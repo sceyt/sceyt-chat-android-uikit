@@ -8,7 +8,7 @@ import kotlinx.parcelize.Parcelize
 
 @Parcelize
 data class DraftMessage(
-        val chatId: Long,
+        val channelId: Long,
         val body: String?,
         val createdAt: Long,
         val mentionUsers: List<SceytUser>?,

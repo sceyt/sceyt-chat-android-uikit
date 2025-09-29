@@ -27,6 +27,7 @@ import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.SendMessageResult
 import com.sceyt.chatuikit.data.models.SyncNearMessagesResult
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
+import com.sceyt.chatuikit.data.models.channels.DraftMessage
 import com.sceyt.chatuikit.data.models.channels.EditChannelData
 import com.sceyt.chatuikit.data.models.channels.GetAllChannelsResponse
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
@@ -39,7 +40,6 @@ import com.sceyt.chatuikit.data.models.messages.SceytMarker
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
 import com.sceyt.chatuikit.data.models.messages.SceytUser
-import com.sceyt.chatuikit.data.models.messages.UpdateDraftMessageData
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.notifications.managers.RealtimeNotificationManager
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
@@ -316,8 +316,8 @@ internal class PersistenceMiddleWareImpl(
         return channelLogic.unHideChannel(channelId)
     }
 
-    override suspend fun updateDraftMessage(data: UpdateDraftMessageData) {
-        channelLogic.updateDraftMessage(data)
+    override suspend fun updateDraftMessage(draftMessage: DraftMessage) {
+        channelLogic.updateDraftMessage(draftMessage)
     }
 
     override fun getChannelMessageCount(channelId: Long): Flow<Long> {

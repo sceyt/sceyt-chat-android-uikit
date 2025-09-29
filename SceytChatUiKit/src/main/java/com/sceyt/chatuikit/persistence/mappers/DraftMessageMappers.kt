@@ -4,9 +4,6 @@ import com.sceyt.chat.models.message.BodyAttribute
 import com.sceyt.chatuikit.data.models.channels.DraftAttachment
 import com.sceyt.chatuikit.data.models.channels.DraftMessage
 import com.sceyt.chatuikit.data.models.channels.DraftVoiceAttachment
-import com.sceyt.chatuikit.data.models.messages.SceytMessage
-import com.sceyt.chatuikit.data.models.messages.SceytUser
-import com.sceyt.chatuikit.data.models.messages.UpdateDraftMessageData
 import com.sceyt.chatuikit.media.audio.AudioRecordData
 import com.sceyt.chatuikit.persistence.database.entity.messages.DraftAttachmentEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.DraftMessageDb
@@ -14,7 +11,7 @@ import com.sceyt.chatuikit.persistence.database.entity.messages.DraftMessageEnti
 import com.sceyt.chatuikit.persistence.database.entity.messages.DraftVoiceAttachmentEntity
 
 internal fun DraftMessageDb.toDraftMessage() = DraftMessage(
-    chatId = draftMessageEntity.chatId,
+    channelId = draftMessageEntity.chatId,
     body = draftMessageEntity.message,
     createdAt = draftMessageEntity.createdAt,
     mentionUsers = mentionUsers?.map { it.toSceytUser() },
@@ -38,29 +35,11 @@ internal fun DraftVoiceAttachmentEntity.toDraftVoiceAttachment() = DraftVoiceAtt
     amplitudes = amplitudes
 )
 
-internal fun DraftMessageEntity.toDraftMessage(
-        mentionUsers: List<SceytUser>?,
-        replyOrEditMessage: SceytMessage?,
-        attachments: List<DraftAttachment>?,
-        voiceAttachment: DraftVoiceAttachment?,
-) = DraftMessage(
-    chatId = chatId,
-    body = message,
-    createdAt = createdAt,
-    mentionUsers = mentionUsers,
-    replyOrEditMessage = replyOrEditMessage,
-    isReply = isReplyMessage ?: false,
-    bodyAttributes = styleRanges,
-    attachments = attachments,
-    voiceAttachment = voiceAttachment
-)
-
-internal fun UpdateDraftMessageData.toDraftMessageEntity(
-        bodyAttributes: List<BodyAttribute>,
-        createdAt: Long = System.currentTimeMillis(),
+internal fun DraftMessage.toDraftMessageEntity(
+        bodyAttributes: List<BodyAttribute>?,
 ) = DraftMessageEntity(
     chatId = channelId,
-    message = message,
+    message = body,
     createdAt = createdAt,
     replyOrEditMessageId = replyOrEditMessage?.id,
     isReplyMessage = isReply,

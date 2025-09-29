@@ -28,6 +28,7 @@ import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
+import com.sceyt.chatuikit.data.models.channels.DraftMessage
 import com.sceyt.chatuikit.data.models.channels.EditChannelData
 import com.sceyt.chatuikit.data.models.channels.GetAllChannelsResponse
 import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
@@ -37,7 +38,6 @@ import com.sceyt.chatuikit.data.models.channels.SelfChannelMetadata
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
 import com.sceyt.chatuikit.data.models.messages.SceytUser
-import com.sceyt.chatuikit.data.models.messages.UpdateDraftMessageData
 import com.sceyt.chatuikit.data.models.onError
 import com.sceyt.chatuikit.data.models.onSuccessNotNull
 import com.sceyt.chatuikit.extensions.findIndexed
@@ -61,9 +61,7 @@ import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
-import com.sceyt.chatuikit.persistence.mappers.createEmptyUser
 import com.sceyt.chatuikit.persistence.mappers.createPendingChannel
-import com.sceyt.chatuikit.persistence.mappers.toBodyAttribute
 import com.sceyt.chatuikit.persistence.mappers.toChannel
 import com.sceyt.chatuikit.persistence.mappers.toChannelEntity
 import com.sceyt.chatuikit.persistence.mappers.toDraftAttachmentEntity
@@ -969,22 +967,19 @@ internal class PersistenceChannelsLogicImpl(
         channelsRepository.sendChannelEvent(channelId, event)
     }
 
-    override suspend fun updateDraftMessage(data: UpdateDraftMessageData) = with(data) {
-        val draftMessage = if (!hasContent()) {
+    override suspend fun updateDraftMessage(draftMessage: DraftMessage) = with(draftMessage) {
+        if (!hasContent()) {
             draftMessageDao.deleteDraftByChannelId(channelId)
-            null
+            channelsCache.updateChannelDraftMessage(channelId, null)
+            return
         } else {
-            val attributes = mentionUsers.map { it.toBodyAttribute() }.toMutableSet()
-            styling?.let {
-                attributes.addAll(it.map { styleRange -> styleRange.toBodyAttribute() })
-            }
-            val draftMessageEntity = this.toDraftMessageEntity(bodyAttributes = attributes.toList())
+            val draftMessageEntity = this.toDraftMessageEntity(bodyAttributes = bodyAttributes)
 
-            val links = mentionUsers.map {
-                DraftMessageUserLinkEntity(chatId = channelId, userId = it.recipientId)
+            val links = mentionUsers?.map {
+                DraftMessageUserLinkEntity(chatId = channelId, userId = it.id)
             }
 
-            val attachmentsDb = attachments.map { attachment ->
+            val attachmentsDb = attachments?.map { attachment ->
                 attachment.toDraftAttachmentEntity()
             }
 
@@ -994,16 +989,8 @@ internal class PersistenceChannelsLogicImpl(
                 attachments = attachmentsDb,
                 voiceAttachment = voiceAttachment?.toDraftVoiceAttachmentEntity()
             )
-
-            draftMessageEntity.toDraftMessage(
-                mentionUsers = mentionUsers.map {
-                    createEmptyUser(it.recipientId, it.name)
-                },
-                replyOrEditMessage = replyOrEditMessage,
-                attachments = attachments,
-                voiceAttachment = voiceAttachment
-            )
         }
+
         channelsCache.updateChannelDraftMessage(channelId, draftMessage)
     }
 

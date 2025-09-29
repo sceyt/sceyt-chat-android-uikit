@@ -28,6 +28,7 @@ import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadPrev
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.SyncNearMessagesResult
 import com.sceyt.chatuikit.data.models.channels.DraftAttachment
+import com.sceyt.chatuikit.data.models.channels.DraftMessage
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.fold
@@ -38,7 +39,6 @@ import com.sceyt.chatuikit.data.models.messages.MessageId
 import com.sceyt.chatuikit.data.models.messages.MessageTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReactionTotal
-import com.sceyt.chatuikit.data.models.messages.UpdateDraftMessageData
 import com.sceyt.chatuikit.data.models.onSuccess
 import com.sceyt.chatuikit.data.models.onSuccessNotNull
 import com.sceyt.chatuikit.data.toFileListItem
@@ -74,6 +74,8 @@ import com.sceyt.chatuikit.persistence.interactor.MessageReactionInteractor
 import com.sceyt.chatuikit.persistence.interactor.UserInteractor
 import com.sceyt.chatuikit.persistence.logic.PersistenceConnectionLogic
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
+import com.sceyt.chatuikit.persistence.mappers.createEmptyUser
+import com.sceyt.chatuikit.persistence.mappers.toBodyAttribute
 import com.sceyt.chatuikit.persistence.mappers.toVoiceAttachmentData
 import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager
 import com.sceyt.chatuikit.presentation.common.DebounceHelper
@@ -683,26 +685,36 @@ class MessageListViewModel(
             isReply: Boolean,
     ) {
         viewModelScope.launch(Dispatchers.IO) {
-            val data = UpdateDraftMessageData(
+            val bodyAttributes = mentionUsers.map { it.toBodyAttribute() }.toMutableSet()
+            styling?.let {
+                bodyAttributes.addAll(it.map { styleRange -> styleRange.toBodyAttribute() })
+            }
+
+            val draftAttachments = attachments.mapNotNull { attachment ->
+                DraftAttachment(
+                    channelId = conversationId,
+                    filePath = attachment.filePath ?: return@mapNotNull null,
+                    type = AttachmentTypeEnum.entries.find {
+                        it.value == attachment.type
+                    } ?: return@mapNotNull null
+                )
+            }
+
+            val dratMessage = DraftMessage(
                 channelId = conversationId,
-                message = text?.toString(),
-                attachments = attachments.mapNotNull { attachment ->
-                    DraftAttachment(
-                        channelId = conversationId,
-                        filePath = attachment.filePath,
-                        type = AttachmentTypeEnum.entries.find {
-                            it.value == attachment.type
-                        } ?: return@mapNotNull null
-                    )
+                body = text?.toString(),
+                createdAt = System.currentTimeMillis(),
+                mentionUsers = mentionUsers.map {
+                    createEmptyUser(it.recipientId, it.name)
                 },
-                voiceAttachment = audioRecordData?.toVoiceAttachmentData(conversationId),
-                mentionUsers = mentionUsers,
-                styling = styling,
                 replyOrEditMessage = replyOrEditMessage,
-                isReply = isReply
+                isReply = isReply,
+                bodyAttributes = bodyAttributes.toList(),
+                attachments = draftAttachments,
+                voiceAttachment = audioRecordData?.toVoiceAttachmentData(conversationId)
             )
 
-            channelInteractor.updateDraftMessage(data)
+            channelInteractor.updateDraftMessage(dratMessage)
         }
     }
 
