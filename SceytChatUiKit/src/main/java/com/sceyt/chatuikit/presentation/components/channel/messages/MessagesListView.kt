@@ -411,8 +411,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     internal fun updateMessage(message: SceytMessage): Boolean {
         var foundToUpdate = false
-        SceytLog.i(TAG, "Message updated: id ${message.id}, tid ${message.tid}," +
-                " body ${message.body}, deliveryStatus ${message.deliveryStatus}")
+        SceytLog.i(TAG, "Message updated: id ${message.id}, tid ${message.tid}, deliveryStatus ${message.deliveryStatus}")
         val data = messagesRV.getData()
         for ((index, item) in data.withIndex()) {
             if (item is MessageItem && item.message.tid == message.tid) {
