@@ -27,6 +27,7 @@ import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.SendMessageResult
 import com.sceyt.chatuikit.data.models.SyncNearMessagesResult
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
+import com.sceyt.chatuikit.data.models.channels.DraftMessage
 import com.sceyt.chatuikit.data.models.channels.EditChannelData
 import com.sceyt.chatuikit.data.models.channels.GetAllChannelsResponse
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
@@ -48,17 +49,15 @@ import com.sceyt.chatuikit.persistence.interactor.ChannelMemberInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageMarkerInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageReactionInteractor
-import com.sceyt.chatuikit.persistence.logic.PersistenceMessageMarkerLogic
 import com.sceyt.chatuikit.persistence.interactor.UserInteractor
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceConnectionLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMembersLogic
+import com.sceyt.chatuikit.persistence.logic.PersistenceMessageMarkerLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceReactionsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceUsersLogic
-import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
-import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
 import com.sceyt.chatuikit.services.SceytPresenceChecker
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -317,11 +316,8 @@ internal class PersistenceMiddleWareImpl(
         return channelLogic.unHideChannel(channelId)
     }
 
-    override suspend fun updateDraftMessage(
-            channelId: Long, message: String?, mentionUsers: List<Mention>,
-            styling: List<BodyStyleRange>?, replyOrEditMessage: SceytMessage?, isReply: Boolean,
-    ) {
-        channelLogic.updateDraftMessage(channelId, message, mentionUsers, styling, replyOrEditMessage, isReply)
+    override suspend fun updateDraftMessage(draftMessage: DraftMessage) {
+        channelLogic.updateDraftMessage(draftMessage)
     }
 
     override fun getChannelMessageCount(channelId: Long): Flow<Long> {

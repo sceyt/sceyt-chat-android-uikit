@@ -7,7 +7,6 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ShareCompat
-import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.isVisible
@@ -136,7 +135,6 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
     }
 
     private fun initViews() {
-        WindowCompat.setDecorFitsSystemWindows(window, false)
         binding.toolbar.applySystemWindowInsetsPadding(
             applyTop = true,
             applyRight = true,
@@ -363,7 +361,9 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
 
     private fun getMimeTypeFrom(file: SceytAttachment): String {
         var mimeType = getMimeType(file.filePath)
-        if (mimeType.isNullOrBlank()) mimeType = if (file.type == AttachmentTypeEnum.Image.value) "image/jpeg" else "video/mp4"
+        if (mimeType.isNullOrBlank())
+            mimeType = if (file.type == AttachmentTypeEnum.Image.value)
+                "image/jpeg" else "video/mp4"
         return mimeType
     }
 

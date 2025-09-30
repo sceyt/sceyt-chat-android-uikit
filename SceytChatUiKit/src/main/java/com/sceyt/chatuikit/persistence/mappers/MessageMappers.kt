@@ -3,12 +3,9 @@ package com.sceyt.chatuikit.persistence.mappers
 import com.sceyt.chat.models.message.ForwardingDetails
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.wrapper.ClientWrapper
-import com.sceyt.chatuikit.data.models.channels.DraftMessage
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytUser
-import com.sceyt.chatuikit.persistence.database.entity.messages.DraftMessageDb
-import com.sceyt.chatuikit.persistence.database.entity.messages.DraftMessageEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.ForwardingDetailsDb
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageDb
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageEntity
@@ -282,32 +279,11 @@ internal fun ForwardingDetails.toForwardingDetailsDb() = ForwardingDetailsDb(
     hops = hops
 )
 
-
-internal fun ForwardingDetailsDb.toForwardingDetails(channelId: Long, user: SceytUser?) = ForwardingDetails(
+internal fun ForwardingDetailsDb.toForwardingDetails(
+        channelId: Long,
+        user: SceytUser?,
+) = ForwardingDetails(
     messageId, channelId,
     user?.toUser(),
     hops
-)
-
-internal fun DraftMessageDb.toDraftMessage() = DraftMessage(
-    chatId = draftMessageEntity.chatId,
-    body = draftMessageEntity.message,
-    createdAt = draftMessageEntity.createdAt,
-    mentionUsers = mentionUsers?.map { it.toSceytUser() },
-    replyOrEditMessage = replyOrEditMessage?.toSceytMessage(),
-    isReply = draftMessageEntity.isReplyMessage ?: false,
-    bodyAttributes = draftMessageEntity.styleRanges
-)
-
-internal fun DraftMessageEntity.toDraftMessage(
-        mentionUsers: List<SceytUser>?,
-        replyMessage: SceytMessage?,
-) = DraftMessage(
-    chatId = chatId,
-    body = message,
-    createdAt = createdAt,
-    mentionUsers = mentionUsers,
-    replyOrEditMessage = replyMessage,
-    isReply = isReplyMessage ?: false,
-    bodyAttributes = styleRanges
 )

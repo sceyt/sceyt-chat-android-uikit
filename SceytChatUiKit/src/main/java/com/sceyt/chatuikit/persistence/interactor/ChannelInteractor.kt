@@ -7,12 +7,10 @@ import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
+import com.sceyt.chatuikit.data.models.channels.DraftMessage
 import com.sceyt.chatuikit.data.models.channels.EditChannelData
 import com.sceyt.chatuikit.data.models.channels.GetAllChannelsResponse
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
-import com.sceyt.chatuikit.data.models.messages.SceytMessage
-import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
-import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
 import kotlinx.coroutines.flow.Flow
 
 interface ChannelInteractor {
@@ -35,7 +33,7 @@ interface ChannelInteractor {
             onlyMine: Boolean,
             ignoreDb: Boolean,
             loadKey: LoadKeyData?,
-            directChatType: String = ChannelTypeEnum.Direct.value
+            directChatType: String = ChannelTypeEnum.Direct.value,
     ): Flow<PaginationResponse<SceytChannel>>
 
     suspend fun getChannelsBySQLiteQuery(query: SimpleSQLiteQuery): List<SceytChannel>
@@ -65,11 +63,7 @@ interface ChannelInteractor {
     suspend fun join(channelId: Long): SceytResponse<SceytChannel>
     suspend fun hideChannel(channelId: Long): SceytResponse<SceytChannel>
     suspend fun unHideChannel(channelId: Long): SceytResponse<SceytChannel>
-    suspend fun updateDraftMessage(
-            channelId: Long, message: String?, mentionUsers: List<Mention>,
-            styling: List<BodyStyleRange>?, replyOrEditMessage: SceytMessage?, isReply: Boolean,
-    )
-
+    suspend fun updateDraftMessage(draftMessage: DraftMessage)
     fun getChannelMessageCount(channelId: Long): Flow<Long>
     fun getTotalUnreadCount(channelTypes: List<String> = emptyList()): Flow<Long>
 }
