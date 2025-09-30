@@ -248,8 +248,7 @@ class MessagesRepositoryImpl : MessagesRepository {
         SceytLog.i(TAG, "sending message with channelId $channelId, tid: ${message.tid}")
         ChannelOperator.build(channelId).sendMessage(transformMessage, object : MessageCallback {
             override fun onResult(message: Message) {
-                SceytLog.i(TAG, "send message success with tid: ${message.tid}," +
-                        " body: ${message.body}, initialTid: ${message.tid}")
+                SceytLog.i(TAG, "send message success with tid: ${message.tid}, initialTid: ${message.tid}")
                 val resultTransformed = SceytChatUIKit.messageTransformer?.transformToGet(message)
                         ?: message
                 continuation.safeResume(SceytResponse.Success(resultTransformed.toSceytUiMessage()))
