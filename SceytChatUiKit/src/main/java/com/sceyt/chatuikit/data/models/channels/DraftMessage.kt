@@ -19,7 +19,7 @@ data class DraftMessage(
         val voiceAttachment: DraftVoiceAttachment?,
 ) : Parcelable {
 
-    fun hasContent() = !body.isNullOrEmpty()
+    fun hasContent() = !body.isNullOrBlank()
             || !attachments.isNullOrEmpty()
             || voiceAttachment != null
             || replyOrEditMessage != null
