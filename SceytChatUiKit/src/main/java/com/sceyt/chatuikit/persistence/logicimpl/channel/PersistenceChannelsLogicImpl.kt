@@ -28,6 +28,7 @@ import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
+import com.sceyt.chatuikit.data.models.channels.DraftMessage
 import com.sceyt.chatuikit.data.models.channels.EditChannelData
 import com.sceyt.chatuikit.data.models.channels.GetAllChannelsResponse
 import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
@@ -53,7 +54,6 @@ import com.sceyt.chatuikit.persistence.database.dao.PendingReactionDao
 import com.sceyt.chatuikit.persistence.database.dao.UserDao
 import com.sceyt.chatuikit.persistence.database.entity.channel.ChatUserReactionEntity
 import com.sceyt.chatuikit.persistence.database.entity.channel.UserChatLinkEntity
-import com.sceyt.chatuikit.persistence.database.entity.messages.DraftMessageEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.DraftMessageUserLinkEntity
 import com.sceyt.chatuikit.persistence.database.entity.user.UserDb
 import com.sceyt.chatuikit.persistence.extensions.getPeer
@@ -61,12 +61,13 @@ import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
-import com.sceyt.chatuikit.persistence.mappers.createEmptyUser
 import com.sceyt.chatuikit.persistence.mappers.createPendingChannel
-import com.sceyt.chatuikit.persistence.mappers.toBodyAttribute
 import com.sceyt.chatuikit.persistence.mappers.toChannel
 import com.sceyt.chatuikit.persistence.mappers.toChannelEntity
+import com.sceyt.chatuikit.persistence.mappers.toDraftAttachmentEntity
 import com.sceyt.chatuikit.persistence.mappers.toDraftMessage
+import com.sceyt.chatuikit.persistence.mappers.toDraftMessageEntity
+import com.sceyt.chatuikit.persistence.mappers.toDraftVoiceAttachmentEntity
 import com.sceyt.chatuikit.persistence.mappers.toReactionData
 import com.sceyt.chatuikit.persistence.mappers.toSceytMessage
 import com.sceyt.chatuikit.persistence.mappers.toSceytReaction
@@ -77,8 +78,6 @@ import com.sceyt.chatuikit.persistence.mappers.toUserReactionsEntity
 import com.sceyt.chatuikit.persistence.repositories.ChannelsRepository
 import com.sceyt.chatuikit.persistence.workers.SendForwardMessagesWorkManager
 import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager
-import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
-import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
 import com.sceyt.chatuikit.presentation.extensions.isDeleted
 import com.sceyt.chatuikit.presentation.extensions.isDeletedOrHardDeleted
 import com.sceyt.chatuikit.presentation.extensions.isHardDeleted
@@ -968,32 +967,30 @@ internal class PersistenceChannelsLogicImpl(
         channelsRepository.sendChannelEvent(channelId, event)
     }
 
-    override suspend fun updateDraftMessage(
-            channelId: Long,
-            message: String?,
-            mentionUsers: List<Mention>,
-            styling: List<BodyStyleRange>?,
-            replyOrEditMessage: SceytMessage?,
-            isReply: Boolean,
-    ) {
-        val draftMessage = if (message.isNullOrBlank()) {
+    override suspend fun updateDraftMessage(draftMessage: DraftMessage) = with(draftMessage) {
+        if (!hasContent()) {
             draftMessageDao.deleteDraftByChannelId(channelId)
-            null
+            channelsCache.updateChannelDraftMessage(channelId, null)
+            return
         } else {
-            val attributes = mentionUsers.map { it.toBodyAttribute() }.toMutableList()
-            styling?.let {
-                attributes.addAll(it.map { styleRange -> styleRange.toBodyAttribute() })
+            val draftMessageEntity = this.toDraftMessageEntity(bodyAttributes = bodyAttributes)
+
+            val links = mentionUsers?.map {
+                DraftMessageUserLinkEntity(chatId = channelId, userId = it.id)
             }
-            val draftMessageEntity = DraftMessageEntity(channelId, message, System.currentTimeMillis(),
-                replyOrEditMessage?.id, isReply, attributes)
-            val links = mentionUsers.map {
-                DraftMessageUserLinkEntity(chatId = channelId, userId = it.recipientId)
+
+            val attachmentsDb = attachments?.map { attachment ->
+                attachment.toDraftAttachmentEntity()
             }
-            draftMessageDao.insertWithUserLinks(draftMessageEntity, links)
-            draftMessageEntity.toDraftMessage(mentionUsers.map {
-                createEmptyUser(it.recipientId, it.name)
-            }, replyOrEditMessage)
+
+            draftMessageDao.insertDraftMessage(
+                entity = draftMessageEntity,
+                links = links,
+                attachments = attachmentsDb,
+                voiceAttachment = voiceAttachment?.toDraftVoiceAttachmentEntity()
+            )
         }
+
         channelsCache.updateChannelDraftMessage(channelId, draftMessage)
     }
 

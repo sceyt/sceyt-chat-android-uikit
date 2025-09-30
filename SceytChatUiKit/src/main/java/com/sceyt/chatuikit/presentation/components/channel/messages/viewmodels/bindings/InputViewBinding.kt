@@ -5,6 +5,7 @@ import android.text.Editable
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewModelScope
+import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
@@ -16,6 +17,7 @@ import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
+import com.sceyt.chatuikit.media.audio.AudioRecordData
 import com.sceyt.chatuikit.persistence.extensions.getChannelType
 import com.sceyt.chatuikit.persistence.extensions.isPublic
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
@@ -43,7 +45,7 @@ import kotlinx.coroutines.withContext
 fun MessageListViewModel.bind(
         messageInputView: MessageInputView,
         replyInThreadMessage: SceytMessage?,
-        lifecycleOwner: LifecycleOwner
+        lifecycleOwner: LifecycleOwner,
 ) {
 
     messageActionBridge.setInputView(messageInputView)
@@ -180,13 +182,21 @@ fun MessageListViewModel.bind(
 
         override fun updateDraftMessage(
                 text: Editable?,
+                attachments: List<Attachment>,
+                audioRecordData: AudioRecordData?,
                 mentionUserIds: List<Mention>,
                 styling: List<BodyStyleRange>?,
                 replyOrEditMessage: SceytMessage?,
-                isReply: Boolean
-        ) {
-            this@bind.updateDraftMessage(text, mentionUserIds, styling, replyOrEditMessage, isReply)
-        }
+                isReply: Boolean,
+        ) = this@bind.updateDraftMessage(
+            text = text,
+            attachments = attachments,
+            audioRecordData = audioRecordData,
+            mentionUsers = mentionUserIds,
+            styling = styling,
+            replyOrEditMessage = replyOrEditMessage,
+            isReply = isReply
+        )
 
         override fun mention(query: String) {
             mentionJob?.cancel()

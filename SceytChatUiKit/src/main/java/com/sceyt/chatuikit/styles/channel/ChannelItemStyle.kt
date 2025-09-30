@@ -83,7 +83,7 @@ import java.util.Date
  * @property channelEventTitleFormatter - Formatter for activity title, default is [SceytChatUIKitFormatters.channelListChannelEventTitleFormatter].
  * @property unreadCountFormatter - Formatter for unread count, default is [SceytChatUIKitFormatters.unreadCountFormatter].
  * @property lastMessageBodyFormatter - Formatter for last message body, default is [SceytChatUIKitFormatters.channelLastMessageBodyFormatter].
- * @property draftMessageBodyFormatter - Formatter for draft message body, default is [SceytChatUIKitFormatters.draftMessageBodyFormatter].
+ * @property draftMessageBodyFormatter - Formatter for draft message body, default is [SceytChatUIKitFormatters.channelDraftLastMessageBodyFormatter].
  * @property channelSubtitleFormatter - Formatter for channel subtitle, default is [SceytChatUIKitFormatters.channelListItemSubtitleFormatter].
  * @property attachmentIconProvider - Provider for attachment icon, default is [SceytChatUIKitProviders.attachmentIconProvider].
  * @property presenceStateColorProvider - Provider for presence state color, default is [SceytChatUIKitProviders.presenceStateColorProvider].
@@ -215,7 +215,7 @@ data class ChannelItemStyle(
                     channelEventTitleFormatter = SceytChatUIKit.formatters.channelListChannelEventTitleFormatter,
                     unreadCountFormatter = SceytChatUIKit.formatters.unreadCountFormatter,
                     lastMessageBodyFormatter = SceytChatUIKit.formatters.channelLastMessageBodyFormatter,
-                    draftMessageBodyFormatter = SceytChatUIKit.formatters.draftMessageBodyFormatter,
+                    draftMessageBodyFormatter = SceytChatUIKit.formatters.channelDraftLastMessageBodyFormatter,
                     channelSubtitleFormatter = SceytChatUIKit.formatters.channelListItemSubtitleFormatter,
                     attachmentIconProvider = SceytChatUIKit.providers.channelListAttachmentIconProvider,
                     presenceStateColorProvider = SceytChatUIKit.providers.presenceStateColorProvider,

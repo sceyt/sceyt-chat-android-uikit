@@ -35,6 +35,7 @@ import com.sceyt.chatuikit.formatters.defaults.DefaultNotificationBodyFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultNotificationTitleFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelEventTitleFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelEventUserNameFormatter
+import com.sceyt.chatuikit.formatters.defaults.DefaultDraftMessageBodyWithAttachmentsFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUnreadCountFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUserAndNotesNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUserNameFormatter
@@ -109,6 +110,9 @@ class SceytChatUIKitFormatters {
 
     var channelLastMessageBodyFormatter: Formatter<MessageBodyFormatterAttributes> by lazyVar {
         DefaultMessageBodyWithAttachmentsFormatter()
+    }
+    var channelDraftLastMessageBodyFormatter: Formatter<DraftMessageBodyFormatterAttributes> by lazyVar {
+        DefaultDraftMessageBodyWithAttachmentsFormatter()
     }
 
     var editMessageBodyFormatter: Formatter<MessageBodyFormatterAttributes> by lazyVar {
@@ -195,7 +199,7 @@ class SceytChatUIKitFormatters {
         DefaultNotificationBodyFormatter()
     }
 
-    var connectionStateTitleFormatter : Formatter<ConnectionState> by lazyVar {
+    var connectionStateTitleFormatter: Formatter<ConnectionState> by lazyVar {
         DefaultConnectionsStateTitleFormatter()
     }
 }

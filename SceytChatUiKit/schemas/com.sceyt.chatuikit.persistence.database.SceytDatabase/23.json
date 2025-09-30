@@ -1,0 +1,1996 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 23,
+    "identityHash": "27abb47c2be3eab1b3bacfc95be27b2d",
+    "entities": [
+      {
+        "tableName": "sceyt_channel_table",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`chat_id` INTEGER NOT NULL, `parentChannelId` INTEGER, `uri` TEXT, `type` TEXT NOT NULL, `subject` TEXT, `avatarUrl` TEXT, `metadata` TEXT, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, `messagesClearedAt` INTEGER NOT NULL, `memberCount` INTEGER NOT NULL, `createdById` TEXT, `userRole` TEXT, `unread` INTEGER NOT NULL, `newMessageCount` INTEGER NOT NULL, `newMentionCount` INTEGER NOT NULL, `newReactedMessageCount` INTEGER NOT NULL, `hidden` INTEGER NOT NULL, `archived` INTEGER NOT NULL, `muted` INTEGER NOT NULL, `mutedTill` INTEGER, `pinnedAt` INTEGER, `lastReceivedMessageId` INTEGER NOT NULL, `lastDisplayedMessageId` INTEGER NOT NULL, `messageRetentionPeriod` INTEGER NOT NULL, `lastMessageTid` INTEGER, `lastMessageAt` INTEGER, `pending` INTEGER NOT NULL, `isSelf` INTEGER NOT NULL DEFAULT false, PRIMARY KEY(`chat_id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "chat_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "parentChannelId",
+            "columnName": "parentChannelId",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "uri",
+            "columnName": "uri",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "type",
+            "columnName": "type",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "subject",
+            "columnName": "subject",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "avatarUrl",
+            "columnName": "avatarUrl",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "metadata",
+            "columnName": "metadata",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updatedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "messagesClearedAt",
+            "columnName": "messagesClearedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "memberCount",
+            "columnName": "memberCount",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdById",
+            "columnName": "createdById",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "userRole",
+            "columnName": "userRole",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "unread",
+            "columnName": "unread",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "newMessageCount",
+            "columnName": "newMessageCount",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "newMentionCount",
+            "columnName": "newMentionCount",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "newReactedMessageCount",
+            "columnName": "newReactedMessageCount",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hidden",
+            "columnName": "hidden",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "archived",
+            "columnName": "archived",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "muted",
+            "columnName": "muted",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "mutedTill",
+            "columnName": "mutedTill",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "pinnedAt",
+            "columnName": "pinnedAt",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "lastReceivedMessageId",
+            "columnName": "lastReceivedMessageId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastDisplayedMessageId",
+            "columnName": "lastDisplayedMessageId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "messageRetentionPeriod",
+            "columnName": "messageRetentionPeriod",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastMessageTid",
+            "columnName": "lastMessageTid",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "lastMessageAt",
+            "columnName": "lastMessageAt",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "pending",
+            "columnName": "pending",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isSelf",
+            "columnName": "isSelf",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "false"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "chat_id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_sceyt_channel_table_uri",
+            "unique": true,
+            "columnNames": [
+              "uri"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_sceyt_channel_table_uri` ON `${TABLE_NAME}` (`uri`)"
+          },
+          {
+            "name": "index_sceyt_channel_table_type",
+            "unique": false,
+            "columnNames": [
+              "type"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sceyt_channel_table_type` ON `${TABLE_NAME}` (`type`)"
+          },
+          {
+            "name": "index_sceyt_channel_table_subject",
+            "unique": false,
+            "columnNames": [
+              "subject"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sceyt_channel_table_subject` ON `${TABLE_NAME}` (`subject`)"
+          },
+          {
+            "name": "index_sceyt_channel_table_createdAt",
+            "unique": false,
+            "columnNames": [
+              "createdAt"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sceyt_channel_table_createdAt` ON `${TABLE_NAME}` (`createdAt`)"
+          },
+          {
+            "name": "index_sceyt_channel_table_userRole",
+            "unique": false,
+            "columnNames": [
+              "userRole"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sceyt_channel_table_userRole` ON `${TABLE_NAME}` (`userRole`)"
+          },
+          {
+            "name": "index_sceyt_channel_table_lastMessageAt",
+            "unique": false,
+            "columnNames": [
+              "lastMessageAt"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sceyt_channel_table_lastMessageAt` ON `${TABLE_NAME}` (`lastMessageAt`)"
+          },
+          {
+            "name": "index_sceyt_channel_table_pending",
+            "unique": false,
+            "columnNames": [
+              "pending"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sceyt_channel_table_pending` ON `${TABLE_NAME}` (`pending`)"
+          },
+          {
+            "name": "index_sceyt_channel_table_isSelf",
+            "unique": false,
+            "columnNames": [
+              "isSelf"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sceyt_channel_table_isSelf` ON `${TABLE_NAME}` (`isSelf`)"
+          }
+        ]
+      },
+      {
+        "tableName": "sceyt_user_table",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`user_id` TEXT NOT NULL, `username` TEXT NOT NULL DEFAULT '', `firstName` TEXT, `lastName` TEXT, `avatarURL` TEXT, `activityStatus` INTEGER, `blocked` INTEGER NOT NULL, `state` INTEGER, `status` TEXT, `lastActiveAt` INTEGER, PRIMARY KEY(`user_id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "user_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "username",
+            "columnName": "username",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "''"
+          },
+          {
+            "fieldPath": "firstName",
+            "columnName": "firstName",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "lastName",
+            "columnName": "lastName",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "avatarURL",
+            "columnName": "avatarURL",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "activityStatus",
+            "columnName": "activityStatus",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "blocked",
+            "columnName": "blocked",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "presence.state",
+            "columnName": "state",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "presence.status",
+            "columnName": "status",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "presence.lastActiveAt",
+            "columnName": "lastActiveAt",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "user_id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_sceyt_user_table_username",
+            "unique": false,
+            "columnNames": [
+              "username"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sceyt_user_table_username` ON `${TABLE_NAME}` (`username`)"
+          }
+        ]
+      },
+      {
+        "tableName": "sceyt_user_chat_link_table",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `user_id` TEXT NOT NULL, `chat_id` INTEGER NOT NULL, `role` TEXT NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "userId",
+            "columnName": "user_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "chatId",
+            "columnName": "chat_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "role",
+            "columnName": "role",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "uniqueUserInChat",
+            "unique": true,
+            "columnNames": [
+              "chat_id",
+              "user_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `uniqueUserInChat` ON `${TABLE_NAME}` (`chat_id`, `user_id`)"
+          },
+          {
+            "name": "index_sceyt_user_chat_link_table_user_id",
+            "unique": false,
+            "columnNames": [
+              "user_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sceyt_user_chat_link_table_user_id` ON `${TABLE_NAME}` (`user_id`)"
+          },
+          {
+            "name": "index_sceyt_user_chat_link_table_chat_id",
+            "unique": false,
+            "columnNames": [
+              "chat_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sceyt_user_chat_link_table_chat_id` ON `${TABLE_NAME}` (`chat_id`)"
+          }
+        ]
+      },
+      {
+        "tableName": "sceyt_message_table",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`tid` INTEGER NOT NULL, `message_id` INTEGER, `channelId` INTEGER NOT NULL, `body` TEXT NOT NULL, `type` TEXT NOT NULL, `metadata` TEXT, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, `incoming` INTEGER NOT NULL, `isTransient` INTEGER NOT NULL, `silent` INTEGER NOT NULL, `deliveryStatus` INTEGER NOT NULL, `state` INTEGER NOT NULL, `fromId` TEXT, `markerCount` TEXT, `mentionedUsersIds` TEXT, `parentId` INTEGER, `replyCount` INTEGER NOT NULL, `displayCount` INTEGER NOT NULL, `autoDeleteAt` INTEGER, `bodyAttribute` TEXT, `disableMentionsCount` INTEGER NOT NULL DEFAULT 0, `unList` INTEGER NOT NULL, `messageId` INTEGER, `userId` TEXT, `hops` INTEGER, PRIMARY KEY(`tid`))",
+        "fields": [
+          {
+            "fieldPath": "tid",
+            "columnName": "tid",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "id",
+            "columnName": "message_id",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "channelId",
+            "columnName": "channelId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "body",
+            "columnName": "body",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "type",
+            "columnName": "type",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "metadata",
+            "columnName": "metadata",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updatedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "incoming",
+            "columnName": "incoming",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isTransient",
+            "columnName": "isTransient",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "silent",
+            "columnName": "silent",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "deliveryStatus",
+            "columnName": "deliveryStatus",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "state",
+            "columnName": "state",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fromId",
+            "columnName": "fromId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "markerCount",
+            "columnName": "markerCount",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "mentionedUsersIds",
+            "columnName": "mentionedUsersIds",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "parentId",
+            "columnName": "parentId",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "replyCount",
+            "columnName": "replyCount",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "displayCount",
+            "columnName": "displayCount",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "autoDeleteAt",
+            "columnName": "autoDeleteAt",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "bodyAttribute",
+            "columnName": "bodyAttribute",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "disableMentionsCount",
+            "columnName": "disableMentionsCount",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "unList",
+            "columnName": "unList",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "forwardingDetailsDb.messageId",
+            "columnName": "messageId",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "forwardingDetailsDb.userId",
+            "columnName": "userId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "forwardingDetailsDb.hops",
+            "columnName": "hops",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "tid"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_sceyt_message_table_message_id",
+            "unique": true,
+            "columnNames": [
+              "message_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_sceyt_message_table_message_id` ON `${TABLE_NAME}` (`message_id`)"
+          },
+          {
+            "name": "index_sceyt_message_table_channelId",
+            "unique": false,
+            "columnNames": [
+              "channelId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sceyt_message_table_channelId` ON `${TABLE_NAME}` (`channelId`)"
+          },
+          {
+            "name": "index_sceyt_message_table_createdAt",
+            "unique": false,
+            "columnNames": [
+              "createdAt"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sceyt_message_table_createdAt` ON `${TABLE_NAME}` (`createdAt`)"
+          },
+          {
+            "name": "index_sceyt_message_table_deliveryStatus",
+            "unique": false,
+            "columnNames": [
+              "deliveryStatus"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sceyt_message_table_deliveryStatus` ON `${TABLE_NAME}` (`deliveryStatus`)"
+          },
+          {
+            "name": "index_sceyt_message_table_unList",
+            "unique": false,
+            "columnNames": [
+              "unList"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sceyt_message_table_unList` ON `${TABLE_NAME}` (`unList`)"
+          }
+        ]
+      },
+      {
+        "tableName": "sceyt_mention_user_message_link_table",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`messageTid` INTEGER NOT NULL, `user_id` TEXT NOT NULL, PRIMARY KEY(`messageTid`, `user_id`), FOREIGN KEY(`messageTid`) REFERENCES `sceyt_message_table`(`tid`) ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED)",
+        "fields": [
+          {
+            "fieldPath": "messageTid",
+            "columnName": "messageTid",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "userId",
+            "columnName": "user_id",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "messageTid",
+            "user_id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_sceyt_mention_user_message_link_table_messageTid",
+            "unique": false,
+            "columnNames": [
+              "messageTid"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sceyt_mention_user_message_link_table_messageTid` ON `${TABLE_NAME}` (`messageTid`)"
+          },
+          {
+            "name": "index_sceyt_mention_user_message_link_table_user_id",
+            "unique": false,
+            "columnNames": [
+              "user_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sceyt_mention_user_message_link_table_user_id` ON `${TABLE_NAME}` (`user_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "sceyt_message_table",
+            "onDelete": "CASCADE",
+            "onUpdate": "CASCADE",
+            "columns": [
+              "messageTid"
+            ],
+            "referencedColumns": [
+              "tid"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "sceyt_draft_message_table",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`chatId` INTEGER NOT NULL, `message` TEXT, `createdAt` INTEGER NOT NULL, `replyOrEditMessageId` INTEGER, `isReplyMessage` INTEGER, `styleRanges` TEXT, PRIMARY KEY(`chatId`))",
+        "fields": [
+          {
+            "fieldPath": "chatId",
+            "columnName": "chatId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "message",
+            "columnName": "message",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "replyOrEditMessageId",
+            "columnName": "replyOrEditMessageId",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "isReplyMessage",
+            "columnName": "isReplyMessage",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "styleRanges",
+            "columnName": "styleRanges",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "chatId"
+          ]
+        }
+      },
+      {
+        "tableName": "sceyt_draft_attachment_table",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`chatId` INTEGER NOT NULL, `filePath` TEXT NOT NULL, `type` TEXT NOT NULL, `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, FOREIGN KEY(`chatId`) REFERENCES `sceyt_draft_message_table`(`chatId`) ON UPDATE CASCADE ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "chatId",
+            "columnName": "chatId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "filePath",
+            "columnName": "filePath",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "type",
+            "columnName": "type",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_sceyt_draft_attachment_table_chatId",
+            "unique": false,
+            "columnNames": [
+              "chatId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sceyt_draft_attachment_table_chatId` ON `${TABLE_NAME}` (`chatId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "sceyt_draft_message_table",
+            "onDelete": "CASCADE",
+            "onUpdate": "CASCADE",
+            "columns": [
+              "chatId"
+            ],
+            "referencedColumns": [
+              "chatId"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "sceyt_draft_voice_attachment_table",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`chatId` INTEGER NOT NULL, `filePath` TEXT NOT NULL, `duration` INTEGER NOT NULL, `amplitudes` TEXT NOT NULL, `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, FOREIGN KEY(`chatId`) REFERENCES `sceyt_draft_message_table`(`chatId`) ON UPDATE CASCADE ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "chatId",
+            "columnName": "chatId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "filePath",
+            "columnName": "filePath",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "duration",
+            "columnName": "duration",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "amplitudes",
+            "columnName": "amplitudes",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_sceyt_draft_voice_attachment_table_chatId",
+            "unique": false,
+            "columnNames": [
+              "chatId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sceyt_draft_voice_attachment_table_chatId` ON `${TABLE_NAME}` (`chatId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "sceyt_draft_message_table",
+            "onDelete": "CASCADE",
+            "onUpdate": "CASCADE",
+            "columns": [
+              "chatId"
+            ],
+            "referencedColumns": [
+              "chatId"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "sceyt_draft_message_user_link_table",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`chatId` INTEGER NOT NULL, `user_id` TEXT NOT NULL, PRIMARY KEY(`chatId`, `user_id`), FOREIGN KEY(`chatId`) REFERENCES `sceyt_draft_message_table`(`chatId`) ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED)",
+        "fields": [
+          {
+            "fieldPath": "chatId",
+            "columnName": "chatId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "userId",
+            "columnName": "user_id",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "chatId",
+            "user_id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_sceyt_draft_message_user_link_table_user_id",
+            "unique": false,
+            "columnNames": [
+              "user_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sceyt_draft_message_user_link_table_user_id` ON `${TABLE_NAME}` (`user_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "sceyt_draft_message_table",
+            "onDelete": "CASCADE",
+            "onUpdate": "CASCADE",
+            "columns": [
+              "chatId"
+            ],
+            "referencedColumns": [
+              "chatId"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "sceyt_attachment_table",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`primaryKey` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `id` INTEGER, `messageId` INTEGER NOT NULL, `messageTid` INTEGER NOT NULL, `channelId` INTEGER NOT NULL, `userId` TEXT, `name` TEXT NOT NULL, `type` TEXT NOT NULL, `metadata` TEXT, `fileSize` INTEGER NOT NULL, `createdAt` INTEGER NOT NULL, `url` TEXT, `filePath` TEXT, `originalFilePath` TEXT, FOREIGN KEY(`messageTid`) REFERENCES `sceyt_message_table`(`tid`) ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED)",
+        "fields": [
+          {
+            "fieldPath": "primaryKey",
+            "columnName": "primaryKey",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "messageId",
+            "columnName": "messageId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "messageTid",
+            "columnName": "messageTid",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "channelId",
+            "columnName": "channelId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "userId",
+            "columnName": "userId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "type",
+            "columnName": "type",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "metadata",
+            "columnName": "metadata",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "fileSize",
+            "columnName": "fileSize",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "url",
+            "columnName": "url",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "filePath",
+            "columnName": "filePath",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "originalFilePath",
+            "columnName": "originalFilePath",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "primaryKey"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_sceyt_attachment_table_messageTid_url",
+            "unique": true,
+            "columnNames": [
+              "messageTid",
+              "url"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_sceyt_attachment_table_messageTid_url` ON `${TABLE_NAME}` (`messageTid`, `url`)"
+          },
+          {
+            "name": "index_sceyt_attachment_table_id",
+            "unique": false,
+            "columnNames": [
+              "id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sceyt_attachment_table_id` ON `${TABLE_NAME}` (`id`)"
+          },
+          {
+            "name": "index_sceyt_attachment_table_messageTid",
+            "unique": false,
+            "columnNames": [
+              "messageTid"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sceyt_attachment_table_messageTid` ON `${TABLE_NAME}` (`messageTid`)"
+          },
+          {
+            "name": "index_sceyt_attachment_table_type",
+            "unique": false,
+            "columnNames": [
+              "type"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sceyt_attachment_table_type` ON `${TABLE_NAME}` (`type`)"
+          },
+          {
+            "name": "index_sceyt_attachment_table_createdAt",
+            "unique": false,
+            "columnNames": [
+              "createdAt"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sceyt_attachment_table_createdAt` ON `${TABLE_NAME}` (`createdAt`)"
+          },
+          {
+            "name": "index_sceyt_attachment_table_url",
+            "unique": false,
+            "columnNames": [
+              "url"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sceyt_attachment_table_url` ON `${TABLE_NAME}` (`url`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "sceyt_message_table",
+            "onDelete": "CASCADE",
+            "onUpdate": "CASCADE",
+            "columns": [
+              "messageTid"
+            ],
+            "referencedColumns": [
+              "tid"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "sceyt_marker_table",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`messageId` INTEGER NOT NULL, `userId` TEXT NOT NULL, `name` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, PRIMARY KEY(`messageId`, `name`, `userId`), FOREIGN KEY(`messageId`) REFERENCES `sceyt_message_table`(`message_id`) ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED)",
+        "fields": [
+          {
+            "fieldPath": "messageId",
+            "columnName": "messageId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "userId",
+            "columnName": "userId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "messageId",
+            "name",
+            "userId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_sceyt_marker_table_messageId",
+            "unique": false,
+            "columnNames": [
+              "messageId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sceyt_marker_table_messageId` ON `${TABLE_NAME}` (`messageId`)"
+          },
+          {
+            "name": "index_sceyt_marker_table_name",
+            "unique": false,
+            "columnNames": [
+              "name"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sceyt_marker_table_name` ON `${TABLE_NAME}` (`name`)"
+          },
+          {
+            "name": "index_sceyt_marker_table_createdAt",
+            "unique": false,
+            "columnNames": [
+              "createdAt"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sceyt_marker_table_createdAt` ON `${TABLE_NAME}` (`createdAt`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "sceyt_message_table",
+            "onDelete": "CASCADE",
+            "onUpdate": "CASCADE",
+            "columns": [
+              "messageId"
+            ],
+            "referencedColumns": [
+              "message_id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "sceyt_reaction_table",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `messageId` INTEGER NOT NULL, `reaction_key` TEXT NOT NULL, `score` INTEGER NOT NULL, `reason` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `fromId` TEXT, PRIMARY KEY(`id`), FOREIGN KEY(`messageId`) REFERENCES `sceyt_message_table`(`message_id`) ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "messageId",
+            "columnName": "messageId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "key",
+            "columnName": "reaction_key",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "score",
+            "columnName": "score",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "reason",
+            "columnName": "reason",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fromId",
+            "columnName": "fromId",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_sceyt_reaction_table_messageId_reaction_key_fromId",
+            "unique": true,
+            "columnNames": [
+              "messageId",
+              "reaction_key",
+              "fromId"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_sceyt_reaction_table_messageId_reaction_key_fromId` ON `${TABLE_NAME}` (`messageId`, `reaction_key`, `fromId`)"
+          },
+          {
+            "name": "index_sceyt_reaction_table_messageId",
+            "unique": false,
+            "columnNames": [
+              "messageId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sceyt_reaction_table_messageId` ON `${TABLE_NAME}` (`messageId`)"
+          },
+          {
+            "name": "index_sceyt_reaction_table_reaction_key",
+            "unique": false,
+            "columnNames": [
+              "reaction_key"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sceyt_reaction_table_reaction_key` ON `${TABLE_NAME}` (`reaction_key`)"
+          },
+          {
+            "name": "index_sceyt_reaction_table_fromId",
+            "unique": false,
+            "columnNames": [
+              "fromId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sceyt_reaction_table_fromId` ON `${TABLE_NAME}` (`fromId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "sceyt_message_table",
+            "onDelete": "CASCADE",
+            "onUpdate": "CASCADE",
+            "columns": [
+              "messageId"
+            ],
+            "referencedColumns": [
+              "message_id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "sceyt_reaction_total_table",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `messageId` INTEGER NOT NULL, `reaction_key` TEXT NOT NULL, `score` INTEGER NOT NULL, `count` INTEGER NOT NULL, FOREIGN KEY(`messageId`) REFERENCES `sceyt_message_table`(`message_id`) ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "messageId",
+            "columnName": "messageId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "key",
+            "columnName": "reaction_key",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "score",
+            "columnName": "score",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "count",
+            "columnName": "count",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_sceyt_reaction_total_table_messageId_reaction_key",
+            "unique": true,
+            "columnNames": [
+              "messageId",
+              "reaction_key"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_sceyt_reaction_total_table_messageId_reaction_key` ON `${TABLE_NAME}` (`messageId`, `reaction_key`)"
+          },
+          {
+            "name": "index_sceyt_reaction_total_table_messageId",
+            "unique": false,
+            "columnNames": [
+              "messageId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sceyt_reaction_total_table_messageId` ON `${TABLE_NAME}` (`messageId`)"
+          },
+          {
+            "name": "index_sceyt_reaction_total_table_reaction_key",
+            "unique": false,
+            "columnNames": [
+              "reaction_key"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sceyt_reaction_total_table_reaction_key` ON `${TABLE_NAME}` (`reaction_key`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "sceyt_message_table",
+            "onDelete": "CASCADE",
+            "onUpdate": "CASCADE",
+            "columns": [
+              "messageId"
+            ],
+            "referencedColumns": [
+              "message_id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "sceyt_chat_user_reaction_table",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `messageId` INTEGER NOT NULL, `channelId` INTEGER NOT NULL, `reaction_key` TEXT NOT NULL, `score` INTEGER NOT NULL, `reason` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `fromId` TEXT, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "messageId",
+            "columnName": "messageId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "channelId",
+            "columnName": "channelId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "key",
+            "columnName": "reaction_key",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "score",
+            "columnName": "score",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "reason",
+            "columnName": "reason",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fromId",
+            "columnName": "fromId",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_sceyt_chat_user_reaction_table_messageId_channelId_reaction_key_fromId",
+            "unique": true,
+            "columnNames": [
+              "messageId",
+              "channelId",
+              "reaction_key",
+              "fromId"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_sceyt_chat_user_reaction_table_messageId_channelId_reaction_key_fromId` ON `${TABLE_NAME}` (`messageId`, `channelId`, `reaction_key`, `fromId`)"
+          },
+          {
+            "name": "index_sceyt_chat_user_reaction_table_messageId",
+            "unique": false,
+            "columnNames": [
+              "messageId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sceyt_chat_user_reaction_table_messageId` ON `${TABLE_NAME}` (`messageId`)"
+          },
+          {
+            "name": "index_sceyt_chat_user_reaction_table_channelId",
+            "unique": false,
+            "columnNames": [
+              "channelId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sceyt_chat_user_reaction_table_channelId` ON `${TABLE_NAME}` (`channelId`)"
+          },
+          {
+            "name": "index_sceyt_chat_user_reaction_table_reaction_key",
+            "unique": false,
+            "columnNames": [
+              "reaction_key"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sceyt_chat_user_reaction_table_reaction_key` ON `${TABLE_NAME}` (`reaction_key`)"
+          },
+          {
+            "name": "index_sceyt_chat_user_reaction_table_fromId",
+            "unique": false,
+            "columnNames": [
+              "fromId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sceyt_chat_user_reaction_table_fromId` ON `${TABLE_NAME}` (`fromId`)"
+          }
+        ]
+      },
+      {
+        "tableName": "sceyt_pending_marker_table",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`primaryKey` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `channelId` INTEGER NOT NULL, `messageId` INTEGER NOT NULL, `name` TEXT NOT NULL, FOREIGN KEY(`messageId`) REFERENCES `sceyt_message_table`(`message_id`) ON UPDATE CASCADE ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "primaryKey",
+            "columnName": "primaryKey",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "channelId",
+            "columnName": "channelId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "messageId",
+            "columnName": "messageId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "primaryKey"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_sceyt_pending_marker_table_messageId_name",
+            "unique": true,
+            "columnNames": [
+              "messageId",
+              "name"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_sceyt_pending_marker_table_messageId_name` ON `${TABLE_NAME}` (`messageId`, `name`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "sceyt_message_table",
+            "onDelete": "CASCADE",
+            "onUpdate": "CASCADE",
+            "columns": [
+              "messageId"
+            ],
+            "referencedColumns": [
+              "message_id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "sceyt_pending_reaction_table",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`messageId` INTEGER NOT NULL, `reaction_key` TEXT NOT NULL, `score` INTEGER NOT NULL, `reason` TEXT NOT NULL DEFAULT '', `enforceUnique` INTEGER NOT NULL DEFAULT false, `count` INTEGER NOT NULL, `channelId` INTEGER NOT NULL, `isAdd` INTEGER NOT NULL, `createdAt` INTEGER NOT NULL, `incomingMsg` INTEGER NOT NULL DEFAULT false, `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, FOREIGN KEY(`messageId`) REFERENCES `sceyt_message_table`(`message_id`) ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED)",
+        "fields": [
+          {
+            "fieldPath": "messageId",
+            "columnName": "messageId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "key",
+            "columnName": "reaction_key",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "score",
+            "columnName": "score",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "reason",
+            "columnName": "reason",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "''"
+          },
+          {
+            "fieldPath": "enforceUnique",
+            "columnName": "enforceUnique",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "false"
+          },
+          {
+            "fieldPath": "count",
+            "columnName": "count",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "channelId",
+            "columnName": "channelId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isAdd",
+            "columnName": "isAdd",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "incomingMsg",
+            "columnName": "incomingMsg",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "false"
+          },
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_sceyt_pending_reaction_table_messageId_reaction_key",
+            "unique": true,
+            "columnNames": [
+              "messageId",
+              "reaction_key"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_sceyt_pending_reaction_table_messageId_reaction_key` ON `${TABLE_NAME}` (`messageId`, `reaction_key`)"
+          },
+          {
+            "name": "index_sceyt_pending_reaction_table_messageId",
+            "unique": false,
+            "columnNames": [
+              "messageId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sceyt_pending_reaction_table_messageId` ON `${TABLE_NAME}` (`messageId`)"
+          },
+          {
+            "name": "index_sceyt_pending_reaction_table_reaction_key",
+            "unique": false,
+            "columnNames": [
+              "reaction_key"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sceyt_pending_reaction_table_reaction_key` ON `${TABLE_NAME}` (`reaction_key`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "sceyt_message_table",
+            "onDelete": "CASCADE",
+            "onUpdate": "CASCADE",
+            "columns": [
+              "messageId"
+            ],
+            "referencedColumns": [
+              "message_id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "sceyt_pending_message_state_table",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`messageId` INTEGER NOT NULL, `channelId` INTEGER NOT NULL, `state` INTEGER NOT NULL, `editBody` TEXT, `deleteOnlyForMe` INTEGER NOT NULL, PRIMARY KEY(`messageId`))",
+        "fields": [
+          {
+            "fieldPath": "messageId",
+            "columnName": "messageId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "channelId",
+            "columnName": "channelId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "state",
+            "columnName": "state",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "editBody",
+            "columnName": "editBody",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "deleteOnlyForMe",
+            "columnName": "deleteOnlyForMe",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "messageId"
+          ]
+        }
+      },
+      {
+        "tableName": "sceyt_attachment_payload_table",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `messageTid` INTEGER NOT NULL, `transferState` INTEGER NOT NULL, `progressPercent` REAL, `url` TEXT, `filePath` TEXT, FOREIGN KEY(`messageTid`) REFERENCES `sceyt_message_table`(`tid`) ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "messageTid",
+            "columnName": "messageTid",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "transferState",
+            "columnName": "transferState",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "progressPercent",
+            "columnName": "progressPercent",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "url",
+            "columnName": "url",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "filePath",
+            "columnName": "filePath",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_sceyt_attachment_payload_table_messageTid",
+            "unique": true,
+            "columnNames": [
+              "messageTid"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_sceyt_attachment_payload_table_messageTid` ON `${TABLE_NAME}` (`messageTid`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "sceyt_message_table",
+            "onDelete": "CASCADE",
+            "onUpdate": "CASCADE",
+            "columns": [
+              "messageTid"
+            ],
+            "referencedColumns": [
+              "tid"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "sceyt_file_checksum_table",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`checksum` INTEGER NOT NULL, `resizedFilePath` TEXT, `url` TEXT, `metadata` TEXT, `fileSize` INTEGER, PRIMARY KEY(`checksum`))",
+        "fields": [
+          {
+            "fieldPath": "checksum",
+            "columnName": "checksum",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "resizedFilePath",
+            "columnName": "resizedFilePath",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "url",
+            "columnName": "url",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "metadata",
+            "columnName": "metadata",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "fileSize",
+            "columnName": "fileSize",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "checksum"
+          ]
+        }
+      },
+      {
+        "tableName": "sceyt_link_details_table",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`link` TEXT NOT NULL, `url` TEXT, `title` TEXT, `description` TEXT, `siteName` TEXT, `faviconUrl` TEXT, `imageUrl` TEXT, `imageWidth` INTEGER, `imageHeight` INTEGER, `thumb` TEXT, PRIMARY KEY(`link`))",
+        "fields": [
+          {
+            "fieldPath": "link",
+            "columnName": "link",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "url",
+            "columnName": "url",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "description",
+            "columnName": "description",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "siteName",
+            "columnName": "siteName",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "faviconUrl",
+            "columnName": "faviconUrl",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "imageUrl",
+            "columnName": "imageUrl",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "imageWidth",
+            "columnName": "imageWidth",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "imageHeight",
+            "columnName": "imageHeight",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "thumb",
+            "columnName": "thumb",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "link"
+          ]
+        }
+      },
+      {
+        "tableName": "sceyt_load_range_table",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`startId` INTEGER NOT NULL, `endId` INTEGER NOT NULL, `channelId` INTEGER NOT NULL, `rowId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "startId",
+            "columnName": "startId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "endId",
+            "columnName": "endId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "channelId",
+            "columnName": "channelId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "rowId",
+            "columnName": "rowId",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "rowId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_sceyt_load_range_table_startId_channelId",
+            "unique": true,
+            "columnNames": [
+              "startId",
+              "channelId"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_sceyt_load_range_table_startId_channelId` ON `${TABLE_NAME}` (`startId`, `channelId`)"
+          },
+          {
+            "name": "index_sceyt_load_range_table_endId_channelId",
+            "unique": true,
+            "columnNames": [
+              "endId",
+              "channelId"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_sceyt_load_range_table_endId_channelId` ON `${TABLE_NAME}` (`endId`, `channelId`)"
+          },
+          {
+            "name": "index_sceyt_load_range_table_startId",
+            "unique": false,
+            "columnNames": [
+              "startId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sceyt_load_range_table_startId` ON `${TABLE_NAME}` (`startId`)"
+          },
+          {
+            "name": "index_sceyt_load_range_table_endId",
+            "unique": false,
+            "columnNames": [
+              "endId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sceyt_load_range_table_endId` ON `${TABLE_NAME}` (`endId`)"
+          },
+          {
+            "name": "index_sceyt_load_range_table_channelId",
+            "unique": false,
+            "columnNames": [
+              "channelId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sceyt_load_range_table_channelId` ON `${TABLE_NAME}` (`channelId`)"
+          }
+        ]
+      },
+      {
+        "tableName": "sceyt_auto_delete_messages_table",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`messageTid` INTEGER NOT NULL, `channelId` INTEGER NOT NULL, `autoDeleteAt` INTEGER NOT NULL, PRIMARY KEY(`messageTid`), FOREIGN KEY(`messageTid`) REFERENCES `sceyt_message_table`(`tid`) ON UPDATE CASCADE ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "messageTid",
+            "columnName": "messageTid",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "channelId",
+            "columnName": "channelId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "autoDeleteAt",
+            "columnName": "autoDeleteAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "messageTid"
+          ]
+        },
+        "foreignKeys": [
+          {
+            "table": "sceyt_message_table",
+            "onDelete": "CASCADE",
+            "onUpdate": "CASCADE",
+            "columns": [
+              "messageTid"
+            ],
+            "referencedColumns": [
+              "tid"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "sceyt_user_metadata_table",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`user_id` TEXT NOT NULL, `key` TEXT NOT NULL, `value` TEXT NOT NULL, PRIMARY KEY(`user_id`, `key`), FOREIGN KEY(`user_id`) REFERENCES `sceyt_user_table`(`user_id`) ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED)",
+        "fields": [
+          {
+            "fieldPath": "userId",
+            "columnName": "user_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "key",
+            "columnName": "key",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "value",
+            "columnName": "value",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "user_id",
+            "key"
+          ]
+        },
+        "foreignKeys": [
+          {
+            "table": "sceyt_user_table",
+            "onDelete": "CASCADE",
+            "onUpdate": "CASCADE",
+            "columns": [
+              "user_id"
+            ],
+            "referencedColumns": [
+              "user_id"
+            ]
+          }
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '27abb47c2be3eab1b3bacfc95be27b2d')"
+    ]
+  }
+}

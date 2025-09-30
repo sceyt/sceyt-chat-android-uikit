@@ -35,7 +35,6 @@ import com.sceyt.chatuikit.data.models.messages.SceytMarker
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.data.models.onSuccessNotNull
-import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.asActivity
 import com.sceyt.chatuikit.extensions.centerVisibleItemPosition
 import com.sceyt.chatuikit.extensions.customToastSnackBar
@@ -44,7 +43,6 @@ import com.sceyt.chatuikit.extensions.getChildTopByPosition
 import com.sceyt.chatuikit.extensions.getString
 import com.sceyt.chatuikit.extensions.isResumed
 import com.sceyt.chatuikit.extensions.isThePositionVisible
-import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.extensions.checkIsMemberInChannel
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isPublic
@@ -546,9 +544,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             compareMessage = messagesListView.getLastMessage()?.message,
             enableDateSeparator = messagesListView.style.enableDateSeparator)
 
-        SceytLog.i(this@bind.TAG, "onOutgoingMessage : ${message.tid} body: ${message.body}, size: ${notFoundMessagesToUpdate.size}")
         if (notFoundMessagesToUpdate.containsKey(message.tid)) {
-            SceytLog.i(this@bind.TAG, "found in map: ${message.tid} body: ${message.body}, size: ${notFoundMessagesToUpdate.size}")
             notFoundMessagesToUpdate.remove(message.tid)?.let {
                 onOutgoingMessage(it)
                 return
@@ -572,7 +568,6 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 else {
                     val foundToUpdate = messagesListView.updateMessage(message)
                     if (!foundToUpdate) {
-                        SceytLog.i(this@bind.TAG, "Message not found to update-> id ${message.id}, tid: ${message.tid}, body: ${message.body}")
                         notFoundMessagesToUpdate[message.tid] = message
                     }
                 }
