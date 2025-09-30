@@ -184,7 +184,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
             replyMessage: SceytMessage? = null,
             replyInThread: Boolean = false,
     ) {
-        if (enablePresence.not() || channel.isPeerDeleted() || channel.isSelf) {
+        if (!enableSubTitle()) {
             subjectTextView.isVisible = false
             return
         }
@@ -199,6 +199,10 @@ class MessagesListHeaderView @JvmOverloads constructor(
                 setSubTitleText(subjectTextView, subTitleText, !fullName.isNullOrBlank() && !haveUserAction)
             }
         }
+    }
+
+    private fun enableSubTitle(): Boolean {
+        return enablePresence && !channel.isPeerDeleted() && !channel.isSelf
     }
 
     private fun setSubTitleText(textView: TextView, title: CharSequence, visible: Boolean) {
@@ -366,7 +370,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
             setSubTitleText(
                 textView = binding.subTitle,
                 title = title,
-                visible = title.isNotBlank() && !haveUserAction
+                visible = title.isNotBlank() && !haveUserAction && enableSubTitle()
             )
             return@post
         }
@@ -377,7 +381,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
         setSubTitleText(
             textView = binding.subTitle,
             title = title,
-            visible = true
+            visible = enableSubTitle()
         )
     }
 
