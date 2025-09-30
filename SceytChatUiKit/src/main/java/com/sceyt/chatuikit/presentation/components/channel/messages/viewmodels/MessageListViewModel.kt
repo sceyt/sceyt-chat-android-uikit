@@ -6,6 +6,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import androidx.work.ExistingWorkPolicy
 import com.sceyt.chat.models.Types
+import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.DeleteMessageType
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
@@ -26,6 +27,8 @@ import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadPrev
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.SyncNearMessagesResult
+import com.sceyt.chatuikit.data.models.channels.DraftAttachment
+import com.sceyt.chatuikit.data.models.channels.DraftMessage
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.fold
@@ -41,6 +44,7 @@ import com.sceyt.chatuikit.data.models.onSuccessNotNull
 import com.sceyt.chatuikit.data.toFileListItem
 import com.sceyt.chatuikit.extensions.findIndexed
 import com.sceyt.chatuikit.koin.SceytKoinComponent
+import com.sceyt.chatuikit.media.audio.AudioRecordData
 import com.sceyt.chatuikit.persistence.extensions.asLiveData
 import com.sceyt.chatuikit.persistence.extensions.broadcastSharedFlow
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
@@ -70,6 +74,9 @@ import com.sceyt.chatuikit.persistence.interactor.MessageReactionInteractor
 import com.sceyt.chatuikit.persistence.interactor.UserInteractor
 import com.sceyt.chatuikit.persistence.logic.PersistenceConnectionLogic
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
+import com.sceyt.chatuikit.persistence.mappers.createEmptyUser
+import com.sceyt.chatuikit.persistence.mappers.toBodyAttribute
+import com.sceyt.chatuikit.persistence.mappers.toVoiceAttachmentData
 import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager
 import com.sceyt.chatuikit.presentation.common.DebounceHelper
 import com.sceyt.chatuikit.presentation.components.channel.input.data.InputUserAction
@@ -87,6 +94,7 @@ import com.sceyt.chatuikit.shared.helpers.LinkPreviewHelper
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -670,14 +678,44 @@ class MessageListViewModel(
 
     fun updateDraftMessage(
             text: Editable?,
+            attachments: List<Attachment>,
+            audioRecordData: AudioRecordData?,
             mentionUsers: List<Mention>,
             styling: List<BodyStyleRange>?,
             replyOrEditMessage: SceytMessage?,
             isReply: Boolean,
     ) {
-        viewModelScope.launch(Dispatchers.IO) {
-            channelInteractor.updateDraftMessage(channel.id, text?.toString(),
-                mentionUsers, styling, replyOrEditMessage, isReply)
+        viewModelScope.launch(NonCancellable) {
+            val bodyAttributes = mentionUsers.map { it.toBodyAttribute() }.toMutableSet()
+            styling?.let {
+                bodyAttributes.addAll(it.map { styleRange -> styleRange.toBodyAttribute() })
+            }
+
+            val draftAttachments = attachments.mapNotNull { attachment ->
+                DraftAttachment(
+                    channelId = conversationId,
+                    filePath = attachment.filePath ?: return@mapNotNull null,
+                    type = AttachmentTypeEnum.entries.find {
+                        it.value == attachment.type
+                    } ?: return@mapNotNull null
+                )
+            }
+
+            val dratMessage = DraftMessage(
+                channelId = conversationId,
+                body = text?.toString(),
+                createdAt = System.currentTimeMillis(),
+                mentionUsers = mentionUsers.map {
+                    createEmptyUser(it.recipientId, it.name)
+                },
+                replyOrEditMessage = replyOrEditMessage,
+                isReply = isReply,
+                bodyAttributes = bodyAttributes.toList(),
+                attachments = draftAttachments,
+                voiceAttachment = audioRecordData?.toVoiceAttachmentData(conversationId)
+            )
+
+            channelInteractor.updateDraftMessage(dratMessage)
         }
     }
 

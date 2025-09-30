@@ -9,6 +9,12 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.concurrent.Executors
 
+data class AudioRecordData(
+        val file: File,
+        val duration: Int,
+        val amplitudes: List<Int>,
+)
+
 class AudioRecorderHelper(
         private val scope: CoroutineScope,
         private val context: Context,
@@ -41,16 +47,21 @@ class AudioRecorderHelper(
 
     fun stopRecording(onRecorderStop: OnRecorderStop? = null) {
         scope.launch(recorderDispatcher) {
-            currentRecorder?.stopRecording()
             val duration = currentDuration
+            val amplitudes = currentAmplitudes
+            val file = audioFile
+            currentRecorder?.stopRecording()
             var isTooShort = false
             if (duration < 1) {
                 audioFile?.delete()
+                audioFile = null
                 isTooShort = true
+            } else {
+                audioFile = null
             }
             audioFocusHelper.abandonCallAudioFocusCompat()
             withContext(Dispatchers.Main) {
-                onRecorderStop?.onStop(isTooShort, audioFile, duration, currentAmplitudes)
+                onRecorderStop?.onStop(isTooShort, file, duration, amplitudes)
             }
         }
     }
@@ -59,6 +70,7 @@ class AudioRecorderHelper(
         scope.launch(recorderDispatcher) {
             currentRecorder?.stopRecording()
             audioFile?.delete()
+            audioFile = null
             audioFocusHelper.abandonCallAudioFocusCompat()
             withContext(Dispatchers.Main) {
                 onRecorderCancel?.onCancel()
@@ -66,11 +78,20 @@ class AudioRecorderHelper(
         }
     }
 
-    val currentAmplitudes: Array<Int>
+    private val currentAmplitudes: Array<Int>
         get() = currentRecorder?.getRecordingAmplitudes() ?: arrayOf(0)
 
-    val currentDuration: Int
+    private val currentDuration: Int
         get() = currentRecorder?.getRecordingDuration() ?: 0
+
+    fun getAudioRecordData(): AudioRecordData? {
+        val file = audioFile ?: return null
+        val duration = currentDuration
+        if (duration < 1) {
+            return null
+        }
+        return AudioRecordData(file, duration, currentAmplitudes.toList())
+    }
 
     fun interface OnRecorderStart {
         fun onStart(started: Boolean)

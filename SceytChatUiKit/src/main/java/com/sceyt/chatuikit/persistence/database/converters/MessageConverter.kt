@@ -70,4 +70,14 @@ class MessageConverter {
         val type = object : TypeToken<List<BodyAttribute>>() {}.type
         return gson.toJson(obj, type)
     }
+
+    @TypeConverter
+    fun fromIntList(value: List<Int>?): String? {
+        return value?.joinToString(",")
+    }
+
+    @TypeConverter
+    fun toIntList(value: String?): List<Int>? {
+        return value?.split(",")?.mapNotNull { it.toIntOrNull() }
+    }
 }
