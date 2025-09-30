@@ -1,9 +1,11 @@
 package com.sceyt.chatuikit.presentation.components.channel.input.listeners.action
 
 import android.text.Editable
+import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.media.audio.AudioRecordData
 import com.sceyt.chatuikit.presentation.components.channel.input.data.InputUserAction
 import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
@@ -43,9 +45,33 @@ open class InputActionsListenerImpl : InputActionsListener.InputActionListeners 
         channelEventListener?.sendChannelEvent(state)
     }
 
-    override fun updateDraftMessage(text: Editable?, mentionUserIds: List<Mention>, styling: List<BodyStyleRange>?, replyOrEditMessage: SceytMessage?, isReply: Boolean) {
-        defaultListeners?.updateDraftMessage(text, mentionUserIds, styling, replyOrEditMessage, isReply)
-        updateDraftMessageListener?.updateDraftMessage(text, mentionUserIds, styling, replyOrEditMessage, isReply)
+    override fun updateDraftMessage(
+            text: Editable?,
+            attachments: List<Attachment>,
+            audioRecordData: AudioRecordData?,
+            mentionUserIds: List<Mention>,
+            styling: List<BodyStyleRange>?,
+            replyOrEditMessage: SceytMessage?,
+            isReply: Boolean,
+    ) {
+        defaultListeners?.updateDraftMessage(
+            text = text,
+            attachments = attachments,
+            audioRecordData = audioRecordData,
+            mentionUserIds = mentionUserIds,
+            styling = styling,
+            replyOrEditMessage = replyOrEditMessage,
+            isReply = isReply
+        )
+        updateDraftMessageListener?.updateDraftMessage(
+            text = text,
+            attachments = attachments,
+            audioRecordData = audioRecordData,
+            mentionUserIds = mentionUserIds,
+            styling = styling,
+            replyOrEditMessage = replyOrEditMessage,
+            isReply = isReply
+        )
     }
 
     fun setListener(listener: InputActionsListener) {
@@ -68,7 +94,7 @@ open class InputActionsListenerImpl : InputActionsListener.InputActionListeners 
     }
 
     internal fun withDefaultListeners(
-            listener: InputActionsListener.InputActionListeners
+            listener: InputActionsListener.InputActionListeners,
     ): InputActionsListenerImpl {
         defaultListeners = listener
         return this

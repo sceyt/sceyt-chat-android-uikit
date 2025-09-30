@@ -14,6 +14,7 @@ import com.sceyt.chatuikit.formatters.attributes.ChannelItemSubtitleFormatterAtt
 import com.sceyt.chatuikit.formatters.attributes.DraftMessageBodyFormatterAttributes
 import com.sceyt.chatuikit.formatters.attributes.MessageBodyFormatterAttributes
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChatReactionMessagesCache
+import com.sceyt.chatuikit.persistence.mappers.toSceytAttachment
 import com.sceyt.chatuikit.persistence.mappers.toSceytReaction
 
 open class DefaultChannelListSubtitleFormatter : Formatter<ChannelItemSubtitleFormatterAttributes> {
@@ -107,25 +108,38 @@ open class DefaultChannelListSubtitleFormatter : Formatter<ChannelItemSubtitleFo
 
     open fun checkHasDraftMessage(
             context: Context,
-            from: ChannelItemSubtitleFormatterAttributes,
+            attributes: ChannelItemSubtitleFormatterAttributes,
     ): Pair<Boolean, CharSequence> {
-        val channel = from.channel
-        val style = from.channelItemStyle
+        val channel = attributes.channel
+        val style = attributes.channelItemStyle
         val draftMessage = channel.draftMessage
         return if (draftMessage != null) {
             val draft = "${context.getString(R.string.sceyt_draft)}:".toSpannable()
             style.draftPrefixTextStyle.apply(context, draft)
 
+            val formattedBody = style.draftMessageBodyFormatter.format(context, DraftMessageBodyFormatterAttributes(
+                message = draftMessage,
+                mentionTextStyle = style.mentionTextStyle
+            ))
+
+            if (formattedBody.isBlank()) {
+                return true to draft.removeSuffix(":").toSpannable()
+            }
+
+            val attachment = draftMessage.voiceAttachment?.toSceytAttachment()
+                    ?: draftMessage.attachments?.singleOrNull()?.toSceytAttachment()
+
+            val attachmentIcon = attachment?.let {
+                style.attachmentIconProvider.provide(context, it)
+            }
+
             val body = buildSpannedString {
                 append(draft)
                 append(" ")
-                append(style.draftMessageBodyFormatter.format(context, DraftMessageBodyFormatterAttributes(
-                    message = draftMessage,
-                    mentionTextStyle = style.mentionTextStyle)
-                ))
+                append(attachmentIcon.toSpannableString())
+                append(formattedBody)
             }
-            return true to body
-
+            true to body
         } else false to ""
     }
 }
