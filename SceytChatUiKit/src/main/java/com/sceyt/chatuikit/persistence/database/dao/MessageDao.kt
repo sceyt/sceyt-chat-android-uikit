@@ -17,6 +17,7 @@ import com.sceyt.chatuikit.extensions.roundUp
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.ATTACHMENT_PAYLOAD_TABLE
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.ATTACHMENT_TABLE
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.AUTO_DELETE_MESSAGES_TABLE
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.LOAD_RANGE_TABLE
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.MESSAGE_TABLE
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.REACTION_TOTAL_TABLE
@@ -420,6 +421,10 @@ internal abstract class MessageDao {
 
     @Query("select count(*) from $MESSAGE_TABLE where channelId = :channelId")
     abstract fun getMessagesCountAsFlow(channelId: Long): Flow<Long?>
+
+    @Query("select messageTid from $AUTO_DELETE_MESSAGES_TABLE" +
+            " where channelId = :channelId and autoDeleteAt <= :localTime")
+    abstract suspend fun getOutdatedMessageTIds(channelId: Long, localTime: Long): List<Long>
 
     @Query("select exists(select * from $MESSAGE_TABLE where message_id =:messageId)")
     abstract suspend fun existsMessageById(messageId: Long): Boolean

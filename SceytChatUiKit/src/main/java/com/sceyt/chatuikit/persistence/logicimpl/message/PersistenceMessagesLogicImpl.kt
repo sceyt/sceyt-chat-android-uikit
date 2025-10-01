@@ -46,7 +46,6 @@ import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.notifications.NotificationType
 import com.sceyt.chatuikit.persistence.database.dao.AttachmentDao
-import com.sceyt.chatuikit.persistence.database.dao.AutoDeleteMessageDao
 import com.sceyt.chatuikit.persistence.database.dao.LoadRangeDao
 import com.sceyt.chatuikit.persistence.database.dao.MessageDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingMarkerDao
@@ -106,7 +105,6 @@ import org.koin.core.component.inject
 internal class PersistenceMessagesLogicImpl(
         private val context: Context,
         private val messageDao: MessageDao,
-        private val autoDeleteMessageDao: AutoDeleteMessageDao,
         private val rangeDao: LoadRangeDao,
         private val attachmentDao: AttachmentDao,
         private val pendingMarkerDao: PendingMarkerDao,
@@ -1083,14 +1081,13 @@ internal class PersistenceMessagesLogicImpl(
     }
 
     private suspend fun clearOutdatedMessages(channelId: Long) {
-        val outdatedMessages = autoDeleteMessageDao.getOutdatedMessages(
+        val outdatedMessageTIds = messageDao.getOutdatedMessageTIds(
             channelId = channelId,
             localTime = System.currentTimeMillis()
-        ).takeIf { it.isNotEmpty() } ?: return
-        messageDao.deleteMessagesByTid(outdatedMessages.map { message -> message.messageTid })
-        channelCache.messagesDeletedWithAutoDelete(channelId, outdatedMessages.associate {
-            it.messageTid to it.messageTid
-        })
+        ).ifEmpty { return }
+
+        messageDao.deleteMessagesByTid(outdatedMessageTIds)
+        channelCache.messagesDeletedWithAutoDelete(channelId, outdatedMessageTIds)
     }
 
     private suspend fun saveMessagesToDb(
