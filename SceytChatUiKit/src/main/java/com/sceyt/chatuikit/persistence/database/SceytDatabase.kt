@@ -8,7 +8,6 @@ import com.sceyt.chatuikit.persistence.database.converters.ChannelConverter
 import com.sceyt.chatuikit.persistence.database.converters.ListStringConverter
 import com.sceyt.chatuikit.persistence.database.converters.MessageConverter
 import com.sceyt.chatuikit.persistence.database.dao.AttachmentDao
-import com.sceyt.chatuikit.persistence.database.dao.AutoDeleteMessageDao
 import com.sceyt.chatuikit.persistence.database.dao.ChannelDao
 import com.sceyt.chatuikit.persistence.database.dao.ChatUserReactionDao
 import com.sceyt.chatuikit.persistence.database.dao.DraftMessageDao
@@ -114,5 +113,4 @@ internal abstract class SceytDatabase : RoomDatabase() {
     abstract fun linkDao(): LinkDao
     abstract fun loadRangeDao(): LoadRangeDao
     abstract fun markerDao(): MarkerDao
-    abstract fun autoDeleteMessageDao(): AutoDeleteMessageDao
 }

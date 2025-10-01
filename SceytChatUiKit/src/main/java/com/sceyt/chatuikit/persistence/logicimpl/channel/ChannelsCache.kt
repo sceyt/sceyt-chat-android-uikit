@@ -285,7 +285,8 @@ class ChannelsCache {
         }
     }
 
-    fun messagesDeletedWithAutoDelete(channelId: Long, messageTIds: Map<Long, Long>) {
+    fun messagesDeletedWithAutoDelete(channelId: Long, messageTIds: List<Long>) {
+        val messageTIds = messageTIds.associateWith { true }
         cachedData.forEachKeyValue { _, value ->
             value[channelId]?.let { channel ->
                 channel.lastMessage?.tid?.let {
