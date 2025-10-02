@@ -93,7 +93,7 @@ open class ChannelInfoOptionsFragment : Fragment(), ChannelUpdateListener, Chann
                 members.text = style.membersTitleText
             }
             groupChannelMembers.isVisible = channel.haveGetMembersPermission()
-            groupChannelAdmins.isVisible = isOwnerOrAdmin
+            groupChannelAdmins.isVisible = isOwnerOrAdmin && channel.haveGetMembersPermission()
         }
     }
 
