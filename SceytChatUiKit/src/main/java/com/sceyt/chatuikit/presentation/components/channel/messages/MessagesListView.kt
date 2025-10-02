@@ -326,7 +326,12 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     private fun showMessageActionsPopup(view: View, message: SceytMessage) {
-        val popup = MessageActionsPopupMenu(ContextThemeWrapper(context, R.style.SceytPopupMenuStyle), view, message)
+        val popup = MessageActionsPopupMenu(
+            context = ContextThemeWrapper(context, R.style.SceytPopupMenuStyle),
+            anchor = view,
+            message = message,
+            channel = channel
+        )
         popup.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.sceyt_edit_message -> messageActionsViewClickListeners.onEditMessageClick(message)
@@ -562,7 +567,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             messages.forEachIndexed { index, item ->
                 if (item is MessageItem && item.message.parentMessage?.tid == data.messageTid) {
                     val message = item.message
-                    val updatedItem = item.copy(message = message.copy(parentMessage = message.parentMessage?.copy(
+                    val updatedItem = item.copy(message = message.copy(parentMessage = message.parentMessage.copy(
                         attachments = item.message.parentMessage.attachments?.map { attachment ->
                             if (attachment.url == data.url) {
                                 attachment.copy(filePath = data.filePath)

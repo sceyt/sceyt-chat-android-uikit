@@ -15,7 +15,7 @@ import com.sceyt.chatuikit.databinding.SceytDialogMembrerActionsBinding
 import com.sceyt.chatuikit.persistence.extensions.haveChangeMemberRolePermission
 import com.sceyt.chatuikit.persistence.extensions.haveKickAndBlockMemberPermission
 import com.sceyt.chatuikit.persistence.extensions.haveKickMemberPermission
-import com.sceyt.chatuikit.styles.DialogStyle
+import com.sceyt.chatuikit.styles.common.DialogStyle
 
 class MemberActionsDialog(
         context: Context,
