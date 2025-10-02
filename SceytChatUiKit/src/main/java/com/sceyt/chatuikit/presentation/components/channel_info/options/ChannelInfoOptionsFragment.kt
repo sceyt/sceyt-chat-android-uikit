@@ -121,7 +121,8 @@ open class ChannelInfoOptionsFragment : Fragment(), ChannelUpdateListener, Chann
 
         borderBetweenMembersAndAdmins.dividerColor = infoStyle.borderColor
         borderBetweenAdminsAndSearch.dividerColor = infoStyle.borderColor
-        space.layoutParams.height = infoStyle.spaceBetweenSections
+        divider.layoutParams.height = infoStyle.spaceBetweenSections
+        divider.setBackgroundColor(infoStyle.dividerColor)
     }
 
     companion object {

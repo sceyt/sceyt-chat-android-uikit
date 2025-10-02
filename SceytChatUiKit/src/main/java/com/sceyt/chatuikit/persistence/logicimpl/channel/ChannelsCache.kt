@@ -17,9 +17,6 @@ class ChannelsCache {
     private var cachedData = hashMapOf<ChannelListConfig, HashMap<Long, SceytChannel>>()
     private var pendingChannelsData = hashMapOf<Long, SceytChannel>()
 
-    internal val initialized: Boolean
-        get() = cachedData.isNotEmpty()
-
     /** fromPendingToRealChannelsData is used to store created pending channel ids and their real channel ids,
      * to escape creating channel every time when sending message*/
     private var fromPendingToRealChannelsData = hashMapOf<Long, Long>()
@@ -27,7 +24,7 @@ class ChannelsCache {
 
     companion object {
         private val channelUpdatedFlow_ = MutableSharedFlow<ChannelUpdateData>(
-            extraBufferCapacity = 5,
+            extraBufferCapacity = 50,
             onBufferOverflow = BufferOverflow.DROP_OLDEST
         )
         val channelUpdatedFlow = channelUpdatedFlow_.asSharedFlow()
@@ -63,7 +60,7 @@ class ChannelsCache {
         val channelDraftMessageChangesFlow = channelDraftMessageChangesFlow_.asSharedFlow()
 
         private val newChannelsOnSync_ = MutableSharedFlow<Pair<ChannelListConfig, List<SceytChannel>>>(
-            extraBufferCapacity = 5,
+            extraBufferCapacity = 50,
             onBufferOverflow = BufferOverflow.DROP_OLDEST
         )
         val newChannelsOnSync = newChannelsOnSync_.asSharedFlow()
@@ -141,12 +138,16 @@ class ChannelsCache {
         }
     }
 
-    fun upsertChannel(vararg channel: SceytChannel) {
+    fun upsertChannel(channel: SceytChannel) {
+        upsertChannels(listOf(channel))
+    }
+
+    fun upsertChannels(channels: List<SceytChannel>) {
         synchronized(lock) {
-            channel.forEach {
-                cachedData.keys.filter { config -> config.isValidForConfig(it) }.forEach { config ->
-                    upsertChannelImpl(config, it)
-                }
+            channels.forEach { channel ->
+                cachedData.keys
+                    .filter { it.isValidForConfig(channel) }
+                    .forEach { upsertChannelImpl(it, channel) }
             }
         }
     }
@@ -284,7 +285,8 @@ class ChannelsCache {
         }
     }
 
-    fun messagesDeletedWithAutoDelete(channelId: Long, messageTIds: Map<Long, Long>) {
+    fun messagesDeletedWithAutoDelete(channelId: Long, messageTIds: List<Long>) {
+        val messageTIds = messageTIds.associateWith { true }
         cachedData.forEachKeyValue { _, value ->
             value[channelId]?.let { channel ->
                 channel.lastMessage?.tid?.let {
@@ -358,23 +360,6 @@ class ChannelsCache {
             fromPendingToRealChannelsData[pendingChannelId] = newChannel.id
             // Emitting to flow
             pendingChannelCreatedFlow_.tryEmit(Pair(pendingChannelId, newChannel))
-        }
-    }
-
-    fun updateMembersCount(channel: SceytChannel) {
-        var found = false
-        synchronized(lock) {
-            cachedData.forEachKeyValue { key, value ->
-                value[channel.id]?.let {
-                    val updatedChannel = it.copy(memberCount = channel.memberCount)
-                    val diff = it.diff(updatedChannel)
-                    channelUpdated(key, updatedChannel, diff, false, ChannelUpdatedType.Members)
-                    found = true
-                }
-            }
-        }
-        if (!found) {
-            upsertChannel(channel)
         }
     }
 

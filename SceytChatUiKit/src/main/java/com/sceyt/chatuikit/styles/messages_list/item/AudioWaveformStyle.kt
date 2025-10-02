@@ -8,8 +8,8 @@ import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
 import com.sceyt.chatuikit.styles.StyleCustomizer
 
 data class AudioWaveformStyle(
-        @ColorInt val trackColor: Int,
-        @ColorInt val progressColor: Int,
+        @param:ColorInt val trackColor: Int,
+        @param:ColorInt val progressColor: Int,
 ) {
     companion object {
         var styleCustomizer = StyleCustomizer<AudioWaveformStyle> { _, style -> style }

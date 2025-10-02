@@ -1,8 +1,8 @@
 package com.sceyt.chatuikit.services
 
-import com.sceyt.chat.models.user.Presence
 import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.data.models.messages.SceytPresence
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.getPresentableName
 import com.sceyt.chatuikit.extensions.isAppOnForeground
@@ -21,9 +21,11 @@ import kotlin.concurrent.timer
 object SceytPresenceChecker : SceytKoinComponent {
     private val userInteractor: UserInteractor by inject()
 
-    private val onPresenceCheckUsersFlow_: MutableSharedFlow<List<PresenceUser>> = MutableSharedFlow(
-        extraBufferCapacity = 5,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST)
+    private val onPresenceCheckUsersFlow_: MutableSharedFlow<List<PresenceUser>> =
+        MutableSharedFlow(
+            extraBufferCapacity = 5,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST
+        )
     val onPresenceCheckUsersFlow = onPresenceCheckUsersFlow_.asSharedFlow()
 
     private const val presenceCheckCapacity = 12
@@ -89,7 +91,7 @@ object SceytPresenceChecker : SceytKoinComponent {
 
     data class PresenceUser(val user: SceytUser) {
 
-        private fun arePresencesEquals(one: Presence?, two: Presence?): Boolean {
+        private fun arePresencesEquals(one: SceytPresence?, two: SceytPresence?): Boolean {
             return one?.status == two?.status && one?.state == two?.state && one?.lastActiveAt == two?.lastActiveAt
         }
 

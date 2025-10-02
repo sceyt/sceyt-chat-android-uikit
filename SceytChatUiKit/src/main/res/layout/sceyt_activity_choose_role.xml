@@ -4,8 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    tools:context=".presentation.components.role.ChangeRoleActivity"
-    android:background="@color/sceyt_color_background">
+    android:background="@color/sceyt_color_background"
+    tools:context=".presentation.components.role.ChangeRoleActivity">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/layoutToolbar"

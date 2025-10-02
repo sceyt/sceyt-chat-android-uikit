@@ -46,11 +46,14 @@ class EmojiPickerBottomSheetFragment : BottomSheetDialogFragment() {
             },
             onEmojiBackspaceClickListener = null,
             editText = null,
-            theming = EmojiTheming(backgroundColor = Color.TRANSPARENT,
+            theming = EmojiTheming(
+                backgroundColor = Color.TRANSPARENT,
                 primaryColor = requireContext().getCompatColor(SceytChatUIKit.theme.colors.iconSecondaryColor),
                 secondaryColor = requireContext().getCompatColor(SceytChatUIKit.theme.colors.accentColor),
                 dividerColor = requireContext().getCompatColor(R.color.sceyt_color_border),
-                Color.BLACK, Color.BLACK),
+                textColor = Color.BLACK,
+                textSecondaryColor = Color.BLACK
+            ),
             searchEmoji = NoSearchEmoji
         )
     }

@@ -3,7 +3,7 @@ package com.sceyt.chatuikit.presentation.components.channel_list.search.listener
 import android.view.View
 import com.sceyt.chatuikit.presentation.components.channel_list.search.SearchChannelInputView
 
-class SearchInputClickListenersImpl : SearchInputClickListeners.ClickListeners {
+open class SearchInputClickListenersImpl : SearchInputClickListeners.ClickListeners {
     @Suppress("unused")
     constructor()
 

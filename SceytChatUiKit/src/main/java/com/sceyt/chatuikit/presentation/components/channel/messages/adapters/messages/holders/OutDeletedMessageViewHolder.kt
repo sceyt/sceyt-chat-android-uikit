@@ -1,7 +1,6 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders
 
 import com.sceyt.chatuikit.databinding.SceytItemOutDeletedMessageBinding
-import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMessageViewHolder
@@ -38,7 +37,7 @@ class OutDeletedMessageViewHolder(
         get() = false
 
     private fun SceytItemOutDeletedMessageBinding.setMessageItemStyle() {
-        layoutDetails.setBackgroundTint(style.outgoingBubbleColor)
+        style.outgoingBubbleBackgroundStyle.apply(layoutDetails)
         style.deletedMessageTextStyle.apply(messageBody)
         style.selectionCheckboxStyle.apply(selectView)
         messageBody.text = style.deletedStateText

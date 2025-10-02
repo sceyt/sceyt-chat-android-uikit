@@ -6,17 +6,17 @@ import androidx.core.view.isVisible
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.data.models.channels.DraftMessage
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytUser
-import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.getFileSize
 import com.sceyt.chatuikit.formatters.Formatter
-import com.sceyt.chatuikit.logger.SceytLog
+import com.sceyt.chatuikit.persistence.mappers.toSceytAttachment
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.MessageBodyStyleHelper.buildWithAttributes
 import com.sceyt.chatuikit.presentation.custom_views.DecoratedTextView
-import com.sceyt.chatuikit.styles.ChannelItemStyle
+import com.sceyt.chatuikit.styles.channel.ChannelItemStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 import java.io.File
@@ -26,7 +26,7 @@ fun SceytMessage?.setChannelMessageDateAndStatusIcon(
         itemStyle: ChannelItemStyle,
         dateText: CharSequence,
         edited: Boolean,
-        shouldShowStatus: Boolean
+        shouldShowStatus: Boolean,
 ) {
     if (this?.deliveryStatus == null || state == MessageState.Deleted || incoming || !shouldShowStatus) {
         decoratedTextView.appearanceBuilder()
@@ -44,7 +44,6 @@ fun SceytMessage?.setChannelMessageDateAndStatusIcon(
         DeliveryStatus.Sent -> icons.sentIcon
         DeliveryStatus.Received -> icons.receivedIcon
         DeliveryStatus.Displayed -> icons.displayedIcon
-        else -> null
     }
     icon?.let {
         decoratedTextView.appearanceBuilder()
@@ -62,7 +61,7 @@ fun SceytMessage?.setChatMessageDateAndStatusIcon(
         decoratedTextView: DecoratedTextView,
         itemStyle: MessageItemStyle,
         dateText: CharSequence,
-        edited: Boolean
+        edited: Boolean,
 ) {
     if (this?.deliveryStatus == null || state == MessageState.Deleted || incoming) {
         decoratedTextView.appearanceBuilder()
@@ -83,10 +82,6 @@ fun SceytMessage?.setChatMessageDateAndStatusIcon(
         DeliveryStatus.Sent -> icons.sentIcon
         DeliveryStatus.Received -> icons.receivedIcon
         DeliveryStatus.Displayed -> icons.displayedIcon
-        else -> {
-            SceytLog.e(TAG, "Unknown delivery status: $deliveryStatus for message: $id, tid: $tid, body: $body")
-            null
-        }
     }
     icon?.let {
         decoratedTextView.appearanceBuilder()
@@ -129,6 +124,37 @@ fun SceytMessage.getFormattedBodyWithAttachments(
     return SpannableString(body)
 }
 
+fun DraftMessage.getFormattedBodyWithAttachments(
+        context: Context,
+        mentionTextStyle: TextStyle,
+        attachmentNameFormatter: Formatter<SceytAttachment>,
+        mentionUserNameFormatter: Formatter<SceytUser>,
+        mentionClickListener: ((String) -> Unit)?,
+): SpannableString {
+    val body = when {
+        voiceAttachment != null -> {
+            body.orEmpty().ifEmpty { context.getString(R.string.sceyt_voice) }
+        }
+
+        attachments.isNullOrEmpty() || attachments.firstOrNull()?.type == AttachmentTypeEnum.Link -> {
+            buildWithAttributes(context, mentionTextStyle, mentionUserNameFormatter, mentionClickListener)
+        }
+
+        attachments.size == 1 -> {
+            body.orEmpty().ifEmpty {
+                attachmentNameFormatter.format(context, attachments[0].toSceytAttachment())
+            }
+        }
+
+        else -> {
+            body.orEmpty().ifEmpty {
+                context.getString(R.string.sceyt_files)
+            }
+        }
+    }
+    return SpannableString(body)
+}
+
 fun SceytAttachment?.getShowName(context: Context): String {
     this ?: return ""
     return when (type) {
@@ -140,10 +166,11 @@ fun SceytAttachment?.getShowName(context: Context): String {
     }
 }
 
-fun SceytAttachment?.checkLoadedFileIsCorrect(loadedFile: File): File? {
+fun SceytAttachment?.isAttachmentExistAndFullyLoaded(loadedFile: File): File? {
     if (this == null) return null
 
-    if (loadedFile.exists() && getFileSize(loadedFile.path) == fileSize)
+    val loadedFileSize by lazy { getFileSize(loadedFile.path) }
+    if (loadedFile.exists() && loadedFileSize != 0L && loadedFileSize == fileSize)
         return loadedFile
 
     return null

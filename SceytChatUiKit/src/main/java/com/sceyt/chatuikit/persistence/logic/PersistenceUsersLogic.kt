@@ -19,7 +19,7 @@ interface PersistenceUsersLogic {
             metadataKeys: List<String>, metadataValue: String
     ): List<SceytUser>
 
-    suspend fun getCurrentUser(): SceytUser?
+    suspend fun getCurrentUser(refreshFromServer: Boolean): SceytUser?
     fun getCurrentUserId(): String?
     fun getCurrentUserAsFlow(): Flow<SceytUser>
     suspend fun uploadAvatar(avatarUrl: String): SceytResponse<String>

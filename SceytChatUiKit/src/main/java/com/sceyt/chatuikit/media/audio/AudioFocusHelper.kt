@@ -1,14 +1,17 @@
 package com.sceyt.chatuikit.media.audio
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.media.AudioManager
-import androidx.media.AudioFocusRequestCompat
-import androidx.media.AudioManagerCompat
+import androidx.media3.common.audio.AudioFocusRequestCompat
+import androidx.media3.common.audio.AudioManagerCompat
 
+@SuppressLint("UnsafeOptInUsageError")
 class AudioFocusHelper(private val context: Context) {
     private val audioManager: AudioManager by lazy {
         context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
     }
+    private var listener: ((Boolean) -> Unit)? = null
 
     var hasFocus = false
         private set
@@ -16,6 +19,7 @@ class AudioFocusHelper(private val context: Context) {
     private val audioFocusRequestCompat = AudioFocusRequestCompat.Builder(AudioManagerCompat.AUDIOFOCUS_GAIN_TRANSIENT)
         .setOnAudioFocusChangeListener { focusChange ->
             hasFocus = focusChange == AudioManager.AUDIOFOCUS_GAIN_TRANSIENT
+            listener?.invoke(hasFocus)
         }
         .build()
 
@@ -30,5 +34,9 @@ class AudioFocusHelper(private val context: Context) {
     fun abandonCallAudioFocusCompat() {
         val result = AudioManagerCompat.abandonAudioFocusRequest(audioManager, audioFocusRequestCompat)
         hasFocus = (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED).not()
+    }
+
+    fun setListeners(onAudioFocusChanged: (Boolean) -> Unit) {
+        listener = onAudioFocusChanged
     }
 }

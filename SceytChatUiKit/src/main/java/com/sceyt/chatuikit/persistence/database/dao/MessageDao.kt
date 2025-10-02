@@ -14,24 +14,25 @@ import com.sceyt.chat.models.message.DeliveryStatus.Sent
 import com.sceyt.chatuikit.data.models.LoadNearData
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.extensions.roundUp
+import com.sceyt.chatuikit.logger.SceytLog
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.ATTACHMENT_PAYLOAD_TABLE
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.ATTACHMENT_TABLE
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.AUTO_DELETE_MESSAGES_TABLE
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.LOAD_RANGE_TABLE
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.MESSAGE_TABLE
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.REACTION_TOTAL_TABLE
 import com.sceyt.chatuikit.persistence.database.entity.link.LinkDetailsEntity
-import com.sceyt.chatuikit.persistence.database.entity.messages.ATTACHMENT_PAYLOAD_TABLE
-import com.sceyt.chatuikit.persistence.database.entity.messages.ATTACHMENT_TABLE
 import com.sceyt.chatuikit.persistence.database.entity.messages.AttachmentEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.AttachmentPayLoadEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.AutoDeleteMessageEntity
-import com.sceyt.chatuikit.persistence.database.entity.messages.LOAD_RANGE_TABLE
-import com.sceyt.chatuikit.persistence.database.entity.messages.MESSAGE_TABLE
 import com.sceyt.chatuikit.persistence.database.entity.messages.MarkerEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.MentionUserMessageLinkEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageDb
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageIdAndTid
-import com.sceyt.chatuikit.persistence.database.entity.messages.REACTION_TOTAL_TABLE
 import com.sceyt.chatuikit.persistence.database.entity.messages.ReactionEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.ReactionTotalEntity
 import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingMarkerEntity
-import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.persistence.mappers.toAttachmentPayLoad
 import kotlinx.coroutines.flow.Flow
 import kotlin.math.max
@@ -40,34 +41,39 @@ import kotlin.math.max
 internal abstract class MessageDao {
 
     @Transaction
-    open suspend fun upsertMessage(messageDb: MessageDb) {
-        upsertMessageEntity(messageDb.messageEntity)
+    open suspend fun upsertMessage(messageDb: MessageDb): Boolean {
+        val forceUpdated = upsertMessageEntity(messageDb.messageEntity)
         insertMessagesPayloads(listOf(messageDb))
+        return forceUpdated
     }
 
     @Transaction
-    open suspend fun upsertMessages(messagesDb: List<MessageDb>) {
-        if (messagesDb.isEmpty()) return
-        upsertMessageEntities(messagesDb.map { it.messageEntity })
+    open suspend fun upsertMessages(messagesDb: List<MessageDb>): List<MessageEntity> {
+        if (messagesDb.isEmpty()) return emptyList()
+        val forceUpdatedList = upsertMessageEntities(messagesDb.map { it.messageEntity })
         insertMessagesPayloads(messagesDb)
+        return forceUpdatedList
     }
 
     @Transaction
     open suspend fun insertMessagesIgnored(messagesDb: List<MessageDb>) {
         if (messagesDb.isEmpty()) return
 
-        val entities = messagesDb.map { it.messageEntity }
-        val rowIds = insertMany(entities)
-        val insertedMessages = rowIds.mapIndexedNotNull { index, rowId ->
-            if (rowId != -1L) messagesDb.firstOrNull { it.messageEntity.tid == entities[index].tid } else null
-        }
+        val messageEntities = messagesDb.map { it.messageEntity }
+        val rowIds = insertManyIgnored(messageEntities)
 
-        insertMessagesPayloads(insertedMessages)
+        val insertedMessages = messagesDb
+            .zip(rowIds)
+            .mapNotNull { (msgDb, rowId) -> if (rowId != -1L) msgDb else null }
+
+        if (insertedMessages.isNotEmpty()) {
+            insertMessagesPayloads(insertedMessages)
+        }
     }
 
     @Transaction
     open suspend fun insertMessageIgnored(messagesDb: MessageDb) {
-        val rowId = insert(messagesDb.messageEntity)
+        val rowId = insertIgnored(messagesDb.messageEntity)
         if (rowId != -1L)
             insertMessagesPayloads(listOf(messagesDb))
     }
@@ -106,41 +112,76 @@ internal abstract class MessageDao {
         insertAutoDeleteMessage(*messages.toTypedArray())
     }
 
-    private suspend fun upsertMessageEntity(messageEntity: MessageEntity) {
-        val rowId = insert(messageEntity)
+    /**
+     * Upsert message entity.
+     * If message exist then update it.
+     * If message not exist then insert it.
+     * @param messageEntity message entity to upsert
+     * @return true if message force inserted
+     * */
+    private suspend fun upsertMessageEntity(messageEntity: MessageEntity): Boolean {
+        val rowId = insertIgnored(messageEntity)
         if (rowId == -1L) {
-            updateMessage(messageEntity)
+            val updated = updateMessageIgnored(messageEntity) == 1
+            if (!updated) {
+                insert(messageEntity)
+                SceytLog.d(TAG, "Upsert conflict: message (ID=${messageEntity.id}) failed to update, force inserted.")
+                return true
+            }
         }
+        return false
     }
 
-    private suspend fun upsertMessageEntities(messageEntities: List<MessageEntity>) {
-        val rowIds = insertMany(messageEntities)
+    /**
+     * Upsert messages entities.
+     * If message exist then update it.
+     * If message not exist then insert it.
+     * @param messageEntities list of message entities
+     * @return list of force inserted message entities
+     * */
+    private suspend fun upsertMessageEntities(
+            messageEntities: List<MessageEntity>,
+    ): List<MessageEntity> {
+        val rowIds = insertManyIgnored(messageEntities)
         val entitiesToUpdate = rowIds.mapIndexedNotNull { index, rowId ->
             if (rowId == -1L) messageEntities[index] else null
         }
-        updateMessages(entitiesToUpdate)
+        val count = updateMessagesIgnored(entitiesToUpdate)
+        if (count != entitiesToUpdate.size) {
+            insertMany(entitiesToUpdate)
+            SceytLog.d(TAG, "Upsert conflict detected: ${entitiesToUpdate.size - count} messages failed to update. " +
+                    "Force inserted ${entitiesToUpdate.size} messages.")
+            return entitiesToUpdate
+        }
+        return emptyList()
     }
 
     @Transaction
     open suspend fun upsertMessageEntitiesWithTransaction(messageEntities: List<MessageEntity>) {
-        val rowIds = insertMany(messageEntities)
+        val rowIds = insertManyIgnored(messageEntities)
         val entitiesToUpdate = rowIds.mapIndexedNotNull { index, rowId ->
             if (rowId == -1L) messageEntities[index] else null
         }
-        updateMessages(entitiesToUpdate)
+        updateMessagesIgnored(entitiesToUpdate)
     }
 
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     protected abstract suspend fun insert(messages: MessageEntity): Long
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
+    protected abstract suspend fun insertIgnored(messages: MessageEntity): Long
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    protected abstract suspend fun insertManyIgnored(messages: List<MessageEntity>): List<Long>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     protected abstract suspend fun insertMany(messages: List<MessageEntity>): List<Long>
 
-    @Update(onConflict = OnConflictStrategy.REPLACE)
-    abstract suspend fun updateMessage(messageEntity: MessageEntity)
+    @Update(onConflict = OnConflictStrategy.IGNORE)
+    abstract suspend fun updateMessageIgnored(messageEntity: MessageEntity): Int
 
-    @Update(onConflict = OnConflictStrategy.REPLACE)
-    abstract suspend fun updateMessages(messageEntity: List<MessageEntity>)
+    @Update(onConflict = OnConflictStrategy.IGNORE)
+    abstract suspend fun updateMessagesIgnored(messageEntity: List<MessageEntity>): Int
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     protected abstract suspend fun insertAttachments(attachments: List<AttachmentEntity>)
@@ -249,84 +290,84 @@ internal abstract class MessageDao {
         insertUserMarkers(filtered)
     }
 
-    @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
+    @SuppressWarnings(RoomWarnings.QUERY_MISMATCH)
     @Transaction
     @Query("select * from $MESSAGE_TABLE as message " +
-            "join $LOAD_RANGE_TABLE as range on range.channelId = :channelId " +
-            "and range.startId <= :lastMessageId and range.endId >= :lastMessageId " +
+            "join $LOAD_RANGE_TABLE as loadRange on loadRange.channelId = :channelId " +
+            "and loadRange.startId <= :lastMessageId and loadRange.endId >= :lastMessageId " +
             "where message.channelId =:channelId and message_id <:lastMessageId " +
-            "and (message_id >= range.startId and message_id <= range.endId)" +
+            "and (message_id >= loadRange.startId and message_id <= loadRange.endId)" +
             "and not unList and deliveryStatus != $PENDING_STATUS " +
             "group by message.message_id " +
             "order by createdAt desc, tid desc limit :limit")
     abstract suspend fun getOldestThenMessages(channelId: Long, lastMessageId: Long, limit: Int): List<MessageDb>
 
-    @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
+    @SuppressWarnings(RoomWarnings.QUERY_MISMATCH)
     @Transaction
     @Query("select * from $MESSAGE_TABLE as message " +
-            "join $LOAD_RANGE_TABLE as range on range.channelId = :channelId " +
-            "and range.startId <= :lastMessageId and range.endId >= :lastMessageId " +
+            "join $LOAD_RANGE_TABLE as loadRange on loadRange.channelId = :channelId " +
+            "and loadRange.startId <= :lastMessageId and loadRange.endId >= :lastMessageId " +
             "where message.channelId =:channelId and message_id <=:lastMessageId " +
-            "and (message_id >= range.startId and message_id <= range.endId)" +
+            "and (message_id >= loadRange.startId and message_id <= loadRange.endId)" +
             "and not unList and deliveryStatus != $PENDING_STATUS " +
             "group by message.message_id " +
             "order by createdAt desc, tid desc limit :limit")
     abstract suspend fun getOldestThenMessagesInclude(channelId: Long, lastMessageId: Long, limit: Int): List<MessageDb>
 
-    @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
+    @SuppressWarnings(RoomWarnings.QUERY_MISMATCH)
     @Transaction
     @Query("select * from $MESSAGE_TABLE as message " +
-            "join $LOAD_RANGE_TABLE as range on range.channelId = :channelId " +
-            "and range.startId <= :messageId and range.endId >= :messageId " +
+            "join $LOAD_RANGE_TABLE as loadRange on loadRange.channelId = :channelId " +
+            "and loadRange.startId <= :messageId and loadRange.endId >= :messageId " +
             "where message.channelId =:channelId and message_id >:messageId " +
-            "and (message_id >= range.startId and message_id <= range.endId)" +
+            "and (message_id >= loadRange.startId and message_id <= loadRange.endId)" +
             "and not unList and deliveryStatus != $PENDING_STATUS " +
             "group by message.message_id " +
             "order by createdAt, tid limit :limit")
     abstract suspend fun getNewestThenMessage(channelId: Long, messageId: Long, limit: Int): List<MessageDb>
 
-    @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
+    @SuppressWarnings(RoomWarnings.QUERY_MISMATCH)
     @Transaction
     @Query("select * from $MESSAGE_TABLE as message " +
-            "join $LOAD_RANGE_TABLE as range on range.channelId = :channelId " +
-            "and range.startId <= :messageId and range.endId >= :messageId " +
+            "join $LOAD_RANGE_TABLE as loadRange on loadRange.channelId = :channelId " +
+            "and loadRange.startId <= :messageId and loadRange.endId >= :messageId " +
             "where message.channelId =:channelId and message_id >=:messageId " +
-            "and (message_id >= range.startId and message_id <= range.endId)" +
+            "and (message_id >= loadRange.startId and message_id <= loadRange.endId)" +
             "and not unList and deliveryStatus != $PENDING_STATUS " +
             "group by message.message_id " +
             "order by createdAt, tid limit :limit")
     abstract suspend fun getNewestThenMessageInclude(channelId: Long, messageId: Long, limit: Int): List<MessageDb>
 
     @Transaction
-    open suspend fun getNearMessages(channelId: Long, messageId: Long, limit: Int): LoadNearData<MessageDb> {
-        var newest = getNewestThenMessageInclude(channelId, messageId, limit)
-        val includesInNewest = newest.firstOrNull()?.messageEntity?.id == messageId
-
-        newest = if (includesInNewest) { // Remove first message because because it will include in oldest
-            newest.toArrayList().apply { removeAt(0) }
-        } else emptyList()
-
-        var oldest = getOldestThenMessagesInclude(channelId, messageId, limit).reversed()
+    open suspend fun getNearMessages(
+            channelId: Long,
+            messageId: Long,
+            limit: Int,
+    ): LoadNearData<MessageDb> {
+        val oldest = getOldestThenMessagesInclude(channelId, messageId, limit).reversed()
         val includesInOldest = oldest.lastOrNull()?.messageEntity?.id == messageId
 
+        // If the message not exist then return empty list
         if (!includesInOldest)
-            oldest = emptyList()
-
-        if (!includesInOldest && !includesInNewest)
             return LoadNearData(emptyList(), hasNext = false, hasPrev = false)
 
-        val newestDiff = max(limit / 2 - newest.size, 0)
+        val newest = getNewestThenMessage(channelId, messageId, limit)
+        val halfLimit = limit / 2
+
+        val newestDiff = max(halfLimit - newest.size, 0)
         val oldestDiff = max((limit.toDouble() / 2).roundUp() - oldest.size, 0)
 
-        var newMessages = newest.take(limit / 2 + oldestDiff)
-        val oldMessages = oldest.takeLast(limit / 2 + newestDiff)
+        var newMessages = newest.take(halfLimit + oldestDiff)
+        val oldMessages = oldest.takeLast(halfLimit + newestDiff)
 
-        if (oldMessages.size < limit && newMessages.size > limit / 2)
+        if (oldMessages.size < limit && newMessages.size > halfLimit)
             newMessages = newest.take(limit - oldMessages.size)
 
-        val hasPrev = oldest.size >= limit / 2
-        val hasNext = newest.size >= limit / 2
-        return LoadNearData((oldMessages + newMessages).sortedBy { it.messageEntity.createdAt }, hasNext = hasNext, hasPrev)
+        val hasPrev = oldest.size > halfLimit
+        val hasNext = newest.size > halfLimit
+
+        val data = (oldMessages + newMessages).sortedBy { it.messageEntity.createdAt }
+        return LoadNearData(data, hasNext = hasNext, hasPrev)
     }
 
     @Transaction
@@ -380,6 +421,10 @@ internal abstract class MessageDao {
 
     @Query("select count(*) from $MESSAGE_TABLE where channelId = :channelId")
     abstract fun getMessagesCountAsFlow(channelId: Long): Flow<Long?>
+
+    @Query("select messageTid from $AUTO_DELETE_MESSAGES_TABLE" +
+            " where channelId = :channelId and autoDeleteAt <= :localTime")
+    abstract suspend fun getOutdatedMessageTIds(channelId: Long, localTime: Long): List<Long>
 
     @Query("select exists(select * from $MESSAGE_TABLE where message_id =:messageId)")
     abstract suspend fun existsMessageById(messageId: Long): Boolean
@@ -460,6 +505,7 @@ internal abstract class MessageDao {
     abstract fun deleteAllReactionTotalsByMessageId(messageId: List<Long>)
 
     private companion object {
+        private const val TAG = "MessageDao"
         private const val SQLITE_MAX_VARIABLE_NUMBER: Int = 999
         private const val PENDING_STATUS = 0
     }

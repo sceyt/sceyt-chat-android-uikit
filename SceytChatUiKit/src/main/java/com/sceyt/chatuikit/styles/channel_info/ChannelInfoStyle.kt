@@ -17,8 +17,9 @@ import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 
 /**
  * Style for [ChannelInfoActivity] page.
- * @property backgroundColor - background color of the page, default value is [Colors.backgroundColorSecondary]
- * @property borderColor - border color of the page, default value is [Colors.borderColor]
+ * @property backgroundColor - background color of the page, default value is [Colors.backgroundColor]
+ * @property borderColor - border color of the borders, default value is [Colors.borderColor]
+ * @property dividerColor - border color of the dividers, default value is [Colors.backgroundColorSecondary]
  * @property spaceBetweenSections - space between sections, default value is 16dp
  * @property toolBarStyle - style for the toolbar
  * @property detailsStyle - style for the details section
@@ -33,9 +34,10 @@ import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
  * @property linkStyle - style for the link section
  * */
 data class ChannelInfoStyle(
-        @ColorInt val backgroundColor: Int,
-        @ColorInt val borderColor: Int,
-        @Px var spaceBetweenSections: Int,
+        @param:ColorInt val backgroundColor: Int,
+        @param:ColorInt val borderColor: Int,
+        @param:ColorInt val dividerColor: Int,
+        @param:Px var spaceBetweenSections: Int,
         val toolBarStyle: ChannelInfoToolBarStyle,
         val detailsStyle: ChannelInfoDetailStyle,
         val descriptionStyle: ChannelInfoDescriptionStyle,
@@ -55,12 +57,13 @@ data class ChannelInfoStyle(
 
     internal class Builder(
             private val context: Context,
-            private val attributeSet: AttributeSet?
+            private val attributeSet: AttributeSet?,
     ) {
 
         fun build(): ChannelInfoStyle {
-            val backgroundColor = context.getCompatColor(SceytChatUIKitTheme.colors.backgroundColorSecondary)
+            val backgroundColor = context.getCompatColor(SceytChatUIKitTheme.colors.backgroundColor)
             val borderColor = context.getCompatColor(SceytChatUIKitTheme.colors.borderColor)
+            val dividerColor = context.getCompatColor(SceytChatUIKitTheme.colors.backgroundColorSecondary)
             val spaceBetweenSections = dpToPx(16f)
             val toolBarStyle = ChannelInfoToolBarStyle.Builder(context, attributeSet).build()
             val detailsStyle = ChannelInfoDetailStyle.Builder(context, attributeSet).build()
@@ -77,6 +80,7 @@ data class ChannelInfoStyle(
             return ChannelInfoStyle(
                 backgroundColor = backgroundColor,
                 borderColor = borderColor,
+                dividerColor = dividerColor,
                 spaceBetweenSections = spaceBetweenSections,
                 toolBarStyle = toolBarStyle,
                 detailsStyle = detailsStyle,

@@ -12,8 +12,8 @@ import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.TextStyle
 
 data class VoiceRecorderViewStyle(
-        @ColorInt val backgroundColor: Int,
-        @ColorInt val recordingIndicatorColor: Int,
+        @param:ColorInt val backgroundColor: Int,
+        @param:ColorInt val recordingIndicatorColor: Int,
         val slideToCancelText: String,
         val cancelText: String,
         val recordingIcon: Drawable?,

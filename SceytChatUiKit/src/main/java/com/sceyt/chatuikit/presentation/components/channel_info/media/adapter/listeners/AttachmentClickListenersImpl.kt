@@ -3,7 +3,7 @@ package com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.l
 import android.view.View
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelFileItem
 
-class AttachmentClickListenersImpl : AttachmentClickListeners.ClickListeners {
+open class AttachmentClickListenersImpl : AttachmentClickListeners.ClickListeners {
     private var attachmentClickListener: AttachmentClickListeners.AttachmentClickListener? = null
     private var attachmentLoaderClickListener: AttachmentClickListeners.AttachmentLoaderClickListener? = null
 

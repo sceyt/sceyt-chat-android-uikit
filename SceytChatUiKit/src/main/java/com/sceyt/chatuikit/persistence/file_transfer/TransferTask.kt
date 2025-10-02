@@ -15,9 +15,9 @@ class TransferTask(
     var updateFileLocationCallback: UpdateFileLocationCallback? = null
     var thumbCallback: ThumbCallback? = null
 
-    val onCompletionListeners: HashMap<String, (success: Boolean, url: String?) -> Unit> by lazy { hashMapOf() }
+    val onCompletionListeners: HashMap<String, (Result<SceytAttachment>) -> Unit> by lazy { hashMapOf() }
 
-    fun addOnCompletionListener(key: String, listener: (success: Boolean, url: String?) -> Unit) {
+    fun addOnCompletionListener(key: String, listener: (Result<SceytAttachment>) -> Unit) {
         onCompletionListeners[key] = listener
     }
 }

@@ -18,7 +18,7 @@ import com.sceyt.chatuikit.persistence.extensions.haveKickMemberPermission
 import com.sceyt.chatuikit.styles.DialogStyle
 
 class MemberActionsDialog(
-        context: Context
+        context: Context,
 ) : Dialog(context, R.style.SceytDialogNoTitle95) {
     private lateinit var binding: SceytDialogMembrerActionsBinding
     private val style = DialogStyle.default(context)
@@ -79,7 +79,7 @@ class MemberActionsDialog(
         fun newInstance(
                 context: Context,
                 member: SceytMember,
-                channel: SceytChannel
+                channel: SceytChannel,
         ): MemberActionsDialog {
             val dialog = MemberActionsDialog(context)
             dialog.member = member

@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.os.Bundle
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.viewModels
 import androidx.annotation.CallSuper
@@ -29,6 +30,7 @@ import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.databinding.SceytActivityChannelInfoBinding
 import com.sceyt.chatuikit.extensions.TAG_NAME
+import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
 import com.sceyt.chatuikit.extensions.createIntent
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.findIndexed
@@ -72,6 +74,7 @@ import com.sceyt.chatuikit.presentation.components.channel_info.voice.ChannelInf
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.dialogs.ChannelActionConfirmationWithDialog
 import com.sceyt.chatuikit.presentation.components.edit_channel.EditChannelFragment
 import com.sceyt.chatuikit.presentation.root.PageState
+import com.sceyt.chatuikit.styles.StyleRegistry
 import com.sceyt.chatuikit.services.SceytPresenceChecker.PresenceUser
 import com.sceyt.chatuikit.styles.channel_info.ChannelInfoStyle
 
@@ -89,8 +92,12 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
     @CallSuper
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         style = ChannelInfoStyle.Builder(this, null).build()
+        registerAllStyles()
+        
         setActivityContentView()
+        binding?.let { applyInsetsAndWindowColor(it.root) }
         statusBarIconsColorWithBackground()
 
         getBundleArguments()
@@ -104,6 +111,14 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
         viewModel.observeToChannelUpdate(channel.id)
         viewModel.onChannelEvent(channel.id)
         observeUserUpdateIfNeeded()
+    }
+
+    /** Register all sub-styles to survive configuration changes */
+    private fun registerAllStyles() {
+        StyleRegistry.register(style.mediaStyle)
+        StyleRegistry.register(style.filesStyle)
+        StyleRegistry.register(style.linkStyle)
+        StyleRegistry.register(style.voiceStyle)
     }
 
     private fun getBundleArguments() {
@@ -125,11 +140,9 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
             finish()
         }
 
-        viewModel.onChannelLeftLiveData.observe(this) { data ->
-            data.channel?.let {
-                channel = it
-                setChannelDetails(it)
-            }
+        viewModel.onChannelLeftLiveData.observe(this) { event ->
+            channel = event.channel
+            setChannelDetails(channel)
             if (!channel.isPublic())
                 finish()
         }
@@ -427,9 +440,6 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
             }.show()
     }
 
-    protected open fun onReportClick(channel: SceytChannel) {
-    }
-
     protected open fun onDirectChatMoreActionClick(actionsEnum: DirectChatActionsDialog.ActionsEnum) {
         when (actionsEnum) {
             ClearHistory -> onClearHistoryClick(channel)
@@ -610,13 +620,21 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
     protected open fun getChannelMembersFragment(channel: SceytChannel, memberType: MemberTypeEnum): Fragment? =
             ChannelMembersFragment.newInstance(channel, memberType)
 
-    protected open fun getChannelMediaFragment(channel: SceytChannel): Fragment? = ChannelInfoMediaFragment.newInstance(channel, style)
+    protected open fun getChannelMediaFragment(channel: SceytChannel): Fragment? {
+        return ChannelInfoMediaFragment.newInstance(channel, style.mediaStyle.styleId)
+    }
 
-    protected open fun getChannelFilesFragment(channel: SceytChannel): Fragment? = ChannelInfoFilesFragment.newInstance(channel, style)
+    protected open fun getChannelFilesFragment(channel: SceytChannel): Fragment? {
+        return ChannelInfoFilesFragment.newInstance(channel, style.filesStyle.styleId)
+    }
 
-    protected open fun getChannelLinksFragment(channel: SceytChannel): Fragment? = ChannelInfoLinksFragment.newInstance(channel, style)
+    protected open fun getChannelLinksFragment(channel: SceytChannel): Fragment? {
+        return ChannelInfoLinksFragment.newInstance(channel, style.linkStyle.styleId)
+    }
 
-    protected open fun getChannelVoiceFragment(channel: SceytChannel): Fragment? = ChannelInfoVoiceFragment.newInstance(channel, style)
+    protected open fun getChannelVoiceFragment(channel: SceytChannel): Fragment? {
+        return ChannelInfoVoiceFragment.newInstance(channel, style.voiceStyle.styleId)
+    }
 
     protected open fun getEditChannelFragment(channel: SceytChannel): Fragment? = EditChannelFragment.newInstance(channel)
 
@@ -666,6 +684,17 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
                 tabLayout.setTabTextColors(textColor, selectedTextColor)
             }
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        // Clean up all registered styles
+        StyleRegistry.unregister(
+            style.mediaStyle.styleId, 
+            style.filesStyle.styleId,
+            style.linkStyle.styleId, 
+            style.voiceStyle.styleId
+        )
     }
 
     companion object {

@@ -31,9 +31,9 @@ data class UserDiff(
 
 fun SceytUser.diff(other: SceytUser): UserDiff {
     return UserDiff(
-        firstNameChanged = firstName.equalsIgnoreNull(other.firstName).not(),
-        lastNameChanged = lastName.equalsIgnoreNull(other.lastName).not(),
-        avatarURLChanged = avatarURL.equalsIgnoreNull(other.avatarURL).not(),
+        firstNameChanged = !firstName.equalsIgnoreNull(other.firstName),
+        lastNameChanged = !lastName.equalsIgnoreNull(other.lastName),
+        avatarURLChanged = !avatarURL.equalsIgnoreNull(other.avatarURL),
         presenceChanged = presence?.hasDiff(other.presence) == true,
         activityStatusChanged = state != other.state,
         blockedChanged = blocked != other.blocked

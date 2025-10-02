@@ -5,9 +5,9 @@ import androidx.room.Query
 import androidx.room.RoomWarnings
 import androidx.room.Transaction
 import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.USER_CHAT_LINK_TABLE
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.USER_TABLE
 import com.sceyt.chatuikit.persistence.database.entity.channel.ChanelMemberDb
-import com.sceyt.chatuikit.persistence.database.entity.channel.USER_CHAT_LINK_TABLE
-import com.sceyt.chatuikit.persistence.database.entity.user.USER_TABLE
 
 @Dao
 internal interface MemberDao {
@@ -15,34 +15,35 @@ internal interface MemberDao {
     @Query("select user_id from $USER_CHAT_LINK_TABLE where chat_id =:channelId and role =:role")
     suspend fun getChannelOwner(channelId: Long, role: String = RoleTypeEnum.Owner.value): String?
 
-    @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
+    @SuppressWarnings(RoomWarnings.QUERY_MISMATCH)
     @Transaction
-    @Query("select * from $USER_CHAT_LINK_TABLE join $USER_TABLE " +
-            "on $USER_CHAT_LINK_TABLE.user_id = $USER_TABLE.user_id " +
+    @Query("select * from $USER_CHAT_LINK_TABLE as userChatLink join $USER_TABLE as user " +
+            "on userChatLink.user_id = user.user_id " +
             "where chat_id =:channelId " +
             "order by user_id limit :limit offset :offset")
     suspend fun getChannelMembers(channelId: Long, limit: Int, offset: Int): List<ChanelMemberDb>
 
-    @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
+    @SuppressWarnings(RoomWarnings.QUERY_MISMATCH)
     @Transaction
-    @Query("select * from $USER_CHAT_LINK_TABLE " +
-            "join $USER_TABLE on $USER_CHAT_LINK_TABLE.user_id = $USER_TABLE.user_id " +
+    @Query("select * from $USER_CHAT_LINK_TABLE as userChatLink " +
+            "join $USER_TABLE as user on userChatLink.user_id = user.user_id " +
             "where chat_id =:channelId and role=:role " +
             "order by user_id limit :limit offset :offset")
     suspend fun getChannelMembersWithRole(channelId: Long, limit: Int, offset: Int, role: String): List<ChanelMemberDb>
 
-    @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
+    @SuppressWarnings(RoomWarnings.QUERY_MISMATCH)
     @Transaction
-    @Query("select * from $USER_CHAT_LINK_TABLE " +
-            "join $USER_TABLE on $USER_CHAT_LINK_TABLE.user_id = $USER_TABLE.user_id " +
+    @Query("select * from $USER_CHAT_LINK_TABLE as userChatLink join $USER_TABLE as user " +
+            "on userChatLink.user_id = user.user_id " +
             "and (firstName like :name || '%' or lastName like :name || '%' or (firstName || ' ' || lastName) " +
             "like :name || '%') " +
             "where chat_id =:channelId")
     suspend fun getChannelMembersByDisplayName(channelId: Long, name: String): List<ChanelMemberDb>
 
-    @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
+    @SuppressWarnings(RoomWarnings.QUERY_MISMATCH)
     @Transaction
-    @Query("select * from $USER_CHAT_LINK_TABLE as links join $USER_TABLE on links.user_id = $USER_TABLE.user_id " +
+    @Query("select * from $USER_CHAT_LINK_TABLE as links " +
+            "join $USER_TABLE as user on links.user_id = user.user_id " +
             "where chat_id =:channelId and links.user_id in (:ids) " +
             "order by user_id")
     suspend fun getChannelMembersByIds(channelId: Long, vararg ids: String): List<ChanelMemberDb>

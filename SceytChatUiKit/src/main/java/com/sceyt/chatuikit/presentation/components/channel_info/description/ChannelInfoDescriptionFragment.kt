@@ -82,7 +82,8 @@ open class ChannelInfoDescriptionFragment : Fragment(), ChannelUpdateListener, C
         style.descriptionTextStyle.apply(tvDescription)
         tvTitle.text = style.titleText
         border.setBackgroundColor(infoStyle.borderColor)
-        space.layoutParams.height = infoStyle.spaceBetweenSections
+        divider.layoutParams.height = infoStyle.spaceBetweenSections
+        divider.setBackgroundColor(infoStyle.dividerColor)
     }
 
     companion object {

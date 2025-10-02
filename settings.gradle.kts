@@ -11,15 +11,9 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        maven {
-            url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
-        }
-        maven {
-            url = uri("https://jcenter.bintray.com")
-        }
-        maven {
-            url = uri("https://jitpack.io")
-        }
+        maven(url = "https://central.sonatype.com/repository/maven-snapshots/")
+        maven(url = "https://jcenter.bintray.com")
+        maven(url = "https://jitpack.io")
         mavenLocal()
     }
 }

@@ -37,8 +37,14 @@ class MessageToSendHelper(
 ) {
     val mentionedUsersCache = mutableMapOf<String, SceytUser>()
 
-    fun sendMessage(allAttachments: List<Attachment>, body: CharSequence?, editMessage: SceytMessage?,
-                    replyMessage: SceytMessage?, replyThreadMessageId: Long?, linkDetails: LinkPreviewDetails?) {
+    fun sendMessage(
+            allAttachments: List<Attachment>,
+            body: CharSequence?,
+            editMessage: SceytMessage?,
+            replyMessage: SceytMessage?,
+            replyThreadMessageId: Long?,
+            linkDetails: LinkPreviewDetails?
+    ) {
         val replacedBody = replaceBodyMentions(body)
 
         if (!checkIsEditingMessage(replacedBody, editMessage, linkDetails)) {
@@ -64,9 +70,14 @@ class MessageToSendHelper(
         }
     }
 
-    private fun buildMessage(body: CharSequence, attachments: Array<Attachment>,
-                             withMentionedUsers: Boolean, replyMessage: SceytMessage?,
-                             replyThreadMessageId: Long?, type: String = "text"): Message {
+    private fun buildMessage(
+            body: CharSequence,
+            attachments: Array<Attachment>,
+            withMentionedUsers: Boolean,
+            replyMessage: SceytMessage?,
+            replyThreadMessageId: Long?,
+            type: String = "text"
+    ): Message {
         val message = Message.MessageBuilder()
             .setTid(ClientWrapper.generateTid())
             .setAttachments(attachments)
@@ -96,7 +107,10 @@ class MessageToSendHelper(
         return newBody
     }
 
-    private fun initBodyAttributes(styling: List<BodyStyleRange>?, mentions: List<Mention>?): List<BodyAttribute> {
+    private fun initBodyAttributes(
+            styling: List<BodyStyleRange>?,
+            mentions: List<Mention>?
+    ): List<BodyAttribute> {
         val attributes = styling?.map { it.toBodyAttribute() }?.toArrayList() ?: arrayListOf()
 
         if (!mentions.isNullOrEmpty()) {
@@ -107,8 +121,11 @@ class MessageToSendHelper(
         return attributes
     }
 
-    private fun checkIsEditingMessage(body: CharSequence, message: SceytMessage?,
-                                      linkDetails: LinkPreviewDetails?): Boolean {
+    private fun checkIsEditingMessage(
+            body: CharSequence,
+            message: SceytMessage?,
+            linkDetails: LinkPreviewDetails?
+    ): Boolean {
         if (message == null) return false
         val linkAttachment = getLinkAttachmentFromBody(body, linkDetails)
             ?.toSceytAttachment(message.tid, TransferState.Uploaded, linkPreviewDetails = linkDetails)
@@ -145,7 +162,9 @@ class MessageToSendHelper(
         return true
     }
 
-    private fun getMentionUsersAndAttributes(body: CharSequence): Pair<List<BodyAttribute>, List<SceytUser>> {
+    private fun getMentionUsersAndAttributes(
+            body: CharSequence
+    ): Pair<List<BodyAttribute>, List<SceytUser>> {
         val bodyAttributes = arrayListOf<BodyAttribute>()
         var mentionUsers = listOf<SceytUser>()
         val mentions = MentionAnnotation.getMentionsFromAnnotations(body)
@@ -160,7 +179,10 @@ class MessageToSendHelper(
         return Pair(bodyAttributes, mentionUsers)
     }
 
-    private fun getLinkAttachmentFromBody(body: CharSequence?, linkDetails: LinkPreviewDetails?): Attachment? {
+    private fun getLinkAttachmentFromBody(
+            body: CharSequence?,
+            linkDetails: LinkPreviewDetails?
+    ): Attachment? {
         val validLink = linkDetails?.link
                 ?: body.extractLinks().firstOrNull { it.isValidUrl(context) }
         if (validLink != null) {
@@ -176,8 +198,10 @@ class MessageToSendHelper(
         return null
     }
 
-    private fun Message.MessageBuilder.initRelyMessage(replyMessage: SceytMessage?,
-                                                       replyThreadMessageId: Long?): Message.MessageBuilder {
+    private fun Message.MessageBuilder.initRelyMessage(
+            replyMessage: SceytMessage?,
+            replyThreadMessageId: Long?
+    ): Message.MessageBuilder {
         replyMessage?.let {
             setParentMessageId(it.id)
             setParentMessage(it.toMessage())

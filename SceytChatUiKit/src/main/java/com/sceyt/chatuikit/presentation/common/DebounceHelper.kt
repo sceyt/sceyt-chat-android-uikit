@@ -66,7 +66,7 @@ class DebounceHelper {
      * Run immediately if no job is running.
      * containing the new work.
      */
-    fun submitForceIfNotRunning(work: () -> Unit) {
+    fun submitForceIfNotRunning(work: suspend () -> Unit) {
         val needToDelay = job?.isActive ?: false
         job?.cancel()
         job = scope.launch {
@@ -111,5 +111,12 @@ class DebounceHelper {
      */
     fun shutdown() {
         scope.cancel()
+    }
+
+    /**
+     * Checks if a job is running.
+     * */
+    fun isRunning(): Boolean {
+        return job?.isActive ?: false
     }
 }

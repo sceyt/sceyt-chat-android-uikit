@@ -7,7 +7,7 @@ import com.sceyt.chatuikit.presentation.custom_views.AvatarView
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
 
 data class AvatarStyle(
-        @ColorInt val avatarBackgroundColor: Int = UNSET_COLOR,
+        @param:ColorInt val avatarBackgroundColor: Int = UNSET_COLOR,
         val textStyle: TextStyle = TextStyle(),
         val shape: Shape = Shape.Circle
 ) {

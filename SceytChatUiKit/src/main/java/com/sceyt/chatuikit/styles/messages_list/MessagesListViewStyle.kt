@@ -12,12 +12,14 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.presentation.components.channel.messages.MessagesListView
-import com.sceyt.chatuikit.styles.MessagesListHeaderStyle.Companion.styleCustomizer
-import com.sceyt.chatuikit.styles.SearchChannelInputStyle.Companion.styleCustomizer
+import com.sceyt.chatuikit.styles.SceytComponentStyle
+import com.sceyt.chatuikit.styles.messages_list.MessagesListHeaderStyle.Companion.styleCustomizer
+import com.sceyt.chatuikit.styles.search.SearchChannelInputStyle.Companion.styleCustomizer
 import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildDateSeparatorStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildReactionPickerStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildScrollDownButtonStyle
+import com.sceyt.chatuikit.styles.extensions.messages_list.buildScrollUnreadMentionButtonStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildUnreadMessagesSeparatorStyle
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
@@ -26,10 +28,11 @@ import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
  * @property backgroundColor Background color of the message list view
  * @property emptyState Layout resource for the empty state view,default is [R.layout.sceyt_messages_empty_state]
  * @property emptyStateForSelfChannel Layout resource for the empty state view for self channel,default is [R.layout.sceyt_messages_empty_state_self_channel]
- * @property loadingState Layout resource for the loading state view,default is [R.layout.sceyt_loading_state]
+ * @property loadingState Layout resource for the loading state view,default is [R.layout.sceyt_page_loading_state]
  * @property sameSenderMessageDistance Distance between two messages from the same sender, default is 4dp
  * @property differentSenderMessageDistance Distance between two messages from different senders, default is 8dp
  * @property scrollDownButtonStyle Style for the scroll down button, default is [buildScrollDownButtonStyle]
+ * @property scrollUnreadMentionButtonStyle Style for the scroll unread mention button, default is [buildScrollUnreadMentionButtonStyle]
  * @property dateSeparatorStyle Style for the date separator, default is [buildDateSeparatorStyle]
  * @property unreadMessagesSeparatorStyle Style for the unread messages separator, default is [buildUnreadMessagesSeparatorStyle]
  * @property reactionPickerStyle Style for the reaction picker, default is [buildReactionPickerStyle]
@@ -38,20 +41,22 @@ import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
  * @property messageItemStyle Style for the message item view
  **/
 data class MessagesListViewStyle(
-        @ColorInt val backgroundColor: Int,
-        @LayoutRes val emptyState: Int,
-        @LayoutRes val emptyStateForSelfChannel: Int,
-        @LayoutRes val loadingState: Int,
-        @Dimension val sameSenderMessageDistance: Int,
-        @Dimension val differentSenderMessageDistance: Int,
+        @param:ColorInt val backgroundColor: Int,
+        @param:LayoutRes val emptyState: Int,
+        @param:LayoutRes val emptyStateForSelfChannel: Int,
+        @param:LayoutRes val loadingState: Int,
+        @param:Dimension val sameSenderMessageDistance: Int,
+        @param:Dimension val differentSenderMessageDistance: Int,
         val messageItemStyle: MessageItemStyle,
-        val scrollDownButtonStyle: ScrollDownButtonStyle,
+        val scrollDownButtonStyle: ScrollButtonStyle,
+        val scrollUnreadMentionButtonStyle: ScrollButtonStyle,
         val dateSeparatorStyle: DateSeparatorStyle,
         val unreadMessagesSeparatorStyle: UnreadMessagesSeparatorStyle,
         val reactionPickerStyle: ReactionPickerStyle,
         val enableScrollDownButton: Boolean,
         val enableDateSeparator: Boolean,
-) {
+) : SceytComponentStyle() {
+
     companion object {
         @JvmField
         var styleCustomizer = StyleCustomizer<MessagesListViewStyle> { _, style -> style }
@@ -75,7 +80,7 @@ data class MessagesListViewStyle(
 
     internal class Builder(
             internal val context: Context,
-            private val attrs: AttributeSet?
+            private val attrs: AttributeSet?,
     ) {
         fun build(): MessagesListViewStyle {
             context.obtainStyledAttributes(attrs, R.styleable.MessagesListView).use { array ->
@@ -91,7 +96,7 @@ data class MessagesListViewStyle(
                     R.layout.sceyt_messages_empty_state_self_channel)
 
                 val loadingState = array.getResourceId(R.styleable.MessagesListView_sceytUiMessagesListLoadingStateLayout,
-                    R.layout.sceyt_loading_state)
+                    R.layout.sceyt_page_loading_state)
 
                 val sameSenderMessageDistance = array.getDimensionPixelSize(R.styleable.MessagesListView_sceytUiMessagesListSameSenderMessageDistance,
                     dpToPx(4f))
@@ -113,6 +118,7 @@ data class MessagesListViewStyle(
                     differentSenderMessageDistance = differentSenderMessageDistance,
                     messageItemStyle = messageItemStyle,
                     scrollDownButtonStyle = buildScrollDownButtonStyle(array),
+                    scrollUnreadMentionButtonStyle = buildScrollUnreadMentionButtonStyle(array),
                     dateSeparatorStyle = buildDateSeparatorStyle(array),
                     unreadMessagesSeparatorStyle = buildUnreadMessagesSeparatorStyle(array),
                     reactionPickerStyle = buildReactionPickerStyle(array),

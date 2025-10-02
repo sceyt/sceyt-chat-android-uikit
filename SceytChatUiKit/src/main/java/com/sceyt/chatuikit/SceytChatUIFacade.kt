@@ -10,6 +10,7 @@ import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.data.constants.SceytConstants.SCEYT_WORKER_TAG
 import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.repositories.getUserId
+import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.database.cleaner.DatabaseCleaner
 import com.sceyt.chatuikit.persistence.extensions.safeResume
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
@@ -77,7 +78,7 @@ class SceytChatUIFacade(
 
     fun updateToken(
             token: String,
-            listener: ((success: Boolean, errorMessage: String?) -> Unit)? = null
+            listener: ((success: Boolean, errorMessage: String?) -> Unit)? = null,
     ) {
         ChatClient.updateToken(token, object : ActionCallback {
             override fun onSuccess() {
@@ -104,6 +105,7 @@ class SceytChatUIFacade(
         databaseCleaner.cleanDatabase()
         preferences.clear()
         channelsCache.clearAll()
+        SceytLog.i(TAG, "UI kit data cleared.")
     }
 
     fun logOut(unregisterPushCallback: ((Result<Boolean>) -> Unit)? = null) = scope.launch {
@@ -120,12 +122,13 @@ class SceytChatUIFacade(
 
     private suspend fun unregisterFirebaseToken(): Result<Boolean> = withContext(Dispatchers.IO) {
         suspendCancellableCoroutine { continuation ->
-            FirebaseMessagingDelegate.unregisterFirebaseToken { success, error ->
-                if (success) {
-                    continuation.safeResume(Result.success(true))
-                } else
-                    continuation.safeResume(Result.failure(Exception(error)))
+            FirebaseMessagingDelegate.unregisterFirebaseToken { result ->
+                continuation.safeResume(result)
             }
         }
+    }
+
+    companion object {
+        private val TAG = SceytChatUIFacade::class.java.name
     }
 }

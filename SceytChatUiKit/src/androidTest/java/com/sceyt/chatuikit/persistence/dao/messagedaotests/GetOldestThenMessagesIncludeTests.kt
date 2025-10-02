@@ -35,7 +35,7 @@ class GetOldestThenMessagesIncludeTests{
     @Before
     fun setUp() {
         database = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), SceytDatabase::class.java)
-            .fallbackToDestructiveMigration()
+            .fallbackToDestructiveMigration(true)
             .allowMainThreadQueries()
             .build()
         messageDao = database.messageDao()
@@ -48,8 +48,32 @@ class GetOldestThenMessagesIncludeTests{
     }
 
     private fun createMessage(tid: Long, id: Long): MessageEntity {
-        return MessageEntity(tid, id, channelId, "body", "text", null, id, 0, incoming = false, isTransient = false, silent = false,
-            deliveryStatus = DeliveryStatus.Displayed, state = MessageState.Unmodified, fromId = "1", markerCount = null, mentionedUsersIds = null, parentId = null, replyCount = 0L, displayCount = 0, autoDeleteAt = null, forwardingDetailsDb = null, bodyAttribute = null, unList = false)
+        return MessageEntity(
+            tid = tid,
+            id = id,
+            channelId = channelId,
+            body = "body",
+            type = "text",
+            metadata = null,
+            createdAt = id,
+            updatedAt = 0,
+            incoming = false,
+            isTransient = false,
+            silent = false,
+            deliveryStatus = DeliveryStatus.Displayed,
+            state = MessageState.Unmodified,
+            fromId = "1",
+            markerCount = null,
+            mentionedUsersIds = null,
+            parentId = null,
+            replyCount = 0L,
+            displayCount = 0,
+            autoDeleteAt = null,
+            forwardingDetailsDb = null,
+            bodyAttribute = null,
+            unList = false,
+            disableMentionsCount = false
+        )
     }
 
     @Test

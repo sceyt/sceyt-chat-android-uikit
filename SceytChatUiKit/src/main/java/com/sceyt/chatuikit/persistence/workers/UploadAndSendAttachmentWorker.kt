@@ -124,7 +124,7 @@ class UploadAndSendAttachmentWorker(
                     fileChecksumDao.insert(checksumEntity)
                 }
 
-                val (success, url) = suspendCancellableCoroutine { continuation ->
+                val result = suspendCancellableCoroutine { continuation ->
                     if (attachment.transferState != TransferState.PauseUpload) {
 
                         val transferData = TransferData(tmpMessage.tid, attachment.progressPercent
@@ -140,14 +140,17 @@ class UploadAndSendAttachmentWorker(
                         uploadFile(attachment, continuation, isSharing)
                     }
                 }
-
-                if (success && url.isNotNullOrBlank()) {
-                    if (checksum != null)
-                        fileChecksumDao.updateUrl(checksum, url)
-                    attachments[index] = attachment.copy(url = url)
-                    return kotlin.Result.success(attachments)
-                } else
-                    return kotlin.Result.failure(Exception("Could not upload file"))
+                return result.fold(
+                    onSuccess = {
+                        if (checksum != null)
+                            fileChecksumDao.updateUrl(checksum, it.url)
+                        attachments[index] = it
+                        kotlin.Result.success(attachments)
+                    },
+                    onFailure = {
+                        kotlin.Result.failure(it)
+                    }
+                )
             }
         }
         return kotlin.Result.failure(Exception("Could not find any attachment to upload"))
@@ -155,21 +158,21 @@ class UploadAndSendAttachmentWorker(
 
     private fun uploadFile(
             attachment: SceytAttachment,
-            continuation: CancellableContinuation<Pair<Boolean, String?>>,
+            continuation: CancellableContinuation<kotlin.Result<SceytAttachment>>,
             isSharing: Boolean
     ) {
         if (isSharing) {
-            fileTransferService.uploadSharedFile(attachment, FileTransferHelper.createTransferTask(attachment).also { task ->
-                task.addOnCompletionListener(this.toString(), listener = { success: Boolean, url: String? ->
-                    continuation.safeResume(Pair(success, url))
+            fileTransferService.uploadSharedFile(
+                attachment = attachment,
+                transferTask = FileTransferHelper.createTransferTask(attachment).also { task ->
+                    task.addOnCompletionListener(this.toString(), listener = continuation::safeResume)
                 })
-            })
         } else {
-            fileTransferService.upload(attachment, FileTransferHelper.createTransferTask(attachment).also { task ->
-                task.addOnCompletionListener(this.toString(), listener = { success: Boolean, url: String? ->
-                    continuation.safeResume(Pair(success, url))
+            fileTransferService.upload(
+                attachment = attachment,
+                transferTask = FileTransferHelper.createTransferTask(attachment).also { task ->
+                    task.addOnCompletionListener(this.toString(), listener = continuation::safeResume)
                 })
-            })
         }
     }
 

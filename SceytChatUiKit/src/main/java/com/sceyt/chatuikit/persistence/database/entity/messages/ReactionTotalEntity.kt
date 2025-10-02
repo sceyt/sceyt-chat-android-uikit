@@ -5,8 +5,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
-
-internal const val REACTION_TOTAL_TABLE = "sceyt_reaction_total_table"
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.REACTION_TOTAL_TABLE
 
 @Entity(
     tableName = REACTION_TOTAL_TABLE,

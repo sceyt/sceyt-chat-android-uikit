@@ -99,14 +99,14 @@ class OutImageMessageViewHolder(
                 setImageTopCorners(fileImage)
             }
 
+            if (diff.replyContainerChanged)
+                setReplyMessageContainer(message, binding.viewReply)
+
             if (diff.reactionsChanged || diff.edited)
                 setOrUpdateReactions(item, rvReactions, viewPoolReactions)
 
             if (diff.bodyChanged && !diff.reactionsChanged && recyclerViewReactions != null)
                 initWidthsDependReactions(recyclerViewReactions, layoutDetails)
-
-            if (diff.replyContainerChanged)
-                setReplyMessageContainer(message, binding.viewReply)
         }
     }
 

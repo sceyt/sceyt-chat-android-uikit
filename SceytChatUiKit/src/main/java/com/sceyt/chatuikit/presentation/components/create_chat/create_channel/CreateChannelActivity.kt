@@ -3,6 +3,7 @@ package com.sceyt.chatuikit.presentation.components.create_chat.create_channel
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -13,6 +14,7 @@ import com.sceyt.chatuikit.data.models.channels.CreateChannelData
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.databinding.SceytActivityCreateChannelBinding
+import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
 import com.sceyt.chatuikit.extensions.overrideTransitions
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
@@ -26,7 +28,7 @@ import com.sceyt.chatuikit.presentation.components.select_users.SelectUsersActiv
 import com.sceyt.chatuikit.presentation.components.select_users.SelectUsersPageArgs
 import com.sceyt.chatuikit.presentation.components.select_users.SelectUsersResult
 import com.sceyt.chatuikit.presentation.root.PageState
-import com.sceyt.chatuikit.styles.CreateChannelStyle
+import com.sceyt.chatuikit.styles.create_channel.CreateChannelStyle
 import kotlinx.coroutines.launch
 
 class CreateChannelActivity : AppCompatActivity() {
@@ -37,12 +39,14 @@ class CreateChannelActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         style = CreateChannelStyle.Builder(this, null).build()
         setContentView(SceytActivityCreateChannelBinding.inflate(layoutInflater)
             .also { binding = it }
             .root)
 
         binding.applyStyle()
+        applyInsetsAndWindowColor(binding.root)
         statusBarIconsColorWithBackground()
 
         initViewModel()

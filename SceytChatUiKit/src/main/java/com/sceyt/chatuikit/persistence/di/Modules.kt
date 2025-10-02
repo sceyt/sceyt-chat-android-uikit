@@ -8,6 +8,7 @@ import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.notifications.managers.RealtimeNotificationManager
 import com.sceyt.chatuikit.notifications.managers.RealtimeNotificationManagerImpl
 import com.sceyt.chatuikit.persistence.PersistenceMiddleWareImpl
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.SCEYT_CHAT_UI_KIT_DATABASE_NAME
 import com.sceyt.chatuikit.persistence.database.DatabaseMigrations
 import com.sceyt.chatuikit.persistence.database.SceytDatabase
 import com.sceyt.chatuikit.persistence.database.cleaner.DatabaseCleaner
@@ -57,13 +58,11 @@ import org.koin.dsl.module
 import java.util.concurrent.Executors
 import kotlin.coroutines.CoroutineContext
 
-const val SCEYT_CHAT_UI_KIT_DATABASE_NAME = "sceyt_ui_kit_database"
-
 internal val appModules = module {
     single { SceytSyncManager(get(), get()) }
     single<FileTransferService> { FileTransferServiceImpl(get(), get()) }
     single<MessageLoadRangeUpdater> { MessageLoadRangeUpdater(get()) }
-    single<PushService> { PushServiceImpl(get(), get(), get(), get()) }
+    single<PushService> { PushServiceImpl(get(), get(), get()) }
     single<RealtimeNotificationManager> { RealtimeNotificationManagerImpl(get(), get()) }
 }
 
@@ -76,7 +75,7 @@ internal fun databaseModule(enableDatabase: Boolean) = module {
             Room.inMemoryDatabaseBuilder(context, SceytDatabase::class.java)
 
         return builder
-            .fallbackToDestructiveMigration()
+            .fallbackToDestructiveMigration(dropAllTables = true)
             .addMigrations(DatabaseMigrations.Migration_15_16, DatabaseMigrations.Migration_16_17)
             .allowMainThreadQueries()
             .build()
@@ -99,7 +98,6 @@ internal fun databaseModule(enableDatabase: Boolean) = module {
     single { get<SceytDatabase>().linkDao() }
     single { get<SceytDatabase>().loadRangeDao() }
     single { get<SceytDatabase>().markerDao() }
-    single { get<SceytDatabase>().autoDeleteMessageDao() }
 }
 
 internal val interactorModule = module {
@@ -116,7 +114,7 @@ internal val interactorModule = module {
 
 internal val logicModule = module {
     single<PersistenceChannelsLogic> { PersistenceChannelsLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
-    single<PersistenceMessagesLogic> { PersistenceMessagesLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    single<PersistenceMessagesLogic> { PersistenceMessagesLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     single<PersistenceAttachmentLogic> { PersistenceAttachmentLogicImpl(get(), get(), get(), get(), get(), get(), get(), get()) }
     single<PersistenceReactionsLogic> { PersistenceReactionsLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     single<PersistenceMembersLogic> { PersistenceMembersLogicImpl(get(), get(), get(), get(), get(), get(), get()) }
@@ -140,7 +138,7 @@ internal val coroutineModule = module {
     single {
         CoroutineExceptionHandler { _, throwable ->
             if (BuildConfig.DEBUG)
-                SceytLog.e("Coroutine", "An exception accrued in base CoroutineExceptionHandler", throwable)
+                SceytLog.e("CoroutineExceptionHandler", "An exception accrued in base CoroutineExceptionHandler", throwable)
         }
     }
     single<CoroutineScope> { CoroutineScope(SupervisorJob()) }

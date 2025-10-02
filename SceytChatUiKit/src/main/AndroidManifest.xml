@@ -35,6 +35,7 @@
             android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".presentation.components.media.MediaPreviewActivity"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
             android:theme="@style/SceytPreviewThemeDark" />
         <activity
             android:name=".presentation.components.forward.ForwardActivity"
@@ -64,8 +65,7 @@
         <activity
             android:name=".presentation.components.create_chat.create_channel.CreateChannelActivity"
             android:exported="false"
-            android:theme="@style/DefaultFontTheme"
-            android:windowSoftInputMode="adjustResize" />
+            android:theme="@style/DefaultFontTheme" />
         <activity
             android:name=".presentation.components.create_chat.create_group.CreateGroupActivity"
             android:exported="false"

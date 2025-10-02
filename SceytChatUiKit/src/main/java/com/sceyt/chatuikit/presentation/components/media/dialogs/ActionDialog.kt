@@ -10,7 +10,7 @@ import com.sceyt.chatuikit.databinding.SceytDialogMediaActionsBinding
 import com.sceyt.chatuikit.presentation.components.media.dialogs.ActionDialog.Action.Forward
 import com.sceyt.chatuikit.presentation.components.media.dialogs.ActionDialog.Action.Save
 import com.sceyt.chatuikit.presentation.components.media.dialogs.ActionDialog.Action.Share
-import com.sceyt.chatuikit.styles.DialogStyle
+import com.sceyt.chatuikit.styles.common.DialogStyle
 
 class ActionDialog(
         context: Context,

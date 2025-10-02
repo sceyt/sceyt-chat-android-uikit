@@ -5,10 +5,11 @@ import android.text.Editable
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewModelScope
+import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventEnum
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelActionEvent
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytMember
@@ -16,12 +17,14 @@ import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
+import com.sceyt.chatuikit.media.audio.AudioRecordData
 import com.sceyt.chatuikit.persistence.extensions.getChannelType
 import com.sceyt.chatuikit.persistence.extensions.isPublic
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.persistence.mappers.isDeleted
 import com.sceyt.chatuikit.presentation.common.SceytDialog
 import com.sceyt.chatuikit.presentation.components.channel.input.MessageInputView
+import com.sceyt.chatuikit.presentation.components.channel.input.data.InputUserAction
 import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.MessageInputActionCallback
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
@@ -42,7 +45,7 @@ import kotlinx.coroutines.withContext
 fun MessageListViewModel.bind(
         messageInputView: MessageInputView,
         replyInThreadMessage: SceytMessage?,
-        lifecycleOwner: LifecycleOwner
+        lifecycleOwner: LifecycleOwner,
 ) {
 
     messageActionBridge.setInputView(messageInputView)
@@ -95,12 +98,6 @@ fun MessageListViewModel.bind(
             customToastSnackBar(messageInputView, it.errorMessage.toString())
     }
 
-    channelLiveData.observe(lifecycleOwner) {
-        if (it is SceytResponse.Success) {
-            messageInputView.checkIsParticipant(channel)
-        }
-    }
-
     joinLiveData.observe(lifecycleOwner) {
         when (it) {
             is SceytResponse.Success -> messageInputView.joinSuccess()
@@ -116,13 +113,9 @@ fun MessageListViewModel.bind(
         messageInputView.replyMessage(it, false)
     }
 
-    onChannelMemberAddedOrKickedLiveData.observe(lifecycleOwner) {
-        messageInputView.checkIsParticipant(channel)
-    }
-
-    onChannelEventFlow.onEach {
-        when (val event = it.eventType) {
-            is ChannelEventEnum.Left -> {
+    onChannelEventFlow.onEach { event ->
+        when (event) {
+            is ChannelActionEvent.Left -> {
                 if (channel.isPublic()) {
                     event.leftMembers.forEach { member ->
                         if (member.id == SceytChatUIKit.chatUIFacade.myId)
@@ -131,7 +124,7 @@ fun MessageListViewModel.bind(
                 }
             }
 
-            is ChannelEventEnum.Joined -> {
+            is ChannelActionEvent.Joined -> {
                 if (channel.isPublic()) {
                     event.joinedMembers.forEach { member ->
                         if (member.id == SceytChatUIKit.chatUIFacade.myId)
@@ -183,19 +176,27 @@ fun MessageListViewModel.bind(
             upsertLinkPreviewData(linkDetails)
         }
 
-        override fun sendTyping(typing: Boolean) {
-            sendTypingEvent(typing)
+        override fun sendChannelEvent(action: InputUserAction) {
+            this@bind.sendChannelEvent(action)
         }
 
         override fun updateDraftMessage(
                 text: Editable?,
+                attachments: List<Attachment>,
+                audioRecordData: AudioRecordData?,
                 mentionUserIds: List<Mention>,
                 styling: List<BodyStyleRange>?,
                 replyOrEditMessage: SceytMessage?,
-                isReply: Boolean
-        ) {
-            this@bind.updateDraftMessage(text, mentionUserIds, styling, replyOrEditMessage, isReply)
-        }
+                isReply: Boolean,
+        ) = this@bind.updateDraftMessage(
+            text = text,
+            attachments = attachments,
+            audioRecordData = audioRecordData,
+            mentionUsers = mentionUserIds,
+            styling = styling,
+            replyOrEditMessage = replyOrEditMessage,
+            isReply = isReply
+        )
 
         override fun mention(query: String) {
             mentionJob?.cancel()

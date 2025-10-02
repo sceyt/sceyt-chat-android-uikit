@@ -5,11 +5,8 @@ import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.sceyt_callbacks.ActionCallback
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.data.repositories.Keys.KEY_SUBSCRIBED_FOR_PUSH_NOTIFICATION
-import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
-import com.sceyt.chatuikit.persistence.repositories.SceytSharedPreference
 import com.sceyt.chatuikit.persistence.workers.HandleNotificationWorkManager
 import com.sceyt.chatuikit.push.PushData
 import com.sceyt.chatuikit.push.PushDevice
@@ -20,13 +17,12 @@ internal class PushServiceImpl(
         private val context: Context,
         private val scope: CoroutineScope,
         private val messagesLogic: PersistenceMessagesLogic,
-        private val preferences: SceytSharedPreference,
 ) : PushService {
 
     override fun handlePush(data: PushData) {
-        SceytLog.d(TAG, "Handling push: ${data.message.id} ${data.message.body}")
+        SceytLog.d(TAG, "Handling push for messageId: ${data.message.id}, channelId: ${data.message.channelId}")
         scope.launch {
-            // At first, we call the handlePush, which will save the message to the database
+            // At first, we call the handlePush method, which will save the message to the database
             if (!messagesLogic.handlePush(data)) return@launch
 
             val config = SceytChatUIKit.config.notificationConfig
@@ -49,45 +45,53 @@ internal class PushServiceImpl(
         registerClientPushTokenImpl(device)
     }
 
-    override fun unregisterPushDevice(
-            unregisterPushCallback: ((success: Boolean, error: String?) -> Unit)?
-    ) {
-        ChatClient.getClient().unregisterPushToken(object : ActionCallback {
-            override fun onSuccess() {
-                preferences.setBoolean(KEY_SUBSCRIBED_FOR_PUSH_NOTIFICATION, false)
-                unregisterPushCallback?.invoke(true, null)
-            }
-
-            override fun onError(exception: SceytException?) {
-                unregisterPushCallback?.invoke(false, exception?.message)
-            }
-        })
+    override fun unregisterPushDevice(unregisterPushCallback: ((Result<Boolean>) -> Unit)?) {
+        unregisterClientPushTokenImpl(unregisterPushCallback)
     }
 
     override fun ensurePushTokenRegistered() {
-        if (!preferences.getBoolean(KEY_SUBSCRIBED_FOR_PUSH_NOTIFICATION)) {
-            asyncGetDeviceToken(::registerClientPushTokenImpl)
-        }
+        asyncGetDeviceToken(::registerClientPushTokenImpl)
     }
 
     private fun asyncGetDeviceToken(onToken: (device: PushDevice) -> Unit) {
-        SceytChatUIKit.config.notificationConfig.pushProviders.firstOrNull { it.isSupported(context) }?.let {
-            it.generatePushDeviceAsync { pushDevice ->
-                onToken(pushDevice)
-            }
-        }
+        SceytChatUIKit.config.notificationConfig.pushProviders.firstOrNull {
+            it.isSupported(context)
+        }?.generatePushDeviceAsync(onToken)
     }
 
     private fun registerClientPushTokenImpl(device: PushDevice) {
+        val pushSubscriptions = ChatClient.getClient().pushSubscriptions
+        val registered = pushSubscriptions.any {
+            it.dataToken == device.token && it.service == device.service.stingValue()
+        }
+        if (registered) return
         ChatClient.getClient().registerPushToken(device.token, device.service.stingValue(), object : ActionCallback {
             override fun onSuccess() {
-                preferences.setBoolean(KEY_SUBSCRIBED_FOR_PUSH_NOTIFICATION, true)
-                SceytLog.i(this@PushServiceImpl.TAG, "Push token successfully registered, service: ${device.service}")
+                SceytLog.i(TAG, "Push token successfully registered, service: ${device.service}")
             }
 
             override fun onError(e: SceytException) {
-                SceytLog.e(this@PushServiceImpl.TAG, "Couldn't register push token: service: ${device.service}, error: $e")
+                SceytLog.e(TAG, "Couldn't register push token: service: ${device.service}, error: $e")
             }
         })
+    }
+
+    private fun unregisterClientPushTokenImpl(
+            unregisterPushCallback: ((Result<Boolean>) -> Unit)?,
+    ) {
+        ChatClient.getClient().unregisterPushToken(object : ActionCallback {
+            override fun onSuccess() {
+                unregisterPushCallback?.invoke(Result.success(true))
+            }
+
+            override fun onError(exception: SceytException?) {
+                unregisterPushCallback?.invoke(Result.failure(exception
+                        ?: Exception("Unknown error")))
+            }
+        })
+    }
+
+    companion object {
+        private const val TAG = "PushService"
     }
 }

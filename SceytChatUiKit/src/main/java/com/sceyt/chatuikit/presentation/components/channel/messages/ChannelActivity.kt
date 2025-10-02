@@ -3,12 +3,14 @@ package com.sceyt.chatuikit.presentation.components.channel.messages
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytActivityChannelBinding
+import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
 import com.sceyt.chatuikit.extensions.launchActivity
 import com.sceyt.chatuikit.extensions.overrideTransitions
 import com.sceyt.chatuikit.extensions.parcelable
@@ -23,11 +25,12 @@ open class ChannelActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        enableEdgeToEdge()
         setContentView(SceytActivityChannelBinding.inflate(layoutInflater)
             .also { binding = it }
             .root)
 
+        applyInsetsAndWindowColor(binding.root)
         statusBarIconsColorWithBackground(
             statusBarColor = SceytChatUIKit.theme.colors.statusBarColor,
             navigationBarColor = SceytChatUIKit.theme.colors.primaryColor)
@@ -41,9 +44,9 @@ open class ChannelActivity : AppCompatActivity() {
         MessageListViewModelFactory(requireNotNull(intent.parcelable(CHANNEL)))
     }
 
-    override fun onNewIntent(intent: Intent?) {
+    override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        val channel = intent?.parcelable<SceytChannel>(CHANNEL) ?: return
+        val channel = intent.parcelable<SceytChannel>(CHANNEL) ?: return
         if (channel.id == viewModel.channel.id) return
         launchActivity<ChannelActivity> {
             putExtra(CHANNEL, channel)

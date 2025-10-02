@@ -4,8 +4,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
-
-internal const val CHAT_USER_REACTION_TABLE = "sceyt_chat_user_reaction_table"
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.CHAT_USER_REACTION_TABLE
 
 @Entity(
     tableName = CHAT_USER_REACTION_TABLE,

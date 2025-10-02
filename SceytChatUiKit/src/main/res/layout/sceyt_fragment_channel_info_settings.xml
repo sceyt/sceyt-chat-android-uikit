@@ -51,10 +51,11 @@
 
     </androidx.appcompat.widget.LinearLayoutCompat>
 
-    <Space
-        android:id="@+id/space"
+    <View
+        android:id="@+id/divider"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        tools:background="@color/sceyt_color_background_secondary"
         tools:layout_height="16dp" />
 
 </androidx.appcompat.widget.LinearLayoutCompat>

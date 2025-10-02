@@ -6,7 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.role.Role
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.managers.channel.ChannelEventManager
-import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventData
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelActionEvent
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventData
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventEnum
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelOwnerChangedEventData
@@ -19,6 +19,7 @@ import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.messages.SceytUser
+import com.sceyt.chatuikit.data.models.onSuccessNotNull
 import com.sceyt.chatuikit.persistence.extensions.asLiveData
 import com.sceyt.chatuikit.persistence.extensions.haveChangeMemberRolePermission
 import com.sceyt.chatuikit.persistence.extensions.haveKickAndBlockMemberPermission
@@ -28,10 +29,12 @@ import com.sceyt.chatuikit.persistence.interactor.ChannelMemberInteractor
 import com.sceyt.chatuikit.presentation.components.channel_info.members.adapter.MemberItem
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class ChannelMembersViewModel(
+        private val channelId: Long,
         private val channelInteractor: ChannelInteractor,
         private val memberInteractor: ChannelMemberInteractor,
 ) : BaseViewModel() {
@@ -48,8 +51,8 @@ class ChannelMembersViewModel(
     private val _channelOwnerChangedEventLiveData = MutableLiveData<ChannelOwnerChangedEventData>()
     val channelOwnerChangedEventLiveData: LiveData<ChannelOwnerChangedEventData> = _channelOwnerChangedEventLiveData
 
-    private val _channelEventEventLiveData = MutableLiveData<ChannelEventData>()
-    val channelEventEventLiveData: LiveData<ChannelEventData> = _channelEventEventLiveData
+    private val _channelEventEventLiveData = MutableLiveData<ChannelActionEvent>()
+    val channelEventEventLiveData = _channelEventEventLiveData.asLiveData()
 
     private val _channelAddMemberLiveData = MutableLiveData<List<SceytMember>>()
     val channelAddMemberLiveData = _channelAddMemberLiveData.asLiveData()
@@ -62,21 +65,27 @@ class ChannelMembersViewModel(
 
     init {
         viewModelScope.launch {
-            ChannelEventManager.onChannelMembersEventFlow.collect {
-                _channelMemberEventLiveData.postValue(it)
-            }
+            ChannelEventManager.onChannelMembersEventFlow
+                .filter { it.channel.id == channelId }
+                .collect {
+                    _channelMemberEventLiveData.postValue(it)
+                }
         }
 
         viewModelScope.launch {
-            ChannelEventManager.onChannelOwnerChangedEventFlow.collect {
-                _channelOwnerChangedEventLiveData.postValue(it)
-            }
+            ChannelEventManager.onChannelOwnerChangedEventFlow
+                .filter { it.channel.id == channelId }
+                .collect {
+                    _channelOwnerChangedEventLiveData.postValue(it)
+                }
         }
 
         viewModelScope.launch {
-            ChannelEventManager.onChannelEventFlow.collect {
-                _channelEventEventLiveData.postValue(it)
-            }
+            ChannelEventManager.onChannelEventFlow
+                .filter { event -> event.channelId == channelId }
+                .collect {
+                    _channelEventEventLiveData.postValue(it)
+                }
         }
     }
 
@@ -204,9 +213,9 @@ class ChannelMembersViewModel(
             val response = channelInteractor.findOrCreatePendingChannelByMembers(CreateChannelData(
                 type = ChannelTypeEnum.Direct.value,
                 members = listOf(SceytMember(role = Role(RoleTypeEnum.Owner.value), user = user)),
-            ))
-            if (response is SceytResponse.Success)
-                _findOrCreateChatLiveData.postValue(response.data ?: return@launch)
+            )).onSuccessNotNull { data ->
+                _findOrCreateChatLiveData.postValue(data)
+            }
 
             notifyPageStateWithResponse(response)
         }

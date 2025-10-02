@@ -14,8 +14,8 @@ import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.TextStyle
 
 data class InputSelectedMediaStyle(
-        @ColorInt val backgroundColor: Int,
-        @ColorInt val fileAttachmentBackgroundColor: Int,
+        @param:ColorInt val backgroundColor: Int,
+        @param:ColorInt val fileAttachmentBackgroundColor: Int,
         val removeAttachmentIcon: Drawable?,
         val attachmentDurationTextStyle: TextStyle,
         val fileAttachmentNameTextStyle: TextStyle,

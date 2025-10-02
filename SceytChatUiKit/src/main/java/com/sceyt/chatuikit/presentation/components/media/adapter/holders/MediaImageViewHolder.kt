@@ -21,7 +21,7 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploading
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.WaitingToUpload
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.holders.BaseFileViewHolder
 import com.sceyt.chatuikit.presentation.components.media.adapter.MediaItem
-import com.sceyt.chatuikit.styles.MediaPreviewStyle
+import com.sceyt.chatuikit.styles.preview.MediaPreviewStyle
 
 class MediaImageViewHolder(
         private val binding: SceytMediaItemImageBinding,

@@ -4,19 +4,23 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.channel.Channel
+import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.message.BodyAttribute
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.ForwardingDetails
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageState
+import com.sceyt.chat.models.role.Role
 import com.sceyt.chat.models.user.Presence
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.models.user.UserState
+import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
 import com.sceyt.chatuikit.extensions.getStringOrNull
 import com.sceyt.chatuikit.persistence.mappers.toSceytUser
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
+import org.json.JSONArray
 import org.json.JSONObject
 
 object PushDataParser {
@@ -24,8 +28,14 @@ object PushDataParser {
     private const val KEY_MESSAGE = "message"
     private const val KEY_USER = "user"
     private const val KEY_REACTION = "reaction"
+    private const val KEY_MENTIONED_USERS = "mentions"
+    private const val KEY_ATTACHMENTS = "attachments"
 
-    fun getMessage(payload: Map<String, String>, channelId: Long?, user: User?): Message? {
+    fun getMessage(
+            payload: Map<String, String>,
+            channelId: Long?,
+            user: User?,
+    ): Message? {
         channelId ?: return null
         return try {
             val messageJson = payload[KEY_MESSAGE]
@@ -46,15 +56,36 @@ object PushDataParser {
             val bodyAttributes = getBodyAttributesFromJson(messageJsonObject)
             val createdAt = DateTimeUtil.convertStringToDate(createdAtString, DateTimeUtil.SERVER_DATE_PATTERN)
 
-            val attachmentArray = ArrayList<Attachment>()
-            val attachments = messageJsonObject.getJSONArray("attachments")
+            val attachmentArray = mutableListOf<Attachment>()
+            val attachments = messageJsonObject.getJSONArray(KEY_ATTACHMENTS)
             for (i in 0 until attachments.length()) {
-                when (val value: Any = attachments[i]) {
+                when (val attachment = attachments[i]) {
                     is JSONObject -> {
-                        getAttachment(value)?.let { attachmentArray.add(it) }
+                        attachment.getAttachmentFromJSON()?.let {
+                            attachmentArray.add(it)
+                        }
                     }
                 }
             }
+
+            val mentionUsersArray by lazy { mutableListOf<User>() }
+            val mentionedUsersJson = payload[KEY_MENTIONED_USERS]
+            if (mentionedUsersJson != null) {
+                runCatching {
+                    JSONArray(mentionedUsersJson)
+                }.onSuccess { mentionedUsers ->
+                    for (i in 0 until mentionedUsers.length()) {
+                        when (val value = mentionedUsers[i]) {
+                            is JSONObject -> {
+                                value.getUserFromJSON()?.let {
+                                    mentionUsersArray.add(it)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             val parentMessage = if (parentMessageIdString != null)
                 Message(parentMessageIdString, channelId, MessageState.Unmodified) else null
             val messageId = messageIdString.toLongOrNull() ?: return null
@@ -78,13 +109,15 @@ object PushDataParser {
                 /* reactionTotal = */ null,
                 /* markerTotals = */ null,
                 /* userMarkers = */ null,
-                /* mentionedUsers = */ null,
+                /* mentionedUsers = */ mentionUsersArray.toTypedArray(),
                 /* parentMessage = */ parentMessage,
                 /* replyCount = */ 0,
                 /* displayCount = */ 0,
                 /* autoDeleteAt = */ 0,
                 /* forwardingDetails = */ forwardingDetails,
-                /* bodyAttributes = */ bodyAttributes.toTypedArray())
+                /* bodyAttributes = */ bodyAttributes.toTypedArray(),
+                /* disableMentionsCount = */ false
+            )
         } catch (e: Exception) {
             e.printStackTrace()
             null
@@ -95,14 +128,20 @@ object PushDataParser {
         val userJson = payload[KEY_USER] ?: return null
         return try {
             val userJsonObject = JSONObject(userJson)
-            val id = userJsonObject.getString("id")
-            val username = userJsonObject.getStringOrNull("username") ?: ""
-            val fName = userJsonObject.getString("first_name")
-            val lName = userJsonObject.getString("last_name")
-            val presence = userJsonObject.getString("presence_status")
-            User(id, username, fName, lName, "", null,
-                Presence(PresenceState.Online, presence, 0),
-                UserState.Active, false)
+            userJsonObject.getUserFromJSON()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+    fun getMember(payload: Map<String, String>): Member? {
+        val userJson = payload[KEY_USER] ?: return null
+        return try {
+            val userJsonObject = JSONObject(userJson)
+            val user = getUser(payload) ?: return null
+            val role = userJsonObject.getString("role") ?: return null
+            Member(Role(role), user)
         } catch (e: Exception) {
             e.printStackTrace()
             null
@@ -119,10 +158,37 @@ object PushDataParser {
             val subject = channelJsonObject.getString("subject")
             val meta = channelJsonObject.getString("metadata")
             val membersCount = channelJsonObject.getLong("members_count")
-            val channel = Channel(id, 0, uri, type, subject, null, meta, 0, 0,
-                0, membersCount, null, "", false, 0, 0,
-                0, false, false, false, 0, 0, 0,
-                0L, 0L, null, emptyArray(), emptyArray(), emptyArray())
+            val members = listOfNotNull(getMember(payload))
+            val channel = Channel(
+                /* id = */ id,
+                /* parentChannelId = */ 0,
+                /* uri = */ uri,
+                /* type = */ type,
+                /* subject = */ subject,
+                /* avatarUrl = */ null,
+                /* metadata = */ meta,
+                /* createdAt = */ 0,
+                /* updatedAt = */ 0,
+                /* messagesClearedAt = */ 0,
+                /* memberCount = */ membersCount,
+                /* createdBy = */ null,
+                /* userRole = */ RoleTypeEnum.Member.value, // Todo we should receive the role from the server.
+                /* unread = */ false,
+                /* newMessageCount = */ 0,
+                /* newMentionCount = */ 0,
+                /* newReactedMessageCount = */ 0,
+                /* hidden = */ false,
+                /* archived = */ false,
+                /* muted = */ false,
+                /* mutedTill = */ 0,
+                /* pinnedAt = */ 0,
+                /* lastReceivedMessageId = */ 0,
+                /* lastDisplayedMessageId = */ 0L,
+                /* messageRetentionPeriod = */ 0L,
+                /* lastMessage = */ null,
+                /* messages = */ emptyArray(),
+                /* members = */ members.toTypedArray(),
+                /* newReactions = */ emptyArray())
             channel
         } catch (e: Exception) {
             e.printStackTrace()
@@ -147,14 +213,13 @@ object PushDataParser {
         }
     }
 
-    fun getAttachment(attachment: JSONObject?): Attachment? {
+    fun JSONObject.getAttachmentFromJSON(): Attachment? {
         return try {
-            attachment ?: return null
-            val data = attachment.getString("data")
-            val name = attachment.getString("name")
-            val type = attachment.getString("type")
-            val metadata = attachment.getString("metadata")
-            val size = attachment.getString("size").toLongOrNull() ?: return null
+            val data = getString("data")
+            val name = getString("name")
+            val type = getString("type")
+            val metadata = getString("metadata")
+            val size = getString("size").toLongOrNull() ?: return null
             Attachment.Builder("", data, type)
                 .setFileSize(size)
                 .setName(name)
@@ -163,6 +228,28 @@ object PushDataParser {
             e.printStackTrace()
             null
         }
+    }
+
+    fun JSONObject.getUserFromJSON(): User? = try {
+        val id = getString("id")
+        val username = getStringOrNull("username") ?: ""
+        val fName = getString("first_name")
+        val lName = getString("last_name")
+        val presence = getStringOrNull("presence_status")
+        User(
+            /* id = */ id,
+            /* username = */ username,
+            /* firstName = */ fName,
+            /* lastName = */ lName,
+            /* avatarURL = */ "",
+            /* metadataMap = */ null,
+            /* presence = */ Presence(PresenceState.Online, presence.orEmpty(), 0),
+            /* state = */ UserState.Active,
+            /* blocked = */ false
+        )
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
     }
 
     private fun getDeliveryStatusFromJson(jsonObject: JSONObject): DeliveryStatus {

@@ -5,8 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.managers.channel.ChannelEventManager
-import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventData
-import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventEnum
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelActionEvent
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventData
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventEnum
 import com.sceyt.chatuikit.data.models.SceytResponse
@@ -73,10 +72,10 @@ class ChannelInfoViewModel : BaseViewModel(), SceytKoinComponent {
     private val _channelUpdatedLiveData = MutableLiveData<SceytChannel>()
     val channelUpdatedLiveData = _channelUpdatedLiveData.asLiveData()
 
-    private val _onChannelLeftLiveData = MutableLiveData<ChannelEventData>()
+    private val _onChannelLeftLiveData = MutableLiveData<ChannelActionEvent.Left>()
     val onChannelLeftLiveData = _onChannelLeftLiveData.asLiveData()
 
-    private val _onChannelDeletedLiveData = MutableLiveData<ChannelEventData>()
+    private val _onChannelDeletedLiveData = MutableLiveData<ChannelActionEvent.Deleted>()
     val onChannelDeletedLiveData = _onChannelDeletedLiveData.asLiveData()
 
     fun observeUserPresenceUpdate(channel: SceytChannel) {
@@ -111,16 +110,15 @@ class ChannelInfoViewModel : BaseViewModel(), SceytKoinComponent {
     fun onChannelEvent(channelId: Long) {
         ChannelEventManager.onChannelEventFlow
             .filter { it.channelId == channelId }
-            .onEach {
-                when (val event = it.eventType) {
-                    is ChannelEventEnum.Left -> {
+            .onEach { event ->
+                when (event) {
+                    is ChannelActionEvent.Left -> {
                         if (event.leftMembers.any { member -> member.id == SceytChatUIKit.chatUIFacade.myId })
-                            _onChannelLeftLiveData.postValue(it)
+                            _onChannelLeftLiveData.postValue(event)
                     }
 
-                    is ChannelEventEnum.Deleted -> _onChannelDeletedLiveData.postValue(it)
-                    is ChannelEventEnum.Joined -> _joinLiveData.postValue(it.channel
-                            ?: return@onEach)
+                    is ChannelActionEvent.Deleted -> _onChannelDeletedLiveData.postValue(event)
+                    is ChannelActionEvent.Joined -> _joinLiveData.postValue(event.channel)
 
                     else -> return@onEach
                 }

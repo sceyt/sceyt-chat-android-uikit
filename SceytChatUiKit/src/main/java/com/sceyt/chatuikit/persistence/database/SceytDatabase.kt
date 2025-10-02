@@ -8,7 +8,6 @@ import com.sceyt.chatuikit.persistence.database.converters.ChannelConverter
 import com.sceyt.chatuikit.persistence.database.converters.ListStringConverter
 import com.sceyt.chatuikit.persistence.database.converters.MessageConverter
 import com.sceyt.chatuikit.persistence.database.dao.AttachmentDao
-import com.sceyt.chatuikit.persistence.database.dao.AutoDeleteMessageDao
 import com.sceyt.chatuikit.persistence.database.dao.ChannelDao
 import com.sceyt.chatuikit.persistence.database.dao.ChatUserReactionDao
 import com.sceyt.chatuikit.persistence.database.dao.DraftMessageDao
@@ -31,8 +30,10 @@ import com.sceyt.chatuikit.persistence.database.entity.link.LinkDetailsEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.AttachmentEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.AttachmentPayLoadEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.AutoDeleteMessageEntity
+import com.sceyt.chatuikit.persistence.database.entity.messages.DraftAttachmentEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.DraftMessageEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.DraftMessageUserLinkEntity
+import com.sceyt.chatuikit.persistence.database.entity.messages.DraftVoiceAttachmentEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.LoadRangeEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.MarkerEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.MentionUserMessageLinkEntity
@@ -53,6 +54,8 @@ import com.sceyt.chatuikit.persistence.database.entity.user.UserMetadataEntity
         MessageEntity::class,
         MentionUserMessageLinkEntity::class,
         DraftMessageEntity::class,
+        DraftAttachmentEntity::class,
+        DraftVoiceAttachmentEntity::class,
         DraftMessageUserLinkEntity::class,
         AttachmentEntity::class,
         MarkerEntity::class,
@@ -69,7 +72,7 @@ import com.sceyt.chatuikit.persistence.database.entity.user.UserMetadataEntity
         AutoDeleteMessageEntity::class,
         UserMetadataEntity::class,
     ],
-    version = 20,
+    version = 23,
     autoMigrations = [
         AutoMigration(from = 1, to = 2),
         AutoMigration(from = 2, to = 3),
@@ -88,6 +91,9 @@ import com.sceyt.chatuikit.persistence.database.entity.user.UserMetadataEntity
         AutoMigration(from = 17, to = 18, spec = DatabaseMigrations.AutoMigrationSpec17To18::class),
         AutoMigration(from = 18, to = 19, spec = DatabaseMigrations.AutoMigrationSpec18To19::class),
         AutoMigration(from = 19, to = 20),
+        AutoMigration(from = 20, to = 21),
+        AutoMigration(from = 21, to = 22),
+        AutoMigration(from = 22, to = 23)
     ])
 
 @TypeConverters(ChannelConverter::class, MessageConverter::class, ListStringConverter::class)
@@ -107,5 +113,4 @@ internal abstract class SceytDatabase : RoomDatabase() {
     abstract fun linkDao(): LinkDao
     abstract fun loadRangeDao(): LoadRangeDao
     abstract fun markerDao(): MarkerDao
-    abstract fun autoDeleteMessageDao(): AutoDeleteMessageDao
 }

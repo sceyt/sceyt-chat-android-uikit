@@ -15,7 +15,7 @@ import com.sceyt.chatuikit.databinding.SceytFragmentChannelInfoToolbarBinding
 import com.sceyt.chatuikit.extensions.changeAlphaWithAnimation
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.setBundleArguments
-import com.sceyt.chatuikit.extensions.setOnClickListenerDisableClickViewForWhile
+import com.sceyt.chatuikit.extensions.setSafeOnClickListener
 import com.sceyt.chatuikit.persistence.extensions.checkIsMemberInChannel
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.haveUpdateChannelPermission
@@ -66,11 +66,11 @@ open class ChannelInfoToolbarFragment : Fragment(), ChannelUpdateListener, Chann
             buttonsListener?.invoke(ClickActionsEnum.Back)
         }
 
-        icEdit.setOnClickListenerDisableClickViewForWhile {
+        icEdit.setSafeOnClickListener {
             onEditClick()
         }
 
-        icMore.setOnClickListenerDisableClickViewForWhile {
+        icMore.setSafeOnClickListener {
             onMoreClick()
         }
     }

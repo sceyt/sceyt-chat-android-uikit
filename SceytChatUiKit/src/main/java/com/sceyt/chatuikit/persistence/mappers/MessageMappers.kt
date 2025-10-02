@@ -3,12 +3,9 @@ package com.sceyt.chatuikit.persistence.mappers
 import com.sceyt.chat.models.message.ForwardingDetails
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.wrapper.ClientWrapper
-import com.sceyt.chatuikit.data.models.channels.DraftMessage
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytUser
-import com.sceyt.chatuikit.persistence.database.entity.messages.DraftMessageDb
-import com.sceyt.chatuikit.persistence.database.entity.messages.DraftMessageEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.ForwardingDetailsDb
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageDb
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageEntity
@@ -39,7 +36,8 @@ internal fun SceytMessage.toMessageEntity(unList: Boolean) = MessageEntity(
     autoDeleteAt = autoDeleteAt,
     forwardingDetailsDb = forwardingDetails?.toForwardingDetailsDb(),
     unList = unList,
-    bodyAttribute = bodyAttributes
+    bodyAttribute = bodyAttributes,
+    disableMentionsCount = disableMentionsCount
 )
 
 fun getTid(msgId: Long, tid: Long, incoming: Boolean): Long {
@@ -54,7 +52,9 @@ internal fun SceytMessage.toMessageDb(unList: Boolean): MessageDb {
         messageEntity = toMessageEntity(unList),
         from = user?.toUserDb(),
         parent = parentMessage?.toParentMessageEntity(),
-        attachments = attachments?.map { it.toAttachmentDb(id, tid, channelId) },
+        attachments = attachments?.map {
+            it.toAttachmentDb(messageId = id, messageTid = tid, channelId = channelId)
+        },
         userMarkers = userMarkers?.map { it.toMarkerEntity() },
         reactions = userReactions?.map { it.toReactionDb() },
         reactionsTotals = reactionTotals?.map { it.toReactionTotalEntity(id) }?.toMutableList(),
@@ -98,7 +98,8 @@ internal fun MessageDb.toSceytMessage(): SceytMessage {
             autoDeleteAt = autoDeleteAt,
             forwardingDetails = forwardingDetailsDb?.toForwardingDetails(channelId, forwardingUser?.toSceytUser()),
             pendingReactions = pendingReactions?.map { it.toReactionData() },
-            bodyAttributes = bodyAttribute
+            bodyAttributes = bodyAttribute,
+            disableMentionsCount = disableMentionsCount
         )
     }
 }
@@ -114,14 +115,20 @@ internal fun ParentMessageDb.toSceytMessage(): SceytMessage {
 }
 
 internal fun SceytMessage.toParentMessageEntity(): ParentMessageDb {
-    return ParentMessageDb(toMessageEntity(true), user?.toUserDb(), attachments?.map {
-        it.toAttachmentDb(id, getTid(id, tid, incoming), channelId)
-    }, null)
+    val messageTid = getTid(id, tid, incoming)
+    return ParentMessageDb(
+        messageEntity = toMessageEntity(unList = true),
+        from = user?.toUserDb(),
+        attachments = attachments?.map {
+            it.toAttachmentDb(messageId = id, messageTid = messageTid, channelId = channelId)
+        },
+        mentionedUsers = null
+    )
 }
 
 private fun MessageEntity.parentMessageToSceytMessage(
         attachments: Array<SceytAttachment>?,
-        from: SceytUser?, mentionedUsers: List<SceytUser>?
+        from: SceytUser?, mentionedUsers: List<SceytUser>?,
 ) = SceytMessage(
     id = id ?: 0,
     tid = tid,
@@ -149,7 +156,8 @@ private fun MessageEntity.parentMessageToSceytMessage(
     autoDeleteAt = autoDeleteAt,
     forwardingDetails = forwardingDetailsDb?.toForwardingDetails(channelId, null),
     pendingReactions = null,
-    bodyAttributes = bodyAttribute
+    bodyAttributes = bodyAttribute,
+    disableMentionsCount = disableMentionsCount
 )
 
 internal fun MessageDb.toMessage(): Message {
@@ -180,7 +188,8 @@ internal fun MessageDb.toMessage(): Message {
             displayCount,
             autoDeleteAt ?: 0L,
             forwardingDetailsDb?.toForwardingDetails(channelId, forwardingUser?.toSceytUser()),
-            bodyAttribute?.toTypedArray()
+            bodyAttribute?.toTypedArray(),
+            disableMentionsCount
         )
     }
 }
@@ -227,6 +236,7 @@ fun Message.toSceytUiMessage(isGroup: Boolean? = null): SceytMessage {
         forwardingDetails = forwardingDetails,
         pendingReactions = null,
         bodyAttributes = bodyAttributes?.toList(),
+        disableMentionsCount = disableMentionsCount,
         isGroup = isGroup ?: false
     )
 }
@@ -258,7 +268,9 @@ fun SceytMessage.toMessage(): Message {
         displayCount,
         autoDeleteAt ?: 0L,
         forwardingDetails,
-        bodyAttributes?.toTypedArray())
+        bodyAttributes?.toTypedArray(),
+        disableMentionsCount
+    )
 }
 
 internal fun ForwardingDetails.toForwardingDetailsDb() = ForwardingDetailsDb(
@@ -267,32 +279,11 @@ internal fun ForwardingDetails.toForwardingDetailsDb() = ForwardingDetailsDb(
     hops = hops
 )
 
-
-internal fun ForwardingDetailsDb.toForwardingDetails(channelId: Long, user: SceytUser?) = ForwardingDetails(
+internal fun ForwardingDetailsDb.toForwardingDetails(
+        channelId: Long,
+        user: SceytUser?,
+) = ForwardingDetails(
     messageId, channelId,
     user?.toUser(),
     hops
-)
-
-internal fun DraftMessageDb.toDraftMessage() = DraftMessage(
-    chatId = draftMessageEntity.chatId,
-    body = draftMessageEntity.message,
-    createdAt = draftMessageEntity.createdAt,
-    mentionUsers = mentionUsers?.map { it.toSceytUser() },
-    replyOrEditMessage = replyOrEditMessage?.toSceytMessage(),
-    isReply = draftMessageEntity.isReplyMessage ?: false,
-    bodyAttributes = draftMessageEntity.styleRanges
-)
-
-internal fun DraftMessageEntity.toDraftMessage(
-        mentionUsers: List<SceytUser>?,
-        replyMessage: SceytMessage?
-) = DraftMessage(
-    chatId = chatId,
-    body = message,
-    createdAt = createdAt,
-    mentionUsers = mentionUsers,
-    replyOrEditMessage = replyMessage,
-    isReply = isReplyMessage ?: false,
-    bodyAttributes = styleRanges
 )

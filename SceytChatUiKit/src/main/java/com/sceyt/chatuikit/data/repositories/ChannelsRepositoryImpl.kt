@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.data.repositories
 
+import android.util.Log
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.models.SearchQueryOperator
@@ -116,13 +117,19 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         }
     }
 
-    override suspend fun loadMoreChannels(): SceytResponse<List<SceytChannel>> {
-        return suspendCancellableCoroutine { continuation ->
-            val query = if (::channelsQuery.isInitialized)
-                channelsQuery
-            else throw IllegalStateException("Channels query is not initialized")
+    override suspend fun loadMoreChannels(
+            query: String,
+            config: ChannelListConfig,
+            params: SearchChannelParams,
+    ): SceytResponse<List<SceytChannel>> {
+        val channelListQuery = if (::channelsQuery.isInitialized)
+            channelsQuery
+        else {
+            return getChannels(query, config, params)
+        }
 
-            query.loadNext(object : ChannelsCallback {
+        return suspendCancellableCoroutine { continuation ->
+            channelListQuery.loadNext(object : ChannelsCallback {
                 override fun onResult(channels: MutableList<Channel>?) {
                     if (channels.isNullOrEmpty())
                         continuation.safeResume(SceytResponse.Success(emptyList()))
@@ -583,6 +590,11 @@ class ChannelsRepositoryImpl : ChannelsRepository {
                 }
             })
         }
+    }
+
+    override suspend fun sendChannelEvent(channelId: Long, event: String) {
+        ChannelOperator.build(channelId).sendEvent(event)
+        Log.i("sdfsdf", "sendChannelEvent: $event")
     }
 
     private fun createChannelListQuery(

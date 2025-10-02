@@ -6,6 +6,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Parcelable
 import androidx.activity.addCallback
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.annotation.DrawableRes
 import androidx.appcompat.app.AppCompatActivity
@@ -14,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.databinding.SceytActivitySelectUsersBinding
+import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.extensions.overrideTransitions
 import com.sceyt.chatuikit.extensions.parcelable
@@ -23,7 +25,7 @@ import com.sceyt.chatuikit.presentation.components.select_users.adapters.Selecte
 import com.sceyt.chatuikit.presentation.components.select_users.adapters.UserItem
 import com.sceyt.chatuikit.presentation.components.select_users.adapters.holders.SelectableUserViewHolderFactory
 import com.sceyt.chatuikit.presentation.components.select_users.viewmodel.UsersViewModel
-import com.sceyt.chatuikit.styles.SelectUsersStyle
+import com.sceyt.chatuikit.styles.select_users.SelectUsersStyle
 import kotlinx.parcelize.Parcelize
 
 open class SelectUsersActivity : AppCompatActivity() {
@@ -37,6 +39,7 @@ open class SelectUsersActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         style = SelectUsersStyle.Builder(this, null).build()
 
         setContentView(SceytActivitySelectUsersBinding.inflate(layoutInflater)
@@ -44,6 +47,7 @@ open class SelectUsersActivity : AppCompatActivity() {
             .root)
 
         binding.applyStyle()
+        applyInsetsAndWindowColor(binding.root)
         statusBarIconsColorWithBackground()
 
         initViewModel()
@@ -198,7 +202,7 @@ open class SelectUsersActivity : AppCompatActivity() {
 data class SelectUsersPageArgs(
         val toolbarTitle: String? = null,
         val actionButtonAlwaysEnable: Boolean = false,
-        @DrawableRes val actionButtonIcon: Int = R.drawable.sceyt_ic_arrow_next,
+        @param:DrawableRes val actionButtonIcon: Int = R.drawable.sceyt_ic_arrow_next,
 ) : Parcelable
 
 

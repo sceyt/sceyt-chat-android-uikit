@@ -1,13 +1,13 @@
 package com.sceyt.chatuikit.persistence.extensions
 
 import android.util.Log
-import com.abedelazizshe.lightcompressorlibrary.VideoQuality
 import com.sceyt.chatuikit.extensions.getMimeTypeTakeExtension
 import com.sceyt.chatuikit.shared.media_encoder.TranscodeResultEnum.Cancelled
 import com.sceyt.chatuikit.shared.media_encoder.TranscodeResultEnum.Failure
 import com.sceyt.chatuikit.shared.media_encoder.TranscodeResultEnum.Progress
 import com.sceyt.chatuikit.shared.media_encoder.TranscodeResultEnum.Start
 import com.sceyt.chatuikit.shared.media_encoder.TranscodeResultEnum.Success
+import com.sceyt.chatuikit.shared.media_encoder.VideoQuality
 import com.sceyt.chatuikit.shared.media_encoder.VideoTranscodeData
 import com.sceyt.chatuikit.shared.media_encoder.VideoTranscodeHelper
 import com.sceyt.chatuikit.shared.utils.FileResizeUtil

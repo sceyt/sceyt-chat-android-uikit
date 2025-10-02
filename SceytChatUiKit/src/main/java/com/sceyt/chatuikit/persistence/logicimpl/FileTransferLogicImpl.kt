@@ -10,6 +10,7 @@ import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.FileChecksumData
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.extensions.TAG
+import com.sceyt.chatuikit.extensions.getFileSize
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.logger.SceytLog
@@ -35,8 +36,9 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferTask
 import com.sceyt.chatuikit.persistence.logic.FileTransferLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import com.sceyt.chatuikit.persistence.mappers.toTransferData
-import com.sceyt.chatuikit.presentation.extensions.checkLoadedFileIsCorrect
+import com.sceyt.chatuikit.presentation.extensions.isAttachmentExistAndFullyLoaded
 import com.sceyt.chatuikit.shared.media_encoder.VideoTranscodeHelper
+import com.sceyt.chatuikit.shared.utils.FilePathUtil.getOrCreateUniqueFileDirectory
 import com.sceyt.chatuikit.shared.utils.FileResizeUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -46,6 +48,7 @@ import java.io.FileNotFoundException
 import java.util.Collections
 import java.util.LinkedList
 import java.util.Queue
+import java.util.UUID
 import kotlin.math.max
 
 internal class FileTransferLogicImpl(
@@ -53,7 +56,7 @@ internal class FileTransferLogicImpl(
         private val attachmentLogic: PersistenceAttachmentLogic,
 ) : FileTransferLogic, SceytKoinComponent {
     private val fileTransferService: FileTransferService by inject()
-    private val transferUtility by lazy { FileTransferUtility(context) }
+    private val transferUtility by lazy { FileTransferUtility() }
     private var downloadingUrlMap = hashMapOf<String, String>()
     private var thumbPaths = hashMapOf<String, ThumbPathsData>()
     private var preparingThumbsMap = hashMapOf<Long, Long>()
@@ -89,7 +92,10 @@ internal class FileTransferLogicImpl(
                 if (it.isSuccess) {
                     it.getOrNull()?.let { path ->
                         task.updateFileLocationCallback?.onUpdateFileLocation(path)
-                        uploadAttachment = uploadAttachment.copy(filePath = path)
+                        uploadAttachment = uploadAttachment.copy(
+                            filePath = path,
+                            fileSize = getFileSize(path)
+                        )
                     }
                 } else SceytLog.i("resizeResult", "Couldn't resize sharing file with reason ${it.exceptionOrNull()}")
 
@@ -107,7 +113,7 @@ internal class FileTransferLogicImpl(
             return
         }
         val destFile = getDestinationFile(context, attachment)
-        val file = attachment.checkLoadedFileIsCorrect(destFile)
+        val file = attachment.isAttachmentExistAndFullyLoaded(destFile)
 
         if (file != null) {
             task.downloadCallback?.onResult(SceytResponse.Success(file.path))
@@ -223,7 +229,7 @@ internal class FileTransferLogicImpl(
             PendingDownload, PauseDownload, ErrorDownload -> {
                 pausedTasksMap.remove(attachment.messageTid)
                 val destFile = getDestinationFile(context, attachment)
-                val file = attachment.checkLoadedFileIsCorrect(destFile)
+                val file = attachment.isAttachmentExistAndFullyLoaded(destFile)
 
                 if (file != null) {
                     fileTransferService.findTransferTask(attachment)?.downloadCallback?.onResult(
@@ -317,7 +323,10 @@ internal class FileTransferLogicImpl(
             if (it.isSuccess) {
                 it.getOrNull()?.let { path ->
                     transferTask.updateFileLocationCallback?.onUpdateFileLocation(path)
-                    uploadAttachment = uploadAttachment.copy(filePath = path)
+                    uploadAttachment = uploadAttachment.copy(
+                        filePath = path,
+                        fileSize = getFileSize(path)
+                    )
                 }
             } else SceytLog.i("resizeResult", "Couldn't resize file with reason ${it.exceptionOrNull()}")
 
@@ -488,8 +497,10 @@ internal class FileTransferLogicImpl(
     }
 
     private fun getDestinationFile(context: Context, attachment: SceytAttachment): File {
-        return File(context.getSaveFileLocationRoot(attachment.type),
-            "${attachment.messageTid}_${attachment.name}")
+        val root = context.getSaveFileLocationRoot(attachment.type)
+        val fileName = attachment.name.takeIf { it.isNotBlank() } ?: UUID.randomUUID().toString()
+        val destinationFile = getOrCreateUniqueFileDirectory(root, fileName, attachment.fileSize)
+        return destinationFile
     }
 
     private val SceytAttachment.downloadMapKey: String

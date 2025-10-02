@@ -12,6 +12,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.DefaultTimeBar
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.databinding.SceytMediaItemVideoBinding
+import com.sceyt.chatuikit.extensions.applySystemWindowInsetsPadding
 import com.sceyt.chatuikit.extensions.doSafe
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.persistence.file_transfer.ThumbFor
@@ -35,16 +36,15 @@ import com.sceyt.chatuikit.presentation.components.media.MediaPreviewActivity
 import com.sceyt.chatuikit.presentation.components.media.OnMediaClickCallback
 import com.sceyt.chatuikit.presentation.components.media.adapter.MediaAdapter
 import com.sceyt.chatuikit.presentation.components.media.adapter.MediaItem
-import com.sceyt.chatuikit.presentation.components.media.applySystemWindowInsetsMargin
 import com.sceyt.chatuikit.presentation.custom_views.PlayPauseImage
 import com.sceyt.chatuikit.presentation.helpers.ExoPlayerHelper
-import com.sceyt.chatuikit.styles.MediaPreviewStyle
+import com.sceyt.chatuikit.styles.preview.MediaPreviewStyle
 
 class MediaVideoViewHolder(
         private val binding: SceytMediaItemVideoBinding,
         private val style: MediaPreviewStyle,
         private val clickListeners: (MediaItem) -> Unit,
-        private val needMediaDataCallback: (NeedMediaInfoData) -> Unit
+        private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
 ) : BaseFileViewHolder<MediaItem>(binding.root, needMediaDataCallback) {
     private var playerHelper: ExoPlayerHelper? = null
     private var videoController: ConstraintLayout? = null
@@ -76,7 +76,7 @@ class MediaVideoViewHolder(
         var isPlayingBeforePause = false
         binding.videoView.findViewById<ConstraintLayout>(R.id.videoTimeContainer)?.let { videoTimeContainer ->
             with(videoTimeContainer) {
-                applySystemWindowInsetsMargin(applyBottom = true, userDefaultMargins = false)
+                applySystemWindowInsetsPadding(applyBottom = true, applyRight = true, applyLeft = true)
                 findViewById<DefaultTimeBar>(R.id.exo_progress)?.setOnTouchListener { _, event ->
                     when (event.action) {
                         MotionEvent.ACTION_DOWN -> {
@@ -105,7 +105,6 @@ class MediaVideoViewHolder(
     }
 
     private fun setPlayingState() {
-        videoController?.applySystemWindowInsetsMargin(applyBottom = true, userDefaultMargins = false)
         videoController?.isVisible = ((context as? MediaPreviewActivity)?.isVisibleToolbar()
                 ?: true)
         initPlayerHelper()

@@ -3,7 +3,6 @@ package com.sceyt.chatuikit.presentation.components.channel.header
 import android.animation.LayoutTransition
 import android.app.Activity
 import android.content.Context
-import android.graphics.drawable.ColorDrawable
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.Menu
@@ -14,20 +13,20 @@ import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.annotation.MenuRes
 import androidx.appcompat.widget.Toolbar
+import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.forEach
 import androidx.core.view.isVisible
-import androidx.core.view.marginBottom
 import androidx.core.view.marginLeft
-import androidx.core.view.marginRight
-import androidx.core.view.marginTop
 import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.appbar.AppBarLayout
+import com.sceyt.chat.models.ConnectionState
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.data.managers.channel.event.ChannelTypingEventData
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelMemberActivityEvent
+import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytUser
@@ -35,19 +34,25 @@ import com.sceyt.chatuikit.databinding.SceytMessagesListHeaderViewBinding
 import com.sceyt.chatuikit.extensions.asActivity
 import com.sceyt.chatuikit.extensions.asComponentActivity
 import com.sceyt.chatuikit.extensions.getCompatColor
+import com.sceyt.chatuikit.extensions.getScope
 import com.sceyt.chatuikit.extensions.getString
 import com.sceyt.chatuikit.extensions.hideKeyboard
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.maybeComponentActivity
+import com.sceyt.chatuikit.extensions.setPaddings
 import com.sceyt.chatuikit.extensions.showSoftInput
+import com.sceyt.chatuikit.formatters.attributes.ChannelEventTitleFormatterAttributes
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.haveDeleteAnyMessagePermission
+import com.sceyt.chatuikit.persistence.extensions.haveDeleteOwnMessagePermission
 import com.sceyt.chatuikit.persistence.extensions.haveEditAnyMessagePermission
 import com.sceyt.chatuikit.persistence.extensions.haveEditOwnMessagePermission
 import com.sceyt.chatuikit.persistence.extensions.haveForwardMessagePermission
 import com.sceyt.chatuikit.persistence.extensions.haveReplyMessagePermission
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
-import com.sceyt.chatuikit.presentation.components.channel.header.helpers.HeaderTypingUsersHelper
+import com.sceyt.chatuikit.presentation.components.channel.header.helpers.ChannelEventChangeHelper
+import com.sceyt.chatuikit.presentation.components.channel.header.helpers.ChannelEventData
+import com.sceyt.chatuikit.presentation.components.channel.header.helpers.ChannelEventState
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.click.MessageListHeaderClickListeners
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.click.MessageListHeaderClickListeners.ClickListeners
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.click.MessageListHeaderClickListenersImpl
@@ -63,7 +68,7 @@ import com.sceyt.chatuikit.presentation.components.channel.header.listeners.ui.s
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageCommandEvent
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoActivity
 import com.sceyt.chatuikit.presentation.custom_views.AvatarView
-import com.sceyt.chatuikit.styles.MessagesListHeaderStyle
+import com.sceyt.chatuikit.styles.messages_list.MessagesListHeaderStyle
 import com.sceyt.chatuikit.styles.common.MenuStyle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -86,12 +91,13 @@ class MessagesListHeaderView @JvmOverloads constructor(
     private var isReplyInThread: Boolean = false
     private var isGroup = false
     private var enablePresence: Boolean = true
-    private val typingUsersHelper by lazy { initTypingUsersHelper() }
+    private val channelEventChangeHelper by lazy { initChannelEventChangeHelper() }
     private var toolbarActionsHiddenCallback: (() -> Unit)? = null
     private var toolbarSearchModeChangeListener: ((Boolean) -> Unit)? = null
     private var addedMenu: Menu? = null
     private var onSearchQueryChangeListener: ((String) -> Unit)? = null
     val style: MessagesListHeaderStyle
+    private var lastChannelEventState: ChannelEventState? = null
     var isShowingMessageActions = false
         private set
     var isShowingSearchBar = false
@@ -107,10 +113,12 @@ class MessagesListHeaderView @JvmOverloads constructor(
         stateListAnimator = null
         with(binding) {
             applyStyle()
-            layoutToolbarRoot.layoutTransition = LayoutTransition().apply {
+            val animation = LayoutTransition().apply {
                 disableTransitionType(LayoutTransition.DISAPPEARING)
                 setDuration(200)
             }
+            layoutToolbarRoot.layoutTransition = animation
+            layoutSubTitle.layoutTransition = animation
 
             post { subTitle.isSelected = true }
 
@@ -145,7 +153,6 @@ class MessagesListHeaderView @JvmOverloads constructor(
 
         if (!isInEditMode) {
             updatePresenceEveryOneMin()
-            initTypingUsersHelper()
         }
     }
 
@@ -158,12 +165,17 @@ class MessagesListHeaderView @JvmOverloads constructor(
         }
     }
 
-    @Suppress("UNUSED_PARAMETER")
-    private fun setChannelTitle(titleTextView: TextView, channel: SceytChannel, replyMessage: SceytMessage? = null, replyInThread: Boolean = false) {
+    @Suppress("unused", "UNUSED_PARAMETER")
+    private fun setChannelTitle(
+            titleTextView: TextView,
+            channel: SceytChannel,
+            replyMessage: SceytMessage? = null,
+            replyInThread: Boolean = false,
+    ) {
         if (replyInThread) {
             with(titleTextView) {
                 text = getString(R.string.sceyt_thread_reply)
-                (layoutParams as MarginLayoutParams).setMargins(binding.avatar.marginLeft, marginTop, marginRight, marginBottom)
+                (layoutParams as? MarginLayoutParams)?.marginStart = binding.avatar.marginLeft
             }
         } else {
             val title = style.titleFormatter.format(context, channel)
@@ -172,21 +184,31 @@ class MessagesListHeaderView @JvmOverloads constructor(
         }
     }
 
-    private fun setChannelSubTitle(subjectTextView: TextView, channel: SceytChannel, replyMessage: SceytMessage? = null, replyInThread: Boolean = false) {
-        if (enablePresence.not() || channel.isPeerDeleted() || channel.isSelf) {
+    private fun setChannelSubTitle(
+            subjectTextView: TextView,
+            channel: SceytChannel,
+            replyMessage: SceytMessage? = null,
+            replyInThread: Boolean = false,
+    ) {
+        if (!enableSubTitle()) {
             subjectTextView.isVisible = false
             return
         }
         post {
+            if (!ConnectionEventManager.isConnected) return@post
             if (!replyInThread) {
                 val title = style.subtitleFormatter.format(context, channel)
-                setSubTitleText(subjectTextView, title, title.isNotBlank() && !typingUsersHelper.isTyping)
+                setSubTitleText(subjectTextView, title, title.isNotBlank() && !haveUserAction)
             } else {
                 val fullName = replyMessage?.user?.fullName
                 val subTitleText = String.format(getString(R.string.sceyt_with), fullName)
-                setSubTitleText(subjectTextView, subTitleText, !fullName.isNullOrBlank() && !typingUsersHelper.isTyping)
+                setSubTitleText(subjectTextView, subTitleText, !fullName.isNullOrBlank() && !haveUserAction)
             }
         }
+    }
+
+    private fun enableSubTitle(): Boolean {
+        return enablePresence && !channel.isPeerDeleted() && !channel.isSelf
     }
 
     private fun setSubTitleText(textView: TextView, title: CharSequence, visible: Boolean) {
@@ -198,7 +220,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
             return
 
         textView.text = title
-        textView.isVisible = !typingUsersHelper.isTyping
+        textView.isVisible = !haveUserAction
     }
 
     private fun setAvatar(avatar: AvatarView, channel: SceytChannel, replyInThread: Boolean = false) {
@@ -231,14 +253,16 @@ class MessagesListHeaderView @JvmOverloads constructor(
         }
     }
 
-    internal fun setChannel(channel: SceytChannel) {
+    internal fun setChannel(channel: SceytChannel, invalidateUI: Boolean) {
         this.channel = channel
         isGroup = channel.isGroup
 
-        with(binding) {
-            uiElementsListeners.onTitle(title, channel, null, false)
-            uiElementsListeners.onSubTitle(subTitle, channel, null, false)
-            uiElementsListeners.onAvatar(avatar, channel, false)
+        if (invalidateUI) {
+            with(binding) {
+                uiElementsListeners.onTitle(title, channel, null, false)
+                uiElementsListeners.onSubTitle(subTitle, channel, null, false)
+                uiElementsListeners.onAvatar(avatar, channel, false)
+            }
         }
     }
 
@@ -255,26 +279,51 @@ class MessagesListHeaderView @JvmOverloads constructor(
         }
     }
 
-    private fun initTypingUsersHelper(): HeaderTypingUsersHelper {
-        return HeaderTypingUsersHelper(context,
-            isGroup = isGroup,
-            typingUserNameFormatter = style.typingUserNameFormatter,
-            typingTextUpdatedListener = {
-                binding.tvTyping.text = it
-
+    private fun initChannelEventChangeHelper(): ChannelEventChangeHelper {
+        return ChannelEventChangeHelper(
+            scope = getScope(),
+            activeUsersUpdated = {
+                binding.tvChannelEvent.text = if (it.isEmpty()) ""
+                else initChannelEventTitle(it)
+                setTypingState(ChannelEventChangeHelper.getChannelEventState(it))
             },
-            typingStateUpdated = {
-                setTypingState(it)
-            })
+            showChannelEventsInSequence = style.showChannelEventsInSequence
+        )
     }
 
-    private fun setTypingState(typing: Boolean) {
-        if ((typing && isGroup.not()) || (isGroup && typingUsersHelper.typingUsers.isNotEmpty())) {
-            binding.subTitle.isVisible = false
-            binding.groupTyping.isVisible = true
-        } else {
-            binding.groupTyping.isVisible = false
-            binding.subTitle.isVisible = true
+    private fun initChannelEventTitle(channelEventData: List<ChannelEventData>): CharSequence {
+        return style.channelEventTitleFormatter.format(
+            context = context,
+            from = ChannelEventTitleFormatterAttributes(
+                channel = channel,
+                users = channelEventData
+            )
+        )
+    }
+
+    private fun setTypingState(state: ChannelEventState) {
+        if (lastChannelEventState == state) return
+        lastChannelEventState = state
+        val active = state != ChannelEventState.None
+        binding.subTitle.isVisible = !active
+        binding.layoutChannelEvent.isVisible = active
+        with(binding.lottieChannelEvent) {
+            isVisible = style.enableChannelEventIndicator
+            if (style.enableChannelEventIndicator) {
+                when (state) {
+                    ChannelEventState.Typing -> {
+                        setAnimation(R.raw.sceyt_typing)
+                        playAnimation()
+                    }
+
+                    ChannelEventState.Recording -> {
+                        setAnimation(R.raw.sceyt_recording)
+                        playAnimation()
+                    }
+
+                    ChannelEventState.None -> cancelAnimation()
+                }
+            }
         }
     }
 
@@ -285,7 +334,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
                 channel = channel.copy(members = channel.members?.map {
                     if (it.user.id == user.id) it.copy(user = user.copy()) else it
                 })
-                if (!typingUsersHelper.isTyping)
+                if (!haveUserAction)
                     uiElementsListeners.onSubTitle(binding.subTitle, channel, replyMessage, isReplyInThread)
             }
         }
@@ -313,12 +362,33 @@ class MessagesListHeaderView @JvmOverloads constructor(
         }
     }
 
-    internal fun onTyping(data: ChannelTypingEventData) {
-        eventListeners.onTypingEvent(data)
+    internal fun handleMemberActivityEvent(data: ChannelMemberActivityEvent) {
+        eventListeners.onActivityEvent(data)
     }
 
     internal fun onPresenceUpdate(user: SceytUser) {
         eventListeners.onPresenceUpdateEvent(user)
+    }
+
+    internal fun onConnectionStateUpdate(state: ConnectionState) = post {
+        if (state == ConnectionState.Connected) {
+            val title = style.subtitleFormatter.format(context, channel)
+            setSubTitleText(
+                textView = binding.subTitle,
+                title = title,
+                visible = title.isNotBlank() && !haveUserAction && enableSubTitle()
+            )
+            return@post
+        }
+        val title = SceytChatUIKit.formatters.connectionStateTitleFormatter.format(
+            context = context,
+            from = state
+        )
+        setSubTitleText(
+            textView = binding.subTitle,
+            title = title,
+            visible = enableSubTitle()
+        )
     }
 
     internal fun setToolbarActionHiddenCallback(callback: () -> Unit) {
@@ -329,8 +399,12 @@ class MessagesListHeaderView @JvmOverloads constructor(
         toolbarSearchModeChangeListener = listener
     }
 
+    val haveUserAction: Boolean
+        get() = channelEventChangeHelper.haveUserAction
+
     @Suppress("unused")
-    fun isTyping() = typingUsersHelper.isTyping
+    val channelEventData: List<ChannelEventData>
+        get() = channelEventChangeHelper.channelEventData
 
     @Suppress("unused")
     fun getChannel() = if (::channel.isInitialized) channel else null
@@ -375,11 +449,6 @@ class MessagesListHeaderView @JvmOverloads constructor(
     }
 
     @Suppress("unused")
-    fun setTypingTextBuilder(builder: (SceytUser) -> String) {
-        typingUsersHelper.setTypingTextBuilder(builder)
-    }
-
-    @Suppress("unused")
     fun invalidateUi() {
         with(binding) {
             uiElementsListeners.onTitle(title, channel, replyMessage, isReplyInThread)
@@ -395,6 +464,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
             setOnMenuItemClickListener(listener)
             addedMenu = menu
         }
+        binding.layoutToolbarDetails.setPaddings(right = 0)
     }
 
     @Suppress("unused")
@@ -419,8 +489,9 @@ class MessagesListHeaderView @JvmOverloads constructor(
     }
 
     //Event listeners
-    override fun onTypingEvent(data: ChannelTypingEventData) {
-        typingUsersHelper.onTypingEvent(data)
+    override fun onActivityEvent(event: ChannelMemberActivityEvent) {
+        if (event.userId == SceytChatUIKit.currentUserId) return
+        channelEventChangeHelper.onActivityEvent(event)
     }
 
     override fun onPresenceUpdateEvent(user: SceytUser) {
@@ -432,7 +503,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
             titleTextView: TextView,
             channel: SceytChannel,
             replyMessage: SceytMessage?,
-            replyInThread: Boolean
+            replyInThread: Boolean,
     ) {
         setChannelTitle(titleTextView, channel, replyMessage, replyInThread)
     }
@@ -441,7 +512,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
             subjectTextView: TextView,
             channel: SceytChannel,
             replyMessage: SceytMessage?,
-            replyInThread: Boolean
+            replyInThread: Boolean,
     ) {
         setChannelSubTitle(subjectTextView, channel, replyMessage, replyInThread)
     }
@@ -463,37 +534,35 @@ class MessagesListHeaderView @JvmOverloads constructor(
     }
 
     override fun onInitToolbarActionsMenu(vararg messages: SceytMessage, menu: Menu) {
+        if (messages.isEmpty()) return
         val isSingleMessage = messages.size == 1
-        val newSelectedMessage = messages.firstOrNull()
+        val fistMessage = messages.first()
+        val existPendingMessages = messages.any { it.deliveryStatus == DeliveryStatus.Pending }
 
-        val editMessage = menu.findItem(R.id.sceyt_edit_message)
-        val deleteMessage = menu.findItem(R.id.sceyt_delete_message)
-        val replyMessage = menu.findItem(R.id.sceyt_reply)
-        val forwardMessage = menu.findItem(R.id.sceyt_forward)
-        //val replyInThread = menu.findItem(R.id.sceyt_reply_in_thread)
-        val messageInfo = menu.findItem(R.id.sceyt_message_info)
-        val copyMessage = menu.findItem(R.id.sceyt_copy_message)
+        menu.findItem(R.id.sceyt_reply)?.isVisible = isSingleMessage && !existPendingMessages && channel.haveReplyMessagePermission()
+        //menu.findItem(R.id.sceyt_reply_in_thread).isVisible = isSingleMessage && !isPending
 
-        newSelectedMessage?.let { message ->
-            val isPending = message.deliveryStatus == DeliveryStatus.Pending
-            val expiredEditMessage = (System.currentTimeMillis() - message.createdAt) >
-                    SceytChatUIKit.config.messageEditTimeout
+        menu.findItem(R.id.sceyt_forward)?.isVisible = !existPendingMessages && channel.haveForwardMessagePermission()
+        val expiredEditMessage = (System.currentTimeMillis() - fistMessage.createdAt) >
+                SceytChatUIKit.config.messageEditTimeout
 
-            replyMessage?.isVisible = isSingleMessage && !isPending && channel.haveReplyMessagePermission()
-            //replyInThread.isVisible = isSingleMessage && !isPending
-            forwardMessage?.isVisible = !isPending && channel.haveForwardMessagePermission()
-            messageInfo.isVisible = isSingleMessage && !message.incoming && !isPending
-            copyMessage?.isVisible = messages.any { it.body.isNotNullOrBlank() }
-            editMessage.isVisible = when {
-                message.body.isBlank() || expiredEditMessage -> false
-                message.incoming -> channel.haveEditAnyMessagePermission()
-                isSingleMessage -> channel.haveEditOwnMessagePermission() || channel.haveEditOwnMessagePermission()
-                else -> false
-            }
-            deleteMessage.isVisible = when {
-                message.incoming -> channel.haveDeleteAnyMessagePermission()
-                else -> channel.haveDeleteAnyMessagePermission() || channel.haveDeleteAnyMessagePermission()
-            }
+        menu.findItem(R.id.sceyt_edit_message)?.isVisible = when {
+            fistMessage.body.isBlank() || expiredEditMessage -> false
+            fistMessage.incoming -> channel.haveEditAnyMessagePermission()
+            isSingleMessage -> channel.haveEditOwnMessagePermission()
+            else -> false
+        }
+
+        menu.findItem(R.id.sceyt_delete_message).isVisible = when {
+            fistMessage.incoming -> channel.haveDeleteAnyMessagePermission()
+            else -> channel.haveDeleteOwnMessagePermission()
+        }
+
+        menu.findItem(R.id.sceyt_message_info)?.isVisible = isSingleMessage
+                && !fistMessage.incoming && !existPendingMessages
+
+        menu.findItem(R.id.sceyt_copy_message)?.isVisible = messages.any {
+            it.body.isNotNullOrBlank()
         }
     }
 
@@ -533,8 +602,9 @@ class MessagesListHeaderView @JvmOverloads constructor(
 
     private fun SceytMessagesListHeaderViewBinding.applyStyle() {
         root.setBackgroundColor(style.backgroundColor)
-        toolbarUnderline.background = ColorDrawable(style.underlineColor)
+        toolbarUnderline.background = style.underlineColor.toDrawable()
         toolbarUnderline.isVisible = style.showUnderline
+        lottieChannelEvent.isVisible = style.enableChannelEventIndicator
         icBack.setImageDrawable(style.navigationIcon)
         style.titleTextStyle.apply(title)
         style.subTitleStyle.apply(subTitle)

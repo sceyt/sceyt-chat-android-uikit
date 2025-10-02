@@ -15,7 +15,7 @@ import com.sceyt.chatuikit.styles.common.ListItemStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
 
 data class MentionUsersListStyle(
-        @ColorInt val backgroundColor: Int,
+        @param:ColorInt val backgroundColor: Int,
         val itemStyle: ListItemStyle<Formatter<SceytUser>, *, AvatarRenderer<SceytUser>>
 ) {
     companion object {

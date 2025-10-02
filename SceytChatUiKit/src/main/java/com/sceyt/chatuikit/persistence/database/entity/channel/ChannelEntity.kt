@@ -4,8 +4,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
-
-internal const val CHANNEL_TABLE = "sceyt_channel_table"
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.CHANNEL_TABLE
 
 @Entity(
     tableName = CHANNEL_TABLE,

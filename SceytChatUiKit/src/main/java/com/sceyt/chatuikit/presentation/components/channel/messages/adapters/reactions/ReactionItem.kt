@@ -8,9 +8,11 @@ import kotlinx.parcelize.Parcelize
 
 sealed class ReactionItem : SelectableItem(), Parcelable {
     @Parcelize
-    data class Reaction(val reaction: SceytReactionTotal,
-                        val messageTid: Long,
-                        val isPending: Boolean) : ReactionItem()
+    data class Reaction(
+            val reaction: SceytReactionTotal,
+            val messageTid: Long,
+            val isPending: Boolean
+    ) : ReactionItem()
 
     @Parcelize
     data class Other(val message: SceytMessage) : ReactionItem()

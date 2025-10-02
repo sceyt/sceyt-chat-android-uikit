@@ -8,6 +8,7 @@ import androidx.core.content.res.use
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.formatters.Formatter
+import com.sceyt.chatuikit.styles.SceytComponentStyle
 import com.sceyt.chatuikit.renderers.AvatarRenderer
 import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.ListItemStyle
@@ -21,16 +22,17 @@ typealias ReactedUserItemStyle = ListItemStyle<Formatter<SceytUser>, Formatter<S
  * @property itemStyle Style for the user item in the list, default is [buildUserItemStyle].
  * */
 data class ReactedUserListStyle(
-        @ColorInt val backgroundColor: Int,
-        val itemStyle: ReactedUserItemStyle
-) {
+        @param:ColorInt val backgroundColor: Int,
+        val itemStyle: ReactedUserItemStyle,
+) : SceytComponentStyle() {
+
     companion object {
         var styleCustomizer = StyleCustomizer<ReactedUserListStyle> { _, style -> style }
     }
 
     internal class Builder(
             internal val context: Context,
-            private val attributeSet: AttributeSet?
+            private val attributeSet: AttributeSet?,
     ) {
         fun build(): ReactedUserListStyle {
             context.obtainStyledAttributes(attributeSet, R.styleable.ReactionInfo).use { array ->

@@ -3,6 +3,7 @@ package com.sceyt.chatuikit.persistence.logicimpl.message
 import android.content.Context
 import androidx.work.await
 import com.sceyt.chat.models.SceytException
+import com.sceyt.chat.models.Types
 import com.sceyt.chat.models.message.DeleteMessageType
 import com.sceyt.chat.models.message.DeleteMessageType.DeleteForEveryone
 import com.sceyt.chat.models.message.DeleteMessageType.DeleteForMe
@@ -39,14 +40,12 @@ import com.sceyt.chatuikit.data.models.messages.MarkerType.Received
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.data.repositories.getUserId
-import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.toDeliveryStatus
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.notifications.NotificationType
 import com.sceyt.chatuikit.persistence.database.dao.AttachmentDao
-import com.sceyt.chatuikit.persistence.database.dao.AutoDeleteMessageDao
 import com.sceyt.chatuikit.persistence.database.dao.LoadRangeDao
 import com.sceyt.chatuikit.persistence.database.dao.MessageDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingMarkerDao
@@ -106,7 +105,6 @@ import org.koin.core.component.inject
 internal class PersistenceMessagesLogicImpl(
         private val context: Context,
         private val messageDao: MessageDao,
-        private val autoDeleteMessageDao: AutoDeleteMessageDao,
         private val rangeDao: LoadRangeDao,
         private val attachmentDao: AttachmentDao,
         private val pendingMarkerDao: PendingMarkerDao,
@@ -190,12 +188,12 @@ internal class PersistenceMessagesLogicImpl(
                 val selfReactions = reactionDao.getSelfReactionsByMessageId(message.id, myId.toString())
                 val updateMsg = message.copy(userReactions = selfReactions.map { it.toSceytReaction() })
                 messagesCache.messageUpdated(updateMsg.channelId, updateMsg)
-                messageDao.updateMessage(updateMsg.toMessageEntity(false))
+                messageDao.updateMessageIgnored(updateMsg.toMessageEntity(false))
             }
 
             MessageState.Deleted -> {
                 messagesCache.messageUpdated(message.channelId, message)
-                messageDao.updateMessage(message.toMessageEntity(false))
+                messageDao.updateMessageIgnored(message.toMessageEntity(false))
                 deletedPayloads(message.id, message.tid)
             }
 
@@ -243,6 +241,15 @@ internal class PersistenceMessagesLogicImpl(
             query: String,
     ): SceytPagingResponse<List<SceytMessage>> = withContext(dispatcherIO) {
         return@withContext messagesRepository.searchMessages(conversationId, replyInThread, query)
+    }
+
+    override suspend fun getUnreadMentions(
+            conversationId: Long,
+            direction: Types.Direction,
+            messageId: Long,
+            limit: Int,
+    ): SceytPagingResponse<List<Long>> = withContext(dispatcherIO) {
+        return@withContext messagesRepository.getUnreadMentions(conversationId, direction, messageId, limit)
     }
 
     override suspend fun loadNextSearchMessages(): SceytPagingResponse<List<SceytMessage>> = withContext(dispatcherIO) {
@@ -402,7 +409,7 @@ internal class PersistenceMessagesLogicImpl(
     }
 
     private suspend fun createNewChannelInsteadOfPendingChannel(
-            pendingChannel: SceytChannel
+            pendingChannel: SceytChannel,
     ): SceytResponse<SceytChannel> {
         val response = persistenceChannelsLogic.createNewChannelInsteadOfPendingChannel(pendingChannel)
         if (response is SceytResponse.Success) {
@@ -449,7 +456,7 @@ internal class PersistenceMessagesLogicImpl(
 
     override suspend fun sendMessageWithUploadedAttachments(
             channelId: Long,
-            message: Message
+            message: Message,
     ): SceytResponse<SceytMessage> = withContext(dispatcherIO) {
         val channel = channelCache.getOneOf(channelId)
                 ?: persistenceChannelsLogic.getChannelFromDb(channelId)
@@ -811,10 +818,6 @@ internal class PersistenceMessagesLogicImpl(
 
     override fun getOnMessageFlow() = onMessageFlow.asSharedFlow()
 
-    override suspend fun sendTyping(channelId: Long, typing: Boolean) {
-        messagesRepository.sendTyping(channelId, typing)
-    }
-
     private fun loadMessages(
             loadType: LoadType, conversationId: Long, messageId: Long,
             replyInThread: Boolean, offset: Int, limit: Int,
@@ -851,7 +854,7 @@ internal class PersistenceMessagesLogicImpl(
     private suspend fun updateMessageLoadRange(
             messageId: Long,
             channelId: Long,
-            response: SceytResponse<List<SceytMessage>>
+            response: SceytResponse<List<SceytMessage>>,
     ) {
         val data = (response as? SceytResponse.Success)?.data ?: return
         if (data.isEmpty()) return
@@ -1078,21 +1081,20 @@ internal class PersistenceMessagesLogicImpl(
     }
 
     private suspend fun clearOutdatedMessages(channelId: Long) {
-        val outdatedMessages = autoDeleteMessageDao.getOutdatedMessages(
+        val outdatedMessageTIds = messageDao.getOutdatedMessageTIds(
             channelId = channelId,
             localTime = System.currentTimeMillis()
-        ).takeIf { it.isNotEmpty() } ?: return
-        messageDao.deleteMessagesByTid(outdatedMessages.map { message -> message.messageTid })
-        channelCache.messagesDeletedWithAutoDelete(channelId, outdatedMessages.associate {
-            it.messageTid to it.messageTid
-        })
+        ).ifEmpty { return }
+
+        messageDao.deleteMessagesByTid(outdatedMessageTIds)
+        channelCache.messagesDeletedWithAutoDelete(channelId, outdatedMessageTIds)
     }
 
     private suspend fun saveMessagesToDb(
             list: List<SceytMessage>?,
             includeParents: Boolean = true,
             unListAll: Boolean = false,
-            replaceUserOnConflict: Boolean = true
+            replaceUserOnConflict: Boolean = true,
     ): List<SceytMessage> {
         if (list.isNullOrEmpty()) return emptyList()
         val pendingStates = pendingMessageStateDao.getAll()
@@ -1127,12 +1129,19 @@ internal class PersistenceMessagesLogicImpl(
             }
         }
 
-        messageDao.upsertMessages(messagesDb)
+        userDao.insertUsersWithMetadata(usersDb.toList(), replaceUserOnConflict)
+        val forceUpdatedList = messageDao.upsertMessages(messagesDb)
+        if (forceUpdatedList.isNotEmpty()) {
+            messagesCache.deleteAllMessagesWhere {
+                return@deleteAllMessagesWhere forceUpdatedList.any { entity ->
+                    it.channelId == entity.channelId && (it.tid == entity.tid || it.id == entity.id)
+                }
+            }
+        }
         if (parentMessagesDb.isNotEmpty())
             messageDao.insertMessagesIgnored(parentMessagesDb)
 
-        userDao.insertUsersWithMetadata(usersDb.toList(), replaceUserOnConflict)
-        return mutableList
+        return mutableList.toList()
     }
 
     private fun updateMessageStatesWithPendingStates(message: SceytMessage, pendingStates: List<PendingMessageStateEntity>): SceytMessage? {
@@ -1170,6 +1179,7 @@ internal class PersistenceMessagesLogicImpl(
             channelId: Long, marker: MarkerType,
             vararg ids: Long,
     ): List<SceytResponse<MessageListMarker>> = withContext(dispatcherIO) {
+        SceytLog.i(TAG, "Mark messages as marker: ${marker.value}, ids: ${ids.toList()}")
         val responseList = mutableListOf<SceytResponse<MessageListMarker>>()
         ids.toList().chunked(50).forEach {
             val typedArray = it.toLongArray()
@@ -1215,22 +1225,23 @@ internal class PersistenceMessagesLogicImpl(
     private suspend fun onMarkerResponse(
             channelId: Long,
             response: SceytResponse<MessageListMarker>,
-            status: String,
-            vararg ids: Long
+            marker: String,
+            vararg ids: Long,
     ) {
         when (response) {
             is SceytResponse.Success -> {
                 response.data?.let { data ->
-                    SceytLog.i("onMarkerResponse", "send $status, ${ids.toList()}, in response ${data.messageIds}")
+                    SceytLog.i(TAG, "$marker marker successfully added to messages: ${ids.toList()}, in response ${data.messageIds}, " +
+                            "name: ${data.name}")
                     val responseIds = data.messageIds.toList()
 
-                    status.toDeliveryStatus()?.let { deliveryStatus ->
+                    marker.toDeliveryStatus()?.let { deliveryStatus ->
                         messageDao.updateMessagesStatus(channelId, responseIds, deliveryStatus)
                         val tIds = messageDao.getMessageTIdsByIds(*responseIds.toLongArray())
                         messagesCache.updateMessagesStatus(channelId, deliveryStatus, *tIds.toLongArray())
                     }
 
-                    pendingMarkerDao.deleteMessagesMarkersByStatus(responseIds, status)
+                    pendingMarkerDao.deleteMessagesMarkersByStatus(responseIds, marker)
                     myId?.let { userId ->
                         messageDao.insertUserMarkersIfExistMessage(responseIds.map {
                             MarkerEntity(messageId = it, userId = userId, name = data.name)
@@ -1242,9 +1253,14 @@ internal class PersistenceMessagesLogicImpl(
             is SceytResponse.Error -> {
                 // Check if error code is 1301 (TypeNotAllowed), 1228 (TypeBadParam) then delete pending markers
                 val code = response.exception?.code
+                SceytLog.i(TAG, "Error adding $marker marker to messages:${ids.toList()}, error:${response.exception?.message}, code: $code")
                 if (code == 1301 || code == 1228)
-                    pendingMarkerDao.deleteMessagesMarkersByStatus(ids.toList(), status)
+                    pendingMarkerDao.deleteMessagesMarkersByStatus(ids.toList(), marker)
             }
         }
+    }
+
+    companion object {
+        private const val TAG = "PersistenceMessagesLogic"
     }
 }

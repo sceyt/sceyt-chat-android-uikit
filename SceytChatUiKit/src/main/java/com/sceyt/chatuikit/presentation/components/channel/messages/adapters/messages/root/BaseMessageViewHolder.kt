@@ -49,7 +49,6 @@ import com.sceyt.chatuikit.extensions.isRtl
 import com.sceyt.chatuikit.extensions.isValidEmail
 import com.sceyt.chatuikit.extensions.marginHorizontal
 import com.sceyt.chatuikit.extensions.screenPortraitWidthPx
-import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
 import com.sceyt.chatuikit.extensions.setDrawableStart
 import com.sceyt.chatuikit.formatters.attributes.MessageBodyFormatterAttributes
@@ -82,7 +81,6 @@ abstract class BaseMessageViewHolder(
     private var replyMessageContainerBinding: SceytRecyclerReplyContainerBinding? = null
     protected var recyclerViewReactions: RecyclerView? = null
     protected lateinit var messageListItem: MessageListItem
-    val isMessageListItemInitialized get() = this::messageListItem.isInitialized
     private var highlightAnim: ValueAnimator? = null
     private val selectableAnimHelper by lazy { MessageSelectableAnimHelper(this) }
     private val px12 by lazy { dpToPx(12f) } // bodyTextView end margins
@@ -208,8 +206,11 @@ abstract class BaseMessageViewHolder(
         message.setChatMessageDateAndStatusIcon(messageDate, itemStyle, dateText, isEdited)
     }
 
-    // Invoke this method after invoking setOrUpdateReactions, to calculate the final width of the layout bubble
-    protected open fun setReplyMessageContainer(message: SceytMessage, viewStub: ViewStub, calculateWith: Boolean = true) {
+    protected open fun setReplyMessageContainer(
+            message: SceytMessage,
+            viewStub: ViewStub,
+            calculateWith: Boolean = true
+    ) {
         val parent = message.parentMessage
         if (!message.isReplied || parent == null) {
             viewStub.isVisible = false
@@ -218,9 +219,7 @@ abstract class BaseMessageViewHolder(
         if (viewStub.parent != null)
             SceytRecyclerReplyContainerBinding.bind(viewStub.inflate()).also {
                 replyMessageContainerBinding = it
-                it.viewReply.setBackgroundTint(if (message.incoming)
-                    itemStyle.incomingReplyBackgroundColor else itemStyle.outgoingReplyBackgroundColor)
-                it.applyStyle()
+                it.applyStyle(message.incoming)
             }
         with(replyMessageContainerBinding ?: return) {
             val replyStyle = itemStyle.replyMessageStyle
@@ -268,23 +267,14 @@ abstract class BaseMessageViewHolder(
             with(root) {
                 if (calculateWith) {
                     (layoutParams as? ConstraintLayout.LayoutParams)?.let { layoutParams ->
-                        layoutParams.matchConstraintMaxWidth = bubbleMaxWidth - marginHorizontal
-                        // Calculate the width of the layout bubble before measuring replyMessageContainer
-                        layoutBubble?.measure(View.MeasureSpec.UNSPECIFIED, 0)
-                        // Set the width LayoutParams.WRAP_CONTENT to layoutParas to measure the real width of replyMessageContainer
-                        layoutParams.width = LayoutParams.WRAP_CONTENT
                         measure(View.MeasureSpec.UNSPECIFIED, 0)
-                        val bubbleMeasuredWidth = min(bubbleMaxWidth, layoutBubble?.measuredWidth
-                                ?: 0)
-                        val minBoundOfWidth = bubbleMeasuredWidth - marginHorizontal
-                        // If the width of replyMessageContainer is bigger than the width of layout bubble,
-                        // set the width of layout bubble, else set the default width of replyMessageContainer
-                        if (measuredWidth >= minBoundOfWidth)
-                            layoutParams.matchConstraintMinWidth = minBoundOfWidth
-                        else {
-                            layoutParams.matchConstraintMinWidth = 0
-                            layoutParams.width = 0
-                        }
+                        // Set the max width of the reply container
+                        val maxWidth = bubbleMaxWidth - marginHorizontal
+                        layoutParams.matchConstraintMaxWidth = maxWidth
+                        // Set the min width of the reply container, to set message bubble width
+                        // as the same as the reply container width, if the message bubble width
+                        // is less than the reply container width
+                        layoutParams.matchConstraintMinWidth = measuredWidth
                     }
                 }
                 isVisible = true
@@ -305,7 +295,10 @@ abstract class BaseMessageViewHolder(
         }
     }
 
-    protected fun SceytRecyclerReplyContainerBinding.applyStyle() {
+    protected fun SceytRecyclerReplyContainerBinding.applyStyle(incoming: Boolean) {
+        if (incoming)
+            itemStyle.incomingReplyBackgroundStyle.apply(root)
+        else itemStyle.outgoingReplyBackgroundStyle.apply(root)
         itemStyle.replyMessageStyle.titleTextStyle.apply(tvName)
         itemStyle.replyMessageStyle.subtitleTextStyle.apply(tvMessageBody)
         view.setBackgroundColor(itemStyle.replyMessageStyle.borderColor)
@@ -369,13 +362,14 @@ abstract class BaseMessageViewHolder(
         }
     }
 
+    /** Call this method after [setReplyMessageContainer], to calculate [layoutBubble] width correctly. */
     protected open fun setOrUpdateReactions(
             item: MessageListItem.MessageItem,
             rvReactionsViewStub: ViewStub,
             viewPool: RecyclerView.RecycledViewPool
     ) {
         val reactions: List<ReactionItem.Reaction>? = item.message.messageReactions?.take(19)
-        val resizeWithDependReactions = layoutBubbleConfig?.second ?: false
+        val resizeWithDependReactions = layoutBubbleConfig?.second == true
         val layoutDetails = if (resizeWithDependReactions) layoutBubble else null
 
         if (reactions.isNullOrEmpty()) {
@@ -394,7 +388,7 @@ abstract class BaseMessageViewHolder(
         if (rvReactionsViewStub.parent != null)
             rvReactionsViewStub.inflate().also {
                 recyclerViewReactions = it as RecyclerView
-                it.setBackgroundTint(itemStyle.reactionsContainerBackgroundColor)
+                itemStyle.reactionsContainerBackgroundStyle.apply(it)
             }
 
         with(recyclerViewReactions ?: return) {
@@ -417,18 +411,21 @@ abstract class BaseMessageViewHolder(
         initWidthsDependReactions(recyclerViewReactions, layoutDetails)
     }
 
-    protected open fun initWidthsDependReactions(rvReactions: ViewGroup?, layoutDetails: ViewGroup?) {
+    protected open fun initWidthsDependReactions(
+            rvReactions: RecyclerView?,
+            layoutDetails: ViewGroup?
+    ) {
         if (layoutDetails == null || rvReactions == null) return
 
         rvReactions.measure(View.MeasureSpec.UNSPECIFIED, 0)
         layoutDetails.measure(View.MeasureSpec.UNSPECIFIED, 0)
-        val margin = dpToPx(8f)
+        val margins = rvReactions.marginHorizontal
 
         when {
-            rvReactions.measuredWidth + margin > layoutDetails.measuredWidth -> {
-                val newWidth = min((rvReactions.measuredWidth + margin), bubbleMaxWidth)
+            rvReactions.measuredWidth + margins > min(bubbleMaxWidth, layoutDetails.measuredWidth) -> {
+                val newWidth = min((rvReactions.measuredWidth + margins), (bubbleMaxWidth - margins))
                 layoutDetails.layoutParams.width = newWidth
-                rvReactions.layoutParams.width = newWidth - margin
+                rvReactions.layoutParams.width = newWidth - margins
             }
 
             rvReactions.measuredWidth < layoutDetails.measuredWidth -> {
@@ -555,20 +552,23 @@ abstract class BaseMessageViewHolder(
     }
 
     protected open fun applyCommonStyle(
-            layoutDetails: View,
-            tvForwarded: AppCompatTextView,
-            messageBody: ClickableTextView,
-            tvThreadReplyCount: AppCompatTextView,
-            toReplyLine: ToReplyLineView,
+            layoutDetails: View?,
+            tvForwarded: AppCompatTextView?,
+            messageBody: ClickableTextView?,
+            tvThreadReplyCount: AppCompatTextView?,
+            toReplyLine: ToReplyLineView?,
             tvSenderName: AppCompatTextView? = null,
             avatarView: AvatarView? = null,
     ) {
-        layoutDetails.setBackgroundTint(if (incoming)
-            itemStyle.incomingBubbleColor else itemStyle.outgoingBubbleColor)
+        layoutDetails?.let {
+            if (incoming)
+                itemStyle.incomingBubbleBackgroundStyle.apply(layoutDetails)
+            else itemStyle.outgoingBubbleBackgroundStyle.apply(layoutDetails)
+        }
 
-        applyForwardedStyle(tvForwarded)
-        messageBody.applyStyle(itemStyle)
-        itemStyle.threadReplyCountTextStyle.apply(tvThreadReplyCount)
+        tvForwarded?.let { applyForwardedStyle(it) }
+        messageBody?.applyStyle(itemStyle)
+        tvThreadReplyCount?.let { itemStyle.threadReplyCountTextStyle.apply(it) }
         tvSenderName?.let {
             itemStyle.senderNameTextStyle.apply(it)
         }

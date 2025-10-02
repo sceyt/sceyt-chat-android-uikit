@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages
 
+import android.animation.LayoutTransition
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
@@ -9,7 +10,6 @@ import android.view.View
 import android.widget.PopupWindow
 import android.widget.Toast
 import androidx.appcompat.view.ContextThemeWrapper
-import androidx.appcompat.widget.PopupMenu
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.util.Predicate
 import androidx.core.view.isVisible
@@ -23,6 +23,7 @@ import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.data.models.messages.SceytReaction
 import com.sceyt.chatuikit.data.models.messages.SceytReactionTotal
 import com.sceyt.chatuikit.databinding.SceytMessagesListViewBinding
 import com.sceyt.chatuikit.extensions.TAG
@@ -36,7 +37,9 @@ import com.sceyt.chatuikit.extensions.isLastCompletelyItemDisplaying
 import com.sceyt.chatuikit.extensions.maybeComponentActivity
 import com.sceyt.chatuikit.extensions.openLink
 import com.sceyt.chatuikit.extensions.setClipboard
+import com.sceyt.chatuikit.extensions.setLayoutTransition
 import com.sceyt.chatuikit.logger.SceytLog
+import com.sceyt.chatuikit.media.audio.AudioFocusHelper
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.persistence.differs.diff
@@ -65,7 +68,6 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.mes
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.reactions.ReactionItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.components.EmojiPickerBottomSheetFragment
 import com.sceyt.chatuikit.presentation.components.channel.messages.components.MessagesRV
-import com.sceyt.chatuikit.presentation.components.channel.messages.components.ScrollToDownView
 import com.sceyt.chatuikit.presentation.components.channel.messages.dialogs.DeleteMessageDialog
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageCommandEvent
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.ReactionEvent
@@ -89,11 +91,12 @@ import com.sceyt.chatuikit.presentation.components.media.MediaPreviewActivity
 import com.sceyt.chatuikit.presentation.components.message_info.MessageInfoActivity
 import com.sceyt.chatuikit.presentation.extensions.getUpdateMessage
 import com.sceyt.chatuikit.presentation.root.PageState
+import com.sceyt.chatuikit.styles.extensions.messages_list.setPageStateViews
 import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-@Suppress("Unused", "MemberVisibilityCanBePrivate", "JoinDeclarationAndAssignment")
+@Suppress("Unused", "MemberVisibilityCanBePrivate")
 class MessagesListView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : ConstraintLayout(context, attrs, defStyleAttr), ClickListeners,
         ActionsViewClickListeners, PopupClickListeners {
@@ -110,6 +113,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var onWindowFocusChangeListener: ((Boolean) -> Unit)? = null
     private var multiselectDestination: Map<Long, SceytMessage>? = null
     private var forceDisabledActions = false
+    private val audioFocusHelper = AudioFocusHelper(context)
     val style: MessagesListViewStyle
     var enabledActions = true
         private set
@@ -124,9 +128,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         if (background == null)
             setBackgroundColor(style.backgroundColor)
 
+        binding.layoutUnreadCounts.setLayoutTransition(200, LayoutTransition.DISAPPEARING)
+        setPageStateViews()
         binding.scrollDownView.setStyle(style.scrollDownButtonStyle)
-        binding.pageStateView.setLoadingStateView(style.loadingState)
-        binding.pageStateView.setEmptyStateView(style.emptyState)
+        binding.scrollToUnredMentionView.setStyle(style.scrollUnreadMentionButtonStyle)
 
         messagesRV = binding.rvMessages.also { it.setStyle(style) }
         messagesRV.setPadding(paddingLeft, paddingTop, paddingRight, paddingBottom)
@@ -148,6 +153,12 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
         if (isInEditMode)
             binding.scrollDownView.isVisible = style.enableScrollDownButton
+
+        audioFocusHelper.setListeners { hasFocus ->
+            if (hasFocus) {
+                AudioPlayerHelper.stopAll()
+            }
+        }
     }
 
     private fun initClickListeners() {
@@ -198,12 +209,6 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 }
             }
 
-            override fun onReactionLongClick(view: View, item: ReactionItem.Reaction, message: SceytMessage) {
-                checkMaybeInMultiSelectMode(view, message) {
-                    clickListeners.onReactionLongClick(view, item, message)
-                }
-            }
-
             override fun onAttachmentClick(view: View, item: FileListItem, message: SceytMessage) {
                 checkMaybeInMultiSelectMode(view, message) {
                     clickListeners.onAttachmentClick(view, item, message)
@@ -242,14 +247,22 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 clickListeners.onMultiSelectClick(view, message)
             }
 
-            override fun onScrollToDownClick(view: ScrollToDownView) {
+            override fun onScrollToDownClick(view: View) {
                 clickListeners.onScrollToDownClick(view)
+            }
+
+            override fun onScrollToUnreadMentionClick(view: View) {
+                clickListeners.onScrollToUnreadMentionClick(view)
             }
         }
         messagesRV.setMessageListener(defaultClickListeners)
 
         binding.scrollDownView.setOnClickListener {
-            clickListeners.onScrollToDownClick(it as ScrollToDownView)
+            clickListeners.onScrollToDownClick(it)
+        }
+
+        binding.scrollToUnredMentionView.setOnClickListener {
+            clickListeners.onScrollToUnreadMentionClick(it)
         }
     }
 
@@ -312,25 +325,8 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    private fun showReactionActionsPopup(view: View, reaction: ReactionItem.Reaction, message: SceytMessage) {
-        val popup = PopupMenu(ContextThemeWrapper(context, R.style.SceytPopupMenuStyle), view)
-        popup.inflate(R.menu.sceyt_menu_popup_reacton)
-        val containsSelf = reaction.reaction.containsSelf
-        popup.menu.findItem(R.id.sceyt_add).isVisible = !containsSelf
-        popup.menu.findItem(R.id.sceyt_remove).isVisible = containsSelf
-
-        popup.setOnMenuItemClickListener { menuItem ->
-            when (menuItem.itemId) {
-                R.id.sceyt_add -> reactionClickListeners.onAddReaction(message, reaction.reaction.key)
-                R.id.sceyt_remove -> reactionClickListeners.onRemoveReaction(message, reaction)
-            }
-            false
-        }
-        popup.show()
-    }
-
-    private fun showMessageActionsPopup(view: View, message: SceytMessage, channel: SceytChannel) {
-        val popup = MessageActionsPopupMenu(ContextThemeWrapper(context, R.style.SceytPopupMenuStyle), view, message, channel)
+    private fun showMessageActionsPopup(view: View, message: SceytMessage) {
+        val popup = MessageActionsPopupMenu(ContextThemeWrapper(context, R.style.SceytPopupMenuStyle), view, message)
         popup.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.sceyt_edit_message -> messageActionsViewClickListeners.onEditMessageClick(message)
@@ -421,8 +417,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     internal fun updateMessage(message: SceytMessage): Boolean {
         var foundToUpdate = false
-        SceytLog.i(TAG, "Message updated: id ${message.id}, tid ${message.tid}," +
-                " body ${message.body}, deliveryStatus ${message.deliveryStatus}")
+        SceytLog.i(TAG, "Message updated: id ${message.id}, tid ${message.tid}, deliveryStatus ${message.deliveryStatus}")
         val data = messagesRV.getData()
         for ((index, item) in data.withIndex()) {
             if (item is MessageItem && item.message.tid == message.tid) {
@@ -514,11 +509,16 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         binding.pageStateView.updateState(state, messagesRV.isEmpty(), enableErrorSnackBar = enableErrorSnackBar)
     }
 
-    internal suspend fun updateProgress(data: TransferData, updateRecycler: Boolean) {
+    internal suspend fun updateProgress(
+            data: TransferData,
+            updateRecyclerView: Boolean,
+    ) = withContext(Dispatchers.Default) {
         val messages = ArrayList(messagesRV.getData())
-        messages.findIndexed { item -> item is MessageItem && item.message.tid == data.messageTid }?.let { (index, item) ->
-            val message = (item as? MessageItem)?.message ?: return
-            val attachments = message.attachments?.toMutableList() ?: return
+        messages.findIndexed { item ->
+            item is MessageItem && item.message.tid == data.messageTid
+        }?.let { (index, item) ->
+            val message = (item as? MessageItem)?.message ?: return@withContext
+            val attachments = message.attachments?.toMutableList() ?: return@withContext
 
             val predicate: (SceytAttachment) -> Boolean = when (data.state) {
                 Uploading, PendingUpload, PauseUpload, Uploaded, Preparing, WaitingToUpload -> { attachment ->
@@ -537,7 +537,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 if (data.thumbData?.key == ThumbFor.MessagesLisView.value) {
                     foundAttachmentFile?.updateThumbPath(data.filePath)
                 }
-                return
+                return@withContext
             } else {
                 for ((attachmentIndex, sceytAttachment) in attachments.withIndex()) {
                     if (predicate(sceytAttachment)) {
@@ -551,7 +551,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 }
             }
 
-            if (updateRecycler)
+            if (updateRecyclerView)
                 withContext(Dispatchers.Main) {
                     updateItem(index, item, MessageDiff.DEFAULT_FALSE.copy(filesChanged = true))
                 }
@@ -657,8 +657,13 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messagesRV.deleteAllMessagesBefore(predicate)
     }
 
-    internal fun setUnreadCount(unreadCount: Long) {
+    internal fun setUnreadMessagesCount(unreadCount: Long) {
         binding.scrollDownView.setUnreadCount(unreadCount)
+    }
+
+    internal fun setUnreadMentionsCount(unreadCount: Long) {
+        binding.scrollToUnredMentionView.setUnreadCount(unreadCount)
+        binding.scrollToUnredMentionView.isVisible = unreadCount > 0
     }
 
     internal fun setOnWindowFocusChangeListener(listener: (Boolean) -> Unit) {
@@ -701,59 +706,52 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messagesRV.getViewHolderFactory().setNeedMediaDataCallback(callBack)
     }
 
-    fun scrollToMessage(msgId: Long, highlight: Boolean, offset: Int = 0, awaitToScroll: ((Boolean) -> Unit)? = null) {
-        safeScrollTo {
-            messagesRV.getData().findIndexed { it is MessageItem && it.message.id == msgId }?.let {
-                val (position, item) = it
-                item.highligh = highlight
-                (messagesRV.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(position, offset)
+    fun scrollToMessage(
+            messageId: Long,
+            highlight: Boolean,
+            offset: Int = 0,
+            awaitToScroll: ((Boolean) -> Unit)? = null,
+            doIfNotFound: (() -> Unit)? = null,
+    ) {
+        getMessageIndexedById(messageId)?.let { (position, _) ->
+            scrollToPosition(position, highlight, offset, awaitToScroll)
+        } ?: doIfNotFound?.invoke()
+    }
 
-                if (highlight || awaitToScroll != null) {
-                    messagesRV.awaitToScrollFinish(position, callback = {
-                        if (highlight)
-                            (messagesRV.findViewHolderForAdapterPosition(position) as? BaseMessageViewHolder)?.highlight()
-                        awaitToScroll?.invoke(true)
-                    })
-                }
-            } ?: run { awaitToScroll?.invoke(false) }
+    fun scrollToPosition(
+            position: Int,
+            highlight: Boolean,
+            offset: Int = 0,
+            awaitToScroll: ((Boolean) -> Unit)? = null,
+    ) = safeScrollTo {
+        (messagesRV.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(position, offset)
+
+        if (highlight || awaitToScroll != null) {
+            messagesRV.awaitToScrollFinish(position, callback = {
+                if (highlight)
+                    (messagesRV.findViewHolderForAdapterPosition(position) as? BaseMessageViewHolder)?.highlight()
+                awaitToScroll?.invoke(true)
+            })
         }
     }
 
-    fun scrollToPosition(position: Int, highlight: Boolean, offset: Int = 0, awaitToScroll: ((Boolean) -> Unit)? = null) {
-        safeScrollTo {
-            (messagesRV.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(position, offset)
-
-            if (highlight || awaitToScroll != null) {
-                messagesRV.awaitToScrollFinish(position, callback = {
-                    if (highlight)
-                        (messagesRV.findViewHolderForAdapterPosition(position) as? BaseMessageViewHolder)?.highlight()
-                    awaitToScroll?.invoke(true)
-                })
+    fun scrollToUnReadMessage() = safeScrollTo {
+        messagesRV.getData()
+            .indexOfLast { it is MessageListItem.UnreadMessagesSeparatorItem }
+            .takeIf { it != -1 }?.let { index ->
+                scrollToPosition(index, false)
             }
-        }
     }
 
-    fun scrollToUnReadMessage() {
-        safeScrollTo {
-            messagesRV.getData().findIndexed { it is MessageListItem.UnreadMessagesSeparatorItem }?.let {
-                (messagesRV.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(it.first, 0)
-            }
-        }
+    fun scrollToLastMessage() = safeScrollTo {
+        messagesRV.scrollToPosition(messagesRV.getData().size - 1)
     }
 
-    fun scrollToLastMessage() {
-        safeScrollTo {
-            messagesRV.scrollToPosition(messagesRV.getData().size - 1)
-        }
-    }
-
-    private fun safeScrollTo(scrollTo: () -> Unit) {
-        MessagesAdapter.awaitUpdating {
-            try {
-                scrollTo()
-            } catch (e: Exception) {
-                messagesRV.awaitAnimationEnd { scrollTo() }
-            }
+    private fun safeScrollTo(block: () -> Unit) = MessagesAdapter.awaitUpdating {
+        try {
+            block()
+        } catch (e: Exception) {
+            messagesRV.awaitAnimationEnd { block() }
         }
     }
 
@@ -880,11 +878,11 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     override fun onMessageLongClick(view: View, item: MessageItem) {
         if (enabledActions)
-            messageCommandEventListener?.invoke(MessageCommandEvent.OnMultiselectEvent(item.message))
+            messageCommandEventListener?.invoke(MessageCommandEvent.MultiselectEvent(item.message))
     }
 
     override fun onAvatarClick(view: View, item: MessageItem) {
-        messageCommandEventListener?.invoke(MessageCommandEvent.UserClick(view, item.message.user?.id
+        messageCommandEventListener?.invoke(MessageCommandEvent.UserClick(item.message.user?.id
                 ?: return))
     }
 
@@ -905,17 +903,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         context.getFragmentManager()?.let {
             ReactionsInfoBottomSheetFragment.newInstance(message).also { fragment ->
                 fragment.setClickListener { reaction ->
-                    if (reaction.user?.id == SceytChatUIKit.chatUIFacade.myId && channel.haveDeleteOwnMessageReactionPermission())
-                        reactionClickListeners.onRemoveReaction(message,
-                            ReactionItem.Reaction(SceytReactionTotal(reaction.key, containsSelf = true), message.tid, reaction.pending))
+                    reactionClickListeners.onReactionClick(message, reaction)
                 }
             }.show(it, null)
         }
-    }
-
-    override fun onReactionLongClick(view: View, item: ReactionItem.Reaction, message: SceytMessage) {
-        if (enabledActions)
-            showReactionActionsPopup(view, item, message)
     }
 
     override fun onAttachmentClick(view: View, item: FileListItem, message: SceytMessage) {
@@ -937,7 +928,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     override fun onMentionClick(view: View, userId: String) {
-        messageCommandEventListener?.invoke(MessageCommandEvent.UserClick(view, userId))
+        messageCommandEventListener?.invoke(MessageCommandEvent.UserClick(userId))
     }
 
     override fun onAttachmentLoaderClick(view: View, item: FileListItem, message: SceytMessage) {
@@ -957,11 +948,15 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     override fun onMultiSelectClick(view: View, message: SceytMessage) {
-        messageCommandEventListener?.invoke(MessageCommandEvent.OnMultiselectEvent(message))
+        messageCommandEventListener?.invoke(MessageCommandEvent.MultiselectEvent(message))
     }
 
-    override fun onScrollToDownClick(view: ScrollToDownView) {
-        messageCommandEventListener?.invoke(MessageCommandEvent.ScrollToDown(view))
+    override fun onScrollToDownClick(view: View) {
+        messageCommandEventListener?.invoke(MessageCommandEvent.ScrollToDown)
+    }
+
+    override fun onScrollToUnreadMentionClick(view: View) {
+        messageCommandEventListener?.invoke(MessageCommandEvent.ScrollToUnreadMention)
     }
 
 
@@ -1010,6 +1005,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messageCommandEventListener?.invoke(MessageCommandEvent.ReplyInThread(message))
     }
 
+
     //Reaction popup events
     override fun onAddReaction(message: SceytMessage, key: String) {
         addReaction(message, key)
@@ -1017,5 +1013,24 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     override fun onRemoveReaction(message: SceytMessage, reactionItem: ReactionItem.Reaction) {
         reactionEventListener?.invoke(ReactionEvent.RemoveReaction(message, reactionItem.reaction.key))
+    }
+
+    override fun onReactionClick(message: SceytMessage, reaction: SceytReaction) {
+        val userId = reaction.user?.id ?: return
+        if (userId == SceytChatUIKit.chatUIFacade.myId) {
+            if (!channel.haveDeleteOwnMessageReactionPermission()) return
+            onRemoveReaction(
+                message = message,
+                reactionItem = ReactionItem.Reaction(
+                    reaction = SceytReactionTotal(
+                        key = reaction.key, containsSelf = true
+                    ),
+                    messageTid = message.tid,
+                    isPending = reaction.pending
+                )
+            )
+        } else {
+            messageCommandEventListener?.invoke(MessageCommandEvent.UserClick(userId))
+        }
     }
 }

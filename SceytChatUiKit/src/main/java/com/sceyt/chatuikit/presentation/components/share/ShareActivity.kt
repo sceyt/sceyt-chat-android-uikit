@@ -5,16 +5,19 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.os.Parcelable
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.databinding.SceytActivityShareBinding
+import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.parcelableArrayList
+import com.sceyt.chatuikit.extensions.setSafeOnClickListener
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.chatuikit.presentation.common.SceytLoader
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem
@@ -22,7 +25,7 @@ import com.sceyt.chatuikit.presentation.components.share.viewmodel.ShareViewMode
 import com.sceyt.chatuikit.presentation.components.share.viewmodel.ShareViewModel.State.Finish
 import com.sceyt.chatuikit.presentation.components.share.viewmodel.ShareViewModel.State.Loading
 import com.sceyt.chatuikit.presentation.components.shareable.ShareableActivity
-import com.sceyt.chatuikit.styles.ShareStyle
+import com.sceyt.chatuikit.styles.share.ShareStyle
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
@@ -30,14 +33,16 @@ open class ShareActivity : ShareableActivity<ShareStyle>() {
     protected lateinit var binding: SceytActivityShareBinding
     protected val viewModel: ShareViewModel by viewModels()
     protected var body: String? = null
+    protected val shareUris = mutableSetOf<Uri>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        enableEdgeToEdge()
         setContentView(SceytActivityShareBinding.inflate(layoutInflater)
             .also { binding = it }
             .root)
 
+        applyInsetsAndWindowColor(binding.root)
         statusBarIconsColorWithBackground()
 
         getDataFromIntent()
@@ -50,13 +55,14 @@ open class ShareActivity : ShareableActivity<ShareStyle>() {
     }
 
     protected open fun getDataFromIntent() {
+        shareUris.clear()
         when {
             Intent.ACTION_SEND == intent.action -> {
                 if (intent.parcelable<Parcelable>(Intent.EXTRA_STREAM) != null) {
                     val uri = intent.parcelable<Uri>(Intent.EXTRA_STREAM)
                     uri?.let {
                         grantUriPermission(packageName, uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                        viewModel.sharedUris.add(uri)
+                        shareUris.add(uri)
                     }
                 } else if (intent.getCharSequenceExtra(Intent.EXTRA_TEXT) != null) {
                     hideInputOnSharingText()
@@ -71,7 +77,7 @@ open class ShareActivity : ShareableActivity<ShareStyle>() {
                         customToastSnackBar(getString(R.string.sceyt_shara_max_item_count))
                     for (uri in uris.take(20)) {
                         grantUriPermission(packageName, uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                        viewModel.sharedUris.add(uri)
+                        shareUris.add(uri)
                     }
                 } else finishSharingAction()
             }
@@ -89,7 +95,7 @@ open class ShareActivity : ShareableActivity<ShareStyle>() {
 
         toolbar.setQueryChangeListener(::onSearchQueryChanged)
 
-        btnShare.setOnClickListener {
+        btnShare.setSafeOnClickListener {
             onShareClick()
         }
     }
@@ -115,7 +121,7 @@ open class ShareActivity : ShareableActivity<ShareStyle>() {
         val messageBody = (binding.messageInput.text ?: "").trim().toString()
         viewModel.sendFilesMessage(
             channelIds = selectedChannels.toLongArray(),
-            uris = viewModel.sharedUris,
+            uris = shareUris.toList(),
             messageBody
         ).onEach {
             when (it) {
@@ -158,7 +164,7 @@ open class ShareActivity : ShareableActivity<ShareStyle>() {
                 sendTextMessage()
             }
 
-            viewModel.sharedUris.isNotEmpty() -> {
+            shareUris.isNotEmpty() -> {
                 sendFilesMessage()
             }
 
@@ -174,6 +180,8 @@ open class ShareActivity : ShareableActivity<ShareStyle>() {
     }
 
     companion object {
+
+        @Suppress("unused")
         fun newIntent(context: Context, intent: Intent): Intent {
             return Intent(context, ShareActivity::class.java).apply {
                 action = intent.action
