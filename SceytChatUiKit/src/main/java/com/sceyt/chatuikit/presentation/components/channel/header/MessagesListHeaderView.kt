@@ -538,13 +538,15 @@ class MessagesListHeaderView @JvmOverloads constructor(
         val isSingleMessage = messages.size == 1
         val fistMessage = messages.first()
         val existPendingMessages = messages.any { it.deliveryStatus == DeliveryStatus.Pending }
-
-        menu.findItem(R.id.sceyt_reply)?.isVisible = isSingleMessage && !existPendingMessages && channel.haveReplyMessagePermission()
-        //menu.findItem(R.id.sceyt_reply_in_thread).isVisible = isSingleMessage && !isPending
-
-        menu.findItem(R.id.sceyt_forward)?.isVisible = !existPendingMessages && channel.haveForwardMessagePermission()
         val expiredEditMessage = (System.currentTimeMillis() - fistMessage.createdAt) >
                 SceytChatUIKit.config.messageEditTimeout
+
+        menu.findItem(R.id.sceyt_reply)?.isVisible = isSingleMessage && !existPendingMessages
+                && channel.haveReplyMessagePermission()
+        //menu.findItem(R.id.sceyt_reply_in_thread).isVisible = isSingleMessage && !isPending
+
+        menu.findItem(R.id.sceyt_forward)?.isVisible = !existPendingMessages
+                && channel.haveForwardMessagePermission()
 
         menu.findItem(R.id.sceyt_edit_message)?.isVisible = when {
             fistMessage.body.isBlank() || expiredEditMessage -> false
