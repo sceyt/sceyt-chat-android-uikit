@@ -12,6 +12,7 @@ import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytDialogGroupChannelActionsBinding
 import com.sceyt.chatuikit.persistence.extensions.getChannelType
+import com.sceyt.chatuikit.persistence.extensions.haveClearAllMessagesPermission
 import com.sceyt.chatuikit.persistence.extensions.haveDeleteChannelPermission
 import com.sceyt.chatuikit.styles.common.DialogStyle
 
@@ -88,6 +89,7 @@ class GroupChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDi
     private fun determinateState() {
         with(binding) {
             delete.isVisible = channel.haveDeleteChannelPermission()
+            clearHistory.isVisible = channel.haveClearAllMessagesPermission()
             pin.isVisible = !channel.pinned
             unPin.isVisible = channel.pinned
         }
