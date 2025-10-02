@@ -14,10 +14,12 @@ import com.sceyt.chatuikit.databinding.SceytItemChannelBinding
 import com.sceyt.chatuikit.extensions.extractLinksWithPositions
 import com.sceyt.chatuikit.extensions.setOnClickListenerAvailable
 import com.sceyt.chatuikit.extensions.setOnLongClickListenerAvailable
+import com.sceyt.chatuikit.formatters.attributes.ChannelEventTitleFormatterAttributes
 import com.sceyt.chatuikit.formatters.attributes.ChannelItemSubtitleFormatterAttributes
 import com.sceyt.chatuikit.persistence.differs.ChannelDiff
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isDirect
+import com.sceyt.chatuikit.presentation.components.channel.header.helpers.ChannelEventData
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelsAdapter
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.listeners.click.ChannelClickListeners
@@ -25,7 +27,7 @@ import com.sceyt.chatuikit.presentation.custom_views.AvatarView
 import com.sceyt.chatuikit.presentation.custom_views.DecoratedTextView
 import com.sceyt.chatuikit.presentation.custom_views.PresenceStateIndicatorView
 import com.sceyt.chatuikit.presentation.extensions.setChannelMessageDateAndStatusIcon
-import com.sceyt.chatuikit.styles.ChannelItemStyle
+import com.sceyt.chatuikit.styles.channel.ChannelItemStyle
 import java.util.Date
 
 open class ChannelViewHolder(
@@ -62,7 +64,7 @@ open class ChannelViewHolder(
 
                 // this ui states is changed more often, and to avoid wrong ui states we need to set them every time
                 setUnreadCount(channel, binding.unreadMessagesCount)
-                setMentionUserSymbol(channel, binding.icMention)
+                setUnreadMentions(channel, binding.icMention)
                 setLastMessageStatusAndDate(channel, binding.dateStatus)
                 setLastMessagedText(channel, binding.lastMessage)
                 setPresenceState(channel, binding.onlineState)
@@ -85,8 +87,8 @@ open class ChannelViewHolder(
                     if (markedUsUnreadChanged)
                         setChannelMarkedUsUnread(channel, binding.unreadMessagesCount)
 
-                    if (typingStateChanged)
-                        setTypingState(channel, binding.lastMessage)
+                    if (activityStateChanged)
+                        setChannelEventTitle(channel, binding.lastMessage)
 
                     if (autoDeleteStateChanged) {
                         setAutoDeleteState(channel, binding.icAutoDeleted)
@@ -151,7 +153,7 @@ open class ChannelViewHolder(
 
     protected open fun setAvatar(
             channel: SceytChannel,
-            avatarView: AvatarView
+            avatarView: AvatarView,
     ) {
         itemStyle.channelAvatarRenderer.render(
             context = context,
@@ -163,7 +165,7 @@ open class ChannelViewHolder(
 
     protected open fun setLastMessageStatusAndDate(
             channel: SceytChannel,
-            decoratedTextView: DecoratedTextView
+            decoratedTextView: DecoratedTextView,
     ) {
         val data = getDateData(channel)
         val shouldShowStatus = data.second
@@ -177,7 +179,7 @@ open class ChannelViewHolder(
 
     protected open fun setPresenceState(
             channel: SceytChannel,
-            indicatorView: PresenceStateIndicatorView
+            indicatorView: PresenceStateIndicatorView,
     ) {
         val state = channel.getPeer()?.user?.presence?.state ?: PresenceState.Offline
         val showState = !channel.isSelf && channel.isDirect() && state == PresenceState.Online
@@ -215,28 +217,35 @@ open class ChannelViewHolder(
         textView.isVisible = channel.unread
     }
 
-    protected open fun setMentionUserSymbol(channel: SceytChannel, icMention: TextView) {
-        val showMention = channel.newMentionCount > 0 && channel.newMessageCount > 0
-        if (showMention) {
-            icMention.isVisible = true
+    protected open fun setUnreadMentions(channel: SceytChannel, imageView: ImageView) {
+        if (channel.newMentionCount > 0) {
+            imageView.isVisible = true
             if (channel.muted)
-                itemStyle.unreadMentionMutedStateTextStyle.apply(icMention)
-            else itemStyle.unreadMentionTextStyle.apply(icMention)
-        } else icMention.isVisible = false
+                itemStyle.unreadMentionMutedStateBackgroundStyle.apply(imageView)
+            else itemStyle.unreadMentionBackgroundStyle.apply(imageView)
+        } else imageView.isVisible = false
     }
 
-    @SuppressLint("SetTextI18n")
-    protected open fun setTypingState(channel: SceytChannel, textView: TextView) {
-        val data = channel.typingData ?: return
-        if (data.typing) {
-            val title: SpannableStringBuilder = if (channel.isGroup) {
-                val name = itemStyle.typingUserNameFormatter.format(context, data.member)
-                SpannableStringBuilder("$name ${context.getString(R.string.sceyt_typing_)}")
-            } else
-                SpannableStringBuilder(context.getString(R.string.sceyt_typing_))
-            itemStyle.typingTextStyle.apply(context, title)
+    protected open fun setChannelEventTitle(channel: SceytChannel, textView: TextView) {
+        val events = channel.events
+        if (!events.isNullOrEmpty()) {
+            val title = SpannableStringBuilder(initChannelEventTitle(channel, events))
+            itemStyle.channelEventTextStyle.apply(context, title)
             textView.setText(title, TextView.BufferType.SPANNABLE)
         } else setLastMessagedText(channel, textView)
+    }
+
+    protected open fun initChannelEventTitle(
+            channel: SceytChannel,
+            channelEventData: List<ChannelEventData>,
+    ): CharSequence {
+        return itemStyle.channelEventTitleFormatter.format(
+            context = context,
+            from = ChannelEventTitleFormatterAttributes(
+                channel = channel,
+                users = channelEventData
+            )
+        )
     }
 
     protected open fun getDateData(channel: SceytChannel?): Pair<CharSequence, Boolean> {
@@ -269,6 +278,7 @@ open class ChannelViewHolder(
         viewPinned.setBackgroundColor(itemStyle.pinnedChannelBackgroundColor)
         divider.setBackgroundColor(itemStyle.dividerColor)
         icAutoDeleted.setImageDrawable(itemStyle.autoDeletedChannelIcon)
+        icMention.setImageDrawable(itemStyle.unreadMentionIcon)
         dateStatus.appearanceBuilder()
             .setLeadingIconSize(itemStyle.deliveryStatusIndicatorSize)
             .setTextStyle(itemStyle.dateTextStyle)

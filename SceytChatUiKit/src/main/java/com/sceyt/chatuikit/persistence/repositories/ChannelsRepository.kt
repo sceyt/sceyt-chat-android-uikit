@@ -20,8 +20,13 @@ interface ChannelsRepository {
             params: SearchChannelParams
     ): SceytResponse<List<SceytChannel>>
 
+    suspend fun loadMoreChannels(
+            query: String,
+            config: ChannelListConfig,
+            params: SearchChannelParams
+    ): SceytResponse<List<SceytChannel>>
+
     suspend fun getAllChannels(limit: Int): Flow<GetAllChannelsResponse>
-    suspend fun loadMoreChannels(): SceytResponse<List<SceytChannel>>
     suspend fun createChannel(channelData: CreateChannelData): SceytResponse<SceytChannel>
     suspend fun leaveChannel(channelId: Long): SceytResponse<Long>
     suspend fun clearHistory(channelId: Long, forEveryone: Boolean): SceytResponse<Long>
@@ -47,4 +52,5 @@ interface ChannelsRepository {
     suspend fun pinChannel(channelId: Long): SceytResponse<SceytChannel>
     suspend fun unpinChannel(channelId: Long): SceytResponse<SceytChannel>
     suspend fun join(channelId: Long): SceytResponse<SceytChannel>
+    suspend fun sendChannelEvent(channelId: Long, event: String)
 }

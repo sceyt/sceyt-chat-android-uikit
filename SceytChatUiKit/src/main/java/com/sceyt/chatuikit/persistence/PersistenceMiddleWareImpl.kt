@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.persistence
 
 import androidx.sqlite.db.SimpleSQLiteQuery
+import com.sceyt.chat.models.Types
 import com.sceyt.chat.models.message.DeleteMessageType
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
@@ -9,7 +10,7 @@ import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.UserListQuery
 import com.sceyt.chatuikit.config.ChannelListConfig
 import com.sceyt.chatuikit.data.managers.channel.ChannelEventManager
-import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventData
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelActionEvent
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventData
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelOwnerChangedEventData
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelUnreadCountUpdatedEventData
@@ -26,6 +27,7 @@ import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.SendMessageResult
 import com.sceyt.chatuikit.data.models.SyncNearMessagesResult
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
+import com.sceyt.chatuikit.data.models.channels.DraftMessage
 import com.sceyt.chatuikit.data.models.channels.EditChannelData
 import com.sceyt.chatuikit.data.models.channels.GetAllChannelsResponse
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
@@ -47,17 +49,15 @@ import com.sceyt.chatuikit.persistence.interactor.ChannelMemberInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageMarkerInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageReactionInteractor
-import com.sceyt.chatuikit.persistence.logic.PersistenceMessageMarkerLogic
 import com.sceyt.chatuikit.persistence.interactor.UserInteractor
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceConnectionLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMembersLogic
+import com.sceyt.chatuikit.persistence.logic.PersistenceMessageMarkerLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceReactionsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceUsersLogic
-import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
-import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
 import com.sceyt.chatuikit.services.SceytPresenceChecker
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -78,7 +78,7 @@ internal class PersistenceMiddleWareImpl(
         private val membersLogic: PersistenceMembersLogic,
         private val usersLogic: PersistenceUsersLogic,
         private val connectionLogic: PersistenceConnectionLogic,
-        private val realtimeNotificationManager: RealtimeNotificationManager
+        private val realtimeNotificationManager: RealtimeNotificationManager,
 ) : ChannelMemberInteractor, MessageInteractor, ChannelInteractor,
         UserInteractor, AttachmentInteractor, MessageMarkerInteractor,
         MessageReactionInteractor, SceytKoinComponent {
@@ -108,8 +108,8 @@ internal class PersistenceMiddleWareImpl(
     }
 
 
-    private fun onChannelEvent(data: ChannelEventData) {
-        scope.launch(Dispatchers.IO) { channelLogic.onChannelEvent(data) }
+    private fun onChannelEvent(event: ChannelActionEvent) {
+        scope.launch(Dispatchers.IO) { channelLogic.onChannelEvent(event) }
     }
 
     private fun onChannelUnreadCountUpdatedEvent(data: ChannelUnreadCountUpdatedEventData) {
@@ -156,7 +156,7 @@ internal class PersistenceMiddleWareImpl(
     }
 
     private fun onChangedConnectStatus(data: ConnectionStateData) {
-        scope.launch(Dispatchers.IO) { connectionLogic.onChangedConnectStatus(data) }
+        scope.launch { connectionLogic.onChangedConnectStatus(data) }
     }
 
     private fun onPresenceChanged(users: List<SceytPresenceChecker.PresenceUser>) {
@@ -165,12 +165,22 @@ internal class PersistenceMiddleWareImpl(
     }
 
     override suspend fun loadChannels(
-            offset: Int, searchQuery: String, loadKey: LoadKeyData?,
+            offset: Int,
+            searchQuery: String,
+            loadKey: LoadKeyData?,
+            onlyMine: Boolean,
             ignoreDb: Boolean,
+            awaitForConnection: Boolean,
             config: ChannelListConfig,
-    ): Flow<PaginationResponse<SceytChannel>> {
-        return channelLogic.loadChannels(offset, searchQuery, loadKey, ignoreDb, config)
-    }
+    ) = channelLogic.loadChannels(
+        offset = offset,
+        searchQuery = searchQuery,
+        loadKey = loadKey,
+        onlyMine = onlyMine,
+        ignoreDb = ignoreDb,
+        awaitForConnection = awaitForConnection,
+        config = config
+    )
 
     override suspend fun searchChannelsWithUserIds(
             offset: Int,
@@ -182,19 +192,17 @@ internal class PersistenceMiddleWareImpl(
             ignoreDb: Boolean,
             loadKey: LoadKeyData?,
             directChatType: String,
-    ): Flow<PaginationResponse<SceytChannel>> {
-        return channelLogic.searchChannelsWithUserIds(
-            offset = offset,
-            searchQuery = searchQuery,
-            userIds = userIds,
-            config = config,
-            includeSearchByUserDisplayName = includeSearchByUserDisplayName,
-            onlyMine = onlyMine,
-            ignoreDb = ignoreDb,
-            loadKey = loadKey,
-            directChatType = directChatType,
-        )
-    }
+    ) = channelLogic.searchChannelsWithUserIds(
+        offset = offset,
+        searchQuery = searchQuery,
+        userIds = userIds,
+        config = config,
+        includeSearchByUserDisplayName = includeSearchByUserDisplayName,
+        onlyMine = onlyMine,
+        ignoreDb = ignoreDb,
+        loadKey = loadKey,
+        directChatType = directChatType,
+    )
 
     override suspend fun getChannelsBySQLiteQuery(query: SimpleSQLiteQuery): List<SceytChannel> {
         return channelLogic.getChannelsBySQLiteQuery(query)
@@ -233,7 +241,7 @@ internal class PersistenceMiddleWareImpl(
     }
 
     override suspend fun findOrCreatePendingChannelByMembers(
-            data: CreateChannelData
+            data: CreateChannelData,
     ): SceytResponse<SceytChannel> {
         return channelLogic.findOrCreatePendingChannelByMembers(data)
     }
@@ -308,11 +316,8 @@ internal class PersistenceMiddleWareImpl(
         return channelLogic.unHideChannel(channelId)
     }
 
-    override suspend fun updateDraftMessage(
-            channelId: Long, message: String?, mentionUsers: List<Mention>,
-            styling: List<BodyStyleRange>?, replyOrEditMessage: SceytMessage?, isReply: Boolean,
-    ) {
-        channelLogic.updateDraftMessage(channelId, message, mentionUsers, styling, replyOrEditMessage, isReply)
+    override suspend fun updateDraftMessage(draftMessage: DraftMessage) {
+        channelLogic.updateDraftMessage(draftMessage)
     }
 
     override fun getChannelMessageCount(channelId: Long): Flow<Long> {
@@ -396,6 +401,15 @@ internal class PersistenceMiddleWareImpl(
             query: String,
     ): SceytPagingResponse<List<SceytMessage>> {
         return messagesLogic.searchMessages(conversationId, replyInThread, query)
+    }
+
+    override suspend fun getUnreadMentions(
+            conversationId: Long,
+            direction: Types.Direction,
+            messageId: Long,
+            limit: Int,
+    ): SceytPagingResponse<List<Long>> {
+        return messagesLogic.getUnreadMentions(conversationId, direction, messageId, limit)
     }
 
     override suspend fun loadNextSearchMessages(): SceytPagingResponse<List<SceytMessage>> {
@@ -495,31 +509,40 @@ internal class PersistenceMiddleWareImpl(
         return messagesLogic.getMessageFromDbByTid(messageTid)
     }
 
-    override suspend fun sendTyping(channelId: Long, typing: Boolean) {
-        messagesLogic.sendTyping(channelId, typing)
+    override suspend fun sendChannelEvent(channelId: Long, event: String) {
+        channelLogic.sendChannelEvent(channelId, event)
     }
 
     override fun getOnMessageFlow(): SharedFlow<Pair<SceytChannel, SceytMessage>> = messagesLogic.getOnMessageFlow()
 
     override suspend fun getPrevAttachments(
-            conversationId: Long, lastAttachmentId: Long,
-            types: List<String>, offset: Int, ignoreDb: Boolean,
+            conversationId: Long,
+            lastAttachmentId: Long,
+            types: List<String>,
+            offset: Int,
+            ignoreDb: Boolean,
             loadKeyData: LoadKeyData,
     ): Flow<PaginationResponse<AttachmentWithUserData>> {
         return attachmentsLogic.getPrevAttachments(conversationId, lastAttachmentId, types, offset, ignoreDb, loadKeyData)
     }
 
     override suspend fun getNextAttachments(
-            conversationId: Long, lastAttachmentId: Long,
-            types: List<String>, offset: Int, ignoreDb: Boolean,
+            conversationId: Long,
+            lastAttachmentId: Long,
+            types: List<String>,
+            offset: Int,
+            ignoreDb: Boolean,
             loadKeyData: LoadKeyData,
     ): Flow<PaginationResponse<AttachmentWithUserData>> {
         return attachmentsLogic.getNextAttachments(conversationId, lastAttachmentId, types, offset, ignoreDb, loadKeyData)
     }
 
     override suspend fun getNearAttachments(
-            conversationId: Long, attachmentId: Long,
-            types: List<String>, offset: Int, ignoreDb: Boolean,
+            conversationId: Long,
+            attachmentId: Long,
+            types: List<String>,
+            offset: Int,
+            ignoreDb: Boolean,
             loadKeyData: LoadKeyData,
     ): Flow<PaginationResponse<AttachmentWithUserData>> {
         return attachmentsLogic.getNearAttachments(conversationId, attachmentId, types, offset, ignoreDb, loadKeyData)
@@ -582,13 +605,13 @@ internal class PersistenceMiddleWareImpl(
 
     override suspend fun searchLocaleUserByMetadata(
             metadataKeys: List<String>,
-            metadataValue: String
+            metadataValue: String,
     ): List<SceytUser> {
         return usersLogic.searchLocaleUserByMetadata(metadataKeys, metadataValue)
     }
 
-    override suspend fun getCurrentUser(): SceytUser? {
-        return usersLogic.getCurrentUser()
+    override suspend fun getCurrentUser(refreshFromServer: Boolean): SceytUser? {
+        return usersLogic.getCurrentUser(refreshFromServer)
     }
 
     override fun getCurrentUserId(): String? {

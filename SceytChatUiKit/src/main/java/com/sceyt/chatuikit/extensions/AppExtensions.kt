@@ -1,34 +1,28 @@
 package com.sceyt.chatuikit.extensions
 
-import android.app.Activity
 import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import android.os.Build
-import android.os.Build.VERSION.SDK_INT
-import android.os.Build.VERSION_CODES.M
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.Parcelable
 import android.os.PowerManager
+import android.view.Surface
 import android.view.View
-import android.view.WindowInsetsController
-import android.view.inputmethod.InputMethodManager
+import android.view.WindowManager
 import android.widget.Toast
-import androidx.annotation.ColorRes
 import androidx.core.content.IntentCompat
 import androidx.core.os.BundleCompat
-import androidx.core.view.WindowInsetsControllerCompat
-import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import com.google.android.material.snackbar.Snackbar
-import com.sceyt.chatuikit.SceytChatUIKit
 import java.io.Serializable
+import kotlin.math.min
 
 fun Any?.isNull() = this == null
 
@@ -76,29 +70,13 @@ fun Context.getOrientation(): Int {
     return resources.configuration.orientation
 }
 
-fun Activity.isFinishingOrDestroyed() = isFinishing || isDestroyed
+fun Context.screenWidthPx() = resources.displayMetrics.widthPixels
 
-fun Activity.isNotFinishingOrDestroyed() = !isFinishing && !isDestroyed
+fun Context.screenHeightPx() = resources.displayMetrics.heightPixels
 
-fun Activity.hideSoftInput() {
-    val inputMethodManager = getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
-    var view = currentFocus
-    if (view == null) {
-        view = View(this)
-    }
-    inputMethodManager.hideSoftInputFromWindow(view.windowToken, 0)
-}
+fun Context.screenPortraitWidthPx() = min(screenWidthPx(), screenHeightPx())
 
-fun View.hideSoftInput() {
-    val inputMethodManager = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
-    inputMethodManager.hideSoftInputFromWindow(windowToken, 0)
-}
-
-fun Activity.isKeyboardOpen(): Boolean {
-    val rootView = findViewById<View>(android.R.id.content)
-    val heightDiff3: Int = getRootView().rootView.height - rootView.height
-    return (heightDiff3 > dpToPx(200f))
-}
+fun Fragment.screenHeightPx() = resources.displayMetrics.heightPixels
 
 fun customToastSnackBar(view: View?, message: String?, maxLines: Int = 5) {
     try {
@@ -111,58 +89,9 @@ fun customToastSnackBar(view: View?, message: String?, maxLines: Int = 5) {
     }
 }
 
-fun Activity.customToastSnackBar(message: String?) {
-    try {
-        findViewById<View>(android.R.id.content)?.let {
-            customToastSnackBar(it, message)
-        }
-    } catch (ex: Exception) {
-        if (!isFinishing)
-            Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
-    }
-}
-
-fun Fragment.customToastSnackBar(message: String?) {
-    try {
-        if (isAdded)
-            customToastSnackBar(view, message)
-        else Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-    } catch (ex: Exception) {
-        view?.context?.let { Toast.makeText(it, message, Toast.LENGTH_SHORT).show() }
-    }
-}
-
-fun Fragment.setBundleArguments(init: Bundle.() -> Unit): Fragment {
-    arguments = Bundle().apply { init() }
-    return this
-}
-
-inline fun <reified T : Fragment> Fragment.setBundleArgumentsAs(init: Bundle.() -> Unit): T {
-    arguments = Bundle().apply { init() }
-    return this as T
-}
-
-
-inline fun <reified T : DialogFragment> DialogFragment.setBundleArgumentsTyped(
-        init: Bundle.() -> Unit
-): T {
-    arguments = Bundle().apply { init() }
-    return this as T
-}
-
-fun Activity.postDelayed(delayInMillis: Long, functionToExecute: () -> Unit) {
-    Handler(Looper.getMainLooper()).postDelayed({
-        if (isFinishing.not()) {
-            functionToExecute.invoke()
-        }
-    }, delayInMillis)
-}
-
 fun runOnMainThread(run: () -> Unit) {
     Handler(Looper.getMainLooper()).post(run)
 }
-
-fun Activity.getRootView() = findViewById<View>(android.R.id.content)
 
 fun Context.isRtl() = resources.configuration.layoutDirection == View.LAYOUT_DIRECTION_RTL
 
@@ -170,27 +99,18 @@ fun Context.isLandscape(): Boolean {
     return resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 }
 
-@Suppress("DEPRECATION")
-fun Activity.statusBarIconsColorWithBackground(
-        isDark: Boolean = isNightMode(),
-        @ColorRes statusBarColor: Int = SceytChatUIKit.theme.colors.statusBarColor,
-        @ColorRes navigationBarColor: Int = SceytChatUIKit.theme.colors.primaryColor
-) {
+fun Context.isSurfaceRotationRightToLeft(): Boolean {
+    val rotation = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        display.rotation
+    } else {
+        @Suppress("DEPRECATION")
+        (getSystemService(Context.WINDOW_SERVICE) as WindowManager).defaultDisplay.rotation
+    }
 
-    window.statusBarColor = getCompatColor(statusBarColor)
-    if (isDark)
-        window.navigationBarColor = getCompatColor(navigationBarColor)
-
-    if (SDK_INT >= M) {
-        if (SDK_INT >= Build.VERSION_CODES.R) {
-            window.insetsController?.setSystemBarsAppearance(
-                if (isDark) 0 else WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS,
-                WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
-            )
-        } else if (SDK_INT >= M) {
-            val wic = WindowInsetsControllerCompat(window, window.decorView)
-            wic.isAppearanceLightStatusBars = !isDark
-        }
+    return when (rotation) {
+        Surface.ROTATION_90 -> true
+        Surface.ROTATION_270 -> false
+        else -> false
     }
 }
 
@@ -212,4 +132,12 @@ inline fun doSafe(action: () -> Unit) {
     } catch (e: Exception) {
         e.printStackTrace()
     }
+}
+
+fun getPrintableStackTrace() = buildString {
+    appendLine("--------- Stack trace ---------")
+    for (ste in Thread.currentThread().stackTrace) {
+        appendLine(ste.toString())
+    }
+    appendLine("-------------------------------")
 }

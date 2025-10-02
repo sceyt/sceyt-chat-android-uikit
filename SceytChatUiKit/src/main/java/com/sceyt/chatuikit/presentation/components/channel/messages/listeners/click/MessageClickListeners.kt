@@ -2,7 +2,6 @@ package com.sceyt.chatuikit.presentation.components.channel.messages.listeners.c
 
 import android.view.View
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
-import com.sceyt.chatuikit.presentation.components.channel.messages.components.ScrollToDownView
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.reactions.ReactionItem
@@ -37,10 +36,6 @@ sealed interface MessageClickListeners {
         fun onReactionClick(view: View, item: ReactionItem.Reaction, message: SceytMessage)
     }
 
-    fun interface ReactionLongClickListener : MessageClickListeners {
-        fun onReactionLongClick(view: View, item: ReactionItem.Reaction, message: SceytMessage)
-    }
-
     fun interface AttachmentClickListener : MessageClickListeners {
         fun onAttachmentClick(view: View, item: FileListItem, message: SceytMessage)
     }
@@ -66,7 +61,11 @@ sealed interface MessageClickListeners {
     }
 
     fun interface ScrollToDownClickListener : MessageClickListeners {
-        fun onScrollToDownClick(view: ScrollToDownView)
+        fun onScrollToDownClick(view: View)
+    }
+
+    fun interface ScrollToUnreadMentionClickListener : MessageClickListeners {
+        fun onScrollToUnreadMentionClick(view: View)
     }
 
     fun interface MultiSelectClickListener : MessageClickListeners {
@@ -84,11 +83,11 @@ sealed interface MessageClickListeners {
             ReplyCountClickListener,
             AddReactionClickListener,
             ReactionClickListener,
-            ReactionLongClickListener,
             AttachmentClickListener,
             AttachmentLongClickListener,
             MentionClickListener,
             ScrollToDownClickListener,
+            ScrollToUnreadMentionClickListener,
             AttachmentLoaderClickListener,
             MultiSelectClickListener
 }

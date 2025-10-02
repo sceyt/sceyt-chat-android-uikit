@@ -16,12 +16,14 @@ import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.formatters.SceytChatUIKitFormatters
 import com.sceyt.chatuikit.formatters.attributes.MessageBodyFormatterAttributes
+import com.sceyt.chatuikit.styles.SceytComponentStyle
 import com.sceyt.chatuikit.providers.SceytChatUIKitProviders
 import com.sceyt.chatuikit.providers.VisualProvider
 import com.sceyt.chatuikit.renderers.AvatarRenderer
 import com.sceyt.chatuikit.renderers.SceytChatUIKitRenderers
 import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.AvatarStyle
+import com.sceyt.chatuikit.styles.common.BackgroundStyle
 import com.sceyt.chatuikit.styles.common.CheckboxStyle
 import com.sceyt.chatuikit.styles.common.MediaLoaderStyle
 import com.sceyt.chatuikit.styles.common.MessageDeliveryStatusIcons
@@ -32,14 +34,22 @@ import com.sceyt.chatuikit.styles.extensions.messages_list.buildAudioWaveformSty
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildAvatarStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildBodyTextStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildDeletedMessageTextStyle
+import com.sceyt.chatuikit.styles.extensions.messages_list.buildDeliveryStatusIconStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildForwardTitleTextStyle
+import com.sceyt.chatuikit.styles.extensions.messages_list.buildIncomingBubbleBackgroundStyle
+import com.sceyt.chatuikit.styles.extensions.messages_list.buildIncomingLinkPreviewBackgroundStyle
+import com.sceyt.chatuikit.styles.extensions.messages_list.buildIncomingReplyBackgroundStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildLinkPreviewStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildMediaLoaderStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildMentionTextStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildMessageDateTextStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildMessageStateTextStyle
+import com.sceyt.chatuikit.styles.extensions.messages_list.buildOutgoingBubbleBackgroundStyle
+import com.sceyt.chatuikit.styles.extensions.messages_list.buildOutgoingLinkPreviewBackgroundStyle
+import com.sceyt.chatuikit.styles.extensions.messages_list.buildOutgoingReplyBackgroundStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildOverlayMediaLoaderStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildReactionCountTextStyle
+import com.sceyt.chatuikit.styles.extensions.messages_list.buildReactionsContainerBackgroundStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildReplyMessageStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildSelectionCheckboxStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildSenderNameTextStyle
@@ -52,15 +62,15 @@ import java.util.Date
 
 /**
  * Style for the message item view.
- * @property incomingBubbleColor Color for the incoming message bubble, default is [R.color.sceyt_color_bg_inc_message]
- * @property outgoingBubbleColor Color for the outgoing message bubble, default is 14% blend of [Colors.accentColor] with [Colors.backgroundColor]
- * @property incomingReplyBackgroundColor Color for the incoming reply background, default is [R.color.sceyt_color_surface_2]
- * @property outgoingReplyBackgroundColor Color for the outgoing reply background, default is 24% blend of [Colors.accentColor] with [Colors.backgroundColor]
- * @property incomingLinkPreviewBackgroundColor Color for the incoming link preview background, default is [R.color.sceyt_color_bg_inc_link_preview]
- * @property outgoingLinkPreviewBackgroundColor Color for the outgoing link preview background, default is 24% blend of [Colors.accentColor] with [Colors.backgroundColor]
+ * @property incomingBubbleBackgroundStyle Color for the incoming message bubble, default is [buildIncomingBubbleBackgroundStyle]
+ * @property outgoingBubbleBackgroundStyle Color for the outgoing message bubble, default is [buildOutgoingBubbleBackgroundStyle]
+ * @property incomingReplyBackgroundStyle Color for the incoming reply background, default is [incomingReplyBackgroundStyle]
+ * @property outgoingReplyBackgroundStyle Color for the outgoing reply background, default is [outgoingReplyBackgroundStyle]
+ * @property incomingLinkPreviewBackgroundStyle Color for the incoming link preview background, default is [incomingLinkPreviewBackgroundStyle]
+ * @property outgoingLinkPreviewBackgroundStyle Color for the outgoing link preview background, default is [outgoingLinkPreviewBackgroundStyle]
  * @property onOverlayColor Color for the overlay, default is [Colors.overlayBackground2Color]
  * @property threadReplyArrowStrokeColor Color for the thread reply arrow stroke, default is [Colors.accentColor]
- * @property reactionsContainerBackgroundColor Color for the reactions container background, default is [Colors.backgroundColorSections]
+ * @property reactionsContainerBackgroundStyle Color for the reactions container background, default is [buildReactionsContainerBackgroundStyle]
  * @property highlightedMessageColor Color for the highlighted message, default is 30% blend of [Colors.accentColor]
  * @property linkTextColor Color for the link text, default is [R.color.sceyt_auto_link_color]
  * @property videoIcon Icon for the video duration, default is [R.drawable.sceyt_ic_video]
@@ -107,17 +117,17 @@ import java.util.Date
  * @property userAvatarRenderer User avatar renderer, default is [SceytChatUIKitRenderers.userAvatarRenderer].
  * */
 data class MessageItemStyle(
-        @ColorInt val incomingBubbleColor: Int,
-        @ColorInt val outgoingBubbleColor: Int,
-        @ColorInt val incomingReplyBackgroundColor: Int,
-        @ColorInt val outgoingReplyBackgroundColor: Int,
-        @ColorInt val incomingLinkPreviewBackgroundColor: Int,
-        @ColorInt val outgoingLinkPreviewBackgroundColor: Int,
-        @ColorInt val onOverlayColor: Int,
-        @ColorInt val threadReplyArrowStrokeColor: Int,
-        @ColorInt val reactionsContainerBackgroundColor: Int,
-        @ColorInt val highlightedMessageColor: Int,
-        @ColorInt val linkTextColor: Int,
+        val incomingBubbleBackgroundStyle: BackgroundStyle,
+        val outgoingBubbleBackgroundStyle: BackgroundStyle,
+        val incomingReplyBackgroundStyle: BackgroundStyle,
+        val outgoingReplyBackgroundStyle: BackgroundStyle,
+        val incomingLinkPreviewBackgroundStyle: BackgroundStyle,
+        val outgoingLinkPreviewBackgroundStyle: BackgroundStyle,
+        val reactionsContainerBackgroundStyle: BackgroundStyle,
+        @param:ColorInt val onOverlayColor: Int,
+        @param:ColorInt val threadReplyArrowStrokeColor: Int,
+        @param:ColorInt val highlightedMessageColor: Int,
+        @param:ColorInt val linkTextColor: Int,
         val videoIcon: Drawable?,
         val swipeToReplyIcon: Drawable?,
         val forwardedIcon: Drawable?,
@@ -125,10 +135,10 @@ data class MessageItemStyle(
         val voicePlayIcon: Drawable?,
         val voicePauseIcon: Drawable?,
         val viewCountIcon: Drawable?,
-        val messageDeliveryStatusIcons: MessageDeliveryStatusIcons,
         val editedStateText: String,
         val deletedStateText: String,
         val forwardedText: String,
+        val messageDeliveryStatusIcons: MessageDeliveryStatusIcons,
         val bodyTextStyle: TextStyle,
         val deletedMessageTextStyle: TextStyle,
         val senderNameTextStyle: TextStyle,
@@ -159,8 +169,8 @@ data class MessageItemStyle(
         val attachmentFileSizeFormatter: Formatter<SceytAttachment>,
         val attachmentIconProvider: VisualProvider<SceytAttachment, Drawable?>,
         val senderNameColorProvider: VisualProvider<SceytUser, Int>,
-        val userAvatarRenderer: AvatarRenderer<SceytUser>
-) {
+        val userAvatarRenderer: AvatarRenderer<SceytUser>,
+) : SceytComponentStyle() {
 
     companion object {
         @JvmField
@@ -169,41 +179,20 @@ data class MessageItemStyle(
 
     internal class Builder(
             internal val context: Context,
-            private val attrs: AttributeSet?
+            private val attrs: AttributeSet?,
     ) {
+        private val accentColor = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
+        private val bgColor = context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColor)
+        val defaultOutDarkColor = ColorUtils.blendARGB(accentColor, bgColor, 0.76f)
+        val defaultOutBubbleColor = ColorUtils.blendARGB(accentColor, bgColor, 0.86f)
+
         fun build(): MessageItemStyle {
             context.obtainStyledAttributes(attrs, R.styleable.MessagesListView).use { array ->
-                val accentColor = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
-                val bgColor = context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColor)
-
-                val incBubbleColor: Int = array.getColor(R.styleable.MessagesListView_sceytUiMessagesListIncomingBubbleColor,
-                    context.getCompatColor(R.color.sceyt_color_bg_inc_message))
-
-                val defaultOutBubbleColor = ColorUtils.blendARGB(accentColor, bgColor, 0.86f)
-                val outBubbleColor: Int = array.getColor(R.styleable.MessagesListView_sceytUiMessagesListOutgoingBubbleColor,
-                    defaultOutBubbleColor)
-
-                val defaultOutDarkColor = ColorUtils.blendARGB(accentColor, bgColor, 0.76f)
-                val incReplyBackgroundColor: Int = array.getColor(R.styleable.MessagesListView_sceytUiMessagesListIncomingReplyBackgroundColor,
-                    context.getCompatColor(R.color.sceyt_color_surface_2))
-
-                val outReplyBackgroundColor: Int = array.getColor(R.styleable.MessagesListView_sceytUiMessagesListOutgoingReplyBackgroundColor,
-                    defaultOutDarkColor)
-
-                val incLinkPreviewBackgroundColor: Int = array.getColor(R.styleable.MessagesListView_sceytUiMessagesListIncomingLinkPreviewBackgroundColor,
-                    context.getCompatColor(R.color.sceyt_color_bg_inc_link_preview))
-
-                val outLinkPreviewBackgroundColor: Int = array.getColor(R.styleable.MessagesListView_sceytUiMessagesListOutgoingLinkPreviewBackgroundColor,
-                    defaultOutDarkColor)
-
                 val onOverlayColor: Int = array.getColor(R.styleable.MessagesListView_sceytUiMessagesListOnOverlayColor,
                     context.getCompatColor(SceytChatUIKit.theme.colors.overlayBackground2Color))
 
                 val threadReplyArrowStrokeColor: Int = array.getColor(R.styleable.MessagesListView_sceytUiMessagesListThreadReplyArrowStrokeColor,
                     context.getCompatColor(SceytChatUIKit.theme.colors.accentColor))
-
-                val reactionsContainerBackgroundColor: Int = array.getColor(R.styleable.MessagesListView_sceytUiMessagesListReactionsContainerBackgroundColor,
-                    context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColorSections))
 
                 val defaultHighlightedMessageColor = ColorUtils.setAlphaComponent(accentColor, (0.3 * 255).toInt())
                 val highlightedMessageColor: Int = array.getColor(R.styleable.MessagesListView_sceytUiMessagesListHighlightedMessageColor,
@@ -247,13 +236,6 @@ data class MessageItemStyle(
                             context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor)
                         )
 
-                val deliveryStatusIcons = MessageDeliveryStatusIcons.Builder(context, array)
-                    .setPendingIconFromStyle(R.styleable.MessagesListView_sceytUiMessagesListMessageDeliveryStatusPendingIcon)
-                    .setSentIconFromStyle(R.styleable.MessagesListView_sceytUiMessagesListMessageDeliveryStatusSentIcon)
-                    .setReceivedIconIconFromStyle(R.styleable.MessagesListView_sceytUiMessagesListMessageDeliveryStatusReceivedIcon)
-                    .setDisplayedIconFromStyle(R.styleable.MessagesListView_sceytUiMessagesListMessageDeliveryStatusDisplayedIcon)
-                    .build()
-
                 val editedStateText = array.getString(R.styleable.MessagesListView_sceytUiMessagesListEditedStateText)
                         ?: context.getString(R.string.sceyt_edited)
 
@@ -264,15 +246,15 @@ data class MessageItemStyle(
                         ?: context.getString(R.string.sceyt_forwarded_message)
 
                 return MessageItemStyle(
-                    incomingBubbleColor = incBubbleColor,
-                    outgoingBubbleColor = outBubbleColor,
-                    incomingReplyBackgroundColor = incReplyBackgroundColor,
-                    outgoingReplyBackgroundColor = outReplyBackgroundColor,
-                    incomingLinkPreviewBackgroundColor = incLinkPreviewBackgroundColor,
-                    outgoingLinkPreviewBackgroundColor = outLinkPreviewBackgroundColor,
+                    incomingBubbleBackgroundStyle = buildIncomingBubbleBackgroundStyle(array),
+                    outgoingBubbleBackgroundStyle = buildOutgoingBubbleBackgroundStyle(array),
+                    incomingReplyBackgroundStyle = buildIncomingReplyBackgroundStyle(array),
+                    outgoingReplyBackgroundStyle = buildOutgoingReplyBackgroundStyle(array),
+                    incomingLinkPreviewBackgroundStyle = buildIncomingLinkPreviewBackgroundStyle(array),
+                    outgoingLinkPreviewBackgroundStyle = buildOutgoingLinkPreviewBackgroundStyle(array),
+                    reactionsContainerBackgroundStyle = buildReactionsContainerBackgroundStyle(array),
                     onOverlayColor = onOverlayColor,
                     threadReplyArrowStrokeColor = threadReplyArrowStrokeColor,
-                    reactionsContainerBackgroundColor = reactionsContainerBackgroundColor,
                     highlightedMessageColor = highlightedMessageColor,
                     linkTextColor = linkTextColor,
                     videoIcon = videoIcon,
@@ -282,10 +264,10 @@ data class MessageItemStyle(
                     voicePlayIcon = voicePlayIcon,
                     voicePauseIcon = voicePauseIcon,
                     viewCountIcon = viewCountIcon,
-                    messageDeliveryStatusIcons = deliveryStatusIcons,
                     editedStateText = editedStateText,
                     deletedStateText = deletedStateText,
                     forwardedText = forwardedText,
+                    messageDeliveryStatusIcons = buildDeliveryStatusIconStyle(array),
                     bodyTextStyle = buildBodyTextStyle(array),
                     deletedMessageTextStyle = buildDeletedMessageTextStyle(array),
                     senderNameTextStyle = buildSenderNameTextStyle(array),

@@ -5,16 +5,19 @@ import android.text.Editable
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import androidx.work.ExistingWorkPolicy
+import com.sceyt.chat.models.Types
+import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.DeleteMessageType
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.data.constants.SceytConstants
 import com.sceyt.chatuikit.data.managers.channel.ChannelEventManager
-import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventData
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelActionEvent
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelMemberActivityEvent
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventData
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventEnum
-import com.sceyt.chatuikit.data.managers.channel.event.ChannelTypingEventData
 import com.sceyt.chatuikit.data.managers.message.MessageEventManager
 import com.sceyt.chatuikit.data.models.LoadKeyData
 import com.sceyt.chatuikit.data.models.PaginationResponse
@@ -22,21 +25,28 @@ import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNear
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNewest
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadPrev
-import com.sceyt.chatuikit.data.models.SceytPagingResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.SyncNearMessagesResult
+import com.sceyt.chatuikit.data.models.channels.DraftAttachment
+import com.sceyt.chatuikit.data.models.channels.DraftMessage
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
+import com.sceyt.chatuikit.data.models.fold
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.MarkerType
+import com.sceyt.chatuikit.data.models.messages.MessageId
 import com.sceyt.chatuikit.data.models.messages.MessageTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReactionTotal
+import com.sceyt.chatuikit.data.models.onSuccess
+import com.sceyt.chatuikit.data.models.onSuccessNotNull
 import com.sceyt.chatuikit.data.toFileListItem
 import com.sceyt.chatuikit.extensions.findIndexed
 import com.sceyt.chatuikit.koin.SceytKoinComponent
+import com.sceyt.chatuikit.media.audio.AudioRecordData
 import com.sceyt.chatuikit.persistence.extensions.asLiveData
+import com.sceyt.chatuikit.persistence.extensions.broadcastSharedFlow
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferHelper
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
@@ -64,8 +74,12 @@ import com.sceyt.chatuikit.persistence.interactor.MessageReactionInteractor
 import com.sceyt.chatuikit.persistence.interactor.UserInteractor
 import com.sceyt.chatuikit.persistence.logic.PersistenceConnectionLogic
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
+import com.sceyt.chatuikit.persistence.mappers.createEmptyUser
+import com.sceyt.chatuikit.persistence.mappers.toBodyAttribute
+import com.sceyt.chatuikit.persistence.mappers.toVoiceAttachmentData
 import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager
 import com.sceyt.chatuikit.presentation.common.DebounceHelper
+import com.sceyt.chatuikit.presentation.components.channel.input.data.InputUserAction
 import com.sceyt.chatuikit.presentation.components.channel.input.data.SearchResult
 import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
@@ -80,15 +94,16 @@ import com.sceyt.chatuikit.shared.helpers.LinkPreviewHelper
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -120,7 +135,6 @@ class MessageListViewModel(
     internal val placeToSavePathsList = mutableSetOf<Pair<AttachmentTypeEnum, String>>()
     internal val selectedMessagesMap by lazy { mutableMapOf<Long, SceytMessage>() }
     internal val notFoundMessagesToUpdate by lazy { mutableMapOf<Long, SceytMessage>() }
-    internal var scrollToSearchMessageJob: Job? = null
     internal val outgoingMessageMutex by lazy { Mutex() }
     internal val pendingDisplayMsgIds by lazy { Collections.synchronizedSet(mutableSetOf<Long>()) }
     internal val needToUpdateTransferAfterOnResume = hashMapOf<Long, TransferData>()
@@ -145,14 +159,8 @@ class MessageListViewModel(
     private val _joinLiveData = MutableLiveData<SceytResponse<SceytChannel>>()
     val joinLiveData = _joinLiveData.asLiveData()
 
-    private val _channelLiveData = MutableLiveData<SceytResponse<SceytChannel>>()
-    val channelLiveData = _channelLiveData.asLiveData()
-
     private val _messageMarkerLiveData = MutableLiveData<List<SceytResponse<MessageListMarker>>>()
     val messageMarkerLiveData = _messageMarkerLiveData.asLiveData()
-
-    private val _onChannelMemberAddedOrKickedLiveData = MutableLiveData<SceytChannel>()
-    val onChannelMemberAddedOrKickedLiveData = _onChannelMemberAddedOrKickedLiveData.asLiveData()
 
     private val _syncCenteredMessageLiveData = MutableLiveData<SyncNearMessagesResult>()
     val syncCenteredMessageLiveData = _syncCenteredMessageLiveData.asLiveData()
@@ -170,9 +178,10 @@ class MessageListViewModel(
     // val onOutGoingThreadMessageFlow: Flow<SceytMessage>// todo reply in thread
 
     // Chanel events
-    val onChannelEventFlow: Flow<ChannelEventData>
-    val onChannelTypingEventFlow: Flow<ChannelTypingEventData>
-    val onChannelUpdatedEventFlow: Flow<SceytChannel>
+    val onChannelEventFlow: Flow<ChannelActionEvent>
+    val onChannelMemberActivityEventFlow: Flow<ChannelMemberActivityEvent>
+    private val _onChannelUpdatedEventFlow = broadcastSharedFlow<SceytChannel>()
+    val onChannelUpdatedEventFlow = _onChannelUpdatedEventFlow.asSharedFlow()
 
     //Command events
     private val _onEditMessageCommandLiveData = MutableLiveData<SceytMessage>()
@@ -185,18 +194,30 @@ class MessageListViewModel(
     internal val onScrollToReplyMessageLiveData = _onScrollToReplyMessageLiveData.asLiveData()
     private val _onScrollToSearchMessageLiveData = MutableLiveData<SceytMessage>()
     internal val onScrollToSearchMessageLiveData = _onScrollToSearchMessageLiveData.asLiveData()
+    private val _onScrollToUnredMentionMessageLiveData = MutableLiveData<Long>()
+    internal val onScrollToUnredMentionMessageLiveData = _onScrollToUnredMentionMessageLiveData.asLiveData()
 
     // Search messages
-    internal val isSearchingMessageToScroll = AtomicBoolean(false)
+    internal val isPreparingToScrollToMessage = AtomicBoolean(false)
     private val isLoadingNearToSearchMessagesServer = AtomicBoolean(false)
+    private var unreadMentionState = UnreadMentionState()
     private var _searchResult = MutableLiveData<SearchResult>()
     var searchResult = _searchResult.asLiveData()
 
 
     init {
         onNewMessageFlow = messageInteractor.getOnMessageFlow()
-            .filter { it.first.id == channel.id /*&& it.second.replyInThread == replyInThread*/ }
-            .mapNotNull { initMessageInfoData(it.second) }
+            .filter { (channel) ->
+                channel.id == this.channel.id /*&& it.second.replyInThread == replyInThread*/
+            }
+            .map { (_, message) ->
+                checkMaybeHaveUnreadMentionOnNewMessage(message)
+                initMessageInfoData(message)
+            }
+
+        MessageEventManager.onMessageEditedOrDeletedFlow.onEach { message ->
+            checkUnreadMentionsOnMessageUpdated(message)
+        }.launchIn(viewModelScope)
 
         /*
        // todo reply in thread
@@ -207,15 +228,15 @@ class MessageListViewModel(
         onChannelEventFlow = ChannelEventManager.onChannelEventFlow
             .filter { it.channelId == channel.id }
 
-        onChannelTypingEventFlow = ChannelEventManager.onChannelTypingEventFlow
-            .filter { it.channel.id == channel.id && it.member.id != myId }
+        onChannelMemberActivityEventFlow = ChannelEventManager.onChannelMemberActivityEventFlow
+            .filter { it.channelId == channel.id && it.userId != myId }
 
-        onChannelUpdatedEventFlow = ChannelsCache.channelUpdatedFlow
+        ChannelsCache.channelUpdatedFlow
             .filter { it.channel.id == channel.id }
-            .map {
-                updateChannel(it.channel)
-                it.channel
+            .onEach {
+                updateChannel { it.channel }
             }
+            .launchIn(viewModelScope)
 
         viewModelScope.launch(Dispatchers.IO) {
             ChannelEventManager.onChannelMembersEventFlow
@@ -226,14 +247,14 @@ class MessageListViewModel(
         ChannelsCache.pendingChannelCreatedFlow
             .filter { (pendingChannelId, _) -> pendingChannelId == channel.id }
             .onEach { (_, newChannel) ->
-                updateChannel(newChannel)
+                updateChannel { newChannel }
             }
             .launchIn(viewModelScope)
 
         SceytSyncManager.syncChannelMessagesFinished
             .filter { (syncedChannel, _) -> syncedChannel.id == channel.id }
             .onEach { (syncedChannel, _) ->
-                updateChannel(syncedChannel)
+                updateChannel { syncedChannel }
             }
             .launchIn(viewModelScope)
 
@@ -242,6 +263,10 @@ class MessageListViewModel(
 
         /*onOutGoingThreadMessageFlow = MessageEventsObserver.onOutgoingMessageFlow
             .filter { it.channelId == channel.id && it.replyInThread }*/
+
+        if (channel.newMentionCount > 0) {
+            getUnreadMentions(0)
+        }
     }
 
     fun loadPrevMessages(lastMessageId: Long, offset: Int, loadKey: LoadKeyData = LoadKeyData(value = lastMessageId)) {
@@ -278,6 +303,7 @@ class MessageListViewModel(
         setPagingLoadingStarted(LoadNear, ignoreServer = ignoreServer)
         loadPrevJob?.cancel()
         loadNextJob?.cancel()
+        loadNearJob?.cancel()
         loadNearJob = viewModelScope.launch(Dispatchers.IO) {
             val limit = min(50, SceytChatUIKit.config.queryLimits.messageListQueryLimit * 2)
             messageInteractor.loadNearMessages(conversationId, messageId, replyInThread,
@@ -313,28 +339,88 @@ class MessageListViewModel(
 
     fun searchMessages(query: String) {
         viewModelScope.launch {
-            val resp = messageInteractor.searchMessages(conversationId, replyInThread, query)
-            (resp as? SceytPagingResponse.Success)?.let {
-                it.data?.let { messages ->
-                    _searchResult.postValue(SearchResult(0, messages, resp.hasNext))
-                    _onScrollToSearchMessageLiveData.postValue(messages.firstOrNull()
-                            ?: return@launch)
-                }
+            messageInteractor.searchMessages(
+                conversationId = conversationId,
+                replyInThread = replyInThread,
+                query = query
+            ).onSuccess { response ->
+                val messages = response.data
+                _searchResult.postValue(SearchResult(0, messages, response.hasNext))
+                _onScrollToSearchMessageLiveData.postValue(messages.firstOrNull()
+                        ?: return@launch)
             }
         }
+    }
+
+    private fun getUnreadMentions(messageId: Long, scrollTo: Boolean = false) {
+        if (unreadMentionState.isLoadingMore) return
+        unreadMentionState = unreadMentionState.copy(isLoadingMore = true)
+        viewModelScope.launch {
+            messageInteractor.getUnreadMentions(
+                conversationId = conversationId,
+                direction = Types.Direction.DirectionNext,
+                messageId = messageId
+            ).fold(
+                onSuccess = {
+                    val unreadMentions = if (messageId == 0L)
+                        it.data.toSet() else unreadMentionState.messageIds.plus(it.data)
+
+                    unreadMentionState = unreadMentionState.copy(
+                        messageIds = unreadMentions,
+                        hasMore = it.hasNext,
+                        isLoadingMore = false
+                    )
+                    if (channel.newMentionCount > 0 && unreadMentions.isEmpty()) {
+                        updateChannel {
+                            copy(newMentionCount = 0)
+                        }
+                    }
+
+                    if (scrollTo)
+                        prepareToScrollToUnreadMention()
+                },
+                onError = {
+                    unreadMentionState = unreadMentionState.copy(isLoadingMore = false)
+                }
+            )
+        }
+    }
+
+    private fun updateChannel(updateAction: SceytChannel.() -> SceytChannel) {
+        _channel = _channel.updateAction()
+        _conversationId = _channel.id
+        _onChannelUpdatedEventFlow.tryEmit(_channel)
+    }
+
+    private fun getNextUnreadMention(): MessageId? = with(unreadMentionState) {
+        if (messageIds.isEmpty()) {
+            if (channel.newMentionCount > 0) {
+                getUnreadMentions(0, true)
+            }
+            return@with null
+        }
+
+        val ids = messageIds.toMutableSet()
+        val element = ids.first()
+        ids.remove(element)
+
+        unreadMentionState = unreadMentionState.copy(messageIds = ids)
+
+        if (unreadMentionState.hasMore && messageIds.size < 5) {
+            getUnreadMentions(messageIds.last())
+        }
+        return@with MessageId(element)
     }
 
     private fun loadNextSearchedMessages() {
         if (isLoadingNearToSearchMessagesServer.getAndSet(true)) return
         viewModelScope.launch {
-            val resp = messageInteractor.loadNextSearchMessages()
-            (resp as? SceytPagingResponse.Success)?.let {
-                it.data?.let { messages ->
-                    val oldValue = _searchResult.value ?: return@launch
-                    val loadedMessages = ArrayList(oldValue.messages)
-                    val newMessages: List<SceytMessage> = loadedMessages.plus(messages.reversed())
-                    _searchResult.postValue(oldValue.copy(messages = newMessages, hasNext = resp.hasNext))
-                }
+            messageInteractor.loadNextSearchMessages().onSuccess {
+                val messages = it.data
+                val oldValue = _searchResult.value ?: return@launch
+                val loadedMessages = ArrayList(oldValue.messages)
+                val newMessages: List<SceytMessage> = loadedMessages.plus(messages.reversed())
+                _searchResult.postValue(oldValue.copy(messages = newMessages, hasNext = it.hasNext))
             }
             isLoadingNearToSearchMessagesServer.set(false)
         }
@@ -359,6 +445,52 @@ class MessageListViewModel(
             else -> return
         }
         pagingResponseReceived(response)
+    }
+
+    private fun checkMaybeHaveUnreadMentionOnNewMessage(message: SceytMessage) {
+        if (!message.incoming || message.displayCount.toInt() == 0 || message.disableMentionsCount)
+            return
+
+        if (message.mentionedUsers?.any { it.id == SceytChatUIKit.currentUserId } == true) {
+            unreadMentionState = unreadMentionState.copy(
+                messageIds = unreadMentionState.messageIds.plus(message.id)
+            )
+
+            updateChannel {
+                copy(newMentionCount = newMentionCount + 1)
+            }
+        }
+    }
+
+    private fun checkUnreadMentionsOnMessageUpdated(message: SceytMessage) {
+        if (!message.incoming || message.displayCount.toInt() == 0) return
+        var newMentionsCount = channel.newMentionCount
+        when {
+            unreadMentionState.messageIds.contains(message.id) -> {
+                if (message.mentionedUsers.orEmpty().none { it.id == SceytChatUIKit.currentUserId }) {
+                    unreadMentionState = unreadMentionState.copy(
+                        messageIds = unreadMentionState.messageIds.minus(message.id)
+                    )
+                    newMentionsCount = channel.newMentionCount - 1
+                }
+            }
+
+            else -> {
+                if (message.mentionedUsers.orEmpty().any { it.id == SceytChatUIKit.currentUserId }) {
+                    unreadMentionState = unreadMentionState.copy(
+                        messageIds = unreadMentionState.messageIds.plus(message.id)
+                    )
+                    newMentionsCount = channel.newMentionCount + 1
+                }
+            }
+        }
+
+        if (channel.newMentionCount != newMentionsCount) {
+            viewModelScope.launch {
+                // Get channel form server to update new mentions count
+                channelInteractor.getChannelFromServer(channel.id)
+            }
+        }
     }
 
     fun sendPendingMessages() {
@@ -389,6 +521,12 @@ class MessageListViewModel(
 
     fun prepareToScrollToReplyMessage(message: SceytMessage) {
         _onScrollToReplyMessageLiveData.postValue(message.parentMessage ?: return)
+    }
+
+    fun prepareToScrollToUnreadMention() {
+        getNextUnreadMention()?.let {
+            _onScrollToUnredMentionMessageLiveData.postValue(it.messageId)
+        }
     }
 
     fun prepareToPauseOrResumeUpload(item: FileListItem) {
@@ -446,7 +584,7 @@ class MessageListViewModel(
             scoreKey: String,
             score: Int = 1,
             reason: String = "",
-            enforceUnique: Boolean = false
+            enforceUnique: Boolean = false,
     ) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = messageReactionInteractor.addReaction(channel.id, message.id, scoreKey,
@@ -497,6 +635,17 @@ class MessageListViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             val response = messageInteractor.markMessagesAs(channel.id, MarkerType.Displayed, *messageIds)
             _messageMarkerLiveData.postValue(response)
+
+            // Cleat unread mentions when message is read
+            if (unreadMentionState.messageIds.isNotEmpty()) {
+                response.forEach {
+                    it.onSuccessNotNull { marker ->
+                        unreadMentionState = unreadMentionState.copy(
+                            messageIds = unreadMentionState.messageIds.minus(marker.messageIds.toSet())
+                        )
+                    }
+                }
+            }
         }
     }
 
@@ -507,62 +656,84 @@ class MessageListViewModel(
         }
     }
 
-    fun sendTypingEvent(typing: Boolean) {
+    fun sendChannelEvent(action: InputUserAction) {
         if (channel.pending) return
         viewModelScope.launch(Dispatchers.IO) {
-            messageInteractor.sendTyping(channel.id, typing)
+            val event = when (action) {
+                is InputUserAction.Typing -> {
+                    if (action.typing) {
+                        SceytConstants.startTypingEvent
+                    } else SceytConstants.stopTypingEvent
+                }
+
+                is InputUserAction.Recording -> {
+                    if (action.recording) {
+                        SceytConstants.startRecordingEvent
+                    } else SceytConstants.stopRecordingEvent
+                }
+            }
+            messageInteractor.sendChannelEvent(channel.id, event)
         }
     }
 
     fun updateDraftMessage(
             text: Editable?,
+            attachments: List<Attachment>,
+            audioRecordData: AudioRecordData?,
             mentionUsers: List<Mention>,
             styling: List<BodyStyleRange>?,
             replyOrEditMessage: SceytMessage?,
-            isReply: Boolean
+            isReply: Boolean,
     ) {
-        viewModelScope.launch(Dispatchers.IO) {
-            channelInteractor.updateDraftMessage(channel.id, text?.toString(),
-                mentionUsers, styling, replyOrEditMessage, isReply)
+        viewModelScope.launch(NonCancellable) {
+            val bodyAttributes = mentionUsers.map { it.toBodyAttribute() }.toMutableSet()
+            styling?.let {
+                bodyAttributes.addAll(it.map { styleRange -> styleRange.toBodyAttribute() })
+            }
+
+            val draftAttachments = attachments.mapNotNull { attachment ->
+                DraftAttachment(
+                    channelId = conversationId,
+                    filePath = attachment.filePath ?: return@mapNotNull null,
+                    type = AttachmentTypeEnum.entries.find {
+                        it.value == attachment.type
+                    } ?: return@mapNotNull null
+                )
+            }
+
+            val dratMessage = DraftMessage(
+                channelId = conversationId,
+                body = text?.toString(),
+                createdAt = System.currentTimeMillis(),
+                mentionUsers = mentionUsers.map {
+                    createEmptyUser(it.recipientId, it.name)
+                },
+                replyOrEditMessage = replyOrEditMessage,
+                isReply = isReply,
+                bodyAttributes = bodyAttributes.toList(),
+                attachments = draftAttachments,
+                voiceAttachment = audioRecordData?.toVoiceAttachmentData(conversationId)
+            )
+
+            channelInteractor.updateDraftMessage(dratMessage)
         }
     }
 
     fun join() {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelInteractor.join(channel.id)
-            if (response is SceytResponse.Success) {
-                updateChannel(response.data ?: return@launch)
-            }
-            _joinLiveData.postValue(response)
+            channelInteractor.join(channel.id)
         }
     }
 
     fun getChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            when (val response = channelInteractor.getChannelFromServer(channelId)) {
-                // If response is Error, try to get channel from db.
-                is SceytResponse.Error -> {
-                    channelInteractor.getChannelFromDb(channelId)?.let {
-                        _channelLiveData.postValue(SceytResponse.Success(it))
-                    } ?: _channelLiveData.postValue(response)
-                }
-
-                is SceytResponse.Success -> {
-                    updateChannel(response.data ?: return@launch)
-                    _channelLiveData.postValue(response)
-                }
-            }
+            channelInteractor.getChannelFromServer(channelId)
         }
     }
 
     fun markChannelAsRead(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelInteractor.markChannelAsRead(channelId)
-            if (response is SceytResponse.Success) {
-                val data = response.data ?: return@launch
-                updateChannel(data)
-            }
-            _channelLiveData.postValue(response)
+            channelInteractor.markChannelAsRead(channelId)
         }
     }
 
@@ -616,7 +787,7 @@ class MessageListViewModel(
             data: List<SceytMessage>?, hasNext: Boolean, hasPrev: Boolean,
             compareMessage: SceytMessage? = null,
             ignoreUnreadMessagesSeparator: Boolean = false,
-            enableDateSeparator: Boolean
+            enableDateSeparator: Boolean,
     ): List<MessageListItem> {
         if (data.isNullOrEmpty()) return arrayListOf()
 
@@ -664,11 +835,10 @@ class MessageListViewModel(
         return messageItems
     }
 
-
     internal fun initMessageInfoData(
             sceytMessage: SceytMessage,
             prevMessage: SceytMessage? = null,
-            initNameAndAvatar: Boolean = false
+            initNameAndAvatar: Boolean = false,
     ): SceytMessage {
         return sceytMessage.copy(
             isGroup = channel.isGroup,
@@ -800,7 +970,7 @@ class MessageListViewModel(
     }
 
     internal fun scrollToSearchMessage(isPrev: Boolean) {
-        if (isSearchingMessageToScroll.get()) return
+        if (isPreparingToScrollToMessage.get()) return
         val searchResult = searchResult.value ?: return
         val messages = searchResult.messages
         val nextIndex = if (isPrev) {
@@ -809,7 +979,7 @@ class MessageListViewModel(
         if (nextIndex < 0 || nextIndex >= messages.size)
             return
 
-        isSearchingMessageToScroll.set(true)
+        isPreparingToScrollToMessage.set(true)
         _searchResult.postValue(searchResult.copy(currentIndex = nextIndex))
         _onScrollToSearchMessageLiveData.postValue(messages[nextIndex])
 
@@ -826,28 +996,25 @@ class MessageListViewModel(
         when (eventData.eventType) {
             ChannelMembersEventEnum.Added -> {
                 channelMembers.addAll(sceytMembers)
-                _channel = channel.copy(
-                    members = channelMembers,
-                    memberCount = channel.memberCount + sceytMembers.size
-                )
-                _onChannelMemberAddedOrKickedLiveData.postValue(channel)
+                updateChannel {
+                    copy(
+                        members = channelMembers,
+                        memberCount = channel.memberCount + sceytMembers.size
+                    )
+                }
             }
 
             ChannelMembersEventEnum.Kicked -> {
                 channelMembers.removeAll(sceytMembers)
-                _channel = channel.copy(
-                    members = channelMembers,
-                    memberCount = channel.memberCount - sceytMembers.size
-                )
-                _onChannelMemberAddedOrKickedLiveData.postValue(channel)
+                updateChannel {
+                    copy(
+                        members = channelMembers,
+                        memberCount = channel.memberCount - sceytMembers.size
+                    )
+                }
             }
 
             else -> return
         }
-    }
-
-    private fun updateChannel(channel: SceytChannel) {
-        _channel = channel
-        _conversationId = channel.id
     }
 }

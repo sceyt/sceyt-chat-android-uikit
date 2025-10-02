@@ -8,17 +8,15 @@ import com.sceyt.chatuikit.databinding.SceytItemLoadingMoreBinding
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.listeners.click.ChannelClickListeners
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.listeners.click.ChannelClickListenersImpl
-import com.sceyt.chatuikit.styles.ChannelListViewStyle
+import com.sceyt.chatuikit.styles.channel.ChannelItemStyle
 
-open class ChannelViewHolderFactory(context: Context) {
+open class ChannelViewHolderFactory(
+        context: Context,
+        private val itemStyle: ChannelItemStyle,
+) {
     protected val layoutInflater: LayoutInflater = LayoutInflater.from(context)
     protected open val clickListeners = ChannelClickListenersImpl()
-    protected lateinit var channelStyle: ChannelListViewStyle
     private var attachDetachListener: ((ChannelListItem?, Boolean) -> Unit)? = null
-
-    internal fun setStyle(channelStyle: ChannelListViewStyle) {
-        this.channelStyle = channelStyle
-    }
 
     open fun createViewHolder(parent: ViewGroup, viewType: Int): BaseChannelViewHolder {
         return when (viewType) {
@@ -30,8 +28,7 @@ open class ChannelViewHolderFactory(context: Context) {
 
     open fun createChannelViewHolder(parent: ViewGroup): BaseChannelViewHolder {
         val binding = SceytItemChannelBinding.inflate(layoutInflater, parent, false)
-        return ChannelViewHolder(binding, channelStyle.itemStyle,
-            clickListeners, attachDetachListener)
+        return ChannelViewHolder(binding, itemStyle, clickListeners, attachDetachListener)
     }
 
     open fun createLoadingMoreViewHolder(parent: ViewGroup): BaseChannelViewHolder {
@@ -47,6 +44,7 @@ open class ChannelViewHolderFactory(context: Context) {
         attachDetachListener = listener
     }
 
+    @Suppress("unused")
     protected fun getAttachDetachListener() = attachDetachListener
 
     open fun getItemViewType(item: ChannelListItem, position: Int): Int {

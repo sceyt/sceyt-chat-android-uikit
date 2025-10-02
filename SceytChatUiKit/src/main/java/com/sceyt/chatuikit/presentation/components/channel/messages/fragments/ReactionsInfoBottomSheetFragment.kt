@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages.fragments
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -27,6 +28,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.fragments.ad
 import com.sceyt.chatuikit.presentation.components.channel.messages.fragments.adapters.ReactionHeaderItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.fragments.adapters.ReactionsHeaderAdapter
 import com.sceyt.chatuikit.presentation.components.channel.messages.fragments.adapters.ViewPagerAdapterReactedUsers
+import com.sceyt.chatuikit.styles.StyleRegistry
 import com.sceyt.chatuikit.styles.reactions_info.ReactionsInfoStyle
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
@@ -42,10 +44,13 @@ class ReactionsInfoBottomSheetFragment : BottomSheetDialogFragment() {
     private var reactionClick: ((SceytReaction) -> Unit)? = null
     private var pagerCallback: ViewPager2.OnPageChangeCallback? = null
     private lateinit var style: ReactionsInfoStyle
+    private val reactedUserListStyleId by lazy { "$STYLE_KEY_PREFIX${message.tid}" }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        style = ReactionsInfoStyle.Builder(requireContext(), null).build()
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        getBundleArguments()
+        style = ReactionsInfoStyle.Builder(context, null).build()
+        StyleRegistry.register(style = style.reactedUserListStyle, id = reactedUserListStyleId)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -56,7 +61,6 @@ class ReactionsInfoBottomSheetFragment : BottomSheetDialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        getBundleArguments()
         binding.applyStyle()
 
         initAdapters()
@@ -177,7 +181,7 @@ class ReactionsInfoBottomSheetFragment : BottomSheetDialogFragment() {
     }
 
     private fun createReactedUsersFragment(key: String, messageId: Long): FragmentReactedUsers {
-        return FragmentReactedUsers.newInstance(messageId, key, style.reactedUserListStyle).apply {
+        return FragmentReactedUsers.newInstance(messageId, key, reactedUserListStyleId).apply {
             setClickListener {
                 reactionClick?.invoke(it)
                 dismissSafety()
@@ -194,15 +198,19 @@ class ReactionsInfoBottomSheetFragment : BottomSheetDialogFragment() {
         divider.dividerColor = style.dividerColor
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        StyleRegistry.unregister(reactedUserListStyleId)
+    }
+
     companion object {
         private const val MESSAGE_KEY = "messageKey"
+        private const val STYLE_KEY_PREFIX = "ReactedUserListStyle_"
 
         fun newInstance(message: SceytMessage): ReactionsInfoBottomSheetFragment {
-            val fragment = ReactionsInfoBottomSheetFragment()
-            fragment.setBundleArguments {
+            return ReactionsInfoBottomSheetFragment().setBundleArguments {
                 putParcelable(MESSAGE_KEY, message)
             }
-            return fragment
         }
     }
 }

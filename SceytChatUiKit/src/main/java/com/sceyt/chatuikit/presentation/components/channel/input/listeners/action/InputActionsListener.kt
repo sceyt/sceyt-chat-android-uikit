@@ -1,11 +1,14 @@
 package com.sceyt.chatuikit.presentation.components.channel.input.listeners.action
 
 import android.text.Editable
+import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
-import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
+import com.sceyt.chatuikit.media.audio.AudioRecordData
+import com.sceyt.chatuikit.presentation.components.channel.input.data.InputUserAction
 import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
+import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
 
 sealed interface InputActionsListener {
 
@@ -21,19 +24,25 @@ sealed interface InputActionsListener {
         fun sendEditMessage(message: SceytMessage, linkDetails: LinkPreviewDetails?)
     }
 
-    fun interface TypingListener : InputActionsListener {
-        fun sendTyping(typing: Boolean)
+    fun interface ChannelEventListener : InputActionsListener {
+        fun sendChannelEvent(state: InputUserAction)
     }
 
     fun interface UpdateDraftMessageListener {
-        fun updateDraftMessage(text: Editable?, mentionUserIds: List<Mention>,
-                               styling: List<BodyStyleRange>?,
-                               replyOrEditMessage: SceytMessage?, isReply: Boolean)
+        fun updateDraftMessage(
+                text: Editable?,
+                attachments: List<Attachment>,
+                audioRecordData: AudioRecordData?,
+                mentionUserIds: List<Mention>,
+                styling: List<BodyStyleRange>?,
+                replyOrEditMessage: SceytMessage?,
+                isReply: Boolean,
+        )
     }
 
     /** Use this if you want to implement all callbacks */
     interface InputActionListeners : SendMessageListener, SendMessagesListener,
-            SendEditMessageListener, TypingListener, UpdateDraftMessageListener
+            SendEditMessageListener, ChannelEventListener, UpdateDraftMessageListener
 }
 
 internal fun InputActionsListener.setListener(listener: InputActionsListener) {

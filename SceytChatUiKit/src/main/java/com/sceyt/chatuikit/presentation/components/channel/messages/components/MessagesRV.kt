@@ -7,7 +7,6 @@ import android.util.AttributeSet
 import android.view.ViewGroup
 import android.view.animation.AnimationUtils
 import androidx.core.util.Predicate
-import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
@@ -16,7 +15,6 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.extensions.addRVScrollListener
-import com.sceyt.chatuikit.extensions.asComponentActivity
 import com.sceyt.chatuikit.extensions.getFirstVisibleItemPosition
 import com.sceyt.chatuikit.extensions.getLastVisibleItemPosition
 import com.sceyt.chatuikit.extensions.lastVisibleItemPosition
@@ -31,15 +29,13 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.mes
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
 import com.sceyt.chatuikit.shared.helpers.MessageSwipeController
 import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 
 
 class MessagesRV @JvmOverloads constructor(
         context: Context,
         attrs: AttributeSet? = null,
-        defStyleAttr: Int = 0
+        defStyleAttr: Int = 0,
 ) : RecyclerView(context, attrs, defStyleAttr) {
     private lateinit var mAdapter: MessagesAdapter
     private var viewHolderFactory = MessageViewHolderFactory(context)
@@ -98,11 +94,9 @@ class MessagesRV @JvmOverloads constructor(
 
         addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
             if (scrollState != SCROLL_STATE_IDLE || ::mAdapter.isInitialized.not()) return@addOnLayoutChangeListener
-            context.asComponentActivity().lifecycleScope.launch {
-                delay(100)
-                checkNeedLoadPrev(-1)
-                checkNeedLoadNext(1)
-            }
+            scrollY = computeVerticalScrollOffset()
+            checkNeedLoadPrev(-1)
+            checkNeedLoadNext(1)
         }
     }
 

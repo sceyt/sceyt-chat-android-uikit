@@ -56,14 +56,14 @@ import kotlinx.coroutines.withContext
 import org.koin.core.component.inject
 
 internal class PersistenceAttachmentLogicImpl(
-        private val messageDao: MessageDao,
-        private val attachmentDao: AttachmentDao,
-        private val userDao: UserDao,
-        private val fileChecksumDao: FileChecksumDao,
-        private val linkDao: LinkDao,
-        private val messagesCache: MessagesCache,
-        private val attachmentsCache: AttachmentsCache,
-        private val attachmentsRepository: AttachmentsRepository,
+    private val messageDao: MessageDao,
+    private val attachmentDao: AttachmentDao,
+    private val userDao: UserDao,
+    private val fileChecksumDao: FileChecksumDao,
+    private val linkDao: LinkDao,
+    private val messagesCache: MessagesCache,
+    private val attachmentsCache: AttachmentsCache,
+    private val attachmentsRepository: AttachmentsRepository,
 ) : PersistenceAttachmentLogic, SceytKoinComponent {
 
     private val messagesLogic: PersistenceMessagesLogic by inject()
@@ -82,37 +82,73 @@ internal class PersistenceAttachmentLogicImpl(
     }
 
     override suspend fun getPrevAttachments(
-            conversationId: Long, lastAttachmentId: Long, types: List<String>,
-            offset: Int, ignoreDb: Boolean, loadKeyData: LoadKeyData,
-    ): Flow<PaginationResponse<AttachmentWithUserData>> {
-        return loadAttachments(loadType = LoadPrev, conversationId, lastAttachmentId, types, loadKeyData, offset, ignoreDb)
-    }
+        conversationId: Long,
+        lastAttachmentId: Long,
+        types: List<String>,
+        offset: Int,
+        ignoreDb: Boolean,
+        loadKeyData: LoadKeyData,
+    ) = loadAttachments(
+        loadType = LoadPrev,
+        conversationId = conversationId,
+        attachmentId = lastAttachmentId,
+        types = types,
+        loadKey = loadKeyData,
+        offset = offset,
+        ignoreDb = ignoreDb
+    )
 
     override suspend fun getNextAttachments(
-            conversationId: Long, lastAttachmentId: Long, types: List<String>,
-            offset: Int, ignoreDb: Boolean, loadKeyData: LoadKeyData,
-    ): Flow<PaginationResponse<AttachmentWithUserData>> {
-        return loadAttachments(loadType = LoadNext, conversationId, lastAttachmentId, types, loadKeyData, offset, ignoreDb)
-    }
+        conversationId: Long, lastAttachmentId: Long, types: List<String>,
+        offset: Int, ignoreDb: Boolean, loadKeyData: LoadKeyData,
+    ) = loadAttachments(
+        loadType = LoadNext,
+        conversationId = conversationId,
+        attachmentId = lastAttachmentId,
+        types = types,
+        loadKey = loadKeyData,
+        offset = offset,
+        ignoreDb = ignoreDb
+    )
 
     override suspend fun getNearAttachments(
-            conversationId: Long, attachmentId: Long, types: List<String>,
-            offset: Int, ignoreDb: Boolean, loadKeyData: LoadKeyData,
-    ): Flow<PaginationResponse<AttachmentWithUserData>> {
-        return loadAttachments(loadType = LoadNear, conversationId, attachmentId, types, loadKeyData, offset, ignoreDb)
-    }
+        conversationId: Long,
+        attachmentId: Long,
+        types: List<String>,
+        offset: Int,
+        ignoreDb: Boolean,
+        loadKeyData: LoadKeyData,
+    ) = loadAttachments(
+        loadType = LoadNear,
+        conversationId = conversationId,
+        attachmentId = attachmentId,
+        types = types,
+        loadKey = loadKeyData,
+        offset = offset,
+        ignoreDb = ignoreDb
+    )
 
-    override suspend fun updateAttachmentIdAndMessageId(message: SceytMessage) = withContext(Dispatchers.IO) {
-        message.attachments?.forEach { attachment ->
-            attachmentDao.updateAttachmentIdAndMessageId(attachment.id, message.id, message.tid, attachment.url)
+    override suspend fun updateAttachmentIdAndMessageId(message: SceytMessage) =
+        withContext(Dispatchers.IO) {
+            message.attachments?.forEach { attachment ->
+                attachmentDao.updateAttachmentIdAndMessageId(
+                    attachmentId = attachment.id,
+                    messageId = message.id,
+                    messageTid = message.tid,
+                    attachmentUrl = attachment.url
+                )
+            }
+            Unit
         }
-        Unit
-    }
 
     override suspend fun updateTransferDataByMsgTid(data: TransferData) {
         messagesCache.updateAttachmentTransferData(data)
         withContext(Dispatchers.IO) {
-            attachmentDao.updateAttachmentTransferDataByMsgTid(data.messageTid, data.progressPercent, data.state)
+            attachmentDao.updateAttachmentTransferDataByMsgTid(
+                tid = data.messageTid,
+                progress = data.progressPercent,
+                state = data.state
+            )
         }
     }
 
@@ -123,10 +159,20 @@ internal class PersistenceAttachmentLogicImpl(
         }
     }
 
-    override suspend fun updateAttachmentFilePathAndMetadata(messageTid: Long, newPath: String, fileSize: Long, metadata: String?) {
+    override suspend fun updateAttachmentFilePathAndMetadata(
+        messageTid: Long,
+        newPath: String,
+        fileSize: Long,
+        metadata: String?,
+    ) {
         messagesCache.updateAttachmentFilePathAndMeta(messageTid, newPath, metadata)
         withContext(Dispatchers.IO) {
-            attachmentDao.updateAttachmentFilePathAndMetadata(messageTid, newPath, fileSize, metadata)
+            attachmentDao.updateAttachmentFilePathAndMetadata(
+                tid = messageTid,
+                filePath = newPath,
+                fileSize = fileSize,
+                metadata = metadata
+            )
         }
     }
 
@@ -135,65 +181,96 @@ internal class PersistenceAttachmentLogicImpl(
         return fileChecksumDao.getChecksum(checksum ?: return null)?.toFileChecksumData()
     }
 
-    override suspend fun getLinkPreviewData(link: String?): SceytResponse<LinkPreviewDetails> = withContext(Dispatchers.IO) {
-        if (link.isNullOrBlank()) return@withContext SceytResponse.Error(SceytException(0, "Link is null or blank: link -> $link"))
+    override suspend fun getLinkPreviewData(link: String?): SceytResponse<LinkPreviewDetails> =
+        withContext(Dispatchers.IO) {
+            if (link.isNullOrBlank()) return@withContext SceytResponse.Error(
+                exception = SceytException(0, "Link is null or blank: link -> $link")
+            )
 
-        linkDao.getLinkDetailsEntity(link)?.let {
-            return@withContext SceytResponse.Success(it.toLinkPreviewDetails(false))
-        }
-
-        return@withContext when (val response = attachmentsRepository.getLinkPreviewData(link)) {
-            is SceytResponse.Success -> {
-                if (response.data != null) {
-                    val details = response.data.toLinkPreviewDetails(link)
-                    messagesCache.updateAttachmentLinkDetails(details)
-                    attachmentsCache.updateAttachmentLinkDetails(details)
-                    linkDao.insert(details.toLinkDetailsEntity(link, null))
-                    SceytResponse.Success(details)
-                } else
-                    SceytResponse.Error(SceytException(0, "Link is null or blank: link -> $link"))
+            linkDao.getLinkDetailsEntity(link)?.let {
+                return@withContext SceytResponse.Success(it.toLinkPreviewDetails(false))
             }
 
-            is SceytResponse.Error -> SceytResponse.Error(response.exception, null)
+            return@withContext when (val response =
+                attachmentsRepository.getLinkPreviewData(link)) {
+                is SceytResponse.Success -> {
+                    if (response.data != null) {
+                        val details = response.data.toLinkPreviewDetails(link)
+                        messagesCache.updateAttachmentLinkDetails(details)
+                        attachmentsCache.updateAttachmentLinkDetails(details)
+                        linkDao.insert(details.toLinkDetailsEntity(link, null))
+                        SceytResponse.Success(details)
+                    } else
+                        SceytResponse.Error(
+                            exception = SceytException(0, "Link is null or blank: link -> $link")
+                        )
+                }
+
+                is SceytResponse.Error -> SceytResponse.Error(response.exception, null)
+            }
         }
-    }
 
-    override suspend fun upsertLinkPreviewData(linkDetails: LinkPreviewDetails) = withContext(Dispatchers.IO) {
-        linkDao.upsert(linkDetails.toLinkDetailsEntity())
-        messagesCache.updateAttachmentLinkDetails(linkDetails)
-        attachmentsCache.updateAttachmentLinkDetails(linkDetails)
-    }
+    override suspend fun upsertLinkPreviewData(linkDetails: LinkPreviewDetails) =
+        withContext(Dispatchers.IO) {
+            linkDao.upsert(linkDetails.toLinkDetailsEntity())
+            messagesCache.updateAttachmentLinkDetails(linkDetails)
+            attachmentsCache.updateAttachmentLinkDetails(linkDetails)
+        }
 
-    override suspend fun updateLinkDetailsSize(link: String, size: Size) = withContext(Dispatchers.IO) {
-        linkDao.updateSizes(link, size.width, size.height)
-        messagesCache.updateLinkDetailsSize(link, size.width, size.height)
-        attachmentsCache.updateLinkDetailsSize(link, size.width, size.height)
-    }
+    override suspend fun updateLinkDetailsSize(link: String, size: Size) =
+        withContext(Dispatchers.IO) {
+            linkDao.updateSizes(link, size.width, size.height)
+            messagesCache.updateLinkDetailsSize(link, size.width, size.height)
+            attachmentsCache.updateLinkDetailsSize(link, size.width, size.height)
+        }
 
-    override suspend fun updateLinkDetailsThumb(link: String, thumb: String) = withContext(Dispatchers.IO) {
-        linkDao.updateThumb(link, thumb)
-        messagesCache.updateThumb(link, thumb)
-        attachmentsCache.updateThumb(link, thumb)
-    }
+    override suspend fun updateLinkDetailsThumb(link: String, thumb: String) =
+        withContext(Dispatchers.IO) {
+            linkDao.updateThumb(link, thumb)
+            messagesCache.updateThumb(link, thumb)
+            attachmentsCache.updateThumb(link, thumb)
+        }
 
     override fun onTransferProgressPercentUpdated(transferData: TransferData) {
         messagesCache.updateAttachmentTransferData(transferData)
     }
 
     private fun loadAttachments(
-            loadType: PaginationResponse.LoadType, conversationId: Long, attachmentId: Long,
-            types: List<String>, loadKey: LoadKeyData = LoadKeyData(value = attachmentId),
-            offset: Int, ignoreDb: Boolean,
+        loadType: PaginationResponse.LoadType,
+        conversationId: Long,
+        attachmentId: Long,
+        types: List<String>,
+        loadKey: LoadKeyData = LoadKeyData(value = attachmentId),
+        offset: Int,
+        ignoreDb: Boolean,
     ): Flow<PaginationResponse<AttachmentWithUserData>> {
         return callbackFlow {
             if (offset == 0) attachmentsCache.clear(types)
 
             // Load from database
             if (!ignoreDb)
-                trySend(getAttachmentsDbByLoadType(loadType, conversationId, attachmentId, types, loadKey, offset))
+                trySend(
+                    getAttachmentsDbByLoadType(
+                        loadType = loadType,
+                        conversationId = conversationId,
+                        attachmentId = attachmentId,
+                        types = types,
+                        loadKey = loadKey,
+                        offset = offset
+                    )
+                )
             // Load from server
-            trySend(getAttachmentsServerByLoadType(loadType, conversationId, attachmentId, types,
-                loadKey, offset, ignoreDb))
+            trySend(
+                getAttachmentsServerByLoadType(
+                    loadType = loadType,
+                    conversationId = conversationId,
+                    attachmentId = attachmentId,
+                    types = types,
+                    loadKey = loadKey,
+                    offset = offset,
+                    ignoreDb = ignoreDb
+                )
+            )
 
             channel.close()
             awaitClose()
@@ -201,8 +278,8 @@ internal class PersistenceAttachmentLogicImpl(
     }
 
     private suspend fun getAttachmentsDbByLoadType(
-            loadType: PaginationResponse.LoadType, conversationId: Long,
-            attachmentId: Long, types: List<String>, loadKey: LoadKeyData, offset: Int,
+        loadType: PaginationResponse.LoadType, conversationId: Long,
+        attachmentId: Long, types: List<String>, loadKey: LoadKeyData, offset: Int,
     ): PaginationResponse<AttachmentWithUserData> {
 
         var hasNext = false
@@ -238,32 +315,59 @@ internal class PersistenceAttachmentLogicImpl(
         val data = arrayListOf<AttachmentWithUserData>()
 
         attachments.map {
-            data.add(AttachmentWithUserData(it, users.find { userEntity -> userEntity.id == it.userId }?.toSceytUser()))
+            data.add(
+                AttachmentWithUserData(
+                    attachment = it,
+                    user = users.find { userEntity -> userEntity.id == it.userId }?.toSceytUser()
+                )
+            )
         }
         attachmentsCache.addAll(attachments, false)
 
         return PaginationResponse.DBResponse(data, loadKey, offset, hasNext, hasPrev, loadType)
     }
 
-    private suspend fun getPrevAttachmentsDb(channelId: Long, lastAttachmentId: Long, types: List<String>): List<SceytAttachment> {
+    private suspend fun getPrevAttachmentsDb(
+        channelId: Long,
+        lastAttachmentId: Long,
+        types: List<String>,
+    ): List<SceytAttachment> {
         val id = if (lastAttachmentId == 0L) Long.MAX_VALUE else lastAttachmentId
-        val attachments = attachmentDao.getOldestThenAttachment(channelId, id, attachmentsLoadSize, types)
+        val attachments =
+            attachmentDao.getOldestThenAttachment(channelId, id, attachmentsLoadSize, types)
         return attachments.map { attachmentDb -> attachmentDb.toAttachment() }.reversed()
     }
 
-    private suspend fun getNextAttachmentsDb(channelId: Long, lastAttachmentId: Long, types: List<String>): List<SceytAttachment> {
-        val attachments = attachmentDao.getNewestThenAttachment(channelId, lastAttachmentId, attachmentsLoadSize, types)
+    private suspend fun getNextAttachmentsDb(
+        channelId: Long,
+        lastAttachmentId: Long,
+        types: List<String>,
+    ): List<SceytAttachment> {
+        val attachments = attachmentDao.getNewestThenAttachment(
+            channelId,
+            lastAttachmentId,
+            attachmentsLoadSize,
+            types
+        )
         return attachments.map { attachmentDb -> attachmentDb.toAttachment() }
     }
 
-    private suspend fun getNearAttachmentsDb(channelId: Long, attachmentId: Long, types: List<String>): LoadNearData<AttachmentDb> {
+    private suspend fun getNearAttachmentsDb(
+        channelId: Long,
+        attachmentId: Long,
+        types: List<String>,
+    ): LoadNearData<AttachmentDb> {
         return attachmentDao.getNearAttachments(channelId, attachmentId, attachmentsLoadSize, types)
     }
 
     private suspend fun getAttachmentsServerByLoadType(
-            loadType: PaginationResponse.LoadType, conversationId: Long,
-            attachmentId: Long, types: List<String>,
-            loadKey: LoadKeyData, offset: Int, ignoreDb: Boolean,
+        loadType: PaginationResponse.LoadType,
+        conversationId: Long,
+        attachmentId: Long,
+        types: List<String>,
+        loadKey: LoadKeyData,
+        offset: Int,
+        ignoreDb: Boolean,
     ): PaginationResponse<AttachmentWithUserData> {
         var hasNext = false
         var hasPrev = false
@@ -272,19 +376,22 @@ internal class PersistenceAttachmentLogicImpl(
 
         when (loadType) {
             LoadPrev -> {
-                response = attachmentsRepository.getPrevAttachments(conversationId, attachmentId, types)
+                response =
+                    attachmentsRepository.getPrevAttachments(conversationId, attachmentId, types)
                 if (response is SceytResponse.Success)
                     hasPrev = response.data?.first?.size == attachmentsLoadSize
             }
 
             LoadNext -> {
-                response = attachmentsRepository.getNextAttachments(conversationId, attachmentId, types)
+                response =
+                    attachmentsRepository.getNextAttachments(conversationId, attachmentId, types)
                 if (response is SceytResponse.Success)
                     hasPrev = response.data?.first?.size == attachmentsLoadSize
             }
 
             LoadNear -> {
-                response = attachmentsRepository.getNearAttachments(conversationId, attachmentId, types)
+                response =
+                    attachmentsRepository.getNearAttachments(conversationId, attachmentId, types)
                 if (response is SceytResponse.Success) {
                     response.data?.let { pair ->
                         val groupOldAndNewData = pair.first.groupBy { it.id > attachmentId }
@@ -298,7 +405,8 @@ internal class PersistenceAttachmentLogicImpl(
             }
 
             LoadNewest -> {
-                response = attachmentsRepository.getPrevAttachments(conversationId, Long.MAX_VALUE, types)
+                response =
+                    attachmentsRepository.getPrevAttachments(conversationId, Long.MAX_VALUE, types)
                 if (response is SceytResponse.Success)
                     hasPrev = response.data?.first?.size == attachmentsLoadSize
             }
@@ -318,32 +426,42 @@ internal class PersistenceAttachmentLogicImpl(
         return PaginationResponse.ServerResponse(
             data = mappedResponse, cacheData = cacheData,
             loadKey = loadKey, offset = offset, hasDiff = hasDiff, hasNext = hasNext,
-            hasPrev = hasPrev, loadType = loadType, ignoredDb = ignoreDb)
+            hasPrev = hasPrev, loadType = loadType, ignoredDb = ignoreDb
+        )
     }
 
     private suspend fun handelServerResponse(
-            conversationId: Long,
-            response: SceytResponse<Pair<List<Attachment>, Map<String, SceytUser>>>,
+        conversationId: Long,
+        response: SceytResponse<Pair<List<Attachment>, Map<String, SceytUser>>>,
     ): SceytResponse<List<AttachmentWithUserData>> {
         when (response) {
             is SceytResponse.Success -> {
-                if (response.data?.first.isNullOrEmpty()) return SceytResponse.Success(emptyList())
-                val attachments = response.data!!.first
+                val attachments = response.data?.first
+                if (attachments.isNullOrEmpty()) return SceytResponse.Success(emptyList())
                 val usersMap = response.data.second
 
                 // Checking maybe all messages is exist in database
-                val existMsgIdsData = messageDao.getExistMessagesIdTidByIds(attachments.map { it.messageId })
-                val attachmentsAndMissingMessages = getExistAttachmentsAndMissedMsgIds(attachments, existMsgIdsData)
+                val existMsgIdsData = messageDao.getExistMessagesIdTidByIds(attachments.map {
+                    it.messageId
+                })
+                val attachmentsAndMissingMessages =
+                    getExistAttachmentsAndMissedMsgIds(attachments, existMsgIdsData)
                 val sceytAttachments = attachmentsAndMissingMessages.first.toMutableList()
 
                 // Load missed messages, and update attachments transfer state
                 if (attachmentsAndMissingMessages.second.isNotEmpty())
-                    when (val result = getAndCorrectAttachmentsData(conversationId, attachmentsAndMissingMessages.second, attachments)) {
+                    when (val result = getAndCorrectAttachmentsData(
+                        conversationId = conversationId,
+                        messageIds = attachmentsAndMissingMessages.second,
+                        attachments = attachments
+                    )) {
                         is SceytResponse.Success -> sceytAttachments.addAll(result.data ?: listOf())
                         is SceytResponse.Error -> return SceytResponse.Error(result.exception)
                     }
 
-                val finalData = sceytAttachments.map { AttachmentWithUserData(it, usersMap[it.userId]) }
+                val finalData = sceytAttachments.map {
+                    AttachmentWithUserData(it, usersMap[it.userId])
+                }
                 return SceytResponse.Success(finalData)
             }
 
@@ -352,21 +470,27 @@ internal class PersistenceAttachmentLogicImpl(
     }
 
     private suspend fun getExistAttachmentsAndMissedMsgIds(
-            attachments: List<Attachment>,
-            idsData: List<MessageIdAndTid>
+        attachments: List<Attachment>,
+        idsData: List<MessageIdAndTid>,
     ): Pair<List<SceytAttachment>, List<Long>> {
         if (attachments.isEmpty())
             return Pair(emptyList(), emptyList())
 
         val msgIds = attachments.map { it.messageId }
-        val transferData = attachmentDao.getAllAttachmentPayLoadsByMsgTid(*idsData.map { it.tid }.toLongArray())
-        val missedMsgIds: MutableList<Long> = msgIds.minus(idsData.mapNotNull { it.id }.toSet()).toMutableList()
+        val transferData = attachmentDao.getAllAttachmentPayLoadsByMsgTid(*idsData.map {
+            it.tid
+        }.toLongArray())
+        val missedMsgIds: MutableList<Long> =
+            msgIds.minus(idsData.mapNotNull { it.id }.toSet()).toMutableList()
         val sceytAttachments = arrayListOf<SceytAttachment>()
 
         for (attachment in attachments) {
             val messageTid = idsData.find { it.id == attachment.messageId }?.tid
             if (messageTid == null) {
-                SceytLog.e(TAG, "Couldn't find message tid for msgId -> ${attachment.messageId}, added to missed messages list.")
+                SceytLog.e(
+                    tag = TAG,
+                    message = "Couldn't find message tid for msgId -> ${attachment.messageId}, added to missed messages list."
+                )
                 missedMsgIds.add(attachment.messageId)
                 continue
             }
@@ -382,29 +506,44 @@ internal class PersistenceAttachmentLogicImpl(
                     progress = this.progressPercent ?: 0f
                     filePath = this.filePath
                 }
-                linkPreviewDetails = it.linkPreviewDetails?.toLinkPreviewDetails(attachment.isHiddenLinkDetails())
+                linkPreviewDetails =
+                    it.linkPreviewDetails?.toLinkPreviewDetails(attachment.isHiddenLinkDetails())
             }
 
-            sceytAttachments.add(attachment.toSceytAttachment(messageTid, transferState, progress, linkPreviewDetails).copy(
-                filePath = filePath
-            ))
+            sceytAttachments.add(
+                attachment.toSceytAttachment(
+                    messageTid = messageTid,
+                    transferState = transferState,
+                    progress = progress,
+                    linkPreviewDetails = linkPreviewDetails
+                ).copy(filePath = filePath)
+            )
         }
         return Pair(sceytAttachments, missedMsgIds)
     }
 
-    private suspend fun getAndCorrectAttachmentsData(conversationId: Long, messageIds: List<Long>, attachments: List<Attachment>): SceytResponse<List<SceytAttachment>> {
+    private suspend fun getAndCorrectAttachmentsData(
+        conversationId: Long,
+        messageIds: List<Long>,
+        attachments: List<Attachment>,
+    ): SceytResponse<List<SceytAttachment>> {
         return if (messageIds.isNotEmpty()) {
             val sceytAttachments = arrayListOf<SceytAttachment>()
-            when (val messagesResponse = messagesLogic.loadMessagesById(conversationId, messageIds)) {
+            when (val messagesResponse =
+                messagesLogic.loadMessagesById(conversationId, messageIds)) {
                 is SceytResponse.Success -> {
                     messagesResponse.data?.let { data ->
                         messageDao.upsertMessages(data.map { it.toMessageDb(false) })
                         data.forEach {
-                            attachments.find { attachment -> attachment.messageId == it.id }?.let { attachment ->
-                                sceytAttachments.add(attachment.toSceytAttachment(
-                                    messageTid = getTid(it.id, it.tid, it.incoming),
-                                    transferState = TransferState.PendingDownload))
-                            }
+                            attachments.find { attachment -> attachment.messageId == it.id }
+                                ?.let { attachment ->
+                                    sceytAttachments.add(
+                                        attachment.toSceytAttachment(
+                                            messageTid = getTid(it.id, it.tid, it.incoming),
+                                            transferState = TransferState.PendingDownload
+                                        )
+                                    )
+                                }
                         }
                     }
                     SceytResponse.Success(sceytAttachments)

@@ -2,25 +2,24 @@ package com.sceyt.chatuikit.persistence.logic
 
 import androidx.sqlite.db.SimpleSQLiteQuery
 import com.sceyt.chatuikit.config.ChannelListConfig
-import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventData
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelActionEvent
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelUnreadCountUpdatedEventData
 import com.sceyt.chatuikit.data.managers.message.event.MessageStatusChangeData
 import com.sceyt.chatuikit.data.models.LoadKeyData
 import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
+import com.sceyt.chatuikit.data.models.channels.DraftMessage
 import com.sceyt.chatuikit.data.models.channels.EditChannelData
 import com.sceyt.chatuikit.data.models.channels.GetAllChannelsResponse
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
-import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
-import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
 import com.sceyt.chatuikit.push.PushData
 import com.sceyt.chatuikit.services.SceytPresenceChecker
 import kotlinx.coroutines.flow.Flow
 
 interface PersistenceChannelsLogic {
-    suspend fun onChannelEvent(data: ChannelEventData)
+    suspend fun onChannelEvent(event: ChannelActionEvent)
     suspend fun onChannelUnreadCountUpdatedEvent(data: ChannelUnreadCountUpdatedEventData)
     suspend fun onMessageStatusChangeEvent(data: MessageStatusChangeData)
     suspend fun onMessage(data: Pair<SceytChannel, SceytMessage>)
@@ -30,7 +29,9 @@ interface PersistenceChannelsLogic {
             offset: Int,
             searchQuery: String,
             loadKey: LoadKeyData?,
+            onlyMine: Boolean,
             ignoreDb: Boolean,
+            awaitForConnection: Boolean,
             config: ChannelListConfig,
     ): Flow<PaginationResponse<SceytChannel>>
 
@@ -43,7 +44,7 @@ interface PersistenceChannelsLogic {
             onlyMine: Boolean,
             ignoreDb: Boolean,
             loadKey: LoadKeyData?,
-            directChatType: String
+            directChatType: String,
     ): Flow<PaginationResponse<SceytChannel>>
 
     suspend fun getChannelsBySQLiteQuery(query: SimpleSQLiteQuery): List<SceytChannel>
@@ -78,11 +79,8 @@ interface PersistenceChannelsLogic {
     suspend fun updateLastMessageWithLastRead(channelId: Long, message: SceytMessage)
     suspend fun updateLastMessageIfNeeded(channelId: Long, message: SceytMessage?)
     suspend fun blockUnBlockUser(userId: String, block: Boolean)
-    suspend fun updateDraftMessage(
-            channelId: Long, message: String?, mentionUsers: List<Mention>,
-            styling: List<BodyStyleRange>?, replyOrEditMessage: SceytMessage?, isReply: Boolean,
-    )
-
+    suspend fun sendChannelEvent(channelId: Long, event: String)
+    suspend fun updateDraftMessage(draftMessage: DraftMessage)
     suspend fun getChannelsCountFromDb(): Int
     suspend fun onUserPresenceChanged(users: List<SceytPresenceChecker.PresenceUser>)
     fun getChannelMessageCount(channelId: Long): Flow<Long>

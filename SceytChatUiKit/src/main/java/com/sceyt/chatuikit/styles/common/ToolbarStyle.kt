@@ -7,8 +7,8 @@ import com.sceyt.chatuikit.presentation.custom_views.CustomToolbar
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
 
 data class ToolbarStyle(
-        @ColorInt val backgroundColor: Int = UNSET_COLOR,
-        @ColorInt val underlineColor: Int = UNSET_COLOR,
+        @param:ColorInt val backgroundColor: Int = UNSET_COLOR,
+        @param:ColorInt val underlineColor: Int = UNSET_COLOR,
         val navigationIcon: Drawable? = null,
         val menuStyle: MenuStyle = MenuStyle(),
         val titleTextStyle: TextStyle = TextStyle(),

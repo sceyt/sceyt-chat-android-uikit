@@ -6,15 +6,16 @@ import android.view.ContextThemeWrapper
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.FrameLayout
+import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.channel.ChannelListQuery.ChannelListOrder
 import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.data.managers.channel.event.ChannelTypingEventData
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytChannelListViewBinding
 import com.sceyt.chatuikit.persistence.differs.ChannelDiff
 import com.sceyt.chatuikit.persistence.extensions.checkIsMemberInChannel
 import com.sceyt.chatuikit.presentation.common.DebounceHelper
+import com.sceyt.chatuikit.presentation.components.channel.header.helpers.ChannelEventData
 import com.sceyt.chatuikit.presentation.components.channel.messages.ChannelActivity
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.holders.ChannelViewHolderFactory
@@ -30,8 +31,10 @@ import com.sceyt.chatuikit.presentation.components.channel_list.channels.listene
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.popups.ChannelActionsPopup
 import com.sceyt.chatuikit.presentation.custom_views.PageStateView
 import com.sceyt.chatuikit.presentation.root.PageState
-import com.sceyt.chatuikit.styles.ChannelListViewStyle
+import com.sceyt.chatuikit.styles.channel.ChannelListViewStyle
+import com.sceyt.chatuikit.styles.extensions.channel_list.setPageStateViews
 
+@Suppress("JoinDeclarationAndAssignment")
 class ChannelListView @JvmOverloads constructor(
         context: Context,
         attrs: AttributeSet? = null,
@@ -45,8 +48,8 @@ class ChannelListView @JvmOverloads constructor(
     private var clickListeners: ChannelClickListeners.ClickListeners = ChannelClickListenersImpl(this)
     private var popupClickListeners: ChannelPopupClickListeners.PopupClickListeners = ChannelPopupClickListenersImpl(this)
     private var channelCommandEventListener: ((ChannelEvent) -> Unit)? = null
-    private val debounceHelper by lazy { DebounceHelper(300, this) }
-    private val style: ChannelListViewStyle
+    private var debounceHelper: DebounceHelper? = null
+    val style: ChannelListViewStyle
 
     init {
         binding = SceytChannelListViewBinding.inflate(LayoutInflater.from(context), this)
@@ -59,11 +62,7 @@ class ChannelListView @JvmOverloads constructor(
         channelsRV.clipToPadding = clipToPadding
         super.setPadding(0, 0, 0, 0)
 
-        binding.pageStateView.apply {
-            setLoadingStateView(style.loadingState)
-            setEmptyStateView(style.emptyState)
-            setEmptySearchStateView(style.emptySearchState)
-        }
+        setPageStateViews()
 
         defaultClickListeners = object : ChannelClickListenersImpl() {
             override fun onChannelClick(item: ChannelListItem.ChannelItem) {
@@ -81,22 +80,26 @@ class ChannelListView @JvmOverloads constructor(
         channelsRV.setChannelListener(defaultClickListeners)
     }
 
-    internal fun setChannelsList(channels: List<ChannelListItem>) {
-        channelsRV.setData(channels)
+    internal fun setChannelsList(scope: LifecycleCoroutineScope, channels: List<ChannelListItem>) {
+        channelsRV.setData(scope, channels)
         if (channels.isNotEmpty())
             updateStateView(state = PageState.Nothing)
     }
 
-    internal fun addNewChannels(channels: List<ChannelListItem>) {
-        channelsRV.addNewChannels(channels)
+    internal fun addNewChannels(scope: LifecycleCoroutineScope, channels: List<ChannelListItem>) {
+        channelsRV.addNewChannels(scope, channels)
     }
 
-    internal fun addNewChannelAndSort(order: ChannelListOrder, channelItem: ChannelListItem.ChannelItem) {
+    internal fun addNewChannelAndSort(
+            scope: LifecycleCoroutineScope,
+            order: ChannelListOrder,
+            channelItem: ChannelListItem.ChannelItem,
+    ) {
         channelsRV.getData()?.let {
             if (it.contains(channelItem)) return
             val newData = it.plus(channelItem)
-            channelsRV.sortByAndSetNewData(order, newData)
-        } ?: channelsRV.setData(listOf(channelItem))
+            channelsRV.sortByAndSetNewData(scope, order, newData)
+        } ?: channelsRV.setData(scope, listOf(channelItem))
 
         binding.pageStateView.updateState(PageState.Nothing)
     }
@@ -127,11 +130,11 @@ class ChannelListView @JvmOverloads constructor(
         )
     }
 
-    internal fun onTyping(data: ChannelTypingEventData) {
+    internal fun onChannelEvents(channelId: Long, events: List<ChannelEventData>) {
+        val channel = channelsRV.getChannelItem(channelId)?.channel ?: return
         channelsRV.updateChannel(
-            predicate = { (it as? ChannelListItem.ChannelItem)?.channel?.id == data.channel.id },
-            newItem = ChannelListItem.ChannelItem(data.channel.copy(typingData = data)),
-            payloads = ChannelDiff.DEFAULT_FALSE.copy(typingStateChanged = true)
+            predicate = { (it as? ChannelListItem.ChannelItem)?.channel?.id == channelId },
+            newItem = ChannelListItem.ChannelItem(channel.copy(events = events))
         )
     }
 
@@ -208,20 +211,24 @@ class ChannelListView @JvmOverloads constructor(
         channelsRV.hideLoadingMore()
     }
 
-    fun sortChannelsBy(sortBy: ChannelListOrder) {
-        debounceHelper.submitForceIfNotRunning { channelsRV.sortBy(sortBy) }
+    fun sortChannelsBy(scope: LifecycleCoroutineScope, sortBy: ChannelListOrder) {
+        if (debounceHelper == null)
+            debounceHelper = DebounceHelper(300, scope)
+
+        debounceHelper?.submitForceIfNotRunning { channelsRV.sortBy(scope, sortBy) }
     }
 
     /**
      * Cancel last sort channels job.
      * */
     fun cancelLastSort(): Boolean {
-        return debounceHelper.cancelLastDebounce()
+        return debounceHelper?.cancelLastDebounce() ?: false
     }
 
     /**
      * @param listener Channel click listeners, to listen click events.
      */
+    @Suppress("unused")
     fun setChannelClickListener(listener: ChannelClickListeners) {
         clickListeners.setListener(listener)
     }
@@ -229,6 +236,7 @@ class ChannelListView @JvmOverloads constructor(
     /**
      * @param listener The custom channel click listeners.
      */
+    @Suppress("unused")
     fun setCustomChannelClickListeners(listener: ChannelClickListeners.ClickListeners) {
         clickListeners = (listener as? ChannelClickListenersImpl)?.withDefaultListeners(this)
                 ?: listener
@@ -238,6 +246,7 @@ class ChannelListView @JvmOverloads constructor(
      * User this method to set your custom popup click listeners.
      * @param listener is the custom listener.
      */
+    @Suppress("unused")
     fun setCustomChannelPopupClickListener(listener: ChannelPopupClickListeners.PopupClickListeners) {
         popupClickListeners = (listener as? ChannelPopupClickListenersImpl)?.withDefaultListeners(this)
                 ?: listener
@@ -248,10 +257,10 @@ class ChannelListView @JvmOverloads constructor(
      * which is extended from [ChannelViewHolderFactory].
      * @param factory custom view holder factory, extended from [ChannelViewHolderFactory].
      */
+    @Suppress("unused")
     fun setViewHolderFactory(factory: ChannelViewHolderFactory) {
         channelsRV.setViewHolderFactory(factory.apply {
             setChannelListener(defaultClickListeners)
-            setStyle(style)
         })
     }
 
@@ -259,6 +268,7 @@ class ChannelListView @JvmOverloads constructor(
      * Returns the inner [RecyclerView] that is used to display a list of channel list items.
      * @return The inner [RecyclerView] with channels.
      */
+    @Suppress("unused")
     fun getChannelsRv() = channelsRV
 
     /**

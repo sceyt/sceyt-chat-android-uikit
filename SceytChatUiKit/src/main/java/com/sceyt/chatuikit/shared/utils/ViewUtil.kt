@@ -3,14 +3,11 @@ package com.sceyt.chatuikit.shared.utils
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.ValueAnimator
-import android.content.Context
-import android.content.res.Resources
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.animation.doOnEnd
 import androidx.core.view.isVisible
 import kotlin.math.max
-import kotlin.math.roundToInt
 
 object ViewUtil {
 
@@ -39,27 +36,28 @@ object ViewUtil {
         return heightAnimator
     }
 
-    fun expandHeightUnspecified(v: View, duration: Long) {
+    fun expandHeightUnspecified(v: View, from: Int, duration: Long): ValueAnimator? {
         v.measure(
             View.MeasureSpec.makeMeasureSpec(v.rootView.width, View.MeasureSpec.UNSPECIFIED),
             View.MeasureSpec.makeMeasureSpec(v.rootView.height, View.MeasureSpec.UNSPECIFIED)
         )
         val targetWidth = v.measuredHeight
 
-        val widthAnimator = ValueAnimator.ofInt(0, targetWidth)
-        widthAnimator.addUpdateListener { animation ->
+        val animator = ValueAnimator.ofInt(from, targetWidth)
+        animator.addUpdateListener { animation ->
             v.layoutParams.height = animation.animatedValue as Int
             v.requestLayout()
         }
-        widthAnimator.duration = duration
-        widthAnimator.addListener(object : AnimatorListenerAdapter() {
+        animator.duration = duration
+        animator.addListener(object : AnimatorListenerAdapter() {
             override fun onAnimationEnd(animation: Animator) {
                 super.onAnimationEnd(animation)
                 v.layoutParams.height = ViewGroup.LayoutParams.WRAP_CONTENT
                 v.requestLayout()
             }
         })
-        widthAnimator.start()
+        animator.start()
+        return animator
     }
 
     fun collapseHeight(v: View, duration: Long, to: Int = 0,

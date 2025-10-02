@@ -2,19 +2,22 @@ package com.sceyt.chatuikit.presentation.components.forward
 
 import android.content.Context
 import android.os.Bundle
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytActivityForwardBinding
+import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
 import com.sceyt.chatuikit.extensions.launchActivity
 import com.sceyt.chatuikit.extensions.parcelableArrayList
+import com.sceyt.chatuikit.extensions.setSafeOnClickListener
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.chatuikit.presentation.common.SceytLoader
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem
 import com.sceyt.chatuikit.presentation.components.forward.viewmodel.ForwardViewModel
 import com.sceyt.chatuikit.presentation.components.shareable.ShareableActivity
-import com.sceyt.chatuikit.styles.ForwardStyle
+import com.sceyt.chatuikit.styles.forward.ForwardStyle
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
@@ -25,11 +28,12 @@ open class ForwardActivity : ShareableActivity<ForwardStyle>() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        enableEdgeToEdge()
         setContentView(SceytActivityForwardBinding.inflate(layoutInflater)
             .also { binding = it }
             .root)
 
+        applyInsetsAndWindowColor(binding.root)
         statusBarIconsColorWithBackground()
 
         getDataFromIntent()
@@ -54,7 +58,7 @@ open class ForwardActivity : ShareableActivity<ForwardStyle>() {
 
         toolbar.setQueryChangeListener(::onSearchQueryChanged)
 
-        btnForward.setOnClickListener {
+        btnForward.setSafeOnClickListener {
             onForwardClick(true)
         }
     }

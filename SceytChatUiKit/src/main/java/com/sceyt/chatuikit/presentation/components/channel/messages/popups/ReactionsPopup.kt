@@ -2,13 +2,13 @@ package com.sceyt.chatuikit.presentation.components.channel.messages.popups
 
 import android.content.Context
 import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.animation.AnimationUtils
 import android.view.animation.LayoutAnimationController
 import android.widget.PopupWindow
+import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.marginBottom
 import androidx.core.view.marginTop
 import com.sceyt.chatuikit.R
@@ -25,7 +25,7 @@ import java.lang.Integer.max
 import kotlin.math.min
 
 open class ReactionsPopup(
-        private var context: Context
+        private var context: Context,
 ) : PopupWindow(context) {
     private lateinit var binding: SceytPopupAddReactionBinding
     private val defaultClickListener: PopupReactionsAdapter.OnItemClickListener by lazy {
@@ -38,7 +38,7 @@ open class ReactionsPopup(
             message: SceytMessage,
             reactions: List<String>,
             style: ReactionPickerStyle,
-            clickListener: PopupReactionsAdapter.OnItemClickListener
+            clickListener: PopupReactionsAdapter.OnItemClickListener,
     ): ReactionsPopup {
         this.clickListener = clickListener
 
@@ -54,7 +54,7 @@ open class ReactionsPopup(
         binding.applyStyle(style)
 
         animationStyle = if (reversed) R.style.SceytReactionPopupAnimationReversed else R.style.SceytReactionPopupAnimationNormal
-        setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
         isOutsideTouchable = true
         isFocusable = false
         setAdapter(reversed, message, reactions, style, defaultClickListener)
@@ -79,7 +79,7 @@ open class ReactionsPopup(
             message: SceytMessage,
             reactions: List<String>,
             style: ReactionPickerStyle,
-            clickListener: PopupReactionsAdapter.OnItemClickListener
+            clickListener: PopupReactionsAdapter.OnItemClickListener,
     ) {
         val reactionsItems = reactions.map {
             val reactionItem = message.messageReactions?.find { data -> data.reaction.key == it }
@@ -124,7 +124,7 @@ open class ReactionsPopup(
                 message: SceytMessage,
                 reactions: List<String>,
                 style: ReactionPickerStyle,
-                clickListener: PopupReactionsAdapter.OnItemClickListener
+                clickListener: PopupReactionsAdapter.OnItemClickListener,
         ): ReactionsPopup {
             return ReactionsPopup(anchorView.context)
                 .initAndShow(anchorView, message, reactions, style, clickListener)

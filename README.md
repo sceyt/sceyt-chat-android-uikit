@@ -23,16 +23,16 @@ chat into your Android application with minimal coding.
 
 ## Requirements
 Minimal Android SDK version:
--  API 21 (Android 5.0, "Lollipop") or later.
+-  API 24 (Android 7.0, "Nougat") or later.
 
 ## Installation
 1. Add the following line to the `build.gradle` file for your project:
 
-```groovy
+```kotlin
 allprojects {
     repositories {
         mavenCentral()
-        maven { url 'https://jitpack.io' }
+        maven(url = "https://jitpack.io")
     }
 }
 ```
@@ -40,9 +40,9 @@ This will enable your project to use libraries from Maven Central.
 
 2. Add the following dependency to your app's build.gradle file:
 
-```groovy
+```kotlin
 dependencies {
-    implementation 'com.sceyt:sceyt-chat-android-uikit:1.7.8'
+    implementation("com.sceyt:sceyt-chat-android-uikit:1.9.5")
 }
 ```
 ## Usage
@@ -122,8 +122,12 @@ SceytChatUIKit.config.defaultAvatarBackgroundColors = AvatarBackgroundColors { c
 // Set incoming and outgoing message bubble colors in SceytKit.
 MessageItemStyle.styleCustomizer = StyleCustomizer { context, style ->
     style.copy(
-        incomingBubbleColor = ContextCompat.getColor(context, R.color.gray),
-        outgoingBubbleColor = ContextCompat.getColor(context, R.color.pink)
+        incomingBubbleBackgroundStyle = style.incomingBubbleBackgroundStyle.copy(
+            backgroundColor = Color.YELLOW,
+        ),
+        outgoingBubbleBackgroundStyle = style.outgoingBubbleBackgroundStyle.copy(
+            backgroundColor = Color.GREEN,
+        ),
     )
 }
 ```
@@ -134,7 +138,7 @@ To get more about customization, you check our [Sceyt Demo application](https://
 
 If you are using Proguard with this library, make sure to add the following rules to your proguard-rules file:
 
-``` groovy
+``` text
 # Keep all necessary classes in 'com.sceyt.chatuikit' package and its subpackages
 
 -keep class com.sceyt.chatuikit.** { *; }

@@ -3,8 +3,7 @@ package com.sceyt.chatuikit.persistence.database.entity.messages
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
-
-internal const val DRAFT_MESSAGE_USER_LINK_TABLE = "sceyt_draft_message_user_link_table"
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.DRAFT_MESSAGE_USER_LINK_TABLE
 
 @Entity(
     tableName = DRAFT_MESSAGE_USER_LINK_TABLE,
@@ -14,6 +13,7 @@ internal const val DRAFT_MESSAGE_USER_LINK_TABLE = "sceyt_draft_message_user_lin
         parentColumns = ["chatId"],
         childColumns = ["chatId"],
         onDelete = ForeignKey.CASCADE,
+        onUpdate = ForeignKey.CASCADE,
         deferred = true
     )])
 internal data class DraftMessageUserLinkEntity(

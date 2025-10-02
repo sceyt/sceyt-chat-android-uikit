@@ -1,7 +1,6 @@
 package com.sceyt.chatuikit.data.models.channels
 
 import android.os.Parcelable
-import com.sceyt.chatuikit.data.managers.channel.event.ChannelTypingEventData
 import com.sceyt.chatuikit.data.models.messages.PendingReactionData
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
@@ -9,6 +8,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isGroup
 import com.sceyt.chatuikit.persistence.extensions.isSelf
+import com.sceyt.chatuikit.presentation.components.channel.header.helpers.ChannelEventData
 import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
 
@@ -46,7 +46,7 @@ data class SceytChannel(
         val pendingReactions: List<PendingReactionData>?,
         val pending: Boolean,
         val draftMessage: DraftMessage?,
-        val typingData: ChannelTypingEventData? = null,
+        val events: List<ChannelEventData>?,
         val userPermissions: List<String> = listOf(UserPermission.KickMember.value, UserPermission.SendMessage.value)
 ) : Parcelable {
 

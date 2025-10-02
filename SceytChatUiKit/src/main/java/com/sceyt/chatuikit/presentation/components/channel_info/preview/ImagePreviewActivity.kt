@@ -3,13 +3,16 @@ package com.sceyt.chatuikit.presentation.components.channel_info.preview
 import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.sceyt.chatuikit.databinding.SceytFragmentPhotoPreviewBinding
+import com.sceyt.chatuikit.extensions.applySystemWindowInsetsPadding
 import com.sceyt.chatuikit.extensions.launchActivity
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
-import com.sceyt.chatuikit.styles.ImagePreviewStyle
+import com.sceyt.chatuikit.presentation.helpers.AvatarImageLoader
+import com.sceyt.chatuikit.styles.preview.ImagePreviewStyle
 
 class ImagePreviewActivity : AppCompatActivity() {
     private lateinit var binding: SceytFragmentPhotoPreviewBinding
@@ -19,6 +22,7 @@ class ImagePreviewActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         style = ImagePreviewStyle.Builder(this, null).build()
         setContentView(SceytFragmentPhotoPreviewBinding.inflate(LayoutInflater.from(this)).also {
             binding = it
@@ -32,6 +36,7 @@ class ImagePreviewActivity : AppCompatActivity() {
     }
 
     private fun initViews() {
+        binding.toolbar.applySystemWindowInsetsPadding(applyTop = true)
         binding.toolbar.setNavigationClickListener {
             finish()
         }
@@ -44,9 +49,10 @@ class ImagePreviewActivity : AppCompatActivity() {
 
     private fun setDetails() {
         binding.toolbar.setTitle(toolbarTitle)
-
+        // At first try to load image from cache, if not found, load from URL
+        val model = AvatarImageLoader.getFilePathForUrl(context = this, imageUrl) ?: imageUrl
         Glide.with(this)
-            .load(imageUrl)
+            .load(model)
             .transition(DrawableTransitionOptions.withCrossFade())
             .into(binding.imageView)
     }

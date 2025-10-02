@@ -1,15 +1,13 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages.events
 
-import android.view.View
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
-import com.sceyt.chatuikit.presentation.components.channel.messages.components.ScrollToDownView
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
 
 sealed interface MessageCommandEvent {
 
     data class DeleteMessage(
             val messages: List<SceytMessage>,
-            val onlyForMe: Boolean
+            val onlyForMe: Boolean,
     ) : MessageCommandEvent
 
     data class EditMessage(
@@ -18,18 +16,18 @@ sealed interface MessageCommandEvent {
 
     data class ShowHideMessageActions(
             val message: SceytMessage,
-            val show: Boolean
+            val show: Boolean,
     ) : MessageCommandEvent
 
     data class SearchMessages(
-            val show: Boolean
+            val show: Boolean,
     ) : MessageCommandEvent
 
-    data class OnMultiselectEvent(
+    data class MultiselectEvent(
             val message: SceytMessage,
     ) : MessageCommandEvent
 
-    data object OnCancelMultiselectEvent : MessageCommandEvent
+    data object CancelMultiselectEvent : MessageCommandEvent
 
     data class Reply(
             val message: SceytMessage,
@@ -39,21 +37,20 @@ sealed interface MessageCommandEvent {
             val message: SceytMessage,
     ) : MessageCommandEvent
 
-    data class ScrollToDown(
-            val view: ScrollToDownView
-    ) : MessageCommandEvent
+    data object ScrollToDown : MessageCommandEvent
+
+    data object ScrollToUnreadMention : MessageCommandEvent
 
     data class ScrollToReplyMessage(
-            val message: SceytMessage
+            val message: SceytMessage,
     ) : MessageCommandEvent
 
     data class AttachmentLoaderClick(
             val message: SceytMessage,
-            val item: FileListItem
+            val item: FileListItem,
     ) : MessageCommandEvent
 
     data class UserClick(
-            val view: View,
-            val userId: String
+            val userId: String,
     ) : MessageCommandEvent
 }

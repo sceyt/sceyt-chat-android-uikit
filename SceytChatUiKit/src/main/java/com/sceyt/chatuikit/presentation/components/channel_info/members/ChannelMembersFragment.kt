@@ -16,9 +16,9 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.role.Role
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventData
-import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventEnum.Joined
-import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventEnum.Left
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelActionEvent
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelActionEvent.Joined
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelActionEvent.Left
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventData
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventEnum
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelOwnerChangedEventData
@@ -59,9 +59,12 @@ import com.sceyt.chatuikit.presentation.components.select_users.SelectUsersResul
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.styles.channel_members.ChannelMembersStyle
 import org.koin.androidx.viewmodel.ext.android.viewModel
+import org.koin.core.parameter.parametersOf
 
 open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoinComponent {
-    protected val viewModel by viewModel<ChannelMembersViewModel>()
+    protected val viewModel by viewModel<ChannelMembersViewModel>(parameters = {
+        parametersOf(requireNotNull(arguments?.parcelable<SceytChannel>(CHANNEL)).id)
+    })
     protected var membersAdapter: ChannelMembersAdapter? = null
     protected var binding: SceytFragmentChannelMembersBinding? = null
         private set
@@ -386,8 +389,8 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
         viewModel.changeRole(channel.id, *member)
     }
 
-    protected open fun onChannelEvent(eventData: ChannelEventData) {
-        when (val event = eventData.eventType) {
+    protected open fun onChannelEvent(event: ChannelActionEvent) {
+        when (event) {
             is Left -> {
                 event.leftMembers.forEach {
                     removeMember(it.id)

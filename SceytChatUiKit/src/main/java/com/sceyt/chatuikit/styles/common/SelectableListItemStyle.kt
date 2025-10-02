@@ -6,8 +6,8 @@ import com.sceyt.chatuikit.renderers.VisualRenderer
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
 
 data class SelectableListItemStyle<TitleFormatter, SubtitleFormatter, AvatarRenderer>(
-        @ColorInt val backgroundColor: Int = UNSET_COLOR,
-        @ColorInt val dividerColor: Int = UNSET_COLOR,
+        @param:ColorInt val backgroundColor: Int = UNSET_COLOR,
+        @param:ColorInt val dividerColor: Int = UNSET_COLOR,
         val checkboxStyle: CheckboxStyle = CheckboxStyle(),
         val titleTextStyle: TextStyle = TextStyle(),
         val subtitleTextStyle: TextStyle = TextStyle(),

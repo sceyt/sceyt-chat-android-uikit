@@ -1,10 +1,10 @@
 package com.sceyt.chatuikit.persistence.file_transfer
 
-import android.net.Uri
 import android.util.Size
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.data.models.fold
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.extensions.TAG
@@ -84,20 +84,19 @@ object FileTransferHelper : SceytKoinComponent {
     }
 
     @Suppress("MemberVisibilityCanBePrivate")
-    fun TransferTask.getDownloadResultCallback() = TransferResultCallback {
-        when (it) {
-            is SceytResponse.Success -> {
+    fun TransferTask.getDownloadResultCallback() = TransferResultCallback { response ->
+        response.fold(
+            onSuccess = { filePath ->
                 val transferData = TransferData(attachment.messageTid, 100f,
-                    TransferState.Downloaded, it.data, attachment.url)
+                    TransferState.Downloaded, filePath, attachment.url)
 
                 attachment = attachment.getUpdatedWithTransferData(transferData)
                 emitAttachmentTransferUpdate(transferData, attachment.fileSize)
                 scope.launch {
                     attachmentLogic.updateAttachmentWithTransferData(transferData)
                 }
-            }
-
-            is SceytResponse.Error -> {
+            },
+            onError = { exception ->
                 val transferData = TransferData(
                     attachment.messageTid, attachment.progressPercent ?: 0f,
                     ErrorDownload, null, attachment.url)
@@ -107,23 +106,24 @@ object FileTransferHelper : SceytKoinComponent {
                 scope.launch {
                     attachmentLogic.updateAttachmentWithTransferData(transferData)
                 }
-                SceytLog.e(this.TAG, "Couldn't download file url:${attachment.url} error:${it.message}")
+                SceytLog.e(this.TAG, "Couldn't download file url:${attachment.url} error:${exception?.message}")
             }
-        }
+        )
     }
 
     @Suppress("MemberVisibilityCanBePrivate")
-    fun TransferTask.getUploadResultCallback() = TransferResultCallback { result ->
-        when (result) {
+    fun TransferTask.getUploadResultCallback() = TransferResultCallback { response ->
+        val result: Result<SceytAttachment> = when (response) {
             is SceytResponse.Success -> {
                 val transferData = TransferData(attachment.messageTid, 100f,
-                    Uploaded, attachment.filePath, result.data.toString())
+                    Uploaded, attachment.filePath, response.data.toString())
 
                 attachment = attachment.getUpdatedWithTransferData(transferData)
                 emitAttachmentTransferUpdate(transferData, attachment.fileSize)
                 scope.launch {
                     attachmentLogic.updateAttachmentWithTransferData(transferData)
                 }
+                Result.success(attachment)
             }
 
             is SceytResponse.Error -> {
@@ -136,11 +136,12 @@ object FileTransferHelper : SceytKoinComponent {
                 scope.launch {
                     attachmentLogic.updateAttachmentWithTransferData(transferData)
                 }
-                SceytLog.e(this.TAG, "Couldn't upload file " + result.message.toString())
+                SceytLog.e(this.TAG, "Couldn't upload file " + response.message.toString())
+                Result.failure(Throwable(response.message.orEmpty()))
             }
         }
-        fileTransferService.findTransferTask(attachment)?.onCompletionListeners?.values?.forEach {
-            it.invoke((result is SceytResponse.Success), result.data)
+        fileTransferService.findTransferTask(attachment)?.onCompletionListeners?.forEach {
+            it.value.invoke(result)
         }
     }
 
@@ -202,17 +203,20 @@ object FileTransferHelper : SceytKoinComponent {
         return Pair(fileLoadedSize, fileTotalSize)
     }
 
-    private fun getDimensions(type: String, path: String): Size? {
-        return when (type) {
+    private fun getDimensions(type: String, path: String): Size? = try {
+        when (type) {
             AttachmentTypeEnum.Image.value -> {
-                FileResizeUtil.getImageDimensionsSize(Uri.parse(path))
+                FileResizeUtil.getImageDimensionsSize(path)
             }
 
             AttachmentTypeEnum.Video.value -> {
                 FileResizeUtil.getVideoSize(path)
             }
 
-            else -> return null
+            else -> null
         }
+    } catch (e: Exception) {
+        SceytLog.e(TAG, "Couldn't get dimensions of file $path. Error: ${e.message}")
+        null
     }
 }

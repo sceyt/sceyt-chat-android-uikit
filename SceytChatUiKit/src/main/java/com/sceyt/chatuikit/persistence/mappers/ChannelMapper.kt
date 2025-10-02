@@ -81,7 +81,8 @@ internal fun ChannelDb.toChannel(): SceytChannel {
             newReactions = newReactions?.map { it.toSceytReaction() },
             pendingReactions = pendingReactions?.map { it.toReactionData() },
             pending = pending,
-            draftMessage = draftMessage?.toDraftMessage()
+            draftMessage = draftMessage?.toDraftMessage(),
+            events = null
         )
     }
 }
@@ -119,7 +120,8 @@ fun Channel.toSceytUiChannel(): SceytChannel {
         newReactions = newReactions.map { it.toSceytReaction() },
         pendingReactions = null,
         pending = false,
-        draftMessage = null
+        draftMessage = null,
+        events = null
     )
 }
 
@@ -159,5 +161,6 @@ fun createPendingChannel(
     newReactions = null,
     pendingReactions = null,
     pending = true,
-    draftMessage = null
+    draftMessage = null,
+    events = null
 )

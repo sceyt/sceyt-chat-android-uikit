@@ -7,6 +7,7 @@ import androidx.core.content.res.use
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.presentation.components.channel.messages.fragments.ReactionsInfoBottomSheetFragment
+import com.sceyt.chatuikit.styles.SceytComponentStyle
 import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.BackgroundStyle
 import com.sceyt.chatuikit.styles.extensions.reaction_info.buildBackgroundStyle
@@ -21,18 +22,19 @@ import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
  * @property reactedUserListStyle Style for the list of users who reacted to a message.
  * */
 data class ReactionsInfoStyle(
-        @ColorInt val dividerColor: Int,
+        @param:ColorInt val dividerColor: Int,
         val backgroundStyle: BackgroundStyle,
         val headerItemStyle: ReactionsInfoHeaderItemStyle,
-        val reactedUserListStyle: ReactedUserListStyle
-) {
+        val reactedUserListStyle: ReactedUserListStyle,
+) : SceytComponentStyle() {
+
     companion object {
         var styleCustomizer = StyleCustomizer<ReactionsInfoStyle> { _, style -> style }
     }
 
     internal class Builder(
             internal val context: Context,
-            private val attributeSet: AttributeSet?
+            private val attributeSet: AttributeSet?,
     ) {
         fun build(): ReactionsInfoStyle {
             context.obtainStyledAttributes(attributeSet, R.styleable.ReactionInfo).use { array ->

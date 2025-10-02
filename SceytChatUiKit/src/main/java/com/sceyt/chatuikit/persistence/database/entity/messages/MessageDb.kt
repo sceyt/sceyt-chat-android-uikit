@@ -36,7 +36,9 @@ internal data class MessageDb(
         val forwardingUser: UserDb?,
 
         @Relation(parentColumn = "tid", entityColumn = "messageTid", entity = MentionUserMessageLinkEntity::class)
-        val mentionedUsers: List<MentionUserDb>?
+        val mentionedUsers: List<MentionUserDb>?,
 ) {
     val selfReactions get() = reactions?.filter { it.from?.id == SceytChatUIKit.chatUIFacade.myId }
+
+    val id get() = messageEntity.id
 }

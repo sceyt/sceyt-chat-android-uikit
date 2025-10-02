@@ -5,11 +5,9 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.databinding.SceytFragmentChannelInfoVoiceBinding
@@ -30,33 +28,28 @@ import com.sceyt.chatuikit.presentation.components.channel_info.media.viewmodel.
 import com.sceyt.chatuikit.presentation.custom_views.PageStateView
 import com.sceyt.chatuikit.presentation.di.ChannelInfoVoiceViewModelQualifier
 import com.sceyt.chatuikit.presentation.root.PageState
-import com.sceyt.chatuikit.styles.channel_info.ChannelInfoStyle
+import com.sceyt.chatuikit.styles.StyleRegistry
+import com.sceyt.chatuikit.styles.channel_info.voice.ChannelInfoVoiceStyle
+import com.sceyt.chatuikit.styles.extensions.channel_info.voice.setPageStatesView
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
-open class ChannelInfoVoiceFragment : Fragment, SceytKoinComponent, HistoryClearedListener {
-    constructor() : super()
-
-    constructor(infoStyle: ChannelInfoStyle) : super() {
-        this.infoStyle = infoStyle
-    }
-
-    private lateinit var channel: SceytChannel
-    private var binding: SceytFragmentChannelInfoVoiceBinding? = null
+open class ChannelInfoVoiceFragment : Fragment(), SceytKoinComponent, HistoryClearedListener {
+    protected lateinit var channel: SceytChannel
+    protected var binding: SceytFragmentChannelInfoVoiceBinding? = null
     protected open var mediaAdapter: ChannelMediaAdapter? = null
     protected open var pageStateView: PageStateView? = null
     protected open val mediaType = listOf(AttachmentTypeEnum.Voice.value)
     protected val viewModel: ChannelAttachmentsViewModel by viewModel(ChannelInfoVoiceViewModelQualifier)
-    protected lateinit var infoStyle: ChannelInfoStyle
+    protected lateinit var voiceStyle: ChannelInfoVoiceStyle
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        // Keep the style in the view model.
-        // If the style is not initialized it will be taken from the view model.
-        if (::infoStyle.isInitialized)
-            viewModel.infoStyle = infoStyle
-        else
-            infoStyle = viewModel.infoStyle
+        val styleId = arguments?.getString(STYLE_ID_KEY)
+
+        voiceStyle = StyleRegistry.getOrDefault(styleId) {
+            ChannelInfoVoiceStyle.Builder(context, null).build()
+        }
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -85,16 +78,18 @@ open class ChannelInfoVoiceFragment : Fragment, SceytKoinComponent, HistoryClear
         }
 
         lifecycleScope.launch {
-            viewModel.loadMoreFilesFlow.collect(::onMoreFilesList)
+            viewModel.loadMoreAttachmentsFlow.collect(::onMoreFilesList)
         }
 
         viewModel.pageStateLiveData.observe(viewLifecycleOwner, ::onPageStateChange)
     }
 
-    open fun onInitialVoiceList(list: List<ChannelFileItem>) {
+    protected open fun onInitialVoiceList(list: List<ChannelFileItem>) {
         if (mediaAdapter == null) {
             val adapter = ChannelMediaAdapter(SyncArrayList(list), ChannelAttachmentViewHolderFactory(
-                requireContext(), infoStyle, infoStyle.voiceStyle.dateSeparatorStyle).also {
+                context = requireContext(),
+                voiceStyleProvider = { voiceStyle },
+                dateSeparatorStyle = voiceStyle.dateSeparatorStyle).also {
                 it.setClickListener(AttachmentClickListeners.AttachmentClickListener { _, _ ->
                     // voice message play functionality is handled in VoiceMessageViewHolder
                 })
@@ -121,12 +116,16 @@ open class ChannelInfoVoiceFragment : Fragment, SceytKoinComponent, HistoryClear
         } else binding?.rvVoice?.let { mediaAdapter?.notifyUpdate(list, it) }
     }
 
-    open fun onMoreFilesList(list: List<ChannelFileItem>) {
+    protected open fun onMoreFilesList(list: List<ChannelFileItem>) {
         mediaAdapter?.addNewItems(list)
     }
 
-    open fun onPageStateChange(pageState: PageState) {
-        pageStateView?.updateState(pageState, mediaAdapter?.itemCount == 0, enableErrorSnackBar = false)
+    protected open fun onPageStateChange(pageState: PageState) {
+        pageStateView?.updateState(
+            state = pageState,
+            showLoadingIfNeed = (mediaAdapter?.itemCount ?: 0) == 0,
+            enableErrorSnackBar = false
+        )
     }
 
     protected open fun loadInitialFilesList() {
@@ -143,10 +142,7 @@ open class ChannelInfoVoiceFragment : Fragment, SceytKoinComponent, HistoryClear
 
     private fun addPageStateView() {
         binding?.root?.addView(PageStateView(requireContext()).apply {
-            setEmptyStateView(R.layout.sceyt_empty_state).also {
-                it.findViewById<TextView>(R.id.empty_state_title).text = getString(R.string.sceyt_no_voice_items_yet)
-            }
-            setLoadingStateView(R.layout.sceyt_loading_state)
+            setPageStatesView(voiceStyle)
             pageStateView = this
 
             post {
@@ -169,19 +165,19 @@ open class ChannelInfoVoiceFragment : Fragment, SceytKoinComponent, HistoryClear
     }
 
     private fun SceytFragmentChannelInfoVoiceBinding.applyStyle() {
-        root.setBackgroundColor(infoStyle.voiceStyle.backgroundColor)
+        root.setBackgroundColor(voiceStyle.backgroundColor)
     }
 
     companion object {
         const val CHANNEL = "CHANNEL"
+        private const val STYLE_ID_KEY = "STYLE_ID_KEY"
 
         fun newInstance(
                 channel: SceytChannel,
-                infoStyle: ChannelInfoStyle
-        ) = ChannelInfoVoiceFragment(infoStyle).apply {
-            setBundleArguments {
-                putParcelable(CHANNEL, channel)
-            }
+                styleId: String,
+        ) = ChannelInfoVoiceFragment().setBundleArguments {
+            putParcelable(CHANNEL, channel)
+            putString(STYLE_ID_KEY, styleId)
         }
     }
 }

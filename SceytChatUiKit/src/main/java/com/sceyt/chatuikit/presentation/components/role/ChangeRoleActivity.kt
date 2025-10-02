@@ -4,10 +4,12 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.databinding.SceytActivityChooseRoleBinding
+import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
 import com.sceyt.chatuikit.extensions.findIndexed
 import com.sceyt.chatuikit.extensions.overrideTransitions
 import com.sceyt.chatuikit.extensions.parcelable
@@ -24,11 +26,12 @@ class ChangeRoleActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        enableEdgeToEdge()
         setContentView(SceytActivityChooseRoleBinding.inflate(layoutInflater)
             .also { binding = it }
             .root)
 
+        applyInsetsAndWindowColor(binding.root)
         statusBarIconsColorWithBackground()
 
         getBundleArguments()

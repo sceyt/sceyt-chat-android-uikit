@@ -8,11 +8,19 @@ import kotlinx.parcelize.Parcelize
 
 @Parcelize
 data class DraftMessage(
-        val chatId: Long,
+        val channelId: Long,
         val body: String?,
         val createdAt: Long,
         val mentionUsers: List<SceytUser>?,
         val replyOrEditMessage: SceytMessage?,
         val isReply: Boolean,
-        val bodyAttributes: List<BodyAttribute>?
-) : Parcelable
+        val bodyAttributes: List<BodyAttribute>?,
+        val attachments: List<DraftAttachment>?,
+        val voiceAttachment: DraftVoiceAttachment?,
+) : Parcelable {
+
+    fun hasContent() = !body.isNullOrBlank()
+            || !attachments.isNullOrEmpty()
+            || voiceAttachment != null
+            || replyOrEditMessage != null
+}

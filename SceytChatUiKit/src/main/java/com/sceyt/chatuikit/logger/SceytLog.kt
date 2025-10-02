@@ -5,7 +5,7 @@ object SceytLog {
     private var logLevel = SceytLogLevel.Verbose
     private var logger: SceytLogger = SceytLoggerImpl()
 
-    internal fun setLogger(logLevel: SceytLogLevel, logger: SceytLogger) {
+    fun setLogger(logLevel: SceytLogLevel, logger: SceytLogger) {
         this.logLevel = logLevel
         this.logger = logger
     }

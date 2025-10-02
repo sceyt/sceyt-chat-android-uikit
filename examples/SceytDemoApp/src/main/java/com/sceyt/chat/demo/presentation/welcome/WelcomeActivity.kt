@@ -2,11 +2,13 @@ package com.sceyt.chat.demo.presentation.welcome
 
 import android.content.Context
 import android.os.Bundle
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.commit
 import com.sceyt.chat.demo.databinding.ActivityWelcomeBinding
 import com.sceyt.chat.demo.presentation.welcome.create.CreateAccountFragment
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
 import com.sceyt.chatuikit.extensions.launchActivity
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
 
@@ -15,8 +17,10 @@ class WelcomeActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         binding = ActivityWelcomeBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        applyInsetsAndWindowColor(binding.root)
         statusBarIconsColorWithBackground()
     }
 

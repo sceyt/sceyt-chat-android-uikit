@@ -1,9 +1,7 @@
 package com.sceyt.chatuikit
 
 import android.content.Context
-import androidx.core.provider.FontRequest
 import androidx.emoji2.text.EmojiCompat
-import androidx.emoji2.text.FontRequestEmojiCompatConfig
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.ChatClient
@@ -30,8 +28,8 @@ import com.sceyt.chatuikit.persistence.di.useCaseModule
 import com.sceyt.chatuikit.persistence.lazyVar
 import com.sceyt.chatuikit.persistence.mappers.toSceytUser
 import com.sceyt.chatuikit.presentation.di.viewModelModule
-import com.sceyt.chatuikit.providers.SceytChatUIKitProviders
 import com.sceyt.chatuikit.providers.ChatTokenProvider
+import com.sceyt.chatuikit.providers.SceytChatUIKitProviders
 import com.sceyt.chatuikit.renderers.SceytChatUIKitRenderers
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 import com.vanniktech.emoji.EmojiManager
@@ -78,7 +76,7 @@ object SceytChatUIKit : SceytKoinComponent {
             apiUrl: String,
             appId: String,
             clientId: String,
-            enableDatabase: Boolean = true
+            enableDatabase: Boolean = true,
     ) {
         this.appContext = appContext
         ChatClient.initialize(appContext, apiUrl, appId, clientId)
@@ -127,25 +125,8 @@ object SceytChatUIKit : SceytKoinComponent {
     }
 
     private fun initEmojiSupport() {
-        ProcessLifecycleOwner.get().lifecycleScope.launch(Dispatchers.IO) {
-            val fontRequest = FontRequest(
-                "com.google.android.gms.fonts",
-                "com.google.android.gms",
-                "Noto Color Emoji Compat",
-                R.array.com_google_android_gms_fonts_certs)
-            val config = FontRequestEmojiCompatConfig(appContext, fontRequest)
-                .setReplaceAll(true)
-                .registerInitCallback(object : EmojiCompat.InitCallback() {
-                    override fun onInitialized() {
-                        SceytLog.d(TAG, "EmojiCompat initialized")
-                    }
-
-                    override fun onFailed(throwable: Throwable?) {
-                        SceytLog.e(TAG, "EmojiCompat initialization failed", throwable)
-                    }
-                })
-
-            EmojiCompat.init(config)
+        EmojiCompat.init(appContext)
+        ProcessLifecycleOwner.get().lifecycleScope.launch(Dispatchers.Default) {
             EmojiManager.install(GoogleEmojiProvider())
         }
     }

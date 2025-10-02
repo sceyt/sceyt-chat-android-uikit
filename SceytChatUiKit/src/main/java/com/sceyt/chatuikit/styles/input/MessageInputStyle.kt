@@ -16,8 +16,8 @@ import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.formatters.SceytChatUIKitFormatters
 import com.sceyt.chatuikit.formatters.attributes.DraftMessageBodyFormatterAttributes
 import com.sceyt.chatuikit.presentation.components.channel.input.MessageInputView
-import com.sceyt.chatuikit.styles.MessagesListHeaderStyle.Companion.styleCustomizer
-import com.sceyt.chatuikit.styles.SearchChannelInputStyle.Companion.styleCustomizer
+import com.sceyt.chatuikit.styles.messages_list.MessagesListHeaderStyle.Companion.styleCustomizer
+import com.sceyt.chatuikit.styles.search.SearchChannelInputStyle.Companion.styleCustomizer
 import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.ButtonStyle
 import com.sceyt.chatuikit.styles.common.TextInputStyle
@@ -64,14 +64,14 @@ import com.sceyt.chatuikit.theme.Colors
  * @property messageSearchControlsStyle Style for the message search controls, default is [buildMessageSearchControlStyle]
  * @property inputCoverStyle Style for the input cover, default is [buildInputCoverStyle]
  * @property mentionUsersListStyle Style for the mention users list, default is [buildMentionUsersListStyle]
- * @property mentionTextStyle Style for the mention user name while typing, default is [buildMentionTextStyle]
+ * @property mentionTextStyle Style for the mention user name, default is [buildMentionTextStyle]
  * @property mentionUserNameFormatter Formatter for the mention user name, default is [SceytChatUIKitFormatters.userNameFormatter]
  * @property draftMessageBodyFormatterAttributes Formatter for the draft message body, default is [SceytChatUIKitFormatters.draftMessageBodyFormatter]
  * */
 data class MessageInputStyle(
-        @ColorInt val backgroundColor: Int,
-        @ColorInt val dividerColor: Int,
-        @ColorInt val sendIconBackgroundColor: Int,
+        @param:ColorInt val backgroundColor: Int,
+        @param:ColorInt val dividerColor: Int,
+        @param:ColorInt val sendIconBackgroundColor: Int,
         val attachmentIcon: Drawable?,
         val sendMessageIcon: Drawable?,
         val voiceRecordIcon: Drawable?,

@@ -1,7 +1,6 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders
 
 import com.sceyt.chatuikit.databinding.SceytItemIncDeletedMessageBinding
-import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMessageViewHolder
@@ -48,7 +47,7 @@ class IncDeletedMessageViewHolder(
         get() = true
 
     private fun SceytItemIncDeletedMessageBinding.setMessageItemStyle() {
-        layoutDetails.setBackgroundTint(style.incomingBubbleColor)
+        style.incomingBubbleBackgroundStyle.apply(layoutDetails)
         style.deletedMessageTextStyle.apply(messageBody)
         style.senderNameTextStyle.apply(tvUserName)
         style.selectionCheckboxStyle.apply(selectView)

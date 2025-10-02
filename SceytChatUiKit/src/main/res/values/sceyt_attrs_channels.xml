@@ -104,15 +104,15 @@
         </attr>
         <attr name="sceytUiChannelListDraftTextFont" format="reference" />
 
-        <!-- Channel typing text style -->
-        <attr name="sceytUiChannelListTypingTextColor" format="reference|color" />
-        <attr name="sceytUiChannelListTypingTextSize" format="dimension" />
-        <attr name="sceytUiChannelListTypingTextStyle">
+        <!-- Channel user activity text style -->
+        <attr name="sceytUiChannelListChannelEventTextColor" format="reference|color" />
+        <attr name="sceytUiChannelListChannelEventTextSize" format="dimension" />
+        <attr name="sceytUiChannelListChannelEventTextStyle">
             <flag name="normal" value="0" />
             <flag name="bold" value="1" />
             <flag name="italic" value="2" />
         </attr>
-        <attr name="sceytUiChannelListTypingTextFont" format="reference" />
+        <attr name="sceytUiChannelListChannelEventTextFont" format="reference" />
 
         <!-- Channel unread count text style -->
         <attr name="sceytUiChannelListUnreadCountBackgroundColor" format="reference|color" />
@@ -148,27 +148,12 @@
         <attr name="sceytUiChannelListMentionTextFont" format="reference" />
 
 
-        <!-- Channel unread mention text style -->
+        <!-- Channel unread mention icon style -->
+        <attr name="sceytUiChannelListUnreadMentionIcon" format="reference" />
         <attr name="sceytUiChannelListUnreadMentionBackgroundColor" format="reference|color" />
-        <attr name="sceytUiChannelListUnreadMentionTextColor" format="reference|color" />
-        <attr name="sceytUiChannelListUnreadMentionTextSize" format="dimension" />
-        <attr name="sceytUiChannelListUnreadMentionTextFont" format="reference" />
-        <attr name="sceytUiChannelListUnreadMentionTextStyle">
-            <flag name="normal" value="0" />
-            <flag name="bold" value="1" />
-            <flag name="italic" value="2" />
-        </attr>
 
-        <!-- Channel unread mention muted text style  -->
+        <!-- Channel unread mention muted icon style  -->
         <attr name="sceytUiChannelListUnreadMentionMutedStateBackgroundColor" format="reference|color" />
-        <attr name="sceytUiChannelListUnreadMentionMutedStateTextColor" format="reference|color" />
-        <attr name="sceytUiChannelListUnreadMentionMutedStateTextSize" format="dimension" />
-        <attr name="sceytUiChannelListUnreadMentionMutedTextFont" format="reference" />
-        <attr name="sceytUiChannelListUnreadMentionMutedStateTextStyle">
-            <flag name="normal" value="0" />
-            <flag name="bold" value="1" />
-            <flag name="italic" value="2" />
-        </attr>
 
         <!-- Channel avatar style  -->
         <attr name="sceytUiChannelListAvatarBackgroundColor" format="reference|color" />

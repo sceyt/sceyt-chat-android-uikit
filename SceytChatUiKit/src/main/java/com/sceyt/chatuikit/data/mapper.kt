@@ -1,10 +1,10 @@
 package com.sceyt.chatuikit.data
 
 import com.sceyt.chat.models.member.Member
-import com.sceyt.chat.models.user.Presence
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
+import com.sceyt.chatuikit.data.models.messages.SceytPresence
 import com.sceyt.chatuikit.persistence.mappers.getInfoFromMetadata
 import com.sceyt.chatuikit.persistence.mappers.toSceytUser
 import com.sceyt.chatuikit.persistence.mappers.toTransferData
@@ -37,7 +37,7 @@ fun SceytAttachment.toFileListItem(): FileListItem {
     )
 }
 
-fun Presence.hasDiff(other: Presence?): Boolean {
+fun SceytPresence.hasDiff(other: SceytPresence?): Boolean {
     other ?: return true
     return state != other.state || status != other.status || lastActiveAt != other.lastActiveAt
 }

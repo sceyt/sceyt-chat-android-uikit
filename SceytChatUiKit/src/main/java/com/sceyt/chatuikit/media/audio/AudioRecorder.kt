@@ -1,10 +1,11 @@
 package com.sceyt.chatuikit.media.audio
 
-import com.sceyt.chatuikit.media.DurationCallback
+fun interface ReachedMaxDurationListener {
+    fun onReached(duration: Int)
+}
 
 interface AudioRecorder {
-    // Constructor accepts created File or file path
-    fun startRecording(bitrate: Int, durationCallback: DurationCallback?): Boolean
+    fun startRecording(reachedMaxDurationListener: ReachedMaxDurationListener?): Boolean
     fun stopRecording()
     fun getRecordingDuration(): Int
     fun getRecordingAmplitudes(): Array<Int>

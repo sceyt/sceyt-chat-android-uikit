@@ -4,8 +4,8 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.sceyt.chatuikit.persistence.database.entity.messages.MESSAGE_TABLE
-import com.sceyt.chatuikit.persistence.database.entity.pendings.PENDING_REACTION_TABLE
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.MESSAGE_TABLE
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.PENDING_REACTION_TABLE
 import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingReactionEntity
 
 @Dao

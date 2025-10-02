@@ -2,15 +2,15 @@ package com.sceyt.chatuikit.persistence.extensions
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
 
 inline fun <reified T : Enum<T>> Int.toEnum(): T = enumValues<T>()[this]
 
 fun String?.equalsIgnoreNull(other: String?): Boolean {
-    return (this?.trim() ?: "") == (other?.trim() ?: "")
+    return this.orEmpty().trim() == other.orEmpty().trim()
 }
 
 fun <T> List<T>?.equalsIgnoreNull(other: List<T>?): Boolean {
@@ -25,11 +25,12 @@ fun <T> List<T>.toArrayList(): ArrayList<T> {
     return ArrayList(this)
 }
 
-inline fun <T> Continuation<T>.safeResume(value: T, onExceptionCalled: () -> Unit = {}) {
+inline fun <T> CancellableContinuation<T>.safeResume(value: T, onFailure: () -> Unit = {}) {
     try {
-        resume(value)
+        if (isActive)
+            resume(value)
     } catch (ex: Exception) {
-        onExceptionCalled()
+        onFailure()
     }
 }
 
@@ -40,7 +41,7 @@ fun <T> MutableLiveData<T>.asLiveData(): LiveData<T> {
 fun <T> broadcastSharedFlow(
         replay: Int = 0,
         extraBufferCapacity: Int = 1,
-        onBufferOverflow: BufferOverflow = BufferOverflow.DROP_OLDEST
+        onBufferOverflow: BufferOverflow = BufferOverflow.DROP_OLDEST,
 ) = MutableSharedFlow<T>(
     replay = replay,
     extraBufferCapacity = extraBufferCapacity,

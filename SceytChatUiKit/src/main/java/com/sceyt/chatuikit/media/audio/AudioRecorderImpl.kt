@@ -4,7 +4,8 @@ import android.content.Context
 import android.media.MediaRecorder
 import android.os.Build
 import android.util.Log
-import com.sceyt.chatuikit.media.DurationCallback
+import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.config.VoiceRecorderDuration
 import java.io.File
 import java.util.Arrays
 import java.util.Timer
@@ -15,24 +16,28 @@ import kotlin.math.log10
 import kotlin.math.max
 import kotlin.math.min
 
-class AudioRecorderImpl(private var context: Context,
-                        private val file: File) : AudioRecorder {
+class AudioRecorderImpl(
+        private var context: Context,
+        private val file: File,
+) : AudioRecorder {
 
     private var mediaRecorder: MediaRecorder? = null
     private val recording = AtomicBoolean(false)
     private var timer: Timer? = null
     private var startTime: Long = 0
-    private var durationCallback: DurationCallback? = null
+    private var reachedMaxDurationListener: ReachedMaxDurationListener? = null
     private val amplitudes: ArrayList<Int> = ArrayList()
     private var amplitudeIndex = 0
 
-    override fun startRecording(bitrate: Int, durationCallback: DurationCallback?): Boolean {
+    override fun startRecording(
+            reachedMaxDurationListener: ReachedMaxDurationListener?,
+    ): Boolean {
         try {
             Log.i("AudioRecorder", "startRecording")
             recording.set(true)
-            this.durationCallback = durationCallback
+            this.reachedMaxDurationListener = reachedMaxDurationListener
             mediaRecorder = try {
-                initMediaRecorder(bitrate)
+                initMediaRecorder()
             } catch (ex: Exception) {
                 ex.printStackTrace()
                 return false
@@ -45,23 +50,34 @@ class AudioRecorderImpl(private var context: Context,
     }
 
     @Suppress("DEPRECATION")
-    private fun initMediaRecorder(bitrate: Int): MediaRecorder {
+    private fun initMediaRecorder(): MediaRecorder {
         val mediaRecorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             MediaRecorder(context)
         } else MediaRecorder()
+
+        val voiceRecorderConfig = SceytChatUIKit.config.voiceRecorderConfig
+        if (voiceRecorderConfig.maxDuration is VoiceRecorderDuration.MaxDuration) {
+            mediaRecorder.setMaxDuration(voiceRecorderConfig.maxDuration.durationInMilliseconds.toInt())
+        }
 
         mediaRecorder.setAudioSource(MediaRecorder.AudioSource.DEFAULT)
         mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
         mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
         mediaRecorder.setOutputFile(file.absolutePath)
         mediaRecorder.setAudioChannels(1)
-        mediaRecorder.setAudioSamplingRate(16000)
-        mediaRecorder.setMaxDuration(MAX_TIME)
-        mediaRecorder.setAudioEncodingBitRate(bitrate)
+        mediaRecorder.setAudioEncodingBitRate(voiceRecorderConfig.bitrate)
+        mediaRecorder.setAudioSamplingRate(voiceRecorderConfig.simplingRate)
         mediaRecorder.prepare()
         mediaRecorder.start()
         startTimer() // move to after recording start
-        return mediaRecorder
+        return mediaRecorder.also {
+            it.setOnInfoListener { _, what, extra ->
+                if (what == MediaRecorder.MEDIA_RECORDER_INFO_MAX_DURATION_REACHED) {
+                    Log.i("AudioRecorder", "Max duration reached: $extra")
+                    reachedMaxDurationListener?.onReached(getRecordingDuration())
+                }
+            }
+        }
     }
 
     override fun stopRecording() {
@@ -75,6 +91,8 @@ class AudioRecorderImpl(private var context: Context,
                 ex.printStackTrace()
             }
             mediaRecorder = null
+            amplitudeIndex = 0
+            amplitudes.clear()
             recording.set(false)
         }
     }
@@ -118,7 +136,13 @@ class AudioRecorderImpl(private var context: Context,
         timer?.schedule(object : TimerTask() {
             override fun run() {
                 amplitudeIndex++
-                val amplitude = mediaRecorder?.maxAmplitude ?: return
+                val amplitude = try {
+                    mediaRecorder?.maxAmplitude
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    return
+                } ?: return
+
                 if (amplitudeIndex == 1 && amplitude == 0) {
                     return
                 }
@@ -146,7 +170,6 @@ class AudioRecorderImpl(private var context: Context,
 
     companion object {
         const val AUDIO_FORMAT = "m4a"
-        private const val MAX_TIME = 5 * 60 * 1000
         private const val TIMER_PERIOD = 33L
         private const val MAX_AMP_LEN = 50
     }

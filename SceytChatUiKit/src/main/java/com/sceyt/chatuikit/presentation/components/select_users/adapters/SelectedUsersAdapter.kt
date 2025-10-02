@@ -11,7 +11,7 @@ import com.sceyt.chatuikit.extensions.getPresentableName
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.presentation.extensions.setUserAvatar
 import com.sceyt.chatuikit.presentation.root.BaseViewHolder
-import com.sceyt.chatuikit.styles.SelectedUsersListItemStyle
+import com.sceyt.chatuikit.styles.select_users.SelectedUsersListItemStyle
 
 class SelectedUsersAdapter(
         data: List<UserItem.User>,

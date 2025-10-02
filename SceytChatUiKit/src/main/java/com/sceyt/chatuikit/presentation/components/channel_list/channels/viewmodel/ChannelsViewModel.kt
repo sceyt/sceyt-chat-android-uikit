@@ -31,7 +31,6 @@ class ChannelsViewModel(
 ) : BaseViewModel(), SceytKoinComponent {
     private val channelInteractor: ChannelInteractor by inject()
     private var getChannelsJog: Job? = null
-    val selectedChannels = mutableSetOf<Long>()
 
     var searchQuery = ""
         private set
@@ -43,6 +42,7 @@ class ChannelsViewModel(
             offset: Int,
             query: String = searchQuery,
             loadKey: LoadKeyData? = null,
+            onlyMine: Boolean = true,
             ignoreDatabase: Boolean = false,
     ) {
         searchQuery = query
@@ -52,9 +52,15 @@ class ChannelsViewModel(
 
         getChannelsJog?.cancel()
         getChannelsJog = viewModelScope.launch(Dispatchers.IO) {
-            channelInteractor.loadChannels(offset, query, loadKey, ignoreDatabase, config).collect {
-                initPaginationResponse(it)
-            }
+            channelInteractor.loadChannels(
+                offset = offset,
+                searchQuery = query,
+                loadKey = loadKey,
+                onlyMine = onlyMine,
+                ignoreDb = ignoreDatabase,
+                awaitForConnection = true,
+                config = config
+            ).collect(::initPaginationResponse)
         }
     }
 
@@ -87,9 +93,7 @@ class ChannelsViewModel(
                 ignoreDb = ignoreDatabase,
                 loadKey = loadKey,
                 directChatType = directChatType
-            ).collect {
-                initPaginationResponse(it)
-            }
+            ).collect(::initPaginationResponse)
         }
     }
 

@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -19,6 +20,7 @@ import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.databinding.SceytActivityCreateGroupBinding
+import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.hideSoftInput
 import com.sceyt.chatuikit.extensions.launchActivity
@@ -37,8 +39,8 @@ import com.sceyt.chatuikit.presentation.components.startchat.adapters.UsersAdapt
 import com.sceyt.chatuikit.presentation.components.startchat.adapters.holders.UserViewHolderFactory
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.shared.helpers.picker.FilePickerHelper
-import com.sceyt.chatuikit.styles.CreateGroupStyle
-import com.sceyt.chatuikit.styles.ImageCropperStyle
+import com.sceyt.chatuikit.styles.create_channel.CreateGroupStyle
+import com.sceyt.chatuikit.styles.cropper.ImageCropperStyle
 import com.sceyt.chatuikit.styles.common.AvatarStyle
 import com.yalantis.ucrop.UCrop
 import kotlinx.coroutines.launch
@@ -54,12 +56,14 @@ class CreateGroupActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         style = CreateGroupStyle.Builder(this, null).build()
         setContentView(SceytActivityCreateGroupBinding.inflate(layoutInflater)
             .also { binding = it }
             .root)
 
         binding.applyStyle()
+        applyInsetsAndWindowColor(binding.root)
         statusBarIconsColorWithBackground()
 
         getDataFromIntent()

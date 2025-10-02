@@ -3,6 +3,7 @@ package com.sceyt.chatuikit.presentation.components.channel.input.mention
 import android.content.Context
 import android.text.SpannableStringBuilder
 import com.sceyt.chat.models.message.BodyAttribute
+import com.sceyt.chatuikit.data.models.channels.DraftMessage
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.formatters.Formatter
@@ -32,6 +33,23 @@ object MessageBodyStyleHelper {
             context = context,
             body = body,
             mentionUsers = mentionedUsers,
+            bodyAttributes = bodyAttributes,
+            mentionTextStyle = mentionTextStyle,
+            mentionUserNameFormatter = mentionUserNameFormatter,
+            mentionClickListener = mentionClickListener
+        )
+    }
+
+    fun DraftMessage.buildWithAttributes(
+            context: Context,
+            mentionTextStyle: TextStyle,
+            mentionUserNameFormatter: Formatter<SceytUser>,
+            mentionClickListener: ((String) -> Unit)?,
+    ): CharSequence {
+        return buildWithAttributes(
+            context = context,
+            body = body.orEmpty(),
+            mentionUsers = mentionUsers,
             bodyAttributes = bodyAttributes,
             mentionTextStyle = mentionTextStyle,
             mentionUserNameFormatter = mentionUserNameFormatter,

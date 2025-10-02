@@ -7,7 +7,6 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ShareCompat
-import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.isVisible
@@ -25,6 +24,7 @@ import com.sceyt.chatuikit.data.models.messages.AttachmentWithUserData
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.databinding.SceytActivityMediaPreviewBinding
+import com.sceyt.chatuikit.extensions.applySystemWindowInsetsPadding
 import com.sceyt.chatuikit.extensions.checkAndAskPermissions
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.getFileUriWithProvider
@@ -45,12 +45,11 @@ import com.sceyt.chatuikit.presentation.components.media.adapter.MediaItem
 import com.sceyt.chatuikit.presentation.components.media.adapter.MediaItemType
 import com.sceyt.chatuikit.presentation.components.media.dialogs.ActionDialog
 import com.sceyt.chatuikit.presentation.components.media.viewmodel.MediaViewModel
-import com.sceyt.chatuikit.styles.MediaPreviewStyle
+import com.sceyt.chatuikit.styles.preview.MediaPreviewStyle
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import java.io.File
 import java.util.Date
-
 
 open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
     lateinit var binding: SceytActivityMediaPreviewBinding
@@ -81,6 +80,11 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
     override fun onPause() {
         super.onPause()
         mediaAdapter?.pauseAllVideos()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        mediaAdapter?.resumeLastVideo()
     }
 
     override fun onDestroy() {
@@ -131,8 +135,12 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
     }
 
     private fun initViews() {
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-        binding.toolbar.applySystemWindowInsetsPadding(applyTop = true)
+        binding.toolbar.applySystemWindowInsetsPadding(
+            applyTop = true,
+            applyRight = true,
+            applyLeft = true,
+            applyBottom = false
+        )
 
         binding.root.post { toggleFullScreen(false) }
 
@@ -353,7 +361,9 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
 
     private fun getMimeTypeFrom(file: SceytAttachment): String {
         var mimeType = getMimeType(file.filePath)
-        if (mimeType.isNullOrBlank()) mimeType = if (file.type == AttachmentTypeEnum.Image.value) "image/jpeg" else "video/mp4"
+        if (mimeType.isNullOrBlank())
+            mimeType = if (file.type == AttachmentTypeEnum.Image.value)
+                "image/jpeg" else "video/mp4"
         return mimeType
     }
 

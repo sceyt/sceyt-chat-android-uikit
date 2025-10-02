@@ -40,6 +40,7 @@ data class SceytMessage(
         val forwardingDetails: ForwardingDetails?,
         val pendingReactions: List<PendingReactionData>?,
         val bodyAttributes: List<BodyAttribute>?,
+        val disableMentionsCount: Boolean,
     // Local properties
         val shouldShowAvatarAndName: Boolean = false,
         val disabledShowAvatarAndName: Boolean = false,
@@ -55,11 +56,7 @@ data class SceytMessage(
     val isReplied get() = parentMessage != null && parentMessage.id != 0L /*&& !replyInThread*/
 
     override fun equals(other: Any?): Boolean {
-        if (other == null || other !is SceytMessage) return false
-
-        return if (deliveryStatus == DeliveryStatus.Pending || other.deliveryStatus == DeliveryStatus.Pending)
-            other.tid == tid
-        else other.id == id
+        return other is SceytMessage && other.tid == tid
     }
 
     override fun hashCode(): Int {

@@ -26,9 +26,9 @@ import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
  * @property selectedTextStyle Style for the text in the item when it is selected, default is [TextStyle].
  * */
 data class ReactionsInfoHeaderItemStyle(
-        @ColorInt val backgroundColor: Int,
-        @ColorInt val selectedBackgroundColor: Int,
-        @ColorInt val borderColor: Int,
+        @param:ColorInt val backgroundColor: Int,
+        @param:ColorInt val selectedBackgroundColor: Int,
+        @param:ColorInt val borderColor: Int,
         val borderWidth: Int,
         val cornerRadius: Int,
         val textStyle: TextStyle,

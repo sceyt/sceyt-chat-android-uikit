@@ -10,37 +10,49 @@ import androidx.room.Transaction
 import androidx.room.Update
 import androidx.sqlite.db.SimpleSQLiteQuery
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
-import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
-import com.sceyt.chatuikit.persistence.database.entity.channel.CHANNEL_TABLE
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.CHANNEL_TABLE
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.USER_CHAT_LINK_TABLE
 import com.sceyt.chatuikit.persistence.database.entity.channel.ChannelDb
 import com.sceyt.chatuikit.persistence.database.entity.channel.ChannelEntity
-import com.sceyt.chatuikit.persistence.database.entity.channel.USER_CHAT_LINK_TABLE
 import com.sceyt.chatuikit.persistence.database.entity.channel.UserChatLinkEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
-internal interface ChannelDao {
+internal abstract class ChannelDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertChannel(channel: ChannelEntity): Long
+    protected abstract suspend fun insert(channel: ChannelEntity): Long
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    protected abstract suspend fun insertMany(channels: List<ChannelEntity>): List<Long>
 
     @Transaction
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertChannelsAndLinks(channels: List<ChannelEntity>, userChatLinks: List<UserChatLinkEntity>)
+    open suspend fun insertChannelsAndLinks(
+            channels: List<ChannelEntity>,
+            userChatLinks: List<UserChatLinkEntity>,
+    ) {
+        insertMany(channels)
+        insertUserChatLinks(userChatLinks)
+    }
 
     @Transaction
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertChannelAndLinks(channels: ChannelEntity, userChatLinks: List<UserChatLinkEntity>)
+    open suspend fun insertChannelAndLinks(
+            channel: ChannelEntity,
+            userChatLinks: List<UserChatLinkEntity>,
+    ) {
+        insert(channel)
+        insertUserChatLinks(userChatLinks)
+    }
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertUserChatLinks(userChatLinks: List<UserChatLinkEntity>): List<Long>
+    abstract fun insertUserChatLinks(userChatLinks: List<UserChatLinkEntity>): List<Long>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertUserChatLink(userChatLink: UserChatLinkEntity): Long
+    abstract suspend fun insertUserChatLink(userChatLink: UserChatLinkEntity): Long
 
     @Transaction
     @Query("""
         select * from $CHANNEL_TABLE 
-            where userRole !=:ignoreRole 
+            where (case when :onlyMine then userRole <> '' else 1 end) 
             and (not pending or lastMessageTid != 0) 
             and (:isEmptyTypes = 1 or type in (:types)) 
             order by 
@@ -49,16 +61,16 @@ internal interface ChannelDao {
             createdAt desc 
             limit :limit offset :offset
     """)
-    suspend fun getChannels(
+    abstract suspend fun getChannels(
             limit: Int,
             offset: Int,
             types: List<String>,
             orderByLastMessage: Boolean,
-            ignoreRole: String = RoleTypeEnum.None.value,
+            onlyMine: Boolean,
             isEmptyTypes: Int = if (types.isEmpty()) 1 else 0,
     ): List<ChannelDb>
 
-    @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
+    @SuppressWarnings(RoomWarnings.QUERY_MISMATCH)
     @Transaction
     @Query("""
       select * from $CHANNEL_TABLE as channel  
@@ -74,7 +86,7 @@ internal interface ChannelDao {
             createdAt desc 
             limit :limit offset :offset
     """)
-    suspend fun searchChannelsByUserIds(
+    abstract suspend fun searchChannelsByUserIds(
             query: String,
             userIds: List<String>,
             limit: Int,
@@ -88,36 +100,36 @@ internal interface ChannelDao {
 
     @Transaction
     @RawQuery
-    suspend fun getChannelsBySQLiteQuery(query: SimpleSQLiteQuery): List<ChannelDb>
+    abstract suspend fun getChannelsBySQLiteQuery(query: SimpleSQLiteQuery): List<ChannelDb>
 
     @Transaction
     @Query("select * from $CHANNEL_TABLE  where chat_id =:id")
-    suspend fun getChannelById(id: Long): ChannelDb?
+    abstract suspend fun getChannelById(id: Long): ChannelDb?
 
     @Transaction
     @Query("select * from $CHANNEL_TABLE  where chat_id in (:ids)")
-    suspend fun getChannelsById(ids: List<Long>): List<ChannelDb>
+    abstract suspend fun getChannelsById(ids: List<Long>): List<ChannelDb>
 
     @Query("select * from $USER_CHAT_LINK_TABLE where user_id =:userId")
-    suspend fun getUserChannelLinksByPeerId(userId: String): List<UserChatLinkEntity>
+    abstract suspend fun getUserChannelLinksByPeerId(userId: String): List<UserChatLinkEntity>
 
     @Transaction
-    suspend fun getChannelByPeerId(peerId: String): List<ChannelDb> {
+    open suspend fun getChannelByPeerId(peerId: String): List<ChannelDb> {
         val links = getUserChannelLinksByPeerId(peerId)
         return getChannelsById(links.map { it.chatId })
     }
 
-    @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
+    @SuppressWarnings(RoomWarnings.QUERY_MISMATCH)
     @Transaction
-    @Query("select * from $CHANNEL_TABLE join $USER_CHAT_LINK_TABLE as link " +
-            "on link.chat_id = $CHANNEL_TABLE.chat_id " +
+    @Query("select * from $CHANNEL_TABLE as channel join $USER_CHAT_LINK_TABLE as link " +
+            "on link.chat_id = channel.chat_id " +
             "where link.user_id =:peerId and type =:channelType")
-    suspend fun getChannelByUserAndType(
+    abstract suspend fun getChannelByUserAndType(
             peerId: String,
             channelType: String,
     ): ChannelDb?
 
-    @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
+    @SuppressWarnings(RoomWarnings.QUERY_MISMATCH)
     @Transaction
     @Query("""
     select * from $CHANNEL_TABLE  
@@ -129,7 +141,7 @@ internal interface ChannelDao {
     ) 
     and type = :channelType
 """)
-    suspend fun getChannelByUsersAndType(
+    abstract suspend fun getChannelByUsersAndType(
             users: List<String>,
             channelType: String,
             userCount: Int = users.size,
@@ -137,104 +149,104 @@ internal interface ChannelDao {
 
     @Transaction
     @Query("select * from $CHANNEL_TABLE  where uri =:uri")
-    suspend fun getChannelByUri(uri: String): ChannelDb?
+    abstract suspend fun getChannelByUri(uri: String): ChannelDb?
 
-    @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
+    @SuppressWarnings(RoomWarnings.QUERY_MISMATCH)
     @Transaction
     @Query("select * from $CHANNEL_TABLE  where isSelf = 1")
-    suspend fun getSelfChannel(): ChannelDb?
+    abstract suspend fun getSelfChannel(): ChannelDb?
 
     @Query("select chat_id from $CHANNEL_TABLE  where chat_id not in (:ids) " +
             "and (:isEmptyTypes = 1 or type in (:types))" +
             "and pending != 1")
-    suspend fun getNotExistingChannelIdsByIdsAndTypes(
+    abstract suspend fun getNotExistingChannelIdsByIdsAndTypes(
             ids: List<Long>,
             types: List<String>,
             isEmptyTypes: Int = if (types.isEmpty()) 1 else 0,
     ): List<Long>
 
     @Query("select chat_id from $CHANNEL_TABLE  where pending != 1 and (:isEmptyTypes = 1 or type in (:types))")
-    suspend fun getAllChannelIdsByTypes(
+    abstract suspend fun getAllChannelIdsByTypes(
             types: List<String>,
             isEmptyTypes: Int = if (types.isEmpty()) 1 else 0,
     ): List<Long>
 
     @Query("select chat_id from $CHANNEL_TABLE ")
-    suspend fun getAllChannelsIds(): List<Long>
+    abstract suspend fun getAllChannelsIds(): List<Long>
 
     @Query("select lastMessageTid from $CHANNEL_TABLE  where chat_id in (:ids)")
-    suspend fun getChannelsLastMessageTIds(ids: List<Long>): List<Long>
+    abstract suspend fun getChannelsLastMessageTIds(ids: List<Long>): List<Long>
 
     @Query("select lastMessageTid from $CHANNEL_TABLE  where chat_id = :id")
-    suspend fun getChannelLastMessageTid(id: Long): Long?
+    abstract suspend fun getChannelLastMessageTid(id: Long): Long?
 
     @Transaction
     @Query("""
         select sum(newMessageCount) from $CHANNEL_TABLE 
         where :isEmptyTypes = 1 or type in (:channelTypes)
            """)
-    fun getTotalUnreadCountAsFlow(
+    abstract fun getTotalUnreadCountAsFlow(
             channelTypes: List<String>,
             isEmptyTypes: Int = if (channelTypes.isEmpty()) 1 else 0,
     ): Flow<Long?>
 
     @Query("select count(chat_id) from $CHANNEL_TABLE ")
-    suspend fun getAllChannelsCount(): Int
+    abstract suspend fun getAllChannelsCount(): Int
 
     @Query("select messageRetentionPeriod from $CHANNEL_TABLE  where chat_id = :channelId")
-    suspend fun getRetentionPeriodByChannelId(channelId: Long): Long?
+    abstract suspend fun getRetentionPeriodByChannelId(channelId: Long): Long?
 
     @Update
-    suspend fun updateChannel(channelEntity: ChannelEntity)
+    abstract suspend fun updateChannel(channelEntity: ChannelEntity): Int
 
     @Query("update $CHANNEL_TABLE  set lastMessageTid =:lastMessageTid, lastMessageAt =:lastMessageAt where chat_id= :channelId")
-    suspend fun updateLastMessage(channelId: Long, lastMessageTid: Long?, lastMessageAt: Long?)
+    abstract suspend fun updateLastMessage(channelId: Long, lastMessageTid: Long?, lastMessageAt: Long?)
 
     @Query("update $CHANNEL_TABLE  set lastMessageTid =:lastMessageTid, lastMessageAt =:lastMessageAt," +
             "lastDisplayedMessageId =:lastMessageId where chat_id= :channelId")
-    suspend fun updateLastMessageWithLastRead(channelId: Long, lastMessageTid: Long?, lastMessageId: Long?, lastMessageAt: Long?)
+    abstract suspend fun updateLastMessageWithLastRead(channelId: Long, lastMessageTid: Long?, lastMessageId: Long?, lastMessageAt: Long?)
 
     @Query("update $CHANNEL_TABLE  set newMessageCount =:count, unread = 0 where chat_id= :channelId")
-    suspend fun updateUnreadCount(channelId: Long, count: Int)
+    abstract suspend fun updateUnreadCount(channelId: Long, count: Int)
 
     @Query("update $CHANNEL_TABLE  set memberCount =:count where chat_id= :channelId")
-    suspend fun updateMemberCount(channelId: Long, count: Int)
+    abstract suspend fun updateMemberCount(channelId: Long, count: Int)
 
     @Query("update $CHANNEL_TABLE  set muted =:muted, mutedTill =:muteUntil where chat_id =:channelId")
-    suspend fun updateMuteState(channelId: Long, muted: Boolean, muteUntil: Long? = 0)
+    abstract suspend fun updateMuteState(channelId: Long, muted: Boolean, muteUntil: Long? = 0)
 
     @Query("update $CHANNEL_TABLE  set messageRetentionPeriod =:period where chat_id =:channelId")
-    suspend fun updateAutoDeleteState(channelId: Long, period: Long)
+    abstract suspend fun updateAutoDeleteState(channelId: Long, period: Long)
 
     @Query("update $CHANNEL_TABLE  set pinnedAt =:pinnedAt where chat_id =:channelId")
-    suspend fun updatePinState(channelId: Long, pinnedAt: Long?)
+    abstract suspend fun updatePinState(channelId: Long, pinnedAt: Long?)
 
     @Query("delete from $CHANNEL_TABLE  where chat_id =:channelId")
-    suspend fun deleteChannel(channelId: Long)
+    abstract suspend fun deleteChannel(channelId: Long)
 
     @Query("delete from $USER_CHAT_LINK_TABLE where chat_id =:channelId and user_id in (:userIds)")
-    suspend fun deleteUserChatLinks(channelId: Long, vararg userIds: String)
+    abstract suspend fun deleteUserChatLinks(channelId: Long, vararg userIds: String)
 
     @Query("delete from $USER_CHAT_LINK_TABLE where chat_id =:channelId")
-    suspend fun deleteChatLinks(channelId: Long)
+    abstract suspend fun deleteChatLinks(channelId: Long)
 
     @Query("delete from $USER_CHAT_LINK_TABLE where chat_id in (:channelIds)")
-    suspend fun deleteChannelsLinks(channelIds: List<Long>)
+    abstract suspend fun deleteChannelsLinks(channelIds: List<Long>)
 
     @Query("delete from $USER_CHAT_LINK_TABLE where chat_id =:channelId and user_id != :exceptUserId")
-    suspend fun deleteChatLinksExceptUser(channelId: Long, exceptUserId: String)
+    abstract suspend fun deleteChatLinksExceptUser(channelId: Long, exceptUserId: String)
 
     @Transaction
-    suspend fun deleteChannelAndLinks(channelId: Long) {
+    open suspend fun deleteChannelAndLinks(channelId: Long) {
         deleteChannel(channelId)
         deleteChatLinks(channelId)
     }
 
     @Query("delete from $CHANNEL_TABLE  where chat_id in (:ids)")
-    suspend fun deleteAllChannelByIds(ids: List<Long>): Int
+    abstract suspend fun deleteAllChannelByIds(ids: List<Long>): Int
 
     @Transaction
-    suspend fun deleteAllChannelsAndLinksById(ids: List<Long>) {
+    open suspend fun deleteAllChannelsAndLinksById(ids: List<Long>) {
         if (ids.isNotEmpty()) {
             val deletedCount = deleteAllChannelByIds(ids)
             if (deletedCount > 0)

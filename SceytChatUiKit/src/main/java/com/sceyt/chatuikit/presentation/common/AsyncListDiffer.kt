@@ -6,12 +6,14 @@ import androidx.recyclerview.widget.AdapterListUpdateCallback
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListUpdateCallback
 import androidx.recyclerview.widget.RecyclerView
+import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.extensions.removeFirstIf
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -27,6 +29,7 @@ class AsyncListDiffer<T : Any>(
         private val diffCallback: DiffUtil.ItemCallback<T>,
         private val mainDispatcher: CoroutineDispatcher = Dispatchers.Main,
         private val backgroundDispatcher: CoroutineDispatcher = Dispatchers.Default,
+        private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + backgroundDispatcher)
 ) {
 
     private val mutex = Mutex()
@@ -34,13 +37,13 @@ class AsyncListDiffer<T : Any>(
     constructor(
             adapter: RecyclerView.Adapter<*>,
             diffCallback: DiffUtil.ItemCallback<T>,
-    ) : this(AdapterListUpdateCallback(adapter), diffCallback)
+            scope: CoroutineScope
+    ) : this(AdapterListUpdateCallback(adapter), diffCallback, scope = scope)
 
 
     private var list: List<T>? = null
     private var readOnlyList: List<T> = emptyList()
     private val listeners = mutableListOf<ListListener<T>>()
-    private val coroutineScope = CoroutineScope(SupervisorJob() + backgroundDispatcher)
     private var lastSubmitJob: Job? = null
 
     @Volatile
@@ -74,18 +77,20 @@ class AsyncListDiffer<T : Any>(
             newItem: T,
             payloads: Any? = null,
             commitCallback: (() -> Unit)? = null,
-    ) = coroutineScope.launch {
+    ) = scope.launch {
         mutex.withLock {
             waitForSubmitJob()
             val previousList = readOnlyList
             val newList = list?.toMutableList() ?: return@withLock
             val position = newList.indexOfFirst(predicate).takeIf { it != -1 } ?: return@withLock
             newList[position] = newItem
-            list = newList
-            readOnlyList = Collections.unmodifiableList(newList)
-            withContext(mainDispatcher) {
-                updateCallback.onChanged(position, 1, payloads)
-                onCurrentListChanged(previousList, commitCallback)
+            performWithRetry {
+                list = newList
+                readOnlyList = Collections.unmodifiableList(newList)
+                withContext(mainDispatcher) {
+                    updateCallback.onChanged(position, 1, payloads)
+                    onCurrentListChanged(previousList, commitCallback)
+                }
             }
         }
     }.also { lastOperationsJob = it }
@@ -94,17 +99,19 @@ class AsyncListDiffer<T : Any>(
     fun removeItem(
             commitCallback: (() -> Unit)? = null,
             predicate: (T) -> Boolean,
-    ) = coroutineScope.launch {
+    ) = scope.launch {
         mutex.withLock {
             waitForSubmitJob()
             val previousList = readOnlyList
             val newList = list?.toMutableList() ?: mutableListOf()
             val position = newList.removeFirstIf(predicate).takeIf { it != -1 } ?: return@withLock
-            list = newList
-            readOnlyList = Collections.unmodifiableList(newList)
-            withContext(mainDispatcher) {
-                updateCallback.onRemoved(position, 1)
-                onCurrentListChanged(previousList, commitCallback)
+            performWithRetry {
+                list = newList
+                readOnlyList = Collections.unmodifiableList(newList)
+                withContext(mainDispatcher) {
+                    updateCallback.onRemoved(position, 1)
+                    onCurrentListChanged(previousList, commitCallback)
+                }
             }
             return@withLock
         }
@@ -184,11 +191,14 @@ class AsyncListDiffer<T : Any>(
             diffResult: DiffUtil.DiffResult,
             commitCallback: (() -> Unit)?,
     ) = withContext(mainDispatcher) {
-        val previousList = readOnlyList
-        list = newList
-        readOnlyList = Collections.unmodifiableList(newList)
-        diffResult.dispatchUpdatesTo(updateCallback)
-        onCurrentListChanged(previousList, commitCallback)
+        if (!isActive) return@withContext
+        performWithRetry {
+            val previousList = readOnlyList
+            list = newList
+            readOnlyList = Collections.unmodifiableList(newList)
+            diffResult.dispatchUpdatesTo(updateCallback)
+            onCurrentListChanged(previousList, commitCallback)
+        }
     }
 
     @MainThread
@@ -203,7 +213,7 @@ class AsyncListDiffer<T : Any>(
     ) {
         lastSubmitJob?.cancel()
         lastOperationsJob?.cancel()
-        lastSubmitJob = coroutineScope.launch {
+        lastSubmitJob = scope.launch {
             val previousList = readOnlyList
             if (newList === list) {
                 // Same list, nothing to do
@@ -212,21 +222,28 @@ class AsyncListDiffer<T : Any>(
             }
 
             if (newList == null) {
-                // Fast remove-all scenario
-                val countRemoved = list?.size ?: 0
-                list = null
-                readOnlyList = emptyList()
-                updateCallback.onRemoved(0, countRemoved)
-                onCurrentListChanged(previousList, commitCallback)
+                performWithRetry {
+                    // Fast remove-all scenario
+                    val countRemoved = list?.size ?: 0
+                    list = null
+                    readOnlyList = emptyList()
+                    if (countRemoved == 0)
+                        return@launch
+                    updateCallback.onRemoved(0, countRemoved)
+                    onCurrentListChanged(previousList, commitCallback)
+                }
                 return@launch
             }
 
             if (list == null) {
-                // Fast insert-all scenario
-                list = newList
-                readOnlyList = Collections.unmodifiableList(newList)
-                updateCallback.onInserted(0, newList.size)
-                onCurrentListChanged(previousList, commitCallback)
+                if (newList.isEmpty()) return@launch
+                performWithRetry {
+                    // Fast insert-all scenario
+                    list = newList
+                    readOnlyList = Collections.unmodifiableList(newList)
+                    updateCallback.onInserted(0, newList.size)
+                    onCurrentListChanged(previousList, commitCallback)
+                }
                 return@launch
             }
 
@@ -234,18 +251,45 @@ class AsyncListDiffer<T : Any>(
             val oldList = list ?: return@launch
             withContext(backgroundDispatcher) {
                 val result = calculateDiff(oldList, newList)
-                if (isActive) {
-                    latchList(newList, result, commitCallback)
+                latchList(newList, result, commitCallback)
+            }
+        }
+    }
+
+    private suspend inline fun CoroutineScope.performWithRetry(action: () -> Unit) {
+        var attempt = 0
+        val maxAttempts = 3
+        var lastException: Exception? = null
+
+        while (isActive && attempt < maxAttempts) {
+            try {
+                action()
+                return
+            } catch (e: CancellationException) {
+                // If the coroutine is cancelled, we exit immediately
+                SceytLog.w(TAG, "Coroutine was cancelled during retry attempt $attempt", e)
+                throw e
+            } catch (ex: Exception) {
+                lastException = ex
+                SceytLog.w(TAG, "Catch Exception. Retry attempt $attempt", ex)
+                attempt++
+                if (attempt < maxAttempts) {
+                    delay((attempt * 100L).coerceAtMost(500L)) // Exponential backoff
                 }
             }
         }
+
+        if (!isActive || lastException == null) return
+        // If we've exhausted all retries, throw the last exception
+        SceytLog.e(TAG, "Failed to perform action after $attempt attempts", lastException)
+        throw lastException
     }
 
     private fun addItemsImpl(
             items: List<T>,
             position: Int = -1,
             commitCallback: (() -> Unit)? = null,
-    ) = coroutineScope.launch {
+    ) = scope.launch {
         mutex.withLock {
             if (items.isEmpty()) return@withLock
             waitForSubmitJob()
@@ -256,12 +300,14 @@ class AsyncListDiffer<T : Any>(
             } else if (position in newList.indices) {
                 newList.addAll(position, items.toList())
             }
-            list = newList
-            readOnlyList = Collections.unmodifiableList(newList)
-            val positionToInsert = position.takeIf { it != -1 } ?: previousList.size
-            withContext(mainDispatcher) {
-                updateCallback.onInserted(positionToInsert, items.size)
-                onCurrentListChanged(previousList, commitCallback)
+            performWithRetry {
+                list = newList
+                readOnlyList = Collections.unmodifiableList(newList)
+                val positionToInsert = position.takeIf { it != -1 } ?: previousList.size
+                withContext(mainDispatcher) {
+                    updateCallback.onInserted(positionToInsert, items.size)
+                    onCurrentListChanged(previousList, commitCallback)
+                }
             }
         }
     }.also { lastOperationsJob = it }
@@ -279,5 +325,9 @@ class AsyncListDiffer<T : Any>(
                 }
             }
         }
+    }
+
+    companion object {
+        private const val TAG = "AsyncListDiffer"
     }
 }

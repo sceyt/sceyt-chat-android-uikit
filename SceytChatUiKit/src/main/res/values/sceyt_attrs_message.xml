@@ -24,6 +24,19 @@
         </attr>
         <attr name="sceytUiMessagesListScrollDownButtonIcon" format="reference" />
 
+        <!-- Scroll unread mention button style -->
+        <attr name="sceytUiMessagesListScrollUnreadMentionButtonBackgroundColor" format="reference|color" />
+        <attr name="sceytUiMessagesListScrollUnreadMentionButtonUnreadCountTextBackgroundColor" format="reference|color" />
+        <attr name="sceytUiMessagesListScrollUnreadMentionButtonUnreadCountTextColor" format="reference|color" />
+        <attr name="sceytUiMessagesListScrollUnreadMentionButtonUnreadCountTextSize" format="dimension" />
+        <attr name="sceytUiMessagesListScrollUnreadMentionButtonUnreadCountTextFont" format="reference" />
+        <attr name="sceytUiMessagesListScrollUnreadMentionButtonUnreadCountTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiMessagesListScrollUnreadMentionButtonIcon" format="reference" />
+
         <!-- Date separator style -->
         <attr name="sceytUiMessagesListDateSeparatorBackgroundColor" format="reference|color" />
         <attr name="sceytUiMessagesListDateSeparatorTextBackgroundColor" format="reference|color" />

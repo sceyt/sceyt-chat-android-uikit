@@ -27,12 +27,12 @@ import com.sceyt.chatuikit.styles.StyleConstants.UNSET_STYLE
 import com.sceyt.chatuikit.styles.StyleConstants.styleOrDefault
 
 data class TextStyle(
-        @ColorInt val backgroundColor: Int = UNSET_COLOR,
-        @ColorInt val color: Int = UNSET_COLOR,
-        @ColorInt val drawableColor: Int = UNSET_COLOR,
-        @Px val size: Int = UNSET_SIZE,
-        @FontRes val font: Int = UNSET_RESOURCE,
-        @Style val style: Int = UNSET_STYLE,
+        @param:ColorInt val backgroundColor: Int = UNSET_COLOR,
+        @param:ColorInt val color: Int = UNSET_COLOR,
+        @param:ColorInt val drawableColor: Int = UNSET_COLOR,
+        @param:Px val size: Int = UNSET_SIZE,
+        @param:FontRes val font: Int = UNSET_RESOURCE,
+        @param:Style val style: Int = UNSET_STYLE,
 ) {
 
     fun apply(textView: TextView) {

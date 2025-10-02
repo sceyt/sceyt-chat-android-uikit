@@ -43,8 +43,7 @@
                 android:layout_width="0dp"
                 android:layout_height="0dp"
                 android:background="?selectableItemBackground"
-                android:paddingStart="16dp"
-                android:paddingEnd="12dp"
+                android:paddingHorizontal="16dp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@+id/icBack"
@@ -65,7 +64,7 @@
                     android:id="@+id/title"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="12dp"
+                    android:layout_marginStart="12dp"
                     android:fontFamily="@font/roboto_medium"
                     android:singleLine="true"
                     android:textColor="@color/sceyt_color_text_primary"
@@ -83,7 +82,6 @@
                     android:id="@+id/layoutSubTitle"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginEnd="12dp"
                     android:animateLayoutChanges="true"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
@@ -109,43 +107,46 @@
                         app:layout_constraintTop_toTopOf="parent"
                         tools:text="SubTitle" />
 
-                    <androidx.appcompat.widget.AppCompatTextView
-                        android:id="@+id/tvTyping"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:ellipsize="middle"
-                        android:singleLine="true"
-                        android:text="@string/sceyt_typing"
-                        android:textColor="@color/sceyt_color_text_secondary"
-                        android:textSize="13sp"
-                        app:layout_constrainedWidth="true"
-                        app:layout_constraintEnd_toStartOf="@+id/lottieTyping"
-                        app:layout_constraintHorizontal_bias="0"
-                        app:layout_constraintHorizontal_chainStyle="packed"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent" />
-
-                    <com.airbnb.lottie.LottieAnimationView
-                        android:id="@+id/lottieTyping"
-                        android:layout_width="20dp"
-                        android:layout_height="0dp"
-                        android:layout_marginStart="6dp"
-                        android:paddingTop="3dp"
-                        app:layout_constraintBottom_toBottomOf="@+id/tvTyping"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintHorizontal_bias="0.5"
-                        app:layout_constraintStart_toEndOf="@+id/tvTyping"
-                        app:layout_constraintTop_toTopOf="@+id/tvTyping"
-                        app:lottie_autoPlay="true"
-                        app:lottie_loop="true"
-                        app:lottie_rawRes="@raw/sceyt_typing" />
-
-                    <androidx.constraintlayout.widget.Group
-                        android:id="@+id/groupTyping"
-                        android:layout_width="wrap_content"
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:id="@+id/layoutChannelEvent"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:visibility="gone"
-                        app:constraint_referenced_ids="lottieTyping,tvTyping" />
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent">
+
+                        <androidx.appcompat.widget.AppCompatTextView
+                            android:id="@+id/tvChannelEvent"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:ellipsize="middle"
+                            android:singleLine="true"
+                            android:text="@string/sceyt_typing"
+                            android:textColor="@color/sceyt_color_text_secondary"
+                            android:textSize="13sp"
+                            app:layout_constrainedWidth="true"
+                            app:layout_constraintEnd_toStartOf="@+id/lottieChannelEvent"
+                            app:layout_constraintHorizontal_bias="0"
+                            app:layout_constraintHorizontal_chainStyle="packed"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
+
+                        <com.airbnb.lottie.LottieAnimationView
+                            android:id="@+id/lottieChannelEvent"
+                            android:layout_width="20dp"
+                            android:layout_height="0dp"
+                            android:layout_marginStart="5dp"
+                            android:paddingTop="3dp"
+                            app:layout_constraintBottom_toBottomOf="@+id/tvChannelEvent"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toEndOf="@+id/tvChannelEvent"
+                            app:layout_constraintTop_toTopOf="@+id/tvChannelEvent"
+                            app:lottie_loop="true"
+                            tools:lottie_autoPlay="true"
+                            tools:lottie_rawRes="@raw/sceyt_typing" />
+
+                    </androidx.constraintlayout.widget.ConstraintLayout>
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
 

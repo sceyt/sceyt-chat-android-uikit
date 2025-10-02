@@ -19,7 +19,7 @@ import java.util.Date
  * @property dateFormatter - formatter for date separator text
  * */
 data class ChannelInfoDateSeparatorStyle(
-        @ColorInt val backgroundColor: Int,
+        @param:ColorInt val backgroundColor: Int,
         val textStyle: TextStyle,
         val dateFormatter: Formatter<Date>
 ) {

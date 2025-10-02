@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.addCallback
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -15,6 +16,7 @@ import com.sceyt.chatuikit.R.anim.sceyt_anim_slide_hold
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.databinding.SceytActivityStartChatBinding
+import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.extensions.launchActivity
@@ -34,7 +36,7 @@ import com.sceyt.chatuikit.presentation.components.select_users.viewmodel.UsersV
 import com.sceyt.chatuikit.presentation.components.startchat.adapters.UsersAdapter
 import com.sceyt.chatuikit.presentation.components.startchat.adapters.holders.UserViewHolderFactory
 import com.sceyt.chatuikit.presentation.root.PageState
-import com.sceyt.chatuikit.styles.StartChatStyle
+import com.sceyt.chatuikit.styles.create_channel.StartChatStyle
 
 class StartChatActivity : AppCompatActivity() {
     private lateinit var binding: SceytActivityStartChatBinding
@@ -45,12 +47,14 @@ class StartChatActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         style = StartChatStyle.Builder(this, null).build()
         setContentView(SceytActivityStartChatBinding.inflate(layoutInflater)
             .also { binding = it }
             .root)
 
         binding.applyStyle()
+        applyInsetsAndWindowColor(binding.root)
         statusBarIconsColorWithBackground()
 
         initViewModel()
