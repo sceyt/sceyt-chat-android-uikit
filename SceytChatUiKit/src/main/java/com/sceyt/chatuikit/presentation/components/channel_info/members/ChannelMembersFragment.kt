@@ -51,6 +51,7 @@ import com.sceyt.chatuikit.presentation.components.channel_info.members.popups.M
 import com.sceyt.chatuikit.presentation.components.channel_info.members.popups.MemberActionsDialog.ActionsEnum.Delete
 import com.sceyt.chatuikit.presentation.components.channel_info.members.popups.MemberActionsDialog.ActionsEnum.RevokeAdmin
 import com.sceyt.chatuikit.presentation.components.channel_info.members.viewmodel.ChannelMembersViewModel
+import com.sceyt.chatuikit.presentation.components.invite_link.ChannelInviteLinkActivity
 import com.sceyt.chatuikit.presentation.components.select_users.SelectUsersActivity
 import com.sceyt.chatuikit.presentation.components.select_users.SelectUsersPageArgs
 import com.sceyt.chatuikit.presentation.components.select_users.SelectUsersResult
@@ -147,6 +148,10 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
         with(binding ?: return) {
             layoutAddMembers.setOnClickListener {
                 onAddMembersClick(memberType)
+            }
+
+            layoutInviteLink.setOnClickListener {
+                onInviteLinkClick()
             }
 
             toolbar.setNavigationClickListener {
@@ -329,6 +334,10 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
         selectUsersActivityLauncher.launch(SelectUsersActivity.newIntent(requireContext(), args), animOptions)
     }
 
+    protected open fun onInviteLinkClick() {
+        ChannelInviteLinkActivity.launch(requireContext(), channel)
+    }
+
     protected open fun onRevokeAdminClick(member: SceytMember) {
         SceytDialog.showDialog(requireContext(), R.string.sceyt_revoke_admin_title, R.string.sceyt_revoke_admin_desc, R.string.sceyt_revoke, positiveCb = {
             revokeAdmin(member)
@@ -464,7 +473,9 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
         root.setBackgroundColor(style.backgroundColor)
         style.toolbarStyle.apply(toolbar)
         style.addMemberTextStyle.apply(addMembers)
+        style.inviteLinkTextStyle.apply(tvInviteLink)
         icAddMembers.setImageDrawable(style.addMembersIcon)
+        icInviteLink.setImageDrawable(style.inviteLinkIcon)
     }
 
     companion object {
