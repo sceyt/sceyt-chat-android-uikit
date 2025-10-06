@@ -65,16 +65,16 @@ class ChannelListView @JvmOverloads constructor(
         setPageStateViews()
 
         defaultClickListeners = object : ChannelClickListenersImpl() {
-            override fun onChannelClick(item: ChannelListItem.ChannelItem) {
-                clickListeners.onChannelClick(item.copy(channel = item.channel))
+            override fun onChannelClick(view: View, item: ChannelListItem.ChannelItem) {
+                clickListeners.onChannelClick(view, item.copy(channel = item.channel))
             }
 
             override fun onChannelLongClick(view: View, item: ChannelListItem.ChannelItem) {
                 clickListeners.onChannelLongClick(view, item.copy(channel = item.channel))
             }
 
-            override fun onAvatarClick(item: ChannelListItem.ChannelItem) {
-                clickListeners.onAvatarClick(item.copy(channel = item.channel))
+            override fun onAvatarClick(view: View, item: ChannelListItem.ChannelItem) {
+                clickListeners.onAvatarClick(view, item.copy(channel = item.channel))
             }
         }
         channelsRV.setChannelListener(defaultClickListeners)
@@ -289,12 +289,12 @@ class ChannelListView @JvmOverloads constructor(
     }
 
     // Channel Click callbacks
-    override fun onChannelClick(item: ChannelListItem.ChannelItem) {
+    override fun onChannelClick(view: View, item: ChannelListItem.ChannelItem) {
         ChannelActivity.launch(context, item.channel)
     }
 
-    override fun onAvatarClick(item: ChannelListItem.ChannelItem) {
-        clickListeners.onChannelClick(item)
+    override fun onAvatarClick(view: View, item: ChannelListItem.ChannelItem) {
+        clickListeners.onChannelClick(view, item)
     }
 
     override fun onChannelLongClick(view: View, item: ChannelListItem.ChannelItem) {
