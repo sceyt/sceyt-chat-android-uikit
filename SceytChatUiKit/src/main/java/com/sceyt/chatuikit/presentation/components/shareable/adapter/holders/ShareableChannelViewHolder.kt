@@ -16,7 +16,7 @@ open class ShareableChannelViewHolder(
         private val binding: SceytItemShareChannelBinding,
         private val itemStyle: SelectableListItemStyle<Formatter<SceytChannel>,
                 Formatter<SceytChannel>, ChannelAvatarRenderer>,
-        private val clickListener: ChannelClickListeners.ChannelClickListener
+        private val clickListener: ChannelClickListeners.ChannelClickListener,
 ) : BaseChannelViewHolder(binding.root) {
 
     init {
@@ -35,7 +35,7 @@ open class ShareableChannelViewHolder(
         binding.checkbox.isChecked = item.selected
 
         binding.root.setOnClickListener {
-            clickListener.onChannelClick(item)
+            clickListener.onChannelClick(view = it, item)
         }
     }
 

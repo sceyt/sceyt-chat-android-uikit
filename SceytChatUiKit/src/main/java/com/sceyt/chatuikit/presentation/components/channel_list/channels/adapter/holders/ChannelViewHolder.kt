@@ -42,7 +42,7 @@ open class ChannelViewHolder(
             setChannelItemStyle()
 
             root.setOnClickListenerAvailable(ChannelsAdapter.clickAvailableData) {
-                listeners.onChannelClick(item as ChannelListItem.ChannelItem)
+                listeners.onChannelClick(it, item as ChannelListItem.ChannelItem)
             }
 
             parentLayout.setOnLongClickListenerAvailable(ChannelsAdapter.longClickAvailableData) {
@@ -50,7 +50,7 @@ open class ChannelViewHolder(
             }
 
             avatar.setOnClickListenerAvailable(ChannelsAdapter.clickAvailableData) {
-                listeners.onAvatarClick(item as ChannelListItem.ChannelItem)
+                listeners.onAvatarClick(it, item as ChannelListItem.ChannelItem)
             }
         }
     }
