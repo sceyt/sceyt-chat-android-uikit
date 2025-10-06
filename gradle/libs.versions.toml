@@ -5,6 +5,7 @@ converterMoshi = "3.0.0"
 converterGson = "3.0.0"
 coreKtx = "1.17.0"
 coreTesting = "2.2.0"
+coreZxing = "3.5.3"
 emoji2Bundled = "1.6.0"
 emojiGoogle = "0.22.0"
 espressoCore = "3.7.0"
@@ -53,6 +54,7 @@ converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref
 converter-moshi = { module = "com.squareup.retrofit2:converter-moshi", version.ref = "converterMoshi" }
 core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }
 core-testing = { module = "androidx.arch.core:core-testing", version.ref = "coreTesting" }
+core-zxing = { module = "com.google.zxing:core", version.ref = "coreZxing" }
 emoji-google = { module = "com.vanniktech:emoji-google", version.ref = "emojiGoogle" }
 emoji2-bundled = { module = "androidx.emoji2:emoji2-bundled", version.ref = "emoji2Bundled" }
 espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "espressoCore" }

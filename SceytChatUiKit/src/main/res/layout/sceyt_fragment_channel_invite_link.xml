@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".presentation.components.invite_link.ChannelInviteLinkActivity">
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tvInviteLinkTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:fontFamily="@font/roboto_medium"
+        android:text="@string/sceyt_invite_link"
+        android:textSize="13sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:textColor="@color/sceyt_color_accent" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layoutInviteLink"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/sceyt_bg_corners_8"
+        android:backgroundTint="@color/sceyt_color_surface_1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvInviteLinkTitle">
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/tvInviteLink"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:drawablePadding="10dp"
+            android:padding="12dp"
+            android:singleLine="true"
+            android:textSize="16sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/icCopyLink"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="https://chat.sceyt.com/invite/example_invite_link"
+            tools:textColor="@color/sceyt_color_text_primary" />
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/icCopyLink"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="10dp"
+            android:background="?android:selectableItemBackgroundBorderless"
+            android:padding="6dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/sceyt_ic_copy" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/switchShowPrevMessages"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:background="?android:selectableItemBackground"
+        android:checked="true"
+        android:minWidth="0dp"
+        android:minHeight="0dp"
+        android:paddingVertical="4dp"
+        android:text="@string/sceyt_show_previous_messages"
+        android:textColor="@color/sceyt_color_text_primary"
+        android:textSize="16sp"
+        android:theme="@style/SceytSwitchStyle"
+        app:layout_constraintEnd_toEndOf="@+id/layoutInviteLink"
+        app:layout_constraintStart_toStartOf="@+id/layoutInviteLink"
+        app:layout_constraintTop_toBottomOf="@+id/layoutInviteLink" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tvShowPrevMessagesDesc"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:checked="true"
+        android:text="@string/sceyt_show_previous_messages_desc"
+        android:textColor="@color/sceyt_color_text_secondary"
+        android:textSize="13sp"
+        android:theme="@style/SceytSwitchStyle"
+        app:layout_constraintEnd_toEndOf="@+id/switchShowPrevMessages"
+        app:layout_constraintStart_toStartOf="@+id/switchShowPrevMessages"
+        app:layout_constraintTop_toBottomOf="@+id/switchShowPrevMessages" />
+
+    <com.google.android.material.divider.MaterialDivider
+        android:id="@+id/divider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="20dp"
+        app:dividerColor="@color/sceyt_color_border"
+        app:layout_constraintTop_toBottomOf="@+id/tvShowPrevMessagesDesc" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tvShare"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:background="?android:selectableItemBackground"
+        android:drawableStart="@drawable/sceyt_ic_share"
+        android:drawablePadding="12dp"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="10dp"
+        android:text="@string/sceyt_share"
+        android:textColor="@color/sceyt_color_text_primary"
+        android:textSize="16sp"
+        app:layout_constraintTop_toBottomOf="@+id/divider" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tvResetLink"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?android:selectableItemBackground"
+        android:drawableStart="@drawable/sceyt_ic_refresh"
+        android:drawablePadding="12dp"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="10dp"
+        android:text="@string/sceyt_reset_link"
+        android:textColor="@color/sceyt_color_text_primary"
+        android:textSize="16sp"
+        app:layout_constraintTop_toBottomOf="@+id/tvShare" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tvOpenQR"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?android:selectableItemBackground"
+        android:drawableStart="@drawable/sceyt_ic_qr"
+        android:drawablePadding="12dp"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="10dp"
+        android:text="@string/sceyt_open_qr_code"
+        android:textColor="@color/sceyt_color_text_primary"
+        android:textSize="16sp"
+        app:layout_constraintTop_toBottomOf="@+id/tvResetLink" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

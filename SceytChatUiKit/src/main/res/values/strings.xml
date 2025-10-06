@@ -232,4 +232,12 @@
     <string name="sceyt_chats">Chats</string>
     <string name="recording">recording</string>
     <string name="recording_">recording…</string>
+    <string name="sceyt_invite_link">Invite link</string>
+    <string name="sceyt_show_previous_messages">Show Previous Messages</string>
+    <string name="sceyt_show_previous_messages_desc">Message history is visible to new members</string>
+    <string name="sceyt_reset_link">Reset Link</string>
+    <string name="sceyt_open_qr_code">Open QR Code</string>
+    <string name="sceyt_qr_code_for_invites">QR Code for Invites</string>
+    <string name="share_qr_code">Share QR Code</string>
+    <string name="share_channel_link_desc">Show or send this to anyone who\nwants to join this group</string>
 </resources>

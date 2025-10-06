@@ -159,6 +159,12 @@ fun Context.toast(messageResourceId: Int, length: Int) {
     Toast.makeText(this, messageResourceId, length).show()
 }
 
+fun Context.getApplicationIcon(): Drawable {
+    val packageManager = packageManager
+    val applicationInfo = packageManager.getApplicationInfo(packageName, 0)
+    return packageManager.getApplicationIcon(applicationInfo)
+}
+
 inline fun <reified T : Any> Context.launchActivity(
         enterAnimResId: Int? = null,
         exitAnimResId: Int? = null,
