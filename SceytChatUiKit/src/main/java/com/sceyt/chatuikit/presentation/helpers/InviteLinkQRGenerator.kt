@@ -14,17 +14,19 @@ import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.MultiFormatWriter
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 object InviteLinkQRGenerator {
 
 
-    fun generateQrWithRoundedLogo(
+    suspend fun generateQrWithRoundedLogo(
             content: String,
             size: Int = 800,
             logoDrawable: Drawable? = null,
             logoCornerRadius: Float = 28f, // adjust roundness
-    ): Bitmap? {
-        if (content.isBlank()) return null
+    ): Bitmap? = withContext(Dispatchers.IO) {
+        if (content.isBlank()) return@withContext null
         // === Generate QR matrix ===
         val hints = mapOf(
             EncodeHintType.MARGIN to 1,
@@ -51,7 +53,7 @@ object InviteLinkQRGenerator {
         qrBitmap.setPixels(pixels, 0, size, 0, 0, size, size)
 
         // === No logo? return just QR ===
-        if (logoDrawable == null) return qrBitmap
+        if (logoDrawable == null) return@withContext qrBitmap
 
         // === Prepare logo with Telegram-style proportions ===
         val logoSize = (size * 0.22).toInt() // logo covers ~22% of QR (similar to Telegram)
@@ -69,7 +71,7 @@ object InviteLinkQRGenerator {
 
         // === Draw logo on QR (centered with proper padding) ===
         val qrCanvas = Canvas(qrBitmap)
-        
+
         // Calculate center position
         val centerX = size / 2
         val centerY = size / 2
@@ -82,7 +84,7 @@ object InviteLinkQRGenerator {
         val bgSize = logoSize + (bgPadding * 2)
         val bgLeft = centerX - bgSize / 2
         val bgTop = centerY - bgSize / 2
-        
+
         val bgRect = RectF(
             bgLeft.toFloat(),
             bgTop.toFloat(),
@@ -94,6 +96,6 @@ object InviteLinkQRGenerator {
 
         // Draw logo itself centered
         qrCanvas.drawBitmap(roundedLogo, logoLeft.toFloat(), logoTop.toFloat(), null)
-        return qrBitmap
+        return@withContext qrBitmap
     }
 }

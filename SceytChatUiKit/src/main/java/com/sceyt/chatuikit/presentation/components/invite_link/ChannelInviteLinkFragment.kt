@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.presentation.components.invite_link.fragments
+package com.sceyt.chatuikit.presentation.components.invite_link
 
 import android.content.Context
 import android.os.Bundle
@@ -6,6 +6,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
+import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytFragmentChannelInviteLinkBinding
 import com.sceyt.chatuikit.extensions.parcelable
@@ -13,13 +15,22 @@ import com.sceyt.chatuikit.extensions.setBundleArguments
 import com.sceyt.chatuikit.extensions.setClipboard
 import com.sceyt.chatuikit.extensions.setDrawableStart
 import com.sceyt.chatuikit.extensions.setOnlyClickable
+import com.sceyt.chatuikit.koin.SceytKoinComponent
+import com.sceyt.chatuikit.presentation.common.SceytDialog
+import com.sceyt.chatuikit.presentation.common.SceytLoader
+import com.sceyt.chatuikit.presentation.components.invite_link.shareqr.BottomSheetShareInviteQr
+import com.sceyt.chatuikit.presentation.components.invite_link.shareqr.LinkQrData
 import com.sceyt.chatuikit.styles.StyleRegistry
 import com.sceyt.chatuikit.styles.invite_link.ChannelInviteLinStyle
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
-open class ChannelInviteLinkFragment : Fragment() {
+open class ChannelInviteLinkFragment : Fragment(), SceytKoinComponent {
     protected lateinit var binding: SceytFragmentChannelInviteLinkBinding
     protected lateinit var style: ChannelInviteLinStyle
     protected lateinit var channel: SceytChannel
+    protected val viewModel: ChannelInviteLinkViewModel by viewModel()
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -40,41 +51,91 @@ open class ChannelInviteLinkFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        initViews()
         applyStyle()
-        setLinkText("https://link.sceyt.com/abcdefg1234567")
+        getBundleArguments()
+        initViewModel()
+        initViews()
     }
 
     protected open fun getBundleArguments() {
         channel = requireNotNull(arguments?.parcelable(CHANNEL_KEY))
     }
 
+    private fun initViewModel() {
+        viewModel.uiState.onEach {
+            setLinkDetails(
+                link = it.inviteLink.orEmpty(),
+                showPrevMessagesAllowed = it.showPreviousMessages
+            )
+            if (it.isLoading)
+                SceytLoader.showLoading(requireContext())
+            else SceytLoader.hideLoading()
+        }.launchIn(lifecycleScope)
+    }
+
     protected fun initViews() = with(binding) {
         switchShowPrevMessages.setOnlyClickable()
 
         switchShowPrevMessages.setOnClickListener {
-            switchShowPrevMessages.isChecked = !switchShowPrevMessages.isChecked
+            onSwitchShowPrevMessagesClick()
         }
 
         icCopyLink.setOnClickListener {
-            context?.setClipboard(tvInviteLink.text.toString())
+            onCopyLinkClick()
         }
 
         tvShare.setOnClickListener {
-
+            onShareClick()
         }
 
         tvResetLink.setOnClickListener {
-
+            onResetLinkClick()
         }
 
         tvOpenQR.setOnClickListener {
-            BottomSheetShareInviteQr.show(childFragmentManager)
+            onOpenQrClick()
         }
     }
 
-    protected fun setLinkText(link: String) = with(binding) {
+    protected fun setLinkDetails(
+            link: String,
+            showPrevMessagesAllowed: Boolean,
+    ) = with(binding) {
         tvInviteLink.text = link
+        switchShowPrevMessages.isChecked = showPrevMessagesAllowed
+    }
+
+    protected open fun onResetLinkClick() {
+        SceytDialog.showDialog(
+            context = requireContext(),
+            title = getString(R.string.sceyt_reset_link),
+            description = getString(R.string.reset_link_desc),
+            positiveBtnTitle = getString(R.string.reset),
+            positiveCb = {
+                viewModel.resetInviteLink()
+            }
+        )
+    }
+
+    protected open fun onSwitchShowPrevMessagesClick() {
+        viewModel.toggleShowPreviousMessages()
+    }
+
+    protected open fun onCopyLinkClick() {
+        context?.setClipboard(binding.tvInviteLink.text.toString())
+    }
+
+    protected open fun onShareClick() {
+        viewModel.shareInviteLink(requireActivity())
+    }
+
+    protected open fun onOpenQrClick() {
+        BottomSheetShareInviteQr.Companion.show(
+            fragmentManager = childFragmentManager,
+            linkQrData = LinkQrData(
+                link = binding.tvInviteLink.text.toString(),
+            )
+        )
     }
 
     protected fun applyStyle() = with(binding) {
@@ -103,6 +164,8 @@ open class ChannelInviteLinkFragment : Fragment() {
         tvShare.setDrawableStart(style.shareIcon)
         tvResetLink.setDrawableStart(style.resetLinkIcon)
         tvOpenQR.setDrawableStart(style.openQrIcon)
+
+        style.linkPreviewBackgroundStyle.apply(layoutInviteLink)
     }
 
     companion object {

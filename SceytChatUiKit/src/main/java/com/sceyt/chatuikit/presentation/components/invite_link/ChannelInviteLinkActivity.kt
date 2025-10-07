@@ -13,7 +13,6 @@ import com.sceyt.chatuikit.extensions.overrideTransitions
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.presentation.components.channel.messages.ChannelActivity.Companion.CHANNEL
 import com.sceyt.chatuikit.presentation.components.channel_info.links.ChannelInfoLinksFragment
-import com.sceyt.chatuikit.presentation.components.invite_link.fragments.ChannelInviteLinkFragment
 import com.sceyt.chatuikit.styles.StyleRegistry
 import com.sceyt.chatuikit.styles.invite_link.ChannelInviteLinStyle
 
@@ -34,10 +33,18 @@ open class ChannelInviteLinkActivity : AppCompatActivity() {
 
         getDataFromIntent()
         loadChannelInviteLinkFragment()
+        applyStyle()
+        initViews()
     }
 
-    private fun getDataFromIntent() {
+    protected open fun getDataFromIntent() {
         channel = requireNotNull(intent?.parcelable(ChannelInfoLinksFragment.Companion.CHANNEL))
+    }
+
+    protected open fun initViews() = with(binding) {
+        binding.toolbar.setNavigationClickListener {
+            onBackPressedDispatcher.onBackPressed()
+        }
     }
 
     protected open fun loadChannelInviteLinkFragment() {
@@ -48,6 +55,12 @@ open class ChannelInviteLinkActivity : AppCompatActivity() {
         supportFragmentManager.beginTransaction()
             .replace(binding.fragmentContainer.id, fragment)
             .commit()
+    }
+
+    protected open fun applyStyle() = with(binding) {
+        root.setBackgroundColor(style.backgroundColor)
+        style.toolbarStyle.apply(binding.toolbar)
+        toolbar.setTitle(style.toolbarTitle)
     }
 
     override fun finish() {
