@@ -24,7 +24,7 @@ import com.sceyt.chatuikit.styles.extensions.invite_link.buildShowPreviewMessage
 import com.sceyt.chatuikit.styles.extensions.invite_link.buildShowPreviewMessagesSwitchStyle
 import com.sceyt.chatuikit.styles.extensions.invite_link.buildToolbarStyle
 
-data class ChannelInviteLinStyle(
+data class ChannelInviteLinkStyle(
         @param:ColorInt val backgroundColor: Int,
         @param:ColorInt val dividerColor: Int,
         val toolbarTitle: String,
@@ -48,14 +48,14 @@ data class ChannelInviteLinStyle(
 ) : SceytComponentStyle() {
 
     companion object {
-        var styleCustomizer = StyleCustomizer<ChannelInviteLinStyle> { _, style -> style }
+        var styleCustomizer = StyleCustomizer<ChannelInviteLinkStyle> { _, style -> style }
     }
 
     internal class Builder(
             internal val context: Context,
             private val attrs: AttributeSet?,
     ) {
-        fun build(): ChannelInviteLinStyle {
+        fun build(): ChannelInviteLinkStyle {
             context.obtainStyledAttributes(attrs, R.styleable.InviteLink).use { array ->
                 val backgroundColor = context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColor)
                 val dividerColor = context.getCompatColor(SceytChatUIKit.theme.colors.borderColor)
@@ -83,7 +83,7 @@ data class ChannelInviteLinStyle(
                     tintColor = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
                 )
 
-                return ChannelInviteLinStyle(
+                return ChannelInviteLinkStyle(
                     backgroundColor = backgroundColor,
                     dividerColor = dividerColor,
                     toolbarTitle = toolbarTitle,

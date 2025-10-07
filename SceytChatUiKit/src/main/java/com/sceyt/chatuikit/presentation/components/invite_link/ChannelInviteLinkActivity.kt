@@ -14,16 +14,16 @@ import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.presentation.components.channel.messages.ChannelActivity.Companion.CHANNEL
 import com.sceyt.chatuikit.presentation.components.channel_info.links.ChannelInfoLinksFragment
 import com.sceyt.chatuikit.styles.StyleRegistry
-import com.sceyt.chatuikit.styles.invite_link.ChannelInviteLinStyle
+import com.sceyt.chatuikit.styles.invite_link.ChannelInviteLinkStyle
 
 open class ChannelInviteLinkActivity : AppCompatActivity() {
     protected lateinit var binding: SceytActivityChannelInviteLinkBinding
-    protected lateinit var style: ChannelInviteLinStyle
+    protected lateinit var style: ChannelInviteLinkStyle
     private lateinit var channel: SceytChannel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        style = ChannelInviteLinStyle.Builder(this, null).build()
+        style = ChannelInviteLinkStyle.Builder(this, null).build()
         StyleRegistry.register(style)
 
         enableEdgeToEdge()

@@ -12,9 +12,9 @@ import com.sceyt.chatuikit.styles.common.BackgroundStyle
 import com.sceyt.chatuikit.styles.common.SwitchStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.styles.common.ToolbarStyle
-import com.sceyt.chatuikit.styles.invite_link.ChannelInviteLinStyle
+import com.sceyt.chatuikit.styles.invite_link.ChannelInviteLinkStyle
 
-internal fun ChannelInviteLinStyle.Builder.buildToolbarStyle(
+internal fun ChannelInviteLinkStyle.Builder.buildToolbarStyle(
         array: TypedArray,
 ) = ToolbarStyle(
     backgroundColor = context.getCompatColor(SceytChatUIKit.theme.colors.primaryColor),
@@ -24,14 +24,14 @@ internal fun ChannelInviteLinStyle.Builder.buildToolbarStyle(
     )
 )
 
-internal fun ChannelInviteLinStyle.Builder.buildInviteLinkTitleTextStyle(
+internal fun ChannelInviteLinkStyle.Builder.buildInviteLinkTitleTextStyle(
         array: TypedArray,
 ) = TextStyle(
     color = context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor),
     font = R.font.roboto_medium
 )
 
-internal fun ChannelInviteLinStyle.Builder.buildInviteLinkTextStyle(
+internal fun ChannelInviteLinkStyle.Builder.buildInviteLinkTextStyle(
         array: TypedArray,
 ) = TextStyle(
     color = context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor),
@@ -39,7 +39,7 @@ internal fun ChannelInviteLinStyle.Builder.buildInviteLinkTextStyle(
 )
 
 
-internal fun ChannelInviteLinStyle.Builder.buildShowPreviewMessagesSwitchStyle(
+internal fun ChannelInviteLinkStyle.Builder.buildShowPreviewMessagesSwitchStyle(
         array: TypedArray,
 ) = SwitchStyle(
     textStyle = TextStyle(
@@ -51,21 +51,21 @@ internal fun ChannelInviteLinStyle.Builder.buildShowPreviewMessagesSwitchStyle(
     trackUncheckedColor = context.getCompatColor(R.color.sceyt_switch_track_unchecked_color)
 )
 
-internal fun ChannelInviteLinStyle.Builder.buildShowPreviewMessagesSubtitleTextStyle(
+internal fun ChannelInviteLinkStyle.Builder.buildShowPreviewMessagesSubtitleTextStyle(
         array: TypedArray,
 ) = TextStyle(
     color = context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor),
     font = R.font.roboto_regular
 )
 
-internal fun ChannelInviteLinStyle.Builder.buildOptionsTextStyle(
+internal fun ChannelInviteLinkStyle.Builder.buildOptionsTextStyle(
         array: TypedArray,
 ) = TextStyle(
     color = context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor),
     font = R.font.roboto_regular
 )
 
-internal fun ChannelInviteLinStyle.Builder.buildLinkPreviewBackgroundStyle(
+internal fun ChannelInviteLinkStyle.Builder.buildLinkPreviewBackgroundStyle(
         array: TypedArray,
 ) = BackgroundStyle(
     background = context.getCompatDrawable(R.drawable.sceyt_bg_ripple_corners_8).applyTint(
