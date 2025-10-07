@@ -5,7 +5,10 @@ package com.sceyt.chatuikit.styles.extensions.invite_link
 import android.content.res.TypedArray
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.extensions.applyTint
 import com.sceyt.chatuikit.extensions.getCompatColor
+import com.sceyt.chatuikit.extensions.getCompatDrawable
+import com.sceyt.chatuikit.styles.common.BackgroundStyle
 import com.sceyt.chatuikit.styles.common.SwitchStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.styles.common.ToolbarStyle
@@ -44,7 +47,7 @@ internal fun ChannelInviteLinStyle.Builder.buildShowPreviewMessagesSwitchStyle(
         font = R.font.roboto_regular
     ),
     checkedColor = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor),
-    thumbUncheckedColor = context.getCompatColor(R.color.sceyt_switch_track_unchecked_color),
+    thumbUncheckedColor = context.getCompatColor(R.color.sceyt_switch_thumb_unchecked_color),
     trackUncheckedColor = context.getCompatColor(R.color.sceyt_switch_track_unchecked_color)
 )
 
@@ -60,4 +63,12 @@ internal fun ChannelInviteLinStyle.Builder.buildOptionsTextStyle(
 ) = TextStyle(
     color = context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor),
     font = R.font.roboto_regular
+)
+
+internal fun ChannelInviteLinStyle.Builder.buildLinkPreviewBackgroundStyle(
+        array: TypedArray,
+) = BackgroundStyle(
+    background = context.getCompatDrawable(R.drawable.sceyt_bg_ripple_corners_8).applyTint(
+        context.getCompatColor(SceytChatUIKit.theme.colors.surface1Color),
+    )
 )

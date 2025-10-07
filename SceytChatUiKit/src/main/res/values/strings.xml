@@ -240,4 +240,6 @@
     <string name="sceyt_qr_code_for_invites">QR Code for Invites</string>
     <string name="share_qr_code">Share QR Code</string>
     <string name="share_channel_link_desc">Show or send this to anyone who\nwants to join this group</string>
+    <string name="reset_link_desc">Are you sure you want to reset the group link? Anyone with the existing link will no longer be able to use it to join.</string>
+    <string name="reset">Reset</string>
 </resources>

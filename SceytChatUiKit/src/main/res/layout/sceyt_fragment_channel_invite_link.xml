@@ -24,11 +24,13 @@
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="16dp"
         android:layout_marginTop="10dp"
-        android:background="@drawable/sceyt_bg_corners_8"
-        android:backgroundTint="@color/sceyt_color_surface_1"
+        android:clickable="true"
+        android:focusable="true"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tvInviteLinkTitle">
+        app:layout_constraintTop_toBottomOf="@+id/tvInviteLinkTitle"
+        tools:background="@drawable/sceyt_bg_ripple_corners_8"
+        tools:backgroundTint="@color/sceyt_color_surface_1">
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/tvInviteLink"

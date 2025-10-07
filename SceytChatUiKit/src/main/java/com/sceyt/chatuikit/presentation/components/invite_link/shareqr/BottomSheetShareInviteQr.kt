@@ -1,0 +1,103 @@
+package com.sceyt.chatuikit.presentation.components.invite_link.shareqr
+
+import android.app.Dialog
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.fragment.app.FragmentManager
+import androidx.lifecycle.lifecycleScope
+import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.databinding.SceytBottomSheetShareInviteQrBinding
+import com.sceyt.chatuikit.extensions.customToastSnackBar
+import com.sceyt.chatuikit.extensions.dismissSafety
+import com.sceyt.chatuikit.extensions.parcelable
+import com.sceyt.chatuikit.extensions.setBundleArguments
+import com.sceyt.chatuikit.koin.SceytKoinComponent
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import org.koin.androidx.viewmodel.ext.android.viewModel
+import org.koin.core.parameter.parametersOf
+
+open class BottomSheetShareInviteQr : BottomSheetDialogFragment(), SceytKoinComponent {
+    protected lateinit var binding: SceytBottomSheetShareInviteQrBinding
+    protected val viewModel by viewModel<ShareInviteQrViewModel>(
+        parameters = {
+            parametersOf(requireArguments().parcelable<LinkQrData>(LINK_DATA_KEY))
+        }
+    )
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setStyle(STYLE_NORMAL, R.style.SceytAppBottomSheetDialogTheme)
+    }
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+        binding = SceytBottomSheetShareInviteQrBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        initViews()
+        initViewModel()
+    }
+
+    protected open fun initViews() {
+        binding.btnShareQr.setOnClickListener {
+            onShareQrClick()
+        }
+    }
+
+    protected open fun initViewModel() {
+        viewModel.uiState.onEach { state ->
+            state.qrBitmap?.let { bitmap ->
+                binding.icQr.setImageBitmap(bitmap)
+            }
+            state.error?.let { errorType ->
+                when (errorType) {
+                    ErrorType.GenerateQr -> {
+                        customToastSnackBar("Failed to generate QR code")
+                    }
+
+                    ErrorType.SaveQr -> {
+                        customToastSnackBar("Failed to save QR code")
+                    }
+                }
+            }
+        }.launchIn(lifecycleScope)
+    }
+
+    protected open fun onShareQrClick() {
+        viewModel.onShareQrClick(requireActivity())
+        dismissSafety()
+    }
+
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+        return super.onCreateDialog(savedInstanceState).apply {
+            setOnShowListener {
+                val bottomSheet = findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)
+                BottomSheetBehavior.from(bottomSheet).isDraggable = false
+            }
+        }
+    }
+
+    companion object {
+        const val TAG = "BottomSheetShareInviteQr"
+        const val LINK_DATA_KEY = "linkDataKey"
+
+        fun show(
+                fragmentManager: FragmentManager,
+                linkQrData: LinkQrData,
+        ) {
+            val bottomSheet = BottomSheetShareInviteQr().setBundleArguments {
+                putParcelable(LINK_DATA_KEY, linkQrData)
+            }
+            bottomSheet.show(fragmentManager, TAG)
+        }
+    }
+}
+

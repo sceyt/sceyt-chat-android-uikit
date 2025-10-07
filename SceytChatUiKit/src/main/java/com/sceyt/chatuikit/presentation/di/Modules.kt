@@ -5,7 +5,10 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.M
 import com.sceyt.chatuikit.presentation.components.channel_info.media.viewmodel.ChannelAttachmentsViewModel
 import com.sceyt.chatuikit.presentation.components.channel_info.members.viewmodel.ChannelMembersViewModel
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.viewmodel.ChannelsViewModel
+import com.sceyt.chatuikit.presentation.components.invite_link.ChannelInviteLinkViewModel
+import com.sceyt.chatuikit.presentation.components.invite_link.shareqr.ShareInviteQrViewModel
 import org.koin.androidx.viewmodel.dsl.viewModel
+import org.koin.androidx.viewmodel.dsl.viewModelOf
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
@@ -27,6 +30,7 @@ internal val viewModelModule = module {
     viewModel(qualifier = ChannelInfoLinksViewModelQualifier) { ChannelAttachmentsViewModel(get(), get(), get()) }
     viewModel(qualifier = ChannelInfoVoiceViewModelQualifier) { ChannelAttachmentsViewModel(get(), get(), get()) }
     viewModel { parameters -> ReactionsInfoViewModel(get(), messageId = parameters.get(), key = parameters.get()) }
-
+    viewModel { params -> ShareInviteQrViewModel(get(), linkQrData = params.get()) }
+    viewModelOf(::ChannelInviteLinkViewModel)
 }
 

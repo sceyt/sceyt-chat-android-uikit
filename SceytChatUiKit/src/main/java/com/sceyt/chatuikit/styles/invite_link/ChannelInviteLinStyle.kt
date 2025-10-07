@@ -12,11 +12,13 @@ import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.styles.SceytComponentStyle
 import com.sceyt.chatuikit.styles.StyleCustomizer
+import com.sceyt.chatuikit.styles.common.BackgroundStyle
 import com.sceyt.chatuikit.styles.common.SwitchStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.styles.common.ToolbarStyle
 import com.sceyt.chatuikit.styles.extensions.invite_link.buildInviteLinkTextStyle
 import com.sceyt.chatuikit.styles.extensions.invite_link.buildInviteLinkTitleTextStyle
+import com.sceyt.chatuikit.styles.extensions.invite_link.buildLinkPreviewBackgroundStyle
 import com.sceyt.chatuikit.styles.extensions.invite_link.buildOptionsTextStyle
 import com.sceyt.chatuikit.styles.extensions.invite_link.buildShowPreviewMessagesSubtitleTextStyle
 import com.sceyt.chatuikit.styles.extensions.invite_link.buildShowPreviewMessagesSwitchStyle
@@ -42,6 +44,7 @@ data class ChannelInviteLinStyle(
         val showPreviewMessagesSwitchStyle: SwitchStyle,
         val showPreviewMessagesSubtitleTextStyle: TextStyle,
         val optionsTextStyle: TextStyle,
+        val linkPreviewBackgroundStyle: BackgroundStyle,
 ) : SceytComponentStyle() {
 
     companion object {
@@ -99,7 +102,8 @@ data class ChannelInviteLinStyle(
                     inviteLinkTextStyle = buildInviteLinkTextStyle(array),
                     showPreviewMessagesSwitchStyle = buildShowPreviewMessagesSwitchStyle(array),
                     showPreviewMessagesSubtitleTextStyle = buildShowPreviewMessagesSubtitleTextStyle(array),
-                    optionsTextStyle = buildOptionsTextStyle(array)
+                    optionsTextStyle = buildOptionsTextStyle(array),
+                    linkPreviewBackgroundStyle = buildLinkPreviewBackgroundStyle(array)
                 )
             }
         }
