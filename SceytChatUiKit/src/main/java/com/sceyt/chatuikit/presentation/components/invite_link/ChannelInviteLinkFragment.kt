@@ -21,21 +21,21 @@ import com.sceyt.chatuikit.presentation.common.SceytLoader
 import com.sceyt.chatuikit.presentation.components.invite_link.shareqr.BottomSheetShareInviteQr
 import com.sceyt.chatuikit.presentation.components.invite_link.shareqr.LinkQrData
 import com.sceyt.chatuikit.styles.StyleRegistry
-import com.sceyt.chatuikit.styles.invite_link.ChannelInviteLinStyle
+import com.sceyt.chatuikit.styles.invite_link.ChannelInviteLinkStyle
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 open class ChannelInviteLinkFragment : Fragment(), SceytKoinComponent {
     protected lateinit var binding: SceytFragmentChannelInviteLinkBinding
-    protected lateinit var style: ChannelInviteLinStyle
+    protected lateinit var style: ChannelInviteLinkStyle
     protected lateinit var channel: SceytChannel
     protected val viewModel: ChannelInviteLinkViewModel by viewModel()
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
         style = StyleRegistry.getOrDefault(arguments?.getString(STYLE_ID_KEY)) {
-            ChannelInviteLinStyle.Builder(context, null).build()
+            ChannelInviteLinkStyle.Builder(context, null).build()
         }
     }
 
