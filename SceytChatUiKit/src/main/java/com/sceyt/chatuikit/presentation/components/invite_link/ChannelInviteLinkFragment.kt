@@ -19,7 +19,7 @@ import com.sceyt.chatuikit.extensions.setOnlyClickable
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.presentation.common.SceytDialog
 import com.sceyt.chatuikit.presentation.common.SceytLoader
-import com.sceyt.chatuikit.presentation.components.invite_link.shareqr.BottomSheetShareInviteQr
+import com.sceyt.chatuikit.presentation.components.invite_link.shareqr.BottomSheetShareInviteQR
 import com.sceyt.chatuikit.presentation.components.invite_link.shareqr.LinkQrData
 import com.sceyt.chatuikit.styles.StyleRegistry
 import com.sceyt.chatuikit.styles.invite_link.ChannelInviteLinkStyle
@@ -134,7 +134,7 @@ open class ChannelInviteLinkFragment : Fragment(), SceytKoinComponent {
     }
 
     protected open fun onOpenQrClick() {
-        BottomSheetShareInviteQr.Companion.show(
+        BottomSheetShareInviteQR.Companion.show(
             fragmentManager = childFragmentManager,
             linkQrData = LinkQrData(link = linkUrl)
         )

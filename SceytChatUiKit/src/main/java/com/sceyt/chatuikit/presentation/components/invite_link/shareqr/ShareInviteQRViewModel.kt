@@ -40,7 +40,7 @@ data class UIState(
         val error: ErrorType? = null,
 )
 
-class ShareInviteQrViewModel(
+class ShareInviteQRViewModel(
         private val application: Application,
         private val linkQrData: LinkQrData,
 ) : ViewModel() {

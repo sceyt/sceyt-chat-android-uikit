@@ -21,9 +21,9 @@ import kotlinx.coroutines.flow.onEach
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
 
-open class BottomSheetShareInviteQr : BottomSheetDialogFragment(), SceytKoinComponent {
+open class BottomSheetShareInviteQR : BottomSheetDialogFragment(), SceytKoinComponent {
     protected lateinit var binding: SceytBottomSheetShareInviteQrBinding
-    protected val viewModel by viewModel<ShareInviteQrViewModel>(
+    protected val viewModel by viewModel<ShareInviteQRViewModel>(
         parameters = {
             parametersOf(requireArguments().parcelable<LinkQrData>(LINK_DATA_KEY))
         }
@@ -93,7 +93,7 @@ open class BottomSheetShareInviteQr : BottomSheetDialogFragment(), SceytKoinComp
                 fragmentManager: FragmentManager,
                 linkQrData: LinkQrData,
         ) {
-            val bottomSheet = BottomSheetShareInviteQr().setBundleArguments {
+            val bottomSheet = BottomSheetShareInviteQR().setBundleArguments {
                 putParcelable(LINK_DATA_KEY, linkQrData)
             }
             bottomSheet.show(fragmentManager, TAG)
