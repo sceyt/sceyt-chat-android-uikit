@@ -261,7 +261,7 @@ fun String?.getInfoFromMetadataByKey(key: String): String? {
     try {
         val jsonObject = JSONObject(this ?: return null)
         return jsonObject.getFromJsonObject(key)
-    } catch (ex: Exception) {
+    } catch (_: Exception) {
         return null
     }
 }
@@ -269,7 +269,7 @@ fun String?.getInfoFromMetadataByKey(key: String): String? {
 private fun JSONObject.getFromJsonObject(name: String): String? {
     return try {
         getString(name)
-    } catch (ex: Exception) {
+    } catch (_: Exception) {
         null
     }
 }

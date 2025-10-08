@@ -6,6 +6,7 @@ import com.sceyt.chat.models.channel.CreateChannelInviteKeyRequest
 import com.sceyt.chat.models.channel.CreateChannelInviteKeyResponse
 import com.sceyt.chat.models.channel.DeleteRevokedInviteKeyRequest
 import com.sceyt.chat.models.channel.GetChannelByInviteKeyRequest
+import com.sceyt.chat.models.channel.RegenerateChannelInviteKeyRequest
 import com.sceyt.chat.models.channel.RevokeChannelInviteKeyRequest
 import com.sceyt.chat.sceyt_callbacks.ActionCallback
 import com.sceyt.chat.sceyt_callbacks.ChannelCallback
@@ -13,10 +14,10 @@ import com.sceyt.chat.sceyt_callbacks.InviteKeyCallback
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.ChannelInviteKeyData
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
-import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.extensions.safeResume
+import com.sceyt.chatuikit.persistence.mappers.toChannelInviteKeyData
 import com.sceyt.chatuikit.persistence.mappers.toSceytUiChannel
 import com.sceyt.chatuikit.persistence.repositories.ChannelInviteKeyRepository
 import kotlinx.coroutines.Dispatchers
@@ -61,13 +62,7 @@ class ChannelInviteKeyRepositoryImpl : ChannelInviteKeyRepository {
                 .setAccessPriorHistory(accessPriorHistory)
                 .build().execute(object : InviteKeyCallback {
                     override fun onResult(response: CreateChannelInviteKeyResponse) {
-                        val data = ChannelInviteKeyData(
-                            channelId = response.channelId,
-                            key = response.key,
-                            expireAt = response.expiresAt,
-                            maxUses = response.maxUses,
-                            createdBy = SceytUser("Test") // TODO map user
-                        )
+                        val data = response.inviteKey.toChannelInviteKeyData()
                         continuation.safeResume(SceytResponse.Success(data))
                     }
 
@@ -76,6 +71,28 @@ class ChannelInviteKeyRepositoryImpl : ChannelInviteKeyRepository {
                         SceytLog.e(TAG, "createChannelInviteLink error: ${e?.message}, code: ${e?.code}")
                     }
                 })
+        }
+    }
+
+    override suspend fun regenerateChannelInviteKey(
+            channelId: Long,
+            key: String,
+    ): SceytResponse<ChannelInviteKeyData> = withContext(Dispatchers.IO) {
+        return@withContext suspendCancellableCoroutine { continuation ->
+            RegenerateChannelInviteKeyRequest(
+                channelId, key
+            ).execute(object : InviteKeyCallback {
+                override fun onResult(response: CreateChannelInviteKeyResponse) {
+                    val data = response.inviteKey.toChannelInviteKeyData()
+                    continuation.safeResume(SceytResponse.Success(data))
+                }
+
+                override fun onError(e: SceytException?) {
+                    continuation.safeResume(SceytResponse.Error(e))
+                    SceytLog.e(TAG, "regenerateChannelInviteKey error: ${e?.message}, code: ${e?.code}")
+                }
+            }
+            )
         }
     }
 

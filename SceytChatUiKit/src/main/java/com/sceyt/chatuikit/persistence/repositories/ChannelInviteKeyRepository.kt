@@ -13,7 +13,7 @@ interface ChannelInviteKeyRepository {
             maxUses: Int,
             accessPriorHistory: Boolean,
     ): SceytResponse<ChannelInviteKeyData>
-
+    suspend fun regenerateChannelInviteKey(channelId: Long, key: String): SceytResponse<ChannelInviteKeyData>
     suspend fun revokeChannelInviteKeys(channelId: Long, keys: List<String>): SceytResponse<Boolean>
     suspend fun deleteRevokedChannelInviteKeys(channelId: Long, keys: List<String>): SceytResponse<Boolean>
 }
