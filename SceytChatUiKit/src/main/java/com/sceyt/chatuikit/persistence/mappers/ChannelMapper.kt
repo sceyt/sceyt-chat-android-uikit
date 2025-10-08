@@ -171,6 +171,9 @@ fun ChannelInviteKey.toChannelInviteKeyData() = ChannelInviteKeyData(
     channelId = channelId,
     key = key,
     expireAt = expiresAt,
+    revokedAt = revokedAt,
+    revoked = isRevoked,
+    accessPriorHistory = isAccessPriorHistory,
     maxUses = maxUses,
     createdBy = createdBy.toSceytMember()
 )

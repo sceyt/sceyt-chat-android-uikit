@@ -8,6 +8,7 @@ import com.sceyt.chat.models.channel.DeleteRevokedInviteKeyRequest
 import com.sceyt.chat.models.channel.GetChannelByInviteKeyRequest
 import com.sceyt.chat.models.channel.RegenerateChannelInviteKeyRequest
 import com.sceyt.chat.models.channel.RevokeChannelInviteKeyRequest
+import com.sceyt.chat.models.channel.UpdateChannelInviteKeyRequest
 import com.sceyt.chat.sceyt_callbacks.ActionCallback
 import com.sceyt.chat.sceyt_callbacks.ChannelCallback
 import com.sceyt.chat.sceyt_callbacks.InviteKeyCallback
@@ -20,16 +21,14 @@ import com.sceyt.chatuikit.persistence.extensions.safeResume
 import com.sceyt.chatuikit.persistence.mappers.toChannelInviteKeyData
 import com.sceyt.chatuikit.persistence.mappers.toSceytUiChannel
 import com.sceyt.chatuikit.persistence.repositories.ChannelInviteKeyRepository
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.coroutines.withContext
 
 class ChannelInviteKeyRepositoryImpl : ChannelInviteKeyRepository {
 
     override suspend fun getChannelByInviteKey(
             inviteKey: String,
-    ): SceytResponse<SceytChannel> = withContext(Dispatchers.IO) {
-        return@withContext suspendCancellableCoroutine { continuation ->
+    ): SceytResponse<SceytChannel> {
+        return suspendCancellableCoroutine { continuation ->
             GetChannelByInviteKeyRequest(inviteKey).execute(object : ChannelCallback {
                 override fun onResult(channel: Channel) {
                     continuation.safeResume(SceytResponse.Success(channel.toSceytUiChannel()))
@@ -45,7 +44,14 @@ class ChannelInviteKeyRepositoryImpl : ChannelInviteKeyRepository {
 
     override suspend fun getChannelInviteKeys(
             channelId: Long,
-    ): SceytResponse<List<ChannelInviteKeyData>> = withContext(Dispatchers.IO) {
+    ): SceytResponse<List<ChannelInviteKeyData>> {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun getChannelInviteKeySettings(
+            channelId: Long,
+            key: String,
+    ): SceytResponse<ChannelInviteKeyData> {
         TODO("Not yet implemented")
     }
 
@@ -54,8 +60,8 @@ class ChannelInviteKeyRepositoryImpl : ChannelInviteKeyRepository {
             expireAt: Long,
             maxUses: Int,
             accessPriorHistory: Boolean,
-    ): SceytResponse<ChannelInviteKeyData> = withContext(Dispatchers.IO) {
-        return@withContext suspendCancellableCoroutine { continuation ->
+    ): SceytResponse<ChannelInviteKeyData> {
+        return suspendCancellableCoroutine { continuation ->
             CreateChannelInviteKeyRequest.Builder(channelId)
                 .setMaxUses(maxUses)
                 .setExpiresAt(expireAt)
@@ -74,11 +80,36 @@ class ChannelInviteKeyRepositoryImpl : ChannelInviteKeyRepository {
         }
     }
 
+    override suspend fun updateInviteKeySettings(
+            channelId: Long,
+            key: String,
+            expireAt: Long,
+            maxUses: Int,
+            accessPriorHistory: Boolean,
+    ): SceytResponse<Boolean> {
+        return suspendCancellableCoroutine { continuation ->
+            UpdateChannelInviteKeyRequest.Builder(channelId, key)
+                .setAccessPriorHistory(accessPriorHistory)
+                .setMaxUses(maxUses)
+                .setExpiresAt(expireAt)
+                .build().execute(object : ActionCallback {
+                    override fun onSuccess() {
+                        continuation.safeResume(SceytResponse.Success(true))
+                    }
+
+                    override fun onError(e: SceytException?) {
+                        continuation.safeResume(SceytResponse.Error(e))
+                        SceytLog.e(TAG, "updateInviteKeySettings error: ${e?.message}, code: ${e?.code}")
+                    }
+                })
+        }
+    }
+
     override suspend fun regenerateChannelInviteKey(
             channelId: Long,
             key: String,
-    ): SceytResponse<ChannelInviteKeyData> = withContext(Dispatchers.IO) {
-        return@withContext suspendCancellableCoroutine { continuation ->
+    ): SceytResponse<ChannelInviteKeyData> {
+        return suspendCancellableCoroutine { continuation ->
             RegenerateChannelInviteKeyRequest(
                 channelId, key
             ).execute(object : InviteKeyCallback {
@@ -99,8 +130,8 @@ class ChannelInviteKeyRepositoryImpl : ChannelInviteKeyRepository {
     override suspend fun revokeChannelInviteKeys(
             channelId: Long,
             keys: List<String>,
-    ): SceytResponse<Boolean> = withContext(Dispatchers.IO) {
-        return@withContext suspendCancellableCoroutine { continuation ->
+    ): SceytResponse<Boolean> {
+        return suspendCancellableCoroutine { continuation ->
             RevokeChannelInviteKeyRequest(
                 channelId, keys.toTypedArray()
             ).execute(object : ActionCallback {
@@ -119,8 +150,8 @@ class ChannelInviteKeyRepositoryImpl : ChannelInviteKeyRepository {
     override suspend fun deleteRevokedChannelInviteKeys(
             channelId: Long,
             keys: List<String>,
-    ): SceytResponse<Boolean> = withContext(Dispatchers.IO) {
-        return@withContext suspendCancellableCoroutine { continuation ->
+    ): SceytResponse<Boolean> {
+        return suspendCancellableCoroutine { continuation ->
             DeleteRevokedInviteKeyRequest(
                 channelId, keys.toTypedArray()
             ).execute(object : ActionCallback {

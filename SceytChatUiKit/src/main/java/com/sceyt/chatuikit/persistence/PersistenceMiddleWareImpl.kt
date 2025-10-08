@@ -26,6 +26,7 @@ import com.sceyt.chatuikit.data.models.SceytPagingResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.SendMessageResult
 import com.sceyt.chatuikit.data.models.SyncNearMessagesResult
+import com.sceyt.chatuikit.data.models.channels.ChannelInviteKeyData
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
 import com.sceyt.chatuikit.data.models.channels.DraftMessage
 import com.sceyt.chatuikit.data.models.channels.EditChannelData
@@ -45,12 +46,14 @@ import com.sceyt.chatuikit.notifications.managers.RealtimeNotificationManager
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.interactor.AttachmentInteractor
 import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
+import com.sceyt.chatuikit.persistence.interactor.ChannelInviteKeyInteractor
 import com.sceyt.chatuikit.persistence.interactor.ChannelMemberInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageMarkerInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageReactionInteractor
 import com.sceyt.chatuikit.persistence.interactor.UserInteractor
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
+import com.sceyt.chatuikit.persistence.logic.PersistenceChannelInviteKeyLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceConnectionLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMembersLogic
@@ -78,10 +81,11 @@ internal class PersistenceMiddleWareImpl(
         private val membersLogic: PersistenceMembersLogic,
         private val usersLogic: PersistenceUsersLogic,
         private val connectionLogic: PersistenceConnectionLogic,
+        private val channelInviteKeyLogic: PersistenceChannelInviteKeyLogic,
         private val realtimeNotificationManager: RealtimeNotificationManager,
 ) : ChannelMemberInteractor, MessageInteractor, ChannelInteractor,
         UserInteractor, AttachmentInteractor, MessageMarkerInteractor,
-        MessageReactionInteractor, SceytKoinComponent {
+        MessageReactionInteractor, ChannelInviteKeyInteractor, SceytKoinComponent {
 
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
@@ -689,5 +693,48 @@ internal class PersistenceMiddleWareImpl(
 
     override suspend fun getMessageMarkersDb(messageId: Long, names: List<String>, offset: Int, limit: Int): List<SceytMarker> {
         return messageMarkerLogic.getMessageMarkersDb(messageId, names, offset, limit)
+    }
+
+    override suspend fun getChannelByInviteKey(inviteKey: String): SceytResponse<SceytChannel> {
+        return channelInviteKeyLogic.getChannelByInviteKey(inviteKey)
+    }
+
+    override suspend fun getChannelInviteKeys(channelId: Long): SceytResponse<List<ChannelInviteKeyData>> {
+        return channelInviteKeyLogic.getChannelInviteKeys(channelId)
+    }
+
+    override suspend fun getChannelInviteKeySettings(channelId: Long, key: String): SceytResponse<ChannelInviteKeyData> {
+        return channelInviteKeyLogic.getChannelInviteKeySettings(channelId, key)
+    }
+
+    override suspend fun createChannelInviteKey(
+            channelId: Long,
+            expireAt: Long,
+            maxUses: Int,
+            accessPriorHistory: Boolean,
+    ): SceytResponse<ChannelInviteKeyData> {
+        return channelInviteKeyLogic.createChannelInviteKey(channelId, expireAt, maxUses, accessPriorHistory)
+    }
+
+    override suspend fun updateInviteKeySettings(
+            channelId: Long,
+            key: String,
+            expireAt: Long,
+            maxUses: Int,
+            accessPriorHistory: Boolean,
+    ): SceytResponse<Boolean> {
+        return channelInviteKeyLogic.updateInviteKeySettings(channelId, key, expireAt, maxUses, accessPriorHistory)
+    }
+
+    override suspend fun regenerateChannelInviteKey(channelId: Long, key: String): SceytResponse<ChannelInviteKeyData> {
+        return channelInviteKeyLogic.regenerateChannelInviteKey(channelId, key)
+    }
+
+    override suspend fun revokeChannelInviteKeys(channelId: Long, keys: List<String>): SceytResponse<Boolean> {
+        return channelInviteKeyLogic.revokeChannelInviteKeys(channelId, keys)
+    }
+
+    override suspend fun deleteRevokedChannelInviteKeys(channelId: Long, keys: List<String>): SceytResponse<Boolean> {
+        return channelInviteKeyLogic.deleteRevokedChannelInviteKeys(channelId, keys)
     }
 }

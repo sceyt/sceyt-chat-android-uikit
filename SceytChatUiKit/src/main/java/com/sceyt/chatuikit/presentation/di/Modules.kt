@@ -31,7 +31,7 @@ internal val viewModelModule = module {
     viewModel(qualifier = ChannelInfoVoiceViewModelQualifier) { ChannelAttachmentsViewModel(get(), get(), get()) }
     viewModel { parameters -> ReactionsInfoViewModel(get(), messageId = parameters.get(), key = parameters.get()) }
     viewModel { params -> ShareInviteQRViewModel(get(), linkQrData = params.get()) }
-    viewModel { params -> ChannelInviteLinkViewModel(params.get()) }
+    viewModel { params -> ChannelInviteLinkViewModel(params.get(), get()) }
     viewModel { params -> JoinWithInviteLinkViewModel(params.get(), get()) }
 }
 

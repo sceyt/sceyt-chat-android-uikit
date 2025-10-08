@@ -5,6 +5,11 @@ import androidx.core.app.ShareCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.data.models.channels.SceytChannel
+import com.sceyt.chatuikit.data.models.fold
+import com.sceyt.chatuikit.data.models.onError
+import com.sceyt.chatuikit.data.models.onSuccessNotNull
+import com.sceyt.chatuikit.persistence.interactor.ChannelInviteKeyInteractor
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -12,14 +17,18 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class InviteLinkUIState(
-        val inviteLink: String? = null,
+        val inviteKey: String? = null,
         val showPreviousMessages: Boolean = false,
         val isLoading: Boolean = false,
         val error: String? = null,
-)
+) {
+    val inviteLink: String?
+        get() = inviteKey?.let { "${SceytChatUIKit.config.channelDeepLinkDomain}$it" }
+}
 
 class ChannelInviteLinkViewModel(
-        private val channelId: Long,
+        private val channel: SceytChannel,
+        private val channelInviteKeyInteractor: ChannelInviteKeyInteractor,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(InviteLinkUIState())
@@ -35,32 +44,59 @@ class ChannelInviteLinkViewModel(
     }
 
     fun resetInviteLink() {
-        // Logic to reset the invite link
+        val state = _uiState.value
+        if (state.isLoading || state.inviteKey == null) return
+
         _uiState.update {
             it.copy(isLoading = true)
         }
 
-        // Simulate resetting the invite link
         viewModelScope.launch {
-            delay(1000)
-            val newLink = "https://link.sceyt.com/newlink1234567"
-            _uiState.update {
-                it.copy(inviteLink = newLink, isLoading = false)
+            val key = state.inviteKey
+            channelInviteKeyInteractor.regenerateChannelInviteKey(
+                channelId = channel.id,
+                key = key
+            ).onSuccessNotNull { data ->
+                _uiState.update {
+                    it.copy(inviteKey = data.key, isLoading = false, error = null)
+                }
+            }.onError { error ->
+                _uiState.update {
+                    it.copy(isLoading = false, error = error?.message)
+                }
             }
         }
     }
 
-    fun getInviteLink() {
+    private fun getInviteLink() {
+        val primaryKey = channel.uri
+        if (primaryKey.isNullOrBlank()) {
+            _uiState.update {
+                it.copy(isLoading = false, error = "Channel has no primary key")
+            }
+            return
+        }
         _uiState.update {
             it.copy(isLoading = true)
         }
 
-        // Simulate fetching the invite link
         viewModelScope.launch {
-            delay(1000)
-            val fetchedLink = "https://link.sceyt.com/abcdefg1234567"
-            _uiState.update {
-                it.copy(inviteLink = fetchedLink, isLoading = false)
+            channelInviteKeyInteractor.getChannelInviteKeySettings(
+                channelId = channel.id,
+                key = primaryKey
+            ).onSuccessNotNull { data ->
+                _uiState.update {
+                    it.copy(
+                        inviteKey = data.key,
+                        showPreviousMessages = data.accessPriorHistory,
+                        isLoading = false,
+                        error = null
+                    )
+                }
+            }.onError { error ->
+                _uiState.update {
+                    it.copy(isLoading = false, error = error?.message)
+                }
             }
         }
     }
@@ -76,16 +112,37 @@ class ChannelInviteLinkViewModel(
 
 
     private fun updateInviteLinkSettings(showPreviousMessages: Boolean) {
+        val state = _uiState.value
+        if (state.isLoading || state.inviteKey == null) return
+
         _uiState.update {
             it.copy(isLoading = true)
         }
         viewModelScope.launch {
-            // Simulate network or database operation
-            delay(1000)
-            // After operation, update the state
-            _uiState.update {
-                it.copy(showPreviousMessages = showPreviousMessages, isLoading = false)
-            }
+            channelInviteKeyInteractor.updateInviteKeySettings(
+                channelId = channel.id,
+                key = state.inviteKey,
+                accessPriorHistory = showPreviousMessages,
+                expireAt = 0,
+                maxUses = 0
+            ).fold(
+                onSuccess = {
+                    _uiState.update { state ->
+                        state.copy(
+                            showPreviousMessages = showPreviousMessages,
+                            isLoading = false,
+                            error = null
+                        )
+                    }
+                },
+                onError = { error ->
+                    // Adding delay to avoid flickering effect of loading state.
+                    delay(300)
+                    _uiState.update { state ->
+                        state.copy(isLoading = false, error = error?.message)
+                    }
+                }
+            )
         }
     }
 }
