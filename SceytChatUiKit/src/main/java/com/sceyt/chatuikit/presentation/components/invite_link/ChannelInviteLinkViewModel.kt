@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.core.app.ShareCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sceyt.chatuikit.SceytChatUIKit
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,7 +18,9 @@ data class InviteLinkUIState(
         val error: String? = null,
 )
 
-class ChannelInviteLinkViewModel : ViewModel() {
+class ChannelInviteLinkViewModel(
+        private val channelId: Long,
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(InviteLinkUIState())
     val uiState = _uiState.asStateFlow()

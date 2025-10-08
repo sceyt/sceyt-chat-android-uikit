@@ -87,7 +87,7 @@ open class BottomSheetShareInviteQr : BottomSheetDialogFragment(), SceytKoinComp
 
     companion object {
         const val TAG = "BottomSheetShareInviteQr"
-        const val LINK_DATA_KEY = "linkDataKey"
+        private const val LINK_DATA_KEY = "linkDataKey"
 
         fun show(
                 fragmentManager: FragmentManager,

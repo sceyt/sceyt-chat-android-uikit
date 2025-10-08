@@ -242,4 +242,7 @@
     <string name="share_channel_link_desc">Show or send this to anyone who\nwants to join this group</string>
     <string name="reset_link_desc">Are you sure you want to reset the group link? Anyone with the existing link will no longer be able to use it to join.</string>
     <string name="reset">Reset</string>
+    <string name="join_group">Join Group</string>
+    <string name="group_chat_invite">Group Chat Invite</string>
+    <string name="and_others">%1$s and %2$d others</string>
 </resources>
