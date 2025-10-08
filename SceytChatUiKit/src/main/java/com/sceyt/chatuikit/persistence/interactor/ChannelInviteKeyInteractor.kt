@@ -1,10 +1,10 @@
-package com.sceyt.chatuikit.persistence.repositories
+package com.sceyt.chatuikit.persistence.interactor
 
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.ChannelInviteKeyData
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 
-interface ChannelInviteKeyRepository {
+interface ChannelInviteKeyInteractor {
     suspend fun getChannelByInviteKey(inviteKey: String): SceytResponse<SceytChannel>
     suspend fun getChannelInviteKeys(channelId: Long): SceytResponse<List<ChannelInviteKeyData>>
     suspend fun getChannelInviteKeySettings(channelId: Long, key: String): SceytResponse<ChannelInviteKeyData>
@@ -25,3 +25,4 @@ interface ChannelInviteKeyRepository {
     suspend fun revokeChannelInviteKeys(channelId: Long, keys: List<String>): SceytResponse<Boolean>
     suspend fun deleteRevokedChannelInviteKeys(channelId: Long, keys: List<String>): SceytResponse<Boolean>
 }
+

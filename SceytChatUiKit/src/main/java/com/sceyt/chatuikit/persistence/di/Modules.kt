@@ -17,6 +17,7 @@ import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferServiceImpl
 import com.sceyt.chatuikit.persistence.interactor.AttachmentInteractor
 import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
+import com.sceyt.chatuikit.persistence.interactor.ChannelInviteKeyInteractor
 import com.sceyt.chatuikit.persistence.interactor.ChannelMemberInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageMarkerInteractor
@@ -24,6 +25,7 @@ import com.sceyt.chatuikit.persistence.interactor.MessageReactionInteractor
 import com.sceyt.chatuikit.persistence.interactor.UserInteractor
 import com.sceyt.chatuikit.persistence.logic.FileTransferLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
+import com.sceyt.chatuikit.persistence.logic.PersistenceChannelInviteKeyLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceConnectionLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMembersLogic
@@ -32,6 +34,7 @@ import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceReactionsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceUsersLogic
 import com.sceyt.chatuikit.persistence.logicimpl.FileTransferLogicImpl
+import com.sceyt.chatuikit.persistence.logicimpl.PersistenceChannelInviteKeyLogicImpl
 import com.sceyt.chatuikit.persistence.logicimpl.PersistenceConnectionLogicImpl
 import com.sceyt.chatuikit.persistence.logicimpl.PersistenceMembersLogicImpl
 import com.sceyt.chatuikit.persistence.logicimpl.PersistenceMessageMarkerLogicImpl
@@ -101,7 +104,7 @@ internal fun databaseModule(enableDatabase: Boolean) = module {
 }
 
 internal val interactorModule = module {
-    single { PersistenceMiddleWareImpl(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    single { PersistenceMiddleWareImpl(get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     single<ChannelInteractor> { get<PersistenceMiddleWareImpl>() }
     single<MessageInteractor> { get<PersistenceMiddleWareImpl>() }
     single<AttachmentInteractor> { get<PersistenceMiddleWareImpl>() }
@@ -109,7 +112,8 @@ internal val interactorModule = module {
     single<MessageReactionInteractor> { get<PersistenceMiddleWareImpl>() }
     single<ChannelMemberInteractor> { get<PersistenceMiddleWareImpl>() }
     single<UserInteractor> { get<PersistenceMiddleWareImpl>() }
-    single<SceytChatUIFacade> { SceytChatUIFacade(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    single<ChannelInviteKeyInteractor> { get<PersistenceMiddleWareImpl>() }
+    single<SceytChatUIFacade> { SceytChatUIFacade(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
 }
 
 internal val logicModule = module {
@@ -121,6 +125,7 @@ internal val logicModule = module {
     single<PersistenceUsersLogic> { PersistenceUsersLogicImpl(get(), get(), get(), get()) }
     single<PersistenceMessageMarkerLogic> { PersistenceMessageMarkerLogicImpl(get(), get(), get()) }
     single<PersistenceConnectionLogic> { PersistenceConnectionLogicImpl(get(), get(), get(), get()) }
+    single<PersistenceChannelInviteKeyLogic> { PersistenceChannelInviteKeyLogicImpl(get()) }
     single<FileTransferLogic> { FileTransferLogicImpl(get(), get()) }
 }
 
