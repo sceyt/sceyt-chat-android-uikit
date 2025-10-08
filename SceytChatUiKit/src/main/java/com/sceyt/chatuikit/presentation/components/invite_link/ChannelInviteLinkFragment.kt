@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytFragmentChannelInviteLinkBinding
 import com.sceyt.chatuikit.extensions.parcelable
@@ -25,12 +26,15 @@ import com.sceyt.chatuikit.styles.invite_link.ChannelInviteLinkStyle
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.koin.androidx.viewmodel.ext.android.viewModel
+import org.koin.core.parameter.parametersOf
 
 open class ChannelInviteLinkFragment : Fragment(), SceytKoinComponent {
     protected lateinit var binding: SceytFragmentChannelInviteLinkBinding
     protected lateinit var style: ChannelInviteLinkStyle
     protected lateinit var channel: SceytChannel
-    protected val viewModel: ChannelInviteLinkViewModel by viewModel()
+    protected val viewModel: ChannelInviteLinkViewModel by viewModel {
+        parametersOf(channel.id)
+    }
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -132,11 +136,12 @@ open class ChannelInviteLinkFragment : Fragment(), SceytKoinComponent {
     protected open fun onOpenQrClick() {
         BottomSheetShareInviteQr.Companion.show(
             fragmentManager = childFragmentManager,
-            linkQrData = LinkQrData(
-                link = binding.tvInviteLink.text.toString(),
-            )
+            linkQrData = LinkQrData(link = linkUrl)
         )
     }
+
+    protected open val linkUrl: String
+        get() = SceytChatUIKit.config.channelDeepLinkDomain + "join/" + channel.uri
 
     protected fun applyStyle() = with(binding) {
         root.setBackgroundColor(style.backgroundColor)
