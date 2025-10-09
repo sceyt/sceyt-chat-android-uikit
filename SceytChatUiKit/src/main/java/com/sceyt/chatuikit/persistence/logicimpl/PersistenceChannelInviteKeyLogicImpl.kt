@@ -19,6 +19,12 @@ internal class PersistenceChannelInviteKeyLogicImpl(
         return@withContext channelInviteKeyRepository.getChannelByInviteKey(inviteKey)
     }
 
+    override suspend fun joinWithInviteKey(
+            inviteKey: String,
+    ): SceytResponse<SceytChannel> = withContext(Dispatchers.IO) {
+        return@withContext channelInviteKeyRepository.joinWithInviteKey(inviteKey)
+    }
+
     override suspend fun getChannelInviteKeys(
             channelId: Long,
     ): SceytResponse<List<ChannelInviteKeyData>> = withContext(Dispatchers.IO) {
