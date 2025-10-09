@@ -70,11 +70,10 @@ open class ChannelInviteLinkActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        StyleRegistry.unregister(intent.getStringExtra(KEY_INVITE_LINK_STYLE_ID))
+        StyleRegistry.unregister(style.styleId)
     }
 
     companion object {
-        private const val KEY_INVITE_LINK_STYLE_ID = "key_invite_link_style_id"
 
         fun launch(
                 context: Context,

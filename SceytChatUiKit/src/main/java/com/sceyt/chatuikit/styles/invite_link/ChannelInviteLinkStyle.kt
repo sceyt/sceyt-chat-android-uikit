@@ -51,7 +51,7 @@ data class ChannelInviteLinkStyle(
         var styleCustomizer = StyleCustomizer<ChannelInviteLinkStyle> { _, style -> style }
     }
 
-    internal class Builder(
+    class Builder(
             internal val context: Context,
             private val attrs: AttributeSet?,
     ) {
@@ -104,7 +104,7 @@ data class ChannelInviteLinkStyle(
                     showPreviewMessagesSubtitleTextStyle = buildShowPreviewMessagesSubtitleTextStyle(array),
                     optionsTextStyle = buildOptionsTextStyle(array),
                     linkPreviewBackgroundStyle = buildLinkPreviewBackgroundStyle(array)
-                )
+                ).let { styleCustomizer.apply(context, it) }
             }
         }
     }

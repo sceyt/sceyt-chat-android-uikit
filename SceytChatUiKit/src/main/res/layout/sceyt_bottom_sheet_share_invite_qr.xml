@@ -33,6 +33,7 @@
         android:id="@+id/tvDescription"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
         android:gravity="center"
         android:text="@string/share_channel_link_desc"
         android:textColor="@color/sceyt_color_text_secondary"

@@ -2,7 +2,7 @@ package com.sceyt.chatuikit.presentation.components.channel_list.channels.adapte
 
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytItemLoadingMoreBinding
-import com.sceyt.chatuikit.extensions.setProgressColor
+import com.sceyt.chatuikit.extensions.setProgressColorRes
 import com.sceyt.chatuikit.presentation.root.BaseViewHolder
 
 open class LoadingMoreViewHolder<T>(
@@ -10,7 +10,7 @@ open class LoadingMoreViewHolder<T>(
 ) : BaseViewHolder<T>(binding.root) {
 
     init {
-        binding.adapterListLoadingProgressBar.setProgressColor(SceytChatUIKit.theme.colors.accentColor)
+        binding.adapterListLoadingProgressBar.setProgressColorRes(SceytChatUIKit.theme.colors.accentColor)
     }
 
     override fun bind(item: T) {}
