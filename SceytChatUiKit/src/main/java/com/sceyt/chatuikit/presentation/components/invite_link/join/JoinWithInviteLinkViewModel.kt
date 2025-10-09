@@ -3,12 +3,14 @@ package com.sceyt.chatuikit.presentation.components.invite_link.join
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.fold
 import com.sceyt.chatuikit.persistence.interactor.ChannelInviteKeyInteractor
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.minutes
 
 sealed class UiState {
     object Loading : UiState()
@@ -46,6 +48,8 @@ class JoinWithInviteLinkViewModel(
             _uiState.value = UiState.Error(Exception("Invalid invite link"))
             return@launch
         }
+
+        ConnectionEventManager.awaitToConnectSceytWithTimeout(1.minutes.inWholeMilliseconds)
 
         channelInviteKeyInteractor.getChannelByInviteKey(inviteKey).fold(
             onSuccess = { channel ->

@@ -9,6 +9,7 @@ import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.fold
 import com.sceyt.chatuikit.data.models.onError
 import com.sceyt.chatuikit.data.models.onSuccessNotNull
+import com.sceyt.chatuikit.persistence.extensions.isPublic
 import com.sceyt.chatuikit.persistence.interactor.ChannelInviteKeyInteractor
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,6 +20,7 @@ import kotlinx.coroutines.launch
 data class InviteLinkUIState(
         val inviteKey: String? = null,
         val showPreviousMessages: Boolean = false,
+        val allowResetLink: Boolean = false,
         val isLoading: Boolean = false,
         val error: String? = null,
 ) {
@@ -31,7 +33,7 @@ class ChannelInviteLinkViewModel(
         private val channelInviteKeyInteractor: ChannelInviteKeyInteractor,
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(InviteLinkUIState())
+    private val _uiState = MutableStateFlow(InviteLinkUIState(allowResetLink = !channel.isPublic()))
     val uiState = _uiState.asStateFlow()
 
     init {

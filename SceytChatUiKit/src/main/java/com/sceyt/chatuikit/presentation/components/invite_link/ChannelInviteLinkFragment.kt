@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chatuikit.R
@@ -33,7 +34,7 @@ open class ChannelInviteLinkFragment : Fragment(), SceytKoinComponent {
     protected lateinit var style: ChannelInviteLinkStyle
     protected lateinit var channel: SceytChannel
     protected val viewModel: ChannelInviteLinkViewModel by viewModel {
-        parametersOf(channel.id)
+        parametersOf(channel)
     }
 
     override fun onAttach(context: Context) {
@@ -65,16 +66,8 @@ open class ChannelInviteLinkFragment : Fragment(), SceytKoinComponent {
         channel = requireNotNull(arguments?.parcelable(CHANNEL_KEY))
     }
 
-    private fun initViewModel() {
-        viewModel.uiState.onEach {
-            setLinkDetails(
-                link = it.inviteLink.orEmpty(),
-                showPrevMessagesAllowed = it.showPreviousMessages
-            )
-            if (it.isLoading)
-                SceytLoader.showLoading(requireContext())
-            else SceytLoader.hideLoading()
-        }.launchIn(lifecycleScope)
+    protected open fun initViewModel() {
+        viewModel.uiState.onEach(::onUiStateChange).launchIn(lifecycleScope)
     }
 
     protected fun initViews() = with(binding) {
@@ -99,6 +92,17 @@ open class ChannelInviteLinkFragment : Fragment(), SceytKoinComponent {
         tvOpenQR.setOnClickListener {
             onOpenQrClick()
         }
+    }
+
+    protected open fun onUiStateChange(state: InviteLinkUIState) {
+        setLinkDetails(
+            link = state.inviteLink.orEmpty(),
+            showPrevMessagesAllowed = state.showPreviousMessages,
+        )
+        binding.tvResetLink.isVisible = state.allowResetLink
+        if (state.isLoading)
+            SceytLoader.showLoading(requireContext())
+        else SceytLoader.hideLoading()
     }
 
     protected fun setLinkDetails(
