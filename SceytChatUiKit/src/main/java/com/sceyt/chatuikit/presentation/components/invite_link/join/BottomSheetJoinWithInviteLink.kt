@@ -1,10 +1,13 @@
 package com.sceyt.chatuikit.presentation.components.invite_link.join
 
 import android.app.Dialog
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isInvisible
+import androidx.core.view.isVisible
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -15,6 +18,8 @@ import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.databinding.SceytBottomSheetJoinWithInviteLinkBinding
 import com.sceyt.chatuikit.extensions.customToastSnackBar
+import com.sceyt.chatuikit.extensions.empty
+import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.setBundleArguments
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.presentation.components.invite_link.join.adapters.MembersPreviewAdapter
@@ -27,7 +32,7 @@ import org.koin.core.parameter.parametersOf
 open class BottomSheetJoinWithInviteLink : BottomSheetDialogFragment(), SceytKoinComponent {
     protected val viewModel by viewModel<JoinWithInviteLinkViewModel>(
         parameters = {
-            parametersOf(requireArguments().getString(INVITE_LINK_KEY))
+            parametersOf(requireArguments().parcelable<Uri>(INVITE_LINK_KEY))
         }
     )
     protected lateinit var binding: SceytBottomSheetJoinWithInviteLinkBinding
@@ -52,26 +57,55 @@ open class BottomSheetJoinWithInviteLink : BottomSheetDialogFragment(), SceytKoi
 
     protected open fun initViews() {
         binding.btnJoinGroup.setOnClickListener {
-
+            viewModel.joinToChannel()
         }
     }
 
     protected open fun initViewModel() {
-        viewModel.uiState.onEach { state ->
-            when (state) {
-                is UiState.Success -> {
-                    setDetails(state.channel)
-                }
+        viewModel.uiState.onEach(::onUiStateChange).launchIn(lifecycleScope)
+        viewModel.joinActionState.onEach(::onJoiningStateChange).launchIn(lifecycleScope)
+    }
 
-                is UiState.Error -> {
-                    customToastSnackBar(state.error?.message)
-                }
-
-                is UiState.Loading -> {
-                    //show loading
-                }
+    protected open fun onUiStateChange(state: UiState) {
+        when (state) {
+            is UiState.Success -> {
+                setDetails(state.channel)
+                binding.layoutDetails.isVisible = true
+                binding.primaryLoading.isVisible = false
             }
-        }.launchIn(lifecycleScope)
+
+            is UiState.Error -> {
+                customToastSnackBar(state.error?.message)
+            }
+
+            is UiState.Loading -> {
+                binding.layoutDetails.isInvisible = true
+                binding.primaryLoading.isVisible = true
+            }
+        }
+    }
+
+    protected open fun onJoiningStateChange(state: JoinActionState) {
+        when (state) {
+            is JoinActionState.Joined -> {
+                dismiss()
+            }
+
+            is JoinActionState.Joining -> {
+                binding.btnJoinGroup.isEnabled = false
+                binding.primaryLoading.isVisible = true
+            }
+
+            is JoinActionState.JoinError -> {
+                customToastSnackBar(state.error?.message)
+            }
+
+            else -> {}
+        }
+        val isJoining = state is JoinActionState.Joining
+        binding.loadingJoin.isVisible = isJoining
+        binding.btnJoinGroup.text = if (isJoining)
+            empty else getString(R.string.join_group)
     }
 
     protected open fun setDetails(channel: SceytChannel) {
@@ -122,10 +156,10 @@ open class BottomSheetJoinWithInviteLink : BottomSheetDialogFragment(), SceytKoi
 
         fun show(
                 fragmentManager: FragmentManager,
-                inviteLink: String,
+                inviteLink: Uri,
         ) {
             val bottomSheet = BottomSheetJoinWithInviteLink().setBundleArguments {
-                putString(INVITE_LINK_KEY, inviteLink)
+                putParcelable(INVITE_LINK_KEY, inviteLink)
             }
             bottomSheet.show(fragmentManager, TAG)
         }

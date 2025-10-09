@@ -699,6 +699,10 @@ internal class PersistenceMiddleWareImpl(
         return channelInviteKeyLogic.getChannelByInviteKey(inviteKey)
     }
 
+    override suspend fun joinWithInviteKey(inviteKey: String): SceytResponse<SceytChannel> {
+        return channelInviteKeyLogic.joinWithInviteKey(inviteKey)
+    }
+
     override suspend fun getChannelInviteKeys(channelId: Long): SceytResponse<List<ChannelInviteKeyData>> {
         return channelInviteKeyLogic.getChannelInviteKeys(channelId)
     }
