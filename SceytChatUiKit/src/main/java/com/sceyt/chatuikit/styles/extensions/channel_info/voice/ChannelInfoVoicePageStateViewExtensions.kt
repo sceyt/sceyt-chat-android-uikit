@@ -5,7 +5,7 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytEmptyStateBinding
 import com.sceyt.chatuikit.databinding.SceytPageLoadingStateBinding
-import com.sceyt.chatuikit.extensions.setProgressColor
+import com.sceyt.chatuikit.extensions.setProgressColorRes
 import com.sceyt.chatuikit.extensions.setTextColorRes
 import com.sceyt.chatuikit.presentation.custom_views.PageStateView
 import com.sceyt.chatuikit.styles.channel_info.voice.ChannelInfoVoiceStyle
@@ -52,5 +52,5 @@ private fun SceytEmptyStateBinding.applyStyle(emptyStateTitle: String) {
 }
 
 private fun SceytPageLoadingStateBinding.applyStyle() {
-    progressBar.setProgressColor(SceytChatUIKit.theme.colors.accentColor)
+    progressBar.setProgressColorRes(SceytChatUIKit.theme.colors.accentColor)
 }

@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.presentation.components.invite_link.shareqr
 
 import android.app.Dialog
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -16,6 +17,8 @@ import com.sceyt.chatuikit.extensions.dismissSafety
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.setBundleArguments
 import com.sceyt.chatuikit.koin.SceytKoinComponent
+import com.sceyt.chatuikit.styles.StyleRegistry
+import com.sceyt.chatuikit.styles.invite_link.BottomSheetShareInviteQRStyle
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -23,11 +26,19 @@ import org.koin.core.parameter.parametersOf
 
 open class BottomSheetShareInviteQR : BottomSheetDialogFragment(), SceytKoinComponent {
     protected lateinit var binding: SceytBottomSheetShareInviteQrBinding
+    protected lateinit var style: BottomSheetShareInviteQRStyle
     protected val viewModel by viewModel<ShareInviteQRViewModel>(
         parameters = {
             parametersOf(requireArguments().parcelable<LinkQrData>(LINK_DATA_KEY))
         }
     )
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        style = StyleRegistry.getOrDefault(arguments?.getString(STYLE_ID_KEY)) {
+            BottomSheetShareInviteQRStyle.Builder(context, null).build()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,6 +53,7 @@ open class BottomSheetShareInviteQR : BottomSheetDialogFragment(), SceytKoinComp
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        applyStyle()
         initViews()
         initViewModel()
     }
@@ -76,6 +88,22 @@ open class BottomSheetShareInviteQR : BottomSheetDialogFragment(), SceytKoinComp
         dismissSafety()
     }
 
+    protected open fun applyStyle() = with(binding) {
+        style.backgroundStyle.apply(root)
+
+        // Apply text styles
+        style.titleTextStyle.apply(tvTitle)
+        style.descriptionTextStyle.apply(tvDescription)
+
+        // Apply button style
+        style.shareButtonStyle.apply(btnShareQr)
+
+        // Set texts
+        tvTitle.text = style.titleText
+        tvDescription.text = style.descriptionText
+        btnShareQr.text = style.shareButtonText
+    }
+
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         return super.onCreateDialog(savedInstanceState).apply {
             setOnShowListener {
@@ -87,13 +115,16 @@ open class BottomSheetShareInviteQR : BottomSheetDialogFragment(), SceytKoinComp
 
     companion object {
         const val TAG = "BottomSheetShareInviteQr"
+        private const val STYLE_ID_KEY = "STYLE_ID_KEY"
         private const val LINK_DATA_KEY = "linkDataKey"
 
         fun show(
                 fragmentManager: FragmentManager,
                 linkQrData: LinkQrData,
+                styleId: String? = null,
         ) {
             val bottomSheet = BottomSheetShareInviteQR().setBundleArguments {
+                putString(STYLE_ID_KEY, styleId)
                 putParcelable(LINK_DATA_KEY, linkQrData)
             }
             bottomSheet.show(fragmentManager, TAG)

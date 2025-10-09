@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.presentation.components.invite_link.join
 
 import android.app.Dialog
+import android.content.Context
 import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -21,9 +22,12 @@ import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.empty
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.setBundleArguments
+import com.sceyt.chatuikit.extensions.setProgressColor
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.presentation.components.invite_link.join.adapters.MembersPreviewAdapter
 import com.sceyt.chatuikit.presentation.custom_views.AvatarView
+import com.sceyt.chatuikit.styles.StyleRegistry
+import com.sceyt.chatuikit.styles.invite_link.BottomSheetJoinWithInviteLinkStyle
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -36,7 +40,15 @@ open class BottomSheetJoinWithInviteLink : BottomSheetDialogFragment(), SceytKoi
         }
     )
     protected lateinit var binding: SceytBottomSheetJoinWithInviteLinkBinding
+    protected lateinit var style: BottomSheetJoinWithInviteLinkStyle
 
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        style = StyleRegistry.getOrDefault(arguments?.getString(STYLE_ID_KEY)) {
+            BottomSheetJoinWithInviteLinkStyle.Builder(context, null).build()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,6 +63,7 @@ open class BottomSheetJoinWithInviteLink : BottomSheetDialogFragment(), SceytKoi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        applyStyle()
         initViews()
         initViewModel()
     }
@@ -141,6 +154,26 @@ open class BottomSheetJoinWithInviteLink : BottomSheetDialogFragment(), SceytKoi
         else displayNames
     }
 
+    protected open fun applyStyle() = with(binding) {
+        style.backgroundStyle.apply(root)
+
+        // Apply text styles
+        style.subjectTextStyle.apply(tvSubject)
+        style.subtitleTextStyle.apply(tvInviteTitle)
+        style.memberNamesTextStyle.apply(tvMemberNames)
+
+        // Apply button style
+        style.joinButtonStyle.apply(btnJoinGroup)
+        btnJoinGroup.text = style.joinButtonText
+
+        // Set subtitle text
+        tvInviteTitle.text = style.subtitleText
+
+        // Apply progress bar colors
+        primaryLoading.setProgressColor(style.primaryProgressBarColor)
+        loadingJoin.setProgressColor(style.buttonProgressBarColor)
+    }
+
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         return super.onCreateDialog(savedInstanceState).apply {
             setOnShowListener {
@@ -152,13 +185,16 @@ open class BottomSheetJoinWithInviteLink : BottomSheetDialogFragment(), SceytKoi
 
     companion object {
         const val TAG = "BottomSheetJoinWithInviteLink"
+        private const val STYLE_ID_KEY = "STYLE_ID_KEY"
         private const val INVITE_LINK_KEY = "invite_link"
 
         fun show(
                 fragmentManager: FragmentManager,
                 inviteLink: Uri,
+                styleId: String? = null,
         ) {
             val bottomSheet = BottomSheetJoinWithInviteLink().setBundleArguments {
+                putString(STYLE_ID_KEY, styleId)
                 putParcelable(INVITE_LINK_KEY, inviteLink)
             }
             bottomSheet.show(fragmentManager, TAG)
