@@ -61,6 +61,7 @@
         <activity
             android:name=".presentation.main.MainActivity"
             android:exported="true"
+            android:launchMode="singleTask"
             android:theme="@style/SceytAppTheme.Default"
             android:windowSoftInputMode="adjustResize" />
 
