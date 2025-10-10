@@ -10,6 +10,7 @@ import android.view.ViewGroup
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityOptionsCompat
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.role.Role
@@ -38,6 +39,7 @@ import com.sceyt.chatuikit.extensions.setBoldSpan
 import com.sceyt.chatuikit.extensions.setBundleArguments
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.extensions.getChannelType
+import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.presentation.common.SceytDialog
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoActivity
@@ -91,8 +93,7 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
         initViewModel()
         initViews()
         binding?.applyStyle()
-        initStringsWithAddType()
-        loadInitialMembers()
+        setDetails()
     }
 
     override fun onAttach(context: Context) {
@@ -160,6 +161,12 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
         }
     }
 
+    protected open fun setDetails() {
+        binding?.layoutInviteLink?.isVisible = !channel.isDirect()
+        initStringsWithAddType()
+        loadInitialMembers()
+    }
+
     private fun initStringsWithAddType() {
         with(binding ?: return) {
             when (memberType) {
@@ -203,7 +210,7 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
         })
     }
 
-    private fun updateMembersWithServerResponse(data: PaginationResponse.ServerResponse<MemberItem>, hasNext: Boolean) {
+    protected fun updateMembersWithServerResponse(data: PaginationResponse.ServerResponse<MemberItem>, hasNext: Boolean) {
         val itemsDb = data.cacheData as ArrayList
         binding?.rvMembers?.awaitAnimationEnd {
             val members = ArrayList(membersAdapter?.getData() ?: arrayListOf())
@@ -222,7 +229,7 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
         }
     }
 
-    private fun addMembers(members: List<SceytMember>?) {
+    protected fun addMembers(members: List<SceytMember>?) {
         if (members.isNullOrEmpty()) return
         membersAdapter?.addNewItemsToStart(members.map {
             MemberItem.Member(it)
@@ -230,14 +237,14 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
         binding?.rvMembers?.scrollToPosition(0)
     }
 
-    private fun removeMember(memberId: String) {
+    protected fun removeMember(memberId: String) {
         membersAdapter?.getMemberItemById(memberId)?.let {
             membersAdapter?.getData()?.removeAt(it.first)
             membersAdapter?.notifyItemRemoved(it.first)
         }
     }
 
-    private fun getRole(): String? {
+    protected fun getRole(): String? {
         return when (memberType) {
             MemberTypeEnum.Admin -> RoleTypeEnum.Admin.value
             MemberTypeEnum.Subscriber -> null

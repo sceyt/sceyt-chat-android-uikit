@@ -32,7 +32,9 @@ object ConnectionEventManager {
 
     private val onChangedConnectStatusFlow_: MutableSharedFlow<ConnectionStateData> = MutableSharedFlow(
         extraBufferCapacity = 1,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST)
+        onBufferOverflow = BufferOverflow.DROP_OLDEST,
+        replay = 1
+    )
     val onChangedConnectStatusFlow = onChangedConnectStatusFlow_.asSharedFlow()
 
     private val onTokenWillExpire_: MutableSharedFlow<Long> = MutableSharedFlow(

@@ -33,6 +33,8 @@ import kotlinx.coroutines.flow.onEach
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
 
+typealias JoinedByInviteLink = Boolean
+
 open class BottomSheetJoinWithInviteLink : BottomSheetDialogFragment(), SceytKoinComponent {
     protected val viewModel by viewModel<JoinWithInviteLinkViewModel>(
         parameters = {
@@ -41,7 +43,7 @@ open class BottomSheetJoinWithInviteLink : BottomSheetDialogFragment(), SceytKoi
     )
     protected lateinit var binding: SceytBottomSheetJoinWithInviteLinkBinding
     protected lateinit var style: BottomSheetJoinWithInviteLinkStyle
-
+    protected var joinedToChannelListener: (SceytChannel, JoinedByInviteLink) -> Unit = { _, _ -> }
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -82,6 +84,9 @@ open class BottomSheetJoinWithInviteLink : BottomSheetDialogFragment(), SceytKoi
     protected open fun onUiStateChange(state: UiState) {
         when (state) {
             is UiState.Success -> {
+                if (checkMaybelAlreadyJoined(channel = state.channel)) {
+                    return
+                }
                 setDetails(state.channel)
                 binding.layoutDetails.isVisible = true
                 binding.primaryLoading.isVisible = false
@@ -98,27 +103,30 @@ open class BottomSheetJoinWithInviteLink : BottomSheetDialogFragment(), SceytKoi
         }
     }
 
+    protected open fun checkMaybelAlreadyJoined(channel: SceytChannel): Boolean {
+        if (channel.userRole.isNullOrBlank()) return false
+        dismiss()
+        joinedToChannelListener.invoke(channel, false)
+        return true
+    }
+
     protected open fun onJoiningStateChange(state: JoinActionState) {
         when (state) {
             is JoinActionState.Joined -> {
+                joinedToChannelListener(state.channel, true)
                 dismiss()
-            }
-
-            is JoinActionState.Joining -> {
-                binding.btnJoinGroup.isEnabled = false
-                binding.primaryLoading.isVisible = true
             }
 
             is JoinActionState.JoinError -> {
                 customToastSnackBar(state.error?.message)
             }
 
-            else -> {}
+            else -> Unit
         }
         val isJoining = state is JoinActionState.Joining
         binding.loadingJoin.isVisible = isJoining
         binding.btnJoinGroup.text = if (isJoining)
-            empty else getString(R.string.join_group)
+            empty else style.joinButtonText
     }
 
     protected open fun setDetails(channel: SceytChannel) {
@@ -184,19 +192,26 @@ open class BottomSheetJoinWithInviteLink : BottomSheetDialogFragment(), SceytKoi
     }
 
     companion object {
-        const val TAG = "BottomSheetJoinWithInviteLink"
+        private const val TAG = "BottomSheetJoinWithInviteLink"
         private const val STYLE_ID_KEY = "STYLE_ID_KEY"
         private const val INVITE_LINK_KEY = "invite_link"
 
         fun show(
                 fragmentManager: FragmentManager,
                 inviteLink: Uri,
+                joinedToChannelListener: ((SceytChannel, JoinedByInviteLink) -> Unit),
                 styleId: String? = null,
         ) {
+            val existingSheet = fragmentManager.findFragmentByTag(TAG) as? BottomSheetJoinWithInviteLink
+            if (existingSheet != null && existingSheet.isAdded) {
+                existingSheet.joinedToChannelListener = joinedToChannelListener
+                return
+            }
             val bottomSheet = BottomSheetJoinWithInviteLink().setBundleArguments {
                 putString(STYLE_ID_KEY, styleId)
                 putParcelable(INVITE_LINK_KEY, inviteLink)
             }
+            bottomSheet.joinedToChannelListener = joinedToChannelListener
             bottomSheet.show(fragmentManager, TAG)
         }
     }

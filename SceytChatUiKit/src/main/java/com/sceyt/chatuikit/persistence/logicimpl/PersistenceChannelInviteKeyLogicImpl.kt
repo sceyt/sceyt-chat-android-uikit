@@ -3,14 +3,17 @@ package com.sceyt.chatuikit.persistence.logicimpl
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.ChannelInviteKeyData
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
+import com.sceyt.chatuikit.data.models.onSuccessNotNull
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelInviteKeyLogic
+import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.repositories.ChannelInviteKeyRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 internal class PersistenceChannelInviteKeyLogicImpl(
         private val channelInviteKeyRepository: ChannelInviteKeyRepository,
+        private val channelsLogic: PersistenceChannelsLogic,
 ) : PersistenceChannelInviteKeyLogic, SceytKoinComponent {
 
     override suspend fun getChannelByInviteKey(
@@ -73,6 +76,13 @@ internal class PersistenceChannelInviteKeyLogicImpl(
             key: String,
     ): SceytResponse<ChannelInviteKeyData> = withContext(Dispatchers.IO) {
         return@withContext channelInviteKeyRepository.regenerateChannelInviteKey(channelId, key)
+            .onSuccessNotNull { data ->
+                channelsLogic.checkChannelUrlUpdate(
+                    channelId = channelId,
+                    oldKey = key,
+                    newKey = data.key
+                )
+            }
     }
 
     override suspend fun revokeChannelInviteKeys(

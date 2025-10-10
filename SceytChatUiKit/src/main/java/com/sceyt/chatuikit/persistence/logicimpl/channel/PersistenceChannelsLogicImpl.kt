@@ -1022,6 +1022,15 @@ internal class PersistenceChannelsLogicImpl(
         }.distinctUntilChanged()
     }
 
+    override suspend fun checkChannelUrlUpdate(channelId: Long, oldKey: String, newKey: String) {
+        val channel = getChannelFromDb(channelId) ?: return
+        if (channel.uri == oldKey) {
+            val updatedChannel = channel.copy(uri = newKey)
+            channelDao.updateChannel(updatedChannel.toChannelEntity())
+            channelsCache.updateChannelUri(channelId, newKey)
+        }
+    }
+
     private suspend fun updateChannelPendingLastMessages(channels: List<SceytChannel>): List<SceytChannel> {
         if (channels.isEmpty()) return channels
         val mutableList = channels.toList().toArrayList()
