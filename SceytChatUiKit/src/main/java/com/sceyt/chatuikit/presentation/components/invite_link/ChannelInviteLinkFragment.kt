@@ -145,7 +145,7 @@ open class ChannelInviteLinkFragment : Fragment(), SceytKoinComponent {
     }
 
     protected open val linkUrl: String
-        get() = SceytChatUIKit.config.channelDeepLinkDomain + "join/" + channel.uri
+        get() = SceytChatUIKit.config.channelLinkDeepLinkConfig?.buildInviteUrl(channel.uri.orEmpty())?.toString().orEmpty()
 
     protected fun applyStyle() = with(binding) {
         root.setBackgroundColor(style.backgroundColor)

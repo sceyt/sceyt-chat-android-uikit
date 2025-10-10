@@ -56,6 +56,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
+import org.koin.core.module.dsl.singleOf
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import java.util.concurrent.Executors
@@ -104,7 +105,7 @@ internal fun databaseModule(enableDatabase: Boolean) = module {
 }
 
 internal val interactorModule = module {
-    single { PersistenceMiddleWareImpl(get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    singleOf(::PersistenceMiddleWareImpl)
     single<ChannelInteractor> { get<PersistenceMiddleWareImpl>() }
     single<MessageInteractor> { get<PersistenceMiddleWareImpl>() }
     single<AttachmentInteractor> { get<PersistenceMiddleWareImpl>() }
@@ -113,7 +114,7 @@ internal val interactorModule = module {
     single<ChannelMemberInteractor> { get<PersistenceMiddleWareImpl>() }
     single<UserInteractor> { get<PersistenceMiddleWareImpl>() }
     single<ChannelInviteKeyInteractor> { get<PersistenceMiddleWareImpl>() }
-    single<SceytChatUIFacade> { SceytChatUIFacade(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    singleOf(::SceytChatUIFacade)
 }
 
 internal val logicModule = module {
@@ -125,7 +126,7 @@ internal val logicModule = module {
     single<PersistenceUsersLogic> { PersistenceUsersLogicImpl(get(), get(), get(), get()) }
     single<PersistenceMessageMarkerLogic> { PersistenceMessageMarkerLogicImpl(get(), get(), get()) }
     single<PersistenceConnectionLogic> { PersistenceConnectionLogicImpl(get(), get(), get(), get()) }
-    single<PersistenceChannelInviteKeyLogic> { PersistenceChannelInviteKeyLogicImpl(get()) }
+    single<PersistenceChannelInviteKeyLogic> { PersistenceChannelInviteKeyLogicImpl(get(), get()) }
     single<FileTransferLogic> { FileTransferLogicImpl(get(), get()) }
 }
 

@@ -16,6 +16,7 @@ class SceytChatUIKitConfig {
     var memberRolesConfig: MemberRolesConfig by lazyVar { MemberRolesConfig() }
     var notificationConfig: PushNotificationConfig by lazyVar { PushNotificationConfig() }
     var voiceRecorderConfig: VoiceRecorderConfig by lazyVar { VoiceRecorderConfig() }
+    var channelLinkDeepLinkConfig: ChannelInviteDeepLinkConfig? = null
     var syncChannelsAfterConnect: Boolean = true
     var hardDeleteMessageForAll: Boolean = false
     var messageEditTimeout: Long = 2.hours.inWholeMilliseconds
@@ -44,6 +45,4 @@ class SceytChatUIKitConfig {
 
     @IntRange(from = 1, to = 50)
     var attachmentSelectionLimit: Int = 20
-
-    var channelDeepLinkDomain: String = "https://link.sceyt.com/"
 }

@@ -11,7 +11,6 @@ import com.sceyt.chatuikit.data.models.onError
 import com.sceyt.chatuikit.data.models.onSuccessNotNull
 import com.sceyt.chatuikit.persistence.extensions.isPublic
 import com.sceyt.chatuikit.persistence.interactor.ChannelInviteKeyInteractor
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -25,7 +24,9 @@ data class InviteLinkUIState(
         val error: String? = null,
 ) {
     val inviteLink: String?
-        get() = inviteKey?.let { "${SceytChatUIKit.config.channelDeepLinkDomain}$it" }
+        get() = inviteKey?.let {
+            SceytChatUIKit.config.channelLinkDeepLinkConfig?.buildInviteUrl(it).toString()
+        }
 }
 
 class ChannelInviteLinkViewModel(
@@ -138,8 +139,6 @@ class ChannelInviteLinkViewModel(
                     }
                 },
                 onError = { error ->
-                    // Adding delay to avoid flickering effect of loading state.
-                    delay(300)
                     _uiState.update { state ->
                         state.copy(isLoading = false, error = error?.message)
                     }
