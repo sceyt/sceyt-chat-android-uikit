@@ -18,7 +18,7 @@ import com.sceyt.chatuikit.styles.extensions.invite_link.buildJoinSubjectTextSty
 import com.sceyt.chatuikit.styles.extensions.invite_link.buildJoinSubtitleTextStyle
 import com.sceyt.chatuikit.styles.extensions.invite_link.buildMemberNamesTextStyle
 
-data class BottomSheetJoinWithInviteLinkStyle(
+data class BottomSheetJoinByInviteLinkStyle(
         val backgroundStyle: BackgroundStyle,
         @param:ColorInt val primaryProgressBarColor: Int,
         @param:ColorInt val buttonProgressBarColor: Int,
@@ -31,21 +31,21 @@ data class BottomSheetJoinWithInviteLinkStyle(
 ) : SceytComponentStyle() {
 
     companion object {
-        var styleCustomizer = StyleCustomizer<BottomSheetJoinWithInviteLinkStyle> { _, style -> style }
+        var styleCustomizer = StyleCustomizer<BottomSheetJoinByInviteLinkStyle> { _, style -> style }
     }
 
     internal class Builder(
             internal val context: Context,
             private val attrs: AttributeSet?,
     ) {
-        fun build(): BottomSheetJoinWithInviteLinkStyle {
-            context.obtainStyledAttributes(attrs, R.styleable.JoinWithInviteLink).use { array ->
+        fun build(): BottomSheetJoinByInviteLinkStyle {
+            context.obtainStyledAttributes(attrs, R.styleable.JoinByInviteLink).use { array ->
                 val primaryProgressBarColor = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
                 val buttonProgressBarColor = context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor)
                 val subtitleText = context.getString(R.string.group_chat_invite)
                 val joinButtonText = context.getString(R.string.join_group)
 
-                return BottomSheetJoinWithInviteLinkStyle(
+                return BottomSheetJoinByInviteLinkStyle(
                     backgroundStyle = buildBackgroundStyle(array),
                     primaryProgressBarColor = primaryProgressBarColor,
                     buttonProgressBarColor = buttonProgressBarColor,

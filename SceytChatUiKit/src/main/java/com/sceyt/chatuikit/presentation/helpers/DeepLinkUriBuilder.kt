@@ -51,8 +51,8 @@ class DeepLinkUriBuilder {
 
     /** Build the Uri object */
     fun build(): Uri {
-        require(scheme.isNotBlank()) { "Scheme cannot be blank" }
-        require(host.isNotBlank()) { "Host cannot be blank" }
+        require(scheme.isNotBlank()) { "Couldn't build DeepLinkUri: Scheme cannot be blank" }
+        require(host.isNotBlank()) { "Couldn't build DeepLinkUri: Host cannot be blank" }
 
         val builder = Uri.Builder()
             .scheme(scheme)

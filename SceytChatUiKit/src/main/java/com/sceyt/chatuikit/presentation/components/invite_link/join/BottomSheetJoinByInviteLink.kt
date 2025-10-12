@@ -17,7 +17,7 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
-import com.sceyt.chatuikit.databinding.SceytBottomSheetJoinWithInviteLinkBinding
+import com.sceyt.chatuikit.databinding.SceytBottomSheetJoinByInviteLinkBinding
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.empty
 import com.sceyt.chatuikit.extensions.parcelable
@@ -27,7 +27,7 @@ import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.presentation.components.invite_link.join.adapters.MembersPreviewAdapter
 import com.sceyt.chatuikit.presentation.custom_views.AvatarView
 import com.sceyt.chatuikit.styles.StyleRegistry
-import com.sceyt.chatuikit.styles.invite_link.BottomSheetJoinWithInviteLinkStyle
+import com.sceyt.chatuikit.styles.invite_link.BottomSheetJoinByInviteLinkStyle
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -35,20 +35,20 @@ import org.koin.core.parameter.parametersOf
 
 typealias JoinedByInviteLink = Boolean
 
-open class BottomSheetJoinWithInviteLink : BottomSheetDialogFragment(), SceytKoinComponent {
-    protected val viewModel by viewModel<JoinWithInviteLinkViewModel>(
+open class BottomSheetJoinByInviteLink : BottomSheetDialogFragment(), SceytKoinComponent {
+    protected val viewModel by viewModel<JoinByInviteLinkViewModel>(
         parameters = {
             parametersOf(requireArguments().parcelable<Uri>(INVITE_LINK_KEY))
         }
     )
-    protected lateinit var binding: SceytBottomSheetJoinWithInviteLinkBinding
-    protected lateinit var style: BottomSheetJoinWithInviteLinkStyle
+    protected lateinit var binding: SceytBottomSheetJoinByInviteLinkBinding
+    protected lateinit var style: BottomSheetJoinByInviteLinkStyle
     protected var joinedToChannelListener: (SceytChannel, JoinedByInviteLink) -> Unit = { _, _ -> }
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
         style = StyleRegistry.getOrDefault(arguments?.getString(STYLE_ID_KEY)) {
-            BottomSheetJoinWithInviteLinkStyle.Builder(context, null).build()
+            BottomSheetJoinByInviteLinkStyle.Builder(context, null).build()
         }
     }
 
@@ -58,7 +58,7 @@ open class BottomSheetJoinWithInviteLink : BottomSheetDialogFragment(), SceytKoi
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        binding = SceytBottomSheetJoinWithInviteLinkBinding.inflate(inflater, container, false)
+        binding = SceytBottomSheetJoinByInviteLinkBinding.inflate(inflater, container, false)
         return binding.root
     }
 
@@ -192,7 +192,7 @@ open class BottomSheetJoinWithInviteLink : BottomSheetDialogFragment(), SceytKoi
     }
 
     companion object {
-        private const val TAG = "BottomSheetJoinWithInviteLink"
+        private val TAG = BottomSheetJoinByInviteLink::class.simpleName
         private const val STYLE_ID_KEY = "STYLE_ID_KEY"
         private const val INVITE_LINK_KEY = "invite_link"
 
@@ -202,12 +202,12 @@ open class BottomSheetJoinWithInviteLink : BottomSheetDialogFragment(), SceytKoi
                 joinedToChannelListener: ((SceytChannel, JoinedByInviteLink) -> Unit),
                 styleId: String? = null,
         ) {
-            val existingSheet = fragmentManager.findFragmentByTag(TAG) as? BottomSheetJoinWithInviteLink
+            val existingSheet = fragmentManager.findFragmentByTag(TAG) as? BottomSheetJoinByInviteLink
             if (existingSheet != null && existingSheet.isAdded) {
                 existingSheet.joinedToChannelListener = joinedToChannelListener
                 return
             }
-            val bottomSheet = BottomSheetJoinWithInviteLink().setBundleArguments {
+            val bottomSheet = BottomSheetJoinByInviteLink().setBundleArguments {
                 putString(STYLE_ID_KEY, styleId)
                 putParcelable(INVITE_LINK_KEY, inviteLink)
             }

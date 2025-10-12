@@ -13,9 +13,9 @@ import com.sceyt.chatuikit.styles.common.BackgroundStyle
 import com.sceyt.chatuikit.styles.common.ButtonStyle
 import com.sceyt.chatuikit.styles.common.Shape
 import com.sceyt.chatuikit.styles.common.TextStyle
-import com.sceyt.chatuikit.styles.invite_link.BottomSheetJoinWithInviteLinkStyle
+import com.sceyt.chatuikit.styles.invite_link.BottomSheetJoinByInviteLinkStyle
 
-internal fun BottomSheetJoinWithInviteLinkStyle.Builder.buildBackgroundStyle(
+internal fun BottomSheetJoinByInviteLinkStyle.Builder.buildBackgroundStyle(
         array: TypedArray,
 ): BackgroundStyle {
     val cornersRadius = 16.dpToPx().toFloat()
@@ -25,28 +25,28 @@ internal fun BottomSheetJoinWithInviteLinkStyle.Builder.buildBackgroundStyle(
     )
 }
 
-internal fun BottomSheetJoinWithInviteLinkStyle.Builder.buildJoinSubjectTextStyle(
+internal fun BottomSheetJoinByInviteLinkStyle.Builder.buildJoinSubjectTextStyle(
         array: TypedArray,
 ) = TextStyle(
     color = context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor),
     font = R.font.roboto_medium
 )
 
-internal fun BottomSheetJoinWithInviteLinkStyle.Builder.buildJoinSubtitleTextStyle(
+internal fun BottomSheetJoinByInviteLinkStyle.Builder.buildJoinSubtitleTextStyle(
         array: TypedArray,
 ) = TextStyle(
     color = context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor),
     font = R.font.roboto_regular
 )
 
-internal fun BottomSheetJoinWithInviteLinkStyle.Builder.buildMemberNamesTextStyle(
+internal fun BottomSheetJoinByInviteLinkStyle.Builder.buildMemberNamesTextStyle(
         array: TypedArray,
 ) = TextStyle(
     color = context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor),
     font = R.font.roboto_regular
 )
 
-internal fun BottomSheetJoinWithInviteLinkStyle.Builder.buildJoinButtonStyle(
+internal fun BottomSheetJoinByInviteLinkStyle.Builder.buildJoinButtonStyle(
         array: TypedArray,
 ) = ButtonStyle(
     textStyle = TextStyle(

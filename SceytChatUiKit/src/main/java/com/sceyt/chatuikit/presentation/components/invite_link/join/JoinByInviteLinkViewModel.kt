@@ -23,13 +23,13 @@ sealed class UiState {
 }
 
 sealed class JoinActionState {
-    object Idle : JoinActionState()
-    object Joining : JoinActionState()
+    data object Idle : JoinActionState()
+    data object Joining : JoinActionState()
     data class Joined(val channel: SceytChannel) : JoinActionState()
     data class JoinError(val error: Throwable?) : JoinActionState()
 }
 
-class JoinWithInviteLinkViewModel(
+class JoinByInviteLinkViewModel(
         private val inviteLink: Uri,
         private val channelInviteKeyInteractor: ChannelInviteKeyInteractor,
 ) : ViewModel() {

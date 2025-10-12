@@ -6,7 +6,7 @@ import com.sceyt.chatuikit.presentation.components.channel_info.media.viewmodel.
 import com.sceyt.chatuikit.presentation.components.channel_info.members.viewmodel.ChannelMembersViewModel
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.viewmodel.ChannelsViewModel
 import com.sceyt.chatuikit.presentation.components.invite_link.ChannelInviteLinkViewModel
-import com.sceyt.chatuikit.presentation.components.invite_link.join.JoinWithInviteLinkViewModel
+import com.sceyt.chatuikit.presentation.components.invite_link.join.JoinByInviteLinkViewModel
 import com.sceyt.chatuikit.presentation.components.invite_link.shareqr.ShareInviteQRViewModel
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.core.qualifier.named
@@ -32,6 +32,6 @@ internal val viewModelModule = module {
     viewModel { parameters -> ReactionsInfoViewModel(get(), messageId = parameters.get(), key = parameters.get()) }
     viewModel { params -> ShareInviteQRViewModel(get(), linkQrData = params.get()) }
     viewModel { params -> ChannelInviteLinkViewModel(params.get(), get()) }
-    viewModel { params -> JoinWithInviteLinkViewModel(params.get(), get()) }
+    viewModel { params -> JoinByInviteLinkViewModel(params.get(), get()) }
 }
 

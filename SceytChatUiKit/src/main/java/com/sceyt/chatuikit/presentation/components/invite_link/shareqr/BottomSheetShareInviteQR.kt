@@ -114,7 +114,7 @@ open class BottomSheetShareInviteQR : BottomSheetDialogFragment(), SceytKoinComp
     }
 
     companion object {
-        const val TAG = "BottomSheetShareInviteQr"
+        private val TAG = BottomSheetShareInviteQR::class.simpleName
         private const val STYLE_ID_KEY = "STYLE_ID_KEY"
         private const val LINK_DATA_KEY = "linkDataKey"
 
@@ -123,6 +123,11 @@ open class BottomSheetShareInviteQR : BottomSheetDialogFragment(), SceytKoinComp
                 linkQrData: LinkQrData,
                 styleId: String? = null,
         ) {
+            val existingSheet = fragmentManager.findFragmentByTag(TAG) as? BottomSheetShareInviteQR
+            if (existingSheet != null && existingSheet.isAdded) {
+                return
+            }
+
             val bottomSheet = BottomSheetShareInviteQR().setBundleArguments {
                 putString(STYLE_ID_KEY, styleId)
                 putParcelable(LINK_DATA_KEY, linkQrData)
