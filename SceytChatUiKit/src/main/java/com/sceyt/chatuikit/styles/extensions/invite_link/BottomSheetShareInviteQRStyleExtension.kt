@@ -5,10 +5,8 @@ package com.sceyt.chatuikit.styles.extensions.invite_link
 import android.content.res.TypedArray
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.extensions.applyTint
 import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.getCompatColor
-import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.styles.common.BackgroundStyle
 import com.sceyt.chatuikit.styles.common.ButtonStyle
 import com.sceyt.chatuikit.styles.common.Shape
@@ -47,9 +45,8 @@ internal fun BottomSheetShareInviteQRStyle.Builder.buildShareQrButtonStyle(
         font = R.font.roboto_regular
     ),
     backgroundStyle = BackgroundStyle(
-        background = context.getCompatDrawable(R.drawable.sceyt_bg_corners_8)?.applyTint(
-            context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
-        )
+        backgroundColor = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor),
+        shape = Shape.RoundedCornerShape(8.dpToPx().toFloat())
     )
 )
 
