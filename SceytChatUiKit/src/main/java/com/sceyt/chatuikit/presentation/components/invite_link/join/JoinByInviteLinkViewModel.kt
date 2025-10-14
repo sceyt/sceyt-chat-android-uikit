@@ -13,7 +13,7 @@ import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.minutes
 
 sealed class UiState {
-    object Loading : UiState()
+    data object Loading : UiState()
     data class Success(
             val inviteKey: String,
             val channel: SceytChannel,

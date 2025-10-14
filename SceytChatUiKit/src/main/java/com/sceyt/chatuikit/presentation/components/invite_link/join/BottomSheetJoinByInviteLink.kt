@@ -24,6 +24,7 @@ import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.setBundleArguments
 import com.sceyt.chatuikit.extensions.setProgressColor
 import com.sceyt.chatuikit.koin.SceytKoinComponent
+import com.sceyt.chatuikit.presentation.components.invite_link.JoinByInviteLinkResult
 import com.sceyt.chatuikit.presentation.components.invite_link.join.adapters.MembersPreviewAdapter
 import com.sceyt.chatuikit.presentation.custom_views.AvatarView
 import com.sceyt.chatuikit.styles.StyleRegistry
@@ -33,8 +34,6 @@ import kotlinx.coroutines.flow.onEach
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
 
-typealias JoinedByInviteLink = Boolean
-
 open class BottomSheetJoinByInviteLink : BottomSheetDialogFragment(), SceytKoinComponent {
     protected val viewModel by viewModel<JoinByInviteLinkViewModel>(
         parameters = {
@@ -43,7 +42,7 @@ open class BottomSheetJoinByInviteLink : BottomSheetDialogFragment(), SceytKoinC
     )
     protected lateinit var binding: SceytBottomSheetJoinByInviteLinkBinding
     protected lateinit var style: BottomSheetJoinByInviteLinkStyle
-    protected var joinedToChannelListener: (SceytChannel, JoinedByInviteLink) -> Unit = { _, _ -> }
+    protected var joinedToChannelListener: ((JoinByInviteLinkResult) -> Unit)? = null
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -106,14 +105,16 @@ open class BottomSheetJoinByInviteLink : BottomSheetDialogFragment(), SceytKoinC
     protected open fun checkMaybelAlreadyJoined(channel: SceytChannel): Boolean {
         if (channel.userRole.isNullOrBlank()) return false
         dismiss()
-        joinedToChannelListener.invoke(channel, false)
+        joinedToChannelListener?.invoke(JoinByInviteLinkResult.AlreadyJoined(channel))
         return true
     }
 
     protected open fun onJoiningStateChange(state: JoinActionState) {
         when (state) {
             is JoinActionState.Joined -> {
-                joinedToChannelListener(state.channel, true)
+                joinedToChannelListener?.invoke(
+                    JoinByInviteLinkResult.JoinedByInviteLink(state.channel)
+                )
                 dismiss()
             }
 
@@ -188,18 +189,22 @@ open class BottomSheetJoinByInviteLink : BottomSheetDialogFragment(), SceytKoinC
                 val bottomSheet = findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)
                 BottomSheetBehavior.from(bottomSheet).isDraggable = false
             }
+
+            setOnCancelListener {
+                joinedToChannelListener?.invoke(JoinByInviteLinkResult.Canceled)
+            }
         }
     }
 
     companion object {
-        private val TAG = BottomSheetJoinByInviteLink::class.simpleName
+        private val TAG = BottomSheetJoinByInviteLink::class.java.simpleName
         private const val STYLE_ID_KEY = "STYLE_ID_KEY"
         private const val INVITE_LINK_KEY = "invite_link"
 
         fun show(
                 fragmentManager: FragmentManager,
                 inviteLink: Uri,
-                joinedToChannelListener: ((SceytChannel, JoinedByInviteLink) -> Unit),
+                joinedToChannelListener: ((JoinByInviteLinkResult) -> Unit)? = null,
                 styleId: String? = null,
         ) {
             val existingSheet = fragmentManager.findFragmentByTag(TAG) as? BottomSheetJoinByInviteLink
