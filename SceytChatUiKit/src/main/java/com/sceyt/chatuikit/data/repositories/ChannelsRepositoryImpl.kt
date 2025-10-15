@@ -97,7 +97,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
             inviteKey: String,
     ): SceytResponse<SceytChannel> {
         return suspendCancellableCoroutine { continuation ->
-            GetChannelByInviteKeyRequest(inviteKey).execute(object : ChannelCallback {
+            GetChannelByInviteKeyRequest(inviteKey, channelQueryParam).execute(object : ChannelCallback {
                 override fun onResult(channel: Channel) {
                     continuation.safeResume(SceytResponse.Success(channel.toSceytUiChannel()))
                 }

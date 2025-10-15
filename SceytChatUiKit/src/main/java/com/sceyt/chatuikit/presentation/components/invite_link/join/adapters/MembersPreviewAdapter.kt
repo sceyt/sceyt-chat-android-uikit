@@ -16,6 +16,7 @@ import com.sceyt.chatuikit.styles.common.AvatarStyle
 import com.sceyt.chatuikit.styles.common.Shape
 
 class MembersPreviewAdapter(
+        private val memberCount: Int,
         private val maxPreviewCount: Int = 3,
 ) : ListAdapter<SceytMember, RecyclerView.ViewHolder>(DIFF_CALLBACK) {
     private val overlap = 18.dpToPx()
@@ -69,22 +70,23 @@ class MembersPreviewAdapter(
     }
 
     override fun getItemCount(): Int {
-        val totalCount = currentList.size
-        return minOf(totalCount, maxPreviewCount).let {
-            if (totalCount > maxPreviewCount) it + 1 else it
+        return if (memberCount > maxPreviewCount) {
+            // Show up to maxPreviewCount items (or less if not available) + the +x item
+            minOf(currentList.size, maxPreviewCount) + 1
+        } else {
+            // Just show the items we have
+            currentList.size
         }
     }
 
     override fun getItemViewType(position: Int): Int {
-        return if (totalCount > maxPreviewCount && position == maxPreviewCount) {
+        val membersToShow = minOf(currentList.size, maxPreviewCount)
+        return if (memberCount > maxPreviewCount && position == membersToShow) {
             ViewType.More.type
         } else {
             ViewType.Member.type
         }
     }
-
-    private val totalCount: Int
-        get() = currentList.size
 
     inner class MemberViewHolder(
             val binding: SceytItemChannelInviteMemberBinding,
@@ -106,7 +108,8 @@ class MembersPreviewAdapter(
 
         @SuppressLint("SetTextI18n")
         fun bind() {
-            val moreCount = totalCount - maxPreviewCount
+            val shownMembers = minOf(currentList.size, maxPreviewCount)
+            val moreCount = memberCount - shownMembers
             binding.tvCount.text = "+$moreCount"
         }
     }

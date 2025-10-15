@@ -137,13 +137,13 @@ open class BottomSheetJoinByInviteLink : BottomSheetDialogFragment(), SceytKoinC
             .setDefaultAvatar(AvatarView.DefaultAvatar.FromInitials(channel.subject.orEmpty()))
             .setImageUrl(channel.avatarUrl)
             .build().applyToAvatar()
-        setMembersAdapter(channel.members.orEmpty())
+        setMembersAdapter(channel)
     }
 
-    protected open fun setMembersAdapter(members: List<SceytMember>) {
-        val adapter = MembersPreviewAdapter()
+    protected open fun setMembersAdapter(channel: SceytChannel) {
+        val adapter = MembersPreviewAdapter(memberCount = channel.memberCount.toInt())
         binding.rvMembers.adapter = adapter
-        adapter.submitList(members)
+        adapter.submitList(channel.members)
     }
 
     protected open fun buildMemberNames(members: List<SceytMember>): String {
