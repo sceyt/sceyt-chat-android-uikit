@@ -296,6 +296,10 @@ internal class PersistenceMiddleWareImpl(
         return channelLogic.getChannelFromServer(channelId)
     }
 
+    override suspend fun getChannelByInviteKey(inviteKey: String): SceytResponse<SceytChannel> {
+        return channelLogic.getChannelByInviteKey(inviteKey)
+    }
+
     override suspend fun getChannelFromServerByUri(uri: String): SceytResponse<SceytChannel?> {
         return channelLogic.getChannelFromServerByUri(uri)
     }
@@ -310,6 +314,10 @@ internal class PersistenceMiddleWareImpl(
 
     override suspend fun join(channelId: Long): SceytResponse<SceytChannel> {
         return channelLogic.join(channelId)
+    }
+
+    override suspend fun joinWithInviteKey(inviteKey: String): SceytResponse<SceytChannel> {
+        return channelLogic.joinWithInviteKey(inviteKey)
     }
 
     override suspend fun hideChannel(channelId: Long): SceytResponse<SceytChannel> {
@@ -693,14 +701,6 @@ internal class PersistenceMiddleWareImpl(
 
     override suspend fun getMessageMarkersDb(messageId: Long, names: List<String>, offset: Int, limit: Int): List<SceytMarker> {
         return messageMarkerLogic.getMessageMarkersDb(messageId, names, offset, limit)
-    }
-
-    override suspend fun getChannelByInviteKey(inviteKey: String): SceytResponse<SceytChannel> {
-        return channelInviteKeyLogic.getChannelByInviteKey(inviteKey)
-    }
-
-    override suspend fun joinWithInviteKey(inviteKey: String): SceytResponse<SceytChannel> {
-        return channelInviteKeyLogic.joinWithInviteKey(inviteKey)
     }
 
     override suspend fun getChannelInviteKeys(channelId: Long): SceytResponse<List<ChannelInviteKeyData>> {

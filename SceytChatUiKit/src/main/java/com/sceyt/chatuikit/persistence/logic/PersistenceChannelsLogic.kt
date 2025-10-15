@@ -73,8 +73,10 @@ interface PersistenceChannelsLogic {
     suspend fun getDirectChannelFromDb(peerId: String): SceytChannel?
     suspend fun getChannelFromServer(channelId: Long): SceytResponse<SceytChannel>
     suspend fun getChannelFromServerByUri(uri: String): SceytResponse<SceytChannel?>
+    suspend fun getChannelByInviteKey(inviteKey: String): SceytResponse<SceytChannel>
     suspend fun editChannel(channelId: Long, data: EditChannelData): SceytResponse<SceytChannel>
     suspend fun join(channelId: Long): SceytResponse<SceytChannel>
+    suspend fun joinWithInviteKey(inviteKey: String): SceytResponse<SceytChannel>
     suspend fun setUnreadCount(channelId: Long, count: Int)
     suspend fun updateLastMessageWithLastRead(channelId: Long, message: SceytMessage)
     suspend fun updateLastMessageIfNeeded(channelId: Long, message: SceytMessage?)
