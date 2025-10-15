@@ -162,7 +162,9 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
     }
 
     protected open fun setDetails() {
-        binding?.layoutInviteLink?.isVisible = !channel.isDirect()
+        val enableInviteLink = SceytChatUIKit.config.channelLinkDeepLinkConfig != null
+                && !channel.isDirect()
+        binding?.layoutInviteLink?.isVisible = enableInviteLink
         initStringsWithAddType()
         loadInitialMembers()
     }
@@ -210,7 +212,10 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
         })
     }
 
-    protected fun updateMembersWithServerResponse(data: PaginationResponse.ServerResponse<MemberItem>, hasNext: Boolean) {
+    protected open fun updateMembersWithServerResponse(
+            data: PaginationResponse.ServerResponse<MemberItem>,
+            hasNext: Boolean
+    ) {
         val itemsDb = data.cacheData as ArrayList
         binding?.rvMembers?.awaitAnimationEnd {
             val members = ArrayList(membersAdapter?.getData() ?: arrayListOf())
@@ -229,7 +234,7 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
         }
     }
 
-    protected fun addMembers(members: List<SceytMember>?) {
+    protected open fun addMembers(members: List<SceytMember>?) {
         if (members.isNullOrEmpty()) return
         membersAdapter?.addNewItemsToStart(members.map {
             MemberItem.Member(it)
@@ -237,14 +242,14 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
         binding?.rvMembers?.scrollToPosition(0)
     }
 
-    protected fun removeMember(memberId: String) {
+    protected open fun removeMember(memberId: String) {
         membersAdapter?.getMemberItemById(memberId)?.let {
             membersAdapter?.getData()?.removeAt(it.first)
             membersAdapter?.notifyItemRemoved(it.first)
         }
     }
 
-    protected fun getRole(): String? {
+    protected open fun getRole(): String? {
         return when (memberType) {
             MemberTypeEnum.Admin -> RoleTypeEnum.Admin.value
             MemberTypeEnum.Subscriber -> null
