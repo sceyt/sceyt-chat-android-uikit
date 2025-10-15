@@ -6,7 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.fold
-import com.sceyt.chatuikit.persistence.interactor.ChannelInviteKeyInteractor
+import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -31,7 +31,7 @@ sealed class JoinActionState {
 
 class JoinByInviteLinkViewModel(
         private val inviteLink: Uri,
-        private val channelInviteKeyInteractor: ChannelInviteKeyInteractor,
+        private val channelInteractor: ChannelInteractor,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<UiState>(UiState.Loading)
     val uiState = _uiState.asStateFlow()
@@ -51,7 +51,7 @@ class JoinByInviteLinkViewModel(
 
         ConnectionEventManager.awaitToConnectSceytWithTimeout(1.minutes.inWholeMilliseconds)
 
-        channelInviteKeyInteractor.getChannelByInviteKey(inviteKey).fold(
+        channelInteractor.getChannelByInviteKey(inviteKey).fold(
             onSuccess = { channel ->
                 if (channel == null) {
                     _uiState.value = UiState.Error(Exception("Channel not found"))
@@ -77,7 +77,7 @@ class JoinByInviteLinkViewModel(
                 }
                 _joinActionState.value = JoinActionState.Joining
 
-                channelInviteKeyInteractor.joinWithInviteKey(inviteKey).fold(
+                channelInteractor.joinWithInviteKey(inviteKey).fold(
                     onSuccess = { channel ->
                         if (channel == null) {
                             _joinActionState.value = JoinActionState.JoinError(

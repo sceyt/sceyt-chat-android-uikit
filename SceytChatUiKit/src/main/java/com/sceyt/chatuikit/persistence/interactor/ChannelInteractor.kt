@@ -57,10 +57,12 @@ interface ChannelInteractor {
     suspend fun getChannelFromDb(channelId: Long): SceytChannel?
     suspend fun getDirectChannelFromDb(peerId: String): SceytChannel?
     suspend fun getChannelFromServer(channelId: Long): SceytResponse<SceytChannel>
+    suspend fun getChannelByInviteKey(inviteKey: String): SceytResponse<SceytChannel>
     suspend fun getChannelFromServerByUri(uri: String): SceytResponse<SceytChannel?>
     suspend fun getChannelsCountFromDb(): Int
     suspend fun editChannel(channelId: Long, data: EditChannelData): SceytResponse<SceytChannel>
     suspend fun join(channelId: Long): SceytResponse<SceytChannel>
+    suspend fun joinWithInviteKey(inviteKey: String): SceytResponse<SceytChannel>
     suspend fun hideChannel(channelId: Long): SceytResponse<SceytChannel>
     suspend fun unHideChannel(channelId: Long): SceytResponse<SceytChannel>
     suspend fun updateDraftMessage(draftMessage: DraftMessage)

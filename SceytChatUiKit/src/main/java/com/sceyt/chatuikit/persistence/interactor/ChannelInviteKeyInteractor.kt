@@ -5,8 +5,6 @@ import com.sceyt.chatuikit.data.models.channels.ChannelInviteKeyData
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 
 interface ChannelInviteKeyInteractor {
-    suspend fun getChannelByInviteKey(inviteKey: String): SceytResponse<SceytChannel>
-    suspend fun joinWithInviteKey(inviteKey: String): SceytResponse<SceytChannel>
     suspend fun getChannelInviteKeys(channelId: Long): SceytResponse<List<ChannelInviteKeyData>>
     suspend fun getChannelInviteKeySettings(channelId: Long, key: String): SceytResponse<ChannelInviteKeyData>
     suspend fun createChannelInviteKey(
