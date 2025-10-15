@@ -1,6 +1,5 @@
 package com.sceyt.chatuikit.data.repositories
 
-import android.util.Log
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.models.SearchQueryOperator
@@ -8,6 +7,8 @@ import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.channel.ChannelListQuery
 import com.sceyt.chat.models.channel.ChannelQueryParam
 import com.sceyt.chat.models.channel.CreateChannelRequest
+import com.sceyt.chat.models.channel.GetChannelByInviteKeyRequest
+import com.sceyt.chat.models.channel.JoinChannelByInviteKeyRequest
 import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.member.MemberListQuery
 import com.sceyt.chat.operators.ChannelOperator
@@ -87,6 +88,23 @@ class ChannelsRepositoryImpl : ChannelsRepository {
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
                     SceytLog.e(TAG, "getChannelFromServerByUrl error: ${e?.message}, code: ${e?.code}")
+                }
+            })
+        }
+    }
+
+    override suspend fun getChannelByInviteKey(
+            inviteKey: String,
+    ): SceytResponse<SceytChannel> {
+        return suspendCancellableCoroutine { continuation ->
+            GetChannelByInviteKeyRequest(inviteKey).execute(object : ChannelCallback {
+                override fun onResult(channel: Channel) {
+                    continuation.safeResume(SceytResponse.Success(channel.toSceytUiChannel()))
+                }
+
+                override fun onError(e: SceytException?) {
+                    continuation.safeResume(SceytResponse.Error(e))
+                    SceytLog.e(TAG, "getChannelByInviteKey error: ${e?.message}, code: ${e?.code}")
                 }
             })
         }
@@ -592,9 +610,23 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         }
     }
 
+    override suspend fun joinWithInviteKey(inviteKey: String): SceytResponse<SceytChannel> {
+        return suspendCancellableCoroutine { continuation ->
+            JoinChannelByInviteKeyRequest(inviteKey).execute(object : ChannelCallback {
+                override fun onResult(channel: Channel) {
+                    continuation.safeResume(SceytResponse.Success(channel.toSceytUiChannel()))
+                }
+
+                override fun onError(e: SceytException?) {
+                    continuation.safeResume(SceytResponse.Error(e))
+                    SceytLog.e(TAG, "joinWithInviteKey error: ${e?.message}, code: ${e?.code}")
+                }
+            })
+        }
+    }
+
     override suspend fun sendChannelEvent(channelId: Long, event: String) {
         ChannelOperator.build(channelId).sendEvent(event)
-        Log.i("sdfsdf", "sendChannelEvent: $event")
     }
 
     private fun createChannelListQuery(

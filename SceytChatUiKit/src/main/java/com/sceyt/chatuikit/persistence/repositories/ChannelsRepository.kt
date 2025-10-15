@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.Flow
 interface ChannelsRepository {
     suspend fun getChannel(id: Long): SceytResponse<SceytChannel>
     suspend fun getChannelByUri(uri: String): SceytResponse<SceytChannel?>
+    suspend fun getChannelByInviteKey(inviteKey: String): SceytResponse<SceytChannel>
     suspend fun getChannels(
             query: String,
             config: ChannelListConfig,
@@ -52,5 +53,6 @@ interface ChannelsRepository {
     suspend fun pinChannel(channelId: Long): SceytResponse<SceytChannel>
     suspend fun unpinChannel(channelId: Long): SceytResponse<SceytChannel>
     suspend fun join(channelId: Long): SceytResponse<SceytChannel>
+    suspend fun joinWithInviteKey(inviteKey: String): SceytResponse<SceytChannel>
     suspend fun sendChannelEvent(channelId: Long, event: String)
 }

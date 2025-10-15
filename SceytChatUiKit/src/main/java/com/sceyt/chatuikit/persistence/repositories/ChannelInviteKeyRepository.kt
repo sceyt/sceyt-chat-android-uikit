@@ -2,11 +2,8 @@ package com.sceyt.chatuikit.persistence.repositories
 
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.ChannelInviteKeyData
-import com.sceyt.chatuikit.data.models.channels.SceytChannel
 
 interface ChannelInviteKeyRepository {
-    suspend fun getChannelByInviteKey(inviteKey: String): SceytResponse<SceytChannel>
-    suspend fun joinWithInviteKey(inviteKey: String): SceytResponse<SceytChannel>
     suspend fun getChannelInviteKeys(channelId: Long): SceytResponse<List<ChannelInviteKeyData>>
     suspend fun getChannelInviteKeySettings(channelId: Long, key: String): SceytResponse<ChannelInviteKeyData>
     suspend fun createChannelInviteKey(

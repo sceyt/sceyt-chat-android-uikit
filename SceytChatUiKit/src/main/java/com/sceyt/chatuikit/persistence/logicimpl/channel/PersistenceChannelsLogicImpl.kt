@@ -897,6 +897,12 @@ internal class PersistenceChannelsLogicImpl(
         return response
     }
 
+    override suspend fun getChannelByInviteKey(
+            inviteKey: String
+    ): SceytResponse<SceytChannel> = withContext(Dispatchers.IO) {
+        return@withContext channelsRepository.getChannelByInviteKey(inviteKey)
+    }
+
     override suspend fun editChannel(channelId: Long, data: EditChannelData): SceytResponse<SceytChannel> {
         if (data.avatarEdited && data.avatarUrl != null) {
             when (val uploadResult = channelsRepository.uploadAvatar(data.avatarUrl.toString())) {
@@ -918,13 +924,26 @@ internal class PersistenceChannelsLogicImpl(
         return response
     }
 
-    override suspend fun join(channelId: Long): SceytResponse<SceytChannel> {
+    override suspend fun join(
+            channelId: Long
+    ): SceytResponse<SceytChannel> = withContext(Dispatchers.IO) {
         val response = channelsRepository.join(channelId).onSuccessNotNull { channel ->
             insertChannelWithMembers(channel)
             channelsCache.upsertChannel(channel)
         }
 
-        return response
+        return@withContext response
+    }
+
+    override suspend fun joinWithInviteKey(
+            inviteKey: String
+    ): SceytResponse<SceytChannel> = withContext(Dispatchers.IO) {
+        val response = channelsRepository.joinWithInviteKey(inviteKey).onSuccessNotNull { channel ->
+            insertChannelWithMembers(channel)
+            channelsCache.upsertChannel(channel)
+        }
+
+        return@withContext response
     }
 
     override suspend fun updateLastMessageWithLastRead(channelId: Long, message: SceytMessage) {

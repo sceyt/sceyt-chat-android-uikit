@@ -1,50 +1,27 @@
 package com.sceyt.chatuikit.data.repositories
 
 import com.sceyt.chat.models.SceytException
-import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.channel.ChannelInviteKey
 import com.sceyt.chat.models.channel.CreateChannelInviteKeyRequest
 import com.sceyt.chat.models.channel.DeleteRevokedInviteKeyRequest
-import com.sceyt.chat.models.channel.GetChannelByInviteKeyRequest
 import com.sceyt.chat.models.channel.GetChannelInviteKeyRequest
 import com.sceyt.chat.models.channel.GetChannelInviteKeysRequest
-import com.sceyt.chat.models.channel.JoinChannelByInviteKeyRequest
 import com.sceyt.chat.models.channel.RegenerateChannelInviteKeyRequest
 import com.sceyt.chat.models.channel.RevokeChannelInviteKeyRequest
 import com.sceyt.chat.models.channel.UpdateChannelInviteKeyRequest
 import com.sceyt.chat.sceyt_callbacks.ActionCallback
-import com.sceyt.chat.sceyt_callbacks.ChannelCallback
 import com.sceyt.chat.sceyt_callbacks.InviteKeyCallback
 import com.sceyt.chat.sceyt_callbacks.InviteKeysCallback
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.ChannelInviteKeyData
-import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.extensions.safeResume
 import com.sceyt.chatuikit.persistence.mappers.toChannelInviteKeyData
-import com.sceyt.chatuikit.persistence.mappers.toSceytUiChannel
 import com.sceyt.chatuikit.persistence.repositories.ChannelInviteKeyRepository
 import kotlinx.coroutines.suspendCancellableCoroutine
 
 class ChannelInviteKeyRepositoryImpl : ChannelInviteKeyRepository {
-
-    override suspend fun getChannelByInviteKey(
-            inviteKey: String,
-    ): SceytResponse<SceytChannel> {
-        return suspendCancellableCoroutine { continuation ->
-            GetChannelByInviteKeyRequest(inviteKey).execute(object : ChannelCallback {
-                override fun onResult(channel: Channel) {
-                    continuation.safeResume(SceytResponse.Success(channel.toSceytUiChannel()))
-                }
-
-                override fun onError(e: SceytException?) {
-                    continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "getChannelByInviteKey error: ${e?.message}, code: ${e?.code}")
-                }
-            })
-        }
-    }
 
     override suspend fun getChannelInviteKeys(
             channelId: Long,
@@ -78,21 +55,6 @@ class ChannelInviteKeyRepositoryImpl : ChannelInviteKeyRepository {
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
                     SceytLog.e(TAG, "getChannelInviteKeySettings error: ${e?.message}, code: ${e?.code}")
-                }
-            })
-        }
-    }
-
-    override suspend fun joinWithInviteKey(inviteKey: String): SceytResponse<SceytChannel> {
-        return suspendCancellableCoroutine { continuation ->
-            JoinChannelByInviteKeyRequest(inviteKey).execute(object : ChannelCallback {
-                override fun onResult(channel: Channel) {
-                    continuation.safeResume(SceytResponse.Success(channel.toSceytUiChannel()))
-                }
-
-                override fun onError(e: SceytException?) {
-                    continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "joinWithInviteKey error: ${e?.message}, code: ${e?.code}")
                 }
             })
         }

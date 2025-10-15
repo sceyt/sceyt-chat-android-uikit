@@ -2,7 +2,6 @@ package com.sceyt.chatuikit.persistence.logicimpl
 
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.ChannelInviteKeyData
-import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.onSuccessNotNull
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelInviteKeyLogic
@@ -15,18 +14,6 @@ internal class PersistenceChannelInviteKeyLogicImpl(
         private val channelInviteKeyRepository: ChannelInviteKeyRepository,
         private val channelsLogic: PersistenceChannelsLogic,
 ) : PersistenceChannelInviteKeyLogic, SceytKoinComponent {
-
-    override suspend fun getChannelByInviteKey(
-            inviteKey: String,
-    ): SceytResponse<SceytChannel> = withContext(Dispatchers.IO) {
-        return@withContext channelInviteKeyRepository.getChannelByInviteKey(inviteKey)
-    }
-
-    override suspend fun joinWithInviteKey(
-            inviteKey: String,
-    ): SceytResponse<SceytChannel> = withContext(Dispatchers.IO) {
-        return@withContext channelInviteKeyRepository.joinWithInviteKey(inviteKey)
-    }
 
     override suspend fun getChannelInviteKeys(
             channelId: Long,
