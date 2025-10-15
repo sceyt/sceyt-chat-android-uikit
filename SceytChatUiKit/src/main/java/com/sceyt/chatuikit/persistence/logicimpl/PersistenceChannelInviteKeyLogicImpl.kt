@@ -21,11 +21,11 @@ internal class PersistenceChannelInviteKeyLogicImpl(
         return@withContext channelInviteKeyRepository.getChannelInviteKeys(channelId)
     }
 
-    override suspend fun getChannelInviteKeySettings(
+    override suspend fun getChannelInviteKey(
             channelId: Long,
             key: String,
     ): SceytResponse<ChannelInviteKeyData> = withContext(Dispatchers.IO) {
-        return@withContext channelInviteKeyRepository.getChannelInviteKeySettings(channelId, key)
+        return@withContext channelInviteKeyRepository.getChannelInviteKey(channelId, key)
     }
 
     override suspend fun createChannelInviteKey(

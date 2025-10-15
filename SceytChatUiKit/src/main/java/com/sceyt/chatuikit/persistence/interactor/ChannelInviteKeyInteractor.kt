@@ -2,11 +2,10 @@ package com.sceyt.chatuikit.persistence.interactor
 
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.ChannelInviteKeyData
-import com.sceyt.chatuikit.data.models.channels.SceytChannel
 
 interface ChannelInviteKeyInteractor {
     suspend fun getChannelInviteKeys(channelId: Long): SceytResponse<List<ChannelInviteKeyData>>
-    suspend fun getChannelInviteKeySettings(channelId: Long, key: String): SceytResponse<ChannelInviteKeyData>
+    suspend fun getChannelInviteKey(channelId: Long, key: String): SceytResponse<ChannelInviteKeyData>
     suspend fun createChannelInviteKey(
             channelId: Long,
             expireAt: Long,
