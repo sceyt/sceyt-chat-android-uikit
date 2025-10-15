@@ -84,7 +84,7 @@ class ChannelInviteLinkViewModel(
         }
 
         viewModelScope.launch {
-            channelInviteKeyInteractor.getChannelInviteKeySettings(
+            channelInviteKeyInteractor.getChannelInviteKey(
                 channelId = channel.id,
                 key = primaryKey
             ).onSuccessNotNull { data ->

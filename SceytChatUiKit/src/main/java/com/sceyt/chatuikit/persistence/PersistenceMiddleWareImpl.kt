@@ -707,8 +707,8 @@ internal class PersistenceMiddleWareImpl(
         return channelInviteKeyLogic.getChannelInviteKeys(channelId)
     }
 
-    override suspend fun getChannelInviteKeySettings(channelId: Long, key: String): SceytResponse<ChannelInviteKeyData> {
-        return channelInviteKeyLogic.getChannelInviteKeySettings(channelId, key)
+    override suspend fun getChannelInviteKey(channelId: Long, key: String): SceytResponse<ChannelInviteKeyData> {
+        return channelInviteKeyLogic.getChannelInviteKey(channelId, key)
     }
 
     override suspend fun createChannelInviteKey(

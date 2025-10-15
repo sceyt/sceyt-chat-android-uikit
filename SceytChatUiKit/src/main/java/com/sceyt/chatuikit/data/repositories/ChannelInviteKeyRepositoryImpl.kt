@@ -41,7 +41,7 @@ class ChannelInviteKeyRepositoryImpl : ChannelInviteKeyRepository {
         }
     }
 
-    override suspend fun getChannelInviteKeySettings(
+    override suspend fun getChannelInviteKey(
             channelId: Long,
             key: String,
     ): SceytResponse<ChannelInviteKeyData> {
@@ -54,7 +54,7 @@ class ChannelInviteKeyRepositoryImpl : ChannelInviteKeyRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "getChannelInviteKeySettings error: ${e?.message}, code: ${e?.code}")
+                    SceytLog.e(TAG, "getChannelInviteKey error: ${e?.message}, code: ${e?.code}")
                 }
             })
         }
