@@ -9,7 +9,7 @@ import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.onError
 import com.sceyt.chatuikit.data.models.onSuccessNotNull
 import com.sceyt.chatuikit.koin.SceytKoinComponent
-import com.sceyt.chatuikit.persistence.interactor.ChannelInviteKeyInteractor
+import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
 import com.sceyt.chatuikit.presentation.common.SceytLoader
 import com.sceyt.chatuikit.presentation.components.invite_link.join.BottomSheetJoinByInviteLink
 import kotlinx.coroutines.TimeoutCancellationException
@@ -29,7 +29,7 @@ sealed interface JoinByInviteLinkResult {
 open class ChannelInviteLinkHandler(
         private val context: Context
 ) : SceytKoinComponent {
-    private val channelInviteKeyInteractor: ChannelInviteKeyInteractor by inject()
+    private val channelInteractor: ChannelInteractor by inject()
 
     private var _isLoading = AtomicBoolean(false)
     val isLoading: Boolean get() = _isLoading.get()
@@ -67,7 +67,7 @@ open class ChannelInviteLinkHandler(
         try {
             withTimeout(timeout) {
                 ConnectionEventManager.awaitToConnectSceyt()
-                channelInviteKeyInteractor.getChannelByInviteKey(key)
+                channelInteractor.getChannelByInviteKey(key)
                     .onSuccessNotNull { channel ->
                         if (channel.userRole.isNullOrBlank()) {
                             showBottomSheetJoinByInviteLink(
