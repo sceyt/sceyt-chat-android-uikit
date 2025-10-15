@@ -1,6 +1,8 @@
 package com.sceyt.chat.demo
 
 import android.app.Application
+import android.util.Log
+import com.sceyt.chat.ChatClient
 import com.sceyt.chat.demo.connection.ChatClientConnectionInterceptor
 import com.sceyt.chat.demo.connection.SceytConnectionProvider
 import com.sceyt.chat.demo.di.apiModule
@@ -10,7 +12,9 @@ import com.sceyt.chat.demo.di.viewModelModules
 import com.sceyt.chat.demo.notifications.CustomFileTransferNotificationBuilder
 import com.sceyt.chat.demo.notifications.CustomPushNotificationBuilder
 import com.sceyt.chat.demo.notifications.CustomPushNotificationChannelProvider
+import com.sceyt.chat.models.SCTLogLevel
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.config.ChannelInviteDeepLinkConfig
 import com.sceyt.chatuikit.config.PushNotificationConfig
 import com.sceyt.chatuikit.providers.ChatTokenProvider
 import com.sceyt.chatuikit.push.providers.firebase.FirebasePushServiceProvider
@@ -44,6 +48,14 @@ class SceytChatDemoApp : Application() {
         )
 
         setupNotifications()
+
+        ChatClient.setSceytLogLevel(SCTLogLevel.Info) { i: Int, s: String, s1: String ->
+            when (i) {
+                Log.DEBUG, Log.INFO, Log.VERBOSE -> Log.i(s, s1)
+                Log.WARN -> Log.w(s, s1)
+                Log.ERROR, Log.ASSERT -> Log.e(s, s1)
+            }
+        }
     }
 
     private fun setupNotifications() {

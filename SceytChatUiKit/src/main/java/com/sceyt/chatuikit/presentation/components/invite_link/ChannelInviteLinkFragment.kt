@@ -12,6 +12,7 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytFragmentChannelInviteLinkBinding
+import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.setBundleArguments
 import com.sceyt.chatuikit.extensions.setClipboard
@@ -103,6 +104,10 @@ open class ChannelInviteLinkFragment : Fragment(), SceytKoinComponent {
         if (state.isLoading)
             SceytLoader.showLoading(requireContext())
         else SceytLoader.hideLoading()
+
+        state.error?.let {
+            customToastSnackBar(binding.root, it)
+        }
     }
 
     protected fun setLinkDetails(

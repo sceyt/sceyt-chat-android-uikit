@@ -51,7 +51,7 @@ class ChannelInviteLinkViewModel(
         if (state.isLoading || state.inviteKey == null) return
 
         _uiState.update {
-            it.copy(isLoading = true)
+            it.copy(isLoading = true, error = null)
         }
 
         viewModelScope.launch {
