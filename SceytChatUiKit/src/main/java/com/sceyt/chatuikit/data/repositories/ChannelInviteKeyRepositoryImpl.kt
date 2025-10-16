@@ -35,7 +35,8 @@ class ChannelInviteKeyRepositoryImpl : ChannelInviteKeyRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "getChannelInviteKeys error for channelId: $channelId, error: ${e?.message}, code: ${e?.code}")
+                    SceytLog.e(TAG, "getChannelInviteKeys error for channelId: $channelId," +
+                            " error: ${e?.message}, code: ${e?.code}")
                 }
             })
         }
@@ -54,7 +55,8 @@ class ChannelInviteKeyRepositoryImpl : ChannelInviteKeyRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "getChannelInviteKey error: ${e?.message}, code: ${e?.code}, channelId: $channelId, key: $key")
+                    SceytLog.e(TAG, "getChannelInviteKey error: ${e?.message}," +
+                            " code: ${e?.code}, channelId: $channelId, key: $key")
                 }
             })
         }
@@ -79,7 +81,8 @@ class ChannelInviteKeyRepositoryImpl : ChannelInviteKeyRepository {
 
                     override fun onError(e: SceytException?) {
                         continuation.safeResume(SceytResponse.Error(e))
-                        SceytLog.e(TAG, "createChannelInviteLink error: ${e?.message}, code: ${e?.code}, channelId: $channelId")
+                        SceytLog.e(TAG, "createChannelInviteLink error: ${e?.message}," +
+                                " code: ${e?.code}, channelId: $channelId")
                     }
                 })
         }
@@ -104,7 +107,8 @@ class ChannelInviteKeyRepositoryImpl : ChannelInviteKeyRepository {
 
                     override fun onError(e: SceytException?) {
                         continuation.safeResume(SceytResponse.Error(e))
-                        SceytLog.e(TAG, "updateInviteKeySettings error: ${e?.message}, code: ${e?.code}, channelId: $channelId, key: $key")
+                        SceytLog.e(TAG, "updateInviteKeySettings error: ${e?.message}," +
+                                " code: ${e?.code}, channelId: $channelId, key: $key")
                     }
                 })
         }
@@ -125,7 +129,8 @@ class ChannelInviteKeyRepositoryImpl : ChannelInviteKeyRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "regenerateChannelInviteKey error: ${e?.message}, code: ${e?.code}, channelId: $channelId, key: $key")
+                    SceytLog.e(TAG, "regenerateChannelInviteKey error: ${e?.message}," +
+                            " code: ${e?.code}, channelId: $channelId, key: $key")
                 }
             })
         }
@@ -145,7 +150,8 @@ class ChannelInviteKeyRepositoryImpl : ChannelInviteKeyRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "revokeChannelInviteKeys error: ${e?.message}, code: ${e?.code}, channelId: $channelId, keys: $keys")
+                    SceytLog.e(TAG, "revokeChannelInviteKeys error: ${e?.message}, " +
+                            "code: ${e?.code}, channelId: $channelId, keys: $keys")
                 }
             })
         }
@@ -165,7 +171,8 @@ class ChannelInviteKeyRepositoryImpl : ChannelInviteKeyRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "deleteRevokedChannelInviteKeys error: ${e?.message}, code: ${e?.code}, channelId: $channelId, keys: $keys")
+                    SceytLog.e(TAG, "deleteRevokedChannelInviteKeys error: ${e?.message}, " +
+                            "code: ${e?.code}, channelId: $channelId, keys: $keys")
                 }
             })
         }
