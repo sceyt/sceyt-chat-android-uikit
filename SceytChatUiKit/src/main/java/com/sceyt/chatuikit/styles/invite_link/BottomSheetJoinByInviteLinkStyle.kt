@@ -42,8 +42,8 @@ data class BottomSheetJoinByInviteLinkStyle(
             context.obtainStyledAttributes(attrs, R.styleable.JoinByInviteLink).use { array ->
                 val primaryProgressBarColor = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
                 val buttonProgressBarColor = context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor)
-                val subtitleText = context.getString(R.string.group_chat_invite)
-                val joinButtonText = context.getString(R.string.join_group)
+                val subtitleText = context.getString(R.string.sceyt_group_chat_invite)
+                val joinButtonText = context.getString(R.string.sceyt_join_group)
 
                 return BottomSheetJoinByInviteLinkStyle(
                     backgroundStyle = buildBackgroundStyle(array),

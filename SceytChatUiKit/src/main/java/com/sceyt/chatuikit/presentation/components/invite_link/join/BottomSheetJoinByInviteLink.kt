@@ -159,7 +159,7 @@ open class BottomSheetJoinByInviteLink : BottomSheetDialogFragment(), SceytKoinC
         val remainingCount = members.size - 3
 
         return if (remainingCount > 0)
-            getString(R.string.and_others, displayNames, remainingCount)
+            getString(R.string.sceyt_and_others, displayNames, remainingCount)
         else displayNames
     }
 

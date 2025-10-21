@@ -35,8 +35,8 @@ data class BottomSheetShareInviteQRStyle(
         fun build(): BottomSheetShareInviteQRStyle {
             context.obtainStyledAttributes(attrs, R.styleable.ShareInviteQR).use { array ->
                 val titleText = context.getString(R.string.sceyt_qr_code_for_invites)
-                val descriptionText = context.getString(R.string.share_channel_link_desc)
-                val shareButtonText = context.getString(R.string.share_qr_code)
+                val descriptionText = context.getString(R.string.sceyt_share_channel_link_desc)
+                val shareButtonText = context.getString(R.string.sceyt_share_qr_code)
 
                 return BottomSheetShareInviteQRStyle(
                     backgroundStyle = buildBackgroundStyle(array),
