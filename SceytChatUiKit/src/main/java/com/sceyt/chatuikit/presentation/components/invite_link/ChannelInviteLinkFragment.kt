@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -136,7 +137,7 @@ open class ChannelInviteLinkFragment : Fragment(), SceytKoinComponent {
 
     protected open fun onCopyLinkClick() {
         context?.setClipboard(binding.tvInviteLink.text.toString())
-        customToastSnackBar(binding.root, getString(R.string.sceyt_link_copied))
+        Toast.makeText(requireContext(), getString(R.string.sceyt_link_copied), Toast.LENGTH_SHORT).show()
     }
 
     protected open fun onShareClick() {
