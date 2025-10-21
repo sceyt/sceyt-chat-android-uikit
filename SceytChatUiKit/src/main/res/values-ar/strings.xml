@@ -191,7 +191,6 @@
     <string name="sceyt_auto_delete_messages_off">حذف الرسائل تلقائيًا (متوقف)</string>
     <string name="sceyt_pin_chat">تثبيت الدردشة</string>
     <string name="sceyt_un_pin_chat">إلغاء تثبيت الدردشة</string>
-    <string name="sceyt_channel_uri_copied">تم نسخ رابط القناة</string>
     <string name="sceyt_report_channel">الإبلاغ عن القناة</string>
     <string name="sceyt_the_url_exist_title">اسم القناة محجوز مسبقًا</string>
     <string name="sceyt_url_length_validation_text">يجب أن يكون الاسم بين 5 و50 حرفًا.</string>

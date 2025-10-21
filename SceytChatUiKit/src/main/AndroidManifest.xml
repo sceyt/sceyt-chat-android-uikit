@@ -66,6 +66,12 @@
             android:name=".presentation.components.create_chat.create_channel.CreateChannelActivity"
             android:exported="false"
             android:theme="@style/DefaultFontTheme" />
+
+        <activity
+            android:name=".presentation.components.invite_link.ChannelInviteLinkActivity"
+            android:exported="false"
+            android:theme="@style/DefaultFontTheme" />
+
         <activity
             android:name=".presentation.components.create_chat.create_group.CreateGroupActivity"
             android:exported="false"

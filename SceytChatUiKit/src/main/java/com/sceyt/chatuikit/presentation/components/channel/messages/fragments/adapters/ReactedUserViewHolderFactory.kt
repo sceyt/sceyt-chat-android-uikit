@@ -6,8 +6,7 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytItemLoadingMoreBinding
 import com.sceyt.chatuikit.databinding.SceytItemReactedUserBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
-import com.sceyt.chatuikit.extensions.setProgressColor
-import com.sceyt.chatuikit.presentation.components.channel.messages.fragments.adapters.ReactedUserViewHolderFactory.OnItemClickListener
+import com.sceyt.chatuikit.extensions.setProgressColorRes
 import com.sceyt.chatuikit.presentation.components.channel.messages.fragments.adapters.holders.users.ReactedUserViewHolder
 import com.sceyt.chatuikit.presentation.root.BaseViewHolder
 import com.sceyt.chatuikit.styles.reactions_info.ReactedUserItemStyle
@@ -34,7 +33,7 @@ open class ReactedUserViewHolderFactory(
         val binding = SceytItemLoadingMoreBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return object : BaseViewHolder<ReactedUserItem>(binding.root) {
             override fun bind(item: ReactedUserItem) {
-                binding.adapterListLoadingProgressBar.setProgressColor(context.getCompatColor(SceytChatUIKit.theme.colors.accentColor))
+                binding.adapterListLoadingProgressBar.setProgressColorRes(context.getCompatColor(SceytChatUIKit.theme.colors.accentColor))
             }
         }
     }

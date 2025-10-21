@@ -1,6 +1,8 @@
 package com.sceyt.chatuikit.persistence.mappers
 
 import com.sceyt.chat.models.channel.Channel
+import com.sceyt.chat.models.channel.ChannelInviteKey
+import com.sceyt.chatuikit.data.models.channels.ChannelInviteKeyData
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
 import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
@@ -163,4 +165,15 @@ fun createPendingChannel(
     pending = true,
     draftMessage = null,
     events = null
+)
+
+fun ChannelInviteKey.toChannelInviteKeyData() = ChannelInviteKeyData(
+    channelId = channelId,
+    key = key,
+    expireAt = expiresAt,
+    revokedAt = revokedAt,
+    revoked = isRevoked,
+    accessPriorHistory = isAccessPriorHistory,
+    maxUses = maxUses,
+    createdBy = createdBy.toSceytMember()
 )

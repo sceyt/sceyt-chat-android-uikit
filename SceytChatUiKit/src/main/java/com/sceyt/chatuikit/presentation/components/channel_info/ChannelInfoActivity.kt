@@ -74,8 +74,8 @@ import com.sceyt.chatuikit.presentation.components.channel_info.voice.ChannelInf
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.dialogs.ChannelActionConfirmationWithDialog
 import com.sceyt.chatuikit.presentation.components.edit_channel.EditChannelFragment
 import com.sceyt.chatuikit.presentation.root.PageState
-import com.sceyt.chatuikit.styles.StyleRegistry
 import com.sceyt.chatuikit.services.SceytPresenceChecker.PresenceUser
+import com.sceyt.chatuikit.styles.StyleRegistry
 import com.sceyt.chatuikit.styles.channel_info.ChannelInfoStyle
 
 @Suppress("MemberVisibilityCanBePrivate")
@@ -95,7 +95,7 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
         enableEdgeToEdge()
         style = ChannelInfoStyle.Builder(this, null).build()
         registerAllStyles()
-        
+
         setActivityContentView()
         binding?.let { applyInsetsAndWindowColor(it.root) }
         statusBarIconsColorWithBackground()
@@ -602,7 +602,9 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
     protected open fun setChannelSpecifications(channel: SceytChannel) {
         initOrUpdateFragment(binding?.frameLayoutSpecifications ?: return) {
-            getChannelURIFragment(channel)
+            if (SceytChatUIKit.config.channelLinkDeepLinkConfig != null)
+                getChannelURIFragment(channel)
+            else null
         }
     }
 
@@ -653,7 +655,9 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
     protected open fun getChannelAdditionalInfoFragment(channel: SceytChannel): Fragment? = null
 
     //URI
-    protected open fun getChannelURIFragment(channel: SceytChannel): Fragment? = ChannelInfoURIFragment.newInstance(channel)
+    protected open fun getChannelURIFragment(
+            channel: SceytChannel
+    ): Fragment? = ChannelInfoURIFragment.newInstance(channel)
 
     protected open fun onPageStateChanged(pageState: PageState) {
         if (pageState is PageState.StateError) {
@@ -690,9 +694,9 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
         super.onDestroy()
         // Clean up all registered styles
         StyleRegistry.unregister(
-            style.mediaStyle.styleId, 
+            style.mediaStyle.styleId,
             style.filesStyle.styleId,
-            style.linkStyle.styleId, 
+            style.linkStyle.styleId,
             style.voiceStyle.styleId
         )
     }

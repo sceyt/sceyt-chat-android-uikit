@@ -80,7 +80,8 @@ data class ButtonStyle(
                 backgroundColor = backgroundColor,
                 borderColor = borderColor,
                 borderWidth = borderWidth,
-                shape = RoundedCornerShape(cornerRadius)
+                shape = if (cornerRadius != UNSET_CORNER_RADIUS)
+                    RoundedCornerShape(cornerRadius) else Shape.UnsetShape
             ),
             textStyle = textStyle
         )
