@@ -191,7 +191,6 @@
     <string name="sceyt_auto_delete_messages_off">Auto-Delete messages (off)</string>
     <string name="sceyt_pin_chat">Pin chat</string>
     <string name="sceyt_un_pin_chat">Unpin chat</string>
-    <string name="sceyt_channel_uri_copied">Channel Uri copied</string>
     <string name="sceyt_report_channel">Report channel</string>
     <string name="sceyt_the_url_exist_title">Channel name is already taken</string>
     <string name="sceyt_url_length_validation_text">The name should be 5–50 characters long.</string>
