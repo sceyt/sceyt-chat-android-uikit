@@ -245,4 +245,15 @@
     <string name="sceyt_group_chat_invite">Group Chat Invite</string>
     <string name="sceyt_and_others">%1$s and %2$d others</string>
     <string name="sceyt_link_copied">Link copied</string>
+    <string name="sceyt_poll">Poll</string>
+    <string name="sceyt_poll_question">Question</string>
+    <string name="sceyt_poll_add_question">Add question</string>
+    <string name="sceyt_poll_options">Options</string>
+    <string name="sceyt_poll_add_option">Add an option</string>
+    <string name="sceyt_poll_parameters">Parameters</string>
+    <string name="sceyt_poll_anonymous">Anonymous poll</string>
+    <string name="sceyt_poll_multiple_votes">Multiple votes</string>
+    <string name="sceyt_poll_can_retract_votes">Can\'t retract votes</string>
+    <string name="sceyt_create_poll">Create Poll</string>
+    <string name="sceyt_poll_add">Add poll</string>
 </resources>
