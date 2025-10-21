@@ -144,14 +144,13 @@ open class ChannelInviteLinkFragment : Fragment(), SceytKoinComponent {
     }
 
     protected open fun onOpenQrClick() {
-        BottomSheetShareInviteQR.Companion.show(
+        val inviteKey = channel.uri ?: return
+        val uri = SceytChatUIKit.config.channelLinkDeepLinkConfig?.buildInviteUrl(inviteKey)
+        BottomSheetShareInviteQR.show(
             fragmentManager = childFragmentManager,
-            linkQrData = LinkQrData(link = linkUrl)
+            linkQrData = LinkQrData(link = uri?.toString() ?: return)
         )
     }
-
-    protected open val linkUrl: String
-        get() = SceytChatUIKit.config.channelLinkDeepLinkConfig?.buildInviteUrl(channel.uri.orEmpty())?.toString().orEmpty()
 
     protected fun applyStyle() = with(binding) {
         root.setBackgroundColor(style.backgroundColor)
