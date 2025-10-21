@@ -122,8 +122,8 @@ open class ChannelInviteLinkFragment : Fragment(), SceytKoinComponent {
         SceytDialog.showDialog(
             context = requireContext(),
             title = getString(R.string.sceyt_reset_link),
-            description = getString(R.string.reset_link_desc),
-            positiveBtnTitle = getString(R.string.reset),
+            description = getString(R.string.sceyt_reset_link_desc),
+            positiveBtnTitle = getString(R.string.sceyt_reset),
             positiveCb = {
                 viewModel.resetInviteLink()
             }
@@ -136,6 +136,7 @@ open class ChannelInviteLinkFragment : Fragment(), SceytKoinComponent {
 
     protected open fun onCopyLinkClick() {
         context?.setClipboard(binding.tvInviteLink.text.toString())
+        customToastSnackBar(binding.root, getString(R.string.sceyt_link_copied))
     }
 
     protected open fun onShareClick() {
