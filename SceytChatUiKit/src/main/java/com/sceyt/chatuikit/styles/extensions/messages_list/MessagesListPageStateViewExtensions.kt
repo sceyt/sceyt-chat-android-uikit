@@ -6,7 +6,7 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytMessagesEmptyStateBinding
 import com.sceyt.chatuikit.databinding.SceytMessagesEmptyStateSelfChannelBinding
 import com.sceyt.chatuikit.databinding.SceytPageLoadingStateBinding
-import com.sceyt.chatuikit.extensions.setProgressColor
+import com.sceyt.chatuikit.extensions.setProgressColorRes
 import com.sceyt.chatuikit.extensions.setTextColorRes
 import com.sceyt.chatuikit.extensions.setTintColorRes
 import com.sceyt.chatuikit.presentation.components.channel.messages.MessagesListView
@@ -79,5 +79,5 @@ private fun SceytMessagesEmptyStateSelfChannelBinding.applyStyle() {
 }
 
 private fun SceytPageLoadingStateBinding.applyStyle() {
-    progressBar.setProgressColor(SceytChatUIKit.theme.colors.accentColor)
+    progressBar.setProgressColorRes(SceytChatUIKit.theme.colors.accentColor)
 }

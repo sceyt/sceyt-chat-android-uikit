@@ -199,8 +199,12 @@ fun TextView.setHintColorRes(@ColorRes color: Int) {
 val View.marginHorizontal
     get() = marginStart + marginEnd
 
-fun ProgressBar.setProgressColor(@ColorRes colorId: Int) {
+fun ProgressBar.setProgressColorRes(@ColorRes colorId: Int) {
     indeterminateDrawable.setTint(context.getCompatColor(colorId))
+}
+
+fun ProgressBar.setProgressColor(@ColorInt color: Int) {
+    indeterminateDrawable.setTint(color)
 }
 
 @Suppress("DEPRECATION")

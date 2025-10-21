@@ -79,6 +79,7 @@ dependencies {
     api(libs.libphonenumber)
     api(libs.ucrop)
     api(libs.gson)
+    api(libs.core.zxing)
 
     // Instrumented Unit Tests
     androidTestImplementation(libs.junit.ktx)

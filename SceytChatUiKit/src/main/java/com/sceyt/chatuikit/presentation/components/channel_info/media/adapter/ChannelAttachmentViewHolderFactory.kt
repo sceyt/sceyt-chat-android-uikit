@@ -11,7 +11,7 @@ import com.sceyt.chatuikit.databinding.SceytItemChannelMediaDateSeparatorBinding
 import com.sceyt.chatuikit.databinding.SceytItemChannelVideoBinding
 import com.sceyt.chatuikit.databinding.SceytItemChannelVoiceBinding
 import com.sceyt.chatuikit.databinding.SceytItemLoadingMoreBinding
-import com.sceyt.chatuikit.extensions.setProgressColor
+import com.sceyt.chatuikit.extensions.setProgressColorRes
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.holders.BaseFileViewHolder
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelFileItem
@@ -106,7 +106,7 @@ open class ChannelAttachmentViewHolderFactory(
         val binding = SceytItemLoadingMoreBinding.inflate(layoutInflater, parent, false)
         return object : BaseFileViewHolder<ChannelFileItem>(binding.root, {}) {
             override fun bind(item: ChannelFileItem) {
-                binding.adapterListLoadingProgressBar.setProgressColor(SceytChatUIKit.theme.colors.accentColor)
+                binding.adapterListLoadingProgressBar.setProgressColorRes(SceytChatUIKit.theme.colors.accentColor)
             }
         }
     }

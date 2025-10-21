@@ -106,8 +106,12 @@ fun ByteArray.decodeByteArrayToBitmap(): Bitmap? {
     return FileResizeUtil.getOrientationCorrectedBitmap(bitmap ?: return null, this)
 }
 
-fun Bitmap.toFile(context: Context): File {
-    val dest = File(context.cacheDir.toString() + UUID.randomUUID() + ".JPEG")
+fun Bitmap.toFile(
+        context: Context,
+        parentDir: File = context.cacheDir,
+        name: String = UUID.randomUUID().toString() + ".JPEG",
+): File {
+    val dest = File(parentDir, name)
     compress(Bitmap.CompressFormat.JPEG, 100, dest.outputStream())
     return dest
 }

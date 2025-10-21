@@ -275,11 +275,21 @@ class ChannelsCache {
         synchronized(lock) {
             cachedData.forEachKeyValue { key, value ->
                 value[channelId]?.let { channel ->
-                    val updatedChannel = channel.copy(
-                        messageRetentionPeriod = period
-                    )
+                    val updatedChannel = channel.copy(messageRetentionPeriod = period)
                     val diff = channel.diff(updatedChannel)
                     channelUpdated(key, updatedChannel, diff, false, ChannelUpdatedType.AutoDeleteState)
+                }
+            }
+        }
+    }
+
+    fun updateChannelUri(channelId: Long, newUri: String) {
+        synchronized(lock) {
+            cachedData.forEachKeyValue { key, value ->
+                value[channelId]?.let { channel ->
+                    val updatedChannel = channel.copy(uri = newUri)
+                    val diff = channel.diff(updatedChannel)
+                    channelUpdated(key, updatedChannel, diff, false, ChannelUpdatedType.Updated)
                 }
             }
         }

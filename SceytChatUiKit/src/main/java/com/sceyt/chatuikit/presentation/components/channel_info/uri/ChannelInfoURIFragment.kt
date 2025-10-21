@@ -9,6 +9,7 @@ import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytFragmentChannelInfoUriBinding
 import com.sceyt.chatuikit.extensions.parcelable
@@ -62,7 +63,8 @@ open class ChannelInfoURIFragment : Fragment(), ChannelUpdateListener, ChannelIn
     open fun setChannelSpecification(channel: SceytChannel) {
         with(binding) {
             if (channel.isPublic()) {
-                uri.text = channel.uri
+                val config = SceytChatUIKit.config.channelLinkDeepLinkConfig ?: return
+                uri.text = config.buildInviteUrl(channel.uri.orEmpty()).toString()
             } else binding.root.isVisible = false
         }
     }
@@ -70,7 +72,7 @@ open class ChannelInfoURIFragment : Fragment(), ChannelUpdateListener, ChannelIn
     private fun onLinkClick(channel: SceytChannel) {
         val uri = channel.uri ?: return
         context?.setClipboard(uri)
-        Toast.makeText(context, getString(R.string.sceyt_channel_uri_copied), Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, getString(R.string.sceyt_link_copied), Toast.LENGTH_SHORT).show()
     }
 
     override fun onChannelUpdated(channel: SceytChannel) {

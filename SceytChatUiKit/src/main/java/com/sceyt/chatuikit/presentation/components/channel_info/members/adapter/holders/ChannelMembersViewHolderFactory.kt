@@ -6,7 +6,7 @@ import android.view.ViewGroup
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytItemChannelMembersBinding
 import com.sceyt.chatuikit.databinding.SceytItemLoadingMoreBinding
-import com.sceyt.chatuikit.extensions.setProgressColor
+import com.sceyt.chatuikit.extensions.setProgressColorRes
 import com.sceyt.chatuikit.presentation.components.channel_info.members.adapter.MemberItem
 import com.sceyt.chatuikit.presentation.components.channel_info.members.adapter.diff.MemberItemPayloadDiff
 import com.sceyt.chatuikit.presentation.components.channel_info.members.adapter.listeners.MemberClickListeners
@@ -43,7 +43,7 @@ open class ChannelMembersViewHolderFactory(
             }
 
             private fun SceytItemLoadingMoreBinding.applyStyle() {
-                adapterListLoadingProgressBar.setProgressColor(SceytChatUIKit.theme.colors.accentColor)
+                adapterListLoadingProgressBar.setProgressColorRes(SceytChatUIKit.theme.colors.accentColor)
             }
         }
     }
