@@ -72,7 +72,7 @@ open class ChannelInfoURIFragment : Fragment(), ChannelUpdateListener, ChannelIn
     private fun onLinkClick(channel: SceytChannel) {
         val uri = channel.uri ?: return
         context?.setClipboard(uri)
-        Toast.makeText(context, getString(R.string.sceyt_channel_uri_copied), Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, getString(R.string.sceyt_link_copied), Toast.LENGTH_SHORT).show()
     }
 
     override fun onChannelUpdated(channel: SceytChannel) {
