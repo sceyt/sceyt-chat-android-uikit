@@ -16,4 +16,18 @@ enum class MessageTypeEnum(val value: String) {
             System -> "system"
         }
     }
+
+    companion object {
+
+       fun fromValue(value: String): MessageTypeEnum? {
+            return when (value) {
+                "text" -> Text
+                "media" -> Media
+                "file" -> File
+                "link" -> Link
+                "system" -> System
+                else -> null
+            }
+        }
+    }
 }
