@@ -17,6 +17,7 @@ import com.sceyt.chatuikit.extensions.setOnClickListenerAvailable
 import com.sceyt.chatuikit.extensions.setOnLongClickListenerAvailable
 import com.sceyt.chatuikit.formatters.attributes.ChannelEventTitleFormatterAttributes
 import com.sceyt.chatuikit.formatters.attributes.ChannelItemSubtitleFormatterAttributes
+import com.sceyt.chatuikit.formatters.attributes.MessageBodyFormatterAttributes
 import com.sceyt.chatuikit.persistence.differs.ChannelDiff
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isDirect
@@ -114,7 +115,16 @@ open class ChannelViewHolder(
     protected open fun setLastMessagedText(channel: SceytChannel, textView: TextView) {
         val isUnsupportedMessage = (channel.lastMessage?.let { MessageTypeEnum.fromValue(it.type) } == null)
         val text = if (isUnsupportedMessage) {
-            context.getString(R.string.unsupported_message_text)
+            channel.lastMessage?.let {
+                itemStyle.unsupportedMessageBodyFormatter.format(
+                    context = context,
+                    from = MessageBodyFormatterAttributes(
+                        message = it,
+                        mentionTextStyle = itemStyle.mentionTextStyle,
+                        mentionClickListener = null
+                    )
+                )
+            } ?: context.getString(R.string.unsupported_message_text)
         } else
             itemStyle.channelSubtitleFormatter.format(
                 context = context,

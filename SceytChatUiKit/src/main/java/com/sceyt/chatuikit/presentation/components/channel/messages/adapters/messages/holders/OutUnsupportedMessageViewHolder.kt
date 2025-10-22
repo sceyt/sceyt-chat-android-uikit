@@ -52,6 +52,9 @@ class OutUnsupportedMessageViewHolder(
                 if (diff.edited || diff.statusChanged)
                     setMessageStatusAndDateText(message, messageDate)
 
+                if (diff.edited || diff.bodyChanged)
+                    setUnsupportedMessageBody(messageBody, message)
+
                 if (diff.replyCountChanged)
                     setReplyCount(tvReplyCount, toReplyLine, item)
 
