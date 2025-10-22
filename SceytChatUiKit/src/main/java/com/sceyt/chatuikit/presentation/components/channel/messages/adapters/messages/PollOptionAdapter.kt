@@ -43,7 +43,7 @@ class PollOptionAdapter(
         holder.bind(getItem(position), diff, animate = shouldAnimate)
     }
 
-    fun submitListWithAnimation(
+    fun setOptions(
             newOptions: List<PollOption>,
             newTotalVotes: Int? = null,
             animate: Boolean,
@@ -66,6 +66,8 @@ class PollOptionAdapter(
                 diff: PollOptionDiff,
                 animate: Boolean = false,
         ) = with(binding) {
+            checkbox.isVisible = !isClosed
+
             if (diff.selectedChanged) {
                 checkbox.isChecked = option.selected
             }
@@ -108,7 +110,6 @@ class PollOptionAdapter(
             // Disable clicking if poll is closed (only set once)
             if (diff == PollOptionDiff.DEFAULT) {
                 root.isEnabled = !isClosed
-                root.alpha = if (isClosed) 0.6f else 1.0f
 
                 root.setOnClickListener {
                     if (!isClosed) {
@@ -120,8 +121,11 @@ class PollOptionAdapter(
 
         private fun animateProgress(from: Int, to: Int) {
             progressAnimator?.cancel()
-            // Use ObjectAnimator for smoother animation
-            progressAnimator = ObjectAnimator.ofInt(binding.progressBar, "progress", from, to).apply {
+            progressAnimator = ObjectAnimator.ofInt(
+                binding.progressBar,
+                "progress",
+                from, to
+            ).apply {
                 duration = 300
                 interpolator = LinearInterpolator()
                 addUpdateListener { animator ->
