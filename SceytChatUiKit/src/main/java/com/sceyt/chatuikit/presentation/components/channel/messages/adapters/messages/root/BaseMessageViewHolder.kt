@@ -164,6 +164,21 @@ abstract class BaseMessageViewHolder(
         messageBody.setText(body, TextView.BufferType.SPANNABLE)
     }
 
+    protected open fun setUnsupportedMessageBody(
+            messageBody: TextView,
+            message: SceytMessage
+    ) {
+        val body = itemStyle.unsupportedMessageBodyFormatter.format(context, MessageBodyFormatterAttributes(
+            message = message,
+            mentionTextStyle = itemStyle.mentionTextStyle,
+            mentionClickListener = {
+                messageListeners?.onMentionClick(messageBody, it)
+            }
+        ))
+        messageBody.autoLinkMask = 0
+        messageBody.setText(body, TextView.BufferType.SPANNABLE)
+    }
+
     protected open fun setTextAutoLinkMasks(
             messageBody: TextView,
             bodyText: CharSequence,

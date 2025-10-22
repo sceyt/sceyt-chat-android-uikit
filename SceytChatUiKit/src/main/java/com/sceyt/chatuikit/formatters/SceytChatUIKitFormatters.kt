@@ -37,6 +37,7 @@ import com.sceyt.chatuikit.formatters.defaults.DefaultChannelEventTitleFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelEventUserNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultDraftMessageBodyWithAttachmentsFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUnreadCountFormatter
+import com.sceyt.chatuikit.formatters.defaults.DefaultUnsupportedMessageBodyFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUserAndNotesNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUserNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUserPresenceDateFormatter
@@ -106,6 +107,10 @@ class SceytChatUIKitFormatters {
 
     var messageBodyFormatter: Formatter<MessageBodyFormatterAttributes> by lazyVar {
         DefaultMessageBodyFormatter()
+    }
+
+    var unSupportMessageBodyFormatter: Formatter<MessageBodyFormatterAttributes> by lazyVar {
+        DefaultUnsupportedMessageBodyFormatter()
     }
 
     var channelLastMessageBodyFormatter: Formatter<MessageBodyFormatterAttributes> by lazyVar {
