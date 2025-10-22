@@ -245,4 +245,7 @@
     <string name="sceyt_group_chat_invite">Group Chat Invite</string>
     <string name="sceyt_and_others">%1$s and %2$d others</string>
     <string name="sceyt_link_copied">Link copied</string>
+    <string name="sceyt_view_results">View Results</string>
+    <string name="sceyt_public_poll">Public poll</string>
+    <string name="sceyt_anonymous_poll">Anonymous poll</string>
 </resources>
