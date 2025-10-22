@@ -56,5 +56,6 @@
     <color name="sceyt_media_primary_color">#CC000000</color>
     <color name="sceyt_switch_thumb_unchecked_color">#ECECEC</color>
     <color name="sceyt_switch_track_unchecked_color">#D4D5DC</color>
+    <color name="sceyt_color_disabled">#818C99</color>
 
 </resources>
