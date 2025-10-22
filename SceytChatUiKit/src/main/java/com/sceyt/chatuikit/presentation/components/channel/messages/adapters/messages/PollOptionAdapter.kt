@@ -15,15 +15,14 @@ import com.sceyt.chatuikit.persistence.differs.PollOptionDiff
 import com.sceyt.chatuikit.persistence.differs.diff
 import com.sceyt.chatuikit.styles.messages_list.item.PollStyle
 
-
 class PollOptionAdapter(
-        poll: SceytPoll,
+        private var poll: SceytPoll,
         private val pollStyle: PollStyle,
         private val onOptionClick: ((PollOption) -> Unit)? = null,
 ) : ListAdapter<PollOption, PollOptionAdapter.PollOptionViewHolder>(PollOptionDiffCallback()) {
-    private var totalVotes: Int = poll.totalVotes
-    private val isAnonymous: Boolean = poll.anonymous
-    private val isClosed: Boolean = poll.closed
+    private val totalVotes: Int get() = poll.totalVotes
+    private val isAnonymous: Boolean get() = poll.anonymous
+    private val isClosed: Boolean get() = poll.closed
     private var shouldAnimate = false
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PollOptionViewHolder {
@@ -45,14 +44,17 @@ class PollOptionAdapter(
         holder.bind(getItem(position), diff, animate = shouldAnimate)
     }
 
-    fun setOptions(
-            newOptions: List<PollOption>,
-            newTotalVotes: Int? = null,
+    override fun getItemId(position: Int): Long {
+        return getItem(position).id.hashCode().toLong()
+    }
+
+    fun updatePoll(
+            poll: SceytPoll,
             animate: Boolean,
     ) {
-        newTotalVotes?.let { totalVotes = it }
+        this.poll = poll
         shouldAnimate = animate
-        submitList(newOptions)
+        submitList(poll.options)
     }
 
     inner class PollOptionViewHolder(

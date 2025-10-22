@@ -12,10 +12,16 @@ import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
 class OutPollMessageViewHolder(
         private val binding: SceytItemOutPollMessageBinding,
-        private val viewPool: RecyclerView.RecycledViewPool,
+        private val viewPoolReactions: RecyclerView.RecycledViewPool,
+        viewPoolPollOptions: RecyclerView.RecycledViewPool,
         style: MessageItemStyle,
         messageListeners: MessageClickListeners.ClickListeners?,
-) : BasePollMessageViewHolder(binding.root, style, messageListeners) {
+) : BasePollMessageViewHolder(
+    view = binding.root,
+    style = style,
+    messageListeners = messageListeners,
+    viewPoolPollOptions = viewPoolPollOptions
+) {
 
     init {
         with(binding) {
@@ -56,7 +62,7 @@ class OutPollMessageViewHolder(
                     setReplyMessageContainer(message, viewReply)
 
                 if (diff.reactionsChanged || diff.edited)
-                    setOrUpdateReactions(item, rvReactions, viewPool)
+                    setOrUpdateReactions(item, rvReactions, viewPoolReactions)
 
                 if (diff.pollChanged) {
                     val poll = parsePoll(message.metadata)

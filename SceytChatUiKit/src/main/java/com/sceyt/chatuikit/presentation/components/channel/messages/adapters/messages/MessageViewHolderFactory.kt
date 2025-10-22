@@ -60,6 +60,7 @@ import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle
 open class MessageViewHolderFactory(context: Context) {
     protected val viewPoolReactions = RecyclerView.RecycledViewPool()
     protected val viewPoolFiles = RecyclerView.RecycledViewPool()
+    protected val viewPoolPollOptions = RecyclerView.RecycledViewPool()
     protected val layoutInflater: LayoutInflater = LayoutInflater.from(context)
     private lateinit var messageItemStyle: MessagesListViewStyle
     private var clickListeners = MessageClickListenersImpl()
@@ -205,14 +206,23 @@ open class MessageViewHolderFactory(context: Context) {
 
     open fun createIncPollMsgViewHolder(parent: ViewGroup): BaseMessageViewHolder {
         return IncPollMessageViewHolder(
-            SceytItemIncPollMessageBinding.inflate(layoutInflater, parent, false),
-            viewPoolReactions, messageItemStyle.messageItemStyle, clickListeners, displayedListener)
+            binding = SceytItemIncPollMessageBinding.inflate(layoutInflater, parent, false),
+            viewPoolReactions = viewPoolReactions,
+            viewPoolPollOptions = viewPoolPollOptions,
+            style = messageItemStyle.messageItemStyle,
+            messageListeners = clickListeners,
+            displayedListener = displayedListener
+        )
     }
 
     open fun createOutPollMsgViewHolder(parent: ViewGroup): BaseMessageViewHolder {
         return OutPollMessageViewHolder(
-            SceytItemOutPollMessageBinding.inflate(layoutInflater, parent, false),
-            viewPoolReactions, messageItemStyle.messageItemStyle, clickListeners)
+            binding = SceytItemOutPollMessageBinding.inflate(layoutInflater, parent, false),
+            viewPoolReactions = viewPoolReactions,
+            viewPoolPollOptions = viewPoolPollOptions,
+            style = messageItemStyle.messageItemStyle,
+            messageListeners = clickListeners
+        )
     }
 
     open fun createDateSeparatorViewHolder(parent: ViewGroup): BaseMessageViewHolder {
