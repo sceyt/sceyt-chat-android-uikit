@@ -3,6 +3,7 @@ package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.me
 import android.animation.ObjectAnimator
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import android.view.animation.LinearInterpolator
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
@@ -42,7 +43,11 @@ class PollOptionAdapter(
         holder.bind(getItem(position), diff, animate = shouldAnimate)
     }
 
-    fun submitListWithAnimation(newOptions: List<PollOption>, newTotalVotes: Int? = null, animate: Boolean = false) {
+    fun submitListWithAnimation(
+            newOptions: List<PollOption>,
+            newTotalVotes: Int? = null,
+            animate: Boolean,
+    ) {
         newTotalVotes?.let { totalVotes = it }
         shouldAnimate = animate
         submitList(newOptions)
@@ -56,56 +61,58 @@ class PollOptionAdapter(
         private var progressAnimator: ObjectAnimator? = null
         private var votersAdapter: VoterAvatarAdapter? = null
 
-        fun bind(option: PollOption, diff: PollOptionDiff, animate: Boolean = false) {
-            with(binding) {
-                if (diff.selectedChanged) {
-                    checkbox.isChecked = option.selected
+        fun bind(
+                option: PollOption,
+                diff: PollOptionDiff,
+                animate: Boolean = false,
+        ) = with(binding) {
+            if (diff.selectedChanged) {
+                checkbox.isChecked = option.selected
+            }
+
+            if (diff.textChanged) {
+                tvOptionText.text = option.text
+            }
+
+            if (diff.voteCountChanged) {
+                tvVoteCount.text = option.voteCount.toString()
+                tvVoteCount.isVisible = option.voteCount > 0
+
+                val percentage = option.getPercentage(totalVotes).toInt()
+
+                if (animate && percentage != currentProgress && diff != PollOptionDiff.DEFAULT) {
+                    animateProgress(currentProgress, percentage)
+                } else {
+                    // Set progress immediately without animation
+                    progressAnimator?.cancel()
+                    progressBar.progress = percentage
+                    currentProgress = percentage
                 }
+            }
 
-                if (diff.textChanged) {
-                    tvOptionText.text = option.text
-                }
-
-                if (diff.voteCountChanged) {
-                    tvVoteCount.text = option.voteCount.toString()
-                    tvVoteCount.isVisible = option.voteCount > 0
-
-                    val percentage = option.getPercentage(totalVotes).toInt()
-
-                    if (animate && percentage != currentProgress && diff != PollOptionDiff.DEFAULT) {
-                        animateProgress(currentProgress, percentage)
-                    } else {
-                        // Set progress immediately without animation
-                        progressAnimator?.cancel()
-                        progressBar.progress = percentage
-                        currentProgress = percentage
+            // Setup voters avatars (hide if anonymous)
+            if (diff.votersChanged) {
+                if (!isAnonymous && option.voters.isNotEmpty()) {
+                    if (votersAdapter == null) {
+                        votersAdapter = VoterAvatarAdapter()
+                        rvVoters.itemAnimator = null
+                        rvVoters.adapter = votersAdapter
                     }
+                    votersAdapter?.submitList(option.voters.take(3))
+                    rvVoters.isVisible = true
+                } else {
+                    rvVoters.isVisible = false
                 }
+            }
 
-                // Setup voters avatars (hide if anonymous)
-                if (diff.votersChanged) {
-                    if (!isAnonymous && option.voters.isNotEmpty()) {
-                        if (votersAdapter == null) {
-                            votersAdapter = VoterAvatarAdapter()
-                            rvVoters.itemAnimator = null
-                            rvVoters.adapter = votersAdapter
-                        }
-                        votersAdapter?.submitList(option.voters.take(3))
-                        rvVoters.isVisible = true
-                    } else {
-                        rvVoters.isVisible = false
-                    }
-                }
+            // Disable clicking if poll is closed (only set once)
+            if (diff == PollOptionDiff.DEFAULT) {
+                root.isEnabled = !isClosed
+                root.alpha = if (isClosed) 0.6f else 1.0f
 
-                // Disable clicking if poll is closed (only set once)
-                if (diff == PollOptionDiff.DEFAULT) {
-                    root.isEnabled = !isClosed
-                    root.alpha = if (isClosed) 0.6f else 1.0f
-
-                    root.setOnClickListener {
-                        if (!isClosed) {
-                            onOptionClick?.invoke(option)
-                        }
+                root.setOnClickListener {
+                    if (!isClosed) {
+                        onOptionClick?.invoke(option)
                     }
                 }
             }
@@ -115,7 +122,8 @@ class PollOptionAdapter(
             progressAnimator?.cancel()
             // Use ObjectAnimator for smoother animation
             progressAnimator = ObjectAnimator.ofInt(binding.progressBar, "progress", from, to).apply {
-                duration = 300 // Longer duration for smoother animation
+                duration = 300
+                interpolator = LinearInterpolator()
                 addUpdateListener { animator ->
                     currentProgress = animator.animatedValue as Int
                 }
