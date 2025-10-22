@@ -26,7 +26,7 @@ data class SceytPoll(
         val endAt: Long? = null,
         val createdAt: Long,
         val totalVotes: Int = 0,
-        val closed: Boolean = false
+        val closed: Boolean = false,
 ) : Parcelable
 
 /**
@@ -43,9 +43,9 @@ data class PollOption(
         val text: String,
         val voteCount: Int = 0,
         val voters: List<SceytUser> = emptyList(),
-        val selected: Boolean = false
+        val selected: Boolean = false,
 ) : Parcelable {
-    
+
     /**
      * Calculate percentage of total votes
      */

@@ -17,6 +17,7 @@ abstract class BasePollMessageViewHolder(
         view: View,
         protected val style: MessageItemStyle,
         protected val messageListeners: MessageClickListeners.ClickListeners?,
+        private val viewPoolPollOptions: RecyclerView.RecycledViewPool,
         displayedListener: ((MessageListItem) -> Unit)? = null,
 ) : BaseMessageViewHolder(view, style, messageListeners, displayedListener) {
 
@@ -67,22 +68,27 @@ abstract class BasePollMessageViewHolder(
             poll: SceytPoll,
             rvPollOptions: RecyclerView,
     ) {
-        val shouldAnimate = pollOptionAdapter != null && currentPoll?.id == poll.id
+        val isSamePoll = currentPoll?.id == poll.id
+        val shouldAnimate = pollOptionAdapter != null && isSamePoll
 
-        if (pollOptionAdapter == null) {
+        if (pollOptionAdapter == null || !isSamePoll) {
             pollOptionAdapter = PollOptionAdapter(
                 poll = poll,
                 pollStyle = pollStyle
             ) { option ->
                 onPollOptionClick(option)
             }
-            rvPollOptions.itemAnimator = null
-            rvPollOptions.adapter = pollOptionAdapter
+
+            with(rvPollOptions) {
+                setRecycledViewPool(viewPoolPollOptions)
+                itemAnimator = null
+                adapter = pollOptionAdapter
+            }
         }
 
-        pollOptionAdapter?.setOptions(
-            newOptions = poll.options,
-            newTotalVotes = poll.totalVotes,
+
+        pollOptionAdapter?.updatePoll(
+            poll = poll,
             animate = shouldAnimate
         )
     }
@@ -127,6 +133,11 @@ abstract class BasePollMessageViewHolder(
         pollStyle.pollTypeTextStyle.apply(tvPollType)
         pollStyle.viewResultsTextStyle.apply(tvViewResults)
         divider.setBackgroundColor(pollStyle.dividerColor)
+    }
+
+    override fun onViewDetachedFromWindow() {
+        super.onViewDetachedFromWindow()
+        pollOptionAdapter = null
     }
 }
 
