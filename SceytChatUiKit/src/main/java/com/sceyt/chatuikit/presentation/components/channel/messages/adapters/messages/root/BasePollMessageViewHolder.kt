@@ -8,6 +8,7 @@ import com.google.gson.Gson
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.messages.PollOption
 import com.sceyt.chatuikit.data.models.messages.SceytPoll
+import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.PollOptionAdapter
 import com.sceyt.chatuikit.presentation.components.channel.messages.helpers.PollVoteHelper
@@ -27,9 +28,7 @@ abstract class BasePollMessageViewHolder(
 
     protected fun parsePoll(metadata: String?): SceytPoll? {
         return try {
-            metadata?.let { gson.fromJson(it, SceytPoll::class.java) }?.copy(
-                closed = true
-            )
+            metadata?.let { gson.fromJson(it, SceytPoll::class.java) }
         } catch (_: Exception) {
             null
         }
@@ -67,9 +66,9 @@ abstract class BasePollMessageViewHolder(
             isEnabled = poll.totalVotes > 0
             setTextColor(
                 if (poll.totalVotes > 0)
-                    tvViewResults.context.getColor(R.color.sceyt_color_accent)
+                    context.getCompatColor(R.color.sceyt_color_accent)
                 else
-                    tvViewResults.context.getColor(R.color.sceyt_color_icon_inactive)
+                    context.getCompatColor(R.color.sceyt_color_disabled)
             )
         }
 
