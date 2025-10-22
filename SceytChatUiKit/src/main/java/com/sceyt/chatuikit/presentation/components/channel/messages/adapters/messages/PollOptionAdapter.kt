@@ -1,7 +1,6 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages
 
 import android.animation.ObjectAnimator
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.core.view.isVisible
@@ -11,9 +10,12 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.data.models.messages.PollOption
 import com.sceyt.chatuikit.data.models.messages.SceytPoll
 import com.sceyt.chatuikit.databinding.SceytItemPollOptionBinding
+import com.sceyt.chatuikit.persistence.differs.PollOptionDiff
+import com.sceyt.chatuikit.persistence.differs.diff
+
 
 class PollOptionAdapter(
-        private val poll: SceytPoll,
+        poll: SceytPoll,
         private val onOptionClick: ((PollOption) -> Unit)? = null,
 ) : ListAdapter<PollOption, PollOptionAdapter.PollOptionViewHolder>(PollOptionDiffCallback()) {
     private var totalVotes: Int = poll.totalVotes
@@ -31,11 +33,13 @@ class PollOptionAdapter(
     }
 
     override fun onBindViewHolder(holder: PollOptionViewHolder, position: Int) {
-        holder.bind(getItem(position), animate = shouldAnimate)
+        holder.bind(getItem(position), PollOptionDiff.DEFAULT, animate = shouldAnimate)
     }
 
-    override fun onBindViewHolder(holder: PollOptionViewHolder, position: Int, payloads: List<Any?>) {
-        super.onBindViewHolder(holder, position, payloads)
+    override fun onBindViewHolder(holder: PollOptionViewHolder, position: Int, payloads: MutableList<Any>) {
+        val diff = payloads.find { it is PollOptionDiff } as? PollOptionDiff
+                ?: PollOptionDiff.DEFAULT
+        holder.bind(getItem(position), diff, animate = shouldAnimate)
     }
 
     fun submitListWithAnimation(newOptions: List<PollOption>, newTotalVotes: Int? = null, animate: Boolean = false) {
@@ -50,43 +54,58 @@ class PollOptionAdapter(
 
         private var currentProgress = 0
         private var progressAnimator: ObjectAnimator? = null
+        private var votersAdapter: VoterAvatarAdapter? = null
 
-        fun bind(option: PollOption, animate: Boolean = false) {
-            Log.i("sfsfsdf", "Binding option: ${option.text}, selected: ${option.selected}, votes: ${option.voteCount}")
+        fun bind(option: PollOption, diff: PollOptionDiff, animate: Boolean = false) {
             with(binding) {
-                checkbox.isChecked = option.selected
-                tvOptionText.text = option.text
-                tvVoteCount.text = option.voteCount.toString()
-                tvVoteCount.isVisible = option.voteCount > 0
+                if (diff.selectedChanged) {
+                    checkbox.isChecked = option.selected
+                }
 
-                val percentage = option.getPercentage(totalVotes).toInt()
+                if (diff.textChanged) {
+                    tvOptionText.text = option.text
+                }
 
-                if (animate && percentage != currentProgress && currentProgress > 0) {
-                    // Only animate if we have a valid previous progress
-                    animateProgress(currentProgress, percentage)
-                } else {
-                    // Set progress immediately without animation
-                    progressBar.progress = percentage
-                    currentProgress = percentage
+                if (diff.voteCountChanged) {
+                    tvVoteCount.text = option.voteCount.toString()
+                    tvVoteCount.isVisible = option.voteCount > 0
+
+                    val percentage = option.getPercentage(totalVotes).toInt()
+
+                    if (animate && percentage != currentProgress && currentProgress > 0) {
+                        // Only animate if we have a valid previous progress
+                        animateProgress(currentProgress, percentage)
+                    } else {
+                        // Set progress immediately without animation
+                        progressBar.progress = percentage
+                        currentProgress = percentage
+                    }
                 }
 
                 // Setup voters avatars (hide if anonymous)
-                if (!isAnonymous && option.voters.isNotEmpty()) {
-                    val votersAdapter = VoterAvatarAdapter()
-                    rvVoters.adapter = votersAdapter
-                    votersAdapter.submitList(option.voters.take(3))
-                    rvVoters.isVisible = true
-                } else {
-                    rvVoters.isVisible = false
+                if (diff.votersChanged) {
+                    if (!isAnonymous && option.voters.isNotEmpty()) {
+                        if (votersAdapter == null) {
+                            votersAdapter = VoterAvatarAdapter()
+                            rvVoters.itemAnimator = null
+                            rvVoters.adapter = votersAdapter
+                        }
+                        votersAdapter?.submitList(option.voters.take(3))
+                        rvVoters.isVisible = true
+                    } else {
+                        rvVoters.isVisible = false
+                    }
                 }
 
-                // Disable clicking if poll is closed
-                root.isEnabled = !isClosed
-                root.alpha = if (isClosed) 0.6f else 1.0f
+                // Disable clicking if poll is closed (only set once)
+                if (diff == PollOptionDiff.DEFAULT) {
+                    root.isEnabled = !isClosed
+                    root.alpha = if (isClosed) 0.6f else 1.0f
 
-                root.setOnClickListener {
-                    if (!isClosed) {
-                        onOptionClick?.invoke(option)
+                    root.setOnClickListener {
+                        if (!isClosed) {
+                            onOptionClick?.invoke(option)
+                        }
                     }
                 }
             }
@@ -111,11 +130,11 @@ class PollOptionAdapter(
         }
 
         override fun areContentsTheSame(oldItem: PollOption, newItem: PollOption): Boolean {
-            return oldItem == newItem
+            return oldItem.diff(newItem).hasDifference().not()
         }
 
-        override fun getChangePayload(oldItem: PollOption, newItem: PollOption): Any? {
-            return Any()
+        override fun getChangePayload(oldItem: PollOption, newItem: PollOption): Any {
+            return oldItem.diff(newItem)
         }
     }
 }
