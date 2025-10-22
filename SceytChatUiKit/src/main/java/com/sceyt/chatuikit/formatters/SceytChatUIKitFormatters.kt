@@ -2,7 +2,9 @@ package com.sceyt.chatuikit.formatters
 
 import com.sceyt.chat.models.ConnectionState
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
+import com.sceyt.chatuikit.data.models.messages.PollOption
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
+import com.sceyt.chatuikit.data.models.messages.SceytPoll
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.formatters.attributes.ChannelItemSubtitleFormatterAttributes
 import com.sceyt.chatuikit.formatters.attributes.DraftMessageBodyFormatterAttributes
@@ -36,6 +38,8 @@ import com.sceyt.chatuikit.formatters.defaults.DefaultNotificationTitleFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelEventTitleFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelEventUserNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultDraftMessageBodyWithAttachmentsFormatter
+import com.sceyt.chatuikit.formatters.defaults.DefaultPollTypeFormatter
+import com.sceyt.chatuikit.formatters.defaults.DefaultPollVoteCountFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUnreadCountFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUserAndNotesNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUserNameFormatter
@@ -201,5 +205,13 @@ class SceytChatUIKitFormatters {
 
     var connectionStateTitleFormatter: Formatter<ConnectionState> by lazyVar {
         DefaultConnectionsStateTitleFormatter()
+    }
+
+    var pollTypeFormatter: Formatter<SceytPoll> by lazyVar {
+        DefaultPollTypeFormatter()
+    }
+
+    var pollVoteCountFormatter: Formatter<PollOption> by lazyVar {
+        DefaultPollVoteCountFormatter()
     }
 }
