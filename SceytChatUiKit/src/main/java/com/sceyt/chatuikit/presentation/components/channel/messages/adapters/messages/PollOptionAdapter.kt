@@ -48,6 +48,11 @@ class PollOptionAdapter(
         return getItem(position).id.hashCode().toLong()
     }
 
+    override fun onViewDetachedFromWindow(holder: PollOptionViewHolder) {
+        super.onViewDetachedFromWindow(holder)
+        holder.onViewDetachedFromWindow()
+    }
+
     fun updatePoll(
             poll: SceytPoll,
             animate: Boolean,
@@ -60,23 +65,17 @@ class PollOptionAdapter(
     inner class PollOptionViewHolder(
             private val binding: SceytItemPollOptionBinding,
     ) : RecyclerView.ViewHolder(binding.root) {
-
         private var currentProgress = 0
         private var progressAnimator: ObjectAnimator? = null
         private var votersAdapter: VoterAvatarAdapter? = null
 
         init {
             applyStyle()
-            with(binding) {
-                root.isEnabled = !isClosed
-                checkbox.isVisible = !isClosed
-
-                root.setOnClickListener {
-                    if (!isClosed) {
-                        val position = bindingAdapterPosition
-                        if (position != RecyclerView.NO_POSITION) {
-                            onOptionClick?.invoke(getItem(position))
-                        }
+            binding.root.setOnClickListener {
+                if (!isClosed) {
+                    val position = bindingAdapterPosition
+                    if (position != RecyclerView.NO_POSITION) {
+                        onOptionClick?.invoke(getItem(position))
                     }
                 }
             }
@@ -87,6 +86,8 @@ class PollOptionAdapter(
                 diff: PollOptionDiff,
                 animate: Boolean = false,
         ) = with(binding) {
+            root.isEnabled = !isClosed
+            checkbox.isVisible = !isClosed
 
             if (diff.selectedChanged) {
                 checkbox.isChecked = option.selected
@@ -97,7 +98,7 @@ class PollOptionAdapter(
             }
 
             if (diff.voteCountChanged) {
-                tvVoteCount.text = option.voteCount.toString()
+                tvVoteCount.text = pollStyle.voteCountFormatter.format(root.context, option)
                 tvVoteCount.isVisible = option.voteCount > 0
 
                 val percentage = option.getPercentage(totalVotes).toInt()
@@ -124,8 +125,13 @@ class PollOptionAdapter(
                     rvVoters.isVisible = true
                 } else {
                     rvVoters.isVisible = false
+                    votersAdapter?.submitList(emptyList())
                 }
             }
+        }
+
+        fun onViewDetachedFromWindow() {
+            progressAnimator?.cancel()
         }
 
         private fun animateProgress(from: Int, to: Int) {

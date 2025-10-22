@@ -42,6 +42,7 @@ abstract class BasePollMessageViewHolder(
             tvViewResults: TextView,
             divider: View,
     ) {
+        val isSamePoll = currentPoll?.id == poll.id
         currentPoll = poll
 
         tvPollQuestion.text = poll.question
@@ -61,14 +62,14 @@ abstract class BasePollMessageViewHolder(
             }
         }
 
-        setOptions(poll, rvPollOptions)
+        setOptions(poll = poll, isSamePoll = isSamePoll, rvPollOptions = rvPollOptions)
     }
 
     protected open fun setOptions(
             poll: SceytPoll,
+            isSamePoll: Boolean,
             rvPollOptions: RecyclerView,
     ) {
-        val isSamePoll = currentPoll?.id == poll.id
         val shouldAnimate = pollOptionAdapter != null && isSamePoll
 
         if (pollOptionAdapter == null || !isSamePoll) {
@@ -85,7 +86,6 @@ abstract class BasePollMessageViewHolder(
                 adapter = pollOptionAdapter
             }
         }
-
 
         pollOptionAdapter?.updatePoll(
             poll = poll,
@@ -133,11 +133,6 @@ abstract class BasePollMessageViewHolder(
         pollStyle.pollTypeTextStyle.apply(tvPollType)
         pollStyle.viewResultsTextStyle.apply(tvViewResults)
         divider.setBackgroundColor(pollStyle.dividerColor)
-    }
-
-    override fun onViewDetachedFromWindow() {
-        super.onViewDetachedFromWindow()
-        pollOptionAdapter = null
     }
 }
 
