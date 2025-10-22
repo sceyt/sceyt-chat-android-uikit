@@ -5,6 +5,7 @@ import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.data.models.messages.PollOption
 import com.sceyt.chatuikit.data.models.messages.SceytPoll
+import java.util.UUID
 
 /**
  * Helper class for creating and sending poll messages
@@ -15,7 +16,7 @@ object PollMessageHelper {
 
     /**
      * Creates a poll message
-     * 
+     *
      * @param question The poll question/title
      * @param options List of option texts
      * @param allowMultipleAnswers Whether users can select multiple options (default: false)
@@ -25,12 +26,12 @@ object PollMessageHelper {
      * @return Message ready to be sent
      */
     fun createPollMessage(
-        question: String,
-        options: List<String>,
-        allowMultipleAnswers: Boolean = false,
-        anonymous: Boolean = false,
-        allowAddOption: Boolean = false,
-        endAt: Long? = null
+            question: String,
+            options: List<String>,
+            allowMultipleAnswers: Boolean = false,
+            anonymous: Boolean = false,
+            allowAddOption: Boolean = false,
+            endAt: Long? = null,
     ): Message {
         require(question.isNotBlank()) { "Poll question cannot be blank" }
         require(options.size >= 2) { "Poll must have at least 2 options" }
@@ -41,7 +42,7 @@ object PollMessageHelper {
 
         val pollOptions = options.mapIndexed { index, text ->
             PollOption(
-                id = "${pollId}_option_$index",
+                id = UUID.randomUUID().toString(),
                 text = text,
                 voteCount = 0,
                 voters = emptyList(),
@@ -105,7 +106,7 @@ object PollMessageHelper {
 
     /**
      * Creates a poll with an expiration date
-     * 
+     *
      * @param question The poll question
      * @param options List of options
      * @param durationMillis Duration in milliseconds from now
@@ -120,7 +121,7 @@ object PollMessageHelper {
     }
 
     private fun generatePollId(): String {
-        return "poll_${System.currentTimeMillis()}_${(0..999).random()}"
+        return UUID.randomUUID().toString()
     }
 }
 
@@ -128,12 +129,12 @@ object PollMessageHelper {
  * Extension function to send a poll message directly from MessageListViewModel
  */
 fun com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageListViewModel.sendPoll(
-    question: String,
-    options: List<String>,
-    allowMultipleAnswers: Boolean = false,
-    anonymous: Boolean = false,
-    allowAddOption: Boolean = false,
-    endAt: Long? = null
+        question: String,
+        options: List<String>,
+        allowMultipleAnswers: Boolean = false,
+        anonymous: Boolean = false,
+        allowAddOption: Boolean = false,
+        endAt: Long? = null,
 ) {
     val message = PollMessageHelper.createPollMessage(
         question = question,

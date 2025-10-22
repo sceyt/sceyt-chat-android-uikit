@@ -7,24 +7,21 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.google.gson.Gson
-import com.sceyt.chat.models.user.UserState
+import com.sceyt.chat.demo.databinding.ActivityPollExamplesBinding
+import com.sceyt.chat.models.message.Message
+import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.PollOption
 import com.sceyt.chatuikit.data.models.messages.SceytPoll
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.parcelable
-import com.sceyt.chatuikit.presentation.components.channel.input.helpers.PollMessageHelper
-import com.sceyt.chatuikit.presentation.components.channel.input.helpers.sendPoll
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageListViewModel
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageListViewModelFactory
-import com.sceyt.chat.models.message.Message
-import com.sceyt.chat.wrapper.ClientWrapper
-import com.sceyt.chat.demo.databinding.ActivityPollExamplesBinding
-import java.util.concurrent.TimeUnit
+import java.util.UUID
 
 /**
  * Example activity demonstrating how to send poll messages
- * 
+ *
  * This activity provides buttons to test all different types of polls.
  */
 class PollExamplesActivity : AppCompatActivity() {
@@ -40,7 +37,7 @@ class PollExamplesActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityPollExamplesBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        
+
         setupButtons()
     }
 
@@ -147,13 +144,13 @@ class PollExamplesActivity : AppCompatActivity() {
      * Helper function to create a poll message with voters
      */
     private fun createPollWithVoters(
-        question: String,
-        options: List<String>,
-        voteCounts: List<Int>,
-        allowMultipleAnswers: Boolean = false,
-        anonymous: Boolean = false
+            question: String,
+            options: List<String>,
+            voteCounts: List<Int>,
+            allowMultipleAnswers: Boolean = false,
+            anonymous: Boolean = false,
     ): Message {
-        val pollId = "poll_${System.currentTimeMillis()}_${(0..999).random()}"
+        val pollId = UUID.randomUUID().toString()
         val createdAt = System.currentTimeMillis()
 
         val pollOptions = options.mapIndexed { index, text ->
@@ -163,9 +160,9 @@ class PollExamplesActivity : AppCompatActivity() {
             } else {
                 emptyList()
             }
-            
+
             PollOption(
-                id = "${pollId}_option_$index",
+                id = UUID.randomUUID().toString(),
                 text = text,
                 voteCount = voteCount,
                 voters = voters,
@@ -208,7 +205,7 @@ class PollExamplesActivity : AppCompatActivity() {
             options = listOf("AI avatars", "AI music", "AI assistance", "AI translation"),
             voteCounts = listOf(3, 6, 1, 2) // Vote counts for each option
         )
-        
+
         viewModel.sendMessage(message)
     }
 
@@ -223,7 +220,7 @@ class PollExamplesActivity : AppCompatActivity() {
             voteCounts = listOf(5, 3, 2, 1, 0),
             anonymous = true
         )
-        
+
         viewModel.sendMessage(message)
     }
 
@@ -238,7 +235,7 @@ class PollExamplesActivity : AppCompatActivity() {
             voteCounts = listOf(2, 5, 4, 3, 2, 1),
             allowMultipleAnswers = true
         )
-        
+
         viewModel.sendMessage(message)
     }
 
@@ -252,7 +249,7 @@ class PollExamplesActivity : AppCompatActivity() {
             options = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday"),
             voteCounts = listOf(2, 4, 3, 1, 2)
         )
-        
+
         viewModel.sendMessage(message)
     }
 
@@ -267,12 +264,12 @@ class PollExamplesActivity : AppCompatActivity() {
             voteCounts = listOf(5, 3, 4, 2),
             allowMultipleAnswers = false
         )
-        
+
         viewModel.sendMessage(message)
     }
 
     /**
-     * Example 6: Using extension function  
+     * Example 6: Using extension function
      * Simplified way to send polls directly from ViewModel
      */
     fun sendPollWithExtension() {
@@ -282,7 +279,7 @@ class PollExamplesActivity : AppCompatActivity() {
             voteCounts = listOf(5, 1, 2),
             anonymous = false
         )
-        
+
         viewModel.sendMessage(message)
     }
 
@@ -295,7 +292,7 @@ class PollExamplesActivity : AppCompatActivity() {
             options = listOf("Yes", "No", "Maybe"),
             voteCounts = listOf(4, 2, 1)
         )
-        
+
         viewModel.sendMessage(message)
     }
 
@@ -308,7 +305,7 @@ class PollExamplesActivity : AppCompatActivity() {
             options = listOf("⭐", "⭐⭐", "⭐⭐⭐", "⭐⭐⭐⭐", "⭐⭐⭐⭐⭐"),
             voteCounts = listOf(0, 1, 2, 3, 6)
         )
-        
+
         viewModel.sendMessage(message)
     }
 }

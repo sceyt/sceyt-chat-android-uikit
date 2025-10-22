@@ -13,14 +13,12 @@ import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 class OutPollMessageViewHolder(
         private val binding: SceytItemOutPollMessageBinding,
         private val viewPoolReactions: RecyclerView.RecycledViewPool,
-        viewPoolPollOptions: RecyclerView.RecycledViewPool,
         style: MessageItemStyle,
         messageListeners: MessageClickListeners.ClickListeners?,
 ) : BasePollMessageViewHolder(
     view = binding.root,
     style = style,
-    messageListeners = messageListeners,
-    viewPoolPollOptions = viewPoolPollOptions
+    messageListeners = messageListeners
 ) {
 
     init {
