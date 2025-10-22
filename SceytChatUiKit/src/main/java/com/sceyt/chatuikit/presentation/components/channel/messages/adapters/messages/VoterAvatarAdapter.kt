@@ -2,15 +2,34 @@ package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.me
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.core.view.updateLayoutParams
 import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.databinding.SceytItemVoterAvatarBinding
-import com.sceyt.chatuikit.presentation.custom_views.AvatarView
+import com.sceyt.chatuikit.extensions.dpToPx
 
-class VoterAvatarAdapter : RecyclerView.Adapter<VoterAvatarAdapter.VoterAvatarViewHolder>() {
+class VoterAvatarAdapter : ListAdapter<SceytUser, VoterAvatarAdapter.VoterAvatarViewHolder>(
+    DIFF_CALLBACK
+) {
+    private val overlap = 9.dpToPx()
 
-    private val voters = mutableListOf<SceytUser>()
+    companion object {
+        private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<SceytUser>() {
+            override fun areItemsTheSame(oldItem: SceytUser, newItem: SceytUser): Boolean {
+                return oldItem.id == newItem.id
+            }
+
+            override fun areContentsTheSame(oldItem: SceytUser, newItem: SceytUser): Boolean {
+                return oldItem == newItem
+            }
+
+            override fun getChangePayload(oldItem: SceytUser, newItem: SceytUser): Any? {
+                return Any()
+            }
+        }
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VoterAvatarViewHolder {
         val binding = SceytItemVoterAvatarBinding.inflate(
@@ -22,21 +41,16 @@ class VoterAvatarAdapter : RecyclerView.Adapter<VoterAvatarAdapter.VoterAvatarVi
     }
 
     override fun onBindViewHolder(holder: VoterAvatarViewHolder, position: Int) {
-        holder.bind(voters[position])
-    }
-
-    override fun getItemCount() = voters.size
-
-    fun submitList(newVoters: List<SceytUser>) {
-        val diffCallback = VoterDiffCallback(voters, newVoters)
-        val diffResult = DiffUtil.calculateDiff(diffCallback)
-        voters.clear()
-        voters.addAll(newVoters)
-        diffResult.dispatchUpdatesTo(this)
+        holder.itemView.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+            marginStart = if (position > 0) {
+                -overlap
+            } else 0
+        }
+        holder.bind(getItem(position))
     }
 
     class VoterAvatarViewHolder(
-            private val binding: SceytItemVoterAvatarBinding
+            private val binding: SceytItemVoterAvatarBinding,
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(user: SceytUser) {
@@ -44,24 +58,6 @@ class VoterAvatarAdapter : RecyclerView.Adapter<VoterAvatarAdapter.VoterAvatarVi
                 .setImageUrl(user.avatarURL)
                 .build()
                 .applyToAvatar()
-        }
-    }
-
-    private class VoterDiffCallback(
-            private val oldList: List<SceytUser>,
-            private val newList: List<SceytUser>
-    ) : DiffUtil.Callback() {
-
-        override fun getOldListSize() = oldList.size
-
-        override fun getNewListSize() = newList.size
-
-        override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-            return oldList[oldItemPosition].id == newList[newItemPosition].id
-        }
-
-        override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-            return oldList[oldItemPosition] == newList[newItemPosition]
         }
     }
 }

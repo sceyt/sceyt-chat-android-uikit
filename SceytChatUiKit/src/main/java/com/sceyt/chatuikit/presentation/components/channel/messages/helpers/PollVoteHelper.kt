@@ -43,27 +43,6 @@ object PollVoteHelper {
             totalVotes = newTotalVotes
         )
     }
-
-    fun toggleVote(poll: SceytPoll, clickedOption: PollOption, currentUser: SceytUser?): SceytPoll? {
-        if (poll.closed) return null // Can't vote on closed polls
-
-        val updatedOptions = if (poll.allowMultipleAnswers) {
-            // Multiple choice: toggle the clicked option
-            handleMultipleChoice(poll.options, clickedOption, currentUser)
-        } else {
-            // Single choice: unselect others and toggle the clicked option
-            handleSingleChoice(poll.options, clickedOption, currentUser)
-        }
-
-        // Calculate new total votes
-        val newTotalVotes = updatedOptions.sumOf { it.voteCount }
-
-        // Create updated poll
-        return poll.copy(
-            options = updatedOptions,
-            totalVotes = newTotalVotes
-        )
-    }
     
     /**
      * Handles voting in single choice polls

@@ -119,8 +119,8 @@ class OutPollMessageViewHolder(
         val updatedPoll = PollVoteHelper.toggleVote(message, option, currentUser) ?: return
         
         // Update UI with animation
-        currentPoll = updatedPoll
-        pollOptionAdapter?.submitListWithAnimation(currentPoll!!.options, currentPoll!!.totalVotes, animate = true)
+        setupPollViews(updatedPoll)
+
         // Notify listener for backend sync
         messageListeners?.onPollOptionClick(
             binding.root,
