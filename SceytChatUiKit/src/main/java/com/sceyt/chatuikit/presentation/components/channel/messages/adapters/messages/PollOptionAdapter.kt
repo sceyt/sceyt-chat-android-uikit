@@ -72,11 +72,11 @@ class PollOptionAdapter(
 
                     val percentage = option.getPercentage(totalVotes).toInt()
 
-                    // Animate if: we want animation, percentage changed, and it's not the initial bind
                     if (animate && percentage != currentProgress && diff != PollOptionDiff.DEFAULT) {
                         animateProgress(currentProgress, percentage)
                     } else {
                         // Set progress immediately without animation
+                        progressAnimator?.cancel()
                         progressBar.progress = percentage
                         currentProgress = percentage
                     }
