@@ -20,12 +20,14 @@
         android:id="@+id/tvOptionText"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginHorizontal="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
         android:textColor="@color/sceyt_color_text_primary"
         android:textSize="@dimen/smallTextSize"
         app:layout_constraintEnd_toStartOf="@+id/rvVoters"
         app:layout_constraintStart_toEndOf="@+id/checkbox"
         app:layout_constraintTop_toTopOf="@+id/checkbox"
+        app:layout_goneMarginStart="0dp"
         tools:text="AI avatars" />
 
     <androidx.recyclerview.widget.RecyclerView
@@ -35,7 +37,7 @@
         android:layout_marginEnd="5dp"
         android:orientation="horizontal"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        app:layout_constraintBottom_toBottomOf="@+id/checkbox"
+        app:layout_constraintBottom_toBottomOf="@+id/barrierVoters"
         app:layout_constraintEnd_toStartOf="@+id/tvVoteCount"
         app:layout_constraintTop_toTopOf="parent"
         tools:itemCount="3"
@@ -47,7 +49,7 @@
         android:layout_height="wrap_content"
         android:textColor="@color/sceyt_color_text_primary"
         android:textSize="@dimen/smallTextSize"
-        app:layout_constraintBottom_toBottomOf="@+id/checkbox"
+        app:layout_constraintBottom_toBottomOf="@+id/barrierVoters"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/checkbox"
         tools:text="3" />
