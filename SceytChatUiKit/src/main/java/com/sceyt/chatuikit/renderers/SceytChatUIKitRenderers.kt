@@ -19,4 +19,8 @@ class SceytChatUIKitRenderers {
     var userAndNotesAvatarRenderer: AvatarRenderer<SceytUser> by lazyVar {
         DefaultUserAndNotesAvatarRenderer()
     }
+
+    var voterAvatarRenderer: AvatarRenderer<SceytUser> by lazyVar {
+        DefaultUserAvatarRenderer()
+    }
 }

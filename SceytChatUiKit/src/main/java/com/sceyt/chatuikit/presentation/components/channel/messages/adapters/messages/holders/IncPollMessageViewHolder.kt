@@ -76,17 +76,15 @@ class IncPollMessageViewHolder(
         }
     }
 
-    override fun updatePollViews(poll: SceytPoll) {
-        with(binding) {
-            tvPollQuestion.text = poll.question
-            setupPollViews(
-                poll = poll,
-                rvPollOptions = rvPollOptions,
-                tvPollType = tvPollType,
-                tvViewResults = tvViewResults,
-                divider = divider
-            )
-        }
+    override fun updatePollViews(poll: SceytPoll) = with(binding) {
+        setupPollViews(
+            poll = poll,
+            rvPollOptions = rvPollOptions,
+            tvPollQuestion = tvPollQuestion,
+            tvPollType = tvPollType,
+            tvViewResults = tvViewResults,
+            divider = divider
+        )
     }
 
     override val selectMessageView get() = binding.selectView
@@ -103,6 +101,13 @@ class IncPollMessageViewHolder(
             toReplyLine = toReplyLine,
             tvSenderName = tvUserName,
             avatarView = avatar
+        )
+
+        applyStyle(
+            tvPollQuestion = tvPollQuestion,
+            tvPollType = tvPollType,
+            tvViewResults = tvViewResults,
+            divider = divider
         )
     }
 }

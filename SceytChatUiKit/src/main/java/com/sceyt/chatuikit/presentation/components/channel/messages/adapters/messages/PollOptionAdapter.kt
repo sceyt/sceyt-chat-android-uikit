@@ -13,10 +13,12 @@ import com.sceyt.chatuikit.data.models.messages.SceytPoll
 import com.sceyt.chatuikit.databinding.SceytItemPollOptionBinding
 import com.sceyt.chatuikit.persistence.differs.PollOptionDiff
 import com.sceyt.chatuikit.persistence.differs.diff
+import com.sceyt.chatuikit.styles.messages_list.item.PollStyle
 
 
 class PollOptionAdapter(
         poll: SceytPoll,
+        private val pollStyle: PollStyle,
         private val onOptionClick: ((PollOption) -> Unit)? = null,
 ) : ListAdapter<PollOption, PollOptionAdapter.PollOptionViewHolder>(PollOptionDiffCallback()) {
     private var totalVotes: Int = poll.totalVotes
@@ -61,12 +63,28 @@ class PollOptionAdapter(
         private var progressAnimator: ObjectAnimator? = null
         private var votersAdapter: VoterAvatarAdapter? = null
 
+        init {
+            applyStyle()
+            with(binding) {
+                root.isEnabled = !isClosed
+                checkbox.isVisible = !isClosed
+
+                root.setOnClickListener {
+                    if (!isClosed) {
+                        val position = bindingAdapterPosition
+                        if (position != RecyclerView.NO_POSITION) {
+                            onOptionClick?.invoke(getItem(position))
+                        }
+                    }
+                }
+            }
+        }
+
         fun bind(
                 option: PollOption,
                 diff: PollOptionDiff,
                 animate: Boolean = false,
         ) = with(binding) {
-            checkbox.isVisible = !isClosed
 
             if (diff.selectedChanged) {
                 checkbox.isChecked = option.selected
@@ -106,17 +124,6 @@ class PollOptionAdapter(
                     rvVoters.isVisible = false
                 }
             }
-
-            // Disable clicking if poll is closed (only set once)
-            if (diff == PollOptionDiff.DEFAULT) {
-                root.isEnabled = !isClosed
-
-                root.setOnClickListener {
-                    if (!isClosed) {
-                        onOptionClick?.invoke(option)
-                    }
-                }
-            }
         }
 
         private fun animateProgress(from: Int, to: Int) {
@@ -133,6 +140,11 @@ class PollOptionAdapter(
                 }
                 start()
             }
+        }
+
+        private fun applyStyle() = with(binding) {
+            pollStyle.optionTextStyle.apply(tvOptionText)
+            pollStyle.voteCountTextStyle.apply(tvVoteCount)
         }
     }
 

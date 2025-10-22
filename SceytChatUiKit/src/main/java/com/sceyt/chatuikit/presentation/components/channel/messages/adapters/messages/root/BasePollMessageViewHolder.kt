@@ -5,10 +5,8 @@ import android.widget.TextView
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.google.gson.Gson
-import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.messages.PollOption
 import com.sceyt.chatuikit.data.models.messages.SceytPoll
-import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.PollOptionAdapter
 import com.sceyt.chatuikit.presentation.components.channel.messages.helpers.PollVoteHelper
@@ -17,7 +15,7 @@ import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
 abstract class BasePollMessageViewHolder(
         view: View,
-        style: MessageItemStyle,
+        protected val style: MessageItemStyle,
         protected val messageListeners: MessageClickListeners.ClickListeners?,
         displayedListener: ((MessageListItem) -> Unit)? = null,
 ) : BaseMessageViewHolder(view, style, messageListeners, displayedListener) {
@@ -25,6 +23,7 @@ abstract class BasePollMessageViewHolder(
     protected val gson = Gson()
     protected var pollOptionAdapter: PollOptionAdapter? = null
     protected var currentPoll: SceytPoll? = null
+    protected val pollStyle = style.pollStyle
 
     protected fun parsePoll(metadata: String?): SceytPoll? {
         return try {
@@ -37,39 +36,28 @@ abstract class BasePollMessageViewHolder(
     protected fun setupPollViews(
             poll: SceytPoll,
             rvPollOptions: RecyclerView,
+            tvPollQuestion: TextView,
             tvPollType: TextView,
             tvViewResults: TextView,
             divider: View,
     ) {
         currentPoll = poll
 
-        // Show "Poll finished" if closed, otherwise show poll type
-        tvPollType.text = when {
-            poll.closed -> {
-                tvPollType.context.getString(R.string.sceyt_poll_finished)
-            }
+        tvPollQuestion.text = poll.question
+        tvPollType.text = pollStyle.pollTypeFormatter.format(context, poll)
 
-            poll.anonymous -> {
-                tvPollType.context.getString(R.string.sceyt_anonymous_poll)
-            }
-
-            else -> {
-                tvPollType.context.getString(R.string.sceyt_public_poll)
-            }
-        }
-
+        // Apply divider color
         divider.isVisible = !poll.anonymous
-
 
         with(tvViewResults) {
             isVisible = !poll.anonymous
             isEnabled = poll.totalVotes > 0
-            setTextColor(
-                if (poll.totalVotes > 0)
-                    context.getCompatColor(R.color.sceyt_color_accent)
-                else
-                    context.getCompatColor(R.color.sceyt_color_disabled)
-            )
+
+            if (poll.totalVotes > 0) {
+                pollStyle.viewResultsTextStyle.apply(this)
+            } else {
+                pollStyle.viewResultsDisabledTextStyle.apply(this)
+            }
         }
 
         setOptions(poll, rvPollOptions)
@@ -82,7 +70,10 @@ abstract class BasePollMessageViewHolder(
         val shouldAnimate = pollOptionAdapter != null && currentPoll?.id == poll.id
 
         if (pollOptionAdapter == null) {
-            pollOptionAdapter = PollOptionAdapter(poll = poll) { option ->
+            pollOptionAdapter = PollOptionAdapter(
+                poll = poll,
+                pollStyle = pollStyle
+            ) { option ->
                 onPollOptionClick(option)
             }
             rvPollOptions.itemAnimator = null
@@ -125,5 +116,17 @@ abstract class BasePollMessageViewHolder(
     }
 
     protected abstract fun updatePollViews(poll: SceytPoll)
+
+    protected open fun applyStyle(
+            tvPollQuestion: TextView,
+            tvPollType: TextView,
+            tvViewResults: TextView,
+            divider: View,
+    ) {
+        pollStyle.questionTextStyle.apply(tvPollQuestion)
+        pollStyle.pollTypeTextStyle.apply(tvPollType)
+        pollStyle.viewResultsTextStyle.apply(tvViewResults)
+        divider.setBackgroundColor(pollStyle.dividerColor)
+    }
 }
 
