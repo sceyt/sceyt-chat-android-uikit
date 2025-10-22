@@ -14,6 +14,7 @@ import com.bumptech.glide.Glide
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
+import com.sceyt.chatuikit.data.models.messages.MessageTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytFragmentMessageActionsBinding
@@ -104,13 +105,17 @@ class MessageActionsView @JvmOverloads constructor(
 
             loadAttachmentImage(message.attachments, style.attachmentIconProvider)
 
-            tvMessageBody.text = style.messageBodyFormatter.format(
-                context = context,
-                from = MessageBodyFormatterAttributes(
-                    message = message,
-                    mentionTextStyle = style.mentionTextStyle
+            tvMessageBody.text = if ((MessageTypeEnum.fromValue(message.type)) == null) {
+                context.getString(R.string.unsupported_message_text)
+            } else {
+                style.messageBodyFormatter.format(
+                    context = context,
+                    from = MessageBodyFormatterAttributes(
+                        message = message,
+                        mentionTextStyle = style.mentionTextStyle
+                    )
                 )
-            )
+            }
         }
     }
 

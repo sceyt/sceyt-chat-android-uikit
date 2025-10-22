@@ -28,6 +28,7 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMemberActivityEvent
 import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
+import com.sceyt.chatuikit.data.models.messages.MessageTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.databinding.SceytMessagesListHeaderViewBinding
@@ -62,8 +63,8 @@ import com.sceyt.chatuikit.presentation.components.channel.header.listeners.ui.s
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageCommandEvent
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoActivity
 import com.sceyt.chatuikit.presentation.custom_views.AvatarView
-import com.sceyt.chatuikit.styles.messages_list.MessagesListHeaderStyle
 import com.sceyt.chatuikit.styles.common.MenuStyle
+import com.sceyt.chatuikit.styles.messages_list.MessagesListHeaderStyle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -531,6 +532,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
         if (messages.isEmpty()) return
         val isSingleMessage = messages.size == 1
         val fistMessage = messages.first()
+        val isUnsupportedMessage = MessageTypeEnum.fromValue(fistMessage.type) == null
         val existPendingMessages = messages.any { it.deliveryStatus == DeliveryStatus.Pending }
 
         menu.findItem(R.id.sceyt_reply)?.isVisible = isSingleMessage && !existPendingMessages
@@ -538,13 +540,20 @@ class MessagesListHeaderView @JvmOverloads constructor(
         menu.findItem(R.id.sceyt_forward)?.isVisible = !existPendingMessages
         val expiredEditMessage = (System.currentTimeMillis() - fistMessage.createdAt) >
                 SceytChatUIKit.config.messageEditTimeout
-        menu.findItem(R.id.sceyt_edit_message)?.isVisible = isSingleMessage &&
-                !fistMessage.incoming && fistMessage.body.isNotNullOrBlank() && !expiredEditMessage
+        menu.findItem(R.id.sceyt_edit_message)?.isVisible = isSingleMessage && !isUnsupportedMessage
+        !fistMessage.incoming && fistMessage.body.isNotNullOrBlank() && !expiredEditMessage
         menu.findItem(R.id.sceyt_message_info)?.isVisible = isSingleMessage
                 && !fistMessage.incoming && !existPendingMessages
-        menu.findItem(R.id.sceyt_copy_message)?.isVisible = messages.any {
-            it.body.isNotNullOrBlank()
+        menu.findItem(R.id.sceyt_copy_message)?.isVisible = canCopy(*messages)
+    }
+
+    fun canCopy(vararg messages: SceytMessage): Boolean {
+        var hasText = false
+        for (m in messages) {
+            if (!hasText && m.body.isNotNullOrBlank()) hasText = true
+            if (MessageTypeEnum.fromValue(m.type) == null) return false
         }
+        return hasText
     }
 
     override fun showSearchMessagesBar(event: MessageCommandEvent.SearchMessages) {

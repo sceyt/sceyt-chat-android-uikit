@@ -10,6 +10,7 @@ import androidx.core.view.isVisible
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
+import com.sceyt.chatuikit.data.models.messages.MessageTypeEnum
 import com.sceyt.chatuikit.databinding.SceytItemChannelBinding
 import com.sceyt.chatuikit.extensions.extractLinksWithPositions
 import com.sceyt.chatuikit.extensions.setOnClickListenerAvailable
@@ -111,13 +112,17 @@ open class ChannelViewHolder(
     }
 
     protected open fun setLastMessagedText(channel: SceytChannel, textView: TextView) {
-        val text = itemStyle.channelSubtitleFormatter.format(
-            context = context,
-            from = ChannelItemSubtitleFormatterAttributes(
-                channel = channel,
-                channelItemStyle = itemStyle
+        val isUnsupportedMessage = (channel.lastMessage?.let { MessageTypeEnum.fromValue(it.type) } == null)
+        val text = if (isUnsupportedMessage) {
+            context.getString(R.string.unsupported_message_text)
+        } else
+            itemStyle.channelSubtitleFormatter.format(
+                context = context,
+                from = ChannelItemSubtitleFormatterAttributes(
+                    channel = channel,
+                    channelItemStyle = itemStyle
+                )
             )
-        )
         setTextAutoLinkMasks(textView, text)
         textView.setText(text, TextView.BufferType.SPANNABLE)
     }

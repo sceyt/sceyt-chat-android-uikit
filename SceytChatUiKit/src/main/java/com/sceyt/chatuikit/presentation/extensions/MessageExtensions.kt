@@ -8,6 +8,7 @@ import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.channels.DraftMessage
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
+import com.sceyt.chatuikit.data.models.messages.MessageTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytUser
@@ -63,7 +64,7 @@ fun SceytMessage?.setChatMessageDateAndStatusIcon(
         dateText: CharSequence,
         edited: Boolean,
 ) {
-    if (this?.deliveryStatus == null || state == MessageState.Deleted || incoming) {
+    if (this?.deliveryStatus == null || state == MessageState.Deleted || incoming || MessageTypeEnum.fromValue(type) == null) {
         decoratedTextView.appearanceBuilder()
             .setText(dateText)
             .setTextStyle(itemStyle.messageDateTextStyle)
