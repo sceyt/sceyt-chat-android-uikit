@@ -248,4 +248,5 @@
     <string name="sceyt_view_results">View Results</string>
     <string name="sceyt_public_poll">Public poll</string>
     <string name="sceyt_anonymous_poll">Anonymous poll</string>
+    <string name="sceyt_poll_finished">Poll finished</string>
 </resources>

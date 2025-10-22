@@ -2,17 +2,11 @@ package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.me
 
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
-import com.google.gson.Gson
-import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.data.models.messages.PollOption
-import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytPoll
 import com.sceyt.chatuikit.databinding.SceytItemOutPollMessageBinding
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
-import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.PollOptionAdapter
-import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMessageViewHolder
-import com.sceyt.chatuikit.presentation.components.channel.messages.helpers.PollVoteHelper
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BasePollMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
@@ -20,12 +14,8 @@ class OutPollMessageViewHolder(
         private val binding: SceytItemOutPollMessageBinding,
         private val viewPool: RecyclerView.RecycledViewPool,
         style: MessageItemStyle,
-        private val messageListeners: MessageClickListeners.ClickListeners?,
-) : BaseMessageViewHolder(binding.root, style, messageListeners) {
-
-    private val gson = Gson()
-    private var pollOptionAdapter: PollOptionAdapter? = null
-    private var currentPoll: SceytPoll? = null
+        messageListeners: MessageClickListeners.ClickListeners?,
+) : BasePollMessageViewHolder(binding.root, style, messageListeners) {
 
     init {
         with(binding) {
@@ -59,13 +49,6 @@ class OutPollMessageViewHolder(
                 if (diff.edited || diff.statusChanged)
                     setMessageStatusAndDateText(message, messageDate)
 
-                if (diff.edited || diff.bodyChanged) {
-                    val poll = parsePoll(message.metadata)
-                    if (poll != null) {
-                        setupPollViews(poll)
-                    }
-                }
-
                 if (diff.replyCountChanged)
                     setReplyCount(tvReplyCount, toReplyLine, item)
 
@@ -74,66 +57,28 @@ class OutPollMessageViewHolder(
 
                 if (diff.reactionsChanged || diff.edited)
                     setOrUpdateReactions(item, rvReactions, viewPool)
+
+                if (diff.pollChanged) {
+                    val poll = parsePoll(message.metadata)
+                    if (poll != null) {
+                        updatePollViews(poll)
+                    }
+                }
             }
         }
     }
 
-    private fun parsePoll(metadata: String?): SceytPoll? {
-        return try {
-            metadata?.let { gson.fromJson(it, SceytPoll::class.java) }
-        } catch (e: Exception) {
-            null
-        }
-    }
-
-    private fun setupPollViews(poll: SceytPoll) {
-        currentPoll = poll
+    override fun updatePollViews(poll: SceytPoll) {
         with(binding) {
             tvPollQuestion.text = poll.question
-            tvPollType.text = if (poll.anonymous) {
-                root.context.getString(R.string.sceyt_anonymous_poll)
-            } else {
-                root.context.getString(R.string.sceyt_public_poll)
-            }
-
-            val shouldAnimate = pollOptionAdapter != null
-            if (pollOptionAdapter == null) {
-                pollOptionAdapter = PollOptionAdapter(poll = poll) { option ->
-                    onPollOptionClick(option)
-                }
-                rvPollOptions.adapter = pollOptionAdapter
-            }
-            pollOptionAdapter?.submitListWithAnimation(poll.options, poll.totalVotes, animate = shouldAnimate)
+            setupPollViews(
+                poll = poll,
+                rvPollOptions = rvPollOptions,
+                tvPollType = tvPollType,
+                tvViewResults = tvViewResults,
+                divider = divider
+            )
         }
-    }
-    
-    private fun onPollOptionClick(option: PollOption) {
-        val messageItem = messageListItem as? MessageListItem.MessageItem ?: return
-        val message = messageItem.message as? SceytMessage ?: return
-        val poll = currentPoll ?: return
-        
-        // Get current user
-        val currentUser = PollVoteHelper.getCurrentUser()
-        
-        // Toggle vote and get updated poll
-        val updatedPoll = PollVoteHelper.toggleVote(message, option, currentUser) ?: return
-        
-        // Update UI with animation
-        setupPollViews(updatedPoll)
-
-        // Notify listener for backend sync
-        messageListeners?.onPollOptionClick(
-            binding.root,
-            messageItem,
-            option
-        )
-    }
-
-    private fun onViewResultsClick() {
-        messageListeners?.onPollViewResultsClick(
-            binding.root,
-            messageListItem as MessageListItem.MessageItem
-        )
     }
 
     override val selectMessageView get() = binding.selectView
