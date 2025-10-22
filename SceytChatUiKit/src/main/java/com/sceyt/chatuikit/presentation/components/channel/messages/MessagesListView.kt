@@ -20,6 +20,7 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
+import com.sceyt.chatuikit.data.models.messages.PollOption
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
@@ -241,6 +242,18 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
             override fun onMultiSelectClick(view: View, message: SceytMessage) {
                 clickListeners.onMultiSelectClick(view, message)
+            }
+
+            override fun onPollOptionClick(view: View, item: MessageItem, option: PollOption) {
+                checkMaybeInMultiSelectMode(view, item.message) {
+                    clickListeners.onPollOptionClick(view, item, option)
+                }
+            }
+
+            override fun onPollViewResultsClick(view: View, item: MessageItem) {
+                checkMaybeInMultiSelectMode(view, item.message) {
+                    clickListeners.onPollViewResultsClick(view, item)
+                }
             }
 
             override fun onScrollToDownClick(view: View) {
@@ -939,6 +952,14 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     override fun onMultiSelectClick(view: View, message: SceytMessage) {
         messageCommandEventListener?.invoke(MessageCommandEvent.MultiselectEvent(message))
+    }
+
+    override fun onPollOptionClick(view: View, item: MessageItem, option: PollOption) {
+        // Default implementation - can be overridden by listeners
+    }
+
+    override fun onPollViewResultsClick(view: View, item: MessageItem) {
+        // Default implementation - can be overridden by listeners
     }
 
     override fun onScrollToDownClick(view: View) {

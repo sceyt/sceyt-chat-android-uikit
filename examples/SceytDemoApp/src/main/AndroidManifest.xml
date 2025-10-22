@@ -66,6 +66,11 @@
             android:windowSoftInputMode="adjustResize" />
 
         <activity
+            android:name=".presentation.PollExamplesActivity"
+            android:theme="@style/SceytAppTheme.Default"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
             android:name=".presentation.welcome.WelcomeActivity"
             android:exported="true"
             android:theme="@style/SceytAppTheme.Default"
