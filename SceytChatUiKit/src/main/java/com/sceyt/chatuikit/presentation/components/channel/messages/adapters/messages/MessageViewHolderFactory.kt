@@ -13,18 +13,18 @@ import com.sceyt.chatuikit.databinding.SceytItemIncDeletedMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemIncFileMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemIncImageMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemIncLinkMessageBinding
+import com.sceyt.chatuikit.databinding.SceytItemIncPollMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemIncTextMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemIncVideoMessageBinding
-import com.sceyt.chatuikit.databinding.SceytItemIncPollMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemIncVoiceMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemLoadingMoreBinding
 import com.sceyt.chatuikit.databinding.SceytItemMessageDateSeparatorBinding
 import com.sceyt.chatuikit.databinding.SceytItemOutAttachmentsMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemOutDeletedMessageBinding
-import com.sceyt.chatuikit.databinding.SceytItemOutPollMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemOutFileMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemOutImageMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemOutLinkMessageBinding
+import com.sceyt.chatuikit.databinding.SceytItemOutPollMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemOutTextMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemOutVideoMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemOutVoiceMessageBinding
@@ -60,7 +60,6 @@ import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle
 open class MessageViewHolderFactory(context: Context) {
     protected val viewPoolReactions = RecyclerView.RecycledViewPool()
     protected val viewPoolFiles = RecyclerView.RecycledViewPool()
-    protected val viewPoolPollOptions = RecyclerView.RecycledViewPool()
     protected val layoutInflater: LayoutInflater = LayoutInflater.from(context)
     private lateinit var messageItemStyle: MessagesListViewStyle
     private var clickListeners = MessageClickListenersImpl()
@@ -208,7 +207,6 @@ open class MessageViewHolderFactory(context: Context) {
         return IncPollMessageViewHolder(
             binding = SceytItemIncPollMessageBinding.inflate(layoutInflater, parent, false),
             viewPoolReactions = viewPoolReactions,
-            viewPoolPollOptions = viewPoolPollOptions,
             style = messageItemStyle.messageItemStyle,
             messageListeners = clickListeners,
             displayedListener = displayedListener
@@ -219,7 +217,6 @@ open class MessageViewHolderFactory(context: Context) {
         return OutPollMessageViewHolder(
             binding = SceytItemOutPollMessageBinding.inflate(layoutInflater, parent, false),
             viewPoolReactions = viewPoolReactions,
-            viewPoolPollOptions = viewPoolPollOptions,
             style = messageItemStyle.messageItemStyle,
             messageListeners = clickListeners
         )

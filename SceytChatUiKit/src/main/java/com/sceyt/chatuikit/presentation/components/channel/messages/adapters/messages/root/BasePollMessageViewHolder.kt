@@ -17,7 +17,6 @@ abstract class BasePollMessageViewHolder(
         view: View,
         protected val style: MessageItemStyle,
         protected val messageListeners: MessageClickListeners.ClickListeners?,
-        private val viewPoolPollOptions: RecyclerView.RecycledViewPool,
         displayedListener: ((MessageListItem) -> Unit)? = null,
 ) : BaseMessageViewHolder(view, style, messageListeners, displayedListener) {
 
@@ -74,20 +73,19 @@ abstract class BasePollMessageViewHolder(
 
         if (pollOptionAdapter == null || !isSamePoll) {
             pollOptionAdapter = PollOptionAdapter(
-                poll = poll,
-                pollStyle = pollStyle
-            ) { option ->
-                onPollOptionClick(option)
-            }
+                pollStyle = pollStyle,
+                onOptionClick = { option ->
+                    onPollOptionClick(option)
+                }
+            )
 
             with(rvPollOptions) {
-                setRecycledViewPool(viewPoolPollOptions)
                 itemAnimator = null
                 adapter = pollOptionAdapter
             }
         }
 
-        pollOptionAdapter?.updatePoll(
+        pollOptionAdapter?.submitData(
             poll = poll,
             animate = shouldAnimate
         )

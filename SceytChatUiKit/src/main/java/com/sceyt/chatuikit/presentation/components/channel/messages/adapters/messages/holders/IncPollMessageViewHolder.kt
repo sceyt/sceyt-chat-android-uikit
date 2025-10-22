@@ -13,7 +13,6 @@ import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 class IncPollMessageViewHolder(
         private val binding: SceytItemIncPollMessageBinding,
         private val viewPoolReactions: RecyclerView.RecycledViewPool,
-        viewPoolPollOptions: RecyclerView.RecycledViewPool,
         style: MessageItemStyle,
         messageListeners: MessageClickListeners.ClickListeners?,
         displayedListener: ((MessageListItem) -> Unit)?,
@@ -21,7 +20,6 @@ class IncPollMessageViewHolder(
     view = binding.root,
     style = style,
     messageListeners = messageListeners,
-    viewPoolPollOptions = viewPoolPollOptions,
     displayedListener = displayedListener
 ) {
 

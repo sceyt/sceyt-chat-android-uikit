@@ -16,10 +16,10 @@ import com.sceyt.chatuikit.persistence.differs.diff
 import com.sceyt.chatuikit.styles.messages_list.item.PollStyle
 
 class PollOptionAdapter(
-        private var poll: SceytPoll,
         private val pollStyle: PollStyle,
         private val onOptionClick: ((PollOption) -> Unit)? = null,
 ) : ListAdapter<PollOption, PollOptionAdapter.PollOptionViewHolder>(PollOptionDiffCallback()) {
+    private lateinit var poll: SceytPoll
     private val totalVotes: Int get() = poll.totalVotes
     private val isAnonymous: Boolean get() = poll.anonymous
     private val isClosed: Boolean get() = poll.closed
@@ -53,7 +53,7 @@ class PollOptionAdapter(
         holder.onViewDetachedFromWindow()
     }
 
-    fun updatePoll(
+    fun submitData(
             poll: SceytPoll,
             animate: Boolean,
     ) {
@@ -65,6 +65,7 @@ class PollOptionAdapter(
     inner class PollOptionViewHolder(
             private val binding: SceytItemPollOptionBinding,
     ) : RecyclerView.ViewHolder(binding.root) {
+        private lateinit var currentOption: PollOption
         private var currentProgress = 0
         private var progressAnimator: ObjectAnimator? = null
         private var votersAdapter: VoterAvatarAdapter? = null
@@ -72,11 +73,8 @@ class PollOptionAdapter(
         init {
             applyStyle()
             binding.root.setOnClickListener {
-                if (!isClosed) {
-                    val position = bindingAdapterPosition
-                    if (position != RecyclerView.NO_POSITION) {
-                        onOptionClick?.invoke(getItem(position))
-                    }
+                if (!isClosed && ::currentOption.isInitialized) {
+                    onOptionClick?.invoke(currentOption)
                 }
             }
         }
@@ -86,6 +84,8 @@ class PollOptionAdapter(
                 diff: PollOptionDiff,
                 animate: Boolean = false,
         ) = with(binding) {
+            currentOption = option
+
             root.isEnabled = !isClosed
             checkbox.isVisible = !isClosed
 
