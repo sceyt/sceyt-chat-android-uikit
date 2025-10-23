@@ -1,6 +1,6 @@
 package com.sceyt.chatuikit.persistence.differs
 
-import com.sceyt.chatuikit.data.models.messages.PollOption
+import com.sceyt.chatuikit.data.models.messages.PollOptionUiModel
 
 data class PollOptionDiff(
         val textChanged: Boolean,
@@ -32,7 +32,7 @@ data class PollOptionDiff(
     }
 }
 
-fun PollOption.diff(other: PollOption): PollOptionDiff {
+fun PollOptionUiModel.diff(other: PollOptionUiModel): PollOptionDiff {
     return PollOptionDiff(
         textChanged = text != other.text,
         voteCountChanged = voteCount != other.voteCount,

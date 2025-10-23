@@ -3,14 +3,17 @@ package com.sceyt.chatuikit.persistence.mappers
 import com.sceyt.chat.models.message.ForwardingDetails
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.wrapper.ClientWrapper
+import com.sceyt.chatuikit.data.models.messages.PollOption
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.data.models.messages.SceytPollDetails
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.persistence.database.entity.messages.ForwardingDetailsDb
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageDb
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.ParentMessageDb
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
+import java.util.UUID
 
 internal fun SceytMessage.toMessageEntity(unList: Boolean) = MessageEntity(
     tid = getTid(id, tid, incoming),
@@ -99,7 +102,14 @@ internal fun MessageDb.toSceytMessage(): SceytMessage {
             forwardingDetails = forwardingDetailsDb?.toForwardingDetails(channelId, forwardingUser?.toSceytUser()),
             pendingReactions = pendingReactions?.map { it.toReactionData() },
             bodyAttributes = bodyAttribute,
-            disableMentionsCount = disableMentionsCount
+            disableMentionsCount = disableMentionsCount,
+            poll = createPollWithVoters(
+                question = "Sample Poll Question",
+                options = listOf("Option 1", "Option 2", "Option 3"),
+                voteCounts = listOf(5, 3, 2),
+                allowMultipleVotes = true,
+                anonymous = false
+            )
         )
     }
 }
@@ -157,7 +167,14 @@ private fun MessageEntity.parentMessageToSceytMessage(
     forwardingDetails = forwardingDetailsDb?.toForwardingDetails(channelId, null),
     pendingReactions = null,
     bodyAttributes = bodyAttribute,
-    disableMentionsCount = disableMentionsCount
+    disableMentionsCount = disableMentionsCount,
+    poll = createPollWithVoters(
+        question = "Sample Poll Question",
+        options = listOf("Option 1", "Option 2", "Option 3"),
+        voteCounts = listOf(5, 3, 2),
+        allowMultipleVotes = true,
+        anonymous = false
+    )
 )
 
 internal fun MessageDb.toMessage(): Message {
@@ -237,7 +254,14 @@ fun Message.toSceytUiMessage(isGroup: Boolean? = null): SceytMessage {
         pendingReactions = null,
         bodyAttributes = bodyAttributes?.toList(),
         disableMentionsCount = disableMentionsCount,
-        isGroup = isGroup ?: false
+        isGroup = isGroup ?: false,
+        poll = createPollWithVoters(
+            question = "Sample Poll Question",
+            options = listOf("Option 1", "Option 2", "Option 3"),
+            voteCounts = listOf(5, 3, 2),
+            allowMultipleVotes = true,
+            anonymous = false
+        )
     )
 }
 
@@ -286,4 +310,121 @@ internal fun ForwardingDetailsDb.toForwardingDetails(
     messageId, channelId,
     user?.toUser(),
     hops
+)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+fun createPollWithVoters(
+        question: String,
+        options: List<String>,
+        voteCounts: List<Int>,
+        allowMultipleVotes: Boolean = false,
+        anonymous: Boolean = false,
+): SceytPollDetails {
+    val pollId = UUID.randomUUID().toString()
+    val createdAt = System.currentTimeMillis()
+
+    val pollOptions = options.map { text ->
+        PollOption(
+            id = UUID.randomUUID().toString(),
+            name = text
+        )
+    }
+
+    // Create votesPerOption map from vote counts
+    val votesPerOption = pollOptions.mapIndexed { index, option ->
+        option.id to (voteCounts.getOrNull(index) ?: 0)
+    }.toMap()
+
+    // Create votes list (mock data for demo)
+    val votes = pollOptions.flatMapIndexed { index, option ->
+        val voteCount = voteCounts.getOrNull(index) ?: 0
+        if (!anonymous && voteCount > 0) {
+            mockUsers.take(minOf(voteCount, mockUsers.size)).map { user ->
+                com.sceyt.chatuikit.data.models.messages.Vote(
+                    id = UUID.randomUUID().toString(),
+                    pollId = pollId,
+                    optionId = option.id,
+                    createdAt = createdAt,
+                    user = user
+                )
+            }
+        } else {
+            emptyList()
+        }
+    }
+
+    val poll = SceytPollDetails(
+        id = pollId,
+        name = question,
+        description = "",
+        options = pollOptions,
+        anonymous = anonymous,
+        allowMultipleVotes = allowMultipleVotes,
+        allowVoteRetract = true,
+        votesPerOption = votesPerOption,
+        votes = votes,
+        ownVotes = emptyList(),
+        createdAt = createdAt,
+        updatedAt = createdAt,
+        closedAt = 0,
+        closed = false
+    )
+
+
+    return poll
+}
+
+val mockUsers = listOf(
+    SceytUser(
+        id = "user1",
+    ).copy(
+        firstName = "John",
+        lastName = "Doe",
+    ),
+    SceytUser(
+        id = "user2",
+    ).copy(
+        firstName = "Jane",
+        lastName = "Smith",
+    ),
+    SceytUser(
+        id = "user3",
+    ).copy(
+        firstName = "Bob",
+        lastName = "Wilson",
+    ),
+    SceytUser(
+        id = "user4",
+    ).copy(
+        firstName = "Alice",
+        lastName = "Johnson",
+    ),
+    SceytUser(
+        id = "user5",
+    ).copy(
+        firstName = "Charlie",
+        lastName = "Brown",
+    ),
+    SceytUser(
+        id = "user6",
+    ).copy(
+        firstName = "Diana",
+        lastName = "Prince",
+    )
 )

@@ -5,8 +5,8 @@ import android.content.res.TypedArray
 import androidx.annotation.ColorInt
 import androidx.annotation.StyleableRes
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.data.models.messages.PollOption
-import com.sceyt.chatuikit.data.models.messages.SceytPoll
+import com.sceyt.chatuikit.data.models.messages.PollOptionUiModel
+import com.sceyt.chatuikit.data.models.messages.SceytPollDetails
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.renderers.AvatarRenderer
@@ -26,8 +26,8 @@ data class PollStyle(
         val optionTextStyle: TextStyle,
         val voteCountTextStyle: TextStyle,
         val checkboxStyle: CheckboxStyle,
-        val pollTypeFormatter: Formatter<SceytPoll>,
-        val voteCountFormatter: Formatter<PollOption>,
+        val pollTypeFormatter: Formatter<SceytPollDetails>,
+        val voteCountFormatter: Formatter<PollOptionUiModel>,
         val voterAvatarRenderer: AvatarRenderer<SceytUser>,
 ) {
     companion object {

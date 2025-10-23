@@ -41,13 +41,14 @@ data class SceytMessage(
         val pendingReactions: List<PendingReactionData>?,
         val bodyAttributes: List<BodyAttribute>?,
         val disableMentionsCount: Boolean,
+        val poll: SceytPollDetails?,
     // Local properties
         val shouldShowAvatarAndName: Boolean = false,
         val disabledShowAvatarAndName: Boolean = false,
         val isGroup: Boolean = false,
         val files: List<FileListItem>? = null,
         val messageReactions: List<ReactionItem.Reaction>? = null,
-        val isSelected: Boolean = false
+        val isSelected: Boolean = false,
 ) : Parcelable, Cloneable {
 
     val isForwarded get() = (forwardingDetails?.messageId ?: 0L) > 0L

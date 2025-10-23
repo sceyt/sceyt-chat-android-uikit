@@ -4,7 +4,7 @@ import com.google.gson.Gson
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.data.models.messages.PollOption
-import com.sceyt.chatuikit.data.models.messages.SceytPoll
+import com.sceyt.chatuikit.data.models.messages.SceytPollDetails
 import java.util.UUID
 
 /**
@@ -19,19 +19,19 @@ object PollMessageHelper {
      *
      * @param question The poll question/title
      * @param options List of option texts
-     * @param allowMultipleAnswers Whether users can select multiple options (default: false)
+     * @param description Optional poll description (default: empty)
+     * @param allowMultipleVotes Whether users can select multiple options (default: false)
      * @param anonymous Whether votes are anonymous (default: false)
-     * @param allowAddOption Whether users can add their own options (default: false)
-     * @param endAt Poll end timestamp, null for no expiration (default: null)
+     * @param allowVoteRetract Whether users can retract their votes (default: true)
      * @return Message ready to be sent
      */
     fun createPollMessage(
             question: String,
             options: List<String>,
-            allowMultipleAnswers: Boolean = false,
+            description: String = "",
+            allowMultipleVotes: Boolean = false,
             anonymous: Boolean = false,
-            allowAddOption: Boolean = false,
-            endAt: Long? = null,
+            allowVoteRetract: Boolean = true,
     ): Message {
         require(question.isNotBlank()) { "Poll question cannot be blank" }
         require(options.size >= 2) { "Poll must have at least 2 options" }
@@ -40,26 +40,27 @@ object PollMessageHelper {
         val pollId = generatePollId()
         val createdAt = System.currentTimeMillis()
 
-        val pollOptions = options.mapIndexed { index, text ->
+        val pollOptions = options.map { text ->
             PollOption(
                 id = UUID.randomUUID().toString(),
-                text = text,
-                voteCount = 0,
-                voters = emptyList(),
-                selected = false
+                name = text
             )
         }
 
-        val poll = SceytPoll(
+        val poll = SceytPollDetails(
             id = pollId,
-            question = question,
+            name = question,
+            description = description,
             options = pollOptions,
-            allowMultipleAnswers = allowMultipleAnswers,
             anonymous = anonymous,
-            allowAddOption = allowAddOption,
-            endAt = endAt,
+            allowMultipleVotes = allowMultipleVotes,
+            allowVoteRetract = allowVoteRetract,
+            votesPerOption = emptyMap(),
+            votes = emptyList(),
+            ownVotes = emptyList(),
             createdAt = createdAt,
-            totalVotes = 0,
+            updatedAt = createdAt,
+            closedAt = 0,
             closed = false
         )
 
@@ -100,23 +101,7 @@ object PollMessageHelper {
         return createPollMessage(
             question = question,
             options = options,
-            allowMultipleAnswers = true
-        )
-    }
-
-    /**
-     * Creates a poll with an expiration date
-     *
-     * @param question The poll question
-     * @param options List of options
-     * @param durationMillis Duration in milliseconds from now
-     */
-    fun createTimedPoll(question: String, options: List<String>, durationMillis: Long): Message {
-        val endAt = System.currentTimeMillis() + durationMillis
-        return createPollMessage(
-            question = question,
-            options = options,
-            endAt = endAt
+            allowMultipleVotes = true
         )
     }
 
@@ -131,18 +116,18 @@ object PollMessageHelper {
 fun com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageListViewModel.sendPoll(
         question: String,
         options: List<String>,
-        allowMultipleAnswers: Boolean = false,
+        description: String = "",
+        allowMultipleVotes: Boolean = false,
         anonymous: Boolean = false,
-        allowAddOption: Boolean = false,
-        endAt: Long? = null,
+        allowVoteRetract: Boolean = true,
 ) {
     val message = PollMessageHelper.createPollMessage(
         question = question,
         options = options,
-        allowMultipleAnswers = allowMultipleAnswers,
+        description = description,
+        allowMultipleVotes = allowMultipleVotes,
         anonymous = anonymous,
-        allowAddOption = allowAddOption,
-        endAt = endAt
+        allowVoteRetract = allowVoteRetract
     )
     sendMessage(message)
 }
