@@ -37,6 +37,7 @@ import com.sceyt.chatuikit.styles.common.Shape
 import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.styles.common.applyTo
 import kotlin.math.abs
+import kotlin.math.ceil
 
 class AvatarView @JvmOverloads constructor(
         context: Context,
@@ -188,23 +189,21 @@ class AvatarView @JvmOverloads constructor(
     }
 
     private fun drawBorder(canvas: Canvas) {
-        borderPaint.strokeWidth = borderWidth
-        borderPaint.color = borderColor
-
         val halfBorderWidth = borderWidth / 2f
 
         when (val avatarShape = shape) {
             Shape.Circle -> {
-                val radius = (width / 2).toFloat() - halfBorderWidth
-                canvas.drawCircle((width / 2).toFloat(), (height / 2).toFloat(), radius, borderPaint)
+                val halfWidth = width / 2f
+                val radius = ceil(halfWidth - halfBorderWidth)
+                canvas.drawCircle(halfWidth, halfWidth, radius, borderPaint)
             }
 
             is Shape.RoundedCornerShape -> {
                 val rect = RectF(
                     halfBorderWidth,
                     halfBorderWidth,
-                    width.toFloat() - halfBorderWidth,
-                    height.toFloat() - halfBorderWidth
+                    width - halfBorderWidth,
+                    height - halfBorderWidth
                 )
                 val radii = floatArrayOf(
                     avatarShape.topLeft, avatarShape.topLeft,
@@ -222,8 +221,8 @@ class AvatarView @JvmOverloads constructor(
                 val rect = RectF(
                     halfBorderWidth,
                     halfBorderWidth,
-                    width.toFloat() - halfBorderWidth,
-                    height.toFloat() - halfBorderWidth
+                    width - halfBorderWidth,
+                    height - halfBorderWidth
                 )
                 canvas.drawRect(rect, borderPaint)
             }
