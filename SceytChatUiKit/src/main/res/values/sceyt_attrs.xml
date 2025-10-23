@@ -32,6 +32,8 @@
             <flag name="rounded" value="1" />
         </attr>
         <attr name="sceytUiAvatarCornerRadius" format="dimension" />
+        <attr name="sceytUiAvatarBorderWidth" format="dimension" />
+        <attr name="sceytUiAvatarBorderColor" format="color|reference" />
     </declare-styleable>
 
     <declare-styleable name="ToReplyLineView">
