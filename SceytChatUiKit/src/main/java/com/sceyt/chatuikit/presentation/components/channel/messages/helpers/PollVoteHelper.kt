@@ -1,17 +1,15 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages.helpers
 
-import android.system.Os.poll
-import com.google.gson.Gson
-import com.sceyt.chatuikit.data.models.messages.PollOption
+import com.sceyt.chatuikit.data.models.messages.PollOptionUiModel
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
-import com.sceyt.chatuikit.data.models.messages.SceytPoll
+import com.sceyt.chatuikit.data.models.messages.SceytPollDetails
 import com.sceyt.chatuikit.data.models.messages.SceytUser
+import com.sceyt.chatuikit.data.models.messages.Vote
 
 /**
  * Helper class for managing poll voting logic
  */
 object PollVoteHelper {
-    private val gson = Gson()
 
     /**
      * Toggles a vote for the given option in the poll.
@@ -22,120 +20,59 @@ object PollVoteHelper {
      * @param currentUser The user who is voting
      * @return Updated poll with new state, or null if voting failed
      */
-    fun toggleVote(message: SceytMessage, clickedOption: PollOption, currentUser: SceytUser?): SceytPoll? {
-        val poll = parsePoll(message.metadata) ?: return null
+    fun toggleVote(message: SceytMessage, clickedOption: PollOptionUiModel, currentUser: SceytUser?): SceytPollDetails? {
+        val poll = message.poll ?: return null
         if (poll.closed) return null // Can't vote on closed polls
         
-        val updatedOptions = if (poll.allowMultipleAnswers) {
-            // Multiple choice: toggle the clicked option
-            handleMultipleChoice(poll.options, clickedOption, currentUser)
+        currentUser ?: return null
+        
+        val isCurrentlyVoted = poll.ownVotes.any { it.optionId == clickedOption.id }
+        
+        val updatedOwnVotes = if (isCurrentlyVoted) {
+            // Remove vote
+            poll.ownVotes.filter { it.optionId != clickedOption.id }
         } else {
-            // Single choice: unselect others and toggle the clicked option
-            handleSingleChoice(poll.options, clickedOption, currentUser)
+            val newVote = Vote(
+                id = java.util.UUID.randomUUID().toString(),
+                pollId = poll.id,
+                optionId = clickedOption.id,
+                createdAt = System.currentTimeMillis(),
+                user = currentUser
+            )
+            
+            if (poll.allowMultipleVotes) {
+                // Multiple choice: add to existing votes
+                poll.ownVotes + newVote
+            } else {
+                // Single choice: replace all votes
+                listOf(newVote)
+            }
         }
         
-        // Calculate new total votes
-        val newTotalVotes = updatedOptions.sumOf { it.voteCount }
+        // Update vote counts
+        val updatedVotesPerOption = poll.votesPerOption.toMutableMap()
+        
+        // Handle vote removal
+        if (isCurrentlyVoted) {
+            updatedVotesPerOption[clickedOption.id] = maxOf(0, (updatedVotesPerOption[clickedOption.id] ?: 0) - 1)
+        } else {
+            updatedVotesPerOption[clickedOption.id] = (updatedVotesPerOption[clickedOption.id] ?: 0) + 1
+        }
+        
+        // For single choice, remove votes from other options
+        if (!poll.allowMultipleVotes && !isCurrentlyVoted) {
+            poll.ownVotes.forEach { oldVote ->
+                if (oldVote.optionId != clickedOption.id) {
+                    updatedVotesPerOption[oldVote.optionId] = maxOf(0, (updatedVotesPerOption[oldVote.optionId] ?: 0) - 1)
+                }
+            }
+        }
         
         // Create updated poll
         return poll.copy(
-            options = updatedOptions,
-            totalVotes = newTotalVotes
+            ownVotes = updatedOwnVotes,
+            votesPerOption = updatedVotesPerOption
         )
-    }
-    
-    /**
-     * Handles voting in single choice polls
-     */
-    private fun handleSingleChoice(
-        options: List<PollOption>,
-        clickedOption: PollOption,
-        currentUser: SceytUser?
-    ): List<PollOption> {
-        return options.map { option ->
-            when {
-                option.id == clickedOption.id -> {
-                    // Toggle the clicked option
-                    if (option.selected) {
-                        // Unvote
-                        option.copy(
-                            selected = false,
-                            voteCount = maxOf(0, option.voteCount - 1),
-                            voters = option.voters.filter { it.id != currentUser?.id }
-                        )
-                    } else {
-                        // Vote
-                        val newVoters = if (currentUser != null && !option.voters.any { it.id == currentUser.id }) {
-                            option.voters + currentUser
-                        } else {
-                            option.voters
-                        }
-                        option.copy(
-                            selected = true,
-                            voteCount = option.voteCount + 1,
-                            voters = newVoters
-                        )
-                    }
-                }
-                option.selected -> {
-                    // Unselect other options
-                    option.copy(
-                        selected = false,
-                        voteCount = maxOf(0, option.voteCount - 1),
-                        voters = option.voters.filter { it.id != currentUser?.id }
-                    )
-                }
-                else -> option
-            }
-        }
-    }
-    
-    /**
-     * Handles voting in multiple choice polls
-     */
-    private fun handleMultipleChoice(
-        options: List<PollOption>,
-        clickedOption: PollOption,
-        currentUser: SceytUser?
-    ): List<PollOption> {
-        return options.map { option ->
-            if (option.id == clickedOption.id) {
-                // Toggle only the clicked option
-                if (option.selected) {
-                    // Unvote
-                    option.copy(
-                        selected = false,
-                        voteCount = maxOf(0, option.voteCount - 1),
-                        voters = option.voters.filter { it.id != currentUser?.id }
-                    )
-                } else {
-                    // Vote
-                    val newVoters = if (currentUser != null && !option.voters.any { it.id == currentUser.id }) {
-                        option.voters + currentUser
-                    } else {
-                        option.voters
-                    }
-                    option.copy(
-                        selected = true,
-                        voteCount = option.voteCount + 1,
-                        voters = newVoters
-                    )
-                }
-            } else {
-                option
-            }
-        }
-    }
-    
-    /**
-     * Parses poll data from message metadata
-     */
-    fun parsePoll(metadata: String?): SceytPoll? {
-        return try {
-            metadata?.let { gson.fromJson(it, SceytPoll::class.java) }
-        } catch (e: Exception) {
-            null
-        }
     }
     
     /**

@@ -61,19 +61,19 @@
         app:barrierDirection="bottom"
         app:constraint_referenced_ids="rvVoters, tvOptionText" />
 
-    <ProgressBar
+    <com.sceyt.chatuikit.presentation.custom_views.HorizontalProgressView
         android:id="@+id/progressBar"
-        style="?android:attr/progressBarStyleHorizontal"
         android:layout_width="0dp"
         android:layout_height="6dp"
         android:layout_marginTop="4dp"
-        android:indeterminate="false"
-        android:max="100"
-        android:progressDrawable="@drawable/sceyt_poll_progress_bar"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="@+id/tvOptionText"
         app:layout_constraintTop_toBottomOf="@+id/barrierVoters"
-        tools:progress="50" />
+        app:horizontalProgressViewProgress="0"
+        app:horizontalProgressViewBackgroundColor="#D0D8E3"
+        app:horizontalProgressViewColor="@color/sceyt_color_accent"
+        app:horizontalProgressViewCornerRadius="8dp"
+        tools:horizontalProgressViewProgress="50" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
 

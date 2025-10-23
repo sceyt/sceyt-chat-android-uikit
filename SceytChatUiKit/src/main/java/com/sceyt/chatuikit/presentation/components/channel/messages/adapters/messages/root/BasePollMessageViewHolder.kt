@@ -4,11 +4,12 @@ import android.view.View
 import android.widget.TextView
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
-import com.google.gson.Gson
 import com.sceyt.chatuikit.data.models.messages.PollOption
-import com.sceyt.chatuikit.data.models.messages.SceytPoll
+import com.sceyt.chatuikit.data.models.messages.PollOptionUiModel
+import com.sceyt.chatuikit.data.models.messages.SceytPollDetails
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.PollOptionAdapter
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.PollOptionViewHolderFactory
 import com.sceyt.chatuikit.presentation.components.channel.messages.helpers.PollVoteHelper
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
@@ -20,21 +21,22 @@ abstract class BasePollMessageViewHolder(
         displayedListener: ((MessageListItem) -> Unit)? = null,
 ) : BaseMessageViewHolder(view, style, messageListeners, displayedListener) {
 
-    protected val gson = Gson()
     protected var pollOptionAdapter: PollOptionAdapter? = null
-    protected var currentPoll: SceytPoll? = null
+    protected var currentPoll: SceytPollDetails? = null
     protected val pollStyle = style.pollStyle
-
-    protected fun parsePoll(metadata: String?): SceytPoll? {
-        return try {
-            metadata?.let { gson.fromJson(it, SceytPoll::class.java) }
-        } catch (_: Exception) {
-            null
-        }
+    private val pollOptionViewHolderFactory by lazy {
+        PollOptionViewHolderFactory(
+            context = context,
+            pollStyle = pollStyle,
+            isClosedProvider = { currentPoll?.closed ?: false },
+            isAnonymousProvider = { currentPoll?.anonymous ?: false },
+            totalVotesProvider = { currentPoll?.totalVotes ?: 0 },
+            onOptionClick = { option -> onPollOptionClick(option) }
+        )
     }
 
     protected fun setupPollViews(
-            poll: SceytPoll,
+            poll: SceytPollDetails,
             rvPollOptions: RecyclerView,
             tvPollQuestion: TextView,
             tvPollType: TextView,
@@ -44,17 +46,17 @@ abstract class BasePollMessageViewHolder(
         val isSamePoll = currentPoll?.id == poll.id
         currentPoll = poll
 
-        tvPollQuestion.text = poll.question
+        tvPollQuestion.text = poll.name
         tvPollType.text = pollStyle.pollTypeFormatter.format(context, poll)
 
-        // Apply divider color
         divider.isVisible = !poll.anonymous
 
+        val totalVotes = poll.totalVotes
         with(tvViewResults) {
             isVisible = !poll.anonymous
-            isEnabled = poll.totalVotes > 0
+            isEnabled = totalVotes > 0
 
-            if (poll.totalVotes > 0) {
+            if (totalVotes > 0) {
                 pollStyle.viewResultsTextStyle.apply(this)
             } else {
                 pollStyle.viewResultsDisabledTextStyle.apply(this)
@@ -65,19 +67,14 @@ abstract class BasePollMessageViewHolder(
     }
 
     protected open fun setOptions(
-            poll: SceytPoll,
+            poll: SceytPollDetails,
             isSamePoll: Boolean,
             rvPollOptions: RecyclerView,
     ) {
         val shouldAnimate = pollOptionAdapter != null && isSamePoll
 
         if (pollOptionAdapter == null || !isSamePoll) {
-            pollOptionAdapter = PollOptionAdapter(
-                pollStyle = pollStyle,
-                onOptionClick = { option ->
-                    onPollOptionClick(option)
-                }
-            )
+            pollOptionAdapter = PollOptionAdapter(viewHolderFactory = pollOptionViewHolderFactory)
 
             with(rvPollOptions) {
                 itemAnimator = null
@@ -91,7 +88,7 @@ abstract class BasePollMessageViewHolder(
         )
     }
 
-    protected open fun onPollOptionClick(option: PollOption) {
+    protected open fun onPollOptionClick(option: PollOptionUiModel) {
         val messageItem = messageListItem as? MessageListItem.MessageItem ?: return
         val message = messageItem.message
 
@@ -108,7 +105,7 @@ abstract class BasePollMessageViewHolder(
         messageListeners?.onPollOptionClick(
             view = itemView,
             item = messageItem,
-            option = option
+            option = PollOption(id = option.id, name = option.text)
         )
     }
 
@@ -119,7 +116,7 @@ abstract class BasePollMessageViewHolder(
         )
     }
 
-    protected abstract fun updatePollViews(poll: SceytPoll)
+    protected abstract fun updatePollViews(poll: SceytPollDetails)
 
     protected open fun applyStyle(
             tvPollQuestion: TextView,

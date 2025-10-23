@@ -12,7 +12,7 @@ import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.PollOption
-import com.sceyt.chatuikit.data.models.messages.SceytPoll
+import com.sceyt.chatuikit.data.models.messages.SceytPollDetails
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageListViewModel
@@ -100,7 +100,7 @@ class PollExamplesActivity : AppCompatActivity() {
         }
 
         // Mock users for demonstration
-        private val mockUsers = listOf(
+        val mockUsers = listOf(
             SceytUser(
                 id = "user1",
             ).copy(
@@ -143,44 +143,60 @@ class PollExamplesActivity : AppCompatActivity() {
     /**
      * Helper function to create a poll message with voters
      */
-    private fun createPollWithVoters(
+    fun createPollWithVoters(
             question: String,
             options: List<String>,
             voteCounts: List<Int>,
-            allowMultipleAnswers: Boolean = false,
+            allowMultipleVotes: Boolean = false,
             anonymous: Boolean = false,
     ): Message {
         val pollId = UUID.randomUUID().toString()
         val createdAt = System.currentTimeMillis()
 
-        val pollOptions = options.mapIndexed { index, text ->
-            val voteCount = voteCounts.getOrNull(index) ?: 0
-            val voters = if (!anonymous && voteCount > 0) {
-                mockUsers.take(minOf(voteCount, mockUsers.size))
-            } else {
-                emptyList()
-            }
-
+        val pollOptions = options.map { text ->
             PollOption(
                 id = UUID.randomUUID().toString(),
-                text = text,
-                voteCount = voteCount,
-                voters = voters,
-                selected = false
+                name = text
             )
         }
 
-        val totalVotes = voteCounts.sum()
-        val poll = SceytPoll(
+        // Create votesPerOption map from vote counts
+        val votesPerOption = pollOptions.mapIndexed { index, option ->
+            option.id to (voteCounts.getOrNull(index) ?: 0)
+        }.toMap()
+
+        // Create votes list (mock data for demo)
+        val votes = pollOptions.flatMapIndexed { index, option ->
+            val voteCount = voteCounts.getOrNull(index) ?: 0
+            if (!anonymous && voteCount > 0) {
+                mockUsers.take(minOf(voteCount, mockUsers.size)).map { user ->
+                    com.sceyt.chatuikit.data.models.messages.Vote(
+                        id = UUID.randomUUID().toString(),
+                        pollId = pollId,
+                        optionId = option.id,
+                        createdAt = createdAt,
+                        user = user
+                    )
+                }
+            } else {
+                emptyList()
+            }
+        }
+
+        val poll = SceytPollDetails(
             id = pollId,
-            question = question,
+            name = question,
+            description = "",
             options = pollOptions,
-            allowMultipleAnswers = allowMultipleAnswers,
             anonymous = anonymous,
-            allowAddOption = false,
-            endAt = null,
+            allowMultipleVotes = allowMultipleVotes,
+            allowVoteRetract = true,
+            votesPerOption = votesPerOption,
+            votes = votes,
+            ownVotes = emptyList(),
             createdAt = createdAt,
-            totalVotes = totalVotes,
+            updatedAt = createdAt,
+            closedAt = 0,
             closed = false
         )
 
@@ -233,7 +249,7 @@ class PollExamplesActivity : AppCompatActivity() {
             question = "Which programming languages do you use? (Select all)",
             options = listOf("Java", "Kotlin", "Python", "JavaScript", "Swift", "Go"),
             voteCounts = listOf(2, 5, 4, 3, 2, 1),
-            allowMultipleAnswers = true
+            allowMultipleVotes = true
         )
 
         viewModel.sendMessage(message)
@@ -262,7 +278,7 @@ class PollExamplesActivity : AppCompatActivity() {
             question = "Which feature should we prioritize?",
             options = listOf("Dark Mode", "Push Notifications", "Search", "Custom Themes"),
             voteCounts = listOf(5, 3, 4, 2),
-            allowMultipleAnswers = false
+            allowMultipleVotes = false
         )
 
         viewModel.sendMessage(message)

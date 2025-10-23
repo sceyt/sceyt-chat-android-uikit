@@ -2,7 +2,7 @@ package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.me
 
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chatuikit.data.models.messages.SceytPoll
+import com.sceyt.chatuikit.data.models.messages.SceytPollDetails
 import com.sceyt.chatuikit.databinding.SceytItemIncPollMessageBinding
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
@@ -67,10 +67,7 @@ class IncPollMessageViewHolder(
                     setOrUpdateReactions(item = item, rvReactionsViewStub = rvReactions, viewPool = viewPoolReactions)
 
                 if (diff.pollChanged) {
-                    val poll = parsePoll(message.metadata)
-                    if (poll != null) {
-                        updatePollViews(poll)
-                    }
+                    message.poll?.let { updatePollViews(it) }
                 }
 
                 if (item.message.shouldShowAvatarAndName)
@@ -81,7 +78,7 @@ class IncPollMessageViewHolder(
         }
     }
 
-    override fun updatePollViews(poll: SceytPoll) = with(binding) {
+    override fun updatePollViews(poll: SceytPollDetails) = with(binding) {
         setupPollViews(
             poll = poll,
             rvPollOptions = rvPollOptions,
