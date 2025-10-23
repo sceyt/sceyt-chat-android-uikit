@@ -116,7 +116,8 @@ object PushDataParser {
                 /* autoDeleteAt = */ 0,
                 /* forwardingDetails = */ forwardingDetails,
                 /* bodyAttributes = */ bodyAttributes.toTypedArray(),
-                /* disableMentionsCount = */ false
+                /* disableMentionsCount = */ false,
+                /* poll = */ null
             )
         } catch (e: Exception) {
             e.printStackTrace()

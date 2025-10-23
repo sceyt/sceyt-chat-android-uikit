@@ -12,8 +12,15 @@ import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.renderers.AvatarRenderer
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
 import com.sceyt.chatuikit.styles.StyleCustomizer
+import com.sceyt.chatuikit.styles.common.AvatarStyle
+import com.sceyt.chatuikit.styles.common.BackgroundStyle
 import com.sceyt.chatuikit.styles.common.CheckboxStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
+
+data class VoterAvatarRendererAttributes(
+        val bubbleBackgroundStyle: BackgroundStyle,
+        val voter: SceytUser,
+)
 
 data class PollStyle(
         @param:ColorInt val dividerColor: Int,
@@ -26,9 +33,10 @@ data class PollStyle(
         val optionTextStyle: TextStyle,
         val voteCountTextStyle: TextStyle,
         val checkboxStyle: CheckboxStyle,
+        val voterAvatarStyle: AvatarStyle,
         val pollTypeFormatter: Formatter<SceytPollDetails>,
         val voteCountFormatter: Formatter<PollOptionUiModel>,
-        val voterAvatarRenderer: AvatarRenderer<SceytUser>,
+        val voterAvatarRenderer: AvatarRenderer<VoterAvatarRendererAttributes>,
 ) {
     companion object {
         var styleCustomizer = StyleCustomizer<PollStyle> { _, style -> style }
@@ -36,7 +44,7 @@ data class PollStyle(
 
     internal class Builder(
             private val context: Context,
-            private val typedArray: TypedArray
+            private val typedArray: TypedArray,
     ) {
         @ColorInt
         private var dividerColor: Int = UNSET_COLOR
@@ -53,6 +61,7 @@ data class PollStyle(
         private var optionTextStyle: TextStyle = TextStyle()
         private var voteCountTextStyle: TextStyle = TextStyle()
         private var checkboxStyle: CheckboxStyle = CheckboxStyle()
+        private var voterAvatarStyle: AvatarStyle = AvatarStyle()
 
         fun dividerColor(@StyleableRes index: Int, @ColorInt defValue: Int = dividerColor) = apply {
             this.dividerColor = typedArray.getColor(index, defValue)
@@ -94,6 +103,10 @@ data class PollStyle(
             this.checkboxStyle = checkboxStyle
         }
 
+        fun voterAvatarStyle(voterAvatarStyle: AvatarStyle) = apply {
+            this.voterAvatarStyle = voterAvatarStyle
+        }
+
         fun build() = PollStyle(
             dividerColor = dividerColor,
             progressBarBackground = progressBarBackground,
@@ -105,6 +118,7 @@ data class PollStyle(
             optionTextStyle = optionTextStyle,
             voteCountTextStyle = voteCountTextStyle,
             checkboxStyle = checkboxStyle,
+            voterAvatarStyle = voterAvatarStyle,
             pollTypeFormatter = SceytChatUIKit.formatters.pollTypeFormatter,
             voteCountFormatter = SceytChatUIKit.formatters.pollVoteCountFormatter,
             voterAvatarRenderer = SceytChatUIKit.renderers.voterAvatarRenderer
