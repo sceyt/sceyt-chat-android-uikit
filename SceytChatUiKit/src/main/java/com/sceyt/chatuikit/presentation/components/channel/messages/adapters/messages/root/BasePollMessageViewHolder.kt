@@ -4,6 +4,7 @@ import android.view.View
 import android.widget.TextView
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.PollOption
 import com.sceyt.chatuikit.data.models.messages.PollOptionUiModel
 import com.sceyt.chatuikit.data.models.messages.SceytPollDetails
@@ -31,6 +32,10 @@ abstract class BasePollMessageViewHolder(
             isClosedProvider = { currentPoll?.closed ?: false },
             isAnonymousProvider = { currentPoll?.anonymous ?: false },
             totalVotesProvider = { currentPoll?.totalVotes ?: 0 },
+            bubbleBackgroundStyleProvider = {
+                if (incoming) style.incomingBubbleBackgroundStyle
+                else style.outgoingBubbleBackgroundStyle
+            },
             onOptionClick = { option -> onPollOptionClick(option) }
         )
     }
@@ -89,22 +94,17 @@ abstract class BasePollMessageViewHolder(
     }
 
     protected open fun onPollOptionClick(option: PollOptionUiModel) {
-        val messageItem = messageListItem as? MessageListItem.MessageItem ?: return
-        val message = messageItem.message
-
-        // Get current user
-        val currentUser = PollVoteHelper.getCurrentUser()
+        val currentUser = SceytChatUIKit.currentUser ?: return
 
         // Toggle vote and get updated poll
-        val updatedPoll = PollVoteHelper.toggleVote(message, option, currentUser) ?: return
+        val updatedPoll = PollVoteHelper.toggleVote(requireMessage, option, currentUser) ?: return
 
         // Update UI with animation
         updatePollViews(updatedPoll)
 
-        // Notify listener for backend sync
         messageListeners?.onPollOptionClick(
             view = itemView,
-            item = messageItem,
+            item = requireMessageItem,
             option = PollOption(id = option.id, name = option.text)
         )
     }
@@ -112,7 +112,7 @@ abstract class BasePollMessageViewHolder(
     protected fun onViewResultsClick() {
         messageListeners?.onPollViewResultsClick(
             view = itemView,
-            item = messageListItem as MessageListItem.MessageItem
+            item = requireMessageItem
         )
     }
 

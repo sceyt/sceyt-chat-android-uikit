@@ -206,7 +206,8 @@ internal fun MessageDb.toMessage(): Message {
             autoDeleteAt ?: 0L,
             forwardingDetailsDb?.toForwardingDetails(channelId, forwardingUser?.toSceytUser()),
             bodyAttribute?.toTypedArray(),
-            disableMentionsCount
+            disableMentionsCount,
+            null
         )
     }
 }
@@ -293,7 +294,8 @@ fun SceytMessage.toMessage(): Message {
         autoDeleteAt ?: 0L,
         forwardingDetails,
         bodyAttributes?.toTypedArray(),
-        disableMentionsCount
+        disableMentionsCount,
+        null
     )
 }
 

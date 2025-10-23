@@ -9,8 +9,14 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.databinding.SceytItemVoterAvatarBinding
 import com.sceyt.chatuikit.extensions.dpToPx
+import com.sceyt.chatuikit.styles.common.BackgroundStyle
+import com.sceyt.chatuikit.styles.messages_list.item.PollStyle
+import com.sceyt.chatuikit.styles.messages_list.item.VoterAvatarRendererAttributes
 
-class VoterAvatarAdapter : ListAdapter<SceytUser, VoterAvatarAdapter.VoterAvatarViewHolder>(
+class VoterAvatarAdapter(
+        private val pollStyle: PollStyle,
+        private val bubbleBackgroundStyleProvider: () -> BackgroundStyle,
+) : ListAdapter<SceytUser, VoterAvatarAdapter.VoterAvatarViewHolder>(
     DIFF_CALLBACK
 ) {
     private val overlap = 9.dpToPx()
@@ -49,15 +55,20 @@ class VoterAvatarAdapter : ListAdapter<SceytUser, VoterAvatarAdapter.VoterAvatar
         holder.bind(getItem(position))
     }
 
-    class VoterAvatarViewHolder(
+    inner class VoterAvatarViewHolder(
             private val binding: SceytItemVoterAvatarBinding,
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(user: SceytUser) {
-            binding.avatar.appearanceBuilder()
-                .setImageUrl(user.avatarURL)
-                .build()
-                .applyToAvatar()
+            pollStyle.voterAvatarRenderer.render(
+                context = itemView.context,
+                from = VoterAvatarRendererAttributes(
+                    bubbleBackgroundStyle = bubbleBackgroundStyleProvider(),
+                    voter = user
+                ),
+                style = pollStyle.voterAvatarStyle,
+                avatarView = binding.avatar
+            )
         }
     }
 }

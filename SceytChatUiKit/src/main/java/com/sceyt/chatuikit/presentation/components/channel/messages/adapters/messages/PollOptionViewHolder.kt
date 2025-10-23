@@ -5,6 +5,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.data.models.messages.PollOptionUiModel
 import com.sceyt.chatuikit.databinding.SceytItemPollOptionBinding
 import com.sceyt.chatuikit.persistence.differs.PollOptionDiff
+import com.sceyt.chatuikit.styles.common.BackgroundStyle
 import com.sceyt.chatuikit.styles.messages_list.item.PollStyle
 
 open class PollOptionViewHolder(
@@ -13,6 +14,7 @@ open class PollOptionViewHolder(
         private val isClosedProvider: () -> Boolean,
         private val isAnonymousProvider: () -> Boolean,
         private val totalVotesProvider: () -> Int,
+        private val bubbleBackgroundStyleProvider: () -> BackgroundStyle,
         private var onOptionClick: ((PollOptionUiModel) -> Unit)? = null,
 ) : RecyclerView.ViewHolder(binding.root) {
     private lateinit var currentOption: PollOptionUiModel
@@ -65,7 +67,10 @@ open class PollOptionViewHolder(
         if (diff.votersChanged) {
             if (!isAnonymous && option.voters.isNotEmpty()) {
                 if (votersAdapter == null) {
-                    votersAdapter = VoterAvatarAdapter()
+                    votersAdapter = VoterAvatarAdapter(
+                        pollStyle = pollStyle,
+                        bubbleBackgroundStyleProvider = bubbleBackgroundStyleProvider
+                    )
                     rvVoters.itemAnimator = null
                     rvVoters.adapter = votersAdapter
                 }
