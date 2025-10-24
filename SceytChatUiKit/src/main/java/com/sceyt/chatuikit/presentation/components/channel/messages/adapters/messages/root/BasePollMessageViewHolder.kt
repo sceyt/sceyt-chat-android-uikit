@@ -4,14 +4,12 @@ import android.view.View
 import android.widget.TextView
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.PollOption
 import com.sceyt.chatuikit.data.models.messages.PollOptionUiModel
 import com.sceyt.chatuikit.data.models.messages.SceytPollDetails
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.PollOptionAdapter
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.PollOptionViewHolderFactory
-import com.sceyt.chatuikit.presentation.components.channel.messages.helpers.PollVoteHelper
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
@@ -94,14 +92,6 @@ abstract class BasePollMessageViewHolder(
     }
 
     protected open fun onPollOptionClick(option: PollOptionUiModel) {
-        val currentUser = SceytChatUIKit.currentUser ?: return
-
-        // Toggle vote and get updated poll
-        val updatedPoll = PollVoteHelper.toggleVote(requireMessage, option, currentUser) ?: return
-
-        // Update UI with animation
-        updatePollViews(updatedPoll)
-
         messageListeners?.onPollOptionClick(
             view = itemView,
             item = requireMessageItem,

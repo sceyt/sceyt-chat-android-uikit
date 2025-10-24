@@ -21,7 +21,7 @@ data class MessageDiff(
     fun hasDifference(): Boolean {
         return edited || bodyChanged || statusChanged || avatarChanged || nameChanged || replyCountChanged
                 || replyContainerChanged || reactionsChanged || showAvatarAndNameChanged || filesChanged
-                || selectionChanged || metadataChanged
+                || selectionChanged || metadataChanged || pollChanged
     }
 
     companion object {
@@ -81,7 +81,7 @@ fun SceytMessage.diff(other: SceytMessage): MessageDiff {
         filesChanged = attachments?.size != other.attachments?.size,
         selectionChanged = isSelected != other.isSelected,
         metadataChanged = metadata != other.metadata,
-        pollChanged = metadata != other.metadata
+        pollChanged = poll != other.poll
     )
 }
 
@@ -101,6 +101,6 @@ fun SceytMessage.diffContent(other: SceytMessage): MessageDiff {
         filesChanged = attachments?.size != other.attachments?.size,
         selectionChanged = isSelected != other.isSelected,
         metadataChanged = metadata != other.metadata,
-        pollChanged = metadata != other.metadata
+        pollChanged = poll != other.poll
     )
 }

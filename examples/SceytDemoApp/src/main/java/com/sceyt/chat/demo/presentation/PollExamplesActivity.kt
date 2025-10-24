@@ -6,15 +6,15 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import com.google.gson.Gson
 import com.sceyt.chat.demo.databinding.ActivityPollExamplesBinding
 import com.sceyt.chat.models.message.Message
+import com.sceyt.chat.models.poll.PollDetails
+import com.sceyt.chat.models.poll.PollVote
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
-import com.sceyt.chatuikit.data.models.messages.PollOption
-import com.sceyt.chatuikit.data.models.messages.SceytPollDetails
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.parcelable
+import com.sceyt.chatuikit.persistence.mappers.toUser
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageListViewModel
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageListViewModelFactory
 import java.util.UUID
@@ -152,11 +152,12 @@ class PollExamplesActivity : AppCompatActivity() {
     ): Message {
         val pollId = UUID.randomUUID().toString()
         val createdAt = System.currentTimeMillis()
+        val messageTid = ClientWrapper.generateTid()
 
         val pollOptions = options.map { text ->
-            PollOption(
-                id = UUID.randomUUID().toString(),
-                name = text
+            com.sceyt.chat.models.poll.PollOption(
+                UUID.randomUUID().toString(),
+                text
             )
         }
 
@@ -170,12 +171,12 @@ class PollExamplesActivity : AppCompatActivity() {
             val voteCount = voteCounts.getOrNull(index) ?: 0
             if (!anonymous && voteCount > 0) {
                 mockUsers.take(minOf(voteCount, mockUsers.size)).map { user ->
-                    com.sceyt.chatuikit.data.models.messages.Vote(
-                        id = UUID.randomUUID().toString(),
-                        pollId = pollId,
-                        optionId = option.id,
-                        createdAt = createdAt,
-                        user = user
+                    PollVote(
+                        UUID.randomUUID().toString(),
+                        pollId,
+                        option.id,
+                        createdAt,
+                        user.toUser()
                     )
                 }
             } else {
@@ -183,30 +184,29 @@ class PollExamplesActivity : AppCompatActivity() {
             }
         }
 
-        val poll = SceytPollDetails(
-            id = pollId,
-            name = question,
-            description = "",
-            options = pollOptions,
-            anonymous = anonymous,
-            allowMultipleVotes = allowMultipleVotes,
-            allowVoteRetract = true,
-            votesPerOption = votesPerOption,
-            votes = votes,
-            ownVotes = emptyList(),
-            createdAt = createdAt,
-            updatedAt = createdAt,
-            closedAt = 0,
-            closed = false
+        val poll = PollDetails(
+            pollId,
+            question,
+            "",
+            pollOptions.toTypedArray(),
+            anonymous,
+            allowMultipleVotes,
+            true,
+            votesPerOption,
+            votes.toTypedArray(),
+            emptyArray(),
+            createdAt,
+            createdAt,
+            0,
+            false,
         )
 
-        val gson = Gson()
         return Message.MessageBuilder()
-            .setTid(ClientWrapper.generateTid())
+            .setTid(messageTid)
             .setType("poll")
             .setBody(question)
-            .setMetadata(gson.toJson(poll))
             .setCreatedAt(createdAt)
+            .setPoll(poll)
             .build()
     }
 

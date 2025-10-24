@@ -560,6 +560,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     }
 
     fun onMessageUpdated(data: Pair<Long, List<SceytMessage>>) {
+        val (_, messages) = data
         suspend fun update(sceytMessage: SceytMessage) {
             val message = initMessageInfoData(sceytMessage)
             withContext(Dispatchers.Main) {
@@ -575,16 +576,20 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
 
         viewModelScope.launch(Dispatchers.Default) {
-            data.second.forEach {
-                if (it.incoming) {
-                    update(it)
-                } else outgoingMessageMutex.withLock { update(it) }
+            messages.forEach { message ->
+                if (message.incoming) {
+                    update(message)
+                } else outgoingMessageMutex.withLock {
+                    update(message)
+                }
             }
         }
     }
 
-    onNewOutGoingMessageFlow.onEach {
-        outgoingMessageMutex.withLock { onOutgoingMessage(it) }
+    onNewOutGoingMessageFlow.onEach { message ->
+        outgoingMessageMutex.withLock {
+            onOutgoingMessage(message)
+        }
     }.launchIn(lifecycleOwner.lifecycleScope)
 
     onNewMessageFlow.onEach(::onMessage).launchIn(lifecycleOwner.lifecycleScope)
@@ -768,6 +773,10 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
     messagesListView.setMessageReactionsEventListener {
         onReactionEvent(it)
+    }
+
+    messagesListView.setMessagePollEventListener {
+        onPollEvent(it)
     }
 
     messagesListView.setScrollStateChangeListener {

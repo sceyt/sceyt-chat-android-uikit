@@ -50,6 +50,7 @@ import com.sceyt.chatuikit.persistence.interactor.ChannelInviteKeyInteractor
 import com.sceyt.chatuikit.persistence.interactor.ChannelMemberInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageMarkerInteractor
+import com.sceyt.chatuikit.persistence.interactor.MessagePollInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageReactionInteractor
 import com.sceyt.chatuikit.persistence.interactor.UserInteractor
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
@@ -59,6 +60,7 @@ import com.sceyt.chatuikit.persistence.logic.PersistenceConnectionLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMembersLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessageMarkerLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
+import com.sceyt.chatuikit.persistence.logic.PersistencePollLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceReactionsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceUsersLogic
 import com.sceyt.chatuikit.services.SceytPresenceChecker
@@ -77,6 +79,7 @@ internal class PersistenceMiddleWareImpl(
         private val messagesLogic: PersistenceMessagesLogic,
         private val attachmentsLogic: PersistenceAttachmentLogic,
         private val reactionsLogic: PersistenceReactionsLogic,
+        private val pollLogic: PersistencePollLogic,
         private val messageMarkerLogic: PersistenceMessageMarkerLogic,
         private val membersLogic: PersistenceMembersLogic,
         private val usersLogic: PersistenceUsersLogic,
@@ -85,7 +88,7 @@ internal class PersistenceMiddleWareImpl(
         private val realtimeNotificationManager: RealtimeNotificationManager,
 ) : ChannelMemberInteractor, MessageInteractor, ChannelInteractor,
         UserInteractor, AttachmentInteractor, MessageMarkerInteractor,
-        MessageReactionInteractor, ChannelInviteKeyInteractor, SceytKoinComponent {
+        MessageReactionInteractor, MessagePollInteractor, ChannelInviteKeyInteractor, SceytKoinComponent {
 
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
@@ -693,6 +696,19 @@ internal class PersistenceMiddleWareImpl(
 
     override suspend fun deleteReaction(channelId: Long, messageId: Long, scoreKey: String): SceytResponse<SceytMessage> {
         return reactionsLogic.deleteReaction(channelId, messageId, scoreKey)
+    }
+
+    override suspend fun toggleVote(
+        channelId: Long,
+        messageTid: Long,
+        pollId: String,
+        optionId: String
+    ): SceytResponse<SceytMessage> {
+        return pollLogic.toggleVote(channelId, messageTid, pollId, optionId)
+    }
+
+    override suspend fun sendAllPendingVotes() {
+        pollLogic.sendAllPendingVotes()
     }
 
     override suspend fun getMessageMarkers(messageId: Long, name: String, offset: Int, limit: Int): SceytResponse<List<SceytMarker>> {

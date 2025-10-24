@@ -30,6 +30,9 @@ import com.sceyt.chatuikit.persistence.database.entity.messages.MentionUserMessa
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageDb
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageIdAndTid
+import com.sceyt.chatuikit.persistence.database.entity.messages.PollEntity
+import com.sceyt.chatuikit.persistence.database.entity.messages.PollOptionEntity
+import com.sceyt.chatuikit.persistence.database.entity.messages.PollVoteEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.ReactionEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.ReactionTotalEntity
 import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingMarkerEntity
@@ -87,6 +90,9 @@ internal abstract class MessageDao {
         //Delete reactions scores before insert
         deleteMessageReactionTotalsChunked(messages.mapNotNull { it.messageEntity.id })
 
+        //Delete polls before insert (handles deleted votes, options, etc.)
+        deletePollsChunked(messages.map { it.messageEntity.tid })
+
         //Insert attachments
         insertAttachmentsWithPayloads(*messages.toTypedArray())
 
@@ -110,6 +116,9 @@ internal abstract class MessageDao {
 
         //Insert auto delete messages
         insertAutoDeleteMessage(*messages.toTypedArray())
+
+        //Insert polls
+        insertPolls(*messages.toTypedArray())
     }
 
     /**
@@ -210,6 +219,15 @@ internal abstract class MessageDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     protected abstract suspend fun insertPendingMarkersIgnored(entities: List<PendingMarkerEntity>)
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    protected abstract suspend fun insertPollEntities(polls: List<PollEntity>)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    protected abstract suspend fun insertPollOptions(options: List<PollOptionEntity>)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    protected abstract suspend fun insertPollVotes(votes: List<PollVoteEntity>)
+
     @Transaction
     open suspend fun insertPendingMarkers(entities: List<PendingMarkerEntity>) {
         if (entities.isEmpty()) return
@@ -277,6 +295,39 @@ internal abstract class MessageDao {
         }.takeIf { it.isNotEmpty() } ?: return
 
         insertAutoDeletedMessages(filtered)
+    }
+
+    private suspend fun insertPolls(vararg messages: MessageDb) {
+        val pollsToInsert = mutableListOf<PollEntity>()
+        val optionsToInsert = mutableListOf<PollOptionEntity>()
+        val votesToInsert = mutableListOf<PollVoteEntity>()
+
+        messages.forEach { messageDb ->
+            val pollDb = messageDb.poll ?: return@forEach
+
+            // Add poll entity
+            pollsToInsert.add(pollDb.pollEntity)
+
+            // Add poll options
+            optionsToInsert.addAll(pollDb.options)
+
+            // Add poll votes
+            pollDb.votes?.forEach { voteDb ->
+                votesToInsert.add(voteDb.vote)
+            }
+        }
+
+        if (pollsToInsert.isNotEmpty()) {
+            insertPollEntities(pollsToInsert)
+        }
+
+        if (optionsToInsert.isNotEmpty()) {
+            insertPollOptions(optionsToInsert)
+        }
+
+        if (votesToInsert.isNotEmpty()) {
+            insertPollVotes(votesToInsert)
+        }
     }
 
     @Transaction
@@ -429,6 +480,9 @@ internal abstract class MessageDao {
     @Query("select exists(select * from $MESSAGE_TABLE where message_id =:messageId)")
     abstract suspend fun existsMessageById(messageId: Long): Boolean
 
+    @Query("select exists(select * from $MESSAGE_TABLE where tid =:tid)")
+    abstract suspend fun existsMessageByTid(tid: Long): Boolean
+
     @Query("update $MESSAGE_TABLE set deliveryStatus =:status where message_id in (:ids)")
     abstract suspend fun updateMessageStatus(status: DeliveryStatus, vararg ids: Long): Int
 
@@ -477,32 +531,48 @@ internal abstract class MessageDao {
 
     @Transaction
     open suspend fun deleteAttachmentsChunked(messageTides: List<Long>) {
-        messageTides.chunked(SQLITE_MAX_VARIABLE_NUMBER).forEach(this::deleteAttachments)
+        messageTides.chunked(SQLITE_MAX_VARIABLE_NUMBER).forEach { ids ->
+            deleteAttachments(ids)
+        }
     }
 
     @Transaction
     open suspend fun deleteAttachmentsPayloadsChunked(messageTides: List<Long>) {
-        messageTides.chunked(SQLITE_MAX_VARIABLE_NUMBER).forEach(::deleteAttachmentsPayLoad)
+        messageTides.chunked(SQLITE_MAX_VARIABLE_NUMBER).forEach { ids ->
+            deleteAttachmentsPayLoad(ids)
+        }
     }
 
     @Transaction
     open suspend fun deleteMessageReactionTotalsChunked(messageIdes: List<Long>) {
-        messageIdes.chunked(SQLITE_MAX_VARIABLE_NUMBER).forEach(::deleteAllReactionsAndTotals)
+        messageIdes.chunked(SQLITE_MAX_VARIABLE_NUMBER).forEach { ids ->
+            deleteAllReactionsAndTotals(ids)
+        }
+    }
+
+    @Transaction
+    open suspend fun deletePollsChunked(messageTIds: List<Long>) {
+        messageTIds.chunked(SQLITE_MAX_VARIABLE_NUMBER).forEach { ids ->
+            deletePollsByMessageTides(ids)
+        }
     }
 
     @Query("delete from $ATTACHMENT_TABLE where messageTid in (:messageTides)")
-    abstract fun deleteAttachments(messageTides: List<Long>)
+    protected abstract suspend fun deleteAttachments(messageTides: List<Long>)
 
     @Query("delete from $ATTACHMENT_PAYLOAD_TABLE where messageTid in (:messageTides)")
-    abstract fun deleteAttachmentsPayLoad(messageTides: List<Long>)
+    protected abstract suspend fun deleteAttachmentsPayLoad(messageTides: List<Long>)
+
+    @Query("DELETE FROM sceyt_poll_table WHERE messageTid IN (:messageTides)")
+    protected abstract suspend fun deletePollsByMessageTides(messageTides: List<Long>)
 
     @Transaction
-    open fun deleteAllReactionsAndTotals(messageIds: List<Long>) {
+    protected open suspend fun deleteAllReactionsAndTotals(messageIds: List<Long>) {
         deleteAllReactionTotalsByMessageId(messageIds)
     }
 
     @Query("delete from $REACTION_TOTAL_TABLE where messageId in (:messageId)")
-    abstract fun deleteAllReactionTotalsByMessageId(messageId: List<Long>)
+    protected abstract fun deleteAllReactionTotalsByMessageId(messageId: List<Long>)
 
     private companion object {
         private const val TAG = "MessageDao"
