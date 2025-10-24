@@ -5,10 +5,15 @@ import androidx.room.Relation
 import com.sceyt.chatuikit.persistence.database.entity.user.UserDb
 import com.sceyt.chatuikit.persistence.database.entity.user.UserEntity
 
-internal data class ReactionDb(
-        @Embedded
-        val reaction: ReactionEntity,
 
-        @Relation(parentColumn = "fromId", entityColumn = "user_id", entity = UserEntity::class)
-        val from: UserDb?,
+internal data class PollVoteDb(
+        @Embedded
+        val vote: PollVoteEntity,
+
+        @Relation(
+            parentColumn = "userId",
+            entityColumn = "user_id",
+            entity = UserEntity::class
+        )
+        val user: UserDb?,
 )

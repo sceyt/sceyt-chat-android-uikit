@@ -68,6 +68,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.components.E
 import com.sceyt.chatuikit.presentation.components.channel.messages.components.MessagesRV
 import com.sceyt.chatuikit.presentation.components.channel.messages.dialogs.DeleteMessageDialog
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageCommandEvent
+import com.sceyt.chatuikit.presentation.components.channel.messages.events.PollEvent
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.ReactionEvent
 import com.sceyt.chatuikit.presentation.components.channel.messages.fragments.ReactionsInfoBottomSheetFragment
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.action.MessageActionsViewClickListeners
@@ -107,6 +108,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     private lateinit var reactionClickListeners: PopupClickListeners
     private var messageCommandEventListener: ((MessageCommandEvent) -> Unit)? = null
     private var reactionEventListener: ((ReactionEvent) -> Unit)? = null
+    private var pollEventListener: ((PollEvent) -> Unit)? = null
     private var reactionsPopupWindow: PopupWindow? = null
     private var onWindowFocusChangeListener: ((Boolean) -> Unit)? = null
     private var multiselectDestination: Map<Long, SceytMessage>? = null
@@ -569,7 +571,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             messages.forEachIndexed { index, item ->
                 if (item is MessageItem && item.message.parentMessage?.tid == data.messageTid) {
                     val message = item.message
-                    val updatedItem = item.copy(message = message.copy(parentMessage = message.parentMessage?.copy(
+                    val updatedItem = item.copy(message = message.copy(parentMessage = message.parentMessage.copy(
                         attachments = item.message.parentMessage.attachments?.map { attachment ->
                             if (attachment.url == data.url) {
                                 attachment.copy(filePath = data.filePath)
@@ -649,6 +651,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     internal fun setMessageReactionsEventListener(listener: (ReactionEvent) -> Unit) {
         reactionEventListener = listener
+    }
+
+    internal fun setMessagePollEventListener(listener: (PollEvent) -> Unit) {
+        pollEventListener = listener
     }
 
     internal fun setMessageCommandEventListener(listener: (MessageCommandEvent) -> Unit) {
@@ -955,7 +961,9 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     override fun onPollOptionClick(view: View, item: MessageItem, option: PollOption) {
-        // Default implementation - can be overridden by listeners
+        if (enabledActions) {
+            pollEventListener?.invoke(PollEvent.ToggleVote(item.message, option))
+        }
     }
 
     override fun onPollViewResultsClick(view: View, item: MessageItem) {

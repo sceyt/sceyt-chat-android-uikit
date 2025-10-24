@@ -58,10 +58,12 @@ object PollMessageHelper {
             votesPerOption = emptyMap(),
             votes = emptyList(),
             ownVotes = emptyList(),
+            pendingVotes = null,
             createdAt = createdAt,
             updatedAt = createdAt,
             closedAt = 0,
-            closed = false
+            closed = false,
+            messageTid = 0
         )
 
         return Message.MessageBuilder()

@@ -8,6 +8,7 @@ import kotlinx.parcelize.Parcelize
 data class SceytPollDetails(
         val id: String,
         val name: String,
+        val messageTid: Long,
         val description: String,
         val options: List<PollOption>,
         val anonymous: Boolean,
@@ -16,6 +17,7 @@ data class SceytPollDetails(
         val votesPerOption: Map<String, Int>,
         val votes: List<Vote>,
         val ownVotes: List<Vote>,
+        val pendingVotes: List<PendingVoteData>?,
         val createdAt: Long,
         val updatedAt: Long,
         val closedAt: Long,
@@ -51,6 +53,7 @@ data class PollOptionUiModel(
         val text: String,
         val voteCount: Int,
         val voters: List<SceytUser>,
+        val pendingVote: PendingVoteData?,
         val selected: Boolean,
 ) {
     fun getPercentage(totalVotes: Int): Float {
@@ -64,17 +67,41 @@ data class PollOptionUiModel(
  * Converts PollOption to PollOptionUiModel with voting data from SceytPollDetails
  */
 fun PollOption.toUiModel(poll: SceytPollDetails): PollOptionUiModel {
-    val voteCount = poll.votesPerOption[id] ?: 0
-    val optionVotes = poll.votes.filter { it.optionId == id }
-    val voters = if (!poll.anonymous) optionVotes.mapNotNull { it.user } else emptyList()
-    val isSelected = poll.ownVotes.any { it.optionId == id }
-    
+    val pendingVote = poll.pendingVotes?.firstOrNull { it.optionId == id }
+    val pendingDelta = when (pendingVote?.isAdd) {
+        true -> 1
+        false -> -1
+        null -> 0
+    }
+
+    val baseCount = poll.votesPerOption[id] ?: 0
+    val finalVoteCount = (baseCount + pendingDelta).coerceAtLeast(0)
+
+    val isSelected = poll.ownVotes.any { it.optionId == id } || pendingVote?.isAdd == true
+
+    val voters = when {
+        poll.anonymous -> emptyList()
+        else -> {
+            val current = poll.votes.asSequence()
+                .filter { it.optionId == id }
+                .mapNotNull { it.user }
+                .toList()
+
+            when {
+                pendingVote == null -> current
+                pendingVote.isAdd -> current + pendingVote.user
+                else -> current.filter { it.id != pendingVote.user.id }
+            }
+        }
+    }
+
     return PollOptionUiModel(
         id = id,
         text = name,
-        voteCount = voteCount,
+        voteCount = finalVoteCount,
         voters = voters,
-        selected = isSelected
+        selected = isSelected,
+        pendingVote = pendingVote
     )
 }
 

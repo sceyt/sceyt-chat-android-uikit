@@ -3,7 +3,6 @@ package com.sceyt.chatuikit.persistence.mappers
 import com.sceyt.chat.models.message.ForwardingDetails
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.wrapper.ClientWrapper
-import com.sceyt.chatuikit.data.models.messages.PollOption
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytPollDetails
@@ -13,7 +12,6 @@ import com.sceyt.chatuikit.persistence.database.entity.messages.MessageDb
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.ParentMessageDb
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
-import java.util.UUID
 
 internal fun SceytMessage.toMessageEntity(unList: Boolean) = MessageEntity(
     tid = getTid(id, tid, incoming),
@@ -63,7 +61,8 @@ internal fun SceytMessage.toMessageDb(unList: Boolean): MessageDb {
         reactionsTotals = reactionTotals?.map { it.toReactionTotalEntity(id) }?.toMutableList(),
         forwardingUser = forwardingDetails?.user?.toUserDb(),
         pendingReactions = null,
-        mentionedUsers = null
+        mentionedUsers = null,
+        poll = poll?.toPollDb(),
     )
 }
 
@@ -103,13 +102,7 @@ internal fun MessageDb.toSceytMessage(): SceytMessage {
             pendingReactions = pendingReactions?.map { it.toReactionData() },
             bodyAttributes = bodyAttribute,
             disableMentionsCount = disableMentionsCount,
-            poll = createPollWithVoters(
-                question = "Sample Poll Question",
-                options = listOf("Option 1", "Option 2", "Option 3"),
-                voteCounts = listOf(5, 3, 2),
-                allowMultipleVotes = true,
-                anonymous = false
-            )
+            poll = poll?.toSceytPollDetails()
         )
     }
 }
@@ -120,7 +113,8 @@ internal fun ParentMessageDb.toSceytMessage(): SceytMessage {
         from = this@toSceytMessage.from?.toSceytUser(),
         mentionedUsers = mentionedUsers?.map {
             it.user?.toSceytUser() ?: SceytUser(it.link.userId)
-        }
+        },
+        pollDetails = this@toSceytMessage.poll?.toSceytPollDetails()
     )
 }
 
@@ -132,13 +126,16 @@ internal fun SceytMessage.toParentMessageEntity(): ParentMessageDb {
         attachments = attachments?.map {
             it.toAttachmentDb(messageId = id, messageTid = messageTid, channelId = channelId)
         },
-        mentionedUsers = null
+        mentionedUsers = null,
+        poll = poll?.toPollDb()
     )
 }
 
 private fun MessageEntity.parentMessageToSceytMessage(
         attachments: Array<SceytAttachment>?,
-        from: SceytUser?, mentionedUsers: List<SceytUser>?,
+        from: SceytUser?,
+        mentionedUsers: List<SceytUser>?,
+        pollDetails: SceytPollDetails?,
 ) = SceytMessage(
     id = id ?: 0,
     tid = tid,
@@ -168,13 +165,7 @@ private fun MessageEntity.parentMessageToSceytMessage(
     pendingReactions = null,
     bodyAttributes = bodyAttribute,
     disableMentionsCount = disableMentionsCount,
-    poll = createPollWithVoters(
-        question = "Sample Poll Question",
-        options = listOf("Option 1", "Option 2", "Option 3"),
-        voteCounts = listOf(5, 3, 2),
-        allowMultipleVotes = true,
-        anonymous = false
-    )
+    poll = pollDetails
 )
 
 internal fun MessageDb.toMessage(): Message {
@@ -256,13 +247,7 @@ fun Message.toSceytUiMessage(isGroup: Boolean? = null): SceytMessage {
         bodyAttributes = bodyAttributes?.toList(),
         disableMentionsCount = disableMentionsCount,
         isGroup = isGroup ?: false,
-        poll = createPollWithVoters(
-            question = "Sample Poll Question",
-            options = listOf("Option 1", "Option 2", "Option 3"),
-            voteCounts = listOf(5, 3, 2),
-            allowMultipleVotes = true,
-            anonymous = false
-        )
+        poll = poll?.toSceytPollDetails(messageTid = tid)
     )
 }
 
@@ -312,121 +297,4 @@ internal fun ForwardingDetailsDb.toForwardingDetails(
     messageId, channelId,
     user?.toUser(),
     hops
-)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-fun createPollWithVoters(
-        question: String,
-        options: List<String>,
-        voteCounts: List<Int>,
-        allowMultipleVotes: Boolean = false,
-        anonymous: Boolean = false,
-): SceytPollDetails {
-    val pollId = UUID.randomUUID().toString()
-    val createdAt = System.currentTimeMillis()
-
-    val pollOptions = options.map { text ->
-        PollOption(
-            id = UUID.randomUUID().toString(),
-            name = text
-        )
-    }
-
-    // Create votesPerOption map from vote counts
-    val votesPerOption = pollOptions.mapIndexed { index, option ->
-        option.id to (voteCounts.getOrNull(index) ?: 0)
-    }.toMap()
-
-    // Create votes list (mock data for demo)
-    val votes = pollOptions.flatMapIndexed { index, option ->
-        val voteCount = voteCounts.getOrNull(index) ?: 0
-        if (!anonymous && voteCount > 0) {
-            mockUsers.take(minOf(voteCount, mockUsers.size)).map { user ->
-                com.sceyt.chatuikit.data.models.messages.Vote(
-                    id = UUID.randomUUID().toString(),
-                    pollId = pollId,
-                    optionId = option.id,
-                    createdAt = createdAt,
-                    user = user
-                )
-            }
-        } else {
-            emptyList()
-        }
-    }
-
-    val poll = SceytPollDetails(
-        id = pollId,
-        name = question,
-        description = "",
-        options = pollOptions,
-        anonymous = anonymous,
-        allowMultipleVotes = allowMultipleVotes,
-        allowVoteRetract = true,
-        votesPerOption = votesPerOption,
-        votes = votes,
-        ownVotes = emptyList(),
-        createdAt = createdAt,
-        updatedAt = createdAt,
-        closedAt = 0,
-        closed = false
-    )
-
-
-    return poll
-}
-
-val mockUsers = listOf(
-    SceytUser(
-        id = "user1",
-    ).copy(
-        firstName = "John",
-        lastName = "Doe",
-    ),
-    SceytUser(
-        id = "user2",
-    ).copy(
-        firstName = "Jane",
-        lastName = "Smith",
-    ),
-    SceytUser(
-        id = "user3",
-    ).copy(
-        firstName = "Bob",
-        lastName = "Wilson",
-    ),
-    SceytUser(
-        id = "user4",
-    ).copy(
-        firstName = "Alice",
-        lastName = "Johnson",
-    ),
-    SceytUser(
-        id = "user5",
-    ).copy(
-        firstName = "Charlie",
-        lastName = "Brown",
-    ),
-    SceytUser(
-        id = "user6",
-    ).copy(
-        firstName = "Diana",
-        lastName = "Prince",
-    )
 )
