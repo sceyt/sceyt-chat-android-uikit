@@ -861,6 +861,51 @@ internal fun MessageItemStyle.Builder.buildOverlayMediaLoaderStyle(
     )
     .build()
 
+/* Poll voter avatar text style */
+internal fun MessageItemStyle.Builder.buildPollVoterAvatarTextStyle(
+        typedArray: TypedArray,
+) = TextStyle.Builder(typedArray)
+    .setColor(
+        index = R.styleable.MessagesListView_sceytUiMessagesListPollVoterAvatarTextColor,
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor))
+    .setSize(
+        index = R.styleable.MessagesListView_sceytUiMessagesListPollVoterAvatarTextSize
+    )
+    .setStyle(
+        index = R.styleable.MessagesListView_sceytUiMessagesListPollVoterAvatarTextStyle
+    )
+    .setFont(
+        index = R.styleable.MessagesListView_sceytUiMessagesListPollVoterAvatarTextFont
+    )
+    .build()
+
+@Suppress("UnusedReceiverParameter")
+internal fun MessageItemStyle.Builder.buildPollVoterAvatarShape(
+        array: TypedArray,
+): Shape {
+    val value = array.getInt(R.styleable.MessagesListView_sceytUiMessagesListPollVoterAvatarShape, 0)
+    val cornerRadius = array.getDimension(R.styleable.MessagesListView_sceytUiMessagesListPollVoterAvatarCornerRadius, 0f)
+    return if (value == 1) {
+        Shape.RoundedCornerShape(cornerRadius)
+    } else Shape.Circle
+}
+
+internal fun MessageItemStyle.Builder.buildPollVoterAvatarStyle(
+        typedArray: TypedArray,
+) = AvatarStyle.Builder(typedArray)
+    .avatarBackgroundColor(
+        index = R.styleable.MessagesListView_sceytUiMessagesListPollVoterAvatarBackgroundColor
+    )
+    .borderWidth(
+        index = R.styleable.MessagesListView_sceytUiMessagesListPollVoterAvatarBorderWidth
+    )
+    .borderColor(
+        index = R.styleable.MessagesListView_sceytUiMessagesListPollVoterAvatarBorderColor
+    )
+    .textStyle(buildPollVoterAvatarTextStyle(typedArray))
+    .shape(buildPollVoterAvatarShape(typedArray))
+    .build()
+
 /* Poll Style */
 internal fun MessageItemStyle.Builder.buildPollStyle(
         typedArray: TypedArray,
@@ -963,6 +1008,7 @@ internal fun MessageItemStyle.Builder.buildPollStyle(
             )
             .build()
     )
+    .voterAvatarStyle(buildPollVoterAvatarStyle(typedArray))
     .checkboxStyle(
         CheckboxStyle.Builder(typedArray)
             .checkedIcon(

@@ -409,6 +409,23 @@
         <attr name="sceytUiMessagesListPollCheckboxCheckedIcon" format="reference" />
         <attr name="sceytUiMessagesListPollCheckboxUncheckedIcon" format="reference" />
         <attr name="sceytUiMessagesListPollCheckboxPressedIcon" format="reference" />
+        <!--Poll voter avatar style-->
+        <attr name="sceytUiMessagesListPollVoterAvatarBackgroundColor" format="reference|color" />
+        <attr name="sceytUiMessagesListPollVoterAvatarTextColor" format="reference|color" />
+        <attr name="sceytUiMessagesListPollVoterAvatarTextSize" format="dimension" />
+        <attr name="sceytUiMessagesListPollVoterAvatarTextFont" format="reference" />
+        <attr name="sceytUiMessagesListPollVoterAvatarTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiMessagesListPollVoterAvatarShape">
+            <flag name="circle" value="0" />
+            <flag name="rounded" value="1" />
+        </attr>
+        <attr name="sceytUiMessagesListPollVoterAvatarCornerRadius" format="dimension" />
+        <attr name="sceytUiMessagesListPollVoterAvatarBorderWidth" format="dimension" />
+        <attr name="sceytUiMessagesListPollVoterAvatarBorderColor" format="reference|color" />
 
     </declare-styleable>
 </resources>
