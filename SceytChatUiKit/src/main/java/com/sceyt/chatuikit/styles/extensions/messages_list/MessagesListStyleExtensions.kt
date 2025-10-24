@@ -932,7 +932,8 @@ internal fun MessageItemStyle.Builder.buildPollStyle(
                 index = R.styleable.MessagesListView_sceytUiMessagesListPollQuestionTextSize
             )
             .setFont(
-                index = R.styleable.MessagesListView_sceytUiMessagesListPollQuestionTextFont
+                index = R.styleable.MessagesListView_sceytUiMessagesListPollQuestionTextFont,
+                defValue = R.font.roboto_medium
             )
             .build()
     )
