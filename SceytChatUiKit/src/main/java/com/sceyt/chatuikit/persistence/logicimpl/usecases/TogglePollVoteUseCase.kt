@@ -1,17 +1,17 @@
 package com.sceyt.chatuikit.persistence.logicimpl.usecases
 
 import com.bumptech.glide.request.RequestOptions.option
-import com.sceyt.chat.models.SceytException
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.data.models.createErrorResponse
 import com.sceyt.chatuikit.data.models.messages.PendingVoteData
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytPollDetails
-import com.sceyt.chatuikit.persistence.database.dao.MessageDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingPollVoteDao
 import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingPollVoteEntity
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
-import com.sceyt.chatuikit.persistence.mappers.toSceytMessage
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /**
  * Use case for toggling poll votes with optimistic UI updates via pending votes.
@@ -20,7 +20,6 @@ import com.sceyt.chatuikit.persistence.mappers.toSceytMessage
 internal class TogglePollVoteUseCase(
         private val addPollVoteUseCase: AddPollVoteUseCase,
         private val removePollVoteUseCase: RemovePollVoteUseCase,
-        private val messageDao: MessageDao,
         private val pendingPollVoteDao: PendingPollVoteDao,
         private val messagesCache: MessagesCache,
 ) {
@@ -38,16 +37,15 @@ internal class TogglePollVoteUseCase(
             channelId: Long,
             message: SceytMessage,
             optionId: String,
-    ): SceytResponse<SceytMessage> {
+    ): SceytResponse<SceytMessage> = withContext(Dispatchers.IO) {
         val poll = message.poll
-                ?: return SceytResponse.Error(SceytException(0, "Poll not found in message"))
+                ?: return@withContext createErrorResponse("Poll not found in message")
         val currentUser = SceytChatUIKit.chatUIFacade.userInteractor.getCurrentUser()
-                ?: return SceytResponse.Error(SceytException(0, "Current user not found"))
+                ?: return@withContext createErrorResponse("Current user not found")
 
         // Can't vote on closed polls
-        if (poll.closed) return SceytResponse.Error(
-            SceytException(0, "Poll is closed")
-        )
+        if (poll.closed)
+            return@withContext createErrorResponse("Poll is closed")
 
         // Check if there's already a pending vote for this option
         val existingPendingVote = poll.pendingVotes?.firstOrNull {
@@ -56,13 +54,13 @@ internal class TogglePollVoteUseCase(
 
         // User is toggling back a pending vote - remove it
         if (existingPendingVote != null) {
-            return removePendingVote(channelId, message, optionId)
+            return@withContext removePendingVote(channelId, message, optionId)
         }
 
         // Determine if user has already voted for this option
         val hasVoted = poll.ownVotes.any { it.optionId == optionId }
 
-        return if (poll.allowMultipleVotes) {
+        return@withContext if (poll.allowMultipleVotes) {
             // Multiple answer polls - simple toggle
             handleMultipleAnswerToggle(channelId, message, poll, optionId, hasVoted, currentUser)
         } else {
@@ -113,8 +111,7 @@ internal class TogglePollVoteUseCase(
         )
         pendingPollVoteDao.insert(pendingVoteEntity)
 
-        // 3. Make API call in background
-
+        // 3. Make server call
         return if (hasVoted) {
             removePollVoteUseCase(message.tid, poll.id, optionId, currentUser.id)
         } else {
@@ -206,9 +203,7 @@ internal class TogglePollVoteUseCase(
         )
         pendingPollVoteDao.insert(newPendingVoteEntity)
 
-        // 3. Make API calls
-
-        // Add or remove the new vote
+        // 3. Make server call
         return if (hasVoted) {
             removePollVoteUseCase(message.tid, poll.id, optionId, currentUser.id)
         } else {
@@ -242,15 +237,5 @@ internal class TogglePollVoteUseCase(
         pendingPollVoteDao.deleteByOption(message.tid, poll.id, optionId)
 
         return SceytResponse.Success(updatedMessage)
-    }
-
-    /**
-     * Updates cache with fresh data from database after server sync.
-     */
-    private suspend fun updateCacheFromDatabase(channelId: Long, messageTid: Long) {
-        val updatedMessage = messageDao.getMessageByTid(messageTid)?.toSceytMessage()
-        if (updatedMessage != null) {
-            messagesCache.messageUpdated(channelId, updatedMessage)
-        }
     }
 }
