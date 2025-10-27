@@ -67,7 +67,7 @@ class IncPollMessageViewHolder(
                     setOrUpdateReactions(item = item, rvReactionsViewStub = rvReactions, viewPool = viewPoolReactions)
 
                 if (diff.pollChanged) {
-                    message.poll?.let { updatePollViews(it) }
+                    updatePollViews(message.poll)
                 }
 
                 if (item.message.shouldShowAvatarAndName)
@@ -78,7 +78,7 @@ class IncPollMessageViewHolder(
         }
     }
 
-    override fun updatePollViews(poll: SceytPollDetails) = with(binding) {
+    override fun updatePollViews(poll: SceytPollDetails?) = with(binding) {
         setupPollViews(
             poll = poll,
             rvPollOptions = rvPollOptions,

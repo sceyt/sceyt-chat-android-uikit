@@ -63,13 +63,13 @@ class OutPollMessageViewHolder(
                     setOrUpdateReactions(item, rvReactions, viewPoolReactions)
 
                 if (diff.pollChanged) {
-                    message.poll?.let { updatePollViews(it) }
+                    updatePollViews(message.poll)
                 }
             }
         }
     }
 
-    override fun updatePollViews(poll: SceytPollDetails) = with(binding) {
+    override fun updatePollViews(poll: SceytPollDetails?) = with(binding) {
         setupPollViews(
             poll = poll,
             rvPollOptions = rvPollOptions,
