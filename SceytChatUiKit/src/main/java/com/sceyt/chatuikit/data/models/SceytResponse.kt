@@ -51,3 +51,12 @@ sealed class SceytPagingResponse<T>(
         }
     }
 }
+
+fun <T> createErrorResponse(message: String, code: Int = 0): SceytResponse.Error<T> {
+    val exception = createSceytException(message, code)
+    return SceytResponse.Error(exception)
+}
+
+fun createSceytException(message: String, code: Int = 0): SceytException {
+    return SceytException(code, message)
+}
