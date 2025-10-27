@@ -16,11 +16,12 @@ data class MessageDiff(
         val filesChanged: Boolean,
         val selectionChanged: Boolean,
         val metadataChanged: Boolean,
+        val pollChanged: Boolean,
 ) {
     fun hasDifference(): Boolean {
         return edited || bodyChanged || statusChanged || avatarChanged || nameChanged || replyCountChanged
                 || replyContainerChanged || reactionsChanged || showAvatarAndNameChanged || filesChanged
-                || selectionChanged || metadataChanged
+                || selectionChanged || metadataChanged || pollChanged
     }
 
     companion object {
@@ -36,7 +37,8 @@ data class MessageDiff(
             showAvatarAndNameChanged = true,
             filesChanged = true,
             selectionChanged = true,
-            metadataChanged = true
+            metadataChanged = true,
+            pollChanged = true
         )
         val DEFAULT_FALSE = MessageDiff(
             edited = false,
@@ -50,7 +52,8 @@ data class MessageDiff(
             showAvatarAndNameChanged = false,
             filesChanged = false,
             selectionChanged = false,
-            metadataChanged = false
+            metadataChanged = false,
+            pollChanged = false
         )
     }
 
@@ -77,7 +80,8 @@ fun SceytMessage.diff(other: SceytMessage): MessageDiff {
                 || disabledShowAvatarAndName != other.disabledShowAvatarAndName,
         filesChanged = attachments?.size != other.attachments?.size,
         selectionChanged = isSelected != other.isSelected,
-        metadataChanged = metadata != other.metadata
+        metadataChanged = metadata != other.metadata,
+        pollChanged = poll != other.poll
     )
 }
 
@@ -96,6 +100,7 @@ fun SceytMessage.diffContent(other: SceytMessage): MessageDiff {
         showAvatarAndNameChanged = false,
         filesChanged = attachments?.size != other.attachments?.size,
         selectionChanged = isSelected != other.isSelected,
-        metadataChanged = metadata != other.metadata
+        metadataChanged = metadata != other.metadata,
+        pollChanged = poll != other.poll
     )
 }

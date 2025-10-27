@@ -20,6 +20,7 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
+import com.sceyt.chatuikit.data.models.messages.PollOption
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
@@ -67,6 +68,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.components.E
 import com.sceyt.chatuikit.presentation.components.channel.messages.components.MessagesRV
 import com.sceyt.chatuikit.presentation.components.channel.messages.dialogs.DeleteMessageDialog
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageCommandEvent
+import com.sceyt.chatuikit.presentation.components.channel.messages.events.PollEvent
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.ReactionEvent
 import com.sceyt.chatuikit.presentation.components.channel.messages.fragments.ReactionsInfoBottomSheetFragment
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.action.MessageActionsViewClickListeners
@@ -106,6 +108,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     private lateinit var reactionClickListeners: PopupClickListeners
     private var messageCommandEventListener: ((MessageCommandEvent) -> Unit)? = null
     private var reactionEventListener: ((ReactionEvent) -> Unit)? = null
+    private var pollEventListener: ((PollEvent) -> Unit)? = null
     private var reactionsPopupWindow: PopupWindow? = null
     private var onWindowFocusChangeListener: ((Boolean) -> Unit)? = null
     private var multiselectDestination: Map<Long, SceytMessage>? = null
@@ -241,6 +244,18 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
             override fun onMultiSelectClick(view: View, message: SceytMessage) {
                 clickListeners.onMultiSelectClick(view, message)
+            }
+
+            override fun onPollOptionClick(view: View, item: MessageItem, option: PollOption) {
+                checkMaybeInMultiSelectMode(view, item.message) {
+                    clickListeners.onPollOptionClick(view, item, option)
+                }
+            }
+
+            override fun onPollViewResultsClick(view: View, item: MessageItem) {
+                checkMaybeInMultiSelectMode(view, item.message) {
+                    clickListeners.onPollViewResultsClick(view, item)
+                }
             }
 
             override fun onScrollToDownClick(view: View) {
@@ -556,7 +571,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             messages.forEachIndexed { index, item ->
                 if (item is MessageItem && item.message.parentMessage?.tid == data.messageTid) {
                     val message = item.message
-                    val updatedItem = item.copy(message = message.copy(parentMessage = message.parentMessage?.copy(
+                    val updatedItem = item.copy(message = message.copy(parentMessage = message.parentMessage.copy(
                         attachments = item.message.parentMessage.attachments?.map { attachment ->
                             if (attachment.url == data.url) {
                                 attachment.copy(filePath = data.filePath)
@@ -636,6 +651,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     internal fun setMessageReactionsEventListener(listener: (ReactionEvent) -> Unit) {
         reactionEventListener = listener
+    }
+
+    internal fun setMessagePollEventListener(listener: (PollEvent) -> Unit) {
+        pollEventListener = listener
     }
 
     internal fun setMessageCommandEventListener(listener: (MessageCommandEvent) -> Unit) {
@@ -939,6 +958,16 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     override fun onMultiSelectClick(view: View, message: SceytMessage) {
         messageCommandEventListener?.invoke(MessageCommandEvent.MultiselectEvent(message))
+    }
+
+    override fun onPollOptionClick(view: View, item: MessageItem, option: PollOption) {
+        if (enabledActions) {
+            pollEventListener?.invoke(PollEvent.ToggleVote(item.message, option))
+        }
+    }
+
+    override fun onPollViewResultsClick(view: View, item: MessageItem) {
+        // Default implementation - can be overridden by listeners
     }
 
     override fun onScrollToDownClick(view: View) {

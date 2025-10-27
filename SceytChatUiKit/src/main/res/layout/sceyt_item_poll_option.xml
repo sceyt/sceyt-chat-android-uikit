@@ -4,54 +4,76 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="8dp"
-    android:clickable="true"
-    android:focusable="true"
-    tools:background="@drawable/sceyt_bg_ripple_corners_8"
-    tools:backgroundTint="@color/sceyt_color_surface_1">
+    android:paddingVertical="10dp">
 
-    <androidx.appcompat.widget.AppCompatEditText
-        android:id="@+id/etOption"
+    <androidx.appcompat.widget.AppCompatCheckBox
+        android:id="@+id/checkbox"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:background="@null"
+        android:button="@drawable/sceyt_custom_radiobutton"
+        android:clickable="false"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tvOptionText"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:background="@android:color/transparent"
-        android:hint="@string/sceyt_poll_add"
-        android:minHeight="48dp"
-        android:padding="12dp"
-        android:textSize="16sp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/icRemove"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:textColor="@color/sceyt_color_text_primary"
-        tools:textColorHint="@color/sceyt_color_text_secondary" />
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:textColor="@color/sceyt_color_text_primary"
+        android:textSize="@dimen/smallTextSize"
+        app:layout_constraintEnd_toStartOf="@+id/rvVoters"
+        app:layout_constraintStart_toEndOf="@+id/checkbox"
+        app:layout_constraintTop_toTopOf="@+id/checkbox"
+        app:layout_goneMarginStart="0dp"
+        tools:text="AI avatars" />
 
-    <androidx.appcompat.widget.AppCompatImageView
-        android:id="@+id/icRemove"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvVoters"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
-        android:background="?android:selectableItemBackgroundBorderless"
-        android:padding="8dp"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/icDrag"
+        android:layout_marginEnd="5dp"
+        android:orientation="horizontal"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        app:layout_constraintBottom_toBottomOf="@+id/barrierVoters"
+        app:layout_constraintEnd_toStartOf="@+id/tvVoteCount"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/sceyt_ic_close"
-        tools:tint="@color/sceyt_color_text_secondary"
-        tools:visibility="visible" />
+        tools:itemCount="3"
+        tools:listitem="@layout/sceyt_item_voter_avatar" />
 
-    <androidx.appcompat.widget.AppCompatImageView
-        android:id="@+id/icDrag"
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tvVoteCount"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
-        android:padding="8dp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:textColor="@color/sceyt_color_text_primary"
+        android:textSize="@dimen/smallTextSize"
+        app:layout_constraintBottom_toBottomOf="@+id/barrierVoters"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/sceyt_ic_drag"
-        tools:tint="@color/sceyt_color_text_secondary" />
+        app:layout_constraintTop_toTopOf="@+id/checkbox"
+        tools:text="3" />
+
+    <androidx.constraintlayout.widget.Barrier
+        android:id="@+id/barrierVoters"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:barrierDirection="bottom"
+        app:constraint_referenced_ids="rvVoters, tvOptionText" />
+
+    <com.sceyt.chatuikit.presentation.custom_views.HorizontalProgressView
+        android:id="@+id/progressBar"
+        android:layout_width="0dp"
+        android:layout_height="6dp"
+        android:layout_marginTop="4dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@+id/tvOptionText"
+        app:layout_constraintTop_toBottomOf="@+id/barrierVoters"
+        app:horizontalProgressViewProgress="0"
+        app:horizontalProgressViewBackgroundColor="#D0D8E3"
+        app:horizontalProgressViewColor="@color/sceyt_color_accent"
+        app:horizontalProgressViewCornerRadius="8dp"
+        tools:horizontalProgressViewProgress="50" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
 

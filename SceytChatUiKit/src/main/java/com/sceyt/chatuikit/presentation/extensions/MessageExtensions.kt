@@ -211,7 +211,9 @@ fun SceytMessage.getUpdateMessage(message: SceytMessage): SceytMessage {
         autoDeleteAt = message.autoDeleteAt,
         pendingReactions = message.pendingReactions,
         bodyAttributes = message.bodyAttributes,
+        disableMentionsCount = message.disableMentionsCount,
+        poll = message.poll,
         messageReactions = message.messageReactions,
-        files = message.files
+        files = message.files,
     )
 }

@@ -5,6 +5,7 @@ import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.data.models.messages.SceytPollDetails
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.persistence.database.entity.messages.ForwardingDetailsDb
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageDb
@@ -60,7 +61,8 @@ internal fun SceytMessage.toMessageDb(unList: Boolean): MessageDb {
         reactionsTotals = reactionTotals?.map { it.toReactionTotalEntity(id) }?.toMutableList(),
         forwardingUser = forwardingDetails?.user?.toUserDb(),
         pendingReactions = null,
-        mentionedUsers = null
+        mentionedUsers = null,
+        poll = poll?.toPollDb(),
     )
 }
 
@@ -99,7 +101,8 @@ internal fun MessageDb.toSceytMessage(): SceytMessage {
             forwardingDetails = forwardingDetailsDb?.toForwardingDetails(channelId, forwardingUser?.toSceytUser()),
             pendingReactions = pendingReactions?.map { it.toReactionData() },
             bodyAttributes = bodyAttribute,
-            disableMentionsCount = disableMentionsCount
+            disableMentionsCount = disableMentionsCount,
+            poll = poll?.toSceytPollDetails()
         )
     }
 }
@@ -110,7 +113,8 @@ internal fun ParentMessageDb.toSceytMessage(): SceytMessage {
         from = this@toSceytMessage.from?.toSceytUser(),
         mentionedUsers = mentionedUsers?.map {
             it.user?.toSceytUser() ?: SceytUser(it.link.userId)
-        }
+        },
+        pollDetails = this@toSceytMessage.poll?.toSceytPollDetails()
     )
 }
 
@@ -122,13 +126,16 @@ internal fun SceytMessage.toParentMessageEntity(): ParentMessageDb {
         attachments = attachments?.map {
             it.toAttachmentDb(messageId = id, messageTid = messageTid, channelId = channelId)
         },
-        mentionedUsers = null
+        mentionedUsers = null,
+        poll = poll?.toPollDb()
     )
 }
 
 private fun MessageEntity.parentMessageToSceytMessage(
         attachments: Array<SceytAttachment>?,
-        from: SceytUser?, mentionedUsers: List<SceytUser>?,
+        from: SceytUser?,
+        mentionedUsers: List<SceytUser>?,
+        pollDetails: SceytPollDetails?,
 ) = SceytMessage(
     id = id ?: 0,
     tid = tid,
@@ -157,7 +164,8 @@ private fun MessageEntity.parentMessageToSceytMessage(
     forwardingDetails = forwardingDetailsDb?.toForwardingDetails(channelId, null),
     pendingReactions = null,
     bodyAttributes = bodyAttribute,
-    disableMentionsCount = disableMentionsCount
+    disableMentionsCount = disableMentionsCount,
+    poll = pollDetails
 )
 
 internal fun MessageDb.toMessage(): Message {
@@ -189,7 +197,8 @@ internal fun MessageDb.toMessage(): Message {
             autoDeleteAt ?: 0L,
             forwardingDetailsDb?.toForwardingDetails(channelId, forwardingUser?.toSceytUser()),
             bodyAttribute?.toTypedArray(),
-            disableMentionsCount
+            disableMentionsCount,
+            null
         )
     }
 }
@@ -237,7 +246,8 @@ fun Message.toSceytUiMessage(isGroup: Boolean? = null): SceytMessage {
         pendingReactions = null,
         bodyAttributes = bodyAttributes?.toList(),
         disableMentionsCount = disableMentionsCount,
-        isGroup = isGroup ?: false
+        isGroup = isGroup ?: false,
+        poll = poll?.toSceytPollDetails(messageTid = tid)
     )
 }
 
@@ -269,7 +279,8 @@ fun SceytMessage.toMessage(): Message {
         autoDeleteAt ?: 0L,
         forwardingDetails,
         bodyAttributes?.toTypedArray(),
-        disableMentionsCount
+        disableMentionsCount,
+        null
     )
 }
 

@@ -94,7 +94,7 @@ abstract class BaseMessageViewHolder(
         if (diff.selectionChanged || diff.statusChanged)
             selectableAnimHelper.doOnBind(selectMessageView, item)
 
-        if (messageListItem.highligh)
+        if (messageListItem.highlight)
             highlight()
     }
 
@@ -133,7 +133,7 @@ abstract class BaseMessageViewHolder(
         if (messageListItem is MessageListItem.MessageItem) {
             highlightAnim?.cancel()
             view.setBackgroundColor(Color.TRANSPARENT)
-            messageListItem.highligh = false
+            messageListItem.highlight = false
         }
     }
 
@@ -548,7 +548,7 @@ abstract class BaseMessageViewHolder(
         highlightAnim?.duration = 2000
         highlightAnim?.addUpdateListener { animator -> view.setBackgroundColor(animator.animatedValue as Int) }
         highlightAnim?.start()
-        messageListItem.highligh = false
+        messageListItem.highlight = false
     }
 
     protected open fun applyCommonStyle(

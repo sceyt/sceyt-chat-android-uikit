@@ -12,6 +12,7 @@ import com.sceyt.chatuikit.extensions.spToPx
 import com.sceyt.chatuikit.styles.common.AvatarStyle
 import com.sceyt.chatuikit.styles.common.BackgroundStyle
 import com.sceyt.chatuikit.styles.common.CheckboxStyle
+import com.sceyt.chatuikit.styles.common.MediaLoaderStyle
 import com.sceyt.chatuikit.styles.common.MessageDeliveryStatusIcons
 import com.sceyt.chatuikit.styles.common.Shape
 import com.sceyt.chatuikit.styles.common.TextStyle
@@ -22,6 +23,7 @@ import com.sceyt.chatuikit.styles.messages_list.ScrollButtonStyle
 import com.sceyt.chatuikit.styles.messages_list.UnreadMessagesSeparatorStyle
 import com.sceyt.chatuikit.styles.messages_list.item.LinkPreviewStyle
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
+import com.sceyt.chatuikit.styles.messages_list.item.PollStyle
 import com.sceyt.chatuikit.styles.messages_list.item.ReplyMessageStyle
 
 internal fun MessagesListViewStyle.Builder.buildScrollDownTextStyle(
@@ -203,7 +205,7 @@ internal fun MessageItemStyle.Builder.buildIncomingBubbleBackgroundStyle(
 
 
 internal fun MessageItemStyle.Builder.buildOutgoingBubbleBackgroundStyle(
-        typedArray: TypedArray
+        typedArray: TypedArray,
 ) = BackgroundStyle.Builder(typedArray)
     .setBackgroundColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListOutgoingBubbleColor,
@@ -752,7 +754,7 @@ internal fun MessageItemStyle.Builder.buildReplyMessageStyle(
 /* Media Loader Style */
 internal fun MessageItemStyle.Builder.buildMediaLoaderStyle(
         typedArray: TypedArray,
-) = com.sceyt.chatuikit.styles.common.MediaLoaderStyle.Builder(typedArray)
+) = MediaLoaderStyle.Builder(typedArray)
     .backgroundColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListMediaLoaderBackgroundColor
     )
@@ -827,7 +829,7 @@ internal fun MessageItemStyle.Builder.buildSelectionCheckboxStyle(
 /* Overlay Media Style*/
 internal fun MessageItemStyle.Builder.buildOverlayMediaLoaderStyle(
         typedArray: TypedArray,
-) = com.sceyt.chatuikit.styles.common.MediaLoaderStyle.Builder(typedArray)
+) = MediaLoaderStyle.Builder(typedArray)
     .backgroundColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListOverlayMediaLoaderBackgroundColor,
         defValue = context.getCompatColor(SceytChatUIKit.theme.colors.overlayBackground2Color)
@@ -856,5 +858,175 @@ internal fun MessageItemStyle.Builder.buildOverlayMediaLoaderStyle(
         defValue = context.getCompatDrawable(R.drawable.sceyt_ic_download).applyTint(
             context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor)
         )
+    )
+    .build()
+
+/* Poll voter avatar text style */
+internal fun MessageItemStyle.Builder.buildPollVoterAvatarTextStyle(
+        typedArray: TypedArray,
+) = TextStyle.Builder(typedArray)
+    .setColor(
+        index = R.styleable.MessagesListView_sceytUiMessagesListPollVoterAvatarTextColor,
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor))
+    .setSize(
+        index = R.styleable.MessagesListView_sceytUiMessagesListPollVoterAvatarTextSize
+    )
+    .setStyle(
+        index = R.styleable.MessagesListView_sceytUiMessagesListPollVoterAvatarTextStyle
+    )
+    .setFont(
+        index = R.styleable.MessagesListView_sceytUiMessagesListPollVoterAvatarTextFont
+    )
+    .build()
+
+@Suppress("UnusedReceiverParameter")
+internal fun MessageItemStyle.Builder.buildPollVoterAvatarShape(
+        array: TypedArray,
+): Shape {
+    val value = array.getInt(R.styleable.MessagesListView_sceytUiMessagesListPollVoterAvatarShape, 0)
+    val cornerRadius = array.getDimension(R.styleable.MessagesListView_sceytUiMessagesListPollVoterAvatarCornerRadius, 0f)
+    return if (value == 1) {
+        Shape.RoundedCornerShape(cornerRadius)
+    } else Shape.Circle
+}
+
+internal fun MessageItemStyle.Builder.buildPollVoterAvatarStyle(
+        typedArray: TypedArray,
+) = AvatarStyle.Builder(typedArray)
+    .avatarBackgroundColor(
+        index = R.styleable.MessagesListView_sceytUiMessagesListPollVoterAvatarBackgroundColor
+    )
+    .borderWidth(
+        index = R.styleable.MessagesListView_sceytUiMessagesListPollVoterAvatarBorderWidth
+    )
+    .borderColor(
+        index = R.styleable.MessagesListView_sceytUiMessagesListPollVoterAvatarBorderColor
+    )
+    .textStyle(buildPollVoterAvatarTextStyle(typedArray))
+    .shape(buildPollVoterAvatarShape(typedArray))
+    .build()
+
+/* Poll Style */
+internal fun MessageItemStyle.Builder.buildPollStyle(
+        typedArray: TypedArray,
+) = PollStyle.Builder(context, typedArray)
+    .dividerColor(
+        index = R.styleable.MessagesListView_sceytUiMessagesListPollDividerColor,
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColor)
+    )
+    .progressBarBackground(
+        index = R.styleable.MessagesListView_sceytUiMessagesListPollProgressBarBackgroundColor,
+        defValue = context.getCompatColor(R.color.sceyt_color_background_sections)
+    )
+    .progressBarForeground(
+        index = R.styleable.MessagesListView_sceytUiMessagesListPollProgressBarForegroundColor,
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
+    )
+    .questionTextStyle(
+        TextStyle.Builder(typedArray)
+            .setColor(
+                index = R.styleable.MessagesListView_sceytUiMessagesListPollQuestionTextColor,
+                defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor)
+            )
+            .setSize(
+                index = R.styleable.MessagesListView_sceytUiMessagesListPollQuestionTextSize
+            )
+            .setFont(
+                index = R.styleable.MessagesListView_sceytUiMessagesListPollQuestionTextFont,
+                defValue = R.font.roboto_medium
+            )
+            .build()
+    )
+    .pollTypeTextStyle(
+        TextStyle.Builder(typedArray)
+            .setColor(
+                index = R.styleable.MessagesListView_sceytUiMessagesListPollTypeTextColor,
+                defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor)
+            )
+            .setSize(
+                index = R.styleable.MessagesListView_sceytUiMessagesListPollTypeTextSize
+            )
+            .setFont(
+                index = R.styleable.MessagesListView_sceytUiMessagesListPollTypeTextFont
+            )
+            .build()
+    )
+    .viewResultsTextStyle(
+        TextStyle.Builder(typedArray)
+            .setColor(
+                index = R.styleable.MessagesListView_sceytUiMessagesListPollViewResultsTextColor,
+                defValue = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
+            )
+            .setSize(
+                index = R.styleable.MessagesListView_sceytUiMessagesListPollViewResultsTextSize
+            )
+            .setFont(
+                index = R.styleable.MessagesListView_sceytUiMessagesListPollViewResultsTextFont,
+                defValue = R.font.roboto_medium
+            )
+            .build()
+    )
+    .viewResultsDisabledTextStyle(
+        TextStyle.Builder(typedArray)
+            .setColor(
+                index = R.styleable.MessagesListView_sceytUiMessagesListPollViewResultsDisabledTextColor,
+                defValue = context.getCompatColor(R.color.sceyt_color_disabled)
+            )
+            .setSize(
+                index = R.styleable.MessagesListView_sceytUiMessagesListPollViewResultsDisabledTextSize
+            )
+            .setFont(
+                index = R.styleable.MessagesListView_sceytUiMessagesListPollViewResultsDisabledTextFont,
+                defValue = R.font.roboto_medium
+            )
+            .build()
+    )
+    .optionTextStyle(
+        TextStyle.Builder(typedArray)
+            .setColor(
+                index = R.styleable.MessagesListView_sceytUiMessagesListPollOptionTextColor,
+                defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor)
+            )
+            .setSize(
+                index = R.styleable.MessagesListView_sceytUiMessagesListPollOptionTextSize
+            )
+            .setFont(
+                index = R.styleable.MessagesListView_sceytUiMessagesListPollOptionTextFont
+            )
+            .build()
+    )
+    .voteCountTextStyle(
+        TextStyle.Builder(typedArray)
+            .setColor(
+                index = R.styleable.MessagesListView_sceytUiMessagesListPollVoteCountTextColor,
+                defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor)
+            )
+            .setSize(
+                index = R.styleable.MessagesListView_sceytUiMessagesListPollVoteCountTextSize
+            )
+            .setFont(
+                index = R.styleable.MessagesListView_sceytUiMessagesListPollVoteCountTextFont
+            )
+            .build()
+    )
+    .voterAvatarStyle(buildPollVoterAvatarStyle(typedArray))
+    .checkboxStyle(
+        CheckboxStyle.Builder(typedArray)
+            .checkedIcon(
+                index = R.styleable.MessagesListView_sceytUiMessagesListPollCheckboxCheckedIcon,
+                defValue = context.getCompatDrawable(R.drawable.sceyt_ic_checked_state).applyTint(
+                    context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
+                )
+            )
+            .uncheckedIcon(
+                index = R.styleable.MessagesListView_sceytUiMessagesListPollCheckboxUncheckedIcon,
+                defValue = context.getCompatDrawable(R.drawable.sceyt_ic_unchecked_state).applyTint(
+                    context.getCompatColor(SceytChatUIKit.theme.colors.iconSecondaryColor)
+                )
+            )
+            .pressedIcon(
+                index = R.styleable.MessagesListView_sceytUiMessagesListPollCheckboxPressedIcon
+            )
+            .build()
     )
     .build()

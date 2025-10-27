@@ -39,5 +39,5 @@ sealed class MessageListItem {
         }
     }
 
-    var highligh = false
+    var highlight = false
 }
