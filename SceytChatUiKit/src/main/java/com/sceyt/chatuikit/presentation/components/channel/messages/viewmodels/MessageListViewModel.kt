@@ -37,6 +37,7 @@ import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.MessageId
 import com.sceyt.chatuikit.data.models.messages.MessageTypeEnum
+import com.sceyt.chatuikit.data.models.messages.PollOption
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReactionTotal
 import com.sceyt.chatuikit.data.models.onSuccess
@@ -70,6 +71,7 @@ import com.sceyt.chatuikit.persistence.interactor.AttachmentInteractor
 import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
 import com.sceyt.chatuikit.persistence.interactor.ChannelMemberInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
+import com.sceyt.chatuikit.persistence.interactor.MessagePollInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageReactionInteractor
 import com.sceyt.chatuikit.persistence.interactor.UserInteractor
 import com.sceyt.chatuikit.persistence.logic.PersistenceConnectionLogic
@@ -87,6 +89,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.fil
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.reactions.ReactionItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageCommandEvent
+import com.sceyt.chatuikit.presentation.components.channel.messages.events.PollEvent
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.ReactionEvent
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import com.sceyt.chatuikit.services.SceytSyncManager
@@ -121,6 +124,7 @@ class MessageListViewModel(
     private val messageInteractor: MessageInteractor by inject()
     internal val channelInteractor: ChannelInteractor by inject()
     private val messageReactionInteractor: MessageReactionInteractor by inject()
+    private val messagePollInteractor: MessagePollInteractor by inject()
     internal val attachmentInteractor: AttachmentInteractor by inject()
     internal val channelMemberInteractor: ChannelMemberInteractor by inject()
     internal val connectionLogic: PersistenceConnectionLogic by inject()
@@ -933,6 +937,27 @@ class MessageListViewModel(
             is ReactionEvent.RemoveReaction -> {
                 deleteReaction(event.message, event.scoreKey)
             }
+        }
+    }
+
+    internal fun onPollEvent(event: PollEvent) {
+        when (event) {
+            is PollEvent.ToggleVote -> {
+                togglePollVote(event.message, event.option)
+            }
+        }
+    }
+
+    private fun togglePollVote(message: SceytMessage, option: PollOption) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val poll = message.poll ?: return@launch
+            val response = messagePollInteractor.toggleVote(
+                channelId = channel.id,
+                messageTid = message.tid,
+                pollId = poll.id,
+                optionId = option.id
+            )
+            notifyPageStateWithResponse(response, showError = false)
         }
     }
 

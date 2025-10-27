@@ -5,6 +5,7 @@ import com.sceyt.chatuikit.data.repositories.ChannelInviteKeyRepositoryImpl
 import com.sceyt.chatuikit.data.repositories.ChannelsRepositoryImpl
 import com.sceyt.chatuikit.data.repositories.MessageMarkersRepositoryImpl
 import com.sceyt.chatuikit.data.repositories.MessagesRepositoryImpl
+import com.sceyt.chatuikit.data.repositories.PollRepositoryImpl
 import com.sceyt.chatuikit.data.repositories.ProfileRepositoryImpl
 import com.sceyt.chatuikit.data.repositories.ReactionsRepositoryImpl
 import com.sceyt.chatuikit.data.repositories.SceytSharedPreferenceImpl
@@ -14,6 +15,7 @@ import com.sceyt.chatuikit.persistence.repositories.ChannelInviteKeyRepository
 import com.sceyt.chatuikit.persistence.repositories.ChannelsRepository
 import com.sceyt.chatuikit.persistence.repositories.MessageMarkersRepository
 import com.sceyt.chatuikit.persistence.repositories.MessagesRepository
+import com.sceyt.chatuikit.persistence.repositories.PollRepository
 import com.sceyt.chatuikit.persistence.repositories.ProfileRepository
 import com.sceyt.chatuikit.persistence.repositories.ReactionsRepository
 import com.sceyt.chatuikit.persistence.repositories.SceytSharedPreference
@@ -28,8 +30,8 @@ internal val repositoryModule = module {
     factory<MessagesRepository> { MessagesRepositoryImpl() }
     factory<AttachmentsRepository> { AttachmentsRepositoryImpl() }
     factory<ReactionsRepository> { ReactionsRepositoryImpl() }
+    factory<PollRepository> { PollRepositoryImpl() }
     factory<UsersRepository> { UsersRepositoryImpl() }
-    factory<MessageMarkersRepository> { MessageMarkersRepositoryImpl() }
     factory<MessageMarkersRepository> { MessageMarkersRepositoryImpl() }
     factoryOf<ChannelInviteKeyRepository>(::ChannelInviteKeyRepositoryImpl)
 }
