@@ -4,15 +4,12 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import com.sceyt.chatuikit.data.models.messages.PollOptionUiModel
-import com.sceyt.chatuikit.data.models.messages.SceytPollDetails
-import com.sceyt.chatuikit.data.models.messages.getOptionsUiModels
 import com.sceyt.chatuikit.persistence.differs.PollOptionDiff
 import com.sceyt.chatuikit.persistence.differs.diff
 
 class PollOptionAdapter(
         private val viewHolderFactory: PollOptionViewHolderFactory,
 ) : ListAdapter<PollOptionUiModel, PollOptionViewHolder>(DIFF_CALLBACK) {
-    private lateinit var poll: SceytPollDetails
     private var shouldAnimate = false
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PollOptionViewHolder {
@@ -39,12 +36,11 @@ class PollOptionAdapter(
     }
 
     fun submitData(
-            poll: SceytPollDetails,
+            options: List<PollOptionUiModel>,
             animate: Boolean,
     ) {
-        this.poll = poll
         shouldAnimate = animate
-        submitList(poll.getOptionsUiModels())
+        submitList(options)
     }
 
     companion object {

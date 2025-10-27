@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.data.models.messages.PollOption
 import com.sceyt.chatuikit.data.models.messages.PollOptionUiModel
 import com.sceyt.chatuikit.data.models.messages.SceytPollDetails
+import com.sceyt.chatuikit.data.models.messages.getOptionsUiModels
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.PollOptionAdapter
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.PollOptionViewHolderFactory
@@ -39,13 +40,17 @@ abstract class BasePollMessageViewHolder(
     }
 
     protected fun setupPollViews(
-            poll: SceytPollDetails,
+            poll: SceytPollDetails?,
             rvPollOptions: RecyclerView,
             tvPollQuestion: TextView,
             tvPollType: TextView,
             tvViewResults: TextView,
             divider: View,
     ) {
+        if (poll == null) {
+            setOptions(options = emptyList(), isSamePoll = false, rvPollOptions = rvPollOptions)
+            return
+        }
         val isSamePoll = currentPoll?.id == poll.id
         currentPoll = poll
 
@@ -66,11 +71,15 @@ abstract class BasePollMessageViewHolder(
             }
         }
 
-        setOptions(poll = poll, isSamePoll = isSamePoll, rvPollOptions = rvPollOptions)
+        setOptions(
+            options = poll.getOptionsUiModels(),
+            isSamePoll = isSamePoll,
+            rvPollOptions = rvPollOptions
+        )
     }
 
     protected open fun setOptions(
-            poll: SceytPollDetails,
+            options: List<PollOptionUiModel>,
             isSamePoll: Boolean,
             rvPollOptions: RecyclerView,
     ) {
@@ -86,7 +95,7 @@ abstract class BasePollMessageViewHolder(
         }
 
         pollOptionAdapter?.submitData(
-            poll = poll,
+            options = options,
             animate = shouldAnimate
         )
     }
@@ -106,7 +115,7 @@ abstract class BasePollMessageViewHolder(
         )
     }
 
-    protected abstract fun updatePollViews(poll: SceytPollDetails)
+    protected abstract fun updatePollViews(poll: SceytPollDetails?)
 
     protected open fun applyStyle(
             tvPollQuestion: TextView,
