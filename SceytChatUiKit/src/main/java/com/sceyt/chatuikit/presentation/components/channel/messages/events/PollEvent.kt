@@ -9,5 +9,13 @@ sealed class PollEvent {
         val message: SceytMessage,
         val option: PollOption
     ) : PollEvent()
+
+    data class RetractVote(
+        val message: SceytMessage
+    ) : PollEvent()
+
+    data class EndVote(
+        val message: SceytMessage
+    ) : PollEvent()
 }
 

@@ -707,6 +707,22 @@ internal class PersistenceMiddleWareImpl(
         return pollLogic.toggleVote(channelId, messageTid, pollId, optionId)
     }
 
+    override suspend fun retractVote(
+        channelId: Long,
+        messageTid: Long,
+        pollId: String
+    ): SceytResponse<SceytMessage> {
+        return pollLogic.retractVote(channelId, messageTid, pollId)
+    }
+
+    override suspend fun endPoll(
+        channelId: Long,
+        messageTid: Long,
+        pollId: String
+    ): SceytResponse<SceytMessage> {
+        return pollLogic.endPoll(channelId, messageTid, pollId)
+    }
+
     override suspend fun sendAllPendingVotes() {
         pollLogic.sendAllPendingVotes()
     }

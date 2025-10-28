@@ -945,6 +945,12 @@ class MessageListViewModel(
             is PollEvent.ToggleVote -> {
                 togglePollVote(event.message, event.option)
             }
+            is PollEvent.RetractVote -> {
+                retractVote(event.message)
+            }
+            is PollEvent.EndVote -> {
+                endVote(event.message)
+            }
         }
     }
 
@@ -956,6 +962,34 @@ class MessageListViewModel(
                 messageTid = message.tid,
                 pollId = poll.id,
                 optionId = option.id
+            )
+            notifyPageStateWithResponse(response, showError = false)
+        }
+    }
+
+    private fun retractVote(message: SceytMessage) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val poll = message.poll ?: return@launch
+            if (!poll.allowVoteRetract || poll.ownVotes.isEmpty()) return@launch
+
+            val response = messagePollInteractor.retractVote(
+                channelId = channel.id,
+                messageTid = message.tid,
+                pollId = poll.id
+            )
+            notifyPageStateWithResponse(response, showError = false)
+        }
+    }
+
+    private fun endVote(message: SceytMessage) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val poll = message.poll ?: return@launch
+            if (poll.closed) return@launch
+
+            val response = messagePollInteractor.endPoll(
+                channelId = channel.id,
+                messageTid = message.tid,
+                pollId = poll.id
             )
             notifyPageStateWithResponse(response, showError = false)
         }
