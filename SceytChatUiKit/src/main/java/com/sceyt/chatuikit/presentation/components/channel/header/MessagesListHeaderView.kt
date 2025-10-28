@@ -62,8 +62,8 @@ import com.sceyt.chatuikit.presentation.components.channel.header.listeners.ui.s
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageCommandEvent
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoActivity
 import com.sceyt.chatuikit.presentation.custom_views.AvatarView
-import com.sceyt.chatuikit.styles.messages_list.MessagesListHeaderStyle
 import com.sceyt.chatuikit.styles.common.MenuStyle
+import com.sceyt.chatuikit.styles.messages_list.MessagesListHeaderStyle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -532,6 +532,8 @@ class MessagesListHeaderView @JvmOverloads constructor(
         val isSingleMessage = messages.size == 1
         val fistMessage = messages.first()
         val existPendingMessages = messages.any { it.deliveryStatus == DeliveryStatus.Pending }
+        val poll = fistMessage.poll
+        val isPollMessage = poll != null
 
         menu.findItem(R.id.sceyt_reply)?.isVisible = isSingleMessage && !existPendingMessages
         //menu.findItem(R.id.sceyt_reply_in_thread).isVisible = isSingleMessage && !isPending
@@ -545,6 +547,15 @@ class MessagesListHeaderView @JvmOverloads constructor(
         menu.findItem(R.id.sceyt_copy_message)?.isVisible = messages.any {
             it.body.isNotNullOrBlank()
         }
+
+        // Handle poll-specific actions
+        val hasVoted = poll?.ownVotes?.isNotEmpty() == true
+        val isPending = fistMessage.deliveryStatus == DeliveryStatus.Pending
+        val canRetractVote = !isPending && isSingleMessage && poll?.allowVoteRetract == true && hasVoted && !poll.closed
+        val canEndVote = !isPending && isSingleMessage && !fistMessage.incoming && isPollMessage && !poll.closed
+
+        menu.findItem(R.id.sceyt_retract_vote)?.isVisible = canRetractVote
+        menu.findItem(R.id.sceyt_end_vote)?.isVisible = canEndVote
     }
 
     override fun showSearchMessagesBar(event: MessageCommandEvent.SearchMessages) {

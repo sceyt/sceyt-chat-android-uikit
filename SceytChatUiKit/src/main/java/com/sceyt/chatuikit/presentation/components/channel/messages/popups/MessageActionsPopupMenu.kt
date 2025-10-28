@@ -20,7 +20,7 @@ import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 class MessageActionsPopupMenu(
         private val context: Context,
         anchor: View,
-        private var message: SceytMessage
+        private var message: SceytMessage,
 ) : PopupMenu(context, anchor) {
 
     @SuppressLint("RestrictedApi")
@@ -49,6 +49,17 @@ class MessageActionsPopupMenu(
                 icon?.colorFilter = BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
                     ContextCompat.getColor(context, R.color.sceyt_color_warning), BlendModeCompat.SRC_ATOP)
             }
+
+        // Handle poll-specific actions
+        val poll = message.poll
+        val isPollMessage = poll != null
+        val hasVoted = poll?.ownVotes?.isNotEmpty() == true
+        val canRetractVote = !isPending && poll?.allowVoteRetract == true && hasVoted && !poll.closed
+        val canEndVote = !isPending && !message.incoming && isPollMessage && !poll.closed
+
+        menu.findItem(R.id.sceyt_retract_vote)?.isVisible = canRetractVote
+        menu.findItem(R.id.sceyt_end_vote)?.isVisible = canEndVote
+
         super.show()
     }
 

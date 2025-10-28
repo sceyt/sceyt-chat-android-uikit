@@ -36,9 +36,17 @@ sealed interface MessageActionsViewClickListeners {
         fun onReplyMessageInThreadClick(message: SceytMessage)
     }
 
+    fun interface RetractVote : MessageActionsViewClickListeners {
+        fun onRetractVoteClick(message: SceytMessage)
+    }
+
+    fun interface EndVote : MessageActionsViewClickListeners {
+        fun onEndVoteClick(message: SceytMessage)
+    }
+
     /** Use this if you want to implement all callbacks */
     interface ActionsViewClickListeners : CopyMessage, DeleteMessage, EditMessage, MessageInfo,
-            ForwardMessage, ReactMessage, ReplyMessage, ReplyInThreadMessage
+            ForwardMessage, ReactMessage, ReplyMessage, ReplyInThreadMessage, RetractVote, EndVote
 }
 
 internal fun MessageActionsViewClickListeners.setListener(listener: MessageActionsViewClickListeners) {

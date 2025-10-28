@@ -9,6 +9,8 @@ import com.sceyt.chatuikit.persistence.database.dao.PollDao
 import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingPollVoteEntity
 import com.sceyt.chatuikit.persistence.logic.PersistencePollLogic
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.EndPollUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.RetractPollVoteUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.TogglePollVoteUseCase
 import com.sceyt.chatuikit.persistence.mappers.getTid
 import com.sceyt.chatuikit.persistence.mappers.toPollDb
@@ -22,6 +24,8 @@ internal class PersistencePollLogicImpl(
         private val pendingPollVoteDao: PendingPollVoteDao,
         private val messagesCache: MessagesCache,
         private val togglePollVoteUseCase: TogglePollVoteUseCase,
+        private val retractPollVoteUseCase: RetractPollVoteUseCase,
+        private val endPollUseCase: EndPollUseCase,
 ) : PersistencePollLogic {
 
     private val pollUpdateMutex = Mutex()
@@ -38,6 +42,26 @@ internal class PersistencePollLogicImpl(
             )
 
             return togglePollVoteUseCase.invoke(channelId, message.toSceytMessage(), optionId)
+        }
+    }
+
+    override suspend fun retractVote(
+            channelId: Long,
+            messageTid: Long,
+            pollId: String,
+    ): SceytResponse<SceytMessage> {
+        pollUpdateMutex.withLock {
+            return retractPollVoteUseCase.invoke(channelId, messageTid, pollId)
+        }
+    }
+
+    override suspend fun endPoll(
+            channelId: Long,
+            messageTid: Long,
+            pollId: String,
+    ): SceytResponse<SceytMessage> {
+        pollUpdateMutex.withLock {
+            return endPollUseCase.invoke(channelId, messageTid, pollId)
         }
     }
 

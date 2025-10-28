@@ -260,4 +260,6 @@
     <string name="sceyt_poll_can_retract_votes">Can\'t retract votes</string>
     <string name="sceyt_poll_add">Add</string>
     <string name="sceyt_send">Send</string>
+    <string name="sceyt_retract_vote">Retract vote</string>
+    <string name="sceyt_end_vote">End vote</string>
 </resources>
