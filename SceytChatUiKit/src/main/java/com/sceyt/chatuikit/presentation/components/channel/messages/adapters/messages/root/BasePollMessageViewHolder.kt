@@ -30,7 +30,6 @@ abstract class BasePollMessageViewHolder(
             pollStyle = pollStyle,
             isClosedProvider = { currentPoll?.closed ?: false },
             isAnonymousProvider = { currentPoll?.anonymous ?: false },
-            totalVotesProvider = { currentPoll?.totalVotes ?: 0 },
             bubbleBackgroundStyleProvider = {
                 if (incoming) style.incomingBubbleBackgroundStyle
                 else style.outgoingBubbleBackgroundStyle

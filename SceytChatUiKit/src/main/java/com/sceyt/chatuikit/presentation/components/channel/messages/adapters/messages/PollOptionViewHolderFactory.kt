@@ -13,7 +13,6 @@ open class PollOptionViewHolderFactory(
         private val pollStyle: PollStyle,
         private val isClosedProvider: () -> Boolean,
         private val isAnonymousProvider: () -> Boolean,
-        private val totalVotesProvider: () -> Int,
         private val bubbleBackgroundStyleProvider: (() -> BackgroundStyle),
         private val onOptionClick: ((PollOptionUiModel) -> Unit)? = null,
 ) {
@@ -26,7 +25,6 @@ open class PollOptionViewHolderFactory(
             pollStyle = pollStyle,
             isClosedProvider = isClosedProvider,
             isAnonymousProvider = isAnonymousProvider,
-            totalVotesProvider = totalVotesProvider,
             bubbleBackgroundStyleProvider = bubbleBackgroundStyleProvider,
             onOptionClick = onOptionClick
         )

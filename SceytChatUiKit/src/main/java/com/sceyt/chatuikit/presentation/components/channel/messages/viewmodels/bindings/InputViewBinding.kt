@@ -31,6 +31,7 @@ import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.MentionUserHelper.getValueData
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.MentionValidatorWatcher
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageListViewModel
+import com.sceyt.chatuikit.presentation.components.create_poll.CreatePollActivity
 import com.sceyt.chatuikit.presentation.root.PageState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -238,6 +239,10 @@ fun MessageListViewModel.bind(
 
         override fun scrollToPrev() {
             scrollToSearchMessage(true)
+        }
+
+        override fun createPoll() {
+            CreatePollActivity.launch(messageInputView.context, channel.id)
         }
     })
 }

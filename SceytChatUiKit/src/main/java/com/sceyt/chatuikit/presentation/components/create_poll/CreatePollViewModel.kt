@@ -1,49 +1,62 @@
 package com.sceyt.chatuikit.presentation.components.create_poll
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sceyt.chat.models.message.Message
+import com.sceyt.chat.models.poll.PollDetails
+import com.sceyt.chat.models.poll.PollOption
+import com.sceyt.chat.wrapper.ClientWrapper
+import com.sceyt.chatuikit.data.models.messages.MessageTypeEnum
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
+import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
 import com.sceyt.chatuikit.presentation.common.DebounceHelper
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import java.util.UUID
 
 data class PollOptionItem(
-        val id: String = java.util.UUID.randomUUID().toString(),
+        val id: String = UUID.randomUUID().toString(),
         val text: String = "",
         val isCurrent: Boolean = false,
 )
 
 data class CreatePollUIState(
         val question: String = "",
-        val options: List<PollOptionItem> = listOf(PollOptionItem("1"), PollOptionItem("2")),
+        val options: List<PollOptionItem> = listOf(PollOptionItem(), PollOptionItem()),
         val isAnonymous: Boolean = false,
         val allowMultipleVotes: Boolean = false,
-        val canRetractVotes: Boolean = true,
+        val allowVoteRetraction: Boolean = true,
         val reachedMaxPollCount: Boolean = false,
         val isValid: Boolean = false,
         val error: String? = null,
+        val isLoading: Boolean = false,
 )
 
-class CreatePollViewModel : ViewModel() {
+class CreatePollViewModel(
+        private val messageInteractor: MessageInteractor,
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(CreatePollUIState())
     val uiState = _uiState.asStateFlow()
 
-    private val debounceHelper by lazy { DebounceHelper(200L, viewModelScope) }
+    private val debouncingOptions by lazy { DebounceHelper(200L, viewModelScope) }
+    private val debouncingQuestion by lazy { DebounceHelper(200L, viewModelScope) }
     private val maxPollCount = 12
 
     fun updateQuestion(question: String) {
-        _uiState.update {
-            it.copy(question = question, error = null)
+        debouncingQuestion.submit {
+            _uiState.update {
+                it.copy(question = question, error = null)
+            }
+            validatePoll()
         }
-        validatePoll()
     }
 
     fun updateOption(optionId: String, text: String) {
-        debounceHelper.submit {
-            Log.i("sdfsdf", "updateOption: $optionId : $text")
+        debouncingOptions.submit {
             _uiState.update { state ->
                 val updatedOptions = state.options.map { option ->
                     if (option.id == optionId)
@@ -153,17 +166,37 @@ class CreatePollViewModel : ViewModel() {
 
     fun toggleCanRetractVotes() {
         _uiState.update {
-            it.copy(canRetractVotes = !it.canRetractVotes)
+            it.copy(allowVoteRetraction = !it.allowVoteRetraction)
         }
     }
 
-    fun createPoll(): Boolean {
+    fun createPoll(channelId: Long): Boolean {
         val state = _uiState.value
         if (!state.isValid) {
             _uiState.update { it.copy(error = "Please fill in all required fields") }
             return false
         }
-        // TODO: Implement actual poll creation logic
+
+        viewModelScope.launch(NonCancellable) {
+            val pollDetails = PollDetails.Builder()
+                .setId(UUID.randomUUID().toString())
+                .setName(state.question)
+                .setOptions(state.options.map { PollOption(it.id, it.text) }.toTypedArray())
+                .setAnonymous(state.isAnonymous)
+                .setAllowMultipleVotes(state.allowMultipleVotes)
+                .setAllowVoteRetract(state.allowVoteRetraction)
+                .build()
+
+            val message = Message.MessageBuilder(channelId)
+                .setType(MessageTypeEnum.Poll.value)
+                .setBody(state.question)
+                .setTid(ClientWrapper.generateTid())
+                .setPoll(pollDetails)
+                .build()
+
+            messageInteractor.sendMessage(channelId, message)
+        }
+
         return true
     }
 

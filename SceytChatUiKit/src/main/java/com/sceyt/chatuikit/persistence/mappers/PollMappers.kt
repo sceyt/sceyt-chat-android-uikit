@@ -107,7 +107,7 @@ internal fun PollDetails.toSceytPollDetails(
     id = id,
     name = name,
     messageTid = messageTid,
-    description = description,
+    description = description.orEmpty(),
     options = options.map { option -> option.toPollOption() },
     anonymous = isAnonymous,
     allowMultipleVotes = isAllowMultipleVotes,

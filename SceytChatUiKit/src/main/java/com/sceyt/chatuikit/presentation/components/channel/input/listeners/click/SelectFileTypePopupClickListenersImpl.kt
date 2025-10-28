@@ -4,6 +4,7 @@ import com.sceyt.chatuikit.presentation.components.channel.input.MessageInputVie
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.SelectFileTypePopupClickListeners.ClickListeners
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.SelectFileTypePopupClickListeners.FileClickListener
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.SelectFileTypePopupClickListeners.GalleryClickListener
+import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.SelectFileTypePopupClickListeners.PollClickListener
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.SelectFileTypePopupClickListeners.TakePhotoClickListener
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.SelectFileTypePopupClickListeners.TakeVideoClickListener
 
@@ -20,6 +21,7 @@ open class SelectFileTypePopupClickListenersImpl : ClickListeners {
     private var takePhotoClickListener: TakePhotoClickListener? = null
     private var takeVideoClickListener: TakeVideoClickListener? = null
     private var fileClickListener: FileClickListener? = null
+    private var pollClickListener: PollClickListener? = null
 
 
     override fun onGalleryClick() {
@@ -42,12 +44,20 @@ open class SelectFileTypePopupClickListenersImpl : ClickListeners {
         fileClickListener?.onFileClick(mimeTypes)
     }
 
+
+    override fun onPollClick() {
+        defaultListeners?.onPollClick()
+        pollClickListener?.onPollClick()
+    }
+
     fun setListener(listener: SelectFileTypePopupClickListeners) {
         when (listener) {
             is ClickListeners -> {
                 galleryClickListener = listener
                 takePhotoClickListener = listener
+                takeVideoClickListener = listener
                 fileClickListener = listener
+                pollClickListener = listener
             }
 
             is GalleryClickListener -> {
@@ -64,6 +74,10 @@ open class SelectFileTypePopupClickListenersImpl : ClickListeners {
 
             is FileClickListener -> {
                 fileClickListener = listener
+            }
+
+            is PollClickListener -> {
+                pollClickListener = listener
             }
         }
     }

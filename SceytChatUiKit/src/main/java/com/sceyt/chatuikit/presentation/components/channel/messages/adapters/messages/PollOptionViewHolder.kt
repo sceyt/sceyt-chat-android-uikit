@@ -13,10 +13,10 @@ open class PollOptionViewHolder(
         private val pollStyle: PollStyle,
         private val isClosedProvider: () -> Boolean,
         private val isAnonymousProvider: () -> Boolean,
-        private val totalVotesProvider: () -> Int,
         private val bubbleBackgroundStyleProvider: () -> BackgroundStyle,
         private var onOptionClick: ((PollOptionUiModel) -> Unit)? = null,
 ) : RecyclerView.ViewHolder(binding.root) {
+    private val context = binding.root.context
     private lateinit var currentOption: PollOptionUiModel
     private var currentProgress = 0
     private var votersAdapter: VoterAvatarAdapter? = null
@@ -39,7 +39,7 @@ open class PollOptionViewHolder(
 
         val isClosed = isClosedProvider()
         val isAnonymous = isAnonymousProvider()
-        val totalVotes = totalVotesProvider()
+        val totalVotes = option.voteCount
 
         root.isEnabled = !isClosed
         checkbox.isVisible = !isClosed
@@ -53,8 +53,7 @@ open class PollOptionViewHolder(
         }
 
         if (diff.voteCountChanged) {
-            tvVoteCount.text = pollStyle.voteCountFormatter.format(root.context, option)
-            tvVoteCount.isVisible = option.voteCount > 0
+            tvVoteCount.text = pollStyle.voteCountFormatter.format(context, option)
 
             val percentage = option.getPercentage(totalVotes).toInt()
             val shouldAnimate = animate && percentage != currentProgress && diff != PollOptionDiff.DEFAULT
@@ -74,10 +73,8 @@ open class PollOptionViewHolder(
                     rvVoters.itemAnimator = null
                     rvVoters.adapter = votersAdapter
                 }
-                votersAdapter?.submitList(option.voters.take(3))
-                rvVoters.isVisible = true
+                votersAdapter?.submitList(option.voters.take(2))
             } else {
-                rvVoters.isVisible = false
                 votersAdapter?.submitList(emptyList())
             }
         }

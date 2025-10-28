@@ -17,10 +17,15 @@ sealed interface SelectFileTypePopupClickListeners {
         fun onFileClick(mimeTypes: Array<String>?)
     }
 
+    fun interface PollClickListener : SelectFileTypePopupClickListeners {
+        fun onPollClick()
+    }
+
     /** Use this if you want to implement all callbacks */
     interface ClickListeners :
             GalleryClickListener,
             TakePhotoClickListener,
             TakeVideoClickListener,
-            FileClickListener
+            FileClickListener,
+            PollClickListener
 }

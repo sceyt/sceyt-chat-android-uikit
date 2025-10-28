@@ -11,7 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_constraintTop_toTopOf="parent"
-        tools:sceytUiToolbarTitle="@string/poll" />
+        tools:sceytUiToolbarTitle="@string/sceyt_poll" />
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
