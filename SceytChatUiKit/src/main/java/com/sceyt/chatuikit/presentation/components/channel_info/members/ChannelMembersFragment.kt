@@ -43,7 +43,6 @@ import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.presentation.common.SceytDialog
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoActivity
-import com.sceyt.chatuikit.presentation.components.channel_info.ChannelUpdateListener
 import com.sceyt.chatuikit.presentation.components.channel_info.members.adapter.ChannelMembersAdapter
 import com.sceyt.chatuikit.presentation.components.channel_info.members.adapter.MemberItem
 import com.sceyt.chatuikit.presentation.components.channel_info.members.adapter.diff.MemberItemPayloadDiff
@@ -62,7 +61,7 @@ import com.sceyt.chatuikit.styles.channel_members.ChannelMembersStyle
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
 
-open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoinComponent {
+open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
     protected val viewModel by viewModel<ChannelMembersViewModel>(parameters = {
         parametersOf(requireNotNull(arguments?.parcelable<SceytChannel>(CHANNEL)).id)
     })
@@ -134,7 +133,7 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
 
         viewModel.channelOwnerChangedEventLiveData.observe(viewLifecycleOwner, ::onChannelOwnerChanged)
 
-        viewModel.channelEventEventLiveData.observe(viewLifecycleOwner, ::onChannelEvent)
+        viewModel.channelEventLiveData.observe(viewLifecycleOwner, ::onChannelEvent)
 
         viewModel.channelAddMemberLiveData.observe(viewLifecycleOwner, ::onAddedMember)
 
@@ -214,7 +213,7 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
 
     protected open fun updateMembersWithServerResponse(
             data: PaginationResponse.ServerResponse<MemberItem>,
-            hasNext: Boolean
+            hasNext: Boolean,
     ) {
         val itemsDb = data.cacheData as ArrayList
         binding?.rvMembers?.awaitAnimationEnd {
@@ -423,6 +422,10 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
 
     protected open fun onChannelEvent(event: ChannelActionEvent) {
         when (event) {
+            is ChannelActionEvent.Updated -> {
+                onChannelUpdated(event.channel)
+            }
+
             is Left -> {
                 event.leftMembers.forEach {
                     removeMember(it.id)
@@ -476,7 +479,7 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
             customToastSnackBar(pageState.errorMessage.toString())
     }
 
-    override fun onChannelUpdated(channel: SceytChannel) {
+    protected open fun onChannelUpdated(channel: SceytChannel) {
         this.channel = channel
         getCurrentUserRole()
     }
