@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="8dp"
+    android:background="@drawable/sceyt_bg_ripple_corners_8"
+    android:backgroundTint="@color/sceyt_color_surface_1"
+    android:clickable="true"
+    android:focusable="true">
+
+    <androidx.appcompat.widget.AppCompatEditText
+        android:id="@+id/tvOption"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="@android:color/transparent"
+        android:hint="@string/sceyt_poll_add"
+        android:imeActionLabel="Next"
+        android:imeOptions="actionNext"
+        android:inputType="textMultiLine"
+        android:maxLength="120"
+        android:maxLines="4"
+        android:paddingVertical="14dp"
+        android:paddingStart="14dp"
+        android:paddingEnd="2dp"
+        android:scrollbars="vertical"
+        android:singleLine="false"
+        android:textSize="16sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/icDrag"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:textColor="@color/sceyt_color_text_primary"
+        tools:textColorHint="@color/sceyt_color_text_secondary" />
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/icDrag"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="4dp"
+        android:padding="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/sceyt_ic_drag"
+        tools:tint="@color/sceyt_color_text_secondary" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+

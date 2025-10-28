@@ -6,18 +6,25 @@
     android:layout_height="match_parent"
     tools:context=".presentation.components.create_poll.CreatePollFragment">
 
+    <com.sceyt.chatuikit.presentation.custom_views.CustomToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:sceytUiToolbarTitle="@string/poll" />
+
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:layout_marginBottom="24dp"
         android:fillViewport="true"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintBottom_toTopOf="@+id/btnSend"
+        app:layout_constraintTop_toBottomOf="@+id/toolbar">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-            <!-- Question Section -->
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/tvQuestionTitle"
                 android:layout_width="wrap_content"
@@ -48,7 +55,8 @@
                     android:layout_height="wrap_content"
                     android:background="@android:color/transparent"
                     android:hint="@string/sceyt_poll_add_question"
-                    android:minHeight="48dp"
+                    android:maxLength="200"
+                    android:maxLines="4"
                     android:padding="12dp"
                     android:textSize="16sp"
                     app:layout_constraintBottom_toBottomOf="parent"
@@ -60,7 +68,6 @@
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
-            <!-- Options Section -->
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/tvOptionsTitle"
                 android:layout_width="wrap_content"
@@ -86,7 +93,7 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/tvOptionsTitle"
                 tools:itemCount="3"
-                tools:listitem="@layout/sceyt_item_poll_option" />
+                tools:listitem="@layout/sceyt_item_create_poll_option" />
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/tvAddOption"
@@ -98,8 +105,8 @@
                 android:drawableStart="@drawable/sceyt_ic_add"
                 android:drawablePadding="8dp"
                 android:fontFamily="@font/roboto_medium"
+                android:gravity="center"
                 android:paddingVertical="8dp"
-                android:paddingEnd="16dp"
                 android:text="@string/sceyt_poll_add_option"
                 android:textSize="14sp"
                 app:layout_constraintStart_toStartOf="parent"
@@ -107,7 +114,6 @@
                 tools:drawableTint="@color/sceyt_color_accent"
                 tools:textColor="@color/sceyt_color_accent" />
 
-            <!-- Parameters Section -->
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/tvParametersTitle"
                 android:layout_width="wrap_content"
@@ -179,7 +185,21 @@
                 app:layout_constraintTop_toBottomOf="@+id/switchRetractVotes" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
+
     </androidx.core.widget.NestedScrollView>
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btnSend"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginBottom="24dp"
+        android:background="@drawable/sceyt_bg_corners_8"
+        android:text="@string/sceyt_send"
+        android:textAllCaps="false"
+        android:textColor="@color/sceyt_color_on_primary"
+        android:textSize="16sp"
+        app:layout_constraintBottom_toBottomOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
 

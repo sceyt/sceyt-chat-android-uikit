@@ -2,23 +2,22 @@ package com.sceyt.chatuikit.presentation.components.create_poll
 
 import android.content.Context
 import android.os.Bundle
-import android.text.Editable
-import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.isVisible
+import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.ItemTouchHelper
-import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chatuikit.R
+import androidx.recyclerview.widget.DefaultItemAnimator
 import com.sceyt.chatuikit.databinding.SceytFragmentCreatePollBinding
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.setDrawableStart
 import com.sceyt.chatuikit.extensions.setOnlyClickable
 import com.sceyt.chatuikit.koin.SceytKoinComponent
-import com.sceyt.chatuikit.presentation.components.create_poll.adapters.PollOptionsAdapter
+import com.sceyt.chatuikit.presentation.components.create_poll.adapters.CreatePollOptionsAdapter
+import com.sceyt.chatuikit.shared.helpers.ReorderSwipeController
 import com.sceyt.chatuikit.styles.StyleRegistry
 import com.sceyt.chatuikit.styles.create_poll.CreatePollStyle
 import kotlinx.coroutines.flow.launchIn
@@ -29,7 +28,7 @@ open class CreatePollFragment : Fragment(), SceytKoinComponent {
     protected lateinit var binding: SceytFragmentCreatePollBinding
     protected lateinit var style: CreatePollStyle
     protected val viewModel: CreatePollViewModel by viewModel()
-    protected lateinit var pollOptionsAdapter: PollOptionsAdapter
+    protected var pollOptionsAdapter: CreatePollOptionsAdapter? = null
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -53,58 +52,21 @@ open class CreatePollFragment : Fragment(), SceytKoinComponent {
         applyStyle()
         initViewModel()
         initViews()
+        initPollOptionsAdapter()
     }
 
     protected open fun initViewModel() {
-        viewModel.uiState.onEach(::onUiStateChange).launchIn(lifecycleScope)
+        viewModel.uiState
+            .flowWithLifecycle(lifecycle = lifecycle)
+            .onEach(::onUiStateChange)
+            .launchIn(lifecycleScope)
     }
 
     protected fun initViews() = with(binding) {
-        // Setup RecyclerView
-        pollOptionsAdapter = PollOptionsAdapter(
-            style = style,
-            onTextChanged = { option, text ->
-                viewModel.updateOption(option.id, text)
-            },
-            onRemoveClick = { option ->
-                viewModel.removeOption(option.id)
-            },
-            onOptionMoved = { fromPosition, toPosition ->
-                viewModel.moveOption(fromPosition, toPosition)
-            }
-        )
-        rvOptions.adapter = pollOptionsAdapter
-
-        // Setup ItemTouchHelper for drag and drop
-        val itemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(
-            ItemTouchHelper.UP or ItemTouchHelper.DOWN,
-            0
-        ) {
-            override fun onMove(
-                    recyclerView: RecyclerView,
-                    viewHolder: RecyclerView.ViewHolder,
-                    target: RecyclerView.ViewHolder
-            ): Boolean {
-                val fromPosition = viewHolder.adapterPosition
-                val toPosition = target.adapterPosition
-                pollOptionsAdapter.moveItem(fromPosition, toPosition)
-                return true
-            }
-
-            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-                // Not used
-            }
-        })
-        itemTouchHelper.attachToRecyclerView(rvOptions)
-
         // Setup question input
-        etQuestion.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-            override fun afterTextChanged(s: Editable?) {
-                viewModel.updateQuestion(s?.toString() ?: "")
-            }
-        })
+        etQuestion.doAfterTextChanged {
+            viewModel.updateQuestion(it?.toString() ?: "")
+        }
 
         // Setup switches
         switchAnonymous.setOnlyClickable()
@@ -124,28 +86,67 @@ open class CreatePollFragment : Fragment(), SceytKoinComponent {
         }
 
         tvAddOption.setOnClickListener {
-            viewModel.addOption()
+            viewModel.addOption(true)
         }
     }
 
-    protected open fun onUiStateChange(state: CreatePollUIState) {
+    protected open fun initPollOptionsAdapter() {
+        pollOptionsAdapter = CreatePollOptionsAdapter(
+            style = style,
+            onTextChanged = { option, text ->
+                viewModel.updateOption(option.id, text)
+            },
+            onRemoveClick = { option ->
+                viewModel.removeOption(option.id)
+            },
+            onOptionMoved = { fromPosition, toPosition ->
+                viewModel.moveOption(fromPosition, toPosition)
+            },
+            onNextClick = {
+                viewModel.onNextOptionClick(it)
+            },
+            onOptionClick = { view, option ->
+                viewModel.onOptionClick(view, option)
+            }
+        )
+
+        with(binding.rvOptions) {
+            adapter = pollOptionsAdapter
+            itemAnimator = DefaultItemAnimator().apply {
+                addDuration = 100
+                removeDuration = 100
+                moveDuration = 100
+            }
+
+            // Setup ItemTouchHelper for drag and drop
+            ReorderSwipeController(onMoveItem = { fromPosition, toPosition ->
+                pollOptionsAdapter?.moveItem(fromPosition, toPosition)
+            }).attachToRecyclerView(this)
+        }
+    }
+
+    protected open fun onUiStateChange(state: CreatePollUIState) = with(binding) {
         binding.switchAnonymous.isChecked = state.isAnonymous
         binding.switchMultipleVotes.isChecked = state.allowMultipleVotes
         binding.switchRetractVotes.isChecked = state.canRetractVotes
 
-        pollOptionsAdapter.submitList(state.options)
+        binding.tvAddOption.isVisible = !state.reachedMaxPollCount
+        updateSendButtonState(state.isValid)
+
+        if (pollOptionsAdapter == null) {
+            initPollOptionsAdapter()
+        }
+        pollOptionsAdapter?.submitList(state.options)
 
         state.error?.let {
             customToastSnackBar(binding.root, it)
         }
     }
 
-    fun getPollData(): CreatePollUIState? {
-        return if (viewModel.uiState.value.isValid) {
-            viewModel.uiState.value
-        } else {
-            viewModel.createPoll() // This will show validation errors
-            null
+    protected open fun updateSendButtonState(isEnabled: Boolean) {
+        with(binding.btnSend) {
+            this.isEnabled = isEnabled
+            alpha = if (isEnabled) 1.0f else 0.5f
         }
     }
 

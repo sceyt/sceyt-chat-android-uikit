@@ -259,5 +259,7 @@
     <string name="sceyt_poll_multiple_votes">Multiple votes</string>
     <string name="sceyt_poll_can_retract_votes">Can\'t retract votes</string>
     <string name="sceyt_create_poll">Create Poll</string>
-    <string name="sceyt_poll_add">Add poll</string>
+    <string name="sceyt_poll_add">Add</string>
+    <string name="poll">Poll</string>
+    <string name="sceyt_send">Send</string>
 </resources>
