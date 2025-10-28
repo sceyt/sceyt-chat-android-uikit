@@ -485,6 +485,7 @@ class MessageInputView @JvmOverloads constructor(
                 PickType.Photo -> selectFileTypePopupClickListeners.onTakePhotoClick()
                 PickType.Video -> selectFileTypePopupClickListeners.onTakeVideoClick()
                 PickType.File -> selectFileTypePopupClickListeners.onFileClick(null)
+                PickType.Poll -> selectFileTypePopupClickListeners.onPollClick()
             }
         }.show()
     }
@@ -1040,6 +1041,10 @@ class MessageInputView @JvmOverloads constructor(
             result = { pats ->
                 addAttachment(*pats.map { AttachmentTypeEnum.File to it }.toTypedArray())
             })
+    }
+
+    override fun onPollClick() {
+        messageInputActionCallback?.createPoll()
     }
 
     override fun onInputStateChanged(sendImage: ImageView, state: InputState) {

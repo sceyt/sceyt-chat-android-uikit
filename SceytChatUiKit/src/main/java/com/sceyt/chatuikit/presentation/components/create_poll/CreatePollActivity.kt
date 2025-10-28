@@ -10,6 +10,7 @@ import com.sceyt.chatuikit.databinding.SceytActivityCreatePollBinding
 import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
 import com.sceyt.chatuikit.extensions.launchActivity
 import com.sceyt.chatuikit.extensions.overrideTransitions
+import com.sceyt.chatuikit.persistence.logicimpl.message.ChannelId
 import com.sceyt.chatuikit.styles.StyleRegistry
 import com.sceyt.chatuikit.styles.create_poll.CreatePollStyle
 
@@ -33,6 +34,7 @@ open class CreatePollActivity : AppCompatActivity() {
 
     protected open fun loadCreatePollFragment() {
         val fragment = CreatePollFragment.newInstance(
+            channelId = intent.getLongExtra(CHANNEL_ID_KEY, 0),
             styleId = style.styleId
         )
 
@@ -56,12 +58,18 @@ open class CreatePollActivity : AppCompatActivity() {
     }
 
     companion object {
+        private const val CHANNEL_ID_KEY = "channel_id_key"
 
-        fun launch(context: Context) {
+        fun launch(
+                context: Context,
+                channelId: ChannelId,
+        ) {
             context.launchActivity<CreatePollActivity>(
                 enterAnimResId = R.anim.sceyt_anim_slide_in_right,
                 exitAnimResId = R.anim.sceyt_anim_slide_hold,
-            )
+            ) {
+                putExtra(CHANNEL_ID_KEY, channelId)
+            }
         }
     }
 }

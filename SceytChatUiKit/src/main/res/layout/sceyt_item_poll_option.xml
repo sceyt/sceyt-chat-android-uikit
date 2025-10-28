@@ -13,6 +13,8 @@
         android:background="@null"
         android:button="@drawable/sceyt_custom_radiobutton"
         android:clickable="false"
+        android:scaleX=".9"
+        android:scaleY=".9"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -20,8 +22,9 @@
         android:id="@+id/tvOptionText"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
+        android:layout_marginStart="5dp"
         android:layout_marginEnd="8dp"
+        android:minHeight="20dp"
         android:textColor="@color/sceyt_color_text_primary"
         android:textSize="@dimen/smallTextSize"
         app:layout_constraintEnd_toStartOf="@+id/rvVoters"
@@ -34,13 +37,15 @@
         android:id="@+id/rvVoters"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="5dp"
+        android:layout_marginEnd="3dp"
+        android:minWidth="30dp"
         android:orientation="horizontal"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         app:layout_constraintBottom_toBottomOf="@+id/barrierVoters"
         app:layout_constraintEnd_toStartOf="@+id/tvVoteCount"
         app:layout_constraintTop_toTopOf="parent"
-        tools:itemCount="3"
+        app:stackFromEnd="true"
+        tools:itemCount="1"
         tools:listitem="@layout/sceyt_item_voter_avatar" />
 
     <androidx.appcompat.widget.AppCompatTextView
@@ -66,13 +71,13 @@
         android:layout_width="0dp"
         android:layout_height="6dp"
         android:layout_marginTop="4dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="@+id/tvOptionText"
-        app:layout_constraintTop_toBottomOf="@+id/barrierVoters"
-        app:horizontalProgressViewProgress="0"
         app:horizontalProgressViewBackgroundColor="#D0D8E3"
         app:horizontalProgressViewColor="@color/sceyt_color_accent"
         app:horizontalProgressViewCornerRadius="8dp"
+        app:horizontalProgressViewProgress="0"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@+id/tvOptionText"
+        app:layout_constraintTop_toBottomOf="@+id/barrierVoters"
         tools:horizontalProgressViewProgress="50" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

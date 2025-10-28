@@ -29,7 +29,6 @@ import com.sceyt.chatuikit.styles.extensions.create_poll.buildToolbarStyle
 
 data class CreatePollStyle(
         @param:ColorInt val backgroundColor: Int,
-        @param:ColorInt val dividerColor: Int,
         val toolbarTitle: String,
         val questionTitle: String,
         val questionHint: String,
@@ -65,8 +64,7 @@ data class CreatePollStyle(
         fun build(): CreatePollStyle {
             context.obtainStyledAttributes(attrs, R.styleable.CreatePoll).use { array ->
                 val backgroundColor = context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColor)
-                val dividerColor = context.getCompatColor(SceytChatUIKit.theme.colors.borderColor)
-                val toolbarTitle = context.getString(R.string.sceyt_create_poll)
+                val toolbarTitle = context.getString(R.string.sceyt_poll)
                 val questionTitle = context.getString(R.string.sceyt_poll_question)
                 val questionHint = context.getString(R.string.sceyt_poll_add_question)
                 val optionsTitle = context.getString(R.string.sceyt_poll_options)
@@ -90,7 +88,6 @@ data class CreatePollStyle(
 
                 return CreatePollStyle(
                     backgroundColor = backgroundColor,
-                    dividerColor = dividerColor,
                     toolbarTitle = toolbarTitle,
                     questionTitle = questionTitle,
                     questionHint = questionHint,

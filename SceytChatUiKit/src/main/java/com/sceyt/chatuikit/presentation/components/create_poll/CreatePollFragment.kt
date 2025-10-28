@@ -16,6 +16,7 @@ import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.setDrawableStart
 import com.sceyt.chatuikit.extensions.setOnlyClickable
 import com.sceyt.chatuikit.koin.SceytKoinComponent
+import com.sceyt.chatuikit.persistence.logicimpl.message.ChannelId
 import com.sceyt.chatuikit.presentation.components.create_poll.adapters.CreatePollOptionsAdapter
 import com.sceyt.chatuikit.shared.helpers.ReorderSwipeController
 import com.sceyt.chatuikit.styles.StyleRegistry
@@ -63,9 +64,13 @@ open class CreatePollFragment : Fragment(), SceytKoinComponent {
     }
 
     protected fun initViews() = with(binding) {
+        toolbar.setNavigationClickListener {
+            requireActivity().onBackPressedDispatcher.onBackPressed()
+        }
+
         // Setup question input
         etQuestion.doAfterTextChanged {
-            viewModel.updateQuestion(it?.toString() ?: "")
+            viewModel.updateQuestion(it?.toString().orEmpty())
         }
 
         // Setup switches
@@ -87,6 +92,14 @@ open class CreatePollFragment : Fragment(), SceytKoinComponent {
 
         tvAddOption.setOnClickListener {
             viewModel.addOption(true)
+        }
+
+        btnSend.setOnClickListener {
+            val channelId = arguments?.getLong(CHANNEL_ID_KEY) ?: 0L
+            val success = viewModel.createPoll(channelId)
+            if (success) {
+                requireActivity().onBackPressedDispatcher.onBackPressed()
+            }
         }
     }
 
@@ -128,7 +141,7 @@ open class CreatePollFragment : Fragment(), SceytKoinComponent {
     protected open fun onUiStateChange(state: CreatePollUIState) = with(binding) {
         binding.switchAnonymous.isChecked = state.isAnonymous
         binding.switchMultipleVotes.isChecked = state.allowMultipleVotes
-        binding.switchRetractVotes.isChecked = state.canRetractVotes
+        binding.switchRetractVotes.isChecked = state.allowVoteRetraction
 
         binding.tvAddOption.isVisible = !state.reachedMaxPollCount
         updateSendButtonState(state.isValid)
@@ -154,6 +167,7 @@ open class CreatePollFragment : Fragment(), SceytKoinComponent {
         root.setBackgroundColor(style.backgroundColor)
 
         // Set texts
+        toolbar.setTitle(style.toolbarTitle)
         tvQuestionTitle.text = style.questionTitle
         etQuestion.hint = style.questionHint
         tvOptionsTitle.text = style.optionsTitle
@@ -186,10 +200,15 @@ open class CreatePollFragment : Fragment(), SceytKoinComponent {
 
     companion object {
         private const val STYLE_ID_KEY = "STYLE_ID_KEY"
+        private const val CHANNEL_ID_KEY = "CHANNEL_ID_KEY"
 
-        fun newInstance(styleId: String?) = CreatePollFragment().apply {
+        fun newInstance(
+                channelId: ChannelId,
+                styleId: String? = null,
+        ) = CreatePollFragment().apply {
             arguments = Bundle().apply {
                 putString(STYLE_ID_KEY, styleId)
+                putLong(CHANNEL_ID_KEY, channelId)
             }
         }
     }

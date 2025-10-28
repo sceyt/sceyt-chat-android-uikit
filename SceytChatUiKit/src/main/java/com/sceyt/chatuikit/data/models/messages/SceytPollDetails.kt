@@ -26,7 +26,9 @@ data class SceytPollDetails(
 
     @IgnoredOnParcel
     val totalVotes: Int by lazy {
-        votesPerOption.values.sum()
+        votesPerOption.values.sum() + (pendingVotes?.sumOf {
+            if (it.isAdd) 1 else -1
+        } ?: 0)
     }
 }
 
