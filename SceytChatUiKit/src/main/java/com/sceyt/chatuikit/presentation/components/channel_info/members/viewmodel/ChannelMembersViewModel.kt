@@ -48,8 +48,8 @@ class ChannelMembersViewModel(
     private val _channelOwnerChangedEventLiveData = MutableLiveData<ChannelOwnerChangedEventData>()
     val channelOwnerChangedEventLiveData: LiveData<ChannelOwnerChangedEventData> = _channelOwnerChangedEventLiveData
 
-    private val _channelEventEventLiveData = MutableLiveData<ChannelActionEvent>()
-    val channelEventEventLiveData = _channelEventEventLiveData.asLiveData()
+    private val _channelEventLiveData = MutableLiveData<ChannelActionEvent>()
+    val channelEventLiveData = _channelEventLiveData.asLiveData()
 
     private val _channelAddMemberLiveData = MutableLiveData<List<SceytMember>>()
     val channelAddMemberLiveData = _channelAddMemberLiveData.asLiveData()
@@ -81,7 +81,7 @@ class ChannelMembersViewModel(
             ChannelEventManager.onChannelEventFlow
                 .filter { event -> event.channelId == channelId }
                 .collect {
-                    _channelEventEventLiveData.postValue(it)
+                    _channelEventLiveData.postValue(it)
                 }
         }
     }
