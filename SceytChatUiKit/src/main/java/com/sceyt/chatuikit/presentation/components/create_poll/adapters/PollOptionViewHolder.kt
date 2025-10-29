@@ -39,6 +39,7 @@ class PollOptionViewHolder(
 
         with(tvOption) {
             setText(option.text)
+            imeOptions = option.keyboardAction
 
             // Add editor action listener for "Next" action
             addOnEditorActionListener(option)

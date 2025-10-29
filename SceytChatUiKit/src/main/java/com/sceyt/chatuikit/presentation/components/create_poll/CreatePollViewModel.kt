@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.presentation.components.create_poll
 
+import android.view.inputmethod.EditorInfo
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.message.Message
@@ -21,6 +22,7 @@ data class PollOptionItem(
         val id: String = UUID.randomUUID().toString(),
         val text: String = "",
         val isCurrent: Boolean = false,
+        val keyboardAction: Int = EditorInfo.IME_ACTION_NEXT,
 )
 
 data class CreatePollUIState(
@@ -72,15 +74,17 @@ class CreatePollViewModel(
     fun addOption(makeCurrent: Boolean) {
         _uiState.update { state ->
             if (state.reachedMaxPollCount) return
+            val willReachedMax = state.options.size >= maxPollCount - 1
+            val keyboardAction = if (willReachedMax)
+                EditorInfo.IME_ACTION_DONE else EditorInfo.IME_ACTION_NEXT
 
-            val newOption = PollOptionItem(isCurrent = makeCurrent)
+            val newOption = PollOptionItem(isCurrent = makeCurrent, keyboardAction = keyboardAction)
             val updatedOptions = if (makeCurrent) {
                 state.options.map { it.copy(isCurrent = false) } + newOption
             } else {
                 state.options + newOption
             }
-            val reachedMax = updatedOptions.size >= maxPollCount
-            state.copy(options = updatedOptions, reachedMaxPollCount = reachedMax, error = null)
+            state.copy(options = updatedOptions, reachedMaxPollCount = willReachedMax, error = null)
         }
     }
 
@@ -100,7 +104,11 @@ class CreatePollViewModel(
             // Remove the option
             options.removeAt(index)
             val reachedMax = options.size >= maxPollCount
-            state.copy(options = options.toList(), reachedMaxPollCount = reachedMax, error = null)
+            state.copy(
+                options = options.map { it.copy(keyboardAction = EditorInfo.IME_ACTION_NEXT) },
+                reachedMaxPollCount = reachedMax,
+                error = null
+            )
         }
         validatePoll()
     }
