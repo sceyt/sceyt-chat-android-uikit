@@ -35,10 +35,11 @@ sealed class SceytPagingResponse<T>(
     class Success<T>(
             val data: T,
             val hasNext: Boolean,
+            val nextToken: String? = null,
     ) : SceytPagingResponse<T>() {
 
         override fun toString(): String {
-            return "Success(data=$data, hasNext=$hasNext)"
+            return "Success(data=$data, hasNext=$hasNext, nextToken=$nextToken)"
         }
     }
 

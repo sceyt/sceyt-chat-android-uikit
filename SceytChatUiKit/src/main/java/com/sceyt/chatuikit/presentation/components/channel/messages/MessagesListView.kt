@@ -967,7 +967,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     override fun onPollViewResultsClick(view: View, item: MessageItem) {
-        // Default implementation - can be overridden by listeners
+        messageCommandEventListener?.invoke(MessageCommandEvent.PollViewResultsClick(item.message))
     }
 
     override fun onScrollToDownClick(view: View) {

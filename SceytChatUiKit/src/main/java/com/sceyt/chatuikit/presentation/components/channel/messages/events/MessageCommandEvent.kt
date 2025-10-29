@@ -53,4 +53,8 @@ sealed interface MessageCommandEvent {
     data class UserClick(
             val userId: String,
     ) : MessageCommandEvent
+
+    data class PollViewResultsClick(
+            val message: SceytMessage,
+    ) : MessageCommandEvent
 }
