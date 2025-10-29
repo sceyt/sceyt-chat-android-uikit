@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders
 
+import android.view.ViewGroup
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.data.models.messages.SceytPollDetails
@@ -90,6 +91,9 @@ class IncPollMessageViewHolder(
     }
 
     override val selectMessageView get() = binding.selectView
+
+    override val layoutBubbleConfig: Pair<ViewGroup, Boolean>?
+        get() = Pair(binding.layoutDetails, false)
 
     override val incoming: Boolean
         get() = true
