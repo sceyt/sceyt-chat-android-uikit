@@ -13,9 +13,11 @@ import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
+import com.sceyt.chatuikit.data.models.messages.Vote
 import com.sceyt.chatuikit.databinding.SceytFragmentPollOptionVotersBinding
 import com.sceyt.chatuikit.extensions.addRVScrollListener
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
+import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.setBundleArguments
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.presentation.common.DebounceHelper
@@ -43,13 +45,16 @@ open class PollOptionVotersFragment : Fragment(), SceytKoinComponent {
         private set
     protected var pollOptionVotersCount: Int = 0
         private set
+    protected var ownVote: Vote? = null
+        private set
     protected lateinit var style: PollOptionVotersStyle
         private set
     protected val viewModel: PollOptionVotersViewModel by viewModel {
         parametersOf(
             pollId,
             pollOptionId,
-            pollOptionVotersCount
+            pollOptionVotersCount,
+            ownVote
         )
     }
     private var styleId: String = ""
@@ -82,6 +87,7 @@ open class PollOptionVotersFragment : Fragment(), SceytKoinComponent {
         pollOptionName = requireNotNull(arguments?.getString(POLL_OPTION_NAME))
         pollOptionVotersCount = requireNotNull(arguments?.getInt(POLL_OPTION_VOTERS_COUNT))
         styleId = requireNotNull(arguments?.getString(STYLE_ID))
+        ownVote = arguments?.parcelable(OWN_VOTE)
     }
 
     protected open fun initStyle(context: Context) {
@@ -203,13 +209,15 @@ open class PollOptionVotersFragment : Fragment(), SceytKoinComponent {
         private const val POLL_OPTION_NAME = "POLL_OPTION_NAME"
         private const val POLL_OPTION_VOTERS_COUNT = "POLL_OPTION_VOTERS_COUNT"
         private const val STYLE_ID = "STYLE_ID"
+        private const val OWN_VOTE = "OWN_VOTE"
 
         fun newInstance(
                 pollId: String,
                 pollOptionId: String,
                 pollOptionName: String,
                 pollOptionVotersCount: Int,
-                styleId: String
+                styleId: String,
+                ownVote: Vote? = null
         ): PollOptionVotersFragment {
             val fragment = PollOptionVotersFragment()
             fragment.setBundleArguments {
@@ -218,7 +226,7 @@ open class PollOptionVotersFragment : Fragment(), SceytKoinComponent {
                 putString(POLL_OPTION_NAME, pollOptionName)
                 putInt(POLL_OPTION_VOTERS_COUNT, pollOptionVotersCount)
                 putString(STYLE_ID, styleId)
-
+                putParcelable(OWN_VOTE, ownVote)
             }
             return fragment
         }

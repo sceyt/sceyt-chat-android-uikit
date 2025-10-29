@@ -11,6 +11,7 @@ import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.messages.SceytUser
+import com.sceyt.chatuikit.data.models.messages.Vote
 import com.sceyt.chatuikit.data.models.onSuccessNotNull
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
@@ -26,7 +27,8 @@ import kotlinx.coroutines.withContext
 class PollOptionVotersViewModel(
         private val pollId: String,
         private val optionId: String,
-        private val pollOptionVotersCount:Int,
+        private val pollOptionVotersCount: Int,
+        private val ownVote: Vote?,
         private val persistenceChannelsLogic: PersistenceChannelsLogic,
         private val pollRepository: PollRepository
 ) : BaseViewModel(), SceytKoinComponent {
@@ -63,6 +65,10 @@ class PollOptionVotersViewModel(
                     if (offset == 0) {
                         votersList.clear()
                         votersList.add(VoterItem.HeaderItem(pollOptionVotersCount))
+                        
+                        if (ownVote != null) {
+                            votersList.add(VoterItem.Voter(ownVote))
+                        }
                     }
                     
                     votersList.removeAll { it is VoterItem.LoadingMore }
