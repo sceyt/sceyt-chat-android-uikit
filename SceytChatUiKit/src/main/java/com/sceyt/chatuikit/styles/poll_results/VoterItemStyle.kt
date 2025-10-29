@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.AttributeSet
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytUser
+import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.formatters.UserFormatter
 import com.sceyt.chatuikit.renderers.AvatarRenderer
 import com.sceyt.chatuikit.styles.common.AvatarStyle
@@ -14,8 +15,9 @@ data class VoterItemStyle(
         val voteTimeTextStyle: TextStyle,
         val avatarStyle: AvatarStyle,
         val userNameFormatter: UserFormatter,
+        val pollVoteDateFormatter:Formatter<Long>,
         val avatarRenderer: AvatarRenderer<SceytUser>,
-        val voteCountFormatter: com.sceyt.chatuikit.formatters.Formatter<Int>
+        val voteCountFormatter: Formatter<Int>
 ) {
 
     companion object {
@@ -33,6 +35,7 @@ data class VoterItemStyle(
                     voteTimeTextStyle = buildVoteTimeTextStyle(array),
                     avatarStyle = buildAvatarStyle(array),
                     userNameFormatter = SceytChatUIKit.formatters.userNameFormatter,
+                    pollVoteDateFormatter = SceytChatUIKit.formatters.pollVoteDateFormatter,
                     avatarRenderer = SceytChatUIKit.renderers.userAvatarRenderer,
                     voteCountFormatter = SceytChatUIKit.formatters.pollResultVoteCountFormatter,
                 ).let { styleCustomizer.apply(context, it) }

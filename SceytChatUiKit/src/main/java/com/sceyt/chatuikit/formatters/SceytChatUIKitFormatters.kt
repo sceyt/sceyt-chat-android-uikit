@@ -221,7 +221,7 @@ class SceytChatUIKitFormatters {
         DefaultPollResultVoteCountFormatter()
     }
 
-    var pollVoteTimeDateFormatter: Formatter<Long> by lazyVar {
+    var pollVoteDateFormatter: Formatter<Long> by lazyVar {
         DefaultPollVoteTimeDateFormatter()
     }
 }

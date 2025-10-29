@@ -1,21 +1,18 @@
 package com.sceyt.chatuikit.presentation.components.poll_results.adapter.holders
 
-import android.view.View
 import androidx.core.view.isVisible
 import com.sceyt.chatuikit.databinding.SceytItemPollResultOptionBinding
+import com.sceyt.chatuikit.presentation.components.poll_results.PollResultsStyle
 import com.sceyt.chatuikit.presentation.components.poll_results.adapter.PollResultItem
 import com.sceyt.chatuikit.presentation.components.poll_results.adapter.VoterItem
 import com.sceyt.chatuikit.presentation.components.poll_results.adapter.VotersAdapter
 import com.sceyt.chatuikit.presentation.components.poll_results.adapter.listeners.PollResultClickListeners
-import com.sceyt.chatuikit.presentation.components.poll_results.adapter.listeners.VoterClickListeners
+import com.sceyt.chatuikit.presentation.components.poll_results.adapter.listeners.VoterClickListeners.VoterClickListener
 import com.sceyt.chatuikit.presentation.root.BaseViewHolder
-import com.sceyt.chatuikit.styles.poll_results.PollResultItemStyle
-import com.sceyt.chatuikit.styles.poll_results.VoterItemStyle
 
 class PollOptionResultViewHolder(
         private val binding: SceytItemPollResultOptionBinding,
-        private val style: PollResultItemStyle,
-        private val voterStyle: VoterItemStyle,
+        private val style: PollResultsStyle,
         private val clickListeners: PollResultClickListeners.ClickListeners
 ) : BaseViewHolder<PollResultItem>(binding.root) {
 
@@ -30,29 +27,12 @@ class PollOptionResultViewHolder(
         setupVotersAdapter()
     }
 
-    fun setIsLastItem(isLast: Boolean) {
-        binding.divider.isVisible = !isLast
-    }
-
-    private fun setupVotersAdapter() {
-        votersAdapter = VotersAdapter(
-            viewHolderFactory = VotersViewHolderFactory(context, voterStyle).also {
-                it.setOnClickListener(object : VoterClickListeners.ClickListeners {
-                    override fun onVoterClick(view: View, item: VoterItem.Voter) {
-                        clickListeners.onVoterClick(view, item)
-                    }
-                })
-            }
-        )
-        binding.rvVoters.adapter = votersAdapter
-    }
-
     override fun bind(item: PollResultItem) {
         pollOptionItem = (item as? PollResultItem.PollOptionItem) ?: return
 
         with(binding) {
             tvOptionName.text = pollOptionItem.pollOption.name
-            tvVoteCount.text = style.voteCountFormatter.format(root.context, pollOptionItem.voteCount)
+            tvVoteCount.text = style.pollResultItemStyle.voteCountFormatter.format(context, pollOptionItem.voteCount)
 
             val votersToShow = pollOptionItem.voters.take(5)
             val voterItems = votersToShow.map { VoterItem.Voter(it) }
@@ -63,10 +43,28 @@ class PollOptionResultViewHolder(
         }
     }
 
+    fun setIsLastItem(isLast: Boolean) {
+        binding.divider.isVisible = !isLast
+    }
+
+    private fun setupVotersAdapter() {
+        votersAdapter = VotersAdapter(
+            viewHolderFactory = VotersViewHolderFactory(
+                context = context,
+                style = style.pollResultItemStyle.voterItemStyle)
+                .also { factory ->
+                    factory.setOnClickListener(VoterClickListener(clickListeners::onVoterClick))
+                }
+        )
+        binding.rvVoters.adapter = votersAdapter
+    }
+
     private fun SceytItemPollResultOptionBinding.applyStyle() {
-        style.optionNameTextStyle.apply(tvOptionName)
-        style.voteCountTextStyle.apply(tvVoteCount)
-        style.showAllButtonTextStyle.apply(btnShowAll)
-        style.itemDividerStyle.apply(divider)
+        with(style.pollResultItemStyle) {
+            optionNameTextStyle.apply(tvOptionName)
+            voteCountTextStyle.apply(tvVoteCount)
+            showAllButtonTextStyle.apply(btnShowAll)
+            itemDividerStyle.apply(divider)
+        }
     }
 }
