@@ -4,6 +4,7 @@ import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.Reaction
+import com.sceyt.chat.models.poll.PollVote
 import com.sceyt.chat.sceyt_listeners.MessageListener
 import com.sceyt.chatuikit.data.managers.message.event.ReactionUpdateEventData
 import com.sceyt.chatuikit.data.managers.message.event.ReactionUpdateEventEnum
@@ -82,6 +83,22 @@ object MessageEventManager : AllEventManagers {
             override fun onReactionDeleted(message: Message?, reaction: Reaction?) {
                 if (message == null || reaction == null) return
                 eventManager.onReactionDeleted(message.toSceytUiMessage(), reaction.toSceytReaction())
+            }
+
+            override fun onVoteAdded(message: Message?, list: List<PollVote>?) {
+                print("dsdsds Vote added to message: $message")
+            }
+
+            override fun onVoteDeleted(message: Message?, list: List<PollVote>?) {
+                print("dsdsds Vote deleted from message: $message")
+            }
+
+            override fun onVoteRetracted(message: Message?) {
+                print("dsdsds Vote retracted from message: $message")
+            }
+
+            override fun onPollClosed(message: Message?) {
+                print("dsdsds Poll closed for message: $message")
             }
         })
     }

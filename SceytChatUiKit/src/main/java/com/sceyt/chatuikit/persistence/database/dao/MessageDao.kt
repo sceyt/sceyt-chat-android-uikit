@@ -20,6 +20,7 @@ import com.sceyt.chatuikit.persistence.database.DatabaseConstants.ATTACHMENT_TAB
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.AUTO_DELETE_MESSAGES_TABLE
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.LOAD_RANGE_TABLE
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.MESSAGE_TABLE
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.POLL_TABLE
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.REACTION_TOTAL_TABLE
 import com.sceyt.chatuikit.persistence.database.entity.link.LinkDetailsEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.AttachmentEntity
@@ -563,7 +564,7 @@ internal abstract class MessageDao {
     @Query("delete from $ATTACHMENT_PAYLOAD_TABLE where messageTid in (:messageTides)")
     protected abstract suspend fun deleteAttachmentsPayLoad(messageTides: List<Long>)
 
-    @Query("DELETE FROM sceyt_poll_table WHERE messageTid IN (:messageTides)")
+    @Query("delete from $POLL_TABLE WHERE messageTid IN (:messageTides)")
     protected abstract suspend fun deletePollsByMessageTides(messageTides: List<Long>)
 
     @Transaction
