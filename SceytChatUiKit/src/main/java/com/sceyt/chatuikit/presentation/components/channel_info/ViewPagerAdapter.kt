@@ -35,7 +35,7 @@ class ViewPagerAdapter(
         } ?: ""
     }
 
-    fun getFragment() = fragments
+    fun getFragments() = fragments
 
     fun historyCleared() {
         fragments.forEach {
