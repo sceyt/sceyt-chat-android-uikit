@@ -60,12 +60,24 @@ class CreatePollOptionsAdapter(
         }
 
         override fun areContentsTheSame(oldItem: PollOptionItem, newItem: PollOptionItem): Boolean {
-            return oldItem.id == newItem.id && oldItem.isCurrent == newItem.isCurrent
+            return oldItem == newItem
         }
 
         override fun getChangePayload(oldItem: PollOptionItem, newItem: PollOptionItem): Any {
-            return Any()
+            return when {
+                oldItem.isCurrent != newItem.isCurrent -> PAYLOAD_FOCUS_CHANGED
+                oldItem.text != newItem.text -> PAYLOAD_TEXT_CHANGED
+                oldItem.keyboardAction != newItem.keyboardAction -> PAYLOAD_KEYBOARD_ACTION_CHANGED
+                else -> PAYLOAD_UNKNOWN
+            }
         }
+    }
+
+    companion object {
+        private const val PAYLOAD_FOCUS_CHANGED = "focus_changed"
+        private const val PAYLOAD_TEXT_CHANGED = "text_changed"
+        private const val PAYLOAD_KEYBOARD_ACTION_CHANGED = "keyboard_action_changed"
+        private const val PAYLOAD_UNKNOWN = "unknown"
     }
 }
 
