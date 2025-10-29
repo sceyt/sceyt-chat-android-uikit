@@ -40,8 +40,6 @@ data class PollOption(
 
 @Parcelize
 data class Vote(
-        val id: String,
-        val pollId: String,
         val optionId: String,
         val createdAt: Long,
         val user: SceytUser?,
