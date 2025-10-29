@@ -36,8 +36,7 @@ internal fun PollOption.toPollOptionEntity(pollId: String) = PollOptionEntity(
     name = name,
 )
 
-internal fun Vote.toPollVoteEntity() = PollVoteEntity(
-    id = id,
+internal fun Vote.toPollVoteEntity(pollId: String) = PollVoteEntity(
     pollId = pollId,
     optionId = optionId,
     userId = user?.id ?: "",
@@ -50,7 +49,7 @@ internal fun SceytPollDetails.toPollDb() = PollDb(
     votes = votes.mapNotNull { vote ->
         vote.user?.let { user ->
             PollVoteDb(
-                vote = vote.toPollVoteEntity(),
+                vote = vote.toPollVoteEntity(id),
                 user = user.toUserDb()
             )
         }
@@ -64,8 +63,6 @@ internal fun PollOptionEntity.toPollOption() = PollOption(
 )
 
 internal fun PollVoteDb.toVote() = Vote(
-    id = vote.id,
-    pollId = vote.pollId,
     optionId = vote.optionId,
     createdAt = vote.createdAt,
     user = user?.toSceytUser(),
@@ -123,8 +120,6 @@ internal fun PollDetails.toSceytPollDetails(
 )
 
 internal fun PollVote.toVote() = Vote(
-    id = id,
-    pollId = pollId,
     optionId = optionId,
     createdAt = createdAt.time,
     user = user?.toSceytUser(),
