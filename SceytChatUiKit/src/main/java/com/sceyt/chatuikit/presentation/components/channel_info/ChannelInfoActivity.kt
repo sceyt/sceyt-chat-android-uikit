@@ -332,7 +332,7 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
     open fun setChannelDetails(channel: SceytChannel) {
         setChannelToolbar(channel)
         setChannelSettings(channel)
-        setChannelMembersByRoleButtons(channel)
+        setChannelOptions(channel)
         setChannelDescription(channel)
         setChannelInfo(channel)
         setChannelAdditionalInfoFragment(channel)
@@ -535,7 +535,7 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
     }
 
     protected open fun toggleToolbarViews(showDetails: Boolean) {
-        (binding?.frameLayoutToolbar?.getFragment() as? ChannelInfoToolbarFragment)?.toggleToolbarViews(showDetails)
+        binding?.frameLayoutToolbar?.getFragment<ChannelInfoToolbarFragment>()?.toggleToolbarViews(showDetails)
         binding?.viewTopTabLayout?.isVisible = showDetails
     }
 
@@ -568,9 +568,9 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
         }
     }
 
-    protected open fun setChannelMembersByRoleButtons(channel: SceytChannel) {
-        initOrUpdateFragment(binding?.frameLayoutMembersByRole ?: return) {
-            getChannelMembersByRoleFragment(channel)
+    protected open fun setChannelOptions(channel: SceytChannel) {
+        initOrUpdateFragment(binding?.frameLayoutOptions ?: return) {
+            getChannelOptionFragment(channel)
         }.also {
             (it as? ChannelInfoOptionsFragment)?.setClickActionsListener { actionsEnum ->
                 when (actionsEnum) {
@@ -647,16 +647,20 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
     protected open fun getChannelSettingsFragment(channel: SceytChannel): Fragment? = ChannelInfoSettingsFragment.newInstance(channel)
 
-    //Members by role buttons
-    protected open fun getChannelMembersByRoleFragment(channel: SceytChannel): Fragment? =
-            ChannelInfoOptionsFragment.newInstance(channel, intent.getBooleanExtra(ENABLE_SEARCH_MESSAGES, false))
+    //Options
+    protected open fun getChannelOptionFragment(
+            channel: SceytChannel,
+    ): Fragment? = ChannelInfoOptionsFragment.newInstance(
+        channel = channel,
+        enableSearchMessages = intent.getBooleanExtra(ENABLE_SEARCH_MESSAGES, false)
+    )
 
     //Additional info
     protected open fun getChannelAdditionalInfoFragment(channel: SceytChannel): Fragment? = null
 
     //URI
     protected open fun getChannelURIFragment(
-            channel: SceytChannel
+            channel: SceytChannel,
     ): Fragment? = ChannelInfoURIFragment.newInstance(channel)
 
     protected open fun onPageStateChanged(pageState: PageState) {
