@@ -144,8 +144,7 @@ class PollOptionViewHolder(
     }
 
     private fun applyStyle() = with(binding) {
-        style.optionItemBackgroundStyle.apply(root)
-        style.optionInputTextStyle.apply(tvOption)
+        style.optionInputTextStyle.apply(tvOption, root)
         icDrag.setImageDrawable(style.dragIcon)
     }
 }

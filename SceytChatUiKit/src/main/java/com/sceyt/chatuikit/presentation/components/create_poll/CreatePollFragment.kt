@@ -10,7 +10,6 @@ import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.DefaultItemAnimator
 import com.sceyt.chatuikit.databinding.SceytFragmentCreatePollBinding
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.setDrawableStart
@@ -18,6 +17,7 @@ import com.sceyt.chatuikit.extensions.setOnlyClickable
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.logicimpl.message.ChannelId
 import com.sceyt.chatuikit.presentation.components.create_poll.adapters.CreatePollOptionsAdapter
+import com.sceyt.chatuikit.presentation.components.create_poll.adapters.PollOptionItemAnimator
 import com.sceyt.chatuikit.shared.helpers.ReorderSwipeController
 import com.sceyt.chatuikit.styles.StyleRegistry
 import com.sceyt.chatuikit.styles.create_poll.CreatePollStyle
@@ -125,11 +125,7 @@ open class CreatePollFragment : Fragment(), SceytKoinComponent {
 
         with(binding.rvOptions) {
             adapter = pollOptionsAdapter
-            itemAnimator = DefaultItemAnimator().apply {
-                addDuration = 100
-                removeDuration = 100
-                moveDuration = 100
-            }
+            itemAnimator = PollOptionItemAnimator()
 
             // Setup ItemTouchHelper for drag and drop
             ReorderSwipeController(onMoveItem = { fromPosition, toPosition ->
@@ -179,10 +175,10 @@ open class CreatePollFragment : Fragment(), SceytKoinComponent {
 
         // Apply text styles
         style.questionTitleTextStyle.apply(tvQuestionTitle)
-        style.questionInputTextStyle.apply(etQuestion)
         style.optionsTitleTextStyle.apply(tvOptionsTitle)
         style.addOptionTextStyle.apply(tvAddOption)
         style.parametersTitleTextStyle.apply(tvParametersTitle)
+        style.questionInputTextStyle.apply(etQuestion, layoutQuestion)
 
         // Apply switch styles
         with(style.switchStyle) {
@@ -193,9 +189,6 @@ open class CreatePollFragment : Fragment(), SceytKoinComponent {
 
         // Apply icons
         tvAddOption.setDrawableStart(style.addOptionIcon)
-
-        // Apply backgrounds
-        style.questionBackgroundStyle.apply(layoutQuestion)
     }
 
     companion object {

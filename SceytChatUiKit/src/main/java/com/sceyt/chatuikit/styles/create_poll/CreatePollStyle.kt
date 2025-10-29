@@ -12,17 +12,15 @@ import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.styles.SceytComponentStyle
 import com.sceyt.chatuikit.styles.StyleCustomizer
-import com.sceyt.chatuikit.styles.common.BackgroundStyle
 import com.sceyt.chatuikit.styles.common.SwitchStyle
+import com.sceyt.chatuikit.styles.common.TextInputStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.styles.common.ToolbarStyle
 import com.sceyt.chatuikit.styles.extensions.create_poll.buildAddOptionTextStyle
-import com.sceyt.chatuikit.styles.extensions.create_poll.buildOptionInputTextStyle
-import com.sceyt.chatuikit.styles.extensions.create_poll.buildOptionItemBackgroundStyle
+import com.sceyt.chatuikit.styles.extensions.create_poll.buildOptionInputStyle
 import com.sceyt.chatuikit.styles.extensions.create_poll.buildOptionsTitleTextStyle
 import com.sceyt.chatuikit.styles.extensions.create_poll.buildParametersSwitchStyle
 import com.sceyt.chatuikit.styles.extensions.create_poll.buildParametersTitleTextStyle
-import com.sceyt.chatuikit.styles.extensions.create_poll.buildQuestionBackgroundStyle
 import com.sceyt.chatuikit.styles.extensions.create_poll.buildQuestionInputTextStyle
 import com.sceyt.chatuikit.styles.extensions.create_poll.buildQuestionTitleTextStyle
 import com.sceyt.chatuikit.styles.extensions.create_poll.buildToolbarStyle
@@ -42,14 +40,12 @@ data class CreatePollStyle(
         val dragIcon: Drawable?,
         val toolbarStyle: ToolbarStyle,
         val questionTitleTextStyle: TextStyle,
-        val questionInputTextStyle: TextStyle,
         val optionsTitleTextStyle: TextStyle,
-        val optionInputTextStyle: TextStyle,
-        val addOptionTextStyle: TextStyle,
         val parametersTitleTextStyle: TextStyle,
+        val addOptionTextStyle: TextStyle,
+        val questionInputTextStyle: TextInputStyle,
+        val optionInputTextStyle: TextInputStyle,
         val switchStyle: SwitchStyle,
-        val questionBackgroundStyle: BackgroundStyle,
-        val optionItemBackgroundStyle: BackgroundStyle,
 ) : SceytComponentStyle() {
 
     companion object {
@@ -96,14 +92,12 @@ data class CreatePollStyle(
                     dragIcon = dragIcon,
                     toolbarStyle = buildToolbarStyle(array),
                     questionTitleTextStyle = buildQuestionTitleTextStyle(array),
-                    questionInputTextStyle = buildQuestionInputTextStyle(array),
                     optionsTitleTextStyle = buildOptionsTitleTextStyle(array),
-                    optionInputTextStyle = buildOptionInputTextStyle(array),
                     addOptionTextStyle = buildAddOptionTextStyle(array),
+                    questionInputTextStyle = buildQuestionInputTextStyle(array),
+                    optionInputTextStyle = buildOptionInputStyle(array),
                     parametersTitleTextStyle = buildParametersTitleTextStyle(array),
                     switchStyle = buildParametersSwitchStyle(array),
-                    questionBackgroundStyle = buildQuestionBackgroundStyle(array),
-                    optionItemBackgroundStyle = buildOptionItemBackgroundStyle(array)
                 ).let { styleCustomizer.apply(context, it) }
             }
         }
