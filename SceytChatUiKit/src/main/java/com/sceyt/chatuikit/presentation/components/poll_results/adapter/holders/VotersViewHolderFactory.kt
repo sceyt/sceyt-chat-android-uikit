@@ -13,8 +13,8 @@ import com.sceyt.chatuikit.presentation.root.BaseViewHolder
 import com.sceyt.chatuikit.styles.poll_results.VoterItemStyle
 
 open class VotersViewHolderFactory(
-        private val context: Context,
-        private val style: VoterItemStyle,
+        context: Context,
+        private val style: VoterItemStyle
 ) {
     private val layoutInflater = LayoutInflater.from(context)
     private val clickListeners = VoterClickListenersImpl()
@@ -57,7 +57,7 @@ open class VotersViewHolderFactory(
     }
 
     private class LoadingMoreViewHolder(
-            private val binding: SceytItemLoadingMoreBinding,
+            binding: SceytItemLoadingMoreBinding,
     ) : BaseViewHolder<VoterItem>(binding.root) {
         override fun bind(item: VoterItem) {}
     }

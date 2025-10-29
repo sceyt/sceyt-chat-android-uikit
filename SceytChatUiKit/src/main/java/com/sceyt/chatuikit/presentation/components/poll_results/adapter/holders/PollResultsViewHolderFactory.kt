@@ -23,17 +23,14 @@ open class PollResultsViewHolderFactory(
             VIEW_TYPE_HEADER -> {
                 PollResultHeaderViewHolder(
                     binding = SceytItemPollResultHeaderBinding.inflate(layoutInflater, parent, false),
-                    questionTextStyle = style.questionTextStyle,
-                    pollTypeTextStyle = style.pollTypeTextStyle,
-                    headerDividerStyle = style.headerDividerStyle
+                    style = style
                 )
             }
 
             VIEW_TYPE_OPTION -> {
               PollOptionResultViewHolder(
                     binding = SceytItemPollResultOptionBinding.inflate(layoutInflater, parent, false),
-                    style = style.pollResultItemStyle,
-                    voterStyle = style.pollResultItemStyle.voterItemStyle,
+                    style = style,
                     clickListeners = clickListeners
                 )
             }

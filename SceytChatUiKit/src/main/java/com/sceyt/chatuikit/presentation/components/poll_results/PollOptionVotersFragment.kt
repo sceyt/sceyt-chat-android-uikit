@@ -107,10 +107,8 @@ open class PollOptionVotersFragment : Fragment(), SceytKoinComponent {
     protected open fun setupVotersAdapter() {
         votersAdapter = VotersAdapter(
             viewHolderFactory = VotersViewHolderFactory(requireContext(), style.voterItemStyle).also {
-                it.setOnClickListener(object : VoterClickListeners.ClickListeners {
-                    override fun onVoterClick(view: View, item: VoterItem.Voter) {
-                        onVoterClick(item)
-                    }
+                it.setOnClickListener(VoterClickListeners.VoterClickListener { _, item ->
+                    onVoterClick(item)
                 })
             }
         )
@@ -210,7 +208,7 @@ open class PollOptionVotersFragment : Fragment(), SceytKoinComponent {
                 pollId: String,
                 pollOptionId: String,
                 pollOptionName: String,
-                pollOptionVotersCount:Int,
+                pollOptionVotersCount: Int,
                 styleId: String
         ): PollOptionVotersFragment {
             val fragment = PollOptionVotersFragment()

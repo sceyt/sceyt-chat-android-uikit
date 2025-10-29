@@ -30,7 +30,7 @@ class VoterViewHolder(
         with(binding) {
             style.avatarRenderer.render(root.context, user, style.avatarStyle, avatar)
             tvUserName.text = style.userNameFormatter.format(root.context, user)
-            tvVoteTime.text = SceytChatUIKit.formatters.pollVoteTimeDateFormatter.format(
+            tvVoteTime.text = style.pollVoteDateFormatter.format(
                 context = root.context,
                 from = vote.createdAt
             )

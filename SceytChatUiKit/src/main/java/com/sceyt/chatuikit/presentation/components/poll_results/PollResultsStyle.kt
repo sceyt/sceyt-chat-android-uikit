@@ -5,7 +5,9 @@ import android.util.AttributeSet
 import androidx.annotation.ColorInt
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.data.models.messages.SceytPollDetails
 import com.sceyt.chatuikit.extensions.getCompatColor
+import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.styles.SceytComponentStyle
 import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.DividerStyle
@@ -25,6 +27,7 @@ class PollResultsStyle(
         val toolbarStyle: ToolbarStyle,
         val questionTextStyle: TextStyle,
         val pollTypeTextStyle: TextStyle,
+        val pollTypeFormatter: Formatter<SceytPollDetails>,
         val headerDividerStyle: DividerStyle,
         val pollResultItemStyle: PollResultItemStyle,
         val pollOptionVotersStyle: PollOptionVotersStyle,
@@ -50,8 +53,9 @@ class PollResultsStyle(
                     pollTypeTextStyle = buildPollTypeTextStyle(array),
                     headerDividerStyle = buildHeaderDividerStyle(array),
                     pollResultItemStyle = pollResultItemStyle,
-                    pollOptionVotersStyle = buildPollOptionVotersStyle(array, attrs)
-                ).let { styleCustomizer.apply(context, it) }
+                    pollOptionVotersStyle = buildPollOptionVotersStyle(array, attrs),
+                    pollTypeFormatter = SceytChatUIKit.formatters.pollTypeFormatter,
+                    ).let { styleCustomizer.apply(context, it) }
             }
         }
     }
