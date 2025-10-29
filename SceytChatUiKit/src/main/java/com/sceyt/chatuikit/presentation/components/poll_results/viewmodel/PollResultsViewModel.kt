@@ -52,14 +52,23 @@ class PollResultsViewModel(
             val headerItem = PollResultItem.HeaderItem(poll = poll)
 
             val optionItems = poll.options.map { option ->
-                val voters = poll.votes.filter { it.optionId == option.id }
-                val voteCount = voters.size
-                val hasMore = voters.size > 5
+                val otherVoters = poll.votes.filter { it.optionId == option.id }
+                
+                val ownVote = poll.ownVotes.firstOrNull { it.optionId == option.id }
+                
+                val allVoters = if (ownVote != null) {
+                    listOf(ownVote) + otherVoters
+                } else {
+                    otherVoters
+                }
+                
+                val voteCount = allVoters.size
+                val hasMore = allVoters.size > 5
 
                 PollResultItem.PollOptionItem(
                     pollOption = option,
                     voteCount = voteCount,
-                    voters = voters,
+                    voters = allVoters,
                     hasMore = hasMore
                 )
             }

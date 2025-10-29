@@ -36,5 +36,5 @@ internal val viewModelModule = module {
     viewModel { params -> ChannelInviteLinkViewModel(params.get(), get()) }
     viewModel { params -> JoinByInviteLinkViewModel(params.get(), get()) }
     viewModel { params -> PollResultsViewModel(params.get(), get()) }
-    viewModel { params -> PollOptionVotersViewModel(params.get(), params.get(), params.get(), get(), get()) }
+    viewModel { params -> PollOptionVotersViewModel(params.get(), params.get(), params.get(), params.get(), get(), get()) }
 }
