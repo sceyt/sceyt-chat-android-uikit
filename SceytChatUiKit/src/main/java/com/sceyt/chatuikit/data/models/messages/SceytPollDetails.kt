@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.data.models.messages
 
 import android.os.Parcelable
+import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
@@ -23,16 +24,19 @@ data class SceytPollDetails(
     val closed: Boolean,
 ) : Parcelable {
 
-    val maVotedCountWithPendingVotes: Int
-        get() {
-            val realCounts = getRealCountsWithPendingVotes()
-            return realCounts.maxByOrNull { it.value }?.value ?: 0
-        }
+    @IgnoredOnParcel
+    private val realCountsCache: Map<String, Int> by lazy {
+        getRealCountsWithPendingVotes()
+    }
+
+    @IgnoredOnParcel
+    val maxVotedCountWithPendingVotes: Int
+        get() = realCountsCache.maxOfOrNull { it.value } ?: 0
 
     fun getRealCountsWithPendingVotes(): Map<String, Int> {
-        val pendingPartition = pendingVotes.orEmpty().partition { it.isAdd }
         if (pendingVotes.isNullOrEmpty()) return votesPerOption
-        val (pendingAdd, pendingRemove) = pendingPartition
+
+        val (pendingAdd, pendingRemove) = pendingVotes.partition { it.isAdd }
 
         // Start with a mutable copy of current vote counts
         val realCounts = votesPerOption.toMutableMap()
@@ -41,11 +45,10 @@ data class SceytPollDetails(
         pendingAdd.forEach { pending ->
             realCounts[pending.optionId] = (realCounts[pending.optionId] ?: 0) + 1
         }
-
         // Subtract pending vote removals
         pendingRemove.forEach { pending ->
             realCounts[pending.optionId] =
-                ((realCounts[pending.optionId] ?: 0) - 1).coerceAtLeast(0)
+                (realCounts.getOrDefault(pending.optionId, 0) - 1).coerceAtLeast(0)
         }
 
         return realCounts
@@ -162,7 +165,7 @@ fun PollOption.toUiModel(poll: SceytPollDetails): PollOptionUiModel {
         voters = voters.mapNotNull { it },
         selected = isSelected,
         pendingVote = pendingVote,
-        totalVotesCount = poll.maVotedCountWithPendingVotes
+        totalVotesCount = poll.maxVotedCountWithPendingVotes
     )
 }
 
