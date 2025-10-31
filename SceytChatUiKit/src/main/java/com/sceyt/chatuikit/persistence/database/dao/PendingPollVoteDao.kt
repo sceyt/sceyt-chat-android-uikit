@@ -17,6 +17,9 @@ internal abstract class PendingPollVoteDao {
     @Query("DELETE FROM $PENDING_POLL_VOTE_TABLE WHERE messageTid =:messageTid and pollId = :pollId AND optionId = :optionId")
     abstract suspend fun deleteByOption(messageTid: Long, pollId: String, optionId: String): Int
 
+    @Query("DELETE FROM $PENDING_POLL_VOTE_TABLE WHERE messageTid =:messageTid and pollId = :pollId")
+    abstract suspend fun deletePendingVotesByPollId(messageTid: Long, pollId: String): Int
+
     @Transaction
     open suspend fun insertIfMessageExists(pendingVote: PendingPollVoteEntity) {
         insert(pendingVote)

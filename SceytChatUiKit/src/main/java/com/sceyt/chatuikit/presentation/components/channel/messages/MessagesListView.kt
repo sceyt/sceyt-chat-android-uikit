@@ -347,6 +347,8 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 R.id.sceyt_reply_in_thread -> messageActionsViewClickListeners.onReplyMessageInThreadClick(message)
                 R.id.sceyt_copy_message -> messageActionsViewClickListeners.onCopyMessagesClick(message)
                 R.id.sceyt_delete_message -> messageActionsViewClickListeners.onDeleteMessageClick(message, requireForMe = false, actionFinish = {})
+                R.id.sceyt_retract_vote -> messageActionsViewClickListeners.onRetractVoteClick(message)
+                R.id.sceyt_end_vote -> messageActionsViewClickListeners.onEndVoteClick(message)
             }
             false
         }
@@ -1022,6 +1024,17 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     override fun onReplyMessageInThreadClick(message: SceytMessage) {
         messageCommandEventListener?.invoke(MessageCommandEvent.ReplyInThread(message))
+    }
+
+    override fun onRetractVoteClick(message: SceytMessage) {
+        pollEventListener?.invoke(PollEvent.RetractVote(message))
+    }
+
+    override fun onEndVoteClick(message: SceytMessage) {
+        val poll = message.poll ?: return
+        if (!poll.closed) {
+            pollEventListener?.invoke(PollEvent.EndVote(message))
+        }
     }
 
 

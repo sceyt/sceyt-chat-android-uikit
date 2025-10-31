@@ -4,5 +4,6 @@ enum class PickType {
     Gallery,
     Photo,
     Video,
-    File
+    File,
+    Poll
 }

@@ -249,6 +249,19 @@
     <string name="sceyt_public_poll">Public poll</string>
     <string name="sceyt_anonymous_poll">Anonymous poll</string>
     <string name="sceyt_poll_finished">Poll finished</string>
+    <string name="sceyt_poll">Poll</string>
+    <string name="sceyt_poll_question">Question</string>
+    <string name="sceyt_poll_add_question">Add question</string>
+    <string name="sceyt_poll_options">Options</string>
+    <string name="sceyt_poll_add_option">Add an option</string>
+    <string name="sceyt_poll_parameters">Parameters</string>
+    <string name="sceyt_poll_anonymous">Anonymous poll</string>
+    <string name="sceyt_poll_multiple_votes">Multiple votes</string>
+    <string name="sceyt_poll_can_retract_votes">Can\'t retract votes</string>
+    <string name="sceyt_poll_add">Add</string>
+    <string name="sceyt_send">Send</string>
+    <string name="sceyt_retract_vote">Retract vote</string>
+    <string name="sceyt_end_vote">End vote</string>
     <string name="poll_results">Poll results</string>
     <string name="sceyt_show_all">Show All</string>
 </resources>

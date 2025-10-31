@@ -55,8 +55,8 @@ object InviteLinkQRGenerator {
         // === No logo? return just QR ===
         if (logoDrawable == null) return@withContext qrBitmap
 
-        // === Prepare logo with Telegram-style proportions ===
-        val logoSize = (size * 0.22).toInt() // logo covers ~22% of QR (similar to Telegram)
+        // === Prepare logo with proportions ===
+        val logoSize = (size * 0.22).toInt() // logo covers ~22% of QR
         val logoBitmap = logoDrawable.toBitmap(logoSize, logoSize, Bitmap.Config.ARGB_8888)
 
         // === Round the logo corners ===
@@ -78,7 +78,7 @@ object InviteLinkQRGenerator {
         val logoLeft = centerX - logoSize / 2
         val logoTop = centerY - logoSize / 2
 
-        // Draw white rounded background behind logo with generous padding (Telegram style)
+        // Draw white rounded background behind logo with generous padding
         // The padding ensures QR patterns have proper distance from the logo
         val bgPadding = (logoSize * 0.15f).toInt() // ~15% padding around logo
         val bgSize = logoSize + (bgPadding * 2)

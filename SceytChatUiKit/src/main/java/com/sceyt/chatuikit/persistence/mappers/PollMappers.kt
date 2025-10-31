@@ -14,6 +14,7 @@ import com.sceyt.chatuikit.persistence.database.entity.messages.PollEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.PollOptionEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.PollVoteDb
 import com.sceyt.chatuikit.persistence.database.entity.messages.PollVoteEntity
+import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingPollVoteEntity
 
 internal fun SceytPollDetails.toPollEntity(messageTid: Long) = PollEntity(
     id = id,
@@ -36,8 +37,7 @@ internal fun PollOption.toPollOptionEntity(pollId: String) = PollOptionEntity(
     name = name,
 )
 
-internal fun Vote.toPollVoteEntity() = PollVoteEntity(
-    id = id,
+internal fun Vote.toPollVoteEntity(pollId: String) = PollVoteEntity(
     pollId = pollId,
     optionId = optionId,
     userId = user?.id ?: "",
@@ -47,10 +47,10 @@ internal fun Vote.toPollVoteEntity() = PollVoteEntity(
 internal fun SceytPollDetails.toPollDb() = PollDb(
     pollEntity = toPollEntity(messageTid),
     options = options.map { it.toPollOptionEntity(id) },
-    votes = votes.mapNotNull { vote ->
+    votes = (votes + ownVotes).mapNotNull { vote ->
         vote.user?.let { user ->
             PollVoteDb(
-                vote = vote.toPollVoteEntity(),
+                vote = vote.toPollVoteEntity(id),
                 user = user.toUserDb()
             )
         }
@@ -64,8 +64,6 @@ internal fun PollOptionEntity.toPollOption() = PollOption(
 )
 
 internal fun PollVoteDb.toVote() = Vote(
-    id = vote.id,
-    pollId = vote.pollId,
     optionId = vote.optionId,
     createdAt = vote.createdAt,
     user = user?.toSceytUser(),
@@ -82,32 +80,45 @@ internal fun PendingPollVoteDb.toPendingVoteData() = with(pendingVote) {
     )
 }
 
-internal fun PollDb.toSceytPollDetails() = SceytPollDetails(
-    id = pollEntity.id,
-    name = pollEntity.name,
-    messageTid = pollEntity.messageTid,
-    description = pollEntity.description,
-    options = options.map { it.toPollOption() },
-    anonymous = pollEntity.anonymous,
-    allowMultipleVotes = pollEntity.allowMultipleVotes,
-    allowVoteRetract = pollEntity.allowVoteRetract,
-    votesPerOption = pollEntity.votesPerOption,
-    votes = votes?.map { it.toVote() }.orEmpty(),
-    ownVotes = votes?.filter { it.user?.id == SceytChatUIKit.currentUserId }?.map { it.toVote() }.orEmpty(),
-    pendingVotes = pendingVotes?.map { it.toPendingVoteData() },
-    createdAt = pollEntity.createdAt,
-    updatedAt = pollEntity.updatedAt,
-    closedAt = pollEntity.closedAt,
-    closed = pollEntity.closed,
-)
+internal fun PollDb.toSceytPollDetails(): SceytPollDetails {
+    val myId = SceytChatUIKit.currentUserId
+    val ownVotes = mutableListOf<Vote>()
+    val otherVotes = mutableListOf<Vote>()
+    votes?.forEach {
+        if (it.vote.userId == myId) {
+            ownVotes.add(it.toVote())
+        } else {
+            otherVotes.add(it.toVote())
+        }
+    }
+
+    return SceytPollDetails(
+        id = pollEntity.id,
+        name = pollEntity.name,
+        messageTid = pollEntity.messageTid,
+        description = pollEntity.description,
+        options = options.map { it.toPollOption() },
+        anonymous = pollEntity.anonymous,
+        allowMultipleVotes = pollEntity.allowMultipleVotes,
+        allowVoteRetract = pollEntity.allowVoteRetract,
+        votesPerOption = pollEntity.votesPerOption,
+        votes = otherVotes,
+        ownVotes = ownVotes,
+        pendingVotes = pendingVotes?.map { it.toPendingVoteData() },
+        createdAt = pollEntity.createdAt,
+        updatedAt = pollEntity.updatedAt,
+        closedAt = pollEntity.closedAt,
+        closed = pollEntity.closed,
+    )
+}
 
 internal fun PollDetails.toSceytPollDetails(
-        messageTid: Long,
+    messageTid: Long,
 ) = SceytPollDetails(
     id = id,
     name = name,
     messageTid = messageTid,
-    description = description,
+    description = description.orEmpty(),
     options = options.map { option -> option.toPollOption() },
     anonymous = isAnonymous,
     allowMultipleVotes = isAllowMultipleVotes,
@@ -122,9 +133,16 @@ internal fun PollDetails.toSceytPollDetails(
     closed = isClosed,
 )
 
-internal fun PollVote.toVote() = Vote(
-    id = id,
+internal fun PendingVoteData.toPendingVoteEntity() = PendingPollVoteEntity(
+    messageTid = messageTid,
     pollId = pollId,
+    optionId = optionId,
+    userId = user.id,
+    isAdd = isAdd,
+    createdAt = createdAt
+)
+
+internal fun PollVote.toVote() = Vote(
     optionId = optionId,
     createdAt = createdAt.time,
     user = user?.toSceytUser(),

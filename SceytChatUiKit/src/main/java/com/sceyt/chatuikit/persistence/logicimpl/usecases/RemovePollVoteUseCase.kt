@@ -2,54 +2,61 @@ package com.sceyt.chatuikit.persistence.logicimpl.usecases
 
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.data.models.onSuccessNotNull
 import com.sceyt.chatuikit.persistence.database.dao.MessageDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingPollVoteDao
-import com.sceyt.chatuikit.persistence.database.dao.PollDao
+import com.sceyt.chatuikit.persistence.logicimpl.message.ChannelId
+import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
+import com.sceyt.chatuikit.persistence.mappers.toMessageDb
 import com.sceyt.chatuikit.persistence.mappers.toSceytMessage
 import com.sceyt.chatuikit.persistence.repositories.PollRepository
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /**
  * Use case for removing a poll vote with server synchronization.
  * Handles database updates and cleans up pending votes after successful API call.
  */
 internal class RemovePollVoteUseCase(
-        private val pollRepository: PollRepository,
-        private val pollDao: PollDao,
-        private val messageDao: MessageDao,
-        private val pendingPollVoteDao: PendingPollVoteDao,
+    private val pollRepository: PollRepository,
+    private val messagesCache: MessagesCache,
+    private val messageDao: MessageDao,
+    private val pendingPollVoteDao: PendingPollVoteDao,
 ) {
 
     /**
      * Removes a vote from a poll option via API and updates database.
      *
-     * @param messageTid The message transaction ID
+     * @param channelId The channel ID
+     * @param messageId The message ID
      * @param pollId The poll ID
      * @param optionId The option ID to remove vote from
-     * @param userId The user ID whose vote to remove
      * @return Response with updated message or error
      */
     suspend operator fun invoke(
-            messageTid: Long,
-            pollId: String,
-            optionId: String,
-            userId: String,
-    ): SceytResponse<SceytMessage> {
-        val response = pollRepository.deleteVote(pollId, optionId)
+        channelId: ChannelId,
+        messageId: Long,
+        pollId: String,
+        optionId: String,
+    ): SceytResponse<SceytMessage> = withContext(Dispatchers.IO) {
+        return@withContext pollRepository.deleteVote(
+            channelId = channelId,
+            messageId = messageId,
+            pollId = pollId,
+            optionId = optionId
+        ).onSuccessNotNull { message ->
+            // Remove pending vote since operation succeeded
+            pendingPollVoteDao.deleteByOption(
+                messageTid = message.tid,
+                pollId = pollId,
+                optionId = optionId
+            )
 
-        return when (response) {
-            is SceytResponse.Success -> {
-                // Delete vote directly from database
-                pollDao.deleteVote(pollId, optionId, userId)
+            messageDao.upsertMessage(messageDb = message.toMessageDb(false))
 
-                // Remove pending vote since operation succeeded
-                pendingPollVoteDao.deleteByOption(messageTid, pollId, optionId)
-
-                // Return updated message from database
-                val updatedMessage = messageDao.getMessageByTid(messageTid)?.toSceytMessage()
-                SceytResponse.Success(updatedMessage)
+            messageDao.getMessageById(messageId)?.let {
+                messagesCache.upsertMessages(channelId, it.toSceytMessage())
             }
-
-            is SceytResponse.Error -> response
         }
     }
 }
