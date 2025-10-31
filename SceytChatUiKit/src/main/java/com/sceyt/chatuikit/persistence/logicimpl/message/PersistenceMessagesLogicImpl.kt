@@ -51,6 +51,7 @@ import com.sceyt.chatuikit.persistence.database.dao.LoadRangeDao
 import com.sceyt.chatuikit.persistence.database.dao.MessageDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingMarkerDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingMessageStateDao
+import com.sceyt.chatuikit.persistence.database.dao.PollDao
 import com.sceyt.chatuikit.persistence.database.dao.ReactionDao
 import com.sceyt.chatuikit.persistence.database.dao.UserDao
 import com.sceyt.chatuikit.persistence.database.entity.messages.AttachmentPayLoadDb
@@ -77,6 +78,7 @@ import com.sceyt.chatuikit.persistence.mappers.toLinkPreviewDetails
 import com.sceyt.chatuikit.persistence.mappers.toMessage
 import com.sceyt.chatuikit.persistence.mappers.toMessageDb
 import com.sceyt.chatuikit.persistence.mappers.toMessageEntity
+import com.sceyt.chatuikit.persistence.mappers.toPendingVoteData
 import com.sceyt.chatuikit.persistence.mappers.toSceytMessage
 import com.sceyt.chatuikit.persistence.mappers.toSceytReaction
 import com.sceyt.chatuikit.persistence.mappers.toSceytUiMessage
@@ -112,6 +114,7 @@ internal class PersistenceMessagesLogicImpl(
     private val reactionDao: ReactionDao,
     private val userDao: UserDao,
     private val pendingMessageStateDao: PendingMessageStateDao,
+    private val pollDao: PollDao,
     private val fileTransferService: FileTransferService,
     private val messagesRepository: MessagesRepository,
     private val preference: SceytSharedPreference,
@@ -197,7 +200,7 @@ internal class PersistenceMessagesLogicImpl(
             messagesCache.updateMessagesStatus(
                 channelId = data.channel.id,
                 status = data.status,
-                tIds = *updatedMessages.map { it.tid }.toLongArray()
+                tIds = updatedMessages.map { it.tid }.toLongArray()
             )
         }
 
@@ -362,7 +365,7 @@ internal class PersistenceMessagesLogicImpl(
                         val updatedMessages = saveMessagesToDb(messages)
                         messagesCache.upsertMessages(
                             channelId = conversationId,
-                            message = *updatedMessages.toTypedArray()
+                            message = updatedMessages.toTypedArray()
                         )
                         checkAndMarkChannelMessagesAsDelivered(conversationId, messages)
                         updateMessageLoadRange(
@@ -592,7 +595,7 @@ internal class PersistenceMessagesLogicImpl(
         SendForwardMessagesWorkManager.schedule(
             context = context,
             channelId = channelId,
-            messageTid = *messageToSend.map { it.tid }.toLongArray()
+            messageTid = messageToSend.map { it.tid }.toLongArray()
         )
         return@withContext SceytResponse.Success(true)
     }
@@ -819,7 +822,7 @@ internal class PersistenceMessagesLogicImpl(
                         channelId = channelId,
                         marker = status,
                         saveToPendingBeforeSend = false,
-                        ids = *msg.map { it.messageId }.toLongArray()
+                        ids = msg.map { it.messageId }.toLongArray()
                     )
             }
         }
@@ -1439,12 +1442,20 @@ internal class PersistenceMessagesLogicImpl(
 
         val mutableList = list.toArrayList()
         for ((index, message) in list.withIndex()) {
-            updateMessageStatesWithPendingStates(message, pendingStates)?.let { updatedMessage ->
-                mutableList[index] = updatedMessage
+            var updatedMessage = message
+            
+            // Update message states with pending states
+            updateMessageStatesWithPendingStates(message, pendingStates)?.let {
+                updatedMessage = it
             }
+            
+            // Preserve pending poll votes from DB
+            updatedMessage = preservePendingPollVotes(updatedMessage)
+            
+            mutableList[index] = updatedMessage
 
             if (includeParents) {
-                message.parentMessage?.let { parent ->
+                updatedMessage.parentMessage?.let { parent ->
                     if (parent.id != 0L) {
                         parentMessagesDb.add(parent.toMessageDb(true))
                         if (parent.incoming && parent.user != null) {
@@ -1454,12 +1465,12 @@ internal class PersistenceMessagesLogicImpl(
                 }
             }
 
-            messagesDb.add(message.toMessageDb(unListAll))
-            if (message.incoming && message.user != null) {
-                usersDb.add(message.user.toUserDb())
+            messagesDb.add(updatedMessage.toMessageDb(unListAll))
+            if (updatedMessage.incoming && updatedMessage.user != null) {
+                usersDb.add(updatedMessage.user.toUserDb())
             }
 
-            message.mentionedUsers?.let {
+            updatedMessage.mentionedUsers?.let {
                 usersDb.addAll(it.map { user -> user.toUserDb() })
             }
         }
@@ -1477,6 +1488,27 @@ internal class PersistenceMessagesLogicImpl(
             messageDao.insertMessagesIgnored(parentMessagesDb)
 
         return mutableList.toList()
+    }
+    
+    /**
+     * Preserve pending poll votes from database when saving server messages.
+     * If incoming message has explicit pendingVotes, use them; otherwise load from DB.
+     */
+    private suspend fun preservePendingPollVotes(message: SceytMessage): SceytMessage {
+        val poll = message.poll ?: return message
+        
+        // If message already has explicit pendingVotes (from manual update), keep them
+        if (poll.pendingVotes != null) return message
+        
+        // Otherwise, load pending votes directly from PollDao (efficient - no need to load entire message)
+        val existingPoll = pollDao.getPollById(poll.id)
+        val existingPendingVotes = existingPoll?.pendingVotes?.map { it.toPendingVoteData() }
+        
+        return if (!existingPendingVotes.isNullOrEmpty()) {
+            message.copy(poll = poll.copy(pendingVotes = existingPendingVotes))
+        } else {
+            message
+        }
     }
 
     private fun updateMessageStatesWithPendingStates(
@@ -1516,7 +1548,7 @@ internal class PersistenceMessagesLogicImpl(
             markMessagesAsImpl(
                 channelId = channelId,
                 marker = Received,
-                ids = *notDisplayedMessages.map { it.id }.toLongArray()
+                ids = notDisplayedMessages.map { it.id }.toLongArray()
             )
     }
 
@@ -1591,7 +1623,7 @@ internal class PersistenceMessagesLogicImpl(
                         messagesCache.updateMessagesStatus(
                             channelId = channelId,
                             status = deliveryStatus,
-                            tIds = *tIds.toLongArray()
+                            tIds = tIds.toLongArray()
                         )
                     }
 
