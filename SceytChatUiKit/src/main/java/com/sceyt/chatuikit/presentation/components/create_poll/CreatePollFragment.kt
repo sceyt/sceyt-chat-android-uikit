@@ -39,9 +39,9 @@ open class CreatePollFragment : Fragment(), SceytKoinComponent {
     }
 
     override fun onCreateView(
-            inflater: LayoutInflater,
-            container: ViewGroup?,
-            savedInstanceState: Bundle?,
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?,
     ): View {
         binding = SceytFragmentCreatePollBinding.inflate(inflater, container, false)
         return binding.root
@@ -135,11 +135,11 @@ open class CreatePollFragment : Fragment(), SceytKoinComponent {
     }
 
     protected open fun onUiStateChange(state: CreatePollUIState) = with(binding) {
-        binding.switchAnonymous.isChecked = state.isAnonymous
-        binding.switchMultipleVotes.isChecked = state.allowMultipleVotes
-        binding.switchRetractVotes.isChecked = state.allowVoteRetraction
+        switchAnonymous.isChecked = state.isAnonymous
+        switchMultipleVotes.isChecked = state.allowMultipleVotes
+        switchRetractVotes.isChecked = state.allowVoteRetraction
 
-        binding.tvAddOption.isVisible = !state.reachedMaxPollCount
+        tvAddOption.isVisible = !state.reachedMaxPollCount
         updateSendButtonState(state.isValid)
 
         if (pollOptionsAdapter == null) {
@@ -148,7 +148,7 @@ open class CreatePollFragment : Fragment(), SceytKoinComponent {
         pollOptionsAdapter?.submitList(state.options)
 
         state.error?.let {
-            customToastSnackBar(binding.root, it)
+            customToastSnackBar(root, it)
         }
     }
 
@@ -196,8 +196,8 @@ open class CreatePollFragment : Fragment(), SceytKoinComponent {
         private const val CHANNEL_ID_KEY = "CHANNEL_ID_KEY"
 
         fun newInstance(
-                channelId: ChannelId,
-                styleId: String? = null,
+            channelId: ChannelId,
+            styleId: String? = null,
         ) = CreatePollFragment().apply {
             arguments = Bundle().apply {
                 putString(STYLE_ID_KEY, styleId)

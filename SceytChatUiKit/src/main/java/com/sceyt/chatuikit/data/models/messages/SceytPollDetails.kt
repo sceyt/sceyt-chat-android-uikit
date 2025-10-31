@@ -31,16 +31,13 @@ data class SceytPollDetails(
 
     val totalVotesWithPendingVotes: Int
         get() {
+            val (pendingAdd, pendingRemove) = pendingVotes.orEmpty().partition { it.isAdd }
             return if (allowMultipleVotes) {
-                val pendingAdds = pendingVotes?.count { it.isAdd } ?: 0
-                val pendingRemoves = pendingVotes?.count { !it.isAdd } ?: 0
-                (totalVotes + pendingAdds - pendingRemoves).coerceAtLeast(0)
+                (totalVotes + pendingAdd.size - pendingRemove.size).coerceAtLeast(0)
             } else {
-                val hasPendingAdd = pendingVotes?.any { it.isAdd } == true
-                val hasPendingRemove = pendingVotes?.any { !it.isAdd } == true
                 when {
-                    hasPendingAdd -> if (ownVotes.isEmpty()) totalVotes + 1 else totalVotes
-                    hasPendingRemove -> (totalVotes - 1).coerceAtLeast(0)
+                    pendingAdd.isNotEmpty() -> if (ownVotes.isEmpty()) totalVotes + 1 else totalVotes
+                    pendingRemove.isNotEmpty() -> (totalVotes - 1).coerceAtLeast(0)
                     else -> totalVotes
                 }
             }
