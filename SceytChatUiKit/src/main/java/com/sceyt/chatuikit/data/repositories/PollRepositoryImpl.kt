@@ -18,13 +18,13 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 
 class PollRepositoryImpl : PollRepository {
 
-    override suspend fun addVote(
+    override suspend fun addVotes(
         channelId: Long,
         messageId: Long,
         pollId: String,
-        optionId: String
+        optionIds: List<String>
     ): SceytResponse<SceytMessage> = suspendCancellableCoroutine { continuation ->
-        AddPollVoteRequest(channelId, messageId, pollId, arrayOf(optionId))
+        AddPollVoteRequest(channelId, messageId, pollId, optionIds.toTypedArray())
             .execute(object : MessageCallback {
                 override fun onResult(message: Message) {
                     continuation.safeResume(SceytResponse.Success(message.toSceytUiMessage()))
@@ -37,13 +37,13 @@ class PollRepositoryImpl : PollRepository {
             })
     }
 
-    override suspend fun deleteVote(
+    override suspend fun deleteVotes(
         channelId: Long,
         messageId: Long,
         pollId: String,
-        optionId: String
+        optionIds: List<String>
     ): SceytResponse<SceytMessage> = suspendCancellableCoroutine { continuation ->
-        DeletePollVoteRequest(channelId, messageId, pollId, arrayOf(optionId))
+        DeletePollVoteRequest(channelId, messageId, pollId, optionIds.toTypedArray())
             .execute(object : MessageCallback {
                 override fun onResult(message: Message) {
                     continuation.safeResume(SceytResponse.Success(message.toSceytUiMessage()))
