@@ -18,15 +18,16 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 
 class PollRepositoryImpl : PollRepository {
 
-    override suspend fun addVote(pollId: String, optionId: String): SceytResponse<SceytMessage> {
-        return suspendCancellableCoroutine { continuation ->
-            AddPollVoteRequest(0, 0, pollId, arrayOf(optionId)).execute(object : MessageCallback {
-                override fun onResult(message: Message?) {
-                    if (message == null) {
-                        continuation.safeResume(SceytResponse.Error(SceytException(0, "Vote is null")))
-                    } else {
-                        continuation.safeResume(SceytResponse.Success(message.toSceytUiMessage()))
-                    }
+    override suspend fun addVote(
+        channelId: Long,
+        messageId: Long,
+        pollId: String,
+        optionId: String
+    ): SceytResponse<SceytMessage> = suspendCancellableCoroutine { continuation ->
+        AddPollVoteRequest(channelId, messageId, pollId, arrayOf(optionId))
+            .execute(object : MessageCallback {
+                override fun onResult(message: Message) {
+                    continuation.safeResume(SceytResponse.Success(message.toSceytUiMessage()))
                 }
 
                 override fun onError(e: SceytException?) {
@@ -34,12 +35,16 @@ class PollRepositoryImpl : PollRepository {
                     SceytLog.e(TAG, "addVote error: ${e?.message}")
                 }
             })
-        }
     }
 
-    override suspend fun deleteVote(pollId: String, optionId: String): SceytResponse<SceytMessage> {
-        return suspendCancellableCoroutine { continuation ->
-            DeletePollVoteRequest(0, 0, pollId, arrayOf(optionId)).execute(object : MessageCallback {
+    override suspend fun deleteVote(
+        channelId: Long,
+        messageId: Long,
+        pollId: String,
+        optionId: String
+    ): SceytResponse<SceytMessage> = suspendCancellableCoroutine { continuation ->
+        DeletePollVoteRequest(channelId, messageId, pollId, arrayOf(optionId))
+            .execute(object : MessageCallback {
                 override fun onResult(message: Message) {
                     continuation.safeResume(SceytResponse.Success(message.toSceytUiMessage()))
                 }
@@ -49,37 +54,40 @@ class PollRepositoryImpl : PollRepository {
                     SceytLog.e(TAG, "deleteVote error: ${e?.message}")
                 }
             })
-        }
     }
 
-    override suspend fun retractVote(channelId: Long, messageId: Long, pollId: String): SceytResponse<SceytMessage> {
-        return suspendCancellableCoroutine { continuation ->
-            RetractPollVoteRequest(channelId, messageId, pollId).execute(object : MessageCallback {
-                override fun onResult(message: Message) {
-                    continuation.safeResume(SceytResponse.Success(message.toSceytUiMessage()))
-                }
+    override suspend fun retractVote(
+        channelId: Long,
+        messageId: Long,
+        pollId: String
+    ): SceytResponse<SceytMessage> = suspendCancellableCoroutine { continuation ->
+        RetractPollVoteRequest(channelId, messageId, pollId).execute(object : MessageCallback {
+            override fun onResult(message: Message) {
+                continuation.safeResume(SceytResponse.Success(message.toSceytUiMessage()))
+            }
 
-                override fun onError(e: SceytException?) {
-                    continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "retractVote error: ${e?.message}")
-                }
-            })
-        }
+            override fun onError(e: SceytException?) {
+                continuation.safeResume(SceytResponse.Error(e))
+                SceytLog.e(TAG, "retractVote error: ${e?.message}")
+            }
+        })
     }
 
-    override suspend fun endPoll(channelId: Long, messageId: Long, pollId: String): SceytResponse<SceytMessage> {
-        return suspendCancellableCoroutine { continuation ->
-            ClosePollRequest(channelId, messageId, pollId).execute(object : MessageCallback {
-                override fun onResult(message: Message) {
-                    continuation.safeResume(SceytResponse.Success(message.toSceytUiMessage()))
-                }
+    override suspend fun endPoll(
+        channelId: Long,
+        messageId: Long,
+        pollId: String
+    ): SceytResponse<SceytMessage> = suspendCancellableCoroutine { continuation ->
+        ClosePollRequest(channelId, messageId, pollId).execute(object : MessageCallback {
+            override fun onResult(message: Message) {
+                continuation.safeResume(SceytResponse.Success(message.toSceytUiMessage()))
+            }
 
-                override fun onError(e: SceytException?) {
-                    continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "endPoll error: ${e?.message}")
-                }
-            })
-        }
+            override fun onError(e: SceytException?) {
+                continuation.safeResume(SceytResponse.Error(e))
+                SceytLog.e(TAG, "endPoll error: ${e?.message}")
+            }
+        })
     }
 }
 

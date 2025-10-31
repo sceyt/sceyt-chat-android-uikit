@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.persistence.logic
 
+import com.sceyt.chatuikit.data.managers.message.event.PollUpdateEventData
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 
@@ -25,6 +26,6 @@ interface PersistencePollLogic {
 
     suspend fun sendAllPendingVotes()
 
-    suspend fun onPollUpdated(message: SceytMessage)
+    suspend fun onPollUpdated(eventData: PollUpdateEventData)
 }
 

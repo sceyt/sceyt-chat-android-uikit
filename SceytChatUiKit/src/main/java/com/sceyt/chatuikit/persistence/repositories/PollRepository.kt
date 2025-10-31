@@ -4,8 +4,20 @@ import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 
 interface PollRepository {
-    suspend fun addVote(pollId: String, optionId: String): SceytResponse<SceytMessage>
-    suspend fun deleteVote(pollId: String, optionId: String): SceytResponse<SceytMessage>
+    suspend fun addVote(
+            channelId: Long,
+            messageId: Long,
+            pollId: String,
+            optionId: String,
+    ): SceytResponse<SceytMessage>
+
+    suspend fun deleteVote(
+            channelId: Long,
+            messageId: Long,
+            pollId: String,
+            optionId: String,
+    ): SceytResponse<SceytMessage>
+
     suspend fun retractVote(
             channelId: Long,
             messageId: Long,

@@ -9,15 +9,15 @@ import com.sceyt.chatuikit.styles.common.BackgroundStyle
 import com.sceyt.chatuikit.styles.messages_list.item.PollStyle
 
 open class PollOptionViewHolderFactory(
-        context: Context,
-        private val pollStyle: PollStyle,
-        private val isClosedProvider: () -> Boolean,
-        private val isAnonymousProvider: () -> Boolean,
-        private val bubbleBackgroundStyleProvider: (() -> BackgroundStyle),
-        private val onOptionClick: ((PollOptionUiModel) -> Unit)? = null,
+    context: Context,
+    private val pollStyle: PollStyle,
+    private val isClosedProvider: () -> Boolean,
+    private val isAnonymousProvider: () -> Boolean,
+    private val bubbleBackgroundStyleProvider: (() -> BackgroundStyle),
+    private val onOptionClick: ((PollOptionUiModel) -> Unit)? = null,
 ) {
 
-    private val layoutInflater = LayoutInflater.from(context)
+    protected val layoutInflater: LayoutInflater by lazy { LayoutInflater.from(context) }
 
     open fun createViewHolder(parent: ViewGroup): PollOptionViewHolder {
         val viewHolder = PollOptionViewHolder(

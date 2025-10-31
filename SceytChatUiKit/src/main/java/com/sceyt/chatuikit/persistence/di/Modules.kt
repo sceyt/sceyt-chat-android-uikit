@@ -56,6 +56,7 @@ import com.sceyt.chatuikit.persistence.logicimpl.usecases.RemovePollVoteUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.RetractPollVoteUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.ShouldShowNotificationUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.TogglePollVoteUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.UpdatePollUseCase
 import com.sceyt.chatuikit.push.service.PushService
 import com.sceyt.chatuikit.push.service.PushServiceImpl
 import com.sceyt.chatuikit.services.SceytSyncManager
@@ -134,7 +135,8 @@ internal val logicModule = module {
     single<PersistenceMessagesLogic> { PersistenceMessagesLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     single<PersistenceAttachmentLogic> { PersistenceAttachmentLogicImpl(get(), get(), get(), get(), get(), get(), get(), get()) }
     single<PersistenceReactionsLogic> { PersistenceReactionsLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
-    single<PersistencePollLogic> { PersistencePollLogicImpl(get(), get(), get(), get(), get(), get(), get()) }
+    single<PersistencePollLogic> { PersistencePollLogicImpl(get(),
+        get(), get(), get(), get(), get(),get()) }
     single<PersistenceMembersLogic> { PersistenceMembersLogicImpl(get(), get(), get(), get(), get(), get(), get()) }
     single<PersistenceUsersLogic> { PersistenceUsersLogicImpl(get(), get(), get(), get()) }
     single<PersistenceMessageMarkerLogic> { PersistenceMessageMarkerLogicImpl(get(), get(), get()) }
@@ -150,6 +152,7 @@ internal val useCaseModule = module {
     factoryOf(::TogglePollVoteUseCase)
     factoryOf(::RetractPollVoteUseCase)
     factoryOf(::EndPollUseCase)
+    factoryOf(::UpdatePollUseCase)
 }
 
 internal val cacheModule = module {

@@ -15,10 +15,10 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.cl
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
 abstract class BasePollMessageViewHolder(
-        view: View,
-        protected val style: MessageItemStyle,
-        protected val messageListeners: MessageClickListeners.ClickListeners?,
-        displayedListener: ((MessageListItem) -> Unit)? = null,
+    view: View,
+    protected val style: MessageItemStyle,
+    protected val messageListeners: MessageClickListeners.ClickListeners?,
+    displayedListener: ((MessageListItem) -> Unit)? = null,
 ) : BaseMessageViewHolder(view, style, messageListeners, displayedListener) {
 
     protected var pollOptionAdapter: PollOptionAdapter? = null
@@ -39,12 +39,12 @@ abstract class BasePollMessageViewHolder(
     }
 
     protected fun setupPollViews(
-            poll: SceytPollDetails?,
-            rvPollOptions: RecyclerView,
-            tvPollQuestion: TextView,
-            tvPollType: TextView,
-            tvViewResults: TextView,
-            divider: View,
+        poll: SceytPollDetails?,
+        rvPollOptions: RecyclerView,
+        tvPollQuestion: TextView,
+        tvPollType: TextView,
+        tvViewResults: TextView,
+        divider: View,
     ) {
         if (poll == null) {
             setOptions(options = emptyList(), isSamePoll = false, rvPollOptions = rvPollOptions)
@@ -58,7 +58,7 @@ abstract class BasePollMessageViewHolder(
 
         divider.isVisible = !poll.anonymous
 
-        val totalVotes = poll.totalVotes
+        val totalVotes = poll.totalVotesWithPendingVotes
         with(tvViewResults) {
             isVisible = !poll.anonymous
             isEnabled = totalVotes > 0
@@ -78,9 +78,9 @@ abstract class BasePollMessageViewHolder(
     }
 
     protected open fun setOptions(
-            options: List<PollOptionUiModel>,
-            isSamePoll: Boolean,
-            rvPollOptions: RecyclerView,
+        options: List<PollOptionUiModel>,
+        isSamePoll: Boolean,
+        rvPollOptions: RecyclerView,
     ) {
         val shouldAnimate = pollOptionAdapter != null && isSamePoll
 
@@ -117,10 +117,10 @@ abstract class BasePollMessageViewHolder(
     protected abstract fun updatePollViews(poll: SceytPollDetails?)
 
     protected open fun applyStyle(
-            tvPollQuestion: TextView,
-            tvPollType: TextView,
-            tvViewResults: TextView,
-            divider: View,
+        tvPollQuestion: TextView,
+        tvPollType: TextView,
+        tvViewResults: TextView,
+        divider: View,
     ) {
         pollStyle.questionTextStyle.apply(tvPollQuestion)
         pollStyle.pollTypeTextStyle.apply(tvPollType)
