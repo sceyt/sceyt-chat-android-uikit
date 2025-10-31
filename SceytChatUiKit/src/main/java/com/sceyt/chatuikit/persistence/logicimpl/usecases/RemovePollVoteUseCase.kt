@@ -37,19 +37,19 @@ internal class RemovePollVoteUseCase(
         channelId: ChannelId,
         messageId: Long,
         pollId: String,
-        optionId: String,
+        optionIds: List<String>,
     ): SceytResponse<SceytMessage> = withContext(Dispatchers.IO) {
-        return@withContext pollRepository.deleteVote(
+        return@withContext pollRepository.deleteVotes(
             channelId = channelId,
             messageId = messageId,
             pollId = pollId,
-            optionId = optionId
+            optionIds = optionIds
         ).onSuccessNotNull { message ->
             // Remove pending vote since operation succeeded
-            pendingPollVoteDao.deleteByOption(
+            pendingPollVoteDao.deleteVotes(
                 messageTid = message.tid,
                 pollId = pollId,
-                optionId = optionId
+                optionIds = optionIds
             )
 
             messageDao.upsertMessage(messageDb = message.toMessageDb(false))

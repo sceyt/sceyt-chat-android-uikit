@@ -58,7 +58,7 @@ abstract class BasePollMessageViewHolder(
 
         divider.isVisible = !poll.anonymous
 
-        val totalVotes = poll.totalVotesWithPendingVotes
+        val totalVotes = poll.maxVotedCountWithPendingVotes
         with(tvViewResults) {
             isVisible = !poll.anonymous
             isEnabled = totalVotes > 0
