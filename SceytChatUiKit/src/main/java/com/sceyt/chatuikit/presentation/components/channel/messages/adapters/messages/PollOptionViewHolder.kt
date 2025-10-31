@@ -4,7 +4,9 @@ import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.data.models.messages.PollOptionUiModel
 import com.sceyt.chatuikit.databinding.SceytItemPollOptionBinding
+import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.persistence.differs.PollOptionDiff
+import com.sceyt.chatuikit.presentation.common.OverlapDecoration
 import com.sceyt.chatuikit.styles.common.BackgroundStyle
 import com.sceyt.chatuikit.styles.messages_list.item.PollStyle
 
@@ -72,6 +74,7 @@ open class PollOptionViewHolder(
                     )
                     rvVoters.itemAnimator = null
                     rvVoters.adapter = votersAdapter
+                    rvVoters.addItemDecoration(OverlapDecoration(9.dpToPx()))
                 }
                 votersAdapter?.submitList(option.voters.take(2))
             } else {
