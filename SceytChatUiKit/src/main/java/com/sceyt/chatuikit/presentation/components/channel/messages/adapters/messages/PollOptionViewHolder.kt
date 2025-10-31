@@ -9,12 +9,12 @@ import com.sceyt.chatuikit.styles.common.BackgroundStyle
 import com.sceyt.chatuikit.styles.messages_list.item.PollStyle
 
 open class PollOptionViewHolder(
-        private val binding: SceytItemPollOptionBinding,
-        private val pollStyle: PollStyle,
-        private val isClosedProvider: () -> Boolean,
-        private val isAnonymousProvider: () -> Boolean,
-        private val bubbleBackgroundStyleProvider: () -> BackgroundStyle,
-        private var onOptionClick: ((PollOptionUiModel) -> Unit)? = null,
+    private val binding: SceytItemPollOptionBinding,
+    private val pollStyle: PollStyle,
+    private val isClosedProvider: () -> Boolean,
+    private val isAnonymousProvider: () -> Boolean,
+    private val bubbleBackgroundStyleProvider: () -> BackgroundStyle,
+    private var onOptionClick: ((PollOptionUiModel) -> Unit)? = null,
 ) : RecyclerView.ViewHolder(binding.root) {
     private val context = binding.root.context
     private lateinit var currentOption: PollOptionUiModel
@@ -31,15 +31,14 @@ open class PollOptionViewHolder(
     }
 
     open fun bind(
-            option: PollOptionUiModel,
-            diff: PollOptionDiff,
-            animate: Boolean = false,
+        option: PollOptionUiModel,
+        diff: PollOptionDiff,
+        animate: Boolean = false,
     ) = with(binding) {
         currentOption = option
 
         val isClosed = isClosedProvider()
         val isAnonymous = isAnonymousProvider()
-        val totalVotes = option.voteCount
 
         root.isEnabled = !isClosed
         checkbox.isVisible = !isClosed
@@ -52,11 +51,12 @@ open class PollOptionViewHolder(
             tvOptionText.text = option.text
         }
 
-        if (diff.voteCountChanged) {
+        if (diff.voteCountChanged || diff.totalVoteCountChanged) {
             tvVoteCount.text = pollStyle.voteCountFormatter.format(context, option)
 
-            val percentage = option.getPercentage(totalVotes).toInt()
-            val shouldAnimate = animate && percentage != currentProgress && diff != PollOptionDiff.DEFAULT
+            val percentage = option.getPercentage().toInt()
+            val shouldAnimate =
+                animate && percentage != currentProgress && diff != PollOptionDiff.DEFAULT
 
             progressBar.setProgress(percentage, animate = shouldAnimate)
             currentProgress = percentage

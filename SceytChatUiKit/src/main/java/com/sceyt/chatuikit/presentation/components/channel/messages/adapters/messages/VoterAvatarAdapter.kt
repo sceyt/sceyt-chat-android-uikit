@@ -14,8 +14,8 @@ import com.sceyt.chatuikit.styles.messages_list.item.PollStyle
 import com.sceyt.chatuikit.styles.messages_list.item.VoterAvatarRendererAttributes
 
 class VoterAvatarAdapter(
-        private val pollStyle: PollStyle,
-        private val bubbleBackgroundStyleProvider: () -> BackgroundStyle,
+    private val pollStyle: PollStyle,
+    private val bubbleBackgroundStyleProvider: () -> BackgroundStyle,
 ) : ListAdapter<SceytUser, VoterAvatarAdapter.VoterAvatarViewHolder>(
     DIFF_CALLBACK
 ) {
@@ -56,7 +56,7 @@ class VoterAvatarAdapter(
     }
 
     inner class VoterAvatarViewHolder(
-            private val binding: SceytItemVoterAvatarBinding,
+        private val binding: SceytItemVoterAvatarBinding,
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(user: SceytUser) {

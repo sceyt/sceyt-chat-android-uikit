@@ -27,7 +27,7 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState.WaitingToUplo
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.comporators.MessageComparator
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 
 typealias ChannelId = Long
 typealias MessageDeletionDate = Long
@@ -42,19 +42,19 @@ class MessagesCache {
             extraBufferCapacity = 30,
             onBufferOverflow = BufferOverflow.DROP_OLDEST
         )
-        val messageUpdatedFlow: SharedFlow<Pair<ChannelId, List<SceytMessage>>> = messageUpdatedFlow_
+        val messageUpdatedFlow = messageUpdatedFlow_.asSharedFlow()
 
         private val messagesClearedFlow_ = MutableSharedFlow<Pair<ChannelId, MessageDeletionDate>>(
             extraBufferCapacity = 30,
             onBufferOverflow = BufferOverflow.DROP_OLDEST
         )
-        val messagesClearedFlow: SharedFlow<Pair<ChannelId, MessageDeletionDate>> = messagesClearedFlow_
+        val messagesClearedFlow = messagesClearedFlow_.asSharedFlow()
 
         private val messageHardDeletedFlow_ = MutableSharedFlow<Pair<ChannelId, SceytMessage>>(
             extraBufferCapacity = 30,
             onBufferOverflow = BufferOverflow.DROP_OLDEST
         )
-        val messageHardDeletedFlow: SharedFlow<Pair<ChannelId, SceytMessage>> = messageHardDeletedFlow_
+        val messageHardDeletedFlow = messageHardDeletedFlow_.asSharedFlow()
     }
 
 
@@ -63,9 +63,9 @@ class MessagesCache {
      * @param checkDiffAndNotifyUpdate if true then will emit message update event, when detected
      * message change. */
     fun addAll(
-            channelId: Long, list: List<SceytMessage>,
-            checkDifference: Boolean,
-            checkDiffAndNotifyUpdate: Boolean,
+        channelId: Long, list: List<SceytMessage>,
+        checkDifference: Boolean,
+        checkDiffAndNotifyUpdate: Boolean,
     ): Boolean {
 
         synchronized(lock) {
@@ -78,7 +78,10 @@ class MessagesCache {
         }
     }
 
-    fun updateAllSyncedMessagesAndGetMissing(channelId: Long, messages: List<SceytMessage>): List<SceytMessage> {
+    fun updateAllSyncedMessagesAndGetMissing(
+        channelId: Long,
+        messages: List<SceytMessage>
+    ): List<SceytMessage> {
         synchronized(lock) {
             val missingMessages = mutableListOf<SceytMessage>()
             messages.forEach {
@@ -135,7 +138,7 @@ class MessagesCache {
     fun getSorted(channelId: Long): List<SceytMessage> {
         synchronized(lock) {
             return getMessagesMap(channelId)?.values?.sortedWith(MessageComparator())
-                    ?: emptyList()
+                ?: emptyList()
         }
     }
 
@@ -217,7 +220,11 @@ class MessagesCache {
         }
     }
 
-    private fun updateMessage(channelId: Long, message: SceytMessage, initPayloads: Boolean): SceytMessage {
+    private fun updateMessage(
+        channelId: Long,
+        message: SceytMessage,
+        initPayloads: Boolean
+    ): SceytMessage {
         var updatedMessage: SceytMessage = message
         cachedMessages[channelId]?.let {
             if (initPayloads)
@@ -243,7 +250,11 @@ class MessagesCache {
             val cashedMessage = getMessageByTid(channelId, message.tid)
             val attachmentPayLoadData = getAttachmentPayLoads(cashedMessage)
             val attachmentsLinkDetails = getAttachmentLinkDetails(cashedMessage)
-            val attachments = getUpdatedAttachmentsWithPayLoads(attachmentPayLoadData, attachmentsLinkDetails, message)
+            val attachments = getUpdatedAttachmentsWithPayLoads(
+                payloadData = attachmentPayLoadData,
+                attachmentsLinkDetails = attachmentsLinkDetails,
+                message = message
+            )
             return message.copy(attachments = attachments?.toList())
         }
 
@@ -263,9 +274,9 @@ class MessagesCache {
     }
 
     private fun getUpdatedAttachmentsWithPayLoads(
-            payloadData: List<AttachmentPayLoadData>?,
-            attachmentsLinkDetails: List<LinkPreviewDetails>?,
-            message: SceytMessage,
+        payloadData: List<AttachmentPayLoadData>?,
+        attachmentsLinkDetails: List<LinkPreviewDetails>?,
+        message: SceytMessage,
     ): List<SceytAttachment>? {
         val updateAttachments = message.attachments?.toMutableList() ?: return null
         val updateLinkDetails = attachmentsLinkDetails?.run { ArrayList(this) }
@@ -278,11 +289,12 @@ class MessagesCache {
                     }
                     return@forEachIndexed
                 }
-                val predicate: (AttachmentPayLoadData) -> Boolean = if (attachment.url.isNotNullOrBlank()) {
-                    { data.any { it.url == attachment.url } }
-                } else {
-                    { data.any { it.filePath == attachment.filePath } }
-                }
+                val predicate: (AttachmentPayLoadData) -> Boolean =
+                    if (attachment.url.isNotNullOrBlank()) {
+                        { data.any { it.url == attachment.url } }
+                    } else {
+                        { data.any { it.filePath == attachment.filePath } }
+                    }
                 data.find(predicate)?.let {
                     updateAttachments[index] = attachment.copy(
                         transferState = it.transferState,
@@ -303,7 +315,9 @@ class MessagesCache {
     }
 
     private fun getAttachmentPayLoads(cashedMessage: SceytMessage?): List<AttachmentPayLoadData>? {
-        val payloads = cashedMessage?.attachments?.filter { it.type != AttachmentTypeEnum.Link.value }?.map { attachment ->
+        val payloads = cashedMessage?.attachments?.filter {
+            it.type != AttachmentTypeEnum.Link.value
+        }?.map { attachment ->
             AttachmentPayLoadData(
                 messageTid = cashedMessage.tid,
                 transferState = attachment.transferState,
@@ -316,17 +330,19 @@ class MessagesCache {
     }
 
     private fun getAttachmentLinkDetails(cashedMessage: SceytMessage?): List<LinkPreviewDetails>? {
-        val payloads = cashedMessage?.attachments?.filter { it.type == AttachmentTypeEnum.Link.value }?.mapNotNull { attachment ->
+        val payloads = cashedMessage?.attachments?.filter {
+            it.type == AttachmentTypeEnum.Link.value
+        }?.mapNotNull { attachment ->
             attachment.linkPreviewDetails
         }
         return payloads
     }
 
     private fun putAndCheckHasDiff(
-            channelId: Long,
-            includeNotExistToDiff: Boolean,
-            checkDiffAndNotifyUpdate: Boolean,
-            vararg messages: SceytMessage,
+        channelId: Long,
+        includeNotExistToDiff: Boolean,
+        checkDiffAndNotifyUpdate: Boolean,
+        vararg messages: SceytMessage,
     ): Boolean {
         var detectedDiff = false
         messages.forEach {
@@ -334,7 +350,7 @@ class MessagesCache {
             if (!detectedDiff || checkDiffAndNotifyUpdate) {
                 val old = getMessageByTid(channelId, updateMessage.tid)
                 val hasDiff = old?.diffContent(updateMessage)?.hasDifference()
-                        ?: includeNotExistToDiff
+                    ?: includeNotExistToDiff
                 if (!detectedDiff)
                     detectedDiff = hasDiff
 
@@ -347,8 +363,8 @@ class MessagesCache {
     }
 
     private fun updateAllAttachments(
-            predicate: (SceytAttachment) -> Boolean,
-            updater: SceytAttachment.() -> SceytAttachment,
+        predicate: (SceytAttachment) -> Boolean,
+        updater: SceytAttachment.() -> SceytAttachment,
     ) {
         cachedMessages.values.forEach { messageHashMap ->
             for ((key, value) in messageHashMap.entries) {
@@ -385,14 +401,16 @@ class MessagesCache {
                             PendingUpload, Uploading, Uploaded, ErrorUpload, PauseUpload, Preparing, WaitingToUpload -> {
                                 if (attachment.filePath == updateDate.filePath) {
                                     attachments[index] = update(attachment)
-                                    messageHashMap[updateDate.messageTid] = message.copy(attachments = attachments)
+                                    messageHashMap[updateDate.messageTid] =
+                                        message.copy(attachments = attachments)
                                 }
                             }
 
                             Downloading, Downloaded, PendingDownload, ErrorDownload, PauseDownload -> {
                                 if (attachment.url == updateDate.url) {
                                     attachments[index] = update(attachment)
-                                    messageHashMap[updateDate.messageTid] = message.copy(attachments = attachments)
+                                    messageHashMap[updateDate.messageTid] =
+                                        message.copy(attachments = attachments)
                                 }
                             }
 
@@ -434,7 +452,12 @@ class MessagesCache {
     fun updateLinkDetailsSize(link: String, width: Int, height: Int) {
         synchronized(lock) {
             updateAllAttachments(predicate = { it.url == link }, updater = {
-                copy(linkPreviewDetails = linkPreviewDetails?.copy(imageWidth = width, imageHeight = height))
+                copy(
+                    linkPreviewDetails = linkPreviewDetails?.copy(
+                        imageWidth = width,
+                        imageHeight = height
+                    )
+                )
             })
         }
     }

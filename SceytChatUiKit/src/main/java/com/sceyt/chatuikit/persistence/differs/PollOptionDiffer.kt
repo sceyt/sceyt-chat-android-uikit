@@ -3,13 +3,15 @@ package com.sceyt.chatuikit.persistence.differs
 import com.sceyt.chatuikit.data.models.messages.PollOptionUiModel
 
 data class PollOptionDiff(
-        val textChanged: Boolean,
-        val voteCountChanged: Boolean,
-        val votersChanged: Boolean,
-        val selectedChanged: Boolean,
+    val textChanged: Boolean,
+    val voteCountChanged: Boolean,
+    val votersChanged: Boolean,
+    val selectedChanged: Boolean,
+    val totalVoteCountChanged: Boolean
 ) {
     fun hasDifference(): Boolean {
-        return textChanged || voteCountChanged || votersChanged || selectedChanged
+        return textChanged || voteCountChanged || votersChanged || selectedChanged ||
+                totalVoteCountChanged
     }
 
     companion object {
@@ -18,12 +20,14 @@ data class PollOptionDiff(
             voteCountChanged = true,
             votersChanged = true,
             selectedChanged = true,
+            totalVoteCountChanged = true
         )
         val DEFAULT_FALSE = PollOptionDiff(
             textChanged = false,
             voteCountChanged = false,
             votersChanged = false,
             selectedChanged = false,
+            totalVoteCountChanged = false
         )
     }
 
@@ -38,6 +42,7 @@ fun PollOptionUiModel.diff(other: PollOptionUiModel): PollOptionDiff {
         voteCountChanged = voteCount != other.voteCount,
         votersChanged = voters != other.voters,
         selectedChanged = selected != other.selected,
+        totalVoteCountChanged = totalVotesCount != other.totalVotesCount
     )
 }
 

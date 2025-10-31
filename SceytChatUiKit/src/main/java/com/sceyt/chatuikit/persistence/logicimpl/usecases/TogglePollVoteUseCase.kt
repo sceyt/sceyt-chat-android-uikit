@@ -7,9 +7,12 @@ import com.sceyt.chatuikit.data.models.createErrorResponse
 import com.sceyt.chatuikit.data.models.messages.PendingVoteData
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytPollDetails
+import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.persistence.database.dao.PendingPollVoteDao
 import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingPollVoteEntity
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
+import com.sceyt.chatuikit.persistence.mappers.toPendingVoteEntity
+import com.sceyt.chatuikit.presentation.extensions.isPending
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -18,10 +21,10 @@ import kotlinx.coroutines.withContext
  * Handles both single-answer and multiple-answer polls with proper server synchronization.
  */
 internal class TogglePollVoteUseCase(
-        private val addPollVoteUseCase: AddPollVoteUseCase,
-        private val removePollVoteUseCase: RemovePollVoteUseCase,
-        private val pendingPollVoteDao: PendingPollVoteDao,
-        private val messagesCache: MessagesCache,
+    private val addPollVoteUseCase: AddPollVoteUseCase,
+    private val removePollVoteUseCase: RemovePollVoteUseCase,
+    private val pendingPollVoteDao: PendingPollVoteDao,
+    private val messagesCache: MessagesCache,
 ) {
 
     /**
@@ -34,27 +37,23 @@ internal class TogglePollVoteUseCase(
      * @return Updated message with pending vote applied, or null if voting not allowed
      */
     suspend operator fun invoke(
-            channelId: Long,
-            message: SceytMessage,
-            optionId: String,
+        channelId: Long,
+        message: SceytMessage,
+        optionId: String,
     ): SceytResponse<SceytMessage> = withContext(Dispatchers.IO) {
         val poll = message.poll
-                ?: return@withContext createErrorResponse("Poll not found in message")
+            ?: return@withContext createErrorResponse("Poll not found in message")
         val currentUser = SceytChatUIKit.chatUIFacade.userInteractor.getCurrentUser()
-                ?: return@withContext createErrorResponse("Current user not found")
+            ?: return@withContext createErrorResponse("Current user not found")
 
         // Can't vote on closed polls
         if (poll.closed)
             return@withContext createErrorResponse("Poll is closed")
 
-        // Check if there's already a pending vote for this option
-        val existingPendingVote = poll.pendingVotes?.firstOrNull {
-            it.optionId == optionId
-        }
-
-        // User is toggling back a pending vote - remove it
-        if (existingPendingVote != null) {
-            return@withContext removePendingVote(channelId, message, optionId)
+        // Check if there's already a pending votes
+        val result = checkPendingVotes(channelId, message, optionId)
+        if (result.handled) {
+            return@withContext SceytResponse.Success(result.updatedMessage)
         }
 
         // Determine if user has already voted for this option
@@ -74,12 +73,12 @@ internal class TogglePollVoteUseCase(
      * Simple add or remove based on current vote state.
      */
     private suspend fun handleMultipleAnswerToggle(
-            channelId: Long,
-            message: SceytMessage,
-            poll: SceytPollDetails,
-            optionId: String,
-            hasVoted: Boolean,
-            currentUser: com.sceyt.chatuikit.data.models.messages.SceytUser,
+        channelId: Long,
+        message: SceytMessage,
+        poll: SceytPollDetails,
+        optionId: String,
+        hasVoted: Boolean,
+        currentUser: SceytUser,
     ): SceytResponse<SceytMessage> {
         // Create new pending vote
         val newPendingVote = PendingVoteData(
@@ -111,11 +110,25 @@ internal class TogglePollVoteUseCase(
         )
         pendingPollVoteDao.insert(pendingVoteEntity)
 
+        // If message is pending, skip server call
+        if (message.isPending())
+            return SceytResponse.Success(updatedMessage)
+
         // 3. Make server call
         return if (hasVoted) {
-            removePollVoteUseCase(message.tid, poll.id, optionId, currentUser.id)
+            removePollVoteUseCase(
+                channelId = channelId,
+                messageId = message.id,
+                pollId = poll.id,
+                optionId = optionId,
+            )
         } else {
-            addPollVoteUseCase(message.tid, poll.id, optionId)
+            addPollVoteUseCase(
+                channelId = channelId,
+                messageId = message.id,
+                pollId = poll.id,
+                optionId = optionId
+            )
         }
     }
 
@@ -124,17 +137,13 @@ internal class TogglePollVoteUseCase(
      * Needs to replace existing votes when selecting a different option.
      */
     private suspend fun handleSingleAnswerToggle(
-            channelId: Long,
-            message: SceytMessage,
-            poll: SceytPollDetails,
-            optionId: String,
-            hasVoted: Boolean,
-            currentUser: com.sceyt.chatuikit.data.models.messages.SceytUser,
+        channelId: Long,
+        message: SceytMessage,
+        poll: SceytPollDetails,
+        optionId: String,
+        hasVoted: Boolean,
+        currentUser: SceytUser,
     ): SceytResponse<SceytMessage> {
-        // For single-answer polls, remove all other pending votes first
-        val pendingVotesForOtherOptions = poll.pendingVotes.orEmpty().filter {
-            it.optionId != optionId
-        }
 
         // Create new pending vote for clicked option
         val newPendingVote = PendingVoteData(
@@ -146,68 +155,36 @@ internal class TogglePollVoteUseCase(
             user = currentUser
         )
 
-        // For single-answer: if user clicks a different option while having voted elsewhere,
-        // we need to remove the old vote and add the new one
-        val userOtherVotes = poll.ownVotes.filter { it.optionId != optionId }
-
-        // Create pending votes to remove old votes
-        val pendingVotesToRemoveOldVotes = userOtherVotes.map { oldVote ->
-            PendingVoteData(
-                pollId = poll.id,
-                messageTid = message.tid,
-                optionId = oldVote.optionId,
-                createdAt = System.currentTimeMillis(),
-                isAdd = false, // Remove old vote
-                user = currentUser
-            )
-        }
-
-        // Combine all pending votes
-        val updatedPendingVotes = pendingVotesToRemoveOldVotes + newPendingVote
-
         // Update message with pending votes
         val updatedMessage = message.copy(
-            poll = poll.copy(pendingVotes = updatedPendingVotes)
+            poll = poll.copy(pendingVotes = listOf(newPendingVote))
         )
 
         // 1. Update cache first for immediate UI responsiveness
         messagesCache.upsertMessages(channelId, updatedMessage)
 
-        // 2. Update database with pending votes
-        // Remove old pending votes for other options
-        pendingVotesForOtherOptions.forEach { oldPending ->
-            pendingPollVoteDao.deleteByOption(message.tid, poll.id, oldPending.optionId)
-        }
-
-        // Add pending votes to remove old actual votes
-        pendingVotesToRemoveOldVotes.forEach { pendingRemove ->
-            val entity = PendingPollVoteEntity(
-                messageTid = message.tid,
-                pollId = poll.id,
-                optionId = pendingRemove.optionId,
-                userId = currentUser.id,
-                isAdd = false,
-                createdAt = System.currentTimeMillis()
-            )
-            pendingPollVoteDao.insert(entity)
-        }
-
         // Add pending vote for new option
-        val newPendingVoteEntity = PendingPollVoteEntity(
-            messageTid = message.tid,
-            pollId = poll.id,
-            optionId = optionId,
-            userId = currentUser.id,
-            isAdd = !hasVoted,
-            createdAt = System.currentTimeMillis()
-        )
-        pendingPollVoteDao.insert(newPendingVoteEntity)
+        pendingPollVoteDao.insert(newPendingVote.toPendingVoteEntity())
+
+        // If message is pending, skip server call
+        if (message.isPending())
+            return SceytResponse.Success(updatedMessage)
 
         // 3. Make server call
         return if (hasVoted) {
-            removePollVoteUseCase(message.tid, poll.id, optionId, currentUser.id)
+            removePollVoteUseCase(
+                channelId = message.channelId,
+                messageId = message.id,
+                pollId = poll.id,
+                optionId = optionId,
+            )
         } else {
-            addPollVoteUseCase(message.tid, poll.id, optionId)
+            addPollVoteUseCase(
+                channelId = channelId,
+                messageId = message.id,
+                pollId = poll.id,
+                optionId = optionId
+            )
         }
     }
 
@@ -215,11 +192,11 @@ internal class TogglePollVoteUseCase(
      * Removes a pending vote when user toggles back before server sync.
      */
     private suspend fun removePendingVote(
-            channelId: Long,
-            message: SceytMessage,
-            optionId: String,
-    ): SceytResponse<SceytMessage> {
-        val poll = message.poll ?: return SceytResponse.Success(message)
+        channelId: Long,
+        message: SceytMessage,
+        optionId: String,
+    ): SceytMessage {
+        val poll = message.poll ?: return message
 
         // Remove pending vote from message
         val updatedPendingVotes = poll.pendingVotes.orEmpty().filter {
@@ -236,6 +213,55 @@ internal class TogglePollVoteUseCase(
         // 2. Remove from database
         pendingPollVoteDao.deleteByOption(message.tid, poll.id, optionId)
 
-        return SceytResponse.Success(updatedMessage)
+        return updatedMessage
     }
+
+    private suspend fun checkPendingVotes(
+        channelId: Long,
+        message: SceytMessage,
+        optionId: String,
+    ): CheckPendingResult {
+        val defaultResult = CheckPendingResult(
+            handled = false,
+            updatedMessage = message
+        )
+        val poll = message.poll
+        if (poll == null || poll.pendingVotes.isNullOrEmpty()) {
+            return defaultResult
+        }
+
+        val pendingVote = poll.pendingVotes.firstOrNull { it.optionId == optionId }
+
+        if (pendingVote != null) {
+            val updatedMessage = removePendingVote(channelId, message, optionId)
+            return CheckPendingResult(
+                handled = true,
+                updatedMessage = updatedMessage
+            )
+        } else {
+            if (!poll.allowMultipleVotes) {
+                // Remove existing pending votes
+                val updatedMessage = message.copy(
+                    poll = poll.copy(pendingVotes = null)
+                )
+                // 1. Update cache first
+                messagesCache.upsertMessages(channelId, updatedMessage)
+
+                // 2. Remove from database
+                pendingPollVoteDao.deletePendingVotesByPollId(message.tid, poll.id)
+
+                return CheckPendingResult(
+                    handled = true,
+                    updatedMessage = updatedMessage
+                )
+            }
+
+        }
+        return defaultResult
+    }
+
+    data class CheckPendingResult(
+        val handled: Boolean,
+        val updatedMessage: SceytMessage
+    )
 }
