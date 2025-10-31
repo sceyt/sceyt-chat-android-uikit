@@ -11,12 +11,12 @@ import com.sceyt.chatuikit.styles.create_poll.CreatePollStyle
 import java.util.Collections
 
 class CreatePollOptionsAdapter(
-        private val style: CreatePollStyle,
-        private val onTextChanged: (PollOptionItem, String) -> Unit,
-        private val onRemoveClick: (PollOptionItem) -> Unit,
-        private val onOptionMoved: (Int, Int) -> Unit,
-        private val onNextClick: (PollOptionItem) -> Unit,
-        private val onOptionClick: (EditText, PollOptionItem) -> Unit,
+    private val style: CreatePollStyle,
+    private val onTextChanged: (PollOptionItem, String) -> Unit,
+    private val onRemoveClick: (PollOptionItem) -> Unit,
+    private val onOptionMoved: (Int, Int) -> Unit,
+    private val onNextClick: (PollOptionItem) -> Unit,
+    private val onOptionClick: (EditText, PollOptionItem) -> Unit,
 ) : ListAdapter<PollOptionItem, PollOptionViewHolder>(PollOptionDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PollOptionViewHolder {
@@ -60,7 +60,8 @@ class CreatePollOptionsAdapter(
         }
 
         override fun areContentsTheSame(oldItem: PollOptionItem, newItem: PollOptionItem): Boolean {
-            return oldItem == newItem
+            return oldItem.isCurrent == newItem.isCurrent
+                    && oldItem.keyboardAction == newItem.keyboardAction
         }
 
         override fun getChangePayload(oldItem: PollOptionItem, newItem: PollOptionItem): Any {
