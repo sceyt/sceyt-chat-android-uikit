@@ -54,6 +54,7 @@ import com.sceyt.chatuikit.persistence.logicimpl.usecases.AddPollVoteUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.EndPollUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.RemovePollVoteUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.RetractPollVoteUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.SendPollPendingVotesUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.ShouldShowNotificationUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.TogglePollVoteUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.UpdatePollUseCase
@@ -84,7 +85,11 @@ internal fun databaseModule(enableDatabase: Boolean) = module {
 
     fun provideDatabase(context: Context): SceytDatabase {
         val builder = if (enableDatabase)
-            Room.databaseBuilder(context, SceytDatabase::class.java, SCEYT_CHAT_UI_KIT_DATABASE_NAME)
+            Room.databaseBuilder(
+                context = context,
+                klass = SceytDatabase::class.java,
+                name = SCEYT_CHAT_UI_KIT_DATABASE_NAME
+            )
         else
             Room.inMemoryDatabaseBuilder(context, SceytDatabase::class.java)
 
@@ -153,6 +158,7 @@ internal val useCaseModule = module {
     factoryOf(::RetractPollVoteUseCase)
     factoryOf(::EndPollUseCase)
     factoryOf(::UpdatePollUseCase)
+    factoryOf(::SendPollPendingVotesUseCase)
 }
 
 internal val cacheModule = module {
@@ -176,14 +182,14 @@ internal val coroutineModule = module {
 }
 
 fun providesUiContext(exceptionHandler: CoroutineExceptionHandler) =
-        Dispatchers.Main + exceptionHandler
+    Dispatchers.Main + exceptionHandler
 
 fun providesIOContext(exceptionHandler: CoroutineExceptionHandler): CoroutineContext =
-        Dispatchers.IO + exceptionHandler
+    Dispatchers.IO + exceptionHandler
 
 fun providesComputationContext(exceptionHandler: CoroutineExceptionHandler): CoroutineContext =
-        Executors.newCachedThreadPool().asCoroutineDispatcher().plus(exceptionHandler)
+    Executors.newCachedThreadPool().asCoroutineDispatcher().plus(exceptionHandler)
 
 fun providesSingleThreadedContext(exceptionHandler: CoroutineExceptionHandler): CoroutineContext =
-        Executors.newSingleThreadExecutor().asCoroutineDispatcher().plus(exceptionHandler)
+    Executors.newSingleThreadExecutor().asCoroutineDispatcher().plus(exceptionHandler)
 

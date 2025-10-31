@@ -30,26 +30,26 @@ internal class AddPollVoteUseCase(
      * @param channelId The channel ID
      * @param messageId The message ID
      * @param pollId The poll ID
-     * @param optionId The option ID to vote for
+     * @param optionIds The option IDs to vote for
      * @return Response with updated message or error
      */
     suspend operator fun invoke(
         channelId: ChannelId,
         messageId: Long,
         pollId: String,
-        optionId: String,
+        optionIds: List<String>,
     ): SceytResponse<SceytMessage> = withContext(Dispatchers.IO) {
-        return@withContext pollRepository.addVote(
+        return@withContext pollRepository.addVotes(
             channelId = channelId,
             messageId = messageId,
             pollId = pollId,
-            optionId = optionId
+            optionIds = optionIds
         ).onSuccessNotNull { message ->
             // Remove pending vote since operation succeeded
-            pendingPollVoteDao.deleteByOption(
+            pendingPollVoteDao.deleteVotes(
                 messageTid = message.tid,
                 pollId = pollId,
-                optionId = optionId
+                optionIds = optionIds
             )
 
             messageDao.upsertMessage(messageDb = message.toMessageDb(false))

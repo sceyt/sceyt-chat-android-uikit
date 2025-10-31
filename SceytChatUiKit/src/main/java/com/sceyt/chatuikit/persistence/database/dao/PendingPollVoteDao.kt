@@ -12,10 +12,17 @@ import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingPollVoteE
 internal abstract class PendingPollVoteDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    abstract suspend fun insert(pendingVote: PendingPollVoteEntity)
+    abstract suspend fun insert(entity: PendingPollVoteEntity)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    abstract suspend fun insertMany(entities: List<PendingPollVoteEntity>)
 
     @Query("DELETE FROM $PENDING_POLL_VOTE_TABLE WHERE messageTid =:messageTid and pollId = :pollId AND optionId = :optionId")
     abstract suspend fun deleteByOption(messageTid: Long, pollId: String, optionId: String): Int
+
+
+ @Query("DELETE FROM $PENDING_POLL_VOTE_TABLE WHERE messageTid =:messageTid and pollId = :pollId AND optionId in(:optionIds)")
+    abstract suspend fun deleteVotes(messageTid: Long, pollId: String, optionIds: List<String>): Int
 
     @Query("DELETE FROM $PENDING_POLL_VOTE_TABLE WHERE messageTid =:messageTid and pollId = :pollId")
     abstract suspend fun deletePendingVotesByPollId(messageTid: Long, pollId: String): Int

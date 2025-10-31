@@ -51,7 +51,12 @@ internal class TogglePollVoteUseCase(
             return@withContext createErrorResponse("Poll is closed")
 
         // Check if there's already a pending votes
-        val result = checkPendingVotes(channelId, message, optionId)
+        val result = checkPendingVotes(
+            channelId = channelId,
+            message = message,
+            optionId = optionId,
+            currentUser = currentUser
+        )
         if (result.handled) {
             return@withContext SceytResponse.Success(result.updatedMessage)
         }
@@ -120,14 +125,14 @@ internal class TogglePollVoteUseCase(
                 channelId = channelId,
                 messageId = message.id,
                 pollId = poll.id,
-                optionId = optionId,
+                optionIds = listOf(optionId),
             )
         } else {
             addPollVoteUseCase(
                 channelId = channelId,
                 messageId = message.id,
                 pollId = poll.id,
-                optionId = optionId
+                optionIds = listOf(optionId)
             )
         }
     }
@@ -176,14 +181,14 @@ internal class TogglePollVoteUseCase(
                 channelId = message.channelId,
                 messageId = message.id,
                 pollId = poll.id,
-                optionId = optionId,
+                optionIds = listOf(optionId),
             )
         } else {
             addPollVoteUseCase(
                 channelId = channelId,
                 messageId = message.id,
                 pollId = poll.id,
-                optionId = optionId
+                optionIds = listOf(optionId)
             )
         }
     }
@@ -220,6 +225,7 @@ internal class TogglePollVoteUseCase(
         channelId: Long,
         message: SceytMessage,
         optionId: String,
+        currentUser: SceytUser,
     ): CheckPendingResult {
         val defaultResult = CheckPendingResult(
             handled = false,
@@ -240,9 +246,26 @@ internal class TogglePollVoteUseCase(
             )
         } else {
             if (!poll.allowMultipleVotes) {
+                val vote = poll.ownVotes.firstOrNull { it.optionId == optionId }
+
+                val newPendingVotes = if (vote?.optionId == optionId) {
+                    emptyList()
+                } else {
+                    listOf(
+                        PendingVoteData(
+                            pollId = poll.id,
+                            messageTid = message.tid,
+                            optionId = optionId,
+                            createdAt = System.currentTimeMillis(),
+                            isAdd = true,
+                            user = currentUser
+                        )
+                    )
+                }
+
                 // Remove existing pending votes
                 val updatedMessage = message.copy(
-                    poll = poll.copy(pendingVotes = null)
+                    poll = poll.copy(pendingVotes = newPendingVotes)
                 )
                 // 1. Update cache first
                 messagesCache.upsertMessages(channelId, updatedMessage)
@@ -250,12 +273,15 @@ internal class TogglePollVoteUseCase(
                 // 2. Remove from database
                 pendingPollVoteDao.deletePendingVotesByPollId(message.tid, poll.id)
 
+                // 3. Add new pending vote to database
+                if (newPendingVotes.isNotEmpty())
+                    pendingPollVoteDao.insertMany(newPendingVotes.map { it.toPendingVoteEntity() })
+
                 return CheckPendingResult(
                     handled = true,
                     updatedMessage = updatedMessage
                 )
             }
-
         }
         return defaultResult
     }

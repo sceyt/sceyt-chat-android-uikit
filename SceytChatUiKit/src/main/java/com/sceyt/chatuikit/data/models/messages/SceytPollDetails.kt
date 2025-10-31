@@ -1,7 +1,6 @@
 package com.sceyt.chatuikit.data.models.messages
 
 import android.os.Parcelable
-import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
@@ -24,24 +23,33 @@ data class SceytPollDetails(
     val closed: Boolean,
 ) : Parcelable {
 
-    @IgnoredOnParcel
-    val totalVotes: Int by lazy {
-        votesPerOption.values.sum()
-    }
-
-    val totalVotesWithPendingVotes: Int
+    val maVotedCountWithPendingVotes: Int
         get() {
-            val (pendingAdd, pendingRemove) = pendingVotes.orEmpty().partition { it.isAdd }
-            return if (allowMultipleVotes) {
-                (totalVotes + pendingAdd.size - pendingRemove.size).coerceAtLeast(0)
-            } else {
-                when {
-                    pendingAdd.isNotEmpty() -> if (ownVotes.isEmpty()) totalVotes + 1 else totalVotes
-                    pendingRemove.isNotEmpty() -> (totalVotes - 1).coerceAtLeast(0)
-                    else -> totalVotes
-                }
-            }
+            val realCounts = getRealCountsWithPendingVotes()
+            return realCounts.maxByOrNull { it.value }?.value ?: 0
         }
+
+    fun getRealCountsWithPendingVotes(): Map<String, Int> {
+        val pendingPartition = pendingVotes.orEmpty().partition { it.isAdd }
+        if (pendingVotes.isNullOrEmpty()) return votesPerOption
+        val (pendingAdd, pendingRemove) = pendingPartition
+
+        // Start with a mutable copy of current vote counts
+        val realCounts = votesPerOption.toMutableMap()
+
+        // Add pending vote additions
+        pendingAdd.forEach { pending ->
+            realCounts[pending.optionId] = (realCounts[pending.optionId] ?: 0) + 1
+        }
+
+        // Subtract pending vote removals
+        pendingRemove.forEach { pending ->
+            realCounts[pending.optionId] =
+                ((realCounts[pending.optionId] ?: 0) - 1).coerceAtLeast(0)
+        }
+
+        return realCounts
+    }
 }
 
 @Parcelize
@@ -122,9 +130,11 @@ fun PollOption.toUiModel(poll: SceytPollDetails): PollOptionUiModel {
             }
         }
 
-        else -> poll.ownVotes.any {
-            it.optionId == id
-        } || pendingVote?.isAdd == true
+        else -> {
+            (poll.ownVotes.any {
+                it.optionId == id
+            } && pendingVote == null) || pendingVote?.isAdd == true
+        }
     }
 
     val voters = when {
@@ -152,7 +162,7 @@ fun PollOption.toUiModel(poll: SceytPollDetails): PollOptionUiModel {
         voters = voters.mapNotNull { it },
         selected = isSelected,
         pendingVote = pendingVote,
-        totalVotesCount = poll.totalVotesWithPendingVotes
+        totalVotesCount = poll.maVotedCountWithPendingVotes
     )
 }
 
