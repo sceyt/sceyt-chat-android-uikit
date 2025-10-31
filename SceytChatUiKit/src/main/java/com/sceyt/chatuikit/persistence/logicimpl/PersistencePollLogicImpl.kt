@@ -8,26 +8,29 @@ import com.sceyt.chatuikit.persistence.database.dao.MessageDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingPollVoteDao
 import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingPollVoteEntity
 import com.sceyt.chatuikit.persistence.logic.PersistencePollLogic
-import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.EndPollUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.RetractPollVoteUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.SendPollPendingVotesUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.TogglePollVoteUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.UpdatePollUseCase
 import com.sceyt.chatuikit.persistence.mappers.toSceytMessage
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import java.util.concurrent.ConcurrentHashMap
 
 internal class PersistencePollLogicImpl(
     private val messageDao: MessageDao,
     private val pendingPollVoteDao: PendingPollVoteDao,
-    private val messagesCache: MessagesCache,
     private val togglePollVoteUseCase: TogglePollVoteUseCase,
     private val retractPollVoteUseCase: RetractPollVoteUseCase,
     private val endPollUseCase: EndPollUseCase,
     private val updatePollUseCase: UpdatePollUseCase,
+    private val sendPollPendingVotesUseCase: SendPollPendingVotesUseCase
 ) : PersistencePollLogic {
 
-    private val pollUpdateMutex = Mutex()
+    private val pollUpdateMutex = ConcurrentHashMap<Long, Mutex>()
 
     override suspend fun toggleVote(
         channelId: Long,
@@ -35,7 +38,7 @@ internal class PersistencePollLogicImpl(
         pollId: String,
         optionId: String,
     ): SceytResponse<SceytMessage> {
-        pollUpdateMutex.withLock {
+        pollMutexForMessage(messageTid).withLock {
             val message = messageDao.getMessageByTid(messageTid)
                 ?: return createErrorResponse("Message not found in database")
 
@@ -48,7 +51,7 @@ internal class PersistencePollLogicImpl(
         messageTid: Long,
         pollId: String,
     ): SceytResponse<SceytMessage> {
-        pollUpdateMutex.withLock {
+        pollMutexForMessage(messageTid).withLock {
             return retractPollVoteUseCase.invoke(channelId, messageTid, pollId)
         }
     }
@@ -58,7 +61,7 @@ internal class PersistencePollLogicImpl(
         messageTid: Long,
         pollId: String,
     ): SceytResponse<SceytMessage> {
-        pollUpdateMutex.withLock {
+        pollMutexForMessage(messageTid).withLock {
             return endPollUseCase.invoke(channelId, messageTid, pollId)
         }
     }
@@ -67,14 +70,18 @@ internal class PersistencePollLogicImpl(
         val pendingVotes = pendingPollVoteDao.getAllPendingVotes()
         if (pendingVotes.isNotEmpty()) {
             val groupByMessage = pendingVotes.groupBy { it.messageTid }
-            for ((messageTid, votes) in groupByMessage) {
-                sendPendingVotesSync(messageTid, votes)
+            coroutineScope {
+                for ((messageTid, votes) in groupByMessage) {
+                    async {
+                        sendPendingVotesSync(messageTid, votes)
+                    }
+                }
             }
         }
     }
 
     override suspend fun onPollUpdated(eventData: PollUpdateEventData) {
-        pollUpdateMutex.withLock {
+        pollMutexForMessage(eventData.message.tid).withLock {
             updatePollUseCase(eventData)
         }
     }
@@ -82,31 +89,19 @@ internal class PersistencePollLogicImpl(
     private suspend fun sendPendingVotesSync(
         messageTid: Long,
         votes: List<PendingPollVoteEntity>
-    ) {
+    ) = pollMutexForMessage(messageTid).withLock {
         val messageDb = messageDao.getMessageByTid(messageTid) ?: return
-        val channelId = messageDb.messageEntity.channelId
-
-        /*  votes.forEach { entity ->
-              if (entity.isAdd) {
-                  addPollVoteUseCase(
-                      channelId = channelId,
-                      message = messageDb.toSceytMessage(),
-                      optionId = entity.optionId
-                  )
-              } else {
-                  removePollVoteUseCase(messageTid, entity.pollId, entity.optionId, entity.userId)
-              }
-              // Update cache with fresh data from database after each vote
-              updateCacheAfterPendingChange(channelId, messageTid)
-          }*/
+        val poll = messageDb.poll ?: return
+        sendPollPendingVotesUseCase(
+            channelId = messageDb.messageEntity.channelId,
+            messageId = messageDb.id ?: return,
+            pollId = poll.pollEntity.id,
+            pendingVotes = votes
+        )
     }
 
-    private suspend fun updateCacheAfterPendingChange(channelId: Long, messageTid: Long) {
-        // Reload message from DB (includes updated pending votes automatically)
-        val updatedMessage = messageDao.getMessageByTid(messageTid)?.toSceytMessage()
-        if (updatedMessage != null) {
-            messagesCache.messageUpdated(channelId, updatedMessage)
-        }
+    private fun pollMutexForMessage(messageTid: Long): Mutex {
+        return pollUpdateMutex.computeIfAbsent(messageTid) { Mutex() }
     }
 }
 
