@@ -19,6 +19,7 @@ import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.managers.connection.event.ConnectionStateData
 import com.sceyt.chatuikit.data.managers.message.MessageEventManager
 import com.sceyt.chatuikit.data.managers.message.event.MessageStatusChangeData
+import com.sceyt.chatuikit.data.managers.message.event.PollUpdateEventData
 import com.sceyt.chatuikit.data.managers.message.event.ReactionUpdateEventData
 import com.sceyt.chatuikit.data.models.LoadKeyData
 import com.sceyt.chatuikit.data.models.PaginationResponse
@@ -104,6 +105,7 @@ internal class PersistenceMiddleWareImpl(
         MessageEventManager.onMessageFlow.onEach(::onMessage).launchIn(scope)
         MessageEventManager.onMessageReactionUpdatedFlow.onEach(::onMessageReactionUpdated).launchIn(scope)
         MessageEventManager.onMessageEditedOrDeletedFlow.onEach(::onMessageEditedOrDeleted).launchIn(scope)
+        MessageEventManager.onPollUpdatedFlow.onEach(::onPollUpdated).launchIn(scope)
 
         // Connection events
         ConnectionEventManager.onChangedConnectStatusFlow.onEach(::onChangedConnectStatus).launchIn(scope)
@@ -153,6 +155,12 @@ internal class PersistenceMiddleWareImpl(
         scope.launch(Dispatchers.IO) {
             reactionsLogic.onMessageReactionUpdated(data)
             realtimeNotificationManager.onReactionEvent(data)
+        }
+    }
+
+    private fun onPollUpdated(data: PollUpdateEventData) {
+        scope.launch(Dispatchers.IO) {
+            pollLogic.onPollUpdated(data)
         }
     }
 
@@ -705,6 +713,22 @@ internal class PersistenceMiddleWareImpl(
         optionId: String
     ): SceytResponse<SceytMessage> {
         return pollLogic.toggleVote(channelId, messageTid, pollId, optionId)
+    }
+
+    override suspend fun retractVote(
+        channelId: Long,
+        messageTid: Long,
+        pollId: String
+    ): SceytResponse<SceytMessage> {
+        return pollLogic.retractVote(channelId, messageTid, pollId)
+    }
+
+    override suspend fun endPoll(
+        channelId: Long,
+        messageTid: Long,
+        pollId: String
+    ): SceytResponse<SceytMessage> {
+        return pollLogic.endPoll(channelId, messageTid, pollId)
     }
 
     override suspend fun sendAllPendingVotes() {

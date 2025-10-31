@@ -33,11 +33,11 @@ import com.sceyt.chatuikit.persistence.database.DatabaseConstants.POLL_VOTE_TABL
     ]
 )
 internal data class PollVoteEntity(
-        @PrimaryKey
-        val id: String,
         val pollId: String,
         val optionId: String,
         val userId: String,
         val createdAt: Long,
+        @PrimaryKey(autoGenerate = true)
+        val id: Long = 0,
 )
 

@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
+import androidx.room.Update
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.MESSAGE_TABLE
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.POLL_OPTION_TABLE
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.POLL_TABLE
@@ -22,49 +23,59 @@ internal abstract class PollDao {
     abstract suspend fun getPollById(pollId: String): PollDb?
 
     @Transaction
-    open suspend fun upsertPoll(pollDb: PollDb) {
-        // Check if message exists
-        if (checkExistMessage(pollDb.pollEntity.messageTid) != pollDb.pollEntity.messageTid)
+    open suspend fun upsertPollEntityWithVotes(
+        entity: PollEntity,
+        votes: List<PollVoteEntity>
+    ) {
+        if (!existsMessageByTid(entity.messageTid))
             return
 
-        // Insert/update poll entity
-        insertPollReplace(pollDb.pollEntity)
-
-        // Delete old options (cascade will handle votes)
-        deletePollOptions(pollDb.pollEntity.id)
-
-        // Insert new options
-        if (pollDb.options.isNotEmpty()) {
-            insertPollOptions(pollDb.options)
-        }
-
-        // Delete all old votes and insert new ones
-        deleteAllVotesByPollId(pollDb.pollEntity.id)
-        val votes = pollDb.votes?.map { it.vote } ?: emptyList()
-        if (votes.isNotEmpty()) {
+        upsertPollEntity(entity)
+        // Insert votes
+        if (votes.isNotEmpty())
             insertVotesReplace(votes)
+    }
+
+    protected suspend fun upsertPollEntity(entity: PollEntity) {
+        val rowId = insertPollIgnored(entity)
+        if (rowId == -1L) {
+            updatePollIgnored(entity) == 1
         }
     }
 
     @Query("DELETE FROM $POLL_VOTE_TABLE WHERE pollId = :pollId AND optionId = :optionId AND userId = :userId")
-    abstract suspend fun deleteVote(pollId: String, optionId: String, userId: String): Int
+    abstract suspend fun deleteUserVote(pollId: String, optionId: String, userId: String): Int
+
+    @Query("DELETE FROM $POLL_VOTE_TABLE WHERE pollId = :pollId AND userId = :userId")
+    abstract suspend fun deleteUserVotes(pollId: String, userId: String): Int
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    protected abstract suspend fun insertVotesReplace(votes: List<PollVoteEntity>)
+    abstract suspend fun insertVotesReplace(votes: List<PollVoteEntity>)
+
 
     @Query("DELETE FROM $POLL_VOTE_TABLE WHERE pollId = :pollId")
     protected abstract suspend fun deleteAllVotesByPollId(pollId: String)
+
+    @Query("DELETE FROM $POLL_VOTE_TABLE WHERE pollId = :pollId AND userId != :excludedUserId")
+    protected abstract suspend fun deleteOthersVotesByPollId(pollId: String, excludedUserId: String)
 
     // Protected methods for internal use
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     protected abstract suspend fun insertPollReplace(poll: PollEntity)
 
+    // Protected methods for internal use
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    protected abstract suspend fun insertPollIgnored(poll: PollEntity): Long
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     protected abstract suspend fun insertPollOptions(options: List<PollOptionEntity>)
+
+    @Update(onConflict = OnConflictStrategy.IGNORE)
+    protected abstract suspend fun updatePollIgnored(poll: PollEntity): Int
 
     @Query("DELETE FROM $POLL_OPTION_TABLE WHERE pollId = :pollId")
     protected abstract suspend fun deletePollOptions(pollId: String)
 
-    @Query("SELECT tid FROM $MESSAGE_TABLE WHERE tid = :messageTid")
-    protected abstract suspend fun checkExistMessage(messageTid: Long): Long?
+    @Query("select exists(select * from $MESSAGE_TABLE where tid =:tid)")
+    abstract suspend fun existsMessageByTid(tid: Long): Boolean
 }

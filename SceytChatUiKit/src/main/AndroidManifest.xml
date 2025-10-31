@@ -29,6 +29,11 @@
             android:theme="@style/DefaultFontTheme"
             android:windowSoftInputMode="adjustResize" />
         <activity
+            android:name=".presentation.components.create_poll.CreatePollActivity"
+            android:exported="false"
+            android:theme="@style/DefaultFontTheme"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
             android:name=".presentation.components.channel_info.ChannelInfoActivity"
             android:exported="false"
             android:theme="@style/DefaultFontTheme"

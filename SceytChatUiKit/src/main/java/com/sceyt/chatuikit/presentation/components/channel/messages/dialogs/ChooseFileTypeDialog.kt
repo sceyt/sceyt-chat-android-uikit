@@ -53,6 +53,11 @@ class ChooseFileTypeDialog(context: Context) : Dialog(context, R.style.SceytDial
             chooseListener?.invoke(PickType.File)
             dismiss()
         }
+
+        poll.setOnClickListener {
+            chooseListener?.invoke(PickType.Poll)
+            dismiss()
+        }
     }
 
     fun setChooseListener(listener: (PickType) -> Unit): ChooseFileTypeDialog {
