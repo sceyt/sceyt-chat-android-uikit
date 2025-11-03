@@ -161,7 +161,7 @@
     <declare-styleable name="HorizontalProgressView">
         <attr name="horizontalProgressViewProgress" format="integer" />
         <attr name="horizontalProgressViewColor" format="color|reference" />
-        <attr name="horizontalProgressViewBackgroundColor" format="color|reference" />
+        <attr name="horizontalProgressViewTrackColor" format="color|reference" />
         <attr name="horizontalProgressViewCornerRadius" format="dimension" />
     </declare-styleable>
 

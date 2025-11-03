@@ -88,6 +88,9 @@ open class PollOptionViewHolder(
     protected open fun applyStyle() = with(binding) {
         pollStyle.optionTextStyle.apply(tvOptionText)
         pollStyle.voteCountTextStyle.apply(tvVoteCount)
+        pollStyle.checkboxStyle.apply(checkbox)
+        progressBar.progressColor = pollStyle.progressColor
+        progressBar.progressTrackColor = pollStyle.progressTrackColor
     }
 }
 

@@ -403,8 +403,8 @@
         </attr>
         <!--Poll colors-->
         <attr name="sceytUiMessagesListPollDividerColor" format="reference|color" />
-        <attr name="sceytUiMessagesListPollProgressBarBackgroundColor" format="reference|color" />
-        <attr name="sceytUiMessagesListPollProgressBarForegroundColor" format="reference|color" />
+        <attr name="sceytUiMessagesListPollProgressBarTrackColor" format="reference|color" />
+        <attr name="sceytUiMessagesListPollProgressBarColor" format="reference|color" />
         <!--Poll checkbox icons-->
         <attr name="sceytUiMessagesListPollCheckboxCheckedIcon" format="reference" />
         <attr name="sceytUiMessagesListPollCheckboxUncheckedIcon" format="reference" />

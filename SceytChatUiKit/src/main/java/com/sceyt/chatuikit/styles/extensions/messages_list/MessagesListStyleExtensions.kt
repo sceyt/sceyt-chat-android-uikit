@@ -914,12 +914,12 @@ internal fun MessageItemStyle.Builder.buildPollStyle(
         index = R.styleable.MessagesListView_sceytUiMessagesListPollDividerColor,
         defValue = context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColor)
     )
-    .progressBarBackground(
-        index = R.styleable.MessagesListView_sceytUiMessagesListPollProgressBarBackgroundColor,
+    .progressTrackColor(
+        index = R.styleable.MessagesListView_sceytUiMessagesListPollProgressBarTrackColor,
         defValue = context.getCompatColor(R.color.sceyt_color_background_sections)
     )
-    .progressBarForeground(
-        index = R.styleable.MessagesListView_sceytUiMessagesListPollProgressBarForegroundColor,
+    .progressColor(
+        index = R.styleable.MessagesListView_sceytUiMessagesListPollProgressBarColor,
         defValue = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
     )
     .questionTextStyle(
