@@ -63,7 +63,7 @@ fun PollOption.toUiModel(poll: SceytPollDetails): PollOptionUiModel {
 
         if (isSelected) {
             // Show own user first, then up to 2 others
-            listOfNotNull(ownVote?.user ?: pendingVote?.user) + otherVoters.take(2)
+            otherVoters.take(2) + listOfNotNull(ownVote?.user ?: pendingVote?.user)
         } else {
             // Show up to 3 other voters
             otherVoters

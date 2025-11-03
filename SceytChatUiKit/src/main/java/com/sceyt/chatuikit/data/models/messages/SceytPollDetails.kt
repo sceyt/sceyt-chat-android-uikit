@@ -7,14 +7,14 @@ import kotlinx.parcelize.Parcelize
 @Parcelize
 data class SceytPollDetails(
     val id: String,
-    val name: String,
     val messageTid: Long,
+    val name: String,
     val description: String,
-    val options: List<PollOption>,
     val anonymous: Boolean,
     val allowMultipleVotes: Boolean,
     val allowVoteRetract: Boolean,
     val votesPerOption: Map<String, Int>,
+    val options: List<PollOption>,
     val votes: List<Vote>,
     val ownVotes: List<Vote>,
     val pendingVotes: List<PendingVoteData>?,

@@ -72,9 +72,9 @@ open class PollOptionViewHolder(
                     )
                     rvVoters.itemAnimator = null
                     rvVoters.adapter = votersAdapter
-                    rvVoters.addItemDecoration(OverlapDecoration(9.dpToPx()))
+                    rvVoters.addItemDecoration(OverlapDecoration(10.dpToPx()))
                 }
-                votersAdapter?.submitList(option.voters.take(2))
+                votersAdapter?.submitList(option.voters.take(3))
             } else {
                 votersAdapter?.submitList(emptyList())
             }
@@ -88,6 +88,9 @@ open class PollOptionViewHolder(
     protected open fun applyStyle() = with(binding) {
         pollStyle.optionTextStyle.apply(tvOptionText)
         pollStyle.voteCountTextStyle.apply(tvVoteCount)
+        pollStyle.checkboxStyle.apply(checkbox)
+        progressBar.progressColor = pollStyle.progressColor
+        progressBar.progressTrackColor = pollStyle.progressTrackColor
     }
 }
 

@@ -24,8 +24,8 @@ data class VoterAvatarRendererAttributes(
 
 data class PollStyle(
         @param:ColorInt val dividerColor: Int,
-        @param:ColorInt val progressBarBackground: Int,
-        @param:ColorInt val progressBarForeground: Int,
+        @param:ColorInt val progressTrackColor: Int,
+        @param:ColorInt val progressColor: Int,
         val questionTextStyle: TextStyle,
         val pollTypeTextStyle: TextStyle,
         val viewResultsTextStyle: TextStyle,
@@ -50,10 +50,10 @@ data class PollStyle(
         private var dividerColor: Int = UNSET_COLOR
 
         @ColorInt
-        private var progressBarBackground: Int = UNSET_COLOR
+        private var progressTrackColor: Int = UNSET_COLOR
 
         @ColorInt
-        private var progressBarForeground: Int = UNSET_COLOR
+        private var progressColor: Int = UNSET_COLOR
         private var questionTextStyle: TextStyle = TextStyle()
         private var pollTypeTextStyle: TextStyle = TextStyle()
         private var viewResultsTextStyle: TextStyle = TextStyle()
@@ -67,12 +67,12 @@ data class PollStyle(
             this.dividerColor = typedArray.getColor(index, defValue)
         }
 
-        fun progressBarBackground(@StyleableRes index: Int, @ColorInt defValue: Int = progressBarBackground) = apply {
-            this.progressBarBackground = typedArray.getColor(index, defValue)
+        fun progressTrackColor(@StyleableRes index: Int, @ColorInt defValue: Int = progressTrackColor) = apply {
+            this.progressTrackColor = typedArray.getColor(index, defValue)
         }
 
-        fun progressBarForeground(@StyleableRes index: Int, @ColorInt defValue: Int = progressBarForeground) = apply {
-            this.progressBarForeground = typedArray.getColor(index, defValue)
+        fun progressColor(@StyleableRes index: Int, @ColorInt defValue: Int = progressColor) = apply {
+            this.progressColor = typedArray.getColor(index, defValue)
         }
 
         fun questionTextStyle(questionTextStyle: TextStyle) = apply {
@@ -109,8 +109,8 @@ data class PollStyle(
 
         fun build() = PollStyle(
             dividerColor = dividerColor,
-            progressBarBackground = progressBarBackground,
-            progressBarForeground = progressBarForeground,
+            progressTrackColor = progressTrackColor,
+            progressColor = progressColor,
             questionTextStyle = questionTextStyle,
             pollTypeTextStyle = pollTypeTextStyle,
             viewResultsTextStyle = viewResultsTextStyle,
