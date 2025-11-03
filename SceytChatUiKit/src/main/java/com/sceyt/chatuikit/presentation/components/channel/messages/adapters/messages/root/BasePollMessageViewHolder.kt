@@ -28,7 +28,6 @@ abstract class BasePollMessageViewHolder(
         PollOptionViewHolderFactory(
             context = context,
             pollStyle = pollStyle,
-            isClosedProvider = { currentPoll?.closed ?: false },
             isAnonymousProvider = { currentPoll?.anonymous ?: false },
             bubbleBackgroundStyleProvider = {
                 if (incoming) style.incomingBubbleBackgroundStyle
