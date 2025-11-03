@@ -35,7 +35,6 @@ data class CreatePollStyle(
         val parametersTitle: String,
         val anonymousPollTitle: String,
         val multipleVotesTitle: String,
-        val retractVotesTitle: String,
         val addOptionIcon: Drawable?,
         val dragIcon: Drawable?,
         val toolbarStyle: ToolbarStyle,
@@ -67,7 +66,6 @@ data class CreatePollStyle(
                 val parametersTitle = context.getString(R.string.sceyt_poll_parameters)
                 val anonymousPollTitle = context.getString(R.string.sceyt_poll_anonymous)
                 val multipleVotesTitle = context.getString(R.string.sceyt_poll_multiple_votes)
-                val retractVotesTitle = context.getString(R.string.sceyt_poll_can_retract_votes)
 
                 val addOptionIcon = context.getCompatDrawable(R.drawable.sceyt_ic_add)?.applyTint(
                     tintColor = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
@@ -87,7 +85,6 @@ data class CreatePollStyle(
                     parametersTitle = parametersTitle,
                     anonymousPollTitle = anonymousPollTitle,
                     multipleVotesTitle = multipleVotesTitle,
-                    retractVotesTitle = retractVotesTitle,
                     addOptionIcon = addOptionIcon,
                     dragIcon = dragIcon,
                     toolbarStyle = buildToolbarStyle(array),
