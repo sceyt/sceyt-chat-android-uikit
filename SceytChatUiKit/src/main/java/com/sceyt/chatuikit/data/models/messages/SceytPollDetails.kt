@@ -58,5 +58,16 @@ private fun SceytPollDetails.getRealCountsWithPendingVotes(): Map<String, Int> {
             .coerceAtLeast(0)
     }
 
+    // Handle single-vote polls: ensure only one option is selected
+    if (!allowMultipleVotes && pendingAdd.isNotEmpty()) {
+        val pendingAddOptionIds = pendingAdd.map { it.optionId }.toSet()
+        ownVotes.forEach {
+            if (it.optionId !in pendingAddOptionIds) {
+                realCounts[it.optionId] = (realCounts[it.optionId] ?: 1) - 1
+                    .coerceAtLeast(0)
+            }
+        }
+    }
+
     return realCounts
 }
