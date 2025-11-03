@@ -46,8 +46,8 @@ open class MessageEventHandlerImpl : MessageEventHandler.AllEventManagers {
         defaultListeners?.onVoteDeleted(message, votes)
     }
 
-    override fun onVoteRetracted(message: SceytMessage) {
-        defaultListeners?.onVoteRetracted(message)
+    override fun onVoteRetracted(message: SceytMessage, votes: List<Vote>) {
+        defaultListeners?.onVoteRetracted(message, votes)
     }
 
     override fun onPollClosed(message: SceytMessage) {
