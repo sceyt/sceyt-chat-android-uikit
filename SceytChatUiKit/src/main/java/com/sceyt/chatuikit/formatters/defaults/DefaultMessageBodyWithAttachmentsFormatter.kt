@@ -10,6 +10,7 @@ open class DefaultMessageBodyWithAttachmentsFormatter : Formatter<MessageBodyFor
         return from.message.getFormattedBodyWithAttachments(
             context = context,
             mentionTextStyle = from.mentionTextStyle,
+            messageTypeIconProvider = from.messageTypeIconProvider,
             mentionUserNameFormatter = from.mentionUserNameFormatter,
             attachmentNameFormatter = from.attachmentNameFormatter,
             mentionClickListener = from.mentionClickListener
