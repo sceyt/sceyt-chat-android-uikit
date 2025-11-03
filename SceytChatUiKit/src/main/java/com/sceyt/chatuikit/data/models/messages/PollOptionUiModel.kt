@@ -12,6 +12,7 @@ data class PollOptionUiModel(
     val pendingVote: PendingVoteData?,
     val selected: Boolean,
     val totalVotesCount: Int,
+    val closed: Boolean
 ) {
     fun getPercentage(): Float {
         return if (totalVotesCount > 0) {
@@ -74,7 +75,8 @@ fun PollOption.toUiModel(poll: SceytPollDetails): PollOptionUiModel {
         voters = voters,
         selected = isSelected,
         pendingVote = pendingVote,
-        totalVotesCount = poll.maxVotedCountWithPendingVotes
+        totalVotesCount = poll.maxVotedCountWithPendingVotes,
+        closed = poll.closed
     )
 }
 

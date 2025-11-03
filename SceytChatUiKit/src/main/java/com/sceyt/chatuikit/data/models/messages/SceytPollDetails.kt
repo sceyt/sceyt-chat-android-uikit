@@ -40,6 +40,9 @@ private fun SceytPollDetails.getRealCountsWithPendingVotes(): Map<String, Int> {
 
     val (pendingAdd, pendingRemove) = pendingVotes.partition { it.isAdd }
 
+    if (pendingAdd.isEmpty() && pendingRemove.isEmpty())
+        return votesPerOption
+
     // Start with a mutable copy of current vote counts
     val realCounts = votesPerOption.toMutableMap()
 
@@ -53,6 +56,17 @@ private fun SceytPollDetails.getRealCountsWithPendingVotes(): Map<String, Int> {
             .getOrDefault(pending.optionId, 0)
             .minus(1)
             .coerceAtLeast(0)
+    }
+
+    // Handle single-vote polls: ensure only one option is selected
+    if (!allowMultipleVotes && pendingAdd.isNotEmpty()) {
+        val pendingAddOptionIds = pendingAdd.map { it.optionId }.toSet()
+        ownVotes.forEach {
+            if (it.optionId !in pendingAddOptionIds) {
+                realCounts[it.optionId] = (realCounts[it.optionId] ?: 1) - 1
+                    .coerceAtLeast(0)
+            }
+        }
     }
 
     return realCounts
