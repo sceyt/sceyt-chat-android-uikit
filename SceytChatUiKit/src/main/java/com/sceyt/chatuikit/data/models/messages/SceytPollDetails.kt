@@ -40,6 +40,9 @@ private fun SceytPollDetails.getRealCountsWithPendingVotes(): Map<String, Int> {
 
     val (pendingAdd, pendingRemove) = pendingVotes.partition { it.isAdd }
 
+    if (pendingAdd.isEmpty() && pendingRemove.isEmpty())
+        return votesPerOption
+
     // Start with a mutable copy of current vote counts
     val realCounts = votesPerOption.toMutableMap()
 

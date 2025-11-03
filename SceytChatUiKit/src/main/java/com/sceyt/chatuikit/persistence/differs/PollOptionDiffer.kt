@@ -7,11 +7,12 @@ data class PollOptionDiff(
     val voteCountChanged: Boolean,
     val votersChanged: Boolean,
     val selectedChanged: Boolean,
-    val totalVoteCountChanged: Boolean
+    val totalVoteCountChanged: Boolean,
+    val closedStatusChanged: Boolean
 ) {
     fun hasDifference(): Boolean {
         return textChanged || voteCountChanged || votersChanged || selectedChanged ||
-                totalVoteCountChanged
+                totalVoteCountChanged || closedStatusChanged
     }
 
     companion object {
@@ -20,19 +21,15 @@ data class PollOptionDiff(
             voteCountChanged = true,
             votersChanged = true,
             selectedChanged = true,
-            totalVoteCountChanged = true
-        )
-        val DEFAULT_FALSE = PollOptionDiff(
-            textChanged = false,
-            voteCountChanged = false,
-            votersChanged = false,
-            selectedChanged = false,
-            totalVoteCountChanged = false
+            totalVoteCountChanged = true,
+            closedStatusChanged = true
         )
     }
 
     override fun toString(): String {
-        return "textChanged: $textChanged, voteCountChanged: $voteCountChanged, votersChanged: $votersChanged, selectedChanged: $selectedChanged"
+        return "textChanged: $textChanged, voteCountChanged: $voteCountChanged, " +
+                "votersChanged: $votersChanged, selectedChanged: $selectedChanged " +
+                "totalVoteCountChanged: $totalVoteCountChanged, closedStatusChanged: $closedStatusChanged"
     }
 }
 
@@ -42,7 +39,8 @@ fun PollOptionUiModel.diff(other: PollOptionUiModel): PollOptionDiff {
         voteCountChanged = voteCount != other.voteCount,
         votersChanged = voters != other.voters,
         selectedChanged = selected != other.selected,
-        totalVoteCountChanged = totalVotesCount != other.totalVotesCount
+        totalVoteCountChanged = totalVotesCount != other.totalVotesCount,
+        closedStatusChanged = closed != other.closed
     )
 }
 
