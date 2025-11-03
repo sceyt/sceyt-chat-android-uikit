@@ -109,7 +109,7 @@ private fun checkIgnoreHighlight(deliveryStatus: DeliveryStatus?): Boolean {
 fun SceytMessage.getFormattedBodyWithAttachments(
     context: Context,
     mentionTextStyle: TextStyle,
-    messageTypeIconProvider: VisualProvider<SceytMessage, Drawable?>,
+    messageTypeIconProvider: VisualProvider<SceytMessage, Drawable?>?,
     attachmentNameFormatter: Formatter<SceytAttachment>,
     mentionUserNameFormatter: Formatter<SceytUser>,
     mentionClickListener: ((String) -> Unit)?,
@@ -131,7 +131,7 @@ fun SceytMessage.getFormattedBodyWithAttachments(
 
         else -> context.getString(R.string.sceyt_file)
     }
-    val messageTypeIcon = messageTypeIconProvider.provide(context, this)
+    val messageTypeIcon = messageTypeIconProvider?.provide(context, this)
     return if (messageTypeIcon != null) {
         SpannableStringBuilder().apply {
             append(messageTypeIcon.toSpannableString())
