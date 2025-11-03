@@ -13,6 +13,7 @@ import androidx.lifecycle.lifecycleScope
 import com.sceyt.chatuikit.databinding.SceytFragmentCreatePollBinding
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.setDrawableStart
+import com.sceyt.chatuikit.extensions.setMultiLineWithImeOptions
 import com.sceyt.chatuikit.extensions.setOnlyClickable
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.logicimpl.message.ChannelId
@@ -69,6 +70,7 @@ open class CreatePollFragment : Fragment(), SceytKoinComponent {
         }
 
         // Setup question input
+        etQuestion.setMultiLineWithImeOptions()
         etQuestion.doAfterTextChanged {
             viewModel.updateQuestion(it?.toString().orEmpty())
         }
