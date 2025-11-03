@@ -159,7 +159,7 @@ internal class PersistenceMiddleWareImpl(
     }
 
     private fun onPollUpdated(data: PollUpdateEventData) {
-        scope.launch(Dispatchers.IO) {
+        scope.launch {
             pollLogic.onPollUpdated(data)
         }
     }

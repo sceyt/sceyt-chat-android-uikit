@@ -40,7 +40,7 @@ sealed interface MessageEventHandler {
     }
 
     fun interface OnVoteRetracted : MessageEventHandler {
-        fun onVoteRetracted(message: SceytMessage)
+        fun onVoteRetracted(message: SceytMessage, votes: List<Vote>)
     }
 
     fun interface OnPollClosed : MessageEventHandler {
@@ -48,5 +48,6 @@ sealed interface MessageEventHandler {
     }
 
     interface AllEventManagers : OnMessage, OnDirectMessage, OnMessageDeleted, OnMessageEdited,
-            OnReactionAdded, OnReactionDeleted, OnVoteAdded, OnVoteDeleted, OnVoteRetracted, OnPollClosed
+        OnReactionAdded, OnReactionDeleted, OnVoteAdded, OnVoteDeleted,
+        OnVoteRetracted, OnPollClosed
 }

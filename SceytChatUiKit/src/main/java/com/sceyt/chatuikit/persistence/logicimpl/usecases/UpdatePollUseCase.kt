@@ -10,6 +10,8 @@ import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
 import com.sceyt.chatuikit.persistence.mappers.toPollEntity
 import com.sceyt.chatuikit.persistence.mappers.toPollVoteEntity
 import com.sceyt.chatuikit.persistence.mappers.toSceytMessage
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 internal class UpdatePollUseCase(
     private val messageDao: MessageDao,
@@ -17,7 +19,7 @@ internal class UpdatePollUseCase(
     private val messagesCache: MessagesCache
 ) {
 
-    suspend operator fun invoke(data: PollUpdateEventData) {
+    suspend operator fun invoke(data: PollUpdateEventData) = withContext(Dispatchers.IO) {
         val (message, votes, event) = data
 
         when (event) {
@@ -29,8 +31,13 @@ internal class UpdatePollUseCase(
                 handleVoteDeleted(message, votes.orEmpty())
             }
 
-            PollUpdateEventEnum.VoteRetracted -> TODO()
-            PollUpdateEventEnum.PollClosed -> TODO()
+            PollUpdateEventEnum.VoteRetracted -> {
+                handleVoteRetracted(message, votes.orEmpty())
+            }
+
+            PollUpdateEventEnum.PollClosed -> {
+                handlePollClosed(message)
+            }
         }
     }
 
@@ -54,9 +61,7 @@ internal class UpdatePollUseCase(
             votes = votes.map { it.toPollVoteEntity(poll.id) }
         )
 
-        messageDao.getMessageById(message.id)?.let {
-            messagesCache.upsertMessages(message.channelId, it.toSceytMessage())
-        }
+        getAndUpdateMessageInCache(message)
     }
 
     private suspend fun handleVoteDeleted(message: SceytMessage, votes: List<Vote>) {
@@ -74,9 +79,27 @@ internal class UpdatePollUseCase(
 
         pollDao.upsertPollEntityWithVotes(
             entity = message.poll.toPollEntity(message.tid),
-            votes =emptyList()
+            votes = emptyList()
         )
 
+        getAndUpdateMessageInCache(message)
+    }
+
+    private suspend fun handleVoteRetracted(message: SceytMessage, votes: List<Vote>) {
+        handleVoteDeleted(message, votes)
+    }
+
+    private suspend fun handlePollClosed(message: SceytMessage) {
+        val poll = message.poll ?: return
+        pollDao.upsertPollEntityWithVotes(
+            entity = poll.toPollEntity(message.tid),
+            votes = emptyList()
+        )
+
+        getAndUpdateMessageInCache(message)
+    }
+
+    private suspend fun getAndUpdateMessageInCache(message: SceytMessage) {
         messageDao.getMessageById(message.id)?.let {
             messagesCache.upsertMessages(message.channelId, it.toSceytMessage())
         }
