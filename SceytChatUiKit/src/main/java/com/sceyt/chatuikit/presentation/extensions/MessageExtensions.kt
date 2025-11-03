@@ -132,13 +132,12 @@ fun SceytMessage.getFormattedBodyWithAttachments(
         else -> context.getString(R.string.sceyt_file)
     }
     val messageTypeIcon = messageTypeIconProvider.provide(context, this)
-    val finalBody = if (messageTypeIcon != null) {
+    return if (messageTypeIcon != null) {
         SpannableStringBuilder().apply {
             append(messageTypeIcon.toSpannableString())
-            append(body)
+            append(body.trim())
         }
-    } else body
-    return finalBody
+    } else body.trim()
 }
 
 fun DraftMessage.getFormattedBodyWithAttachments(
