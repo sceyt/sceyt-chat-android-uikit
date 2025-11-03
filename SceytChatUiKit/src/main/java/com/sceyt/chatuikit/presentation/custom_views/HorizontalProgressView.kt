@@ -8,6 +8,7 @@ import android.graphics.RectF
 import android.util.AttributeSet
 import android.view.View
 import android.view.animation.LinearInterpolator
+import androidx.annotation.ColorInt
 import androidx.core.content.res.use
 import com.sceyt.chatuikit.R
 
@@ -31,6 +32,7 @@ class HorizontalProgressView @JvmOverloads constructor(
             invalidate()
         }
 
+    @setparam:ColorInt
     var progressColor: Int
         get() = progressPaint.color
         set(value) {
@@ -38,7 +40,8 @@ class HorizontalProgressView @JvmOverloads constructor(
             invalidate()
         }
 
-    var progressBackgroundColor: Int
+    @setparam:ColorInt
+    var progressTrackColor: Int
         get() = backgroundPaint.color
         set(value) {
             backgroundPaint.color = value
@@ -50,8 +53,8 @@ class HorizontalProgressView @JvmOverloads constructor(
             val defaultBackgroundColor = 0xFFD0D8E3.toInt()
             val defaultProgressColor = context.getColor(R.color.sceyt_color_accent)
 
-            progressBackgroundColor = typedArray.getColor(
-                R.styleable.HorizontalProgressView_horizontalProgressViewBackgroundColor,
+            progressTrackColor = typedArray.getColor(
+                R.styleable.HorizontalProgressView_horizontalProgressViewTrackColor,
                 defaultBackgroundColor
             )
             progressColor = typedArray.getColor(
