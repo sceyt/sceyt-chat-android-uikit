@@ -4,19 +4,19 @@ import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.persistence.extensions.equalsIgnoreNull
 
 data class MessageDiff(
-        val edited: Boolean,
-        val bodyChanged: Boolean,
-        val statusChanged: Boolean,
-        val avatarChanged: Boolean,
-        val nameChanged: Boolean,
-        val replyCountChanged: Boolean,
-        val replyContainerChanged: Boolean,
-        val reactionsChanged: Boolean,
-        val showAvatarAndNameChanged: Boolean,
-        val filesChanged: Boolean,
-        val selectionChanged: Boolean,
-        val metadataChanged: Boolean,
-        val pollChanged: Boolean,
+    val edited: Boolean,
+    val bodyChanged: Boolean,
+    val statusChanged: Boolean,
+    val avatarChanged: Boolean,
+    val nameChanged: Boolean,
+    val replyCountChanged: Boolean,
+    val replyContainerChanged: Boolean,
+    val reactionsChanged: Boolean,
+    val showAvatarAndNameChanged: Boolean,
+    val filesChanged: Boolean,
+    val selectionChanged: Boolean,
+    val metadataChanged: Boolean,
+    val pollChanged: Boolean,
 ) {
     fun hasDifference(): Boolean {
         return edited || bodyChanged || statusChanged || avatarChanged || nameChanged || replyCountChanged
@@ -60,7 +60,8 @@ data class MessageDiff(
     override fun toString(): String {
         return "edited: $edited, bodyChanged: $bodyChanged, statusChanged: $statusChanged, avatarChanged: $avatarChanged, " +
                 "nameChanged: $nameChanged, replyCountChanged: $replyCountChanged, reactionsChanged: $reactionsChanged, " +
-                "showAvatarAndNameChanged: $showAvatarAndNameChanged, filesChanged: $filesChanged, selectionChanged: $selectionChanged"
+                "showAvatarAndNameChanged: $showAvatarAndNameChanged, filesChanged: $filesChanged, selectionChanged: $selectionChanged, " +
+                "metadataChanged: $metadataChanged, pollChanged: $pollChanged"
     }
 }
 
@@ -75,7 +76,7 @@ fun SceytMessage.diff(other: SceytMessage): MessageDiff {
         replyContainerChanged = parentMessage != other.parentMessage || parentMessage?.user != other.parentMessage?.user
                 || parentMessage?.state != other.parentMessage?.state || parentMessage?.body != other.parentMessage?.body,
         reactionsChanged = messageReactions?.equalsIgnoreNull(other.messageReactions)?.not()
-                ?: other.reactionTotals.isNullOrEmpty().not(),
+            ?: other.reactionTotals.isNullOrEmpty().not(),
         showAvatarAndNameChanged = shouldShowAvatarAndName != other.shouldShowAvatarAndName
                 || disabledShowAvatarAndName != other.disabledShowAvatarAndName,
         filesChanged = attachments?.size != other.attachments?.size,
@@ -96,7 +97,7 @@ fun SceytMessage.diffContent(other: SceytMessage): MessageDiff {
         replyContainerChanged = parentMessage != other.parentMessage || parentMessage?.user != other.parentMessage?.user
                 || parentMessage?.state != other.parentMessage?.state || parentMessage?.body != other.parentMessage?.body,
         reactionsChanged = reactionTotals?.equalsIgnoreNull(other.reactionTotals)?.not()
-                ?: other.reactionTotals.isNullOrEmpty().not(),
+            ?: other.reactionTotals.isNullOrEmpty().not(),
         showAvatarAndNameChanged = false,
         filesChanged = attachments?.size != other.attachments?.size,
         selectionChanged = isSelected != other.isSelected,
