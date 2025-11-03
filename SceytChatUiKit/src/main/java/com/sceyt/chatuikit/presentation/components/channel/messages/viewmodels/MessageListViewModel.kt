@@ -715,7 +715,7 @@ class MessageListViewModel(
             val response = messageInteractor.markMessagesAs(
                 channelId = channel.id,
                 marker = MarkerType.Displayed,
-                ids = *messageIds
+                ids = messageIds
             )
             _messageMarkerLiveData.postValue(response)
 
