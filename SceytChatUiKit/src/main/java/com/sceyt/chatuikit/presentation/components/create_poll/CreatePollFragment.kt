@@ -76,7 +76,6 @@ open class CreatePollFragment : Fragment(), SceytKoinComponent {
         // Setup switches
         switchAnonymous.setOnlyClickable()
         switchMultipleVotes.setOnlyClickable()
-        switchRetractVotes.setOnlyClickable()
 
         switchAnonymous.setOnClickListener {
             viewModel.toggleAnonymous()
@@ -84,10 +83,6 @@ open class CreatePollFragment : Fragment(), SceytKoinComponent {
 
         switchMultipleVotes.setOnClickListener {
             viewModel.toggleMultipleVotes()
-        }
-
-        switchRetractVotes.setOnClickListener {
-            viewModel.toggleCanRetractVotes()
         }
 
         tvAddOption.setOnClickListener {
@@ -137,7 +132,6 @@ open class CreatePollFragment : Fragment(), SceytKoinComponent {
     protected open fun onUiStateChange(state: CreatePollUIState) = with(binding) {
         switchAnonymous.isChecked = state.isAnonymous
         switchMultipleVotes.isChecked = state.allowMultipleVotes
-        switchRetractVotes.isChecked = state.allowVoteRetraction
 
         tvAddOption.isVisible = !state.reachedMaxPollCount
         updateSendButtonState(state.isValid)
@@ -171,7 +165,6 @@ open class CreatePollFragment : Fragment(), SceytKoinComponent {
         tvParametersTitle.text = style.parametersTitle
         switchAnonymous.text = style.anonymousPollTitle
         switchMultipleVotes.text = style.multipleVotesTitle
-        switchRetractVotes.text = style.retractVotesTitle
 
         // Apply text styles
         style.questionTitleTextStyle.apply(tvQuestionTitle)
@@ -184,7 +177,6 @@ open class CreatePollFragment : Fragment(), SceytKoinComponent {
         with(style.switchStyle) {
             apply(switchAnonymous)
             apply(switchMultipleVotes)
-            apply(switchRetractVotes)
         }
 
         // Apply icons

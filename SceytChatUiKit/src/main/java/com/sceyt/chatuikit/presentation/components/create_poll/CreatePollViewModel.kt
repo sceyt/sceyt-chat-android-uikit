@@ -172,12 +172,6 @@ class CreatePollViewModel(
         }
     }
 
-    fun toggleCanRetractVotes() {
-        _uiState.update {
-            it.copy(allowVoteRetraction = !it.allowVoteRetraction)
-        }
-    }
-
     fun createPoll(channelId: Long): Boolean {
         val state = _uiState.value
         if (!state.isValid) {
