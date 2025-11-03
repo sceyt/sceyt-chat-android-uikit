@@ -72,6 +72,7 @@ class ChooseFileTypeDialog(context: Context) : Dialog(context, R.style.SceytDial
             apply(takeVideo)
             apply(gallery)
             apply(file)
+            apply(poll)
         }
     }
 }
