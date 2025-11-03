@@ -179,8 +179,11 @@ open class CreatePollFragment : Fragment(), SceytKoinComponent {
             apply(switchMultipleVotes)
         }
 
+        style.buttonStyle.apply(btnSend)
+
         // Apply icons
         tvAddOption.setDrawableStart(style.addOptionIcon)
+
     }
 
     companion object {
