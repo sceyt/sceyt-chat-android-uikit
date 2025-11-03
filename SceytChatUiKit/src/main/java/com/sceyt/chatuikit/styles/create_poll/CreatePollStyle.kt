@@ -12,11 +12,13 @@ import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.styles.SceytComponentStyle
 import com.sceyt.chatuikit.styles.StyleCustomizer
+import com.sceyt.chatuikit.styles.common.ButtonStyle
 import com.sceyt.chatuikit.styles.common.SwitchStyle
 import com.sceyt.chatuikit.styles.common.TextInputStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.styles.common.ToolbarStyle
 import com.sceyt.chatuikit.styles.extensions.create_poll.buildAddOptionTextStyle
+import com.sceyt.chatuikit.styles.extensions.create_poll.buildButtonStyle
 import com.sceyt.chatuikit.styles.extensions.create_poll.buildOptionInputStyle
 import com.sceyt.chatuikit.styles.extensions.create_poll.buildOptionsTitleTextStyle
 import com.sceyt.chatuikit.styles.extensions.create_poll.buildParametersSwitchStyle
@@ -26,26 +28,26 @@ import com.sceyt.chatuikit.styles.extensions.create_poll.buildQuestionTitleTextS
 import com.sceyt.chatuikit.styles.extensions.create_poll.buildToolbarStyle
 
 data class CreatePollStyle(
-        @param:ColorInt val backgroundColor: Int,
-        val toolbarTitle: String,
-        val questionTitle: String,
-        val questionHint: String,
-        val optionsTitle: String,
-        val addOptionTitle: String,
-        val parametersTitle: String,
-        val anonymousPollTitle: String,
-        val multipleVotesTitle: String,
-        val retractVotesTitle: String,
-        val addOptionIcon: Drawable?,
-        val dragIcon: Drawable?,
-        val toolbarStyle: ToolbarStyle,
-        val questionTitleTextStyle: TextStyle,
-        val optionsTitleTextStyle: TextStyle,
-        val parametersTitleTextStyle: TextStyle,
-        val addOptionTextStyle: TextStyle,
-        val questionInputTextStyle: TextInputStyle,
-        val optionInputTextStyle: TextInputStyle,
-        val switchStyle: SwitchStyle,
+    @param:ColorInt val backgroundColor: Int,
+    val toolbarTitle: String,
+    val questionTitle: String,
+    val questionHint: String,
+    val optionsTitle: String,
+    val addOptionTitle: String,
+    val parametersTitle: String,
+    val anonymousPollTitle: String,
+    val multipleVotesTitle: String,
+    val addOptionIcon: Drawable?,
+    val dragIcon: Drawable?,
+    val toolbarStyle: ToolbarStyle,
+    val questionTitleTextStyle: TextStyle,
+    val optionsTitleTextStyle: TextStyle,
+    val parametersTitleTextStyle: TextStyle,
+    val addOptionTextStyle: TextStyle,
+    val questionInputTextStyle: TextInputStyle,
+    val optionInputTextStyle: TextInputStyle,
+    val switchStyle: SwitchStyle,
+    val buttonStyle: ButtonStyle
 ) : SceytComponentStyle() {
 
     companion object {
@@ -53,12 +55,13 @@ data class CreatePollStyle(
     }
 
     class Builder(
-            internal val context: Context,
-            private val attrs: AttributeSet?,
+        internal val context: Context,
+        private val attrs: AttributeSet?,
     ) {
         fun build(): CreatePollStyle {
             context.obtainStyledAttributes(attrs, R.styleable.CreatePoll).use { array ->
-                val backgroundColor = context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColor)
+                val backgroundColor =
+                    context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColor)
                 val toolbarTitle = context.getString(R.string.sceyt_poll)
                 val questionTitle = context.getString(R.string.sceyt_poll_question)
                 val questionHint = context.getString(R.string.sceyt_poll_add_question)
@@ -67,7 +70,6 @@ data class CreatePollStyle(
                 val parametersTitle = context.getString(R.string.sceyt_poll_parameters)
                 val anonymousPollTitle = context.getString(R.string.sceyt_poll_anonymous)
                 val multipleVotesTitle = context.getString(R.string.sceyt_poll_multiple_votes)
-                val retractVotesTitle = context.getString(R.string.sceyt_poll_can_retract_votes)
 
                 val addOptionIcon = context.getCompatDrawable(R.drawable.sceyt_ic_add)?.applyTint(
                     tintColor = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
@@ -87,7 +89,6 @@ data class CreatePollStyle(
                     parametersTitle = parametersTitle,
                     anonymousPollTitle = anonymousPollTitle,
                     multipleVotesTitle = multipleVotesTitle,
-                    retractVotesTitle = retractVotesTitle,
                     addOptionIcon = addOptionIcon,
                     dragIcon = dragIcon,
                     toolbarStyle = buildToolbarStyle(array),
@@ -98,6 +99,7 @@ data class CreatePollStyle(
                     optionInputTextStyle = buildOptionInputStyle(array),
                     parametersTitleTextStyle = buildParametersTitleTextStyle(array),
                     switchStyle = buildParametersSwitchStyle(array),
+                    buttonStyle = buildButtonStyle(array)
                 ).let { styleCustomizer.apply(context, it) }
             }
         }

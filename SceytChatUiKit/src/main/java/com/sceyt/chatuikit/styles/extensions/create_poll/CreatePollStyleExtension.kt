@@ -5,9 +5,12 @@ package com.sceyt.chatuikit.styles.extensions.create_poll
 import android.content.res.TypedArray
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.extensions.applyTint
 import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.getCompatColor
+import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.styles.common.BackgroundStyle
+import com.sceyt.chatuikit.styles.common.ButtonStyle
 import com.sceyt.chatuikit.styles.common.HintStyle
 import com.sceyt.chatuikit.styles.common.Shape
 import com.sceyt.chatuikit.styles.common.SwitchStyle
@@ -99,4 +102,17 @@ internal fun CreatePollStyle.Builder.buildParametersSwitchStyle(
     checkedColor = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor),
     thumbUncheckedColor = context.getCompatColor(R.color.sceyt_switch_thumb_unchecked_color),
     trackUncheckedColor = context.getCompatColor(R.color.sceyt_switch_track_unchecked_color)
+)
+
+internal fun CreatePollStyle.Builder.buildButtonStyle(
+        array: TypedArray,
+) = ButtonStyle(
+    textStyle = TextStyle(
+        color = context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor),
+        font = R.font.roboto_medium
+    ),
+    backgroundStyle = BackgroundStyle(
+        backgroundColor = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor),
+        shape = Shape.RoundedCornerShape(8.dpToPx().toFloat())
+    )
 )

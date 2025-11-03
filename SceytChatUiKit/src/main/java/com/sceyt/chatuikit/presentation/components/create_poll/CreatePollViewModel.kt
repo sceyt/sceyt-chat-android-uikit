@@ -19,26 +19,26 @@ import kotlinx.coroutines.launch
 import java.util.UUID
 
 data class PollOptionItem(
-        val id: String = UUID.randomUUID().toString(),
-        val text: String = "",
-        val isCurrent: Boolean = false,
-        val keyboardAction: Int = EditorInfo.IME_ACTION_NEXT,
+    val id: String = UUID.randomUUID().toString(),
+    val text: String = "",
+    val isCurrent: Boolean = false,
+    val keyboardAction: Int = EditorInfo.IME_ACTION_NEXT,
 )
 
 data class CreatePollUIState(
-        val question: String = "",
-        val options: List<PollOptionItem> = listOf(PollOptionItem(), PollOptionItem()),
-        val isAnonymous: Boolean = false,
-        val allowMultipleVotes: Boolean = false,
-        val allowVoteRetraction: Boolean = true,
-        val reachedMaxPollCount: Boolean = false,
-        val isValid: Boolean = false,
-        val error: String? = null,
-        val isLoading: Boolean = false,
+    val question: String = "",
+    val options: List<PollOptionItem> = listOf(PollOptionItem(), PollOptionItem()),
+    val isAnonymous: Boolean = false,
+    val allowMultipleVotes: Boolean = false,
+    val allowVoteRetraction: Boolean = true,
+    val reachedMaxPollCount: Boolean = false,
+    val isValid: Boolean = false,
+    val error: String? = null,
+    val isLoading: Boolean = false,
 )
 
 class CreatePollViewModel(
-        private val messageInteractor: MessageInteractor,
+    private val messageInteractor: MessageInteractor,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(CreatePollUIState())
@@ -172,12 +172,6 @@ class CreatePollViewModel(
         }
     }
 
-    fun toggleCanRetractVotes() {
-        _uiState.update {
-            it.copy(allowVoteRetraction = !it.allowVoteRetraction)
-        }
-    }
-
     fun createPoll(channelId: Long): Boolean {
         val state = _uiState.value
         if (!state.isValid) {
@@ -186,10 +180,13 @@ class CreatePollViewModel(
         }
 
         viewModelScope.launch(NonCancellable) {
+            val options = state.options
+                .filter { it.text.isNotBlank() }
+                .map { PollOption(it.id, it.text) }
             val pollDetails = PollDetails.Builder()
                 .setId(UUID.randomUUID().toString())
                 .setName(state.question)
-                .setOptions(state.options.map { PollOption(it.id, it.text) }.toTypedArray())
+                .setOptions(options.toTypedArray())
                 .setAnonymous(state.isAnonymous)
                 .setAllowMultipleVotes(state.allowMultipleVotes)
                 .setAllowVoteRetract(state.allowVoteRetraction)
