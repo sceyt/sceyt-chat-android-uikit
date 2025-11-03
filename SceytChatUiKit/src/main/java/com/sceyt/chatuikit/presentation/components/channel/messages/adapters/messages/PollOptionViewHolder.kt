@@ -72,9 +72,9 @@ open class PollOptionViewHolder(
                     )
                     rvVoters.itemAnimator = null
                     rvVoters.adapter = votersAdapter
-                    rvVoters.addItemDecoration(OverlapDecoration(9.dpToPx()))
+                    rvVoters.addItemDecoration(OverlapDecoration(10.dpToPx()))
                 }
-                votersAdapter?.submitList(option.voters.take(2))
+                votersAdapter?.submitList(option.voters.take(3))
             } else {
                 votersAdapter?.submitList(emptyList())
             }
