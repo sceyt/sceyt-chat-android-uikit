@@ -10,7 +10,6 @@ import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.data.models.messages.MessageTypeEnum
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
-import com.sceyt.chatuikit.presentation.common.DebounceHelper
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -44,31 +43,25 @@ class CreatePollViewModel(
     private val _uiState = MutableStateFlow(CreatePollUIState())
     val uiState = _uiState.asStateFlow()
 
-    private val debouncingOptions by lazy { DebounceHelper(200L, viewModelScope) }
-    private val debouncingQuestion by lazy { DebounceHelper(200L, viewModelScope) }
     private val maxPollCount = 12
 
     fun updateQuestion(question: String) {
-        debouncingQuestion.submit {
-            _uiState.update {
-                it.copy(question = question, error = null)
-            }
-            validatePoll()
+        _uiState.update {
+            it.copy(question = question, error = null)
         }
+        validatePoll()
     }
 
     fun updateOption(optionId: String, text: String) {
-        debouncingOptions.submit {
-            _uiState.update { state ->
-                val updatedOptions = state.options.map { option ->
-                    if (option.id == optionId)
-                        option.copy(text = text)
-                    else option
-                }
-                state.copy(options = updatedOptions, error = null)
+        _uiState.update { state ->
+            val updatedOptions = state.options.map { option ->
+                if (option.id == optionId)
+                    option.copy(text = text)
+                else option
             }
-            validatePoll()
+            state.copy(options = updatedOptions, error = null)
         }
+        validatePoll()
     }
 
     fun addOption(makeCurrent: Boolean) {
