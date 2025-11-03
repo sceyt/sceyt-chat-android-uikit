@@ -30,37 +30,45 @@ import kotlinx.coroutines.withContext
 object MessageEventManager : AllEventManagers {
     private var eventManager: AllEventManagers = MessageEventHandlerImpl(this)
 
-    private val onMessageFlow_: MutableSharedFlow<Pair<SceytChannel, SceytMessage>> = MutableSharedFlow(
-        extraBufferCapacity = 5,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST)
+    private val onMessageFlow_: MutableSharedFlow<Pair<SceytChannel, SceytMessage>> =
+        MutableSharedFlow(
+            extraBufferCapacity = 5,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST
+        )
     val onMessageFlow = onMessageFlow_.asSharedFlow()
 
     private val onDirectMessageFlow_: MutableSharedFlow<SceytMessage> = MutableSharedFlow(
         extraBufferCapacity = 5,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST)
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
     val onDirectMessageFlow = onDirectMessageFlow_.asSharedFlow()
 
-    private val onMessageReactionUpdatedFlow_: MutableSharedFlow<ReactionUpdateEventData> = MutableSharedFlow(
-        extraBufferCapacity = 5,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST)
+    private val onMessageReactionUpdatedFlow_: MutableSharedFlow<ReactionUpdateEventData> =
+        MutableSharedFlow(
+            extraBufferCapacity = 5,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST
+        )
     val onMessageReactionUpdatedFlow = onMessageReactionUpdatedFlow_.asSharedFlow()
 
 
     private val onMessageEditedOrDeletedFlow_: MutableSharedFlow<SceytMessage> = MutableSharedFlow(
         extraBufferCapacity = 5,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST)
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
     val onMessageEditedOrDeletedFlow = onMessageEditedOrDeletedFlow_.asSharedFlow()
 
 
     private val onPollUpdatedFlow_: MutableSharedFlow<PollUpdateEventData> = MutableSharedFlow(
         extraBufferCapacity = 5,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST)
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
     val onPollUpdatedFlow = onPollUpdatedFlow_.asSharedFlow()
 
 
     private val onOutGoingMessageFlow_: MutableSharedFlow<SceytMessage> = MutableSharedFlow(
         extraBufferCapacity = 50,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST)
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
     val onOutgoingMessageFlow = onOutGoingMessageFlow_.asSharedFlow()
 
 
@@ -92,7 +100,10 @@ object MessageEventManager : AllEventManagers {
 
             override fun onReactionDeleted(message: Message?, reaction: Reaction?) {
                 if (message == null || reaction == null) return
-                eventManager.onReactionDeleted(message.toSceytUiMessage(), reaction.toSceytReaction())
+                eventManager.onReactionDeleted(
+                    message = message.toSceytUiMessage(),
+                    reaction = reaction.toSceytReaction()
+                )
             }
 
             override fun onVoteAdded(message: Message?, list: List<PollVote>?) {
@@ -105,9 +116,12 @@ object MessageEventManager : AllEventManagers {
                 eventManager.onVoteDeleted(message.toSceytUiMessage(), list.map { it.toVote() })
             }
 
-            override fun onVoteRetracted(message: Message?) {
+            override fun onVoteRetracted(message: Message?, list: List<PollVote>?) {
                 message ?: return
-                eventManager.onVoteRetracted(message.toSceytUiMessage())
+                eventManager.onVoteRetracted(
+                    message = message.toSceytUiMessage(),
+                    votes = list?.map { it.toVote() }.orEmpty()
+                )
             }
 
             override fun onPollClosed(message: Message?) {
@@ -135,27 +149,63 @@ object MessageEventManager : AllEventManagers {
     }
 
     override fun onReactionAdded(message: SceytMessage, reaction: SceytReaction) {
-        onMessageReactionUpdatedFlow_.tryEmit(ReactionUpdateEventData(message, reaction, ReactionUpdateEventEnum.Add))
+        onMessageReactionUpdatedFlow_.tryEmit(
+            ReactionUpdateEventData(
+                message = message,
+                reaction = reaction,
+                eventType = ReactionUpdateEventEnum.Add
+            )
+        )
     }
 
     override fun onReactionDeleted(message: SceytMessage, reaction: SceytReaction) {
-        onMessageReactionUpdatedFlow_.tryEmit(ReactionUpdateEventData(message, reaction, ReactionUpdateEventEnum.Remove))
+        onMessageReactionUpdatedFlow_.tryEmit(
+            ReactionUpdateEventData(
+                message = message,
+                reaction = reaction,
+                eventType = ReactionUpdateEventEnum.Remove
+            )
+        )
     }
 
     override fun onVoteAdded(message: SceytMessage, votes: List<Vote>) {
-        onPollUpdatedFlow_.tryEmit(PollUpdateEventData(message, votes, PollUpdateEventEnum.VoteAdded))
+        onPollUpdatedFlow_.tryEmit(
+            PollUpdateEventData(
+                message = message,
+                votes = votes,
+                eventType = PollUpdateEventEnum.VoteAdded
+            )
+        )
     }
 
     override fun onVoteDeleted(message: SceytMessage, votes: List<Vote>) {
-        onPollUpdatedFlow_.tryEmit(PollUpdateEventData(message, votes, PollUpdateEventEnum.VoteDeleted))
+        onPollUpdatedFlow_.tryEmit(
+            PollUpdateEventData(
+                message = message,
+                votes = votes,
+                eventType = PollUpdateEventEnum.VoteDeleted
+            )
+        )
     }
 
-    override fun onVoteRetracted(message: SceytMessage) {
-        onPollUpdatedFlow_.tryEmit(PollUpdateEventData(message, null, PollUpdateEventEnum.VoteRetracted))
+    override fun onVoteRetracted(message: SceytMessage, votes: List<Vote>) {
+        onPollUpdatedFlow_.tryEmit(
+            PollUpdateEventData(
+                message = message,
+                votes = votes,
+                eventType = PollUpdateEventEnum.VoteRetracted
+            )
+        )
     }
 
     override fun onPollClosed(message: SceytMessage) {
-        onPollUpdatedFlow_.tryEmit(PollUpdateEventData(message, null, PollUpdateEventEnum.PollClosed))
+        onPollUpdatedFlow_.tryEmit(
+            PollUpdateEventData(
+                message = message,
+                votes = null,
+                eventType = PollUpdateEventEnum.PollClosed
+            )
+        )
     }
 
     @Suppress("unused")

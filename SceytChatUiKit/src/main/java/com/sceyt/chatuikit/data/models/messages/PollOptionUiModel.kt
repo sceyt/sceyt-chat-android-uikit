@@ -58,13 +58,15 @@ fun PollOption.toUiModel(poll: SceytPollDetails): PollOptionUiModel {
         val otherVoters = poll.votes
             .filter { it.optionId == id }
             .mapNotNull { it.user }
+            .take(3)
+            .sortedBy { it.id }
 
         if (isSelected) {
             // Show own user first, then up to 2 others
             listOfNotNull(ownVote?.user ?: pendingVote?.user) + otherVoters.take(2)
         } else {
             // Show up to 3 other voters
-            otherVoters.take(3)
+            otherVoters
         }
     }
 
