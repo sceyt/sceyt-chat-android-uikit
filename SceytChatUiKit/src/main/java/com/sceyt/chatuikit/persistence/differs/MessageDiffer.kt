@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.persistence.differs
 
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.data.models.messages.SceytPollDetails
 import com.sceyt.chatuikit.persistence.extensions.equalsIgnoreNull
 
 data class MessageDiff(
@@ -82,7 +83,7 @@ fun SceytMessage.diff(other: SceytMessage): MessageDiff {
         filesChanged = attachments?.size != other.attachments?.size,
         selectionChanged = isSelected != other.isSelected,
         metadataChanged = metadata != other.metadata,
-        pollChanged = poll != other.poll
+        pollChanged = poll?.pollChanged(other.poll) ?: (other.poll != null)
     )
 }
 
@@ -102,6 +103,28 @@ fun SceytMessage.diffContent(other: SceytMessage): MessageDiff {
         filesChanged = attachments?.size != other.attachments?.size,
         selectionChanged = isSelected != other.isSelected,
         metadataChanged = metadata != other.metadata,
-        pollChanged = poll != other.poll
+        pollChanged = poll?.pollChanged(other.poll) ?: (other.poll != null)
     )
+}
+
+fun SceytPollDetails.pollChanged(other: SceytPollDetails?): Boolean {
+    val otherPoll = other ?: return true
+    if (id != otherPoll.id) return true
+    if (messageTid != otherPoll.messageTid) return true
+    if (!name.equalsIgnoreNull(otherPoll.name)) return true
+    if (!description.equalsIgnoreNull(otherPoll.description)) return true
+    if (anonymous != otherPoll.anonymous) return true
+    if (allowMultipleVotes != otherPoll.allowMultipleVotes) return true
+    if (allowVoteRetract != otherPoll.allowVoteRetract) return true
+    if (votesPerOption.size != otherPoll.votesPerOption.size) return true
+    if (options.size != otherPoll.options.size) return true
+    if (votes != otherPoll.votes) return true
+    if (ownVotes != otherPoll.ownVotes) return true
+    if (!pendingVotes.equalsIgnoreNull(otherPoll.pendingVotes)) return true
+    if (createdAt != otherPoll.createdAt) return true
+    if (updatedAt != otherPoll.updatedAt) return true
+    if (closedAt != otherPoll.closedAt) return true
+    if (closed != otherPoll.closed) return true
+
+    return false
 }
