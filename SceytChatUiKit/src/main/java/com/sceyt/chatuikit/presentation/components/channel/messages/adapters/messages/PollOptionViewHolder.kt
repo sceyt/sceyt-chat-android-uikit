@@ -13,7 +13,6 @@ import com.sceyt.chatuikit.styles.messages_list.item.PollStyle
 open class PollOptionViewHolder(
     private val binding: SceytItemPollOptionBinding,
     private val pollStyle: PollStyle,
-    private val isClosedProvider: () -> Boolean,
     private val isAnonymousProvider: () -> Boolean,
     private val bubbleBackgroundStyleProvider: () -> BackgroundStyle,
     private var onOptionClick: ((PollOptionUiModel) -> Unit)? = null,
@@ -26,7 +25,7 @@ open class PollOptionViewHolder(
     init {
         applyStyle()
         binding.root.setOnClickListener {
-            if (!isClosedProvider() && ::currentOption.isInitialized) {
+            if (::currentOption.isInitialized && !currentOption.closed) {
                 onOptionClick?.invoke(currentOption)
             }
         }
@@ -39,11 +38,10 @@ open class PollOptionViewHolder(
     ) = with(binding) {
         currentOption = option
 
-        val isClosed = isClosedProvider()
-        val isAnonymous = isAnonymousProvider()
-
-        root.isEnabled = !isClosed
-        checkbox.isVisible = !isClosed
+        if (diff.closedStatusChanged) {
+            checkbox.isVisible = !option.closed
+            root.isEnabled = !option.closed
+        }
 
         if (diff.selectedChanged) {
             checkbox.isChecked = option.selected
@@ -66,7 +64,7 @@ open class PollOptionViewHolder(
 
         // Setup voters avatars (hide if anonymous)
         if (diff.votersChanged) {
-            if (!isAnonymous && option.voters.isNotEmpty()) {
+            if (!isAnonymousProvider() && option.voters.isNotEmpty()) {
                 if (votersAdapter == null) {
                     votersAdapter = VoterAvatarAdapter(
                         pollStyle = pollStyle,
