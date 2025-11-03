@@ -532,8 +532,13 @@ class MessagesListHeaderView @JvmOverloads constructor(
         val isSingleMessage = messages.size == 1
         val fistMessage = messages.first()
         val existPendingMessages = messages.any { it.deliveryStatus == DeliveryStatus.Pending }
+        val isPending = fistMessage.deliveryStatus == DeliveryStatus.Pending
+
         val poll = fistMessage.poll
         val isPollMessage = poll != null
+        val hasVoted = poll?.ownVotes?.isNotEmpty() == true
+        val canRetractVote = !isPending && isSingleMessage && poll?.allowVoteRetract == true && hasVoted && !poll.closed
+        val canEndVote = !isPending && isSingleMessage && !fistMessage.incoming && isPollMessage && !poll.closed
 
         menu.findItem(R.id.sceyt_reply)?.isVisible = isSingleMessage && !existPendingMessages
         //menu.findItem(R.id.sceyt_reply_in_thread).isVisible = isSingleMessage && !isPending
@@ -542,17 +547,13 @@ class MessagesListHeaderView @JvmOverloads constructor(
                 SceytChatUIKit.config.messageEditTimeout
         menu.findItem(R.id.sceyt_edit_message)?.isVisible = isSingleMessage &&
                 !fistMessage.incoming && fistMessage.body.isNotNullOrBlank() && !expiredEditMessage
+                && !isPollMessage
         menu.findItem(R.id.sceyt_message_info)?.isVisible = isSingleMessage
                 && !fistMessage.incoming && !existPendingMessages
         menu.findItem(R.id.sceyt_copy_message)?.isVisible = messages.any {
             it.body.isNotNullOrBlank()
         }
 
-        // Handle poll-specific actions
-        val hasVoted = poll?.ownVotes?.isNotEmpty() == true
-        val isPending = fistMessage.deliveryStatus == DeliveryStatus.Pending
-        val canRetractVote = !isPending && isSingleMessage && poll?.allowVoteRetract == true && hasVoted && !poll.closed
-        val canEndVote = !isPending && isSingleMessage && !fistMessage.incoming && isPollMessage && !poll.closed
 
         menu.findItem(R.id.sceyt_retract_vote)?.isVisible = canRetractVote
         menu.findItem(R.id.sceyt_end_vote)?.isVisible = canEndVote
