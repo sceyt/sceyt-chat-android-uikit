@@ -21,6 +21,7 @@ open class DefaultNotificationBodyFormatter : Formatter<PushData> {
         val messageBody = from.message.getFormattedBodyWithAttachments(
             context = context,
             mentionTextStyle = TextStyle(style = Typeface.BOLD),
+            messageTypeIconProvider = SceytChatUIKit.providers.messageTypeIconProvider,
             mentionUserNameFormatter = SceytChatUIKit.formatters.mentionUserNameFormatter,
             attachmentNameFormatter = SceytChatUIKit.formatters.attachmentNameFormatter,
             mentionClickListener = null
