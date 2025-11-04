@@ -23,4 +23,10 @@ object SceytConstants {
     const val stopRecordingEvent = "stop_recording"
 
     internal const val SCEYT_WORKER_TAG = "sceyt_worker_tag"
+
+    const val emojiVideo = "▶️"
+    const val emojiImage = "🌄"
+    const val emojiVoice = "🎤"
+    const val emojiFile = "📄"
+    const val emojiPoll = "📊"
 }
