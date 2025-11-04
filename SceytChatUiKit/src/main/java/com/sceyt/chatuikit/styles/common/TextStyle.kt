@@ -27,12 +27,12 @@ import com.sceyt.chatuikit.styles.StyleConstants.UNSET_STYLE
 import com.sceyt.chatuikit.styles.StyleConstants.styleOrDefault
 
 data class TextStyle(
-        @param:ColorInt val backgroundColor: Int = UNSET_COLOR,
-        @param:ColorInt val color: Int = UNSET_COLOR,
-        @param:ColorInt val drawableColor: Int = UNSET_COLOR,
-        @param:Px val size: Int = UNSET_SIZE,
-        @param:FontRes val font: Int = UNSET_RESOURCE,
-        @param:Style val style: Int = UNSET_STYLE,
+    @param:ColorInt val backgroundColor: Int = UNSET_COLOR,
+    @param:ColorInt val color: Int = UNSET_COLOR,
+    @param:ColorInt val drawableColor: Int = UNSET_COLOR,
+    @param:Px val size: Int = UNSET_SIZE,
+    @param:FontRes val font: Int = UNSET_RESOURCE,
+    @param:Style val style: Int = UNSET_STYLE,
 ) {
 
     fun apply(textView: TextView) {
@@ -60,10 +60,10 @@ data class TextStyle(
     }
 
     fun apply(
-            context: Context,
-            spannable: Spannable,
-            start: Int = 0,
-            end: Int = spannable.length,
+        context: Context,
+        spannable: Spannable,
+        start: Int = 0,
+        end: Int = spannable.length,
     ) {
         if (end - start <= 0) return
         if (color != UNSET_COLOR) {
@@ -91,22 +91,31 @@ data class TextStyle(
             textPaint.color = color
         }
 
-        if (font != UNSET_RESOURCE) {
-            val style = when (style) {
-                Typeface.BOLD -> Typeface.BOLD
-                Typeface.ITALIC -> Typeface.ITALIC
-                else -> Typeface.NORMAL
-            }
-            val typeface = ResourcesCompat.getFont(context, font) ?: Typeface.DEFAULT
-            textPaint.typeface = Typeface.create(typeface, style)
-        }
-
-        if (style != UNSET_STYLE) {
-            textPaint.isFakeBoldText = style == Typeface.BOLD
-        }
-
         if (size != UNSET_SIZE) {
             textPaint.textSize = size.toFloat()
+        }
+
+        // Apply typeface with style
+        if (font != UNSET_RESOURCE || style != UNSET_STYLE) {
+            val typefaceStyle = when (style) {
+                Typeface.BOLD -> Typeface.BOLD
+                Typeface.ITALIC -> Typeface.ITALIC
+                UNSET_STYLE -> Typeface.NORMAL
+                else -> Typeface.NORMAL
+            }
+
+            val baseTypeface = if (font != UNSET_RESOURCE) {
+                ResourcesCompat.getFont(context, font) ?: Typeface.DEFAULT
+            } else {
+                textPaint.typeface ?: Typeface.DEFAULT
+            }
+
+            textPaint.typeface = Typeface.create(baseTypeface, typefaceStyle)
+
+            // Only use fake bold if we couldn't get a real bold typeface
+            if (typefaceStyle == Typeface.BOLD && textPaint.typeface?.isBold != true) {
+                textPaint.isFakeBoldText = true
+            }
         }
     }
 
@@ -133,7 +142,10 @@ data class TextStyle(
             color = typedArray.getColor(index, defValue)
         }
 
-        fun setBackgroundColor(@StyleableRes index: Int, @ColorInt defValue: Int = backgroundColor) = apply {
+        fun setBackgroundColor(
+            @StyleableRes index: Int,
+            @ColorInt defValue: Int = backgroundColor
+        ) = apply {
             backgroundColor = typedArray.getColor(index, defValue)
         }
 
