@@ -1089,7 +1089,7 @@ class MessageListViewModel(
             messageTid = message.tid,
             pollId = poll.id
         )
-        notifyPageStateWithResponse(response, showError = false)
+        notifyPageStateWithResponse(response, showError = true)
     }
 
     private fun endVote(
@@ -1103,7 +1103,7 @@ class MessageListViewModel(
             messageTid = message.tid,
             pollId = poll.id
         )
-        notifyPageStateWithResponse(response, showError = false)
+        notifyPageStateWithResponse(response, showError = true)
     }
 
     internal fun needMediaInfo(data: NeedMediaInfoData) {
