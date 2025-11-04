@@ -9,8 +9,8 @@ import com.sceyt.chatuikit.presentation.components.create_poll.CreatePollViewMod
 import com.sceyt.chatuikit.presentation.components.invite_link.ChannelInviteLinkViewModel
 import com.sceyt.chatuikit.presentation.components.invite_link.join.JoinByInviteLinkViewModel
 import com.sceyt.chatuikit.presentation.components.invite_link.shareqr.ShareInviteQRViewModel
-import org.koin.androidx.viewmodel.dsl.viewModel
-import org.koin.androidx.viewmodel.dsl.viewModelOf
+import org.koin.core.module.dsl.viewModel
+import org.koin.core.module.dsl.viewModelOf
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
