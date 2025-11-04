@@ -12,6 +12,7 @@ import com.sceyt.chatuikit.extensions.launchActivity
 import com.sceyt.chatuikit.extensions.overrideTransitions
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.styles.StyleRegistry
+import com.sceyt.chatuikit.styles.poll_results.PollResultsStyle
 
 open class PollResultsActivity : AppCompatActivity() {
     protected open lateinit var binding: ActivityPollResultsBinding

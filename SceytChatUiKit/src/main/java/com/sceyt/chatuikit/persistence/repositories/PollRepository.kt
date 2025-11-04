@@ -33,6 +33,7 @@ interface PollRepository {
     ): SceytResponse<SceytMessage>
 
     suspend fun getPollVotes(
+        messageId: Long,
         pollId: String,
         optionId: String,
         nextToken: String

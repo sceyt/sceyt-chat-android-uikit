@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.presentation.components.poll_results
+package com.sceyt.chatuikit.presentation.components.poll_results.option_voters
 
 import android.content.Context
 import android.os.Bundle
@@ -19,14 +19,15 @@ import com.sceyt.chatuikit.extensions.addRVScrollListener
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.setBundleArguments
+import com.sceyt.chatuikit.extensions.setProgressColor
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.presentation.common.DebounceHelper
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoActivity
+import com.sceyt.chatuikit.styles.poll_results.PollResultsStyle
 import com.sceyt.chatuikit.presentation.components.poll_results.adapter.VoterItem
 import com.sceyt.chatuikit.presentation.components.poll_results.adapter.VotersAdapter
 import com.sceyt.chatuikit.presentation.components.poll_results.adapter.holders.VotersViewHolderFactory
 import com.sceyt.chatuikit.presentation.components.poll_results.adapter.listeners.VoterClickListeners
-import com.sceyt.chatuikit.presentation.components.poll_results.viewmodel.PollOptionVotersViewModel
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.styles.StyleRegistry
 import com.sceyt.chatuikit.styles.poll_results.PollOptionVotersStyle
@@ -37,6 +38,8 @@ import org.koin.core.parameter.parametersOf
 open class PollOptionVotersFragment : Fragment(), SceytKoinComponent {
     protected var votersAdapter: VotersAdapter? = null
     protected lateinit var binding: SceytFragmentPollOptionVotersBinding
+    protected var messageId: Long = 0L
+        private set
     protected lateinit var pollId: String
         private set
     protected lateinit var pollOptionId: String
@@ -51,6 +54,7 @@ open class PollOptionVotersFragment : Fragment(), SceytKoinComponent {
         private set
     protected val viewModel: PollOptionVotersViewModel by viewModel {
         parametersOf(
+            messageId,
             pollId,
             pollOptionId,
             pollOptionVotersCount,
@@ -82,6 +86,7 @@ open class PollOptionVotersFragment : Fragment(), SceytKoinComponent {
     }
 
     protected open fun getBundleArguments() {
+        messageId = requireNotNull(arguments?.getLong(MESSAGE_ID))
         pollId = requireNotNull(arguments?.getString(POLL_ID))
         pollOptionId = requireNotNull(arguments?.getString(POLL_OPTION_ID))
         pollOptionName = requireNotNull(arguments?.getString(POLL_OPTION_NAME))
@@ -106,13 +111,13 @@ open class PollOptionVotersFragment : Fragment(), SceytKoinComponent {
         style.let { votersStyle ->
             votersStyle.toolbarStyle.apply(binding.toolbar)
             binding.root.setBackgroundColor(votersStyle.backgroundColor)
-
+            binding.progressBar.setProgressColor(votersStyle.initialLoaderColor)
         }
     }
 
     protected open fun setupVotersAdapter() {
         votersAdapter = VotersAdapter(
-            viewHolderFactory = VotersViewHolderFactory(requireContext(), style.voterItemStyle).also {
+            viewHolderFactory = VotersViewHolderFactory(requireContext(), style).also {
                 it.setOnClickListener(VoterClickListeners.VoterClickListener { _, item ->
                     onVoterClick(item)
                 })
@@ -195,7 +200,7 @@ open class PollOptionVotersFragment : Fragment(), SceytKoinComponent {
     }
 
     protected open fun onFindOrCreateChat(sceytChannel: SceytChannel) {
-        ChannelInfoActivity.launch(requireContext(), sceytChannel)
+        ChannelInfoActivity.Companion.launch(requireContext(), sceytChannel)
     }
 
     override fun onDestroyView() {
@@ -204,6 +209,7 @@ open class PollOptionVotersFragment : Fragment(), SceytKoinComponent {
     }
 
     companion object {
+        private const val MESSAGE_ID = "MESSAGE_ID"
         private const val POLL_ID = "POLL_ID"
         private const val POLL_OPTION_ID = "POLL_OPTION_ID"
         private const val POLL_OPTION_NAME = "POLL_OPTION_NAME"
@@ -212,6 +218,7 @@ open class PollOptionVotersFragment : Fragment(), SceytKoinComponent {
         private const val OWN_VOTE = "OWN_VOTE"
 
         fun newInstance(
+                messageId: Long,
                 pollId: String,
                 pollOptionId: String,
                 pollOptionName: String,
@@ -221,6 +228,7 @@ open class PollOptionVotersFragment : Fragment(), SceytKoinComponent {
         ): PollOptionVotersFragment {
             val fragment = PollOptionVotersFragment()
             fragment.setBundleArguments {
+                putLong(MESSAGE_ID, messageId)
                 putString(POLL_ID, pollId)
                 putString(POLL_OPTION_ID, pollOptionId)
                 putString(POLL_OPTION_NAME, pollOptionName)

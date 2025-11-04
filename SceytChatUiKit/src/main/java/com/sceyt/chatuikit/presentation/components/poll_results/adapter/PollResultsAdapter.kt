@@ -28,6 +28,20 @@ class PollResultsAdapter(
         }
     }
 
+    override fun onBindViewHolder(holder: BaseViewHolder<PollResultItem>, position: Int, payloads: MutableList<Any>) {
+        if (payloads.isEmpty()) {
+            super.onBindViewHolder(holder, position, payloads)
+            return
+        }
+
+        if (holder is PollOptionResultViewHolder) {
+            val payload = payloads.firstOrNull() as? PollResultItemPayloadDiff
+            if (payload != null) {
+                holder.bind(differ.currentList[position], payload)
+            }
+        }
+    }
+
     override fun getItemCount(): Int = differ.currentList.size
 
     override fun getItemViewType(position: Int): Int {

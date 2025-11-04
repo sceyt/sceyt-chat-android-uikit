@@ -22,6 +22,20 @@ class VotersAdapter(
         holder.bind(item = differ.currentList[position])
     }
 
+    override fun onBindViewHolder(holder: BaseViewHolder<VoterItem>, position: Int, payloads: MutableList<Any>) {
+        if (payloads.isEmpty()) {
+            super.onBindViewHolder(holder, position, payloads)
+            return
+        }
+
+        val payload = payloads.firstOrNull() as? VoterItemPayloadDiff
+        if (payload != null && !payload.hasDifference()) {
+            return
+        }
+
+        holder.bind(differ.currentList[position])
+    }
+
     override fun getItemCount(): Int = differ.currentList.size
 
     override fun getItemViewType(position: Int): Int {

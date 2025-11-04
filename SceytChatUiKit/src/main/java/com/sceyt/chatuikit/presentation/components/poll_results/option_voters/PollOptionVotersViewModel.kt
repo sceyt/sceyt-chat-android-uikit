@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.presentation.components.poll_results.viewmodel
+package com.sceyt.chatuikit.presentation.components.poll_results.option_voters
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -10,11 +10,12 @@ import com.sceyt.chatuikit.data.models.channels.CreateChannelData
 import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
+import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.data.models.messages.Vote
 import com.sceyt.chatuikit.data.models.onSuccessNotNull
-import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
+import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
 import com.sceyt.chatuikit.persistence.repositories.PollRepository
 import com.sceyt.chatuikit.presentation.components.poll_results.adapter.VoterItem
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
@@ -25,13 +26,14 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class PollOptionVotersViewModel(
-        private val pollId: String,
-        private val optionId: String,
-        private val pollOptionVotersCount: Int,
-        private val ownVote: Vote?,
-        private val persistenceChannelsLogic: PersistenceChannelsLogic,
-        private val pollRepository: PollRepository
-) : BaseViewModel(), SceytKoinComponent {
+    private val messageId:Long,
+    private val pollId: String,
+    private val optionId: String,
+    private val pollOptionVotersCount: Int,
+    private val ownVote: Vote?,
+    private val persistenceChannelsLogic: PersistenceChannelsLogic,
+    private val pollRepository: PollRepository
+) : BaseViewModel(){
 
     private val _loadVotersLiveData = MutableLiveData<List<VoterItem>>()
     val loadVotersLiveData: LiveData<List<VoterItem>> = _loadVotersLiveData
@@ -43,6 +45,81 @@ class PollOptionVotersViewModel(
     private var isLoading = false
     private val votersList = mutableListOf<VoterItem>()
 
+    init {
+        observePollUpdates()
+    }
+
+    private fun observePollUpdates() {
+        viewModelScope.launch {
+            MessagesCache.Companion.messageUpdatedFlow
+                .collect { (_, messages) ->
+                    messages.find { it.id == messageId }?.let { updatedMessage ->
+                        handlePollUpdate(updatedMessage)
+                    }
+                }
+        }
+    }
+
+    private suspend fun handlePollUpdate(updatedMessage: SceytMessage) {
+        val poll = updatedMessage.poll ?: return
+
+        val allVotes = poll.votes.filter { it.optionId == optionId }
+        val ownVoteForOption = poll.ownVotes.firstOrNull { it.optionId == optionId }
+
+        val updatedVoteCount = if (ownVoteForOption != null) {
+            allVotes.size + 1
+        } else {
+            allVotes.size
+        }
+
+        val headerIndex = votersList.indexOfFirst { it is VoterItem.HeaderItem }
+        if (headerIndex >= 0) {
+            votersList[headerIndex] = VoterItem.HeaderItem(updatedVoteCount)
+        }
+
+        val currentVoterIds = allVotes.mapNotNull { it.user?.id }.toSet()
+
+        val votersToRemove = votersList
+            .filterIsInstance<VoterItem.Voter>()
+            .filter { voterItem ->
+                val userId = voterItem.vote.user?.id
+                userId != null && userId !in currentVoterIds && userId != ownVote?.user?.id
+            }
+
+        votersList.removeAll(votersToRemove.toSet())
+
+        val existingVoterIds = votersList
+            .filterIsInstance<VoterItem.Voter>()
+            .mapNotNull { it.vote.user?.id }
+            .toSet()
+
+        val newVoters = allVotes
+            .filter { vote -> vote.user?.id !in existingVoterIds && vote.user?.id != ownVote?.user?.id }
+            .map { VoterItem.Voter(it) }
+
+        if (newVoters.isNotEmpty() || votersToRemove.isNotEmpty()) {
+            votersList.removeAll { it is VoterItem.LoadingMore }
+
+            val insertionIndex = if (ownVote != null) {
+                2 // After header and own vote
+            } else {
+                1 // After header only
+            }
+
+            if (newVoters.isNotEmpty()) {
+                votersList.addAll(insertionIndex, newVoters)
+            }
+
+            if (hasNext) {
+                votersList.add(VoterItem.LoadingMore)
+            }
+        }
+
+        withContext(Dispatchers.Main) {
+            _loadVotersLiveData.value = votersList.toList()
+        }
+    }
+
     fun loadVotes(offset: Int) {
         if (isLoading) return
         isLoading = true
@@ -52,6 +129,7 @@ class PollOptionVotersViewModel(
 
         viewModelScope.launch(Dispatchers.IO) {
             val response = pollRepository.getPollVotes(
+                messageId = messageId,
                 pollId = pollId,
                 optionId = optionId,
                 nextToken = if (offset > 0) nextToken else ""
@@ -61,24 +139,24 @@ class PollOptionVotersViewModel(
                 is SceytPagingResponse.Success -> {
                     nextToken = response.nextToken ?: ""
                     hasNext = response.hasNext
-                    
+
                     if (offset == 0) {
                         votersList.clear()
                         votersList.add(VoterItem.HeaderItem(pollOptionVotersCount))
-                        
+
                         if (ownVote != null) {
                             votersList.add(VoterItem.Voter(ownVote))
                         }
                     }
-                    
+
                     votersList.removeAll { it is VoterItem.LoadingMore }
-                    
+
                     votersList.addAll(response.data.map { VoterItem.Voter(it) })
-                    
+
                     if (hasNext) {
                         votersList.add(VoterItem.LoadingMore)
                     }
-                    
+
                     withContext(Dispatchers.Main) {
                         _loadVotersLiveData.value = votersList.toList()
                         isLoading = false
@@ -97,10 +175,17 @@ class PollOptionVotersViewModel(
 
     fun findOrCreatePendingDirectChat(user: SceytUser) {
         viewModelScope.launch(Dispatchers.IO) {
-            persistenceChannelsLogic.findOrCreatePendingChannelByMembers(CreateChannelData(
-                type = ChannelTypeEnum.Direct.value,
-                members = listOf(SceytMember(role = Role(RoleTypeEnum.Owner.value), user = user)),
-            )).onSuccessNotNull { data ->
+            persistenceChannelsLogic.findOrCreatePendingChannelByMembers(
+                CreateChannelData(
+                    type = ChannelTypeEnum.Direct.value,
+                    members = listOf(
+                        SceytMember(
+                            role = Role(RoleTypeEnum.Owner.value),
+                            user = user
+                        )
+                    ),
+                )
+            ).onSuccessNotNull { data ->
                 _findOrCreateChatFlow.emit(data)
             }
         }

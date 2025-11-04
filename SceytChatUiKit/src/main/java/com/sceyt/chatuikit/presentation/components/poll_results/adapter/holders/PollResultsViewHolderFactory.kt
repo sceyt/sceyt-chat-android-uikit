@@ -5,7 +5,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import com.sceyt.chatuikit.databinding.SceytItemPollResultHeaderBinding
 import com.sceyt.chatuikit.databinding.SceytItemPollResultOptionBinding
-import com.sceyt.chatuikit.presentation.components.poll_results.PollResultsStyle
+import com.sceyt.chatuikit.styles.poll_results.PollResultsStyle
 import com.sceyt.chatuikit.presentation.components.poll_results.adapter.PollResultItem
 import com.sceyt.chatuikit.presentation.components.poll_results.adapter.listeners.PollResultClickListeners
 import com.sceyt.chatuikit.presentation.components.poll_results.adapter.listeners.PollResultClickListenersImpl

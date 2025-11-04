@@ -97,12 +97,15 @@ class PollRepositoryImpl : PollRepository {
         })
     }
 
-    override suspend fun getPollVotes(pollId: String,
-                                      optionId: String,
-                                      nextToken: String): SceytPagingResponse<List<Vote>> {
+    override suspend fun getPollVotes(
+        messageId: Long,
+        pollId: String,
+        optionId: String,
+        nextToken: String
+    ): SceytPagingResponse<List<Vote>> {
         return suspendCancellableCoroutine { continuation ->
             val limit = SceytChatUIKit.config.queryLimits.votersListQueryLimit
-            val request = GetPollVotesRequest(pollId, optionId)
+            val request = GetPollVotesRequest(messageId, pollId, optionId)
                 .setLimit(limit)
                 .setNextToken(nextToken)
 
@@ -110,8 +113,15 @@ class PollRepositoryImpl : PollRepository {
                 override fun onResult(votes: MutableList<PollVote>?) {
                     val mappedVotes = votes?.map { it.toVote() } ?: emptyList()
                     val updatedNextToken = request.nextToken
-                    val hasNext = mappedVotes.size >= limit || updatedNextToken?.isNotEmpty() == true
-                    continuation.safeResume(SceytPagingResponse.Success(mappedVotes, hasNext, updatedNextToken))
+                    val hasNext =
+                        mappedVotes.size >= limit || updatedNextToken?.isNotEmpty() == true
+                    continuation.safeResume(
+                        SceytPagingResponse.Success(
+                            mappedVotes,
+                            hasNext,
+                            updatedNextToken
+                        )
+                    )
                 }
 
                 override fun onError(e: SceytException?) {
