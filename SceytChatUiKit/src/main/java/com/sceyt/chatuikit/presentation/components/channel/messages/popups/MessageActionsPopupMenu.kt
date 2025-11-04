@@ -42,7 +42,7 @@ class MessageActionsPopupMenu(
 
 
         menu.findItem(R.id.sceyt_reply).isVisible = !isPending
-        menu.findItem(R.id.sceyt_forward).isVisible = !isPending
+        menu.findItem(R.id.sceyt_forward).isVisible = !isPending && !isPollMessage
 
         val expiredEditMessage =
             (System.currentTimeMillis() - message.createdAt) > SceytChatUIKit.config.messageEditTimeout
