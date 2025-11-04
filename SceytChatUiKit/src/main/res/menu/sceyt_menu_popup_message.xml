@@ -40,13 +40,13 @@
 
     <item
         android:id="@+id/sceyt_retract_vote"
-        android:icon="@drawable/sceyt_ic_retract_vote"
+        android:icon="@drawable/sceyt_ic_retract_votes"
         android:title="@string/sceyt_retract_vote"
         app:showAsAction="ifRoom" />
 
     <item
         android:id="@+id/sceyt_end_vote"
-        android:icon="@drawable/sceyt_ic_end_vote"
+        android:icon="@drawable/sceyt_ic_end_poll"
         android:title="@string/sceyt_end_vote"
         app:showAsAction="ifRoom" />
 
