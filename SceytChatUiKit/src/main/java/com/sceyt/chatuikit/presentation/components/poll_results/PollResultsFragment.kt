@@ -6,9 +6,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
+import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.R.anim
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
@@ -25,7 +26,8 @@ import com.sceyt.chatuikit.presentation.components.poll_results.adapter.listener
 import com.sceyt.chatuikit.presentation.components.poll_results.option_voters.PollOptionVotersFragment
 import com.sceyt.chatuikit.styles.StyleRegistry
 import com.sceyt.chatuikit.styles.poll_results.PollResultsStyle
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
 
@@ -54,9 +56,10 @@ open class PollResultsFragment : Fragment(), SceytKoinComponent {
         super.onViewCreated(view, savedInstanceState)
 
         getBundleArguments()
+        applyStyle()
+        initViewModel()
         initToolbar()
         setupRecyclerView()
-        observeUIState()
     }
 
     protected open fun getBundleArguments() {
@@ -71,8 +74,6 @@ open class PollResultsFragment : Fragment(), SceytKoinComponent {
     }
 
     protected open fun initToolbar() {
-        style.toolbarStyle.apply(binding.toolbar)
-        binding.toolbar.setTitle(style.toolbarTitle)
         binding.toolbar.setNavigationClickListener {
             requireActivity().onBackPressedDispatcher.onBackPressed()
         }
@@ -98,46 +99,21 @@ open class PollResultsFragment : Fragment(), SceytKoinComponent {
         binding.rvPollOptions.adapter = pollResultsAdapter
     }
 
-    protected open fun observeUIState() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                launch {
-                    viewModel.uiState.collect { state ->
-                        when (state) {
-                            is PollResultsUIState.Success -> {
-                                onStateSuccess(state.items)
-                            }
+    protected open fun initViewModel() {
+        viewModel.uiState
+            .flowWithLifecycle(lifecycle = viewLifecycleOwner.lifecycle)
+            .onEach(::onUiStateChange)
+            .launchIn(viewLifecycleOwner.lifecycleScope)
 
-                            is PollResultsUIState.Loading -> {
-                                onStateLoading()
-                            }
-
-                            is PollResultsUIState.Empty -> {
-                                onStateEmpty()
-                            }
-                        }
-                    }
-                }
-
-                launch {
-                    viewModel.findOrCreateChatFlow.collect { channel ->
-                        onFindOrCreateChat(channel)
-                    }
-                }
-            }
-        }
+        viewModel.findOrCreateChatFlow
+            .flowWithLifecycle(lifecycle = viewLifecycleOwner.lifecycle)
+            .onEach(::onFindOrCreateChat)
+            .launchIn(viewLifecycleOwner.lifecycleScope)
     }
 
-    protected open fun onStateSuccess(items: List<PollResultItem>) {
-        pollResultsAdapter?.submitList(items)
+    protected open fun onUiStateChange(state: PollResultsUIState) {
+        pollResultsAdapter?.submitList(state.items)
     }
-
-    protected open fun onStateLoading() {
-    }
-
-    protected open fun onStateEmpty() {
-    }
-
     protected open fun onShowAllClick(item: PollResultItem.PollOptionItem) {
         val poll = message.poll ?: return
         val pollId = poll.id
@@ -157,12 +133,12 @@ open class PollResultsFragment : Fragment(), SceytKoinComponent {
 
         parentFragmentManager.beginTransaction()
             .setCustomAnimations(
-                com.sceyt.chatuikit.R.anim.sceyt_anim_slide_in_right,
+                anim.sceyt_anim_slide_in_right,
                 0,
                 0,
-                com.sceyt.chatuikit.R.anim.sceyt_anim_slide_out_right
+                anim.sceyt_anim_slide_out_right
             )
-            .replace(com.sceyt.chatuikit.R.id.fragmentContainer, fragment)
+            .replace(R.id.fragmentContainer, fragment)
             .addToBackStack(null)
             .commit()
     }
@@ -175,6 +151,15 @@ open class PollResultsFragment : Fragment(), SceytKoinComponent {
 
     protected open fun onFindOrCreateChat(sceytChannel: SceytChannel) {
         ChannelInfoActivity.launch(requireContext(), sceytChannel)
+    }
+
+
+    protected open fun applyStyle() = with(binding) {
+        root.setBackgroundColor(style.backgroundColor)
+
+        // Apply toolbar style
+        style.toolbarStyle.apply(toolbar)
+        toolbar.setTitle(style.toolbarTitle)
     }
 
     companion object {

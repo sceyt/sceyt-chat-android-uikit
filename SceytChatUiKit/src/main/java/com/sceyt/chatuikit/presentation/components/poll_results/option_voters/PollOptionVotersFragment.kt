@@ -6,9 +6,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.SceytChatUIKit
@@ -28,10 +27,10 @@ import com.sceyt.chatuikit.presentation.components.poll_results.adapter.VoterIte
 import com.sceyt.chatuikit.presentation.components.poll_results.adapter.VotersAdapter
 import com.sceyt.chatuikit.presentation.components.poll_results.adapter.holders.VotersViewHolderFactory
 import com.sceyt.chatuikit.presentation.components.poll_results.adapter.listeners.VoterClickListeners
-import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.styles.StyleRegistry
 import com.sceyt.chatuikit.styles.poll_results.PollOptionVotersStyle
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
 
@@ -79,6 +78,7 @@ open class PollOptionVotersFragment : Fragment(), SceytKoinComponent {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        applyStyle()
         initViews()
         setupVotersAdapter()
         initViewModel()
@@ -103,15 +103,8 @@ open class PollOptionVotersFragment : Fragment(), SceytKoinComponent {
     }
 
     protected open fun initViews() {
-        binding.toolbar.setTitle(pollOptionName)
         binding.toolbar.setNavigationClickListener {
             requireActivity().onBackPressedDispatcher.onBackPressed()
-        }
-
-        style.let { votersStyle ->
-            votersStyle.toolbarStyle.apply(binding.toolbar)
-            binding.root.setBackgroundColor(votersStyle.backgroundColor)
-            binding.progressBar.setProgressColor(votersStyle.initialLoaderColor)
         }
     }
 
@@ -135,7 +128,8 @@ open class PollOptionVotersFragment : Fragment(), SceytKoinComponent {
             addRVScrollListener(onScrolled = { _: RecyclerView, _: Int, _: Int ->
                 if (isLastItemDisplaying()) {
                     loadMoreDebounce.submit {
-                        if (!viewModel.canLoadNext()) return@submit
+                        val currentState = viewModel.uiState.value
+                        if (!currentState.hasNext || currentState.isLoading) return@submit
 
                         val offset = votersAdapter?.getSkip() ?: 0
                         viewModel.loadVotes(offset)
@@ -146,36 +140,30 @@ open class PollOptionVotersFragment : Fragment(), SceytKoinComponent {
     }
 
     protected open fun initViewModel() {
-        viewModel.loadVotersLiveData.observe(viewLifecycleOwner) { voters ->
-            setOrUpdateVotersAdapter(voters)
+        viewModel.uiState
+            .flowWithLifecycle(lifecycle = viewLifecycleOwner.lifecycle)
+            .onEach(::onUiStateChange)
+            .launchIn(viewLifecycleOwner.lifecycleScope)
 
-            if (voters.isNotEmpty()) {
-                hideLoading()
-            }
+        viewModel.findOrCreateChatFlow
+            .flowWithLifecycle(lifecycle = viewLifecycleOwner.lifecycle)
+            .onEach(::onFindOrCreateChat)
+            .launchIn(viewLifecycleOwner.lifecycleScope)
+    }
+
+    protected open fun onUiStateChange(state: PollOptionVotersUIState) {
+        setOrUpdateVotersAdapter(state.voters)
+
+        // Show loading only when there are no voters yet
+        if (state.isLoading && state.voters.isEmpty()) {
+            showLoading()
+        } else {
+            hideLoading()
         }
 
-        viewModel.pageStateLiveData.observe(viewLifecycleOwner) { state ->
-            when (state) {
-                is PageState.StateLoading -> {
-                    if (state.isLoading && votersAdapter?.itemCount == 0) {
-                        showLoading()
-                    } else {
-                        hideLoading()
-                    }
-                }
-
-                else -> {
-                    hideLoading()
-                }
-            }
-        }
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.findOrCreateChatFlow.collect { channel ->
-                    onFindOrCreateChat(channel)
-                }
-            }
+        // Handle errors if needed
+        state.error?.let {
+            // Could show error message here if needed
         }
     }
 
@@ -202,6 +190,18 @@ open class PollOptionVotersFragment : Fragment(), SceytKoinComponent {
     protected open fun onFindOrCreateChat(sceytChannel: SceytChannel) {
         ChannelInfoActivity.Companion.launch(requireContext(), sceytChannel)
     }
+
+    protected open fun applyStyle() = with(binding) {
+        root.setBackgroundColor(style.backgroundColor)
+
+        // Apply toolbar style
+        style.toolbarStyle.apply(toolbar)
+        toolbar.setTitle(pollOptionName)
+
+        // Apply loader color
+        progressBar.setProgressColor(style.initialLoaderColor)
+    }
+
 
     override fun onDestroyView() {
         super.onDestroyView()
