@@ -9,7 +9,9 @@ import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import androidx.core.widget.doAfterTextChanged
 import androidx.recyclerview.widget.RecyclerView
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytItemCreatePollOptionBinding
+import com.sceyt.chatuikit.extensions.setCursorAndHandleColorRes
 import com.sceyt.chatuikit.extensions.showSoftInput
 import com.sceyt.chatuikit.presentation.components.create_poll.PollOptionItem
 import com.sceyt.chatuikit.styles.create_poll.CreatePollStyle
@@ -146,6 +148,7 @@ class PollOptionViewHolder(
     private fun applyStyle() = with(binding) {
         style.optionInputTextStyle.apply(tvOption, root)
         icDrag.setImageDrawable(style.dragIcon)
+        tvOption.setCursorAndHandleColorRes(SceytChatUIKit.theme.colors.accentColor)
     }
 }
 

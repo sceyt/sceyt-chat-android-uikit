@@ -50,7 +50,7 @@
                 tools:backgroundTint="@color/sceyt_color_surface_1">
 
                 <androidx.appcompat.widget.AppCompatEditText
-                    android:id="@+id/etQuestion"
+                    android:id="@+id/inputQuestion"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@android:color/transparent"

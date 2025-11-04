@@ -10,8 +10,10 @@ import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytFragmentCreatePollBinding
 import com.sceyt.chatuikit.extensions.customToastSnackBar
+import com.sceyt.chatuikit.extensions.setCursorAndHandleColorRes
 import com.sceyt.chatuikit.extensions.setDrawableStart
 import com.sceyt.chatuikit.extensions.setMultiLineWithImeOptions
 import com.sceyt.chatuikit.extensions.setOnlyClickable
@@ -70,8 +72,8 @@ open class CreatePollFragment : Fragment(), SceytKoinComponent {
         }
 
         // Setup question input
-        etQuestion.setMultiLineWithImeOptions()
-        etQuestion.doAfterTextChanged {
+        inputQuestion.setMultiLineWithImeOptions()
+        inputQuestion.doAfterTextChanged {
             viewModel.updateQuestion(it?.toString().orEmpty())
         }
 
@@ -161,7 +163,7 @@ open class CreatePollFragment : Fragment(), SceytKoinComponent {
         // Set texts
         toolbar.setTitle(style.toolbarTitle)
         tvQuestionTitle.text = style.questionTitle
-        etQuestion.hint = style.questionHint
+        inputQuestion.hint = style.questionHint
         tvOptionsTitle.text = style.optionsTitle
         tvAddOption.text = style.addOptionTitle
         tvParametersTitle.text = style.parametersTitle
@@ -173,7 +175,8 @@ open class CreatePollFragment : Fragment(), SceytKoinComponent {
         style.optionsTitleTextStyle.apply(tvOptionsTitle)
         style.addOptionTextStyle.apply(tvAddOption)
         style.parametersTitleTextStyle.apply(tvParametersTitle)
-        style.questionInputTextStyle.apply(etQuestion, layoutQuestion)
+        style.questionInputTextStyle.apply(inputQuestion, layoutQuestion)
+        inputQuestion.setCursorAndHandleColorRes(SceytChatUIKit.theme.colors.accentColor)
 
         // Apply switch styles
         with(style.switchStyle) {
