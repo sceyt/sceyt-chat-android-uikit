@@ -38,8 +38,10 @@ import com.sceyt.chatuikit.formatters.defaults.DefaultMessageMarkerDateFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultMessageViewCountFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultNotificationBodyFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultNotificationTitleFormatter
+import com.sceyt.chatuikit.formatters.defaults.DefaultPollResultVoteCountFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultPollTypeFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultPollVoteCountFormatter
+import com.sceyt.chatuikit.formatters.defaults.DefaultPollVoteTimeDateFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUnreadCountFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUserAndNotesNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUserNameFormatter
@@ -213,5 +215,13 @@ class SceytChatUIKitFormatters {
 
     var pollVoteCountFormatter: Formatter<PollOptionUiModel> by lazyVar {
         DefaultPollVoteCountFormatter()
+    }
+
+    var pollResultVoteCountFormatter: Formatter<Int> by lazyVar {
+        DefaultPollResultVoteCountFormatter()
+    }
+
+    var pollVoteDateFormatter: Formatter<Long> by lazyVar {
+        DefaultPollVoteTimeDateFormatter()
     }
 }

@@ -56,6 +56,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.mes
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageCommandEvent
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageListViewModel
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoActivity
+import com.sceyt.chatuikit.presentation.components.poll_results.PollResultsActivity
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.services.SceytSyncManager
 import com.sceyt.chatuikit.styles.extensions.messages_list.setEmptyStateForSelfChannel
@@ -757,6 +758,10 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
             is MessageCommandEvent.ReplyInThread -> {
 
+            }
+
+            is MessageCommandEvent.PollViewResultsClick -> {
+                PollResultsActivity.launch(messagesListView.context, event.message)
             }
         }
     }
