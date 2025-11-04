@@ -6,13 +6,20 @@ import com.sceyt.chat.models.poll.AddPollVoteRequest
 import com.sceyt.chat.models.poll.ClosePollRequest
 import com.sceyt.chat.models.poll.DeletePollVoteRequest
 import com.sceyt.chat.models.poll.RetractPollVoteRequest
+import com.sceyt.chat.models.poll.GetPollVotesRequest
+import com.sceyt.chat.models.poll.PollVote
 import com.sceyt.chat.sceyt_callbacks.MessageCallback
+import com.sceyt.chat.sceyt_callbacks.PollVotesCallback
+import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.data.models.SceytPagingResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.data.models.messages.Vote
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.extensions.safeResume
 import com.sceyt.chatuikit.persistence.mappers.toSceytUiMessage
+import com.sceyt.chatuikit.persistence.mappers.toVote
 import com.sceyt.chatuikit.persistence.repositories.PollRepository
 import kotlinx.coroutines.suspendCancellableCoroutine
 
@@ -88,6 +95,41 @@ class PollRepositoryImpl : PollRepository {
                 SceytLog.e(TAG, "endPoll error: ${e?.message}")
             }
         })
+    }
+
+    override suspend fun getPollVotes(
+        messageId: Long,
+        pollId: String,
+        optionId: String,
+        nextToken: String
+    ): SceytPagingResponse<List<Vote>> {
+        return suspendCancellableCoroutine { continuation ->
+            val limit = SceytChatUIKit.config.queryLimits.votersListQueryLimit
+            val request = GetPollVotesRequest(messageId, pollId, optionId)
+                .setLimit(limit)
+                .setNextToken(nextToken)
+
+            request.execute(object : PollVotesCallback {
+                override fun onResult(votes: MutableList<PollVote>?) {
+                    val mappedVotes = votes?.map { it.toVote() } ?: emptyList()
+                    val updatedNextToken = request.nextToken
+                    val hasNext =
+                        mappedVotes.size >= limit || updatedNextToken?.isNotEmpty() == true
+                    continuation.safeResume(
+                        SceytPagingResponse.Success(
+                            mappedVotes,
+                            hasNext,
+                            updatedNextToken
+                        )
+                    )
+                }
+
+                override fun onError(e: SceytException?) {
+                    continuation.safeResume(SceytPagingResponse.Error(e))
+                    SceytLog.e(TAG, "getPollVotesPaginated error: ${e?.message}")
+                }
+            })
+        }
     }
 }
 

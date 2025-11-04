@@ -1,7 +1,9 @@
 package com.sceyt.chatuikit.persistence.repositories
 
+import com.sceyt.chatuikit.data.models.SceytPagingResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.data.models.messages.Vote
 
 interface PollRepository {
     suspend fun addVotes(
@@ -29,5 +31,13 @@ interface PollRepository {
         messageId: Long,
         pollId: String,
     ): SceytResponse<SceytMessage>
+
+    suspend fun getPollVotes(
+        messageId: Long,
+        pollId: String,
+        optionId: String,
+        nextToken: String
+    ): SceytPagingResponse<List<Vote>>
+
 }
 

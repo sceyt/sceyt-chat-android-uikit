@@ -261,6 +261,8 @@
     <string name="sceyt_send">Send</string>
     <string name="sceyt_retract_vote">Retract vote</string>
     <string name="sceyt_end_vote">End vote</string>
+    <string name="poll_results">Poll results</string>
+    <string name="sceyt_show_all">Show All</string>
     <string name="sceyt_end">End</string>
     <string name="sceyt_not_now">Not now</string>
     <string name="sceyt_end_poll_dialog_desc">Are you sure you want to end this poll? People will no longer be able to vote.</string>
