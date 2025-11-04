@@ -22,6 +22,8 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -55,15 +57,14 @@ class PollOptionVotersViewModel(
         observePollUpdates()
     }
 
-    private fun observePollUpdates() {
-        viewModelScope.launch {
-            MessagesCache.Companion.messageUpdatedFlow
-                .collect { (_, messages) ->
-                    messages.find { it.id == messageId }?.let { updatedMessage ->
-                        handlePollUpdate(updatedMessage)
-                    }
+      private fun observePollUpdates() {
+        MessagesCache.messageUpdatedFlow
+            .onEach { (_, messages) ->
+                messages.find { it.id == messageId }?.let { updatedMessage ->
+                    handlePollUpdate(updatedMessage)
                 }
-        }
+            }
+            .launchIn(viewModelScope)
     }
 
     private fun handlePollUpdate(updatedMessage: SceytMessage) {
@@ -81,6 +82,16 @@ class PollOptionVotersViewModel(
         val headerIndex = votersList.indexOfFirst { it is VoterItem.HeaderItem }
         if (headerIndex >= 0) {
             votersList[headerIndex] = VoterItem.HeaderItem(updatedVoteCount)
+        } else {
+            votersList.add(0, VoterItem.HeaderItem(updatedVoteCount))
+        }
+
+        if (ownVote != null) {
+            val hasOwn = votersList.any { it is VoterItem.Voter && it.vote.user?.id == ownVote.user?.id }
+            if (!hasOwn) {
+                val insertOwnIndex = kotlin.math.min(1, votersList.size)
+                votersList.add(insertOwnIndex, VoterItem.Voter(ownVote))
+            }
         }
 
         val currentVoterIds = allVotes.mapNotNull { it.user?.id }.toSet()
@@ -106,14 +117,12 @@ class PollOptionVotersViewModel(
         if (newVoters.isNotEmpty() || votersToRemove.isNotEmpty()) {
             votersList.removeAll { it is VoterItem.LoadingMore }
 
-            val insertionIndex = if (ownVote != null) {
-                2 // After header and own vote
-            } else {
-                1 // After header only
-            }
+            val baseIndex = votersList.indexOfFirst { it is VoterItem.HeaderItem }.let { if (it == -1) 0 else it + 1 }
+            val insertionIndex = baseIndex + if (ownVote != null) 1 else 0
+            val safeIndex = insertionIndex.coerceIn(0, votersList.size)
 
             if (newVoters.isNotEmpty()) {
-                votersList.addAll(insertionIndex, newVoters)
+                votersList.addAll(safeIndex, newVoters)
             }
 
             if (_uiState.value.hasNext) {
