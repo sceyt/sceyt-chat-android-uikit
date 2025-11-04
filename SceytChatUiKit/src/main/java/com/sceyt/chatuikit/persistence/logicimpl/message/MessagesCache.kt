@@ -28,14 +28,15 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.mes
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 typealias ChannelId = Long
 typealias MessageDeletionDate = Long
 
 class MessagesCache {
-    @Volatile
     private var cachedMessages = hashMapOf<Long, HashMap<Long, SceytMessage>>()
-    private val lock = Any()
+    private val mutex = Mutex()
 
     companion object {
         private val messageUpdatedFlow_ = MutableSharedFlow<Pair<ChannelId, List<SceytMessage>>>(
@@ -62,145 +63,114 @@ class MessagesCache {
      * @param checkDifference if true check differences and add payloads, otherwise only put to cash.
      * @param checkDiffAndNotifyUpdate if true then will emit message update event, when detected
      * message change. */
-    fun addAll(
+    suspend fun addAll(
         channelId: Long, list: List<SceytMessage>,
         checkDifference: Boolean,
         checkDiffAndNotifyUpdate: Boolean,
-    ): Boolean {
-
-        synchronized(lock) {
-            return if (checkDifference)
-                putAndCheckHasDiff(channelId, true, checkDiffAndNotifyUpdate, *list.toTypedArray())
-            else {
-                putAllMessages(channelId, list)
-                false
-            }
+    ): Boolean = mutex.withLock {
+        return@withLock if (checkDifference)
+            putAndCheckHasDiff(channelId, true, checkDiffAndNotifyUpdate, *list.toTypedArray())
+        else {
+            putAllMessages(channelId, list)
+            false
         }
     }
 
-    fun updateAllSyncedMessagesAndGetMissing(
+    suspend fun updateAllSyncedMessagesAndGetMissing(
         channelId: Long,
         messages: List<SceytMessage>
-    ): List<SceytMessage> {
-        synchronized(lock) {
-            val missingMessages = mutableListOf<SceytMessage>()
-            messages.forEach {
-                val updatedMessage = initMessagePayLoads(channelId, it)
-                val old = getMessageByTid(channelId, it.tid)
-                val hasDiff = old?.diffContent(updatedMessage)?.hasDifference() ?: false
-                if (hasDiff)
-                    emitMessageUpdated(channelId, updatedMessage)
+    ): List<SceytMessage> = mutex.withLock {
+        val missingMessages = mutableListOf<SceytMessage>()
+        messages.forEach {
+            val updatedMessage = initMessagePayLoads(channelId, it)
+            val old = getMessageByTid(channelId, it.tid)
+            val hasDiff = old?.diffContent(updatedMessage)?.hasDifference() ?: false
+            if (hasDiff)
+                emitMessageUpdated(channelId, updatedMessage)
 
-                updateMessage(channelId, updatedMessage, false)
+            updateMessage(channelId, updatedMessage, false)
 
-                if (old == null)
-                    missingMessages.add(updatedMessage)
+            if (old == null)
+                missingMessages.add(updatedMessage)
+        }
+
+        return@withLock missingMessages
+    }
+
+    suspend fun add(channelId: Long, message: SceytMessage) = mutex.withLock {
+        putAndCheckHasDiff(channelId, false, true, message)
+    }
+
+    suspend fun get(channelId: Long, tid: Long): SceytMessage? = mutex.withLock {
+        return@withLock getMessageByTid(channelId, tid)
+    }
+
+    suspend fun getChannelMessages(channelId: Long): List<SceytMessage>? = mutex.withLock {
+        return@withLock cachedMessages[channelId]?.values?.toList()
+    }
+
+    suspend fun clear(channelId: Long) = mutex.withLock {
+        cachedMessages[channelId]?.clear()
+    }
+
+    suspend fun clearAllExceptPending(channelId: Long) = mutex.withLock {
+        getMessagesMap(channelId)?.values
+            ?.filter { it.deliveryStatus != DeliveryStatus.Pending }
+            ?.map { it.tid }?.forEach {
+                cachedMessages[channelId]?.remove(it)
             }
-
-            return missingMessages
-        }
     }
 
-    fun add(channelId: Long, message: SceytMessage) {
-        synchronized(lock) {
-            putAndCheckHasDiff(channelId, false, true, message)
-        }
+    suspend fun getSorted(channelId: Long): List<SceytMessage> = mutex.withLock {
+        return@withLock getMessagesMap(channelId)?.values?.sortedWith(MessageComparator())
+            ?: emptyList()
     }
 
-    fun get(channelId: Long, tid: Long): SceytMessage? {
-        synchronized(lock) {
-            return getMessageByTid(channelId, tid)
+    suspend fun messageUpdated(channelId: Long, vararg message: SceytMessage) = mutex.withLock {
+        val messages = message.map {
+            updateMessage(channelId, it, true)
         }
+        emitMessageUpdated(channelId, *messages.toTypedArray())
     }
 
-    fun getChannelMessages(channelId: Long): List<SceytMessage>? {
-        synchronized(lock) {
-            return cachedMessages[channelId]?.values?.toList()
-        }
-    }
-
-    fun clear(channelId: Long) {
-        synchronized(lock) {
-            cachedMessages[channelId]?.clear()
-        }
-    }
-
-    fun clearAllExceptPending(channelId: Long) {
-        synchronized(lock) {
-            getMessagesMap(channelId)?.values
-                ?.filter { it.deliveryStatus != DeliveryStatus.Pending }
-                ?.map { it.tid }?.forEach {
-                    cachedMessages[channelId]?.remove(it)
-                }
-        }
-    }
-
-    fun getSorted(channelId: Long): List<SceytMessage> {
-        synchronized(lock) {
-            return getMessagesMap(channelId)?.values?.sortedWith(MessageComparator())
-                ?: emptyList()
-        }
-    }
-
-    fun messageUpdated(channelId: Long, vararg message: SceytMessage) {
-        synchronized(lock) {
-            val messages = message.map {
-                updateMessage(channelId, it, true)
-            }
-            emitMessageUpdated(channelId, *messages.toTypedArray())
-        }
-    }
-
-    fun updateMessagesStatus(channelId: Long, status: DeliveryStatus, vararg tIds: Long) {
-        synchronized(lock) {
-            val updatesMessages = mutableListOf<SceytMessage>()
-            tIds.forEach {
-                getMessageByTid(channelId, it)?.let { message ->
-                    if (message.deliveryStatus < status) {
-                        updatesMessages.add(message.copy(deliveryStatus = status))
-                    }
+    suspend fun updateMessagesStatus(channelId: Long, status: DeliveryStatus, vararg tIds: Long) = mutex.withLock {
+        val updatesMessages = mutableListOf<SceytMessage>()
+        tIds.forEach {
+            getMessageByTid(channelId, it)?.let { message ->
+                if (message.deliveryStatus < status) {
+                    updatesMessages.add(message.copy(deliveryStatus = status))
                 }
             }
-            emitMessageUpdated(channelId, *updatesMessages.toTypedArray())
+        }
+        emitMessageUpdated(channelId, *updatesMessages.toTypedArray())
+    }
+
+    suspend fun hardDeleteMessage(channelId: Long, message: SceytMessage) = mutex.withLock {
+        cachedMessages[channelId]?.remove(message.tid)
+        messageHardDeletedFlow_.tryEmit(Pair(channelId, message))
+    }
+
+    suspend fun deleteAllMessagesLowerThenDate(channelId: Long, messagesDeletionDate: Long) = mutex.withLock {
+        if (getMessagesMap(channelId)?.removeAllIf { it.createdAt <= messagesDeletionDate && it.deliveryStatus != DeliveryStatus.Pending } == true) {
+            messagesClearedFlow_.tryEmit(Pair(channelId, messagesDeletionDate))
         }
     }
 
-    fun hardDeleteMessage(channelId: Long, message: SceytMessage) {
-        synchronized(lock) {
-            cachedMessages[channelId]?.remove(message.tid)
-            messageHardDeletedFlow_.tryEmit(Pair(channelId, message))
+    suspend fun deleteAllMessagesWhere(predicate: (SceytMessage) -> Boolean) = mutex.withLock {
+        cachedMessages.forEach { (_, map) ->
+            map.removeAllIf(predicate)
         }
     }
 
-    fun deleteAllMessagesLowerThenDate(channelId: Long, messagesDeletionDate: Long) {
-        synchronized(lock) {
-            if (getMessagesMap(channelId)?.removeAllIf { it.createdAt <= messagesDeletionDate && it.deliveryStatus != DeliveryStatus.Pending } == true) {
-                messagesClearedFlow_.tryEmit(Pair(channelId, messagesDeletionDate))
-            }
+    suspend fun upsertMessages(channelId: Long, vararg message: SceytMessage) = mutex.withLock {
+        message.forEach {
+            putAndCheckHasDiff(channelId, false, true, it)
         }
     }
 
-    fun deleteAllMessagesWhere(predicate: (SceytMessage) -> Boolean) {
-        synchronized(lock) {
-            cachedMessages.forEach { (_, map) ->
-                map.removeAllIf(predicate)
-            }
-        }
-    }
-
-    fun upsertMessages(channelId: Long, vararg message: SceytMessage) {
-        synchronized(lock) {
-            message.forEach {
-                putAndCheckHasDiff(channelId, false, true, it)
-            }
-        }
-    }
-
-    fun upsertNotifyUpdateAnyway(channelId: Long, vararg message: SceytMessage) {
-        synchronized(lock) {
-            message.forEach {
-                emitMessageUpdated(channelId, updateMessage(channelId, it, true))
-            }
+    suspend fun upsertNotifyUpdateAnyway(channelId: Long, vararg message: SceytMessage) = mutex.withLock {
+        message.forEach {
+            emitMessageUpdated(channelId, updateMessage(channelId, it, true))
         }
     }
 
@@ -379,115 +349,101 @@ class MessagesCache {
         }
     }
 
-    fun updateAttachmentTransferData(updateDate: TransferData) {
-        synchronized(lock) {
-            fun update(attachment: SceytAttachment): SceytAttachment {
-                return attachment.copy(
-                    transferState = updateDate.state,
-                    progressPercent = updateDate.progressPercent,
-                    filePath = updateDate.filePath,
-                    url = updateDate.url
-                )
-            }
+    suspend fun updateAttachmentTransferData(updateDate: TransferData) = mutex.withLock {
+        fun update(attachment: SceytAttachment): SceytAttachment {
+            return attachment.copy(
+                transferState = updateDate.state,
+                progressPercent = updateDate.progressPercent,
+                filePath = updateDate.filePath,
+                url = updateDate.url
+            )
+        }
 
-            cachedMessages.values.forEach { messageHashMap ->
-                messageHashMap[updateDate.messageTid]?.let { message ->
-                    val attachments = message.attachments?.toMutableList() ?: return@let
-                    attachments.forEachIndexed att@{ index, attachment ->
-                        if (attachment.type == AttachmentTypeEnum.Link.value)
-                            return@att
+        cachedMessages.values.forEach { messageHashMap ->
+            messageHashMap[updateDate.messageTid]?.let { message ->
+                val attachments = message.attachments?.toMutableList() ?: return@let
+                attachments.forEachIndexed att@{ index, attachment ->
+                    if (attachment.type == AttachmentTypeEnum.Link.value)
+                        return@att
 
-                        when (updateDate.state) {
-                            PendingUpload, Uploading, Uploaded, ErrorUpload, PauseUpload, Preparing, WaitingToUpload -> {
-                                if (attachment.filePath == updateDate.filePath) {
-                                    attachments[index] = update(attachment)
-                                    messageHashMap[updateDate.messageTid] =
-                                        message.copy(attachments = attachments)
-                                }
+                    when (updateDate.state) {
+                        PendingUpload, Uploading, Uploaded, ErrorUpload, PauseUpload, Preparing, WaitingToUpload -> {
+                            if (attachment.filePath == updateDate.filePath) {
+                                attachments[index] = update(attachment)
+                                messageHashMap[updateDate.messageTid] =
+                                    message.copy(attachments = attachments)
                             }
-
-                            Downloading, Downloaded, PendingDownload, ErrorDownload, PauseDownload -> {
-                                if (attachment.url == updateDate.url) {
-                                    attachments[index] = update(attachment)
-                                    messageHashMap[updateDate.messageTid] =
-                                        message.copy(attachments = attachments)
-                                }
-                            }
-
-                            FilePathChanged, ThumbLoaded -> return
                         }
+
+                        Downloading, Downloaded, PendingDownload, ErrorDownload, PauseDownload -> {
+                            if (attachment.url == updateDate.url) {
+                                attachments[index] = update(attachment)
+                                messageHashMap[updateDate.messageTid] =
+                                    message.copy(attachments = attachments)
+                            }
+                        }
+
+                        FilePathChanged, ThumbLoaded -> return@withLock
                     }
                 }
             }
         }
     }
 
-    fun updateAttachmentFilePathAndMeta(messageTid: Long, path: String?, metadata: String?) {
-        synchronized(lock) {
-            cachedMessages.values.forEach { messageHashMap ->
-                messageHashMap[messageTid]?.let { message ->
-                    val attachments = message.attachments?.toMutableList() ?: return@let
-                    attachments.forEachIndexed att@{ index, attachment ->
-                        if (attachment.type == AttachmentTypeEnum.Link.value)
-                            return@att
-                        attachments[index] = attachment.copy(
-                            filePath = path,
-                            metadata = metadata
-                        )
-                        messageHashMap[messageTid] = message.copy(attachments = attachments)
-                    }
-                }
-            }
-        }
-    }
-
-    fun updateAttachmentLinkDetails(data: LinkPreviewDetails) {
-        synchronized(lock) {
-            updateAllAttachments(predicate = { it.url == data.link }, updater = {
-                copy(linkPreviewDetails = data)
-            })
-        }
-    }
-
-    fun updateLinkDetailsSize(link: String, width: Int, height: Int) {
-        synchronized(lock) {
-            updateAllAttachments(predicate = { it.url == link }, updater = {
-                copy(
-                    linkPreviewDetails = linkPreviewDetails?.copy(
-                        imageWidth = width,
-                        imageHeight = height
+    suspend fun updateAttachmentFilePathAndMeta(messageTid: Long, path: String?, metadata: String?) = mutex.withLock {
+        cachedMessages.values.forEach { messageHashMap ->
+            messageHashMap[messageTid]?.let { message ->
+                val attachments = message.attachments?.toMutableList() ?: return@let
+                attachments.forEachIndexed att@{ index, attachment ->
+                    if (attachment.type == AttachmentTypeEnum.Link.value)
+                        return@att
+                    attachments[index] = attachment.copy(
+                        filePath = path,
+                        metadata = metadata
                     )
-                )
-            })
-        }
-    }
-
-    fun updateThumb(link: String, thumb: String) {
-        synchronized(lock) {
-            updateAllAttachments(predicate = { it.url == link }, updater = {
-                copy(linkPreviewDetails = linkPreviewDetails?.copy(thumb = thumb))
-            })
-        }
-    }
-
-    fun moveMessagesToNewChannel(pendingChannelId: Long, newChannelId: Long) {
-        synchronized(lock) {
-            cachedMessages[newChannelId] = cachedMessages[pendingChannelId] ?: return
-            cachedMessages.remove(pendingChannelId)
-        }
-    }
-
-    internal fun deletePendingReaction(channelId: Long, tid: Long, key: String): SceytMessage? {
-        synchronized(lock) {
-            return cachedMessages[channelId]?.get(tid)?.let {
-                val newReactions = it.pendingReactions?.toMutableSet()?.apply {
-                    find { data -> data.key == key }?.let { reactionData ->
-                        remove(reactionData)
-                    }
+                    messageHashMap[messageTid] = message.copy(attachments = attachments)
                 }
-                val message = it.copy(pendingReactions = newReactions?.toList())
-                cachedMessages[channelId]?.put(tid, message)
             }
+        }
+    }
+
+    suspend fun updateAttachmentLinkDetails(data: LinkPreviewDetails) = mutex.withLock {
+        updateAllAttachments(predicate = { it.url == data.link }, updater = {
+            copy(linkPreviewDetails = data)
+        })
+    }
+
+    suspend fun updateLinkDetailsSize(link: String, width: Int, height: Int) = mutex.withLock {
+        updateAllAttachments(predicate = { it.url == link }, updater = {
+            copy(
+                linkPreviewDetails = linkPreviewDetails?.copy(
+                    imageWidth = width,
+                    imageHeight = height
+                )
+            )
+        })
+    }
+
+    suspend fun updateThumb(link: String, thumb: String) = mutex.withLock {
+        updateAllAttachments(predicate = { it.url == link }, updater = {
+            copy(linkPreviewDetails = linkPreviewDetails?.copy(thumb = thumb))
+        })
+    }
+
+    suspend fun moveMessagesToNewChannel(pendingChannelId: Long, newChannelId: Long) = mutex.withLock {
+        cachedMessages[newChannelId] = cachedMessages[pendingChannelId] ?: return@withLock
+        cachedMessages.remove(pendingChannelId)
+    }
+
+    internal suspend fun deletePendingReaction(channelId: Long, tid: Long, key: String): SceytMessage? = mutex.withLock {
+        return@withLock cachedMessages[channelId]?.get(tid)?.let {
+            val newReactions = it.pendingReactions?.toMutableSet()?.apply {
+                find { data -> data.key == key }?.let { reactionData ->
+                    remove(reactionData)
+                }
+            }
+            val message = it.copy(pendingReactions = newReactions?.toList())
+            cachedMessages[channelId]?.put(tid, message)
         }
     }
 }
