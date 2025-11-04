@@ -9,8 +9,8 @@ import com.sceyt.chatuikit.presentation.components.create_poll.CreatePollViewMod
 import com.sceyt.chatuikit.presentation.components.invite_link.ChannelInviteLinkViewModel
 import com.sceyt.chatuikit.presentation.components.invite_link.join.JoinByInviteLinkViewModel
 import com.sceyt.chatuikit.presentation.components.invite_link.shareqr.ShareInviteQRViewModel
-import com.sceyt.chatuikit.presentation.components.poll_results.viewmodel.PollOptionVotersViewModel
-import com.sceyt.chatuikit.presentation.components.poll_results.viewmodel.PollResultsViewModel
+import com.sceyt.chatuikit.presentation.components.poll_results.option_voters.PollOptionVotersViewModel
+import com.sceyt.chatuikit.presentation.components.poll_results.PollResultsViewModel
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.androidx.viewmodel.dsl.viewModelOf
 import org.koin.core.qualifier.named
@@ -38,6 +38,13 @@ internal val viewModelModule = module {
     viewModel { params -> ChannelInviteLinkViewModel(params.get(), get()) }
     viewModel { params -> JoinByInviteLinkViewModel(params.get(), get()) }
     viewModel { params -> PollResultsViewModel(params.get(), get()) }
-    viewModel { params -> PollOptionVotersViewModel(params.get(), params.get(), params.get(), params.get(), get(), get()) }
+    viewModel { params -> PollOptionVotersViewModel(params.get(),
+        params.get(),
+        params.get(),
+        params.get(),
+        params.getOrNull(),
+        get(),
+        get())
+    }
     viewModelOf(::CreatePollViewModel)
 }

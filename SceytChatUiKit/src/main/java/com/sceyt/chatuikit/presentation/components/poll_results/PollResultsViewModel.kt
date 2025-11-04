@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.presentation.components.poll_results.viewmodel
+package com.sceyt.chatuikit.presentation.components.poll_results
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -12,6 +12,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.data.models.onSuccessNotNull
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
+import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
 import com.sceyt.chatuikit.presentation.components.poll_results.adapter.PollResultItem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -39,45 +40,65 @@ class PollResultsViewModel(
 
     init {
         loadPollResults()
+        observePollUpdates()
+    }
+
+    private fun observePollUpdates() {
+        viewModelScope.launch {
+            MessagesCache.messageUpdatedFlow
+                .collect { (_, messages) ->
+                    messages.find { it.id == message.id }?.let { updatedMessage ->
+                        handlePollUpdate(updatedMessage)
+                    }
+                }
+        }
+    }
+
+    private fun handlePollUpdate(updatedMessage: SceytMessage) {
+        loadPollResultsFromMessage(updatedMessage)
     }
 
     private fun loadPollResults() {
         viewModelScope.launch(Dispatchers.Default) {
-            val poll = message.poll
-            if (poll == null) {
-                _uiState.value = PollResultsUIState.Empty
-                return@launch
-            }
-
-            val headerItem = PollResultItem.HeaderItem(poll = poll)
-
-            val optionItems = poll.options.map { option ->
-                val otherVoters = poll.votes.filter { it.optionId == option.id }
-                
-                val ownVote = poll.ownVotes.firstOrNull { it.optionId == option.id }
-                
-                val allVoters = if (ownVote != null) {
-                    listOf(ownVote) + otherVoters
-                } else {
-                    otherVoters
-                }
-                
-                val voteCount = allVoters.size
-                val hasMore = allVoters.size > 5
-
-                PollResultItem.PollOptionItem(
-                    pollOption = option,
-                    voteCount = voteCount,
-                    voters = allVoters,
-                    hasMore = hasMore
-                )
-            }
-
-            val allItems = mutableListOf<PollResultItem>(headerItem)
-            allItems.addAll(optionItems)
-
-            _uiState.value = PollResultsUIState.Success(allItems)
+            loadPollResultsFromMessage(message)
         }
+    }
+
+    private fun loadPollResultsFromMessage(message: SceytMessage) {
+        val poll = message.poll
+        if (poll == null) {
+            _uiState.value = PollResultsUIState.Empty
+            return
+        }
+
+        val headerItem = PollResultItem.HeaderItem(poll = poll)
+
+        val optionItems = poll.options.map { option ->
+            val otherVoters = poll.votes.filter { it.optionId == option.id }
+            
+            val ownVote = poll.ownVotes.firstOrNull { it.optionId == option.id }
+            
+            val allVoters = if (ownVote != null) {
+                listOf(ownVote) + otherVoters
+            } else {
+                otherVoters
+            }
+            
+            val voteCount = allVoters.size
+            val hasMore = allVoters.size > 5
+
+            PollResultItem.PollOptionItem(
+                pollOption = option,
+                voteCount = voteCount,
+                voters = allVoters,
+                hasMore = hasMore
+            )
+        }
+
+        val allItems = mutableListOf<PollResultItem>(headerItem)
+        allItems.addAll(optionItems)
+
+        _uiState.value = PollResultsUIState.Success(allItems)
     }
 
     fun findOrCreatePendingDirectChat(user: SceytUser) {

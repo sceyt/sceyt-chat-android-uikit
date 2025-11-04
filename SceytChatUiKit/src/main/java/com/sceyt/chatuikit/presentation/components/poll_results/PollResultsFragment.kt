@@ -22,9 +22,9 @@ import com.sceyt.chatuikit.presentation.components.poll_results.adapter.PollResu
 import com.sceyt.chatuikit.presentation.components.poll_results.adapter.VoterItem
 import com.sceyt.chatuikit.presentation.components.poll_results.adapter.holders.PollResultsViewHolderFactory
 import com.sceyt.chatuikit.presentation.components.poll_results.adapter.listeners.PollResultClickListeners
-import com.sceyt.chatuikit.presentation.components.poll_results.viewmodel.PollResultsUIState
-import com.sceyt.chatuikit.presentation.components.poll_results.viewmodel.PollResultsViewModel
+import com.sceyt.chatuikit.presentation.components.poll_results.option_voters.PollOptionVotersFragment
 import com.sceyt.chatuikit.styles.StyleRegistry
+import com.sceyt.chatuikit.styles.poll_results.PollResultsStyle
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
@@ -146,6 +146,7 @@ open class PollResultsFragment : Fragment(), SceytKoinComponent {
         val ownVote = poll.ownVotes.firstOrNull { it.optionId == pollOptionId }
         
         val fragment = PollOptionVotersFragment.newInstance(
+            messageId = message.id,
             pollId = pollId,
             pollOptionId = pollOptionId,
             pollOptionName = item.pollOption.name,

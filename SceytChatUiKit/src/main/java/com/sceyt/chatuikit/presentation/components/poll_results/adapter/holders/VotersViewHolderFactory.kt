@@ -6,15 +6,16 @@ import android.view.ViewGroup
 import com.sceyt.chatuikit.databinding.SceytItemLoadingMoreBinding
 import com.sceyt.chatuikit.databinding.SceytItemVoterBinding
 import com.sceyt.chatuikit.databinding.SceytItemVoterHeaderBinding
+import com.sceyt.chatuikit.extensions.setProgressColor
 import com.sceyt.chatuikit.presentation.components.poll_results.adapter.VoterItem
 import com.sceyt.chatuikit.presentation.components.poll_results.adapter.listeners.VoterClickListeners
 import com.sceyt.chatuikit.presentation.components.poll_results.adapter.listeners.VoterClickListenersImpl
 import com.sceyt.chatuikit.presentation.root.BaseViewHolder
-import com.sceyt.chatuikit.styles.poll_results.VoterItemStyle
+import com.sceyt.chatuikit.styles.poll_results.PollOptionVotersStyle
 
 open class VotersViewHolderFactory(
         context: Context,
-        private val style: VoterItemStyle
+        private val style: PollOptionVotersStyle
 ) {
     private val layoutInflater = LayoutInflater.from(context)
     private val clickListeners = VoterClickListenersImpl()
@@ -23,17 +24,18 @@ open class VotersViewHolderFactory(
         return when (viewType) {
             ItemType.Header.ordinal -> VoterHeaderViewHolder(
                 binding = SceytItemVoterHeaderBinding.inflate(layoutInflater, parent, false),
-                style = style
+                style = style.voterItemStyle
             )
 
             ItemType.Voter.ordinal -> VoterViewHolder(
                 binding = SceytItemVoterBinding.inflate(layoutInflater, parent, false),
-                style = style,
+                style = style.voterItemStyle,
                 clickListeners = clickListeners
             )
 
             ItemType.Loading.ordinal -> LoadingMoreViewHolder(
                 SceytItemLoadingMoreBinding.inflate(layoutInflater, parent, false),
+                style = style
             )
 
             else -> throw IllegalArgumentException("Unknown view type $viewType")
@@ -57,8 +59,11 @@ open class VotersViewHolderFactory(
     }
 
     private class LoadingMoreViewHolder(
-            binding: SceytItemLoadingMoreBinding,
+            private val binding: SceytItemLoadingMoreBinding,
+            private val style: PollOptionVotersStyle
     ) : BaseViewHolder<VoterItem>(binding.root) {
-        override fun bind(item: VoterItem) {}
+        override fun bind(item: VoterItem) {
+            binding.adapterListLoadingProgressBar.setProgressColor(style.loadMoreProgressColor)
+        }
     }
 }

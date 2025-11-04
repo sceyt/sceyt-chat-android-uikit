@@ -4,7 +4,7 @@ import android.content.res.TypedArray
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.getCompatColor
-import com.sceyt.chatuikit.presentation.components.poll_results.PollResultsStyle
+import com.sceyt.chatuikit.styles.poll_results.PollResultsStyle
 import com.sceyt.chatuikit.styles.common.DividerStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.styles.common.ToolbarStyle
@@ -90,4 +90,6 @@ internal fun PollResultsStyle.Builder.buildPollOptionVotersStyle(
     .toolbarTitle("")
     .toolbarStyle(buildPollOptionVotersToolbarStyle(array))
     .voterItemStyle(VoterItemStyle.Builder(context, attrs).build())
+    .initialLoaderColor(context.getCompatColor(SceytChatUIKit.theme.colors.accentColor))
+    .loadMoreProgressColor(context.getCompatColor(SceytChatUIKit.theme.colors.accentColor))
     .build()
