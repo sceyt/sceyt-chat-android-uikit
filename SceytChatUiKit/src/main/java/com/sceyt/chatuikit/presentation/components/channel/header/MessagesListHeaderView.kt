@@ -542,7 +542,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
 
         menu.findItem(R.id.sceyt_reply)?.isVisible = isSingleMessage && !existPendingMessages
         //menu.findItem(R.id.sceyt_reply_in_thread).isVisible = isSingleMessage && !isPending
-        menu.findItem(R.id.sceyt_forward)?.isVisible = !existPendingMessages
+        menu.findItem(R.id.sceyt_forward)?.isVisible = !existPendingMessages && !isPollMessage
         val expiredEditMessage = (System.currentTimeMillis() - fistMessage.createdAt) >
                 SceytChatUIKit.config.messageEditTimeout
         menu.findItem(R.id.sceyt_edit_message)?.isVisible = isSingleMessage &&

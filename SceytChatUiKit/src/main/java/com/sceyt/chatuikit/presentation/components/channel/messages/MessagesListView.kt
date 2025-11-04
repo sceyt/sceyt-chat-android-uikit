@@ -56,6 +56,7 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploading
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.WaitingToUpload
 import com.sceyt.chatuikit.persistence.mappers.isLink
 import com.sceyt.chatuikit.presentation.common.KeyboardEventListener
+import com.sceyt.chatuikit.presentation.common.SceytDialog
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.openFile
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
@@ -96,9 +97,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 @Suppress("Unused", "MemberVisibilityCanBePrivate")
-class MessagesListView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
-    : ConstraintLayout(context, attrs, defStyleAttr), ClickListeners,
-        ActionsViewClickListeners, PopupClickListeners {
+class MessagesListView @JvmOverloads constructor(
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0
+) : ConstraintLayout(context, attrs, defStyleAttr), ClickListeners,
+    ActionsViewClickListeners, PopupClickListeners {
 
     private val binding: SceytMessagesListViewBinding
     private var messagesRV: MessagesRV
@@ -202,7 +206,11 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 }
             }
 
-            override fun onReactionClick(view: View, item: ReactionItem.Reaction, message: SceytMessage) {
+            override fun onReactionClick(
+                view: View,
+                item: ReactionItem.Reaction,
+                message: SceytMessage
+            ) {
                 checkMaybeInMultiSelectMode(view, message) {
                     clickListeners.onReactionClick(view, item, message)
                 }
@@ -214,7 +222,11 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 }
             }
 
-            override fun onAttachmentLongClick(view: View, item: FileListItem, message: SceytMessage) {
+            override fun onAttachmentLongClick(
+                view: View,
+                item: FileListItem,
+                message: SceytMessage
+            ) {
                 checkMaybeInMultiSelectMode(view, message) {
                     clickListeners.onAttachmentLongClick(view, item, message)
                 }
@@ -224,7 +236,11 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 clickListeners.onMentionClick(view, userId)
             }
 
-            override fun onAttachmentLoaderClick(view: View, item: FileListItem, message: SceytMessage) {
+            override fun onAttachmentLoaderClick(
+                view: View,
+                item: FileListItem,
+                message: SceytMessage
+            ) {
                 checkMaybeInMultiSelectMode(view, message) {
                     clickListeners.onAttachmentLoaderClick(view, item, message)
                 }
@@ -314,13 +330,19 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             ?.toMutableList() ?: mutableListOf()
 
         if (reactions.size < maxSize) {
-            reactions.addAll(SceytChatUIKit.config.defaultReactions
-                .minus(reactions.toSet())
-                .take(maxSize - reactions.size))
+            reactions.addAll(
+                SceytChatUIKit.config.defaultReactions
+                    .minus(reactions.toSet())
+                    .take(maxSize - reactions.size)
+            )
         }
 
-        return ReactionsPopup.showPopup(view, message, reactions.take(maxSize), style.reactionPickerStyle,
-            object : PopupReactionsAdapter.OnItemClickListener {
+        return ReactionsPopup.showPopup(
+            anchorView = view,
+            message = message,
+            reactions = reactions.take(maxSize),
+            style = style.reactionPickerStyle,
+            clickListener = object : PopupReactionsAdapter.OnItemClickListener {
                 override fun onReactionClick(reaction: ReactionItem.Reaction) {
                     this@MessagesListView.onAddOrRemoveReaction(reaction, message)
                 }
@@ -337,17 +359,37 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     private fun showMessageActionsPopup(view: View, message: SceytMessage) {
-        val popup = MessageActionsPopupMenu(ContextThemeWrapper(context, R.style.SceytPopupMenuStyle), view, message)
+        val popup = MessageActionsPopupMenu(
+            context = ContextThemeWrapper(context, R.style.SceytPopupMenuStyle),
+            anchor = view,
+            message = message
+        )
         popup.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
-                R.id.sceyt_edit_message -> messageActionsViewClickListeners.onEditMessageClick(message)
+                R.id.sceyt_edit_message -> messageActionsViewClickListeners.onEditMessageClick(
+                    message
+                )
+
                 R.id.sceyt_forward -> messageActionsViewClickListeners.onForwardMessageClick(message)
                 R.id.sceyt_react -> messageActionsViewClickListeners.onReactMessageClick(message)
                 R.id.sceyt_reply -> messageActionsViewClickListeners.onReplyMessageClick(message)
-                R.id.sceyt_reply_in_thread -> messageActionsViewClickListeners.onReplyMessageInThreadClick(message)
-                R.id.sceyt_copy_message -> messageActionsViewClickListeners.onCopyMessagesClick(message)
-                R.id.sceyt_delete_message -> messageActionsViewClickListeners.onDeleteMessageClick(message, requireForMe = false, actionFinish = {})
-                R.id.sceyt_retract_vote -> messageActionsViewClickListeners.onRetractVoteClick(message)
+                R.id.sceyt_reply_in_thread -> messageActionsViewClickListeners.onReplyMessageInThreadClick(
+                    message
+                )
+
+                R.id.sceyt_copy_message -> messageActionsViewClickListeners.onCopyMessagesClick(
+                    message
+                )
+
+                R.id.sceyt_delete_message -> messageActionsViewClickListeners.onDeleteMessageClick(
+                    message,
+                    requireForMe = false,
+                    actionFinish = {})
+
+                R.id.sceyt_retract_vote -> messageActionsViewClickListeners.onRetractVoteClick(
+                    message
+                )
+
                 R.id.sceyt_end_vote -> messageActionsViewClickListeners.onEndVoteClick(message)
             }
             false
@@ -372,16 +414,30 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     private fun onAttachmentLoaderClick(item: FileListItem, message: SceytMessage) {
-        messageCommandEventListener?.invoke(MessageCommandEvent.AttachmentLoaderClick(message, item))
+        messageCommandEventListener?.invoke(
+            MessageCommandEvent.AttachmentLoaderClick(
+                message = message,
+                item = item
+            )
+        )
     }
 
     private fun showAddEmojiDialog(message: SceytMessage) {
         context.getFragmentManager()?.let {
             EmojiPickerBottomSheetFragment().also { fragment ->
                 fragment.setEmojiListener { emoji ->
-                    val containsSelf = message.userReactions?.find { reaction -> reaction.key == emoji } != null
-                    onAddOrRemoveReaction(ReactionItem.Reaction(SceytReactionTotal(emoji,
-                        containsSelf = containsSelf), message.tid, true), message)
+                    val containsSelf = message.userReactions?.find { reaction ->
+                        reaction.key == emoji
+                    } != null
+
+                    onAddOrRemoveReaction(
+                        ReactionItem.Reaction(
+                            SceytReactionTotal(
+                                key = emoji,
+                                containsSelf = containsSelf
+                            ), message.tid, true
+                        ), message
+                    )
                 }
             }.show(it, null)
         }
@@ -390,18 +446,23 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     private fun updateItem(index: Int, item: MessageListItem, diff: MessageDiff) {
         val message = (item as? MessageItem)?.message ?: return
         (messagesRV.findViewHolderForItemId(item.getItemId()) as? BaseMessageViewHolder)?.let {
-            SceytLog.i("StatusIssueTag", "updateItem: found by itemId: ${item.getItemId()}, " +
-                    "msgId-> ${message.id}, diff ${diff.statusChanged}, status ${message.deliveryStatus}")
+            SceytLog.i(
+                "StatusIssueTag", "updateItem: found by itemId: ${item.getItemId()}, " +
+                        "msgId-> ${message.id}, diff ${diff.statusChanged}, status ${message.deliveryStatus}"
+            )
             it.bind(item, diff)
         } ?: run {
-            SceytLog.i("StatusIssueTag", "updateItem: notifyItemChanged by index $index, " +
-                    "diff ${diff.statusChanged}, msgId-> ${message.id}, status ${message.deliveryStatus}")
+            SceytLog.i(
+                "StatusIssueTag", "updateItem: notifyItemChanged by index $index, " +
+                        "diff ${diff.statusChanged}, msgId-> ${message.id}, status ${message.deliveryStatus}"
+            )
             messagesRV.adapter?.notifyItemChanged(index, diff)
         }
     }
 
     private fun notifyItemUpdatedToVisibleItems(item: MessageListItem) {
-        (messagesRV.findViewHolderForItemId(item.getItemId()) as? BaseMessageViewHolder)?.itemUpdated(item)
+        (messagesRV.findViewHolderForItemId(item.getItemId()) as? BaseMessageViewHolder)
+            ?.itemUpdated(item)
     }
 
     internal fun setMessagesList(data: List<MessageListItem>, force: Boolean = false) {
@@ -428,15 +489,20 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     internal fun updateMessage(message: SceytMessage): Boolean {
         var foundToUpdate = false
-        SceytLog.i(TAG, "Message updated: id ${message.id}, tid ${message.tid}, deliveryStatus ${message.deliveryStatus}")
+        SceytLog.i(
+            TAG,
+            "Message updated: id ${message.id}, tid ${message.tid}, deliveryStatus ${message.deliveryStatus}"
+        )
         val data = messagesRV.getData()
         for ((index, item) in data.withIndex()) {
             if (item is MessageItem && item.message.tid == message.tid) {
                 val updatedItem = item.copy(message = item.message.getUpdateMessage(message))
                 val diff = item.message.diff(updatedItem.message)
                 updateAdapterItem(index, updatedItem, diff)
-                SceytLog.i(TAG, "Found to update: id ${item.message.id}, tid ${item.message.tid}," +
-                        " diff ${diff.statusChanged}, newStatus ${message.deliveryStatus}, index $index, size ${messagesRV.getData().size}")
+                SceytLog.i(
+                    TAG, "Found to update: id ${item.message.id}, tid ${item.message.tid}," +
+                            " diff ${diff.statusChanged}, newStatus ${message.deliveryStatus}, index $index, size ${messagesRV.getData().size}"
+                )
                 foundToUpdate = true
                 break
             }
@@ -448,8 +514,15 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         val data = messagesRV.getData()
         for ((index, item) in data.withIndex()) {
             if (item is MessageItem && item.message.tid == message.tid) {
-                val updatedItem = item.copy(message = item.message.copy(isSelected = message.isSelected))
-                updateAdapterItem(index, updatedItem, MessageDiff.DEFAULT_FALSE.copy(selectionChanged = true))
+                val updatedItem = item.copy(
+                    message = item.message.copy(isSelected = message.isSelected)
+                )
+
+                updateAdapterItem(
+                    index = index,
+                    item = updatedItem,
+                    diff = MessageDiff.DEFAULT_FALSE.copy(selectionChanged = true)
+                )
                 break
             }
         }
@@ -477,7 +550,9 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             return
         }
         val data = messagesRV.getData()
-        messagesRV.getData().findIndexed { it is MessageItem && it.message.id == updateMessage.id }?.let { (index, item) ->
+        messagesRV.getData().findIndexed {
+            it is MessageItem && it.message.id == updateMessage.id
+        }?.let { (index, item) ->
             val message = (item as MessageItem).message
             val updatedItem = item.copy(message = message.getUpdateMessage(updateMessage))
             messagesRV.updateItemAt(index, updatedItem)
@@ -489,10 +564,15 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
 
         // Check reply message to update
-        data.filter { it is MessageItem && it.message.parentMessage?.id == updateMessage.id }.forEach { item ->
-            data.findIndexed { it is MessageItem && it.message.id == (item as MessageItem).message.id }?.let { (index, msg) ->
+        data.filter {
+            it is MessageItem && it.message.parentMessage?.id == updateMessage.id
+        }.forEach { item ->
+            data.findIndexed {
+                it is MessageItem && it.message.id == (item as MessageItem).message.id
+            }?.let { (index, msg) ->
                 val oldMessage = (msg as MessageItem).message
-                val updatedItem = msg.copy(message = oldMessage.copy(parentMessage = updateMessage))
+                val updatedItem =
+                    msg.copy(message = oldMessage.copy(parentMessage = updateMessage))
                 updateAdapterItem(index, updatedItem, oldMessage.diff(updatedItem.message))
             }
         }
@@ -505,24 +585,32 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal fun updateReaction(sceytMessage: SceytMessage) {
-        messagesRV.getData().findIndexed { it is MessageItem && it.message.id == sceytMessage.id }?.let { (index, item) ->
+        messagesRV.getData().findIndexed {
+            it is MessageItem && it.message.id == sceytMessage.id
+        }?.let { (index, item) ->
             val message = (item as MessageItem).message
-            val updatedItem = item.copy(message = message.copy(
-                reactionTotals = sceytMessage.reactionTotals,
-                userReactions = sceytMessage.userReactions,
-                messageReactions = sceytMessage.messageReactions
-            ))
+            val updatedItem = item.copy(
+                message = message.copy(
+                    reactionTotals = sceytMessage.reactionTotals,
+                    userReactions = sceytMessage.userReactions,
+                    messageReactions = sceytMessage.messageReactions
+                )
+            )
             updateAdapterItem(index, updatedItem, message.diff(updatedItem.message))
         }
     }
 
     internal fun updateViewState(state: PageState, enableErrorSnackBar: Boolean = true) {
-        binding.pageStateView.updateState(state, messagesRV.isEmpty(), enableErrorSnackBar = enableErrorSnackBar)
+        binding.pageStateView.updateState(
+            state = state,
+            showLoadingIfNeed = messagesRV.isEmpty(),
+            enableErrorSnackBar = enableErrorSnackBar
+        )
     }
 
     internal suspend fun updateProgress(
-            data: TransferData,
-            updateRecyclerView: Boolean,
+        data: TransferData,
+        updateRecyclerView: Boolean,
     ) = withContext(Dispatchers.Default) {
         val messages = ArrayList(messagesRV.getData())
         messages.findIndexed { item ->
@@ -552,10 +640,16 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             } else {
                 for ((attachmentIndex, sceytAttachment) in attachments.withIndex()) {
                     if (predicate(sceytAttachment)) {
-                        val attachmentWithTransfer = sceytAttachment.getUpdatedWithTransferData(data)
-                        val updatedAttachment = foundAttachmentFile?.updateAttachment(attachmentWithTransfer)
+                        val attachmentWithTransfer = sceytAttachment.getUpdatedWithTransferData(
+                            data = data
+                        )
+                        val updatedAttachment = foundAttachmentFile?.updateAttachment(
+                            file = attachmentWithTransfer
+                        )
                         attachments[attachmentIndex] = updatedAttachment ?: attachmentWithTransfer
-                        val updatedItem = item.copy(message = message.copy(attachments = attachments))
+                        val updatedItem = item.copy(
+                            message = message.copy(attachments = attachments)
+                        )
                         updateAdapterItemNotifyVisible(index, updatedItem)
                         break
                     }
@@ -573,16 +667,22 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             messages.forEachIndexed { index, item ->
                 if (item is MessageItem && item.message.parentMessage?.tid == data.messageTid) {
                     val message = item.message
-                    val updatedItem = item.copy(message = message.copy(parentMessage = message.parentMessage.copy(
-                        attachments = item.message.parentMessage.attachments?.map { attachment ->
-                            if (attachment.url == data.url) {
-                                attachment.copy(filePath = data.filePath)
-                            } else attachment
-                        }
-                    )))
+                    val updatedItem = item.copy(
+                        message = message.copy(
+                            parentMessage = message.parentMessage.copy(
+                                attachments = item.message.parentMessage.attachments?.map { attachment ->
+                                    if (attachment.url == data.url) {
+                                        attachment.copy(filePath = data.filePath)
+                                    } else attachment
+                                }
+                            )))
 
                     withContext(Dispatchers.Main) {
-                        updateAdapterItem(index, updatedItem, MessageDiff.DEFAULT_FALSE.copy(replyContainerChanged = true))
+                        updateAdapterItem(
+                            index = index,
+                            item = updatedItem,
+                            diff = MessageDiff.DEFAULT_FALSE.copy(replyContainerChanged = true)
+                        )
                     }
                 }
             }
@@ -599,20 +699,30 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             }
 
             attachments.findIndexed(predicate)?.let { (index, foundAttachmentFile) ->
-                val updatedAttachment = foundAttachmentFile.copy(linkPreviewDetails = linkPreviewDetails)
+                val updatedAttachment = foundAttachmentFile.copy(
+                    linkPreviewDetails = linkPreviewDetails
+                )
                 attachments[index] = updatedAttachment
                 val updatedItem = item.copy(message = message.copy(attachments = attachments))
                 withContext(Dispatchers.Main) {
-                    updateAdapterItem(itemIndex, updatedItem, MessageDiff.DEFAULT_FALSE.copy(filesChanged = true))
+                    updateAdapterItem(
+                        index = itemIndex,
+                        item = updatedItem,
+                        diff = MessageDiff.DEFAULT_FALSE.copy(filesChanged = true)
+                    )
                 }
             }
         }
     }
 
     internal fun messageSendFailed(tid: Long) {
-        messagesRV.getData().findIndexed { it is MessageItem && it.message.tid == tid }?.let { (index, item) ->
+        messagesRV.getData().findIndexed {
+            it is MessageItem && it.message.tid == tid
+        }?.let { (index, item) ->
             val message = (item as MessageItem).message
-            val updatedItem = item.copy(message = item.message.copy(deliveryStatus = DeliveryStatus.Pending))
+            val updatedItem = item.copy(
+                message = item.message.copy(deliveryStatus = DeliveryStatus.Pending)
+            )
             updateAdapterItem(index, updatedItem, message.diff(updatedItem.message))
         }
     }
@@ -622,7 +732,11 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             it is MessageItem && it.message.id == replyMessage?.parentMessage?.id
         }?.let { (index, item) ->
             val message = (item as MessageItem).message
-            val updatedItem = item.copy(message = item.message.copy(replyCount = message.replyCount + 1))
+            val updatedItem = item.copy(
+                message = item.message.copy(
+                    replyCount = message.replyCount + 1
+                )
+            )
             updateAdapterItem(index, updatedItem, message.diff(updatedItem.message))
         }
     }
@@ -691,7 +805,12 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         updateAdapterItemNotifyVisible(index, item)
     }
 
-    private fun updateAdapterItem(index: Int, item: MessageItem, diff: MessageDiff, notify: Boolean = true) {
+    private fun updateAdapterItem(
+        index: Int,
+        item: MessageItem,
+        diff: MessageDiff,
+        notify: Boolean = true
+    ) {
         messagesRV.updateItemAt(index, item)
         if (notify)
             updateItem(index, item, diff)
@@ -722,11 +841,11 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     fun scrollToMessage(
-            messageId: Long,
-            highlight: Boolean,
-            offset: Int = 0,
-            awaitToScroll: ((Boolean) -> Unit)? = null,
-            doIfNotFound: (() -> Unit)? = null,
+        messageId: Long,
+        highlight: Boolean,
+        offset: Int = 0,
+        awaitToScroll: ((Boolean) -> Unit)? = null,
+        doIfNotFound: (() -> Unit)? = null,
     ) {
         getMessageIndexedById(messageId)?.let { (position, _) ->
             scrollToPosition(position, highlight, offset, awaitToScroll)
@@ -734,12 +853,15 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     fun scrollToPosition(
-            position: Int,
-            highlight: Boolean,
-            offset: Int = 0,
-            awaitToScroll: ((Boolean) -> Unit)? = null,
+        position: Int,
+        highlight: Boolean,
+        offset: Int = 0,
+        awaitToScroll: ((Boolean) -> Unit)? = null,
     ) = safeScrollTo {
-        (messagesRV.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(position, offset)
+        (messagesRV.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(
+            position,
+            offset
+        )
 
         if (highlight || awaitToScroll != null) {
             messagesRV.awaitToScrollFinish(position, callback = {
@@ -803,9 +925,13 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     fun getLastMessage() = messagesRV.getLastMsg()
 
-    fun getFirstMessageBy(predicate: (MessageListItem) -> Boolean) = messagesRV.getFirstMessageBy(predicate)
+    fun getFirstMessageBy(
+        predicate: (MessageListItem) -> Boolean
+    ) = messagesRV.getFirstMessageBy(predicate)
 
-    fun getLastMessageBy(predicate: (MessageListItem) -> Boolean) = messagesRV.getLastMessageBy(predicate)
+    fun getLastMessageBy(
+        predicate: (MessageListItem) -> Boolean
+    ) = messagesRV.getLastMessageBy(predicate)
 
     fun getMessagesRecyclerView() = messagesRV
 
@@ -828,7 +954,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     fun setCustomMessageClickListener(listener: ClickListeners) {
         clickListeners = (listener as? MessageClickListenersImpl)?.withDefaultListeners(this)
-                ?: listener
+            ?: listener
     }
 
     fun setCustomMessageActionsViewClickListener(listener: ActionsViewClickListeners) {
@@ -893,8 +1019,11 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     override fun onAvatarClick(view: View, item: MessageItem) {
-        messageCommandEventListener?.invoke(MessageCommandEvent.UserClick(item.message.user?.id
-                ?: return))
+        messageCommandEventListener?.invoke(
+            MessageCommandEvent.UserClick(
+                userId = item.message.user?.id ?: return
+            )
+        )
     }
 
     override fun onReplyMessageContainerClick(view: View, item: MessageItem) {
@@ -923,11 +1052,21 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     override fun onAttachmentClick(view: View, item: FileListItem, message: SceytMessage) {
         when (item.type) {
             AttachmentTypeEnum.Image -> {
-                MediaPreviewActivity.launch(context, item.attachment, message.user, message.channelId)
+                MediaPreviewActivity.launch(
+                    context = context,
+                    attachment = item.attachment,
+                    from = message.user,
+                    channelId = message.channelId
+                )
             }
 
             AttachmentTypeEnum.Video -> {
-                MediaPreviewActivity.launch(context, item.attachment, message.user, message.channelId)
+                MediaPreviewActivity.launch(
+                    context = context,
+                    attachment = item.attachment,
+                    from = message.user,
+                    channelId = message.channelId
+                )
             }
 
             else -> item.attachment.openFile(context)
@@ -990,14 +1129,22 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         Toast.makeText(context, toastMessage, Toast.LENGTH_SHORT).show()
     }
 
-    override fun onDeleteMessageClick(vararg messages: SceytMessage, requireForMe: Boolean, actionFinish: () -> Unit) {
+    override fun onDeleteMessageClick(
+        vararg messages: SceytMessage,
+        requireForMe: Boolean,
+        actionFinish: () -> Unit
+    ) {
         DeleteMessageDialog(context)
             .setDeleteMessagesCount(messages.size)
             .setRequireForMe(requireForMe)
             .setAcceptCallback { forMe ->
                 actionFinish()
-                messageCommandEventListener?.invoke(MessageCommandEvent.DeleteMessage(messages.toList(),
-                    onlyForMe = requireForMe || forMe))
+                messageCommandEventListener?.invoke(
+                    MessageCommandEvent.DeleteMessage(
+                        messages = messages.toList(),
+                        onlyForMe = requireForMe || forMe
+                    )
+                )
             }.show()
     }
 
@@ -1032,9 +1179,18 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     override fun onEndVoteClick(message: SceytMessage) {
         val poll = message.poll ?: return
-        if (!poll.closed) {
-            pollEventListener?.invoke(PollEvent.EndVote(message))
-        }
+        if (poll.closed) return
+
+        SceytDialog.showDialog(
+            context = context,
+            titleId = R.string.sceyt_end_poll_dialog_title,
+            descId = R.string.sceyt_end_poll_dialog_desc,
+            positiveBtnTitleId = R.string.sceyt_end,
+            negativeBtnTitleId = R.string.sceyt_not_now,
+            positiveCb = {
+                pollEventListener?.invoke(PollEvent.EndVote(message))
+            }
+        )
     }
 
 
@@ -1044,7 +1200,12 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     override fun onRemoveReaction(message: SceytMessage, reactionItem: ReactionItem.Reaction) {
-        reactionEventListener?.invoke(ReactionEvent.RemoveReaction(message, reactionItem.reaction.key))
+        reactionEventListener?.invoke(
+            ReactionEvent.RemoveReaction(
+                message = message,
+                scoreKey = reactionItem.reaction.key
+            )
+        )
     }
 
     override fun onReactionClick(message: SceytMessage, reaction: SceytReaction) {
