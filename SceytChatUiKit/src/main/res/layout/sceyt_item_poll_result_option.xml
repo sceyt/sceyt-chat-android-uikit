@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/layoutOptionContainer"
@@ -8,38 +8,33 @@
     android:orientation="vertical"
     android:paddingTop="16dp">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:layout_width="match_parent"
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tvOptionName"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:paddingHorizontal="16dp">
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:fontFamily="@font/roboto_medium"
+        android:textColor="@color/sceyt_color_text_primary"
+        android:textSize="@dimen/mediumTextSize"
+        app:layout_constraintEnd_toStartOf="@+id/tvVoteCount"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="🤖 AI avatars" />
 
-        <androidx.appcompat.widget.AppCompatTextView
-            android:id="@+id/tvOptionName"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="16dp"
-            android:fontFamily="@font/roboto_medium"
-            android:textColor="@color/sceyt_color_text_primary"
-            android:textSize="@dimen/mediumTextSize"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/tvVoteCount"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="🤖 AI avatars" />
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tvVoteCount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="16dp"
+        android:fontFamily="@font/roboto_regular"
+        android:textColor="@color/sceyt_color_text_secondary"
+        android:textSize="@dimen/smallTextSize"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="152 votes" />
 
-        <androidx.appcompat.widget.AppCompatTextView
-            android:id="@+id/tvVoteCount"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:fontFamily="@font/roboto_regular"
-            android:textColor="@color/sceyt_color_text_secondary"
-            android:textSize="@dimen/smallTextSize"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="152 votes" />
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvVoters"
@@ -49,6 +44,8 @@
         android:nestedScrollingEnabled="false"
         android:overScrollMode="never"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvOptionName"
         tools:itemCount="3"
         tools:listitem="@layout/sceyt_item_voter" />
 
@@ -57,16 +54,23 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
+        android:foreground="@drawable/sceyt_bg_ripple"
         android:text="@string/sceyt_show_all"
         android:textAllCaps="false"
         android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/rvVoters"
         tools:visibility="visible" />
 
     <View
         android:id="@+id/divider"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="1dp"
         android:layout_marginTop="16dp"
-        android:background="@color/sceyt_color_border" />
+        android:background="@color/sceyt_color_border"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btnShowAll" />
 
-</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

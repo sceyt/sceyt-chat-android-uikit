@@ -19,20 +19,21 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-sealed interface PollResultsUIState {
-    data class Success(val items: List<PollResultItem>) : PollResultsUIState
-    data object Loading : PollResultsUIState
-    data object Empty : PollResultsUIState
-}
+data class PollResultsUIState(
+    val items: List<PollResultItem> = emptyList(),
+    val isLoading: Boolean = false,
+    val error: String? = null,
+)
 
 class PollResultsViewModel(
         private val message: SceytMessage,
         private val persistenceChannelsLogic: PersistenceChannelsLogic
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow<PollResultsUIState>(PollResultsUIState.Loading)
+    private val _uiState = MutableStateFlow(PollResultsUIState(isLoading = true))
     val uiState = _uiState.asStateFlow()
 
     private val _findOrCreateChatFlow = MutableSharedFlow<SceytChannel>()
@@ -67,7 +68,9 @@ class PollResultsViewModel(
     private fun loadPollResultsFromMessage(message: SceytMessage) {
         val poll = message.poll
         if (poll == null) {
-            _uiState.value = PollResultsUIState.Empty
+            _uiState.update {
+                it.copy(items = emptyList(), isLoading = false, error = null)
+            }
             return
         }
 
@@ -84,8 +87,8 @@ class PollResultsViewModel(
                 otherVoters
             }
             
-            val voteCount = allVoters.size
-            val hasMore = allVoters.size > 5
+            val voteCount = poll.votesPerOption[option.id] ?: 0
+            val hasMore = voteCount > 5
 
             PollResultItem.PollOptionItem(
                 pollOption = option,
@@ -98,7 +101,9 @@ class PollResultsViewModel(
         val allItems = mutableListOf<PollResultItem>(headerItem)
         allItems.addAll(optionItems)
 
-        _uiState.value = PollResultsUIState.Success(allItems)
+        _uiState.update {
+            it.copy(items = allItems, isLoading = false, error = null)
+        }
     }
 
     fun findOrCreatePendingDirectChat(user: SceytUser) {

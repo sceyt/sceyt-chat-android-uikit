@@ -1,7 +1,5 @@
 package com.sceyt.chatuikit.presentation.components.poll_results.option_voters
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.role.Role
 import com.sceyt.chatuikit.data.models.SceytPagingResponse
@@ -21,9 +19,18 @@ import com.sceyt.chatuikit.presentation.components.poll_results.adapter.VoterIte
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+
+data class PollOptionVotersUIState(
+    val voters: List<VoterItem> = emptyList(),
+    val isLoading: Boolean = false,
+    val hasNext: Boolean = false,
+    val error: String? = null,
+)
 
 class PollOptionVotersViewModel(
     private val messageId:Long,
@@ -35,14 +42,13 @@ class PollOptionVotersViewModel(
     private val pollRepository: PollRepository
 ) : BaseViewModel(){
 
-    private val _loadVotersLiveData = MutableLiveData<List<VoterItem>>()
-    val loadVotersLiveData: LiveData<List<VoterItem>> = _loadVotersLiveData
+    private val _uiState = MutableStateFlow(PollOptionVotersUIState())
+    val uiState = _uiState.asStateFlow()
 
     private val _findOrCreateChatFlow = MutableSharedFlow<SceytChannel>()
     val findOrCreateChatFlow = _findOrCreateChatFlow.asSharedFlow()
 
     private var nextToken: String = ""
-    private var isLoading = false
     private val votersList = mutableListOf<VoterItem>()
 
     init {
@@ -60,7 +66,7 @@ class PollOptionVotersViewModel(
         }
     }
 
-    private suspend fun handlePollUpdate(updatedMessage: SceytMessage) {
+    private fun handlePollUpdate(updatedMessage: SceytMessage) {
         val poll = updatedMessage.poll ?: return
 
         val allVotes = poll.votes.filter { it.optionId == optionId }
@@ -110,22 +116,20 @@ class PollOptionVotersViewModel(
                 votersList.addAll(insertionIndex, newVoters)
             }
 
-            if (hasNext) {
+            if (_uiState.value.hasNext) {
                 votersList.add(VoterItem.LoadingMore)
             }
         }
 
-        withContext(Dispatchers.Main) {
-            _loadVotersLiveData.value = votersList.toList()
+        _uiState.update { state ->
+            state.copy(voters = votersList.toList())
         }
     }
 
     fun loadVotes(offset: Int) {
-        if (isLoading) return
-        isLoading = true
+        if (_uiState.value.isLoading) return
 
-        val isLoadingMore = offset > 0
-        notifyPageLoadingState(isLoadingMore)
+        _uiState.update { it.copy(isLoading = true, error = null) }
 
         viewModelScope.launch(Dispatchers.IO) {
             val response = pollRepository.getPollVotes(
@@ -138,7 +142,6 @@ class PollOptionVotersViewModel(
             when (response) {
                 is SceytPagingResponse.Success -> {
                     nextToken = response.nextToken ?: ""
-                    hasNext = response.hasNext
 
                     if (offset == 0) {
                         votersList.clear()
@@ -153,20 +156,27 @@ class PollOptionVotersViewModel(
 
                     votersList.addAll(response.data.map { VoterItem.Voter(it) })
 
-                    if (hasNext) {
+                    if (response.hasNext) {
                         votersList.add(VoterItem.LoadingMore)
                     }
 
-                    withContext(Dispatchers.Main) {
-                        _loadVotersLiveData.value = votersList.toList()
-                        isLoading = false
+                    _uiState.update {
+                        it.copy(
+                            voters = votersList.toList(),
+                            isLoading = false,
+                            hasNext = response.hasNext,
+                            error = null
+                        )
                     }
                 }
 
                 is SceytPagingResponse.Error -> {
-                    hasNext = false
-                    withContext(Dispatchers.Main) {
-                        isLoading = false
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            hasNext = false,
+                            error = response.exception?.message
+                        )
                     }
                 }
             }
