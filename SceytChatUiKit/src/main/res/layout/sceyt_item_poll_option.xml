@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:clipChildren="false"
     android:paddingVertical="10dp">
 
     <androidx.appcompat.widget.AppCompatCheckBox
@@ -48,7 +49,7 @@
         tools:itemCount="1"
         tools:listitem="@layout/sceyt_item_voter_avatar" />
 
-    <androidx.appcompat.widget.AppCompatTextView
+    <com.sceyt.chatuikit.presentation.custom_views.AnimatedCounterTextView
         android:id="@+id/tvVoteCount"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -57,6 +58,7 @@
         app:layout_constraintBottom_toBottomOf="@+id/barrierVoters"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/checkbox"
+        app:layout_constraintWidth_min="10dp"
         tools:text="3" />
 
     <androidx.constraintlayout.widget.Barrier
