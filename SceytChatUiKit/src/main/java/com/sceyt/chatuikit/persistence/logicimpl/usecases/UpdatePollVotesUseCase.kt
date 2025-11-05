@@ -3,15 +3,16 @@ package com.sceyt.chatuikit.persistence.logicimpl.usecases
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.Vote
 import com.sceyt.chatuikit.persistence.database.dao.MessageDao
+import com.sceyt.chatuikit.persistence.database.dao.PendingPollVoteDao
 import com.sceyt.chatuikit.persistence.database.dao.PollDao
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
 import com.sceyt.chatuikit.persistence.mappers.toPollVoteEntity
 import com.sceyt.chatuikit.persistence.mappers.toSceytMessage
-import kotlin.collections.forEach
 
 internal class UpdatePollVotesUseCase(
     private val pollDao: PollDao,
     private val messageDao: MessageDao,
+    private val pendingPollVoteDao: PendingPollVoteDao,
     private val messagesCache: MessagesCache
 ) {
 
@@ -32,18 +33,24 @@ internal class UpdatePollVotesUseCase(
 
         removedVotes.forEach { vote ->
             votedPorOption[vote.optionId]?.let { voteCount ->
-                if (voteCount > 0)
-                    votedPorOption[vote.optionId] = voteCount - 1
+                val newCount = voteCount - 1
+                if (newCount > 0)
+                    votedPorOption[vote.optionId] = newCount
                 else {
                     votedPorOption.remove(vote.optionId)
                 }
             }
         }
 
-        val updatedPollEntity = pollEntity.copy(votesPerOption = votedPorOption)
+
+        pendingPollVoteDao.deleteVotesByOptionIds(
+            messageTid = message.tid,
+            pollId = pollId,
+            optionIds = (addedVoted + removedVotes).map { it.optionId }
+        )
 
         pollDao.upsertPollEntityWithVotes(
-            entity = updatedPollEntity,
+            entity = pollEntity.copy(votesPerOption = votedPorOption),
             addedVotes = addedVoted.map { it.toPollVoteEntity(pollId) },
             deletedVotes = removedVotes.map { it.toPollVoteEntity(pollId) }
         )
