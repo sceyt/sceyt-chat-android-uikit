@@ -2,6 +2,7 @@ package com.sceyt.chatuikit.persistence.logicimpl.usecases
 
 import com.bumptech.glide.request.RequestOptions.option
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.data.models.ChangeVoteResponseData
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.createErrorResponse
 import com.sceyt.chatuikit.data.models.messages.PendingVoteData
@@ -40,7 +41,7 @@ internal class TogglePollVoteUseCase(
         channelId: Long,
         message: SceytMessage,
         optionId: String,
-    ): SceytResponse<SceytMessage> = withContext(Dispatchers.IO) {
+    ): SceytResponse<ChangeVoteResponseData> = withContext(Dispatchers.IO) {
         val poll = message.poll
             ?: return@withContext createErrorResponse("Poll not found in message")
         val currentUser = SceytChatUIKit.chatUIFacade.userInteractor.getCurrentUser()
@@ -58,7 +59,7 @@ internal class TogglePollVoteUseCase(
             currentUser = currentUser
         )
         if (result.handled) {
-            return@withContext SceytResponse.Success(result.updatedMessage)
+            return@withContext SceytResponse.Success(ChangeVoteResponseData(result.updatedMessage))
         }
 
         // Determine if user has already voted for this option
@@ -84,7 +85,7 @@ internal class TogglePollVoteUseCase(
         optionId: String,
         hasVoted: Boolean,
         currentUser: SceytUser,
-    ): SceytResponse<SceytMessage> {
+    ): SceytResponse<ChangeVoteResponseData> {
         // Create new pending vote
         val newPendingVote = PendingVoteData(
             pollId = poll.id,
@@ -117,7 +118,7 @@ internal class TogglePollVoteUseCase(
 
         // If message is pending, skip server call
         if (message.isPending())
-            return SceytResponse.Success(updatedMessage)
+            return SceytResponse.Success(ChangeVoteResponseData(message = updatedMessage))
 
         // 3. Make server call
         return if (hasVoted) {
@@ -148,7 +149,7 @@ internal class TogglePollVoteUseCase(
         optionId: String,
         hasVoted: Boolean,
         currentUser: SceytUser,
-    ): SceytResponse<SceytMessage> {
+    ): SceytResponse<ChangeVoteResponseData> {
 
         // Create new pending vote for clicked option
         val newPendingVote = PendingVoteData(
@@ -173,7 +174,7 @@ internal class TogglePollVoteUseCase(
 
         // If message is pending, skip server call
         if (message.isPending())
-            return SceytResponse.Success(updatedMessage)
+            return SceytResponse.Success(ChangeVoteResponseData(message = updatedMessage))
 
         // 3. Make server call
         return if (hasVoted) {

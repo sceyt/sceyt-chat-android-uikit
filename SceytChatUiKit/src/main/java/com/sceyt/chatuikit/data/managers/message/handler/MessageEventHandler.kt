@@ -31,16 +31,12 @@ sealed interface MessageEventHandler {
         fun onReactionDeleted(message: SceytMessage, reaction: SceytReaction)
     }
 
-    fun interface OnVoteAdded : MessageEventHandler {
-        fun onVoteAdded(message: SceytMessage, votes: List<Vote>)
-    }
-
-    fun interface OnVoteDeleted : MessageEventHandler {
-        fun onVoteDeleted(message: SceytMessage, votes: List<Vote>)
+    fun interface OnVotesChanged : MessageEventHandler {
+        fun onVoteChanged(message: SceytMessage, addedVotes: List<Vote>, removedVoted: List<Vote>)
     }
 
     fun interface OnVoteRetracted : MessageEventHandler {
-        fun onVoteRetracted(message: SceytMessage, votes: List<Vote>)
+        fun onVoteRetracted(message: SceytMessage, retractedVotes: List<Vote>)
     }
 
     fun interface OnPollClosed : MessageEventHandler {
@@ -48,6 +44,5 @@ sealed interface MessageEventHandler {
     }
 
     interface AllEventManagers : OnMessage, OnDirectMessage, OnMessageDeleted, OnMessageEdited,
-        OnReactionAdded, OnReactionDeleted, OnVoteAdded, OnVoteDeleted,
-        OnVoteRetracted, OnPollClosed
+        OnReactionAdded, OnReactionDeleted, OnVotesChanged, OnVoteRetracted, OnPollClosed
 }

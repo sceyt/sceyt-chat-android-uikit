@@ -241,18 +241,16 @@ internal class PersistenceMessagesLogicImpl(
         limit: Int,
         loadKey: LoadKeyData,
         ignoreDb: Boolean,
-    ): Flow<PaginationResponse<SceytMessage>> = withContext(dispatcherIO) {
-        return@withContext loadMessages(
-            loadType = LoadPrev,
-            conversationId = conversationId,
-            messageId = lastMessageId,
-            replyInThread = replyInThread,
-            offset = offset,
-            limit = limit,
-            loadKey = loadKey,
-            ignoreDb = ignoreDb
-        )
-    }
+    ): Flow<PaginationResponse<SceytMessage>> = loadMessages(
+        loadType = LoadPrev,
+        conversationId = conversationId,
+        messageId = lastMessageId,
+        replyInThread = replyInThread,
+        offset = offset,
+        limit = limit,
+        loadKey = loadKey,
+        ignoreDb = ignoreDb
+    )
 
     override suspend fun loadNextMessages(
         conversationId: Long,
@@ -261,17 +259,15 @@ internal class PersistenceMessagesLogicImpl(
         offset: Int,
         limit: Int,
         ignoreDb: Boolean,
-    ): Flow<PaginationResponse<SceytMessage>> = withContext(dispatcherIO) {
-        return@withContext loadMessages(
-            loadType = LoadNext,
-            conversationId = conversationId,
-            messageId = lastMessageId,
-            replyInThread = replyInThread,
-            offset = offset,
-            limit = limit,
-            ignoreDb = ignoreDb
-        )
-    }
+    ): Flow<PaginationResponse<SceytMessage>> = loadMessages(
+        loadType = LoadNext,
+        conversationId = conversationId,
+        messageId = lastMessageId,
+        replyInThread = replyInThread,
+        offset = offset,
+        limit = limit,
+        ignoreDb = ignoreDb
+    )
 
     override suspend fun loadNearMessages(
         conversationId: Long,
@@ -281,19 +277,17 @@ internal class PersistenceMessagesLogicImpl(
         loadKey: LoadKeyData,
         ignoreDb: Boolean,
         ignoreServer: Boolean,
-    ): Flow<PaginationResponse<SceytMessage>> = withContext(dispatcherIO) {
-        return@withContext loadMessages(
-            loadType = LoadNear,
-            conversationId = conversationId,
-            messageId = messageId,
-            replyInThread = replyInThread,
-            offset = 0,
-            limit = limit,
-            loadKey = loadKey,
-            ignoreDb = ignoreDb,
-            ignoreServer = ignoreServer
-        )
-    }
+    ): Flow<PaginationResponse<SceytMessage>> = loadMessages(
+        loadType = LoadNear,
+        conversationId = conversationId,
+        messageId = messageId,
+        replyInThread = replyInThread,
+        offset = 0,
+        limit = limit,
+        loadKey = loadKey,
+        ignoreDb = ignoreDb,
+        ignoreServer = ignoreServer
+    )
 
     override suspend fun loadNewestMessages(
         conversationId: Long,
@@ -301,18 +295,16 @@ internal class PersistenceMessagesLogicImpl(
         limit: Int,
         loadKey: LoadKeyData,
         ignoreDb: Boolean
-    ): Flow<PaginationResponse<SceytMessage>> = withContext(dispatcherIO) {
-        return@withContext loadMessages(
-            loadType = LoadNewest,
-            conversationId = conversationId,
-            messageId = 0,
-            replyInThread = replyInThread,
-            offset = 0,
-            limit = limit,
-            loadKey = loadKey,
-            ignoreDb = ignoreDb
-        )
-    }
+    ): Flow<PaginationResponse<SceytMessage>> = loadMessages(
+        loadType = LoadNewest,
+        conversationId = conversationId,
+        messageId = 0,
+        replyInThread = replyInThread,
+        offset = 0,
+        limit = limit,
+        loadKey = loadKey,
+        ignoreDb = ignoreDb
+    )
 
     override suspend fun searchMessages(
         conversationId: Long,
@@ -465,7 +457,7 @@ internal class PersistenceMessagesLogicImpl(
         val channel = channelCache.getOneOf(channelId)
             ?: persistenceChannelsLogic.getChannelFromDb(channelId)
         if (channel?.pending == true) {
-            return@withContext createChannelAndSendMessageWithLock(
+            createChannelAndSendMessageWithLock(
                 pendingChannel = channel,
                 message = message,
                 isPendingMessage = false,
@@ -475,7 +467,7 @@ internal class PersistenceMessagesLogicImpl(
                     channelCache.removeFromPendingToRealChannelsData(channelId)
             }
         }
-        return@withContext sendMessageImpl(
+        sendMessageImpl(
             channelId = channelId,
             message = message,
             isSharing = false,
@@ -1443,15 +1435,15 @@ internal class PersistenceMessagesLogicImpl(
         val mutableList = list.toArrayList()
         for ((index, message) in list.withIndex()) {
             var updatedMessage = message
-            
+
             // Update message states with pending states
             updateMessageStatesWithPendingStates(message, pendingStates)?.let {
                 updatedMessage = it
             }
-            
+
             // Preserve pending poll votes from DB
             updatedMessage = preservePendingPollVotes(updatedMessage)
-            
+
             mutableList[index] = updatedMessage
 
             if (includeParents) {
@@ -1489,21 +1481,21 @@ internal class PersistenceMessagesLogicImpl(
 
         return mutableList.toList()
     }
-    
+
     /**
      * Preserve pending poll votes from database when saving server messages.
      * If incoming message has explicit pendingVotes, use them; otherwise load from DB.
      */
     private suspend fun preservePendingPollVotes(message: SceytMessage): SceytMessage {
         val poll = message.poll ?: return message
-        
+
         // If message already has explicit pendingVotes (from manual update), keep them
         if (poll.pendingVotes != null) return message
-        
+
         // Otherwise, load pending votes directly from PollDao (efficient - no need to load entire message)
-        val existingPoll = pollDao.getPollById(poll.id)
+        val existingPoll = pollDao.getPollById(message.tid, poll.id)
         val existingPendingVotes = existingPoll?.pendingVotes?.map { it.toPendingVoteData() }
-        
+
         return if (!existingPendingVotes.isNullOrEmpty()) {
             message.copy(poll = poll.copy(pendingVotes = existingPendingVotes))
         } else {
