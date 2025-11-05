@@ -6,8 +6,7 @@ import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.Reaction
 import com.sceyt.chat.models.poll.PollVote
 import com.sceyt.chat.sceyt_listeners.MessageListener
-import com.sceyt.chatuikit.data.managers.message.event.PollUpdateEventData
-import com.sceyt.chatuikit.data.managers.message.event.PollUpdateEventEnum
+import com.sceyt.chatuikit.data.managers.message.event.PollUpdateEvent
 import com.sceyt.chatuikit.data.managers.message.event.ReactionUpdateEventData
 import com.sceyt.chatuikit.data.managers.message.event.ReactionUpdateEventEnum
 import com.sceyt.chatuikit.data.managers.message.handler.MessageEventHandler.AllEventManagers
@@ -58,7 +57,7 @@ object MessageEventManager : AllEventManagers {
     val onMessageEditedOrDeletedFlow = onMessageEditedOrDeletedFlow_.asSharedFlow()
 
 
-    private val onPollUpdatedFlow_: MutableSharedFlow<PollUpdateEventData> = MutableSharedFlow(
+    private val onPollUpdatedFlow_: MutableSharedFlow<PollUpdateEvent> = MutableSharedFlow(
         extraBufferCapacity = 5,
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
@@ -106,21 +105,24 @@ object MessageEventManager : AllEventManagers {
                 )
             }
 
-            override fun onVoteAdded(message: Message?, list: List<PollVote>?) {
-                if (message == null || list == null) return
-                eventManager.onVoteAdded(message.toSceytUiMessage(), list.map { it.toVote() })
-            }
-
-            override fun onVoteDeleted(message: Message?, list: List<PollVote>?) {
-                if (message == null || list == null) return
-                eventManager.onVoteDeleted(message.toSceytUiMessage(), list.map { it.toVote() })
+            override fun onVoteChanged(
+                message: Message?,
+                addedVotes: List<PollVote>?,
+                removedVotes: List<PollVote>?
+            ) {
+                if (message == null) return
+                eventManager.onVoteChanged(
+                    message = message.toSceytUiMessage(),
+                    addedVotes = addedVotes?.map { it.toVote() }.orEmpty(),
+                    removedVoted = removedVotes?.map { it.toVote() }.orEmpty()
+                )
             }
 
             override fun onVoteRetracted(message: Message?, list: List<PollVote>?) {
                 message ?: return
                 eventManager.onVoteRetracted(
                     message = message.toSceytUiMessage(),
-                    votes = list?.map { it.toVote() }.orEmpty()
+                    retractedVotes = list?.map { it.toVote() }.orEmpty()
                 )
             }
 
@@ -168,44 +170,31 @@ object MessageEventManager : AllEventManagers {
         )
     }
 
-    override fun onVoteAdded(message: SceytMessage, votes: List<Vote>) {
+    override fun onVoteChanged(
+        message: SceytMessage,
+        addedVotes: List<Vote>,
+        removedVoted: List<Vote>
+    ) {
         onPollUpdatedFlow_.tryEmit(
-            PollUpdateEventData(
+            value = PollUpdateEvent.VoteChanged(
                 message = message,
-                votes = votes,
-                eventType = PollUpdateEventEnum.VoteAdded
+                addedVotes = addedVotes,
+                removedVotes = removedVoted,
             )
         )
     }
 
-    override fun onVoteDeleted(message: SceytMessage, votes: List<Vote>) {
+    override fun onVoteRetracted(message: SceytMessage, retractedVotes: List<Vote>) {
         onPollUpdatedFlow_.tryEmit(
-            PollUpdateEventData(
+            value = PollUpdateEvent.VoteRetracted(
                 message = message,
-                votes = votes,
-                eventType = PollUpdateEventEnum.VoteDeleted
-            )
-        )
-    }
-
-    override fun onVoteRetracted(message: SceytMessage, votes: List<Vote>) {
-        onPollUpdatedFlow_.tryEmit(
-            PollUpdateEventData(
-                message = message,
-                votes = votes,
-                eventType = PollUpdateEventEnum.VoteRetracted
+                retractedVotes = retractedVotes,
             )
         )
     }
 
     override fun onPollClosed(message: SceytMessage) {
-        onPollUpdatedFlow_.tryEmit(
-            PollUpdateEventData(
-                message = message,
-                votes = null,
-                eventType = PollUpdateEventEnum.PollClosed
-            )
-        )
+        onPollUpdatedFlow_.tryEmit(PollUpdateEvent.PollClosed(message = message))
     }
 
     @Suppress("unused")

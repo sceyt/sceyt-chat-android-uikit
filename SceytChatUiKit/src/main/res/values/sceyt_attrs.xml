@@ -165,4 +165,11 @@
         <attr name="horizontalProgressViewCornerRadius" format="dimension" />
     </declare-styleable>
 
+    <declare-styleable name="AnimatedCounterTextView">
+        <attr name="android:text" />
+        <attr name="android:textColor" />
+        <attr name="android:textSize" />
+        <attr name="android:fontFamily" />
+    </declare-styleable>
+
 </resources>
