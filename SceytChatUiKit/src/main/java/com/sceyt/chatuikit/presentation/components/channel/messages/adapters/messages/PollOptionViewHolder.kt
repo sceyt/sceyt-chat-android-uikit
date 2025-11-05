@@ -77,9 +77,9 @@ open class PollOptionViewHolder(
                     rvVoters.adapter = votersAdapter
                     rvVoters.addItemDecoration(OverlapDecoration(10.dpToPx()))
                 }
-                votersAdapter?.submitList(option.voters.take(3))
+                votersAdapter?.submitData(option.voters.take(3), animate = animate)
             } else {
-                votersAdapter?.submitList(emptyList())
+                votersAdapter?.submitData(emptyList(), animate = false)
             }
         }
     }
