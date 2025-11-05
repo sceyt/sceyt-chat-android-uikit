@@ -1,12 +1,14 @@
 package com.sceyt.chatuikit.persistence.logicimpl.usecases
 
+import com.sceyt.chatuikit.persistence.database.dao.MessageDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingPollVoteDao
+import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
 import com.sceyt.chatuikit.persistence.mappers.toSceytMessage
 
 internal class HandleChangeVoteErrorUseCase(
     private val pendingPollVoteDao: PendingPollVoteDao,
-    private val messageDao: com.sceyt.chatuikit.persistence.database.dao.MessageDao,
-    private val messagesCache: com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
+    private val messageDao: MessageDao,
+    private val messagesCache: MessagesCache
 ) {
 
     suspend operator fun invoke(
