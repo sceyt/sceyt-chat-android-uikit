@@ -21,11 +21,6 @@ class PollResultsAdapter(
 
     override fun onBindViewHolder(holder: BaseViewHolder<PollResultItem>, position: Int) {
         holder.bind(item = differ.currentList[position])
-
-        if (holder is PollOptionResultViewHolder) {
-            val isLastPollOption = position == differ.currentList.size - 1
-            holder.setIsLastItem(isLastPollOption)
-        }
     }
 
     override fun onBindViewHolder(holder: BaseViewHolder<PollResultItem>, position: Int, payloads: MutableList<Any>) {

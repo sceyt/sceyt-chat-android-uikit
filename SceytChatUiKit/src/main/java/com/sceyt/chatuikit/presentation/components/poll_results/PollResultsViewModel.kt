@@ -31,8 +31,8 @@ data class PollResultsUIState(
 )
 
 class PollResultsViewModel(
-        private val message: SceytMessage,
-        private val persistenceChannelsLogic: PersistenceChannelsLogic
+    private val message: SceytMessage,
+    private val persistenceChannelsLogic: PersistenceChannelsLogic
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PollResultsUIState(isLoading = true))
@@ -68,7 +68,6 @@ class PollResultsViewModel(
 
     private fun updateUiFromMessage(message: SceytMessage) {
         val items = if (message.poll == null) emptyList() else buildPollItems(message)
-
         _uiState.update {
             it.copy(items = items, isLoading = false, error = null)
         }
@@ -115,10 +114,17 @@ class PollResultsViewModel(
 
     fun findOrCreatePendingDirectChat(user: SceytUser) {
         viewModelScope.launch(Dispatchers.IO) {
-            persistenceChannelsLogic.findOrCreatePendingChannelByMembers(CreateChannelData(
-                type = ChannelTypeEnum.Direct.value,
-                members = listOf(SceytMember(role = Role(RoleTypeEnum.Owner.value), user = user)),
-            )).onSuccessNotNull { data ->
+            persistenceChannelsLogic.findOrCreatePendingChannelByMembers(
+                CreateChannelData(
+                    type = ChannelTypeEnum.Direct.value,
+                    members = listOf(
+                        SceytMember(
+                            role = Role(RoleTypeEnum.Owner.value),
+                            user = user
+                        )
+                    ),
+                )
+            ).onSuccessNotNull { data ->
                 _findOrCreateChatFlow.emit(data)
             }
         }

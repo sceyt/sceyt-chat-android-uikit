@@ -427,5 +427,7 @@
         <attr name="sceytUiMessagesListPollVoterAvatarBorderWidth" format="dimension" />
         <attr name="sceytUiMessagesListPollVoterAvatarBorderColor" format="reference|color" />
 
+        
+
     </declare-styleable>
 </resources>

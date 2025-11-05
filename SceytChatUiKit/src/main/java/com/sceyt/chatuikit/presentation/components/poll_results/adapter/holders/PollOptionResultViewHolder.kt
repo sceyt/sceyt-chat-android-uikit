@@ -2,7 +2,6 @@ package com.sceyt.chatuikit.presentation.components.poll_results.adapter.holders
 
 import androidx.core.view.isVisible
 import com.sceyt.chatuikit.databinding.SceytItemPollResultOptionBinding
-import com.sceyt.chatuikit.styles.poll_results.PollResultsStyle
 import com.sceyt.chatuikit.presentation.components.poll_results.adapter.PollResultItem
 import com.sceyt.chatuikit.presentation.components.poll_results.adapter.VoterItem
 import com.sceyt.chatuikit.presentation.components.poll_results.adapter.VotersAdapter
@@ -10,6 +9,7 @@ import com.sceyt.chatuikit.presentation.components.poll_results.adapter.diff.Pol
 import com.sceyt.chatuikit.presentation.components.poll_results.adapter.listeners.PollResultClickListeners
 import com.sceyt.chatuikit.presentation.components.poll_results.adapter.listeners.VoterClickListeners.VoterClickListener
 import com.sceyt.chatuikit.presentation.root.BaseViewHolder
+import com.sceyt.chatuikit.styles.poll_results.PollResultsStyle
 
 class PollOptionResultViewHolder(
         private val binding: SceytItemPollResultOptionBinding,
@@ -64,11 +64,6 @@ class PollOptionResultViewHolder(
             }
         }
     }
-
-    fun setIsLastItem(isLast: Boolean) {
-        binding.divider.isVisible = !isLast
-    }
-
     private fun setupVotersAdapter() {
         votersAdapter = VotersAdapter(
             viewHolderFactory = VotersViewHolderFactory(
@@ -83,10 +78,10 @@ class PollOptionResultViewHolder(
 
     private fun SceytItemPollResultOptionBinding.applyStyle() {
         with(style.pollResultItemStyle) {
+            optionBackgroundStyle.apply(layoutOptionContainer)
             optionNameTextStyle.apply(tvOptionName)
             voteCountTextStyle.apply(tvVoteCount)
             showAllButtonTextStyle.apply(btnShowAll)
-            itemDividerStyle.apply(divider)
         }
     }
 }
