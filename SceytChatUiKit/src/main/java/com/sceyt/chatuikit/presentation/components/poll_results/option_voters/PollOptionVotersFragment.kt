@@ -20,15 +20,14 @@ import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.setBundleArguments
 import com.sceyt.chatuikit.extensions.setProgressColor
 import com.sceyt.chatuikit.koin.SceytKoinComponent
-import com.sceyt.chatuikit.presentation.common.DebounceHelper
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoActivity
-import com.sceyt.chatuikit.styles.poll_results.PollResultsStyle
 import com.sceyt.chatuikit.presentation.components.poll_results.adapter.VoterItem
 import com.sceyt.chatuikit.presentation.components.poll_results.adapter.VotersAdapter
 import com.sceyt.chatuikit.presentation.components.poll_results.adapter.holders.VotersViewHolderFactory
 import com.sceyt.chatuikit.presentation.components.poll_results.adapter.listeners.VoterClickListeners
 import com.sceyt.chatuikit.styles.StyleRegistry
 import com.sceyt.chatuikit.styles.poll_results.PollOptionVotersStyle
+import com.sceyt.chatuikit.styles.poll_results.PollResultsStyle
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -62,7 +61,6 @@ open class PollOptionVotersFragment : Fragment(), SceytKoinComponent {
     }
     private var styleId: String = ""
     private val myId: String? get() = SceytChatUIKit.chatUIFacade.myId
-    private val loadMoreDebounce by lazy { DebounceHelper(100, this) }
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -70,7 +68,11 @@ open class PollOptionVotersFragment : Fragment(), SceytKoinComponent {
         initStyle(context)
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
         binding = SceytFragmentPollOptionVotersBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -82,7 +84,6 @@ open class PollOptionVotersFragment : Fragment(), SceytKoinComponent {
         initViews()
         setupVotersAdapter()
         initViewModel()
-        viewModel.loadVotes(0)
     }
 
     protected open fun getBundleArguments() {
@@ -127,12 +128,8 @@ open class PollOptionVotersFragment : Fragment(), SceytKoinComponent {
 
             addRVScrollListener(onScrolled = { _: RecyclerView, _: Int, _: Int ->
                 if (isLastItemDisplaying()) {
-                    loadMoreDebounce.submit {
-                        val currentState = viewModel.uiState.value
-                        if (!currentState.hasNext || currentState.isLoading) return@submit
-
-                        val offset = votersAdapter?.getSkip() ?: 0
-                        viewModel.loadVotes(offset)
+                    if (viewModel.canLoadMore()) {
+                        viewModel.loadMore()
                     }
                 }
             })
@@ -218,13 +215,13 @@ open class PollOptionVotersFragment : Fragment(), SceytKoinComponent {
         private const val OWN_VOTE = "OWN_VOTE"
 
         fun newInstance(
-                messageId: Long,
-                pollId: String,
-                pollOptionId: String,
-                pollOptionName: String,
-                pollOptionVotersCount: Int,
-                styleId: String,
-                ownVote: Vote? = null
+            messageId: Long,
+            pollId: String,
+            pollOptionId: String,
+            pollOptionName: String,
+            pollOptionVotersCount: Int,
+            styleId: String,
+            ownVote: Vote? = null
         ): PollOptionVotersFragment {
             val fragment = PollOptionVotersFragment()
             fragment.setBundleArguments {

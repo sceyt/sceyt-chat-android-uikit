@@ -51,10 +51,13 @@ class PollOptionVotersViewModel(
     val findOrCreateChatFlow = _findOrCreateChatFlow.asSharedFlow()
 
     private var nextToken: String = ""
+    private var hasMoreData: Boolean = false
+    private var isLoadingMore: Boolean = false
     private val votersList = mutableListOf<VoterItem>()
 
     init {
         observePollUpdates()
+        loadInitialData()
     }
 
       private fun observePollUpdates() {
@@ -135,33 +138,32 @@ class PollOptionVotersViewModel(
         }
     }
 
-    fun loadVotes(offset: Int) {
-        if (_uiState.value.isLoading) return
-
-        _uiState.update { it.copy(isLoading = true, error = null) }
-
+    private fun loadInitialData() {
         viewModelScope.launch(Dispatchers.IO) {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+
+            nextToken = ""
+            hasMoreData = false
+            isLoadingMore = false
+            votersList.clear()
+
             val response = pollRepository.getPollVotes(
                 messageId = messageId,
                 pollId = pollId,
                 optionId = optionId,
-                nextToken = if (offset > 0) nextToken else ""
+                nextToken = ""
             )
 
             when (response) {
                 is SceytPagingResponse.Success -> {
                     nextToken = response.nextToken ?: ""
+                    hasMoreData = response.hasNext
 
-                    if (offset == 0) {
-                        votersList.clear()
-                        votersList.add(VoterItem.HeaderItem(pollOptionVotersCount))
+                    votersList.add(VoterItem.HeaderItem(pollOptionVotersCount))
 
-                        if (ownVote != null) {
-                            votersList.add(VoterItem.Voter(ownVote))
-                        }
+                    if (ownVote != null) {
+                        votersList.add(VoterItem.Voter(ownVote))
                     }
-
-                    votersList.removeAll { it is VoterItem.LoadingMore }
 
                     votersList.addAll(response.data.map { VoterItem.Voter(it) })
 
@@ -169,14 +171,7 @@ class PollOptionVotersViewModel(
                         votersList.add(VoterItem.LoadingMore)
                     }
 
-                    _uiState.update {
-                        it.copy(
-                            voters = votersList.toList(),
-                            isLoading = false,
-                            hasNext = response.hasNext,
-                            error = null
-                        )
-                    }
+                    updateUIState()
                 }
 
                 is SceytPagingResponse.Error -> {
@@ -191,6 +186,62 @@ class PollOptionVotersViewModel(
             }
         }
     }
+
+    fun loadMore() {
+        if (!hasMoreData || isLoadingMore) return
+
+        viewModelScope.launch(Dispatchers.IO) {
+            isLoadingMore = true
+
+            val response = pollRepository.getPollVotes(
+                messageId = messageId,
+                pollId = pollId,
+                optionId = optionId,
+                nextToken = nextToken
+            )
+
+            when (response) {
+                is SceytPagingResponse.Success -> {
+                    nextToken = response.nextToken ?: ""
+                    hasMoreData = response.hasNext
+
+                    votersList.removeAll { it is VoterItem.LoadingMore }
+
+                    votersList.addAll(response.data.map { VoterItem.Voter(it) })
+
+                    if (response.hasNext) {
+                        votersList.add(VoterItem.LoadingMore)
+                    }
+
+                    updateUIState()
+                }
+
+                is SceytPagingResponse.Error -> {
+                    _uiState.update {
+                        it.copy(
+                            hasNext = false,
+                            error = response.exception?.message
+                        )
+                    }
+                }
+            }
+
+            isLoadingMore = false
+        }
+    }
+
+    private fun updateUIState() {
+        _uiState.update {
+            it.copy(
+                voters = votersList.toList(),
+                isLoading = false,
+                hasNext = hasMoreData,
+                error = null
+            )
+        }
+    }
+
+    fun canLoadMore(): Boolean = hasMoreData && !isLoadingMore
 
     fun findOrCreatePendingDirectChat(user: SceytUser) {
         viewModelScope.launch(Dispatchers.IO) {
