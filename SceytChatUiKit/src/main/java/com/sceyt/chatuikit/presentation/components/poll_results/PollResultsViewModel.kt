@@ -19,6 +19,8 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -29,8 +31,8 @@ data class PollResultsUIState(
 )
 
 class PollResultsViewModel(
-        private val message: SceytMessage,
-        private val persistenceChannelsLogic: PersistenceChannelsLogic
+    private val message: SceytMessage,
+    private val persistenceChannelsLogic: PersistenceChannelsLogic
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PollResultsUIState(isLoading = true))
@@ -45,73 +47,84 @@ class PollResultsViewModel(
     }
 
     private fun observePollUpdates() {
-        viewModelScope.launch {
-            MessagesCache.messageUpdatedFlow
-                .collect { (_, messages) ->
-                    messages.find { it.id == message.id }?.let { updatedMessage ->
-                        handlePollUpdate(updatedMessage)
-                    }
+        MessagesCache.messageUpdatedFlow
+            .onEach { (_, messages) ->
+                messages.find { it.id == message.id }?.let { updatedMessage ->
+                    handlePollUpdate(updatedMessage)
                 }
-        }
+            }
+            .launchIn(viewModelScope)
     }
 
     private fun handlePollUpdate(updatedMessage: SceytMessage) {
-        loadPollResultsFromMessage(updatedMessage)
+        updateUiFromMessage(updatedMessage)
     }
 
     private fun loadPollResults() {
         viewModelScope.launch(Dispatchers.Default) {
-            loadPollResultsFromMessage(message)
+            updateUiFromMessage(message)
         }
     }
 
-    private fun loadPollResultsFromMessage(message: SceytMessage) {
-        val poll = message.poll
-        if (poll == null) {
-            _uiState.update {
-                it.copy(items = emptyList(), isLoading = false, error = null)
-            }
-            return
+    private fun updateUiFromMessage(message: SceytMessage) {
+        val items = if (message.poll == null) emptyList() else buildPollItems(message)
+        _uiState.update {
+            it.copy(items = items, isLoading = false, error = null)
         }
+    }
+
+    private fun buildPollItems(message: SceytMessage): List<PollResultItem> {
+        val poll = message.poll ?: return emptyList()
 
         val headerItem = PollResultItem.HeaderItem(poll = poll)
 
+        val votesByOptionId = poll.votes.groupBy { it.optionId }
+        val ownVoteByOptionId = poll.ownVotes.associateBy { it.optionId }
+
         val optionItems = poll.options.map { option ->
-            val otherVoters = poll.votes.filter { it.optionId == option.id }
-            
-            val ownVote = poll.ownVotes.firstOrNull { it.optionId == option.id }
-            
-            val allVoters = if (ownVote != null) {
-                listOf(ownVote) + otherVoters
-            } else {
-                otherVoters
-            }
-            
+            val otherVoters = votesByOptionId[option.id].orEmpty()
+            val ownVote = ownVoteByOptionId[option.id]
+            val voters = buildPreviewList(otherVoters, ownVote)
+
             val voteCount = poll.votesPerOption[option.id] ?: 0
-            val hasMore = voteCount > 5
+            val hasMore = voteCount > VOTERS_PREVIEW_LIMIT
 
             PollResultItem.PollOptionItem(
                 pollOption = option,
                 voteCount = voteCount,
-                voters = allVoters,
+                voters = voters,
                 hasMore = hasMore
             )
         }
 
-        val allItems = mutableListOf<PollResultItem>(headerItem)
-        allItems.addAll(optionItems)
+        return listOf(headerItem) + optionItems
+    }
 
-        _uiState.update {
-            it.copy(items = allItems, isLoading = false, error = null)
+    private fun <T> buildPreviewList(otherItems: List<T>, ownItem: T?): List<T> {
+        return if (ownItem != null) {
+            listOf(ownItem) + otherItems.take(maxOf(0, VOTERS_PREVIEW_LIMIT - 1))
+        } else {
+            otherItems.take(VOTERS_PREVIEW_LIMIT)
         }
+    }
+
+    private companion object {
+        const val VOTERS_PREVIEW_LIMIT = 5
     }
 
     fun findOrCreatePendingDirectChat(user: SceytUser) {
         viewModelScope.launch(Dispatchers.IO) {
-            persistenceChannelsLogic.findOrCreatePendingChannelByMembers(CreateChannelData(
-                type = ChannelTypeEnum.Direct.value,
-                members = listOf(SceytMember(role = Role(RoleTypeEnum.Owner.value), user = user)),
-            )).onSuccessNotNull { data ->
+            persistenceChannelsLogic.findOrCreatePendingChannelByMembers(
+                CreateChannelData(
+                    type = ChannelTypeEnum.Direct.value,
+                    members = listOf(
+                        SceytMember(
+                            role = Role(RoleTypeEnum.Owner.value),
+                            user = user
+                        )
+                    ),
+                )
+            ).onSuccessNotNull { data ->
                 _findOrCreateChatFlow.emit(data)
             }
         }

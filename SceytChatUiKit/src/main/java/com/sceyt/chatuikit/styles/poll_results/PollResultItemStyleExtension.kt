@@ -5,12 +5,13 @@ import android.util.AttributeSet
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.getCompatColor
-import com.sceyt.chatuikit.styles.common.DividerStyle
+import com.sceyt.chatuikit.styles.common.BackgroundStyle
+import com.sceyt.chatuikit.styles.common.Shape
 import com.sceyt.chatuikit.styles.common.TextStyle
 
 /* Option Name Text Style */
 internal fun PollResultItemStyle.Builder.buildOptionNameTextStyle(
-        array: TypedArray,
+    array: TypedArray,
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.PollResults_sceytUiPollResultsOptionNameTextColor,
@@ -28,7 +29,7 @@ internal fun PollResultItemStyle.Builder.buildOptionNameTextStyle(
 
 /* Vote Count Text Style */
 internal fun PollResultItemStyle.Builder.buildVoteCountTextStyle(
-        array: TypedArray,
+    array: TypedArray,
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.PollResults_sceytUiPollResultsVoteCountTextColor,
@@ -44,9 +45,24 @@ internal fun PollResultItemStyle.Builder.buildVoteCountTextStyle(
     )
     .build()
 
+/* Option Background Style */
+internal fun PollResultItemStyle.Builder.buildOptionBackgroundStyle(
+    array: TypedArray,
+) = BackgroundStyle.Builder(array)
+    .setBackgroundColor(
+        index = R.styleable.PollResults_sceytUiPollResultsOptionBackgroundColor,
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.surface1Color)
+    )
+    .setShape(
+        Shape.RoundedCornerShape(
+            radius = context.resources.getDimension(R.dimen.sceyt_space_8dp)
+        )
+    )
+    .build()
+
 /* Show All Button Text Style */
 internal fun PollResultItemStyle.Builder.buildShowAllButtonTextStyle(
-        array: TypedArray,
+    array: TypedArray,
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.PollResults_sceytUiPollResultsShowAllButtonTextColor,
@@ -62,21 +78,7 @@ internal fun PollResultItemStyle.Builder.buildShowAllButtonTextStyle(
     )
     .build()
 
-/* Item Divider Style */
-internal fun PollResultItemStyle.Builder.buildItemDividerStyle(
-        array: TypedArray,
-) = DividerStyle.Builder(array)
-    .setColor(
-        index = R.styleable.PollResults_sceytUiPollResultsDividerColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.borderColor)
-    )
-    .setHeight(
-        index = R.styleable.PollResults_sceytUiPollResultsDividerHeight,
-        defValue = context.resources.getDimensionPixelSize(R.dimen.sceyt_space_8dp)
-    )
-    .build()
-
 /* Voter Item Style */
 internal fun PollResultItemStyle.Builder.buildVoterItemStyle(
-        attrs: AttributeSet?
+    attrs: AttributeSet?
 ) = VoterItemStyle.Builder(context, attrs).build()

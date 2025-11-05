@@ -6,15 +6,15 @@ import androidx.core.content.res.use
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.formatters.Formatter
-import com.sceyt.chatuikit.styles.common.DividerStyle
+import com.sceyt.chatuikit.styles.common.BackgroundStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
 
 data class PollResultItemStyle(
         val optionNameTextStyle: TextStyle,
         val voteCountTextStyle: TextStyle,
         val showAllButtonTextStyle: TextStyle,
+        val optionBackgroundStyle: BackgroundStyle,
         val voteCountFormatter: Formatter<Int>,
-        val itemDividerStyle: DividerStyle,
         val voterItemStyle: VoterItemStyle
 ) {
     companion object {
@@ -31,8 +31,8 @@ data class PollResultItemStyle(
                     optionNameTextStyle = buildOptionNameTextStyle(array),
                     voteCountTextStyle = buildVoteCountTextStyle(array),
                     showAllButtonTextStyle = buildShowAllButtonTextStyle(array),
+                    optionBackgroundStyle = buildOptionBackgroundStyle(array),
                     voteCountFormatter = SceytChatUIKit.formatters.pollResultVoteCountFormatter,
-                    itemDividerStyle = buildItemDividerStyle(array),
                     voterItemStyle = buildVoterItemStyle(attrs)
                 ).let { styleCustomizer.apply(context, it) }
             }

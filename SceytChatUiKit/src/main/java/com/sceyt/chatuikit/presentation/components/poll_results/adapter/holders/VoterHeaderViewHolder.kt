@@ -12,6 +12,7 @@ class VoterHeaderViewHolder(
 
     override fun bind(item: VoterItem) {
         val headerItem = (item as? VoterItem.HeaderItem) ?: return
+        style.votersHeaderTextStyle.apply(binding.tvVoteCount)
         binding.tvVoteCount.text = style.voteCountFormatter.format(context, headerItem.voteCount)
     }
 }
