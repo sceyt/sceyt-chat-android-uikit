@@ -10,7 +10,7 @@ import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.styles.SceytComponentStyle
 import com.sceyt.chatuikit.styles.StyleCustomizer
-import com.sceyt.chatuikit.styles.common.DividerStyle
+import com.sceyt.chatuikit.styles.common.BackgroundStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.styles.common.ToolbarStyle
 
@@ -18,10 +18,10 @@ class PollResultsStyle(
     @param:ColorInt val backgroundColor: Int,
     val toolbarTitle: String,
     val toolbarStyle: ToolbarStyle,
+    val headerBackgroundStyle: BackgroundStyle,
     val questionTextStyle: TextStyle,
     val pollTypeTextStyle: TextStyle,
     val pollTypeFormatter: Formatter<SceytPollDetails>,
-    val headerDividerStyle: DividerStyle,
     val pollResultItemStyle: PollResultItemStyle,
     val pollOptionVotersStyle: PollOptionVotersStyle,
 ) : SceytComponentStyle() {
@@ -42,9 +42,9 @@ class PollResultsStyle(
                     backgroundColor = context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColor),
                     toolbarTitle = context.getString(R.string.poll_results),
                     toolbarStyle = buildToolbarStyle(array),
+                    headerBackgroundStyle = buildHeaderBackgroundStyle(array),
                     questionTextStyle = buildQuestionTextStyle(array),
                     pollTypeTextStyle = buildPollTypeTextStyle(array),
-                    headerDividerStyle = buildHeaderDividerStyle(array),
                     pollResultItemStyle = pollResultItemStyle,
                     pollOptionVotersStyle = buildPollOptionVotersStyle(array, attrs),
                     pollTypeFormatter = SceytChatUIKit.formatters.pollTypeFormatter,

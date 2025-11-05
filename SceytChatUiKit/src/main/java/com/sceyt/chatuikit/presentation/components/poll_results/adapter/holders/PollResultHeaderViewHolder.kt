@@ -1,11 +1,9 @@
 package com.sceyt.chatuikit.presentation.components.poll_results.adapter.holders
 
 import com.sceyt.chatuikit.databinding.SceytItemPollResultHeaderBinding
-import com.sceyt.chatuikit.styles.poll_results.PollResultsStyle
 import com.sceyt.chatuikit.presentation.components.poll_results.adapter.PollResultItem
 import com.sceyt.chatuikit.presentation.root.BaseViewHolder
-import com.sceyt.chatuikit.styles.common.DividerStyle
-import com.sceyt.chatuikit.styles.common.TextStyle
+import com.sceyt.chatuikit.styles.poll_results.PollResultsStyle
 
 class PollResultHeaderViewHolder(
         private val binding: SceytItemPollResultHeaderBinding,
@@ -31,9 +29,9 @@ class PollResultHeaderViewHolder(
 
     private fun SceytItemPollResultHeaderBinding.applyStyle() {
         with(style){
+            headerBackgroundStyle.apply(layoutQuestionHeader)
             questionTextStyle.apply(tvPollQuestion)
             pollTypeTextStyle.apply(tvPollType)
-            headerDividerStyle.apply(divider)
         }
     }
 }

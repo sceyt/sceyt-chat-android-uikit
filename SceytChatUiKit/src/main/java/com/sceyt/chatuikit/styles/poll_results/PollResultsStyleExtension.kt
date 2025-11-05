@@ -4,8 +4,8 @@ import android.content.res.TypedArray
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.getCompatColor
-import com.sceyt.chatuikit.styles.poll_results.PollResultsStyle
-import com.sceyt.chatuikit.styles.common.DividerStyle
+import com.sceyt.chatuikit.styles.common.BackgroundStyle
+import com.sceyt.chatuikit.styles.common.Shape
 import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.styles.common.ToolbarStyle
 
@@ -19,20 +19,6 @@ internal fun PollResultsStyle.Builder.buildToolbarStyle(
         font = R.font.roboto_medium
     )
 )
-
-/* Header Divider Style */
-internal fun PollResultsStyle.Builder.buildHeaderDividerStyle(
-        array: TypedArray,
-) = DividerStyle.Builder(array)
-    .setColor(
-        index = R.styleable.PollResults_sceytUiPollResultsHeaderDividerColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.borderColor)
-    )
-    .setHeight(
-        index = R.styleable.PollResults_sceytUiPollResultsHeaderDividerHeight,
-        defValue = context.resources.getDimensionPixelSize(R.dimen.sceyt_space_8dp)
-    )
-    .build()
 
 /* Question Text Style */
 internal fun PollResultsStyle.Builder.buildQuestionTextStyle(
@@ -92,4 +78,19 @@ internal fun PollResultsStyle.Builder.buildPollOptionVotersStyle(
     .voterItemStyle(VoterItemStyle.Builder(context, attrs).build())
     .initialLoaderColor(context.getCompatColor(SceytChatUIKit.theme.colors.accentColor))
     .loadMoreProgressColor(context.getCompatColor(SceytChatUIKit.theme.colors.accentColor))
+    .build()
+
+/* Header Background Style */
+internal fun PollResultsStyle.Builder.buildHeaderBackgroundStyle(
+        array: TypedArray,
+) = BackgroundStyle.Builder(array)
+    .setBackgroundColor(
+        index = R.styleable.PollResults_sceytUiPollResultsHeaderBackgroundColor,
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.surface1Color)
+    )
+    .setShape(
+        Shape.RoundedCornerShape(
+            radius = context.resources.getDimension(R.dimen.sceyt_space_8dp)
+        )
+    )
     .build()
