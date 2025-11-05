@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.persistence.logicimpl
 
-import com.sceyt.chatuikit.data.managers.message.event.PollUpdateEventData
+import com.sceyt.chatuikit.data.managers.message.event.PollUpdateEvent
+import com.sceyt.chatuikit.data.models.ChangeVoteResponseData
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.createErrorResponse
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
@@ -37,7 +38,7 @@ internal class PersistencePollLogicImpl(
         messageTid: Long,
         pollId: String,
         optionId: String,
-    ): SceytResponse<SceytMessage> {
+    ): SceytResponse<ChangeVoteResponseData> {
         pollMutexForMessage(messageTid).withLock {
             val message = messageDao.getMessageByTid(messageTid)
                 ?: return createErrorResponse("Message not found in database")
@@ -50,10 +51,8 @@ internal class PersistencePollLogicImpl(
         channelId: Long,
         messageTid: Long,
         pollId: String,
-    ): SceytResponse<SceytMessage> {
-        pollMutexForMessage(messageTid).withLock {
-            return retractPollVoteUseCase.invoke(channelId, messageTid, pollId)
-        }
+    ): SceytResponse<ChangeVoteResponseData> = pollMutexForMessage(messageTid).withLock {
+        return retractPollVoteUseCase.invoke(channelId, messageTid, pollId)
     }
 
     override suspend fun endPoll(
@@ -80,9 +79,9 @@ internal class PersistencePollLogicImpl(
         }
     }
 
-    override suspend fun onPollUpdated(eventData: PollUpdateEventData) {
-        pollMutexForMessage(eventData.message.tid).withLock {
-            updatePollUseCase(eventData)
+    override suspend fun onPollUpdated(event: PollUpdateEvent) {
+        pollMutexForMessage(event.messageTid).withLock {
+            updatePollUseCase(event)
         }
     }
 

@@ -19,8 +19,11 @@ import com.sceyt.chatuikit.persistence.database.entity.messages.PollVoteEntity
 internal abstract class PollDao {
 
     @Transaction
-    @Query("SELECT * FROM $POLL_TABLE WHERE id = :pollId")
-    abstract suspend fun getPollById(pollId: String): PollDb?
+    @Query("SELECT * FROM $POLL_TABLE WHERE messageTid =:messageTid AND id = :pollId")
+    abstract suspend fun getPollById(messageTid: Long, pollId: String): PollDb?
+
+    @Query("SELECT * FROM $POLL_TABLE WHERE messageTid =:messageTid AND id = :pollId")
+    abstract suspend fun getPollEntityById(messageTid: Long, pollId: String): PollEntity?
 
     @Transaction
     open suspend fun upsertPollEntityWithVotes(
@@ -36,6 +39,28 @@ internal abstract class PollDao {
             insertVotesReplace(votes)
     }
 
+    @Transaction
+    open suspend fun upsertPollEntityWithVotes(
+        entity: PollEntity,
+        addedVotes: List<PollVoteEntity>,
+        deletedVotes: List<PollVoteEntity>,
+    ) {
+        if (!existsMessageByTid(entity.messageTid))
+            return
+
+        upsertPollEntity(entity)
+
+        // Delete votes
+        deletedVotes.groupBy { it.userId }.forEach { entry ->
+            val (userId, votes) = entry
+            deleteUserVotes(entity.id, userId, votes.map { it.optionId })
+        }
+
+        // Insert votes
+        if (addedVotes.isNotEmpty())
+            insertVotesReplace(addedVotes)
+    }
+
     protected suspend fun upsertPollEntity(entity: PollEntity) {
         val rowId = insertPollIgnored(entity)
         if (rowId == -1L) {
@@ -46,8 +71,11 @@ internal abstract class PollDao {
     @Query("DELETE FROM $POLL_VOTE_TABLE WHERE pollId = :pollId AND optionId = :optionId AND userId = :userId")
     abstract suspend fun deleteUserVote(pollId: String, optionId: String, userId: String): Int
 
+    @Query("DELETE FROM $POLL_VOTE_TABLE WHERE pollId = :pollId AND userId = :userId AND optionId IN (:optionIds)")
+    abstract suspend fun deleteUserVotes(pollId: String, userId: String, optionIds: List<String>)
+
     @Query("DELETE FROM $POLL_VOTE_TABLE WHERE pollId = :pollId AND userId = :userId")
-    abstract suspend fun deleteUserVotes(pollId: String, userId: String): Int
+    abstract suspend fun deleteUserAllVotes(pollId: String, userId: String): Int
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     abstract suspend fun insertVotesReplace(votes: List<PollVoteEntity>)
