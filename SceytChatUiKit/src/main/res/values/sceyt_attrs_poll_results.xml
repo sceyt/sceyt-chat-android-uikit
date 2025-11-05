@@ -33,5 +33,13 @@
         <attr name="sceytUiPollResultsShowAllButtonTextColor" format="color" />
         <attr name="sceytUiPollResultsShowAllButtonTextSize" format="dimension" />
         <attr name="sceytUiPollResultsShowAllButtonTextFont" format="reference" />
+
+        <!-- Option background -->
+        <attr name="sceytUiPollResultsOptionBackgroundColor" format="color" />
+        <attr name="sceytUiPollResultsOptionBackgroundCornerRadius" format="dimension" />
+
+        <!-- Header background -->
+        <attr name="sceytUiPollResultsHeaderBackgroundColor" format="color" />
+        <attr name="sceytUiPollResultsHeaderBackgroundCornerRadius" format="dimension" />
     </declare-styleable>
 </resources>

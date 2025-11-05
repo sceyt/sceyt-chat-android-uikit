@@ -29,3 +29,12 @@ internal fun VoterItemStyle.Builder.buildVoteTimeTextStyle(
 internal fun VoterItemStyle.Builder.buildAvatarStyle(
         array: TypedArray,
 ) = AvatarStyle.Builder(array).build()
+
+/* Voters header (count) Text Style */
+internal fun VoterItemStyle.Builder.buildVotersHeaderTextStyle(
+        array: TypedArray,
+) = TextStyle(
+    color = context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor),
+    font = R.font.roboto_regular,
+    size = context.resources.getDimensionPixelSize(R.dimen.mediumTextSize)
+)
