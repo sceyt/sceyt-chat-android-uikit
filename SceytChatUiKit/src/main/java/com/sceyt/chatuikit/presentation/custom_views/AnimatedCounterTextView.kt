@@ -127,6 +127,10 @@ class AnimatedCounterTextView @JvmOverloads constructor(
      * Sets the text with animation if enabled
      */
     fun setTextAnimated(newText: String, animate: Boolean = true) {
+        if (newText == this.nextText) {
+            return
+        }
+
         // Cancel any ongoing animation
         animator?.cancel()
 
