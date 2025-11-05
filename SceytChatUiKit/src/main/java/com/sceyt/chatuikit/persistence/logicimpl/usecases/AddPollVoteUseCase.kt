@@ -1,14 +1,11 @@
 package com.sceyt.chatuikit.persistence.logicimpl.usecases
 
+import com.sceyt.chatuikit.data.models.ChangeVoteResponseData
 import com.sceyt.chatuikit.data.models.SceytResponse
-import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.data.models.onError
 import com.sceyt.chatuikit.data.models.onSuccessNotNull
-import com.sceyt.chatuikit.persistence.database.dao.MessageDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingPollVoteDao
 import com.sceyt.chatuikit.persistence.logicimpl.message.ChannelId
-import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
-import com.sceyt.chatuikit.persistence.mappers.toMessageDb
-import com.sceyt.chatuikit.persistence.mappers.toSceytMessage
 import com.sceyt.chatuikit.persistence.repositories.PollRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -19,9 +16,8 @@ import kotlinx.coroutines.withContext
  */
 internal class AddPollVoteUseCase(
     private val pollRepository: PollRepository,
-    private val messageDao: MessageDao,
-    private val messagesCache: MessagesCache,
-    private val pendingPollVoteDao: PendingPollVoteDao,
+    private val updatePollVotesUseCase: UpdatePollVotesUseCase,
+    private val pendingPollVoteDao: PendingPollVoteDao
 ) {
 
     /**
@@ -38,24 +34,28 @@ internal class AddPollVoteUseCase(
         messageId: Long,
         pollId: String,
         optionIds: List<String>,
-    ): SceytResponse<SceytMessage> = withContext(Dispatchers.IO) {
-        return@withContext pollRepository.addVotes(
+    ): SceytResponse<ChangeVoteResponseData> = withContext(Dispatchers.IO) {
+        return@withContext pollRepository.changeVotes(
             channelId = channelId,
             messageId = messageId,
             pollId = pollId,
-            optionIds = optionIds
-        ).onSuccessNotNull { message ->
-            // Remove pending vote since operation succeeded
-            pendingPollVoteDao.deleteVotes(
-                messageTid = message.tid,
-                pollId = pollId,
-                optionIds = optionIds
+            addOptionIds = optionIds,
+            removeOptionIds = emptyList()
+        ).onSuccessNotNull { (message, addedVotes, removedVotes) ->
+            // Update message in database
+            updatePollVotesUseCase.invoke(
+                message = message,
+                addedVoted = addedVotes,
+                removedVotes = removedVotes
             )
-
-            messageDao.upsertMessage(messageDb = message.toMessageDb(false))
-
-            messageDao.getMessageById(messageId)?.let {
-                messagesCache.upsertMessages(channelId, it.toSceytMessage())
+        }.onError {
+            // Handle specific error codes if needed
+            if (it?.code == 1301) {
+                pendingPollVoteDao.deleteVotesByOptionIds(
+                    messageTid = messageId,
+                    pollId = pollId,
+                    optionIds = optionIds
+                )
             }
         }
     }

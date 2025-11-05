@@ -58,6 +58,7 @@ import com.sceyt.chatuikit.persistence.logicimpl.usecases.SendPollPendingVotesUs
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.ShouldShowNotificationUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.TogglePollVoteUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.UpdatePollUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.UpdatePollVotesUseCase
 import com.sceyt.chatuikit.push.service.PushService
 import com.sceyt.chatuikit.push.service.PushServiceImpl
 import com.sceyt.chatuikit.services.SceytSyncManager
@@ -158,6 +159,7 @@ internal val useCaseModule = module {
     factoryOf(::RetractPollVoteUseCase)
     factoryOf(::EndPollUseCase)
     factoryOf(::UpdatePollUseCase)
+    factoryOf(::UpdatePollVotesUseCase)
     factoryOf(::SendPollPendingVotesUseCase)
 }
 
