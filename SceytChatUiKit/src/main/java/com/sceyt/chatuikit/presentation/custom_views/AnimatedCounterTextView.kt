@@ -127,9 +127,8 @@ class AnimatedCounterTextView @JvmOverloads constructor(
      * Sets the text with animation if enabled
      */
     fun setTextAnimated(newText: String, animate: Boolean = true) {
-        if (newText == currentText) {
-            return
-        }
+        // Cancel any ongoing animation
+        animator?.cancel()
 
         if (!animate || currentText.isEmpty()) {
             currentText = newText
@@ -137,9 +136,6 @@ class AnimatedCounterTextView @JvmOverloads constructor(
             invalidate()
             return
         }
-
-        // Cancel any ongoing animation
-        animator?.cancel()
 
         // Determine direction based on numeric comparison if possible
         isIncreasing = try {
