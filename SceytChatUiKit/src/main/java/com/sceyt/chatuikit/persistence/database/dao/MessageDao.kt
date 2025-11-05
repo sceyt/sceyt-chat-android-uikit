@@ -490,6 +490,9 @@ internal abstract class MessageDao {
     @Query("select tid from $MESSAGE_TABLE where message_id in (:ids)")
     abstract suspend fun getMessageTIdsByIds(vararg ids: Long): List<Long>
 
+    @Query("select tid from $MESSAGE_TABLE where message_id =:id")
+    abstract suspend fun getMessageTidById(id: Long): Long?
+
     @Query("select message_id as id, tid from $MESSAGE_TABLE where channelId =:channelId and message_id <= :id and deliveryStatus in (:status)")
     abstract suspend fun getMessagesTidAndIdLoverThanByStatus(
         channelId: Long,

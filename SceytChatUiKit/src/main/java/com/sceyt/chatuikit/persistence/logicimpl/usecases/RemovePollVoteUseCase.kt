@@ -4,7 +4,6 @@ import com.sceyt.chatuikit.data.models.ChangeVoteResponseData
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.onError
 import com.sceyt.chatuikit.data.models.onSuccessNotNull
-import com.sceyt.chatuikit.persistence.database.dao.PendingPollVoteDao
 import com.sceyt.chatuikit.persistence.logicimpl.message.ChannelId
 import com.sceyt.chatuikit.persistence.repositories.PollRepository
 import kotlinx.coroutines.Dispatchers
@@ -17,7 +16,7 @@ import kotlinx.coroutines.withContext
 internal class RemovePollVoteUseCase(
     private val pollRepository: PollRepository,
     private val updatePollVotesUseCase: UpdatePollVotesUseCase,
-    private val pendingPollVoteDao: PendingPollVoteDao
+    private val handleChangeVoteErrorUseCase: HandleChangeVoteErrorUseCase
 ) {
 
     /**
@@ -50,13 +49,12 @@ internal class RemovePollVoteUseCase(
             )
         }.onError {
             // Handle specific error codes if needed
-            if (it?.code == 1301) {
-                pendingPollVoteDao.deleteVotesByOptionIds(
-                    messageTid = messageId,
-                    pollId = pollId,
-                    optionIds = optionIds
-                )
-            }
+            handleChangeVoteErrorUseCase(
+                messageId = messageId,
+                pollId = pollId,
+                optionIds = optionIds,
+                errorCode = it?.code
+            )
         }
     }
 }

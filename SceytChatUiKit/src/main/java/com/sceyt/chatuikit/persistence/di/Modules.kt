@@ -52,6 +52,7 @@ import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
 import com.sceyt.chatuikit.persistence.logicimpl.message.PersistenceMessagesLogicImpl
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.AddPollVoteUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.EndPollUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.HandleChangeVoteErrorUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.RemovePollVoteUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.RetractPollVoteUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.SendPollPendingVotesUseCase
@@ -161,6 +162,7 @@ internal val useCaseModule = module {
     factoryOf(::UpdatePollUseCase)
     factoryOf(::UpdatePollVotesUseCase)
     factoryOf(::SendPollPendingVotesUseCase)
+    factoryOf(::HandleChangeVoteErrorUseCase)
 }
 
 internal val cacheModule = module {
