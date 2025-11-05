@@ -42,7 +42,7 @@ class PollResultsViewModel(
     val findOrCreateChatFlow = _findOrCreateChatFlow.asSharedFlow()
 
     init {
-        refreshPollResults()
+        loadPollResults()
         observePollUpdates()
     }
 
@@ -60,7 +60,7 @@ class PollResultsViewModel(
         updateUiFromMessage(updatedMessage)
     }
 
-    private fun refreshPollResults() {
+    private fun loadPollResults() {
         viewModelScope.launch(Dispatchers.Default) {
             updateUiFromMessage(message)
         }
