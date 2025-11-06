@@ -24,8 +24,9 @@ import com.sceyt.chatuikit.persistence.database.DatabaseConstants.POLL_OPTION_TA
 internal data class PollOptionEntity(
     @PrimaryKey
     val id: String,
-    @ColumnInfo(index = true)
     val pollId: String,
     val name: String,
+    @ColumnInfo(index = true)
+    val order: Int,
 )
 

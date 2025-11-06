@@ -319,7 +319,7 @@ internal fun PollDb.toPollDetails(): PollDetails = with(pollEntity) {
     }
 
     return PollDetails.Builder()
-        .setId(pollId)
+        .setId(id)
         .setName(name)
         .setDescription(description)
         .setOptions(options.map { PollOption(it.id, it.name) }.toTypedArray())

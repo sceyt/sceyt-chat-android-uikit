@@ -10,12 +10,15 @@ import com.sceyt.chatuikit.presentation.components.poll_results.adapter.holders.
 import com.sceyt.chatuikit.presentation.root.BaseViewHolder
 
 class PollResultsAdapter(
-        private val viewHolderFactory: PollResultsViewHolderFactory
+    private val viewHolderFactory: PollResultsViewHolderFactory
 ) : RecyclerView.Adapter<BaseViewHolder<PollResultItem>>() {
 
     private val differ = AsyncListDiffer(this, PollResultItemDiffCallback())
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder<PollResultItem> {
+    override fun onCreateViewHolder(
+        parent: ViewGroup,
+        viewType: Int
+    ): BaseViewHolder<PollResultItem> {
         return viewHolderFactory.createViewHolder(parent, viewType)
     }
 
@@ -23,7 +26,11 @@ class PollResultsAdapter(
         holder.bind(item = differ.currentList[position])
     }
 
-    override fun onBindViewHolder(holder: BaseViewHolder<PollResultItem>, position: Int, payloads: MutableList<Any>) {
+    override fun onBindViewHolder(
+        holder: BaseViewHolder<PollResultItem>,
+        position: Int,
+        payloads: MutableList<Any>
+    ) {
         if (payloads.isEmpty()) {
             super.onBindViewHolder(holder, position, payloads)
             return
@@ -63,7 +70,13 @@ class PollResultsAdapter(
         }
 
         override fun areContentsTheSame(oldItem: PollResultItem, newItem: PollResultItem): Boolean {
-            return oldItem == newItem
+            return when {
+                oldItem is PollResultItem.HeaderItem && newItem is PollResultItem.HeaderItem ->
+                    oldItem.poll.name == newItem.poll.name &&
+                            oldItem.poll.closed == newItem.poll.closed
+
+                else -> oldItem == newItem
+            }
         }
 
         override fun getChangePayload(oldItem: PollResultItem, newItem: PollResultItem): Any? {
