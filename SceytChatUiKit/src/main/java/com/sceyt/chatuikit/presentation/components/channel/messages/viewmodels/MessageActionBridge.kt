@@ -80,6 +80,16 @@ internal class MessageActionBridge {
                             actionFinish.invoke()
                         })
                 }
+
+                R.id.sceyt_retract_vote -> firstMessage?.let { message ->
+                    actionFinish.invoke()
+                    messageActionListener.onRetractVoteClick(message)
+                }
+
+                R.id.sceyt_end_vote -> firstMessage?.let { message ->
+                    actionFinish.invoke()
+                    messageActionListener.onEndVoteClick(message)
+                }
             }
         }
     }

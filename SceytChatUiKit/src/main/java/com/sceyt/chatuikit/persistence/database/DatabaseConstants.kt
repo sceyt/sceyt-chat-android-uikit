@@ -40,4 +40,10 @@ internal object DatabaseConstants {
     // Marker
     const val MARKER_TABLE = "sceyt_marker_table"
     const val PENDING_MARKER_TABLE = "sceyt_pending_marker_table"
+
+    // Poll
+    const val POLL_TABLE = "sceyt_poll_table"
+    const val POLL_OPTION_TABLE = "sceyt_poll_option_table"
+    const val POLL_VOTE_TABLE = "sceyt_poll_vote_table"
+    const val PENDING_POLL_VOTE_TABLE = "sceyt_pending_poll_vote_table"
 }

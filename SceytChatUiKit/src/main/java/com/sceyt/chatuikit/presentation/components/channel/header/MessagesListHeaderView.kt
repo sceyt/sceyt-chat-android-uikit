@@ -71,16 +71,17 @@ import kotlinx.coroutines.launch
 
 @Suppress("MemberVisibilityCanBePrivate", "JoinDeclarationAndAssignment")
 class MessagesListHeaderView @JvmOverloads constructor(
-        context: Context,
-        attrs: AttributeSet? = null,
-        defStyleAttr: Int = 0,
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0,
 ) : AppBarLayout(context, attrs, defStyleAttr), ClickListeners,
-        EventListeners, ElementsListeners {
+    EventListeners, ElementsListeners {
 
     private val binding: SceytMessagesListHeaderViewBinding
     private var clickListeners: ClickListeners = MessageListHeaderClickListenersImpl(this)
     private var eventListeners: EventListeners = MessageListHeaderEventsListenerImpl(this)
-    internal var uiElementsListeners: ElementsListeners = MessageListHeaderUIElementsListenerImpl(this)
+    internal var uiElementsListeners: ElementsListeners =
+        MessageListHeaderUIElementsListenerImpl(this)
     private lateinit var channel: SceytChannel
     private var replyMessage: SceytMessage? = null
     private var isReplyInThread: Boolean = false
@@ -155,17 +156,22 @@ class MessagesListHeaderView @JvmOverloads constructor(
         context.asComponentActivity().lifecycleScope.launch {
             while (isActive) {
                 delay(1000 * 60)
-                uiElementsListeners.onSubTitle(binding.subTitle, channel, replyMessage, isReplyInThread)
+                uiElementsListeners.onSubTitle(
+                    subjectTextView = binding.subTitle,
+                    channel = channel,
+                    replyMessage = replyMessage,
+                    replyInThread = isReplyInThread
+                )
             }
         }
     }
 
     @Suppress("unused", "UNUSED_PARAMETER")
     private fun setChannelTitle(
-            titleTextView: TextView,
-            channel: SceytChannel,
-            replyMessage: SceytMessage? = null,
-            replyInThread: Boolean = false,
+        titleTextView: TextView,
+        channel: SceytChannel,
+        replyMessage: SceytMessage? = null,
+        replyInThread: Boolean = false,
     ) {
         if (replyInThread) {
             with(titleTextView) {
@@ -180,10 +186,10 @@ class MessagesListHeaderView @JvmOverloads constructor(
     }
 
     private fun setChannelSubTitle(
-            subjectTextView: TextView,
-            channel: SceytChannel,
-            replyMessage: SceytMessage? = null,
-            replyInThread: Boolean = false,
+        subjectTextView: TextView,
+        channel: SceytChannel,
+        replyMessage: SceytMessage? = null,
+        replyInThread: Boolean = false,
     ) {
         if (!enableSubTitle()) {
             subjectTextView.isVisible = false
@@ -197,7 +203,11 @@ class MessagesListHeaderView @JvmOverloads constructor(
             } else {
                 val fullName = replyMessage?.user?.fullName
                 val subTitleText = String.format(getString(R.string.sceyt_with), fullName)
-                setSubTitleText(subjectTextView, subTitleText, !fullName.isNullOrBlank() && !haveUserAction)
+                setSubTitleText(
+                    textView = subjectTextView,
+                    title = subTitleText,
+                    visible = !fullName.isNullOrBlank() && !haveUserAction
+                )
             }
         }
     }
@@ -218,16 +228,20 @@ class MessagesListHeaderView @JvmOverloads constructor(
         textView.isVisible = !haveUserAction
     }
 
-    private fun setAvatar(avatar: AvatarView, channel: SceytChannel, replyInThread: Boolean = false) {
+    private fun setAvatar(
+        avatar: AvatarView,
+        channel: SceytChannel,
+        replyInThread: Boolean = false
+    ) {
         binding.avatar.isVisible = !replyInThread
         if (!replyInThread)
             style.channelAvatarRenderer.render(context, channel, style.avatarStyle, avatar)
     }
 
     private fun showMessageActionsInToolbar(
-            vararg messages: SceytMessage,
-            menuStyle: MenuStyle,
-            listener: ((MenuItem, actionFinish: () -> Unit) -> Unit)?,
+        vararg messages: SceytMessage,
+        menuStyle: MenuStyle,
+        listener: ((MenuItem, actionFinish: () -> Unit) -> Unit)?,
     ) {
         with(binding) {
             toolbarMessageActions.setToolbarIconsVisibilityInitializer { messages, menu ->
@@ -330,7 +344,12 @@ class MessagesListHeaderView @JvmOverloads constructor(
                     if (it.user.id == user.id) it.copy(user = user.copy()) else it
                 })
                 if (!haveUserAction)
-                    uiElementsListeners.onSubTitle(binding.subTitle, channel, replyMessage, isReplyInThread)
+                    uiElementsListeners.onSubTitle(
+                        subjectTextView = binding.subTitle,
+                        channel = channel,
+                        replyMessage = replyMessage,
+                        replyInThread = isReplyInThread
+                    )
             }
         }
     }
@@ -346,8 +365,10 @@ class MessagesListHeaderView @JvmOverloads constructor(
         hideMessageActions()
         layoutSearch.isVisible = showSearch
         layoutToolbarDetails.isVisible = !showSearch
-        root.setBackgroundColor(if (showSearch) context.getCompatColor(R.color.sceyt_color_background)
-        else context.getCompatColor(R.color.sceyt_color_primary))
+        root.setBackgroundColor(
+            if (showSearch) context.getCompatColor(R.color.sceyt_color_background)
+            else context.getCompatColor(R.color.sceyt_color_primary)
+        )
         isShowingSearchBar = showSearch
         if (showSearch)
             context.showSoftInput(inputSearch)
@@ -470,11 +491,15 @@ class MessagesListHeaderView @JvmOverloads constructor(
         enablePresence = enable
     }
 
-    private val channelInfoLauncher = if (isInEditMode) null else context.maybeComponentActivity()?.run {
+    private val channelInfoLauncher = if (isInEditMode) null
+    else context.maybeComponentActivity()?.run {
         if (!lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
             registerForActivityResult(StartActivityForResult()) { result ->
                 if (result.resultCode == Activity.RESULT_OK) {
-                    result.data?.getBooleanExtra(ChannelInfoActivity.ACTION_SEARCH_MESSAGES, false)?.let { search ->
+                    result.data?.getBooleanExtra(
+                        ChannelInfoActivity.ACTION_SEARCH_MESSAGES,
+                        false
+                    )?.let { search ->
                         if (search)
                             showSearchMessagesBar(MessageCommandEvent.SearchMessages(true))
                     }
@@ -495,19 +520,19 @@ class MessagesListHeaderView @JvmOverloads constructor(
 
     //Ui elements listeners
     override fun onTitle(
-            titleTextView: TextView,
-            channel: SceytChannel,
-            replyMessage: SceytMessage?,
-            replyInThread: Boolean,
+        titleTextView: TextView,
+        channel: SceytChannel,
+        replyMessage: SceytMessage?,
+        replyInThread: Boolean,
     ) {
         setChannelTitle(titleTextView, channel, replyMessage, replyInThread)
     }
 
     override fun onSubTitle(
-            subjectTextView: TextView,
-            channel: SceytChannel,
-            replyMessage: SceytMessage?,
-            replyInThread: Boolean,
+        subjectTextView: TextView,
+        channel: SceytChannel,
+        replyMessage: SceytMessage?,
+        replyInThread: Boolean,
     ) {
         setChannelSubTitle(subjectTextView, channel, replyMessage, replyInThread)
     }
@@ -517,9 +542,9 @@ class MessagesListHeaderView @JvmOverloads constructor(
     }
 
     override fun onShowMessageActionsMenu(
-            vararg messages: SceytMessage,
-            menuStyle: MenuStyle,
-            listener: ((MenuItem, actionFinish: () -> Unit) -> Unit)?,
+        vararg messages: SceytMessage,
+        menuStyle: MenuStyle,
+        listener: ((MenuItem, actionFinish: () -> Unit) -> Unit)?,
     ) {
         showMessageActionsInToolbar(*messages, menuStyle = menuStyle, listener = listener)
     }
@@ -534,17 +559,29 @@ class MessagesListHeaderView @JvmOverloads constructor(
         val fistMessage = messages.first()
         val isUnsupportedMessage = MessageTypeEnum.fromValue(fistMessage.type) == null
         val existPendingMessages = messages.any { it.deliveryStatus == DeliveryStatus.Pending }
+        val existPollMessage = messages.any { it.type == MessageTypeEnum.Poll.value }
+
+        val poll = fistMessage.poll
+        val isPollMessage = poll != null
+        val hasVoted = poll?.ownVotes?.isNotEmpty() == true
+        val canRetractVote =
+            !existPendingMessages && isSingleMessage && poll?.allowVoteRetract == true && hasVoted && !poll.closed
+        val canEndVote =
+            !existPendingMessages && isSingleMessage && !fistMessage.incoming && isPollMessage && !poll.closed
 
         menu.findItem(R.id.sceyt_reply)?.isVisible = isSingleMessage && !existPendingMessages
         //menu.findItem(R.id.sceyt_reply_in_thread).isVisible = isSingleMessage && !isPending
-        menu.findItem(R.id.sceyt_forward)?.isVisible = !existPendingMessages
+        menu.findItem(R.id.sceyt_forward)?.isVisible =
+            !existPendingMessages && !isPollMessage && !existPollMessage
         val expiredEditMessage = (System.currentTimeMillis() - fistMessage.createdAt) >
                 SceytChatUIKit.config.messageEditTimeout
         menu.findItem(R.id.sceyt_edit_message)?.isVisible = isSingleMessage && !isUnsupportedMessage
-        !fistMessage.incoming && fistMessage.body.isNotNullOrBlank() && !expiredEditMessage
+        !fistMessage.incoming && fistMessage.body.isNotNullOrBlank() && !expiredEditMessage &&
         menu.findItem(R.id.sceyt_message_info)?.isVisible = isSingleMessage
                 && !fistMessage.incoming && !existPendingMessages
         menu.findItem(R.id.sceyt_copy_message)?.isVisible = canCopy(*messages)
+        menu.findItem(R.id.sceyt_retract_vote)?.isVisible = canRetractVote
+        menu.findItem(R.id.sceyt_end_vote)?.isVisible = canEndVote
     }
 
     fun canCopy(vararg messages: SceytMessage): Boolean {
@@ -586,7 +623,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
             }
 
             else -> context.maybeComponentActivity()?.onBackPressedDispatcher?.onBackPressed()
-                    ?: context.asActivity().finish()
+                ?: context.asActivity().finish()
         }
     }
 
@@ -602,7 +639,8 @@ class MessagesListHeaderView @JvmOverloads constructor(
             editText = inputSearch,
             inputRoot = layoutSearch,
             searchIconImage = icSearch,
-            clearIconImage = icClear)
+            clearIconImage = icClear
+        )
         style.messageActionsMenuStyle.apply(toolbarMessageActions)
         style.avatarStyle.apply(avatar)
     }

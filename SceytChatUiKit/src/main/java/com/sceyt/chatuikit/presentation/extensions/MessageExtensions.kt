@@ -1,7 +1,9 @@
 package com.sceyt.chatuikit.presentation.extensions
 
 import android.content.Context
+import android.graphics.drawable.Drawable
 import android.text.SpannableString
+import android.text.SpannableStringBuilder
 import androidx.core.view.isVisible
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
@@ -13,21 +15,23 @@ import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.getFileSize
+import com.sceyt.chatuikit.extensions.toSpannableString
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.persistence.mappers.toSceytAttachment
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.MessageBodyStyleHelper.buildWithAttributes
 import com.sceyt.chatuikit.presentation.custom_views.DecoratedTextView
+import com.sceyt.chatuikit.providers.VisualProvider
 import com.sceyt.chatuikit.styles.channel.ChannelItemStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 import java.io.File
 
 fun SceytMessage?.setChannelMessageDateAndStatusIcon(
-        decoratedTextView: DecoratedTextView,
-        itemStyle: ChannelItemStyle,
-        dateText: CharSequence,
-        edited: Boolean,
-        shouldShowStatus: Boolean,
+    decoratedTextView: DecoratedTextView,
+    itemStyle: ChannelItemStyle,
+    dateText: CharSequence,
+    edited: Boolean,
+    shouldShowStatus: Boolean,
 ) {
     if (this?.deliveryStatus == null || state == MessageState.Deleted || incoming || !shouldShowStatus) {
         decoratedTextView.appearanceBuilder()
@@ -59,10 +63,10 @@ fun SceytMessage?.setChannelMessageDateAndStatusIcon(
 }
 
 fun SceytMessage?.setChatMessageDateAndStatusIcon(
-        decoratedTextView: DecoratedTextView,
-        itemStyle: MessageItemStyle,
-        dateText: CharSequence,
-        edited: Boolean,
+    decoratedTextView: DecoratedTextView,
+    itemStyle: MessageItemStyle,
+    dateText: CharSequence,
+    edited: Boolean,
 ) {
     if (this?.deliveryStatus == null || state == MessageState.Deleted || incoming || MessageTypeEnum.fromValue(type) == null) {
         decoratedTextView.appearanceBuilder()
@@ -104,16 +108,22 @@ private fun checkIgnoreHighlight(deliveryStatus: DeliveryStatus?): Boolean {
 }
 
 fun SceytMessage.getFormattedBodyWithAttachments(
-        context: Context,
-        mentionTextStyle: TextStyle,
-        attachmentNameFormatter: Formatter<SceytAttachment>,
-        mentionUserNameFormatter: Formatter<SceytUser>,
-        mentionClickListener: ((String) -> Unit)?,
-): SpannableString {
+    context: Context,
+    mentionTextStyle: TextStyle,
+    messageTypeIconProvider: VisualProvider<SceytMessage, Drawable?>?,
+    attachmentNameFormatter: Formatter<SceytAttachment>,
+    mentionUserNameFormatter: Formatter<SceytUser>,
+    mentionClickListener: ((String) -> Unit)?,
+): CharSequence {
     val body = when {
         state == MessageState.Deleted -> context.getString(R.string.sceyt_message_was_deleted)
         attachments.isNullOrEmpty() || attachments.firstOrNull()?.type == AttachmentTypeEnum.Link.value -> {
-            buildWithAttributes(context, mentionTextStyle, mentionUserNameFormatter, mentionClickListener)
+            buildWithAttributes(
+                context = context,
+                mentionTextStyle = mentionTextStyle,
+                mentionUserNameFormatter = mentionUserNameFormatter,
+                mentionClickListener = mentionClickListener
+            )
         }
 
         attachments.size == 1 -> {
@@ -122,15 +132,21 @@ fun SceytMessage.getFormattedBodyWithAttachments(
 
         else -> context.getString(R.string.sceyt_file)
     }
-    return SpannableString(body)
+    val messageTypeIcon = messageTypeIconProvider?.provide(context, this)
+    return if (messageTypeIcon != null) {
+        SpannableStringBuilder().apply {
+            append(messageTypeIcon.toSpannableString())
+            append(body.trim())
+        }
+    } else body.trim()
 }
 
 fun DraftMessage.getFormattedBodyWithAttachments(
-        context: Context,
-        mentionTextStyle: TextStyle,
-        attachmentNameFormatter: Formatter<SceytAttachment>,
-        mentionUserNameFormatter: Formatter<SceytUser>,
-        mentionClickListener: ((String) -> Unit)?,
+    context: Context,
+    mentionTextStyle: TextStyle,
+    attachmentNameFormatter: Formatter<SceytAttachment>,
+    mentionUserNameFormatter: Formatter<SceytUser>,
+    mentionClickListener: ((String) -> Unit)?,
 ): SpannableString {
     val body = when {
         voiceAttachment != null -> {
@@ -138,7 +154,12 @@ fun DraftMessage.getFormattedBodyWithAttachments(
         }
 
         attachments.isNullOrEmpty() || attachments.firstOrNull()?.type == AttachmentTypeEnum.Link -> {
-            buildWithAttributes(context, mentionTextStyle, mentionUserNameFormatter, mentionClickListener)
+            buildWithAttributes(
+                context = context,
+                mentionTextStyle = mentionTextStyle,
+                mentionUserNameFormatter = mentionUserNameFormatter,
+                mentionClickListener = mentionClickListener
+            )
         }
 
         attachments.size == 1 -> {
@@ -179,7 +200,8 @@ fun SceytAttachment?.isAttachmentExistAndFullyLoaded(loadedFile: File): File? {
 
 fun SceytMessage.isPending() = deliveryStatus == DeliveryStatus.Pending
 
-fun MessageState.isDeletedOrHardDeleted() = this == MessageState.Deleted || this == MessageState.DeletedHard
+fun MessageState.isDeletedOrHardDeleted() =
+    this == MessageState.Deleted || this == MessageState.DeletedHard
 
 fun MessageState.isDeleted() = this == MessageState.Deleted
 
@@ -212,7 +234,9 @@ fun SceytMessage.getUpdateMessage(message: SceytMessage): SceytMessage {
         autoDeleteAt = message.autoDeleteAt,
         pendingReactions = message.pendingReactions,
         bodyAttributes = message.bodyAttributes,
+        disableMentionsCount = message.disableMentionsCount,
+        poll = message.poll,
         messageReactions = message.messageReactions,
-        files = message.files
+        files = message.files,
     )
 }

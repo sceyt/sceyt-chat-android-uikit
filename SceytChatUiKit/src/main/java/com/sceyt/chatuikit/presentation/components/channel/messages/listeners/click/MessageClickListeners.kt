@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click
 
 import android.view.View
+import com.sceyt.chatuikit.data.models.messages.PollOption
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
@@ -72,6 +73,14 @@ sealed interface MessageClickListeners {
         fun onMultiSelectClick(view: View, message: SceytMessage)
     }
 
+    fun interface PollOptionClickListener : MessageClickListeners {
+        fun onPollOptionClick(view: View, item: MessageListItem.MessageItem, option: PollOption)
+    }
+
+    fun interface PollViewResultsClickListener : MessageClickListeners {
+        fun onPollViewResultsClick(view: View, item: MessageListItem.MessageItem)
+    }
+
     /** Use this if you want to implement all callbacks */
     interface ClickListeners :
             MessageClickListener,
@@ -89,7 +98,9 @@ sealed interface MessageClickListeners {
             ScrollToDownClickListener,
             ScrollToUnreadMentionClickListener,
             AttachmentLoaderClickListener,
-            MultiSelectClickListener
+            MultiSelectClickListener,
+            PollOptionClickListener,
+            PollViewResultsClickListener
 }
 
 internal fun MessageClickListeners.setListener(listener: MessageClickListeners) {

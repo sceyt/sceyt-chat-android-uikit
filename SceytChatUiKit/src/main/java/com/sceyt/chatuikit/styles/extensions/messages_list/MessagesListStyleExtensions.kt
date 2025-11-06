@@ -12,6 +12,7 @@ import com.sceyt.chatuikit.extensions.spToPx
 import com.sceyt.chatuikit.styles.common.AvatarStyle
 import com.sceyt.chatuikit.styles.common.BackgroundStyle
 import com.sceyt.chatuikit.styles.common.CheckboxStyle
+import com.sceyt.chatuikit.styles.common.MediaLoaderStyle
 import com.sceyt.chatuikit.styles.common.MessageDeliveryStatusIcons
 import com.sceyt.chatuikit.styles.common.Shape
 import com.sceyt.chatuikit.styles.common.TextStyle
@@ -22,10 +23,11 @@ import com.sceyt.chatuikit.styles.messages_list.ScrollButtonStyle
 import com.sceyt.chatuikit.styles.messages_list.UnreadMessagesSeparatorStyle
 import com.sceyt.chatuikit.styles.messages_list.item.LinkPreviewStyle
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
+import com.sceyt.chatuikit.styles.messages_list.item.PollStyle
 import com.sceyt.chatuikit.styles.messages_list.item.ReplyMessageStyle
 
 internal fun MessagesListViewStyle.Builder.buildScrollDownTextStyle(
-        typedArray: TypedArray,
+    typedArray: TypedArray,
 ) = TextStyle.Builder(typedArray)
     .setBackgroundColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListScrollDownButtonUnreadCountTextBackgroundColor,
@@ -33,7 +35,8 @@ internal fun MessagesListViewStyle.Builder.buildScrollDownTextStyle(
     )
     .setColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListScrollDownButtonUnreadCountTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor))
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor)
+    )
     .setSize(
         index = R.styleable.MessagesListView_sceytUiMessagesListScrollDownButtonUnreadCountTextSize
     )
@@ -44,7 +47,7 @@ internal fun MessagesListViewStyle.Builder.buildScrollDownTextStyle(
 
 
 internal fun MessagesListViewStyle.Builder.buildScrollUnreadMentionTextStyle(
-        typedArray: TypedArray,
+    typedArray: TypedArray,
 ) = TextStyle.Builder(typedArray)
     .setBackgroundColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListScrollUnreadMentionButtonUnreadCountTextBackgroundColor,
@@ -52,7 +55,8 @@ internal fun MessagesListViewStyle.Builder.buildScrollUnreadMentionTextStyle(
     )
     .setColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListScrollUnreadMentionButtonUnreadCountTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor))
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor)
+    )
     .setSize(
         index = R.styleable.MessagesListView_sceytUiMessagesListScrollUnreadMentionButtonUnreadCountTextSize
     )
@@ -63,7 +67,7 @@ internal fun MessagesListViewStyle.Builder.buildScrollUnreadMentionTextStyle(
 
 
 internal fun MessagesListViewStyle.Builder.buildScrollDownButtonStyle(
-        typedArray: TypedArray,
+    typedArray: TypedArray,
 ) = ScrollButtonStyle.Builder(context, typedArray)
     .backgroundColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListScrollDownButtonBackgroundColor
@@ -79,7 +83,7 @@ internal fun MessagesListViewStyle.Builder.buildScrollDownButtonStyle(
     .build()
 
 internal fun MessagesListViewStyle.Builder.buildScrollUnreadMentionButtonStyle(
-        typedArray: TypedArray,
+    typedArray: TypedArray,
 ) = ScrollButtonStyle.Builder(context, typedArray)
     .backgroundColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListScrollUnreadMentionButtonBackgroundColor
@@ -96,11 +100,12 @@ internal fun MessagesListViewStyle.Builder.buildScrollUnreadMentionButtonStyle(
 
 // DateSeparatorStyle
 internal fun MessagesListViewStyle.Builder.buildDateSeparatorTextStyle(
-        typedArray: TypedArray,
+    typedArray: TypedArray,
 ) = TextStyle.Builder(typedArray)
     .setColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListDateSeparatorTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor))
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor)
+    )
     .setSize(
         index = R.styleable.MessagesListView_sceytUiMessagesListDateSeparatorTextSize
     )
@@ -113,7 +118,7 @@ internal fun MessagesListViewStyle.Builder.buildDateSeparatorTextStyle(
     .build()
 
 internal fun MessagesListViewStyle.Builder.buildDateSeparatorStyle(
-        typedArray: TypedArray,
+    typedArray: TypedArray,
 ) = DateSeparatorStyle.Builder(context, typedArray)
     .backgroundColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListDateSeparatorBackgroundColor,
@@ -135,7 +140,7 @@ internal fun MessagesListViewStyle.Builder.buildDateSeparatorStyle(
 
 //UnreadMessagesSeparatorStyle
 internal fun MessagesListViewStyle.Builder.buildUnreadMessagesSeparatorTextStyle(
-        typedArray: TypedArray,
+    typedArray: TypedArray,
 ) = TextStyle.Builder(typedArray)
     .setColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListUnreadMessagesSeparatorTextColor,
@@ -151,7 +156,7 @@ internal fun MessagesListViewStyle.Builder.buildUnreadMessagesSeparatorTextStyle
     .build()
 
 internal fun MessagesListViewStyle.Builder.buildUnreadMessagesSeparatorStyle(
-        typedArray: TypedArray,
+    typedArray: TypedArray,
 ) = UnreadMessagesSeparatorStyle.Builder(context, typedArray)
     .backgroundColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListUnreadMessagesSeparatorBackgroundColor,
@@ -166,7 +171,7 @@ internal fun MessagesListViewStyle.Builder.buildUnreadMessagesSeparatorStyle(
 
 // ReactionPickerStyle
 internal fun MessagesListViewStyle.Builder.buildReactionPickerStyle(
-        typedArray: TypedArray,
+    typedArray: TypedArray,
 ) = ReactionPickerStyle.Builder(context, typedArray)
     .backgroundColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListReactionPickerBackgroundColor,
@@ -190,7 +195,7 @@ internal fun MessagesListViewStyle.Builder.buildReactionPickerStyle(
 
 
 internal fun MessageItemStyle.Builder.buildIncomingBubbleBackgroundStyle(
-        typedArray: TypedArray,
+    typedArray: TypedArray,
 ) = BackgroundStyle.Builder(typedArray)
     .setBackgroundColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListIncomingBubbleColor,
@@ -203,7 +208,7 @@ internal fun MessageItemStyle.Builder.buildIncomingBubbleBackgroundStyle(
 
 
 internal fun MessageItemStyle.Builder.buildOutgoingBubbleBackgroundStyle(
-        typedArray: TypedArray
+    typedArray: TypedArray,
 ) = BackgroundStyle.Builder(typedArray)
     .setBackgroundColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListOutgoingBubbleColor,
@@ -217,7 +222,7 @@ internal fun MessageItemStyle.Builder.buildOutgoingBubbleBackgroundStyle(
 
 //Incoming reply background
 internal fun MessageItemStyle.Builder.buildIncomingReplyBackgroundStyle(
-        typedArray: TypedArray,
+    typedArray: TypedArray,
 ) = BackgroundStyle.Builder(typedArray)
     .setBackgroundColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListIncomingReplyBackgroundColor,
@@ -230,7 +235,7 @@ internal fun MessageItemStyle.Builder.buildIncomingReplyBackgroundStyle(
 
 //Outgoing reply background
 internal fun MessageItemStyle.Builder.buildOutgoingReplyBackgroundStyle(
-        typedArray: TypedArray,
+    typedArray: TypedArray,
 ) = BackgroundStyle.Builder(typedArray)
     .setBackgroundColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListOutgoingReplyBackgroundColor,
@@ -243,7 +248,7 @@ internal fun MessageItemStyle.Builder.buildOutgoingReplyBackgroundStyle(
 
 // OutLinkPreviewBackgroundStyle
 internal fun MessageItemStyle.Builder.buildOutgoingLinkPreviewBackgroundStyle(
-        typedArray: TypedArray,
+    typedArray: TypedArray,
 ) = BackgroundStyle.Builder(typedArray)
     .setBackgroundColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListOutgoingLinkPreviewBackgroundColor,
@@ -256,7 +261,7 @@ internal fun MessageItemStyle.Builder.buildOutgoingLinkPreviewBackgroundStyle(
 
 //ReactionsContainerBackgroundStyle
 internal fun MessageItemStyle.Builder.buildReactionsContainerBackgroundStyle(
-        typedArray: TypedArray,
+    typedArray: TypedArray,
 ) = BackgroundStyle.Builder(typedArray)
     .setBackgroundColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListReactionsContainerBackgroundColor,
@@ -270,7 +275,7 @@ internal fun MessageItemStyle.Builder.buildReactionsContainerBackgroundStyle(
 
 // Incoming Link Preview Background
 internal fun MessageItemStyle.Builder.buildIncomingLinkPreviewBackgroundStyle(
-        typedArray: TypedArray,
+    typedArray: TypedArray,
 ) = BackgroundStyle.Builder(typedArray)
     .setBackgroundColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListIncomingLinkPreviewBackgroundColor,
@@ -283,7 +288,7 @@ internal fun MessageItemStyle.Builder.buildIncomingLinkPreviewBackgroundStyle(
 
 // Delivery status icons
 internal fun MessageItemStyle.Builder.buildDeliveryStatusIconStyle(
-        typedArray: TypedArray,
+    typedArray: TypedArray,
 ) = MessageDeliveryStatusIcons.Builder(context, typedArray)
     .setPendingIconFromStyle(R.styleable.MessagesListView_sceytUiMessagesListMessageDeliveryStatusPendingIcon)
     .setSentIconFromStyle(R.styleable.MessagesListView_sceytUiMessagesListMessageDeliveryStatusSentIcon)
@@ -293,11 +298,12 @@ internal fun MessageItemStyle.Builder.buildDeliveryStatusIconStyle(
 
 /* Item Body text style */
 internal fun MessageItemStyle.Builder.buildBodyTextStyle(
-        typedArray: TypedArray,
+    typedArray: TypedArray,
 ) = TextStyle.Builder(typedArray)
     .setColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListBodyTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor))
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor)
+    )
     .setSize(
         index = R.styleable.MessagesListView_sceytUiMessagesListBodyTextSize
     )
@@ -311,11 +317,12 @@ internal fun MessageItemStyle.Builder.buildBodyTextStyle(
 
 /*DeletedMessageTextStyle*/
 internal fun MessageItemStyle.Builder.buildDeletedMessageTextStyle(
-        typedArray: TypedArray,
+    typedArray: TypedArray,
 ) = TextStyle.Builder(typedArray)
     .setColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListDeletedMessageTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor))
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor)
+    )
     .setSize(
         index = R.styleable.MessagesListView_sceytUiMessagesListDeletedMessageTextSize
     )
@@ -330,11 +337,12 @@ internal fun MessageItemStyle.Builder.buildDeletedMessageTextStyle(
 
 /*SenderNameTextStyle*/
 internal fun MessageItemStyle.Builder.buildSenderNameTextStyle(
-        typedArray: TypedArray,
+    typedArray: TypedArray,
 ) = TextStyle.Builder(typedArray)
     .setColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListSenderNameTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor))
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
+    )
     .setSize(
         index = R.styleable.MessagesListView_sceytUiMessagesListSenderNameTextSize
     )
@@ -349,11 +357,12 @@ internal fun MessageItemStyle.Builder.buildSenderNameTextStyle(
 
 /*MessageDateTextStyle*/
 internal fun MessageItemStyle.Builder.buildMessageDateTextStyle(
-        typedArray: TypedArray,
+    typedArray: TypedArray,
 ) = TextStyle.Builder(typedArray)
     .setColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListMessageDateTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor))
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor)
+    )
     .setSize(
         index = R.styleable.MessagesListView_sceytUiMessagesListMessageDateTextSize,
         defValue = 12f.spToPx().toInt()
@@ -368,11 +377,12 @@ internal fun MessageItemStyle.Builder.buildMessageDateTextStyle(
 
 /*MessageStateTextStyle*/
 internal fun MessageItemStyle.Builder.buildMessageStateTextStyle(
-        typedArray: TypedArray,
+    typedArray: TypedArray,
 ) = TextStyle.Builder(typedArray)
     .setColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListMessageStateTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor))
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor)
+    )
     .setSize(
         index = R.styleable.MessagesListView_sceytUiMessagesListMessageStateTextSize,
         defValue = 12f.spToPx().toInt()
@@ -388,11 +398,12 @@ internal fun MessageItemStyle.Builder.buildMessageStateTextStyle(
 
 /*MentionTextStyle*/
 internal fun MessageItemStyle.Builder.buildMentionTextStyle(
-        typedArray: TypedArray,
+    typedArray: TypedArray,
 ) = TextStyle.Builder(typedArray)
     .setColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListMentionTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor))
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
+    )
     .setSize(
         index = R.styleable.MessagesListView_sceytUiMessagesListMentionTextSize
     )
@@ -406,11 +417,12 @@ internal fun MessageItemStyle.Builder.buildMentionTextStyle(
 
 /*VideoDurationTextStyle*/
 internal fun MessageItemStyle.Builder.buildVideoDurationTextStyle(
-        typedArray: TypedArray,
+    typedArray: TypedArray,
 ) = TextStyle.Builder(typedArray)
     .setColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListVideoDurationTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor))
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor)
+    )
     .setSize(
         index = R.styleable.MessagesListView_sceytUiMessagesListVideoDurationTextSize
     )
@@ -424,11 +436,12 @@ internal fun MessageItemStyle.Builder.buildVideoDurationTextStyle(
 
 /*ThreadReplyCountTextStyle*/
 internal fun MessageItemStyle.Builder.buildThreadReplyCountTextStyle(
-        typedArray: TypedArray,
+    typedArray: TypedArray,
 ) = TextStyle.Builder(typedArray)
     .setColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListThreadReplyCountTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor))
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
+    )
     .setSize(
         index = R.styleable.MessagesListView_sceytUiMessagesListThreadReplyCountTextSize
     )
@@ -442,11 +455,12 @@ internal fun MessageItemStyle.Builder.buildThreadReplyCountTextStyle(
 
 /*ForwardTitleTextStyle*/
 internal fun MessageItemStyle.Builder.buildForwardTitleTextStyle(
-        typedArray: TypedArray,
+    typedArray: TypedArray,
 ) = TextStyle.Builder(typedArray)
     .setColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListForwardTitleTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor))
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
+    )
     .setSize(
         index = R.styleable.MessagesListView_sceytUiMessagesListForwardTitleTextSize
     )
@@ -461,11 +475,12 @@ internal fun MessageItemStyle.Builder.buildForwardTitleTextStyle(
 
 /*ReactionCountTextStyle*/
 internal fun MessageItemStyle.Builder.buildReactionCountTextStyle(
-        typedArray: TypedArray,
+    typedArray: TypedArray,
 ) = TextStyle.Builder(typedArray)
     .setColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListReactionCountTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor))
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor)
+    )
     .setSize(
         index = R.styleable.MessagesListView_sceytUiMessagesListReactionCountTextSize
     )
@@ -479,11 +494,12 @@ internal fun MessageItemStyle.Builder.buildReactionCountTextStyle(
 
 /*VoiceSpeedTextStyle*/
 internal fun MessageItemStyle.Builder.buildVoiceSpeedTextStyle(
-        typedArray: TypedArray,
+    typedArray: TypedArray,
 ) = TextStyle.Builder(typedArray)
     .setColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListVoiceSpeedTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor))
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor)
+    )
     .setSize(
         index = R.styleable.MessagesListView_sceytUiMessagesListVoiceSpeedTextSize
     )
@@ -498,11 +514,12 @@ internal fun MessageItemStyle.Builder.buildVoiceSpeedTextStyle(
 
 /*VoiceDurationTextStyle*/
 internal fun MessageItemStyle.Builder.buildVoiceDurationTextStyle(
-        typedArray: TypedArray,
+    typedArray: TypedArray,
 ) = TextStyle.Builder(typedArray)
     .setColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListVoiceDurationTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor))
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor)
+    )
     .setSize(
         index = R.styleable.MessagesListView_sceytUiMessagesListVoiceDurationTextSize
     )
@@ -516,11 +533,12 @@ internal fun MessageItemStyle.Builder.buildVoiceDurationTextStyle(
 
 /*AttachmentFileNameTextStyle*/
 internal fun MessageItemStyle.Builder.buildAttachmentFileNameTextStyle(
-        typedArray: TypedArray,
+    typedArray: TypedArray,
 ) = TextStyle.Builder(typedArray)
     .setColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListAttachmentFileNameTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor))
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor)
+    )
     .setSize(
         index = R.styleable.MessagesListView_sceytUiMessagesListAttachmentFileNameTextSize
     )
@@ -535,11 +553,12 @@ internal fun MessageItemStyle.Builder.buildAttachmentFileNameTextStyle(
 
 /*AttachmentFileSizeTextStyle*/
 internal fun MessageItemStyle.Builder.buildAttachmentFileSizeTextStyle(
-        typedArray: TypedArray,
+    typedArray: TypedArray,
 ) = TextStyle.Builder(typedArray)
     .setColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListAttachmentFileSizeTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor))
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor)
+    )
     .setSize(
         index = R.styleable.MessagesListView_sceytUiMessagesListAttachmentFileSizeTextSize
     )
@@ -553,11 +572,12 @@ internal fun MessageItemStyle.Builder.buildAttachmentFileSizeTextStyle(
 
 /*LinkPreviewStyle*/
 internal fun MessageItemStyle.Builder.buildLinkPreviewTitleTextStyle(
-        typedArray: TypedArray,
+    typedArray: TypedArray,
 ) = TextStyle.Builder(typedArray)
     .setColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListLinkPreviewTitleTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor))
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor)
+    )
     .setSize(
         index = R.styleable.MessagesListView_sceytUiMessagesListLinkPreviewTitleTextSize
     )
@@ -570,11 +590,12 @@ internal fun MessageItemStyle.Builder.buildLinkPreviewTitleTextStyle(
     .build()
 
 internal fun MessageItemStyle.Builder.buildLinkPreviewDescriptionTextStyle(
-        typedArray: TypedArray,
+    typedArray: TypedArray,
 ) = TextStyle.Builder(typedArray)
     .setColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListLinkPreviewDescriptionTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor))
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor)
+    )
     .setSize(
         index = R.styleable.MessagesListView_sceytUiMessagesListLinkPreviewDescriptionTextSize
     )
@@ -588,11 +609,12 @@ internal fun MessageItemStyle.Builder.buildLinkPreviewDescriptionTextStyle(
 
 /* Avatar style */
 internal fun MessageItemStyle.Builder.buildAvatarTextStyle(
-        typedArray: TypedArray,
+    typedArray: TypedArray,
 ) = TextStyle.Builder(typedArray)
     .setColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListAvatarTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor))
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor)
+    )
     .setSize(
         index = R.styleable.MessagesListView_sceytUiMessagesListAvatarTextSize
     )
@@ -606,17 +628,18 @@ internal fun MessageItemStyle.Builder.buildAvatarTextStyle(
 
 @Suppress("UnusedReceiverParameter")
 internal fun MessageItemStyle.Builder.buildAvatarShape(
-        array: TypedArray,
+    array: TypedArray,
 ): Shape {
     val value = array.getInt(R.styleable.MessagesListView_sceytUiMessagesListAvatarShape, 0)
-    val cornerRadius = array.getDimension(R.styleable.MessagesListView_sceytUiMessagesListAvatarCornerRadius, 0f)
+    val cornerRadius =
+        array.getDimension(R.styleable.MessagesListView_sceytUiMessagesListAvatarCornerRadius, 0f)
     return if (value == 1) {
         Shape.RoundedCornerShape(cornerRadius)
     } else Shape.Circle
 }
 
 internal fun MessageItemStyle.Builder.buildAvatarStyle(
-        typedArray: TypedArray,
+    typedArray: TypedArray,
 ) = AvatarStyle.Builder(typedArray)
     .avatarBackgroundColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListAvatarBackgroundColor
@@ -626,7 +649,7 @@ internal fun MessageItemStyle.Builder.buildAvatarStyle(
     .build()
 
 internal fun MessageItemStyle.Builder.buildLinkPreviewStyle(
-        typedArray: TypedArray,
+    typedArray: TypedArray,
 ) = LinkPreviewStyle.Builder(context, typedArray)
     .placeHolder(
         index = R.styleable.MessagesListView_sceytUiMessagesListLinkPreviewPlaceHolder
@@ -637,11 +660,12 @@ internal fun MessageItemStyle.Builder.buildLinkPreviewStyle(
 
 /* ReplyMessageStyle */
 internal fun MessageItemStyle.Builder.buildReplyMessageTitleTextStyle(
-        typedArray: TypedArray,
+    typedArray: TypedArray,
 ) = TextStyle.Builder(typedArray)
     .setColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListReplyMessageTitleTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor))
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
+    )
     .setSize(
         index = R.styleable.MessagesListView_sceytUiMessagesListReplyMessageTitleTextSize
     )
@@ -655,11 +679,12 @@ internal fun MessageItemStyle.Builder.buildReplyMessageTitleTextStyle(
     .build()
 
 internal fun MessageItemStyle.Builder.buildReplyMessageSubtitleTextStyle(
-        typedArray: TypedArray,
+    typedArray: TypedArray,
 ) = TextStyle.Builder(typedArray)
     .setColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListReplyMessageSubtitleTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor))
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor)
+    )
     .setSize(
         index = R.styleable.MessagesListView_sceytUiMessagesListReplyMessageSubtitleTextSize
     )
@@ -673,7 +698,7 @@ internal fun MessageItemStyle.Builder.buildReplyMessageSubtitleTextStyle(
 
 //Reply message mention text style
 internal fun MessageItemStyle.Builder.buildReplyMessageMentionTextStyle(
-        typedArray: TypedArray,
+    typedArray: TypedArray,
 ) = TextStyle.Builder(typedArray)
     .setColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListReplyMessageMentionTextColor,
@@ -692,7 +717,7 @@ internal fun MessageItemStyle.Builder.buildReplyMessageMentionTextStyle(
 
 //Reply message deleted text style
 internal fun MessageItemStyle.Builder.buildReplyMessageDeletedTextStyle(
-        typedArray: TypedArray,
+    typedArray: TypedArray,
 ) = TextStyle.Builder(typedArray)
     .setColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListReplyMessageDeletedTextColor,
@@ -712,7 +737,7 @@ internal fun MessageItemStyle.Builder.buildReplyMessageDeletedTextStyle(
 
 //Reply message attachment duration text style
 internal fun MessageItemStyle.Builder.buildReplyMessageAttachmentDurationTextStyle(
-        typedArray: TypedArray,
+    typedArray: TypedArray,
 ) = TextStyle.Builder(typedArray)
     .setColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListReplyMessageAttachmentDurationTextColor,
@@ -731,7 +756,7 @@ internal fun MessageItemStyle.Builder.buildReplyMessageAttachmentDurationTextSty
 
 
 internal fun MessageItemStyle.Builder.buildReplyMessageStyle(
-        typedArray: TypedArray,
+    typedArray: TypedArray,
 ) = ReplyMessageStyle.Builder(context, typedArray)
     .borderColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListReplyMessageBorderColor,
@@ -751,8 +776,8 @@ internal fun MessageItemStyle.Builder.buildReplyMessageStyle(
 
 /* Media Loader Style */
 internal fun MessageItemStyle.Builder.buildMediaLoaderStyle(
-        typedArray: TypedArray,
-) = com.sceyt.chatuikit.styles.common.MediaLoaderStyle.Builder(typedArray)
+    typedArray: TypedArray,
+) = MediaLoaderStyle.Builder(typedArray)
     .backgroundColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListMediaLoaderBackgroundColor
     )
@@ -785,7 +810,7 @@ internal fun MessageItemStyle.Builder.buildMediaLoaderStyle(
 
 /* Audio waveform style */
 internal fun MessageItemStyle.Builder.buildAudioWaveformStyle(
-        typedArray: TypedArray,
+    typedArray: TypedArray,
 ) = com.sceyt.chatuikit.styles.messages_list.item.AudioWaveformStyle.Builder(context, typedArray)
     .trackColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListAudioWaveformTrackColor,
@@ -799,7 +824,7 @@ internal fun MessageItemStyle.Builder.buildAudioWaveformStyle(
 
 /* Selection checkbox style */
 internal fun MessageItemStyle.Builder.buildSelectionCheckboxStyle(
-        typedArray: TypedArray,
+    typedArray: TypedArray,
 ) = CheckboxStyle.Builder(typedArray)
     .checkedIcon(
         index = R.styleable.MessagesListView_sceytUiMessagesListSelectionCheckboxCheckedIcon,
@@ -826,8 +851,8 @@ internal fun MessageItemStyle.Builder.buildSelectionCheckboxStyle(
 
 /* Overlay Media Style*/
 internal fun MessageItemStyle.Builder.buildOverlayMediaLoaderStyle(
-        typedArray: TypedArray,
-) = com.sceyt.chatuikit.styles.common.MediaLoaderStyle.Builder(typedArray)
+    typedArray: TypedArray,
+) = MediaLoaderStyle.Builder(typedArray)
     .backgroundColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListOverlayMediaLoaderBackgroundColor,
         defValue = context.getCompatColor(SceytChatUIKit.theme.colors.overlayBackground2Color)
@@ -856,5 +881,180 @@ internal fun MessageItemStyle.Builder.buildOverlayMediaLoaderStyle(
         defValue = context.getCompatDrawable(R.drawable.sceyt_ic_download).applyTint(
             context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor)
         )
+    )
+    .build()
+
+/* Poll voter avatar text style */
+internal fun MessageItemStyle.Builder.buildPollVoterAvatarTextStyle(
+    typedArray: TypedArray,
+) = TextStyle.Builder(typedArray)
+    .setColor(
+        index = R.styleable.MessagesListView_sceytUiMessagesListPollVoterAvatarTextColor,
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor)
+    )
+    .setSize(
+        index = R.styleable.MessagesListView_sceytUiMessagesListPollVoterAvatarTextSize
+    )
+    .setStyle(
+        index = R.styleable.MessagesListView_sceytUiMessagesListPollVoterAvatarTextStyle
+    )
+    .setFont(
+        index = R.styleable.MessagesListView_sceytUiMessagesListPollVoterAvatarTextFont
+    )
+    .build()
+
+@Suppress("UnusedReceiverParameter")
+internal fun MessageItemStyle.Builder.buildPollVoterAvatarShape(
+    array: TypedArray,
+): Shape {
+    val value =
+        array.getInt(R.styleable.MessagesListView_sceytUiMessagesListPollVoterAvatarShape, 0)
+    val cornerRadius = array.getDimension(
+        R.styleable.MessagesListView_sceytUiMessagesListPollVoterAvatarCornerRadius,
+        0f
+    )
+    return if (value == 1) {
+        Shape.RoundedCornerShape(cornerRadius)
+    } else Shape.Circle
+}
+
+internal fun MessageItemStyle.Builder.buildPollVoterAvatarStyle(
+    typedArray: TypedArray,
+) = AvatarStyle.Builder(typedArray)
+    .avatarBackgroundColor(
+        index = R.styleable.MessagesListView_sceytUiMessagesListPollVoterAvatarBackgroundColor
+    )
+    .borderWidth(
+        index = R.styleable.MessagesListView_sceytUiMessagesListPollVoterAvatarBorderWidth
+    )
+    .borderColor(
+        index = R.styleable.MessagesListView_sceytUiMessagesListPollVoterAvatarBorderColor
+    )
+    .textStyle(buildPollVoterAvatarTextStyle(typedArray))
+    .shape(buildPollVoterAvatarShape(typedArray))
+    .build()
+
+/* Poll Style */
+internal fun MessageItemStyle.Builder.buildPollStyle(
+    typedArray: TypedArray,
+) = PollStyle.Builder(context, typedArray)
+    .dividerColor(
+        index = R.styleable.MessagesListView_sceytUiMessagesListPollDividerColor,
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColor)
+    )
+    .progressTrackColor(
+        index = R.styleable.MessagesListView_sceytUiMessagesListPollProgressBarTrackColor,
+        defValue = context.getCompatColor(R.color.sceyt_progress_track_color)
+    )
+    .progressColor(
+        index = R.styleable.MessagesListView_sceytUiMessagesListPollProgressBarColor,
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
+    )
+    .questionTextStyle(
+        TextStyle.Builder(typedArray)
+            .setColor(
+                index = R.styleable.MessagesListView_sceytUiMessagesListPollQuestionTextColor,
+                defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor)
+            )
+            .setSize(
+                index = R.styleable.MessagesListView_sceytUiMessagesListPollQuestionTextSize
+            )
+            .setFont(
+                index = R.styleable.MessagesListView_sceytUiMessagesListPollQuestionTextFont,
+                defValue = R.font.roboto_medium
+            )
+            .build()
+    )
+    .pollTypeTextStyle(
+        TextStyle.Builder(typedArray)
+            .setColor(
+                index = R.styleable.MessagesListView_sceytUiMessagesListPollTypeTextColor,
+                defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor)
+            )
+            .setSize(
+                index = R.styleable.MessagesListView_sceytUiMessagesListPollTypeTextSize
+            )
+            .setFont(
+                index = R.styleable.MessagesListView_sceytUiMessagesListPollTypeTextFont
+            )
+            .build()
+    )
+    .viewResultsTextStyle(
+        TextStyle.Builder(typedArray)
+            .setColor(
+                index = R.styleable.MessagesListView_sceytUiMessagesListPollViewResultsTextColor,
+                defValue = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
+            )
+            .setSize(
+                index = R.styleable.MessagesListView_sceytUiMessagesListPollViewResultsTextSize
+            )
+            .setFont(
+                index = R.styleable.MessagesListView_sceytUiMessagesListPollViewResultsTextFont,
+                defValue = R.font.roboto_medium
+            )
+            .build()
+    )
+    .viewResultsDisabledTextStyle(
+        TextStyle.Builder(typedArray)
+            .setColor(
+                index = R.styleable.MessagesListView_sceytUiMessagesListPollViewResultsDisabledTextColor,
+                defValue = context.getCompatColor(R.color.sceyt_color_disabled)
+            )
+            .setSize(
+                index = R.styleable.MessagesListView_sceytUiMessagesListPollViewResultsDisabledTextSize
+            )
+            .setFont(
+                index = R.styleable.MessagesListView_sceytUiMessagesListPollViewResultsDisabledTextFont,
+                defValue = R.font.roboto_medium
+            )
+            .build()
+    )
+    .optionTextStyle(
+        TextStyle.Builder(typedArray)
+            .setColor(
+                index = R.styleable.MessagesListView_sceytUiMessagesListPollOptionTextColor,
+                defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor)
+            )
+            .setSize(
+                index = R.styleable.MessagesListView_sceytUiMessagesListPollOptionTextSize
+            )
+            .setFont(
+                index = R.styleable.MessagesListView_sceytUiMessagesListPollOptionTextFont
+            )
+            .build()
+    )
+    .voteCountTextStyle(
+        TextStyle.Builder(typedArray)
+            .setColor(
+                index = R.styleable.MessagesListView_sceytUiMessagesListPollVoteCountTextColor,
+                defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor)
+            )
+            .setSize(
+                index = R.styleable.MessagesListView_sceytUiMessagesListPollVoteCountTextSize
+            )
+            .setFont(
+                index = R.styleable.MessagesListView_sceytUiMessagesListPollVoteCountTextFont
+            )
+            .build()
+    )
+    .voterAvatarStyle(buildPollVoterAvatarStyle(typedArray))
+    .checkboxStyle(
+        CheckboxStyle.Builder(typedArray)
+            .checkedIcon(
+                index = R.styleable.MessagesListView_sceytUiMessagesListPollCheckboxCheckedIcon,
+                defValue = context.getCompatDrawable(R.drawable.sceyt_ic_checked_state).applyTint(
+                    context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
+                )
+            )
+            .uncheckedIcon(
+                index = R.styleable.MessagesListView_sceytUiMessagesListPollCheckboxUncheckedIcon,
+                defValue = context.getCompatDrawable(R.drawable.sceyt_ic_unchecked_state).applyTint(
+                    context.getCompatColor(SceytChatUIKit.theme.colors.iconSecondaryColor)
+                )
+            )
+            .pressedIcon(
+                index = R.styleable.MessagesListView_sceytUiMessagesListPollCheckboxPressedIcon
+            )
+            .build()
     )
     .build()

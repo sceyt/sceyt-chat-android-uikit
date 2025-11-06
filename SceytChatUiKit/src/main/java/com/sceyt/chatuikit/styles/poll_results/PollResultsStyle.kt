@@ -1,0 +1,55 @@
+package com.sceyt.chatuikit.styles.poll_results
+
+import android.content.Context
+import android.util.AttributeSet
+import androidx.annotation.ColorInt
+import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.data.models.messages.SceytPollDetails
+import com.sceyt.chatuikit.extensions.getCompatColor
+import com.sceyt.chatuikit.formatters.Formatter
+import com.sceyt.chatuikit.styles.SceytComponentStyle
+import com.sceyt.chatuikit.styles.StyleCustomizer
+import com.sceyt.chatuikit.styles.common.BackgroundStyle
+import com.sceyt.chatuikit.styles.common.TextStyle
+import com.sceyt.chatuikit.styles.common.ToolbarStyle
+
+class PollResultsStyle(
+    @param:ColorInt val backgroundColor: Int,
+    val toolbarTitle: String,
+    val toolbarStyle: ToolbarStyle,
+    val headerBackgroundStyle: BackgroundStyle,
+    val questionTextStyle: TextStyle,
+    val pollTypeTextStyle: TextStyle,
+    val pollTypeFormatter: Formatter<SceytPollDetails>,
+    val pollResultItemStyle: PollResultItemStyle,
+    val pollOptionVotersStyle: PollOptionVotersStyle,
+) : SceytComponentStyle() {
+
+    companion object {
+        var styleCustomizer = StyleCustomizer<PollResultsStyle> { _, style -> style }
+    }
+
+    class Builder(
+        internal val context: Context,
+        private val attrs: AttributeSet?
+    ) {
+        fun build(): PollResultsStyle {
+            context.obtainStyledAttributes(attrs, R.styleable.PollResults).use { array ->
+                val pollResultItemStyle = PollResultItemStyle.Builder(context, attrs).build()
+
+                return PollResultsStyle(
+                    backgroundColor = context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColor),
+                    toolbarTitle = context.getString(R.string.poll_results),
+                    toolbarStyle = buildToolbarStyle(array),
+                    headerBackgroundStyle = buildHeaderBackgroundStyle(array),
+                    questionTextStyle = buildQuestionTextStyle(array),
+                    pollTypeTextStyle = buildPollTypeTextStyle(array),
+                    pollResultItemStyle = pollResultItemStyle,
+                    pollOptionVotersStyle = buildPollOptionVotersStyle(array, attrs),
+                    pollTypeFormatter = SceytChatUIKit.formatters.pollTypeFormatter,
+                    ).let { styleCustomizer.apply(context, it) }
+            }
+        }
+    }
+}

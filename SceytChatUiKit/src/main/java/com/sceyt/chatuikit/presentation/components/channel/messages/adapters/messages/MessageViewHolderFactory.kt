@@ -14,6 +14,7 @@ import com.sceyt.chatuikit.databinding.SceytItemIncDeletedMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemIncFileMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemIncImageMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemIncLinkMessageBinding
+import com.sceyt.chatuikit.databinding.SceytItemIncPollMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemIncTextMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemIncUnsupportedMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemIncVideoMessageBinding
@@ -25,6 +26,7 @@ import com.sceyt.chatuikit.databinding.SceytItemOutDeletedMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemOutFileMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemOutImageMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemOutLinkMessageBinding
+import com.sceyt.chatuikit.databinding.SceytItemOutPollMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemOutTextMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemOutUnsupportedMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemOutVideoMessageBinding
@@ -38,6 +40,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.mes
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.IncFileMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.IncImageMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.IncLinkMessageViewHolder
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.IncPollMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.IncTextMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.IncUnsupportedMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.IncVideoMessageViewHolder
@@ -48,6 +51,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.mes
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.OutFileMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.OutImageMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.OutLinkMessageViewHolder
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.OutPollMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.OutTextMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.OutUnsupportedMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.OutVideoMessageViewHolder
@@ -88,6 +92,8 @@ open class MessageViewHolderFactory(context: Context) {
             MessageViewTypeEnum.OutFile.ordinal -> createOutFileMsgViewHolder(parent)
             MessageViewTypeEnum.IncFiles.ordinal -> createIncFilesMsgViewHolder(parent)
             MessageViewTypeEnum.OutFiles.ordinal -> createOutFilesMsgViewHolder(parent)
+            MessageViewTypeEnum.IncPoll.ordinal -> createIncPollMsgViewHolder(parent)
+            MessageViewTypeEnum.OutPoll.ordinal -> createOutPollMsgViewHolder(parent)
             MessageViewTypeEnum.IncDeleted.ordinal -> createIncDeletedMsgViewHolder(parent)
             MessageViewTypeEnum.OutDeleted.ordinal -> createOutDeletedMsgViewHolder(parent)
             MessageViewTypeEnum.DateSeparator.ordinal -> createDateSeparatorViewHolder(parent)
@@ -204,6 +210,25 @@ open class MessageViewHolderFactory(context: Context) {
             messageItemStyle.messageItemStyle)
     }
 
+    open fun createIncPollMsgViewHolder(parent: ViewGroup): BaseMessageViewHolder {
+        return IncPollMessageViewHolder(
+            binding = SceytItemIncPollMessageBinding.inflate(layoutInflater, parent, false),
+            viewPoolReactions = viewPoolReactions,
+            style = messageItemStyle.messageItemStyle,
+            messageListeners = clickListeners,
+            displayedListener = displayedListener
+        )
+    }
+
+    open fun createOutPollMsgViewHolder(parent: ViewGroup): BaseMessageViewHolder {
+        return OutPollMessageViewHolder(
+            binding = SceytItemOutPollMessageBinding.inflate(layoutInflater, parent, false),
+            viewPoolReactions = viewPoolReactions,
+            style = messageItemStyle.messageItemStyle,
+            messageListeners = clickListeners
+        )
+    }
+
     open fun createDateSeparatorViewHolder(parent: ViewGroup): BaseMessageViewHolder {
         return DateSeparatorViewHolder(
             SceytItemMessageDateSeparatorBinding.inflate(layoutInflater, parent, false),
@@ -249,7 +274,7 @@ open class MessageViewHolderFactory(context: Context) {
     }
 
     private fun pick(inc: Boolean, incType: MessageViewTypeEnum, outType: MessageViewTypeEnum) =
-            if (inc) incType else outType
+        if (inc) incType else outType
 
     open fun getMessageType(message: SceytMessage): Int {
         val inc = message.incoming
@@ -260,10 +285,14 @@ open class MessageViewHolderFactory(context: Context) {
         }
 
         return when (MessageTypeEnum.fromValue(message.type)) {
+            MessageTypeEnum.Poll ->
+                pick(inc, MessageViewTypeEnum.IncPoll, MessageViewTypeEnum.OutPoll).ordinal
+
             MessageTypeEnum.Text,
             MessageTypeEnum.Media,
             MessageTypeEnum.File,
-            MessageTypeEnum.Link -> resolveContentViewType(inc, attachments).ordinal
+            MessageTypeEnum.Link ->
+                resolveContentViewType(inc, attachments).ordinal
 
             MessageTypeEnum.System, null ->
                 pick(inc, MessageViewTypeEnum.IncUnsupported, MessageViewTypeEnum.OutUnsupported).ordinal
@@ -271,8 +300,8 @@ open class MessageViewHolderFactory(context: Context) {
     }
 
     private fun resolveContentViewType(
-            inc: Boolean,
-            attachments: List<SceytAttachment>
+        inc: Boolean,
+        attachments: List<SceytAttachment>
     ): MessageViewTypeEnum {
         if (attachments.isEmpty()) {
             return pick(inc, MessageViewTypeEnum.IncText, MessageViewTypeEnum.OutText)
@@ -302,7 +331,6 @@ open class MessageViewHolderFactory(context: Context) {
                 pick(inc, MessageViewTypeEnum.IncFiles, MessageViewTypeEnum.OutFiles)
         }
     }
-
 
     fun setMessageListener(listener: MessageClickListeners) {
         clickListeners.setListener(listener)
@@ -345,6 +373,8 @@ open class MessageViewHolderFactory(context: Context) {
         OutFile,
         IncFiles,
         OutFiles,
+        IncPoll,
+        OutPoll,
         DateSeparator,
         UnreadMessagesSeparator,
         Loading,

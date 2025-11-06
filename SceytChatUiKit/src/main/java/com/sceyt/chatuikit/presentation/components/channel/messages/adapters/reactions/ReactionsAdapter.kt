@@ -10,11 +10,11 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.rea
 
 class ReactionsAdapter(
         private val viewHolderFactory: ReactionViewHolderFactory,
-        private val message: SceytMessage
-) : ListAdapter<ReactionItem.Reaction, RecyclerView.ViewHolder>(REACTIONS_DIFF_UTIL) {
+        private val message: SceytMessage,
+) : ListAdapter<ReactionItem.Reaction, RecyclerView.ViewHolder>(REACTIONS_DIFF_CALLBACK) {
 
     companion object {
-        val REACTIONS_DIFF_UTIL = object : DiffUtil.ItemCallback<ReactionItem.Reaction>() {
+        private val REACTIONS_DIFF_CALLBACK = object : DiffUtil.ItemCallback<ReactionItem.Reaction>() {
             override fun areItemsTheSame(oldItem: ReactionItem.Reaction, newItem: ReactionItem.Reaction): Boolean {
                 return oldItem.reaction.key == newItem.reaction.key
             }
@@ -37,13 +37,5 @@ class ReactionsAdapter(
         val shouldShowCount = (currentList.size > 1 || (currentList.firstOrNull()?.reaction?.score
                 ?: 0) > 1) && position == currentList.size - 1
         (holder as ReactionViewHolder).bind(currentList[position], shouldShowCount, message)
-    }
-
-    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int, payloads: MutableList<Any>) {
-        super.onBindViewHolder(holder, position, payloads)
-    }
-
-    override fun getItemCount(): Int {
-        return currentList.size
     }
 }

@@ -37,6 +37,9 @@ internal data class MessageDb(
 
         @Relation(parentColumn = "tid", entityColumn = "messageTid", entity = MentionUserMessageLinkEntity::class)
         val mentionedUsers: List<MentionUserDb>?,
+
+        @Relation(parentColumn = "tid", entityColumn = "messageTid", entity = PollEntity::class)
+        val poll: PollDb?,
 ) {
     val selfReactions get() = reactions?.filter { it.from?.id == SceytChatUIKit.chatUIFacade.myId }
 

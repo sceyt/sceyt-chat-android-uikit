@@ -48,6 +48,7 @@ import com.sceyt.chatuikit.styles.extensions.messages_list.buildOutgoingBubbleBa
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildOutgoingLinkPreviewBackgroundStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildOutgoingReplyBackgroundStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildOverlayMediaLoaderStyle
+import com.sceyt.chatuikit.styles.extensions.messages_list.buildPollStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildReactionCountTextStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildReactionsContainerBackgroundStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildReplyMessageStyle
@@ -101,6 +102,7 @@ import java.util.Date
  * @property avatarStyle Style for the avatar, default is [buildAvatarStyle].
  * @property linkPreviewStyle Style for the link preview, default is [buildLinkPreviewStyle].
  * @property replyMessageStyle Style for the reply message, default is [buildReplyMessageStyle].
+ * @property pollStyle Style for the poll, default is [buildPollStyle].
  * @property mediaLoaderStyle Style for the media loader, default is [buildMediaLoaderStyle].
  * @property overlayMediaLoaderStyle Style for the overlay media loader, default is [buildOverlayMediaLoaderStyle].
  * @property voiceWaveformStyle Style for the voice waveform, default is [buildAudioWaveformStyle].
@@ -157,6 +159,7 @@ data class MessageItemStyle(
         val avatarStyle: AvatarStyle,
         val linkPreviewStyle: LinkPreviewStyle,
         val replyMessageStyle: ReplyMessageStyle,
+        val pollStyle: PollStyle,
         val mediaLoaderStyle: MediaLoaderStyle,
         val overlayMediaLoaderStyle: MediaLoaderStyle,
         val voiceWaveformStyle: AudioWaveformStyle,
@@ -287,6 +290,7 @@ data class MessageItemStyle(
                     avatarStyle = buildAvatarStyle(array),
                     linkPreviewStyle = buildLinkPreviewStyle(array),
                     replyMessageStyle = buildReplyMessageStyle(array),
+                    pollStyle = buildPollStyle(array),
                     mediaLoaderStyle = buildMediaLoaderStyle(array),
                     voiceWaveformStyle = buildAudioWaveformStyle(array),
                     overlayMediaLoaderStyle = buildOverlayMediaLoaderStyle(array),
