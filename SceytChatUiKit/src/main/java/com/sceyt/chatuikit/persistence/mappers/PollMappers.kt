@@ -129,9 +129,9 @@ internal fun PollDetails.toSceytPollDetails(
     votes = votes?.map { vote -> vote.toVote() }.orEmpty(),
     ownVotes = ownVotes?.map { it.toVote() }.orEmpty(),
     pendingVotes = null,
-    createdAt = createdAt.time,
-    updatedAt = updatedAt.time,
-    closedAt = closedAt.time,
+    createdAt = createdAt,
+    updatedAt = updatedAt,
+    closedAt = closedAt,
     closed = isClosed,
 )
 
