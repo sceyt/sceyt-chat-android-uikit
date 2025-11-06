@@ -15,9 +15,9 @@ open class ChannelClickListenersImpl : ChannelClickListeners.ClickListeners {
         defaultListeners = listeners
     }
 
-    override fun onChannelClick(item: ChannelListItem.ChannelItem) {
-        defaultListeners?.onChannelClick(item)
-        channelClickListener?.onChannelClick(item)
+    override fun onChannelClick(view: View, item: ChannelListItem.ChannelItem) {
+        defaultListeners?.onChannelClick(view, item)
+        channelClickListener?.onChannelClick(view, item)
     }
 
     override fun onChannelLongClick(view: View, item: ChannelListItem.ChannelItem) {
@@ -25,9 +25,9 @@ open class ChannelClickListenersImpl : ChannelClickListeners.ClickListeners {
         channelLongClickListener?.onChannelLongClick(view, item)
     }
 
-    override fun onAvatarClick(item: ChannelListItem.ChannelItem) {
-        defaultListeners?.onAvatarClick(item)
-        avatarClickListener?.onAvatarClick(item)
+    override fun onAvatarClick(view: View, item: ChannelListItem.ChannelItem) {
+        defaultListeners?.onAvatarClick(view, item)
+        avatarClickListener?.onAvatarClick(view, item)
     }
 
     fun setListener(listener: ChannelClickListeners) {
@@ -53,7 +53,7 @@ open class ChannelClickListenersImpl : ChannelClickListeners.ClickListeners {
     }
 
     internal fun withDefaultListeners(
-            listeners: ChannelClickListeners.ClickListeners
+            listeners: ChannelClickListeners.ClickListeners,
     ): ChannelClickListenersImpl {
         defaultListeners = listeners
         return this

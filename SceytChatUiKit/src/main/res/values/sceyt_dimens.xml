@@ -9,4 +9,5 @@
     <dimen name="extraLargeTextSize">22sp</dimen>
     <dimen name="superLargeTextSize">24sp</dimen>
     <dimen name="messageProgressSize">46dp</dimen>
+    <dimen name="sceyt_space_8dp">8dp</dimen>
 </resources>

@@ -68,7 +68,7 @@ android {
             dimension = "environment"
             resValue("string", "app_name", "Sceyt Chat Staging")
 
-            buildConfigField("String", "API_URL", "\"https://uk-london-south-api-2-staging.waafi.com\"")
+            buildConfigField("String", "API_URL", "\"https://mp-api-staging-htgcloud-region-02.waafi.com\"")
             buildConfigField("String", "APP_ID", "\"yzr58x11rm\"")
             buildConfigField("String", "GEN_TOKEN_BASE_URL", "\"https://hm25ehfh6i.execute-api.eu-central-1.amazonaws.com/\"")
             buildConfigField("String", "GEN_TOKEN_ENDPOINT", "\"/load-test/user/genToken\"")

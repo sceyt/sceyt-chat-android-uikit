@@ -346,5 +346,88 @@
         <attr name="sceytUiMessagesListMessageDeliveryStatusReceivedIcon" format="reference" />
         <attr name="sceytUiMessagesListMessageDeliveryStatusDisplayedIcon" format="reference" />
 
+        <!--Poll style-->
+        <!--Poll question text style-->
+        <attr name="sceytUiMessagesListPollQuestionTextColor" format="reference|color" />
+        <attr name="sceytUiMessagesListPollQuestionTextSize" format="dimension" />
+        <attr name="sceytUiMessagesListPollQuestionTextFont" format="reference" />
+        <attr name="sceytUiMessagesListPollQuestionTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <!--Poll type text style-->
+        <attr name="sceytUiMessagesListPollTypeTextColor" format="reference|color" />
+        <attr name="sceytUiMessagesListPollTypeTextSize" format="dimension" />
+        <attr name="sceytUiMessagesListPollTypeTextFont" format="reference" />
+        <attr name="sceytUiMessagesListPollTypeTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <!--Poll view results text style-->
+        <attr name="sceytUiMessagesListPollViewResultsTextColor" format="reference|color" />
+        <attr name="sceytUiMessagesListPollViewResultsTextSize" format="dimension" />
+        <attr name="sceytUiMessagesListPollViewResultsTextFont" format="reference" />
+        <attr name="sceytUiMessagesListPollViewResultsTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <!--Poll view results disabled text style-->
+        <attr name="sceytUiMessagesListPollViewResultsDisabledTextColor" format="reference|color" />
+        <attr name="sceytUiMessagesListPollViewResultsDisabledTextSize" format="dimension" />
+        <attr name="sceytUiMessagesListPollViewResultsDisabledTextFont" format="reference" />
+        <attr name="sceytUiMessagesListPollViewResultsDisabledTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <!--Poll option text style-->
+        <attr name="sceytUiMessagesListPollOptionTextColor" format="reference|color" />
+        <attr name="sceytUiMessagesListPollOptionTextSize" format="dimension" />
+        <attr name="sceytUiMessagesListPollOptionTextFont" format="reference" />
+        <attr name="sceytUiMessagesListPollOptionTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <!--Poll vote count text style-->
+        <attr name="sceytUiMessagesListPollVoteCountTextColor" format="reference|color" />
+        <attr name="sceytUiMessagesListPollVoteCountTextSize" format="dimension" />
+        <attr name="sceytUiMessagesListPollVoteCountTextFont" format="reference" />
+        <attr name="sceytUiMessagesListPollVoteCountTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <!--Poll colors-->
+        <attr name="sceytUiMessagesListPollDividerColor" format="reference|color" />
+        <attr name="sceytUiMessagesListPollProgressBarTrackColor" format="reference|color" />
+        <attr name="sceytUiMessagesListPollProgressBarColor" format="reference|color" />
+        <!--Poll checkbox icons-->
+        <attr name="sceytUiMessagesListPollCheckboxCheckedIcon" format="reference" />
+        <attr name="sceytUiMessagesListPollCheckboxUncheckedIcon" format="reference" />
+        <attr name="sceytUiMessagesListPollCheckboxPressedIcon" format="reference" />
+        <!--Poll voter avatar style-->
+        <attr name="sceytUiMessagesListPollVoterAvatarBackgroundColor" format="reference|color" />
+        <attr name="sceytUiMessagesListPollVoterAvatarTextColor" format="reference|color" />
+        <attr name="sceytUiMessagesListPollVoterAvatarTextSize" format="dimension" />
+        <attr name="sceytUiMessagesListPollVoterAvatarTextFont" format="reference" />
+        <attr name="sceytUiMessagesListPollVoterAvatarTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiMessagesListPollVoterAvatarShape">
+            <flag name="circle" value="0" />
+            <flag name="rounded" value="1" />
+        </attr>
+        <attr name="sceytUiMessagesListPollVoterAvatarCornerRadius" format="dimension" />
+        <attr name="sceytUiMessagesListPollVoterAvatarBorderWidth" format="dimension" />
+        <attr name="sceytUiMessagesListPollVoterAvatarBorderColor" format="reference|color" />
+
+        
+
     </declare-styleable>
 </resources>

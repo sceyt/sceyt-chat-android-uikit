@@ -16,6 +16,7 @@ import com.sceyt.chatuikit.persistence.extensions.safeResume
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.interactor.AttachmentInteractor
 import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
+import com.sceyt.chatuikit.persistence.interactor.ChannelInviteKeyInteractor
 import com.sceyt.chatuikit.persistence.interactor.ChannelMemberInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageMarkerInteractor
@@ -52,6 +53,7 @@ class SceytChatUIFacade(
         val attachmentInteractor: AttachmentInteractor,
         val messageReactionInteractor: MessageReactionInteractor,
         val messageMarkerInteractor: MessageMarkerInteractor,
+        val channelInviteKeyInteractor: ChannelInviteKeyInteractor,
 ) {
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private var clientUserId: String? = null

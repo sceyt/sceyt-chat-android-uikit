@@ -3,7 +3,7 @@ package com.sceyt.chatuikit.presentation.components.channel_info.members.adapter
 import android.view.View
 import com.sceyt.chatuikit.presentation.components.channel_info.members.adapter.MemberItem
 
-class MemberClickListenersImpl : MemberClickListeners.ClickListeners {
+open class MemberClickListenersImpl : MemberClickListeners.ClickListeners {
     private var memberClickListener: MemberClickListeners.MemberClickListener? = null
     private var memberLongClickListener: MemberClickListeners.MemberLongClickListener? = null
 

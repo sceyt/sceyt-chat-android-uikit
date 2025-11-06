@@ -24,9 +24,9 @@ import com.sceyt.chatuikit.presentation.components.startchat.StartChatActivity
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
-class ChannelListFragment : Fragment() {
-    private lateinit var binding: SceytFragmentChannelsBinding
-    private val viewModel: ChannelsViewModel by viewModels(factoryProducer = {
+open class ChannelListFragment : Fragment() {
+    protected lateinit var binding: SceytFragmentChannelsBinding
+    protected val viewModel: ChannelsViewModel by viewModels(factoryProducer = {
         ChannelsViewModelFactory()
     })
 
@@ -50,7 +50,7 @@ class ChannelListFragment : Fragment() {
         }
     }
 
-    private fun initViews() {
+    protected open fun initViews() {
         setupConnectionStatus(ConnectionEventManager.connectionState)
 
         lifecycleScope.launch {
@@ -64,7 +64,7 @@ class ChannelListFragment : Fragment() {
         }
     }
 
-    private fun setupConnectionStatus(state: ConnectionState) {
+    protected open fun setupConnectionStatus(state: ConnectionState) {
         if (state == ConnectionState.Connected) {
             binding.title.text = getString(R.string.sceyt_chats)
             return
@@ -76,7 +76,7 @@ class ChannelListFragment : Fragment() {
         )
     }
 
-    private fun SceytFragmentChannelsBinding.applyStyle() {
+    protected open fun SceytFragmentChannelsBinding.applyStyle() {
         layoutToolbar.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.colors.primaryColor))
         searchAppBarLayout.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.colors.backgroundColor))
         title.setTextColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)

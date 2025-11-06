@@ -131,29 +131,38 @@ fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: Lif
         }
     }.launchIn(viewModelScope)
 
-    ChannelsCache.channelUpdatedFlow.onEach { data ->
-        SceytLog.i("ChannelUpdatedTag", "viewModel: id: ${data.channel.id} unreadCount ${data.channel.newMessageCount}" +
-                " isResumed ${lifecycleOwner.isResumed()} hasDifference: ${data.diff.hasDifference()}" +
-                " lastMessageChanged: ${data.diff.lastMessageChanged} needSorting: ${data.needSorting}")
+    ChannelsCache.channelUpdatedFlow
+        .filter { config.isValidForConfig(it.channel) }
+        .onEach { data ->
+            SceytLog.i("ChannelUpdatedTag", "viewModel: id: ${data.channel.id} unreadCount ${data.channel.newMessageCount}" +
+                    " isResumed ${lifecycleOwner.isResumed()} hasDifference: ${data.diff.hasDifference()}" +
+                    " lastMessageChanged: ${data.diff.lastMessageChanged} needSorting: ${data.needSorting}")
 
-        if (!lifecycleOwner.isResumed()) {
-            lifecycleScope.launch(Dispatchers.Default) {
-                mutexUpdateList.withLock {
-                    needSubmitOnResume = getUpdateAfterOnResumeData().map {
-                        if (it is ChannelItem && it.channel.id == data.channel.id) {
-                            it.copy(channel = data.channel)
-                        } else it
+            if (!lifecycleOwner.isResumed()) {
+                lifecycleScope.launch(Dispatchers.Default) {
+                    mutexUpdateList.withLock {
+                        var found = false
+                        needSubmitOnResume = getUpdateAfterOnResumeData().map {
+                            if (it is ChannelItem && it.channel.id == data.channel.id) {
+                                found = true
+                                it.copy(channel = data.channel)
+                            } else it
+                        }
+                        if (!found) {
+                            val newList = needSubmitOnResume?.toMutableList() ?: mutableListOf()
+                            newList.add(ChannelItem(data.channel))
+                            needSubmitOnResume = newList
+                        }
                     }
                 }
+            } else {
+                val isCanceled = channelListView.cancelLastSort()
+                channelListView.channelUpdated(data.channel) {
+                    if (data.diff.lastMessageChanged || data.needSorting || isCanceled)
+                        channelListView.sortChannelsBy(lifecycleScope, SceytChatUIKit.config.channelListOrder)
+                }
             }
-        } else {
-            val isCanceled = channelListView.cancelLastSort()
-            channelListView.channelUpdated(data.channel) {
-                if (data.diff.lastMessageChanged || data.needSorting || isCanceled)
-                    channelListView.sortChannelsBy(lifecycleScope, SceytChatUIKit.config.channelListOrder)
-            }
-        }
-    }.launchIn(viewModelScope)
+        }.launchIn(viewModelScope)
 
     ChannelsCache.channelReactionMsgLoadedFlow.onEach { data ->
         lifecycleScope.launch {

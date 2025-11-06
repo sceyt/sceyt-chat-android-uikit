@@ -17,24 +17,30 @@ import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferServiceImpl
 import com.sceyt.chatuikit.persistence.interactor.AttachmentInteractor
 import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
+import com.sceyt.chatuikit.persistence.interactor.ChannelInviteKeyInteractor
 import com.sceyt.chatuikit.persistence.interactor.ChannelMemberInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageMarkerInteractor
+import com.sceyt.chatuikit.persistence.interactor.MessagePollInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageReactionInteractor
 import com.sceyt.chatuikit.persistence.interactor.UserInteractor
 import com.sceyt.chatuikit.persistence.logic.FileTransferLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
+import com.sceyt.chatuikit.persistence.logic.PersistenceChannelInviteKeyLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceConnectionLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMembersLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessageMarkerLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
+import com.sceyt.chatuikit.persistence.logic.PersistencePollLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceReactionsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceUsersLogic
 import com.sceyt.chatuikit.persistence.logicimpl.FileTransferLogicImpl
+import com.sceyt.chatuikit.persistence.logicimpl.PersistenceChannelInviteKeyLogicImpl
 import com.sceyt.chatuikit.persistence.logicimpl.PersistenceConnectionLogicImpl
 import com.sceyt.chatuikit.persistence.logicimpl.PersistenceMembersLogicImpl
 import com.sceyt.chatuikit.persistence.logicimpl.PersistenceMessageMarkerLogicImpl
+import com.sceyt.chatuikit.persistence.logicimpl.PersistencePollLogicImpl
 import com.sceyt.chatuikit.persistence.logicimpl.PersistenceReactionsLogicImpl
 import com.sceyt.chatuikit.persistence.logicimpl.PersistenceUsersLogicImpl
 import com.sceyt.chatuikit.persistence.logicimpl.attachment.AttachmentsCache
@@ -44,7 +50,16 @@ import com.sceyt.chatuikit.persistence.logicimpl.channel.PersistenceChannelsLogi
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessageLoadRangeUpdater
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
 import com.sceyt.chatuikit.persistence.logicimpl.message.PersistenceMessagesLogicImpl
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.AddPollVoteUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.EndPollUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.HandleChangeVoteErrorUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.RemovePollVoteUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.RetractPollVoteUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.SendPollPendingVotesUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.ShouldShowNotificationUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.TogglePollVoteUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.UpdatePollUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.UpdatePollVotesUseCase
 import com.sceyt.chatuikit.push.service.PushService
 import com.sceyt.chatuikit.push.service.PushServiceImpl
 import com.sceyt.chatuikit.services.SceytSyncManager
@@ -53,6 +68,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
+import org.koin.core.module.dsl.factoryOf
+import org.koin.core.module.dsl.singleOf
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import java.util.concurrent.Executors
@@ -70,7 +87,11 @@ internal fun databaseModule(enableDatabase: Boolean) = module {
 
     fun provideDatabase(context: Context): SceytDatabase {
         val builder = if (enableDatabase)
-            Room.databaseBuilder(context, SceytDatabase::class.java, SCEYT_CHAT_UI_KIT_DATABASE_NAME)
+            Room.databaseBuilder(
+                context = context,
+                klass = SceytDatabase::class.java,
+                name = SCEYT_CHAT_UI_KIT_DATABASE_NAME
+            )
         else
             Room.inMemoryDatabaseBuilder(context, SceytDatabase::class.java)
 
@@ -98,19 +119,22 @@ internal fun databaseModule(enableDatabase: Boolean) = module {
     single { get<SceytDatabase>().linkDao() }
     single { get<SceytDatabase>().loadRangeDao() }
     single { get<SceytDatabase>().markerDao() }
-    single { get<SceytDatabase>().autoDeleteMessageDao() }
+    single { get<SceytDatabase>().pollDao() }
+    single { get<SceytDatabase>().pendingPollVoteDao() }
 }
 
 internal val interactorModule = module {
-    single { PersistenceMiddleWareImpl(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    singleOf(::PersistenceMiddleWareImpl)
     single<ChannelInteractor> { get<PersistenceMiddleWareImpl>() }
     single<MessageInteractor> { get<PersistenceMiddleWareImpl>() }
     single<AttachmentInteractor> { get<PersistenceMiddleWareImpl>() }
     single<MessageMarkerInteractor> { get<PersistenceMiddleWareImpl>() }
     single<MessageReactionInteractor> { get<PersistenceMiddleWareImpl>() }
+    single<MessagePollInteractor> { get<PersistenceMiddleWareImpl>() }
     single<ChannelMemberInteractor> { get<PersistenceMiddleWareImpl>() }
     single<UserInteractor> { get<PersistenceMiddleWareImpl>() }
-    single<SceytChatUIFacade> { SceytChatUIFacade(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    single<ChannelInviteKeyInteractor> { get<PersistenceMiddleWareImpl>() }
+    singleOf(::SceytChatUIFacade)
 }
 
 internal val logicModule = module {
@@ -118,15 +142,27 @@ internal val logicModule = module {
     single<PersistenceMessagesLogic> { PersistenceMessagesLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     single<PersistenceAttachmentLogic> { PersistenceAttachmentLogicImpl(get(), get(), get(), get(), get(), get(), get(), get()) }
     single<PersistenceReactionsLogic> { PersistenceReactionsLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    single<PersistencePollLogic> { PersistencePollLogicImpl(get(),
+        get(), get(), get(), get(), get(),get()) }
     single<PersistenceMembersLogic> { PersistenceMembersLogicImpl(get(), get(), get(), get(), get(), get(), get()) }
     single<PersistenceUsersLogic> { PersistenceUsersLogicImpl(get(), get(), get(), get()) }
     single<PersistenceMessageMarkerLogic> { PersistenceMessageMarkerLogicImpl(get(), get(), get()) }
     single<PersistenceConnectionLogic> { PersistenceConnectionLogicImpl(get(), get(), get(), get()) }
+    single<PersistenceChannelInviteKeyLogic> { PersistenceChannelInviteKeyLogicImpl(get(), get()) }
     single<FileTransferLogic> { FileTransferLogicImpl(get(), get()) }
 }
 
 internal val useCaseModule = module {
-    factory { ShouldShowNotificationUseCase(get()) }
+    factoryOf(::ShouldShowNotificationUseCase)
+    factoryOf(::AddPollVoteUseCase)
+    factoryOf(::RemovePollVoteUseCase)
+    factoryOf(::TogglePollVoteUseCase)
+    factoryOf(::RetractPollVoteUseCase)
+    factoryOf(::EndPollUseCase)
+    factoryOf(::UpdatePollUseCase)
+    factoryOf(::UpdatePollVotesUseCase)
+    factoryOf(::SendPollPendingVotesUseCase)
+    factoryOf(::HandleChangeVoteErrorUseCase)
 }
 
 internal val cacheModule = module {
@@ -150,14 +186,14 @@ internal val coroutineModule = module {
 }
 
 fun providesUiContext(exceptionHandler: CoroutineExceptionHandler) =
-        Dispatchers.Main + exceptionHandler
+    Dispatchers.Main + exceptionHandler
 
 fun providesIOContext(exceptionHandler: CoroutineExceptionHandler): CoroutineContext =
-        Dispatchers.IO + exceptionHandler
+    Dispatchers.IO + exceptionHandler
 
 fun providesComputationContext(exceptionHandler: CoroutineExceptionHandler): CoroutineContext =
-        Executors.newCachedThreadPool().asCoroutineDispatcher().plus(exceptionHandler)
+    Executors.newCachedThreadPool().asCoroutineDispatcher().plus(exceptionHandler)
 
 fun providesSingleThreadedContext(exceptionHandler: CoroutineExceptionHandler): CoroutineContext =
-        Executors.newSingleThreadExecutor().asCoroutineDispatcher().plus(exceptionHandler)
+    Executors.newSingleThreadExecutor().asCoroutineDispatcher().plus(exceptionHandler)
 

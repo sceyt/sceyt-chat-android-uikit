@@ -2,26 +2,31 @@ package com.sceyt.chatuikit.formatters
 
 import com.sceyt.chat.models.ConnectionState
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
+import com.sceyt.chatuikit.data.models.messages.PollOptionUiModel
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
+import com.sceyt.chatuikit.data.models.messages.SceytPollDetails
 import com.sceyt.chatuikit.data.models.messages.SceytUser
+import com.sceyt.chatuikit.formatters.attributes.ChannelEventTitleFormatterAttributes
 import com.sceyt.chatuikit.formatters.attributes.ChannelItemSubtitleFormatterAttributes
 import com.sceyt.chatuikit.formatters.attributes.DraftMessageBodyFormatterAttributes
 import com.sceyt.chatuikit.formatters.attributes.MessageBodyFormatterAttributes
-import com.sceyt.chatuikit.formatters.attributes.ChannelEventTitleFormatterAttributes
 import com.sceyt.chatuikit.formatters.defaults.DefaultAttachmentDateFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultAttachmentNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultAttachmentSizeFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelDateFormatter
+import com.sceyt.chatuikit.formatters.defaults.DefaultChannelEventTitleFormatter
+import com.sceyt.chatuikit.formatters.defaults.DefaultChannelEventUserNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelInfoDateSeparatorFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelInfoFileSubtitleFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelInfoVoiceSubtitleFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelLastMessageSenderNameFormatter
-import com.sceyt.chatuikit.formatters.defaults.DefaultChannelListSubtitleFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelListChannelEventTitleFormatter
+import com.sceyt.chatuikit.formatters.defaults.DefaultChannelListSubtitleFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelSubtitleFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultConnectionsStateTitleFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultDraftMessageBodyFormatter
+import com.sceyt.chatuikit.formatters.defaults.DefaultDraftMessageBodyWithAttachmentsFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultMediaDurationFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultMentionUserNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultMessageBodyFormatter
@@ -33,9 +38,10 @@ import com.sceyt.chatuikit.formatters.defaults.DefaultMessageMarkerDateFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultMessageViewCountFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultNotificationBodyFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultNotificationTitleFormatter
-import com.sceyt.chatuikit.formatters.defaults.DefaultChannelEventTitleFormatter
-import com.sceyt.chatuikit.formatters.defaults.DefaultChannelEventUserNameFormatter
-import com.sceyt.chatuikit.formatters.defaults.DefaultDraftMessageBodyWithAttachmentsFormatter
+import com.sceyt.chatuikit.formatters.defaults.DefaultPollResultVoteCountFormatter
+import com.sceyt.chatuikit.formatters.defaults.DefaultPollTypeFormatter
+import com.sceyt.chatuikit.formatters.defaults.DefaultPollVoteCountFormatter
+import com.sceyt.chatuikit.formatters.defaults.DefaultPollVoteTimeDateFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUnreadCountFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUserAndNotesNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUserNameFormatter
@@ -201,5 +207,21 @@ class SceytChatUIKitFormatters {
 
     var connectionStateTitleFormatter: Formatter<ConnectionState> by lazyVar {
         DefaultConnectionsStateTitleFormatter()
+    }
+
+    var pollTypeFormatter: Formatter<SceytPollDetails> by lazyVar {
+        DefaultPollTypeFormatter()
+    }
+
+    var pollVoteCountFormatter: Formatter<PollOptionUiModel> by lazyVar {
+        DefaultPollVoteCountFormatter()
+    }
+
+    var pollResultVoteCountFormatter: Formatter<Int> by lazyVar {
+        DefaultPollResultVoteCountFormatter()
+    }
+
+    var pollVoteDateFormatter: Formatter<Long> by lazyVar {
+        DefaultPollVoteTimeDateFormatter()
     }
 }

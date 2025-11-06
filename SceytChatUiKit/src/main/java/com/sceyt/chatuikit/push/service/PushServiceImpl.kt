@@ -20,7 +20,7 @@ internal class PushServiceImpl(
 ) : PushService {
 
     override fun handlePush(data: PushData) {
-        SceytLog.d(TAG, "Handling push: ${data.message.id} ${data.message.body}")
+        SceytLog.d(TAG, "Handling push for messageId: ${data.message.id}, channelId: ${data.message.channelId}")
         scope.launch {
             // At first, we call the handlePush method, which will save the message to the database
             if (!messagesLogic.handlePush(data)) return@launch
