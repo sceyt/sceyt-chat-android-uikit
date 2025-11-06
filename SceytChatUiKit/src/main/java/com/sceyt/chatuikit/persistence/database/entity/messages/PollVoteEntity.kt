@@ -17,14 +17,6 @@ import com.sceyt.chatuikit.persistence.database.DatabaseConstants.POLL_VOTE_TABL
             onUpdate = ForeignKey.CASCADE,
             deferred = true
         ),
-        ForeignKey(
-            entity = PollOptionEntity::class,
-            parentColumns = ["id"],
-            childColumns = ["optionId"],
-            onDelete = ForeignKey.CASCADE,
-            onUpdate = ForeignKey.CASCADE,
-            deferred = true
-        )
     ],
     indices = [
         Index(value = ["pollId", "optionId", "userId"], unique = true),
@@ -33,11 +25,11 @@ import com.sceyt.chatuikit.persistence.database.DatabaseConstants.POLL_VOTE_TABL
     ]
 )
 internal data class PollVoteEntity(
-        val pollId: String,
-        val optionId: String,
-        val userId: String,
-        val createdAt: Long,
-        @PrimaryKey(autoGenerate = true)
-        val id: Long = 0,
+    val pollId: String,
+    val optionId: String,
+    val userId: String,
+    val createdAt: Long,
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0,
 )
 
