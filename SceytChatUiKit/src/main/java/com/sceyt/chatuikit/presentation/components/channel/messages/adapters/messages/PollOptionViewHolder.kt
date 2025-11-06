@@ -1,0 +1,99 @@
+package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages
+
+import androidx.core.view.isVisible
+import androidx.recyclerview.widget.RecyclerView
+import com.sceyt.chatuikit.data.models.messages.PollOptionUiModel
+import com.sceyt.chatuikit.databinding.SceytItemPollOptionBinding
+import com.sceyt.chatuikit.extensions.dpToPx
+import com.sceyt.chatuikit.persistence.differs.PollOptionDiff
+import com.sceyt.chatuikit.presentation.common.OverlapDecoration
+import com.sceyt.chatuikit.presentation.custom_views.apply
+import com.sceyt.chatuikit.styles.common.BackgroundStyle
+import com.sceyt.chatuikit.styles.messages_list.item.PollStyle
+
+open class PollOptionViewHolder(
+    private val binding: SceytItemPollOptionBinding,
+    private val pollStyle: PollStyle,
+    private val isAnonymousProvider: () -> Boolean,
+    private val bubbleBackgroundStyleProvider: () -> BackgroundStyle,
+    private var onOptionClick: ((PollOptionUiModel) -> Unit)? = null,
+) : RecyclerView.ViewHolder(binding.root) {
+    private val context = binding.root.context
+    private lateinit var currentOption: PollOptionUiModel
+    private var currentProgress = 0
+    private var votersAdapter: VoterAvatarAdapter? = null
+
+    init {
+        applyStyle()
+        binding.root.setOnClickListener {
+            if (::currentOption.isInitialized && !currentOption.closed) {
+                onOptionClick?.invoke(currentOption)
+            }
+        }
+    }
+
+    open fun bind(
+        option: PollOptionUiModel,
+        diff: PollOptionDiff,
+        animate: Boolean = false,
+    ) = with(binding) {
+        currentOption = option
+
+        if (diff.closedStatusChanged) {
+            checkbox.isVisible = !option.closed
+            root.isEnabled = !option.closed
+        }
+
+        if (diff.selectedChanged) {
+            checkbox.isChecked = option.selected
+        }
+
+        if (diff.textChanged) {
+            tvOptionText.text = option.text
+        }
+
+        if (diff.voteCountChanged || diff.totalVoteCountChanged) {
+            val formattedCount = pollStyle.voteCountFormatter.format(context, option)
+            val shouldAnimate = animate && diff != PollOptionDiff.DEFAULT
+
+            tvVoteCount.setTextAnimated(formattedCount.toString(), shouldAnimate)
+
+            val percentage = option.getPercentage().toInt()
+            val shouldAnimateProgress = shouldAnimate && percentage != currentProgress
+
+            progressBar.setProgress(percentage, animate = shouldAnimateProgress)
+            currentProgress = percentage
+        }
+
+        // Setup voters avatars (hide if anonymous)
+        if (diff.votersChanged) {
+            if (!isAnonymousProvider() && option.voters.isNotEmpty()) {
+                if (votersAdapter == null) {
+                    votersAdapter = VoterAvatarAdapter(
+                        pollStyle = pollStyle,
+                        bubbleBackgroundStyleProvider = bubbleBackgroundStyleProvider
+                    )
+                    rvVoters.itemAnimator = null
+                    rvVoters.adapter = votersAdapter
+                    rvVoters.addItemDecoration(OverlapDecoration(10.dpToPx()))
+                }
+                votersAdapter?.submitData(option.voters.take(3), animate = animate)
+            } else {
+                votersAdapter?.submitData(emptyList(), animate = false)
+            }
+        }
+    }
+
+    open fun onViewDetachedFromWindow() {
+        binding.progressBar.cancelAnimation()
+    }
+
+    protected open fun applyStyle() = with(binding) {
+        pollStyle.optionTextStyle.apply(tvOptionText)
+        pollStyle.voteCountTextStyle.apply(tvVoteCount)
+        pollStyle.checkboxStyle.apply(checkbox)
+        progressBar.progressColor = pollStyle.progressColor
+        progressBar.progressTrackColor = pollStyle.progressTrackColor
+    }
+}
+

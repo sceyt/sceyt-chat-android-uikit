@@ -7,8 +7,10 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.databinding.SceytItemReactionBinding
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
 
-class ReactionViewHolderFactory(context: Context,
-                                private val onReactionClickListener: MessageClickListeners.ReactionClickListener?) {
+class ReactionViewHolderFactory(
+        context: Context,
+        private val onReactionClickListener: MessageClickListeners.ReactionClickListener?,
+) {
 
     private val layoutInflater = LayoutInflater.from(context)
 

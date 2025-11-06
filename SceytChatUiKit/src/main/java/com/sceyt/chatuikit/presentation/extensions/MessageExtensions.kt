@@ -22,11 +22,11 @@ import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 import java.io.File
 
 fun SceytMessage?.setChannelMessageDateAndStatusIcon(
-        decoratedTextView: DecoratedTextView,
-        itemStyle: ChannelItemStyle,
-        dateText: CharSequence,
-        edited: Boolean,
-        shouldShowStatus: Boolean,
+    decoratedTextView: DecoratedTextView,
+    itemStyle: ChannelItemStyle,
+    dateText: CharSequence,
+    edited: Boolean,
+    shouldShowStatus: Boolean,
 ) {
     if (this?.deliveryStatus == null || state == MessageState.Deleted || incoming || !shouldShowStatus) {
         decoratedTextView.appearanceBuilder()
@@ -58,10 +58,10 @@ fun SceytMessage?.setChannelMessageDateAndStatusIcon(
 }
 
 fun SceytMessage?.setChatMessageDateAndStatusIcon(
-        decoratedTextView: DecoratedTextView,
-        itemStyle: MessageItemStyle,
-        dateText: CharSequence,
-        edited: Boolean,
+    decoratedTextView: DecoratedTextView,
+    itemStyle: MessageItemStyle,
+    dateText: CharSequence,
+    edited: Boolean,
 ) {
     if (this?.deliveryStatus == null || state == MessageState.Deleted || incoming) {
         decoratedTextView.appearanceBuilder()
@@ -103,16 +103,21 @@ private fun checkIgnoreHighlight(deliveryStatus: DeliveryStatus?): Boolean {
 }
 
 fun SceytMessage.getFormattedBodyWithAttachments(
-        context: Context,
-        mentionTextStyle: TextStyle,
-        attachmentNameFormatter: Formatter<SceytAttachment>,
-        mentionUserNameFormatter: Formatter<SceytUser>,
-        mentionClickListener: ((String) -> Unit)?,
-): SpannableString {
+    context: Context,
+    mentionTextStyle: TextStyle,
+    attachmentNameFormatter: Formatter<SceytAttachment>,
+    mentionUserNameFormatter: Formatter<SceytUser>,
+    mentionClickListener: ((String) -> Unit)?,
+): CharSequence {
     val body = when {
         state == MessageState.Deleted -> context.getString(R.string.sceyt_message_was_deleted)
         attachments.isNullOrEmpty() || attachments.firstOrNull()?.type == AttachmentTypeEnum.Link.value -> {
-            buildWithAttributes(context, mentionTextStyle, mentionUserNameFormatter, mentionClickListener)
+            buildWithAttributes(
+                context = context,
+                mentionTextStyle = mentionTextStyle,
+                mentionUserNameFormatter = mentionUserNameFormatter,
+                mentionClickListener = mentionClickListener
+            )
         }
 
         attachments.size == 1 -> {
@@ -121,15 +126,15 @@ fun SceytMessage.getFormattedBodyWithAttachments(
 
         else -> context.getString(R.string.sceyt_file)
     }
-    return SpannableString(body)
+    return body.trim()
 }
 
 fun DraftMessage.getFormattedBodyWithAttachments(
-        context: Context,
-        mentionTextStyle: TextStyle,
-        attachmentNameFormatter: Formatter<SceytAttachment>,
-        mentionUserNameFormatter: Formatter<SceytUser>,
-        mentionClickListener: ((String) -> Unit)?,
+    context: Context,
+    mentionTextStyle: TextStyle,
+    attachmentNameFormatter: Formatter<SceytAttachment>,
+    mentionUserNameFormatter: Formatter<SceytUser>,
+    mentionClickListener: ((String) -> Unit)?,
 ): SpannableString {
     val body = when {
         voiceAttachment != null -> {
@@ -137,7 +142,12 @@ fun DraftMessage.getFormattedBodyWithAttachments(
         }
 
         attachments.isNullOrEmpty() || attachments.firstOrNull()?.type == AttachmentTypeEnum.Link -> {
-            buildWithAttributes(context, mentionTextStyle, mentionUserNameFormatter, mentionClickListener)
+            buildWithAttributes(
+                context = context,
+                mentionTextStyle = mentionTextStyle,
+                mentionUserNameFormatter = mentionUserNameFormatter,
+                mentionClickListener = mentionClickListener
+            )
         }
 
         attachments.size == 1 -> {
@@ -178,7 +188,8 @@ fun SceytAttachment?.isAttachmentExistAndFullyLoaded(loadedFile: File): File? {
 
 fun SceytMessage.isPending() = deliveryStatus == DeliveryStatus.Pending
 
-fun MessageState.isDeletedOrHardDeleted() = this == MessageState.Deleted || this == MessageState.DeletedHard
+fun MessageState.isDeletedOrHardDeleted() =
+    this == MessageState.Deleted || this == MessageState.DeletedHard
 
 fun MessageState.isDeleted() = this == MessageState.Deleted
 
@@ -211,7 +222,9 @@ fun SceytMessage.getUpdateMessage(message: SceytMessage): SceytMessage {
         autoDeleteAt = message.autoDeleteAt,
         pendingReactions = message.pendingReactions,
         bodyAttributes = message.bodyAttributes,
+        disableMentionsCount = message.disableMentionsCount,
+        poll = message.poll,
         messageReactions = message.messageReactions,
-        files = message.files
+        files = message.files,
     )
 }

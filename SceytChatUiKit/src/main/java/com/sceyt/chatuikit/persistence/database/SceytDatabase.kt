@@ -8,7 +8,6 @@ import com.sceyt.chatuikit.persistence.database.converters.ChannelConverter
 import com.sceyt.chatuikit.persistence.database.converters.ListStringConverter
 import com.sceyt.chatuikit.persistence.database.converters.MessageConverter
 import com.sceyt.chatuikit.persistence.database.dao.AttachmentDao
-import com.sceyt.chatuikit.persistence.database.dao.AutoDeleteMessageDao
 import com.sceyt.chatuikit.persistence.database.dao.ChannelDao
 import com.sceyt.chatuikit.persistence.database.dao.ChatUserReactionDao
 import com.sceyt.chatuikit.persistence.database.dao.DraftMessageDao
@@ -20,7 +19,9 @@ import com.sceyt.chatuikit.persistence.database.dao.MemberDao
 import com.sceyt.chatuikit.persistence.database.dao.MessageDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingMarkerDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingMessageStateDao
+import com.sceyt.chatuikit.persistence.database.dao.PendingPollVoteDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingReactionDao
+import com.sceyt.chatuikit.persistence.database.dao.PollDao
 import com.sceyt.chatuikit.persistence.database.dao.ReactionDao
 import com.sceyt.chatuikit.persistence.database.dao.UserDao
 import com.sceyt.chatuikit.persistence.database.entity.FileChecksumEntity
@@ -39,10 +40,14 @@ import com.sceyt.chatuikit.persistence.database.entity.messages.LoadRangeEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.MarkerEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.MentionUserMessageLinkEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageEntity
+import com.sceyt.chatuikit.persistence.database.entity.messages.PollEntity
+import com.sceyt.chatuikit.persistence.database.entity.messages.PollOptionEntity
+import com.sceyt.chatuikit.persistence.database.entity.messages.PollVoteEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.ReactionEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.ReactionTotalEntity
 import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingMarkerEntity
 import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingMessageStateEntity
+import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingPollVoteEntity
 import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingReactionEntity
 import com.sceyt.chatuikit.persistence.database.entity.user.UserEntity
 import com.sceyt.chatuikit.persistence.database.entity.user.UserMetadataEntity
@@ -72,8 +77,12 @@ import com.sceyt.chatuikit.persistence.database.entity.user.UserMetadataEntity
         LoadRangeEntity::class,
         AutoDeleteMessageEntity::class,
         UserMetadataEntity::class,
+        PollEntity::class,
+        PollOptionEntity::class,
+        PollVoteEntity::class,
+        PendingPollVoteEntity::class,
     ],
-    version = 23,
+    version = 24,
     autoMigrations = [
         AutoMigration(from = 1, to = 2),
         AutoMigration(from = 2, to = 3),
@@ -94,7 +103,8 @@ import com.sceyt.chatuikit.persistence.database.entity.user.UserMetadataEntity
         AutoMigration(from = 19, to = 20),
         AutoMigration(from = 20, to = 21),
         AutoMigration(from = 21, to = 22),
-        AutoMigration(from = 22, to = 23)
+        AutoMigration(from = 22, to = 23),
+        AutoMigration(from = 23, to = 24),
     ])
 
 @TypeConverters(ChannelConverter::class, MessageConverter::class, ListStringConverter::class)
@@ -114,5 +124,6 @@ internal abstract class SceytDatabase : RoomDatabase() {
     abstract fun linkDao(): LinkDao
     abstract fun loadRangeDao(): LoadRangeDao
     abstract fun markerDao(): MarkerDao
-    abstract fun autoDeleteMessageDao(): AutoDeleteMessageDao
+    abstract fun pollDao(): PollDao
+    abstract fun pendingPollVoteDao(): PendingPollVoteDao
 }

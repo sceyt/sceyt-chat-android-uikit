@@ -5,7 +5,14 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.M
 import com.sceyt.chatuikit.presentation.components.channel_info.media.viewmodel.ChannelAttachmentsViewModel
 import com.sceyt.chatuikit.presentation.components.channel_info.members.viewmodel.ChannelMembersViewModel
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.viewmodel.ChannelsViewModel
+import com.sceyt.chatuikit.presentation.components.create_poll.CreatePollViewModel
+import com.sceyt.chatuikit.presentation.components.invite_link.ChannelInviteLinkViewModel
+import com.sceyt.chatuikit.presentation.components.invite_link.join.JoinByInviteLinkViewModel
+import com.sceyt.chatuikit.presentation.components.invite_link.shareqr.ShareInviteQRViewModel
+import com.sceyt.chatuikit.presentation.components.poll_results.option_voters.PollOptionVotersViewModel
+import com.sceyt.chatuikit.presentation.components.poll_results.PollResultsViewModel
 import org.koin.androidx.viewmodel.dsl.viewModel
+import org.koin.androidx.viewmodel.dsl.viewModelOf
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
@@ -27,6 +34,17 @@ internal val viewModelModule = module {
     viewModel(qualifier = ChannelInfoLinksViewModelQualifier) { ChannelAttachmentsViewModel(get(), get(), get()) }
     viewModel(qualifier = ChannelInfoVoiceViewModelQualifier) { ChannelAttachmentsViewModel(get(), get(), get()) }
     viewModel { parameters -> ReactionsInfoViewModel(get(), messageId = parameters.get(), key = parameters.get()) }
-
+    viewModel { params -> ShareInviteQRViewModel(get(), linkQrData = params.get()) }
+    viewModel { params -> ChannelInviteLinkViewModel(params.get(), get()) }
+    viewModel { params -> JoinByInviteLinkViewModel(params.get(), get()) }
+    viewModel { params -> PollResultsViewModel(params.get(), get()) }
+    viewModel { params -> PollOptionVotersViewModel(params.get(),
+        params.get(),
+        params.get(),
+        params.get(),
+        params.getOrNull(),
+        get(),
+        get())
+    }
+    viewModelOf(::CreatePollViewModel)
 }
-

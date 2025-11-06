@@ -74,4 +74,21 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/appCompatTextView3" />
 
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/poll"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?selectableItemBackground"
+        android:drawableStart="@drawable/sceyt_ic_poll"
+        android:drawablePadding="15dp"
+        android:gravity="center_vertical"
+        android:includeFontPadding="false"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="10dp"
+        android:text="@string/sceyt_poll"
+        android:textColor="@color/sceyt_color_text_primary"
+        android:textSize="@dimen/_12ssp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/appCompatTextView3" />
+
 </androidx.appcompat.widget.LinearLayoutCompat>

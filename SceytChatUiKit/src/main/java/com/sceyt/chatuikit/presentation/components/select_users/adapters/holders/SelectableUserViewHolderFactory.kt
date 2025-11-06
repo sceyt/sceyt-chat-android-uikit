@@ -6,7 +6,7 @@ import android.view.ViewGroup
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytItemLoadingMoreBinding
 import com.sceyt.chatuikit.databinding.SceytItemSelectUserBinding
-import com.sceyt.chatuikit.extensions.setProgressColor
+import com.sceyt.chatuikit.extensions.setProgressColorRes
 import com.sceyt.chatuikit.presentation.components.select_users.adapters.SelectableUsersAdapter
 import com.sceyt.chatuikit.presentation.components.select_users.adapters.UserItem
 import com.sceyt.chatuikit.presentation.root.BaseViewHolder
@@ -31,7 +31,7 @@ class SelectableUserViewHolderFactory(
                 val binding = SceytItemLoadingMoreBinding.inflate(layoutInflater, parent, false)
                 return object : BaseViewHolder<UserItem>(binding.root) {
                     override fun bind(item: UserItem) {
-                        binding.adapterListLoadingProgressBar.setProgressColor(SceytChatUIKit.theme.colors.accentColor)
+                        binding.adapterListLoadingProgressBar.setProgressColorRes(SceytChatUIKit.theme.colors.accentColor)
                     }
                 }
             }

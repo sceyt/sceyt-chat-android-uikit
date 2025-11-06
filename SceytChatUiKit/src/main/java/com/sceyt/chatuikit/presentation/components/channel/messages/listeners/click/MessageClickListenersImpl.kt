@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click
 
 import android.view.View
+import com.sceyt.chatuikit.data.models.messages.PollOption
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.presentation.components.channel.messages.MessagesListView
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
@@ -25,6 +26,8 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
     private var scrollToDownClickListener: MessageClickListeners.ScrollToDownClickListener? = null
     private var scrollToUnreadMentionClickListener: MessageClickListeners.ScrollToUnreadMentionClickListener? = null
     private var multiSelectClickListener: MessageClickListeners.MultiSelectClickListener? = null
+    private var pollOptionClickListener: MessageClickListeners.PollOptionClickListener? = null
+    private var pollViewResultsClickListener: MessageClickListeners.PollViewResultsClickListener? = null
 
     constructor()
 
@@ -112,6 +115,16 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
         multiSelectClickListener?.onMultiSelectClick(view, message)
     }
 
+    override fun onPollOptionClick(view: View, item: MessageListItem.MessageItem, option: PollOption) {
+        defaultListeners?.onPollOptionClick(view, item, option)
+        pollOptionClickListener?.onPollOptionClick(view, item, option)
+    }
+
+    override fun onPollViewResultsClick(view: View, item: MessageListItem.MessageItem) {
+        defaultListeners?.onPollViewResultsClick(view, item)
+        pollViewResultsClickListener?.onPollViewResultsClick(view, item)
+    }
+
     fun setListener(listener: MessageClickListeners) {
         when (listener) {
             is MessageClickListeners.ClickListeners -> {
@@ -131,6 +144,8 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
                 scrollToUnreadMentionClickListener = listener
                 attachmentLoaderClickListener = listener
                 multiSelectClickListener = listener
+                pollOptionClickListener = listener
+                pollViewResultsClickListener = listener
             }
 
             is MessageClickListeners.MessageClickListener -> {
@@ -195,6 +210,14 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
 
             is MessageClickListeners.MultiSelectClickListener -> {
                 multiSelectClickListener = listener
+            }
+
+            is MessageClickListeners.PollOptionClickListener -> {
+                pollOptionClickListener = listener
+            }
+
+            is MessageClickListeners.PollViewResultsClickListener -> {
+                pollViewResultsClickListener = listener
             }
         }
     }

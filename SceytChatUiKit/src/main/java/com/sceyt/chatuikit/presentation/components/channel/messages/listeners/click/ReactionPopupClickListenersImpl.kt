@@ -5,7 +5,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytReaction
 import com.sceyt.chatuikit.presentation.components.channel.messages.MessagesListView
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.reactions.ReactionItem
 
-class ReactionPopupClickListenersImpl : ReactionPopupClickListeners.PopupClickListeners {
+open class ReactionPopupClickListenersImpl : ReactionPopupClickListeners.PopupClickListeners {
     @Suppress("unused")
     constructor()
 
@@ -56,7 +56,7 @@ class ReactionPopupClickListenersImpl : ReactionPopupClickListeners.PopupClickLi
     }
 
     internal fun withDefaultListeners(
-            listener: ReactionPopupClickListeners.PopupClickListeners
+            listener: ReactionPopupClickListeners.PopupClickListeners,
     ): ReactionPopupClickListenersImpl {
         defaultListeners = listener
         return this

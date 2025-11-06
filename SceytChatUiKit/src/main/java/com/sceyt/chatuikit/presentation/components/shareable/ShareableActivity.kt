@@ -71,13 +71,21 @@ abstract class ShareableActivity<Style : ShareablePageStyle> : AppCompatActivity
     protected open fun setChannelsList(data: List<ChannelListItem>) {
         lifecycleScope.launch {
             lifecycle.withResumed {
-                val rv = getRV() ?: return@withResumed
+                val recyclerView = getRV() ?: return@withResumed
                 setSelectedItems(data)
-                if (channelsAdapter == null || rv.adapter !is ShareableChannelsAdapter) {
-                    channelsAdapter = ShareableChannelsAdapter(data.toMutableList(), viewHolderFactory.also {
-                        it.setChannelClickListener(::onChannelClick)
-                    }).also { channelsAdapter = it }
-                    with(rv) {
+                if (channelsAdapter == null || recyclerView.adapter !is ShareableChannelsAdapter) {
+                    channelsAdapter = ShareableChannelsAdapter(
+                        channels = data.toMutableList(),
+                        viewHolderFactory = viewHolderFactory.also {
+                            it.setChannelClickListener { view, item ->
+                                onChannelClick(item)
+                            }
+                        })
+                        .also { adapter ->
+                            channelsAdapter = adapter
+                        }
+
+                    with(recyclerView) {
                         adapter = channelsAdapter
                         layoutManager = LinearLayoutManager(this@ShareableActivity)
                         addOnScrollListener(object : RecyclerView.OnScrollListener() {
@@ -91,7 +99,7 @@ abstract class ShareableActivity<Style : ShareablePageStyle> : AppCompatActivity
                             }
                         })
                     }
-                } else channelsAdapter?.notifyUpdate(data, rv)
+                } else channelsAdapter?.notifyUpdate(data, recyclerView)
             }
         }
     }

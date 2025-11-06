@@ -5,15 +5,6 @@ enum class MessageTypeEnum(val value: String) {
     Media("media"),
     File("file"),
     Link("link"),
-    System("system");
-
-    fun value(): String {
-        return when (this) {
-            Text -> "text"
-            Media -> "media"
-            File -> "file"
-            Link -> "link"
-            System -> "system"
-        }
-    }
+    System("system"),
+    Poll("poll");
 }

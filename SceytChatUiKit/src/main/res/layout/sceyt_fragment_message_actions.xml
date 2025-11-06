@@ -88,6 +88,7 @@
         android:layout_marginBottom="13dp"
         android:ellipsize="middle"
         android:singleLine="true"
+        android:textAlignment="center"
         android:textColor="@color/sceyt_color_text_secondary"
         android:textSize="@dimen/smallTextSize"
         app:layout_constrainedWidth="true"

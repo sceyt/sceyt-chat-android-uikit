@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="PollResults">
+        <!-- Header Divider -->
+        <attr name="sceytUiPollResultsHeaderDividerColor" format="color" />
+        <attr name="sceytUiPollResultsHeaderDividerHeight" format="dimension" />
+        
+        <!-- Option Item Divider -->
+        <attr name="sceytUiPollResultsDividerColor" format="color" />
+        <attr name="sceytUiPollResultsDividerHeight" format="dimension" />
+        
+        <!-- Question Text -->
+        <attr name="sceytUiPollResultsQuestionTextColor" format="color" />
+        <attr name="sceytUiPollResultsQuestionTextSize" format="dimension" />
+        <attr name="sceytUiPollResultsQuestionTextFont" format="reference" />
+        
+        <!-- Poll Type Text -->
+        <attr name="sceytUiPollResultsPollTypeTextColor" format="color" />
+        <attr name="sceytUiPollResultsPollTypeTextSize" format="dimension" />
+        <attr name="sceytUiPollResultsPollTypeTextFont" format="reference" />
+        
+        <!-- Option Name Text -->
+        <attr name="sceytUiPollResultsOptionNameTextColor" format="color" />
+        <attr name="sceytUiPollResultsOptionNameTextSize" format="dimension" />
+        <attr name="sceytUiPollResultsOptionNameTextFont" format="reference" />
+        
+        <!-- Vote Count Text -->
+        <attr name="sceytUiPollResultsVoteCountTextColor" format="color" />
+        <attr name="sceytUiPollResultsVoteCountTextSize" format="dimension" />
+        <attr name="sceytUiPollResultsVoteCountTextFont" format="reference" />
+        
+        <!-- Show All Button -->
+        <attr name="sceytUiPollResultsShowAllButtonTextColor" format="color" />
+        <attr name="sceytUiPollResultsShowAllButtonTextSize" format="dimension" />
+        <attr name="sceytUiPollResultsShowAllButtonTextFont" format="reference" />
+
+        <!-- Option background -->
+        <attr name="sceytUiPollResultsOptionBackgroundColor" format="color" />
+        <attr name="sceytUiPollResultsOptionBackgroundCornerRadius" format="dimension" />
+
+        <!-- Header background -->
+        <attr name="sceytUiPollResultsHeaderBackgroundColor" format="color" />
+        <attr name="sceytUiPollResultsHeaderBackgroundCornerRadius" format="dimension" />
+    </declare-styleable>
+</resources>

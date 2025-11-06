@@ -14,7 +14,7 @@ open class DefaultChannelEventTitleFormatter : Formatter<ChannelEventTitleFormat
         if (from.users.isEmpty()) return ""
         val text = if (from.users.any { it.activity == ChannelEventEnum.Typing })
             context.getString(R.string.sceyt_typing)
-        else context.getString(R.string.recording)
+        else context.getString(R.string.sceyt_recording)
         return if (from.channel.isGroup) {
             buildString {
                 from.users.forEachIndexed { index, activeUser ->

@@ -275,9 +275,7 @@ class ChannelsCache {
         synchronized(lock) {
             cachedData.forEachKeyValue { key, value ->
                 value[channelId]?.let { channel ->
-                    val updatedChannel = channel.copy(
-                        messageRetentionPeriod = period
-                    )
+                    val updatedChannel = channel.copy(messageRetentionPeriod = period)
                     val diff = channel.diff(updatedChannel)
                     channelUpdated(key, updatedChannel, diff, false, ChannelUpdatedType.AutoDeleteState)
                 }
@@ -285,7 +283,20 @@ class ChannelsCache {
         }
     }
 
-    fun messagesDeletedWithAutoDelete(channelId: Long, messageTIds: Map<Long, Long>) {
+    fun updateChannelUri(channelId: Long, newUri: String) {
+        synchronized(lock) {
+            cachedData.forEachKeyValue { key, value ->
+                value[channelId]?.let { channel ->
+                    val updatedChannel = channel.copy(uri = newUri)
+                    val diff = channel.diff(updatedChannel)
+                    channelUpdated(key, updatedChannel, diff, false, ChannelUpdatedType.Updated)
+                }
+            }
+        }
+    }
+
+    fun messagesDeletedWithAutoDelete(channelId: Long, messageTIds: List<Long>) {
+        val messageTIds = messageTIds.associateWith { true }
         cachedData.forEachKeyValue { _, value ->
             value[channelId]?.let { channel ->
                 channel.lastMessage?.tid?.let {

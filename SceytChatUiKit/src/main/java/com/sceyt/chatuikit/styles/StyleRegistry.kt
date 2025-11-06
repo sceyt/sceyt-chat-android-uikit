@@ -49,6 +49,7 @@ object StyleRegistry {
 
     /** Remove styles from registry */
     fun unregister(id: String?): SceytComponentStyle? {
+        id ?: return null
         return styles.remove(id)
     }
 

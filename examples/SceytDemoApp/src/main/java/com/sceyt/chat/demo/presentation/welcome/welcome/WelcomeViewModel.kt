@@ -46,7 +46,7 @@ class WelcomeViewModel(
 
     private suspend fun connectUser(userId: String) = withContext(Dispatchers.IO) {
         var job: Job? = null
-        val data = suspendCancellableCoroutine<Result<Boolean>> { continuation ->
+        val data = suspendCancellableCoroutine { continuation ->
             job = ConnectionEventManager.onChangedConnectStatusFlow.onEach {
                 when (it.state) {
                     ConnectionState.Connected -> {
@@ -71,7 +71,7 @@ class WelcomeViewModel(
                     pageStateLiveDataInternal.postValue(PageState.StateError(
                         null, exception?.message
                     ))
-                    job?.cancel()
+                    job.cancel()
                 }
             }
         }

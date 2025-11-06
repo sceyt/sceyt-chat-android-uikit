@@ -10,5 +10,5 @@ internal data class ReactionDb(
         val reaction: ReactionEntity,
 
         @Relation(parentColumn = "fromId", entityColumn = "user_id", entity = UserEntity::class)
-        val from: UserDb?
+        val from: UserDb?,
 )

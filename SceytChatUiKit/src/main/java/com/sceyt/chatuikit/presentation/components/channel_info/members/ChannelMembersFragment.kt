@@ -10,6 +10,7 @@ import android.view.ViewGroup
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityOptionsCompat
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.role.Role
@@ -38,10 +39,10 @@ import com.sceyt.chatuikit.extensions.setBoldSpan
 import com.sceyt.chatuikit.extensions.setBundleArguments
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.extensions.getChannelType
+import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.presentation.common.SceytDialog
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoActivity
-import com.sceyt.chatuikit.presentation.components.channel_info.ChannelUpdateListener
 import com.sceyt.chatuikit.presentation.components.channel_info.members.adapter.ChannelMembersAdapter
 import com.sceyt.chatuikit.presentation.components.channel_info.members.adapter.MemberItem
 import com.sceyt.chatuikit.presentation.components.channel_info.members.adapter.diff.MemberItemPayloadDiff
@@ -51,6 +52,7 @@ import com.sceyt.chatuikit.presentation.components.channel_info.members.popups.M
 import com.sceyt.chatuikit.presentation.components.channel_info.members.popups.MemberActionsDialog.ActionsEnum.Delete
 import com.sceyt.chatuikit.presentation.components.channel_info.members.popups.MemberActionsDialog.ActionsEnum.RevokeAdmin
 import com.sceyt.chatuikit.presentation.components.channel_info.members.viewmodel.ChannelMembersViewModel
+import com.sceyt.chatuikit.presentation.components.invite_link.ChannelInviteLinkActivity
 import com.sceyt.chatuikit.presentation.components.select_users.SelectUsersActivity
 import com.sceyt.chatuikit.presentation.components.select_users.SelectUsersPageArgs
 import com.sceyt.chatuikit.presentation.components.select_users.SelectUsersResult
@@ -59,7 +61,7 @@ import com.sceyt.chatuikit.styles.channel_members.ChannelMembersStyle
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
 
-open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoinComponent {
+open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
     protected val viewModel by viewModel<ChannelMembersViewModel>(parameters = {
         parametersOf(requireNotNull(arguments?.parcelable<SceytChannel>(CHANNEL)).id)
     })
@@ -90,8 +92,7 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
         initViewModel()
         initViews()
         binding?.applyStyle()
-        initStringsWithAddType()
-        loadInitialMembers()
+        setDetails()
     }
 
     override fun onAttach(context: Context) {
@@ -132,7 +133,7 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
 
         viewModel.channelOwnerChangedEventLiveData.observe(viewLifecycleOwner, ::onChannelOwnerChanged)
 
-        viewModel.channelEventEventLiveData.observe(viewLifecycleOwner, ::onChannelEvent)
+        viewModel.channelEventLiveData.observe(viewLifecycleOwner, ::onChannelEvent)
 
         viewModel.channelAddMemberLiveData.observe(viewLifecycleOwner, ::onAddedMember)
 
@@ -149,10 +150,22 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
                 onAddMembersClick(memberType)
             }
 
+            layoutInviteLink.setOnClickListener {
+                onInviteLinkClick()
+            }
+
             toolbar.setNavigationClickListener {
                 requireActivity().onBackPressedDispatcher.onBackPressed()
             }
         }
+    }
+
+    protected open fun setDetails() {
+        val enableInviteLink = SceytChatUIKit.config.channelLinkDeepLinkConfig != null
+                && !channel.isDirect()
+        binding?.layoutInviteLink?.isVisible = enableInviteLink
+        initStringsWithAddType()
+        loadInitialMembers()
     }
 
     private fun initStringsWithAddType() {
@@ -198,7 +211,10 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
         })
     }
 
-    private fun updateMembersWithServerResponse(data: PaginationResponse.ServerResponse<MemberItem>, hasNext: Boolean) {
+    protected open fun updateMembersWithServerResponse(
+            data: PaginationResponse.ServerResponse<MemberItem>,
+            hasNext: Boolean,
+    ) {
         val itemsDb = data.cacheData as ArrayList
         binding?.rvMembers?.awaitAnimationEnd {
             val members = ArrayList(membersAdapter?.getData() ?: arrayListOf())
@@ -217,7 +233,7 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
         }
     }
 
-    private fun addMembers(members: List<SceytMember>?) {
+    protected open fun addMembers(members: List<SceytMember>?) {
         if (members.isNullOrEmpty()) return
         membersAdapter?.addNewItemsToStart(members.map {
             MemberItem.Member(it)
@@ -225,14 +241,14 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
         binding?.rvMembers?.scrollToPosition(0)
     }
 
-    private fun removeMember(memberId: String) {
+    protected open fun removeMember(memberId: String) {
         membersAdapter?.getMemberItemById(memberId)?.let {
             membersAdapter?.getData()?.removeAt(it.first)
             membersAdapter?.notifyItemRemoved(it.first)
         }
     }
 
-    private fun getRole(): String? {
+    protected open fun getRole(): String? {
         return when (memberType) {
             MemberTypeEnum.Admin -> RoleTypeEnum.Admin.value
             MemberTypeEnum.Subscriber -> null
@@ -329,6 +345,10 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
         selectUsersActivityLauncher.launch(SelectUsersActivity.newIntent(requireContext(), args), animOptions)
     }
 
+    protected open fun onInviteLinkClick() {
+        ChannelInviteLinkActivity.launch(requireContext(), channel)
+    }
+
     protected open fun onRevokeAdminClick(member: SceytMember) {
         SceytDialog.showDialog(requireContext(), R.string.sceyt_revoke_admin_title, R.string.sceyt_revoke_admin_desc, R.string.sceyt_revoke, positiveCb = {
             revokeAdmin(member)
@@ -402,6 +422,10 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
 
     protected open fun onChannelEvent(event: ChannelActionEvent) {
         when (event) {
+            is ChannelActionEvent.Updated -> {
+                onChannelUpdated(event.channel)
+            }
+
             is Left -> {
                 event.leftMembers.forEach {
                     removeMember(it.id)
@@ -455,7 +479,7 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
             customToastSnackBar(pageState.errorMessage.toString())
     }
 
-    override fun onChannelUpdated(channel: SceytChannel) {
+    protected open fun onChannelUpdated(channel: SceytChannel) {
         this.channel = channel
         getCurrentUserRole()
     }
@@ -464,7 +488,9 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
         root.setBackgroundColor(style.backgroundColor)
         style.toolbarStyle.apply(toolbar)
         style.addMemberTextStyle.apply(addMembers)
+        style.inviteLinkTextStyle.apply(tvInviteLink)
         icAddMembers.setImageDrawable(style.addMembersIcon)
+        icInviteLink.setImageDrawable(style.inviteLinkIcon)
     }
 
     companion object {
