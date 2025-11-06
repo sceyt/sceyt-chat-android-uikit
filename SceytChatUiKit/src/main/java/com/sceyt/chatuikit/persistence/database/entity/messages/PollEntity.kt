@@ -18,21 +18,25 @@ import com.sceyt.chatuikit.persistence.database.DatabaseConstants.POLL_TABLE
             deferred = true
         )
     ],
-    indices = [Index(value = ["messageTid"], unique = true)]
+    indices = [
+        Index(value = ["messageTid"], unique = true),
+        Index(value = ["pollId"])
+    ]
 )
 internal data class PollEntity(
-        @PrimaryKey
-        val id: String,
-        val messageTid: Long,
-        val name: String,
-        val description: String,
-        val anonymous: Boolean,
-        val votesPerOption: Map<String, Int>,
-        val allowMultipleVotes: Boolean,
-        val allowVoteRetract: Boolean,
-        val createdAt: Long,
-        val updatedAt: Long,
-        val closedAt: Long,
-        val closed: Boolean,
+    val pollId: String,
+    val messageTid: Long,
+    val name: String,
+    val description: String,
+    val anonymous: Boolean,
+    val votesPerOption: Map<String, Int>,
+    val allowMultipleVotes: Boolean,
+    val allowVoteRetract: Boolean,
+    val createdAt: Long,
+    val updatedAt: Long,
+    val closedAt: Long,
+    val closed: Boolean,
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0,
 )
 

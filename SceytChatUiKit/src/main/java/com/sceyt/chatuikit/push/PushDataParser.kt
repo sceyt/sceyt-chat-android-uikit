@@ -10,6 +10,8 @@ import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.ForwardingDetails
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageState
+import com.sceyt.chat.models.poll.PollDetails
+import com.sceyt.chat.models.poll.PollOption
 import com.sceyt.chat.models.role.Role
 import com.sceyt.chat.models.user.Presence
 import com.sceyt.chat.models.user.PresenceState
@@ -30,11 +32,12 @@ object PushDataParser {
     private const val KEY_REACTION = "reaction"
     private const val KEY_MENTIONED_USERS = "mentions"
     private const val KEY_ATTACHMENTS = "attachments"
+    private const val KEY_POLL_DETAILS = "poll_details"
 
     fun getMessage(
-            payload: Map<String, String>,
-            channelId: Long?,
-            user: User?,
+        payload: Map<String, String>,
+        channelId: Long?,
+        user: User?,
     ): Message? {
         channelId ?: return null
         return try {
@@ -44,7 +47,8 @@ object PushDataParser {
             // Do not getLong from json when its a string
             // double.parse corrupts the value
             val messageIdString = messageJsonObject.getString("id")
-            val parentMessageIdString = messageJsonObject.getStringOrNull("parent_id")?.toLongOrNull()
+            val parentMessageIdString =
+                messageJsonObject.getStringOrNull("parent_id")?.toLongOrNull()
             val bodyString = messageJsonObject.getString("body")
             val messageType = messageJsonObject.getString("type")
             val meta = messageJsonObject.getString("metadata")
@@ -54,7 +58,11 @@ object PushDataParser {
             val state = getStateFromJson(messageJsonObject)
             val forwardingDetails = getForwardingDetailsFromJson(messageJsonObject)
             val bodyAttributes = getBodyAttributesFromJson(messageJsonObject)
-            val createdAt = DateTimeUtil.convertStringToDate(createdAtString, DateTimeUtil.SERVER_DATE_PATTERN)
+            val pollDetails = messageJsonObject.getPollDetailsFromJSON()
+            val createdAt = DateTimeUtil.convertStringToDate(
+                date = createdAtString,
+                datePattern = DateTimeUtil.SERVER_DATE_PATTERN
+            )
 
             val attachmentArray = mutableListOf<Attachment>()
             val attachments = messageJsonObject.getJSONArray(KEY_ATTACHMENTS)
@@ -117,7 +125,7 @@ object PushDataParser {
                 /* forwardingDetails = */ forwardingDetails,
                 /* bodyAttributes = */ bodyAttributes.toTypedArray(),
                 /* disableMentionsCount = */ false,
-                /* poll = */ null
+                /* poll = */ pollDetails
             )
         } catch (e: Exception) {
             e.printStackTrace()
@@ -248,6 +256,50 @@ object PushDataParser {
             /* state = */ UserState.Active,
             /* blocked = */ false
         )
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
+    }
+
+    fun JSONObject.getPollOptionFromJSON(): PollOption? = try {
+        val optionId = getString("id")
+        val name = getString("name")
+        PollOption(optionId, name)
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
+    }
+
+    fun JSONObject.getPollDetailsFromJSON(): PollDetails? = try {
+        val pollJson = getJSONObject(KEY_POLL_DETAILS) ?: return null
+        val pollId = pollJson.getString("poll_id")
+        val name = pollJson.getString("name")
+        val description = pollJson.getStringOrNull("description")
+        val anonymous = pollJson.getBoolean("anonymous")
+        val allowMultipleVotes = pollJson.getBoolean("allow_multiple_votes")
+        val allowVoteRetract = pollJson.getBoolean("allow_vote_retract")
+
+        val optionsJsonArray = pollJson.getJSONArray("options")
+        val optionsList = mutableListOf<PollOption>()
+        for (i in 0 until optionsJsonArray.length()) {
+            when (val option = optionsJsonArray[i]) {
+                is JSONObject -> {
+                    option.getPollOptionFromJSON()?.let {
+                        optionsList.add(it)
+                    }
+                }
+            }
+        }
+
+        PollDetails.Builder()
+            .setId(pollId)
+            .setName(name)
+            .setDescription(description)
+            .setOptions(optionsList.toTypedArray())
+            .setAnonymous(anonymous)
+            .setAllowMultipleVotes(allowMultipleVotes)
+            .setAllowVoteRetract(allowVoteRetract)
+            .build()
     } catch (e: Exception) {
         e.printStackTrace()
         null

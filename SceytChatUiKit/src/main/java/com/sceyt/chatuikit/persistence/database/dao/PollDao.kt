@@ -54,7 +54,7 @@ internal abstract class PollDao {
         // Delete votes
         deletedVotes.groupBy { it.userId }.forEach { entry ->
             val (userId, votes) = entry
-            deleteUserVotes(entity.id, userId, votes.map { it.optionId })
+            deleteUserVotes(entity.pollId, userId, votes.map { it.optionId })
         }
 
         // Insert votes
