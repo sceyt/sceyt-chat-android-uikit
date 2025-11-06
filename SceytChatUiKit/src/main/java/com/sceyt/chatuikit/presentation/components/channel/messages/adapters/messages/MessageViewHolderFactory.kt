@@ -94,13 +94,13 @@ open class MessageViewHolderFactory(context: Context) {
             MessageViewTypeEnum.OutFiles.ordinal -> createOutFilesMsgViewHolder(parent)
             MessageViewTypeEnum.IncPoll.ordinal -> createIncPollMsgViewHolder(parent)
             MessageViewTypeEnum.OutPoll.ordinal -> createOutPollMsgViewHolder(parent)
+            MessageViewTypeEnum.IncUnsupported.ordinal -> createIncUnsupportedMsgViewHolder(parent)
+            MessageViewTypeEnum.OutUnsupported.ordinal -> createOutUnsupportedMsgViewHolder(parent)
             MessageViewTypeEnum.IncDeleted.ordinal -> createIncDeletedMsgViewHolder(parent)
             MessageViewTypeEnum.OutDeleted.ordinal -> createOutDeletedMsgViewHolder(parent)
             MessageViewTypeEnum.DateSeparator.ordinal -> createDateSeparatorViewHolder(parent)
             MessageViewTypeEnum.UnreadMessagesSeparator.ordinal -> createUnreadMessagesViewHolder(parent)
             MessageViewTypeEnum.Loading.ordinal -> createLoadingMoreViewHolder(parent)
-            MessageViewTypeEnum.IncUnsupported.ordinal -> createIncUnsupportedMsgViewHolder(parent)
-            MessageViewTypeEnum.OutUnsupported.ordinal -> createOutUnsupportedMsgViewHolder(parent)
             else -> throw RuntimeException("Not supported view type")
         }
     }
@@ -375,10 +375,10 @@ open class MessageViewHolderFactory(context: Context) {
         OutFiles,
         IncPoll,
         OutPoll,
+        IncUnsupported,
+        OutUnsupported,
         DateSeparator,
         UnreadMessagesSeparator,
-        Loading,
-        IncUnsupported,
-        OutUnsupported
+        Loading
     }
 }
