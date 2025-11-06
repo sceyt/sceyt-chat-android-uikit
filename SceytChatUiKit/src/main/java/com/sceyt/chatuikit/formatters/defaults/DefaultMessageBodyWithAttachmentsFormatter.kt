@@ -21,9 +21,9 @@ open class DefaultMessageBodyWithAttachmentsFormatter : Formatter<MessageBodyFor
         return if (messageTypeIcon != null) {
             SpannableStringBuilder().apply {
                 append(messageTypeIcon.toSpannableString())
-                append(body.trim())
+                append(body)
             }
-        } else body.trim()
+        } else body
     }
 }
 
