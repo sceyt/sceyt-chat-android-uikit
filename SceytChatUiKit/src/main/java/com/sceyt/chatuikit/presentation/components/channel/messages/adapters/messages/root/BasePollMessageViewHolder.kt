@@ -102,7 +102,7 @@ abstract class BasePollMessageViewHolder(
         messageListeners?.onPollOptionClick(
             view = itemView,
             item = requireMessageItem,
-            option = PollOption(id = option.id, name = option.text)
+            option = PollOption(id = option.id, name = option.text, order = option.order)
         )
     }
 

@@ -78,7 +78,7 @@ class VotersAdapter(
                     )
                 }
 
-                else -> null
+                else -> Any()
             }
         }
     }

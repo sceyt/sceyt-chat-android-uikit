@@ -17,7 +17,7 @@ import com.sceyt.chatuikit.persistence.database.entity.messages.PollVoteEntity
 import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingPollVoteEntity
 
 internal fun SceytPollDetails.toPollEntity(messageTid: Long) = PollEntity(
-    pollId = id,
+    id = id,
     messageTid = messageTid,
     name = name,
     description = description,
@@ -35,6 +35,7 @@ internal fun PollOption.toPollOptionEntity(pollId: String) = PollOptionEntity(
     id = id,
     pollId = pollId,
     name = name,
+    order = order
 )
 
 internal fun Vote.toPollVoteEntity(pollId: String) = PollVoteEntity(
@@ -61,6 +62,7 @@ internal fun SceytPollDetails.toPollDb() = PollDb(
 internal fun PollOptionEntity.toPollOption() = PollOption(
     id = id,
     name = name,
+    order = order
 )
 
 internal fun PollVoteDb.toVote() = Vote(
@@ -93,7 +95,7 @@ internal fun PollDb.toSceytPollDetails(): SceytPollDetails {
     }
 
     return SceytPollDetails(
-        id = pollEntity.pollId,
+        id = pollEntity.id,
         name = pollEntity.name,
         messageTid = pollEntity.messageTid,
         description = pollEntity.description,
@@ -119,13 +121,13 @@ internal fun PollDetails.toSceytPollDetails(
     name = name,
     messageTid = messageTid,
     description = description.orEmpty(),
-    options = options.map { option -> option.toPollOption() },
+    options = options?.mapIndexed { index, option -> option.toPollOption(index) }.orEmpty(),
     anonymous = isAnonymous,
     allowMultipleVotes = isAllowMultipleVotes,
     allowVoteRetract = isAllowVoteRetract,
     votesPerOption = votesPerOption,
-    votes = votes.map { vote -> vote.toVote() },
-    ownVotes = ownVotes.map { it.toVote() },
+    votes = votes?.map { vote -> vote.toVote() }.orEmpty(),
+    ownVotes = ownVotes?.map { it.toVote() }.orEmpty(),
     pendingVotes = null,
     createdAt = createdAt.time,
     updatedAt = updatedAt.time,
@@ -148,7 +150,8 @@ internal fun PollVote.toVote() = Vote(
     user = user?.toSceytUser(),
 )
 
-internal fun com.sceyt.chat.models.poll.PollOption.toPollOption() = PollOption(
+internal fun com.sceyt.chat.models.poll.PollOption.toPollOption(order: Int) = PollOption(
     id = id,
     name = name,
+    order = order
 )
