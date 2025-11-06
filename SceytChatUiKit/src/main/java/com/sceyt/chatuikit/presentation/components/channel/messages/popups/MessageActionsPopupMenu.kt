@@ -15,12 +15,13 @@ import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 
 class MessageActionsPopupMenu(
-        private val context: Context,
-        anchor: View,
-        private var message: SceytMessage
+    private val context: Context,
+    anchor: View,
+    private var message: SceytMessage,
 ) : PopupMenu(context, anchor) {
 
     @SuppressLint("RestrictedApi")
@@ -29,14 +30,25 @@ class MessageActionsPopupMenu(
         (menu as MenuBuilder).setOptionalIconsVisible(true)
         gravity = if (message.incoming) GravityCompat.START else GravityCompat.END
 
-
         val isPending = message.deliveryStatus == DeliveryStatus.Pending
 
-        menu.findItem(R.id.sceyt_reply).isVisible = !isPending
-        menu.findItem(R.id.sceyt_forward).isVisible = !isPending
+        // Handle poll-specific actions
+        val poll = message.poll
+        val isPollMessage = poll != null
+        val hasVoted = poll?.ownVotes?.isNotEmpty() == true
+        val canRetractVote =
+            !isPending && poll?.allowVoteRetract == true && hasVoted && !poll.closed
+        val canEndVote = !isPending && !message.incoming && isPollMessage && !poll.closed
 
-        val expiredEditMessage = (System.currentTimeMillis() - message.createdAt) > SceytChatUIKit.config.messageEditTimeout
-        menu.findItem(R.id.sceyt_edit_message).isVisible = message.body.isNotNullOrBlank() && !expiredEditMessage
+
+        menu.findItem(R.id.sceyt_reply).isVisible = !isPending
+        menu.findItem(R.id.sceyt_forward).isVisible = !isPending && !isPollMessage
+
+        val expiredEditMessage =
+            (System.currentTimeMillis() - message.createdAt) > SceytChatUIKit.config.messageEditTimeout
+        menu.findItem(R.id.sceyt_edit_message).isVisible =
+            message.body.isNotNullOrBlank() && !expiredEditMessage
+                    && !isPollMessage
 
         val deleteMessageItem = menu.findItem(R.id.sceyt_delete_message)
 
@@ -47,14 +59,25 @@ class MessageActionsPopupMenu(
             deleteMessageItem.apply {
                 title = setColoredTitle(title.toString())
                 icon?.colorFilter = BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
-                    ContextCompat.getColor(context, R.color.sceyt_color_warning), BlendModeCompat.SRC_ATOP)
+                    ContextCompat.getColor(context, R.color.sceyt_color_warning),
+                    BlendModeCompat.SRC_ATOP
+                )
             }
+
+        menu.findItem(R.id.sceyt_retract_vote)?.isVisible = canRetractVote
+        menu.findItem(R.id.sceyt_end_vote)?.isVisible = canEndVote
+
         super.show()
     }
 
     private fun setColoredTitle(text: String): SpannableString {
         val headerTitle = SpannableString(text)
-        headerTitle.setSpan(ForegroundColorSpan(ContextCompat.getColor(context, R.color.sceyt_color_warning)), 0, headerTitle.length, 0)
+        headerTitle.setSpan(
+            ForegroundColorSpan(context.getCompatColor(R.color.sceyt_color_warning)),
+            0,
+            headerTitle.length,
+            0
+        )
         return headerTitle
     }
 }

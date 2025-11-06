@@ -29,6 +29,7 @@ import com.sceyt.chatuikit.extensions.roundUp
 import com.sceyt.chatuikit.presentation.common.EmojiProcessor
 import com.sceyt.chatuikit.presentation.custom_views.AvatarView.DefaultAvatar
 import com.sceyt.chatuikit.presentation.helpers.AvatarImageLoader
+import com.sceyt.chatuikit.styles.StyleConstants.UNSET_BORDER_WIDTH
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_SIZE
 import com.sceyt.chatuikit.styles.common.AvatarStyle
@@ -36,6 +37,7 @@ import com.sceyt.chatuikit.styles.common.Shape
 import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.styles.common.applyTo
 import kotlin.math.abs
+import kotlin.math.ceil
 
 class AvatarView @JvmOverloads constructor(
         context: Context,
@@ -46,9 +48,12 @@ class AvatarView @JvmOverloads constructor(
     private val textPaint = TextPaint(Paint.ANTI_ALIAS_FLAG)
     private lateinit var imagePaint: Paint
     private lateinit var backgroundPaint: Paint
+    private lateinit var borderPaint: Paint
     private var textStyle = TextStyle()
     private var avatarLoadCb: ((loading: Boolean) -> Unit?)? = null
     private var shape: Shape = Shape.Circle
+    private var borderWidth: Float = 0f
+    private var borderColor: Int = 0
 
     @ColorInt
     private var avatarBackgroundColor: Int = 0
@@ -72,6 +77,8 @@ class AvatarView @JvmOverloads constructor(
                 .setStyle(R.styleable.AvatarView_sceytUiAvatarTextStyle)
                 .build()
             avatarBackgroundColor = array.getColor(R.styleable.AvatarView_sceytUiAvatarColor, avatarBackgroundColor)
+            borderWidth = array.getDimension(R.styleable.AvatarView_sceytUiAvatarBorderWidth, 0f)
+            borderColor = array.getColor(R.styleable.AvatarView_sceytUiAvatarBorderColor, 0)
             val defaultAvatarResId = array.getResourceId(R.styleable.AvatarView_sceytUiAvatarDefaultIcon, 0)
             enableRipple = array.getBoolean(R.styleable.AvatarView_sceytUiAvatarEnableRipple, true)
 
@@ -110,6 +117,11 @@ class AvatarView @JvmOverloads constructor(
         backgroundPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
             style = Paint.Style.FILL
         }
+        borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            style = Paint.Style.STROKE
+            strokeWidth = borderWidth
+            color = borderColor
+        }
     }
 
     private fun initShape(shape: Shape) {
@@ -127,6 +139,11 @@ class AvatarView @JvmOverloads constructor(
             }
         }
         super.draw(canvas)
+
+        // Draw border on top of everything
+        if (borderWidth > 0 && borderColor != 0) {
+            drawBorder(canvas)
+        }
     }
 
     private fun drawInitials(canvas: Canvas, name: CharSequence) {
@@ -167,6 +184,47 @@ class AvatarView @JvmOverloads constructor(
 
             Shape.UnsetShape -> {
                 canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
+            }
+        }
+    }
+
+    private fun drawBorder(canvas: Canvas) {
+        val halfBorderWidth = borderWidth / 2f
+
+        when (val avatarShape = shape) {
+            Shape.Circle -> {
+                val halfWidth = width / 2f
+                val radius = ceil(halfWidth - halfBorderWidth)
+                canvas.drawCircle(halfWidth, halfWidth, radius, borderPaint)
+            }
+
+            is Shape.RoundedCornerShape -> {
+                val rect = RectF(
+                    halfBorderWidth,
+                    halfBorderWidth,
+                    width - halfBorderWidth,
+                    height - halfBorderWidth
+                )
+                val radii = floatArrayOf(
+                    avatarShape.topLeft, avatarShape.topLeft,
+                    avatarShape.topRight, avatarShape.topRight,
+                    avatarShape.bottomRight, avatarShape.bottomRight,
+                    avatarShape.bottomLeft, avatarShape.bottomLeft
+                )
+                val path = Path().apply {
+                    addRoundRect(rect, radii, Path.Direction.CW)
+                }
+                canvas.drawPath(path, borderPaint)
+            }
+
+            Shape.UnsetShape -> {
+                val rect = RectF(
+                    halfBorderWidth,
+                    halfBorderWidth,
+                    width - halfBorderWidth,
+                    height - halfBorderWidth
+                )
+                canvas.drawRect(rect, borderPaint)
             }
         }
     }
@@ -304,6 +362,17 @@ class AvatarView @JvmOverloads constructor(
         if (style.avatarBackgroundColor != UNSET_COLOR) {
             avatarBackgroundColor = style.avatarBackgroundColor
         }
+
+        if (style.borderWidth != UNSET_BORDER_WIDTH) {
+            borderWidth = style.borderWidth
+            borderPaint.strokeWidth = style.borderWidth
+        }
+
+        if (style.borderColor != UNSET_COLOR) {
+            borderColor = style.borderColor
+            borderPaint.color = style.borderColor
+        }
+
         shape = style.shape
         initShape(shape)
     }
@@ -403,6 +472,18 @@ class AvatarView @JvmOverloads constructor(
 
         fun setErrorPlaceholder(errorPlaceholder: AvatarErrorPlaceHolder) = apply {
             this.errorPlaceholder = errorPlaceholder
+        }
+
+        fun setBorder(width: Float, @ColorInt color: Int) = apply {
+            avatarStyle = avatarStyle.copy(borderWidth = width, borderColor = color)
+        }
+
+        fun setBorderWidth(width: Float) = apply {
+            avatarStyle = avatarStyle.copy(borderWidth = width)
+        }
+
+        fun setBorderColor(@ColorInt color: Int) = apply {
+            avatarStyle = avatarStyle.copy(borderColor = color)
         }
 
         fun build() = AvatarAppearance(

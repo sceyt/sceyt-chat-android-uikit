@@ -29,6 +29,11 @@
             android:theme="@style/DefaultFontTheme"
             android:windowSoftInputMode="adjustResize" />
         <activity
+            android:name=".presentation.components.create_poll.CreatePollActivity"
+            android:exported="false"
+            android:theme="@style/DefaultFontTheme"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
             android:name=".presentation.components.channel_info.ChannelInfoActivity"
             android:exported="false"
             android:theme="@style/DefaultFontTheme"
@@ -77,6 +82,11 @@
             android:exported="false"
             android:theme="@style/DefaultFontTheme" />
         <activity android:name="com.yalantis.ucrop.UCropActivity" />
+
+        <activity
+            android:name=".presentation.components.poll_results.PollResultsActivity"
+            android:exported="false"
+            android:theme="@style/DefaultFontTheme" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

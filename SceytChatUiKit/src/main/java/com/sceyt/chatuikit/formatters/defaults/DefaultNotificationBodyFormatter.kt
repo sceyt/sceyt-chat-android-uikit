@@ -5,7 +5,9 @@ import android.graphics.Typeface
 import androidx.core.text.buildSpannedString
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.data.constants.SceytConstants
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
+import com.sceyt.chatuikit.data.models.messages.MessageTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.extensions.whitSpace
 import com.sceyt.chatuikit.formatters.Formatter
@@ -23,12 +25,21 @@ open class DefaultNotificationBodyFormatter : Formatter<PushData> {
             mentionTextStyle = TextStyle(style = Typeface.BOLD),
             mentionUserNameFormatter = SceytChatUIKit.formatters.mentionUserNameFormatter,
             attachmentNameFormatter = SceytChatUIKit.formatters.attachmentNameFormatter,
+            messageTypeIconProvider = null, // We cant show drawable icons in push notifications
             mentionClickListener = null
         )
 
         val formattedBody = buildSpannedString {
-            if (!attachmentIcon.isNullOrBlank())
-                append(attachmentIcon.whitSpace())
+            when (from.message.type) {
+                MessageTypeEnum.Poll.value -> {
+                    append(SceytConstants.emojiPoll.whitSpace())
+                }
+
+                else -> {
+                    if (!attachmentIcon.isNullOrBlank())
+                        append(attachmentIcon.whitSpace())
+                }
+            }
 
             append(messageBody)
         }
@@ -36,9 +47,11 @@ open class DefaultNotificationBodyFormatter : Formatter<PushData> {
             NotificationType.ChannelMessage -> formattedBody
             NotificationType.MessageReaction -> {
                 buildSpannedString {
-                    append(context.getString(R.string.sceyt_reacted).whitSpace() +
-                            from.reaction?.key?.whitSpace() +
-                            context.getString(R.string.sceyt_to).whitSpace())
+                    append(
+                        context.getString(R.string.sceyt_reacted).whitSpace() +
+                                from.reaction?.key?.whitSpace() +
+                                context.getString(R.string.sceyt_to).whitSpace()
+                    )
                     append("\"")
                     append(formattedBody)
                     append("\"")
@@ -49,10 +62,10 @@ open class DefaultNotificationBodyFormatter : Formatter<PushData> {
 
     private fun SceytAttachment.getEmojiIcon(): String? {
         return when (type) {
-            AttachmentTypeEnum.Video.value -> "▶️"
-            AttachmentTypeEnum.Image.value -> "🌄"
-            AttachmentTypeEnum.Voice.value -> "🎤"
-            AttachmentTypeEnum.File.value -> "📄"
+            AttachmentTypeEnum.Video.value -> SceytConstants.emojiVideo
+            AttachmentTypeEnum.Image.value -> SceytConstants.emojiImage
+            AttachmentTypeEnum.Voice.value -> SceytConstants.emojiVoice
+            AttachmentTypeEnum.File.value -> SceytConstants.emojiFile
             else -> null
         }
     }
