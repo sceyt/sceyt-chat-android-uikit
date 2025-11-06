@@ -81,7 +81,7 @@ class PollResultsViewModel(
         val votesByOptionId = poll.votes.groupBy { it.optionId }
         val ownVoteByOptionId = poll.ownVotes.associateBy { it.optionId }
 
-        val optionItems = poll.options.map { option ->
+        val optionItems = poll.options.sortedBy { it.order }.map { option ->
             val otherVoters = votesByOptionId[option.id].orEmpty()
             val ownVote = ownVoteByOptionId[option.id]
             val voters = buildPreviewList(otherVoters, ownVote)
