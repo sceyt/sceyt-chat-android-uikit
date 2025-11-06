@@ -25,7 +25,6 @@ open class DefaultNotificationBodyFormatter : Formatter<PushData> {
             mentionTextStyle = TextStyle(style = Typeface.BOLD),
             mentionUserNameFormatter = SceytChatUIKit.formatters.mentionUserNameFormatter,
             attachmentNameFormatter = SceytChatUIKit.formatters.attachmentNameFormatter,
-            messageTypeIconProvider = null, // We cant show drawable icons in push notifications
             mentionClickListener = null
         )
 
