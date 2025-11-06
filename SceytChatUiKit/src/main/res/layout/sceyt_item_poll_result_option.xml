@@ -5,16 +5,15 @@
     android:id="@+id/layoutOptionContainer"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginVertical="6dp">
+    android:layout_marginVertical="6dp"
+    android:paddingVertical="14dp">
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tvOptionName"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
+        android:layout_marginHorizontal="16dp"
         android:fontFamily="@font/roboto_medium"
-        android:paddingVertical="14dp"
         android:textColor="@color/sceyt_color_text_primary"
         android:textSize="@dimen/mediumTextSize"
         app:layout_constraintEnd_toStartOf="@+id/tvVoteCount"
@@ -31,7 +30,6 @@
         android:fontFamily="@font/roboto_regular"
         android:textColor="@color/sceyt_color_text_secondary"
         android:textSize="@dimen/smallTextSize"
-        app:layout_constraintBottom_toBottomOf="@id/tvOptionName"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/tvOptionName"
         tools:text="152 votes" />
@@ -40,6 +38,7 @@
         android:id="@+id/rvVoters"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
         android:nestedScrollingEnabled="false"
         android:overScrollMode="never"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
