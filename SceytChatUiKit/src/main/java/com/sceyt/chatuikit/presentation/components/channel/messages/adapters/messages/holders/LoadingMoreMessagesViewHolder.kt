@@ -7,8 +7,10 @@ import com.sceyt.chatuikit.extensions.setProgressColorRes
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMessageViewHolder
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
-class LoadingMoreMessagesViewHolder(binding: SceytItemLoadingMoreBinding,
-                                    style: MessageItemStyle) : BaseMessageViewHolder(binding.root, style) {
+class LoadingMoreMessagesViewHolder(
+        binding: SceytItemLoadingMoreBinding,
+        style: MessageItemStyle,
+) : BaseMessageViewHolder(binding.root, style) {
 
     init {
         binding.applyStyle()

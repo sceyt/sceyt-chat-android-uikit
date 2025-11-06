@@ -7,7 +7,9 @@ import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.koin.SceytKoinComponent
+import com.sceyt.chatuikit.persistence.extensions.newPoll
 import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
+import com.sceyt.chatuikit.persistence.mappers.toPollDetails
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
@@ -19,9 +21,9 @@ class ForwardViewModel : BaseViewModel(), SceytKoinComponent {
     private val messageInteractor by inject<MessageInteractor>()
 
     fun sendForwardMessage(
-            vararg channelIds: Long,
-            markOwnMessageAsForwarded: Boolean,
-            messages: List<SceytMessage>
+        vararg channelIds: Long,
+        markOwnMessageAsForwarded: Boolean,
+        messages: List<SceytMessage>
     ) = callbackFlow {
         trySend(State.Loading)
         channelIds.forEach { channelId ->
@@ -38,9 +40,12 @@ class ForwardViewModel : BaseViewModel(), SceytKoinComponent {
                     .setAttachments(initAttachments(it.attachments).toTypedArray())
                     .setMetadata(it.metadata)
                     .setBodyAttributes(it.bodyAttributes?.toTypedArray() ?: emptyArray())
-                    .setMentionedUserIds(it.mentionedUsers?.map { user -> user.id }?.toTypedArray()
-                            ?: arrayOf())
+                    .setMentionedUserIds(
+                        it.mentionedUsers?.map { user -> user.id }?.toTypedArray()
+                            ?: arrayOf()
+                    )
                     .setDisableMentionsCount(it.disableMentionsCount)
+                    .setPoll(it.poll.newPoll()?.toPollDetails())
                     //.setReplyInThread(it.replyInThread)
                     .build()
 
@@ -67,7 +72,6 @@ class ForwardViewModel : BaseViewModel(), SceytKoinComponent {
                 .build()
         } ?: emptyList()
     }
-
 
     enum class State {
         Loading,

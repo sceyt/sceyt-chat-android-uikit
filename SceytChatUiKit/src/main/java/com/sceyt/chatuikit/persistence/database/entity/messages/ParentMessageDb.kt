@@ -16,5 +16,8 @@ internal data class ParentMessageDb(
         val attachments: List<AttachmentDb>?,
 
         @Relation(parentColumn = "tid", entityColumn = "messageTid", entity = MentionUserMessageLinkEntity::class)
-        val mentionedUsers: List<MentionUserDb>?
+        val mentionedUsers: List<MentionUserDb>?,
+
+        @Relation(parentColumn = "tid", entityColumn = "messageTid", entity = PollEntity::class)
+        val poll: PollDb?,
 )

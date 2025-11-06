@@ -7,10 +7,12 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
+import com.sceyt.chatuikit.data.models.messages.MessageTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytItemOutFileMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemOutImageMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemOutLinkMessageBinding
+import com.sceyt.chatuikit.databinding.SceytItemOutPollMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemOutTextMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemOutVideoMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemOutVoiceMessageBinding
@@ -20,6 +22,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.mes
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.OutFileMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.OutImageMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.OutLinkMessageViewHolder
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.OutPollMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.OutTextMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.OutVideoMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.OutVoiceMessageViewHolder
@@ -29,8 +32,8 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.cl
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
 open class MessageInfoViewProvider(
-        context: Context,
-        private val messageItemStyle: MessageItemStyle
+    context: Context,
+    private val messageItemStyle: MessageItemStyle
 ) {
     protected val viewPoolReactions = RecyclerView.RecycledViewPool()
     protected var clickListeners = MessageClickListenersImpl()
@@ -45,58 +48,137 @@ open class MessageInfoViewProvider(
         holder.bind(MessageListItem.MessageItem(message), MessageDiff.DEFAULT)
     }
 
-    open fun createViewHolderWithMessage(viewStub: ViewStub, message: SceytMessage): BaseMessageViewHolder {
+    open fun createViewHolderWithMessage(
+        viewStub: ViewStub,
+        message: SceytMessage
+    ): BaseMessageViewHolder {
         viewType = getMessageType(message)
         return when (viewType) {
-            MessageViewTypeEnum.OutText.ordinal -> createOutTextMsgViewHolder(viewStub, R.layout.sceyt_item_out_text_message)
-            MessageViewTypeEnum.OutLink.ordinal -> createOutLinkMsgViewHolder(viewStub, R.layout.sceyt_item_out_link_message)
-            MessageViewTypeEnum.OutVoice.ordinal -> createOutVoiceMsgViewHolder(viewStub, R.layout.sceyt_item_out_voice_message)
-            MessageViewTypeEnum.OutImage.ordinal -> createOutImageMsgViewHolder(viewStub, R.layout.sceyt_item_out_image_message)
-            MessageViewTypeEnum.OutVideo.ordinal -> createOutVideoMsgViewHolder(viewStub, R.layout.sceyt_item_out_video_message)
-            MessageViewTypeEnum.OutFile.ordinal -> createOutFileMsgViewHolder(viewStub, R.layout.sceyt_item_out_file_message)
+            MessageViewTypeEnum.OutText.ordinal -> createOutTextMsgViewHolder(
+                viewStub,
+                R.layout.sceyt_item_out_text_message
+            )
+
+            MessageViewTypeEnum.OutLink.ordinal -> createOutLinkMsgViewHolder(
+                viewStub,
+                R.layout.sceyt_item_out_link_message
+            )
+
+            MessageViewTypeEnum.OutVoice.ordinal -> createOutVoiceMsgViewHolder(
+                viewStub,
+                R.layout.sceyt_item_out_voice_message
+            )
+
+            MessageViewTypeEnum.OutImage.ordinal -> createOutImageMsgViewHolder(
+                viewStub,
+                R.layout.sceyt_item_out_image_message
+            )
+
+            MessageViewTypeEnum.OutVideo.ordinal -> createOutVideoMsgViewHolder(
+                viewStub,
+                R.layout.sceyt_item_out_video_message
+            )
+
+            MessageViewTypeEnum.OutFile.ordinal -> createOutFileMsgViewHolder(
+                viewStub,
+                R.layout.sceyt_item_out_file_message
+            )
+
+            MessageViewTypeEnum.OutPoll.ordinal -> createOutPollMsgViewHolder(
+                viewStub,
+                R.layout.sceyt_item_out_poll_message
+            )
+
             else -> throw RuntimeException("Not supported view type")
         }.also { viewHolder = it }
     }
 
-    private fun createOutTextMsgViewHolder(viewStub: ViewStub, layoutId: Int): BaseMessageViewHolder {
+    protected open fun createOutTextMsgViewHolder(
+        viewStub: ViewStub,
+        layoutId: Int
+    ): BaseMessageViewHolder {
         viewStub.layoutResource = layoutId
         val binding = SceytItemOutTextMessageBinding.bind(viewStub.inflate())
-        return OutTextMessageViewHolder(binding, viewPoolReactions, messageItemStyle, clickListeners)
+        return OutTextMessageViewHolder(
+            binding,
+            viewPoolReactions,
+            messageItemStyle,
+            clickListeners
+        )
     }
 
-    private fun createOutLinkMsgViewHolder(viewStub: ViewStub, layoutId: Int): BaseMessageViewHolder {
+    protected open fun createOutLinkMsgViewHolder(
+        viewStub: ViewStub,
+        layoutId: Int
+    ): BaseMessageViewHolder {
         viewStub.layoutResource = layoutId
         val binding = SceytItemOutLinkMessageBinding.bind(viewStub.inflate())
-        return OutLinkMessageViewHolder(binding, viewPoolReactions,
-            messageItemStyle, clickListeners, needMediaDataCallback)
+        return OutLinkMessageViewHolder(
+            binding, viewPoolReactions,
+            messageItemStyle, clickListeners, needMediaDataCallback
+        )
     }
 
-    private fun createOutVoiceMsgViewHolder(viewStub: ViewStub, layoutId: Int): BaseMessageViewHolder {
+    protected open fun createOutVoiceMsgViewHolder(
+        viewStub: ViewStub,
+        layoutId: Int
+    ): BaseMessageViewHolder {
         viewStub.layoutResource = layoutId
         val binding = SceytItemOutVoiceMessageBinding.bind(viewStub.inflate())
-        return OutVoiceMessageViewHolder(binding, viewPoolReactions, messageItemStyle, clickListeners,
-            needMediaDataCallback, null)
+        return OutVoiceMessageViewHolder(
+            binding, viewPoolReactions, messageItemStyle, clickListeners,
+            needMediaDataCallback, null
+        )
     }
 
-    private fun createOutImageMsgViewHolder(viewStub: ViewStub, layoutId: Int): BaseMessageViewHolder {
+    protected open fun createOutImageMsgViewHolder(
+        viewStub: ViewStub,
+        layoutId: Int
+    ): BaseMessageViewHolder {
         viewStub.layoutResource = layoutId
         val binding = SceytItemOutImageMessageBinding.bind(viewStub.inflate())
-        return OutImageMessageViewHolder(binding, viewPoolReactions, messageItemStyle,
-            clickListeners, needMediaDataCallback)
+        return OutImageMessageViewHolder(
+            binding, viewPoolReactions, messageItemStyle,
+            clickListeners, needMediaDataCallback
+        )
     }
 
-    private fun createOutVideoMsgViewHolder(viewStub: ViewStub, layoutId: Int): BaseMessageViewHolder {
+    protected open fun createOutVideoMsgViewHolder(
+        viewStub: ViewStub,
+        layoutId: Int
+    ): BaseMessageViewHolder {
         viewStub.layoutResource = layoutId
         val binding = SceytItemOutVideoMessageBinding.bind(viewStub.inflate())
-        return OutVideoMessageViewHolder(binding, viewPoolReactions, messageItemStyle,
-            clickListeners, needMediaDataCallback)
+        return OutVideoMessageViewHolder(
+            binding, viewPoolReactions, messageItemStyle,
+            clickListeners, needMediaDataCallback
+        )
     }
 
-    private fun createOutFileMsgViewHolder(viewStub: ViewStub, layoutId: Int): BaseMessageViewHolder {
+    protected open fun createOutFileMsgViewHolder(
+        viewStub: ViewStub,
+        layoutId: Int
+    ): BaseMessageViewHolder {
         viewStub.layoutResource = layoutId
         val binding = SceytItemOutFileMessageBinding.bind(viewStub.inflate())
-        return OutFileMessageViewHolder(binding, viewPoolReactions, messageItemStyle,
-            clickListeners, needMediaDataCallback)
+        return OutFileMessageViewHolder(
+            binding, viewPoolReactions, messageItemStyle,
+            clickListeners, needMediaDataCallback
+        )
+    }
+
+    protected open fun createOutPollMsgViewHolder(
+        viewStub: ViewStub,
+        layoutId: Int
+    ): BaseMessageViewHolder {
+        viewStub.layoutResource = layoutId
+        val binding = SceytItemOutPollMessageBinding.bind(viewStub.inflate())
+        return OutPollMessageViewHolder(
+            binding = binding,
+            viewPoolReactions = viewPoolReactions,
+            style = messageItemStyle,
+            messageListeners = clickListeners
+        )
     }
 
     open fun getMessageType(message: SceytMessage): Int {
@@ -104,6 +186,7 @@ open class MessageInfoViewProvider(
         val attachments = message.attachments
         val type = when {
             message.state == MessageState.Deleted -> if (inc) MessageViewTypeEnum.IncDeleted else MessageViewTypeEnum.OutDeleted
+            message.type == MessageTypeEnum.Poll.value -> if (inc) MessageViewTypeEnum.IncPoll else MessageViewTypeEnum.OutPoll
             !attachments.isNullOrEmpty() -> {
                 val (links, others) = attachments.partition { it.type == AttachmentTypeEnum.Link.value }
                 // Check maybe all attachments are links
@@ -130,7 +213,10 @@ open class MessageInfoViewProvider(
     }
 
     fun updateMessageStatus(message: SceytMessage) {
-        viewHolder?.bind(MessageListItem.MessageItem(message), MessageDiff.DEFAULT_FALSE.copy(statusChanged = true))
+        viewHolder?.bind(
+            MessageListItem.MessageItem(message),
+            MessageDiff.DEFAULT_FALSE.copy(statusChanged = true)
+        )
     }
 
     fun updateMessage(message: SceytMessage) {

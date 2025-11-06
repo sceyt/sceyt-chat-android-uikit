@@ -20,6 +20,8 @@ open class MessageActionsViewClickListenersImpl : MessageActionsViewClickListene
     private var reactMessageListener: MessageActionsViewClickListeners.ReactMessage? = null
     private var replyMessageListener: MessageActionsViewClickListeners.ReplyMessage? = null
     private var replyInThreadMessageListener: MessageActionsViewClickListeners.ReplyInThreadMessage? = null
+    private var retractVoteListener: MessageActionsViewClickListeners.RetractVote? = null
+    private var endVoteListener: MessageActionsViewClickListeners.EndVote? = null
 
     override fun onCopyMessagesClick(vararg messages: SceytMessage) {
         defaultListeners?.onCopyMessagesClick(*messages)
@@ -61,6 +63,16 @@ open class MessageActionsViewClickListenersImpl : MessageActionsViewClickListene
         replyInThreadMessageListener?.onReplyMessageInThreadClick(message)
     }
 
+    override fun onRetractVoteClick(message: SceytMessage) {
+        defaultListeners?.onRetractVoteClick(message)
+        retractVoteListener?.onRetractVoteClick(message)
+    }
+
+    override fun onEndVoteClick(message: SceytMessage) {
+        defaultListeners?.onEndVoteClick(message)
+        endVoteListener?.onEndVoteClick(message)
+    }
+
     fun setListener(listener: MessageActionsViewClickListeners) {
         when (listener) {
             is MessageActionsViewClickListeners.ActionsViewClickListeners -> {
@@ -72,6 +84,8 @@ open class MessageActionsViewClickListenersImpl : MessageActionsViewClickListene
                 reactMessageListener = listener
                 replyMessageListener = listener
                 replyInThreadMessageListener = listener
+                retractVoteListener = listener
+                endVoteListener = listener
             }
 
             is MessageActionsViewClickListeners.CopyMessage -> {
@@ -104,6 +118,14 @@ open class MessageActionsViewClickListenersImpl : MessageActionsViewClickListene
 
             is MessageActionsViewClickListeners.ReplyInThreadMessage -> {
                 replyInThreadMessageListener = listener
+            }
+
+            is MessageActionsViewClickListeners.RetractVote -> {
+                retractVoteListener = listener
+            }
+
+            is MessageActionsViewClickListeners.EndVote -> {
+                endVoteListener = listener
             }
         }
     }

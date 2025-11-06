@@ -30,4 +30,5 @@ interface MessageInputActionCallback {
     fun clearChat()
     fun scrollToNext()
     fun scrollToPrev()
+    fun createPoll()
 }

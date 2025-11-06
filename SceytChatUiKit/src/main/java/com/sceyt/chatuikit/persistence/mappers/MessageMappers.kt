@@ -2,14 +2,22 @@ package com.sceyt.chatuikit.persistence.mappers
 
 import com.sceyt.chat.models.message.ForwardingDetails
 import com.sceyt.chat.models.message.Message
+import com.sceyt.chat.models.poll.PollDetails
+import com.sceyt.chat.models.poll.PollOption
+import com.sceyt.chat.models.poll.PollVote
 import com.sceyt.chat.wrapper.ClientWrapper
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.data.models.messages.SceytPollDetails
 import com.sceyt.chatuikit.data.models.messages.SceytUser
+import com.sceyt.chatuikit.data.models.messages.Vote
 import com.sceyt.chatuikit.persistence.database.entity.messages.ForwardingDetailsDb
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageDb
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.ParentMessageDb
+import com.sceyt.chatuikit.persistence.database.entity.messages.PollDb
+import com.sceyt.chatuikit.persistence.database.entity.messages.PollVoteDb
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 
 internal fun SceytMessage.toMessageEntity(unList: Boolean) = MessageEntity(
@@ -60,7 +68,8 @@ internal fun SceytMessage.toMessageDb(unList: Boolean): MessageDb {
         reactionsTotals = reactionTotals?.map { it.toReactionTotalEntity(id) }?.toMutableList(),
         forwardingUser = forwardingDetails?.user?.toUserDb(),
         pendingReactions = null,
-        mentionedUsers = null
+        mentionedUsers = null,
+        poll = poll?.toPollDb(),
     )
 }
 
@@ -99,7 +108,8 @@ internal fun MessageDb.toSceytMessage(): SceytMessage {
             forwardingDetails = forwardingDetailsDb?.toForwardingDetails(channelId, forwardingUser?.toSceytUser()),
             pendingReactions = pendingReactions?.map { it.toReactionData() },
             bodyAttributes = bodyAttribute,
-            disableMentionsCount = disableMentionsCount
+            disableMentionsCount = disableMentionsCount,
+            poll = poll?.toSceytPollDetails()
         )
     }
 }
@@ -110,7 +120,8 @@ internal fun ParentMessageDb.toSceytMessage(): SceytMessage {
         from = this@toSceytMessage.from?.toSceytUser(),
         mentionedUsers = mentionedUsers?.map {
             it.user?.toSceytUser() ?: SceytUser(it.link.userId)
-        }
+        },
+        pollDetails = this@toSceytMessage.poll?.toSceytPollDetails()
     )
 }
 
@@ -122,13 +133,16 @@ internal fun SceytMessage.toParentMessageEntity(): ParentMessageDb {
         attachments = attachments?.map {
             it.toAttachmentDb(messageId = id, messageTid = messageTid, channelId = channelId)
         },
-        mentionedUsers = null
+        mentionedUsers = null,
+        poll = poll?.toPollDb()
     )
 }
 
 private fun MessageEntity.parentMessageToSceytMessage(
         attachments: Array<SceytAttachment>?,
-        from: SceytUser?, mentionedUsers: List<SceytUser>?,
+        from: SceytUser?,
+        mentionedUsers: List<SceytUser>?,
+        pollDetails: SceytPollDetails?,
 ) = SceytMessage(
     id = id ?: 0,
     tid = tid,
@@ -157,7 +171,8 @@ private fun MessageEntity.parentMessageToSceytMessage(
     forwardingDetails = forwardingDetailsDb?.toForwardingDetails(channelId, null),
     pendingReactions = null,
     bodyAttributes = bodyAttribute,
-    disableMentionsCount = disableMentionsCount
+    disableMentionsCount = disableMentionsCount,
+    poll = pollDetails
 )
 
 internal fun MessageDb.toMessage(): Message {
@@ -189,7 +204,8 @@ internal fun MessageDb.toMessage(): Message {
             autoDeleteAt ?: 0L,
             forwardingDetailsDb?.toForwardingDetails(channelId, forwardingUser?.toSceytUser()),
             bodyAttribute?.toTypedArray(),
-            disableMentionsCount
+            disableMentionsCount,
+            poll?.toPollDetails()
         )
     }
 }
@@ -237,7 +253,8 @@ fun Message.toSceytUiMessage(isGroup: Boolean? = null): SceytMessage {
         pendingReactions = null,
         bodyAttributes = bodyAttributes?.toList(),
         disableMentionsCount = disableMentionsCount,
-        isGroup = isGroup ?: false
+        isGroup = isGroup ?: false,
+        poll = poll?.toSceytPollDetails(messageTid = tid)
     )
 }
 
@@ -269,7 +286,8 @@ fun SceytMessage.toMessage(): Message {
         autoDeleteAt ?: 0L,
         forwardingDetails,
         bodyAttributes?.toTypedArray(),
-        disableMentionsCount
+        disableMentionsCount,
+        poll?.toPollDetails()
     )
 }
 
@@ -287,3 +305,66 @@ internal fun ForwardingDetailsDb.toForwardingDetails(
     user?.toUser(),
     hops
 )
+
+internal fun PollDb.toPollDetails(): PollDetails = with(pollEntity) {
+    val myId = SceytChatUIKit.currentUserId
+    val ownVotes = mutableListOf<PollVote>()
+    val otherVotes = mutableListOf<PollVote>()
+    votes?.forEach {
+        if (it.vote.userId == myId) {
+            ownVotes.add(it.toPollVote())
+        } else {
+            otherVotes.add(it.toPollVote())
+        }
+    }
+
+    return PollDetails.Builder()
+        .setId(id)
+        .setName(name)
+        .setDescription(description)
+        .setOptions(options.map { PollOption(it.id, it.name) }.toTypedArray())
+        .setAnonymous(anonymous)
+        .setAllowMultipleVotes(allowMultipleVotes)
+        .setAllowVoteRetract(allowVoteRetract)
+        .setVotesPerOption(votesPerOption)
+        .setOwnVotes(ownVotes.toTypedArray())
+        .setVotes(otherVotes.toTypedArray())
+        .setCreatedAt(createdAt)
+        .setClosed(closed)
+        .build()
+}
+
+internal fun PollVoteDb.toPollVote(): PollVote = with(vote) {
+    return PollVote(optionId, createdAt, user?.toUser())
+}
+
+internal fun Vote.toPollVote(): PollVote {
+    return PollVote(optionId, createdAt, user?.toUser())
+}
+
+internal fun SceytPollDetails.toPollDetails(): PollDetails {
+    val myId = SceytChatUIKit.currentUserId
+    val ownVotes = mutableListOf<PollVote>()
+    val otherVotes = mutableListOf<PollVote>()
+    votes.forEach {
+        if (it.user?.id == myId) {
+            ownVotes.add(it.toPollVote())
+        } else {
+            otherVotes.add(it.toPollVote())
+        }
+    }
+    return PollDetails.Builder()
+        .setId(id)
+        .setName(name)
+        .setDescription(description)
+        .setOptions(options.map { PollOption(it.id, it.name) }.toTypedArray())
+        .setAnonymous(anonymous)
+        .setAllowMultipleVotes(allowMultipleVotes)
+        .setAllowVoteRetract(allowVoteRetract)
+        .setVotesPerOption(votesPerOption)
+        .setVotes(otherVotes.toTypedArray())
+        .setOwnVotes(ownVotes.toTypedArray())
+        .setCreatedAt(createdAt)
+        .setClosed(closed)
+        .build()
+}
