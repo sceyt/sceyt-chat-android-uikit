@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.presentation.components.poll_results.adapter.holders
 
 import androidx.core.view.isVisible
+import androidx.recyclerview.widget.SimpleItemAnimator
 import com.sceyt.chatuikit.databinding.SceytItemPollResultOptionBinding
 import com.sceyt.chatuikit.presentation.components.poll_results.adapter.PollResultItem
 import com.sceyt.chatuikit.presentation.components.poll_results.adapter.VoterItem
@@ -74,6 +75,7 @@ class PollOptionResultViewHolder(
                 }
         )
         binding.rvVoters.adapter = votersAdapter
+        (binding.rvVoters.itemAnimator as? SimpleItemAnimator)?.supportsChangeAnimations = false
     }
 
     private fun SceytItemPollResultOptionBinding.applyStyle() {

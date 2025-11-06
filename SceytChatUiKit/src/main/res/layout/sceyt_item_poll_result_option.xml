@@ -14,7 +14,8 @@
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
         android:fontFamily="@font/roboto_medium"
-        android:paddingVertical="14dp"
+        android:layout_marginTop="14dp"
+        android:paddingBottom="14dp"
         android:textColor="@color/sceyt_color_text_primary"
         android:textSize="@dimen/mediumTextSize"
         app:layout_constraintEnd_toStartOf="@+id/tvVoteCount"
@@ -31,7 +32,6 @@
         android:fontFamily="@font/roboto_regular"
         android:textColor="@color/sceyt_color_text_secondary"
         android:textSize="@dimen/smallTextSize"
-        app:layout_constraintBottom_toBottomOf="@id/tvOptionName"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/tvOptionName"
         tools:text="152 votes" />

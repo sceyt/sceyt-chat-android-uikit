@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.SimpleItemAnimator
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.R.anim
 import com.sceyt.chatuikit.SceytChatUIKit
@@ -97,6 +98,7 @@ open class PollResultsFragment : Fragment(), SceytKoinComponent {
 
         pollResultsAdapter = PollResultsAdapter(viewHolderFactory = factory)
         binding.rvPollOptions.adapter = pollResultsAdapter
+        (binding.rvPollOptions.itemAnimator as? SimpleItemAnimator)?.supportsChangeAnimations = false
     }
 
     protected open fun initViewModel() {
