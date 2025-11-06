@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 24,
-    "identityHash": "e6b9ac5539be477728f966b6e25cb3d2",
+    "identityHash": "0e6dbbdc1699c92ece09ea49ba6b9456",
     "entities": [
       {
         "tableName": "sceyt_channel_table",
@@ -2161,7 +2161,7 @@
       },
       {
         "tableName": "sceyt_poll_vote_table",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`pollId` TEXT NOT NULL, `optionId` TEXT NOT NULL, `userId` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, FOREIGN KEY(`pollId`) REFERENCES `sceyt_poll_table`(`id`) ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED, FOREIGN KEY(`optionId`) REFERENCES `sceyt_poll_option_table`(`id`) ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`pollId` TEXT NOT NULL, `optionId` TEXT NOT NULL, `userId` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, FOREIGN KEY(`pollId`) REFERENCES `sceyt_poll_table`(`id`) ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED)",
         "fields": [
           {
             "fieldPath": "pollId",
@@ -2238,17 +2238,6 @@
             "onUpdate": "CASCADE",
             "columns": [
               "pollId"
-            ],
-            "referencedColumns": [
-              "id"
-            ]
-          },
-          {
-            "table": "sceyt_poll_option_table",
-            "onDelete": "CASCADE",
-            "onUpdate": "CASCADE",
-            "columns": [
-              "optionId"
             ],
             "referencedColumns": [
               "id"
@@ -2375,7 +2364,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'e6b9ac5539be477728f966b6e25cb3d2')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '0e6dbbdc1699c92ece09ea49ba6b9456')"
     ]
   }
 }

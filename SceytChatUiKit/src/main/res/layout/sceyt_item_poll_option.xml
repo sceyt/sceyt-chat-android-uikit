@@ -43,7 +43,7 @@
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         app:layout_constraintBottom_toBottomOf="@+id/barrierVoters"
         app:layout_constraintEnd_toStartOf="@+id/tvVoteCount"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintHeight_min="20dp"
         app:layout_constraintWidth_min="45dp"
         app:stackFromEnd="true"
         tools:itemCount="1"
@@ -57,7 +57,7 @@
         android:textSize="@dimen/smallTextSize"
         app:layout_constraintBottom_toBottomOf="@+id/barrierVoters"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/checkbox"
+        app:layout_constraintHeight_min="20dp"
         app:layout_constraintWidth_min="10dp"
         tools:text="3" />
 

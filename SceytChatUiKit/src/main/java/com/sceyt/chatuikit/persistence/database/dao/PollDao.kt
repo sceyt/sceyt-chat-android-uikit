@@ -34,6 +34,7 @@ internal abstract class PollDao {
             return
 
         upsertPollEntity(entity)
+
         // Insert votes
         if (votes.isNotEmpty())
             insertVotesReplace(votes)
@@ -80,18 +81,15 @@ internal abstract class PollDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     abstract suspend fun insertVotesReplace(votes: List<PollVoteEntity>)
 
-
     @Query("DELETE FROM $POLL_VOTE_TABLE WHERE pollId = :pollId")
     protected abstract suspend fun deleteAllVotesByPollId(pollId: String)
 
     @Query("DELETE FROM $POLL_VOTE_TABLE WHERE pollId = :pollId AND userId != :excludedUserId")
     protected abstract suspend fun deleteOthersVotesByPollId(pollId: String, excludedUserId: String)
 
-    // Protected methods for internal use
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     protected abstract suspend fun insertPollReplace(poll: PollEntity)
 
-    // Protected methods for internal use
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     protected abstract suspend fun insertPollIgnored(poll: PollEntity): Long
 
