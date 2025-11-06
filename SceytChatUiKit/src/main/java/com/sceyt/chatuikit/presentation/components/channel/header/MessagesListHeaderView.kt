@@ -576,7 +576,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
         val expiredEditMessage = (System.currentTimeMillis() - fistMessage.createdAt) >
                 SceytChatUIKit.config.messageEditTimeout
         menu.findItem(R.id.sceyt_edit_message)?.isVisible = isSingleMessage && !isUnsupportedMessage
-        !fistMessage.incoming && fistMessage.body.isNotNullOrBlank() && !expiredEditMessage &&
+                && !fistMessage.incoming && fistMessage.body.isNotNullOrBlank() && !expiredEditMessage && !isPollMessage
         menu.findItem(R.id.sceyt_message_info)?.isVisible = isSingleMessage
                 && !fistMessage.incoming && !existPendingMessages
         menu.findItem(R.id.sceyt_copy_message)?.isVisible = canCopy(*messages)
