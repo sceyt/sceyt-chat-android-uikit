@@ -78,13 +78,21 @@ open class DefaultChannelListSubtitleFormatter : Formatter<ChannelItemSubtitleFo
                 ?: return false to ""
 
         if (lastReaction.id > (channel.lastMessage?.id ?: 0) || lastReaction.pending) {
-            val toMessage = SpannableStringBuilder(style.lastMessageBodyFormatter.format(
+            val body = style.lastMessageBodyFormatter.format(
                 context = context,
                 from = MessageBodyFormatterAttributes(
                     message = message,
                     mentionTextStyle = style.mentionTextStyle
                 )
-            ))
+            )
+
+            val attachmentIcon = message.attachments?.firstOrNull()?.let {
+                style.attachmentIconProvider.provide(context, it)
+            }
+
+            val toMessage = SpannableStringBuilder(attachmentIcon.toSpannableString())
+            toMessage.append(body)
+
             val reactedWord = context.getString(R.string.sceyt_reacted)
 
             val reactUserName = when {
@@ -100,7 +108,9 @@ open class DefaultChannelListSubtitleFormatter : Formatter<ChannelItemSubtitleFo
 
             val text = "$reactUserName ${lastReaction.key} ${context.getString(R.string.sceyt_to)}"
             val title = SpannableStringBuilder("$text ")
-            title.append("\" $toMessage \"")
+            title.append("\"")
+            title.append(toMessage)
+            title.append("\"")
             return true to title
         }
         return false to ""

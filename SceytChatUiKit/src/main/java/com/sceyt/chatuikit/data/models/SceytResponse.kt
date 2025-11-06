@@ -35,10 +35,11 @@ sealed class SceytPagingResponse<T>(
     class Success<T>(
             val data: T,
             val hasNext: Boolean,
+            val nextToken: String? = null,
     ) : SceytPagingResponse<T>() {
 
         override fun toString(): String {
-            return "Success(data=$data, hasNext=$hasNext)"
+            return "Success(data=$data, hasNext=$hasNext, nextToken=$nextToken)"
         }
     }
 
@@ -50,4 +51,13 @@ sealed class SceytPagingResponse<T>(
             return "Error(exception=$exception)"
         }
     }
+}
+
+fun <T> createErrorResponse(message: String, code: Int = 0): SceytResponse.Error<T> {
+    val exception = createSceytException(message, code)
+    return SceytResponse.Error(exception)
+}
+
+fun createSceytException(message: String, code: Int = 0): SceytException {
+    return SceytException(code, message)
 }

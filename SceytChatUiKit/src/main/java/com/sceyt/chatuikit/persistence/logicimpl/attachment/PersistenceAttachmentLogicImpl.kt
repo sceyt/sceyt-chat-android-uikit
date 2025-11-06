@@ -36,6 +36,9 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import com.sceyt.chatuikit.persistence.mappers.getTid
 import com.sceyt.chatuikit.persistence.mappers.isHiddenLinkDetails
 import com.sceyt.chatuikit.persistence.mappers.toAttachment
@@ -68,6 +71,7 @@ internal class PersistenceAttachmentLogicImpl(
 
     private val messagesLogic: PersistenceMessagesLogic by inject()
     private val attachmentsLoadSize get() = SceytChatUIKit.config.queryLimits.attachmentListQueryLimit
+    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     override suspend fun setupFileTransferUpdateObserver() {
         FileTransferHelper.onTransferUpdatedLiveData.asFlow().collect {
@@ -232,7 +236,9 @@ internal class PersistenceAttachmentLogicImpl(
         }
 
     override fun onTransferProgressPercentUpdated(transferData: TransferData) {
-        messagesCache.updateAttachmentTransferData(transferData)
+        scope.launch {
+            messagesCache.updateAttachmentTransferData(transferData)
+        }
     }
 
     private fun loadAttachments(

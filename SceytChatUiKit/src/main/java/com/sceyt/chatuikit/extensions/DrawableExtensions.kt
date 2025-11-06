@@ -7,6 +7,7 @@ import android.graphics.drawable.LayerDrawable
 import android.text.Spannable
 import android.text.SpannableStringBuilder
 import android.text.style.ImageSpan
+import android.util.Size
 import androidx.annotation.ColorInt
 import androidx.annotation.ColorRes
 import androidx.annotation.IdRes
@@ -15,10 +16,13 @@ import androidx.core.content.ContextCompat
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 
-fun Drawable?.toSpannableString(): SpannableStringBuilder {
+fun Drawable?.toSpannableString(
+    maxSizeDp: Int = 18
+): SpannableStringBuilder {
     this ?: return SpannableStringBuilder()
     val builder = SpannableStringBuilder(". ")
-    setBounds(0, 0, intrinsicWidth, intrinsicHeight)
+    val size = calculateScaledSize(maxSizeDp)
+    setBounds(0, 0, size.width, size.height)
     builder.setSpan(ImageSpan(this), 0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
     return builder
 }
@@ -42,9 +46,9 @@ fun Drawable?.applyTintBackgroundLayer(@ColorInt tintColor: Int, @IdRes bgLayerI
 }
 
 fun Drawable?.applyTintBackgroundLayer(
-        context: Context,
-        @ColorRes tintColor: Int,
-        @IdRes bgLayerId: Int,
+    context: Context,
+    @ColorRes tintColor: Int,
+    @IdRes bgLayerId: Int,
 ): Drawable? {
     if (this !is LayerDrawable) return this
     return mutate().apply {
@@ -54,9 +58,9 @@ fun Drawable?.applyTintBackgroundLayer(
 }
 
 fun SwitchCompat.setColors(
-        @ColorInt checkedColor: Int = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor),
-        @ColorInt thumbUncheckedColor: Int = context.getCompatColor(R.color.sceyt_switch_thumb_unchecked_color),
-        @ColorInt trackUncheckedColor: Int = context.getCompatColor(R.color.sceyt_switch_track_unchecked_color),
+    @ColorInt checkedColor: Int = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor),
+    @ColorInt thumbUncheckedColor: Int = context.getCompatColor(R.color.sceyt_switch_thumb_unchecked_color),
+    @ColorInt trackUncheckedColor: Int = context.getCompatColor(R.color.sceyt_switch_track_unchecked_color),
 ) {
     val thumbColor = ColorStateList(
         arrayOf(
@@ -81,4 +85,29 @@ fun SwitchCompat.setColors(
 
     thumbTintList = thumbColor
     trackTintList = trackColor
+}
+
+/**
+ * Calculates scaled width and height preserving aspect ratio.
+ * Ensures the larger dimension fits into [maxSizeDp].
+ */
+fun Drawable.calculateScaledSize(
+    maxSizeDp: Int
+): Size {
+    val maxSizePx = maxSizeDp.dpToPx()
+
+    val w = intrinsicWidth.takeIf { it > 0 } ?: maxSizePx
+    val h = intrinsicHeight.takeIf { it > 0 } ?: maxSizePx
+
+    val ratio = w.toFloat() / h.toFloat()
+
+    return if (ratio >= 1f) {
+        val width = maxSizePx
+        val height = (maxSizePx / ratio).toInt()
+        Size(width, height)
+    } else {
+        val height = maxSizePx
+        val width = (maxSizePx * ratio).toInt()
+        Size(width, height)
+    }
 }

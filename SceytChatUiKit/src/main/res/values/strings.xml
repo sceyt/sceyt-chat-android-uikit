@@ -245,5 +245,27 @@
     <string name="sceyt_group_chat_invite">Group Chat Invite</string>
     <string name="sceyt_and_others">%1$s and %2$d others</string>
     <string name="sceyt_link_copied">Link copied</string>
+    <string name="sceyt_view_results">View Results</string>
+    <string name="sceyt_public_poll">Public poll</string>
+    <string name="sceyt_anonymous_poll">Anonymous poll</string>
+    <string name="sceyt_poll_finished">Poll finished</string>
+    <string name="sceyt_poll">Poll</string>
+    <string name="sceyt_poll_question">Question</string>
+    <string name="sceyt_poll_add_question">Add question</string>
+    <string name="sceyt_poll_options">Options</string>
+    <string name="sceyt_poll_add_option">Add an option</string>
+    <string name="sceyt_poll_parameters">Parameters</string>
+    <string name="sceyt_poll_anonymous">Anonymous poll</string>
+    <string name="sceyt_poll_multiple_votes">Multiple votes</string>
+    <string name="sceyt_poll_add">Add</string>
+    <string name="sceyt_send">Send</string>
+    <string name="sceyt_retract_vote">Retract vote</string>
+    <string name="sceyt_end_vote">End vote</string>
+    <string name="poll_results">Poll results</string>
+    <string name="sceyt_show_all">Show All</string>
+    <string name="sceyt_end">End</string>
+    <string name="sceyt_not_now">Not now</string>
+    <string name="sceyt_end_poll_dialog_desc">Are you sure you want to end this poll? People will no longer be able to vote.</string>
+    <string name="sceyt_end_poll_dialog_title">End poll?</string>
     <string name="unsupported_message_text">This message is not supported.</string>
 </resources>

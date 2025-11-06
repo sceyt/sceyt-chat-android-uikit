@@ -32,6 +32,8 @@
             <flag name="rounded" value="1" />
         </attr>
         <attr name="sceytUiAvatarCornerRadius" format="dimension" />
+        <attr name="sceytUiAvatarBorderWidth" format="dimension" />
+        <attr name="sceytUiAvatarBorderColor" format="color|reference" />
     </declare-styleable>
 
     <declare-styleable name="ToReplyLineView">
@@ -154,6 +156,20 @@
         <attr name="sceytUiToolbarIconsTint" format="color|reference" />
         <attr name="sceytUiToolbarEnableDivider" format="boolean" />
         <attr name="sceytUiToolbarDividerColor" format="color|reference" />
+    </declare-styleable>
+
+    <declare-styleable name="HorizontalProgressView">
+        <attr name="horizontalProgressViewProgress" format="integer" />
+        <attr name="horizontalProgressViewColor" format="color|reference" />
+        <attr name="horizontalProgressViewTrackColor" format="color|reference" />
+        <attr name="horizontalProgressViewCornerRadius" format="dimension" />
+    </declare-styleable>
+
+    <declare-styleable name="AnimatedCounterTextView">
+        <attr name="android:text" />
+        <attr name="android:textColor" />
+        <attr name="android:textSize" />
+        <attr name="android:fontFamily" />
     </declare-styleable>
 
 </resources>

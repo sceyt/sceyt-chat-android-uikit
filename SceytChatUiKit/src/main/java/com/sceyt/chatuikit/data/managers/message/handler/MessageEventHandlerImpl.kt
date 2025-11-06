@@ -3,6 +3,7 @@ package com.sceyt.chatuikit.data.managers.message.handler
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
+import com.sceyt.chatuikit.data.models.messages.Vote
 
 open class MessageEventHandlerImpl : MessageEventHandler.AllEventManagers {
     private var defaultListeners: MessageEventHandler.AllEventManagers? = null
@@ -35,6 +36,22 @@ open class MessageEventHandlerImpl : MessageEventHandler.AllEventManagers {
 
     override fun onReactionDeleted(message: SceytMessage, reaction: SceytReaction) {
         defaultListeners?.onReactionDeleted(message, reaction)
+    }
+
+    override fun onVoteChanged(
+        message: SceytMessage,
+        addedVotes: List<Vote>,
+        removedVoted: List<Vote>
+    ) {
+        defaultListeners?.onVoteChanged(message, addedVotes, removedVoted)
+    }
+
+    override fun onVoteRetracted(message: SceytMessage, retractedVotes: List<Vote>) {
+        defaultListeners?.onVoteRetracted(message, retractedVotes)
+    }
+
+    override fun onPollClosed(message: SceytMessage) {
+        defaultListeners?.onPollClosed(message)
     }
 
     internal fun setDefaultListeners(listener: MessageEventHandler.AllEventManagers) {

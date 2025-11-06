@@ -5,7 +5,8 @@ enum class MessageTypeEnum(val value: String) {
     Media("media"),
     File("file"),
     Link("link"),
-    System("system");
+    System("system"),
+    Poll("poll");
 
     fun value(): String {
         return when (this) {
@@ -14,18 +15,20 @@ enum class MessageTypeEnum(val value: String) {
             File -> "file"
             Link -> "link"
             System -> "system"
+            Poll -> "poll"
         }
     }
 
     companion object {
 
-       fun fromValue(value: String): MessageTypeEnum? {
+        fun fromValue(value: String): MessageTypeEnum? {
             return when (value) {
                 "text" -> Text
                 "media" -> Media
                 "file" -> File
                 "link" -> Link
                 "system" -> System
+                "poll" -> Poll
                 else -> null
             }
         }
