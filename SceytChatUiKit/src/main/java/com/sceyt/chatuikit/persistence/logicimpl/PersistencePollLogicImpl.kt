@@ -94,7 +94,7 @@ internal class PersistencePollLogicImpl(
         sendPollPendingVotesUseCase(
             channelId = messageDb.messageEntity.channelId,
             messageId = messageDb.id ?: return,
-            pollId = poll.pollEntity.id,
+            pollId = poll.pollEntity.pollId,
             pendingVotes = votes
         )
     }

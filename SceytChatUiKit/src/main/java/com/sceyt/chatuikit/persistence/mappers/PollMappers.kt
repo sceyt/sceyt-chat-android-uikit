@@ -17,7 +17,7 @@ import com.sceyt.chatuikit.persistence.database.entity.messages.PollVoteEntity
 import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingPollVoteEntity
 
 internal fun SceytPollDetails.toPollEntity(messageTid: Long) = PollEntity(
-    id = id,
+    pollId = id,
     messageTid = messageTid,
     name = name,
     description = description,
@@ -93,7 +93,7 @@ internal fun PollDb.toSceytPollDetails(): SceytPollDetails {
     }
 
     return SceytPollDetails(
-        id = pollEntity.id,
+        id = pollEntity.pollId,
         name = pollEntity.name,
         messageTid = pollEntity.messageTid,
         description = pollEntity.description,

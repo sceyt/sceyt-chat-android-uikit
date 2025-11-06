@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 24,
-    "identityHash": "0e6dbbdc1699c92ece09ea49ba6b9456",
+    "identityHash": "3cd4d0ec7eafe0d4bc2e1c3bf63aa5f8",
     "entities": [
       {
         "tableName": "sceyt_channel_table",
@@ -1989,11 +1989,11 @@
       },
       {
         "tableName": "sceyt_poll_table",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `messageTid` INTEGER NOT NULL, `name` TEXT NOT NULL, `description` TEXT NOT NULL, `anonymous` INTEGER NOT NULL, `votesPerOption` TEXT NOT NULL, `allowMultipleVotes` INTEGER NOT NULL, `allowVoteRetract` INTEGER NOT NULL, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, `closedAt` INTEGER NOT NULL, `closed` INTEGER NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`messageTid`) REFERENCES `sceyt_message_table`(`tid`) ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`pollId` TEXT NOT NULL, `messageTid` INTEGER NOT NULL, `name` TEXT NOT NULL, `description` TEXT NOT NULL, `anonymous` INTEGER NOT NULL, `votesPerOption` TEXT NOT NULL, `allowMultipleVotes` INTEGER NOT NULL, `allowVoteRetract` INTEGER NOT NULL, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, `closedAt` INTEGER NOT NULL, `closed` INTEGER NOT NULL, `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, FOREIGN KEY(`messageTid`) REFERENCES `sceyt_message_table`(`tid`) ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED)",
         "fields": [
           {
-            "fieldPath": "id",
-            "columnName": "id",
+            "fieldPath": "pollId",
+            "columnName": "pollId",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -2062,10 +2062,16 @@
             "columnName": "closed",
             "affinity": "INTEGER",
             "notNull": true
+          },
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
           }
         ],
         "primaryKey": {
-          "autoGenerate": false,
+          "autoGenerate": true,
           "columnNames": [
             "id"
           ]
@@ -2079,6 +2085,15 @@
             ],
             "orders": [],
             "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_sceyt_poll_table_messageTid` ON `${TABLE_NAME}` (`messageTid`)"
+          },
+          {
+            "name": "index_sceyt_poll_table_pollId",
+            "unique": false,
+            "columnNames": [
+              "pollId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sceyt_poll_table_pollId` ON `${TABLE_NAME}` (`pollId`)"
           }
         ],
         "foreignKeys": [
@@ -2364,7 +2379,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '0e6dbbdc1699c92ece09ea49ba6b9456')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '3cd4d0ec7eafe0d4bc2e1c3bf63aa5f8')"
     ]
   }
 }
