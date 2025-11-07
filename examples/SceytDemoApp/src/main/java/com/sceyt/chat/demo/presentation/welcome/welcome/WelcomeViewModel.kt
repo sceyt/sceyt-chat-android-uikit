@@ -5,29 +5,26 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.demo.connection.SceytConnectionProvider
 import com.sceyt.chat.demo.data.AppSharedPreference
-import com.sceyt.chat.models.ConnectionState
 import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
+import com.sceyt.chatuikit.persistence.extensions.safeResume
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import com.sceyt.chatuikit.presentation.root.PageState
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
-import kotlin.coroutines.resume
+import kotlin.time.Duration.Companion.seconds
 
 class WelcomeViewModel(
-        private val preference: AppSharedPreference,
-        private val connectionProvider: SceytConnectionProvider
+    private val preference: AppSharedPreference,
+    private val connectionProvider: SceytConnectionProvider
 ) : BaseViewModel() {
 
     private val _logInLiveData = MutableLiveData<Boolean>()
     val logInLiveData: LiveData<Boolean> = _logInLiveData
 
     fun loginUser(
-            userId: String,
+        userId: String,
     ) {
         viewModelScope.launch {
             pageStateLiveDataInternal.value = PageState.StateLoading()
@@ -35,6 +32,7 @@ class WelcomeViewModel(
             val result = connectUser(userId)
             if (result.isSuccess) {
                 preference.setString(AppSharedPreference.PREF_USER_ID, userId)
+                pageStateLiveDataInternal.value = PageState.Nothing
             } else
                 pageStateLiveDataInternal.value = PageState.StateError(
                     null, result.exceptionOrNull()?.message
@@ -44,38 +42,29 @@ class WelcomeViewModel(
         }
     }
 
-    private suspend fun connectUser(userId: String) = withContext(Dispatchers.IO) {
-        var job: Job? = null
-        val data = suspendCancellableCoroutine { continuation ->
-            job = ConnectionEventManager.onChangedConnectStatusFlow.onEach {
-                when (it.state) {
-                    ConnectionState.Connected -> {
-                        continuation.resume(Result.success(true))
-                        job?.cancel()
-                    }
+    private suspend fun connectUser(
+        userId: String
+    ): Result<Boolean> = withContext(Dispatchers.IO) {
 
-                    ConnectionState.Disconnected, ConnectionState.Failed -> {
-                        continuation.resume(
-                            Result.failure(Exception(it.exception?.message))
-                        )
-                        job?.cancel()
-                    }
-
-                    else -> Unit
-                }
-            }.launchIn(this)
-
+        val getTokenResult = suspendCancellableCoroutine { continuation ->
             connectionProvider.connectChatClient(userId) { isStarted, exception ->
                 if (!isStarted) {
-                    continuation.resume(Result.failure(Throwable(exception?.message)))
-                    pageStateLiveDataInternal.postValue(PageState.StateError(
-                        null, exception?.message
-                    ))
-                    job.cancel()
-                }
+                    pageStateLiveDataInternal.postValue(
+                        PageState.StateError(null, exception?.message)
+                    )
+                    continuation.safeResume(
+                        Result.failure(
+                            exception ?: Exception("Connection failed")
+                        )
+                    )
+                } else continuation.safeResume(Result.success(true))
             }
         }
 
-        return@withContext data
+        if (getTokenResult.isFailure) {
+            return@withContext getTokenResult
+        }
+
+        return@withContext ConnectionEventManager.awaitToConnectSceytWithResult(8.seconds.inWholeMilliseconds)
     }
 }
