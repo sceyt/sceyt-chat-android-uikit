@@ -56,6 +56,7 @@ import com.sceyt.chatuikit.persistence.logicimpl.usecases.HandleChangeVoteErrorU
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.RemovePollVoteUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.RetractPollVoteUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.SendPollPendingVotesUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.SetUserPresenceUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.ShouldShowNotificationUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.TogglePollVoteUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.UpdatePollUseCase
@@ -147,7 +148,7 @@ internal val logicModule = module {
     single<PersistenceMembersLogic> { PersistenceMembersLogicImpl(get(), get(), get(), get(), get(), get(), get()) }
     single<PersistenceUsersLogic> { PersistenceUsersLogicImpl(get(), get(), get(), get()) }
     single<PersistenceMessageMarkerLogic> { PersistenceMessageMarkerLogicImpl(get(), get(), get()) }
-    single<PersistenceConnectionLogic> { PersistenceConnectionLogicImpl(get(), get(), get(), get()) }
+    single<PersistenceConnectionLogic> { PersistenceConnectionLogicImpl(get(), get(), get(), get(), get()) }
     single<PersistenceChannelInviteKeyLogic> { PersistenceChannelInviteKeyLogicImpl(get(), get()) }
     single<FileTransferLogic> { FileTransferLogicImpl(get(), get()) }
 }
@@ -163,6 +164,7 @@ internal val useCaseModule = module {
     factoryOf(::UpdatePollVotesUseCase)
     factoryOf(::SendPollPendingVotesUseCase)
     factoryOf(::HandleChangeVoteErrorUseCase)
+    factoryOf(::SetUserPresenceUseCase)
 }
 
 internal val cacheModule = module {

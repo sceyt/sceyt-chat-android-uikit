@@ -65,8 +65,8 @@ class ProfileFragment : Fragment() {
 
     private fun initViewModel() {
         viewModel.currentUserAsFlow
-            .onEach(::setUserDetails)
-            .launchIn(lifecycleScope)
+            ?.onEach(::setUserDetails)
+            ?.launchIn(lifecycleScope)
 
         viewModel.settingsLiveData.observe(viewLifecycleOwner) {
             muted = it.mute.isMuted

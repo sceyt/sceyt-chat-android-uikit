@@ -26,17 +26,16 @@ import com.sceyt.chatuikit.persistence.repositories.UsersRepository
 import com.sceyt.chatuikit.services.SceytPresenceChecker
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.suspendCancellableCoroutine
 import org.koin.core.component.inject
 
 internal class PersistenceUsersLogicImpl(
-        private val userDao: UserDao,
-        private val userRepository: UsersRepository,
-        private val profileRepo: ProfileRepository,
-        private val preference: SceytSharedPreference,
+    private val userDao: UserDao,
+    private val userRepository: UsersRepository,
+    private val profileRepo: ProfileRepository,
+    private val preference: SceytSharedPreference,
 ) : PersistenceUsersLogic, SceytKoinComponent {
     private val persistenceChannelsLogic: PersistenceChannelsLogic by inject()
 
@@ -97,8 +96,8 @@ internal class PersistenceUsersLogicImpl(
     }
 
     override suspend fun searchLocaleUserByMetadata(
-            metadataKeys: List<String>,
-            metadataValue: String,
+        metadataKeys: List<String>,
+        metadataValue: String,
     ): List<SceytUser> {
         return userDao.searchUsersByMetadata(metadataKeys, metadataValue).map { it.toSceytUser() }
     }
@@ -134,13 +133,12 @@ internal class PersistenceUsersLogicImpl(
         return preference.getUserId()
     }
 
-    override fun getCurrentUserAsFlow(): Flow<SceytUser> {
-        return (preference.getUserId() ?: ClientWrapper.currentUser?.id)?.let {
-            userDao.getUserByIdAsFlow(it)
-                .filterNotNull()
-                .map { userDb -> userDb.toSceytUser() }
-                .distinctUntilChanged { old, new -> !old.diff(new).hasDifference() }
-        } ?: emptyFlow()
+    override fun getCurrentUserAsFlow(): Flow<SceytUser>? {
+        val currentUserId = getCurrentUserId() ?: return null
+        return userDao.getUserByIdAsFlow(currentUserId)
+            .filterNotNull()
+            .map { userDb -> userDb.toSceytUser() }
+            .distinctUntilChanged { old, new -> !old.diff(new).hasDifference() }
     }
 
     override suspend fun uploadAvatar(avatarUrl: String): SceytResponse<String> {
@@ -148,11 +146,11 @@ internal class PersistenceUsersLogicImpl(
     }
 
     override suspend fun updateProfile(
-            username: String,
-            firstName: String?,
-            lastName: String?,
-            avatarUri: String?,
-            metadataMap: Map<String, String>?,
+        username: String,
+        firstName: String?,
+        lastName: String?,
+        avatarUri: String?,
+        metadataMap: Map<String, String>?,
     ): SceytResponse<SceytUser> {
         val request = User.setProfileRequest().apply {
             avatarUri?.let { uri ->
@@ -177,7 +175,7 @@ internal class PersistenceUsersLogicImpl(
     override suspend fun updateStatus(status: String): SceytResponse<Boolean> {
         val presence = getCurrentUser(false)?.presence?.state ?: PresenceState.Offline
 
-        val response = suspendCancellableCoroutine<SceytResponse<Boolean>> { continuation ->
+        val response = suspendCancellableCoroutine { continuation ->
             ClientWrapper.setPresence(presence, status) {
                 if (it.isOk)
                     continuation.safeResume(SceytResponse.Success(true))
@@ -191,11 +189,15 @@ internal class PersistenceUsersLogicImpl(
         return response
     }
 
-    override suspend fun setPresenceState(presenceState: PresenceState): SceytResponse<Boolean> {
+    override suspend fun setPresenceState(
+        presenceState: PresenceState
+    ): SceytResponse<Boolean> {
         val status = ClientWrapper.currentUser?.presence?.status
-        val response = suspendCancellableCoroutine<SceytResponse<Boolean>> { continuation ->
-            ClientWrapper.setPresence(presenceState, if (status.isNullOrBlank())
-                SceytChatUIKit.config.presenceConfig.defaultPresenceStatus else status) {
+        val response = suspendCancellableCoroutine { continuation ->
+            ClientWrapper.setPresence(
+                presenceState, if (status.isNullOrBlank())
+                    SceytChatUIKit.config.presenceConfig.defaultPresenceStatus else status
+            ) {
                 if (it.isOk) {
                     continuation.safeResume(SceytResponse.Success(true))
                 } else continuation.safeResume(SceytResponse.Error(it.error))
@@ -224,7 +226,10 @@ internal class PersistenceUsersLogicImpl(
         userDao.updateUsers(users.map { it.user.toUserEntity() })
     }
 
-    override suspend fun blockUnBlockUser(userId: String, block: Boolean): SceytResponse<List<SceytUser>> {
+    override suspend fun blockUnBlockUser(
+        userId: String,
+        block: Boolean
+    ): SceytResponse<List<SceytUser>> {
         val response = if (block) {
             userRepository.blockUser(userId)
         } else

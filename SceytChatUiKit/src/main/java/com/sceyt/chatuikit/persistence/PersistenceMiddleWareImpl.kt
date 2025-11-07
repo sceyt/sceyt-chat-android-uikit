@@ -768,7 +768,7 @@ internal class PersistenceMiddleWareImpl(
         return usersLogic.getCurrentUserId()
     }
 
-    override fun getCurrentUserAsFlow(): Flow<SceytUser> {
+    override fun getCurrentUserAsFlow(): Flow<SceytUser>? {
         return usersLogic.getCurrentUserAsFlow()
     }
 
