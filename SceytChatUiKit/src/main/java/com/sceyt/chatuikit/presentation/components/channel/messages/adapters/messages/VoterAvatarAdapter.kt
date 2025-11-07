@@ -24,6 +24,10 @@ class VoterAvatarAdapter(
 
     private var shouldAnimate = false
 
+    init {
+        setHasStableIds(true)
+    }
+
     companion object {
         private const val ANIMATION_DURATION = 250L
         
@@ -53,6 +57,10 @@ class VoterAvatarAdapter(
 
     override fun onBindViewHolder(holder: VoterAvatarViewHolder, position: Int) {
         holder.bind(getItem(position), shouldAnimate = shouldAnimate)
+    }
+
+    override fun getItemId(position: Int): Long {
+        return getItem(position).id.hashCode().toLong()
     }
     
     override fun onViewRecycled(holder: VoterAvatarViewHolder) {

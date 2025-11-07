@@ -73,9 +73,13 @@ open class PollOptionViewHolder(
                         pollStyle = pollStyle,
                         bubbleBackgroundStyleProvider = bubbleBackgroundStyleProvider
                     )
-                    rvVoters.itemAnimator = null
-                    rvVoters.adapter = votersAdapter
-                    rvVoters.addItemDecoration(OverlapDecoration(10.dpToPx()))
+                    with(rvVoters) {
+                        itemAnimator = null
+                        adapter = votersAdapter
+                        if (itemDecorationCount == 0) {
+                            addItemDecoration(OverlapDecoration(10.dpToPx()))
+                        }
+                    }
                 }
                 votersAdapter?.submitData(option.voters.take(3), animate = animate)
             } else {
