@@ -42,7 +42,7 @@ This will enable your project to use libraries from Maven Central.
 
 ```kotlin
 dependencies {
-    implementation("com.sceyt:sceyt-chat-android-uikit:2.0.0")
+    implementation("com.sceyt:sceyt-chat-android-uikit:2.0.1")
 }
 ```
 ## Usage
