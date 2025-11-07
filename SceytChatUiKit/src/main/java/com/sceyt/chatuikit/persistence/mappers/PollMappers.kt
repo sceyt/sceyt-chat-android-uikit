@@ -86,7 +86,7 @@ internal fun PollDb.toSceytPollDetails(): SceytPollDetails {
     val myId = SceytChatUIKit.currentUserId
     val ownVotes = mutableListOf<Vote>()
     val otherVotes = mutableListOf<Vote>()
-    votes?.forEach {
+    votes?.sortedByDescending { it.vote.createdAt }?.forEach {
         if (it.vote.userId == myId) {
             ownVotes.add(it.toVote())
         } else {

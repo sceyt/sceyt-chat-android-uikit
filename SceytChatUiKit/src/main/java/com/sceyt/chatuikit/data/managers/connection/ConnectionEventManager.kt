@@ -6,21 +6,12 @@ import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.sceyt_listeners.ClientListener
 import com.sceyt.chatuikit.data.managers.connection.event.ConnectionStateData
 import com.sceyt.chatuikit.logger.SceytLog
-import com.sceyt.chatuikit.persistence.extensions.safeResume
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.onSubscription
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeoutOrNull
 
 object ConnectionEventManager {
     private const val TAG = "ConnectionEventManager"
@@ -29,37 +20,44 @@ object ConnectionEventManager {
         get() = getConnectionStateIfInitialized()
 
     val isConnected get() = connectionState == ConnectionState.Connected
+    val isConnecting get() = connectionState == ConnectionState.Connecting
 
-    private val onChangedConnectStatusFlow_: MutableSharedFlow<ConnectionStateData> = MutableSharedFlow(
+    private val _onChangedConnectStatusFlow: MutableSharedFlow<ConnectionStateData> =
+        MutableSharedFlow(
+            extraBufferCapacity = 1,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST,
+            replay = 1
+        )
+    val onChangedConnectStatusFlow = _onChangedConnectStatusFlow.asSharedFlow()
+
+    private val _onTokenWillExpire: MutableSharedFlow<Long> = MutableSharedFlow(
         extraBufferCapacity = 1,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST,
-        replay = 1
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
-    val onChangedConnectStatusFlow = onChangedConnectStatusFlow_.asSharedFlow()
+    val onTokenWillExpire = _onTokenWillExpire.asSharedFlow()
 
-    private val onTokenWillExpire_: MutableSharedFlow<Long> = MutableSharedFlow(
+    private val _onTokenExpired: MutableSharedFlow<Unit> = MutableSharedFlow(
         extraBufferCapacity = 1,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST)
-    val onTokenWillExpire = onTokenWillExpire_.asSharedFlow()
-
-    private val onTokenExpired_: MutableSharedFlow<Unit> = MutableSharedFlow(
-        extraBufferCapacity = 1,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST)
-    val onTokenExpired = onTokenExpired_.asSharedFlow()
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
+    val onTokenExpired = _onTokenExpired.asSharedFlow()
 
     init {
         ChatClient.getClient().addClientListener(TAG, object : ClientListener {
-            override fun onConnectionStateChanged(state: ConnectionState?, exception: SceytException?) {
+            override fun onConnectionStateChanged(
+                state: ConnectionState?,
+                exception: SceytException?
+            ) {
                 SceytLog.i(TAG, "onConnectionStateChanged, state: $state, exception: $exception")
-                onChangedConnectStatusFlow_.tryEmit(ConnectionStateData(state, exception))
+                _onChangedConnectStatusFlow.tryEmit(ConnectionStateData(state, exception))
             }
 
             override fun onTokenWillExpire(expireTime: Long) {
-                onTokenWillExpire_.tryEmit(expireTime)
+                _onTokenWillExpire.tryEmit(expireTime)
             }
 
             override fun onTokenExpired() {
-                onTokenExpired_.tryEmit(Unit)
+                _onTokenExpired.tryEmit(Unit)
             }
         })
     }
@@ -76,22 +74,30 @@ object ConnectionEventManager {
         if (isConnected)
             return true
 
-        val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-        return suspendCancellableCoroutine { continuation ->
+        return withTimeoutOrNull(timeout) {
             onChangedConnectStatusFlow
-                .onSubscription {
-                    scope.launch {
-                        delay(timeout)
-                        continuation.safeResume(isConnected)
-                        scope.cancel()
-                    }
-                }
-                .onEach {
-                    if (it.state == ConnectionState.Connected) {
-                        continuation.safeResume(true)
-                        scope.cancel()
-                    }
-                }.launchIn(scope)
+                .first { it.state == ConnectionState.Connected }
+            true
+        } ?: isConnected
+    }
+
+    suspend fun awaitToConnectSceytWithResult(timeout: Long): Result<Boolean> {
+        if (isConnected)
+            return Result.success(true)
+
+        val state = withTimeoutOrNull(timeout) {
+            onChangedConnectStatusFlow.first { data ->
+                data.state == ConnectionState.Connected || data.state == ConnectionState.Failed
+            }
+        }
+
+        return when (state?.state) {
+            ConnectionState.Connected -> Result.success(true)
+            ConnectionState.Failed -> Result.failure(
+                state.exception ?: Exception("Connection failed")
+            )
+
+            else -> Result.failure(Exception("Connection timeout"))
         }
     }
 
@@ -99,5 +105,9 @@ object ConnectionEventManager {
         return if (ChatClient.isInitialized()) {
             ChatClient.getClient().connectionState()
         } else ConnectionState.Disconnected
+    }
+
+    internal fun onDisconnected() {
+        _onChangedConnectStatusFlow.tryEmit(ConnectionStateData(ConnectionState.Disconnected))
     }
 }

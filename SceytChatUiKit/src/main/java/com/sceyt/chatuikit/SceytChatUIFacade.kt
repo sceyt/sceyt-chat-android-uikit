@@ -116,6 +116,7 @@ class SceytChatUIFacade(
         clearData()
         val result = unregisterFirebaseToken()
         ChatClient.getClient().disconnect()
+        ConnectionEventManager.onDisconnected()
         ClientWrapper.currentUser = null
         clientUserId = null
         SceytChatUIKit.notifications.pushNotification.notificationHandler.cancelAllNotifications()

@@ -28,7 +28,7 @@ data class CreatePollUIState(
     val question: String = "",
     val options: List<PollOptionItem> = listOf(PollOptionItem(), PollOptionItem()),
     val isAnonymous: Boolean = false,
-    val allowMultipleVotes: Boolean = false,
+    val allowMultipleVotes: Boolean = true,
     val allowVoteRetraction: Boolean = true,
     val reachedMaxPollCount: Boolean = false,
     val isValid: Boolean = false,
@@ -39,11 +39,10 @@ data class CreatePollUIState(
 class CreatePollViewModel(
     private val messageInteractor: MessageInteractor,
 ) : ViewModel() {
+    private val maxPollOptionsCount: Int = 12
 
     private val _uiState = MutableStateFlow(CreatePollUIState())
     val uiState = _uiState.asStateFlow()
-
-    private val maxPollCount = 12
 
     fun updateQuestion(question: String) {
         _uiState.update {
@@ -67,7 +66,7 @@ class CreatePollViewModel(
     fun addOption(makeCurrent: Boolean) {
         _uiState.update { state ->
             if (state.reachedMaxPollCount) return
-            val willReachedMax = state.options.size >= maxPollCount - 1
+            val willReachedMax = state.options.size >= maxPollOptionsCount - 1
             val keyboardAction = if (willReachedMax)
                 EditorInfo.IME_ACTION_DONE else EditorInfo.IME_ACTION_NEXT
 
@@ -96,7 +95,7 @@ class CreatePollViewModel(
             }
             // Remove the option
             options.removeAt(index)
-            val reachedMax = options.size >= maxPollCount
+            val reachedMax = options.size >= maxPollOptionsCount
             state.copy(
                 options = options.map { it.copy(keyboardAction = EditorInfo.IME_ACTION_NEXT) },
                 reachedMaxPollCount = reachedMax,
