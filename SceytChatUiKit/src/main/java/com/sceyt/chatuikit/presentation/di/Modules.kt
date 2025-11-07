@@ -9,9 +9,8 @@ import com.sceyt.chatuikit.presentation.components.create_poll.CreatePollViewMod
 import com.sceyt.chatuikit.presentation.components.invite_link.ChannelInviteLinkViewModel
 import com.sceyt.chatuikit.presentation.components.invite_link.join.JoinByInviteLinkViewModel
 import com.sceyt.chatuikit.presentation.components.invite_link.shareqr.ShareInviteQRViewModel
-import com.sceyt.chatuikit.presentation.components.poll_results.option_voters.PollOptionVotersViewModel
 import com.sceyt.chatuikit.presentation.components.poll_results.PollResultsViewModel
-import org.koin.androidx.viewmodel.dsl.viewModel
+import com.sceyt.chatuikit.presentation.components.poll_results.option_voters.PollOptionVotersViewModel
 import org.koin.androidx.viewmodel.dsl.viewModelOf
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
@@ -22,29 +21,27 @@ val ChannelInfoLinksViewModelQualifier = named("ChannelInfoLinksFragment")
 val ChannelInfoVoiceViewModelQualifier = named("ChannelInfoVoiceFragment")
 
 internal val viewModelModule = module {
-    viewModel { params ->
-        MessageListViewModel(params.get(), params.get(), params.get())
-    }
-    viewModel { params ->
-        ChannelsViewModel(params.get())
-    }
-    viewModel { parameters -> ChannelMembersViewModel(channelId = parameters.get(), get(), get()) }
-    viewModel(qualifier = ChannelInfoMediaViewModelQualifier) { ChannelAttachmentsViewModel(get(), get(), get()) }
-    viewModel(qualifier = ChannelInfoFilesViewModelQualifier) { ChannelAttachmentsViewModel(get(), get(), get()) }
-    viewModel(qualifier = ChannelInfoLinksViewModelQualifier) { ChannelAttachmentsViewModel(get(), get(), get()) }
-    viewModel(qualifier = ChannelInfoVoiceViewModelQualifier) { ChannelAttachmentsViewModel(get(), get(), get()) }
-    viewModel { parameters -> ReactionsInfoViewModel(get(), messageId = parameters.get(), key = parameters.get()) }
-    viewModel { params -> ShareInviteQRViewModel(get(), linkQrData = params.get()) }
-    viewModel { params -> ChannelInviteLinkViewModel(params.get(), get()) }
-    viewModel { params -> JoinByInviteLinkViewModel(params.get(), get()) }
-    viewModel { params -> PollResultsViewModel(params.get(), get()) }
-    viewModel { params -> PollOptionVotersViewModel(params.get(),
-        params.get(),
-        params.get(),
-        params.get(),
-        params.getOrNull(),
-        get(),
-        get())
-    }
+    viewModelOf(constructor = ::ChannelAttachmentsViewModel, options = {
+        qualifier = ChannelInfoMediaViewModelQualifier
+    })
+    viewModelOf(constructor = ::ChannelAttachmentsViewModel, options = {
+        qualifier = ChannelInfoFilesViewModelQualifier
+    })
+    viewModelOf(constructor = ::ChannelAttachmentsViewModel, options = {
+        qualifier = ChannelInfoLinksViewModelQualifier
+    })
+    viewModelOf(constructor = ::ChannelAttachmentsViewModel, options = {
+        qualifier = ChannelInfoVoiceViewModelQualifier
+    })
+
+    viewModelOf(::MessageListViewModel)
+    viewModelOf(::ChannelsViewModel)
+    viewModelOf(::ChannelMembersViewModel)
+    viewModelOf(::ReactionsInfoViewModel)
+    viewModelOf(::ShareInviteQRViewModel)
+    viewModelOf(::ChannelInviteLinkViewModel)
+    viewModelOf(::JoinByInviteLinkViewModel)
+    viewModelOf(::PollResultsViewModel)
+    viewModelOf(::PollOptionVotersViewModel)
     viewModelOf(::CreatePollViewModel)
 }
