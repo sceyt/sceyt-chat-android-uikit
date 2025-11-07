@@ -87,6 +87,7 @@ class SceytConnectionProvider(
                     ChatClient.getClient().disconnect()
                 }
                 preference.setString(AppSharedPreference.PREF_USER_TOKEN, null)
+                preference.setString(AppSharedPreference.PREF_USER_ID, userId)
             }
 
             if (ConnectionEventManager.connectionState == ConnectionState.Connecting) {
