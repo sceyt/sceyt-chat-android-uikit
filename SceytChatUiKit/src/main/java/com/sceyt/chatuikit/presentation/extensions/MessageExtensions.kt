@@ -1,9 +1,7 @@
 package com.sceyt.chatuikit.presentation.extensions
 
 import android.content.Context
-import android.graphics.drawable.Drawable
 import android.text.SpannableString
-import android.text.SpannableStringBuilder
 import androidx.core.view.isVisible
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
@@ -15,12 +13,10 @@ import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.getFileSize
-import com.sceyt.chatuikit.extensions.toSpannableString
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.persistence.mappers.toSceytAttachment
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.MessageBodyStyleHelper.buildWithAttributes
 import com.sceyt.chatuikit.presentation.custom_views.DecoratedTextView
-import com.sceyt.chatuikit.providers.VisualProvider
 import com.sceyt.chatuikit.styles.channel.ChannelItemStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
@@ -110,7 +106,6 @@ private fun checkIgnoreHighlight(deliveryStatus: DeliveryStatus?): Boolean {
 fun SceytMessage.getFormattedBodyWithAttachments(
     context: Context,
     mentionTextStyle: TextStyle,
-    messageTypeIconProvider: VisualProvider<SceytMessage, Drawable?>?,
     attachmentNameFormatter: Formatter<SceytAttachment>,
     mentionUserNameFormatter: Formatter<SceytUser>,
     mentionClickListener: ((String) -> Unit)?,
@@ -132,13 +127,7 @@ fun SceytMessage.getFormattedBodyWithAttachments(
 
         else -> context.getString(R.string.sceyt_file)
     }
-    val messageTypeIcon = messageTypeIconProvider?.provide(context, this)
-    return if (messageTypeIcon != null) {
-        SpannableStringBuilder().apply {
-            append(messageTypeIcon.toSpannableString())
-            append(body.trim())
-        }
-    } else body.trim()
+    return body.trim()
 }
 
 fun DraftMessage.getFormattedBodyWithAttachments(

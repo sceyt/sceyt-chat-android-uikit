@@ -81,7 +81,7 @@ abstract class BasePollMessageViewHolder(
         isSamePoll: Boolean,
         rvPollOptions: RecyclerView,
     ) {
-        val shouldAnimate = pollOptionAdapter != null && isSamePoll
+        val shouldAnimate = pollOptionAdapter != null && isSamePoll && !messageListItem.highlight
 
         if (pollOptionAdapter == null || !isSamePoll) {
             pollOptionAdapter = PollOptionAdapter(viewHolderFactory = pollOptionViewHolderFactory)

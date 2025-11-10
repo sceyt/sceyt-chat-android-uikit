@@ -58,9 +58,9 @@ fun PollOption.toUiModel(poll: SceytPollDetails): PollOptionUiModel {
     } else {
         val otherVoters = poll.votes
             .filter { it.optionId == id }
+            .sortedByDescending { it.createdAt }
             .mapNotNull { it.user }
             .take(3)
-            .sortedBy { it.id }
 
         if (isSelected) {
             // Show own user first, then up to 2 others

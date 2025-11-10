@@ -936,6 +936,10 @@ internal class PersistenceChannelsLogicImpl(
         return channelDao.getChannelById(channelId)?.toChannel()
     }
 
+    override suspend fun getChannelsFromDb(channelIds: List<Long>): List<SceytChannel> {
+        return channelDao.getChannelsById(channelIds).map { it.toChannel() }
+    }
+
     override suspend fun getRetentionPeriodByChannelId(channelId: Long): Long {
         return channelDao.getRetentionPeriodByChannelId(channelId) ?: 0
     }

@@ -42,13 +42,13 @@ object AvatarImageLoader {
      * @param preloadForOffline Whether to save the image to custom cache directory for persistent storage
      */
     fun loadAvatar(
-            context: Context,
-            imageUrl: String?,
-            imageView: ImageView,
-            placeholder: AvatarView.AvatarPlaceholder? = null,
-            errorPlaceholder: AvatarView.AvatarErrorPlaceHolder? = null,
-            loadCallback: ((loading: Boolean) -> Unit)? = null,
-            preloadForOffline: Boolean = true
+        context: Context,
+        imageUrl: String?,
+        imageView: ImageView,
+        placeholder: AvatarView.AvatarPlaceholder? = null,
+        errorPlaceholder: AvatarView.AvatarErrorPlaceHolder? = null,
+        loadCallback: ((loading: Boolean) -> Unit)? = null,
+        preloadForOffline: Boolean = true
     ) {
         if (imageUrl.isNullOrBlank()) {
             loadCallback?.invoke(false)
@@ -68,7 +68,8 @@ object AvatarImageLoader {
             .applyPlaceHolder(placeholder)
             .applyError(errorPlaceholder)
             .transition(DrawableTransitionOptions.withCrossFade(100))
-            .listener(glideRequestListener(
+            .listener(
+                glideRequestListener(
                 onResourceReady = { resource, model, _, _, _ ->
                     // If we loaded from URL (not our cached file) and caching is not done yet, save to our custom cache
                     if (preloadForOffline && model == imageUrl && (cachedFile == null || !cachedFile.exists())) {
