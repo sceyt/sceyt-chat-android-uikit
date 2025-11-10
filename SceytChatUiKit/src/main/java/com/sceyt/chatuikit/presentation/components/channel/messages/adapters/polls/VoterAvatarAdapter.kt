@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages
+package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.polls
 
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
@@ -7,7 +7,6 @@ import android.view.ViewGroup
 import android.view.animation.OvershootInterpolator
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.databinding.SceytItemVoterAvatarBinding
@@ -19,7 +18,7 @@ class VoterAvatarAdapter(
     private val pollStyle: PollStyle,
     private val bubbleBackgroundStyleProvider: () -> BackgroundStyle,
     private val onVoterClick: (() -> Unit)? = null,
-) : ListAdapter<SceytUser, VoterAvatarAdapter.VoterAvatarViewHolder>(
+) : androidx.recyclerview.widget.ListAdapter<SceytUser, VoterAvatarAdapter.VoterAvatarViewHolder>(
     DIFF_CALLBACK
 ) {
 
