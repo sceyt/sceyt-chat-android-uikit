@@ -15,25 +15,25 @@ import kotlinx.coroutines.flow.Flow
 
 interface ChannelInteractor {
     suspend fun loadChannels(
-            offset: Int,
-            searchQuery: String,
-            loadKey: LoadKeyData?,
-            onlyMine: Boolean,
-            ignoreDb: Boolean,
-            awaitForConnection: Boolean,
-            config: ChannelListConfig,
+        offset: Int,
+        searchQuery: String,
+        loadKey: LoadKeyData?,
+        onlyMine: Boolean,
+        ignoreDb: Boolean,
+        awaitForConnection: Boolean,
+        config: ChannelListConfig,
     ): Flow<PaginationResponse<SceytChannel>>
 
     suspend fun searchChannelsWithUserIds(
-            offset: Int,
-            searchQuery: String,
-            userIds: List<String>,
-            config: ChannelListConfig,
-            includeSearchByUserDisplayName: Boolean,
-            onlyMine: Boolean,
-            ignoreDb: Boolean,
-            loadKey: LoadKeyData?,
-            directChatType: String = ChannelTypeEnum.Direct.value,
+        offset: Int,
+        searchQuery: String,
+        userIds: List<String>,
+        config: ChannelListConfig,
+        includeSearchByUserDisplayName: Boolean,
+        onlyMine: Boolean,
+        ignoreDb: Boolean,
+        loadKey: LoadKeyData?,
+        directChatType: String = ChannelTypeEnum.Direct.value,
     ): Flow<PaginationResponse<SceytChannel>>
 
     suspend fun getChannelsBySQLiteQuery(query: SimpleSQLiteQuery): List<SceytChannel>
@@ -55,6 +55,7 @@ interface ChannelInteractor {
     suspend fun pinChannel(channelId: Long): SceytResponse<SceytChannel>
     suspend fun unpinChannel(channelId: Long): SceytResponse<SceytChannel>
     suspend fun getChannelFromDb(channelId: Long): SceytChannel?
+    suspend fun getChannelsFromDb(channelIds: List<Long>): List<SceytChannel>
     suspend fun getDirectChannelFromDb(peerId: String): SceytChannel?
     suspend fun getChannelFromServer(channelId: Long): SceytResponse<SceytChannel>
     suspend fun getChannelByInviteKey(inviteKey: String): SceytResponse<SceytChannel>
