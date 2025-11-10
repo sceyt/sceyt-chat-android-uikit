@@ -45,7 +45,6 @@ import com.sceyt.chatuikit.formatters.defaults.DefaultPollVoteCountFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultPollVoteTimeDateFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUnreadCountFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUnsupportedMessageBodyFormatter
-import com.sceyt.chatuikit.formatters.defaults.DefaultUnsupportedMessageShortBodyFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUserAndNotesNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUserNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUserPresenceDateFormatter
@@ -122,7 +121,7 @@ class SceytChatUIKitFormatters {
     }
 
     var unsupportedMessageShortBodyFormatter: Formatter<SceytMessage> by lazyVar {
-        DefaultUnsupportedMessageShortBodyFormatter()
+        DefaultUnsupportedMessageBodyFormatter()
     }
 
     var channelLastMessageBodyFormatter: Formatter<MessageBodyFormatterAttributes> by lazyVar {
