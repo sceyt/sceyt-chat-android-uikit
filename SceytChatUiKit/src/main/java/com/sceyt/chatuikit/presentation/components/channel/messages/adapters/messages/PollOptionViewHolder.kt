@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages
 
+import android.view.HapticFeedbackConstants
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.data.models.messages.PollOptionUiModel
@@ -27,6 +28,7 @@ open class PollOptionViewHolder(
         applyStyle()
         binding.root.setOnClickListener {
             if (::currentOption.isInitialized && !currentOption.closed) {
+                it.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
                 onOptionClick?.invoke(currentOption)
             }
         }
