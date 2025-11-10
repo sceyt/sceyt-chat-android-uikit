@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.view.animation.OvershootInterpolator
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.databinding.SceytItemVoterAvatarBinding
@@ -18,9 +19,7 @@ class VoterAvatarAdapter(
     private val pollStyle: PollStyle,
     private val bubbleBackgroundStyleProvider: () -> BackgroundStyle,
     private val onVoterClick: (() -> Unit)? = null,
-) : androidx.recyclerview.widget.ListAdapter<SceytUser, VoterAvatarAdapter.VoterAvatarViewHolder>(
-    DIFF_CALLBACK
-) {
+) : ListAdapter<SceytUser, VoterAvatarAdapter.VoterAvatarViewHolder>(DIFF_CALLBACK) {
 
     private var shouldAnimate = false
 
