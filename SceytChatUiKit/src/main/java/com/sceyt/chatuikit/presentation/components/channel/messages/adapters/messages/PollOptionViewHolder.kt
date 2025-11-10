@@ -20,11 +20,18 @@ open class PollOptionViewHolder(
     private var onOptionClick: ((PollOptionUiModel) -> Unit)? = null,
 ) : RecyclerView.ViewHolder(binding.root) {
     private val context = binding.root.context
+    private lateinit var currentOption: PollOptionUiModel
     private var currentProgress = 0
     private var votersAdapter: VoterAvatarAdapter? = null
 
     init {
         applyStyle()
+        binding.root.setOnClickListener {
+            if (::currentOption.isInitialized && !currentOption.closed) {
+                it.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+                onOptionClick?.invoke(currentOption)
+            }
+        }
     }
 
     open fun bind(
@@ -32,6 +39,7 @@ open class PollOptionViewHolder(
         diff: PollOptionDiff,
         animate: Boolean = false,
     ) = with(binding) {
+        currentOption = option
 
         if (diff.closedStatusChanged) {
             checkbox.isVisible = !option.closed
@@ -77,13 +85,6 @@ open class PollOptionViewHolder(
                 votersAdapter?.submitData(option.voters.take(3), animate = animate)
             } else {
                 votersAdapter?.submitData(emptyList(), animate = false)
-            }
-        }
-
-        root.setOnClickListener {
-            if (!option.closed) {
-                it.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
-                onOptionClick?.invoke(option)
             }
         }
     }
