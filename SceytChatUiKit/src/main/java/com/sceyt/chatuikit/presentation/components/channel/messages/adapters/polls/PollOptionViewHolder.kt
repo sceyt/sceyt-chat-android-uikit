@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages
+package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.polls
 
 import android.view.HapticFeedbackConstants
 import androidx.core.view.isVisible
