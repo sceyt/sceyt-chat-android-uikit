@@ -172,11 +172,12 @@ class CreatePollViewModel(
         }
 
         viewModelScope.launch(NonCancellable) {
+            val messageTid = ClientWrapper.generateTid()
             val options = state.options
                 .filter { it.text.isNotBlank() }
                 .map { PollOption(it.id, it.text) }
             val pollDetails = PollDetails.Builder()
-                .setId(UUID.randomUUID().toString())
+                .setId(messageTid.toString())
                 .setName(state.question)
                 .setOptions(options.toTypedArray())
                 .setAnonymous(state.isAnonymous)
@@ -187,7 +188,7 @@ class CreatePollViewModel(
             val message = Message.MessageBuilder(channelId)
                 .setType(MessageTypeEnum.Poll.value)
                 .setBody(state.question)
-                .setTid(ClientWrapper.generateTid())
+                .setTid(messageTid)
                 .setPoll(pollDetails)
                 .build()
 

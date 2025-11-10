@@ -90,6 +90,9 @@ class OutPollMessageViewHolder(
         get() = false
 
     private fun SceytItemOutPollMessageBinding.setMessageItemStyle() {
+        // For view result button ripple effect
+        layoutDetails.clipToOutline = true
+
         applyCommonStyle(
             layoutDetails = layoutDetails,
             tvForwarded = tvForwarded,

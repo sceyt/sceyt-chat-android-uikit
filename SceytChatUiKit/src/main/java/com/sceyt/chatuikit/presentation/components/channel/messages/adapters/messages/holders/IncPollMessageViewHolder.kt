@@ -99,6 +99,9 @@ class IncPollMessageViewHolder(
         get() = true
 
     private fun SceytItemIncPollMessageBinding.setMessageItemStyle() {
+        // For view result button ripple effect
+        layoutDetails.clipToOutline = true
+
         applyCommonStyle(
             layoutDetails = layoutDetails,
             tvForwarded = tvForwarded,
