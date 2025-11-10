@@ -581,7 +581,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
                 && !fistMessage.incoming && !existPendingMessages
         menu.findItem(R.id.sceyt_copy_message)?.isVisible = messages.any {
             it.body.isNotNullOrBlank()
-        }
+        } && !existPollMessage
 
 
         menu.findItem(R.id.sceyt_retract_vote)?.isVisible = canRetractVote
