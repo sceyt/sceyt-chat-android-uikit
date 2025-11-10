@@ -25,9 +25,9 @@ class FileTransferUtility {
     private val downloader = OkHttpDownloader()
 
     fun uploadFile(
-            attachment: SceytAttachment,
-            onProgress: (Float) -> Unit,
-            onResult: (SceytResponse<String>) -> Unit,
+        attachment: SceytAttachment,
+        onProgress: (Float) -> Unit,
+        onResult: (SceytResponse<String>) -> Unit,
     ) {
         val job = scope.launch {
             callbackFlow<Any> {
@@ -75,10 +75,10 @@ class FileTransferUtility {
     }
 
     fun downloadFile(
-            attachment: SceytAttachment,
-            destFile: File,
-            onProgress: (Float) -> Unit,
-            onResult: (SceytResponse<String>) -> Unit,
+        attachment: SceytAttachment,
+        destFile: File,
+        onProgress: (Float) -> Unit,
+        onResult: (SceytResponse<String>) -> Unit,
     ) {
         downloader.downloadFile(attachment, destFile, onProgress, onResult)
     }

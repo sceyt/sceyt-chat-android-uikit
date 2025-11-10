@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages
 
+import android.view.HapticFeedbackConstants
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.data.models.messages.PollOptionUiModel
@@ -27,6 +28,7 @@ open class PollOptionViewHolder(
         applyStyle()
         binding.root.setOnClickListener {
             if (::currentOption.isInitialized && !currentOption.closed) {
+                it.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
                 onOptionClick?.invoke(currentOption)
             }
         }
@@ -65,7 +67,6 @@ open class PollOptionViewHolder(
             currentProgress = percentage
         }
 
-        // Setup voters avatars (hide if anonymous)
         if (diff.votersChanged) {
             if (!isAnonymousProvider() && option.voters.isNotEmpty()) {
                 if (votersAdapter == null) {
@@ -73,9 +74,13 @@ open class PollOptionViewHolder(
                         pollStyle = pollStyle,
                         bubbleBackgroundStyleProvider = bubbleBackgroundStyleProvider
                     )
-                    rvVoters.itemAnimator = null
-                    rvVoters.adapter = votersAdapter
-                    rvVoters.addItemDecoration(OverlapDecoration(10.dpToPx()))
+                    with(rvVoters) {
+                        itemAnimator = null
+                        adapter = votersAdapter
+                        if (itemDecorationCount == 0) {
+                            addItemDecoration(OverlapDecoration(10.dpToPx()))
+                        }
+                    }
                 }
                 votersAdapter?.submitData(option.voters.take(3), animate = animate)
             } else {

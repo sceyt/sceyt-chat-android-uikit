@@ -136,6 +136,7 @@ class AnimatedCounterTextView @JvmOverloads constructor(
 
         if (!animate || currentText.isEmpty()) {
             currentText = newText
+            nextText = newText
             requestLayout()
             invalidate()
             return

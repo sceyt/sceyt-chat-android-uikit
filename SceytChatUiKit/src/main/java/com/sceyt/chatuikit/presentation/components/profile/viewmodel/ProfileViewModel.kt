@@ -7,22 +7,18 @@ import com.sceyt.chat.models.settings.UserSettings
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.models.SceytResponse
-import com.sceyt.chatuikit.data.models.messages.SceytUser
+import com.sceyt.chatuikit.data.models.onError
 import com.sceyt.chatuikit.koin.SceytKoinComponent
-import com.sceyt.chatuikit.persistence.extensions.asLiveData
 import com.sceyt.chatuikit.persistence.interactor.UserInteractor
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.shareIn
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.koin.core.component.inject
 
 class ProfileViewModel : BaseViewModel(), SceytKoinComponent {
     private val userInteractor: UserInteractor by inject()
-
-    private val _editProfileLiveData = MutableLiveData<SceytUser>()
-    val editProfileLiveData = _editProfileLiveData.asLiveData()
 
     private val _muteUnMuteLiveData = MutableLiveData<Boolean>()
     val muteUnMuteLiveData: LiveData<Boolean> = _muteUnMuteLiveData
@@ -36,16 +32,17 @@ class ProfileViewModel : BaseViewModel(), SceytKoinComponent {
     private val _logOutLiveData = MutableLiveData<Boolean>()
     val logOutLiveData: LiveData<Boolean> = _logOutLiveData
 
-    val currentUserAsFlow = userInteractor.getCurrentUserAsFlow()
-        .shareIn(viewModelScope, SharingStarted.Lazily, 1)
+    val currentUserAsFlow
+        get() = userInteractor.getCurrentUserAsFlow()
+            ?.stateIn(viewModelScope, SharingStarted.Lazily, null)
 
     fun updateProfile(
-            firstName: String?,
-            lastName: String?,
-            username: String,
-            avatarUrl: String?,
-            shouldUploadAvatar: Boolean,
-            metadataMap: Map<String, String>?,
+        firstName: String?,
+        lastName: String?,
+        username: String,
+        avatarUrl: String?,
+        shouldUploadAvatar: Boolean,
+        metadataMap: Map<String, String>?,
     ) {
         viewModelScope.launch(Dispatchers.IO) {
             var newUrl = avatarUrl
@@ -59,20 +56,14 @@ class ProfileViewModel : BaseViewModel(), SceytKoinComponent {
                 }
             }
 
-            when (val response = userInteractor.updateProfile(
+            userInteractor.updateProfile(
                 username = username,
                 firstName = firstName,
                 lastName = lastName,
                 avatarUrl = newUrl,
                 metadataMap = metadataMap
-            )) {
-                is SceytResponse.Success -> {
-                    _editProfileLiveData.postValue(response.data ?: return@launch)
-                }
-
-                is SceytResponse.Error -> {
-                    _editProfileErrorLiveData.postValue(response.message)
-                }
+            ).onError {
+                _editProfileErrorLiveData.postValue(it?.message ?: return@onError)
             }
         }
     }

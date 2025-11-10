@@ -1042,18 +1042,20 @@ internal fun MessageItemStyle.Builder.buildPollStyle(
         CheckboxStyle.Builder(typedArray)
             .checkedIcon(
                 index = R.styleable.MessagesListView_sceytUiMessagesListPollCheckboxCheckedIcon,
-                defValue = context.getCompatDrawable(R.drawable.sceyt_ic_checked_state).applyTint(
-                    context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
-                )
+                defValue = context.getCompatDrawable(R.drawable.sceyt_ic_checked_state_20)
+                    .applyTint(
+                        context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
+                    )
             )
             .uncheckedIcon(
                 index = R.styleable.MessagesListView_sceytUiMessagesListPollCheckboxUncheckedIcon,
-                defValue = context.getCompatDrawable(R.drawable.sceyt_ic_unchecked_state).applyTint(
-                    context.getCompatColor(SceytChatUIKit.theme.colors.iconSecondaryColor)
-                )
+                defValue = context.getCompatDrawable(R.drawable.sceyt_ic_unchecked_state_20)
+                    .applyTint(
+                        context.getCompatColor(SceytChatUIKit.theme.colors.iconSecondaryColor)
+                    )
             )
             .pressedIcon(
-                index = R.styleable.MessagesListView_sceytUiMessagesListPollCheckboxPressedIcon
+                index = R.styleable.MessagesListView_sceytUiMessagesListPollCheckboxPressedIcon,
             )
             .build()
     )

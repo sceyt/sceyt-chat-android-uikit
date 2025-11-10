@@ -40,10 +40,12 @@ class LinkPreviewHelper : SceytKoinComponent {
 
     private fun initDefaultScope() = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
-    fun getPreview(attachment: SceytAttachment,
-                   requireFullData: Boolean,
-                   successListener: PreviewCallback.Success? = null,
-                   errorListener: PreviewCallback.Error? = null) {
+    fun getPreview(
+        attachment: SceytAttachment,
+        requireFullData: Boolean,
+        successListener: PreviewCallback.Success? = null,
+        errorListener: PreviewCallback.Error? = null
+    ) {
 
         scope.launch(Dispatchers.IO) {
             val link = attachment.url ?: return@launch withContext(Dispatchers.Main) {
@@ -60,9 +62,15 @@ class LinkPreviewHelper : SceytKoinComponent {
                     if (requireFullData && details.imageUrl != null && details.imageWidth == null) {
                         val bitmap = getImageBitmapWithGlideWithTimeout(context, details.imageUrl)
                         if (bitmap != null) {
-                            details = details.copy(imageWidth = bitmap.width, imageHeight = bitmap.height)
+                            details = details.copy(
+                                imageWidth = bitmap.width,
+                                imageHeight = bitmap.height
+                            )
                             // update link image size
-                            attachmentLogic.updateLinkDetailsSize(link, Size(bitmap.width, bitmap.height))
+                            attachmentLogic.updateLinkDetailsSize(
+                                link = link,
+                                size = Size(bitmap.width, bitmap.height)
+                            )
                             val thumb = getImageThumb(bitmap)
                             thumb?.let {
                                 details = details.copy(thumb = it)
@@ -83,14 +91,23 @@ class LinkPreviewHelper : SceytKoinComponent {
         }
     }
 
-    fun checkMissedData(details: LinkPreviewDetails, successListener: PreviewCallback.Success? = null) {
+    fun checkMissedData(
+        details: LinkPreviewDetails,
+        successListener: PreviewCallback.Success? = null
+    ) {
         if (details.imageUrl != null && details.imageWidth == null) {
             scope.launch(Dispatchers.IO) {
                 val bitmap = getImageBitmapWithGlideWithTimeout(context, details.imageUrl)
                 if (bitmap != null) {
-                    var detailsToUpdate = details.copy(imageWidth = bitmap.width, imageHeight = bitmap.height)
+                    var detailsToUpdate = details.copy(
+                        imageWidth = bitmap.width,
+                        imageHeight = bitmap.height
+                    )
                     // update link image size
-                    attachmentLogic.updateLinkDetailsSize(details.link, Size(bitmap.width, bitmap.height))
+                    attachmentLogic.updateLinkDetailsSize(
+                        link = details.link,
+                        size = Size(bitmap.width, bitmap.height)
+                    )
                     val thumb = getImageThumb(bitmap)
                     thumb?.let {
                         detailsToUpdate = detailsToUpdate.copy(thumb = it)

@@ -8,9 +8,12 @@ import com.sceyt.chatuikit.data.models.channels.CreateChannelData
 import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
+import com.sceyt.chatuikit.data.models.messages.PendingVoteData
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytUser
+import com.sceyt.chatuikit.data.models.messages.Vote
 import com.sceyt.chatuikit.data.models.onSuccessNotNull
+import com.sceyt.chatuikit.persistence.extensions.getRealCountsWithPendingVotes
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
 import com.sceyt.chatuikit.presentation.components.poll_results.adapter.PollResultItem
@@ -80,13 +83,18 @@ class PollResultsViewModel(
 
         val votesByOptionId = poll.votes.groupBy { it.optionId }
         val ownVoteByOptionId = poll.ownVotes.associateBy { it.optionId }
+        val pendingVotesByOptionId = poll.pendingVotes.orEmpty().groupBy { it.optionId }
+
+        val realVoteCounts = poll.getRealCountsWithPendingVotes()
 
         val optionItems = poll.options.sortedBy { it.order }.map { option ->
             val otherVoters = votesByOptionId[option.id].orEmpty()
             val ownVote = ownVoteByOptionId[option.id]
-            val voters = buildPreviewList(otherVoters, ownVote)
+            val pendingVotesForOption = pendingVotesByOptionId[option.id].orEmpty()
 
-            val voteCount = poll.votesPerOption[option.id] ?: 0
+            val voters = buildVotersPreviewList(otherVoters, ownVote, pendingVotesForOption)
+
+            val voteCount = realVoteCounts[option.id] ?: 0
             val hasMore = voteCount > VOTERS_PREVIEW_LIMIT
 
             PollResultItem.PollOptionItem(
@@ -100,12 +108,39 @@ class PollResultsViewModel(
         return listOf(headerItem) + optionItems
     }
 
-    private fun <T> buildPreviewList(otherItems: List<T>, ownItem: T?): List<T> {
-        return if (ownItem != null) {
-            listOf(ownItem) + otherItems.take(maxOf(0, VOTERS_PREVIEW_LIMIT - 1))
-        } else {
-            otherItems.take(VOTERS_PREVIEW_LIMIT)
+    private fun buildVotersPreviewList(
+        otherVoters: List<Vote>,
+        ownVote: Vote?,
+        pendingVotes: List<PendingVoteData>,
+    ): List<Vote> {
+        val pendingAdds = pendingVotes.filter { it.isAdd }
+        val pendingRemoves = pendingVotes.filter { !it.isAdd }
+        
+        val allVoters = mutableListOf<Vote>()
+        
+        val ownPendingAdd = pendingAdds.firstOrNull()
+        val ownPendingRemove = pendingRemoves.firstOrNull()
+        
+        when {
+            ownPendingAdd != null -> {
+                allVoters.add(Vote(
+                    optionId = ownPendingAdd.optionId,
+                    createdAt = ownPendingAdd.createdAt,
+                    user = ownPendingAdd.user
+                ))
+            }
+            ownVote != null && ownPendingRemove == null -> {
+                allVoters.add(ownVote)
+            }
         }
+        
+        val usersWithPendingRemoves = pendingRemoves.map { it.user.id }.toSet()
+        otherVoters
+            .filter { vote -> vote.user?.id?.let { !usersWithPendingRemoves.contains(it) } ?: false }
+            .take(maxOf(0, VOTERS_PREVIEW_LIMIT - allVoters.size))
+            .let { allVoters.addAll(it) }
+        
+        return allVoters.take(VOTERS_PREVIEW_LIMIT)
     }
 
     private companion object {

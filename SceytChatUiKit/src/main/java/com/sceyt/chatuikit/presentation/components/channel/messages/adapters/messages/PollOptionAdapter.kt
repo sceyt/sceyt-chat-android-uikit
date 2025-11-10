@@ -12,6 +12,10 @@ class PollOptionAdapter(
 ) : ListAdapter<PollOptionUiModel, PollOptionViewHolder>(DIFF_CALLBACK) {
     private var shouldAnimate = false
 
+    init {
+        setHasStableIds(true)
+    }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PollOptionViewHolder {
         return viewHolderFactory.createViewHolder(parent)
     }

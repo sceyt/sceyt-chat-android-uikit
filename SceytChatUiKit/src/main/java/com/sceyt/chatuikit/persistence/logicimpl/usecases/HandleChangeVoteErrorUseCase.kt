@@ -17,7 +17,7 @@ internal class HandleChangeVoteErrorUseCase(
         optionIds: List<String>,
         errorCode: Int?
     ) {
-        if (errorCode == 1301) {
+        if (errorCode == 404 || errorCode == 1301) {
             val messageTid = messageDao.getMessageTidById(messageId) ?: return
             val count = pendingPollVoteDao.deleteVotesByOptionIds(
                 messageTid = messageTid,

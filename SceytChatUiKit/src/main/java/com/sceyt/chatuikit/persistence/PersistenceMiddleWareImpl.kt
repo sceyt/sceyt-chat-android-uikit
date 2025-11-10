@@ -314,6 +314,10 @@ internal class PersistenceMiddleWareImpl(
         return channelLogic.getChannelFromDb(channelId)
     }
 
+    override suspend fun getChannelsFromDb(channelIds: List<Long>): List<SceytChannel> {
+        return channelLogic.getChannelsFromDb(channelIds)
+    }
+
     override suspend fun getDirectChannelFromDb(peerId: String): SceytChannel? {
         return channelLogic.getDirectChannelFromDb(peerId)
     }
@@ -768,7 +772,7 @@ internal class PersistenceMiddleWareImpl(
         return usersLogic.getCurrentUserId()
     }
 
-    override fun getCurrentUserAsFlow(): Flow<SceytUser> {
+    override fun getCurrentUserAsFlow(): Flow<SceytUser>? {
         return usersLogic.getCurrentUserAsFlow()
     }
 

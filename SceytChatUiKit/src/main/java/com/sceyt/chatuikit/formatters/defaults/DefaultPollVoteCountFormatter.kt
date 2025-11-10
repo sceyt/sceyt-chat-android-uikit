@@ -6,7 +6,8 @@ import com.sceyt.chatuikit.formatters.Formatter
 
 open class DefaultPollVoteCountFormatter : Formatter<PollOptionUiModel> {
     override fun format(context: Context, from: PollOptionUiModel): String {
-        return from.voteCount.toString()
+        return if (from.voteCount > 99)
+            "99+" else from.voteCount.toString()
     }
 }
 
