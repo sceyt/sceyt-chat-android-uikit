@@ -18,6 +18,7 @@ open class PollOptionViewHolder(
     private val isAnonymousProvider: () -> Boolean,
     private val bubbleBackgroundStyleProvider: () -> BackgroundStyle,
     private var onOptionClick: ((PollOptionUiModel) -> Unit)? = null,
+    private var onVotersClick: ((PollOptionUiModel) -> Unit)? = null,
 ) : RecyclerView.ViewHolder(binding.root) {
     private val context = binding.root.context
     private lateinit var currentOption: PollOptionUiModel
@@ -72,7 +73,10 @@ open class PollOptionViewHolder(
                 if (votersAdapter == null) {
                     votersAdapter = VoterAvatarAdapter(
                         pollStyle = pollStyle,
-                        bubbleBackgroundStyleProvider = bubbleBackgroundStyleProvider
+                        bubbleBackgroundStyleProvider = bubbleBackgroundStyleProvider,
+                        onVoterClick = {
+                            onVotersClick?.invoke(option)
+                        }
                     )
                     with(rvVoters) {
                         itemAnimator = null
