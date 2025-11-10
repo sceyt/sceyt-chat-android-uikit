@@ -16,6 +16,7 @@ import com.sceyt.chatuikit.formatters.attributes.MessageBodyFormatterAttributes
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChatReactionMessagesCache
 import com.sceyt.chatuikit.persistence.mappers.toSceytAttachment
 import com.sceyt.chatuikit.persistence.mappers.toSceytReaction
+import com.sceyt.chatuikit.presentation.extensions.isUnsupported
 
 open class DefaultChannelListSubtitleFormatter : Formatter<ChannelItemSubtitleFormatterAttributes> {
     override fun format(context: Context, from: ChannelItemSubtitleFormatterAttributes): CharSequence {
@@ -33,6 +34,10 @@ open class DefaultChannelListSubtitleFormatter : Formatter<ChannelItemSubtitleFo
         if (message.state == MessageState.Deleted) {
             val text = SpannableStringBuilder(style.messageDeletedStateText)
             style.deletedTextStyle.apply(context, text)
+            return text
+        }
+        if (message.isUnsupported()){
+            val text = style.unsupportedMessageBodyShortFormatter.format(context, message)
             return text
         }
         val body = style.lastMessageBodyFormatter.format(context, MessageBodyFormatterAttributes(

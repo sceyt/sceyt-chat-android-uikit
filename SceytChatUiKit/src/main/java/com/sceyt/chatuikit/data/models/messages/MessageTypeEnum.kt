@@ -8,19 +8,7 @@ enum class MessageTypeEnum(val value: String) {
     System("system"),
     Poll("poll");
 
-    fun value(): String {
-        return when (this) {
-            Text -> "text"
-            Media -> "media"
-            File -> "file"
-            Link -> "link"
-            System -> "system"
-            Poll -> "poll"
-        }
-    }
-
     companion object {
-
         fun fromValue(value: String): MessageTypeEnum? {
             return when (value) {
                 "text" -> Text

@@ -14,7 +14,6 @@ import com.bumptech.glide.Glide
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
-import com.sceyt.chatuikit.data.models.messages.MessageTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytFragmentMessageActionsBinding
@@ -23,6 +22,7 @@ import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
 import com.sceyt.chatuikit.formatters.attributes.MessageBodyFormatterAttributes
 import com.sceyt.chatuikit.persistence.mappers.getThumbFromMetadata
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.MessageInputClickListeners.CancelReplyMessageViewClickListener
+import com.sceyt.chatuikit.presentation.extensions.isUnsupported
 import com.sceyt.chatuikit.providers.VisualProvider
 import com.sceyt.chatuikit.shared.utils.ViewUtil
 import com.sceyt.chatuikit.styles.input.InputEditMessageStyle
@@ -105,8 +105,8 @@ class MessageActionsView @JvmOverloads constructor(
 
             loadAttachmentImage(message.attachments, style.attachmentIconProvider)
 
-            tvMessageBody.text = if ((MessageTypeEnum.fromValue(message.type)) == null) {
-                context.getString(R.string.unsupported_message_text)
+            tvMessageBody.text = if (message.isUnsupported()) {
+                style.unsupportedMessageShortBodyFormatter.format(context, message)
             } else {
                 style.messageBodyFormatter.format(
                     context = context,

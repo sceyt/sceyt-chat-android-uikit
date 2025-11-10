@@ -64,7 +64,7 @@ fun SceytMessage?.setChatMessageDateAndStatusIcon(
     dateText: CharSequence,
     edited: Boolean,
 ) {
-    if (this?.deliveryStatus == null || state == MessageState.Deleted || incoming || MessageTypeEnum.fromValue(type) == null) {
+    if (this?.deliveryStatus == null || state == MessageState.Deleted || incoming) {
         decoratedTextView.appearanceBuilder()
             .setText(dateText)
             .setTextStyle(itemStyle.messageDateTextStyle)
@@ -229,3 +229,6 @@ fun SceytMessage.getUpdateMessage(message: SceytMessage): SceytMessage {
         files = message.files,
     )
 }
+
+fun SceytMessage.isUnsupported() =
+    MessageTypeEnum.fromValue(this.type) == null

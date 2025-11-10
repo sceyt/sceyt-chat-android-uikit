@@ -1,12 +1,24 @@
 package com.sceyt.chatuikit.formatters.defaults
 
 import android.content.Context
+import android.graphics.Typeface
+import android.text.SpannableString
+import android.text.Spanned
+import android.text.style.StyleSpan
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.formatters.Formatter
-import com.sceyt.chatuikit.formatters.attributes.MessageBodyFormatterAttributes
 
-open class DefaultUnsupportedMessageBodyFormatter : Formatter<MessageBodyFormatterAttributes> {
-    override fun format(context: Context, from: MessageBodyFormatterAttributes): CharSequence {
-        return context.getString(R.string.unsupported_message_text)
+open class DefaultUnsupportedMessageBodyFormatter : Formatter<SceytMessage> {
+    override fun format(context: Context, from: SceytMessage): CharSequence {
+        val body = context.getString(R.string.unsupported_message_text)
+        val span = SpannableString(body)
+        span.setSpan(
+            StyleSpan(Typeface.ITALIC),
+            0,
+            body.length - 1,
+            Spanned.SPAN_INCLUSIVE_INCLUSIVE
+        )
+        return span
     }
 }
