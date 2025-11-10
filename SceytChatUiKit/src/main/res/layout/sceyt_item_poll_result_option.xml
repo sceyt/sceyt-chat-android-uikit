@@ -27,7 +27,7 @@
         android:layout_marginStart="8dp"
         android:layout_marginEnd="16dp"
         android:fontFamily="@font/roboto_regular"
-        android:textColor="@color/sceyt_color_text_secondary"
+        tools:textColor="@color/sceyt_color_text_primary"
         android:textSize="@dimen/smallTextSize"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/tvOptionName"
