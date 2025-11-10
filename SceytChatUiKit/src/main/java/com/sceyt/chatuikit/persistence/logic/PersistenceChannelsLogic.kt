@@ -69,6 +69,7 @@ interface PersistenceChannelsLogic {
     suspend fun hideChannel(channelId: Long): SceytResponse<SceytChannel>
     suspend fun unHideChannel(channelId: Long): SceytResponse<SceytChannel>
     suspend fun getChannelFromDb(channelId: Long): SceytChannel?
+    suspend fun getChannelsFromDb(channelIds: List<Long>): List<SceytChannel>
     suspend fun getRetentionPeriodByChannelId(channelId: Long): Long
     suspend fun getDirectChannelFromDb(peerId: String): SceytChannel?
     suspend fun getChannelFromServer(channelId: Long): SceytResponse<SceytChannel>
