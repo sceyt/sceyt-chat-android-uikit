@@ -12,6 +12,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.data.models.messages.Vote
 import com.sceyt.chatuikit.data.models.onSuccessNotNull
+import com.sceyt.chatuikit.persistence.extensions.getRealCountsWithPendingVotes
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
 import com.sceyt.chatuikit.persistence.repositories.PollRepository
@@ -73,14 +74,12 @@ class PollOptionVotersViewModel(
     private fun handlePollUpdate(updatedMessage: SceytMessage) {
         val poll = updatedMessage.poll ?: return
 
-        val allVotes = poll.votes.filter { it.optionId == optionId }
-        val ownVoteForOption = poll.ownVotes.firstOrNull { it.optionId == optionId }
+        val pendingVotesForOption = poll.pendingVotes.orEmpty().filter { it.optionId == optionId }
+        val pendingAdds = pendingVotesForOption.filter { it.isAdd }
+        val pendingRemoves = pendingVotesForOption.filter { !it.isAdd }
 
-        val updatedVoteCount = if (ownVoteForOption != null) {
-            allVotes.size + 1
-        } else {
-            allVotes.size
-        }
+        val realVoteCounts = poll.getRealCountsWithPendingVotes()
+        val updatedVoteCount = realVoteCounts[optionId] ?: 0
 
         val headerIndex = votersList.indexOfFirst { it is VoterItem.HeaderItem }
         if (headerIndex >= 0) {
@@ -89,21 +88,44 @@ class PollOptionVotersViewModel(
             votersList.add(0, VoterItem.HeaderItem(updatedVoteCount))
         }
 
-        if (ownVote != null) {
-            val hasOwn = votersList.any { it is VoterItem.Voter && it.vote.user?.id == ownVote.user?.id }
-            if (!hasOwn) {
+        val ownVoteForOption = poll.ownVotes.firstOrNull { it.optionId == optionId }
+        val ownPendingAdd = pendingAdds.firstOrNull()
+        val ownPendingRemove = pendingRemoves.firstOrNull()
+
+        votersList.removeAll { it is VoterItem.Voter && it.vote.user?.id == ownVote?.user?.id }
+
+        when {
+            ownPendingAdd != null -> {
                 val insertOwnIndex = kotlin.math.min(1, votersList.size)
-                votersList.add(insertOwnIndex, VoterItem.Voter(ownVote))
+                votersList.add(insertOwnIndex, VoterItem.Voter(Vote(
+                    optionId = ownPendingAdd.optionId,
+                    createdAt = ownPendingAdd.createdAt,
+                    user = ownPendingAdd.user
+                )))
+            }
+            ownVoteForOption != null && ownPendingRemove == null -> {
+                val insertOwnIndex = kotlin.math.min(1, votersList.size)
+                votersList.add(insertOwnIndex, VoterItem.Voter(ownVoteForOption))
             }
         }
 
-        val currentVoterIds = allVotes.mapNotNull { it.user?.id }.toSet()
+        val allVotes = poll.votes.filter { it.optionId == optionId }
+        
+        val usersWithPendingRemoves = pendingRemoves.map { it.user.id }.toSet()
+        
+        val currentVoterIds = allVotes
+            .mapNotNull { it.user?.id }
+            .filter { !usersWithPendingRemoves.contains(it) }
+            .toSet()
+
+        val pendingAddUserIds = pendingAdds.map { it.user.id }.toSet()
+        val allCurrentVoterIds = currentVoterIds + pendingAddUserIds
 
         val votersToRemove = votersList
             .filterIsInstance<VoterItem.Voter>()
             .filter { voterItem ->
                 val userId = voterItem.vote.user?.id
-                userId != null && userId !in currentVoterIds && userId != ownVote?.user?.id
+                userId != null && userId !in allCurrentVoterIds && userId != ownVote?.user?.id
             }
 
         votersList.removeAll(votersToRemove.toSet())
@@ -114,18 +136,42 @@ class PollOptionVotersViewModel(
             .toSet()
 
         val newVoters = allVotes
-            .filter { vote -> vote.user?.id !in existingVoterIds && vote.user?.id != ownVote?.user?.id }
+            .filter { vote -> 
+                val userId = vote.user?.id
+                userId != null && 
+                userId !in existingVoterIds && 
+                userId != ownVote?.user?.id &&
+                !usersWithPendingRemoves.contains(userId)
+            }
             .map { VoterItem.Voter(it) }
 
-        if (newVoters.isNotEmpty() || votersToRemove.isNotEmpty()) {
+        val newPendingVoters = pendingAdds
+            .filter { pending ->
+                val userId = pending.user.id
+                userId !in existingVoterIds && userId != ownVote?.user?.id
+            }
+            .map { pending ->
+                VoterItem.Voter(Vote(
+                    optionId = pending.optionId,
+                    createdAt = pending.createdAt,
+                    user = pending.user
+                ))
+            }
+
+        if (newVoters.isNotEmpty() || newPendingVoters.isNotEmpty() || votersToRemove.isNotEmpty()) {
             votersList.removeAll { it is VoterItem.LoadingMore }
 
             val baseIndex = votersList.indexOfFirst { it is VoterItem.HeaderItem }.let { if (it == -1) 0 else it + 1 }
-            val insertionIndex = baseIndex + if (ownVote != null) 1 else 0
+            val hasOwnVote = votersList.any { it is VoterItem.Voter && it.vote.user?.id == ownVote?.user?.id }
+            val insertionIndex = baseIndex + if (hasOwnVote) 1 else 0
             val safeIndex = insertionIndex.coerceIn(0, votersList.size)
 
             if (newVoters.isNotEmpty()) {
                 votersList.addAll(safeIndex, newVoters)
+            }
+            
+            if (newPendingVoters.isNotEmpty()) {
+                votersList.addAll(safeIndex, newPendingVoters)
             }
 
             if (_uiState.value.hasNext) {

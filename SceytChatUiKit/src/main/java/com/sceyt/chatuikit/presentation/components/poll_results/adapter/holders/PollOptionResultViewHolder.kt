@@ -12,9 +12,9 @@ import com.sceyt.chatuikit.presentation.root.BaseViewHolder
 import com.sceyt.chatuikit.styles.poll_results.PollResultsStyle
 
 class PollOptionResultViewHolder(
-        private val binding: SceytItemPollResultOptionBinding,
-        private val style: PollResultsStyle,
-        private val clickListeners: PollResultClickListeners.ClickListeners
+    private val binding: SceytItemPollResultOptionBinding,
+    private val style: PollResultsStyle,
+    private val clickListeners: PollResultClickListeners.ClickListeners
 ) : BaseViewHolder<PollResultItem>(binding.root) {
 
     private lateinit var pollOptionItem: PollResultItem.PollOptionItem
@@ -22,10 +22,13 @@ class PollOptionResultViewHolder(
 
     init {
         binding.applyStyle()
+        binding.root.clipToOutline = true
+
+        setupVotersAdapter()
+
         binding.btnShowAll.setOnClickListener {
             clickListeners.onShowAllClick(it, pollOptionItem)
         }
-        setupVotersAdapter()
     }
 
     override fun bind(item: PollResultItem) {
@@ -33,7 +36,10 @@ class PollOptionResultViewHolder(
 
         with(binding) {
             tvOptionName.text = pollOptionItem.pollOption.name
-            tvVoteCount.text = style.pollResultItemStyle.voteCountFormatter.format(context, pollOptionItem.voteCount)
+            tvVoteCount.text = style.pollResultItemStyle.voteCountFormatter.format(
+                context,
+                pollOptionItem.voteCount
+            )
 
             val votersToShow = pollOptionItem.voters.take(5)
             val voterItems = votersToShow.map { VoterItem.Voter(it) }
@@ -53,7 +59,10 @@ class PollOptionResultViewHolder(
             }
 
             if (payload.voteCountChanged) {
-                tvVoteCount.text = style.pollResultItemStyle.voteCountFormatter.format(context, pollOptionItem.voteCount)
+                tvVoteCount.text = style.pollResultItemStyle.voteCountFormatter.format(
+                    context,
+                    pollOptionItem.voteCount
+                )
             }
 
             if (payload.votersChanged) {
@@ -64,11 +73,13 @@ class PollOptionResultViewHolder(
             }
         }
     }
+
     private fun setupVotersAdapter() {
         votersAdapter = VotersAdapter(
             viewHolderFactory = VotersViewHolderFactory(
                 context = context,
-                style = style.pollOptionVotersStyle)
+                style = style.pollOptionVotersStyle
+            )
                 .also { factory ->
                     factory.setOnClickListener(VoterClickListener(clickListeners::onVoterClick))
                 }

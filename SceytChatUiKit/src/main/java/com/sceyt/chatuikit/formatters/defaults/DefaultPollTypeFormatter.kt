@@ -10,9 +10,23 @@ open class DefaultPollTypeFormatter : Formatter<SceytPollDetails> {
         return from.run {
             when {
                 closed -> context.getString(R.string.sceyt_poll_finished)
-                anonymous -> context.getString(R.string.sceyt_anonymous_poll)
-                else -> context.getString(R.string.sceyt_public_poll)
+                anonymous -> {
+                    String.format(
+                        context.getString(R.string.sceyt_anonymous_poll_and_type),
+                        context.getTypeText(from)
+                    )
+                }
+
+                else -> context.getTypeText(from)
             }
+        }
+    }
+
+    open fun Context.getTypeText(poll: SceytPollDetails): String {
+        return if (poll.allowMultipleVotes) {
+            getString(R.string.multiple_votes)
+        } else {
+            getString(R.string.single_vote)
         }
     }
 }

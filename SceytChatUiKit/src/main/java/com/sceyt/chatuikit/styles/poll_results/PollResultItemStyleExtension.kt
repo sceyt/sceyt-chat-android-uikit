@@ -33,7 +33,7 @@ internal fun PollResultItemStyle.Builder.buildVoteCountTextStyle(
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.PollResults_sceytUiPollResultsVoteCountTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor)
     )
     .setSize(
         index = R.styleable.PollResults_sceytUiPollResultsVoteCountTextSize,
