@@ -6,6 +6,5 @@
     android:layout_width="20dp"
     android:layout_height="20dp"
     app:sceytUiAvatarDefaultIcon="@drawable/sceyt_ic_default_avatar"
-    app:sceytUiAvatarEnableRipple="false"
     tools:sceytUiAvatarFullName="John" />
 

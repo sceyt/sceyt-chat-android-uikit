@@ -81,6 +81,10 @@ sealed interface MessageClickListeners {
         fun onPollViewResultsClick(view: View, item: MessageListItem.MessageItem)
     }
 
+    fun interface PollVotersClickListener : MessageClickListeners {
+        fun onPollVotersClick(view: View, item: MessageListItem.MessageItem, option: PollOption)
+    }
+
     /** Use this if you want to implement all callbacks */
     interface ClickListeners :
             MessageClickListener,
@@ -100,7 +104,8 @@ sealed interface MessageClickListeners {
             AttachmentLoaderClickListener,
             MultiSelectClickListener,
             PollOptionClickListener,
-            PollViewResultsClickListener
+            PollViewResultsClickListener,
+            PollVotersClickListener
 }
 
 internal fun MessageClickListeners.setListener(listener: MessageClickListeners) {

@@ -66,6 +66,7 @@ class MessageActionsPopupMenu(
 
         menu.findItem(R.id.sceyt_retract_vote)?.isVisible = canRetractVote
         menu.findItem(R.id.sceyt_end_vote)?.isVisible = canEndVote
+        menu.findItem(R.id.sceyt_copy_message)?.isVisible = !isPollMessage
 
         super.show()
     }

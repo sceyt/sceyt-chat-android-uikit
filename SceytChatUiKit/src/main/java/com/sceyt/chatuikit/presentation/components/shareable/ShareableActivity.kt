@@ -29,7 +29,8 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
-abstract class ShareableActivity<Style : ShareablePageStyle> : AppCompatActivity(), SceytKoinComponent {
+abstract class ShareableActivity<Style : ShareablePageStyle> : AppCompatActivity(),
+    SceytKoinComponent {
     protected val shareableViewModel: ShareableViewModel by viewModels(factoryProducer = {
         provideViewModelFactory()
     })
@@ -92,10 +93,14 @@ abstract class ShareableActivity<Style : ShareablePageStyle> : AppCompatActivity
                             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                                 super.onScrolled(recyclerView, dx, dy)
                                 if (adapter is ShareableChannelsAdapter && isLastItemDisplaying() && shareableViewModel.canLoadNext())
-                                    shareableViewModel.getChannels(channelsAdapter?.getSkip()
-                                            ?: 0, shareableViewModel.searchQuery,
-                                        LoadKeyData(value = channelsAdapter?.getChannels()?.lastOrNull()?.channel?.id
-                                                ?: 0))
+                                    shareableViewModel.getChannels(
+                                        offset = channelsAdapter?.getSkip() ?: 0,
+                                        query = shareableViewModel.searchQuery,
+                                        loadKey = LoadKeyData(
+                                            value = channelsAdapter?.getChannels()
+                                                ?.lastOrNull()?.channel?.id ?: 0
+                                        )
+                                    )
                             }
                         })
                     }
@@ -119,7 +124,8 @@ abstract class ShareableActivity<Style : ShareablePageStyle> : AppCompatActivity
 
     private fun setSelectedItems(data: List<ChannelListItem>) {
         data.forEach {
-            it.selected = it is ChannelListItem.ChannelItem && selectedChannels.contains(it.channel.id)
+            it.selected =
+                it is ChannelListItem.ChannelItem && selectedChannels.contains(it.channel.id)
         }
     }
 
@@ -155,9 +161,9 @@ abstract class ShareableActivity<Style : ShareablePageStyle> : AppCompatActivity
     protected open val selectedChannels get() = shareableViewModel.selectedChannels
 
     protected open fun finishSharingAction() {
-        val intent = packageManager.getLaunchIntentForPackage(packageName)
-        if (intent != null)
-            startActivity(intent)
+        if (isTaskRoot) {
+            packageManager.getLaunchIntentForPackage(packageName)?.let(::startActivity)
+        }
 
         super.finish()
     }

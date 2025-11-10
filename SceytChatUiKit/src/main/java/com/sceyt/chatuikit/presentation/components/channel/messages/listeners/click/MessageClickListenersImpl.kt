@@ -28,6 +28,7 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
     private var multiSelectClickListener: MessageClickListeners.MultiSelectClickListener? = null
     private var pollOptionClickListener: MessageClickListeners.PollOptionClickListener? = null
     private var pollViewResultsClickListener: MessageClickListeners.PollViewResultsClickListener? = null
+    private var pollVotersClickListener: MessageClickListeners.PollVotersClickListener? = null
 
     constructor()
 
@@ -125,6 +126,11 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
         pollViewResultsClickListener?.onPollViewResultsClick(view, item)
     }
 
+    override fun onPollVotersClick(view: View, item: MessageListItem.MessageItem, option: PollOption) {
+        defaultListeners?.onPollVotersClick(view, item, option)
+        pollVotersClickListener?.onPollVotersClick(view, item, option)
+    }
+
     fun setListener(listener: MessageClickListeners) {
         when (listener) {
             is MessageClickListeners.ClickListeners -> {
@@ -146,6 +152,7 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
                 multiSelectClickListener = listener
                 pollOptionClickListener = listener
                 pollViewResultsClickListener = listener
+                pollVotersClickListener = listener
             }
 
             is MessageClickListeners.MessageClickListener -> {
@@ -218,6 +225,10 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
 
             is MessageClickListeners.PollViewResultsClickListener -> {
                 pollViewResultsClickListener = listener
+            }
+
+            is MessageClickListeners.PollVotersClickListener -> {
+                pollVotersClickListener = listener
             }
         }
     }

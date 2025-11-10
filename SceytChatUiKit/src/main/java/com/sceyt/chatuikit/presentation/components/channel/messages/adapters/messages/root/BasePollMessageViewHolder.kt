@@ -33,7 +33,8 @@ abstract class BasePollMessageViewHolder(
                 if (incoming) style.incomingBubbleBackgroundStyle
                 else style.outgoingBubbleBackgroundStyle
             },
-            onOptionClick = { option -> onPollOptionClick(option) }
+            onOptionClick = { option -> onPollOptionClick(option) },
+            onVotersClick = { option -> onPollVotersClick(option) }
         )
     }
 
@@ -110,6 +111,14 @@ abstract class BasePollMessageViewHolder(
         messageListeners?.onPollViewResultsClick(
             view = itemView,
             item = requireMessageItem
+        )
+    }
+
+    protected open fun onPollVotersClick(option: PollOptionUiModel) {
+        messageListeners?.onPollVotersClick(
+            view = itemView,
+            item = requireMessageItem,
+            option = PollOption(id = option.id, name = option.text, order = option.order)
         )
     }
 
