@@ -9,13 +9,11 @@
 
     <androidx.appcompat.widget.AppCompatCheckBox
         android:id="@+id/checkbox"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
         android:background="@null"
-        android:button="@drawable/sceyt_custom_radiobutton"
         android:clickable="false"
-        android:scaleX=".9"
-        android:scaleY=".9"
+        app:buttonCompat="@drawable/sceyt_custom_radiobutton_20"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -23,10 +21,11 @@
         android:id="@+id/tvOptionText"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="5dp"
+        android:layout_marginStart="8dp"
         android:layout_marginEnd="8dp"
         android:textColor="@color/sceyt_color_text_primary"
         android:textSize="@dimen/smallTextSize"
+        android:includeFontPadding="false"
         app:layout_constraintEnd_toStartOf="@+id/rvVoters"
         app:layout_constraintHeight_min="20dp"
         app:layout_constraintStart_toEndOf="@+id/checkbox"
