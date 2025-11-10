@@ -4,6 +4,7 @@ import com.sceyt.chat.models.ConnectionState
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.PollOptionUiModel
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
+import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytPollDetails
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.formatters.attributes.ChannelEventTitleFormatterAttributes
@@ -44,6 +45,7 @@ import com.sceyt.chatuikit.formatters.defaults.DefaultPollVoteCountFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultPollVoteTimeDateFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUnreadCountFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUnsupportedMessageBodyFormatter
+import com.sceyt.chatuikit.formatters.defaults.DefaultUnsupportedMessageShortBodyFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUserAndNotesNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUserNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUserPresenceDateFormatter
@@ -115,8 +117,12 @@ class SceytChatUIKitFormatters {
         DefaultMessageBodyFormatter()
     }
 
-    var unSupportMessageBodyFormatter: Formatter<MessageBodyFormatterAttributes> by lazyVar {
+    var unSupportMessageBodyFormatter: Formatter<SceytMessage> by lazyVar {
         DefaultUnsupportedMessageBodyFormatter()
+    }
+
+    var unsupportedMessageShortBodyFormatter: Formatter<SceytMessage> by lazyVar {
+        DefaultUnsupportedMessageShortBodyFormatter()
     }
 
     var channelLastMessageBodyFormatter: Formatter<MessageBodyFormatterAttributes> by lazyVar {

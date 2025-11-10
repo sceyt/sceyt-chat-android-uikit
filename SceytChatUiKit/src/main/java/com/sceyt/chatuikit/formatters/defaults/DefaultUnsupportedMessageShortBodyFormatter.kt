@@ -9,7 +9,7 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.formatters.Formatter
 
-open class DefaultUnsupportedMessageBodyFormatter : Formatter<SceytMessage> {
+open class DefaultUnsupportedMessageShortBodyFormatter : Formatter<SceytMessage> {
     override fun format(context: Context, from: SceytMessage): CharSequence {
         val body = context.getString(R.string.unsupported_message_text)
         val span = SpannableString(body)

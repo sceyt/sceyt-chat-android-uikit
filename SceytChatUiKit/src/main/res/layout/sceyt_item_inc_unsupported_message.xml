@@ -123,7 +123,7 @@
             android:text="@string/unsupported_message_text"
             android:textColor="@color/sceyt_color_text_secondary"
             android:textSize="@dimen/mediumTextSize"
-            android:textStyle="italic"
+            tools:textStyle="italic"
             app:layout_constrainedWidth="true"
             app:layout_constraintBottom_toBottomOf="@+id/layoutDetails"
             app:layout_constraintEnd_toStartOf="@+id/messageDate"

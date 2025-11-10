@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders
 
+import android.widget.TextView
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.databinding.SceytItemOutUnsupportedMessageBinding
@@ -10,10 +11,10 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.cl
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
 class OutUnsupportedMessageViewHolder(
-        private val binding: SceytItemOutUnsupportedMessageBinding,
-        private val viewPool: RecyclerView.RecycledViewPool,
-        style: MessageItemStyle,
-        private val messageListeners: MessageClickListeners.ClickListeners?,
+    private val binding: SceytItemOutUnsupportedMessageBinding,
+    private val viewPool: RecyclerView.RecycledViewPool,
+    private val style: MessageItemStyle,
+    private val messageListeners: MessageClickListeners.ClickListeners?,
 ) : BaseMessageViewHolder(binding.root, style, messageListeners) {
 
     init {
@@ -25,12 +26,18 @@ class OutUnsupportedMessageViewHolder(
             }
 
             root.setOnLongClickListener {
-                messageListeners?.onMessageLongClick(it, messageListItem as MessageListItem.MessageItem)
+                messageListeners?.onMessageLongClick(
+                    it,
+                    messageListItem as MessageListItem.MessageItem
+                )
                 return@setOnLongClickListener true
             }
 
             messageBody.doOnLongClick {
-                messageListeners?.onMessageLongClick(it, messageListItem as MessageListItem.MessageItem)
+                messageListeners?.onMessageLongClick(
+                    it,
+                    messageListItem as MessageListItem.MessageItem
+                )
             }
 
             messageBody.doOnClickWhenNoLink {
@@ -52,9 +59,10 @@ class OutUnsupportedMessageViewHolder(
                 if (diff.edited || diff.statusChanged)
                     setMessageStatusAndDateText(message, messageDate)
 
-                if (diff.edited || diff.bodyChanged)
-                    setUnsupportedMessageBody(messageBody, message)
-
+                if (diff.edited || diff.bodyChanged) {
+                    val body = style.unsupportedMessageBodyFormatter.format(context, message)
+                    messageBody.setText(body, TextView.BufferType.SPANNABLE)
+                }
                 if (diff.replyCountChanged)
                     setReplyCount(tvReplyCount, toReplyLine, item)
 
@@ -69,7 +77,7 @@ class OutUnsupportedMessageViewHolder(
 
     override val selectMessageView get() = binding.selectView
 
-    override val layoutBubbleConfig get() = Pair(binding.layoutDetails, true)
+    override val layoutBubbleConfig get() = Pair(binding.layoutDetails, false)
 
     override val incoming: Boolean
         get() = false
