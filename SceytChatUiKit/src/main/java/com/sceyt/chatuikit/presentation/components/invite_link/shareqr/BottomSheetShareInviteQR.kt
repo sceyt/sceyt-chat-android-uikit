@@ -12,10 +12,10 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.databinding.SceytBottomSheetShareInviteQrBinding
-import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.dismissSafety
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.setBundleArguments
+import com.sceyt.chatuikit.extensions.shortToast
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.styles.StyleRegistry
 import com.sceyt.chatuikit.styles.invite_link.BottomSheetShareInviteQRStyle
@@ -45,7 +45,11 @@ open class BottomSheetShareInviteQR : BottomSheetDialogFragment(), SceytKoinComp
         setStyle(STYLE_NORMAL, R.style.SceytAppBottomSheetDialogTheme)
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
         binding = SceytBottomSheetShareInviteQrBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -72,11 +76,11 @@ open class BottomSheetShareInviteQR : BottomSheetDialogFragment(), SceytKoinComp
             state.error?.let { errorType ->
                 when (errorType) {
                     ErrorType.GenerateQr -> {
-                        customToastSnackBar("Failed to generate QR code")
+                        requireContext().shortToast(getString(R.string.sceyt_failed_to_generate_qr_code))
                     }
 
                     ErrorType.SaveQr -> {
-                        customToastSnackBar("Failed to save QR code")
+                        requireContext().shortToast(getString(R.string.sceyt_failed_to_save_qr_code))
                     }
                 }
             }
@@ -107,7 +111,8 @@ open class BottomSheetShareInviteQR : BottomSheetDialogFragment(), SceytKoinComp
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         return super.onCreateDialog(savedInstanceState).apply {
             setOnShowListener {
-                val bottomSheet = findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)
+                val bottomSheet =
+                    findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)
                 BottomSheetBehavior.from(bottomSheet).isDraggable = false
             }
         }
@@ -119,9 +124,9 @@ open class BottomSheetShareInviteQR : BottomSheetDialogFragment(), SceytKoinComp
         private const val LINK_DATA_KEY = "linkDataKey"
 
         fun show(
-                fragmentManager: FragmentManager,
-                linkQrData: LinkQrData,
-                styleId: String? = null,
+            fragmentManager: FragmentManager,
+            linkQrData: LinkQrData,
+            styleId: String? = null,
         ) {
             val existingSheet = fragmentManager.findFragmentByTag(TAG) as? BottomSheetShareInviteQR
             if (existingSheet != null && existingSheet.isAdded) {

@@ -32,6 +32,7 @@ import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
+import com.google.android.material.snackbar.BaseTransientBottomBar.Duration
 import com.sceyt.chatuikit.logger.SceytLog
 import java.io.File
 import java.net.HttpURLConnection
@@ -131,8 +132,10 @@ fun Context.asFragmentActivity(): FragmentActivity {
 }
 
 fun Context.getFileUriWithProvider(file: File): Uri {
-    return FileProvider.getUriForFile(this,
-        "$packageName.provider", file)
+    return FileProvider.getUriForFile(
+        this,
+        "$packageName.provider", file
+    )
 }
 
 fun Context.shortToast(message: String) {
@@ -151,8 +154,9 @@ fun Context.longToast(messageResourceId: Int) {
     toast(messageResourceId, Toast.LENGTH_LONG)
 }
 
-fun Context.toast(message: String?, length: Int) {
-    Toast.makeText(this, message, length).show()
+fun Context.toast(message: String?, @Duration duration: Int = Toast.LENGTH_SHORT) {
+    message ?: return
+    Toast.makeText(this, message, duration).show()
 }
 
 fun Context.toast(messageResourceId: Int, length: Int) {
@@ -166,13 +170,14 @@ fun Context.getApplicationIcon(): Drawable {
 }
 
 inline fun <reified T : Any> Context.launchActivity(
-        enterAnimResId: Int? = null,
-        exitAnimResId: Int? = null,
-        options: Bundle = Bundle(),
-        noinline init: Intent.() -> Unit = {},
+    enterAnimResId: Int? = null,
+    exitAnimResId: Int? = null,
+    options: Bundle = Bundle(),
+    noinline init: Intent.() -> Unit = {},
 ) {
     if (enterAnimResId != null && exitAnimResId != null) {
-        val animOptions = ActivityOptionsCompat.makeCustomAnimation(this, enterAnimResId, exitAnimResId)
+        val animOptions =
+            ActivityOptionsCompat.makeCustomAnimation(this, enterAnimResId, exitAnimResId)
         options.putAll(animOptions.toBundle())
     }
     val intent = createIntent<T>()
@@ -189,7 +194,8 @@ fun Context.showSoftInput(editText: EditText) {
     var showed = false
     val run = Runnable {
         editText.requestFocus()
-        val inputMethodManager = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        val inputMethodManager =
+            getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         showed = inputMethodManager.showSoftInput(editText, InputMethodManager.SHOW_IMPLICIT)
     }
     run.run()
@@ -217,7 +223,7 @@ fun Context.isNightMode(): Boolean {
 fun Context.checkActiveInternetConnection(timeout: Int = 2000): Boolean {
     if (hasActiveNetwork()) {
         try {
-            val urlConnection: HttpURLConnection = URL("https://www.google.com").openConnection() as HttpURLConnection
+            val urlConnection = URL("https://www.google.com").openConnection() as HttpURLConnection
             urlConnection.setRequestProperty("User-Agent", "Test")
             urlConnection.setRequestProperty("Connection", "close")
             urlConnection.connectTimeout = timeout
@@ -234,7 +240,8 @@ fun Context.checkActiveInternetConnection(timeout: Int = 2000): Boolean {
 fun Context.hasActiveNetwork(): Boolean {
     val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-        val capability = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+        val capability =
+            connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
         capability?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) ?: false
     } else {
         connectivityManager.activeNetworkInfo != null && connectivityManager.activeNetworkInfo?.isConnected == true

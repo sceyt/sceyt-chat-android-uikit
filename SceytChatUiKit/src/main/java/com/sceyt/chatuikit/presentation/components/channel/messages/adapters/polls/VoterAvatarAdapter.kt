@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages
+package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.polls
 
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
@@ -19,9 +19,7 @@ class VoterAvatarAdapter(
     private val pollStyle: PollStyle,
     private val bubbleBackgroundStyleProvider: () -> BackgroundStyle,
     private val onVoterClick: (() -> Unit)? = null,
-) : ListAdapter<SceytUser, VoterAvatarAdapter.VoterAvatarViewHolder>(
-    DIFF_CALLBACK
-) {
+) : ListAdapter<SceytUser, VoterAvatarAdapter.VoterAvatarViewHolder>(DIFF_CALLBACK) {
 
     private var shouldAnimate = false
 

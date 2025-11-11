@@ -270,4 +270,8 @@
     <string name="multiple_votes">Multiple votes</string>
     <string name="single_vote">Single vote</string>
     <string name="unsupported_message_text">This message is not supported.</string>
+    <string name="sceyt_multiple_votes">Multiple votes</string>
+    <string name="sceyt_single_vote">Single vote</string>
+    <string name="sceyt_failed_to_generate_qr_code">Failed to generate QR code</string>
+    <string name="sceyt_failed_to_save_qr_code">Failed to save QR code</string>
 </resources>

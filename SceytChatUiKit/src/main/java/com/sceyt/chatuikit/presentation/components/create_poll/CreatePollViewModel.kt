@@ -7,7 +7,7 @@ import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.poll.PollDetails
 import com.sceyt.chat.models.poll.PollOption
 import com.sceyt.chat.wrapper.ClientWrapper
-import com.sceyt.chatuikit.data.models.messages.MessageTypeEnum
+import com.sceyt.chatuikit.data.models.messages.SceytMessageType
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
 import kotlinx.coroutines.NonCancellable
@@ -186,7 +186,7 @@ class CreatePollViewModel(
                 .build()
 
             val message = Message.MessageBuilder(channelId)
-                .setType(MessageTypeEnum.Poll.value)
+                .setType(SceytMessageType.Poll.value)
                 .setBody(state.question)
                 .setTid(messageTid)
                 .setPoll(pollDetails)

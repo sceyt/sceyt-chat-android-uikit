@@ -6,7 +6,7 @@ import androidx.core.util.Predicate
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chatuikit.data.models.messages.MessageTypeEnum
+import com.sceyt.chatuikit.data.models.messages.SceytMessageType
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.extensions.asComponentActivity
 import com.sceyt.chatuikit.extensions.dispatchUpdatesToSafety
@@ -187,8 +187,8 @@ class MessagesAdapter(
             val prev = (messages.getOrNull(position - 1) as? MessageItem)?.message
             val current = (messages.getOrNull(position) as? MessageItem)?.message
             if (prev != null && current != null)
-                return prev.incoming != current.incoming || current.type == MessageTypeEnum.System.value
-                        || prev.type == MessageTypeEnum.System.value
+                return prev.incoming != current.incoming || current.type == SceytMessageType.System.value
+                        || prev.type == SceytMessageType.System.value
         } catch (ex: Exception) {
             ex.printStackTrace()
         }

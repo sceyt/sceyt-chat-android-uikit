@@ -9,8 +9,8 @@ import com.sceyt.chatuikit.data.models.messages.PollOptionUiModel
 import com.sceyt.chatuikit.data.models.messages.SceytPollDetails
 import com.sceyt.chatuikit.data.models.messages.getOptionsUiModels
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
-import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.PollOptionAdapter
-import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.PollOptionViewHolderFactory
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.polls.PollOptionAdapter
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.polls.PollOptionViewHolderFactory
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
