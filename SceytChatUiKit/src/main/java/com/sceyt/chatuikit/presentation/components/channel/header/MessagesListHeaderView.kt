@@ -28,7 +28,7 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMemberActivityEvent
 import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
-import com.sceyt.chatuikit.data.models.messages.MessageTypeEnum
+import com.sceyt.chatuikit.data.models.messages.SceytMessageType
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.databinding.SceytMessagesListHeaderViewBinding
@@ -558,7 +558,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
         val isSingleMessage = messages.size == 1
         val fistMessage = messages.first()
         val existPendingMessages = messages.any { it.deliveryStatus == DeliveryStatus.Pending }
-        val existPollMessage = messages.any { it.type == MessageTypeEnum.Poll.value }
+        val existPollMessage = messages.any { it.type == SceytMessageType.Poll.value }
 
         val poll = fistMessage.poll
         val isPollMessage = poll != null

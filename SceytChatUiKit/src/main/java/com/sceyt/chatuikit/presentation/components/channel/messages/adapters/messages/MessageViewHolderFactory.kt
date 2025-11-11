@@ -6,7 +6,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
-import com.sceyt.chatuikit.data.models.messages.MessageTypeEnum
+import com.sceyt.chatuikit.data.models.messages.SceytMessageType
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytItemIncAttachmentsMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemIncDeletedMessageBinding
@@ -258,7 +258,7 @@ open class MessageViewHolderFactory(context: Context) {
         val attachments = message.attachments
         val type = when {
             message.state == MessageState.Deleted -> if (inc) MessageViewTypeEnum.IncDeleted else MessageViewTypeEnum.OutDeleted
-            message.type == MessageTypeEnum.Poll.value -> if (inc) MessageViewTypeEnum.IncPoll else MessageViewTypeEnum.OutPoll
+            message.type == SceytMessageType.Poll.value -> if (inc) MessageViewTypeEnum.IncPoll else MessageViewTypeEnum.OutPoll
             !attachments.isNullOrEmpty() -> {
                 val (links, others) = attachments.partition { it.type == AttachmentTypeEnum.Link.value }
                 //Check maybe all attachments are links
