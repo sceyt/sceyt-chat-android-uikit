@@ -56,7 +56,11 @@ open class BottomSheetJoinByInviteLink : BottomSheetDialogFragment(), SceytKoinC
         setStyle(STYLE_NORMAL, R.style.SceytAppBottomSheetDialogTheme)
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
         binding = SceytBottomSheetJoinByInviteLinkBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -119,7 +123,7 @@ open class BottomSheetJoinByInviteLink : BottomSheetDialogFragment(), SceytKoinC
             }
 
             is JoinActionState.JoinError -> {
-                customToastSnackBar(state.error?.message)
+                customToastSnackBar(binding.root, state.error?.message)
             }
 
             else -> Unit
@@ -186,7 +190,9 @@ open class BottomSheetJoinByInviteLink : BottomSheetDialogFragment(), SceytKoinC
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         return super.onCreateDialog(savedInstanceState).apply {
             setOnShowListener {
-                val bottomSheet = findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)
+                val bottomSheet = findViewById<View>(
+                    com.google.android.material.R.id.design_bottom_sheet
+                )
                 BottomSheetBehavior.from(bottomSheet).isDraggable = false
             }
 
@@ -202,12 +208,13 @@ open class BottomSheetJoinByInviteLink : BottomSheetDialogFragment(), SceytKoinC
         private const val INVITE_LINK_KEY = "invite_link"
 
         fun show(
-                fragmentManager: FragmentManager,
-                inviteLink: Uri,
-                joinedToChannelListener: ((JoinByInviteLinkResult) -> Unit)? = null,
-                styleId: String? = null,
+            fragmentManager: FragmentManager,
+            inviteLink: Uri,
+            joinedToChannelListener: ((JoinByInviteLinkResult) -> Unit)? = null,
+            styleId: String? = null,
         ) {
-            val existingSheet = fragmentManager.findFragmentByTag(TAG) as? BottomSheetJoinByInviteLink
+            val existingSheet =
+                fragmentManager.findFragmentByTag(TAG) as? BottomSheetJoinByInviteLink
             if (existingSheet != null && existingSheet.isAdded) {
                 existingSheet.joinedToChannelListener = joinedToChannelListener
                 return
