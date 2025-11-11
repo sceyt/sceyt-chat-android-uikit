@@ -21,6 +21,11 @@ abstract class SceytMessageType(val value: String) {
         fun fromString(type: String): SceytMessageType {
             return registry[type] ?: Unsupported(type)
         }
+
+        init {
+            // Register built-in types
+            listOf(Text, Media, File, Link, System, Poll)
+        }
     }
 
     init {
