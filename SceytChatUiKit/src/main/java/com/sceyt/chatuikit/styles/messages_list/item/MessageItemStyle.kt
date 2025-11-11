@@ -110,7 +110,7 @@ import java.util.Date
  * @property selectionCheckboxStyle Style for the selection checkbox, default is [buildSelectionCheckboxStyle].
  * @property senderNameFormatter Formatter for the sender name, default is [SceytChatUIKitFormatters.userNameFormatter].
  * @property messageBodyFormatter Formatter for the message body. Use it to format the message body, default is [SceytChatUIKitFormatters.messageBodyFormatter].
- * @property unsupportedMessageBodyFormatter Formatter for unsupported message body. Use it to format unsupported messages, default is [SceytChatUIKitFormatters.unSupportMessageBodyFormatter].
+ * @property unsupportedMessageBodyFormatter Formatter for unsupported message body. Use it to format unsupported messages, default is [SceytChatUIKitFormatters.unsupportedMessageBodyFormatter].
  * @property messageViewCountFormatter Formatter for the message view count, default is [SceytChatUIKitFormatters.messageViewCountFormatter].
  * @property messageDateFormatter Formatter for the message date, default is [SceytChatUIKitFormatters.messageDateFormatter].
  * @property voiceDurationFormatter Formatter for the voice duration, default is [SceytChatUIKitFormatters.mediaDurationFormatter].
@@ -298,7 +298,7 @@ data class MessageItemStyle(
                     selectionCheckboxStyle = buildSelectionCheckboxStyle(array),
                     senderNameFormatter = SceytChatUIKit.formatters.userNameFormatter,
                     messageBodyFormatter = SceytChatUIKit.formatters.messageBodyFormatter,
-                    unsupportedMessageBodyFormatter = SceytChatUIKit.formatters.unSupportMessageBodyFormatter,
+                    unsupportedMessageBodyFormatter = SceytChatUIKit.formatters.unsupportedMessageBodyFormatter,
                     messageViewCountFormatter = SceytChatUIKit.formatters.messageViewCountFormatter,
                     messageDateFormatter = SceytChatUIKit.formatters.messageDateFormatter,
                     voiceDurationFormatter = SceytChatUIKit.formatters.voiceDurationFormatter,

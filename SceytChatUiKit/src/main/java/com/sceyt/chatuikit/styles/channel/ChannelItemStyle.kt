@@ -84,7 +84,7 @@ import java.util.Date
  * @property channelEventTitleFormatter - Formatter for activity title, default is [SceytChatUIKitFormatters.channelListChannelEventTitleFormatter].
  * @property unreadCountFormatter - Formatter for unread count, default is [SceytChatUIKitFormatters.unreadCountFormatter].
  * @property lastMessageBodyFormatter - Formatter for last message body, default is [SceytChatUIKitFormatters.channelLastMessageBodyFormatter].
- * @property unsupportedMessageBodyFormatter - Formatter for unsupported message body, default is [SceytChatUIKitFormatters.unSupportMessageBodyFormatter].
+ * @property unsupportedMessageBodyFormatter - Formatter for unsupported message body, default is [SceytChatUIKitFormatters.unsupportedMessageBodyFormatter].
  * @property draftMessageBodyFormatter - Formatter for draft message body, default is [SceytChatUIKitFormatters.channelDraftLastMessageBodyFormatter].
  * @property channelSubtitleFormatter - Formatter for channel subtitle, default is [SceytChatUIKitFormatters.channelListItemSubtitleFormatter].
  * @property attachmentIconProvider - Provider for attachment icon, default is [SceytChatUIKitProviders.attachmentIconProvider].
