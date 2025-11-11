@@ -1,8 +1,21 @@
 package com.sceyt.chatuikit.data.models.messages
 
-abstract class SceytMessageType(
-    val value: String
-) {
+import java.util.concurrent.ConcurrentHashMap
+
+abstract class SceytMessageType(val value: String) {
+
+    companion object Registry {
+        private val registry = ConcurrentHashMap<String, SceytMessageType>()
+
+        fun register(type: SceytMessageType) {
+            registry[type.value] = type
+        }
+
+        fun fromString(type: String): SceytMessageType {
+            return registry[type] ?: Unsupported(type)
+        }
+    }
+
     data object Text : SceytMessageType("text")
     data object Media : SceytMessageType("media")
     data object File : SceytMessageType("file")
@@ -11,15 +24,7 @@ abstract class SceytMessageType(
     data object Poll : SceytMessageType("poll")
     data class Unsupported(val type: String) : SceytMessageType(type)
 
-    open fun getFromString(type: String): SceytMessageType {
-        return when (type) {
-            Text.value -> Text
-            Media.value -> Media
-            File.value -> File
-            Link.value -> Link
-            System.value -> System
-            Poll.value -> Poll
-            else -> Unsupported(type)
-        }
+    init {
+        if (this !is Unsupported) register(this)
     }
 }
