@@ -9,7 +9,7 @@ fun Fragment.customToastSnackBar(message: String?) {
         if (isAdded)
             customToastSnackBar(view, message)
         else Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-    } catch (ex: Exception) {
+    } catch (_: Exception) {
         view?.context?.let { Toast.makeText(it, message, Toast.LENGTH_SHORT).show() }
     }
 }

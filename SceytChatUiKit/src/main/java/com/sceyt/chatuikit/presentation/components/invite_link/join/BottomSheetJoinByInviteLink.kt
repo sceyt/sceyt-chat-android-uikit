@@ -23,6 +23,7 @@ import com.sceyt.chatuikit.extensions.empty
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.setBundleArguments
 import com.sceyt.chatuikit.extensions.setProgressColor
+import com.sceyt.chatuikit.extensions.shortToast
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.presentation.components.invite_link.JoinByInviteLinkResult
 import com.sceyt.chatuikit.presentation.components.invite_link.join.adapters.MembersPreviewAdapter
@@ -123,7 +124,7 @@ open class BottomSheetJoinByInviteLink : BottomSheetDialogFragment(), SceytKoinC
             }
 
             is JoinActionState.JoinError -> {
-                customToastSnackBar(binding.root, state.error?.message)
+                requireContext().shortToast(state.error?.message ?: return)
             }
 
             else -> Unit
