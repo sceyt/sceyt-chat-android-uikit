@@ -22,7 +22,6 @@ import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
 import com.sceyt.chatuikit.formatters.attributes.MessageBodyFormatterAttributes
 import com.sceyt.chatuikit.persistence.mappers.getThumbFromMetadata
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.MessageInputClickListeners.CancelReplyMessageViewClickListener
-import com.sceyt.chatuikit.presentation.extensions.isUnsupported
 import com.sceyt.chatuikit.providers.VisualProvider
 import com.sceyt.chatuikit.shared.utils.ViewUtil
 import com.sceyt.chatuikit.styles.input.InputEditMessageStyle
@@ -31,9 +30,9 @@ import com.sceyt.chatuikit.styles.input.MessageInputStyle
 
 @Suppress("MemberVisibilityCanBePrivate", "JoinDeclarationAndAssignment")
 class MessageActionsView @JvmOverloads constructor(
-        context: Context,
-        attrs: AttributeSet? = null,
-        defStyleAttr: Int = 0
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0
 ) : ConstraintLayout(context, attrs, defStyleAttr) {
     private var binding: SceytFragmentMessageActionsBinding
     private var clickListeners: CancelReplyMessageViewClickListener? = null
@@ -61,7 +60,8 @@ class MessageActionsView @JvmOverloads constructor(
                 ViewUtil.expandHeight(root, 0, 200)
             }
 
-            val replyTitle = SpannableStringBuilder("${context.getString(R.string.sceyt_edit_message)}:")
+            val replyTitle =
+                SpannableStringBuilder("${context.getString(R.string.sceyt_edit_message)}:")
             style.titleTextStyle.apply(context, replyTitle)
             tvName.text = replyTitle
 
@@ -105,17 +105,13 @@ class MessageActionsView @JvmOverloads constructor(
 
             loadAttachmentImage(message.attachments, style.attachmentIconProvider)
 
-            tvMessageBody.text = if (message.isUnsupported()) {
-                style.unsupportedMessageShortBodyFormatter.format(context, message)
-            } else {
-                style.messageBodyFormatter.format(
-                    context = context,
-                    from = MessageBodyFormatterAttributes(
-                        message = message,
-                        mentionTextStyle = style.mentionTextStyle
-                    )
+            tvMessageBody.text = style.messageBodyFormatter.format(
+                context = context,
+                from = MessageBodyFormatterAttributes(
+                    message = message,
+                    mentionTextStyle = style.mentionTextStyle
                 )
-            }
+            )
         }
     }
 
@@ -158,8 +154,8 @@ class MessageActionsView @JvmOverloads constructor(
     }
 
     private fun loadAttachmentImage(
-            attachments: List<SceytAttachment>?,
-            attachmentIconProvider: VisualProvider<SceytAttachment, Drawable?>,
+        attachments: List<SceytAttachment>?,
+        attachmentIconProvider: VisualProvider<SceytAttachment, Drawable?>,
     ) {
         with(binding) {
             if (attachments.isNullOrEmpty()) {
@@ -199,11 +195,11 @@ class MessageActionsView @JvmOverloads constructor(
     }
 
     private fun loadImage(
-            imageAttachment: ImageView,
-            metadata: String?,
-            path: String?,
-            defaultPlaceHolder: Drawable? = null,
-            error: Drawable? = null
+        imageAttachment: ImageView,
+        metadata: String?,
+        path: String?,
+        defaultPlaceHolder: Drawable? = null,
+        error: Drawable? = null
     ) {
         val placeHolder = getThumbFromMetadata(metadata)?.toDrawable(context.resources)
             ?.mutate() ?: defaultPlaceHolder

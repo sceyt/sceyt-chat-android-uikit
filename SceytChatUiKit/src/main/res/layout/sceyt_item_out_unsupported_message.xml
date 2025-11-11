@@ -87,7 +87,7 @@
             android:layout_marginHorizontal="12dp"
             android:layout_marginTop="4dp"
             android:layout_marginBottom="8dp"
-            android:text="@string/unsupported_message_text"
+            android:text="@string/sceyt_unsupported_message_text"
             android:textColor="@color/sceyt_color_text_secondary"
             android:textSize="@dimen/mediumTextSize"
             tools:textStyle="italic"
@@ -97,7 +97,7 @@
             app:layout_constraintHorizontal_bias="0"
             app:layout_constraintStart_toStartOf="@+id/layoutDetails"
             app:layout_constraintTop_toBottomOf="@+id/viewReply"
-            tools:text="@string/unsupported_message_text" />
+            tools:text="@string/sceyt_unsupported_message_text" />
 
         <com.sceyt.chatuikit.presentation.custom_views.DecoratedTextView
             android:id="@+id/messageDate"
