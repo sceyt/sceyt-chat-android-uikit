@@ -11,6 +11,7 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
+import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.applyTint
 import com.sceyt.chatuikit.extensions.applyTintBackgroundLayer
@@ -19,10 +20,10 @@ import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.formatters.SceytChatUIKitFormatters
+import com.sceyt.chatuikit.formatters.attributes.ChannelEventTitleFormatterAttributes
 import com.sceyt.chatuikit.formatters.attributes.ChannelItemSubtitleFormatterAttributes
 import com.sceyt.chatuikit.formatters.attributes.DraftMessageBodyFormatterAttributes
 import com.sceyt.chatuikit.formatters.attributes.MessageBodyFormatterAttributes
-import com.sceyt.chatuikit.formatters.attributes.ChannelEventTitleFormatterAttributes
 import com.sceyt.chatuikit.providers.SceytChatUIKitProviders
 import com.sceyt.chatuikit.providers.VisualProvider
 import com.sceyt.chatuikit.renderers.AvatarRenderer
@@ -33,6 +34,7 @@ import com.sceyt.chatuikit.styles.common.BackgroundStyle
 import com.sceyt.chatuikit.styles.common.MessageDeliveryStatusIcons
 import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.styles.extensions.channel_list.buildAvatarStyle
+import com.sceyt.chatuikit.styles.extensions.channel_list.buildChannelEventTextStyle
 import com.sceyt.chatuikit.styles.extensions.channel_list.buildDateTextStyle
 import com.sceyt.chatuikit.styles.extensions.channel_list.buildDeletedTextStyle
 import com.sceyt.chatuikit.styles.extensions.channel_list.buildDraftPrefixTextStyle
@@ -40,11 +42,10 @@ import com.sceyt.chatuikit.styles.extensions.channel_list.buildLastMessageSender
 import com.sceyt.chatuikit.styles.extensions.channel_list.buildLastMessageTextStyle
 import com.sceyt.chatuikit.styles.extensions.channel_list.buildMentionTextStyle
 import com.sceyt.chatuikit.styles.extensions.channel_list.buildSubjectTextStyle
-import com.sceyt.chatuikit.styles.extensions.channel_list.buildChannelEventTextStyle
 import com.sceyt.chatuikit.styles.extensions.channel_list.buildUnreadCountMutedTextStyle
 import com.sceyt.chatuikit.styles.extensions.channel_list.buildUnreadCountTextStyle
-import com.sceyt.chatuikit.styles.extensions.channel_list.buildUnreadMentionMutedBackgroundStyle
 import com.sceyt.chatuikit.styles.extensions.channel_list.buildUnreadMentionBackgroundStyle
+import com.sceyt.chatuikit.styles.extensions.channel_list.buildUnreadMentionMutedBackgroundStyle
 import com.sceyt.chatuikit.theme.Colors
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 import java.util.Date
@@ -83,6 +84,7 @@ import java.util.Date
  * @property channelEventTitleFormatter - Formatter for activity title, default is [SceytChatUIKitFormatters.channelListChannelEventTitleFormatter].
  * @property unreadCountFormatter - Formatter for unread count, default is [SceytChatUIKitFormatters.unreadCountFormatter].
  * @property lastMessageBodyFormatter - Formatter for last message body, default is [SceytChatUIKitFormatters.channelLastMessageBodyFormatter].
+ * @property unsupportedMessageBodyFormatter - Formatter for unsupported message body, default is [SceytChatUIKitFormatters.unSupportMessageBodyFormatter].
  * @property draftMessageBodyFormatter - Formatter for draft message body, default is [SceytChatUIKitFormatters.channelDraftLastMessageBodyFormatter].
  * @property channelSubtitleFormatter - Formatter for channel subtitle, default is [SceytChatUIKitFormatters.channelListItemSubtitleFormatter].
  * @property attachmentIconProvider - Provider for attachment icon, default is [SceytChatUIKitProviders.attachmentIconProvider].
@@ -90,43 +92,44 @@ import java.util.Date
  * @property channelAvatarRenderer - Renderer for channel avatar, default is [SceytChatUIKitRenderers.channelAvatarRenderer].
  * */
 data class ChannelItemStyle(
-        @param:ColorInt val backgroundColor: Int,
-        @param:ColorInt val pinnedChannelBackgroundColor: Int,
-        @param:ColorInt val dividerColor: Int,
-        @param:ColorInt val linkTextColor: Int,
-        val mutedIcon: Drawable?,
-        val pinIcon: Drawable?,
-        val autoDeletedChannelIcon: Drawable?,
-        val unreadMentionIcon: Drawable?,
-        val messageDeliveryStatusIcons: MessageDeliveryStatusIcons,
-        val deliveryStatusIndicatorSize: Int,
-        val messageDeletedStateText: String,
-        val subjectTextStyle: TextStyle,
-        val lastMessageTextStyle: TextStyle,
-        val dateTextStyle: TextStyle,
-        val lastMessageSenderNameTextStyle: TextStyle,
-        val deletedTextStyle: TextStyle,
-        val draftPrefixTextStyle: TextStyle,
-        val channelEventTextStyle: TextStyle,
-        val unreadCountTextStyle: TextStyle,
-        val unreadCountMutedStateTextStyle: TextStyle,
-        val mentionTextStyle: TextStyle,
-        val unreadMentionBackgroundStyle: BackgroundStyle,
-        val unreadMentionMutedStateBackgroundStyle: BackgroundStyle,
-        val avatarStyle: AvatarStyle,
-        val channelTitleFormatter: Formatter<SceytChannel>,
-        val channelSubtitleFormatter: Formatter<ChannelItemSubtitleFormatterAttributes>,
-        val channelDateFormatter: Formatter<Date>,
-        val lastMessageSenderNameFormatter: Formatter<SceytChannel>,
-        val mentionUserNameFormatter: Formatter<SceytUser>,
-        val reactedUserNameFormatter: Formatter<SceytUser>,
-        val channelEventTitleFormatter: Formatter<ChannelEventTitleFormatterAttributes>,
-        val unreadCountFormatter: Formatter<Long>,
-        val lastMessageBodyFormatter: Formatter<MessageBodyFormatterAttributes>,
-        val draftMessageBodyFormatter: Formatter<DraftMessageBodyFormatterAttributes>,
-        val attachmentIconProvider: VisualProvider<SceytAttachment, Drawable?>,
-        val presenceStateColorProvider: VisualProvider<PresenceState, Int>,
-        val channelAvatarRenderer: AvatarRenderer<SceytChannel>,
+    @param:ColorInt val backgroundColor: Int,
+    @param:ColorInt val pinnedChannelBackgroundColor: Int,
+    @param:ColorInt val dividerColor: Int,
+    @param:ColorInt val linkTextColor: Int,
+    val mutedIcon: Drawable?,
+    val pinIcon: Drawable?,
+    val autoDeletedChannelIcon: Drawable?,
+    val unreadMentionIcon: Drawable?,
+    val messageDeliveryStatusIcons: MessageDeliveryStatusIcons,
+    val deliveryStatusIndicatorSize: Int,
+    val messageDeletedStateText: String,
+    val subjectTextStyle: TextStyle,
+    val lastMessageTextStyle: TextStyle,
+    val dateTextStyle: TextStyle,
+    val lastMessageSenderNameTextStyle: TextStyle,
+    val deletedTextStyle: TextStyle,
+    val draftPrefixTextStyle: TextStyle,
+    val channelEventTextStyle: TextStyle,
+    val unreadCountTextStyle: TextStyle,
+    val unreadCountMutedStateTextStyle: TextStyle,
+    val mentionTextStyle: TextStyle,
+    val unreadMentionBackgroundStyle: BackgroundStyle,
+    val unreadMentionMutedStateBackgroundStyle: BackgroundStyle,
+    val avatarStyle: AvatarStyle,
+    val channelTitleFormatter: Formatter<SceytChannel>,
+    val channelSubtitleFormatter: Formatter<ChannelItemSubtitleFormatterAttributes>,
+    val channelDateFormatter: Formatter<Date>,
+    val lastMessageSenderNameFormatter: Formatter<SceytChannel>,
+    val mentionUserNameFormatter: Formatter<SceytUser>,
+    val reactedUserNameFormatter: Formatter<SceytUser>,
+    val channelEventTitleFormatter: Formatter<ChannelEventTitleFormatterAttributes>,
+    val unreadCountFormatter: Formatter<Long>,
+    val lastMessageBodyFormatter: Formatter<MessageBodyFormatterAttributes>,
+    val unsupportedMessageBodyShortFormatter: Formatter<SceytMessage>,
+    val draftMessageBodyFormatter: Formatter<DraftMessageBodyFormatterAttributes>,
+    val attachmentIconProvider: VisualProvider<SceytAttachment, Drawable?>,
+    val presenceStateColorProvider: VisualProvider<PresenceState, Int>,
+    val channelAvatarRenderer: AvatarRenderer<SceytChannel>,
 ) {
 
     companion object {
@@ -215,6 +218,7 @@ data class ChannelItemStyle(
                     channelEventTitleFormatter = SceytChatUIKit.formatters.channelListChannelEventTitleFormatter,
                     unreadCountFormatter = SceytChatUIKit.formatters.unreadCountFormatter,
                     lastMessageBodyFormatter = SceytChatUIKit.formatters.channelLastMessageBodyFormatter,
+                    unsupportedMessageBodyShortFormatter = SceytChatUIKit.formatters.unsupportedMessageShortBodyFormatter,
                     draftMessageBodyFormatter = SceytChatUIKit.formatters.channelDraftLastMessageBodyFormatter,
                     channelSubtitleFormatter = SceytChatUIKit.formatters.channelListItemSubtitleFormatter,
                     attachmentIconProvider = SceytChatUIKit.providers.channelListAttachmentIconProvider,

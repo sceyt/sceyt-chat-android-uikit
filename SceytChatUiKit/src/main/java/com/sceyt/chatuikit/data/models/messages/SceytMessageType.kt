@@ -1,5 +1,4 @@
 package com.sceyt.chatuikit.data.models.messages
-
 import java.util.concurrent.ConcurrentHashMap
 
 abstract class SceytMessageType(val value: String) {

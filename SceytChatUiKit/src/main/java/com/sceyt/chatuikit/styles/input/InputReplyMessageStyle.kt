@@ -7,6 +7,7 @@ import androidx.annotation.ColorInt
 import androidx.annotation.StyleableRes
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
+import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.formatters.attributes.MessageBodyFormatterAttributes
@@ -16,17 +17,18 @@ import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.TextStyle
 
 data class InputReplyMessageStyle(
-        @param:ColorInt val backgroundColor: Int,
-        val replyIcon: Drawable?,
-        val titleTextStyle: TextStyle,
-        val senderNameTextStyle: TextStyle,
-        val bodyTextStyle: TextStyle,
-        val mentionTextStyle: TextStyle,
-        val attachmentDurationTextStyle: TextStyle,
-        val attachmentDurationFormatter: Formatter<Long>,
-        val senderNameFormatter: Formatter<SceytUser>,
-        val messageBodyFormatter: Formatter<MessageBodyFormatterAttributes>,
-        val attachmentIconProvider: VisualProvider<SceytAttachment, Drawable?>,
+    @param:ColorInt val backgroundColor: Int,
+    val replyIcon: Drawable?,
+    val titleTextStyle: TextStyle,
+    val senderNameTextStyle: TextStyle,
+    val bodyTextStyle: TextStyle,
+    val mentionTextStyle: TextStyle,
+    val attachmentDurationTextStyle: TextStyle,
+    val attachmentDurationFormatter: Formatter<Long>,
+    val senderNameFormatter: Formatter<SceytUser>,
+    val messageBodyFormatter: Formatter<MessageBodyFormatterAttributes>,
+    val unsupportedMessageShortBodyFormatter: Formatter<SceytMessage>,
+    val attachmentIconProvider: VisualProvider<SceytAttachment, Drawable?>,
 ) {
     companion object {
         var styleCustomizer = StyleCustomizer<InputReplyMessageStyle> { _, style -> style }
@@ -73,6 +75,7 @@ data class InputReplyMessageStyle(
             this.attachmentDurationTextStyle = attachmentDurationTextStyle
         }
 
+
         fun build() = InputReplyMessageStyle(
             backgroundColor = backgroundColor,
             replyIcon = replyIcon,
@@ -84,6 +87,7 @@ data class InputReplyMessageStyle(
             attachmentDurationFormatter = SceytChatUIKit.formatters.mediaDurationFormatter,
             senderNameFormatter = SceytChatUIKit.formatters.userNameFormatter,
             messageBodyFormatter = SceytChatUIKit.formatters.replyMessageBodyFormatter,
+            unsupportedMessageShortBodyFormatter = SceytChatUIKit.formatters.unsupportedMessageShortBodyFormatter,
             attachmentIconProvider = SceytChatUIKit.providers.attachmentIconProvider
         ).let { styleCustomizer.apply(context, it) }
     }
