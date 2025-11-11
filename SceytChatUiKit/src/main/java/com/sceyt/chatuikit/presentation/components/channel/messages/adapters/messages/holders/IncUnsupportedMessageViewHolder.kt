@@ -62,6 +62,7 @@ class IncUnsupportedMessageViewHolder(
                 if (diff.edited || diff.bodyChanged) {
                     val body = style.unsupportedMessageBodyFormatter.format(context, message)
                     messageBody.setText(body, TextView.BufferType.SPANNABLE)
+                    setBodyTextPosition(messageBody, messageDate, layoutDetails)
                 }
 
                 if (diff.avatarChanged || diff.showAvatarAndNameChanged)
