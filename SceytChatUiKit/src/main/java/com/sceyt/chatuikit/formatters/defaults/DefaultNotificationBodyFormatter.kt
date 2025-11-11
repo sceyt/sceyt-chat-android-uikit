@@ -7,7 +7,7 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.constants.SceytConstants
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
-import com.sceyt.chatuikit.data.models.messages.MessageTypeEnum
+import com.sceyt.chatuikit.data.models.messages.SceytMessageType
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.extensions.whitSpace
 import com.sceyt.chatuikit.formatters.Formatter
@@ -30,7 +30,7 @@ open class DefaultNotificationBodyFormatter : Formatter<PushData> {
 
         val formattedBody = buildSpannedString {
             when (from.message.type) {
-                MessageTypeEnum.Poll.value -> {
+                SceytMessageType.Poll.value -> {
                     append(SceytConstants.emojiPoll.whitSpace())
                 }
 
