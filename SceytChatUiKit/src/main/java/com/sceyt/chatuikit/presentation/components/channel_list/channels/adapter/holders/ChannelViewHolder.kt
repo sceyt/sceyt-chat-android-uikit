@@ -31,10 +31,10 @@ import com.sceyt.chatuikit.styles.channel.ChannelItemStyle
 import java.util.Date
 
 open class ChannelViewHolder(
-        private val binding: SceytItemChannelBinding,
-        private val itemStyle: ChannelItemStyle,
-        private var listeners: ChannelClickListeners.ClickListeners,
-        private val attachDetachListener: ((ChannelListItem?, attached: Boolean) -> Unit)? = null,
+    private val binding: SceytItemChannelBinding,
+    private val itemStyle: ChannelItemStyle,
+    private var listeners: ChannelClickListeners.ClickListeners,
+    private val attachDetachListener: ((ChannelListItem?, attached: Boolean) -> Unit)? = null,
 ) : BaseChannelViewHolder(binding.root) {
 
     init {
@@ -152,8 +152,8 @@ open class ChannelViewHolder(
     }
 
     protected open fun setAvatar(
-            channel: SceytChannel,
-            avatarView: AvatarView,
+        channel: SceytChannel,
+        avatarView: AvatarView,
     ) {
         itemStyle.channelAvatarRenderer.render(
             context = context,
@@ -164,8 +164,8 @@ open class ChannelViewHolder(
     }
 
     protected open fun setLastMessageStatusAndDate(
-            channel: SceytChannel,
-            decoratedTextView: DecoratedTextView,
+        channel: SceytChannel,
+        decoratedTextView: DecoratedTextView,
     ) {
         val data = getDateData(channel)
         val shouldShowStatus = data.second
@@ -174,16 +174,22 @@ open class ChannelViewHolder(
             itemStyle = itemStyle,
             dateText = data.first,
             edited = false,
-            shouldShowStatus = shouldShowStatus)
+            shouldShowStatus = shouldShowStatus
+        )
     }
 
     protected open fun setPresenceState(
-            channel: SceytChannel,
-            indicatorView: PresenceStateIndicatorView,
+        channel: SceytChannel,
+        indicatorView: PresenceStateIndicatorView,
     ) {
         val state = channel.getPeer()?.user?.presence?.state ?: PresenceState.Offline
         val showState = !channel.isSelf && channel.isDirect() && state == PresenceState.Online
-        indicatorView.setIndicatorColor(itemStyle.presenceStateColorProvider.provide(context, state))
+        indicatorView.setIndicatorColor(
+            itemStyle.presenceStateColorProvider.provide(
+                context,
+                state
+            )
+        )
         indicatorView.isVisible = showState
     }
 
@@ -236,8 +242,8 @@ open class ChannelViewHolder(
     }
 
     protected open fun initChannelEventTitle(
-            channel: SceytChannel,
-            channelEventData: List<ChannelEventData>,
+        channel: SceytChannel,
+        channelEventData: List<ChannelEventData>,
     ): CharSequence {
         return itemStyle.channelEventTitleFormatter.format(
             context = context,
@@ -260,7 +266,7 @@ open class ChannelViewHolder(
             channel.lastMessage != null -> {
                 val lastMessageCreatedAt = channel.lastMessage.createdAt
                 val lastReactionCreatedAt = channel.newReactions?.maxByOrNull { it.id }?.createdAt
-                        ?: 0
+                    ?: 0
                 if (lastReactionCreatedAt > lastMessageCreatedAt)
                     lastReactionCreatedAt
                 else lastMessageCreatedAt

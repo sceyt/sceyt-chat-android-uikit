@@ -229,7 +229,6 @@ fun SceytMessage.getUpdateMessage(message: SceytMessage): SceytMessage {
         files = message.files,
     )
 }
-
 fun SceytMessage.getMessageType(): SceytMessageType {
     return SceytMessageType.fromString(type)
 }
