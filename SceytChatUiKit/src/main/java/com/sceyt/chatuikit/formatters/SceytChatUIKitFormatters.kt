@@ -116,7 +116,7 @@ class SceytChatUIKitFormatters {
         DefaultMessageBodyFormatter()
     }
 
-    var unSupportMessageBodyFormatter: Formatter<SceytMessage> by lazyVar {
+    var unsupportedMessageBodyFormatter: Formatter<SceytMessage> by lazyVar {
         DefaultUnsupportedMessageBodyFormatter()
     }
 
