@@ -267,6 +267,8 @@
     <string name="sceyt_not_now">Not now</string>
     <string name="sceyt_end_poll_dialog_desc">Are you sure you want to end this poll? People will no longer be able to vote.</string>
     <string name="sceyt_end_poll_dialog_title">End poll?</string>
-    <string name="multiple_votes">Multiple votes</string>
-    <string name="single_vote">Single vote</string>
+    <string name="sceyt_multiple_votes">Multiple votes</string>
+    <string name="sceyt_single_vote">Single vote</string>
+    <string name="sceyt_failed_to_generate_qr_code">Failed to generate QR code</string>
+    <string name="sceyt_failed_to_save_qr_code">Failed to save QR code</string>
 </resources>
