@@ -63,7 +63,7 @@ import com.sceyt.chatuikit.presentation.components.channel.header.listeners.ui.s
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageCommandEvent
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoActivity
 import com.sceyt.chatuikit.presentation.custom_views.AvatarView
-import com.sceyt.chatuikit.presentation.extensions.isUnsupported
+import com.sceyt.chatuikit.presentation.extensions.isSupportedType
 import com.sceyt.chatuikit.styles.common.MenuStyle
 import com.sceyt.chatuikit.styles.messages_list.MessagesListHeaderStyle
 import kotlinx.coroutines.delay
@@ -565,11 +565,11 @@ class MessagesListHeaderView @JvmOverloads constructor(
         val firstMessage = messages.first()
         val now = System.currentTimeMillis()
 
-        val isUnsupportedFirst = firstMessage.isUnsupported()
+        val isUnsupportedFirst = !firstMessage.isSupportedType()
 
         val anyPending = messages.any { it.deliveryStatus == DeliveryStatus.Pending }
-        val anyPollInSelection = messages.any { it.type == MessageTypeEnum.Poll.value }
-        val anyUnsupportedInSelection = messages.any { it.isUnsupported() }
+        val anyPollInSelection = messages.any { it.type == SceytMessageType.Poll.value }
+        val anyUnsupportedInSelection = messages.any { !it.isSupportedType() }
 
         val poll = firstMessage.poll
         val isPollMessage = poll != null

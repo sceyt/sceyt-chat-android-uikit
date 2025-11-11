@@ -11,7 +11,7 @@ import com.sceyt.chatuikit.formatters.Formatter
 
 open class DefaultUnsupportedMessageBodyFormatter : Formatter<SceytMessage> {
     override fun format(context: Context, from: SceytMessage): CharSequence {
-        val body = context.getString(R.string.unsupported_message_text)
+        val body = context.getString(R.string.sceyt_unsupported_message_text)
         val span = SpannableString(body)
         span.setSpan(
             StyleSpan(Typeface.ITALIC),

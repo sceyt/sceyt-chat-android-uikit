@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
+import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessageType
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytItemOutFileMessageBinding
@@ -31,6 +32,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.mes
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListenersImpl
+import com.sceyt.chatuikit.presentation.extensions.getMessageType
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
 open class MessageInfoViewProvider(
@@ -115,7 +117,10 @@ open class MessageInfoViewProvider(
         )
     }
 
-    private fun createOutLinkMsgViewHolder(viewStub: ViewStub, layoutId: Int): BaseMessageViewHolder {
+    protected open fun createOutLinkMsgViewHolder(
+        viewStub: ViewStub,
+        layoutId: Int
+    ): BaseMessageViewHolder {
         viewStub.layoutResource = layoutId
         val binding = SceytItemOutLinkMessageBinding.bind(viewStub.inflate())
         return OutLinkMessageViewHolder(
@@ -186,13 +191,18 @@ open class MessageInfoViewProvider(
         )
     }
 
-    private fun createOutUnsupportedMsgViewHolder(
+    protected open fun createOutUnsupportedMsgViewHolder(
         viewStub: ViewStub,
         layoutId: Int
     ): BaseMessageViewHolder {
         viewStub.layoutResource = layoutId
         val binding = SceytItemOutUnsupportedMessageBinding.bind(viewStub.inflate())
-        return OutUnsupportedMessageViewHolder(binding, viewPoolReactions, messageItemStyle, clickListeners)
+        return OutUnsupportedMessageViewHolder(
+            binding,
+            viewPoolReactions,
+            messageItemStyle,
+            clickListeners
+        )
     }
 
     private fun pick(inc: Boolean, incType: MessageViewTypeEnum, outType: MessageViewTypeEnum) =
@@ -206,18 +216,23 @@ open class MessageInfoViewProvider(
             return pick(inc, MessageViewTypeEnum.IncDeleted, MessageViewTypeEnum.OutDeleted).ordinal
         }
 
-        return when (MessageTypeEnum.fromValue(message.type)) {
-            MessageTypeEnum.Poll ->
+        return when (message.getMessageType()) {
+            SceytMessageType.Poll ->
                 pick(inc, MessageViewTypeEnum.IncPoll, MessageViewTypeEnum.OutPoll).ordinal
 
-            MessageTypeEnum.Text,
-            MessageTypeEnum.Media,
-            MessageTypeEnum.File,
-            MessageTypeEnum.Link ->
+            SceytMessageType.Text,
+            SceytMessageType.Media,
+            SceytMessageType.File,
+            SceytMessageType.Link ->
                 resolveContentViewType(inc, attachments).ordinal
 
-            MessageTypeEnum.System, null ->
-                pick(inc, MessageViewTypeEnum.IncUnsupported, MessageViewTypeEnum.OutUnsupported).ordinal
+            else ->
+                pick(
+                    inc,
+                    MessageViewTypeEnum.IncUnsupported,
+                    MessageViewTypeEnum.OutUnsupported
+                ).ordinal
+
         }
     }
 

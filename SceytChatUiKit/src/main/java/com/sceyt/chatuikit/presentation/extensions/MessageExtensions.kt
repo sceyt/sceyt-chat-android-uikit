@@ -8,7 +8,6 @@ import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.channels.DraftMessage
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
-import com.sceyt.chatuikit.data.models.messages.MessageTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytMessageType
@@ -230,7 +229,6 @@ fun SceytMessage.getUpdateMessage(message: SceytMessage): SceytMessage {
         files = message.files,
     )
 }
-
 fun SceytMessage.getMessageType(): SceytMessageType {
     return SceytMessageType.fromString(type)
 }
