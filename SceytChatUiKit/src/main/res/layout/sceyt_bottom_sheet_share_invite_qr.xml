@@ -35,7 +35,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:gravity="center"
-        android:paddingHorizontal="20dp"
+        android:paddingHorizontal="15dp"
         android:text="@string/sceyt_share_channel_link_desc"
         android:textColor="@color/sceyt_color_text_secondary"
         android:textSize="13sp"
