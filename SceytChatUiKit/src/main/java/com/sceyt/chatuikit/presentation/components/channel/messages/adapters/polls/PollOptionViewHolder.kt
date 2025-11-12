@@ -33,6 +33,12 @@ open class PollOptionViewHolder(
                 onOptionClick?.invoke(currentOption)
             }
         }
+
+        binding.tvVoteCount.setOnClickListener {
+            if (::currentOption.isInitialized && !currentOption.closed) {
+                onVotersClick?.invoke(currentOption)
+            }
+        }
     }
 
     open fun bind(
