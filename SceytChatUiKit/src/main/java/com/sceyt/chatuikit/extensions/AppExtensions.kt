@@ -84,7 +84,7 @@ fun customToastSnackBar(view: View?, message: String?, maxLines: Int = 5) {
             Snackbar.make(view, message, Snackbar.LENGTH_LONG)
                 .setTextMaxLines(maxLines)
                 .show()
-    } catch (ex: Exception) {
+    } catch (_: Exception) {
         view?.context?.let { Toast.makeText(it, message, Toast.LENGTH_SHORT).show() }
     }
 }

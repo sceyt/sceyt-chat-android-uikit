@@ -1062,8 +1062,16 @@ internal class PersistenceChannelsLogicImpl(
         }
     }
 
-    override suspend fun updateLastMessageIfNeeded(channelId: Long, message: SceytMessage?) {
-        if (message?.deliveryStatus != DeliveryStatus.Pending) {
+    override suspend fun updateLastMessageOnMessagesResponseIfNeeded(
+        channelId: Long,
+        message: SceytMessage?
+    ) {
+        val cashedChannel = channelsCache.getOneOf(channelId)
+        // Check if both last messages are not pending
+        val needToUpdateLastMessage = message?.deliveryStatus != DeliveryStatus.Pending
+                && cashedChannel?.lastMessage?.deliveryStatus != DeliveryStatus.Pending
+
+        if (needToUpdateLastMessage) {
             channelDao.updateLastMessage(channelId, message?.tid, message?.createdAt)
             channelsCache.updateLastMessage(channelId, message)
         }
