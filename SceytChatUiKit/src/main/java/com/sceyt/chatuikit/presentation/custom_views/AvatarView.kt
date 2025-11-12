@@ -40,9 +40,9 @@ import kotlin.math.abs
 import kotlin.math.ceil
 
 class AvatarView @JvmOverloads constructor(
-        context: Context,
-        attrs: AttributeSet? = null,
-        defStyleAttr: Int = 0,
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0,
 ) : ShapeableImageView(context, attrs, defStyleAttr) {
     private var imageUrl: String? = null
     private val textPaint = TextPaint(Paint.ANTI_ALIAS_FLAG)
@@ -62,7 +62,7 @@ class AvatarView @JvmOverloads constructor(
     private var placeholder: AvatarPlaceholder? = null
     private var errorPlaceholder: AvatarErrorPlaceHolder? = null
     private val defaultPlaceholder by lazy {
-        context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColorSecondary).toDrawable()
+        context.getCompatColor(R.color.sceyt_color_avatar_placeholder).toDrawable()
     }
     private val emojiProcessor by lazy { EmojiProcessor() }
 
@@ -76,10 +76,12 @@ class AvatarView @JvmOverloads constructor(
                 .setFont(R.styleable.AvatarView_sceytUiAvatarTextFont)
                 .setStyle(R.styleable.AvatarView_sceytUiAvatarTextStyle)
                 .build()
-            avatarBackgroundColor = array.getColor(R.styleable.AvatarView_sceytUiAvatarColor, avatarBackgroundColor)
+            avatarBackgroundColor =
+                array.getColor(R.styleable.AvatarView_sceytUiAvatarColor, avatarBackgroundColor)
             borderWidth = array.getDimension(R.styleable.AvatarView_sceytUiAvatarBorderWidth, 0f)
             borderColor = array.getColor(R.styleable.AvatarView_sceytUiAvatarBorderColor, 0)
-            val defaultAvatarResId = array.getResourceId(R.styleable.AvatarView_sceytUiAvatarDefaultIcon, 0)
+            val defaultAvatarResId =
+                array.getResourceId(R.styleable.AvatarView_sceytUiAvatarDefaultIcon, 0)
             enableRipple = array.getBoolean(R.styleable.AvatarView_sceytUiAvatarEnableRipple, true)
 
             defaultAvatar = when {
@@ -92,7 +94,8 @@ class AvatarView @JvmOverloads constructor(
                 else -> null
             }
             val shapeValue = array.getInt(R.styleable.AvatarView_sceytUiAvatarShape, 0)
-            val cornerRadius = array.getDimension(R.styleable.AvatarView_sceytUiAvatarCornerRadius, 0f)
+            val cornerRadius =
+                array.getDimension(R.styleable.AvatarView_sceytUiAvatarCornerRadius, 0f)
             shape = if (shapeValue == 1) {
                 Shape.RoundedCornerShape(cornerRadius)
             } else Shape.Circle
@@ -165,7 +168,12 @@ class AvatarView @JvmOverloads constructor(
         val paint = backgroundPaint.apply { this.color = color }
         when (val avatarShape = shape) {
             Shape.Circle -> {
-                canvas.drawCircle((width / 2).toFloat(), (height / 2).toFloat(), (width / 2).toFloat(), paint)
+                canvas.drawCircle(
+                    (width / 2).toFloat(),
+                    (height / 2).toFloat(),
+                    (width / 2).toFloat(),
+                    paint
+                )
             }
 
             is Shape.RoundedCornerShape -> {
@@ -278,7 +286,7 @@ class AvatarView @JvmOverloads constructor(
                 imageView = this,
                 placeholder = placeholder ?: AvatarPlaceholder.FromDrawable(defaultPlaceholder),
                 errorPlaceholder = errorPlaceholder
-                        ?: AvatarErrorPlaceHolder.FromDrawable(defaultPlaceholder),
+                    ?: AvatarErrorPlaceHolder.FromDrawable(defaultPlaceholder),
                 loadCallback = { loading ->
                     avatarLoadCb?.invoke(loading)
                 },
@@ -398,12 +406,12 @@ class AvatarView @JvmOverloads constructor(
     fun appearanceBuilder() = AppearanceBuilder()
 
     inner class AvatarAppearance(
-            val style: AvatarStyle,
-            val imageUrl: String?,
-            val defaultAvatar: DefaultAvatar?,
-            val placeholder: AvatarPlaceholder?,
-            val errorPlaceholder: AvatarErrorPlaceHolder?,
-            val preloadForOffline: Boolean,
+        val style: AvatarStyle,
+        val imageUrl: String?,
+        val defaultAvatar: DefaultAvatar?,
+        val placeholder: AvatarPlaceholder?,
+        val errorPlaceholder: AvatarErrorPlaceHolder?,
+        val preloadForOffline: Boolean,
     ) {
 
         fun applyToAvatar() {
