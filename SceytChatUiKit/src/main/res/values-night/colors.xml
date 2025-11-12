@@ -33,5 +33,6 @@
     <color name="sceyt_color_bg_inc_link_preview">#303032</color>
     <color name="sceyt_switch_track_unchecked_color">#464749</color>
     <color name="sceyt_progress_track_color">#464749</color>
+    <color name="sceyt_color_avatar_placeholder">#323235</color>
 
 </resources>

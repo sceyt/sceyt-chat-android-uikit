@@ -21,8 +21,6 @@ open class DefaultVoterAvatarRenderer : AvatarRenderer<VoterAvatarRendererAttrib
             .setStyle(style)
             .setDefaultAvatar(defaultAvatar)
             .setImageUrl(from.voter.avatarURL)
-            .setErrorPlaceholder(AvatarView.AvatarErrorPlaceHolder.FromDrawable(defaultAvatar))
-            .setPlaceholder(AvatarView.AvatarPlaceholder.FromDrawable(defaultAvatar))
             .setBorder(5f, from.bubbleBackgroundStyle.backgroundColor)
             .build()
             .applyToAvatar()

@@ -12,26 +12,30 @@ import com.sceyt.chatuikit.styles.common.AvatarStyle
 
 open class DefaultUserAndNotesAvatarRenderer : AvatarRenderer<SceytUser> {
 
-    override fun render(context: Context, from: SceytUser, style: AvatarStyle, avatarView: AvatarView) {
-
-        val defaultAvatar = SceytChatUIKit.providers.userDefaultAvatarProvider.provide(context, from)
+    override fun render(
+        context: Context,
+        from: SceytUser,
+        style: AvatarStyle,
+        avatarView: AvatarView
+    ) {
+        var defaultAvatar =
+            SceytChatUIKit.providers.userDefaultAvatarProvider.provide(context, from)
         val builder = avatarView.appearanceBuilder()
             .setStyle(style)
-            .setDefaultAvatar(defaultAvatar)
             .setImageUrl(from.avatarURL)
 
         if (from.id == SceytChatUIKit.currentUserId) {
-            builder.setImageUrl(null)
-            builder.setDefaultAvatar(
-                drawable = context
-                    .getCompatDrawable(R.drawable.sceyt_ic_notes_with_bachgriund_layers)
+            defaultAvatar =
+                context.getCompatDrawable(R.drawable.sceyt_ic_notes_with_bachgriund_layers)
                     .applyTintBackgroundLayer(
                         context = context,
                         tintColor = SceytChatUIKit.theme.colors.accentColor,
                         bgLayerId = R.id.backgroundLayer
-                    ))
+                    )
+            builder.setImageUrl(null)
         }
 
+        builder.setDefaultAvatar(defaultAvatar)
         builder.build().applyToAvatar()
     }
 }
