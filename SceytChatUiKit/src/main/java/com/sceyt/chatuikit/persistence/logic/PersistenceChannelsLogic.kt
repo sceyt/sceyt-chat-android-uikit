@@ -26,25 +26,25 @@ interface PersistenceChannelsLogic {
     suspend fun handlePush(data: PushData)
     suspend fun onMessageEditedOrDeleted(message: SceytMessage)
     fun loadChannels(
-            offset: Int,
-            searchQuery: String,
-            loadKey: LoadKeyData?,
-            onlyMine: Boolean,
-            ignoreDb: Boolean,
-            awaitForConnection: Boolean,
-            config: ChannelListConfig,
+        offset: Int,
+        searchQuery: String,
+        loadKey: LoadKeyData?,
+        onlyMine: Boolean,
+        ignoreDb: Boolean,
+        awaitForConnection: Boolean,
+        config: ChannelListConfig,
     ): Flow<PaginationResponse<SceytChannel>>
 
     suspend fun searchChannelsWithUserIds(
-            offset: Int,
-            searchQuery: String,
-            userIds: List<String>,
-            config: ChannelListConfig,
-            includeSearchByUserDisplayName: Boolean,
-            onlyMine: Boolean,
-            ignoreDb: Boolean,
-            loadKey: LoadKeyData?,
-            directChatType: String,
+        offset: Int,
+        searchQuery: String,
+        userIds: List<String>,
+        config: ChannelListConfig,
+        includeSearchByUserDisplayName: Boolean,
+        onlyMine: Boolean,
+        ignoreDb: Boolean,
+        loadKey: LoadKeyData?,
+        directChatType: String,
     ): Flow<PaginationResponse<SceytChannel>>
 
     suspend fun getChannelsBySQLiteQuery(query: SimpleSQLiteQuery): List<SceytChannel>
@@ -80,7 +80,7 @@ interface PersistenceChannelsLogic {
     suspend fun joinWithInviteKey(inviteKey: String): SceytResponse<SceytChannel>
     suspend fun setUnreadCount(channelId: Long, count: Int)
     suspend fun updateLastMessageWithLastRead(channelId: Long, message: SceytMessage)
-    suspend fun updateLastMessageIfNeeded(channelId: Long, message: SceytMessage?)
+    suspend fun updateLastMessageOnMessagesResponseIfNeeded(channelId: Long, message: SceytMessage?)
     suspend fun blockUnBlockUser(userId: String, block: Boolean)
     suspend fun sendChannelEvent(channelId: Long, event: String)
     suspend fun updateDraftMessage(draftMessage: DraftMessage)
