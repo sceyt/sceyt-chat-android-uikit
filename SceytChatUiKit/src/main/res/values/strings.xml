@@ -272,4 +272,6 @@
     <string name="sceyt_single_vote">Single vote</string>
     <string name="sceyt_failed_to_generate_qr_code">Failed to generate QR code</string>
     <string name="sceyt_failed_to_save_qr_code">Failed to save QR code</string>
+    <string name="sceyt_discard_poll_title">Discard poll?</string>
+    <string name="sceyt_discard_poll_desc">Are you sure you want to discard this poll?</string>
 </resources>
