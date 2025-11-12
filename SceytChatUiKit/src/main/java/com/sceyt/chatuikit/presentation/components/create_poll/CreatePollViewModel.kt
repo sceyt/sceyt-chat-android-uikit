@@ -164,6 +164,13 @@ class CreatePollViewModel(
         }
     }
 
+    fun hasAnyInput(): Boolean {
+        val state = _uiState.value
+        val hasQuestion = state.question.isNotBlank()
+        val hasOptions = state.options.any { it.text.isNotBlank() }
+        return hasQuestion || hasOptions
+    }
+
     fun createPoll(channelId: Long): Boolean {
         val state = _uiState.value
         if (!state.isValid) {

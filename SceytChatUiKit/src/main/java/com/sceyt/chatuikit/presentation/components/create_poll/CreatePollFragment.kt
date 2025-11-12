@@ -5,11 +5,13 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.OnBackPressedCallback
 import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
+import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytFragmentCreatePollBinding
 import com.sceyt.chatuikit.extensions.customToastSnackBar
@@ -19,6 +21,7 @@ import com.sceyt.chatuikit.extensions.setMultiLineWithImeOptions
 import com.sceyt.chatuikit.extensions.setOnlyClickable
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.logicimpl.message.ChannelId
+import com.sceyt.chatuikit.presentation.common.SceytDialog
 import com.sceyt.chatuikit.presentation.components.create_poll.adapters.CreatePollOptionsAdapter
 import com.sceyt.chatuikit.presentation.components.create_poll.adapters.PollOptionItemAnimator
 import com.sceyt.chatuikit.shared.helpers.ReorderSwipeController
@@ -33,6 +36,7 @@ open class CreatePollFragment : Fragment(), SceytKoinComponent {
     protected lateinit var style: CreatePollStyle
     protected val viewModel: CreatePollViewModel by viewModel()
     protected var pollOptionsAdapter: CreatePollOptionsAdapter? = null
+    protected var backPressCallback: OnBackPressedCallback? = null
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -57,6 +61,7 @@ open class CreatePollFragment : Fragment(), SceytKoinComponent {
         initViewModel()
         initViews()
         initPollOptionsAdapter()
+        setupBackPressHandler()
     }
 
     protected open fun initViewModel() {
@@ -68,7 +73,7 @@ open class CreatePollFragment : Fragment(), SceytKoinComponent {
 
     protected fun initViews() = with(binding) {
         toolbar.setNavigationClickListener {
-            requireActivity().onBackPressedDispatcher.onBackPressed()
+            handleBackPress()
         }
 
         // Setup question input
@@ -100,6 +105,19 @@ open class CreatePollFragment : Fragment(), SceytKoinComponent {
                 requireActivity().onBackPressedDispatcher.onBackPressed()
             }
         }
+    }
+
+    protected open fun setupBackPressHandler() {
+        val callback = object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                handleBackPress()
+            }
+        }
+        backPressCallback = callback
+        requireActivity().onBackPressedDispatcher.addCallback(
+            owner = viewLifecycleOwner,
+            onBackPressedCallback = callback
+        )
     }
 
     protected open fun initPollOptionsAdapter() {
@@ -155,6 +173,32 @@ open class CreatePollFragment : Fragment(), SceytKoinComponent {
             this.isEnabled = isEnabled
             alpha = if (isEnabled) 1.0f else 0.5f
         }
+    }
+
+    protected open fun handleBackPress() {
+        if (viewModel.hasAnyInput()) {
+            showDiscardPollDialog()
+        } else {
+            finishScreen()
+        }
+    }
+
+    protected open fun showDiscardPollDialog() {
+        SceytDialog.showDialog(
+            context = requireContext(),
+            title = getString(R.string.sceyt_discard_poll_title),
+            description = getString(R.string.sceyt_discard_poll_desc),
+            positiveBtnTitle = getString(R.string.sceyt_discard),
+            negativeBtnTitle = getString(R.string.sceyt_cancel),
+            positiveCb = {
+                finishScreen()
+            }
+        )
+    }
+
+    protected open fun finishScreen() {
+        backPressCallback?.isEnabled = false
+        requireActivity().onBackPressedDispatcher.onBackPressed()
     }
 
     protected fun applyStyle() = with(binding) {
