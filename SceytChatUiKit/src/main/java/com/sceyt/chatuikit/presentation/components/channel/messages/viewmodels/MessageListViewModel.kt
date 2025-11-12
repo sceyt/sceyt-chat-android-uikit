@@ -681,13 +681,13 @@ class MessageListViewModel(
     }
 
     fun sendMessage(message: Message) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(NonCancellable) {
             messageInteractor.sendMessageAsFlow(channel.id, message).collect()
         }
     }
 
     fun sendMessages(messages: List<Message>) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(NonCancellable) {
             messageInteractor.sendMessages(channel.id, messages)
         }
     }
