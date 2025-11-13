@@ -466,14 +466,15 @@ internal class PersistenceMessagesLogicImpl(
                 if (!createChannelAndSendMessageMutex.isLocked)
                     channelCache.removeFromPendingToRealChannelsData(channelId)
             }
+        } else {
+            sendMessageImpl(
+                channelId = channelId,
+                message = message,
+                isSharing = false,
+                isPendingMessage = false,
+                isUploadedAttachments = false
+            )
         }
-        sendMessageImpl(
-            channelId = channelId,
-            message = message,
-            isSharing = false,
-            isPendingMessage = false,
-            isUploadedAttachments = false
-        )
     }
 
     private suspend fun createChannelAndSendMessageWithLock(
