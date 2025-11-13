@@ -274,6 +274,12 @@ class MessagesListView @JvmOverloads constructor(
                 }
             }
 
+            override fun onPollVotersClick(view: View, item: MessageItem, option: PollOption) {
+                checkMaybeInMultiSelectMode(view, item.message) {
+                    clickListeners.onPollVotersClick(view, item, option)
+                }
+            }
+
             override fun onScrollToDownClick(view: View) {
                 clickListeners.onScrollToDownClick(view)
             }
@@ -1108,6 +1114,10 @@ class MessagesListView @JvmOverloads constructor(
     }
 
     override fun onPollViewResultsClick(view: View, item: MessageItem) {
+        messageCommandEventListener?.invoke(MessageCommandEvent.PollViewResultsClick(item.message))
+    }
+
+    override fun onPollVotersClick(view: View, item: MessageItem, option: PollOption) {
         messageCommandEventListener?.invoke(MessageCommandEvent.PollViewResultsClick(item.message))
     }
 

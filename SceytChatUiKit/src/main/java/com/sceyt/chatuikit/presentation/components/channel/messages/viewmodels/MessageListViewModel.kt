@@ -36,7 +36,7 @@ import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.MessageId
-import com.sceyt.chatuikit.data.models.messages.MessageTypeEnum
+import com.sceyt.chatuikit.data.models.messages.SceytMessageType
 import com.sceyt.chatuikit.data.models.messages.PollOption
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReactionTotal
@@ -681,13 +681,13 @@ class MessageListViewModel(
     }
 
     fun sendMessage(message: Message) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(NonCancellable) {
             messageInteractor.sendMessageAsFlow(channel.id, message).collect()
         }
     }
 
     fun sendMessages(messages: List<Message>) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(NonCancellable) {
             messageInteractor.sendMessages(channel.id, messages)
         }
     }
@@ -1030,7 +1030,7 @@ class MessageListViewModel(
         else {
             val sameSender = prevMessage.user?.id == sceytMessage.user?.id
             channel.isGroup && (!sameSender || shouldShowDate(sceytMessage, prevMessage)
-                    || prevMessage.type == MessageTypeEnum.System.value)
+                    || prevMessage.type == SceytMessageType.System.value)
         }
     }
 

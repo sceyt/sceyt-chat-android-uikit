@@ -33,9 +33,9 @@ import kotlin.math.absoluteValue
 
 
 class MessagesRV @JvmOverloads constructor(
-        context: Context,
-        attrs: AttributeSet? = null,
-        defStyleAttr: Int = 0,
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0,
 ) : RecyclerView(context, attrs, defStyleAttr) {
     private lateinit var mAdapter: MessagesAdapter
     private var viewHolderFactory = MessageViewHolderFactory(context)
@@ -44,13 +44,15 @@ class MessagesRV @JvmOverloads constructor(
     private var scrollStateChangeListener: ((Int) -> Unit)? = null
 
     // Loading prev properties
-    private var needLoadPrevMessagesListener: ((offset: Int, message: MessageListItem?) -> Unit)? = null
+    private var needLoadPrevMessagesListener: ((offset: Int, message: MessageListItem?) -> Unit)? =
+        null
     private var reachToStartInvoked = false
     private var reachToPrefetchDistanceToLoadPrevInvoked = false
     private var reachToStartListener: ((offset: Int, message: MessageListItem?) -> Unit)? = null
 
     // Loading next properties
-    private var needLoadNextMessagesListener: ((offset: Int, message: MessageListItem?) -> Unit)? = null
+    private var needLoadNextMessagesListener: ((offset: Int, message: MessageListItem?) -> Unit)? =
+        null
     private var reachToEndInvoked = false
     private var reachToPrefetchDistanceToLoadNextInvoked = false
     private var reachToEndListener: ((offset: Int, message: MessageListItem?) -> Unit)? = null
@@ -73,7 +75,9 @@ class MessagesRV @JvmOverloads constructor(
             moveDuration = 150
         }
 
-        layoutAnimation = AnimationUtils.loadLayoutAnimation(context, R.anim.sceyt_layout_anim_messages)
+        layoutAnimation = AnimationUtils.loadLayoutAnimation(
+            context, R.anim.sceyt_layout_anim_messages
+        )
 
         layoutManager = SpeedyLinearLayoutManager(context).apply {
             stackFromEnd = true
@@ -117,7 +121,10 @@ class MessagesRV @JvmOverloads constructor(
 
             if (!reachToPrefetchDistanceToLoadPrevInvoked) {
                 reachToPrefetchDistanceToLoadPrevInvoked = true
-                needLoadPrevMessagesListener?.invoke(mAdapter.getSkip(), mAdapter.getFirstMessageItem())
+                needLoadPrevMessagesListener?.invoke(
+                    mAdapter.getSkip(),
+                    mAdapter.getFirstMessageItem()
+                )
             }
         } else reachToPrefetchDistanceToLoadPrevInvoked = false
     }
@@ -190,7 +197,10 @@ class MessagesRV @JvmOverloads constructor(
             if (style.enableDateSeparator)
                 StickyDateHeaderUpdater(this, parent as ViewGroup, mAdapter, style)
 
-            val swipeController = MessageSwipeController(context, style.messageItemStyle) { position ->
+            val swipeController = MessageSwipeController(
+                context = context,
+                style = style.messageItemStyle
+            ) { position ->
                 Handler(Looper.getMainLooper()).postDelayed({
                     mAdapter.getData().getOrNull(position)?.let {
                         swipeToReplyListener?.invoke(it)

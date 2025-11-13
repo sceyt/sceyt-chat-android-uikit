@@ -47,9 +47,9 @@ open class ChannelInviteLinkFragment : Fragment(), SceytKoinComponent {
     }
 
     override fun onCreateView(
-            inflater: LayoutInflater,
-            container: ViewGroup?,
-            savedInstanceState: Bundle?,
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?,
     ): View {
         binding = SceytFragmentChannelInviteLinkBinding.inflate(inflater, container, false)
         return binding.root
@@ -100,6 +100,7 @@ open class ChannelInviteLinkFragment : Fragment(), SceytKoinComponent {
         setLinkDetails(
             link = state.inviteLink.orEmpty(),
             showPrevMessagesAllowed = state.showPreviousMessages,
+            jumpDrawablesToCurrentState = state.jumpDrawablesToCurrentState
         )
         binding.tvResetLink.isVisible = state.allowResetLink
         if (state.isLoading)
@@ -112,11 +113,14 @@ open class ChannelInviteLinkFragment : Fragment(), SceytKoinComponent {
     }
 
     protected fun setLinkDetails(
-            link: String,
-            showPrevMessagesAllowed: Boolean,
+        link: String,
+        showPrevMessagesAllowed: Boolean,
+        jumpDrawablesToCurrentState: Boolean
     ) = with(binding) {
         tvInviteLink.text = link
         switchShowPrevMessages.isChecked = showPrevMessagesAllowed
+        if (jumpDrawablesToCurrentState)
+            switchShowPrevMessages.jumpDrawablesToCurrentState()
     }
 
     protected open fun onResetLinkClick() {
@@ -137,7 +141,8 @@ open class ChannelInviteLinkFragment : Fragment(), SceytKoinComponent {
 
     protected open fun onCopyLinkClick() {
         context?.setClipboard(binding.tvInviteLink.text.toString())
-        Toast.makeText(requireContext(), getString(R.string.sceyt_link_copied), Toast.LENGTH_SHORT).show()
+        Toast.makeText(requireContext(), getString(R.string.sceyt_link_copied), Toast.LENGTH_SHORT)
+            .show()
     }
 
     protected open fun onShareClick() {
@@ -188,8 +193,8 @@ open class ChannelInviteLinkFragment : Fragment(), SceytKoinComponent {
         private const val CHANNEL_KEY = "CHANNEL"
 
         fun newInstance(
-                styleId: String?,
-                channel: SceytChannel,
+            styleId: String?,
+            channel: SceytChannel,
         ) = ChannelInviteLinkFragment().setBundleArguments {
             putString(STYLE_ID_KEY, styleId)
             putParcelable(CHANNEL_KEY, channel)

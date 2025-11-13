@@ -118,11 +118,16 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         getChannel(channel.id)
 
     if (channel.lastDisplayedMessageId == 0L || channel.lastMessage?.deliveryStatus == DeliveryStatus.Pending
-            || channel.lastDisplayedMessageId == channel.lastMessage?.id)
+        || channel.lastDisplayedMessageId == channel.lastMessage?.id
+    )
         loadPrevMessages(channel.lastMessage?.id ?: 0, 0)
     else {
         pinnedLastReadMessageId = channel.lastDisplayedMessageId
-        loadNearMessages(pinnedLastReadMessageId, LoadKeyData(key = LoadKeyType.ScrollToUnreadMessage.longValue), false)
+        loadNearMessages(
+            messageId = pinnedLastReadMessageId,
+            loadKey = LoadKeyData(key = LoadKeyType.ScrollToUnreadMessage.longValue),
+            ignoreServer = false
+        )
     }
 
     fun setUnreadCounts(channel: SceytChannel) {
@@ -133,15 +138,16 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     fun checkEnableDisableActions(channel: SceytChannel) {
         messagesListView.setActionsEnabled(
             enabled = !replyInThread && channel.checkIsMemberInChannel() &&
-                    (channel.isGroup || channel.getPeer()?.user?.blocked != true), false)
+                    (channel.isGroup || channel.getPeer()?.user?.blocked != true), false
+        )
     }
 
     checkEnableDisableActions(channel)
     setUnreadCounts(channel)
 
     suspend fun getCompareMessage(
-            loadType: PaginationResponse.LoadType,
-            proportion: List<SceytMessage>,
+        loadType: PaginationResponse.LoadType,
+        proportion: List<SceytMessage>,
     ): SceytMessage? = withContext(Dispatchers.Default) {
         if (proportion.isEmpty()) return@withContext null
         val proportionFirstId = proportion.first().id
@@ -196,34 +202,64 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     suspend fun initPaginationDbResponse(response: PaginationResponse.DBResponse<SceytMessage>) {
         val enableDateSeparator = messagesListView.style.enableDateSeparator
         if (response.offset == 0) {
-            messagesListView.setMessagesList(mapToMessageListItem(data = response.data,
-                hasNext = response.hasNext, hasPrev = response.hasPrev,
-                enableDateSeparator = enableDateSeparator), true)
+            messagesListView.setMessagesList(
+                data = mapToMessageListItem(
+                    data = response.data,
+                    hasNext = response.hasNext,
+                    hasPrev = response.hasPrev,
+                    enableDateSeparator = enableDateSeparator
+                ), force = true
+            )
         } else {
             when (response.loadType) {
                 LoadPrev -> {
-                    messagesListView.addPrevPageMessages(mapToMessageListItem(data = response.data,
-                        hasNext = response.hasNext, hasPrev = response.hasPrev,
-                        enableDateSeparator = enableDateSeparator))
+                    messagesListView.addPrevPageMessages(
+                        mapToMessageListItem(
+                            data = response.data,
+                            hasNext = response.hasNext,
+                            hasPrev = response.hasPrev,
+                            enableDateSeparator = enableDateSeparator
+                        )
+                    )
                 }
 
                 LoadNext -> {
                     val hasNext = checkMaybeHesNext(response)
                     val compareMessage = getCompareMessage(response.loadType, response.data)
-                    messagesListView.addNextPageMessages(mapToMessageListItem(data = response.data,
-                        hasNext = hasNext, hasPrev = response.hasPrev, compareMessage,
-                        enableDateSeparator = enableDateSeparator))
+                    messagesListView.addNextPageMessages(
+                        mapToMessageListItem(
+                            data = response.data,
+                            hasNext = hasNext,
+                            hasPrev = response.hasPrev,
+                            compareMessage = compareMessage,
+                            enableDateSeparator = enableDateSeparator
+                        )
+                    )
                 }
 
                 LoadNear -> {
                     val hasNext = checkMaybeHesNext(response)
-                    messagesListView.setMessagesList(mapToMessageListItem(data = response.data, hasNext = hasNext,
-                        hasPrev = response.hasPrev, enableDateSeparator = enableDateSeparator), true)
+                    messagesListView.setMessagesList(
+                        data = mapToMessageListItem(
+                            data = response.data,
+                            hasNext = hasNext,
+                            hasPrev = response.hasPrev,
+                            enableDateSeparator = enableDateSeparator
+                        ),
+                        force = true
+                    )
                 }
 
                 LoadNewest -> {
-                    messagesListView.setMessagesList(mapToMessageListItem(data = response.data, hasNext = response.hasNext,
-                        hasPrev = response.hasPrev, enableDateSeparator = enableDateSeparator), true)
+                    messagesListView.setMessagesList(
+                        data = mapToMessageListItem(
+                            data = response.data,
+                            hasNext = response.hasNext,
+                            hasPrev = response.hasPrev,
+                            enableDateSeparator = enableDateSeparator
+                        ),
+                        force = true
+                    )
                 }
             }
         }
@@ -238,11 +274,13 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                         response.data.data ?: return
                     } else response.cacheData
 
-                    val newMessages = mapToMessageListItem(data = dataToMap,
+                    val newMessages = mapToMessageListItem(
+                        data = dataToMap,
                         hasNext = response.hasNext,
                         hasPrev = response.hasPrev,
                         compareMessage = getCompareMessage(response.loadType, dataToMap),
-                        enableDateSeparator = messagesListView.style.enableDateSeparator)
+                        enableDateSeparator = messagesListView.style.enableDateSeparator
+                    )
 
                     if (response.dbResultWasEmpty) {
                         if (response.loadType == LoadNear)
@@ -253,7 +291,10 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                             else messagesListView.addPrevPageMessages(newMessages)
                         }
                     } else
-                        messagesListView.setMessagesList(newMessages, response.loadKey?.key == LoadKeyType.ScrollToLastMessage.longValue)
+                        messagesListView.setMessagesList(
+                            data = newMessages,
+                            force = response.loadKey?.key == LoadKeyType.ScrollToLastMessage.longValue
+                        )
                 } else
                     checkToHildeLoadingMoreItemByLoadType(response.loadType)
 
@@ -316,7 +357,8 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         .onEach { (syncChannel, messages) ->
             if (syncChannel.id == channel.id) {
                 if (pinnedLastReadMessageId == 0L && syncChannel.lastDisplayedMessageId != 0L
-                        && syncChannel.lastDisplayedMessageId != syncChannel.lastMessage?.id)
+                    && syncChannel.lastDisplayedMessageId != syncChannel.lastMessage?.id
+                )
                     pinnedLastReadMessageId = syncChannel.lastDisplayedMessageId
 
                 lifecycleOwner.lifecycleScope.launch {
@@ -326,13 +368,15 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                     val newMessages = messages.minus(currentMessages.toSet())
                     if (newMessages.isNotEmpty()) {
                         val isLastDisplaying = messagesListView.isLastCompletelyItemDisplaying()
-                        messagesListView.addNextPageMessages(mapToMessageListItem(
-                            data = newMessages,
-                            hasNext = false,
-                            hasPrev = false,
-                            compareMessage = messagesListView.getLastMessage()?.message,
-                            enableDateSeparator = messagesListView.style.enableDateSeparator
-                        ))
+                        messagesListView.addNextPageMessages(
+                            mapToMessageListItem(
+                                data = newMessages,
+                                hasNext = false,
+                                hasPrev = false,
+                                compareMessage = messagesListView.getLastMessage()?.message,
+                                enableDateSeparator = messagesListView.style.enableDateSeparator
+                            )
+                        )
                         if (isLastDisplaying)
                             messagesListView.scrollToLastMessage()
 
@@ -382,12 +426,17 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 items.findIndexed {
                     it is MessageItem && it.message.id == data.centerMessageId
                 }?.let { (index) ->
-                    val topOffset = messagesListView.getMessagesRecyclerView().getChildTopByPosition(index)
+                    val topOffset =
+                        messagesListView.getMessagesRecyclerView().getChildTopByPosition(index)
                     val compareMessage = getCompareMessage(LoadNear, data.missingMessages)
 
-                    items.addAll(mapToMessageListItem(data = data.missingMessages, hasNext = false, hasPrev = false,
-                        compareMessage, ignoreUnreadMessagesSeparator = true,
-                        enableDateSeparator = messagesListView.style.enableDateSeparator))
+                    items.addAll(
+                        mapToMessageListItem(
+                            data = data.missingMessages, hasNext = false, hasPrev = false,
+                            compareMessage, ignoreUnreadMessagesSeparator = true,
+                            enableDateSeparator = messagesListView.style.enableDateSeparator
+                        )
+                    )
 
                     items.sortBy { item -> item.getMessageCreatedAt() }
                     val filtered = mutableSetOf(*items.toTypedArray())
@@ -399,7 +448,9 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                             item is MessageItem && item.message.id == data.centerMessageId
                         } ?: return@withContext
 
-                        if (messagesListView.getMessagesRecyclerView().isThePositionVisible(position))
+                        if (messagesListView.getMessagesRecyclerView()
+                                .isThePositionVisible(position)
+                        )
                             messagesListView.scrollToMessage(data.centerMessageId, false, topOffset)
                     }
                 }
@@ -444,7 +495,11 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                     }
                 }
             } ?: run {
-                loadPrevMessages(lastMsgId, 0, LoadKeyData(key = LoadKeyType.ScrollToLastMessage.longValue))
+                loadPrevMessages(
+                    lastMessageId = lastMsgId,
+                    offset = 0,
+                    loadKey = LoadKeyData(key = LoadKeyType.ScrollToLastMessage.longValue)
+                )
                 markChannelAsRead(channel.id)
             }
         }
@@ -457,9 +512,14 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             offset = 200,
             highlight = true,
             doIfNotFound = {
-                loadNearMessages(messageId, LoadKeyData(
-                    key = LoadKeyType.ScrollToReplyMessage.longValue,
-                    value = messageId), false)
+                loadNearMessages(
+                    messageId = messageId,
+                    loadKey = LoadKeyData(
+                        key = LoadKeyType.ScrollToReplyMessage.longValue,
+                        value = messageId
+                    ),
+                    ignoreServer = false
+                )
             }
         )
     }
@@ -474,10 +534,14 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 isPreparingToScrollToMessage.set(false)
             },
             doIfNotFound = {
-                loadNearMessages(messageId, LoadKeyData(
-                    key = LoadKeyType.ScrollToMessageBy.longValue,
-                    value = messageId
-                ), false)
+                loadNearMessages(
+                    messageId = messageId,
+                    loadKey = LoadKeyData(
+                        key = LoadKeyType.ScrollToMessageBy.longValue,
+                        value = messageId
+                    ),
+                    ignoreServer = false
+                )
             }
         )
     }
@@ -491,9 +555,14 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 isPreparingToScrollToMessage.set(false)
             },
             doIfNotFound = {
-                loadNearMessages(it, LoadKeyData(
-                    key = LoadKeyType.ScrollToMessageBy.longValue,
-                    value = it), false)
+                loadNearMessages(
+                    messageId = it,
+                    loadKey = LoadKeyData(
+                        key = LoadKeyType.ScrollToMessageBy.longValue,
+                        value = it
+                    ),
+                    ignoreServer = false
+                )
             }
         )
         pendingDisplayMsgIds.add(it)
@@ -511,7 +580,14 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                             if (data.messageIds.contains(message.id)) {
                                 val updatedMessage = message.copy(
                                     userMarkers = message.userMarkers.orEmpty()
-                                        .plus(SceytMarker(message.id, user, data.name, data.createdAt))
+                                        .plus(
+                                            SceytMarker(
+                                                messageId = message.id,
+                                                user = user,
+                                                name = data.name,
+                                                createdAt = data.createdAt
+                                            )
+                                        )
                                 )
                                 val updatedItem = listItem.copy(message = updatedMessage)
                                 messagesListView.updateItemAt(index, updatedItem)
@@ -530,7 +606,8 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             hasNext = false,
             hasPrev = false,
             compareMessage = messagesListView.getLastMessage()?.message,
-            enableDateSeparator = messagesListView.style.enableDateSeparator)
+            enableDateSeparator = messagesListView.style.enableDateSeparator
+        )
 
         messagesListView.addNewMessages(*initMessage.toTypedArray())
         messagesListView.updateViewState(PageState.Nothing)
@@ -543,7 +620,8 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             hasNext = false,
             hasPrev = false,
             compareMessage = messagesListView.getLastMessage()?.message,
-            enableDateSeparator = messagesListView.style.enableDateSeparator)
+            enableDateSeparator = messagesListView.style.enableDateSeparator
+        )
 
         if (notFoundMessagesToUpdate.containsKey(message.tid)) {
             notFoundMessagesToUpdate.remove(message.tid)?.let {
@@ -688,7 +766,11 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 val maxCount = SceytChatUIKit.config.messageMultiselectLimit
 
                 if (!wasSelected && selectedMessagesMap.size >= maxCount) {
-                    val errorMessage = String.format(messagesListView.getString(R.string.sceyt_reach_max_message_select_count, maxCount.toString()))
+                    val errorMessage = String.format(
+                        messagesListView.getString(
+                            R.string.sceyt_reach_max_message_select_count, maxCount.toString()
+                        )
+                    )
                     customToastSnackBar(messagesListView, errorMessage)
                     return@setMessageCommandEventListener
                 }
@@ -743,12 +825,20 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                     return@setMessageCommandEventListener
 
                 viewModelScope.launch(Dispatchers.IO) {
-                    val user = userInteractor.getUserFromDbById(event.userId)
-                            ?: SceytUser(event.userId)
-                    val response = channelInteractor.findOrCreatePendingChannelByMembers(CreateChannelData(
-                        type = ChannelTypeEnum.Direct.value,
-                        members = listOf(SceytMember(roleName = RoleTypeEnum.Owner.value, user = user)),
-                    ))
+                    val user = userInteractor.getUserFromDbById(
+                        id = event.userId
+                    ) ?: SceytUser(event.userId)
+                    val response = channelInteractor.findOrCreatePendingChannelByMembers(
+                        data = CreateChannelData(
+                            type = ChannelTypeEnum.Direct.value,
+                            members = listOf(
+                                SceytMember(
+                                    roleName = RoleTypeEnum.Owner.value,
+                                    user = user
+                                )
+                            ),
+                        )
+                    )
                     if (response is SceytResponse.Success)
                         response.data?.let {
                             ChannelInfoActivity.launch(messagesListView.context, response.data)
@@ -761,6 +851,10 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             }
 
             is MessageCommandEvent.PollViewResultsClick -> {
+                val poll = event.message.poll ?: return@setMessageCommandEventListener
+                if (poll.anonymous || poll.maxVotedCountWithPendingVotes == 0)
+                    return@setMessageCommandEventListener
+
                 PollResultsActivity.launch(messagesListView.context, event.message)
             }
         }

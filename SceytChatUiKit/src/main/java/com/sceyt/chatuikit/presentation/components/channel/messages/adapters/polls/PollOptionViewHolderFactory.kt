@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages
+package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.polls
 
 import android.content.Context
 import android.view.LayoutInflater
@@ -14,6 +14,7 @@ open class PollOptionViewHolderFactory(
     private val isAnonymousProvider: () -> Boolean,
     private val bubbleBackgroundStyleProvider: (() -> BackgroundStyle),
     private val onOptionClick: ((PollOptionUiModel) -> Unit)? = null,
+    private val onVotersClick: ((PollOptionUiModel) -> Unit)? = null,
 ) {
 
     protected val layoutInflater: LayoutInflater by lazy { LayoutInflater.from(context) }
@@ -24,7 +25,8 @@ open class PollOptionViewHolderFactory(
             pollStyle = pollStyle,
             isAnonymousProvider = isAnonymousProvider,
             bubbleBackgroundStyleProvider = bubbleBackgroundStyleProvider,
-            onOptionClick = onOptionClick
+            onOptionClick = onOptionClick,
+            onVotersClick = onVotersClick
         )
         return viewHolder
     }

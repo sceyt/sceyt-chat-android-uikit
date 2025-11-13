@@ -24,9 +24,9 @@ open class DefaultPollTypeFormatter : Formatter<SceytPollDetails> {
 
     open fun Context.getTypeText(poll: SceytPollDetails): String {
         return if (poll.allowMultipleVotes) {
-            getString(R.string.multiple_votes)
+            getString(R.string.sceyt_multiple_votes)
         } else {
-            getString(R.string.single_vote)
+            getString(R.string.sceyt_single_vote)
         }
     }
 }

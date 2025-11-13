@@ -18,7 +18,8 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            tools:sceytUiAvatarDefaultIcon="@drawable/sceyt_ic_deleted_user" />
+            tools:sceytUiAvatarColor="@color/sceyt_color_accent"
+            tools:sceytUiAvatarFullName="Annual Meeting" />
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/tvSubject"
@@ -26,6 +27,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:fontFamily="@font/roboto_medium"
+            android:paddingHorizontal="15dp"
             android:textColor="@color/sceyt_color_text_primary"
             android:textSize="20sp"
             app:layout_constraintEnd_toEndOf="parent"
@@ -66,6 +68,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:gravity="center"
+            android:paddingHorizontal="15dp"
             android:textColor="@color/sceyt_color_text_secondary"
             android:textSize="14sp"
             app:layout_constraintEnd_toEndOf="parent"
