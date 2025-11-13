@@ -21,11 +21,12 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class InviteLinkUIState(
-        val inviteKey: String? = null,
-        val showPreviousMessages: Boolean = false,
-        val allowResetLink: Boolean = false,
-        val isLoading: Boolean = false,
-        val error: String? = null,
+    val inviteKey: String? = null,
+    val showPreviousMessages: Boolean = true,
+    val jumpDrawablesToCurrentState: Boolean = false,
+    val allowResetLink: Boolean = false,
+    val isLoading: Boolean = false,
+    val error: String? = null,
 ) {
     val inviteLink: String?
         get() = inviteKey?.let {
@@ -34,15 +35,15 @@ data class InviteLinkUIState(
 }
 
 class ChannelInviteLinkViewModel(
-        private var channel: SceytChannel,
-        private val channelInviteKeyInteractor: ChannelInviteKeyInteractor,
+    private var channel: SceytChannel,
+    private val channelInviteKeyInteractor: ChannelInviteKeyInteractor,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(InviteLinkUIState(allowResetLink = !channel.isPublic()))
     val uiState = _uiState.asStateFlow()
 
     init {
-        getInviteLink()
+        getInviteLink(isInitial = true)
         observeChannelEvents()
     }
 
@@ -50,7 +51,7 @@ class ChannelInviteLinkViewModel(
         ChannelEventManager.onChannelEventFlow.onEach {
             if (it is ChannelActionEvent.Updated && channel.uri != it.channel.uri) {
                 channel = it.channel
-                getInviteLink()
+                getInviteLink(false)
             }
         }.launchIn(viewModelScope)
     }
@@ -75,7 +76,12 @@ class ChannelInviteLinkViewModel(
                 key = key
             ).onSuccessNotNull { data ->
                 _uiState.update {
-                    it.copy(inviteKey = data.key, isLoading = false, error = null)
+                    it.copy(
+                        inviteKey = data.key,
+                        jumpDrawablesToCurrentState = false,
+                        isLoading = false,
+                        error = null
+                    )
                 }
             }.onError { error ->
                 _uiState.update {
@@ -85,7 +91,7 @@ class ChannelInviteLinkViewModel(
         }
     }
 
-    private fun getInviteLink() {
+    private fun getInviteLink(isInitial: Boolean) {
         val primaryKey = channel.uri
         if (primaryKey.isNullOrBlank()) {
             _uiState.update {
@@ -106,6 +112,7 @@ class ChannelInviteLinkViewModel(
                     it.copy(
                         inviteKey = data.key,
                         showPreviousMessages = data.accessPriorHistory,
+                        jumpDrawablesToCurrentState = isInitial,
                         isLoading = false,
                         error = null
                     )
@@ -135,6 +142,7 @@ class ChannelInviteLinkViewModel(
         _uiState.update {
             it.copy(isLoading = true)
         }
+
         viewModelScope.launch {
             channelInviteKeyInteractor.updateInviteKeySettings(
                 channelId = channel.id,
@@ -147,6 +155,7 @@ class ChannelInviteLinkViewModel(
                     _uiState.update { state ->
                         state.copy(
                             showPreviousMessages = showPreviousMessages,
+                            jumpDrawablesToCurrentState = false,
                             isLoading = false,
                             error = null
                         )

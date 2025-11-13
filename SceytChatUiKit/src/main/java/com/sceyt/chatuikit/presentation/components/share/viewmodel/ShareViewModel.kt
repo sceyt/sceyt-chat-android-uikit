@@ -9,7 +9,7 @@ import com.sceyt.chat.models.message.Message.MessageBuilder
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.data.models.SendMessageResult
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
-import com.sceyt.chatuikit.data.models.messages.MessageTypeEnum
+import com.sceyt.chatuikit.data.models.messages.SceytMessageType
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.copyFile
 import com.sceyt.chatuikit.extensions.extractLinks
@@ -45,7 +45,7 @@ class ShareViewModel : BaseViewModel(), SceytKoinComponent {
                 val message = MessageBuilder(channelId)
                     .setBody(body)
                     .setTid(ClientWrapper.generateTid())
-                    .setType(MessageTypeEnum.Text.value)
+                    .setType(SceytMessageType.Text.value)
                     .apply {
                         if (isContainsLink)
                             setAttachments(arrayOf(buildAttachment("", links[0],
@@ -92,7 +92,7 @@ class ShareViewModel : BaseViewModel(), SceytKoinComponent {
                             } else setAttachments(arrayOf(attachment))
                         }
                         .setTid(ClientWrapper.generateTid())
-                        .setType(MessageTypeEnum.Media.value)
+                        .setType(SceytMessageType.Media.value)
                         .build()
 
                     messageInteractor.sendSharedFileMessage(channelId, message)

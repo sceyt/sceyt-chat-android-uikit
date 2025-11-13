@@ -466,14 +466,15 @@ internal class PersistenceMessagesLogicImpl(
                 if (!createChannelAndSendMessageMutex.isLocked)
                     channelCache.removeFromPendingToRealChannelsData(channelId)
             }
+        } else {
+            sendMessageImpl(
+                channelId = channelId,
+                message = message,
+                isSharing = false,
+                isPendingMessage = false,
+                isUploadedAttachments = false
+            )
         }
-        sendMessageImpl(
-            channelId = channelId,
-            message = message,
-            isSharing = false,
-            isPendingMessage = false,
-            isUploadedAttachments = false
-        )
     }
 
     private suspend fun createChannelAndSendMessageWithLock(
@@ -1227,7 +1228,7 @@ internal class PersistenceMessagesLogicImpl(
                     messages = response.data ?: arrayListOf()
                     hasPrev = response.data?.size == messagesLoadSize
                     if (offset == 0) {
-                        persistenceChannelsLogic.updateLastMessageIfNeeded(
+                        persistenceChannelsLogic.updateLastMessageOnMessagesResponseIfNeeded(
                             channelId = channelId,
                             message = messages.lastOrNull()
                         )
@@ -1403,10 +1404,7 @@ internal class PersistenceMessagesLogicImpl(
         val pendingMessage = messageDao.getPendingMessages(channelId)
 
         return if (pendingMessage.isNotEmpty()) {
-            list.toMutableList().run {
-                addAll(pendingMessage)
-                sortedBy { it.messageEntity.createdAt }
-            }
+            list.sortedBy { it.messageEntity.createdAt } + pendingMessage
         } else list
     }
 

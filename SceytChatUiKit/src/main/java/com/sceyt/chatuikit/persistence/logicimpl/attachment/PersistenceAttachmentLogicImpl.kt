@@ -14,6 +14,8 @@ import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNewest
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadPrev
 import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.data.models.createErrorResponse
+import com.sceyt.chatuikit.data.models.fold
 import com.sceyt.chatuikit.data.models.messages.AttachmentWithUserData
 import com.sceyt.chatuikit.data.models.messages.FileChecksumData
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
@@ -36,9 +38,6 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
 import com.sceyt.chatuikit.persistence.mappers.getTid
 import com.sceyt.chatuikit.persistence.mappers.isHiddenLinkDetails
 import com.sceyt.chatuikit.persistence.mappers.toAttachment
@@ -51,10 +50,13 @@ import com.sceyt.chatuikit.persistence.mappers.toSceytAttachment
 import com.sceyt.chatuikit.persistence.mappers.toSceytUser
 import com.sceyt.chatuikit.persistence.repositories.AttachmentsRepository
 import com.sceyt.chatuikit.shared.utils.FileChecksumCalculator
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.core.component.inject
 
@@ -185,7 +187,9 @@ internal class PersistenceAttachmentLogicImpl(
         return fileChecksumDao.getChecksum(checksum ?: return null)?.toFileChecksumData()
     }
 
-    override suspend fun getLinkPreviewData(link: String?): SceytResponse<LinkPreviewDetails> =
+    override suspend fun getLinkPreviewData(
+        link: String?
+    ): SceytResponse<LinkPreviewDetails> =
         withContext(Dispatchers.IO) {
             if (link.isNullOrBlank()) return@withContext SceytResponse.Error(
                 exception = SceytException(0, "Link is null or blank: link -> $link")
@@ -195,23 +199,20 @@ internal class PersistenceAttachmentLogicImpl(
                 return@withContext SceytResponse.Success(it.toLinkPreviewDetails(false))
             }
 
-            return@withContext when (val response =
-                attachmentsRepository.getLinkPreviewData(link)) {
-                is SceytResponse.Success -> {
-                    if (response.data != null) {
-                        val details = response.data.toLinkPreviewDetails(link)
+            return@withContext attachmentsRepository.getLinkPreviewData(link).fold(
+                onSuccess = { data ->
+                    if (data != null) {
+                        val details = data.toLinkPreviewDetails(link)
                         messagesCache.updateAttachmentLinkDetails(details)
                         attachmentsCache.updateAttachmentLinkDetails(details)
                         linkDao.insert(details.toLinkDetailsEntity(link, null))
                         SceytResponse.Success(details)
                     } else
-                        SceytResponse.Error(
-                            exception = SceytException(0, "Link is null or blank: link -> $link")
-                        )
-                }
-
-                is SceytResponse.Error -> SceytResponse.Error(response.exception, null)
-            }
+                        createErrorResponse("Link is null or blank: link -> $link")
+                },
+                onError = {
+                    SceytResponse.Error(it)
+                })
         }
 
     override suspend fun upsertLinkPreviewData(linkDetails: LinkPreviewDetails) =

@@ -46,7 +46,7 @@ open class ChannelInviteLinkHandler(
             fragmentManager: FragmentManager,
             uri: Uri,
             listener: ((JoinByInviteLinkResult) -> Unit)? = null,
-            timeout: Long = 30.seconds.inWholeMilliseconds,
+            timeout: Long = 10.seconds.inWholeMilliseconds,
     ) {
         if (!_isLoading.compareAndSet(false, true)) return
 
@@ -83,7 +83,7 @@ open class ChannelInviteLinkHandler(
                     }
             }
         } catch (ex: TimeoutCancellationException) {
-            listener?.invoke(JoinByInviteLinkResult.Canceled)
+            listener?.invoke(JoinByInviteLinkResult.Error("Connection timeout. Please try again later."))
         } catch (ex: Exception) {
             listener?.invoke(JoinByInviteLinkResult.Error(ex.message))
         } finally {

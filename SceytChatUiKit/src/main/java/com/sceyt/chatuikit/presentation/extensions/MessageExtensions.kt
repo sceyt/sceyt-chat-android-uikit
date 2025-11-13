@@ -10,6 +10,7 @@ import com.sceyt.chatuikit.data.models.channels.DraftMessage
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.data.models.messages.SceytMessageType
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.getFileSize
 import com.sceyt.chatuikit.formatters.Formatter
@@ -227,4 +228,11 @@ fun SceytMessage.getUpdateMessage(message: SceytMessage): SceytMessage {
         messageReactions = message.messageReactions,
         files = message.files,
     )
+}
+fun SceytMessage.getMessageType(): SceytMessageType {
+    return SceytMessageType.fromString(type)
+}
+
+fun SceytMessage.isSupportedType(): Boolean {
+    return getMessageType() !is SceytMessageType.Unsupported
 }

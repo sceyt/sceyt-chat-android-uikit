@@ -9,8 +9,8 @@ import com.sceyt.chatuikit.data.models.messages.PollOptionUiModel
 import com.sceyt.chatuikit.data.models.messages.SceytPollDetails
 import com.sceyt.chatuikit.data.models.messages.getOptionsUiModels
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
-import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.PollOptionAdapter
-import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.PollOptionViewHolderFactory
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.polls.PollOptionAdapter
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.polls.PollOptionViewHolderFactory
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
@@ -33,7 +33,8 @@ abstract class BasePollMessageViewHolder(
                 if (incoming) style.incomingBubbleBackgroundStyle
                 else style.outgoingBubbleBackgroundStyle
             },
-            onOptionClick = { option -> onPollOptionClick(option) }
+            onOptionClick = { option -> onPollOptionClick(option) },
+            onVotersClick = { option -> onPollVotersClick(option) }
         )
     }
 
@@ -110,6 +111,14 @@ abstract class BasePollMessageViewHolder(
         messageListeners?.onPollViewResultsClick(
             view = itemView,
             item = requireMessageItem
+        )
+    }
+
+    protected open fun onPollVotersClick(option: PollOptionUiModel) {
+        messageListeners?.onPollVotersClick(
+            view = itemView,
+            item = requireMessageItem,
+            option = PollOption(id = option.id, name = option.text, order = option.order)
         )
     }
 
