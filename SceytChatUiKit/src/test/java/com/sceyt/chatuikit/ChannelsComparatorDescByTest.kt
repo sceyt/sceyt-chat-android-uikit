@@ -172,6 +172,8 @@ private fun createMessage(createdAt: Long): SceytMessage {
         userReactions = null,
         updatedAt = 0,
         user = null,
-        userMarkers = null
+        userMarkers = null,
+        disableMentionsCount = false,
+        poll = null,
     )
 }
