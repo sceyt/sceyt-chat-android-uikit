@@ -6,7 +6,9 @@
     <dist:module dist:instant="true" />
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <uses-permission
+        android:name="android.permission.REQUEST_INSTALL_PACKAGES"
+        tools:ignore="RequestInstallPackagesPolicy" />
 
     <uses-permission
         android:name="android.permission.READ_EXTERNAL_STORAGE"
@@ -63,7 +65,7 @@
             android:exported="true"
             android:launchMode="singleTask"
             android:theme="@style/SceytAppTheme.Default"
-            android:windowSoftInputMode="adjustResize" >
+            android:windowSoftInputMode="adjustResize">
 
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
@@ -71,10 +73,12 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
 
-                <data
-                    android:host="sceyt.com"
-                    android:pathPrefix="/join/"
-                    android:scheme="https" />
+                <data android:scheme="https" />
+                <data android:scheme="http" />
+
+                <data android:host="sceyt.com" />
+                <data android:pathPrefix="/join/" />
+
             </intent-filter>
         </activity>
 
