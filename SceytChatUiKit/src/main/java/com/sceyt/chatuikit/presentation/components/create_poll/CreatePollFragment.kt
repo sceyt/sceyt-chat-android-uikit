@@ -101,9 +101,8 @@ open class CreatePollFragment : Fragment(), SceytKoinComponent {
         btnSend.setOnClickListener {
             val channelId = arguments?.getLong(CHANNEL_ID_KEY) ?: 0L
             val success = viewModel.createPoll(channelId)
-            if (success) {
-                requireActivity().onBackPressedDispatcher.onBackPressed()
-            }
+            if (success)
+                finishScreen()
         }
     }
 
