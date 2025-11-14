@@ -14,6 +14,7 @@ import com.sceyt.chat.demo.notifications.CustomPushNotificationBuilder
 import com.sceyt.chat.demo.notifications.CustomPushNotificationChannelProvider
 import com.sceyt.chat.models.SCTLogLevel
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.config.ChannelInviteDeepLinkConfig
 import com.sceyt.chatuikit.config.PushNotificationConfig
 import com.sceyt.chatuikit.providers.ChatTokenProvider
 import com.sceyt.chatuikit.push.providers.firebase.FirebasePushServiceProvider
@@ -62,6 +63,13 @@ class SceytChatDemoApp : Application() {
         SceytChatUIKit.config.notificationConfig = PushNotificationConfig(
             pushProviders = listOf(FirebasePushServiceProvider()),
             suppressWhenAppIsInForeground = false
+        )
+
+        // Setting deep link config for channel invite links
+        SceytChatUIKit.config.channelLinkDeepLinkConfig = ChannelInviteDeepLinkConfig(
+            scheme = "https",
+            host = "sceyt.com",
+            pathPrefix = "join"
         )
 
         SceytChatUIKit.notifications.apply {

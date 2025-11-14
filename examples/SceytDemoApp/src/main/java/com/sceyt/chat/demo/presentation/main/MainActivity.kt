@@ -1,6 +1,7 @@
 package com.sceyt.chat.demo.presentation.main
 
 import android.Manifest
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.addCallback
@@ -18,10 +19,14 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
+import com.sceyt.chatuikit.presentation.components.channel.messages.ChannelActivity
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.ChannelListFragment
+import com.sceyt.chatuikit.presentation.components.invite_link.ChannelInviteLinkHandler
+import com.sceyt.chatuikit.presentation.components.invite_link.JoinByInviteLinkResult
 import com.sceyt.chatuikit.presentation.root.PageState
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 
 class MainActivity : AppCompatActivity() {
@@ -61,13 +66,18 @@ class MainActivity : AppCompatActivity() {
                 finish()
         }
         requestNotificationPermission()
+        checkChannelInviteLink(intent)
+    }
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        checkChannelInviteLink(intent ?: return)
     }
 
     private fun initViewModel() {
         createProfileViewModel.pageStateLiveData.observe(this) { pageState ->
             if (pageState is PageState.StateError) customToastSnackBar(
-                pageState.errorMessage
-                        ?: return@observe
+                pageState.errorMessage ?: return@observe
             )
         }
     }
@@ -88,8 +98,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setPagerAdapter() {
-        val adapter =
-                MainViewPagerAdapter(this, arrayListOf(ChannelListFragment(), ProfileFragment()))
+        val adapter = MainViewPagerAdapter(
+            activity = this,
+            mFragments = arrayListOf(ChannelListFragment(), ProfileFragment())
+        )
         binding.viewPager.adapter = adapter
         binding.viewPager.isUserInputEnabled = false
         binding.viewPager.offscreenPageLimit = 2
@@ -101,5 +113,42 @@ class MainActivity : AppCompatActivity() {
     }
 
     private val requestPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()) { }
+        ActivityResultContracts.RequestPermission()
+    ) { }
+
+    private fun checkChannelInviteLink(intent: Intent) {
+        val data = intent.data ?: return
+        if (data.host != SceytChatUIKit.config.channelLinkDeepLinkConfig?.host)
+            return
+
+        lifecycleScope.launch {
+            ChannelInviteLinkHandler(this@MainActivity).invoke(
+                fragmentManager = supportFragmentManager,
+                uri = intent.data ?: return@launch,
+                listener = { result ->
+                    when (result) {
+                        is JoinByInviteLinkResult.AlreadyJoined -> {
+                            ChannelActivity.launch(
+                                context = this@MainActivity,
+                                channel = result.channel
+                            )
+                        }
+
+                        is JoinByInviteLinkResult.JoinedByInviteLink -> {
+                            ChannelActivity.launch(
+                                context = this@MainActivity,
+                                channel = result.channel
+                            )
+                        }
+
+                        is JoinByInviteLinkResult.Canceled -> {}
+
+                        is JoinByInviteLinkResult.Error -> {
+                            customToastSnackBar(binding.viewPager, result.message ?: "Error")
+                        }
+                    }
+                },
+            )
+        }
+    }
 }
