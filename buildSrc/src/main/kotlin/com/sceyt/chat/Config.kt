@@ -10,7 +10,7 @@ object Config {
     const val mavenCentralGroup = "com.sceyt"
     const val mavenCentralArtifactId = "sceyt-chat-android-uikit"
 
-    const val mavenCentralVersion = "2.0.4"
+    const val mavenCentralVersion = "2.0.5"
     //const val mavenCentralVersion = "local"
     //const val mavenCentralVersion = "2.0.305-SNAPSHOT"
 
