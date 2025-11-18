@@ -34,7 +34,6 @@ data class ChannelInfoURIStyle(
 
             val titleTextStyle = TextStyle(
                 color = context.getCompatColor(SceytChatUIKitTheme.colors.textPrimaryColor),
-                font = R.font.roboto_medium
             )
 
             return ChannelInfoURIStyle(
