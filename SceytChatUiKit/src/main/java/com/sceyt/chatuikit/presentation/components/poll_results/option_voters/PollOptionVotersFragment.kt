@@ -12,7 +12,7 @@ import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
-import com.sceyt.chatuikit.data.models.messages.Vote
+import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytFragmentPollOptionVotersBinding
 import com.sceyt.chatuikit.extensions.addRVScrollListener
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
@@ -36,27 +36,18 @@ import org.koin.core.parameter.parametersOf
 open class PollOptionVotersFragment : Fragment(), SceytKoinComponent {
     protected var votersAdapter: VotersAdapter? = null
     protected lateinit var binding: SceytFragmentPollOptionVotersBinding
-    protected var messageId: Long = 0L
-        private set
-    protected lateinit var pollId: String
+    protected lateinit var message: SceytMessage
         private set
     protected lateinit var pollOptionId: String
         private set
-    protected lateinit var pollOptionName: String
-        private set
-    protected var pollOptionVotersCount: Int = 0
-        private set
-    protected var ownVote: Vote? = null
-        private set
+    protected val pollOptionName: String
+        get() = message.poll?.options?.firstOrNull { it.id == pollOptionId }?.name.orEmpty()
     protected lateinit var style: PollOptionVotersStyle
         private set
     protected val viewModel: PollOptionVotersViewModel by viewModel {
         parametersOf(
-            messageId,
-            pollId,
-            pollOptionId,
-            pollOptionVotersCount,
-            ownVote
+            message,
+            pollOptionId
         )
     }
     private var styleId: String = ""
@@ -87,13 +78,9 @@ open class PollOptionVotersFragment : Fragment(), SceytKoinComponent {
     }
 
     protected open fun getBundleArguments() {
-        messageId = requireNotNull(arguments?.getLong(MESSAGE_ID))
-        pollId = requireNotNull(arguments?.getString(POLL_ID))
+        message = requireNotNull(arguments?.parcelable(MESSAGE))
         pollOptionId = requireNotNull(arguments?.getString(POLL_OPTION_ID))
-        pollOptionName = requireNotNull(arguments?.getString(POLL_OPTION_NAME))
-        pollOptionVotersCount = requireNotNull(arguments?.getInt(POLL_OPTION_VOTERS_COUNT))
         styleId = requireNotNull(arguments?.getString(STYLE_ID))
-        ownVote = arguments?.parcelable(OWN_VOTE)
     }
 
     protected open fun initStyle(context: Context) {
@@ -206,32 +193,20 @@ open class PollOptionVotersFragment : Fragment(), SceytKoinComponent {
     }
 
     companion object {
-        private const val MESSAGE_ID = "MESSAGE_ID"
-        private const val POLL_ID = "POLL_ID"
+        private const val MESSAGE = "MESSAGE"
         private const val POLL_OPTION_ID = "POLL_OPTION_ID"
-        private const val POLL_OPTION_NAME = "POLL_OPTION_NAME"
-        private const val POLL_OPTION_VOTERS_COUNT = "POLL_OPTION_VOTERS_COUNT"
         private const val STYLE_ID = "STYLE_ID"
-        private const val OWN_VOTE = "OWN_VOTE"
 
         fun newInstance(
-            messageId: Long,
-            pollId: String,
+            message: SceytMessage,
             pollOptionId: String,
-            pollOptionName: String,
-            pollOptionVotersCount: Int,
-            styleId: String,
-            ownVote: Vote? = null
+            styleId: String
         ): PollOptionVotersFragment {
             val fragment = PollOptionVotersFragment()
             fragment.setBundleArguments {
-                putLong(MESSAGE_ID, messageId)
-                putString(POLL_ID, pollId)
+                putParcelable(MESSAGE, message)
                 putString(POLL_OPTION_ID, pollOptionId)
-                putString(POLL_OPTION_NAME, pollOptionName)
-                putInt(POLL_OPTION_VOTERS_COUNT, pollOptionVotersCount)
                 putString(STYLE_ID, styleId)
-                putParcelable(OWN_VOTE, ownVote)
             }
             return fragment
         }

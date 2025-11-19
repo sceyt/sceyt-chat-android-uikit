@@ -115,20 +115,12 @@ open class PollResultsFragment : Fragment(), SceytKoinComponent {
         pollResultsAdapter?.submitList(state.items)
     }
     protected open fun onShowAllClick(item: PollResultItem.PollOptionItem) {
-        val poll = message.poll ?: return
-        val pollId = poll.id
         val pollOptionId = item.pollOption.id
         
-        val ownVote = poll.ownVotes.firstOrNull { it.optionId == pollOptionId }
-        
         val fragment = PollOptionVotersFragment.newInstance(
-            messageId = message.id,
-            pollId = pollId,
+            message = message,
             pollOptionId = pollOptionId,
-            pollOptionName = item.pollOption.name,
-            pollOptionVotersCount = item.voteCount,
-            styleId = style.styleId,
-            ownVote = ownVote
+            styleId = style.styleId
         )
 
         parentFragmentManager.beginTransaction()
