@@ -16,6 +16,7 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.MarkerType
+import com.sceyt.chatuikit.data.models.messages.SceytMessageType
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.logger.SceytLog
@@ -112,6 +113,7 @@ internal class NotificationActionReceiver : BroadcastReceiver() {
 
         val message = Message.MessageBuilder(channelId)
             .setUser(ClientWrapper.currentUser ?: User(SceytChatUIKit.chatUIFacade.myId))
+            .setType(SceytMessageType.Text.value)
             .setBody(text.toString())
             .build()
 
