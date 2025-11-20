@@ -43,16 +43,6 @@ internal val viewModelModule = module {
     viewModelOf(::ChannelInviteLinkViewModel)
     viewModelOf(::JoinByInviteLinkViewModel)
     viewModelOf(::PollResultsViewModel)
-    viewModel { params ->
-        PollOptionVotersViewModel(
-            messageId = params.get(),
-            pollId = params.get(),
-            optionId = params.get(),
-            pollOptionVotersCount = params.get(),
-            ownVote = params.getOrNull(),
-            persistenceChannelsLogic = get(),
-            pollRepository = get()
-        )
-    }
+    viewModelOf(::PollOptionVotersViewModel)
     viewModelOf(::CreatePollViewModel)
 }
