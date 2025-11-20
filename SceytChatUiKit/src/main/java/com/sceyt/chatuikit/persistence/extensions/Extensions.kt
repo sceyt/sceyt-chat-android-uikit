@@ -29,7 +29,7 @@ inline fun <T> CancellableContinuation<T>.safeResume(value: T, onFailure: () -> 
     try {
         if (isActive)
             resume(value)
-    } catch (ex: Exception) {
+    } catch (_: Exception) {
         onFailure()
     }
 }
