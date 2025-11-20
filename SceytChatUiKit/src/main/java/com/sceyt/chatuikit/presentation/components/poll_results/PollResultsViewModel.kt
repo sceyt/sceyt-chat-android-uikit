@@ -13,7 +13,8 @@ import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.data.models.messages.Vote
 import com.sceyt.chatuikit.data.models.onSuccessNotNull
-import com.sceyt.chatuikit.persistence.extensions.getRealCountsWithPendingVotes
+import com.sceyt.chatuikit.persistence.extensions.getOwnVoteForOption
+import com.sceyt.chatuikit.persistence.extensions.getVoteCountForOption
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
 import com.sceyt.chatuikit.presentation.components.poll_results.adapter.PollResultItem
@@ -82,19 +83,16 @@ class PollResultsViewModel(
         val headerItem = PollResultItem.HeaderItem(poll = poll)
 
         val votesByOptionId = poll.votes.groupBy { it.optionId }
-        val ownVoteByOptionId = poll.ownVotes.associateBy { it.optionId }
         val pendingVotesByOptionId = poll.pendingVotes.orEmpty().groupBy { it.optionId }
-
-        val realVoteCounts = poll.getRealCountsWithPendingVotes()
 
         val optionItems = poll.options.sortedBy { it.order }.map { option ->
             val otherVoters = votesByOptionId[option.id].orEmpty()
-            val ownVote = ownVoteByOptionId[option.id]
+            val ownVote = poll.getOwnVoteForOption(option.id)
             val pendingVotesForOption = pendingVotesByOptionId[option.id].orEmpty()
 
             val voters = buildVotersPreviewList(otherVoters, ownVote, pendingVotesForOption)
 
-            val voteCount = realVoteCounts[option.id] ?: 0
+            val voteCount = poll.getVoteCountForOption(option.id)
             val hasMore = voteCount > VOTERS_PREVIEW_LIMIT
 
             PollResultItem.PollOptionItem(
