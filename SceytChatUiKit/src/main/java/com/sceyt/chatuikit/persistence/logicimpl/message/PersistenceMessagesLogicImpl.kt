@@ -104,6 +104,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.koin.core.component.inject
+import kotlin.time.Duration.Companion.minutes
 
 internal class PersistenceMessagesLogicImpl(
     private val context: Context,
@@ -1411,11 +1412,12 @@ internal class PersistenceMessagesLogicImpl(
     private suspend fun clearOutdatedMessages(channelId: Long) {
         val outdatedMessageTIds = messageDao.getOutdatedMessageTIds(
             channelId = channelId,
-            localTime = System.currentTimeMillis()
+            // As server removes message 1 minute later, so we set local time 1 minute more too.
+            localTime = System.currentTimeMillis() + 1.minutes.inWholeMilliseconds
         ).ifEmpty { return }
 
         messageDao.deleteMessagesByTid(outdatedMessageTIds)
-        channelCache.messagesDeletedWithAutoDelete(channelId, outdatedMessageTIds)
+        persistenceChannelsLogic.handleClearedOutdatedMessages(channelId, outdatedMessageTIds)
     }
 
     private suspend fun saveMessagesToDb(

@@ -221,14 +221,14 @@ class ChannelsCache {
         }
     }
 
-    fun updateLastMessageWithLastRead(channelId: Long, message: SceytMessage) {
+    fun updateLastMessageWithLastRead(channelId: Long, message: SceytMessage?) {
         synchronized(lock) {
             cachedData.forEachKeyValue { config, map ->
                 map[channelId]?.let { channel ->
                     val needSort = checkNeedSortByLastMessage(channel.lastMessage, message)
                     val updatedChannel = channel.copy(
                         lastMessage = message,
-                        lastDisplayedMessageId = message.id
+                        lastDisplayedMessageId = message?.id ?: 0
                     )
                     val diff = channel.diff(updatedChannel)
                     channelUpdated(config, updatedChannel, diff, needSort, ChannelUpdatedType.LastMessage)
@@ -290,26 +290,6 @@ class ChannelsCache {
                     val updatedChannel = channel.copy(uri = newUri)
                     val diff = channel.diff(updatedChannel)
                     channelUpdated(key, updatedChannel, diff, false, ChannelUpdatedType.Updated)
-                }
-            }
-        }
-    }
-
-    fun messagesDeletedWithAutoDelete(channelId: Long, messageTIds: List<Long>) {
-        val messageTIds = messageTIds.associateWith { true }
-        cachedData.forEachKeyValue { _, value ->
-            value[channelId]?.let { channel ->
-                channel.lastMessage?.tid?.let {
-                    if (messageTIds.containsKey(it)) {
-                        val updatedChannel = channel.copy(lastMessage = null)
-                        val diff = channel.diff(updatedChannel)
-                        channelUpdatedFlow_.tryEmit(ChannelUpdateData(
-                            channel = updatedChannel,
-                            needSorting = true,
-                            diff = diff,
-                            eventType = ChannelUpdatedType.LastMessage)
-                        )
-                    }
                 }
             }
         }
