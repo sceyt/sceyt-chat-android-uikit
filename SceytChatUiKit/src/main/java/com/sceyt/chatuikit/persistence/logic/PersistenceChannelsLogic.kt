@@ -87,6 +87,7 @@ interface PersistenceChannelsLogic {
     suspend fun getChannelsCountFromDb(): Int
     suspend fun onUserPresenceChanged(users: List<SceytPresenceChecker.PresenceUser>)
     suspend fun checkChannelUrlUpdate(channelId: Long, oldKey: String, newKey: String)
+    suspend fun handleClearedOutdatedMessages(channelId: Long, outdatedMessageTIds: List<Long>)
     fun getChannelMessageCount(channelId: Long): Flow<Long>
     fun getTotalUnreadCount(channelTypes: List<String>): Flow<Long>
 }
