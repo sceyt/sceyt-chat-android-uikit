@@ -1171,7 +1171,7 @@ internal class PersistenceChannelsLogicImpl(
         channelDao.updateLastMessageWithLastRead(
             channelId = channelId,
             lastMessageTid = newLastMessage?.tid,
-            lastMessageId = newLastMessage?.id,
+            lastMessageId = newLastMessage?.id ?: 0,
             lastMessageAt = newLastMessage?.createdAt
         )
         channelsCache.updateLastMessageWithLastRead(channelId, newLastMessage)
