@@ -1413,7 +1413,7 @@ internal class PersistenceMessagesLogicImpl(
         val outdatedMessageTIds = messageDao.getOutdatedMessageTIds(
             channelId = channelId,
             // As server removes message 1 minute later, so we set local time 1 minute more too.
-            localTime = System.currentTimeMillis() + 1.minutes.inWholeMilliseconds
+            localTime = System.currentTimeMillis() - 1.minutes.inWholeMilliseconds
         ).ifEmpty { return }
 
         messageDao.deleteMessagesByTid(outdatedMessageTIds)
