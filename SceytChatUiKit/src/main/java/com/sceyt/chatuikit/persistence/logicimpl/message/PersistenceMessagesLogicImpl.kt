@@ -402,17 +402,6 @@ internal class PersistenceMessagesLogicImpl(
         return@withContext SyncNearMessagesResult(messageId, response, missingMessages)
     }
 
-    override suspend fun onSyncedChannels(
-        channels: List<SceytChannel>
-    ): Unit = withContext(dispatcherIO) {
-        val autodeleteChannels = channels.filter { it.autoDeleteEnabled }
-        if (autodeleteChannels.isEmpty()) return@withContext
-
-        autodeleteChannels.forEach { channel ->
-            clearOutdatedMessages(channel.id)
-        }
-    }
-
     override suspend fun getMessagesByType(
         channelId: Long,
         lastMessageId: Long,

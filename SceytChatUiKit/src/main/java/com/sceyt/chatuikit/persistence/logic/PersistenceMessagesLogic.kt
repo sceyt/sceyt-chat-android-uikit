@@ -71,7 +71,6 @@ interface PersistenceMessagesLogic {
             replyInThread: Boolean,
     ): SyncNearMessagesResult
 
-    suspend fun onSyncedChannels(channels: List<SceytChannel>)
     suspend fun getMessagesByType(
             channelId: Long, lastMessageId: Long,
             type: String,
