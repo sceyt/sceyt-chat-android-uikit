@@ -156,6 +156,12 @@ class MessagesCache {
         }
     }
 
+    suspend fun deleteAllMessagesLowerThenDate(channelId: Long, messagesDeletionDate: Long) = mutex.withLock {
+        if (getMessagesMap(channelId)?.removeAllIf { it.createdAt <= messagesDeletionDate && it.deliveryStatus != DeliveryStatus.Pending } == true) {
+            messagesClearedFlow_.tryEmit(Pair(channelId, messagesDeletionDate))
+        }
+    }
+
     suspend fun upsertMessages(channelId: Long, vararg message: SceytMessage) = mutex.withLock {
         message.forEach {
             putAndCheckHasDiff(channelId, false, true, it)

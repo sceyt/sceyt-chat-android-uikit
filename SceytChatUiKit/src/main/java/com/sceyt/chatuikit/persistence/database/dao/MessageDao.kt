@@ -576,6 +576,9 @@ internal abstract class MessageDao {
     @Query("delete from $MESSAGE_TABLE where channelId in (:channelIds)")
     abstract suspend fun deleteAllChannelsMessages(channelIds: List<Long>)
 
+    @Query("delete from $MESSAGE_TABLE where channelId =:channelId and createdAt <=:date and deliveryStatus != $PENDING_STATUS")
+    abstract suspend fun deleteAllMessagesLowerThenDateIgnorePending(channelId: Long, date: Long)
+
     @Query("delete from $MESSAGE_TABLE where channelId =:channelId and deliveryStatus != $PENDING_STATUS")
     abstract suspend fun deleteAllMessagesExceptPending(channelId: Long)
 
