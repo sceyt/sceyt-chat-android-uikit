@@ -1167,14 +1167,18 @@ internal class PersistenceChannelsLogicImpl(
             return
 
         val newLastMessage = messageDao.getLastMessage(channelId)?.toSceytMessage()
-
-        channelDao.updateLastMessageWithLastRead(
-            channelId = channelId,
-            lastMessageTid = newLastMessage?.tid,
-            lastMessageId = newLastMessage?.id,
-            lastMessageAt = newLastMessage?.createdAt
-        )
-        channelsCache.updateLastMessageWithLastRead(channelId, newLastMessage)
+        // If new last message is null, try to get channel from server, maybe we haven't loaded it yet
+        if (newLastMessage == null) {
+            getChannelFromServer(channelId)
+        } else {
+            channelDao.updateLastMessageWithLastRead(
+                channelId = channelId,
+                lastMessageTid = newLastMessage.tid,
+                lastMessageId = newLastMessage.id,
+                lastMessageAt = newLastMessage.createdAt
+            )
+            channelsCache.updateLastMessageWithLastRead(channelId, newLastMessage)
+        }
     }
 
     private suspend fun updateChannelPendingLastMessages(channels: List<SceytChannel>): List<SceytChannel> {
