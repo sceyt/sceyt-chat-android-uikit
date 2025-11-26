@@ -150,12 +150,6 @@ class MessagesCache {
         messageHardDeletedFlow_.tryEmit(Pair(channelId, message))
     }
 
-    suspend fun deleteAllMessagesLowerThenDate(channelId: Long, messagesDeletionDate: Long) = mutex.withLock {
-        if (getMessagesMap(channelId)?.removeAllIf { it.createdAt <= messagesDeletionDate && it.deliveryStatus != DeliveryStatus.Pending } == true) {
-            messagesClearedFlow_.tryEmit(Pair(channelId, messagesDeletionDate))
-        }
-    }
-
     suspend fun deleteAllMessagesWhere(predicate: (SceytMessage) -> Boolean) = mutex.withLock {
         cachedMessages.forEach { (_, map) ->
             map.removeAllIf(predicate)
