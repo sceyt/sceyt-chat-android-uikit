@@ -373,6 +373,8 @@ internal class PersistenceChannelsLogicImpl(
                 )
 
                 ChatReactionMessagesCache.getNeededMessages(response.data ?: arrayListOf())
+
+                messageLogic.onSyncedChannels(channels)
             }
 
             channel.close()
@@ -476,6 +478,7 @@ internal class PersistenceChannelsLogicImpl(
                     is GetAllChannelsResponse.Proportion -> {
                         val filledChannels = saveChannelsToDb(response.channels)
                         syncedChannels.addAll(filledChannels)
+                        messageLogic.onSyncedChannels(filledChannels)
                         channelsCache.updateChannel(config, *filledChannels.toTypedArray())
                         trySend(response)
                     }
@@ -953,7 +956,9 @@ internal class PersistenceChannelsLogicImpl(
                 val lastMessage = getChannelCurrentLastMessage(channel)
                 channel.copy(lastMessage = lastMessage).toChannelEntity().let {
                     insertChannelWithMembers(channel)
-                    getAndUpdateCashedChannel(channelId)
+                    getAndUpdateCashedChannel(channelId)?.let { updatedChannel ->
+                        messageLogic.onSyncedChannels(arrayListOf(updatedChannel))
+                    }
                 }
             }
             .onError {
