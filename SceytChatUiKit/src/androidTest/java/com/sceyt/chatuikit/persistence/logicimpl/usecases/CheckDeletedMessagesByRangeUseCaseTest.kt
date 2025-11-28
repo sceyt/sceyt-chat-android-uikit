@@ -58,8 +58,110 @@ class CheckDeletedMessagesByRangeUseCaseTest {
 
     // ========== Case 1: Empty Response Tests ==========
 
+    // ========== LoadNear Specific Tests ==========
+
     @Test
-    fun emptyResponse_withLoadNear_shouldNotDeleteAnything() = runTest {
+    fun loadNear_shouldDeleteMessagesWithinReturnedRangeOnly() = runTest {
+        // Arrange - LoadNear returns messages around messageId
+        insertMessages(
+            createMessageEntity(tid = 50, id = 50),   // Before range - should remain
+            createMessageEntity(tid = 90, id = 90),   // In range - returned
+            createMessageEntity(tid = 95, id = 95),   // In range - DELETED on server
+            createMessageEntity(tid = 100, id = 100), // In range - returned (messageId)
+            createMessageEntity(tid = 105, id = 105), // In range - DELETED on server
+            createMessageEntity(tid = 110, id = 110), // In range - returned
+            createMessageEntity(tid = 200, id = 200)  // After range - should remain
+        )
+
+        val serverMessages = listOf(
+            createSceytMessage(id = 90),
+            createSceytMessage(id = 100),
+            createSceytMessage(id = 110)
+        )
+
+        Log.d("Test", "Initial messages: ${messageDao.getMessagesIds(channelId)}")
+
+        // Act
+        useCase(
+            channelId = channelId,
+            loadType = LoadType.LoadNear,
+            messageId = 100,
+            limit = 30,
+            serverMessages = serverMessages
+        )
+
+        // Assert - Should only delete within range [90, 110], keep 50 and 200
+        val remainingIds = messageDao.getMessagesIds(channelId)
+        Log.d("Test", "Remaining messages: $remainingIds")
+        assertThat(remainingIds).containsExactly(50L, 90L, 100L, 110L, 200L)
+        assertThat(remainingIds).doesNotContain(95L)  // Deleted (in range)
+        assertThat(remainingIds).doesNotContain(105L) // Deleted (in range)
+        assertThat(remainingIds).contains(50L)  // Kept (before range)
+        assertThat(remainingIds).contains(200L) // Kept (after range)
+    }
+
+    @Test
+    fun loadNear_shouldNotDeleteWhenAllMessagesMatch() = runTest {
+        // Arrange
+        insertMessages(
+            createMessageEntity(tid = 90, id = 90),
+            createMessageEntity(tid = 100, id = 100),
+            createMessageEntity(tid = 110, id = 110)
+        )
+
+        val serverMessages = listOf(
+            createSceytMessage(id = 90),
+            createSceytMessage(id = 100),
+            createSceytMessage(id = 110)
+        )
+
+        val initialCount = messageDao.getMessagesCount(channelId)
+
+        // Act
+        useCase(
+            channelId = channelId,
+            loadType = LoadType.LoadNear,
+            messageId = 100,
+            limit = 30,
+            serverMessages = serverMessages
+        )
+
+        // Assert
+        val finalCount = messageDao.getMessagesCount(channelId)
+        assertThat(finalCount).isEqualTo(initialCount)
+    }
+
+    @Test
+    fun loadNear_withSingleMessage_shouldNotDeleteAnything() = runTest {
+        // Arrange
+        insertMessages(
+            createMessageEntity(tid = 50, id = 50),
+            createMessageEntity(tid = 100, id = 100),
+            createMessageEntity(tid = 150, id = 150)
+        )
+
+        val serverMessages = listOf(
+            createSceytMessage(id = 100) // Single message
+        )
+
+        val initialCount = messageDao.getMessagesCount(channelId)
+
+        // Act
+        useCase(
+            channelId = channelId,
+            loadType = LoadType.LoadNear,
+            messageId = 100,
+            limit = 30,
+            serverMessages = serverMessages
+        )
+
+        // Assert - Single message, no range to check
+        val finalCount = messageDao.getMessagesCount(channelId)
+        assertThat(finalCount).isEqualTo(initialCount)
+    }
+
+    @Test
+    fun emptyResponse_withLoadNear_shouldNotDeleteAnythingIfReceivedEmptyList() = runTest {
         // Arrange - Insert some messages
         insertMessages(
             createMessageEntity(tid = 100, id = 100),
@@ -77,6 +179,34 @@ class CheckDeletedMessagesByRangeUseCaseTest {
             messageId = 1000,
             limit = 30,
             serverMessages = emptyList()
+        )
+
+        // Assert
+        val finalCount = messageDao.getMessagesCount(channelId)
+        Log.d("Test", "Final message count: $finalCount")
+        assertThat(finalCount).isEqualTo(initialCount)
+        assertThat(finalCount).isEqualTo(3)
+    }
+
+    @Test
+    fun emptyResponse_withLoadNear_shouldNotDeleteAnythingIfReceivedSingleItem() = runTest {
+        // Arrange - Insert some messages
+        insertMessages(
+            createMessageEntity(tid = 100, id = 100),
+            createMessageEntity(tid = 200, id = 200),
+            createMessageEntity(tid = 300, id = 300)
+        )
+
+        val initialCount = messageDao.getMessagesCount(channelId)
+        Log.d("Test", "Initial message count: $initialCount")
+
+        // Act
+        useCase(
+            channelId = channelId,
+            loadType = LoadType.LoadNear,
+            messageId = 1000,
+            limit = 30,
+            serverMessages = listOf(createSceytMessage(id = 200))
         )
 
         // Assert
@@ -115,39 +245,44 @@ class CheckDeletedMessagesByRangeUseCaseTest {
     }
 
     @Test
-    fun emptyResponse_withLoadNext_shouldDeleteMessagesGreaterThanOrEqualToLastMessageId() = runTest {
-        // Arrange
-        insertMessages(
-            createMessageEntity(tid = 800, id = 800),   // Should remain
-            createMessageEntity(tid = 900, id = 900),   // Should remain
-            createMessageEntity(tid = 1000, id = 1000), // Should be deleted (lastMessageId)
-            createMessageEntity(tid = 1100, id = 1100), // Should be deleted
-            createMessageEntity(tid = 1200, id = 1200)  // Should be deleted
-        )
+    fun emptyResponse_withLoadNext_shouldDeleteMessagesGreaterThanOrEqualToLastMessageId() =
+        runTest {
+            // Arrange
+            insertMessages(
+                createMessageEntity(tid = 800, id = 800),   // Should remain
+                createMessageEntity(tid = 900, id = 900),   // Should remain
+                createMessageEntity(tid = 1000, id = 1000), // Should be deleted (lastMessageId)
+                createMessageEntity(tid = 1100, id = 1100), // Should be deleted
+                createMessageEntity(tid = 1200, id = 1200)  // Should be deleted
+            )
 
-        Log.d("Test", "Initial messages: ${messageDao.getMessagesIds(channelId)}")
+            Log.d("Test", "Initial messages: ${messageDao.getMessagesIds(channelId)}")
 
-        // Act
-        useCase(
-            channelId = channelId,
-            loadType = LoadType.LoadNext,
-            messageId = 1000,
-            limit = 30,
-            serverMessages = emptyList()
-        )
+            // Act
+            useCase(
+                channelId = channelId,
+                loadType = LoadType.LoadNext,
+                messageId = 1000,
+                limit = 30,
+                serverMessages = emptyList()
+            )
 
-        // Assert
-        val remainingIds = messageDao.getMessagesIds(channelId)
-        Log.d("Test", "Remaining messages: $remainingIds")
-        assertThat(remainingIds).containsExactly(800L, 900L)
-    }
+            // Assert
+            val remainingIds = messageDao.getMessagesIds(channelId)
+            Log.d("Test", "Remaining messages: $remainingIds")
+            assertThat(remainingIds).containsExactly(800L, 900L)
+        }
 
     @Test
     fun emptyResponse_withLoadPrev_shouldNotDeletePendingMessages() = runTest {
         // Arrange - Include a pending message
         insertMessages(
             createMessageEntity(tid = 800, id = 800, deliveryStatus = DeliveryStatus.Sent),
-            createMessageEntity(tid = 900, id = 900, deliveryStatus = DeliveryStatus.Pending), // Pending - should remain
+            createMessageEntity(
+                tid = 900,
+                id = 900,
+                deliveryStatus = DeliveryStatus.Pending
+            ), // Pending - should remain
             createMessageEntity(tid = 1000, id = 1000, deliveryStatus = DeliveryStatus.Sent)
         )
 
@@ -273,84 +408,86 @@ class CheckDeletedMessagesByRangeUseCaseTest {
     // ========== Case 3: Extended Range Tests (Gap Detection via Range Adjustment) ==========
 
     @Test
-    fun extendedRange_withLoadPrev_shouldDeleteMessagesInGapBetweenReturnedRangeAndMessageId() = runTest {
-        // Arrange - Request from messageId=1000, server returns 30-50
-        // Range extended to [30, 999] to include gap, messages 51-999 should be deleted
-        insertMessages(
-            createMessageEntity(tid = 30, id = 30),
-            createMessageEntity(tid = 40, id = 40),
-            createMessageEntity(tid = 50, id = 50),
-            createMessageEntity(tid = 60, id = 60),  // In gap - should be deleted
-            createMessageEntity(tid = 70, id = 70),  // In gap - should be deleted
-            createMessageEntity(tid = 80, id = 80),  // In gap - should be deleted
-            createMessageEntity(tid = 999, id = 999) // In gap - should be deleted
-        )
+    fun extendedRange_withLoadPrev_shouldDeleteMessagesInGapBetweenReturnedRangeAndMessageId() =
+        runTest {
+            // Arrange - Request from messageId=1000, server returns 30-50
+            // Range extended to [30, 999] to include gap, messages 51-999 should be deleted
+            insertMessages(
+                createMessageEntity(tid = 30, id = 30),
+                createMessageEntity(tid = 40, id = 40),
+                createMessageEntity(tid = 50, id = 50),
+                createMessageEntity(tid = 60, id = 60),  // In gap - should be deleted
+                createMessageEntity(tid = 70, id = 70),  // In gap - should be deleted
+                createMessageEntity(tid = 80, id = 80),  // In gap - should be deleted
+                createMessageEntity(tid = 999, id = 999) // In gap - should be deleted
+            )
 
-        val serverMessages = listOf(
-            createSceytMessage(id = 30),
-            createSceytMessage(id = 40),
-            createSceytMessage(id = 50)
-        )
+            val serverMessages = listOf(
+                createSceytMessage(id = 30),
+                createSceytMessage(id = 40),
+                createSceytMessage(id = 50)
+            )
 
-        Log.d("Test", "Initial messages: ${messageDao.getMessagesIds(channelId)}")
+            Log.d("Test", "Initial messages: ${messageDao.getMessagesIds(channelId)}")
 
-        // Act
-        useCase(
-            channelId = channelId,
-            loadType = LoadType.LoadPrev,
-            messageId = 1000,
-            limit = 30,
-            serverMessages = serverMessages
-        )
+            // Act
+            useCase(
+                channelId = channelId,
+                loadType = LoadType.LoadPrev,
+                messageId = 1000,
+                limit = 30,
+                serverMessages = serverMessages
+            )
 
-        // Assert
-        val remainingIds = messageDao.getMessagesIds(channelId)
-        Log.d("Test", "Remaining messages: $remainingIds")
-        assertThat(remainingIds).containsExactly(30L, 40L, 50L)
-        assertThat(remainingIds).doesNotContain(60L)
-        assertThat(remainingIds).doesNotContain(70L)
-        assertThat(remainingIds).doesNotContain(80L)
-        assertThat(remainingIds).doesNotContain(999L)
-    }
+            // Assert
+            val remainingIds = messageDao.getMessagesIds(channelId)
+            Log.d("Test", "Remaining messages: $remainingIds")
+            assertThat(remainingIds).containsExactly(30L, 40L, 50L)
+            assertThat(remainingIds).doesNotContain(60L)
+            assertThat(remainingIds).doesNotContain(70L)
+            assertThat(remainingIds).doesNotContain(80L)
+            assertThat(remainingIds).doesNotContain(999L)
+        }
 
     @Test
-    fun extendedRange_withLoadNext_shouldDeleteMessagesInGapBetweenMessageIdAndReturnedRange() = runTest {
-        // Arrange - Request from messageId=100, server returns 150-180
-        // Range extended to [101, 170] to include gap, messages 101-149 should be deleted
-        insertMessages(
-            createMessageEntity(tid = 101, id = 101), // In gap - should be deleted
-            createMessageEntity(tid = 120, id = 120), // In gap - should be deleted
-            createMessageEntity(tid = 149, id = 149), // In gap - should be deleted
-            createMessageEntity(tid = 150, id = 150),
-            createMessageEntity(tid = 160, id = 160),
-            createMessageEntity(tid = 170, id = 170)
-        )
+    fun extendedRange_withLoadNext_shouldDeleteMessagesInGapBetweenMessageIdAndReturnedRange() =
+        runTest {
+            // Arrange - Request from messageId=100, server returns 150-180
+            // Range extended to [101, 170] to include gap, messages 101-149 should be deleted
+            insertMessages(
+                createMessageEntity(tid = 101, id = 101), // In gap - should be deleted
+                createMessageEntity(tid = 120, id = 120), // In gap - should be deleted
+                createMessageEntity(tid = 149, id = 149), // In gap - should be deleted
+                createMessageEntity(tid = 150, id = 150),
+                createMessageEntity(tid = 160, id = 160),
+                createMessageEntity(tid = 170, id = 170)
+            )
 
-        val serverMessages = listOf(
-            createSceytMessage(id = 150),
-            createSceytMessage(id = 160),
-            createSceytMessage(id = 170)
-        )
+            val serverMessages = listOf(
+                createSceytMessage(id = 150),
+                createSceytMessage(id = 160),
+                createSceytMessage(id = 170)
+            )
 
-        Log.d("Test", "Initial messages: ${messageDao.getMessagesIds(channelId)}")
+            Log.d("Test", "Initial messages: ${messageDao.getMessagesIds(channelId)}")
 
-        // Act
-        useCase(
-            channelId = channelId,
-            loadType = LoadType.LoadNext,
-            messageId = 100,
-            limit = 30,
-            serverMessages = serverMessages
-        )
+            // Act
+            useCase(
+                channelId = channelId,
+                loadType = LoadType.LoadNext,
+                messageId = 100,
+                limit = 30,
+                serverMessages = serverMessages
+            )
 
-        // Assert
-        val remainingIds = messageDao.getMessagesIds(channelId)
-        Log.d("Test", "Remaining messages: $remainingIds")
-        assertThat(remainingIds).containsExactly(150L, 160L, 170L)
-        assertThat(remainingIds).doesNotContain(101L)
-        assertThat(remainingIds).doesNotContain(120L)
-        assertThat(remainingIds).doesNotContain(149L)
-    }
+            // Assert
+            val remainingIds = messageDao.getMessagesIds(channelId)
+            Log.d("Test", "Remaining messages: $remainingIds")
+            assertThat(remainingIds).containsExactly(150L, 160L, 170L)
+            assertThat(remainingIds).doesNotContain(101L)
+            assertThat(remainingIds).doesNotContain(120L)
+            assertThat(remainingIds).doesNotContain(149L)
+        }
 
     @Test
     fun extendedRange_withLoadPrev_shouldNotDeleteWhenNoGap() = runTest {
@@ -494,13 +631,14 @@ class CheckDeletedMessagesByRangeUseCaseTest {
 
     @Test
     fun reachedEnd_withLoadNear_shouldNotDeleteBeyondRange() = runTest {
-        // Arrange
+        // Arrange - LoadNear checks only within the returned range, not beyond
         insertMessages(
-            createMessageEntity(tid = 50, id = 50),   // Should remain
-            createMessageEntity(tid = 100, id = 100),
-            createMessageEntity(tid = 200, id = 200),
-            createMessageEntity(tid = 300, id = 300),
-            createMessageEntity(tid = 400, id = 400)  // Should remain
+            createMessageEntity(tid = 50, id = 50),   // Before range - should remain
+            createMessageEntity(tid = 100, id = 100), // In range
+            createMessageEntity(tid = 150, id = 150), // In range - DELETED on server
+            createMessageEntity(tid = 200, id = 200), // In range
+            createMessageEntity(tid = 300, id = 300), // In range
+            createMessageEntity(tid = 400, id = 400)  // After range - should remain
         )
 
         val serverMessages = listOf(
@@ -509,22 +647,24 @@ class CheckDeletedMessagesByRangeUseCaseTest {
             createSceytMessage(id = 300)
         )
 
-        val initialCount = messageDao.getMessagesCount(channelId)
-        Log.d("Test", "Initial message count: $initialCount")
+        Log.d("Test", "Initial messages: ${messageDao.getMessagesIds(channelId)}")
 
         // Act
         useCase(
             channelId = channelId,
             loadType = LoadType.LoadNear,
-            messageId = 1000,
+            messageId = 200,
             limit = 30,
             serverMessages = serverMessages
         )
 
-        // Assert - LoadNear should not delete beyond range
-        val finalCount = messageDao.getMessagesCount(channelId)
-        Log.d("Test", "Final message count: $finalCount")
-        assertThat(finalCount).isEqualTo(initialCount)
+        // Assert - Should delete 150 (within range), keep 50 and 400 (beyond range)
+        val remainingIds = messageDao.getMessagesIds(channelId)
+        Log.d("Test", "Remaining messages: $remainingIds")
+        assertThat(remainingIds).containsExactly(50L, 100L, 200L, 300L, 400L)
+        assertThat(remainingIds).doesNotContain(150L) // Deleted within range
+        assertThat(remainingIds).contains(50L)  // Kept (before range)
+        assertThat(remainingIds).contains(400L) // Kept (after range)
     }
 
     // ========== Case 5: Messages Within Range Tests ==========
@@ -705,7 +845,10 @@ class CheckDeletedMessagesByRangeUseCaseTest {
             createMessageEntity(tid = 100, id = 100), // Returned by server
             createMessageEntity(tid = 200, id = 200), // Returned by server
             createMessageEntity(tid = 300, id = 300), // Returned by server
-            createMessageEntity(tid = 400, id = 400)  // Should be DELETED (gap between returned and messageId)
+            createMessageEntity(
+                tid = 400,
+                id = 400
+            )  // Should be DELETED (gap between returned and messageId)
         )
 
         val serverMessages = listOf(
@@ -770,7 +913,6 @@ class CheckDeletedMessagesByRangeUseCaseTest {
         assertThat(remainingIds).doesNotContain(50L)  // Deleted because < startId
         assertThat(remainingIds).doesNotContain(150L) // Deleted because not in server response
     }
-
 
 
     // ========== Helper Methods ==========

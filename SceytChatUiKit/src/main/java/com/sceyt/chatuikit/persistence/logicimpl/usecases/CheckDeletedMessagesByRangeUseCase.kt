@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.persistence.logicimpl.usecases
 
+import android.util.Log
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNear
@@ -7,7 +8,6 @@ import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNewest
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadPrev
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
-import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.database.dao.MessageDao
 import com.sceyt.chatuikit.persistence.logicimpl.message.ChannelId
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
@@ -37,15 +37,17 @@ internal class CheckDeletedMessagesByRangeUseCase(
         limit: Int,
         serverMessages: List<SceytMessage>
     ) {
-        // LoadNear doesn't need deletion checks
+        val serverIds = serverMessages.map { it.id }.sorted()
+
+        // LoadNear only checks within the returned range (no beyond-range or gap deletion)
         if (loadType == LoadNear) {
-            SceytLog.i(tag, "LoadNear: Skipping deletion checks")
+            handleLoadNearDeletion(channelId = channelId, serverIds = serverIds)
             return
         }
 
         // Case 1: Empty response - delete all messages in the load direction
         if (serverMessages.isEmpty()) {
-            SceytLog.i(
+            Log.i(
                 tag,
                 "Empty response for $loadType from messageId=$messageId, deleting all in direction"
             )
@@ -60,7 +62,7 @@ internal class CheckDeletedMessagesByRangeUseCase(
 
         // Case 2: Single message edge case - only the messageId itself was returned
         if (serverMessages.size == 1 && serverMessages.first().id == messageId) {
-            SceytLog.i(
+            Log.i(
                 tag,
                 "Single message ($messageId) returned for $loadType, reached end in that direction"
             )
@@ -74,7 +76,6 @@ internal class CheckDeletedMessagesByRangeUseCase(
         }
 
         // Prepare for range calculation
-        val serverIds = serverMessages.map { it.id }.sorted()
         val reachedEnd = limit > serverMessages.size
 
         // Case 3: Calculate smart range boundaries using min/max
@@ -84,7 +85,7 @@ internal class CheckDeletedMessagesByRangeUseCase(
                 // Loading older messages before messageId
                 if (reachedEnd) {
                     // Reached beginning, check from 0 to catch all old messages
-                    SceytLog.i(
+                    Log.i(
                         tag,
                         "LoadPrev: Reached beginning, checking from 0 to ${serverIds.last()}"
                     )
@@ -99,7 +100,7 @@ internal class CheckDeletedMessagesByRangeUseCase(
                 // LoadNext/LoadNewest: Loading newer messages after messageId
                 // min() includes gap: if server returns [150-170] and messageId=100, checks from 100
                 val start = min(messageId, serverIds.first())
-                SceytLog.i(
+                Log.i(
                     tag,
                     "$loadType: Checking from $start (messageId=$messageId, server returned from ${serverIds.first()})"
                 )
@@ -112,7 +113,7 @@ internal class CheckDeletedMessagesByRangeUseCase(
                 // Loading older messages before messageId
                 // max() includes gap: if server returns [30-50] and messageId=1000, checks until 1000
                 val end = max(messageId, serverIds.last())
-                SceytLog.i(
+                Log.i(
                     tag,
                     "LoadPrev: Checking until $end (messageId=$messageId, server returned until ${serverIds.last()})"
                 )
@@ -123,7 +124,7 @@ internal class CheckDeletedMessagesByRangeUseCase(
                 // LoadNext/LoadNewest: Loading newer messages after messageId
                 if (reachedEnd) {
                     // Reached end, check until MAX_VALUE to catch all new messages
-                    SceytLog.i(
+                    Log.i(
                         tag,
                         "$loadType: Reached end, checking from ${serverIds.first()} to end"
                     )
@@ -137,17 +138,36 @@ internal class CheckDeletedMessagesByRangeUseCase(
 
         // Validation
         if (startId > endId) {
-            SceytLog.e(tag, "Invalid range: startId ($startId) > endId ($endId)")
+            Log.e(tag, "Invalid range: startId ($startId) > endId ($endId)")
             return
         }
 
-        SceytLog.i(
+        Log.i(
             tag,
             "Checking range [$startId, $endId] for deletions (returned ${serverIds.size} messages, reachedEnd=$reachedEnd)"
         )
 
         // Case 4: Check for deletions within the calculated range
         handleMessagesInRange(channelId, startId, endId, serverIds)
+    }
+
+    private suspend fun handleLoadNearDeletion(
+        channelId: ChannelId,
+        serverIds: List<Long>,
+    ) {
+        if (serverIds.isEmpty()) {
+            Log.i(tag, "LoadNear: Empty response, no deletions")
+            return
+        }
+        if (serverIds.size > 1) {
+            Log.i(
+                tag,
+                "LoadNear: Checking within returned range [${serverIds.first()}, ${serverIds.last()}]"
+            )
+            handleMessagesInRange(channelId, serverIds.first(), serverIds.last(), serverIds)
+        } else {
+            Log.i(tag, "LoadNear: Single message returned, no range to check")
+        }
     }
 
     private suspend fun deleteByLoadType(
@@ -174,65 +194,6 @@ internal class CheckDeletedMessagesByRangeUseCase(
     }
 
     /**
-     * Delete all messages before (and optionally including) the given messageId
-     * Used when LoadPrev returns empty or single messageId
-     */
-    private suspend fun deletePreviousMessages(
-        channelId: ChannelId,
-        messageId: Long,
-        includeMessage: Boolean
-    ) {
-        val operator = if (includeMessage) "<=" else "<"
-        SceytLog.i(tag, "Deleting messages $operator $messageId (includeMessage=$includeMessage)")
-
-        val compareMessageId = if (includeMessage) messageId else messageId - 1
-        val count = messageDao.deleteAllMessagesLowerThenMessageIdIgnorePending(
-            channelId = channelId,
-            messageId = compareMessageId
-        )
-
-        if (count > 0) {
-            SceytLog.i(tag, "Deleted $count messages from DB, updating cache")
-            messagesCache.forceDeleteAllMessagesWhere { message ->
-                message.channelId == channelId && message.deliveryStatus != DeliveryStatus.Pending &&
-                        message.id <= compareMessageId
-            }
-        } else {
-            SceytLog.i(tag, "No messages to delete")
-        }
-    }
-
-    /**
-     * Delete all messages after (and optionally including) the given messageId
-     * Used when LoadNext returns empty or single messageId
-     */
-    private suspend fun deleteNextMessages(
-        channelId: ChannelId,
-        messageId: Long,
-        includeMessage: Boolean
-    ) {
-        val operator = if (includeMessage) ">=" else ">"
-        SceytLog.i(tag, "Deleting messages $operator $messageId (includeMessage=$includeMessage)")
-
-        val compareMessageId = if (includeMessage) messageId else messageId + 1
-        val count = messageDao.deleteAllMessagesGreaterThenMessageIdIgnorePending(
-            channelId = channelId,
-            messageId = compareMessageId
-        )
-
-        if (count > 0) {
-            SceytLog.i(tag, "Deleted $count messages from DB, updating cache")
-            messagesCache.forceDeleteAllMessagesWhere { message ->
-                message.channelId == channelId && message.deliveryStatus != DeliveryStatus.Pending &&
-                        message.id >= compareMessageId
-            }
-        } else {
-            SceytLog.i(tag, "No messages to delete")
-        }
-    }
-
-
-    /**
      * Check for deleted messages within the specified range
      *
      * This function handles ALL deletion scenarios in a unified way:
@@ -256,7 +217,7 @@ internal class CheckDeletedMessagesByRangeUseCase(
         endId: Long,
         serverIds: List<Long>
     ) {
-        SceytLog.i(tag, "Querying local DB for messages in range [$startId, $endId]")
+        Log.i(tag, "Querying local DB for messages in range [$startId, $endId]")
 
         // Get all message IDs from local database in the range
         val localIds = messageDao.getMessagesIdsByRange(
@@ -265,7 +226,7 @@ internal class CheckDeletedMessagesByRangeUseCase(
             endId = endId
         ).toSet()
 
-        SceytLog.i(
+        Log.i(
             tag,
             "Found ${localIds.size} local messages, server returned ${serverIds.size} messages"
         )
@@ -274,7 +235,7 @@ internal class CheckDeletedMessagesByRangeUseCase(
         val deletedMessageIds = localIds.minus(serverIds.toSet())
 
         if (deletedMessageIds.isNotEmpty()) {
-            SceytLog.i(
+            Log.i(
                 tag,
                 "Found ${deletedMessageIds.size} deleted messages in range $startId-$endId"
             )
@@ -288,10 +249,68 @@ internal class CheckDeletedMessagesByRangeUseCase(
             // Delete from cache and notify UI
             if (count > 0) {
                 messagesCache.hardDeleteMessage(channelId, *tIds.toLongArray())
-                SceytLog.i(tag, "Successfully deleted $count messages from DB and cache")
+                Log.i(tag, "Successfully deleted $count messages from DB and cache")
             }
         } else {
-            SceytLog.i(tag, "No deleted messages found in range $startId-$endId")
+            Log.i(tag, "No deleted messages found in range $startId-$endId")
+        }
+    }
+
+    /**
+     * Delete all messages before (and optionally including) the given messageId
+     * Used when LoadPrev returns empty or single messageId
+     */
+    private suspend fun deletePreviousMessages(
+        channelId: ChannelId,
+        messageId: Long,
+        includeMessage: Boolean
+    ) {
+        val operator = if (includeMessage) "<=" else "<"
+        Log.i(tag, "Deleting messages $operator $messageId (includeMessage=$includeMessage)")
+
+        val compareMessageId = if (includeMessage) messageId else messageId - 1
+        val count = messageDao.deleteAllMessagesLowerThenMessageIdIgnorePending(
+            channelId = channelId,
+            messageId = compareMessageId
+        )
+
+        if (count > 0) {
+            Log.i(tag, "Deleted $count messages from DB, updating cache")
+            messagesCache.forceDeleteAllMessagesWhere { message ->
+                message.channelId == channelId && message.deliveryStatus != DeliveryStatus.Pending &&
+                        message.id <= compareMessageId
+            }
+        } else {
+            Log.i(tag, "No messages to delete")
+        }
+    }
+
+    /**
+     * Delete all messages after (and optionally including) the given messageId
+     * Used when LoadNext returns empty or single messageId
+     */
+    private suspend fun deleteNextMessages(
+        channelId: ChannelId,
+        messageId: Long,
+        includeMessage: Boolean
+    ) {
+        val operator = if (includeMessage) ">=" else ">"
+        Log.i(tag, "Deleting messages $operator $messageId (includeMessage=$includeMessage)")
+
+        val compareMessageId = if (includeMessage) messageId else messageId + 1
+        val count = messageDao.deleteAllMessagesGreaterThenMessageIdIgnorePending(
+            channelId = channelId,
+            messageId = compareMessageId
+        )
+
+        if (count > 0) {
+            Log.i(tag, "Deleted $count messages from DB, updating cache")
+            messagesCache.forceDeleteAllMessagesWhere { message ->
+                message.channelId == channelId && message.deliveryStatus != DeliveryStatus.Pending &&
+                        message.id >= compareMessageId
+            }
+        } else {
+            Log.i(tag, "No messages to delete")
         }
     }
 }
