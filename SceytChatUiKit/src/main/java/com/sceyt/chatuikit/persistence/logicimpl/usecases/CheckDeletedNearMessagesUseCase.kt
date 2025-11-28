@@ -2,8 +2,6 @@ package com.sceyt.chatuikit.persistence.logicimpl.usecases
 
 import android.util.Log
 import com.sceyt.chat.models.message.DeliveryStatus
-import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType
-import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNewest
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadPrev
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
@@ -26,9 +24,11 @@ import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
  *
  * Note: Pending messages are never deleted as they haven't been sent to the server yet.
  */
-internal class CheckDeletedMessagesByNearMessagesUseCase(
+internal class CheckDeletedNearMessagesUseCase(
     private val messageDao: MessageDao,
-    private val messagesCache: MessagesCache
+    private val messagesCache: MessagesCache,
+    private val deleteByLoadType: HandleDeleteMessagesByLoadTypeUseCase,
+    private val handleMessagesInRange: HandleMessagesInRangeUseCase
 ) {
     private val tag = "CheckDeletedMessages"
 
@@ -39,7 +39,7 @@ internal class CheckDeletedMessagesByNearMessagesUseCase(
         serverMessages: List<SceytMessage>
     ) {
         // Case 1: Empty response means server has no messages at all
-        // Delete ALL messages in the channel (except pending) because server returned nothing
+        // Delete ALL messages in the channel (except pending)
         if (serverMessages.isEmpty()) {
             Log.i(tag, "LoadNear: Empty server response, deleting ALL messages in channel (except pending)")
             messageDao.deleteAllMessagesByChannelIgnorePending(channelId)
@@ -142,148 +142,5 @@ internal class CheckDeletedMessagesByNearMessagesUseCase(
             serverIds = serverIds
         )
     }
-
-    private suspend fun deleteByLoadType(
-        loadType: LoadType,
-        channelId: ChannelId,
-        messageId: Long,
-        includeMessage: Boolean
-    ) {
-        when (loadType) {
-            LoadPrev -> deletePreviousMessages(
-                channelId = channelId,
-                messageId = messageId,
-                includeMessage = includeMessage
-            )
-
-            LoadNext, LoadNewest -> deleteNextMessages(
-                channelId = channelId,
-                messageId = messageId,
-                includeMessage = includeMessage
-            )
-
-            else -> Unit
-        }
-    }
-
-    /**
-     * Check for deleted messages within the specified range
-     *
-     * This function handles ALL deletion scenarios in a unified way:
-     * 1. Gap deletions - Messages between messageId and returned range
-     *    Example: messageId=100, returned [150-170] → checks [100-170], finds gap 101-149
-     *
-     * 2. Within-range deletions - Missing messages in the returned range itself
-     *    Example: Server returns [100, 200, 300] but local has [100, 150, 200, 300] → deletes 150
-     *
-     * 3. Beyond-range deletions - When reached end (startId=0 or endId=MAX_VALUE)
-     *    Example: LoadPrev reached end, startId=0 → deletes all messages < returned range
-     *
-     * Strategy:
-     * - Query local DB for all messages in [startId, endId]
-     * - Compare with server message IDs
-     * - Delete messages that exist locally but not in server response
-     */
-    private suspend fun handleMessagesInRange(
-        channelId: ChannelId,
-        startId: Long,
-        endId: Long,
-        serverIds: List<Long>
-    ) {
-        Log.i(tag, "Querying local DB for messages in range [$startId, $endId]")
-
-        // Get all message IDs from local database in the range
-        val localIds = messageDao.getMessagesIdsByRange(
-            channelId = channelId,
-            startId = startId,
-            endId = endId
-        ).toSet()
-
-        Log.i(
-            tag,
-            "Found ${localIds.size} local messages, server returned ${serverIds.size} messages"
-        )
-
-        // Find messages that exist locally but not in server response (deleted on server)
-        val deletedMessageIds = localIds.minus(serverIds.toSet())
-
-        if (deletedMessageIds.isNotEmpty()) {
-            Log.i(
-                tag,
-                "Found ${deletedMessageIds.size} deleted messages in range $startId-$endId"
-            )
-
-            // Get TIDs (transaction IDs) for the deleted messages
-            val tIds = messageDao.getMessageTIdsByIds(*deletedMessageIds.toLongArray())
-
-            // Delete from database
-            val count = messageDao.deleteMessagesByTid(tIds)
-
-            // Delete from cache and notify UI
-            if (count > 0) {
-                messagesCache.hardDeleteMessage(channelId, *tIds.toLongArray())
-                Log.i(tag, "Successfully deleted $count messages from DB and cache")
-            }
-        } else {
-            Log.i(tag, "No deleted messages found in range $startId-$endId")
-        }
-    }
-
-    /**
-     * Delete all messages before (and optionally including) the given messageId
-     * Used when LoadPrev returns empty or single messageId
-     */
-    private suspend fun deletePreviousMessages(
-        channelId: ChannelId,
-        messageId: Long,
-        includeMessage: Boolean
-    ) {
-        val operator = if (includeMessage) "<=" else "<"
-        Log.i(tag, "Deleting messages $operator $messageId (includeMessage=$includeMessage)")
-
-        val compareMessageId = if (includeMessage) messageId else messageId - 1
-        val count = messageDao.deleteAllMessagesLowerThenMessageIdIgnorePending(
-            channelId = channelId,
-            messageId = compareMessageId
-        )
-
-        if (count > 0) {
-            Log.i(tag, "Deleted $count messages from DB, updating cache")
-            messagesCache.forceDeleteAllMessagesWhere { message ->
-                message.channelId == channelId && message.deliveryStatus != DeliveryStatus.Pending &&
-                        message.id <= compareMessageId
-            }
-        } else {
-            Log.i(tag, "No messages to delete")
-        }
-    }
-
-    /**
-     * Delete all messages after (and optionally including) the given messageId
-     * Used when LoadNext returns empty or single messageId
-     */
-    private suspend fun deleteNextMessages(
-        channelId: ChannelId,
-        messageId: Long,
-        includeMessage: Boolean
-    ) {
-        val operator = if (includeMessage) ">=" else ">"
-        Log.i(tag, "Deleting messages $operator $messageId (includeMessage=$includeMessage)")
-
-        val compareMessageId = if (includeMessage) messageId else messageId + 1
-        val count = messageDao.deleteAllMessagesGreaterThenMessageIdIgnorePending(
-            channelId = channelId,
-            messageId = compareMessageId
-        )
-
-        if (count > 0) {
-            Log.i(tag, "Deleted $count messages from DB, updating cache")
-            messagesCache.forceDeleteAllMessagesWhere { message ->
-                message.channelId == channelId && message.deliveryStatus != DeliveryStatus.Pending &&
-                        message.id >= compareMessageId
-            }
-        } else {
-            Log.i(tag, "No messages to delete")
-        }
-    }
 }
+
