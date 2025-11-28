@@ -28,6 +28,7 @@ class CheckDeletedMessagesByRangeUseCaseTest {
     private lateinit var database: SceytDatabase
     private lateinit var messageDao: MessageDao
     private lateinit var messagesCache: MessagesCache
+    private lateinit var deletedMessagesByNearMessagesUseCase: CheckDeletedMessagesByNearMessagesUseCase
     private lateinit var useCase: CheckDeletedMessagesByRangeUseCase
 
     private val channelId = 123L
@@ -47,7 +48,8 @@ class CheckDeletedMessagesByRangeUseCaseTest {
 
         messageDao = database.messageDao()
         messagesCache = MessagesCache()
-        useCase = CheckDeletedMessagesByRangeUseCase(messageDao, messagesCache)
+        deletedMessagesByNearMessagesUseCase = CheckDeletedMessagesByNearMessagesUseCase(messageDao, messagesCache)
+        useCase = CheckDeletedMessagesByRangeUseCase(messageDao, messagesCache, deletedMessagesByNearMessagesUseCase)
     }
 
     @After
@@ -62,7 +64,7 @@ class CheckDeletedMessagesByRangeUseCaseTest {
 
     @Test
     fun loadNear_shouldDeleteMessagesWithinReturnedRangeOnly() = runTest {
-        // Arrange - LoadNear returns messages around messageId
+        // Arrange - LoadNear returns messages around messageId with limit == size
         insertMessages(
             createMessageEntity(tid = 50, id = 50),   // Before range - should remain
             createMessageEntity(tid = 90, id = 90),   // In range - returned
@@ -81,12 +83,12 @@ class CheckDeletedMessagesByRangeUseCaseTest {
 
         Log.d("Test", "Initial messages: ${messageDao.getMessagesIds(channelId)}")
 
-        // Act
+        // Act - limit == size, so only within-range deletion (50 and 200 stay)
         useCase(
             channelId = channelId,
             loadType = LoadType.LoadNear,
             messageId = 100,
-            limit = 30,
+            limit = 3, // Same as serverMessages.size to avoid "reached end" logic
             serverMessages = serverMessages
         )
 
@@ -132,7 +134,7 @@ class CheckDeletedMessagesByRangeUseCaseTest {
     }
 
     @Test
-    fun loadNear_withSingleMessage_shouldNotDeleteAnything() = runTest {
+    fun loadNear_withSingleMessage_shouldDeleteAllOtherMessages() = runTest {
         // Arrange
         insertMessages(
             createMessageEntity(tid = 50, id = 50),
@@ -144,9 +146,7 @@ class CheckDeletedMessagesByRangeUseCaseTest {
             createSceytMessage(id = 100) // Single message
         )
 
-        val initialCount = messageDao.getMessagesCount(channelId)
-
-        // Act
+        // Act - size (1) < limit (30), so delete all except returned message
         useCase(
             channelId = channelId,
             loadType = LoadType.LoadNear,
@@ -155,13 +155,15 @@ class CheckDeletedMessagesByRangeUseCaseTest {
             serverMessages = serverMessages
         )
 
-        // Assert - Single message, no range to check
-        val finalCount = messageDao.getMessagesCount(channelId)
-        assertThat(finalCount).isEqualTo(initialCount)
+        // Assert - Only the returned message should remain (50 and 150 deleted)
+        val remainingIds = messageDao.getMessagesIds(channelId)
+        assertThat(remainingIds).containsExactly(100L)
+        assertThat(remainingIds).doesNotContain(50L)
+        assertThat(remainingIds).doesNotContain(150L)
     }
 
     @Test
-    fun emptyResponse_withLoadNear_shouldNotDeleteAnythingIfReceivedEmptyList() = runTest {
+    fun emptyResponse_withLoadNear_shouldDeleteAllMessagesExceptPending() = runTest {
         // Arrange - Insert some messages
         insertMessages(
             createMessageEntity(tid = 100, id = 100),
@@ -172,7 +174,7 @@ class CheckDeletedMessagesByRangeUseCaseTest {
         val initialCount = messageDao.getMessagesCount(channelId)
         Log.d("Test", "Initial message count: $initialCount")
 
-        // Act
+        // Act - Empty response means server has no messages, delete all
         useCase(
             channelId = channelId,
             loadType = LoadType.LoadNear,
@@ -181,15 +183,14 @@ class CheckDeletedMessagesByRangeUseCaseTest {
             serverMessages = emptyList()
         )
 
-        // Assert
+        // Assert - All messages deleted (except pending, but none are pending here)
         val finalCount = messageDao.getMessagesCount(channelId)
         Log.d("Test", "Final message count: $finalCount")
-        assertThat(finalCount).isEqualTo(initialCount)
-        assertThat(finalCount).isEqualTo(3)
+        assertThat(finalCount).isEqualTo(0)
     }
 
     @Test
-    fun emptyResponse_withLoadNear_shouldNotDeleteAnythingIfReceivedSingleItem() = runTest {
+    fun singleItem_withLoadNear_shouldDeleteAllExceptReturnedMessage() = runTest {
         // Arrange - Insert some messages
         insertMessages(
             createMessageEntity(tid = 100, id = 100),
@@ -200,7 +201,7 @@ class CheckDeletedMessagesByRangeUseCaseTest {
         val initialCount = messageDao.getMessagesCount(channelId)
         Log.d("Test", "Initial message count: $initialCount")
 
-        // Act
+        // Act - size (1) < limit (30), delete all except returned message
         useCase(
             channelId = channelId,
             loadType = LoadType.LoadNear,
@@ -209,11 +210,12 @@ class CheckDeletedMessagesByRangeUseCaseTest {
             serverMessages = listOf(createSceytMessage(id = 200))
         )
 
-        // Assert
-        val finalCount = messageDao.getMessagesCount(channelId)
-        Log.d("Test", "Final message count: $finalCount")
-        assertThat(finalCount).isEqualTo(initialCount)
-        assertThat(finalCount).isEqualTo(3)
+        // Assert - Only message 200 remains
+        val remainingIds = messageDao.getMessagesIds(channelId)
+        Log.d("Test", "Remaining messages: $remainingIds")
+        assertThat(remainingIds).containsExactly(200L)
+        assertThat(remainingIds).doesNotContain(100L)
+        assertThat(remainingIds).doesNotContain(300L)
     }
 
     @Test
@@ -649,12 +651,12 @@ class CheckDeletedMessagesByRangeUseCaseTest {
 
         Log.d("Test", "Initial messages: ${messageDao.getMessagesIds(channelId)}")
 
-        // Act
+        // Act - limit == size to avoid "reached end" behavior
         useCase(
             channelId = channelId,
             loadType = LoadType.LoadNear,
             messageId = 200,
-            limit = 30,
+            limit = 3, // Same as serverMessages.size
             serverMessages = serverMessages
         )
 

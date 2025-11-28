@@ -3,158 +3,144 @@ package com.sceyt.chatuikit.persistence.logicimpl.usecases
 import android.util.Log
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType
-import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNear
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNewest
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadPrev
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.extensions.roundUp
 import com.sceyt.chatuikit.persistence.database.dao.MessageDao
 import com.sceyt.chatuikit.persistence.logicimpl.message.ChannelId
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
-import kotlin.math.max
-import kotlin.math.min
 
 /**
- * Check for deleted messages by comparing server response with local database
+ * Check for deleted messages in LoadNear scenario by comparing server response with local database
  *
- * Strategy: Calculate a smart range using min/max that automatically includes:
- * - The returned messages from server
- * - The gap between messageId and returned messages (gap detection)
- * - Messages beyond the range if we've reached the end (end detection)
+ * LoadNear loads messages both before and after a given messageId. This use case handles
+ * the unique deletion logic for this bidirectional loading pattern.
  *
- * Then perform a single range check to find and delete all missing messages.
+ * Strategy:
+ * 1. Empty response → Delete ALL channel messages except pending (server has no messages)
+ * 2. Size < limit → Delete all messages NOT in server response except pending (we have complete list)
+ * 3. Split into top (≤ messageId) and bottom (> messageId) and check each direction
+ * 4. Check within-range for any gap deletions (except pending messages)
+ *
+ * Note: Pending messages are never deleted as they haven't been sent to the server yet.
  */
-internal class CheckDeletedMessagesByRangeUseCase(
+internal class CheckDeletedMessagesByNearMessagesUseCase(
     private val messageDao: MessageDao,
-    private val messagesCache: MessagesCache,
-    private val deletedMessagesByNearMessagesUseCase: CheckDeletedMessagesByNearMessagesUseCase
+    private val messagesCache: MessagesCache
 ) {
     private val tag = "CheckDeletedMessages"
 
     suspend operator fun invoke(
         channelId: ChannelId,
-        loadType: LoadType,
         messageId: Long,
         limit: Int,
         serverMessages: List<SceytMessage>
     ) {
-        val serverIds = serverMessages.map { it.id }.sorted()
-
-        // LoadNear only checks within the returned range (no beyond-range or gap deletion)
-        if (loadType == LoadNear) {
-            deletedMessagesByNearMessagesUseCase(
-                channelId = channelId,
-                messageId = messageId,
-                limit = limit,
-                serverMessages = serverMessages
-            )
-            return
-        }
-
-        // Case 1: Empty response - delete all messages in the load direction
+        // Case 1: Empty response means server has no messages at all
+        // Delete ALL messages in the channel (except pending) because server returned nothing
         if (serverMessages.isEmpty()) {
+            Log.i(tag, "LoadNear: Empty server response, deleting ALL messages in channel (except pending)")
+            messageDao.deleteAllMessagesByChannelIgnorePending(channelId)
+            messagesCache.forceDeleteAllMessagesWhere { message ->
+                message.channelId == channelId && message.deliveryStatus != DeliveryStatus.Pending
+            }
+            return
+        }
+
+        val serverIds = serverMessages.map { it.id }.sorted()
+        
+        // Case 2: Server returned fewer messages than requested limit
+        // This means we have the COMPLETE message list from server, so delete all local messages
+        // that don't exist in this complete list (except pending)
+        if (serverIds.size < limit) {
             Log.i(
                 tag,
-                "Empty response for $loadType from messageId=$messageId, deleting all in direction"
+                "LoadNear: Server returned ${serverIds.size} < limit $limit, treating as complete message list, deleting all not in response"
             )
-            deleteByLoadType(
-                loadType = loadType,
-                channelId = channelId,
-                messageId = messageId,
-                includeMessage = true
-            )
+            messageDao.deleteNotContainsMessagesIgnorePending(channelId, serverIds)
+            messagesCache.forceDeleteAllMessagesWhere { message ->
+                message.channelId == channelId && !serverIds.contains(message.id) &&
+                        message.deliveryStatus != DeliveryStatus.Pending
+            }
             return
         }
 
-        // Case 2: Single message edge case - only the messageId itself was returned
-        if (serverMessages.size == 1 && serverMessages.first().id == messageId) {
+        // Case 3: Normal LoadNear with full response (size == limit)
+        // Split messages into top (messages ≤ messageId) and bottom (messages > messageId)
+        // LoadNear loads limit/2 messages in each direction (rounded up for odd limits)
+        val topNearIds = serverIds.filter { it <= messageId }.sorted()
+        val bottomNearIds = serverIds.filter { it > messageId }.sorted()
+        val normalCountTop = (limit.toDouble() / 2).roundUp()  // Expected count in top direction
+        val normalCountBottom = limit - normalCountTop          // Expected count in bottom direction
+
+        // Case 3a: No top messages found
+        // This means there are no messages ≤ messageId on the server, delete all messages < first returned message
+        if (topNearIds.isEmpty()) {
             Log.i(
                 tag,
-                "Single message ($messageId) returned for $loadType, reached end in that direction"
+                "LoadNear: No top messages found (topNearIds is empty), deleting all messages before ${bottomNearIds.first()}"
             )
-            deleteByLoadType(
-                loadType = loadType,
-                channelId = channelId,
-                messageId = messageId,
-                includeMessage = false
-            )
-            return
+            val deleteFromId = bottomNearIds.first()
+            deleteByLoadType(LoadPrev, channelId, deleteFromId, includeMessage = false)
         }
 
-        // Prepare for range calculation
-        val reachedEnd = limit > serverMessages.size
+        // Case 3b: No bottom messages found
+        // This means there are no messages > messageId on the server, delete all messages > last returned message
+        if (bottomNearIds.isEmpty()) {
+            Log.i(
+                tag,
+                "LoadNear: No bottom messages found (bottomNearIds is empty), deleting all messages after ${topNearIds.last()}"
+            )
+            val deleteFromId = topNearIds.last()
+            deleteByLoadType(LoadNext, channelId, deleteFromId, includeMessage = false)
+        }
 
-        // Case 3: Calculate smart range boundaries using min/max
-        // This elegantly handles gap detection + beyond-range deletion in one range
-        val startId = when (loadType) {
-            LoadPrev -> {
-                // Loading older messages before messageId
-                if (reachedEnd) {
-                    // Reached beginning, check from 0 to catch all old messages
-                    Log.i(
-                        tag,
-                        "LoadPrev: Reached beginning, checking from 0 to ${serverIds.last()}"
-                    )
-                    0
-                } else {
-                    // Not at end yet, just check returned range
-                    serverIds.first()
-                }
-            }
-
-            else -> {
-                // LoadNext/LoadNewest: Loading newer messages after messageId
-                // min() includes gap: if server returns [150-170] and messageId=100, checks from 100
-                val start = min(messageId, serverIds.first())
+        // Case 3c: Fewer top messages than expected (reached end in top/prev direction)
+        // If messageId exists in the small top list, we've reached the beginning, delete all messages before first
+        if (topNearIds.size < normalCountTop) {
+            val existInTop = topNearIds.contains(messageId)
+            if (existInTop) {
                 Log.i(
                     tag,
-                    "$loadType: Checking from $start (messageId=$messageId, server returned from ${serverIds.first()})"
+                    "LoadNear: Top count ${topNearIds.size} < normalCountTop $normalCountTop, reached end in top direction"
                 )
-                start
+                val deleteFromId = topNearIds.first()
+                deleteByLoadType(LoadPrev, channelId, deleteFromId, includeMessage = true)
+            } else {
+                // messageId not in top results, will be handled by handleMessagesInRange below
             }
         }
 
-        val endId = when (loadType) {
-            LoadPrev -> {
-                // Loading older messages before messageId
-                // max() includes gap: if server returns [30-50] and messageId=1000, checks until 1000
-                val end = max(messageId, serverIds.last())
+        // Case 3d: Fewer bottom messages than expected (reached end in bottom/next direction)
+        // If messageId exists in the small bottom list, we've reached the end, delete all messages after last
+        if (bottomNearIds.size < normalCountBottom) {
+            val existInBottom = bottomNearIds.contains(messageId)
+            if (existInBottom) {
                 Log.i(
                     tag,
-                    "LoadPrev: Checking until $end (messageId=$messageId, server returned until ${serverIds.last()})"
+                    "LoadNear: Bottom count ${bottomNearIds.size} < normalCountBottom $normalCountBottom, reached end in bottom direction"
                 )
-                end
-            }
-
-            else -> {
-                // LoadNext/LoadNewest: Loading newer messages after messageId
-                if (reachedEnd) {
-                    // Reached end, check until MAX_VALUE to catch all new messages
-                    Log.i(
-                        tag,
-                        "$loadType: Reached end, checking from ${serverIds.first()} to end"
-                    )
-                    Long.MAX_VALUE
-                } else {
-                    // Not at end yet, just check returned range
-                    serverIds.last()
-                }
+                val deleteFromId = bottomNearIds.last()
+                deleteByLoadType(LoadNext, channelId, deleteFromId, includeMessage = true)
+            } else {
+                // messageId not in bottom results, will be handled by handleMessagesInRange below
             }
         }
 
-        // Validation
-        if (startId > endId) {
-            Log.e(tag, "Invalid range: startId ($startId) > endId ($endId)")
-            return
-        }
-
+        // Case 4: Check for within-range deletions (messages that exist locally but not in server response)
+        // This handles gap detection and any missing messages within the returned range
         Log.i(
             tag,
-            "Checking range [$startId, $endId] for deletions (returned ${serverIds.size} messages, reachedEnd=$reachedEnd)"
+            "LoadNear: Checking for within-range deletions between [${serverIds.first()}, ${serverIds.last()}]"
         )
-
-        // Case 4: Check for deletions within the calculated range
-        handleMessagesInRange(channelId, startId, endId, serverIds)
+        handleMessagesInRange(
+            channelId = channelId,
+            startId =  serverIds.first(),
+            endId = serverIds.last(),
+            serverIds = serverIds
+        )
     }
 
     private suspend fun deleteByLoadType(
