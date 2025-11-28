@@ -26,7 +26,8 @@ import kotlin.math.min
  */
 internal class CheckDeletedMessagesByRangeUseCase(
     private val messageDao: MessageDao,
-    private val messagesCache: MessagesCache
+    private val messagesCache: MessagesCache,
+    private val deletedMessagesByNearMessagesUseCase: CheckDeletedMessagesByNearMessagesUseCase
 ) {
     private val tag = "CheckDeletedMessages"
 
@@ -41,7 +42,12 @@ internal class CheckDeletedMessagesByRangeUseCase(
 
         // LoadNear only checks within the returned range (no beyond-range or gap deletion)
         if (loadType == LoadNear) {
-            handleLoadNearDeletion(channelId = channelId, serverIds = serverIds)
+            deletedMessagesByNearMessagesUseCase(
+                channelId = channelId,
+                messageId = messageId,
+                limit = limit,
+                serverMessages = serverMessages
+            )
             return
         }
 
@@ -149,25 +155,6 @@ internal class CheckDeletedMessagesByRangeUseCase(
 
         // Case 4: Check for deletions within the calculated range
         handleMessagesInRange(channelId, startId, endId, serverIds)
-    }
-
-    private suspend fun handleLoadNearDeletion(
-        channelId: ChannelId,
-        serverIds: List<Long>,
-    ) {
-        if (serverIds.isEmpty()) {
-            Log.i(tag, "LoadNear: Empty response, no deletions")
-            return
-        }
-        if (serverIds.size > 1) {
-            Log.i(
-                tag,
-                "LoadNear: Checking within returned range [${serverIds.first()}, ${serverIds.last()}]"
-            )
-            handleMessagesInRange(channelId, serverIds.first(), serverIds.last(), serverIds)
-        } else {
-            Log.i(tag, "LoadNear: Single message returned, no range to check")
-        }
     }
 
     private suspend fun deleteByLoadType(

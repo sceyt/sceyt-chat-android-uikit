@@ -415,16 +415,28 @@ internal class PersistenceMessagesLogicImpl(
 
     override suspend fun onSyncedChannels(channels: List<SceytChannel>) =
         withContext(dispatcherIO) {
-            channels.forEach {
-                if (it.messagesClearedAt > 0) {
+            channels.forEach { channel ->
+                if (channel.messagesClearedAt > 0) {
                     messageDao.deleteAllMessagesLowerThenDateIgnorePending(
-                        channelId = it.id,
-                        date = it.messagesClearedAt
+                        channelId = channel.id,
+                        date = channel.messagesClearedAt
                     )
                     messagesCache.deleteAllClearedMessages(
-                        channelId = it.id,
-                        messagesDeletionDate = it.messagesClearedAt
+                        channelId = channel.id,
+                        messagesDeletionDate = channel.messagesClearedAt
                     )
+                }
+
+                channel.lastMessage?.let { lastMessage ->
+                    if (channel.lastDisplayedMessageId > lastMessage.id) {
+                        checkDeletedMessagesByRangeUseCase(
+                            channelId = channel.id,
+                            loadType = LoadNext,
+                            messageId = lastMessage.id,
+                            limit = messagesLoadSize,
+                            serverMessages = listOf(lastMessage)
+                        )
+                    }
                 }
             }
         }

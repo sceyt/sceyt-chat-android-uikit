@@ -51,6 +51,7 @@ import com.sceyt.chatuikit.persistence.logicimpl.message.MessageLoadRangeUpdater
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
 import com.sceyt.chatuikit.persistence.logicimpl.message.PersistenceMessagesLogicImpl
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.AddPollVoteUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.CheckDeletedMessagesByNearMessagesUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.CheckDeletedMessagesByRangeUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.EndPollUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.HandleChangeVoteErrorUseCase
@@ -166,6 +167,7 @@ internal val useCaseModule = module {
     factoryOf(::SendPollPendingVotesUseCase)
     factoryOf(::HandleChangeVoteErrorUseCase)
     factoryOf(::SetUserPresenceUseCase)
+    factoryOf(::CheckDeletedMessagesByNearMessagesUseCase)
     factoryOf(::CheckDeletedMessagesByRangeUseCase)
 }
 
