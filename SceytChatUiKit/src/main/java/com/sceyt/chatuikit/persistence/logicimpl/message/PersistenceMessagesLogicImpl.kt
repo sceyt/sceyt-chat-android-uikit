@@ -69,6 +69,7 @@ import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceReactionsLogic
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.CheckDeletedMessagesByRangeUseCase
 import com.sceyt.chatuikit.persistence.mappers.addAttachmentMetadata
 import com.sceyt.chatuikit.persistence.mappers.existThumb
 import com.sceyt.chatuikit.persistence.mappers.getLinkPreviewDetails
@@ -122,6 +123,7 @@ internal class PersistenceMessagesLogicImpl(
     private val messagesCache: MessagesCache,
     private val channelCache: ChannelsCache,
     private val messageLoadRangeUpdater: MessageLoadRangeUpdater,
+    private val checkDeletedMessagesByRangeUseCase: CheckDeletedMessagesByRangeUseCase,
 ) : PersistenceMessagesLogic, SceytKoinComponent {
 
     private val persistenceChannelsLogic: PersistenceChannelsLogic by inject()
@@ -350,7 +352,7 @@ internal class PersistenceMessagesLogicImpl(
         messageId: Long,
     ): Flow<SceytResponse<List<SceytMessage>>> = callbackFlow {
         ConnectionEventManager.awaitToConnectSceyt()
-        messagesRepository.loadAllMessagesAfter(conversationId, replyInThread, messageId)
+        messagesRepository.loadAllMessagesAfter(conversationId, replyInThread, messageId, 50)
             .onCompletion { channel.close() }
             .collect { (nextMessageId, response) ->
                 if (response is SceytResponse.Success) {
@@ -393,6 +395,15 @@ internal class PersistenceMessagesLogicImpl(
                 channelId = conversationId,
                 messages = updatedMessages
             )
+
+            checkDeletedMessagesByRangeUseCase(
+                channelId = conversationId,
+                loadType = LoadNear,
+                messageId = messageId,
+                limit = 30,
+                serverMessages = updatedMessages
+            )
+
             updateMessageLoadRange(
                 messageId = messageId,
                 channelId = conversationId,
@@ -410,7 +421,7 @@ internal class PersistenceMessagesLogicImpl(
                         channelId = it.id,
                         date = it.messagesClearedAt
                     )
-                    messagesCache.deleteAllMessagesLowerThenDate(
+                    messagesCache.deleteAllClearedMessages(
                         channelId = it.id,
                         messagesDeletionDate = it.messagesClearedAt
                     )
@@ -423,7 +434,7 @@ internal class PersistenceMessagesLogicImpl(
         lastMessageId: Long,
         type: String,
     ): SceytResponse<List<SceytMessage>> = withContext(dispatcherIO) {
-        val response = messagesRepository.getMessagesByType(channelId, lastMessageId, type)
+        val response = messagesRepository.getMessagesByType(channelId, lastMessageId, type, 50)
         if (response is SceytResponse.Success) {
             val tIds = getMessagesTid(response.data)
             val payloads = attachmentDao.getAllAttachmentPayLoadsByMsgTid(*tIds.toLongArray())
@@ -1290,6 +1301,14 @@ internal class PersistenceMessagesLogicImpl(
             }
         }
         val updatedMessages = saveMessagesToDb(messages)
+        checkDeletedMessagesByRangeUseCase(
+            channelId = channelId,
+            loadType = loadType,
+            messageId = lastMessageId,
+            limit = limit,
+            serverMessages = updatedMessages
+        )
+
         hasDiff = messagesCache.addAll(
             channelId = channelId,
             list = updatedMessages,
@@ -1469,6 +1488,7 @@ internal class PersistenceMessagesLogicImpl(
 
         userDao.insertUsersWithMetadata(usersDb.toList(), replaceUserOnConflict)
         val forceUpdatedList = messageDao.upsertMessages(messagesDb)
+        // Delete messages from cache which were force updated.
         if (forceUpdatedList.isNotEmpty()) {
             messagesCache.deleteAllMessagesWhere {
                 return@deleteAllMessagesWhere forceUpdatedList.any { entity ->

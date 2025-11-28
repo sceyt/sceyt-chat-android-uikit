@@ -51,6 +51,7 @@ import com.sceyt.chatuikit.persistence.logicimpl.message.MessageLoadRangeUpdater
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
 import com.sceyt.chatuikit.persistence.logicimpl.message.PersistenceMessagesLogicImpl
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.AddPollVoteUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.CheckDeletedMessagesByRangeUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.EndPollUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.HandleChangeVoteErrorUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.RemovePollVoteUseCase
@@ -140,7 +141,7 @@ internal val interactorModule = module {
 
 internal val logicModule = module {
     single<PersistenceChannelsLogic> { PersistenceChannelsLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
-    single<PersistenceMessagesLogic> { PersistenceMessagesLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    single<PersistenceMessagesLogic> { PersistenceMessagesLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     single<PersistenceAttachmentLogic> { PersistenceAttachmentLogicImpl(get(), get(), get(), get(), get(), get(), get(), get()) }
     single<PersistenceReactionsLogic> { PersistenceReactionsLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     single<PersistencePollLogic> { PersistencePollLogicImpl(get(),
@@ -165,6 +166,7 @@ internal val useCaseModule = module {
     factoryOf(::SendPollPendingVotesUseCase)
     factoryOf(::HandleChangeVoteErrorUseCase)
     factoryOf(::SetUserPresenceUseCase)
+    factoryOf(::CheckDeletedMessagesByRangeUseCase)
 }
 
 internal val cacheModule = module {

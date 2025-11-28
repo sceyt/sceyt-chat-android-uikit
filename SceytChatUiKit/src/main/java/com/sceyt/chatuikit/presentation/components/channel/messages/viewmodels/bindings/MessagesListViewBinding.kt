@@ -117,17 +117,29 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     if (channel.userRole.isNullOrEmpty())
         getChannel(channel.id)
 
-    if (channel.lastDisplayedMessageId == 0L || channel.lastMessage?.deliveryStatus == DeliveryStatus.Pending
-        || channel.lastDisplayedMessageId == channel.lastMessage?.id
-    )
-        loadPrevMessages(channel.lastMessage?.id ?: 0, 0)
-    else {
-        pinnedLastReadMessageId = channel.lastDisplayedMessageId
-        loadNearMessages(
-            messageId = pinnedLastReadMessageId,
-            loadKey = LoadKeyData(key = LoadKeyType.ScrollToUnreadMessage.longValue),
-            ignoreServer = false
-        )
+    val lastMessage = channel.lastMessage
+    val lastDisplayedMessageId = channel.lastDisplayedMessageId
+    val lastMessageId = lastMessage?.id ?: 0
+    when {
+        lastDisplayedMessageId == 0L || lastMessage?.deliveryStatus == DeliveryStatus.Pending
+                || lastDisplayedMessageId == lastMessageId -> {
+            loadPrevMessages(lastMessageId, 0)
+        }
+
+        // If last displayed message is less than last message id, this means some messages were deleted.
+        // Load previous messages from last displayed message id to detect deleted messages and remove them.
+        lastDisplayedMessageId >= lastMessageId -> {
+            loadPrevMessages(lastDisplayedMessageId, 0)
+        }
+
+        else -> {
+            pinnedLastReadMessageId = lastDisplayedMessageId
+            loadNearMessages(
+                messageId = pinnedLastReadMessageId,
+                loadKey = LoadKeyData(key = LoadKeyType.ScrollToUnreadMessage.longValue),
+                ignoreServer = false
+            )
+        }
     }
 
     fun setUnreadCounts(channel: SceytChannel) {
@@ -327,9 +339,10 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         val centerPosition = messagesListView.getMessagesRecyclerView().centerVisibleItemPosition()
         if (centerPosition == RecyclerView.NO_POSITION) return
         val item = messagesListView.getData().getOrNull(centerPosition)
-        if (item is MessageItem && lastSyncCenterOffsetId != item.message.id) {
-            lastSyncCenterOffsetId = item.message.id
-            syncCenteredMessage(messageId = item.message.id)
+        val messageId = item?.getMessageId() ?: return
+        if (lastSyncCenterOffsetId != messageId) {
+            lastSyncCenterOffsetId = messageId
+            syncCenteredMessage(messageId = messageId)
         }
     }
 
@@ -466,10 +479,10 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             }
         }.launchIn(lifecycleOwner.lifecycleScope)
 
-    MessagesCache.messageHardDeletedFlow
+    MessagesCache.messagesHardDeletedFlow
         .filter { (channelId, _) -> channelId == channel.id }
-        .onEach { (_, message) ->
-            messagesListView.forceDeleteMessageByTid(message.tid)
+        .onEach { (_, tIds) ->
+            messagesListView.forceDeleteMessageByTid(*tIds.toLongArray())
         }.launchIn(lifecycleOwner.lifecycleScope)
 
     loadMessagesFlow
@@ -479,8 +492,6 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     onChannelUpdatedEventFlow.onEach { channel ->
         setUnreadCounts(channel)
         checkEnableDisableActions(channel)
-        if (channel.lastMessage == null)
-            messagesListView.clearData()
     }.launchIn(lifecycleOwner.lifecycleScope)
 
     onScrollToLastMessageLiveData.observe(lifecycleOwner) { lastMessage ->

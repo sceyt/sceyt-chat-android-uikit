@@ -188,7 +188,12 @@ class MessagesRV @JvmOverloads constructor(
 
     fun setData(messages: List<MessageListItem>, force: Boolean = false) {
         if (::mAdapter.isInitialized.not()) {
-            adapter = MessagesAdapter(SyncArrayList(messages), viewHolderFactory, style).also {
+            adapter = MessagesAdapter(
+                messages = SyncArrayList(collection = messages),
+                viewHolderFactory = viewHolderFactory,
+                style = style,
+                recyclerView = this
+            ).also {
                 it.setHasStableIds(true)
                 mAdapter = it
             }
@@ -214,7 +219,7 @@ class MessagesRV @JvmOverloads constructor(
         } else if (force)
             mAdapter.forceUpdate(messages)
         else
-            mAdapter.notifyUpdate(messages, this)
+            mAdapter.notifyUpdate(messages)
     }
 
     fun isEmpty() = ::mAdapter.isInitialized.not() || mAdapter.getSkip() == 0
@@ -330,9 +335,9 @@ class MessagesRV @JvmOverloads constructor(
         mAdapter.sort(this)
     }
 
-    fun deleteMessageByTid(tid: Long) {
+    fun deleteMessageByTid(vararg tid: Long) {
         if (::mAdapter.isInitialized)
-            mAdapter.deleteMessageByTid(tid)
+            mAdapter.deleteMessageByTIds(tid.toList())
     }
 
     fun hideLoadingPrevItem() {

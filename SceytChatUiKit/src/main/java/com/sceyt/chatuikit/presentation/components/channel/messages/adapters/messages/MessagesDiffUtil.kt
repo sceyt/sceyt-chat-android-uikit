@@ -3,8 +3,10 @@ package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.me
 import androidx.recyclerview.widget.DiffUtil
 import com.sceyt.chatuikit.persistence.differs.diff
 
-class MessagesDiffUtil(private var oldList: List<MessageListItem>,
-                       private var newList: List<MessageListItem>) : DiffUtil.Callback() {
+class MessagesDiffUtil(
+    private var oldList: List<MessageListItem>,
+    private var newList: List<MessageListItem>
+) : DiffUtil.Callback() {
 
     override fun getOldListSize(): Int {
         return oldList.size

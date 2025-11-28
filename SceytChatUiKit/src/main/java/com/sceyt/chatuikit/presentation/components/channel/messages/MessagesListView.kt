@@ -584,8 +584,8 @@ class MessagesListView @JvmOverloads constructor(
         }
     }
 
-    internal fun forceDeleteMessageByTid(tid: Long) {
-        messagesRV.deleteMessageByTid(tid)
+    internal fun forceDeleteMessageByTid(vararg tid: Long) {
+        messagesRV.deleteMessageByTid(*tid)
         if (messagesRV.isEmpty())
             binding.pageStateView.updateState(PageState.StateEmpty())
     }
