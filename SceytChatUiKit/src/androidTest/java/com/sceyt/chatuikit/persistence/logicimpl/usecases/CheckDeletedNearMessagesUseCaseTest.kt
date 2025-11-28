@@ -23,11 +23,13 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 @SmallTest
-class CheckDeletedMessagesByNearMessagesUseCaseTest {
+class CheckDeletedNearMessagesUseCaseTest {
     private lateinit var database: SceytDatabase
     private lateinit var messageDao: MessageDao
     private lateinit var messagesCache: MessagesCache
-    private lateinit var useCase: CheckDeletedMessagesByNearMessagesUseCase
+    private lateinit var deleteByLoadType: HandleDeleteMessagesByLoadTypeUseCase
+    private lateinit var handleMessagesInRange: HandleMessagesInRangeUseCase
+    private lateinit var useCase: CheckDeletedNearMessagesUseCase
 
     private val channelId = 123L
 
@@ -46,7 +48,11 @@ class CheckDeletedMessagesByNearMessagesUseCaseTest {
 
         messageDao = database.messageDao()
         messagesCache = MessagesCache()
-        useCase = CheckDeletedMessagesByNearMessagesUseCase(messageDao, messagesCache)
+        deleteByLoadType = HandleDeleteMessagesByLoadTypeUseCase(messageDao, messagesCache)
+        handleMessagesInRange = HandleMessagesInRangeUseCase(messageDao, messagesCache)
+        useCase = CheckDeletedNearMessagesUseCase(
+            messageDao, messagesCache, deleteByLoadType, handleMessagesInRange
+        )
     }
 
     @After

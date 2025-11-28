@@ -69,7 +69,7 @@ import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceReactionsLogic
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
-import com.sceyt.chatuikit.persistence.logicimpl.usecases.CheckDeletedMessagesByRangeUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.CheckDeletedMessagesUseCase
 import com.sceyt.chatuikit.persistence.mappers.addAttachmentMetadata
 import com.sceyt.chatuikit.persistence.mappers.existThumb
 import com.sceyt.chatuikit.persistence.mappers.getLinkPreviewDetails
@@ -123,7 +123,7 @@ internal class PersistenceMessagesLogicImpl(
     private val messagesCache: MessagesCache,
     private val channelCache: ChannelsCache,
     private val messageLoadRangeUpdater: MessageLoadRangeUpdater,
-    private val checkDeletedMessagesByRangeUseCase: CheckDeletedMessagesByRangeUseCase,
+    private val checkDeletedMessagesUseCase: CheckDeletedMessagesUseCase,
 ) : PersistenceMessagesLogic, SceytKoinComponent {
 
     private val persistenceChannelsLogic: PersistenceChannelsLogic by inject()
@@ -396,7 +396,7 @@ internal class PersistenceMessagesLogicImpl(
                 messages = updatedMessages
             )
 
-            checkDeletedMessagesByRangeUseCase(
+            checkDeletedMessagesUseCase(
                 channelId = conversationId,
                 loadType = LoadNear,
                 messageId = messageId,
@@ -429,7 +429,7 @@ internal class PersistenceMessagesLogicImpl(
 
                 channel.lastMessage?.let { lastMessage ->
                     if (channel.lastDisplayedMessageId > lastMessage.id) {
-                        checkDeletedMessagesByRangeUseCase(
+                        checkDeletedMessagesUseCase(
                             channelId = channel.id,
                             loadType = LoadNext,
                             messageId = lastMessage.id,
@@ -1313,7 +1313,7 @@ internal class PersistenceMessagesLogicImpl(
             }
         }
         val updatedMessages = saveMessagesToDb(messages)
-        checkDeletedMessagesByRangeUseCase(
+        checkDeletedMessagesUseCase(
             channelId = channelId,
             loadType = loadType,
             messageId = lastMessageId,

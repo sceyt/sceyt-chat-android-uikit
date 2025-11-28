@@ -24,12 +24,14 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 @SmallTest
-class CheckDeletedMessagesByRangeUseCaseTest {
+class CheckDeletedMessagesUseCaseTest {
     private lateinit var database: SceytDatabase
     private lateinit var messageDao: MessageDao
     private lateinit var messagesCache: MessagesCache
-    private lateinit var deletedMessagesByNearMessagesUseCase: CheckDeletedMessagesByNearMessagesUseCase
-    private lateinit var useCase: CheckDeletedMessagesByRangeUseCase
+    private lateinit var deleteByLoadType: HandleDeleteMessagesByLoadTypeUseCase
+    private lateinit var handleMessagesInRange: HandleMessagesInRangeUseCase
+    private lateinit var deletedNearMessagesUseCase: CheckDeletedNearMessagesUseCase
+    private lateinit var useCase: CheckDeletedMessagesUseCase
 
     private val channelId = 123L
 
@@ -48,8 +50,14 @@ class CheckDeletedMessagesByRangeUseCaseTest {
 
         messageDao = database.messageDao()
         messagesCache = MessagesCache()
-        deletedMessagesByNearMessagesUseCase = CheckDeletedMessagesByNearMessagesUseCase(messageDao, messagesCache)
-        useCase = CheckDeletedMessagesByRangeUseCase(messageDao, messagesCache, deletedMessagesByNearMessagesUseCase)
+        deleteByLoadType = HandleDeleteMessagesByLoadTypeUseCase(messageDao, messagesCache)
+        handleMessagesInRange = HandleMessagesInRangeUseCase(messageDao, messagesCache)
+        deletedNearMessagesUseCase = CheckDeletedNearMessagesUseCase(
+            messageDao, messagesCache, deleteByLoadType, handleMessagesInRange
+        )
+        useCase = CheckDeletedMessagesUseCase(
+            deletedNearMessagesUseCase, deleteByLoadType, handleMessagesInRange
+        )
     }
 
     @After
