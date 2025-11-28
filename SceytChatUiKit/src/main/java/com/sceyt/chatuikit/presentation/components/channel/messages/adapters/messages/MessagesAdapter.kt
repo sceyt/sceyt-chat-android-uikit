@@ -3,12 +3,11 @@ package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.me
 import android.annotation.SuppressLint
 import android.view.ViewGroup
 import androidx.core.util.Predicate
-import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytMessageType
-import com.sceyt.chatuikit.extensions.asComponentActivity
 import com.sceyt.chatuikit.extensions.dispatchUpdatesToSafety
 import com.sceyt.chatuikit.extensions.dispatchUpdatesToSafetySuspend
 import com.sceyt.chatuikit.extensions.findIndexed
@@ -33,6 +32,7 @@ class MessagesAdapter(
     private var messages: SyncArrayList<MessageListItem>,
     private val viewHolderFactory: MessageViewHolderFactory,
     private val style: MessagesListViewStyle,
+    private val scope: LifecycleCoroutineScope,
     private val recyclerView: RecyclerView
 ) : RecyclerView.Adapter<BaseMessageViewHolder>(), StickyHeaderInterface {
     private val loadingPrevItem by lazy { MessageListItem.LoadingPrevItem }
@@ -175,7 +175,7 @@ class MessagesAdapter(
 
     fun notifyUpdate(messages: List<MessageListItem>) {
         updateJob?.cancel()
-        updateJob = recyclerView.context.asComponentActivity().lifecycleScope.launch {
+        updateJob = scope.launch {
             var productDiffResult: DiffUtil.DiffResult
             withContext(Dispatchers.Default) {
                 val myDiffUtil =

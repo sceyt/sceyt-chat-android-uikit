@@ -13,6 +13,7 @@ import androidx.appcompat.view.ContextThemeWrapper
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.util.Predicate
 import androidx.core.view.isVisible
+import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
@@ -96,7 +97,7 @@ import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-@Suppress("Unused", "MemberVisibilityCanBePrivate")
+@Suppress("Unused", "MemberVisibilityCanBePrivate", "JoinDeclarationAndAssignment")
 class MessagesListView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
@@ -471,24 +472,38 @@ class MessagesListView @JvmOverloads constructor(
             ?.itemUpdated(item)
     }
 
-    internal fun setMessagesList(data: List<MessageListItem>, force: Boolean = false) {
-        messagesRV.setData(data, force)
+    internal fun setMessagesList(
+        data: List<MessageListItem>,
+        lifecycleScope: LifecycleCoroutineScope,
+        force: Boolean = false
+    ) {
+        messagesRV.setData(messages = data, lifecycleScope = lifecycleScope, force = force)
         if (data.isNotEmpty())
             binding.pageStateView.updateState(PageState.Nothing)
     }
 
-    internal fun addNextPageMessages(data: List<MessageListItem>) {
-        messagesRV.addNextPageMessages(data)
+    internal fun addNextPageMessages(
+        data: List<MessageListItem>,
+        lifecycleScope: LifecycleCoroutineScope
+    ) {
+        messagesRV.addNextPageMessages(data, lifecycleScope)
     }
 
-    internal fun addPrevPageMessages(data: List<MessageListItem>) {
-        messagesRV.addPrevPageMessages(data)
+    internal fun addPrevPageMessages(
+        data: List<MessageListItem>,
+        lifecycleScope: LifecycleCoroutineScope
+    ) {
+        messagesRV.addPrevPageMessages(messages = data, lifecycleScope = lifecycleScope)
     }
 
-    internal fun addNewMessages(vararg data: MessageListItem, addedCallback: () -> Unit = {}) {
+    internal fun addNewMessages(
+        vararg data: MessageListItem,
+        lifecycleScope: LifecycleCoroutineScope,
+        addedCallback: () -> Unit = {},
+    ) {
         if (data.isEmpty()) return
         messagesRV.awaitAnimationEnd {
-            messagesRV.addNewMessages(*data)
+            messagesRV.addNewMessages(items = data, lifecycleScope = lifecycleScope)
             addedCallback.invoke()
         }
     }
