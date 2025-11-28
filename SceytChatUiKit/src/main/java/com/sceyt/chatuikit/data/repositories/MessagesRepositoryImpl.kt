@@ -20,6 +20,7 @@ import com.sceyt.chat.sceyt_callbacks.MessagesCallback
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.SceytPagingResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.data.models.createErrorResponse
 import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.extensions.TAG
@@ -41,11 +42,21 @@ class MessagesRepositoryImpl : MessagesRepository {
      * @param lastMessageId conversation last message id.
      * @param replyInThread reply message in thread mode.
      * @param limit count of messages. */
-    override suspend fun getPrevMessages(conversationId: Long, lastMessageId: Long, replyInThread: Boolean, limit: Int): SceytResponse<List<SceytMessage>> {
+    override suspend fun getPrevMessages(
+        conversationId: Long,
+        lastMessageId: Long,
+        replyInThread: Boolean,
+        limit: Int
+    ): SceytResponse<List<SceytMessage>> {
         return suspendCancellableCoroutine { continuation ->
-            getQuery(conversationId, replyInThread, limit, true).loadPrev(lastMessageId, object : MessagesCallback {
+            getQuery(
+                conversationId = conversationId,
+                replyInThread = replyInThread,
+                limit = limit,
+                reversed = true
+            ).loadPrev(lastMessageId, object : MessagesCallback {
                 override fun onResult(messages: MutableList<Message>?) {
-                    val result: MutableList<Message> = messages?.toMutableList() ?: mutableListOf()
+                    val result = messages.orEmpty()
                     continuation.safeResume(SceytResponse.Success(result.map { it.toSceytUiMessage() }))
                 }
 
@@ -66,11 +77,21 @@ class MessagesRepositoryImpl : MessagesRepository {
      * @param lastMessageId conversation last message id.
      * @param replyInThread reply message in thread mode.
      * @param limit count of messages */
-    override suspend fun getNextMessages(conversationId: Long, lastMessageId: Long, replyInThread: Boolean, limit: Int): SceytResponse<List<SceytMessage>> {
+    override suspend fun getNextMessages(
+        conversationId: Long,
+        lastMessageId: Long,
+        replyInThread: Boolean,
+        limit: Int
+    ): SceytResponse<List<SceytMessage>> {
         return suspendCancellableCoroutine { continuation ->
-            getQuery(conversationId, replyInThread, limit, false).loadNext(lastMessageId, object : MessagesCallback {
+            getQuery(
+                conversationId = conversationId,
+                replyInThread = replyInThread,
+                limit = limit,
+                reversed = false
+            ).loadNext(lastMessageId, object : MessagesCallback {
                 override fun onResult(messages: MutableList<Message>?) {
-                    val result: MutableList<Message> = messages?.toMutableList() ?: mutableListOf()
+                    val result = messages.orEmpty()
                     continuation.safeResume(SceytResponse.Success(result.map { it.toSceytUiMessage() }))
                 }
 
@@ -91,11 +112,21 @@ class MessagesRepositoryImpl : MessagesRepository {
      * @param messageId conversation last message id.
      * @param replyInThread reply message in thread mode.
      * @param limit count of messages */
-    override suspend fun getNearMessages(conversationId: Long, messageId: Long, replyInThread: Boolean, limit: Int): SceytResponse<List<SceytMessage>> {
+    override suspend fun getNearMessages(
+        conversationId: Long,
+        messageId: Long,
+        replyInThread: Boolean,
+        limit: Int
+    ): SceytResponse<List<SceytMessage>> {
         return suspendCancellableCoroutine { continuation ->
-            getQuery(conversationId, replyInThread, limit, true).loadNear(messageId, object : MessagesCallback {
+            getQuery(
+                conversationId = conversationId,
+                replyInThread = replyInThread,
+                limit = limit,
+                reversed = true
+            ).loadNear(messageId, object : MessagesCallback {
                 override fun onResult(messages: MutableList<Message>?) {
-                    val result: MutableList<Message> = messages?.toMutableList() ?: mutableListOf()
+                    val result = messages.orEmpty()
                     continuation.safeResume(SceytResponse.Success(result.map { it.toSceytUiMessage() }))
                 }
 
@@ -115,12 +146,21 @@ class MessagesRepositoryImpl : MessagesRepository {
      * @param channelId the main channel id.
      * @param lastMessageId conversation last message id.
      * @param type messages type. */
-    override suspend fun getMessagesByType(channelId: Long, lastMessageId: Long, type: String): SceytResponse<List<SceytMessage>> {
+    override suspend fun getMessagesByType(
+        channelId: Long,
+        lastMessageId: Long,
+        type: String,
+        limit: Int
+    ): SceytResponse<List<SceytMessage>> {
         val lastMsgId = if (lastMessageId == 0L) Long.MAX_VALUE else lastMessageId
         return suspendCancellableCoroutine { continuation ->
-            getQueryByType(type, channelId, messagesLoadSize).loadNext(lastMsgId, object : MessagesCallback {
+            getQueryByType(
+                type = type,
+                conversationId = channelId,
+                limit = limit
+            ).loadNext(lastMsgId, object : MessagesCallback {
                 override fun onResult(messages: MutableList<Message>?) {
-                    val result: MutableList<Message> = messages?.toMutableList() ?: mutableListOf()
+                    val result = messages.orEmpty()
                     continuation.safeResume(SceytResponse.Success(result.map { it.toSceytUiMessage() }))
                 }
 
@@ -133,17 +173,19 @@ class MessagesRepositoryImpl : MessagesRepository {
     }
 
     override suspend fun loadAllMessagesAfter(
-            conversationId: Long, replyInThread: Boolean,
-            messageId: Long,
+        conversationId: Long,
+        replyInThread: Boolean,
+        messageId: Long,
+        limit: Int,
     ): Flow<Pair<Long, SceytResponse<List<SceytMessage>>>> = callbackFlow {
-        val query = getQuery(conversationId, replyInThread, messagesLoadSize, false)
+        val query = getQuery(conversationId, replyInThread, limit, false)
 
         var nextMessageId = messageId
         query.loadNext(messageId - 1, object : MessagesCallback {
             override fun onResult(messages: MutableList<Message>?) {
-                val result: MutableList<Message> = messages?.toMutableList() ?: mutableListOf()
+                val result = messages.orEmpty()
                 trySend(nextMessageId to SceytResponse.Success(result.map { it.toSceytUiMessage() }))
-                if (result.size == messagesLoadSize) {
+                if (result.size == limit) {
                     nextMessageId = result.last().id
                     query.loadNext(nextMessageId, this)
                 } else channel.close()
@@ -159,22 +201,31 @@ class MessagesRepositoryImpl : MessagesRepository {
         awaitClose()
     }
 
-    override suspend fun loadMessagesById(conversationId: Long, ids: List<Long>): SceytResponse<List<SceytMessage>> {
+    override suspend fun loadMessagesById(
+        conversationId: Long,
+        ids: List<Long>
+    ): SceytResponse<List<SceytMessage>> {
         return suspendCancellableCoroutine { continuation ->
-            ChannelOperator.build(conversationId).getMessagesById(ids.toLongArray(), object : MessagesCallback {
-                override fun onResult(result: MutableList<Message>?) {
-                    continuation.safeResume(SceytResponse.Success(result?.map { it.toSceytUiMessage() }.orEmpty()))
-                }
+            ChannelOperator.build(conversationId)
+                .getMessagesById(ids.toLongArray(), object : MessagesCallback {
+                    override fun onResult(result: MutableList<Message>?) {
+                        continuation.safeResume(SceytResponse.Success(result?.map { it.toSceytUiMessage() }
+                            .orEmpty()))
+                    }
 
-                override fun onError(error: SceytException?) {
-                    SceytLog.e(TAG, "loadMessages error: ${error?.message}")
-                    continuation.safeResume(SceytResponse.Error(error))
-                }
-            })
+                    override fun onError(error: SceytException?) {
+                        SceytLog.e(TAG, "loadMessages error: ${error?.message}")
+                        continuation.safeResume(SceytResponse.Error(error))
+                    }
+                })
         }
     }
 
-    override suspend fun searchMessages(conversationId: Long, replyInThread: Boolean, query: String): SceytPagingResponse<List<SceytMessage>> {
+    override suspend fun searchMessages(
+        conversationId: Long,
+        replyInThread: Boolean,
+        query: String
+    ): SceytPagingResponse<List<SceytMessage>> {
         return suspendCancellableCoroutine { continuation ->
             val searchField = MessageSearchField.Builder()
                 .withFilterKey(MessageListFilterKey.FilterKeyBody)
@@ -183,7 +234,12 @@ class MessagesRepositoryImpl : MessagesRepository {
                 .build()
             val searchQuery = MessageSearchQuery(listOf(searchField))
 
-            searchMessageListQuery = getQueryForSearch(conversationId, replyInThread, messagesLoadSize, searchQuery)
+            searchMessageListQuery = getQueryForSearch(
+                conversationId = conversationId,
+                replyInThread = replyInThread,
+                limit = messagesLoadSize,
+                searchQuery = searchQuery
+            )
             searchMessageListQuery?.loadNext(object : MessagesCallback {
                 override fun onResult(messages: MutableList<Message>?) {
                     continuation.safeResume(SceytPagingResponse.Success((messages?.map {
@@ -203,8 +259,12 @@ class MessagesRepositoryImpl : MessagesRepository {
         return suspendCancellableCoroutine { continuation ->
             searchMessageListQuery?.loadNext(object : MessagesCallback {
                 override fun onResult(messages: MutableList<Message>?) {
-                    continuation.safeResume(SceytPagingResponse.Success((messages?.map { it.toSceytUiMessage() }.orEmpty()),
-                        searchMessageListQuery?.hasNext ?: false))
+                    continuation.safeResume(
+                        SceytPagingResponse.Success(
+                            data = messages?.map { it.toSceytUiMessage() }.orEmpty(),
+                            hasNext = searchMessageListQuery?.hasNext ?: false
+                        )
+                    )
                 }
 
                 override fun onError(error: SceytException?) {
@@ -216,10 +276,10 @@ class MessagesRepositoryImpl : MessagesRepository {
     }
 
     override suspend fun getUnreadMentions(
-            conversationId: Long,
-            direction: Types.Direction,
-            messageId: Long,
-            limit: Int,
+        conversationId: Long,
+        direction: Types.Direction,
+        messageId: Long,
+        limit: Int,
     ): SceytPagingResponse<List<Long>> = suspendCancellableCoroutine { continuation ->
         val query = UnreadMentionsListQuery.Builder(conversationId)
             .setMessageId(messageId)
@@ -229,7 +289,12 @@ class MessagesRepositoryImpl : MessagesRepository {
 
         query.load(object : MessageIdsCallback {
             override fun onResult(messageIds: MutableList<Long>?) {
-                continuation.safeResume(SceytPagingResponse.Success(messageIds.orEmpty(), query.hasNext))
+                continuation.safeResume(
+                    SceytPagingResponse.Success(
+                        data = messageIds.orEmpty(),
+                        hasNext = query.hasNext
+                    )
+                )
             }
 
             override fun onError(e: SceytException?) {
@@ -240,17 +305,20 @@ class MessagesRepositoryImpl : MessagesRepository {
     }
 
     override suspend fun sendMessage(
-            channelId: Long,
-            message: Message,
+        channelId: Long,
+        message: Message,
     ): SceytResponse<SceytMessage> = suspendCancellableCoroutine { continuation ->
         val transformMessage = SceytChatUIKit.messageTransformer?.transformToSend(message)
-                ?: message
+            ?: message
         SceytLog.i(TAG, "sending message with channelId $channelId, tid: ${message.tid}")
         ChannelOperator.build(channelId).sendMessage(transformMessage, object : MessageCallback {
             override fun onResult(message: Message) {
-                SceytLog.i(TAG, "send message success with tid: ${message.tid}, initialTid: ${message.tid}")
+                SceytLog.i(
+                    TAG,
+                    "send message success with tid: ${message.tid}, initialTid: ${message.tid}"
+                )
                 val resultTransformed = SceytChatUIKit.messageTransformer?.transformToGet(message)
-                        ?: message
+                    ?: message
                 continuation.safeResume(SceytResponse.Success(resultTransformed.toSceytUiMessage()))
             }
 
@@ -262,12 +330,12 @@ class MessagesRepositoryImpl : MessagesRepository {
     }
 
     override suspend fun deleteMessage(
-            channelId: Long,
-            messageId: Long,
-            deleteType: DeleteMessageType,
-    ): SceytResponse<SceytMessage> {
-        return suspendCancellableCoroutine { continuation ->
-            ChannelOperator.build(channelId).deleteMessage(messageId, deleteType, object : MessageCallback {
+        channelId: Long,
+        messageId: Long,
+        deleteType: DeleteMessageType,
+    ): SceytResponse<SceytMessage> = suspendCancellableCoroutine { continuation ->
+        ChannelOperator.build(channelId)
+            .deleteMessage(messageId, deleteType, object : MessageCallback {
                 override fun onResult(msg: Message) {
                     continuation.safeResume(SceytResponse.Success(msg.toSceytUiMessage()))
                 }
@@ -277,12 +345,14 @@ class MessagesRepositoryImpl : MessagesRepository {
                     continuation.safeResume(SceytResponse.Error(ex))
                 }
             })
-        }
     }
 
-    override suspend fun editMessage(channelId: Long, message: SceytMessage): SceytResponse<SceytMessage> {
-        return suspendCancellableCoroutine { continuation ->
-            ChannelOperator.build(channelId).editMessage(message.toMessage(), object : MessageCallback {
+    override suspend fun editMessage(
+        channelId: Long,
+        message: SceytMessage
+    ): SceytResponse<SceytMessage> = suspendCancellableCoroutine { continuation ->
+        ChannelOperator.build(channelId)
+            .editMessage(message.toMessage(), object : MessageCallback {
                 override fun onResult(result: Message) {
                     continuation.safeResume(SceytResponse.Success(result.toSceytUiMessage()))
                 }
@@ -292,53 +362,63 @@ class MessagesRepositoryImpl : MessagesRepository {
                     continuation.safeResume(SceytResponse.Error(ex))
                 }
             })
-        }
     }
 
-    override suspend fun markMessageAs(channelId: Long, marker: MarkerType, vararg id: Long): SceytResponse<MessageListMarker> {
-        return suspendCancellableCoroutine { continuation ->
-            val callback = object : MessageMarkCallback {
-                override fun onResult(result: MessageListMarker) {
-                    continuation.safeResume(SceytResponse.Success(result))
-                }
-
-                override fun onError(error: SceytException?) {
-                    SceytLog.e(TAG, "markAs:${marker} error: ${error?.message}")
-                    continuation.safeResume(SceytResponse.Error(error))
-                }
+    override suspend fun markMessageAs(
+        channelId: Long,
+        marker: MarkerType,
+        vararg id: Long
+    ): SceytResponse<MessageListMarker> = suspendCancellableCoroutine { continuation ->
+        val callback = object : MessageMarkCallback {
+            override fun onResult(result: MessageListMarker) {
+                continuation.safeResume(SceytResponse.Success(result))
             }
-            val channelOperator = ChannelOperator.build(channelId)
-            when (marker) {
-                MarkerType.Displayed -> channelOperator.markMessagesAsDisplayed(id, callback)
-                MarkerType.Received -> channelOperator.markMessagesAsReceived(id, callback)
-                else -> channelOperator.markMessages(id, marker.value, callback)
+
+            override fun onError(error: SceytException?) {
+                SceytLog.e(TAG, "markAs:${marker} error: ${error?.message}")
+                continuation.safeResume(SceytResponse.Error(error))
             }
         }
-    }
-
-    override suspend fun addMessagesMarker(channelId: Long, marker: String, vararg id: Long): SceytResponse<MessageListMarker> {
-        return suspendCancellableCoroutine { continuation ->
-            val channelOperator = ChannelOperator.build(channelId)
-            channelOperator.markMessages(id, marker, object : MessageMarkCallback {
-                override fun onResult(result: MessageListMarker) {
-                    continuation.safeResume(SceytResponse.Success(result))
-                }
-
-                override fun onError(error: SceytException?) {
-                    SceytLog.e(TAG, "addMessagesMarker: $marker error: ${error?.message}")
-                    continuation.safeResume(SceytResponse.Error(error))
-                }
-            })
+        val channelOperator = ChannelOperator.build(channelId)
+        when (marker) {
+            MarkerType.Displayed -> channelOperator.markMessagesAsDisplayed(id, callback)
+            MarkerType.Received -> channelOperator.markMessagesAsReceived(id, callback)
+            else -> channelOperator.markMessages(id, marker.value, callback)
         }
     }
 
-    override suspend fun getMessageById(channelId: Long, messageId: Long): SceytResponse<SceytMessage> {
-        return suspendCancellableCoroutine { continuation ->
-            ChannelOperator.build(channelId).getMessagesById(longArrayOf(messageId), object : MessagesCallback {
+    override suspend fun addMessagesMarker(
+        channelId: Long,
+        marker: String,
+        vararg id: Long
+    ): SceytResponse<MessageListMarker> = suspendCancellableCoroutine { continuation ->
+        val channelOperator = ChannelOperator.build(channelId)
+        channelOperator.markMessages(id, marker, object : MessageMarkCallback {
+            override fun onResult(result: MessageListMarker) {
+                continuation.safeResume(SceytResponse.Success(result))
+            }
+
+            override fun onError(error: SceytException?) {
+                SceytLog.e(TAG, "addMessagesMarker: $marker error: ${error?.message}")
+                continuation.safeResume(SceytResponse.Error(error))
+            }
+        })
+    }
+
+    override suspend fun getMessageById(
+        channelId: Long,
+        messageId: Long
+    ): SceytResponse<SceytMessage> = suspendCancellableCoroutine { continuation ->
+        ChannelOperator.build(channelId)
+            .getMessagesById(longArrayOf(messageId), object : MessagesCallback {
                 override fun onResult(messages: MutableList<Message>?) {
-                    if (!messages.isNullOrEmpty())
-                        continuation.safeResume(SceytResponse.Success(messages.first().toSceytUiMessage()))
-                    else continuation.safeResume(SceytResponse.Error(SceytException(0, "Message not found")))
+                    if (!messages.isNullOrEmpty()) {
+                        continuation.safeResume(
+                            SceytResponse.Success(
+                                messages.first().toSceytUiMessage()
+                            )
+                        )
+                    } else continuation.safeResume(createErrorResponse("Message not found"))
                 }
 
                 override fun onError(error: SceytException?) {
@@ -346,16 +426,15 @@ class MessagesRepositoryImpl : MessagesRepository {
                     continuation.safeResume(SceytResponse.Error(error))
                 }
             })
-        }
     }
 
     private val messagesLoadSize get() = SceytChatUIKit.config.queryLimits.messageListQueryLimit
 
     private fun getQuery(
-            conversationId: Long,
-            replyInThread: Boolean,
-            limit: Int,
-            reversed: Boolean,
+        conversationId: Long,
+        replyInThread: Boolean,
+        limit: Int,
+        reversed: Boolean,
     ) = MessagesListQuery.Builder(conversationId)
         .setIsThread(replyInThread)
         .setLimit(limit)
@@ -363,10 +442,10 @@ class MessagesRepositoryImpl : MessagesRepository {
         .build()
 
     private fun getQueryForSearch(
-            conversationId: Long,
-            replyInThread: Boolean,
-            limit: Int,
-            searchQuery: MessageSearchQuery,
+        conversationId: Long,
+        replyInThread: Boolean,
+        limit: Int,
+        searchQuery: MessageSearchQuery,
     ) = MessagesListQuery.Builder(conversationId)
         .setIsThread(replyInThread)
         .setLimit(limit)
@@ -375,9 +454,9 @@ class MessagesRepositoryImpl : MessagesRepository {
         .build()
 
     private fun getQueryByType(
-            type: String,
-            conversationId: Long,
-            limit: Int,
+        type: String,
+        conversationId: Long,
+        limit: Int,
     ) = MessagesListQueryByType.Builder(conversationId, type)
         .limit(limit)
         .reversed(true)
