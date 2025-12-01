@@ -123,9 +123,6 @@ internal class FileTransferLogicImpl(
             downloadingUrlMap[downloadMapKey] = downloadMapKey
             pausedTasksMap.remove(attachment.messageTid)
 
-            destFile.deleteOnExit()
-            destFile.createNewFile()
-
             task.progressCallback?.onProgress(TransferData(
                 messageTid = task.messageTid,
                 progressPercent = attachment.progressPercent ?: 0f,

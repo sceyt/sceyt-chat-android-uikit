@@ -3,6 +3,7 @@ package com.sceyt.chatuikit.shared.utils
 import android.content.Context
 import android.net.Uri
 import android.provider.MediaStore.Files.FileColumns
+import android.util.Log
 import com.sceyt.chatuikit.data.constants.SceytConstants
 import java.io.File
 import java.io.FileOutputStream
@@ -10,6 +11,7 @@ import java.io.InputStream
 
 
 object FilePathUtil {
+    private const val TAG = "FilePathUtilTag"
 
     fun getFilePathFromUri(
         context: Context,
@@ -35,9 +37,7 @@ object FilePathUtil {
             context.contentResolver.query(uri, projection, null, null, null)?.use {
                 if (it.moveToFirst()) {
                     val nameIndex = it.getColumnIndex(FileColumns.DISPLAY_NAME)
-                    val sizeIndex = it.getColumnIndex(FileColumns.SIZE)
                     val fileName = it.getString(nameIndex)
-                    val fileSize = it.getLong(sizeIndex)
 
                     val directory = File(parentDirToCopy, SceytConstants.CopyFileDirName)
                     val file = getOrCreateUniqueFileDirectory(directory, fileName)
@@ -55,6 +55,8 @@ object FilePathUtil {
 
     @Synchronized
     fun getOrCreateUniqueFileDirectory(rootDir: File, fileName: String): File {
+        Log.d(TAG, "getOrCreateUniqueFileDirectory: rootDir=$rootDir, fileName=$fileName")
+        
         // Ensure root directory exists
         rootDir.mkdirs()
 
@@ -64,6 +66,7 @@ object FilePathUtil {
                 rootDir else File(rootDir, counter.toString())
 
             if (!targetDir.exists()) {
+                Log.d(TAG, "Creating directory: $targetDir")
                 targetDir.mkdirs()
             }
 
@@ -75,9 +78,11 @@ object FilePathUtil {
             }.getOrDefault(false)
 
             if (created) {
+                Log.d(TAG, "Successfully created file: ${file.absolutePath} (attempts: ${counter + 1})")
                 return file // Successfully created — return it
             }
 
+            Log.d(TAG, "File already exists, trying next directory (counter=$counter)")
             counter++
         }
     }
