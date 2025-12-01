@@ -499,7 +499,7 @@ internal class FileTransferLogicImpl(
     private fun getDestinationFile(context: Context, attachment: SceytAttachment): File {
         val root = context.getSaveFileLocationRoot(attachment.type)
         val fileName = attachment.name.takeIf { it.isNotBlank() } ?: UUID.randomUUID().toString()
-        val destinationFile = getOrCreateUniqueFileDirectory(root, fileName, attachment.fileSize)
+        val destinationFile = getOrCreateUniqueFileDirectory(root, fileName)
         return destinationFile
     }
 
