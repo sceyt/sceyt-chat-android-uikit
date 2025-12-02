@@ -20,6 +20,7 @@ import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.appbar.CollapsingToolbarLayout
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
+import com.google.gson.Gson
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventData
@@ -28,7 +29,11 @@ import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum.Group
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum.Public
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
+import com.sceyt.chatuikit.data.models.messages.DisappearingMessageMetadata
+import com.sceyt.chatuikit.data.models.messages.SceytMessageType
 import com.sceyt.chatuikit.data.models.messages.SceytUser
+import com.sceyt.chatuikit.data.models.messages.SystemMsgBodyEnum
+import com.sceyt.chatuikit.data.models.messages.SystemMsgBodyEnum.DisappearingMessage
 import com.sceyt.chatuikit.databinding.SceytActivityChannelInfoBinding
 import com.sceyt.chatuikit.extensions.TAG_NAME
 import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
@@ -324,15 +329,16 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
                 channelId,
                 com.sceyt.chat.models.message.Message(
                     com.sceyt.chat.models.message.Message.MessageBuilder()
-                        .setType(com.sceyt.chatuikit.data.models.messages.SceytMessageType.System.value)
-                        .setMetadata(com.google.gson.Gson().toJson(
-                            com.sceyt.chatuikit.data.models.messages.DisappearingMessageMetadata(
+                        .setType(SceytMessageType.System.value)
+                        .setMetadata(
+                            Gson().toJson(
+                            DisappearingMessageMetadata(
                                 duration.toString()
                             )
                         ))
                         .withDisplayCount(0)
                         .setSilent(true)
-                        .setBody(com.sceyt.chatuikit.data.models.messages.SystemMsgBodyEnum.DisappearingMessage.value)
+                        .setBody(DisappearingMessage.value)
                 )
             )
         }
@@ -500,10 +506,10 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
                 SceytChatUIKit.chatUIFacade.messageInteractor.sendMessage(
                     channelId, com.sceyt.chat.models.message.Message(
                         com.sceyt.chat.models.message.Message.MessageBuilder()
-                            .setType(com.sceyt.chatuikit.data.models.messages.SceytMessageType.System.value)
+                            .setType(SceytMessageType.System.value)
                             .withDisplayCount(0)
                             .setSilent(true)
-                            .setBody(com.sceyt.chatuikit.data.models.messages.SystemMsgBodyEnum.MemberLeaved.value)
+                            .setBody(SystemMsgBodyEnum.MemberLeaved.value)
                     )
                 )
             }

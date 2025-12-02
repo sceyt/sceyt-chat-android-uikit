@@ -17,7 +17,7 @@ open class DefaultSystemMessageBodyFormatter : Formatter<SceytMessage> {
     override fun format(context: Context, from: SceytMessage): CharSequence {
         val fromName = from.user?.let {
             SceytChatUIKit.formatters.userNameFormatter.format(context, it)
-        } ?: context.getString(R.string.sceyt_you)
+        } ?: " "
 
         return getSystemMessageBody(context, from, fromName.toString())
     }
@@ -61,12 +61,11 @@ open class DefaultSystemMessageBodyFormatter : Formatter<SceytMessage> {
             SystemMsgBodyEnum.DisappearingMessage -> {
                 message.metadata?.jsonToObject(DisappearingMessageMetadata::class.java)?.let { data ->
                     val durationMillis = data.duration?.toLongOrNull() ?: 0L
-                    val durationSeconds = durationMillis / 1000
 
-                    if (durationSeconds == 0L) {
+                    if (durationMillis == 0L) {
                         string.append(context.getString(R.string.sceyt_disappearing_message_disabled, fromName))
                     } else {
-                        val timeText = durationSeconds.formatDisappearingMessagesDuration(context)
+                        val timeText = durationMillis.formatDisappearingMessagesDuration(context)
                         string.append(context.getString(R.string.sceyt_disappearing_message_set, fromName, timeText))
                     }
                 }

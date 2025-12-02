@@ -8,6 +8,7 @@ import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.data.models.messages.SceytMessageType
 import com.sceyt.chatuikit.extensions.toSpannableString
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.formatters.attributes.ChannelItemSubtitleFormatterAttributes
@@ -31,14 +32,20 @@ open class DefaultChannelListSubtitleFormatter : Formatter<ChannelItemSubtitleFo
 
         val style = from.channelItemStyle
         val message = channel.lastMessage ?: return ""
+
         if (message.state == MessageState.Deleted) {
             val text = SpannableStringBuilder(style.messageDeletedStateText)
             style.deletedTextStyle.apply(context, text)
             return text
         }
+
         if (!message.isSupportedType()){
             val text = style.unsupportedMessageBodyShortFormatter.format(context, message)
             return text
+        }
+
+        if (message.type == SceytMessageType.System.value) {
+            return SceytChatUIKit.formatters.systemMessageBodyFormatter.format(context, message)
         }
         val body = style.lastMessageBodyFormatter.format(context, MessageBodyFormatterAttributes(
             message = message,

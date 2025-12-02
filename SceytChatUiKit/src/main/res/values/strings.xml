@@ -97,7 +97,7 @@
     <string name="sceyt_no_link_items_yet">No link items yet</string>
     <string name="sceyt_history_was_successfully_cleared">History was successfully cleared!</string>
     <string name="sceyt_auto_delete">Auto-Delete Messages</string>
-    <string name="sceyt_1_day">One day</string>
+    <string name="sceyt_1_day">1 day</string>
     <string name="sceyt_1_week">1 week</string>
     <string name="sceyt_1_month">1 month</string>
     <string name="sceyt_off">Off</string>
@@ -283,4 +283,5 @@
     <string name="sceyt_disappearing_message_set">%1$s set disappearing messages to %2$s</string>
     <string name="sceyt_disappearing_message_disabled">%1$s disabled disappearing messages</string>
     <string name="sceyt_and">and</string>
+    <string name="sceyt_unknown_duration">Unknown duration</string>
 </resources>
