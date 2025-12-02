@@ -20,7 +20,10 @@ import com.sceyt.chatuikit.persistence.mappers.toSceytReaction
 import com.sceyt.chatuikit.presentation.extensions.isSupportedType
 
 open class DefaultChannelListSubtitleFormatter : Formatter<ChannelItemSubtitleFormatterAttributes> {
-    override fun format(context: Context, from: ChannelItemSubtitleFormatterAttributes): CharSequence {
+    override fun format(
+        context: Context,
+        from: ChannelItemSubtitleFormatterAttributes
+    ): CharSequence {
         val channel = from.channel
         val (hasLastReaction, reactionTitle) = checkHasLastReaction(context, from)
         if (hasLastReaction)
@@ -39,18 +42,28 @@ open class DefaultChannelListSubtitleFormatter : Formatter<ChannelItemSubtitleFo
             return text
         }
 
-        if (!message.isSupportedType()){
-            val text = style.unsupportedMessageBodyShortFormatter.format(context, message)
-            return text
-        }
-
         if (message.type == SceytMessageType.System.value) {
             return SceytChatUIKit.formatters.systemMessageBodyFormatter.format(context, message)
         }
-        val body = style.lastMessageBodyFormatter.format(context, MessageBodyFormatterAttributes(
-            message = message,
-            mentionTextStyle = style.mentionTextStyle)
+
+        if (!message.isSupportedType()) {
+            return SceytChatUIKit.formatters.unsupportedMessageShortBodyFormatter.format(
+                context = context,
+                from = message
+            )
+        }
+
+        val body = style.lastMessageBodyFormatter.format(
+            context, MessageBodyFormatterAttributes(
+                message = message,
+                mentionTextStyle = style.mentionTextStyle
+            )
         )
+
+        if (message.type == SceytMessageType.System.value) {
+            return body
+        }
+
         val senderName = style.lastMessageSenderNameFormatter.format(context, channel)
         val attachmentIcon = message.attachments?.firstOrNull()?.let {
             style.attachmentIconProvider.provide(context, it)
@@ -67,8 +80,8 @@ open class DefaultChannelListSubtitleFormatter : Formatter<ChannelItemSubtitleFo
     }
 
     open fun checkHasLastReaction(
-            context: Context,
-            from: ChannelItemSubtitleFormatterAttributes,
+        context: Context,
+        from: ChannelItemSubtitleFormatterAttributes,
     ): Pair<Boolean, CharSequence> {
         val channel = from.channel
         val style = from.channelItemStyle
@@ -80,14 +93,14 @@ open class DefaultChannelListSubtitleFormatter : Formatter<ChannelItemSubtitleFo
         val addReactions = pendingAddOrRemoveReaction?.get(true)
         val removeReactions = pendingAddOrRemoveReaction?.get(false) ?: emptyList()
         val lastReaction = addReactions?.maxByOrNull { it.createdAt }?.toSceytReaction()
-                ?: channel.newReactions?.filter {
-                    it.user?.id != myId && removeReactions.none { rm ->
-                        rm.key == it.key && rm.messageId == it.messageId && it.user?.id == myId
-                    }
-                }?.maxByOrNull { it.id } ?: return false to ""
+            ?: channel.newReactions?.filter {
+                it.user?.id != myId && removeReactions.none { rm ->
+                    rm.key == it.key && rm.messageId == it.messageId && it.user?.id == myId
+                }
+            }?.maxByOrNull { it.id } ?: return false to ""
 
         val message = ChatReactionMessagesCache.getMessageById(lastReaction.messageId)
-                ?: return false to ""
+            ?: return false to ""
 
         if (lastReaction.id > (channel.lastMessage?.id ?: 0) || lastReaction.pending) {
             val body = style.lastMessageBodyFormatter.format(
@@ -109,12 +122,22 @@ open class DefaultChannelListSubtitleFormatter : Formatter<ChannelItemSubtitleFo
 
             val reactUserName = when {
                 channel.isGroup -> {
-                    val name = lastReaction.user?.let { style.reactedUserNameFormatter.format(context, it) }
-                            ?: ""
+                    val name = lastReaction.user?.let {
+                        style.reactedUserNameFormatter.format(
+                            context,
+                            it
+                        )
+                    }
+                        ?: ""
                     "$name ${reactedWord.lowercase()}"
                 }
 
-                lastReaction.user?.id == myId -> "${context.getString(R.string.sceyt_you)} ${context.getString(R.string.sceyt_reacted).lowercase()}"
+                lastReaction.user?.id == myId -> "${context.getString(R.string.sceyt_you)} ${
+                    context.getString(
+                        R.string.sceyt_reacted
+                    ).lowercase()
+                }"
+
                 else -> context.getString(R.string.sceyt_reacted)
             }
 
@@ -129,8 +152,8 @@ open class DefaultChannelListSubtitleFormatter : Formatter<ChannelItemSubtitleFo
     }
 
     open fun checkHasDraftMessage(
-            context: Context,
-            attributes: ChannelItemSubtitleFormatterAttributes,
+        context: Context,
+        attributes: ChannelItemSubtitleFormatterAttributes,
     ): Pair<Boolean, CharSequence> {
         val channel = attributes.channel
         val style = attributes.channelItemStyle
@@ -139,17 +162,19 @@ open class DefaultChannelListSubtitleFormatter : Formatter<ChannelItemSubtitleFo
             val draft = "${context.getString(R.string.sceyt_draft)}:".toSpannable()
             style.draftPrefixTextStyle.apply(context, draft)
 
-            val formattedBody = style.draftMessageBodyFormatter.format(context, DraftMessageBodyFormatterAttributes(
-                message = draftMessage,
-                mentionTextStyle = style.mentionTextStyle
-            ))
+            val formattedBody = style.draftMessageBodyFormatter.format(
+                context, DraftMessageBodyFormatterAttributes(
+                    message = draftMessage,
+                    mentionTextStyle = style.mentionTextStyle
+                )
+            )
 
             if (formattedBody.isBlank()) {
                 return true to draft.removeSuffix(":").toSpannable()
             }
 
             val attachment = draftMessage.voiceAttachment?.toSceytAttachment()
-                    ?: draftMessage.attachments?.singleOrNull()?.toSceytAttachment()
+                ?: draftMessage.attachments?.singleOrNull()?.toSceytAttachment()
 
             val attachmentIcon = attachment?.let {
                 style.attachmentIconProvider.provide(context, it)
