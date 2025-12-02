@@ -36,12 +36,14 @@ interface MessagesRepository {
             channelId: Long,
             lastMessageId: Long,
             type: String,
+            limit: Int,
     ): SceytResponse<List<SceytMessage>>
 
     suspend fun loadAllMessagesAfter(
             conversationId: Long,
             replyInThread: Boolean,
             messageId: Long,
+            limit: Int,
     ): Flow<Pair<Long, SceytResponse<List<SceytMessage>>>>
 
     suspend fun searchMessages(

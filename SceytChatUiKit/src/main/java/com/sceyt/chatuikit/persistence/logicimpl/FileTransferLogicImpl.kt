@@ -123,9 +123,6 @@ internal class FileTransferLogicImpl(
             downloadingUrlMap[downloadMapKey] = downloadMapKey
             pausedTasksMap.remove(attachment.messageTid)
 
-            destFile.deleteOnExit()
-            destFile.createNewFile()
-
             task.progressCallback?.onProgress(TransferData(
                 messageTid = task.messageTid,
                 progressPercent = attachment.progressPercent ?: 0f,
@@ -499,7 +496,7 @@ internal class FileTransferLogicImpl(
     private fun getDestinationFile(context: Context, attachment: SceytAttachment): File {
         val root = context.getSaveFileLocationRoot(attachment.type)
         val fileName = attachment.name.takeIf { it.isNotBlank() } ?: UUID.randomUUID().toString()
-        val destinationFile = getOrCreateUniqueFileDirectory(root, fileName, attachment.fileSize)
+        val destinationFile = getOrCreateUniqueFileDirectory(root, fileName)
         return destinationFile
     }
 

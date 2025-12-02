@@ -13,12 +13,13 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import androidx.core.net.toUri
 
 fun getMimeType(url: String?): String? {
     if (url.isNullOrBlank()) return null
     return try {
         MimeTypeMap.getSingleton().getMimeTypeFromExtension(url.substring(url.lastIndexOf(".") + 1))
-    } catch (ex: Exception) {
+    } catch (_: Exception) {
         null
     }
 }
@@ -39,7 +40,7 @@ fun getFileSize(fileUri: String): Long {
         val file = File(fileUri)
         if (file.isFile) sizeInBytes = file.length()
         sizeInBytes
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         0
     }
 }
@@ -50,7 +51,7 @@ fun getFileSizeMb(filePath: String): Double {
         val file = File(filePath)
         if (file.isFile) sizeInBytes = file.length()
         sizeInBytes / 1000.0 / 1000.0
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         0.0
     }
 }
@@ -74,7 +75,7 @@ fun copyFile(context: Context, uri: String, name: String): File {
         .apply {
             if (!exists()) {
                 outputStream().use { cache ->
-                    context.contentResolver.openInputStream(Uri.parse(uri)).use { inputStream ->
+                    context.contentResolver.openInputStream(uri.toUri()).use { inputStream ->
                         inputStream?.copyTo(cache)
                     }
                 }
@@ -90,7 +91,7 @@ fun Bitmap?.bitmapToByteArray(): ByteArray? {
         val stream = ByteArrayOutputStream()
         compress(Bitmap.CompressFormat.JPEG, 100, stream)
         stream.toByteArray()
-    } catch (ex: Exception) {
+    } catch (_: Exception) {
         null
     }
 
@@ -113,7 +114,7 @@ fun saveToGallery(context: Context, path: String, name: String, mimeType: String
     }
     Environment.getExternalStoragePublicDirectory(environment)?.let { parent ->
         try {
-            val file = checkAndCreateNewFile(parent, name)
+            val file = checkAndCreateUniqueFile(parent, name)
             FileOutputStream(file).use { fileOutputStream ->
                 File(path).inputStream().use { inputStream ->
                     inputStream.copyTo(fileOutputStream)
@@ -131,10 +132,18 @@ fun saveToGallery(context: Context, path: String, name: String, mimeType: String
     return null
 }
 
-fun checkAndCreateNewFile(parent: File, name: String): File {
+fun checkAndCreateUniqueFile(parent: File, name: String): File {
+    val nameWithoutExt = name.substringBeforeLast(".")
+    val ext = name.substringAfterLast(".", "")
+    var counter = 0
+
     var newFile = File(parent, name)
     while (newFile.exists()) {
-        val newName = "${newFile.nameWithoutExtension}(1).${newFile.extension}"
+        counter++
+        val newName = if (ext.isNotEmpty())
+            "$nameWithoutExt($counter).$ext"
+        else
+            "$nameWithoutExt($counter)"
         newFile = File(parent, newName)
     }
     return newFile

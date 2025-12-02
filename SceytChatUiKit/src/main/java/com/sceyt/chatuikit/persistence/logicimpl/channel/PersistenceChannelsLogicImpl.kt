@@ -1155,6 +1155,32 @@ internal class PersistenceChannelsLogicImpl(
         }
     }
 
+    override suspend fun handleClearedOutdatedMessages(
+        channelId: Long,
+        outdatedMessageTIds: List<Long>
+    ) {
+        // Check if sent message is last message of channel
+        val channel = channelsCache.getOneOf(channelId)
+            ?: channelDao.getChannelById(channelId)?.toChannel() ?: return
+
+        if (!outdatedMessageTIds.contains(channel.lastMessage?.tid ?: return))
+            return
+
+        val newLastMessage = messageDao.getLastMessage(channelId)?.toSceytMessage()
+        // If new last message is null, try to get channel from server, maybe we haven't loaded it yet
+        if (newLastMessage == null) {
+            getChannelFromServer(channelId)
+        } else {
+            channelDao.updateLastMessageWithLastRead(
+                channelId = channelId,
+                lastMessageTid = newLastMessage.tid,
+                lastMessageId = newLastMessage.id,
+                lastMessageAt = newLastMessage.createdAt
+            )
+            channelsCache.updateLastMessageWithLastRead(channelId, newLastMessage)
+        }
+    }
+
     private suspend fun updateChannelPendingLastMessages(channels: List<SceytChannel>): List<SceytChannel> {
         if (channels.isEmpty()) return channels
         val mutableList = channels.toList().toArrayList()
