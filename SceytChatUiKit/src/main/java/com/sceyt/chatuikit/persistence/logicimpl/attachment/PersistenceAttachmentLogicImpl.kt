@@ -431,9 +431,15 @@ internal class PersistenceAttachmentLogicImpl(
         }.reversed()
 
         return PaginationResponse.ServerResponse(
-            data = mappedResponse, cacheData = cacheData,
-            loadKey = loadKey, offset = offset, hasDiff = hasDiff, hasNext = hasNext,
-            hasPrev = hasPrev, loadType = loadType, ignoredDb = ignoreDb
+            data = mappedResponse,
+            cacheData = cacheData,
+            loadKey = loadKey,
+            offset = offset,
+            hasDiff = hasDiff,
+            hasNext = hasNext,
+            hasPrev = hasPrev,
+            loadType = loadType,
+            ignoredDb = ignoreDb
         )
     }
 
