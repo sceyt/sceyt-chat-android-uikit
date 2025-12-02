@@ -3,6 +3,7 @@ package com.sceyt.chatuikit.persistence.repositories
 import com.sceyt.chat.models.member.Member
 import com.sceyt.chatuikit.config.ChannelListConfig
 import com.sceyt.chatuikit.config.SearchChannelParams
+import com.sceyt.chatuikit.data.models.SceytPagingResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
 import com.sceyt.chatuikit.data.models.channels.EditChannelData
@@ -16,15 +17,15 @@ interface ChannelsRepository {
     suspend fun getChannelByUri(uri: String): SceytResponse<SceytChannel?>
     suspend fun getChannelByInviteKey(inviteKey: String): SceytResponse<SceytChannel>
     suspend fun getChannels(
-            query: String,
-            config: ChannelListConfig,
-            params: SearchChannelParams
+        query: String,
+        config: ChannelListConfig,
+        params: SearchChannelParams
     ): SceytResponse<List<SceytChannel>>
 
     suspend fun loadMoreChannels(
-            query: String,
-            config: ChannelListConfig,
-            params: SearchChannelParams
+        query: String,
+        config: ChannelListConfig,
+        params: SearchChannelParams
     ): SceytResponse<List<SceytChannel>>
 
     suspend fun getAllChannels(limit: Int): Flow<GetAllChannelsResponse>
@@ -40,10 +41,23 @@ interface ChannelsRepository {
     suspend fun uploadAvatar(avatarUri: String): SceytResponse<String>
     suspend fun editChannel(channelId: Long, data: EditChannelData): SceytResponse<SceytChannel>
     suspend fun deleteChannel(channelId: Long): SceytResponse<Long>
-    suspend fun loadChannelMembers(channelId: Long, offset: Int, role: String?): SceytResponse<List<SceytMember>>
-    suspend fun addMembersToChannel(channelId: Long, members: List<Member>): SceytResponse<SceytChannel>
+    suspend fun loadChannelMembers(
+        channelId: Long,
+        nextToken: String,
+        role: String?
+    ): SceytPagingResponse<List<SceytMember>>
+
+    suspend fun addMembersToChannel(
+        channelId: Long,
+        members: List<Member>
+    ): SceytResponse<SceytChannel>
+
     suspend fun changeChannelOwner(channelId: Long, userId: String): SceytResponse<SceytChannel>
-    suspend fun changeChannelMemberRole(channelId: Long, vararg member: Member): SceytResponse<SceytChannel>
+    suspend fun changeChannelMemberRole(
+        channelId: Long,
+        vararg member: Member
+    ): SceytResponse<SceytChannel>
+
     suspend fun deleteMember(channelId: Long, userId: String): SceytResponse<SceytChannel>
     suspend fun blockAndDeleteMember(channelId: Long, userId: String): SceytResponse<SceytChannel>
     suspend fun unMuteChannel(channelId: Long): SceytResponse<SceytChannel>
