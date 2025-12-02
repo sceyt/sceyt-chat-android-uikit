@@ -12,7 +12,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityOptionsCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
+import com.google.gson.Gson
+import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.role.Role
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
@@ -30,6 +33,9 @@ import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum.Public
 import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
+import com.sceyt.chatuikit.data.models.messages.MembersMetaData
+import com.sceyt.chatuikit.data.models.messages.SceytMessageType
+import com.sceyt.chatuikit.data.models.messages.SystemMsgBodyEnum
 import com.sceyt.chatuikit.databinding.SceytFragmentChannelMembersBinding
 import com.sceyt.chatuikit.extensions.awaitAnimationEnd
 import com.sceyt.chatuikit.extensions.customToastSnackBar
@@ -41,6 +47,7 @@ import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.extensions.getChannelType
 import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
+import com.sceyt.chatuikit.persistence.mappers.toUser
 import com.sceyt.chatuikit.presentation.common.SceytDialog
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoActivity
 import com.sceyt.chatuikit.presentation.components.channel_info.members.adapter.ChannelMembersAdapter
@@ -58,6 +65,8 @@ import com.sceyt.chatuikit.presentation.components.select_users.SelectUsersPageA
 import com.sceyt.chatuikit.presentation.components.select_users.SelectUsersResult
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.styles.channel_members.ChannelMembersStyle
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
 
@@ -312,11 +321,39 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
     }
 
     protected open fun onAddedMember(data: List<SceytMember>) {
-        if (memberType == MemberTypeEnum.Admin)
-            viewModel.changeRole(channel.id, *data.toTypedArray())
-    }
+            if (channel.isGroup && data.isNotEmpty()) {
+                lifecycleScope.launch(Dispatchers.IO) {
+                    SceytChatUIKit.chatUIFacade.messageInteractor.sendMessage(
+                        channel.id, Message(
+                            Message.MessageBuilder()
+                                .setType(SceytMessageType.System.value)
+                                .setMetadata(Gson().toJson(MembersMetaData(data.map { it.id })))
+                                .setMentionedUsers(data.map { it.user.toUser() }.toTypedArray())
+                                .withDisplayCount(0)
+                                .setSilent(true)
+                                .setBody(SystemMsgBodyEnum.MemberAdded.value)
+                        )
+                    )
+                }
+            }
+        }
 
     protected open fun onRemovedMember(data: List<SceytMember>) {
+        if (channel.isGroup && data.isNotEmpty()) {
+            lifecycleScope.launch(Dispatchers.IO) {
+                SceytChatUIKit.chatUIFacade.messageInteractor.sendMessage(
+                    channel.id, Message(
+                        Message.MessageBuilder()
+                            .setType(SceytMessageType.System.value)
+                            .setMetadata(Gson().toJson(MembersMetaData(data.map { it.id })))
+                            .setMentionedUsers(data.map { it.user.toUser() }.toTypedArray())
+                            .withDisplayCount(0)
+                            .setSilent(true)
+                            .setBody(SystemMsgBodyEnum.MemberRemoved.value)
+                    )
+                )
+            }
+        }
     }
 
     protected open fun currentUserIsOwnerOrAdmin(): Boolean {

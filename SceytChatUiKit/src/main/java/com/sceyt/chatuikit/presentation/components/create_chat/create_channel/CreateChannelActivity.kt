@@ -1,6 +1,5 @@
 package com.sceyt.chatuikit.presentation.components.create_chat.create_channel
 
-import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
@@ -9,10 +8,14 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityOptionsCompat
 import androidx.lifecycle.lifecycleScope
+import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.role.Role
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
+import com.sceyt.chatuikit.data.models.messages.SceytMessageType
+import com.sceyt.chatuikit.data.models.messages.SystemMsgBodyEnum
 import com.sceyt.chatuikit.databinding.SceytActivityCreateChannelBinding
 import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
 import com.sceyt.chatuikit.extensions.overrideTransitions
@@ -56,6 +59,16 @@ class CreateChannelActivity : AppCompatActivity() {
     private fun initViewModel() {
         viewModel.createChatLiveData.observe(this) {
             lifecycleScope.launch {
+                SceytChatUIKit.chatUIFacade.messageInteractor.sendMessage(
+                    it.id, Message(
+                        Message.MessageBuilder()
+                            .setType(SceytMessageType.System.value)
+                            .withDisplayCount(0)
+                            .setSilent(true)
+                            .setBody(SystemMsgBodyEnum.ChannelCreated.value)
+                    )
+                )
+
                 createdChannel = it
                 val animOptions = ActivityOptionsCompat.makeCustomAnimation(this@CreateChannelActivity,
                     com.sceyt.chatuikit.R.anim.sceyt_anim_slide_in_right, com.sceyt.chatuikit.R.anim.sceyt_anim_slide_hold)
@@ -100,7 +113,7 @@ class CreateChannelActivity : AppCompatActivity() {
     }
 
     private val selectUsersActivityLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
+        if (result.resultCode == RESULT_OK) {
             result.data?.parcelable<SelectUsersResult>(SelectUsersActivity.SELECTED_USERS_RESULT)?.let { data ->
                 val members = data.selectedUsers.map { SceytMember(Role(MemberTypeEnum.Subscriber.toRole()), it) }
                 viewModel.addMembers(createdChannel.id, members)
