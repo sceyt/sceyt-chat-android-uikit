@@ -167,6 +167,7 @@ data class MessageItemStyle(
     val overlayMediaLoaderStyle: MediaLoaderStyle,
     val voiceWaveformStyle: AudioWaveformStyle,
     val selectionCheckboxStyle: CheckboxStyle,
+    val systemMessageItemStyle: SystemMessageItemStyle,
     val senderNameFormatter: Formatter<SceytUser>,
     val messageBodyFormatter: Formatter<MessageBodyFormatterAttributes>,
     val unsupportedMessageBodyFormatter: Formatter<SceytMessage>,
@@ -177,8 +178,7 @@ data class MessageItemStyle(
     val attachmentFileSizeFormatter: Formatter<SceytAttachment>,
     val attachmentIconProvider: VisualProvider<SceytAttachment, Drawable?>,
     val senderNameColorProvider: VisualProvider<SceytUser, Int>,
-    val userAvatarRenderer: AvatarRenderer<SceytUser>,
-    val systemMessageItemStyle: SystemMessageItemStyle
+    val userAvatarRenderer: AvatarRenderer<SceytUser>
 ) : SceytComponentStyle() {
 
     companion object {
@@ -299,6 +299,7 @@ data class MessageItemStyle(
                     voiceWaveformStyle = buildAudioWaveformStyle(array),
                     overlayMediaLoaderStyle = buildOverlayMediaLoaderStyle(array),
                     selectionCheckboxStyle = buildSelectionCheckboxStyle(array),
+                    systemMessageItemStyle = buildSystemMessageItemStyle(array),
                     senderNameFormatter = SceytChatUIKit.formatters.userNameFormatter,
                     messageBodyFormatter = SceytChatUIKit.formatters.messageBodyFormatter,
                     unsupportedMessageBodyFormatter = SceytChatUIKit.formatters.unsupportedMessageBodyFormatter,
@@ -309,8 +310,7 @@ data class MessageItemStyle(
                     attachmentFileSizeFormatter = SceytChatUIKit.formatters.attachmentSizeFormatter,
                     attachmentIconProvider = SceytChatUIKit.providers.attachmentIconProvider,
                     senderNameColorProvider = SceytChatUIKit.providers.senderNameColorProvider,
-                    userAvatarRenderer = SceytChatUIKit.renderers.userAvatarRenderer,
-                    systemMessageItemStyle = buildSystemMessageItemStyle(array)
+                    userAvatarRenderer = SceytChatUIKit.renderers.userAvatarRenderer
                 ).let { styleCustomizer.apply(context, it) }
             }
         }

@@ -2,7 +2,9 @@ package com.sceyt.chatuikit.extensions
 
 import android.content.Context
 import com.sceyt.chatuikit.R
-import java.util.*
+import java.util.Calendar
+import java.util.Date
+import kotlin.time.Duration.Companion.days
 
 fun Date.isThisYear(): Boolean {
     val cal = Calendar.getInstance()
@@ -18,23 +20,21 @@ fun Long.isThisYear(): Boolean {
 
 fun Long?.formatDisappearingMessagesDuration(context: Context): String {
     return when {
-        this == null || this < 0 -> {
-            context.resources.getQuantityString(R.plurals.sceyt_days, 0, 0)
+        this == null || this <= 0 -> {
+            context.resources.getString(R.string.sceyt_unknown_duration)
         }
 
-        this >= 2592000 -> {
-            val months = this / 2592000
-            context.resources.getQuantityString(R.plurals.sceyt_months, months.toInt(), months.toInt())
+        this >=30.days.inWholeMilliseconds -> {
+            context.resources.getString(R.string.sceyt_1_month)
+
         }
 
-        this >= 604800 -> {
-            val weeks = this / 604800
-            context.resources.getQuantityString(R.plurals.sceyt_weeks, weeks.toInt(), weeks.toInt())
+        this >= 7.days.inWholeMilliseconds -> {
+            context.resources.getString(R.string.sceyt_1_week)
         }
 
         else -> {
-            val days = this / 86400
-            context.resources.getQuantityString(R.plurals.sceyt_days, days.toInt(), days.toInt())
+            context.resources.getString(R.string.sceyt_1_day)
         }
     }
 }
