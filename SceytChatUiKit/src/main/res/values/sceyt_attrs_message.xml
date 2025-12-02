@@ -427,7 +427,19 @@
         <attr name="sceytUiMessagesListPollVoterAvatarBorderWidth" format="dimension" />
         <attr name="sceytUiMessagesListPollVoterAvatarBorderColor" format="reference|color" />
 
-        
+        <!--System message style-->
+        <attr name="sceytUiMessagesListSystemMessageTextColor" format="reference|color" />
+        <attr name="sceytUiMessagesListSystemMessageTextSize" format="dimension" />
+        <attr name="sceytUiMessagesListSystemMessageTextFont" format="reference" />
+        <attr name="sceytUiMessagesListSystemMessageTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiMessagesListSystemMessageBackgroundColor" format="reference|color" />
+        <attr name="sceytUiMessagesListSystemMessageCornersRadius" format="dimension" />
+        <attr name="sceytUiMessagesListSystemMessageBorderWidth" format="dimension" />
+        <attr name="sceytUiMessagesListSystemMessageBorderColor" format="reference|color" />
 
     </declare-styleable>
 </resources>

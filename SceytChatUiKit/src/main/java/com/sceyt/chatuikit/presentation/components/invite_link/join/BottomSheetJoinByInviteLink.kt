@@ -13,10 +13,13 @@ import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import com.sceyt.chat.models.message.Message
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
+import com.sceyt.chatuikit.data.models.messages.SceytMessageType
+import com.sceyt.chatuikit.data.models.messages.SystemMsgBodyEnum
 import com.sceyt.chatuikit.databinding.SceytBottomSheetJoinByInviteLinkBinding
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.empty
@@ -30,8 +33,10 @@ import com.sceyt.chatuikit.presentation.components.invite_link.join.adapters.Mem
 import com.sceyt.chatuikit.presentation.custom_views.AvatarView
 import com.sceyt.chatuikit.styles.StyleRegistry
 import com.sceyt.chatuikit.styles.invite_link.BottomSheetJoinByInviteLinkStyle
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
 
@@ -117,6 +122,17 @@ open class BottomSheetJoinByInviteLink : BottomSheetDialogFragment(), SceytKoinC
     protected open fun onJoiningStateChange(state: JoinActionState) {
         when (state) {
             is JoinActionState.Joined -> {
+                lifecycleScope.launch(Dispatchers.IO) {
+                    SceytChatUIKit.chatUIFacade.messageInteractor.sendMessage(
+                        state.channel.id, Message(
+                            Message.MessageBuilder()
+                                .setType(SceytMessageType.System.value)
+                                .withDisplayCount(0)
+                                .setSilent(true)
+                                .setBody(SystemMsgBodyEnum.JoinByInviteLink.value)
+                        )
+                    )
+                }
                 joinedToChannelListener?.invoke(
                     JoinByInviteLinkResult.JoinedByInviteLink(state.channel)
                 )
