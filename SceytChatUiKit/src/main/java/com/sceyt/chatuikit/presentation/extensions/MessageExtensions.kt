@@ -236,3 +236,7 @@ fun SceytMessage.getMessageType(): SceytMessageType {
 fun SceytMessage.isSupportedType(): Boolean {
     return getMessageType() !is SceytMessageType.Unsupported
 }
+
+fun SceytMessage.isSystemMessage(): Boolean {
+    return getMessageType() is SceytMessageType.System
+}
