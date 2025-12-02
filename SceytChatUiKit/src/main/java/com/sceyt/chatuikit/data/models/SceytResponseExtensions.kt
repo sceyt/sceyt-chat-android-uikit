@@ -5,6 +5,9 @@ import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
 
+fun SceytResponse<*>.isSuccess(): Boolean {
+    return this is SceytResponse.Success
+}
 
 @OptIn(ExperimentalContracts::class)
 @SinceKotlin("1.3")
