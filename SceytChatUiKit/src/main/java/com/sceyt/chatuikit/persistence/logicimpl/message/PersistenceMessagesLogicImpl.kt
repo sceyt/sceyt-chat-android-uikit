@@ -69,6 +69,7 @@ import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceReactionsLogic
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.CheckDeletedMessagesUseCase
 import com.sceyt.chatuikit.persistence.mappers.addAttachmentMetadata
 import com.sceyt.chatuikit.persistence.mappers.existThumb
 import com.sceyt.chatuikit.persistence.mappers.getLinkPreviewDetails
@@ -104,6 +105,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.koin.core.component.inject
+import kotlin.time.Duration.Companion.minutes
 
 internal class PersistenceMessagesLogicImpl(
     private val context: Context,
@@ -121,6 +123,7 @@ internal class PersistenceMessagesLogicImpl(
     private val messagesCache: MessagesCache,
     private val channelCache: ChannelsCache,
     private val messageLoadRangeUpdater: MessageLoadRangeUpdater,
+    private val checkDeletedMessagesUseCase: CheckDeletedMessagesUseCase,
 ) : PersistenceMessagesLogic, SceytKoinComponent {
 
     private val persistenceChannelsLogic: PersistenceChannelsLogic by inject()
@@ -349,7 +352,7 @@ internal class PersistenceMessagesLogicImpl(
         messageId: Long,
     ): Flow<SceytResponse<List<SceytMessage>>> = callbackFlow {
         ConnectionEventManager.awaitToConnectSceyt()
-        messagesRepository.loadAllMessagesAfter(conversationId, replyInThread, messageId)
+        messagesRepository.loadAllMessagesAfter(conversationId, replyInThread, messageId, 50)
             .onCompletion { channel.close() }
             .collect { (nextMessageId, response) ->
                 if (response is SceytResponse.Success) {
@@ -392,6 +395,15 @@ internal class PersistenceMessagesLogicImpl(
                 channelId = conversationId,
                 messages = updatedMessages
             )
+
+            checkDeletedMessagesUseCase(
+                channelId = conversationId,
+                loadType = LoadNear,
+                messageId = messageId,
+                limit = 30,
+                serverMessages = updatedMessages
+            )
+
             updateMessageLoadRange(
                 messageId = messageId,
                 channelId = conversationId,
@@ -403,16 +415,28 @@ internal class PersistenceMessagesLogicImpl(
 
     override suspend fun onSyncedChannels(channels: List<SceytChannel>) =
         withContext(dispatcherIO) {
-            channels.forEach {
-                if (it.messagesClearedAt > 0) {
+            channels.forEach { channel ->
+                if (channel.messagesClearedAt > 0) {
                     messageDao.deleteAllMessagesLowerThenDateIgnorePending(
-                        channelId = it.id,
-                        date = it.messagesClearedAt
+                        channelId = channel.id,
+                        date = channel.messagesClearedAt
                     )
-                    messagesCache.deleteAllMessagesLowerThenDate(
-                        channelId = it.id,
-                        messagesDeletionDate = it.messagesClearedAt
+                    messagesCache.deleteAllClearedMessages(
+                        channelId = channel.id,
+                        messagesDeletionDate = channel.messagesClearedAt
                     )
+                }
+
+                channel.lastMessage?.let { lastMessage ->
+                    if (channel.lastDisplayedMessageId > lastMessage.id) {
+                        checkDeletedMessagesUseCase(
+                            channelId = channel.id,
+                            loadType = LoadNext,
+                            messageId = lastMessage.id,
+                            limit = messagesLoadSize,
+                            serverMessages = listOf(lastMessage)
+                        )
+                    }
                 }
             }
         }
@@ -422,7 +446,7 @@ internal class PersistenceMessagesLogicImpl(
         lastMessageId: Long,
         type: String,
     ): SceytResponse<List<SceytMessage>> = withContext(dispatcherIO) {
-        val response = messagesRepository.getMessagesByType(channelId, lastMessageId, type)
+        val response = messagesRepository.getMessagesByType(channelId, lastMessageId, type, 50)
         if (response is SceytResponse.Success) {
             val tIds = getMessagesTid(response.data)
             val payloads = attachmentDao.getAllAttachmentPayLoadsByMsgTid(*tIds.toLongArray())
@@ -1289,6 +1313,14 @@ internal class PersistenceMessagesLogicImpl(
             }
         }
         val updatedMessages = saveMessagesToDb(messages)
+        checkDeletedMessagesUseCase(
+            channelId = channelId,
+            loadType = loadType,
+            messageId = lastMessageId,
+            limit = limit,
+            serverMessages = updatedMessages
+        )
+
         hasDiff = messagesCache.addAll(
             channelId = channelId,
             list = updatedMessages,
@@ -1411,11 +1443,12 @@ internal class PersistenceMessagesLogicImpl(
     private suspend fun clearOutdatedMessages(channelId: Long) {
         val outdatedMessageTIds = messageDao.getOutdatedMessageTIds(
             channelId = channelId,
-            localTime = System.currentTimeMillis()
+            // As server removes message 1 minute later, so we set local time 1 minute more too.
+            localTime = System.currentTimeMillis() - 1.minutes.inWholeMilliseconds
         ).ifEmpty { return }
 
         messageDao.deleteMessagesByTid(outdatedMessageTIds)
-        channelCache.messagesDeletedWithAutoDelete(channelId, outdatedMessageTIds)
+        persistenceChannelsLogic.handleClearedOutdatedMessages(channelId, outdatedMessageTIds)
     }
 
     private suspend fun saveMessagesToDb(
@@ -1467,6 +1500,7 @@ internal class PersistenceMessagesLogicImpl(
 
         userDao.insertUsersWithMetadata(usersDb.toList(), replaceUserOnConflict)
         val forceUpdatedList = messageDao.upsertMessages(messagesDb)
+        // Delete messages from cache which were force updated.
         if (forceUpdatedList.isNotEmpty()) {
             messagesCache.deleteAllMessagesWhere {
                 return@deleteAllMessagesWhere forceUpdatedList.any { entity ->

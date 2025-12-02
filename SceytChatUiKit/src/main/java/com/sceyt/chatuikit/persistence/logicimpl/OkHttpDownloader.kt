@@ -2,6 +2,7 @@ package com.sceyt.chatuikit.persistence.logicimpl
 
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.data.models.createErrorResponse
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.logger.SceytLog
@@ -18,9 +19,9 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 
 class OkHttpDownloader {
-    
+
     private val downloadCalls = ConcurrentHashMap<Long, Call>()
-    
+
     private val httpClient: OkHttpClient by lazy {
         OkHttpClient.Builder()
             .connectTimeout(30, TimeUnit.SECONDS)
@@ -45,14 +46,20 @@ class OkHttpDownloader {
         destFile.parentFile?.mkdirs()
 
         val existingSize = if (destFile.exists()) destFile.length() else 0L
-        val request = Request.Builder()
-            .url(url)
-            .apply {
-                if (existingSize > 0) {
-                    addHeader("Range", "bytes=$existingSize-")
+        val request = try {
+            Request.Builder()
+                .url(url)
+                .apply {
+                    if (existingSize > 0) {
+                        addHeader("Range", "bytes=$existingSize-")
+                    }
                 }
-            }
-            .build()
+                .build()
+        } catch (e: Exception) {
+            SceytLog.e(TAG, "Invalid URL: ${e.message}")
+            onResult(SceytResponse.Error(SceytException(0, "Invalid URL: ${e.message}")))
+            return
+        }
 
         val call = httpClient.newCall(request)
         downloadCalls[messageTid] = call
@@ -67,18 +74,20 @@ class OkHttpDownloader {
 
             override fun onResponse(call: Call, response: Response) {
                 if (call.isCanceled()) return
-                
+
                 try {
                     if (!response.isSuccessful) {
                         downloadCalls.remove(messageTid)
-                        onResult(SceytResponse.Error(SceytException(response.code, response.message)))
+                        onResult(
+                            createErrorResponse(message = response.message, code = response.code)
+                        )
                         return
                     }
 
                     val responseBody = response.body
                     val contentLength = responseBody.contentLength()
                     val totalSize = if (contentLength != -1L) contentLength + existingSize else -1L
-                    
+
                     val isPartialContent = response.code == 206
                     val outputStream = if (isPartialContent) {
                         java.io.FileOutputStream(destFile, true) // append mode
@@ -88,34 +97,35 @@ class OkHttpDownloader {
 
                     val sink = outputStream.sink().buffer()
                     val source = responseBody.source()
-                    
+
                     var downloadedBytes = existingSize
                     var lastProgressUpdate = 0L
                     val progressUpdateInterval = 100L // Update every 100ms
-                    
+
                     try {
                         while (!source.exhausted() && !call.isCanceled()) {
                             val bytesRead = source.read(sink.buffer, 8192)
                             if (bytesRead == -1L) break
-                            
+
                             sink.emit()
                             downloadedBytes += bytesRead
-                            
+
                             // Update progress with throttling
                             val currentTime = System.currentTimeMillis()
                             if (currentTime - lastProgressUpdate > progressUpdateInterval) {
                                 if (totalSize > 0) {
-                                    val progress = (downloadedBytes.toFloat() / totalSize.toFloat()) * 100
+                                    val progress =
+                                        (downloadedBytes.toFloat() / totalSize.toFloat()) * 100
                                     onProgress(progress)
                                 }
                                 lastProgressUpdate = currentTime
                             }
                         }
-                        
+
                         sink.close()
-                        
+
                         if (call.isCanceled()) return
-                        
+
                         downloadCalls.remove(messageTid)
                         onResult(SceytResponse.Success(destFile.absolutePath))
                     } catch (e: Exception) {
@@ -126,7 +136,7 @@ class OkHttpDownloader {
                             onResult(SceytResponse.Error(SceytException(0, e.message)))
                         }
                     }
-                    
+
                 } catch (e: Exception) {
                     downloadCalls.remove(messageTid)
                     SceytLog.e(TAG, "Download error: ${e.message}")

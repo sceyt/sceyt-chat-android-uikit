@@ -3,26 +3,25 @@ package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.me
 import android.annotation.SuppressLint
 import android.view.ViewGroup
 import androidx.core.util.Predicate
-import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chatuikit.data.models.messages.SceytMessageType
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
-import com.sceyt.chatuikit.extensions.asComponentActivity
+import com.sceyt.chatuikit.data.models.messages.SceytMessageType
 import com.sceyt.chatuikit.extensions.dispatchUpdatesToSafety
 import com.sceyt.chatuikit.extensions.dispatchUpdatesToSafetySuspend
 import com.sceyt.chatuikit.extensions.findIndexed
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
+import com.sceyt.chatuikit.presentation.common.DebounceHelper
 import com.sceyt.chatuikit.presentation.common.SyncArrayList
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem.MessageItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.comporators.MessageItemComparator
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.sticky_date.StickyDateHeaderView
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.sticky_date.StickyHeaderInterface
-import com.sceyt.chatuikit.presentation.common.DebounceHelper
-import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
+import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -30,9 +29,11 @@ import kotlinx.coroutines.withContext
 import java.util.Date
 
 class MessagesAdapter(
-        private var messages: SyncArrayList<MessageListItem>,
-        private val viewHolderFactory: MessageViewHolderFactory,
-        private val style: MessagesListViewStyle
+    private var messages: SyncArrayList<MessageListItem>,
+    private val viewHolderFactory: MessageViewHolderFactory,
+    private val style: MessagesListViewStyle,
+    private val scope: LifecycleCoroutineScope,
+    private val recyclerView: RecyclerView
 ) : RecyclerView.Adapter<BaseMessageViewHolder>(), StickyHeaderInterface {
     private val loadingPrevItem by lazy { MessageListItem.LoadingPrevItem }
     private val loadingNextItem by lazy { MessageListItem.LoadingNextItem }
@@ -48,10 +49,13 @@ class MessagesAdapter(
         holder.bind(item = messages[position], diff = MessageDiff.DEFAULT)
     }
 
-    override fun onBindViewHolder(holder: BaseMessageViewHolder, position: Int, payloads: MutableList<Any>) {
+    override fun onBindViewHolder(
+        holder: BaseMessageViewHolder,
+        position: Int,
+        payloads: MutableList<Any>
+    ) {
         val diff = payloads.find { it is MessageDiff } as? MessageDiff
-                ?: MessageDiff.DEFAULT
-        holder.bind(item = messages[position], diff)
+        holder.bind(item = messages[position], diff ?: MessageDiff.DEFAULT)
     }
 
     override fun getItemViewType(position: Int): Int {
@@ -98,18 +102,28 @@ class MessagesAdapter(
         }
     }
 
-    private fun updateDateAndState(newItem: MessageListItem, prevItem: MessageListItem?, dateItem: MessageListItem?) {
+    private fun updateDateAndState(
+        newItem: MessageListItem,
+        prevItem: MessageListItem?,
+        dateItem: MessageListItem?
+    ) {
         if (newItem is MessageItem && prevItem is MessageItem) {
             val prevMessage = prevItem.message
             if (prevItem.message.isGroup) {
                 val prevIndex = messages.indexOf(prevItem)
                 messages[prevIndex] = prevItem.copy(
-                    message = prevMessage.copy(shouldShowAvatarAndName = prevMessage.incoming
-                            && prevMessage.user?.id != newItem.message.user?.id))
+                    message = prevMessage.copy(
+                        shouldShowAvatarAndName = prevMessage.incoming
+                                && prevMessage.user?.id != newItem.message.user?.id
+                    )
+                )
                 notifyItemChanged(prevIndex, Unit)
             }
 
-            val needShowDate = !DateTimeUtil.isSameDay(prevMessage.createdAt, newItem.message.createdAt)
+            val needShowDate = !DateTimeUtil.isSameDay(
+                epochOne = prevMessage.createdAt,
+                epochTwo = newItem.message.createdAt
+            )
             if (!needShowDate) {
                 val dateIndex = messages.indexOf(dateItem)
                 if (dateIndex != -1) {
@@ -125,7 +139,9 @@ class MessagesAdapter(
         if (items.isEmpty()) return
 
         val firstItem = getFirstMessageItem()
-        val dateItem = messages.find { it is MessageListItem.DateSeparatorItem && it.msgTid == firstItem?.message?.tid }
+        val dateItem = messages.find { item ->
+            item is MessageListItem.DateSeparatorItem && item.messageTid == firstItem?.message?.tid
+        }
         messages.addAll(0, items)
         notifyItemRangeInserted(0, items.size)
         updateDateAndState(items.last(), firstItem, dateItem)
@@ -157,12 +173,13 @@ class MessagesAdapter(
         }
     }
 
-    fun notifyUpdate(messages: List<MessageListItem>, recyclerView: RecyclerView) {
+    fun notifyUpdate(messages: List<MessageListItem>) {
         updateJob?.cancel()
-        updateJob = recyclerView.context.asComponentActivity().lifecycleScope.launch {
+        updateJob = scope.launch {
             var productDiffResult: DiffUtil.DiffResult
             withContext(Dispatchers.Default) {
-                val myDiffUtil = MessagesDiffUtil(ArrayList(this@MessagesAdapter.messages), messages)
+                val myDiffUtil =
+                    MessagesDiffUtil(ArrayList(this@MessagesAdapter.messages), messages)
                 productDiffResult = DiffUtil.calculateDiff(myDiffUtil, true)
             }
             withContext(Dispatchers.Main) {
@@ -201,12 +218,20 @@ class MessagesAdapter(
         notifyDataSetChanged()
     }
 
+    fun deleteMessageByTIds(tid: List<Long>) {
+        tid.forEach { messageTid ->
+            deleteMessageByTid(messageTid)
+        }
+    }
+
     fun deleteMessageByTid(tid: Long) {
         messages.findIndexed { it is MessageItem && it.message.tid == tid }?.let {
             messages.removeAt(it.first)
             notifyItemRemoved(it.first)
         }
-        messages.findIndexed { it is MessageListItem.DateSeparatorItem && it.msgTid == tid }?.let {
+        messages.findIndexed { item ->
+            item is MessageListItem.DateSeparatorItem && item.messageTid == tid
+        }?.let {
             messages.removeAt(it.first)
             notifyItemRemoved(it.first)
         }
@@ -224,7 +249,9 @@ class MessagesAdapter(
     }
 
     fun removeUnreadMessagesSeparator() {
-        messages.findIndexed { it is MessageListItem.UnreadMessagesSeparatorItem }?.let { (index, _) ->
+        messages.findIndexed { item ->
+            item is MessageListItem.UnreadMessagesSeparatorItem
+        }?.let { (index, _) ->
             messages.removeAt(index)
             notifyItemRemoved(index)
             // Hide avatar and name after removing unread separator, if the previous message is from the same user
@@ -232,9 +259,11 @@ class MessagesAdapter(
                 if (item is MessageItem && item.message.shouldShowAvatarAndName) {
                     messages.getOrNull(index - 1)?.let { prevItem ->
                         if (prevItem is MessageItem && prevItem.message.user?.id == item.message.user?.id
-                                && !shouldShowDate(item.message, prevItem.message)) {
-
-                            messages[index] = item.copy(message = item.message.copy(shouldShowAvatarAndName = false))
+                            && !shouldShowDate(item.message, prevItem.message)
+                        ) {
+                            messages[index] = item.copy(
+                                message = item.message.copy(shouldShowAvatarAndName = false)
+                            )
                             notifyItemChanged(index, Unit)
                         }
                     }
@@ -249,9 +278,10 @@ class MessagesAdapter(
 
     fun sort(recyclerView: RecyclerView) {
         debounceHelper.submit {
-            val myDiffUtil = MessagesDiffUtil(ArrayList(this@MessagesAdapter.messages), messages.apply {
-                sortWith(MessageItemComparator())
-            })
+            val myDiffUtil = MessagesDiffUtil(
+                oldList = ArrayList(this@MessagesAdapter.messages),
+                newList = messages.sortedWith(MessageItemComparator())
+            )
             val productDiffResult = DiffUtil.calculateDiff(myDiffUtil, true)
 
             val isLastItemVisible = recyclerView.isLastItemDisplaying()
@@ -281,9 +311,14 @@ class MessagesAdapter(
 
     override fun bindHeaderData(header: StickyDateHeaderView, headerPosition: Int) {
         if (lastHeaderPosition == headerPosition) return
-        val date = Date(messages.getOrNull(headerPosition)?.getMessageCreatedAtForDateHeader()
-                ?: return)
-        header.setDate(style.dateSeparatorStyle.dateFormatter.format(header.context, date))
+        val dateAt =
+            messages.getOrNull(headerPosition)?.getMessageCreatedAtForDateHeader() ?: return
+        header.setDate(
+            date = style.dateSeparatorStyle.dateFormatter.format(
+                context = header.context,
+                from = Date(dateAt)
+            )
+        )
         lastHeaderPosition = headerPosition
     }
 

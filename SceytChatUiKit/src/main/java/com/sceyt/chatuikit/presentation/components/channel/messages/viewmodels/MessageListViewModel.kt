@@ -888,7 +888,8 @@ class MessageListViewModel(
                     messageItems.add(
                         MessageListItem.DateSeparatorItem(
                             createdAt = message.createdAt,
-                            msgTid = message.tid
+                            messageTid = message.tid,
+                            messageId =  message.id
                         )
                     )
 
