@@ -274,4 +274,13 @@
     <string name="sceyt_failed_to_save_qr_code">Failed to save QR code</string>
     <string name="sceyt_discard_poll_title">Discard poll?</string>
     <string name="sceyt_discard_poll_desc">Are you sure you want to discard this poll?</string>
+    <string name="sceyt_created_this_group">created this group</string>
+    <string name="sceyt_created_this_channel">created this channel</string>
+    <string name="sceyt_added">added</string>
+    <string name="sceyt_removed">removed</string>
+    <string name="sceyt_left_group">left</string>
+    <string name="sceyt_joined_via_invite_link">%1$s joined via invite link</string>
+    <string name="sceyt_disappearing_message_set">%1$s set disappearing messages to %2$s</string>
+    <string name="sceyt_disappearing_message_disabled">%1$s disabled disappearing messages</string>
+    <string name="sceyt_and">and</string>
 </resources>

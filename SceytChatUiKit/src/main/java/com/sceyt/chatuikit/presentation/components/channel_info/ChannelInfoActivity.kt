@@ -14,6 +14,7 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentContainerView
 import androidx.fragment.app.commit
+import androidx.lifecycle.lifecycleScope
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.appbar.CollapsingToolbarLayout
@@ -77,6 +78,7 @@ import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.services.SceytPresenceChecker.PresenceUser
 import com.sceyt.chatuikit.styles.StyleRegistry
 import com.sceyt.chatuikit.styles.channel_info.ChannelInfoStyle
+import kotlinx.coroutines.launch
 
 @Suppress("MemberVisibilityCanBePrivate")
 open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
@@ -316,6 +318,26 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
         viewModel.disableAutoDelete(channel.id)
     }
 
+    private fun sendDisappearingMessageSystemMessage(channelId: Long, duration: Long) {
+        lifecycleScope.launch {
+            SceytChatUIKit.chatUIFacade.messageInteractor.sendMessage(
+                channelId,
+                com.sceyt.chat.models.message.Message(
+                    com.sceyt.chat.models.message.Message.MessageBuilder()
+                        .setType(com.sceyt.chatuikit.data.models.messages.SceytMessageType.System.value)
+                        .setMetadata(com.google.gson.Gson().toJson(
+                            com.sceyt.chatuikit.data.models.messages.DisappearingMessageMetadata(
+                                duration.toString()
+                            )
+                        ))
+                        .withDisplayCount(0)
+                        .setSilent(true)
+                        .setBody(com.sceyt.chatuikit.data.models.messages.SystemMsgBodyEnum.DisappearingMessage.value)
+                )
+            )
+        }
+    }
+
     protected open fun addMembers(members: List<SceytMember>) {
         viewModel.addMembersToChannel(channel.id, members)
     }
@@ -473,6 +495,19 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
     }
 
     protected open fun onLeftChannel(channelId: Long) {
+        if (channel.isGroup) {
+            lifecycleScope.launch {
+                SceytChatUIKit.chatUIFacade.messageInteractor.sendMessage(
+                    channelId, com.sceyt.chat.models.message.Message(
+                        com.sceyt.chat.models.message.Message.MessageBuilder()
+                            .setType(com.sceyt.chatuikit.data.models.messages.SceytMessageType.System.value)
+                            .withDisplayCount(0)
+                            .setSilent(true)
+                            .setBody(com.sceyt.chatuikit.data.models.messages.SystemMsgBodyEnum.MemberLeaved.value)
+                    )
+                )
+            }
+        }
         finish()
     }
 
@@ -485,6 +520,8 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
     }
 
     protected open fun onAutoDeletedModeOnOrOff(sceytChannel: SceytChannel) {
+        val duration = sceytChannel.messageRetentionPeriod
+        sendDisappearingMessageSystemMessage(sceytChannel.id, duration)
         setChannelSettings(sceytChannel)
     }
 
