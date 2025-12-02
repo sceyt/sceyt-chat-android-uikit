@@ -55,6 +55,7 @@ import com.sceyt.chatuikit.styles.extensions.messages_list.buildReactionsContain
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildReplyMessageStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildSelectionCheckboxStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildSenderNameTextStyle
+import com.sceyt.chatuikit.styles.extensions.messages_list.buildSystemMessageItemStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildThreadReplyCountTextStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildVideoDurationTextStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildVoiceDurationTextStyle
@@ -119,6 +120,7 @@ import java.util.Date
  * @property attachmentIconProvider Visual provider for the attachment icon, default is [SceytChatUIKitProviders.attachmentIconProvider].
  * @property senderNameColorProvider Visual provider for the sender name color, default is [SceytChatUIKitProviders.senderNameColorProvider].
  * @property userAvatarRenderer User avatar renderer, default is [SceytChatUIKitRenderers.userAvatarRenderer].
+ * @property systemMessageItemStyle Style for the system message item, default is [SystemMessageItemStyle].
  * */
 data class MessageItemStyle(
     val incomingBubbleBackgroundStyle: BackgroundStyle,
@@ -165,6 +167,7 @@ data class MessageItemStyle(
     val overlayMediaLoaderStyle: MediaLoaderStyle,
     val voiceWaveformStyle: AudioWaveformStyle,
     val selectionCheckboxStyle: CheckboxStyle,
+    val systemMessageItemStyle: SystemMessageItemStyle,
     val senderNameFormatter: Formatter<SceytUser>,
     val messageBodyFormatter: Formatter<MessageBodyFormatterAttributes>,
     val unsupportedMessageBodyFormatter: Formatter<SceytMessage>,
@@ -175,7 +178,7 @@ data class MessageItemStyle(
     val attachmentFileSizeFormatter: Formatter<SceytAttachment>,
     val attachmentIconProvider: VisualProvider<SceytAttachment, Drawable?>,
     val senderNameColorProvider: VisualProvider<SceytUser, Int>,
-    val userAvatarRenderer: AvatarRenderer<SceytUser>,
+    val userAvatarRenderer: AvatarRenderer<SceytUser>
 ) : SceytComponentStyle() {
 
     companion object {
@@ -296,6 +299,7 @@ data class MessageItemStyle(
                     voiceWaveformStyle = buildAudioWaveformStyle(array),
                     overlayMediaLoaderStyle = buildOverlayMediaLoaderStyle(array),
                     selectionCheckboxStyle = buildSelectionCheckboxStyle(array),
+                    systemMessageItemStyle = buildSystemMessageItemStyle(array),
                     senderNameFormatter = SceytChatUIKit.formatters.userNameFormatter,
                     messageBodyFormatter = SceytChatUIKit.formatters.messageBodyFormatter,
                     unsupportedMessageBodyFormatter = SceytChatUIKit.formatters.unsupportedMessageBodyFormatter,
