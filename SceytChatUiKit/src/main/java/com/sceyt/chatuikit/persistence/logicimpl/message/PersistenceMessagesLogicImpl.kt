@@ -34,6 +34,7 @@ import com.sceyt.chatuikit.data.models.SendMessageResult.Companion.toSendMessage
 import com.sceyt.chatuikit.data.models.SyncNearMessagesResult
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.createErrorResponse
+import com.sceyt.chatuikit.data.models.isSuccess
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.MarkerType.Received
@@ -106,6 +107,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.koin.core.component.inject
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 internal class PersistenceMessagesLogicImpl(
     private val context: Context,
@@ -1233,7 +1235,7 @@ internal class PersistenceMessagesLogicImpl(
         val response: SceytResponse<List<SceytMessage>>
 
         if (loadType != LoadNear)
-            ConnectionEventManager.awaitToConnectSceyt()
+            ConnectionEventManager.awaitToConnectSceytWithTimeout(10.seconds.inWholeMilliseconds)
 
         when (loadType) {
             LoadPrev -> {
@@ -1313,13 +1315,15 @@ internal class PersistenceMessagesLogicImpl(
             }
         }
         val updatedMessages = saveMessagesToDb(messages)
-        checkDeletedMessagesUseCase(
-            channelId = channelId,
-            loadType = loadType,
-            messageId = lastMessageId,
-            limit = limit,
-            serverMessages = updatedMessages
-        )
+        if (response.isSuccess()) {
+            checkDeletedMessagesUseCase(
+                channelId = channelId,
+                loadType = loadType,
+                messageId = lastMessageId,
+                limit = limit,
+                serverMessages = updatedMessages
+            )
+        }
 
         hasDiff = messagesCache.addAll(
             channelId = channelId,

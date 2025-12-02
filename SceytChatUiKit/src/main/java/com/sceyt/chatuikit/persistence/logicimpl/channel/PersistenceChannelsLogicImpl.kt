@@ -1218,6 +1218,7 @@ internal class PersistenceChannelsLogicImpl(
     }
 
     private suspend fun deleteChannelsFromDbAndCache(channelIds: List<Long>) {
+        if (channelIds.isEmpty()) return
         channelDao.deleteAllChannelsAndLinksById(channelIds)
         messageDao.deleteAllChannelsMessages(channelIds)
         rangeDao.deleteChannelsLoadRanges(channelIds)

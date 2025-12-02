@@ -20,7 +20,7 @@ internal interface MemberDao {
     @Query("select * from $USER_CHAT_LINK_TABLE as userChatLink join $USER_TABLE as user " +
             "on userChatLink.user_id = user.user_id " +
             "where chat_id =:channelId " +
-            "order by user_id limit :limit offset :offset")
+            "order by userChatLink.id limit :limit offset :offset")
     suspend fun getChannelMembers(channelId: Long, limit: Int, offset: Int): List<ChanelMemberDb>
 
     @SuppressWarnings(RoomWarnings.QUERY_MISMATCH)
@@ -28,7 +28,7 @@ internal interface MemberDao {
     @Query("select * from $USER_CHAT_LINK_TABLE as userChatLink " +
             "join $USER_TABLE as user on userChatLink.user_id = user.user_id " +
             "where chat_id =:channelId and role=:role " +
-            "order by user_id limit :limit offset :offset")
+            "order by userChatLink.id limit :limit offset :offset")
     suspend fun getChannelMembersWithRole(channelId: Long, limit: Int, offset: Int, role: String): List<ChanelMemberDb>
 
     @SuppressWarnings(RoomWarnings.QUERY_MISMATCH)

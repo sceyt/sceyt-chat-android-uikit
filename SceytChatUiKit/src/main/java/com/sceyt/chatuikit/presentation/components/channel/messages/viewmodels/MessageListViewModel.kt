@@ -824,7 +824,7 @@ class MessageListViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             val count = channelMemberInteractor.getMembersCountFromDb(channel.id)
             if (channel.memberCount > count)
-                loadChannelMembers(0, null).collect()
+                loadChannelMembers(offset = 0, nextToken = "", role = null).collect()
         }
     }
 
@@ -832,8 +832,16 @@ class MessageListViewModel(
     fun loadChannelAllMembers() {
         viewModelScope.launch(Dispatchers.IO) {
 
-            suspend fun loadMembers(offset: Int): PaginationResponse.ServerResponse<SceytMember>? {
-                return channelMemberInteractor.loadChannelMembers(channel.id, offset, null)
+            suspend fun loadMembers(
+                offset: Int,
+                nextToken: String
+            ): PaginationResponse.ServerResponse<SceytMember>? {
+                return channelMemberInteractor.loadChannelMembers(
+                    channel.id,
+                    offset,
+                    nextToken,
+                    null
+                )
                     .firstOrNull {
                         it is PaginationResponse.ServerResponse
                     } as? PaginationResponse.ServerResponse<SceytMember>
@@ -842,18 +850,27 @@ class MessageListViewModel(
             val count = channelMemberInteractor.getMembersCountFromDb(channel.id)
             if (channel.memberCount > count) {
                 var offset = 0
-                var rest = loadMembers(0)
+                var rest = loadMembers(0, "")
                 while (rest?.hasNext == true) {
                     offset += rest.data.data?.size ?: return@launch
-                    rest = loadMembers(offset)
+                    rest = loadMembers(offset, rest.nextToken)
                 }
             }
         }
     }
 
     @SuppressWarnings("WeakerAccess")
-    fun loadChannelMembers(offset: Int, role: String?): Flow<PaginationResponse<SceytMember>> {
-        return channelMemberInteractor.loadChannelMembers(channel.id, offset, role)
+    fun loadChannelMembers(
+        offset: Int,
+        nextToken: String,
+        role: String?
+    ): Flow<PaginationResponse<SceytMember>> {
+        return channelMemberInteractor.loadChannelMembers(
+            channelId = channel.id,
+            offset = offset,
+            nextToken = nextToken,
+            role = role
+        )
     }
 
     fun clearHistory(forEveryOne: Boolean) {
@@ -889,7 +906,7 @@ class MessageListViewModel(
                         MessageListItem.DateSeparatorItem(
                             createdAt = message.createdAt,
                             messageTid = message.tid,
-                            messageId =  message.id
+                            messageId = message.id
                         )
                     )
 

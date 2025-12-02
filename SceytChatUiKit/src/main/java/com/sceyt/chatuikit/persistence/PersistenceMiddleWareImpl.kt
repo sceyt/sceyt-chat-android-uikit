@@ -376,9 +376,10 @@ internal class PersistenceMiddleWareImpl(
     override fun loadChannelMembers(
         channelId: Long,
         offset: Int,
+        nextToken: String,
         role: String?
     ): Flow<PaginationResponse<SceytMember>> {
-        return membersLogic.loadChannelMembers(channelId, offset, role)
+        return membersLogic.loadChannelMembers(channelId, offset, nextToken, role)
     }
 
     override suspend fun loadChannelMembersByIds(

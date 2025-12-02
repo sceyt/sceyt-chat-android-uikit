@@ -31,9 +31,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class ChannelMembersViewModel(
-        private val channelId: Long,
-        private val channelsLogic: PersistenceChannelsLogic,
-        private val membersLogic: PersistenceMembersLogic,
+    private val channelId: Long,
+    private val channelsLogic: PersistenceChannelsLogic,
+    private val membersLogic: PersistenceMembersLogic,
 ) : BaseViewModel() {
 
     private val _membersLiveData = MutableLiveData<PaginationResponse<MemberItem>>()
@@ -46,7 +46,7 @@ class ChannelMembersViewModel(
     val channelMemberEventLiveData: LiveData<ChannelMembersEventData> = _channelMemberEventLiveData
 
     private val _channelOwnerChangedEventLiveData = MutableLiveData<ChannelOwnerChangedEventData>()
-    val channelOwnerChangedEventLiveData: LiveData<ChannelOwnerChangedEventData> = _channelOwnerChangedEventLiveData
+    val channelOwnerChangedEventLiveData = _channelOwnerChangedEventLiveData.asLiveData()
 
     private val _channelEventLiveData = MutableLiveData<ChannelActionEvent>()
     val channelEventLiveData = _channelEventLiveData.asLiveData()
@@ -59,6 +59,8 @@ class ChannelMembersViewModel(
 
     private val _findOrCreateChatLiveData = MutableLiveData<SceytChannel>()
     val findOrCreateChatLiveData = _findOrCreateChatLiveData.asLiveData()
+
+    private var nextToken: String = ""
 
     init {
         viewModelScope.launch {
@@ -91,7 +93,12 @@ class ChannelMembersViewModel(
         notifyPageLoadingState(offset > 0)
 
         viewModelScope.launch(Dispatchers.IO) {
-            membersLogic.loadChannelMembers(channelId, offset, role).collect {
+            membersLogic.loadChannelMembers(
+                channelId = channelId,
+                offsetDb = offset,
+                nextToken = nextToken,
+                role = role
+            ).collect {
                 initResponse(it)
             }
         }
@@ -103,8 +110,13 @@ class ChannelMembersViewModel(
                 if (it.data.isNotEmpty()) {
                     withContext(Dispatchers.Main) {
                         _membersLiveData.value = PaginationResponse.DBResponse(
-                            mapToMemberItem(it.data, it.hasNext), null, it.offset)
-                        notifyPageStateWithResponse(SceytResponse.Success(null), it.offset > 0, it.data.isEmpty())
+                            mapToMemberItem(list = it.data, hasNest = it.hasNext), null, it.offset
+                        )
+                        notifyPageStateWithResponse(
+                            response = SceytResponse.Success(null),
+                            wasLoadingMore = it.offset > 0,
+                            isEmpty = it.data.isEmpty()
+                        )
                     }
                 }
             }
@@ -112,10 +124,24 @@ class ChannelMembersViewModel(
             is PaginationResponse.ServerResponse -> {
                 if (it.data is SceytResponse.Success) {
                     withContext(Dispatchers.Main) {
+                        nextToken = it.nextToken
                         _membersLiveData.value = PaginationResponse.ServerResponse(
-                            SceytResponse.Success(mapToMemberItem(it.data.data, it.hasNext)),
-                            it.cacheData.map { MemberItem.Member(it) }, it.loadKey,
-                            it.offset, it.hasDiff, it.hasNext, it.hasPrev, it.loadType, it.ignoredDb)
+                            data = SceytResponse.Success(
+                                mapToMemberItem(
+                                    list = it.data.data,
+                                    hasNest = it.hasNext
+                                )
+                            ),
+                            cacheData = it.cacheData.map { MemberItem.Member(it) },
+                            loadKey = it.loadKey,
+                            offset = it.offset,
+                            hasDiff = it.hasDiff,
+                            hasNext = it.hasNext,
+                            hasPrev = it.hasPrev,
+                            loadType = it.loadType,
+                            ignoredDb = it.ignoredDb,
+                            nextToken = it.nextToken
+                        )
                     }
                 }
                 notifyPageStateWithResponse(it.data, it.offset > 0)
@@ -126,9 +152,12 @@ class ChannelMembersViewModel(
         pagingResponseReceived(it)
     }
 
-    private fun mapToMemberItem(list: List<SceytMember>?, hasNest: Boolean): MutableList<MemberItem> {
+    private fun mapToMemberItem(
+        list: List<SceytMember>?,
+        hasNest: Boolean
+    ): MutableList<MemberItem> {
         val memberItems: MutableList<MemberItem> = (list
-                ?: return arrayListOf()).map { MemberItem.Member(it) }.toMutableList()
+            ?: return arrayListOf()).map { MemberItem.Member(it) }.toMutableList()
         if (hasNest)
             memberItems.add(MemberItem.LoadingMore)
         return memberItems
@@ -155,11 +184,13 @@ class ChannelMembersViewModel(
             if (response is SceytResponse.Success) {
                 val channel = response.data ?: return@launch
                 val members = channel.members ?: return@launch
-                _channelMemberEventLiveData.postValue(ChannelMembersEventData(
-                    channel = channel,
-                    members = members,
-                    eventType = if (block) ChannelMembersEventEnum.Blocked else ChannelMembersEventEnum.Kicked
-                ))
+                _channelMemberEventLiveData.postValue(
+                    ChannelMembersEventData(
+                        channel = channel,
+                        members = members,
+                        eventType = if (block) ChannelMembersEventEnum.Blocked else ChannelMembersEventEnum.Kicked
+                    )
+                )
 
                 _channelRemoveMemberLiveData.postValue(members)
             }
@@ -175,11 +206,13 @@ class ChannelMembersViewModel(
             if (response is SceytResponse.Success) {
                 val channel = response.data ?: return@launch
                 val members = channel.members ?: return@launch
-                _channelMemberEventLiveData.postValue(ChannelMembersEventData(
-                    channel = channel,
-                    members = members,
-                    eventType = ChannelMembersEventEnum.Role
-                ))
+                _channelMemberEventLiveData.postValue(
+                    ChannelMembersEventData(
+                        channel = channel,
+                        members = members,
+                        eventType = ChannelMembersEventEnum.Role
+                    )
+                )
             }
 
             notifyPageStateWithResponse(response)
@@ -193,11 +226,13 @@ class ChannelMembersViewModel(
                 val channel = response.data ?: return@launch
                 val responseMembers = channel.members ?: return@launch
 
-                _channelMemberEventLiveData.postValue(ChannelMembersEventData(
-                    channel = channel,
-                    members = responseMembers,
-                    eventType = ChannelMembersEventEnum.Added
-                ))
+                _channelMemberEventLiveData.postValue(
+                    ChannelMembersEventData(
+                        channel = channel,
+                        members = responseMembers,
+                        eventType = ChannelMembersEventEnum.Added
+                    )
+                )
                 _channelAddMemberLiveData.postValue(responseMembers)
             }
 
@@ -207,10 +242,17 @@ class ChannelMembersViewModel(
 
     fun findOrCreatePendingDirectChat(user: SceytUser) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelsLogic.findOrCreatePendingChannelByMembers(CreateChannelData(
-                type = ChannelTypeEnum.Direct.value,
-                members = listOf(SceytMember(role = Role(RoleTypeEnum.Owner.value), user = user)),
-            )).onSuccessNotNull { data ->
+            val response = channelsLogic.findOrCreatePendingChannelByMembers(
+                CreateChannelData(
+                    type = ChannelTypeEnum.Direct.value,
+                    members = listOf(
+                        SceytMember(
+                            role = Role(RoleTypeEnum.Owner.value),
+                            user = user
+                        )
+                    ),
+                )
+            ).onSuccessNotNull { data ->
                 _findOrCreateChatLiveData.postValue(data)
             }
 
