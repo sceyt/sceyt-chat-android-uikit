@@ -84,7 +84,7 @@ import java.util.Date
  * @property channelEventTitleFormatter - Formatter for activity title, default is [SceytChatUIKitFormatters.channelListChannelEventTitleFormatter].
  * @property unreadCountFormatter - Formatter for unread count, default is [SceytChatUIKitFormatters.unreadCountFormatter].
  * @property lastMessageBodyFormatter - Formatter for last message body, default is [SceytChatUIKitFormatters.channelLastMessageBodyFormatter].
- * @property unsupportedMessageBodyFormatter - Formatter for unsupported message body, default is [SceytChatUIKitFormatters.unsupportedMessageBodyFormatter].
+ * @property unsupportedMessageBodyFormatter - Formatter for unsupported message body, default is [SceytChatUIKitFormatters.unsupportedMessageShortBodyFormatter].
  * @property draftMessageBodyFormatter - Formatter for draft message body, default is [SceytChatUIKitFormatters.channelDraftLastMessageBodyFormatter].
  * @property channelSubtitleFormatter - Formatter for channel subtitle, default is [SceytChatUIKitFormatters.channelListItemSubtitleFormatter].
  * @property attachmentIconProvider - Provider for attachment icon, default is [SceytChatUIKitProviders.attachmentIconProvider].
@@ -125,7 +125,7 @@ data class ChannelItemStyle(
     val channelEventTitleFormatter: Formatter<ChannelEventTitleFormatterAttributes>,
     val unreadCountFormatter: Formatter<Long>,
     val lastMessageBodyFormatter: Formatter<MessageBodyFormatterAttributes>,
-    val unsupportedMessageBodyShortFormatter: Formatter<SceytMessage>,
+    val unsupportedMessageBodyFormatter: Formatter<SceytMessage>,
     val draftMessageBodyFormatter: Formatter<DraftMessageBodyFormatterAttributes>,
     val attachmentIconProvider: VisualProvider<SceytAttachment, Drawable?>,
     val presenceStateColorProvider: VisualProvider<PresenceState, Int>,
@@ -218,7 +218,7 @@ data class ChannelItemStyle(
                     channelEventTitleFormatter = SceytChatUIKit.formatters.channelListChannelEventTitleFormatter,
                     unreadCountFormatter = SceytChatUIKit.formatters.unreadCountFormatter,
                     lastMessageBodyFormatter = SceytChatUIKit.formatters.channelLastMessageBodyFormatter,
-                    unsupportedMessageBodyShortFormatter = SceytChatUIKit.formatters.unsupportedMessageShortBodyFormatter,
+                    unsupportedMessageBodyFormatter = SceytChatUIKit.formatters.unsupportedMessageShortBodyFormatter,
                     draftMessageBodyFormatter = SceytChatUIKit.formatters.channelDraftLastMessageBodyFormatter,
                     channelSubtitleFormatter = SceytChatUIKit.formatters.channelListItemSubtitleFormatter,
                     attachmentIconProvider = SceytChatUIKit.providers.channelListAttachmentIconProvider,
