@@ -110,21 +110,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
         super.onAttach(context)
         style = ChannelMembersStyle.Builder(context, null).build()
 
-        selectUsersActivityLauncher =
-            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-                if (result.resultCode == Activity.RESULT_OK) {
-                    result.data?.parcelable<SelectUsersResult>(SelectUsersActivity.SELECTED_USERS_RESULT)
-                        ?.let { data ->
-                            val members = data.selectedUsers.map { user ->
-                                SceytMember(
-                                    role = Role(memberType.toRole()),
-                                    user = user
-                                )
-                            }
-                            addMembersToChannel(members)
-                        }
-                }
-            }
+        registerSelectUsersActivityLauncher()
     }
 
     override fun onDestroyView() {
@@ -162,7 +148,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
         viewModel.findOrCreateChatLiveData.observe(viewLifecycleOwner, ::onFindOrCreateChat)
     }
 
-    private fun initViews() {
+    protected open fun initViews() {
         with(binding ?: return) {
             layoutAddMembers.setOnClickListener {
                 onAddMembersClick(memberType)
@@ -186,7 +172,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
         loadInitialMembers()
     }
 
-    private fun initStringsWithAddType() {
+    protected open fun initStringsWithAddType() {
         with(binding ?: return) {
             when (memberType) {
                 MemberTypeEnum.Member -> {
@@ -207,7 +193,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
         }
     }
 
-    private fun getCurrentUserRole() {
+    protected fun getCurrentUserRole() {
         channel.members?.find { it.id == myId }?.let {
             currentUserRole = it.role
         }
@@ -379,11 +365,11 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
         viewModel.getChannelMembers(channel.id, 0, getRole())
     }
 
-    protected fun loadMoreMembers(offset: Int) {
+    protected open fun loadMoreMembers(offset: Int) {
         viewModel.getChannelMembers(channel.id, offset, getRole())
     }
 
-    protected fun addMembersToChannel(members: List<SceytMember>) {
+    protected open fun addMembersToChannel(members: List<SceytMember>) {
         viewModel.addMembersToChannel(channel.id, members.toArrayList())
     }
 
@@ -559,7 +545,25 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
         getCurrentUserRole()
     }
 
-    private fun SceytFragmentChannelMembersBinding.applyStyle() {
+    protected open fun registerSelectUsersActivityLauncher() {
+        selectUsersActivityLauncher =
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+                if (result.resultCode == Activity.RESULT_OK) {
+                    result.data?.parcelable<SelectUsersResult>(SelectUsersActivity.SELECTED_USERS_RESULT)
+                        ?.let { data ->
+                            val members = data.selectedUsers.map { user ->
+                                SceytMember(
+                                    role = Role(memberType.toRole()),
+                                    user = user
+                                )
+                            }
+                            addMembersToChannel(members)
+                        }
+                }
+            }
+    }
+
+    protected open fun SceytFragmentChannelMembersBinding.applyStyle() {
         root.setBackgroundColor(style.backgroundColor)
         style.toolbarStyle.apply(toolbar)
         style.addMemberTextStyle.apply(addMembers)
