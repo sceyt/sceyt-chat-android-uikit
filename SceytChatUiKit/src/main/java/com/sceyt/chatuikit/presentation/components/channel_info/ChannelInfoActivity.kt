@@ -28,7 +28,6 @@ import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum.Direct
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum.Group
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum.Public
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
-import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.messages.DisappearingMessageMetadata
 import com.sceyt.chatuikit.data.models.messages.SceytMessageType
 import com.sceyt.chatuikit.data.models.messages.SceytUser
@@ -291,10 +290,6 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
         viewModel.leaveChannel(channel.id)
     }
 
-    protected open fun blockAndLeaveChannel() {
-        viewModel.blockAndLeaveChannel(channel.id)
-    }
-
     protected open fun blockUser(userId: String) {
         viewModel.blockUser(userId)
     }
@@ -342,10 +337,6 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
                 )
             )
         }
-    }
-
-    protected open fun addMembers(members: List<SceytMember>) {
-        viewModel.addMembersToChannel(channel.id, members)
     }
 
     protected open fun getMembersType(): MemberTypeEnum {

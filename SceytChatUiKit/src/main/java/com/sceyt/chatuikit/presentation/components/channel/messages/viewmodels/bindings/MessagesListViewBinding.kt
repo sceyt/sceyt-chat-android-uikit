@@ -204,10 +204,14 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             }
 
             LoadKeyType.ScrollToMessageBy.longValue -> {
-                messagesListView.scrollToMessage(loadKey.value, true, 200) {
-                    if (response is PaginationResponse.ServerResponse)
-                        isPreparingToScrollToMessage.set(false)
-                }
+                messagesListView.scrollToMessage(
+                    messageId = loadKey.value,
+                    highlight = true,
+                    offset = 200,
+                    awaitToScroll = {
+                        if (response is PaginationResponse.ServerResponse)
+                            isPreparingToScrollToMessage.set(false)
+                    })
             }
         }
     }

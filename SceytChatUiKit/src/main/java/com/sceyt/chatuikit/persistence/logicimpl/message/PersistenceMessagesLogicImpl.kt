@@ -771,41 +771,41 @@ internal class PersistenceMessagesLogicImpl(
 
     override suspend fun sendPendingMessages(channelId: Long) = withContext(dispatcherIO) {
         val pendingMessages = messageDao.getPendingMessages(channelId)
+        if (pendingMessages.isEmpty()) return@withContext
+
         val channel = channelCache.getOneOf(channelId)
             ?: persistenceChannelsLogic.getChannelFromDb(channelId)
 
-        if (pendingMessages.isNotEmpty()) {
-            if (channel?.pending == true) {
-                pendingMessages.forEach {
-                    createChannelAndSendMessageWithLock(
-                        pendingChannel = channel,
-                        message = it.toMessage(),
+        if (channel?.pending == true) {
+            pendingMessages.forEach {
+                createChannelAndSendMessageWithLock(
+                    pendingChannel = channel,
+                    message = it.toMessage(),
+                    isPendingMessage = true,
+                    isUploadedAttachments = false
+                ).collect()
+            }
+            if (!createChannelAndSendMessageMutex.isLocked)
+                channelCache.removeFromPendingToRealChannelsData(channelId)
+        } else {
+            pendingMessages.forEach {
+                // If have attachments, we need to check maybe the upload was paused,
+                // if so, we don't need to send message until upload is finished
+                if (it.attachments.isNullOrEmpty() || it.attachments.any { attachment ->
+                        attachment.payLoad?.transferState != TransferState.PauseUpload
+                    }) {
+                    val isUploaded = it.attachments?.all { attachment ->
+                        attachment.attachmentEntity.type == AttachmentTypeEnum.Link.value
+                                || attachment.payLoad?.transferState == TransferState.Uploaded
+                    } ?: false
+                    val message = it.toMessage()
+                    sendMessageImpl(
+                        channelId = channelId,
+                        message = message,
+                        isSharing = false,
                         isPendingMessage = true,
-                        isUploadedAttachments = false
+                        isUploadedAttachments = isUploaded
                     ).collect()
-                }
-                if (!createChannelAndSendMessageMutex.isLocked)
-                    channelCache.removeFromPendingToRealChannelsData(channelId)
-            } else {
-                pendingMessages.forEach {
-                    // If have attachments, we need to check maybe the upload was paused,
-                    // if so, we don't need to send message until upload is finished
-                    if (it.attachments.isNullOrEmpty() || it.attachments.any { attachment ->
-                            attachment.payLoad?.transferState != TransferState.PauseUpload
-                        }) {
-                        val isUploaded = it.attachments?.all { attachment ->
-                            attachment.attachmentEntity.type == AttachmentTypeEnum.Link.value
-                                    || attachment.payLoad?.transferState == TransferState.Uploaded
-                        } ?: false
-                        val message = it.toMessage()
-                        sendMessageImpl(
-                            channelId = channelId,
-                            message = message,
-                            isSharing = false,
-                            isPendingMessage = true,
-                            isUploadedAttachments = isUploaded
-                        ).collect()
-                    }
                 }
             }
         }
