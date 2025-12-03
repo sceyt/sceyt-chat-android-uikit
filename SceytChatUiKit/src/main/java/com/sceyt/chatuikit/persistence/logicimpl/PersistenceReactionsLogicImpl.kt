@@ -7,9 +7,13 @@ import com.sceyt.chatuikit.data.managers.message.event.ReactionUpdateEventEnum.A
 import com.sceyt.chatuikit.data.managers.message.event.ReactionUpdateEventEnum.Remove
 import com.sceyt.chatuikit.data.models.LoadKeyData
 import com.sceyt.chatuikit.data.models.PaginationResponse
+import com.sceyt.chatuikit.data.models.SDKErrorTypeEnum
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
+import com.sceyt.chatuikit.data.models.onError
+import com.sceyt.chatuikit.data.models.onSuccessNotNull
+import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.database.dao.ChannelDao
 import com.sceyt.chatuikit.persistence.database.dao.ChatUserReactionDao
 import com.sceyt.chatuikit.persistence.database.dao.MessageDao
@@ -36,8 +40,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlin.collections.component1
-import kotlin.collections.component2
 
 internal class PersistenceReactionsLogicImpl(
     private val reactionsRepository: ReactionsRepository,
@@ -321,36 +323,44 @@ internal class PersistenceReactionsLogicImpl(
             score = score,
             reason = reason,
             enforceUnique = enforceUnique
-        )
-        if (response is SceytResponse.Success) {
-            response.data?.let { resultMessage ->
-                reactionDao.insertMessageReactionsAndTotalsIfMessageExist(
-                    messageId = messageId,
-                    reactions = resultMessage.userReactions?.map { it.toReactionEntity() },
-                    reactionTotals = resultMessage.reactionTotals?.map {
-                        it.toReactionTotalEntity(messageId)
-                    }
-                )
-
-                messagesCache.deletePendingReaction(channelId, resultMessage.tid, key)
-                pendingReactionDao.deletePendingReaction(messageId, key)
-
-                if (emitUpdate) {
-                    val message = messageDao.getMessageById(messageId)?.toSceytMessage()
-                        ?: response.data
-
-                    messagesCache.messageUpdated(channelId, message)
-                    ChatReactionMessagesCache.addMessage(message)
-
-                    if (!message.incoming) {
-                        val reaction = message.userReactions?.maxByOrNull { it.createdAt }
-                        if (reaction != null)
-                            handleChannelReaction(
-                                data = ReactionUpdateEventData(message, reaction, Add),
-                                message = message
-                            )
-                    }
+        ).onSuccessNotNull { resultMessage ->
+            reactionDao.insertMessageReactionsAndTotalsIfMessageExist(
+                messageId = messageId,
+                reactions = resultMessage.userReactions?.map { it.toReactionEntity() },
+                reactionTotals = resultMessage.reactionTotals?.map {
+                    it.toReactionTotalEntity(messageId)
                 }
+            )
+
+            messagesCache.deletePendingReaction(channelId, resultMessage.tid, key)
+            pendingReactionDao.deletePendingReaction(messageId, key)
+
+            if (emitUpdate) {
+                val message =
+                    messageDao.getMessageById(messageId)?.toSceytMessage() ?: resultMessage
+
+                messagesCache.messageUpdated(channelId, message)
+                ChatReactionMessagesCache.addMessage(message)
+
+                if (!message.incoming) {
+                    val reaction = message.userReactions?.maxByOrNull { it.createdAt }
+                    if (reaction != null)
+                        handleChannelReaction(
+                            data = ReactionUpdateEventData(message, reaction, Add),
+                            message = message
+                        )
+                }
+            }
+        }.onError { exception ->
+            val errorType = SDKErrorTypeEnum.fromValue(exception?.type) ?: return@onError
+            if (!errorType.isResendable) {
+                SceytLog.e(
+                    TAG,
+                    "Add reaction error: ${exception?.message}, errorType: ${errorType.value}" +
+                            "channel id $channelId, reaction:${key} will be deleted due to non-resendable error"
+                )
+                pendingReactionDao.deletePendingReaction(messageId, key)
+                messagesCache.deletePendingReaction(channelId, messageId, key)
             }
         }
         return response
@@ -363,36 +373,45 @@ internal class PersistenceReactionsLogicImpl(
         emitUpdate: Boolean
     ): SceytResponse<SceytMessage> {
         val response = reactionsRepository.deleteReaction(channelId, messageId, key)
-        if (response is SceytResponse.Success) {
-            response.data?.let { resultMessage ->
-                reactionDao.deleteAllReactionsAndTotals(messageId)
-                reactionDao.insertMessageReactionsAndTotalsIfMessageExist(
-                    messageId = messageId,
-                    reactions = resultMessage.userReactions?.map { it.toReactionEntity() },
-                    reactionTotals = resultMessage.reactionTotals?.map {
-                        it.toReactionTotalEntity(messageId)
-                    }
-                )
-
-                pendingReactionDao.deletePendingReaction(messageId, key)
-                messagesCache.deletePendingReaction(channelId, resultMessage.tid, key)
-
-                if (emitUpdate) {
-                    val message = messageDao.getMessageById(messageId)
-                        ?.toSceytMessage() ?: response.data
-
-                    messagesCache.messageUpdated(channelId, message)
-                    ChatReactionMessagesCache.addMessage(message)
-
-                    if (!message.incoming) {
-                        val reaction = message.userReactions?.maxByOrNull { it.createdAt }
-                        if (reaction != null)
-                            handleChannelReaction(
-                                data = ReactionUpdateEventData(message, reaction, Add),
-                                message = message
-                            )
-                    }
+        response.onSuccessNotNull { resultMessage ->
+            reactionDao.deleteAllReactionsAndTotals(messageId)
+            reactionDao.insertMessageReactionsAndTotalsIfMessageExist(
+                messageId = messageId,
+                reactions = resultMessage.userReactions?.map { it.toReactionEntity() },
+                reactionTotals = resultMessage.reactionTotals?.map {
+                    it.toReactionTotalEntity(messageId)
                 }
+            )
+
+            pendingReactionDao.deletePendingReaction(messageId, key)
+            messagesCache.deletePendingReaction(channelId, resultMessage.tid, key)
+
+            if (emitUpdate) {
+                val message =
+                    messageDao.getMessageById(messageId)?.toSceytMessage() ?: resultMessage
+
+                messagesCache.messageUpdated(channelId, message)
+                ChatReactionMessagesCache.addMessage(message)
+
+                if (!message.incoming) {
+                    val reaction = message.userReactions?.maxByOrNull { it.createdAt }
+                    if (reaction != null)
+                        handleChannelReaction(
+                            data = ReactionUpdateEventData(message, reaction, Add),
+                            message = message
+                        )
+                }
+            }
+        }.onError {
+            val errorType = SDKErrorTypeEnum.fromValue(it?.type) ?: return@onError
+            if (!errorType.isResendable) {
+                SceytLog.e(
+                    TAG,
+                    "Delete reaction error: ${it?.message}, errorType: ${errorType.value}" +
+                            "channel id $channelId, reaction:${key} will be deleted due to non-resendable error"
+                )
+                pendingReactionDao.deletePendingReaction(messageId, key)
+                messagesCache.deletePendingReaction(channelId, messageId, key)
             }
         }
         return response
@@ -480,5 +499,9 @@ internal class PersistenceReactionsLogicImpl(
         if (list.isEmpty()) return
         reactionDao.insertReactionsIfMessageExist(list.map { it.toReactionEntity() })
         usersDao.insertUsersWithMetadata(list.mapNotNull { it.user?.toUserDb() })
+    }
+
+    companion object {
+        private const val TAG = "PersistenceReactionsLogic"
     }
 }

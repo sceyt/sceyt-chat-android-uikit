@@ -47,13 +47,13 @@ internal class AddPollVoteUseCase(
                 addedVoted = addedVotes,
                 removedVotes = removedVotes
             )
-        }.onError {
+        }.onError { exception ->
             // Handle specific error codes if needed
             handleChangeVoteErrorUseCase(
                 messageId = messageId,
                 pollId = pollId,
                 optionIds = optionIds,
-                errorCode = it?.code
+                exception = exception
             )
         }
     }
