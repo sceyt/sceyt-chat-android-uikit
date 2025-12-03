@@ -133,8 +133,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
         viewModel.channelMemberEventLiveData.observe(viewLifecycleOwner, ::onChannelMembersEvent)
 
         viewModel.channelOwnerChangedEventLiveData.observe(
-            viewLifecycleOwner,
-            ::onChannelOwnerChanged
+            viewLifecycleOwner, ::onChannelOwnerChanged
         )
 
         viewModel.channelEventLiveData.observe(viewLifecycleOwner, ::onChannelEvent)
