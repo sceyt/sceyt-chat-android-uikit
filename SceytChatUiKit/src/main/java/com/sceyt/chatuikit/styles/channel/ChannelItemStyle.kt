@@ -177,6 +177,7 @@ data class ChannelItemStyle(
                     .setSentIconFromStyle(R.styleable.ChannelListView_sceytUiChannelListStatusSentIndicator)
                     .setReceivedIconIconFromStyle(R.styleable.ChannelListView_sceytUiChannelListStatusReceivedIndicator)
                     .setDisplayedIconFromStyle(R.styleable.ChannelListView_sceytUiChannelListStatusDisplayedIndicator)
+                    .setFailedIconFromStyle(R.styleable.ChannelListView_sceytUiChannelListStatusFailedIndicator)
                     .build()
 
                 val statusIconSize = array.getDimensionPixelSize(R.styleable.ChannelListView_sceytUiChannelListStatusIndicatorSize,

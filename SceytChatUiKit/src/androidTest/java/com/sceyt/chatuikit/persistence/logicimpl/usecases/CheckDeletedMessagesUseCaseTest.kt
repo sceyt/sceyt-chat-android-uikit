@@ -7,7 +7,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
 import com.google.common.truth.Truth.assertThat
-import com.sceyt.chat.models.message.DeliveryStatus
+import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
@@ -287,13 +287,13 @@ class CheckDeletedMessagesUseCaseTest {
     fun emptyResponse_withLoadPrev_shouldNotDeletePendingMessages() = runTest {
         // Arrange - Include a pending message
         insertMessages(
-            createMessageEntity(tid = 800, id = 800, deliveryStatus = DeliveryStatus.Sent),
+            createMessageEntity(tid = 800, id = 800, deliveryStatus = MessageDeliveryStatus.Sent),
             createMessageEntity(
                 tid = 900,
                 id = 900,
-                deliveryStatus = DeliveryStatus.Pending
+                deliveryStatus = MessageDeliveryStatus.Pending
             ), // Pending - should remain
-            createMessageEntity(tid = 1000, id = 1000, deliveryStatus = DeliveryStatus.Sent)
+            createMessageEntity(tid = 1000, id = 1000, deliveryStatus = MessageDeliveryStatus.Sent)
         )
 
         Log.d("Test", "Initial messages: ${messageDao.getMessagesIds(channelId)}")
@@ -931,7 +931,7 @@ class CheckDeletedMessagesUseCaseTest {
         tid: Long,
         id: Long,
         channelId: Long = this.channelId,
-        deliveryStatus: DeliveryStatus = DeliveryStatus.Sent
+        deliveryStatus: MessageDeliveryStatus = MessageDeliveryStatus.Sent
     ): MessageEntity {
         return MessageEntity(
             tid = tid,
@@ -978,7 +978,7 @@ class CheckDeletedMessagesUseCaseTest {
             incoming = false,
             isTransient = false,
             silent = false,
-            deliveryStatus = DeliveryStatus.Sent,
+            deliveryStatus = MessageDeliveryStatus.Sent,
             state = MessageState.Unmodified,
             user = null,
             attachments = null,

@@ -7,7 +7,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
 import com.google.common.truth.Truth.assertThat
-import com.sceyt.chat.models.message.DeliveryStatus
+import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.persistence.database.SceytDatabase
@@ -98,10 +98,10 @@ class CheckDeletedNearMessagesUseCaseTest {
     fun emptyResponse_shouldNotDeletePendingMessages() = runTest {
         // Arrange: Insert messages including pending ones
         insertMessages(
-            createMessageEntity(tid = 100, id = 100, deliveryStatus = DeliveryStatus.Sent),
-            createMessageEntity(tid = 110, id = 110, deliveryStatus = DeliveryStatus.Pending),
-            createMessageEntity(tid = 120, id = 120, deliveryStatus = DeliveryStatus.Sent),
-            createMessageEntity(tid = 130, id = 130, deliveryStatus = DeliveryStatus.Pending)
+            createMessageEntity(tid = 100, id = 100, deliveryStatus = MessageDeliveryStatus.Sent),
+            createMessageEntity(tid = 110, id = 110, deliveryStatus = MessageDeliveryStatus.Pending),
+            createMessageEntity(tid = 120, id = 120, deliveryStatus = MessageDeliveryStatus.Sent),
+            createMessageEntity(tid = 130, id = 130, deliveryStatus = MessageDeliveryStatus.Pending)
         )
 
         Log.d("Test", "Initial count: ${messageDao.getMessagesCount(channelId)}")
@@ -183,11 +183,11 @@ class CheckDeletedNearMessagesUseCaseTest {
     fun reachedEnd_shouldNotDeletePendingMessages() = runTest {
         // Arrange: Insert messages including pending
         insertMessages(
-            createMessageEntity(tid = 100, id = 100, deliveryStatus = DeliveryStatus.Sent),
-            createMessageEntity(tid = 110, id = 110, deliveryStatus = DeliveryStatus.Pending),
-            createMessageEntity(tid = 120, id = 120, deliveryStatus = DeliveryStatus.Sent),
-            createMessageEntity(tid = 130, id = 130, deliveryStatus = DeliveryStatus.Pending),
-            createMessageEntity(tid = 140, id = 140, deliveryStatus = DeliveryStatus.Sent)
+            createMessageEntity(tid = 100, id = 100, deliveryStatus = MessageDeliveryStatus.Sent),
+            createMessageEntity(tid = 110, id = 110, deliveryStatus = MessageDeliveryStatus.Pending),
+            createMessageEntity(tid = 120, id = 120, deliveryStatus = MessageDeliveryStatus.Sent),
+            createMessageEntity(tid = 130, id = 130, deliveryStatus = MessageDeliveryStatus.Pending),
+            createMessageEntity(tid = 140, id = 140, deliveryStatus = MessageDeliveryStatus.Sent)
         )
 
         // Act: Call with size < limit, return only message 120
@@ -633,7 +633,7 @@ class CheckDeletedNearMessagesUseCaseTest {
         tid: Long,
         id: Long,
         channelId: Long = this.channelId,
-        deliveryStatus: DeliveryStatus = DeliveryStatus.Sent
+        deliveryStatus: MessageDeliveryStatus = MessageDeliveryStatus.Sent
     ): MessageEntity {
         return MessageEntity(
             tid = tid,
@@ -680,7 +680,7 @@ class CheckDeletedNearMessagesUseCaseTest {
             incoming = false,
             isTransient = false,
             silent = false,
-            deliveryStatus = DeliveryStatus.Sent,
+            deliveryStatus = MessageDeliveryStatus.Sent,
             state = MessageState.Unmodified,
             user = null,
             attachments = null,

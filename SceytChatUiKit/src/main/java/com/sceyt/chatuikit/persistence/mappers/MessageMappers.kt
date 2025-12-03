@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.persistence.mappers
 
+import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.ForwardingDetails
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.poll.PollDetails
@@ -7,6 +8,7 @@ import com.sceyt.chat.models.poll.PollOption
 import com.sceyt.chat.models.poll.PollVote
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytPollDetails
@@ -105,7 +107,10 @@ internal fun MessageDb.toSceytMessage(): SceytMessage {
             replyCount = replyCount,
             displayCount = displayCount,
             autoDeleteAt = autoDeleteAt,
-            forwardingDetails = forwardingDetailsDb?.toForwardingDetails(channelId, forwardingUser?.toSceytUser()),
+            forwardingDetails = forwardingDetailsDb?.toForwardingDetails(
+                channelId,
+                forwardingUser?.toSceytUser()
+            ),
             pendingReactions = pendingReactions?.map { it.toReactionData() },
             bodyAttributes = bodyAttribute,
             disableMentionsCount = disableMentionsCount,
@@ -139,10 +144,10 @@ internal fun SceytMessage.toParentMessageEntity(): ParentMessageDb {
 }
 
 private fun MessageEntity.parentMessageToSceytMessage(
-        attachments: Array<SceytAttachment>?,
-        from: SceytUser?,
-        mentionedUsers: List<SceytUser>?,
-        pollDetails: SceytPollDetails?,
+    attachments: Array<SceytAttachment>?,
+    from: SceytUser?,
+    mentionedUsers: List<SceytUser>?,
+    pollDetails: SceytPollDetails?,
 ) = SceytMessage(
     id = id ?: 0,
     tid = tid,
@@ -189,7 +194,7 @@ internal fun MessageDb.toMessage(): Message {
             incoming,
             isTransient,
             silent,
-            deliveryStatus,
+            deliveryStatus.toDeliveryStatus(),
             state,
             from?.toUser(),
             attachments?.map { it.toSdkAttachment(false) }?.toTypedArray(),
@@ -210,7 +215,23 @@ internal fun MessageDb.toMessage(): Message {
     }
 }
 
+fun MessageDeliveryStatus.toDeliveryStatus(): DeliveryStatus {
+    return when (this) {
+        MessageDeliveryStatus.Pending, MessageDeliveryStatus.Failed -> DeliveryStatus.Pending
+        MessageDeliveryStatus.Sent -> DeliveryStatus.Sent
+        MessageDeliveryStatus.Received -> DeliveryStatus.Received
+        MessageDeliveryStatus.Displayed -> DeliveryStatus.Displayed
+    }
+}
 
+fun DeliveryStatus.toDeliveryStatus(): MessageDeliveryStatus {
+    return when (this) {
+        DeliveryStatus.Pending -> MessageDeliveryStatus.Pending
+        DeliveryStatus.Sent -> MessageDeliveryStatus.Sent
+        DeliveryStatus.Received -> MessageDeliveryStatus.Received
+        DeliveryStatus.Displayed -> MessageDeliveryStatus.Displayed
+    }
+}
 fun Message.toSceytUiMessage(isGroup: Boolean? = null): SceytMessage {
     val tid = getTid(id, tid, incoming)
     return SceytMessage(
@@ -225,7 +246,7 @@ fun Message.toSceytUiMessage(isGroup: Boolean? = null): SceytMessage {
         incoming = incoming,
         isTransient = isTransient,
         silent = silent,
-        deliveryStatus = deliveryStatus,
+        deliveryStatus = deliveryStatus.toDeliveryStatus(),
         state = state,
         user = user?.toSceytUser(),
         attachments = attachments?.map {
@@ -271,7 +292,7 @@ fun SceytMessage.toMessage(): Message {
         incoming,
         isTransient,
         silent,
-        deliveryStatus,
+        deliveryStatus.toDeliveryStatus(),
         state,
         user?.toUser(),
         attachments?.map { it.toAttachment() }?.toTypedArray(),
@@ -298,8 +319,8 @@ internal fun ForwardingDetails.toForwardingDetailsDb() = ForwardingDetailsDb(
 )
 
 internal fun ForwardingDetailsDb.toForwardingDetails(
-        channelId: Long,
-        user: SceytUser?,
+    channelId: Long,
+    user: SceytUser?,
 ) = ForwardingDetails(
     messageId, channelId,
     user?.toUser(),

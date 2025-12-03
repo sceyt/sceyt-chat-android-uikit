@@ -1,7 +1,6 @@
 package com.sceyt.chatuikit.persistence.logicimpl.usecases
 
 import android.util.Log
-import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadPrev
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
@@ -9,6 +8,7 @@ import com.sceyt.chatuikit.extensions.roundUp
 import com.sceyt.chatuikit.persistence.database.dao.MessageDao
 import com.sceyt.chatuikit.persistence.logicimpl.message.ChannelId
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
+import com.sceyt.chatuikit.presentation.extensions.isNotPending
 
 /**
  * Check for deleted messages in LoadNear scenario by comparing server response with local database
@@ -41,16 +41,19 @@ internal class CheckDeletedNearMessagesUseCase(
         // Case 1: Empty response means server has no messages at all
         // Delete ALL messages in the channel (except pending)
         if (serverMessages.isEmpty()) {
-            Log.i(tag, "LoadNear: Empty server response, deleting ALL messages in channel (except pending)")
+            Log.i(
+                tag,
+                "LoadNear: Empty server response, deleting ALL messages in channel (except pending)"
+            )
             messageDao.deleteAllMessagesByChannelIgnorePending(channelId)
             messagesCache.forceDeleteAllMessagesWhere { message ->
-                message.channelId == channelId && message.deliveryStatus != DeliveryStatus.Pending
+                message.channelId == channelId && message.isNotPending()
             }
             return
         }
 
         val serverIds = serverMessages.map { it.id }.sorted()
-        
+
         // Case 2: Server returned fewer messages than requested limit
         // This means we have the COMPLETE message list from server, so delete all local messages
         // that don't exist in this complete list (except pending)
@@ -62,7 +65,7 @@ internal class CheckDeletedNearMessagesUseCase(
             messageDao.deleteNotContainsMessagesIgnorePending(channelId, serverIds)
             messagesCache.forceDeleteAllMessagesWhere { message ->
                 message.channelId == channelId && !serverIds.contains(message.id) &&
-                        message.deliveryStatus != DeliveryStatus.Pending
+                        message.isNotPending()
             }
             return
         }
@@ -73,7 +76,7 @@ internal class CheckDeletedNearMessagesUseCase(
         val topNearIds = serverIds.filter { it <= messageId }.sorted()
         val bottomNearIds = serverIds.filter { it > messageId }.sorted()
         val normalCountTop = (limit.toDouble() / 2).roundUp()  // Expected count in top direction
-        val normalCountBottom = limit - normalCountTop          // Expected count in bottom direction
+        val normalCountBottom = limit - normalCountTop        // Expected count in bottom direction
 
         // Case 3a: No top messages found
         // This means there are no messages ≤ messageId on the server, delete all messages < first returned message
@@ -137,7 +140,7 @@ internal class CheckDeletedNearMessagesUseCase(
         )
         handleMessagesInRange(
             channelId = channelId,
-            startId =  serverIds.first(),
+            startId = serverIds.first(),
             endId = serverIds.last(),
             serverIds = serverIds
         )

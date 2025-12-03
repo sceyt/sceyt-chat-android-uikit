@@ -9,7 +9,6 @@ import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.view.isVisible
 import androidx.core.view.marginLeft
 import com.google.android.material.imageview.ShapeableImageView
-import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.extensions.asComponentActivity
 import com.sceyt.chatuikit.extensions.calculateScaleWidthHeight
@@ -29,16 +28,17 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.fil
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
 import com.sceyt.chatuikit.presentation.custom_views.CircularProgressView
+import com.sceyt.chatuikit.presentation.extensions.isNotPending
 import com.sceyt.chatuikit.presentation.helpers.AttachmentViewHolderHelper
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
 abstract class BaseMediaMessageViewHolder(
-        view: View,
-        private val style: MessageItemStyle,
-        messageListeners: MessageClickListeners.ClickListeners?,
-        displayedListener: ((MessageListItem) -> Unit)? = null,
-        private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
+    view: View,
+    private val style: MessageItemStyle,
+    messageListeners: MessageClickListeners.ClickListeners?,
+    displayedListener: ((MessageListItem) -> Unit)? = null,
+    private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
 ) : BaseMessageViewHolder(view, style, messageListeners, displayedListener) {
     protected val viewHolderHelper by lazy { AttachmentViewHolderHelper(itemView) }
     protected lateinit var fileItem: FileListItem
@@ -77,9 +77,11 @@ abstract class BaseMediaMessageViewHolder(
 
     protected open fun setImageSize(fileImage: View) {
         val layoutBubble = (layoutBubble as? ConstraintLayout) ?: return
-        val size = calculateScaleWidthHeight(maxSize, minSize, imageWidth = fileItem.size?.width
+        val size = calculateScaleWidthHeight(
+            maxSize, minSize, imageWidth = fileItem.size?.width
                 ?: maxSize,
-            imageHeight = fileItem.size?.height ?: maxSize)
+            imageHeight = fileItem.size?.height ?: maxSize
+        )
         resizedImageSize = size
         val constraintSet = ConstraintSet()
         constraintSet.clone(layoutBubble)
@@ -100,7 +102,11 @@ abstract class BaseMediaMessageViewHolder(
         val attachment = fileItem.attachment
         itemView.post {
             if (attachment.filePath.isNullOrBlank()) return@post
-            val thumbData = ThumbData(ThumbFor.MessagesLisView.value, attachment.filePath, getThumbSize())
+            val thumbData = ThumbData(
+                key = ThumbFor.MessagesLisView.value,
+                filePath = attachment.filePath,
+                size = getThumbSize()
+            )
             needMediaDataCallback.invoke(NeedMediaInfoData.NeedThumb(attachment, thumbData))
         }
     }
@@ -150,7 +156,7 @@ abstract class BaseMediaMessageViewHolder(
         loadingProgressView.getProgressWithState(
             state = data.state,
             style = style.mediaLoaderStyle,
-            hideOnThumbLoaded = requireMessage.deliveryStatus != DeliveryStatus.Pending,
+            hideOnThumbLoaded = requireMessage.isNotPending(),
             progressPercent = data.progressPercent
         )
     }

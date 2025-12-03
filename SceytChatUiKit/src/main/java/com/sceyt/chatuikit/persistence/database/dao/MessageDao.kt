@@ -7,10 +7,10 @@ import androidx.room.Query
 import androidx.room.RoomWarnings
 import androidx.room.Transaction
 import androidx.room.Update
-import com.sceyt.chat.models.message.DeliveryStatus
-import com.sceyt.chat.models.message.DeliveryStatus.Displayed
-import com.sceyt.chat.models.message.DeliveryStatus.Received
-import com.sceyt.chat.models.message.DeliveryStatus.Sent
+import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
+import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus.Displayed
+import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus.Received
+import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus.Sent
 import com.sceyt.chatuikit.data.models.LoadNearData
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.extensions.roundUp
@@ -508,7 +508,7 @@ internal abstract class MessageDao {
     abstract suspend fun getMessagesTidAndIdLoverThanByStatus(
         channelId: Long,
         id: Long,
-        vararg status: DeliveryStatus
+        vararg status: MessageDeliveryStatus
     ): List<MessageIdAndTid>
 
     @Transaction
@@ -543,12 +543,12 @@ internal abstract class MessageDao {
     abstract suspend fun existsMessageByTid(tid: Long): Boolean
 
     @Query("update $MESSAGE_TABLE set deliveryStatus =:status where message_id in (:ids)")
-    abstract suspend fun updateMessageStatus(status: DeliveryStatus, vararg ids: Long): Int
+    abstract suspend fun updateMessageStatus(status: MessageDeliveryStatus, vararg ids: Long): Int
 
     @Transaction
     open suspend fun updateMessageStatusWithBefore(
         channelId: Long,
-        status: DeliveryStatus,
+        status: MessageDeliveryStatus,
         id: Long
     ): List<MessageIdAndTid> {
         val ids = when (status) {
@@ -568,14 +568,14 @@ internal abstract class MessageDao {
     @Query("update $MESSAGE_TABLE set deliveryStatus =:deliveryStatus where channelId =:channelId and incoming")
     abstract suspend fun updateAllIncomingMessagesStatusAsRead(
         channelId: Long,
-        deliveryStatus: DeliveryStatus = Displayed
+        deliveryStatus: MessageDeliveryStatus = Displayed
     )
 
     @Query("update $MESSAGE_TABLE set deliveryStatus =:deliveryStatus where channelId =:channelId and message_id in (:messageIds)")
     abstract suspend fun updateMessagesStatus(
         channelId: Long,
         messageIds: List<Long>,
-        deliveryStatus: DeliveryStatus
+        deliveryStatus: MessageDeliveryStatus
     )
 
     @Query("update $MESSAGE_TABLE set channelId =:newChannelId where channelId =:oldChannelId")

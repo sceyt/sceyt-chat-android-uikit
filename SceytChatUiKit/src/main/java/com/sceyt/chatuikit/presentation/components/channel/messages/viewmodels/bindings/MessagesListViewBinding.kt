@@ -9,7 +9,6 @@ import androidx.lifecycle.viewModelScope
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.ConnectionState
 import com.sceyt.chat.models.message.DeleteMessageType
-import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
@@ -31,6 +30,7 @@ import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.getLoadKey
 import com.sceyt.chatuikit.data.models.messages.MarkerType
+import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import com.sceyt.chatuikit.data.models.messages.SceytMarker
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytUser
@@ -57,6 +57,8 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.events.Messa
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageListViewModel
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoActivity
 import com.sceyt.chatuikit.presentation.components.poll_results.PollResultsActivity
+import com.sceyt.chatuikit.presentation.extensions.isNotPending
+import com.sceyt.chatuikit.presentation.extensions.isPending
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.services.SceytSyncManager
 import com.sceyt.chatuikit.styles.extensions.messages_list.setEmptyStateForSelfChannel
@@ -122,7 +124,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     val lastDisplayedMessageId = channel.lastDisplayedMessageId
     val lastMessageId = lastMessage?.id ?: 0
     when {
-        lastDisplayedMessageId == 0L || lastMessage?.deliveryStatus == DeliveryStatus.Pending
+        lastDisplayedMessageId == 0L || lastMessage?.isPending() == true
                 || lastDisplayedMessageId == lastMessageId -> {
             loadPrevMessages(lastMessageId, 0)
         }
@@ -427,13 +429,13 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 if (stateData.state == ConnectionState.Connected) {
                     val message = messagesListView.getLastMessageBy {
                         // First trying to get last displayed message
-                        it is MessageItem && it.message.deliveryStatus == DeliveryStatus.Displayed
+                        it is MessageItem && it.message.deliveryStatus == MessageDeliveryStatus.Displayed
                     } ?: messagesListView.getFirstMessageBy {
                         // Next trying to get fist sent message
-                        it is MessageItem && it.message.deliveryStatus == DeliveryStatus.Sent
+                        it is MessageItem && it.message.deliveryStatus == MessageDeliveryStatus.Sent
                     } ?: messagesListView.getFirstMessageBy {
                         // Next trying to get fist received message
-                        it is MessageItem && it.message.deliveryStatus == DeliveryStatus.Received
+                        it is MessageItem && it.message.deliveryStatus == MessageDeliveryStatus.Received
                     }
                     (message as? MessageItem)?.let {
                         syncManager.syncConversationMessagesAfter(conversationId, it.message.id)
@@ -488,7 +490,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         .filter { (channelId, _) -> channelId == channel.id }
         .onEach { (_, date) ->
             messagesListView.deleteAllMessagesBefore {
-                it.getMessageCreatedAt() <= date && (it !is MessageItem || it.message.deliveryStatus != DeliveryStatus.Pending)
+                it.getMessageCreatedAt() <= date && (it !is MessageItem || it.message.isNotPending())
             }
         }.launchIn(lifecycleOwner.lifecycleScope)
 

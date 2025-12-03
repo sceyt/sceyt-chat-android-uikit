@@ -11,7 +11,6 @@ import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
@@ -28,6 +27,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.mes
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessagesAdapter
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.sticky_date.StickyDateHeaderUpdater
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
+import com.sceyt.chatuikit.presentation.extensions.isNotPending
 import com.sceyt.chatuikit.shared.helpers.MessageSwipeController
 import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle
 import kotlin.math.absoluteValue
@@ -155,7 +155,7 @@ class MessagesRV @JvmOverloads constructor(
     }
 
     private fun getLastSentItem() = mAdapter.getLastMessageBy {
-        it is MessageListItem.MessageItem && it.message.deliveryStatus != DeliveryStatus.Pending
+        it is MessageListItem.MessageItem && it.message.isNotPending()
     }
 
     private fun checkScrollDown() {

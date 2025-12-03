@@ -7,7 +7,6 @@ import com.sceyt.chat.models.message.DeleteMessageType
 import com.sceyt.chat.models.message.DeleteMessageType.DeleteForEveryone
 import com.sceyt.chat.models.message.DeleteMessageType.DeleteForMe
 import com.sceyt.chat.models.message.DeleteMessageType.DeleteHard
-import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chat.models.message.MessageState
@@ -91,6 +90,7 @@ import com.sceyt.chatuikit.persistence.repositories.MessagesRepository
 import com.sceyt.chatuikit.persistence.repositories.SceytSharedPreference
 import com.sceyt.chatuikit.persistence.workers.SendForwardMessagesWorkManager
 import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager
+import com.sceyt.chatuikit.presentation.extensions.isPending
 import com.sceyt.chatuikit.push.PushData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
@@ -896,7 +896,7 @@ internal class PersistenceMessagesLogicImpl(
             persistenceChannelsLogic.onMessageEditedOrDeleted(message)
         }
 
-        val isPending = message.deliveryStatus == DeliveryStatus.Pending
+        val isPending = message.isPending()
 
         updateMessage(
             message = message.copy(
@@ -927,7 +927,7 @@ internal class PersistenceMessagesLogicImpl(
         message: SceytMessage,
         deleteType: DeleteMessageType,
     ): SceytResponse<SceytMessage> = withContext(dispatcherIO) {
-        if (message.deliveryStatus == DeliveryStatus.Pending) {
+        if (message.isPending()) {
             val clonedMessage = message.copy(state = MessageState.Deleted)
             messageDao.deleteMessageByTid(message.tid)
             messagesCache.hardDeleteMessage(channelId, message)

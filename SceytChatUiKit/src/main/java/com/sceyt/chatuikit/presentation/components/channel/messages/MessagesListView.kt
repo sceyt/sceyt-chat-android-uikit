@@ -15,7 +15,6 @@ import androidx.core.util.Predicate
 import androidx.core.view.isVisible
 import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
@@ -91,6 +90,7 @@ import com.sceyt.chatuikit.presentation.components.forward.ForwardActivity
 import com.sceyt.chatuikit.presentation.components.media.MediaPreviewActivity
 import com.sceyt.chatuikit.presentation.components.message_info.MessageInfoActivity
 import com.sceyt.chatuikit.presentation.extensions.getUpdateMessage
+import com.sceyt.chatuikit.presentation.extensions.isPending
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.styles.extensions.messages_list.setPageStateViews
 import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle
@@ -329,7 +329,7 @@ class MessagesListView @JvmOverloads constructor(
     }
 
     private fun showModifyReactionsPopup(view: View, message: SceytMessage): ReactionsPopup? {
-        if (message.deliveryStatus == DeliveryStatus.Pending) return null
+        if (message.isPending()) return null
         val maxSize = SceytChatUIKit.config.messageReactionPerUserLimit
         val reactions = message.messageReactions
             ?.sortedByDescending { it.reaction.containsSelf }
@@ -564,7 +564,7 @@ class MessagesListView @JvmOverloads constructor(
     }
 
     internal fun messageEditedOrDeleted(updateMessage: SceytMessage) {
-        if (updateMessage.deliveryStatus == DeliveryStatus.Pending && updateMessage.state == MessageState.Deleted) {
+        if (updateMessage.isPending() && updateMessage.state == MessageState.Deleted) {
             messagesRV.deleteMessageByTid(updateMessage.tid)
             if (messagesRV.isEmpty())
                 binding.pageStateView.updateState(PageState.StateEmpty())
