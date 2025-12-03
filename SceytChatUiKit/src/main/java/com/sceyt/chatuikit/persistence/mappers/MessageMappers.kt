@@ -6,6 +6,7 @@ import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.poll.PollDetails
 import com.sceyt.chat.models.poll.PollOption
 import com.sceyt.chat.models.poll.PollVote
+import com.sceyt.chat.models.user.User
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
@@ -15,6 +16,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytPollDetails
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.data.models.messages.Vote
 import com.sceyt.chatuikit.persistence.database.entity.messages.ForwardingDetailsDb
+import com.sceyt.chatuikit.persistence.database.entity.messages.MentionUserDb
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageDb
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.ParentMessageDb
@@ -202,7 +204,7 @@ internal fun MessageDb.toMessage(): Message {
             reactionsTotals?.map { it.toReactionTotal() }?.toTypedArray(),
             markerCount?.toTypedArray(),
             emptyArray(),
-            emptyArray(),
+            mentionedUsers?.map { it.toUser() }?.toTypedArray(),
             parent?.toSceytMessage()?.toMessage(),
             replyCount,
             displayCount,
@@ -213,6 +215,10 @@ internal fun MessageDb.toMessage(): Message {
             poll?.toPollDetails()
         )
     }
+}
+
+private fun MentionUserDb.toUser(): User {
+    return user?.toUser() ?: User(link.userId)
 }
 
 fun MessageDeliveryStatus.toDeliveryStatus(): DeliveryStatus {
@@ -232,6 +238,7 @@ fun DeliveryStatus.toDeliveryStatus(): MessageDeliveryStatus {
         DeliveryStatus.Displayed -> MessageDeliveryStatus.Displayed
     }
 }
+
 fun Message.toSceytUiMessage(isGroup: Boolean? = null): SceytMessage {
     val tid = getTid(id, tid, incoming)
     return SceytMessage(
