@@ -1,5 +1,8 @@
 package com.sceyt.chatuikit.persistence.logicimpl.usecases
 
+import com.sceyt.chat.models.SceytException
+import com.sceyt.chatuikit.data.models.SDKErrorTypeEnum
+import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.database.dao.MessageDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingPollVoteDao
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
@@ -15,9 +18,10 @@ internal class HandleChangeVoteErrorUseCase(
         messageId: Long,
         pollId: String,
         optionIds: List<String>,
-        errorCode: Int?
+        exception: SceytException?
     ) {
-        if (errorCode == 404 || errorCode == 1301) {
+        val errorType = SDKErrorTypeEnum.fromValue(exception?.type) ?: return
+        if (!errorType.isResendable) {
             val messageTid = messageDao.getMessageTidById(messageId) ?: return
             val count = pendingPollVoteDao.deleteVotesByOptionIds(
                 messageTid = messageTid,
@@ -33,6 +37,10 @@ internal class HandleChangeVoteErrorUseCase(
                     )
                 }
             }
+            SceytLog.e(
+                "HandleChangeVoteErrorUseCase",
+                "Delete pending votes for messageId: $messageId, pollId: $pollId, optionIds: $optionIds due to non-resendable error: ${exception?.type}"
+            )
         }
     }
 }

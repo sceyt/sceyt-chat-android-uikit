@@ -40,6 +40,7 @@ import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.MarkerType.Received
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytUser
+import com.sceyt.chatuikit.data.models.onError
 import com.sceyt.chatuikit.data.models.onSuccessNotNull
 import com.sceyt.chatuikit.data.repositories.getUserId
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
@@ -737,41 +738,33 @@ internal class PersistenceMessagesLogicImpl(
 
     private suspend fun onMessageSentResponse(
         channelId: Long,
-        response: SceytResponse<SceytMessage>?,
+        sentMessageResponse: SceytResponse<SceytMessage>,
         message: Message
     ) {
-        when (response ?: return) {
-            is SceytResponse.Success -> {
-                SceytLog.i(
-                    TAG, "Send message success, channel id $channelId, tid:${message.tid}," +
-                            "responseMsgTid ${response.data?.tid} id:${response.data?.id}"
+        sentMessageResponse.onSuccessNotNull { responseMsg ->
+            SceytLog.i(
+                TAG, "Send message success, channel id $channelId, tid:${message.tid}," +
+                        "responseMsgTid ${responseMsg.tid} id:${responseMsg.id}"
+            )
+            messagesCache.messageUpdated(channelId, responseMsg)
+
+            val lastSentMessageId = messageDao.getLastSentMessageId(channelId)
+            updateMessageLoadRangeOnMessageEvent(
+                message = responseMsg,
+                oldLastMessageId = lastSentMessageId ?: responseMsg.id
+            )
+
+            messageDao.upsertMessage(responseMsg.toMessageDb(false))
+            persistenceChannelsLogic.updateLastMessageWithLastRead(channelId, responseMsg)
+        }.onError { exception ->
+            val errorType = SDKErrorTypeEnum.fromValue(exception?.type) ?: return
+            if (!errorType.isResendable) {
+                SceytLog.e(
+                    TAG,
+                    "Send message non-resendable error: ${exception?.message}, errorType: ${errorType.value}" +
+                            "deleting message from db channel id $channelId, tid:${message.tid} id:${message.id}"
                 )
-                response.data?.let { responseMsg ->
-                    messagesCache.messageUpdated(channelId, responseMsg)
-
-                    val lastSentMessageId = messageDao.getLastSentMessageId(channelId)
-                    updateMessageLoadRangeOnMessageEvent(
-                        message = responseMsg,
-                        oldLastMessageId = lastSentMessageId ?: responseMsg.id
-                    )
-
-                    messageDao.upsertMessage(responseMsg.toMessageDb(false))
-                    persistenceChannelsLogic.updateLastMessageWithLastRead(channelId, responseMsg)
-                }
-            }
-
-            is SceytResponse.Error -> {
-                if ((response as? SceytResponse.Error)?.exception?.type == SDKErrorTypeEnum.BadParam.toString()) {
-                    messageDao.deleteMessageByTid(message.tid)
-                    SceytLog.e(
-                        TAG, "Received BadParam error: ${response.exception?.message}, " +
-                                "deleting message from db channel id $channelId, tid:${message.tid} id:${message.id}"
-                    )
-                } else
-                    SceytLog.e(
-                        TAG,
-                        "Send message error: ${response.message}, channel id $channelId, tid:${message.tid} id:${message.id}"
-                    )
+                messageDao.deleteMessageByTid(message.tid)
             }
         }
     }
@@ -992,9 +985,17 @@ internal class PersistenceMessagesLogicImpl(
         message: SceytMessage
     ): SceytResponse<SceytMessage> {
         val response = messagesRepository.editMessage(channelId, message)
-        if (response is SceytResponse.Success) {
-            response.data?.let { updatedMsg ->
-                pendingMessageStateDao.deleteByMessageId(updatedMsg.id)
+        response.onSuccessNotNull { updatedMsg ->
+            pendingMessageStateDao.deleteByMessageId(updatedMsg.id)
+        }.onError {
+            val errorType = SDKErrorTypeEnum.fromValue(it?.type) ?: return@onError
+            if (!errorType.isResendable) {
+                pendingMessageStateDao.deleteByMessageId(message.id)
+                SceytLog.e(
+                    TAG,
+                    "Edit message non-resendable error: ${it?.message}, errorType: ${errorType.value}" +
+                            "deleting pending edit state from db for message id:${message.id}"
+                )
             }
         }
         return response
@@ -1006,9 +1007,17 @@ internal class PersistenceMessagesLogicImpl(
         deleteType: DeleteMessageType
     ): SceytResponse<SceytMessage> {
         val response = messagesRepository.deleteMessage(channelId, messageId, deleteType)
-        if (response is SceytResponse.Success) {
-            response.data?.let { resultMessage ->
-                pendingMessageStateDao.deleteByMessageId(resultMessage.id)
+        response.onSuccessNotNull { resultMessage ->
+            pendingMessageStateDao.deleteByMessageId(resultMessage.id)
+        }.onError {
+            val errorType = SDKErrorTypeEnum.fromValue(it?.type) ?: return@onError
+            if (!errorType.isResendable) {
+                pendingMessageStateDao.deleteByMessageId(messageId)
+                SceytLog.e(
+                    TAG,
+                    "Delete message non-resendable error: ${it?.message}, errorType: ${errorType.value}" +
+                            "deleting pending delete state from db for message id:$messageId"
+                )
             }
         }
         return response
@@ -1635,44 +1644,39 @@ internal class PersistenceMessagesLogicImpl(
         marker: String,
         vararg ids: Long,
     ) {
-        when (response) {
-            is SceytResponse.Success -> {
-                response.data?.let { data ->
-                    SceytLog.i(
-                        tag = TAG,
-                        message = "$marker marker successfully added to messages: ${ids.toList()}, in response ${data.messageIds}, " +
-                                "name: ${data.name}"
-                    )
-                    val responseIds = data.messageIds.toList()
+        response.onSuccessNotNull { data ->
+            SceytLog.i(
+                tag = TAG,
+                message = "$marker marker successfully added to messages: ${ids.toList()}, in response ${data.messageIds}, " +
+                        "name: ${data.name}"
+            )
+            val responseIds = data.messageIds.toList()
 
-                    marker.toDeliveryStatus()?.let { deliveryStatus ->
-                        messageDao.updateMessagesStatus(channelId, responseIds, deliveryStatus)
-                        val tIds = messageDao.getMessageTIdsByIds(*responseIds.toLongArray())
-                        messagesCache.updateMessagesStatus(
-                            channelId = channelId,
-                            status = deliveryStatus,
-                            tIds = tIds.toLongArray()
-                        )
-                    }
-
-                    pendingMarkerDao.deleteMessagesMarkersByStatus(responseIds, marker)
-                    myId?.let { userId ->
-                        messageDao.insertUserMarkersIfExistMessage(responseIds.map {
-                            MarkerEntity(messageId = it, userId = userId, name = data.name)
-                        })
-                    }
-                }
+            marker.toDeliveryStatus()?.let { deliveryStatus ->
+                messageDao.updateMessagesStatus(channelId, responseIds, deliveryStatus)
+                val tIds = messageDao.getMessageTIdsByIds(*responseIds.toLongArray())
+                messagesCache.updateMessagesStatus(
+                    channelId = channelId,
+                    status = deliveryStatus,
+                    tIds = tIds.toLongArray()
+                )
             }
 
-            is SceytResponse.Error -> {
-                // Check if error code is 1301 (TypeNotAllowed), 1228 (TypeBadParam) then delete pending markers
-                val code = response.exception?.code
-                SceytLog.i(
-                    tag = TAG,
-                    message = "Error adding $marker marker to messages:${ids.toList()}, error:${response.exception?.message}, code: $code"
+            pendingMarkerDao.deleteMessagesMarkersByStatus(responseIds, marker)
+            myId?.let { userId ->
+                messageDao.insertUserMarkersIfExistMessage(responseIds.map {
+                    MarkerEntity(messageId = it, userId = userId, name = data.name)
+                })
+            }
+        }.onError { exception ->
+            val errorType = SDKErrorTypeEnum.fromValue(exception?.type) ?: return@onError
+            if (!errorType.isResendable) {
+                SceytLog.e(
+                    TAG,
+                    "Add marker non-resendable error: ${exception?.message}, errorType: ${errorType.value}" +
+                            "deleting marker from db channel id $channelId, marker:${marker}"
                 )
-                if (code == 1301 || code == 1228)
-                    pendingMarkerDao.deleteMessagesMarkersByStatus(ids.toList(), marker)
+                pendingMarkerDao.deleteMessagesMarkersByStatus(ids.toList(), marker)
             }
         }
     }
