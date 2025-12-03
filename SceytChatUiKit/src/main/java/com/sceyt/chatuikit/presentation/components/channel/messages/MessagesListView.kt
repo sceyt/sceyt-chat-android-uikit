@@ -736,18 +736,6 @@ class MessagesListView @JvmOverloads constructor(
         }
     }
 
-    internal fun messageSendFailed(tid: Long) {
-        messagesRV.getData().findIndexed {
-            it is MessageItem && it.message.tid == tid
-        }?.let { (index, item) ->
-            val message = (item as MessageItem).message
-            val updatedItem = item.copy(
-                message = item.message.copy(deliveryStatus = DeliveryStatus.Pending)
-            )
-            updateAdapterItem(index, updatedItem, message.diff(updatedItem.message))
-        }
-    }
-
     internal fun updateReplyCount(replyMessage: SceytMessage?) {
         messagesRV.getData().findIndexed {
             it is MessageItem && it.message.id == replyMessage?.parentMessage?.id

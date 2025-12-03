@@ -36,9 +36,9 @@ import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.MessageId
-import com.sceyt.chatuikit.data.models.messages.SceytMessageType
 import com.sceyt.chatuikit.data.models.messages.PollOption
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.data.models.messages.SceytMessageType
 import com.sceyt.chatuikit.data.models.messages.SceytReactionTotal
 import com.sceyt.chatuikit.data.models.onSuccess
 import com.sceyt.chatuikit.data.models.onSuccessNotNull
@@ -381,7 +381,7 @@ class MessageListViewModel(
                 replyInThread = replyInThread,
                 query = query
             ).onSuccess { response ->
-                val messages = response.data
+                val messages = response.data.sortedBy { it.id }
                 _searchResult.postValue(SearchResult(0, messages, response.hasNext))
                 _onScrollToSearchMessageLiveData.postValue(
                     messages.firstOrNull() ?: return@launch
