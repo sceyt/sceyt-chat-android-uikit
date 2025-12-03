@@ -102,8 +102,9 @@ internal class PersistenceMembersLogicImpl(
         return callbackFlow {
             //todo temporarily delete all members and links only if offset is 0 until we will add order in server
             val memberCount = channelsCache.getOneOf(channelId)?.memberCount
-            val shouldDelete = memberCount == null || memberCount >= channelMembersLoadSize
-            if (normalizedOffset == 0 && shouldDelete)
+            val shouldDelete =
+                normalizedOffset == 0 && (memberCount == null || memberCount >= channelMembersLoadSize)
+            if (shouldDelete)
                 channelDao.deleteChatLinks(channelId)
 
             val dbMembers = getMembersDb(channelId, normalizedOffset, role, channelMembersLoadSize)
@@ -118,7 +119,8 @@ internal class PersistenceMembersLogicImpl(
                     saveMembersToDb(channelId, response.data)
                     // Check has removed items, and if exist delete from DB
                     // todo, temporarily commented until we will add order in server
-                    //getRemovedItemsAndDeleteFromDb(channelId, dbMembers, response.data)
+                    if (!shouldDelete)
+                        getRemovedItemsAndDeleteFromDb(channelId, dbMembers, response.data)
 
                     // Get new updated items from DB
                     val updatedMembers =
