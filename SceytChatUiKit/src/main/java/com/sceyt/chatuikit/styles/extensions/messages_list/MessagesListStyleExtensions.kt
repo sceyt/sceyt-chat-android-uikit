@@ -294,6 +294,7 @@ internal fun MessageItemStyle.Builder.buildDeliveryStatusIconStyle(
     .setSentIconFromStyle(R.styleable.MessagesListView_sceytUiMessagesListMessageDeliveryStatusSentIcon)
     .setReceivedIconIconFromStyle(R.styleable.MessagesListView_sceytUiMessagesListMessageDeliveryStatusReceivedIcon)
     .setDisplayedIconFromStyle(R.styleable.MessagesListView_sceytUiMessagesListMessageDeliveryStatusDisplayedIcon)
+    .setFailedIconFromStyle(R.styleable.MessagesListView_sceytUiMessagesListMessageDeliveryStatusFailedIcon)
     .build()
 
 /* Item Body text style */

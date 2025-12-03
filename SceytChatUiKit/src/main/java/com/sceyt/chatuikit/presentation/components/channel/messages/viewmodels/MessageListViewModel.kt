@@ -8,7 +8,6 @@ import androidx.work.ExistingWorkPolicy
 import com.sceyt.chat.models.Types
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.DeleteMessageType
-import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chatuikit.SceytChatUIKit
@@ -91,6 +90,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.rea
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageCommandEvent
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.PollEvent
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.ReactionEvent
+import com.sceyt.chatuikit.presentation.extensions.isNotPending
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import com.sceyt.chatuikit.services.SceytSyncManager
 import com.sceyt.chatuikit.shared.helpers.LinkPreviewHelper
@@ -965,9 +965,7 @@ class MessageListViewModel(
         var hasNext = response.hasNext
         if (!hasNext) {
             response.data.lastOrNull()?.let { lastMsg ->
-                if (lastMsg.deliveryStatus != DeliveryStatus.Pending
-                    && lastMsg.id < (channel.lastMessage?.id ?: 0)
-                ) {
+                if (lastMsg.isNotPending() && lastMsg.id < (channel.lastMessage?.id ?: 0)) {
                     hasNext = true
                 }
             }

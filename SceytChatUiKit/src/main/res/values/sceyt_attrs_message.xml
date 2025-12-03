@@ -345,6 +345,7 @@
         <attr name="sceytUiMessagesListMessageDeliveryStatusSentIcon" format="reference" />
         <attr name="sceytUiMessagesListMessageDeliveryStatusReceivedIcon" format="reference" />
         <attr name="sceytUiMessagesListMessageDeliveryStatusDisplayedIcon" format="reference" />
+        <attr name="sceytUiMessagesListMessageDeliveryStatusFailedIcon" format="reference" />
 
         <!--Poll style-->
         <!--Poll question text style-->

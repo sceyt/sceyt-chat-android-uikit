@@ -11,12 +11,12 @@ import androidx.core.content.ContextCompat
 import androidx.core.graphics.BlendModeColorFilterCompat
 import androidx.core.graphics.BlendModeCompat
 import androidx.core.view.GravityCompat
-import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
+import com.sceyt.chatuikit.presentation.extensions.isPending
 
 class MessageActionsPopupMenu(
     private val context: Context,
@@ -30,7 +30,7 @@ class MessageActionsPopupMenu(
         (menu as MenuBuilder).setOptionalIconsVisible(true)
         gravity = if (message.incoming) GravityCompat.START else GravityCompat.END
 
-        val isPending = message.deliveryStatus == DeliveryStatus.Pending
+        val isPending = message.isPending()
 
         // Handle poll-specific actions
         val poll = message.poll

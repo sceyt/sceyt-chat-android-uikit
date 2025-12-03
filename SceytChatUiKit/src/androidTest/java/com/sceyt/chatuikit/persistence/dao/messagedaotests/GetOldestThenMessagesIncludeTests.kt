@@ -7,7 +7,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
 import com.google.common.truth.Truth
-import com.sceyt.chat.models.message.DeliveryStatus
+import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chatuikit.persistence.database.SceytDatabase
 import com.sceyt.chatuikit.persistence.database.dao.LoadRangeDao
@@ -60,7 +60,7 @@ class GetOldestThenMessagesIncludeTests{
             incoming = false,
             isTransient = false,
             silent = false,
-            deliveryStatus = DeliveryStatus.Displayed,
+            deliveryStatus = MessageDeliveryStatus.Displayed,
             state = MessageState.Unmodified,
             fromId = "1",
             markerCount = null,

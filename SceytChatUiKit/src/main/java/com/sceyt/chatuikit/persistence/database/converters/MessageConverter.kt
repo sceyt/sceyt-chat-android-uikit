@@ -4,7 +4,7 @@ import androidx.room.TypeConverter
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.sceyt.chat.models.message.BodyAttribute
-import com.sceyt.chat.models.message.DeliveryStatus
+import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import com.sceyt.chat.models.message.MarkerTotal
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chatuikit.persistence.extensions.toEnum
@@ -12,10 +12,10 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 
 class MessageConverter {
     @TypeConverter
-    fun deliveryStatusToTnt(value: DeliveryStatus) = value.ordinal
+    fun deliveryStatusToTnt(value: MessageDeliveryStatus) = value.ordinal
 
     @TypeConverter
-    fun intToDeliveryStatus(value: Int) = value.toEnum<DeliveryStatus>()
+    fun intToDeliveryStatus(value: Int) = value.toEnum<MessageDeliveryStatus>()
 
     @TypeConverter
     fun messageStateToTnt(value: MessageState) = value.ordinal

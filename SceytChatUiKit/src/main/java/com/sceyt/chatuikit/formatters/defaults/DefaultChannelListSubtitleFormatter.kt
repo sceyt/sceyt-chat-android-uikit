@@ -4,7 +4,6 @@ import android.content.Context
 import android.text.SpannableStringBuilder
 import androidx.core.text.buildSpannedString
 import androidx.core.text.toSpannable
-import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
@@ -17,6 +16,7 @@ import com.sceyt.chatuikit.formatters.attributes.MessageBodyFormatterAttributes
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChatReactionMessagesCache
 import com.sceyt.chatuikit.persistence.mappers.toSceytAttachment
 import com.sceyt.chatuikit.persistence.mappers.toSceytReaction
+import com.sceyt.chatuikit.presentation.extensions.isPending
 import com.sceyt.chatuikit.presentation.extensions.isSupportedType
 
 open class DefaultChannelListSubtitleFormatter : Formatter<ChannelItemSubtitleFormatterAttributes> {
@@ -86,7 +86,7 @@ open class DefaultChannelListSubtitleFormatter : Formatter<ChannelItemSubtitleFo
         val channel = from.channel
         val style = from.channelItemStyle
         val myId = SceytChatUIKit.chatUIFacade.myId
-        if (channel.lastMessage?.deliveryStatus == DeliveryStatus.Pending) return false to ""
+        if (channel.lastMessage?.isPending() == true) return false to ""
         val pendingAddOrRemoveReaction = channel.pendingReactions?.filter {
             !it.incomingMsg
         }?.groupBy { it.isAdd }

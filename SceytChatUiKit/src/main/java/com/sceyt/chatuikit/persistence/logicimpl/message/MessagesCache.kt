@@ -1,9 +1,9 @@
 package com.sceyt.chatuikit.persistence.logicimpl.message
 
-import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chatuikit.data.models.messages.AttachmentPayLoadData
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
+import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
@@ -26,6 +26,7 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploaded
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploading
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.WaitingToUpload
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.comporators.MessageComparator
+import com.sceyt.chatuikit.presentation.extensions.isNotPending
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -113,7 +114,7 @@ class MessagesCache {
 
     suspend fun clearAllExceptPending(channelId: Long) = mutex.withLock {
         getMessagesMap(channelId)?.values
-            ?.filter { it.deliveryStatus != DeliveryStatus.Pending }
+            ?.filter { it.isNotPending() }
             ?.map { it.tid }?.forEach {
                 cachedMessages[channelId]?.remove(it)
             }
@@ -133,7 +134,7 @@ class MessagesCache {
 
     suspend fun updateMessagesStatus(
         channelId: Long,
-        status: DeliveryStatus,
+        status: MessageDeliveryStatus,
         vararg tIds: Long
     ) = mutex.withLock {
         val updatesMessages = mutableListOf<SceytMessage>()
@@ -181,7 +182,7 @@ class MessagesCache {
         channelId: Long,
         messagesDeletionDate: Long
     ) = mutex.withLock {
-        if (getMessagesMap(channelId)?.removeAllIf { it.createdAt <= messagesDeletionDate && it.deliveryStatus != DeliveryStatus.Pending } == true) {
+        if (getMessagesMap(channelId)?.removeAllIf { it.createdAt <= messagesDeletionDate && it.isNotPending() } == true) {
             messagesClearedFlow_.tryEmit(Pair(channelId, messagesDeletionDate))
         }
     }

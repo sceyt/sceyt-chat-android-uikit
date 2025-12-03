@@ -1,6 +1,5 @@
 package com.sceyt.chatuikit.persistence.logicimpl.usecases
 
-import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.createErrorResponse
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
@@ -10,6 +9,7 @@ import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
 import com.sceyt.chatuikit.persistence.mappers.toMessageDb
 import com.sceyt.chatuikit.persistence.mappers.toSceytMessage
 import com.sceyt.chatuikit.persistence.repositories.PollRepository
+import com.sceyt.chatuikit.presentation.extensions.isPending
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -35,7 +35,7 @@ internal class EndPollUseCase(
             return@withContext createErrorResponse("Poll is already closed")
         }
 
-        if (message.deliveryStatus == DeliveryStatus.Pending) {
+        if (message.isPending()) {
             return@withContext createErrorResponse("Cannot end a poll for a pending message")
         }
 

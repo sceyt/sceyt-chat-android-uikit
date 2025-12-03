@@ -3,11 +3,11 @@ package com.sceyt.chatuikit.presentation.extensions
 import android.content.Context
 import android.text.SpannableString
 import androidx.core.view.isVisible
-import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.channels.DraftMessage
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
+import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytMessageType
@@ -41,10 +41,11 @@ fun SceytMessage?.setChannelMessageDateAndStatusIcon(
     }
     val icons = itemStyle.messageDeliveryStatusIcons
     val icon = when (deliveryStatus) {
-        DeliveryStatus.Pending -> icons.pendingIcon
-        DeliveryStatus.Sent -> icons.sentIcon
-        DeliveryStatus.Received -> icons.receivedIcon
-        DeliveryStatus.Displayed -> icons.displayedIcon
+        MessageDeliveryStatus.Pending -> icons.pendingIcon
+        MessageDeliveryStatus.Sent -> icons.sentIcon
+        MessageDeliveryStatus.Received -> icons.receivedIcon
+        MessageDeliveryStatus.Displayed -> icons.displayedIcon
+        MessageDeliveryStatus.Failed -> icons.failedIcon
     }
     icon?.let {
         decoratedTextView.appearanceBuilder()
@@ -79,10 +80,11 @@ fun SceytMessage?.setChatMessageDateAndStatusIcon(
     }
     val icons = itemStyle.messageDeliveryStatusIcons
     val icon = when (deliveryStatus) {
-        DeliveryStatus.Pending -> icons.pendingIcon
-        DeliveryStatus.Sent -> icons.sentIcon
-        DeliveryStatus.Received -> icons.receivedIcon
-        DeliveryStatus.Displayed -> icons.displayedIcon
+        MessageDeliveryStatus.Pending -> icons.pendingIcon
+        MessageDeliveryStatus.Sent -> icons.sentIcon
+        MessageDeliveryStatus.Received -> icons.receivedIcon
+        MessageDeliveryStatus.Displayed -> icons.displayedIcon
+        MessageDeliveryStatus.Failed -> icons.failedIcon
     }
     icon?.let {
         decoratedTextView.appearanceBuilder()
@@ -99,8 +101,8 @@ fun SceytMessage?.setChatMessageDateAndStatusIcon(
     }
 }
 
-private fun checkIgnoreHighlight(deliveryStatus: DeliveryStatus?): Boolean {
-    return deliveryStatus == DeliveryStatus.Displayed
+private fun checkIgnoreHighlight(deliveryStatus: MessageDeliveryStatus?): Boolean {
+    return deliveryStatus == MessageDeliveryStatus.Displayed
 }
 
 fun SceytMessage.getFormattedBodyWithAttachments(
@@ -187,7 +189,9 @@ fun SceytAttachment?.isAttachmentExistAndFullyLoaded(loadedFile: File): File? {
     return null
 }
 
-fun SceytMessage.isPending() = deliveryStatus == DeliveryStatus.Pending
+fun SceytMessage.isPending() = deliveryStatus == MessageDeliveryStatus.Pending
+
+fun SceytMessage.isNotPending() = !isPending()
 
 fun MessageState.isDeletedOrHardDeleted() =
     this == MessageState.Deleted || this == MessageState.DeletedHard
@@ -229,6 +233,7 @@ fun SceytMessage.getUpdateMessage(message: SceytMessage): SceytMessage {
         files = message.files,
     )
 }
+
 fun SceytMessage.getMessageType(): SceytMessageType {
     return SceytMessageType.fromString(type)
 }

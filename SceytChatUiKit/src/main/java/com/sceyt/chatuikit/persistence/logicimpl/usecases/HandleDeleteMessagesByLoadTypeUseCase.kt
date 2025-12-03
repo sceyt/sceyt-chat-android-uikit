@@ -1,7 +1,6 @@
 package com.sceyt.chatuikit.persistence.logicimpl.usecases
 
 import android.util.Log
-import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNear
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNewest
@@ -10,13 +9,14 @@ import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadPrev
 import com.sceyt.chatuikit.persistence.database.dao.MessageDao
 import com.sceyt.chatuikit.persistence.logicimpl.message.ChannelId
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
+import com.sceyt.chatuikit.presentation.extensions.isNotPending
 
 /**
  * Handle deletion of messages based on LoadType direction
- * 
+ *
  * This use case handles directional message deletion for LoadPrev, LoadNext, and LoadNewest.
  * LoadNear is not supported as it requires bidirectional logic handled separately.
- * 
+ *
  * @return true if deletion was handled, false for LoadNear (not supported)
  */
 internal class HandleDeleteMessagesByLoadTypeUseCase(
@@ -27,7 +27,7 @@ internal class HandleDeleteMessagesByLoadTypeUseCase(
 
     /**
      * Delete messages in the direction specified by LoadType
-     * 
+     *
      * @param loadType The direction to delete messages (LoadPrev, LoadNext, LoadNewest)
      * @param channelId The channel ID
      * @param messageId The reference message ID for directional deletion
@@ -45,12 +45,12 @@ internal class HandleDeleteMessagesByLoadTypeUseCase(
                 deletePreviousMessages(channelId, messageId, includeMessage)
                 true
             }
-            
+
             LoadNext, LoadNewest -> {
                 deleteNextMessages(channelId, messageId, includeMessage)
                 true
             }
-            
+
             LoadNear -> {
                 // LoadNear has separate bidirectional handling logic
                 Log.i(tag, "LoadNear not handled by this use case")
@@ -80,7 +80,7 @@ internal class HandleDeleteMessagesByLoadTypeUseCase(
         if (count > 0) {
             Log.i(tag, "Deleted $count messages from DB, updating cache")
             messagesCache.forceDeleteAllMessagesWhere { message ->
-                message.channelId == channelId && message.deliveryStatus != DeliveryStatus.Pending &&
+                message.channelId == channelId && message.isNotPending() &&
                         message.id <= compareMessageId
             }
         } else {
@@ -109,8 +109,8 @@ internal class HandleDeleteMessagesByLoadTypeUseCase(
         if (count > 0) {
             Log.i(tag, "Deleted $count messages from DB, updating cache")
             messagesCache.forceDeleteAllMessagesWhere { message ->
-                message.channelId == channelId && message.deliveryStatus != DeliveryStatus.Pending &&
-                        message.id >= compareMessageId
+                message.channelId == channelId && message.isNotPending()
+                        && message.id >= compareMessageId
             }
         } else {
             Log.i(tag, "No messages to delete")

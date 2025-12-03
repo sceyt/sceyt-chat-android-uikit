@@ -5,7 +5,6 @@ import androidx.sqlite.db.SimpleSQLiteQuery
 import com.google.gson.Gson
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.models.channel.ChannelListQuery.ChannelListOrder
-import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.role.Role
 import com.sceyt.chat.models.user.UserState
@@ -36,6 +35,7 @@ import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.channels.SelfChannelMetadata
 import com.sceyt.chatuikit.data.models.createErrorResponse
+import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
 import com.sceyt.chatuikit.data.models.messages.SceytUser
@@ -82,6 +82,7 @@ import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManage
 import com.sceyt.chatuikit.presentation.extensions.isDeleted
 import com.sceyt.chatuikit.presentation.extensions.isDeletedOrHardDeleted
 import com.sceyt.chatuikit.presentation.extensions.isHardDeleted
+import com.sceyt.chatuikit.presentation.extensions.isPending
 import com.sceyt.chatuikit.push.PushData
 import com.sceyt.chatuikit.services.SceytPresenceChecker
 import kotlinx.coroutines.Dispatchers
@@ -247,13 +248,13 @@ internal class PersistenceChannelsLogicImpl(
         channelDao.getChannelById(message.channelId)?.toChannel()?.let { channel ->
             channel.lastMessage?.let { lastMessage ->
                 if (lastMessage.tid == message.tid) {
-                    if (message.deliveryStatus == DeliveryStatus.Pending && message.state == MessageState.Deleted) {
+                    if (message.isPending() && message.state == MessageState.Deleted) {
                         channelsCache.updateLastMessage(message.channelId, null)
                     } else
                         channelsCache.updateLastMessage(message.channelId, message)
                 }
             } ?: run {
-                if (state.isHardDeleted() || message.deliveryStatus == DeliveryStatus.Pending && state.isDeleted())
+                if (state.isHardDeleted() || message.isPending() && state.isDeleted())
                     deleteMessage(message.channelId, message)
                 else
                     channelsCache.upsertChannel(channel.copy(lastMessage = message))
@@ -1040,7 +1041,7 @@ internal class PersistenceChannelsLogicImpl(
 
     override suspend fun updateLastMessageWithLastRead(channelId: Long, message: SceytMessage) {
         // Check if message delivery status is pending, that means message is started to send
-        if (message.deliveryStatus == DeliveryStatus.Pending) {
+        if (message.isPending()) {
             channelDao.updateLastMessage(channelId, message.tid, message.createdAt)
             channelsCache.updateLastMessage(channelId, message)
         } else {
@@ -1068,8 +1069,8 @@ internal class PersistenceChannelsLogicImpl(
     ) {
         val cashedChannel = channelsCache.getOneOf(channelId)
         // Check if both last messages are not pending
-        val needToUpdateLastMessage = message?.deliveryStatus != DeliveryStatus.Pending
-                && cashedChannel?.lastMessage?.deliveryStatus != DeliveryStatus.Pending
+        val needToUpdateLastMessage = message?.deliveryStatus != MessageDeliveryStatus.Pending
+                && cashedChannel?.lastMessage?.deliveryStatus != MessageDeliveryStatus.Pending
 
         if (needToUpdateLastMessage) {
             channelDao.updateLastMessage(channelId, message?.tid, message?.createdAt)

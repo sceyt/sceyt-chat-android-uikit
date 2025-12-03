@@ -6,7 +6,7 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.sceyt.chat.models.message.BodyAttribute
-import com.sceyt.chat.models.message.DeliveryStatus
+import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import com.sceyt.chat.models.message.MarkerTotal
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.MESSAGE_TABLE
@@ -32,7 +32,7 @@ internal data class MessageEntity(
         val isTransient: Boolean,
         val silent: Boolean,
         @ColumnInfo(index = true)
-        val deliveryStatus: DeliveryStatus,
+        val deliveryStatus: MessageDeliveryStatus,
         val state: MessageState,
         val fromId: String?,
         val markerCount: List<MarkerTotal>?,
