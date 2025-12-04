@@ -27,6 +27,7 @@ import com.sceyt.chatuikit.persistence.repositories.UsersRepository
 import com.sceyt.chatuikit.push.service.PushService
 import com.sceyt.chatuikit.services.SceytPresenceChecker
 import com.sceyt.chatuikit.services.SceytSyncManager
+import com.sceyt.chatuikit.services.ServerTimeSync
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -67,6 +68,8 @@ internal class PersistenceConnectionLogicImpl(
 
     override suspend fun onChangedConnectStatus(state: ConnectionStateData) {
         if (state.state == ConnectionState.Connected) {
+            // Update server time synchronization after successful connection
+            ServerTimeSync.updateServerTime()
             SceytPresenceChecker.startPresenceCheck()
             pushService.ensurePushTokenRegistered()
             insertCurrentUser()

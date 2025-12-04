@@ -92,6 +92,7 @@ import com.sceyt.chatuikit.persistence.workers.SendForwardMessagesWorkManager
 import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager
 import com.sceyt.chatuikit.presentation.extensions.isPending
 import com.sceyt.chatuikit.push.PushData
+import com.sceyt.chatuikit.services.ServerTimeSync
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.awaitClose
@@ -383,7 +384,6 @@ internal class PersistenceMessagesLogicImpl(
         messageId: Long,
         replyInThread: Boolean,
     ): SyncNearMessagesResult = withContext(dispatcherIO) {
-
         val response = messagesRepository.getNearMessages(
             conversationId = conversationId,
             messageId = messageId,
@@ -404,7 +404,8 @@ internal class PersistenceMessagesLogicImpl(
                 loadType = LoadNear,
                 messageId = messageId,
                 limit = 30,
-                serverMessages = updatedMessages
+                serverMessages = updatedMessages,
+                syncStartTime = ServerTimeSync.getLastAuthTime()
             )
 
             updateMessageLoadRange(
@@ -431,13 +432,17 @@ internal class PersistenceMessagesLogicImpl(
                 }
 
                 channel.lastMessage?.let { lastMessage ->
-                    if (channel.lastDisplayedMessageId > lastMessage.id) {
+                    val currentChannel by lazy { channelCache.getOneOf(channel.id) }
+                    // Check current channel last message is the same as lastMessage from synced channel,
+                    // to avoid deleting messages incorrectly
+                    if (channel.lastDisplayedMessageId > lastMessage.id && currentChannel?.lastMessage == lastMessage) {
                         checkDeletedMessagesUseCase(
                             channelId = channel.id,
                             loadType = LoadNext,
                             messageId = lastMessage.id,
                             limit = messagesLoadSize,
-                            serverMessages = listOf(lastMessage)
+                            serverMessages = listOf(lastMessage),
+                            syncStartTime = ServerTimeSync.getLastAuthTime()
                         )
                     }
                 }
@@ -1246,6 +1251,8 @@ internal class PersistenceMessagesLogicImpl(
         if (loadType != LoadNear)
             ConnectionEventManager.awaitToConnectSceytWithTimeout(10.seconds.inWholeMilliseconds)
 
+        val syncStartTime = ServerTimeSync.getCurrentServerTime()
+
         when (loadType) {
             LoadPrev -> {
                 var msgId = lastMessageId
@@ -1330,7 +1337,8 @@ internal class PersistenceMessagesLogicImpl(
                 loadType = loadType,
                 messageId = lastMessageId,
                 limit = limit,
-                serverMessages = updatedMessages
+                serverMessages = updatedMessages,
+                syncStartTime = syncStartTime
             )
         }
 

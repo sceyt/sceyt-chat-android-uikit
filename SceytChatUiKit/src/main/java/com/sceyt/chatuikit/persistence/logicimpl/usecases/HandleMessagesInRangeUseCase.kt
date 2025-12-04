@@ -41,7 +41,8 @@ internal class HandleMessagesInRangeUseCase(
         channelId: ChannelId,
         startId: Long,
         endId: Long,
-        serverIds: List<Long>
+        serverIds: List<Long>,
+        syncStartTime: Long
     ) {
         Log.i(tag, "Querying local DB for messages in range [$startId, $endId]")
 
@@ -49,7 +50,8 @@ internal class HandleMessagesInRangeUseCase(
         val localIds = messageDao.getMessagesIdsByRange(
             channelId = channelId,
             startId = startId,
-            endId = endId
+            endId = endId,
+            dateUntil = syncStartTime
         ).toSet()
 
         Log.i(
