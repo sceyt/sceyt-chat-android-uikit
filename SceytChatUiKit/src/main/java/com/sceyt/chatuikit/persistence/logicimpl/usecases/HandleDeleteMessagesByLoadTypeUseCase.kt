@@ -38,7 +38,8 @@ internal class HandleDeleteMessagesByLoadTypeUseCase(
         loadType: LoadType,
         channelId: ChannelId,
         messageId: Long,
-        includeMessage: Boolean
+        includeMessage: Boolean,
+        syncStartTime: Long
     ): Boolean {
         return when (loadType) {
             LoadPrev -> {
@@ -47,7 +48,12 @@ internal class HandleDeleteMessagesByLoadTypeUseCase(
             }
 
             LoadNext, LoadNewest -> {
-                deleteNextMessages(channelId, messageId, includeMessage)
+                deleteNextMessages(
+                    channelId = channelId,
+                    messageId = messageId,
+                    includeMessage = includeMessage,
+                    syncStartTime = syncStartTime
+                )
                 true
             }
 
@@ -95,7 +101,8 @@ internal class HandleDeleteMessagesByLoadTypeUseCase(
     private suspend fun deleteNextMessages(
         channelId: ChannelId,
         messageId: Long,
-        includeMessage: Boolean
+        includeMessage: Boolean,
+        syncStartTime: Long
     ) {
         val operator = if (includeMessage) ">=" else ">"
         Log.i(tag, "Deleting messages $operator $messageId (includeMessage=$includeMessage)")
@@ -103,14 +110,16 @@ internal class HandleDeleteMessagesByLoadTypeUseCase(
         val compareMessageId = if (includeMessage) messageId else messageId + 1
         val count = messageDao.deleteAllMessagesGreaterThenMessageIdIgnorePending(
             channelId = channelId,
-            messageId = compareMessageId
+            messageId = compareMessageId,
+            deleteUntil = syncStartTime
         )
 
         if (count > 0) {
             Log.i(tag, "Deleted $count messages from DB, updating cache")
             messagesCache.forceDeleteAllMessagesWhere { message ->
-                message.channelId == channelId && message.isNotPending()
-                        && message.id >= compareMessageId
+                message.channelId == channelId && message.isNotPending() &&
+                        message.id >= compareMessageId &&
+                        (syncStartTime == 0L || message.createdAt < syncStartTime)
             }
         } else {
             Log.i(tag, "No messages to delete")

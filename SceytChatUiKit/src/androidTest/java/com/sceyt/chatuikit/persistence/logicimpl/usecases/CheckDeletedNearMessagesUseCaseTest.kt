@@ -85,7 +85,8 @@ class CheckDeletedNearMessagesUseCaseTest {
             channelId = channelId,
             messageId = 150,
             limit = 50,
-            serverMessages = emptyList()
+            serverMessages = emptyList(),
+            syncStartTime = 0L
         )
 
         // Assert: All sent messages deleted (no pending messages in this test)
@@ -111,7 +112,8 @@ class CheckDeletedNearMessagesUseCaseTest {
             channelId = channelId,
             messageId = 110,
             limit = 50,
-            serverMessages = emptyList()
+            serverMessages = emptyList(),
+            syncStartTime =0
         )
 
         // Assert: Pending messages are preserved, only sent messages are deleted
@@ -145,7 +147,8 @@ class CheckDeletedNearMessagesUseCaseTest {
             channelId = channelId,
             messageId = 150,
             limit = 50,
-            serverMessages = listOf(createSceytMessage(id = 150))
+            serverMessages = listOf(createSceytMessage(id = 150)),
+            syncStartTime = 0L
         )
 
         // Assert: Only message 150 remains, all others deleted
@@ -170,7 +173,8 @@ class CheckDeletedNearMessagesUseCaseTest {
             channelId = channelId,
             messageId = 150,
             limit = 50,
-            serverMessages = serverMessages
+            serverMessages = serverMessages,
+            syncStartTime = 0L
         )
 
         // Assert: Only those 5 remain
@@ -195,7 +199,8 @@ class CheckDeletedNearMessagesUseCaseTest {
             channelId = channelId,
             messageId = 120,
             limit = 50,
-            serverMessages = listOf(createSceytMessage(id = 120))
+            serverMessages = listOf(createSceytMessage(id = 120)),
+            syncStartTime = 0L
         )
 
         // Assert: Pending messages preserved
@@ -239,7 +244,8 @@ class CheckDeletedNearMessagesUseCaseTest {
                 createSceytMessage(id = 130),
                 createSceytMessage(id = 140),
                 createSceytMessage(id = 150)
-            )
+            ),
+            syncStartTime = 0L
         )
 
         // Assert: Messages < 110 are deleted (LoadPrev direction)
@@ -284,7 +290,8 @@ class CheckDeletedNearMessagesUseCaseTest {
                 createSceytMessage(id = 130),
                 createSceytMessage(id = 140),
                 createSceytMessage(id = 150)
-            )
+            ),
+            syncStartTime = 0L
         )
 
         // Assert: Messages > 150 are deleted (LoadNext direction)
@@ -323,7 +330,8 @@ class CheckDeletedNearMessagesUseCaseTest {
                 createSceytMessage(id = 130),
                 createSceytMessage(id = 140),
                 createSceytMessage(id = 150)
-            )
+            ),
+            syncStartTime = 0L
         )
 
         // Assert: deleteByLoadType(LoadPrev, includeMessage=true) called - deletes all ≤ 100
@@ -362,7 +370,8 @@ class CheckDeletedNearMessagesUseCaseTest {
                 createSceytMessage(id = 80),
                 createSceytMessage(id = 90),
                 createSceytMessage(id = 150)
-            )
+            ),
+            syncStartTime = 0L
         )
 
         // Assert: deleteByLoadType(LoadNext, includeMessage=true) called - deletes all ≥ 150 beyond returned
@@ -401,7 +410,8 @@ class CheckDeletedNearMessagesUseCaseTest {
                 createSceytMessage(id = 110),
                 createSceytMessage(id = 120),
                 createSceytMessage(id = 130)
-            )
+            ),
+            syncStartTime = 0L
         )
 
         // Assert: Falls through to handleMessagesInRange at line 109
@@ -443,7 +453,8 @@ class CheckDeletedNearMessagesUseCaseTest {
                 createSceytMessage(id = 95),
                 createSceytMessage(id = 110),
                 createSceytMessage(id = 120)
-            )
+            ),
+            syncStartTime = 0L
         )
 
         // Assert: Falls through to handleMessagesInRange
@@ -477,7 +488,8 @@ class CheckDeletedNearMessagesUseCaseTest {
                 createSceytMessage(id = 100),
                 createSceytMessage(id = 130),
                 createSceytMessage(id = 150)
-            )
+            ),
+            syncStartTime = 0L
         )
 
         // Assert: Messages 110, 120, 140 deleted
@@ -505,7 +517,8 @@ class CheckDeletedNearMessagesUseCaseTest {
                 createSceytMessage(id = 100),
                 createSceytMessage(id = 110),
                 createSceytMessage(id = 120)
-            )
+            ),
+            syncStartTime = 0L
         )
 
         // Assert: No deletions
@@ -535,7 +548,8 @@ class CheckDeletedNearMessagesUseCaseTest {
                 createSceytMessage(id = 150),
                 createSceytMessage(id = 100),
                 createSceytMessage(id = 120)
-            )
+            ),
+            syncStartTime = 0L
         )
 
         // Assert: Range calculated correctly (100-150), missing messages deleted
@@ -562,7 +576,8 @@ class CheckDeletedNearMessagesUseCaseTest {
             channelId = channelId,
             messageId = 25,
             limit = 50,
-            serverMessages = topMessages + bottomMessages
+            serverMessages = topMessages + bottomMessages,
+            syncStartTime = 0L
         )
 
         // Assert: All messages remain (perfect split)
@@ -586,7 +601,8 @@ class CheckDeletedNearMessagesUseCaseTest {
             channelId = channelId,
             messageId = 26,
             limit = 51,
-            serverMessages = topMessages + bottomMessages
+            serverMessages = topMessages + bottomMessages,
+            syncStartTime = 0L
         )
 
         // Assert: All messages remain (roundUp logic works)
@@ -618,7 +634,8 @@ class CheckDeletedNearMessagesUseCaseTest {
                 createSceytMessage(id = 120),
                 createSceytMessage(id = 130),
                 createSceytMessage(id = 140)
-            )
+            ),
+            syncStartTime = 0L
         )
 
         // Assert: Correct top/bottom split (top=[100], bottom=[110,120,130,140])
@@ -627,13 +644,326 @@ class CheckDeletedNearMessagesUseCaseTest {
         assertThat(remainingIds).containsAtLeast(100L, 110L, 120L, 130L, 140L)
     }
 
+    // ========== syncStartTime Tests for LoadNear ==========
+
+    @Test
+    fun loadNear_emptyResponse_withSyncStartTime_shouldNotDeleteNewMessages() = runTest {
+        // Arrange - Empty response means delete all, but respect syncStartTime
+        val syncStartTime = 1000L
+        insertMessages(
+            createMessageEntity(tid = 50, id = 50, createdAt = 500),    // Old - should delete
+            createMessageEntity(tid = 100, id = 100, createdAt = 900),  // Old - should delete
+            createMessageEntity(tid = 150, id = 150, createdAt = 1100), // New - should NOT delete
+            createMessageEntity(tid = 200, id = 200, createdAt = 1200)  // New - should NOT delete
+        )
+
+        val serverMessages = emptyList<SceytMessage>()
+
+        // Act - Empty response with syncStartTime
+        useCase(
+            channelId = channelId,
+            messageId = 100,
+            limit = 30,
+            serverMessages = serverMessages,
+            syncStartTime = syncStartTime
+        )
+
+        // Assert - Should only delete old messages, keep new ones
+        val remainingIds = messageDao.getMessagesIds(channelId)
+        assertThat(remainingIds).containsExactly(150L, 200L)
+        assertThat(remainingIds).doesNotContain(50L)  // Deleted (old)
+        assertThat(remainingIds).doesNotContain(100L) // Deleted (old)
+        assertThat(remainingIds).contains(150L)       // Kept (new)
+        assertThat(remainingIds).contains(200L)       // Kept (new)
+    }
+
+    @Test
+    fun loadNear_sizeLessThanLimit_withSyncStartTime_shouldNotDeleteNewMessages() = runTest {
+        // Arrange - Complete list from server, but some local messages are new
+        val syncStartTime = 1000L
+        insertMessages(
+            createMessageEntity(tid = 50, id = 50, createdAt = 500),    // Old, not in server - should delete
+            createMessageEntity(tid = 100, id = 100, createdAt = 900),  // Old, in server - should keep
+            createMessageEntity(tid = 150, id = 150, createdAt = 1100), // New, not in server - should NOT delete
+            createMessageEntity(tid = 200, id = 200, createdAt = 200)   // Old, in server - should keep
+        )
+
+        val serverMessages = listOf(
+            createSceytMessage(id = 100),
+            createSceytMessage(id = 200)
+        )
+
+        // Act - size=2 < limit=10, so complete list
+        useCase(
+            channelId = channelId,
+            messageId = 100,
+            limit = 10,
+            serverMessages = serverMessages,
+            syncStartTime = syncStartTime
+        )
+
+        // Assert - Should delete old missing messages (50), but keep new ones (150)
+        val remainingIds = messageDao.getMessagesIds(channelId)
+        Log.d("Test", "Remaining after size < limit with syncStartTime: $remainingIds")
+        assertThat(remainingIds).containsExactly(100L, 150L, 200L)
+        assertThat(remainingIds).doesNotContain(50L)  // Deleted (old, not in server)
+        assertThat(remainingIds).contains(100L)       // Kept (in server)
+        assertThat(remainingIds).contains(150L)       // Kept (new, even though not in server)
+        assertThat(remainingIds).contains(200L)       // Kept (in server)
+    }
+
+    @Test
+    fun loadNear_topReachedEnd_withSyncStartTime_shouldNotDeleteNewMessages() = runTest {
+        // Arrange - Reached end in top direction, with new messages
+        val syncStartTime = 1000L
+        insertMessages(
+            createMessageEntity(tid = 50, id = 50, createdAt = 500),    // Old, before returned range - should delete
+            createMessageEntity(tid = 75, id = 75, createdAt = 1100),   // New, before returned range - should NOT delete
+            createMessageEntity(tid = 100, id = 100, createdAt = 100),  // In range (top)
+            createMessageEntity(tid = 110, id = 110, createdAt = 110),  // In range (bottom)
+            createMessageEntity(tid = 120, id = 120, createdAt = 120)   // In range (bottom)
+        )
+
+        val serverMessages = listOf(
+            createSceytMessage(id = 100),  // Top message (messageId)
+            createSceytMessage(id = 110),
+            createSceytMessage(id = 120)
+        )
+
+        // Act - Top count=1 < normalCountTop=2 (limit=5), so reached end in top direction
+        useCase(
+            channelId = channelId,
+            messageId = 100,
+            limit = 5,
+            serverMessages = serverMessages,
+            syncStartTime = syncStartTime
+        )
+
+        // Assert - Should delete old messages before 100, but keep new ones
+        val remainingIds = messageDao.getMessagesIds(channelId)
+        Log.d("Test", "Remaining after top reached end with syncStartTime: $remainingIds")
+        assertThat(remainingIds).containsExactly(75L, 100L, 110L, 120L)
+        assertThat(remainingIds).doesNotContain(50L)  // Deleted (old, before range)
+        assertThat(remainingIds).contains(75L)        // Kept (new, even though before returned range)
+    }
+
+    @Test
+    fun loadNear_bottomReachedEnd_withSyncStartTime_shouldNotDeleteNewMessages() = runTest {
+        // Arrange - Reached end in bottom direction, with new messages
+        val syncStartTime = 1000L
+        insertMessages(
+            createMessageEntity(tid = 90, id = 90, createdAt = 90),     // In range (top)
+            createMessageEntity(tid = 100, id = 100, createdAt = 100),  // In range (messageId)
+            createMessageEntity(tid = 110, id = 110, createdAt = 110),  // In range (bottom)
+            createMessageEntity(tid = 200, id = 200, createdAt = 900),  // Old, after returned range - should delete
+            createMessageEntity(tid = 300, id = 300, createdAt = 1100)  // New, after returned range - should NOT delete
+        )
+
+        val serverMessages = listOf(
+            createSceytMessage(id = 90),
+            createSceytMessage(id = 100),  // messageId
+            createSceytMessage(id = 110)   // Bottom message
+        )
+
+        // Act - Bottom count=1 < normalCountBottom=2 (limit=5), so reached end in bottom direction
+        useCase(
+            channelId = channelId,
+            messageId = 100,
+            limit = 5,
+            serverMessages = serverMessages,
+            syncStartTime = syncStartTime
+        )
+
+        // Assert - Should delete old messages after 110, but keep new ones
+        val remainingIds = messageDao.getMessagesIds(channelId)
+        Log.d("Test", "Remaining after bottom reached end with syncStartTime: $remainingIds")
+        assertThat(remainingIds).containsExactly(90L, 100L, 110L, 300L)
+        assertThat(remainingIds).doesNotContain(200L) // Deleted (old, after range)
+        assertThat(remainingIds).contains(300L)       // Kept (new, even though after returned range)
+    }
+
+    @Test
+    fun loadNear_noTopMessages_withSyncStartTime_shouldRespectTimeBoundary() = runTest {
+        // Arrange - No top messages found, with new messages before bottom range
+        val syncStartTime = 1000L
+        insertMessages(
+            createMessageEntity(tid = 50, id = 50, createdAt = 500),    // Old, before returned - should delete
+            createMessageEntity(tid = 75, id = 75, createdAt = 1100),   // New, before returned - should NOT delete
+            createMessageEntity(tid = 100, id = 100, createdAt = 100),  // Returned (bottom)
+            createMessageEntity(tid = 110, id = 110, createdAt = 110)   // Returned (bottom)
+        )
+
+        val serverMessages = listOf(
+            createSceytMessage(id = 100),
+            createSceytMessage(id = 110)
+        )
+
+        // Act - No top messages (all returned > messageId=100)
+        useCase(
+            channelId = channelId,
+            messageId = 100,
+            limit = 30,
+            serverMessages = serverMessages,
+            syncStartTime = syncStartTime
+        )
+
+        // Assert
+        val remainingIds = messageDao.getMessagesIds(channelId)
+        assertThat(remainingIds).containsExactly(75L, 100L, 110L)
+        assertThat(remainingIds).doesNotContain(50L) // Deleted (old)
+        assertThat(remainingIds).contains(75L)       // Kept (new)
+    }
+
+    @Test
+    fun loadNear_noBottomMessages_withSyncStartTime_shouldRespectTimeBoundary() = runTest {
+        // Arrange - No bottom messages found, with new messages after top range
+        val syncStartTime = 1000L
+        insertMessages(
+            createMessageEntity(tid = 90, id = 90, createdAt = 90),     // Returned (top)
+            createMessageEntity(tid = 100, id = 100, createdAt = 100),  // Returned (top)
+            createMessageEntity(tid = 200, id = 200, createdAt = 900),  // Old, after returned - should delete
+            createMessageEntity(tid = 300, id = 300, createdAt = 1100)  // New, after returned - should NOT delete
+        )
+
+        val serverMessages = listOf(
+            createSceytMessage(id = 90),
+            createSceytMessage(id = 100)
+        )
+
+        // Act - No bottom messages (all returned <= messageId=100)
+        useCase(
+            channelId = channelId,
+            messageId = 100,
+            limit = 30,
+            serverMessages = serverMessages,
+            syncStartTime = syncStartTime
+        )
+
+        // Assert
+        val remainingIds = messageDao.getMessagesIds(channelId)
+        assertThat(remainingIds).containsExactly(90L, 100L, 300L)
+        assertThat(remainingIds).doesNotContain(200L) // Deleted (old)
+        assertThat(remainingIds).contains(300L)       // Kept (new)
+    }
+
+    @Test
+    fun loadNear_withinRange_withSyncStartTime_shouldRespectTimeBoundary() = runTest {
+        // Arrange - Within range deletions DO use syncStartTime
+        // Even gap detection within LoadNear should preserve new messages
+        val syncStartTime = 1000L
+        insertMessages(
+            createMessageEntity(tid = 100, id = 100, createdAt = 100),   // Returned
+            createMessageEntity(tid = 125, id = 125, createdAt = 1100),  // Gap, NEW - should KEEP
+            createMessageEntity(tid = 150, id = 150, createdAt = 900),   // Gap, OLD - should DELETE
+            createMessageEntity(tid = 200, id = 200, createdAt = 200)    // Returned
+        )
+
+        val serverMessages = listOf(
+            createSceytMessage(id = 100),
+            createSceytMessage(id = 200)
+        )
+
+        // Act - Normal LoadNear, size == limit (no "reached end")
+        useCase(
+            channelId = channelId,
+            messageId = 150,
+            limit = 2,
+            serverMessages = serverMessages,
+            syncStartTime = syncStartTime
+        )
+
+        // Assert - Within-range check respects syncStartTime
+        // 150 deleted (old), 125 kept (new)
+        val remainingIds = messageDao.getMessagesIds(channelId)
+        assertThat(remainingIds).containsExactly(100L, 125L, 200L)
+        assertThat(remainingIds).contains(125L)       // Kept (new, created after syncStartTime)
+        assertThat(remainingIds).doesNotContain(150L) // Deleted (old, created before syncStartTime)
+    }
+
+    @Test
+    fun loadNear_complexScenario_withSyncStartTime_shouldHandleAllCases() = runTest {
+        // Arrange - Complex scenario combining multiple deletion types
+        val syncStartTime = 1000L
+        insertMessages(
+            createMessageEntity(tid = 10, id = 10, createdAt = 500),    // Old, before returned range - DELETE
+            createMessageEntity(tid = 20, id = 20, createdAt = 1100),   // New, before returned range - KEEP
+            createMessageEntity(tid = 100, id = 100, createdAt = 100),  // In range, returned - KEEP
+            createMessageEntity(tid = 125, id = 125, createdAt = 900),  // In range, missing - DELETE
+            createMessageEntity(tid = 150, id = 150, createdAt = 1200), // In range, missing - DELETE (within range)
+            createMessageEntity(tid = 200, id = 200, createdAt = 200),  // In range, returned - KEEP
+            createMessageEntity(tid = 300, id = 300, createdAt = 800),  // Old, after returned range - DELETE
+            createMessageEntity(tid = 400, id = 400, createdAt = 1300)  // New, after returned range - KEEP
+        )
+
+        val serverMessages = listOf(
+            createSceytMessage(id = 100),  // Top
+            createSceytMessage(id = 200)   // Bottom
+        )
+
+        // Act - size=2 < limit=10, complete list
+        useCase(
+            channelId = channelId,
+            messageId = 150,
+            limit = 10,
+            serverMessages = serverMessages,
+            syncStartTime = syncStartTime
+        )
+
+        // Assert
+        val remainingIds = messageDao.getMessagesIds(channelId)
+        Log.d("Test", "Remaining after complex scenario: $remainingIds")
+        assertThat(remainingIds).containsExactly(20L, 100L, 150L, 200L, 400L)
+        assertThat(remainingIds).doesNotContain(10L)  // Deleted (old, not in complete list)
+        assertThat(remainingIds).contains(20L)        // Kept (new, even though not in server)
+        assertThat(remainingIds).contains(100L)       // Kept (in server)
+        assertThat(remainingIds).doesNotContain(125L) // Deleted (old, not in complete list)
+        assertThat(remainingIds).contains(150L)       // Kept (new, even though not in server)
+        assertThat(remainingIds).contains(200L)       // Kept (in server)
+        assertThat(remainingIds).doesNotContain(300L) // Deleted (old, not in complete list)
+        assertThat(remainingIds).contains(400L)       // Kept (new, even though not in server)
+    }
+
+    @Test
+    fun loadNear_boundaryTimestamp_shouldKeepMessagesAtOrAfterSyncStartTime() = runTest {
+        // Arrange - Test boundary condition: messages at exact syncStartTime
+        val syncStartTime = 1000L
+        insertMessages(
+            createMessageEntity(tid = 50, id = 50, createdAt = 999),    // Before - DELETE
+            createMessageEntity(tid = 75, id = 75, createdAt = 1000),   // AT boundary - KEEP (>= not >)
+            createMessageEntity(tid = 100, id = 100, createdAt = 1001), // After - KEEP
+            createMessageEntity(tid = 200, id = 200, createdAt = 200)   // Returned
+        )
+
+        val serverMessages = listOf(
+            createSceytMessage(id = 200)
+        )
+
+        // Act - size=1 < limit=10 (complete list)
+        useCase(
+            channelId = channelId,
+            messageId = 100,
+            limit = 10,
+            serverMessages = serverMessages,
+            syncStartTime = syncStartTime
+        )
+
+        // Assert - Messages with createdAt < syncStartTime deleted, >= syncStartTime kept
+        // Condition is `createdAt < syncStartTime`, so message at exactly 1000 is KEPT
+        val remainingIds = messageDao.getMessagesIds(channelId)
+        assertThat(remainingIds).containsExactly(75L, 100L, 200L)
+        assertThat(remainingIds).doesNotContain(50L)  // Deleted (createdAt=999 < syncStartTime=1000)
+        assertThat(remainingIds).contains(75L)        // Kept (createdAt=1000 >= syncStartTime=1000)
+        assertThat(remainingIds).contains(100L)       // Kept (createdAt=1001 > syncStartTime=1000)
+    }
+
     // ========== Helper Methods ==========
 
     private fun createMessageEntity(
         tid: Long,
         id: Long,
         channelId: Long = this.channelId,
-        deliveryStatus: MessageDeliveryStatus = MessageDeliveryStatus.Sent
+        deliveryStatus: MessageDeliveryStatus = MessageDeliveryStatus.Sent,
+        createdAt: Long = id
     ): MessageEntity {
         return MessageEntity(
             tid = tid,
@@ -642,7 +972,7 @@ class CheckDeletedNearMessagesUseCaseTest {
             body = "Test message $id",
             type = "text",
             bodyAttribute = null,
-            createdAt = id,
+            createdAt = createdAt,
             incoming = false,
             isTransient = false,
             silent = false,

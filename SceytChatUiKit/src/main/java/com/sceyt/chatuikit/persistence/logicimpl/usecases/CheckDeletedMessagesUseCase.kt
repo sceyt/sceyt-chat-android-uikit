@@ -3,6 +3,9 @@ package com.sceyt.chatuikit.persistence.logicimpl.usecases
 import android.util.Log
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNear
+import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNewest
+import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNext
+import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadPrev
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.persistence.logicimpl.message.ChannelId
 import kotlin.math.max
@@ -30,7 +33,8 @@ internal class CheckDeletedMessagesUseCase(
         loadType: LoadType,
         messageId: Long,
         limit: Int,
-        serverMessages: List<SceytMessage>
+        serverMessages: List<SceytMessage>,
+        syncStartTime: Long
     ) {
         val serverIds = serverMessages.map { it.id }.sorted()
 
@@ -40,7 +44,8 @@ internal class CheckDeletedMessagesUseCase(
                 channelId = channelId,
                 messageId = messageId,
                 limit = limit,
-                serverMessages = serverMessages
+                serverMessages = serverMessages,
+                syncStartTime = syncStartTime
             )
             return
         }
@@ -55,7 +60,8 @@ internal class CheckDeletedMessagesUseCase(
                 loadType = loadType,
                 channelId = channelId,
                 messageId = messageId,
-                includeMessage = true
+                includeMessage = true,
+                syncStartTime = syncStartTime
             )
             return
         }
@@ -70,7 +76,8 @@ internal class CheckDeletedMessagesUseCase(
                 loadType = loadType,
                 channelId = channelId,
                 messageId = messageId,
-                includeMessage = false
+                includeMessage = false,
+                syncStartTime = syncStartTime
             )
             return
         }
@@ -81,7 +88,7 @@ internal class CheckDeletedMessagesUseCase(
         // Case 3: Calculate smart range boundaries using min/max
         // This elegantly handles gap detection + beyond-range deletion in one range
         val startId = when (loadType) {
-            LoadType.LoadPrev -> {
+            LoadPrev -> {
                 // Loading older messages before messageId
                 if (reachedEnd) {
                     // Reached beginning, check from 0 to catch all old messages
@@ -92,23 +99,34 @@ internal class CheckDeletedMessagesUseCase(
                 }
             }
 
-            else -> {
-                // LoadNext/LoadNewest: Loading newer messages after messageId
-                // min() includes gap: if server returns [150-170] and messageId=100, checks from 100
-                val start = min(messageId, serverIds.first())
-                start
+            LoadNext, LoadNewest -> {
+                // LoadNext/LoadNewest: Loading newer messages AFTER messageId
+                // Server excludes messageId from response, so we check from messageId+1
+                // min() includes gap: if server returns [150-170] and messageId=100, checks from 101
+                // Special case: LoadNewest uses MAX_VALUE, avoid overflow
+                if (messageId == Long.MAX_VALUE) {
+                    serverIds.first()
+                } else {
+                    min(messageId + 1, serverIds.first())
+                }
+            }
+
+            LoadNear -> {
+                // Handled above, but required for when expression completeness
+                Log.e(tag, "LoadNear should not reach here")
+                return
             }
         }
 
         val endId = when (loadType) {
-            LoadType.LoadPrev -> {
-                // Loading older messages before messageId
-                // max() includes gap: if server returns [30-50] and messageId=1000, checks until 1000
-                val end = max(messageId, serverIds.last())
-                end
+            LoadPrev -> {
+                // Loading older messages BEFORE messageId
+                // Server excludes messageId from response, so we check until messageId-1
+                // max() includes gap: if server returns [30-50] and messageId=100, checks until 99
+                max(messageId - 1, serverIds.last())
             }
 
-            else -> {
+            LoadNext, LoadNewest -> {
                 // LoadNext/LoadNewest: Loading newer messages after messageId
                 if (reachedEnd) {
                     // Reached end, check until MAX_VALUE to catch all new messages
@@ -117,6 +135,12 @@ internal class CheckDeletedMessagesUseCase(
                     // Not at end yet, just check returned range
                     serverIds.last()
                 }
+            }
+
+            LoadNear -> {
+                // Handled above, but required for when expression completeness
+                Log.e(tag, "LoadNear should not reach here")
+                return
             }
         }
 
@@ -132,7 +156,7 @@ internal class CheckDeletedMessagesUseCase(
         )
 
         // Case 4: Check for deletions within the calculated range
-        handleMessagesInRange(channelId, startId, endId, serverIds)
+        handleMessagesInRange(channelId, startId, endId, serverIds, syncStartTime)
     }
 }
 

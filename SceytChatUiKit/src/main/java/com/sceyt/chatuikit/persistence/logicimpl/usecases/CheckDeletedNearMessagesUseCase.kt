@@ -36,7 +36,8 @@ internal class CheckDeletedNearMessagesUseCase(
         channelId: ChannelId,
         messageId: Long,
         limit: Int,
-        serverMessages: List<SceytMessage>
+        serverMessages: List<SceytMessage>,
+        syncStartTime: Long
     ) {
         // Case 1: Empty response means server has no messages at all
         // Delete ALL messages in the channel (except pending)
@@ -45,9 +46,13 @@ internal class CheckDeletedNearMessagesUseCase(
                 tag,
                 "LoadNear: Empty server response, deleting ALL messages in channel (except pending)"
             )
-            messageDao.deleteAllMessagesByChannelIgnorePending(channelId)
+            messageDao.deleteAllMessagesByChannelIgnorePending(
+                channelId = channelId,
+                deleteUntil = syncStartTime
+            )
             messagesCache.forceDeleteAllMessagesWhere { message ->
-                message.channelId == channelId && message.isNotPending()
+                message.channelId == channelId && message.isNotPending() &&
+                        (syncStartTime == 0L || message.createdAt < syncStartTime)
             }
             return
         }
@@ -62,11 +67,20 @@ internal class CheckDeletedNearMessagesUseCase(
                 tag,
                 "LoadNear: Server returned ${serverIds.size} < limit $limit, treating as complete message list, deleting all not in response"
             )
-            messageDao.deleteNotContainsMessagesIgnorePending(channelId, serverIds)
+            val count = messageDao.deleteNotContainsMessagesIgnorePending(
+                channelId = channelId,
+                messageIds = serverIds,
+                deleteUntil = syncStartTime
+            )
             messagesCache.forceDeleteAllMessagesWhere { message ->
                 message.channelId == channelId && !serverIds.contains(message.id) &&
-                        message.isNotPending()
+                        message.isNotPending() &&
+                        (syncStartTime == 0L || message.createdAt < syncStartTime)
             }
+            Log.i(
+                tag,
+                "LoadNear: Deleted $count messages from DB as they do not exist on server (syncStartTime: $syncStartTime)"
+            )
             return
         }
 
@@ -86,7 +100,13 @@ internal class CheckDeletedNearMessagesUseCase(
                 "LoadNear: No top messages found (topNearIds is empty), deleting all messages before ${bottomNearIds.first()}"
             )
             val deleteFromId = bottomNearIds.first()
-            deleteByLoadType(LoadPrev, channelId, deleteFromId, includeMessage = false)
+            deleteByLoadType(
+                loadType = LoadPrev,
+                channelId = channelId,
+                messageId = deleteFromId,
+                includeMessage = false,
+                syncStartTime = syncStartTime
+            )
         }
 
         // Case 3b: No bottom messages found
@@ -97,7 +117,13 @@ internal class CheckDeletedNearMessagesUseCase(
                 "LoadNear: No bottom messages found (bottomNearIds is empty), deleting all messages after ${topNearIds.last()}"
             )
             val deleteFromId = topNearIds.last()
-            deleteByLoadType(LoadNext, channelId, deleteFromId, includeMessage = false)
+            deleteByLoadType(
+                loadType = LoadNext,
+                channelId = channelId,
+                messageId = deleteFromId,
+                includeMessage = false,
+                syncStartTime = syncStartTime
+            )
         }
 
         // Case 3c: Fewer top messages than expected (reached end in top/prev direction)
@@ -110,7 +136,13 @@ internal class CheckDeletedNearMessagesUseCase(
                     "LoadNear: Top count ${topNearIds.size} < normalCountTop $normalCountTop, reached end in top direction"
                 )
                 val deleteFromId = topNearIds.first()
-                deleteByLoadType(LoadPrev, channelId, deleteFromId, includeMessage = true)
+                deleteByLoadType(
+                    loadType = LoadPrev,
+                    channelId = channelId,
+                    messageId = deleteFromId,
+                    includeMessage = false,
+                    syncStartTime = syncStartTime
+                )
             } else {
                 // messageId not in top results, will be handled by handleMessagesInRange below
             }
@@ -126,7 +158,13 @@ internal class CheckDeletedNearMessagesUseCase(
                     "LoadNear: Bottom count ${bottomNearIds.size} < normalCountBottom $normalCountBottom, reached end in bottom direction"
                 )
                 val deleteFromId = bottomNearIds.last()
-                deleteByLoadType(LoadNext, channelId, deleteFromId, includeMessage = true)
+                deleteByLoadType(
+                    loadType = LoadNext,
+                    channelId = channelId,
+                    messageId = deleteFromId,
+                    includeMessage = false,
+                    syncStartTime = syncStartTime
+                )
             } else {
                 // messageId not in bottom results, will be handled by handleMessagesInRange below
             }
@@ -142,7 +180,8 @@ internal class CheckDeletedNearMessagesUseCase(
             channelId = channelId,
             startId = serverIds.first(),
             endId = serverIds.last(),
-            serverIds = serverIds
+            serverIds = serverIds,
+            syncStartTime = syncStartTime
         )
     }
 }
