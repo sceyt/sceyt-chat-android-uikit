@@ -49,6 +49,7 @@ import com.sceyt.chatuikit.persistence.extensions.isPublic
 import com.sceyt.chatuikit.persistence.extensions.safeResume
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferHelper
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
+import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelUpdatedType
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
 import com.sceyt.chatuikit.presentation.components.channel.messages.MessagesListView
@@ -378,6 +379,13 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         .onEach {
             messagesListView.context.asActivity().finish()
         }.launchIn(lifecycleOwner.lifecycleScope)
+
+    ChannelsCache.channelUpdatedFlow
+        .filter { it.channel.id == channel.id && it.eventType == ChannelUpdatedType.ClearedHistory }
+        .onEach {
+            messagesListView.clearData()
+        }
+        .launchIn(lifecycleOwner.lifecycleScope)
 
     SceytSyncManager.syncChannelMessagesFinished
         .filter { it.first.id == channel.id }
