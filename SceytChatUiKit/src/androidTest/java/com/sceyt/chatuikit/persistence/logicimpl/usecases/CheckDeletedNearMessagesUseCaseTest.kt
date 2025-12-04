@@ -956,6 +956,579 @@ class CheckDeletedNearMessagesUseCaseTest {
         assertThat(remainingIds).contains(100L)       // Kept (createdAt=1001 > syncStartTime=1000)
     }
 
+    // ========== Case 3c/3d: Reached End with Partial Results Tests ==========
+
+    @Test
+    fun loadNear_reachedTopEnd_withMessageIdInTop_shouldDeleteAllBeforeFirst() = runTest {
+        // Arrange - LoadNear from 100, limit=10 (expect 5 top, 5 bottom)
+        // Server returns only 3 top messages (including messageId) and 5 bottom → reached top end
+        insertMessages(
+            createMessageEntity(tid = 10, id = 10),   // Should be DELETED (before first returned)
+            createMessageEntity(tid = 20, id = 20),   // Should be DELETED (before first returned)
+            createMessageEntity(tid = 90, id = 90),   // Returned (first)
+            createMessageEntity(tid = 95, id = 95),   // Returned
+            createMessageEntity(tid = 100, id = 100), // Returned (messageId, in top)
+            createMessageEntity(tid = 110, id = 110), // Returned
+            createMessageEntity(tid = 120, id = 120), // Returned
+            createMessageEntity(tid = 130, id = 130), // Returned
+            createMessageEntity(tid = 140, id = 140), // Returned
+            createMessageEntity(tid = 150, id = 150)  // Returned (last)
+        )
+
+        val serverMessages = listOf(
+            createSceytMessage(id = 90),
+            createSceytMessage(id = 95),
+            createSceytMessage(id = 100),
+            createSceytMessage(id = 110),
+            createSceytMessage(id = 120),
+            createSceytMessage(id = 130),
+            createSceytMessage(id = 140),
+            createSceytMessage(id = 150)
+        )
+
+        // Act - topNearIds.size=3 < normalCountTop=5, messageId exists in top
+        useCase(
+            channelId = channelId,
+            messageId = 100,
+            limit = 10,
+            serverMessages = serverMessages,
+            syncStartTime = 0L
+        )
+
+        // Assert - Messages before first (90) should be deleted, but NOT first itself
+        // NOTE: includeMessage=false means topNearIds.first() (90) is kept
+        val remainingIds = messageDao.getMessagesIds(channelId)
+        assertThat(remainingIds).containsExactly(90L, 95L, 100L, 110L, 120L, 130L, 140L, 150L)
+        assertThat(remainingIds).doesNotContain(10L)  // Deleted (before reached end)
+        assertThat(remainingIds).doesNotContain(20L)  // Deleted (before reached end)
+        assertThat(remainingIds).contains(90L)        // Kept (includeMessage=false)
+    }
+
+    @Test
+    fun loadNear_reachedBottomEnd_withMessageIdInBottom_shouldDeleteAllAfterLast() = runTest {
+        // Arrange - LoadNear from 100, limit=10 (expect 5 top, 5 bottom)
+        // Server returns 5 top and only 3 bottom messages (including messageId) → reached bottom end
+        insertMessages(
+            createMessageEntity(tid = 50, id = 50),   // Returned (first)
+            createMessageEntity(tid = 60, id = 60),   // Returned
+            createMessageEntity(tid = 70, id = 70),   // Returned
+            createMessageEntity(tid = 80, id = 80),   // Returned
+            createMessageEntity(tid = 90, id = 90),   // Returned
+            createMessageEntity(tid = 100, id = 100), // Returned (messageId, in bottom)
+            createMessageEntity(tid = 110, id = 110), // Returned
+            createMessageEntity(tid = 120, id = 120), // Returned (last)
+            createMessageEntity(tid = 200, id = 200), // Should be DELETED (after last returned)
+            createMessageEntity(tid = 300, id = 300)  // Should be DELETED (after last returned)
+        )
+
+        val serverMessages = listOf(
+            createSceytMessage(id = 50),
+            createSceytMessage(id = 60),
+            createSceytMessage(id = 70),
+            createSceytMessage(id = 80),
+            createSceytMessage(id = 90),
+            createSceytMessage(id = 100),
+            createSceytMessage(id = 110),
+            createSceytMessage(id = 120)
+        )
+
+        // Act - bottomNearIds.size=3 < normalCountBottom=5, messageId exists in bottom
+        useCase(
+            channelId = channelId,
+            messageId = 100,
+            limit = 10,
+            serverMessages = serverMessages,
+            syncStartTime = 0L
+        )
+
+        // Assert - Messages after last (120) should be deleted, but NOT last itself
+        // NOTE: includeMessage=false means bottomNearIds.last() (120) is kept
+        val remainingIds = messageDao.getMessagesIds(channelId)
+        assertThat(remainingIds).containsExactly(50L, 60L, 70L, 80L, 90L, 100L, 110L, 120L)
+        assertThat(remainingIds).contains(120L)        // Kept (includeMessage=false)
+        assertThat(remainingIds).doesNotContain(200L)  // Deleted (after reached end)
+        assertThat(remainingIds).doesNotContain(300L)  // Deleted (after reached end)
+    }
+
+    @Test
+    fun loadNear_partialTop_withoutMessageId_shouldNotDeleteDirectionally() = runTest {
+        // Arrange - LoadNear from 100, but messageId NOT in top results
+        // This indicates a gap around messageId, not "reached end"
+        // IMPORTANT: Must return exactly limit messages to avoid Case 2 (complete list)
+        insertMessages(
+            createMessageEntity(tid = 10, id = 10),   // Outside range - KEPT
+            createMessageEntity(tid = 20, id = 20),   // Outside range - KEPT
+            createMessageEntity(tid = 90, id = 90),   // Returned (first)
+            createMessageEntity(tid = 95, id = 95),   // Returned
+            createMessageEntity(tid = 97, id = 97),   // Returned (last top, but messageId=100 missing)
+            // messageId=100 doesn't exist on server (gap)
+            createMessageEntity(tid = 110, id = 110), // Returned
+            createMessageEntity(tid = 120, id = 120), // Returned
+            createMessageEntity(tid = 130, id = 130), // Returned
+            createMessageEntity(tid = 140, id = 140), // Returned
+            createMessageEntity(tid = 145, id = 145), // Returned
+            createMessageEntity(tid = 150, id = 150), // Returned
+            createMessageEntity(tid = 155, id = 155)  // Returned (last, exactly 10 messages)
+        )
+
+        val serverMessages = listOf(
+            createSceytMessage(id = 90),
+            createSceytMessage(id = 95),
+            createSceytMessage(id = 97),
+            createSceytMessage(id = 110),
+            createSceytMessage(id = 120),
+            createSceytMessage(id = 130),
+            createSceytMessage(id = 140),
+            createSceytMessage(id = 145),
+            createSceytMessage(id = 150),
+            createSceytMessage(id = 155)
+        )
+
+        // Act - size=10 == limit=10 (Case 3), topNearIds.size=3 < normalCountTop=5, but messageId NOT in top
+        useCase(
+            channelId = channelId,
+            messageId = 100,
+            limit = 10,
+            serverMessages = serverMessages,
+            syncStartTime = 0L
+        )
+
+        // Assert - Should NOT delete before 90 (not reached end, just a gap)
+        // Messages 10, 20 are outside range [90, 155] so they're kept
+        val remainingIds = messageDao.getMessagesIds(channelId)
+        assertThat(remainingIds).containsExactly(10L, 20L, 90L, 95L, 97L, 110L, 120L, 130L, 140L, 145L, 150L, 155L)
+        assertThat(remainingIds).contains(10L)  // Kept (outside range, not reached end)
+        assertThat(remainingIds).contains(20L)  // Kept (outside range, not reached end)
+    }
+
+    @Test
+    fun loadNear_partialBottom_withoutMessageId_shouldNotDeleteDirectionally() = runTest {
+        // Arrange - LoadNear from 100, but messageId NOT in bottom results
+        // This indicates a gap around messageId, not "reached end"
+        // IMPORTANT: Must return exactly limit messages to avoid Case 2 (complete list)
+        insertMessages(
+            createMessageEntity(tid = 45, id = 45),   // Returned (first)
+            createMessageEntity(tid = 50, id = 50),   // Returned
+            createMessageEntity(tid = 60, id = 60),   // Returned
+            createMessageEntity(tid = 70, id = 70),   // Returned
+            createMessageEntity(tid = 80, id = 80),   // Returned
+            createMessageEntity(tid = 90, id = 90),   // Returned
+            createMessageEntity(tid = 95, id = 95),   // Returned (last top, messageId=100 missing)
+            // messageId=100 doesn't exist on server (gap)
+            createMessageEntity(tid = 110, id = 110), // Returned (first bottom, but messageId=100 missing)
+            createMessageEntity(tid = 115, id = 115), // Returned
+            createMessageEntity(tid = 120, id = 120), // Returned (last, exactly 10 messages)
+            createMessageEntity(tid = 200, id = 200), // Outside range - KEPT
+            createMessageEntity(tid = 300, id = 300)  // Outside range - KEPT
+        )
+
+        val serverMessages = listOf(
+            createSceytMessage(id = 45),
+            createSceytMessage(id = 50),
+            createSceytMessage(id = 60),
+            createSceytMessage(id = 70),
+            createSceytMessage(id = 80),
+            createSceytMessage(id = 90),
+            createSceytMessage(id = 95),
+            createSceytMessage(id = 110),
+            createSceytMessage(id = 115),
+            createSceytMessage(id = 120)
+        )
+
+        // Act - size=10 == limit=10 (Case 3), bottomNearIds.size=3 < normalCountBottom=5, but messageId NOT in bottom
+        useCase(
+            channelId = channelId,
+            messageId = 100,
+            limit = 10,
+            serverMessages = serverMessages,
+            syncStartTime = 0L
+        )
+
+        // Assert - Should NOT delete after 120 (not reached end, just a gap)
+        // Messages 200, 300 are outside range [45, 120] so they're kept
+        val remainingIds = messageDao.getMessagesIds(channelId)
+        assertThat(remainingIds).containsExactly(45L, 50L, 60L, 70L, 80L, 90L, 95L, 110L, 115L, 120L, 200L, 300L)
+        assertThat(remainingIds).contains(200L)  // Kept (outside range, not reached end)
+        assertThat(remainingIds).contains(300L)  // Kept (outside range, not reached end)
+    }
+
+    @Test
+    fun loadNear_reachedTopEnd_withSyncStartTime_shouldRespectTimeBoundary() = runTest {
+        // Arrange - Reached top end, but some old messages before first
+        val syncStartTime = 1000L
+        insertMessages(
+            createMessageEntity(tid = 10, id = 10, createdAt = 900),   // OLD - should DELETE
+            createMessageEntity(tid = 20, id = 20, createdAt = 1100),  // NEW - should KEEP
+            createMessageEntity(tid = 90, id = 90, createdAt = 100),   // Returned (first)
+            createMessageEntity(tid = 95, id = 95, createdAt = 200),   // Returned
+            createMessageEntity(tid = 100, id = 100, createdAt = 300), // Returned (messageId, in top)
+            createMessageEntity(tid = 110, id = 110, createdAt = 400), // Returned
+            createMessageEntity(tid = 120, id = 120, createdAt = 500)  // Returned
+        )
+
+        val serverMessages = listOf(
+            createSceytMessage(id = 90),
+            createSceytMessage(id = 95),
+            createSceytMessage(id = 100),
+            createSceytMessage(id = 110),
+            createSceytMessage(id = 120)
+        )
+
+        // Act - topNearIds.size=3 < normalCountTop=5, reached top end
+        useCase(
+            channelId = channelId,
+            messageId = 100,
+            limit = 10,
+            serverMessages = serverMessages,
+            syncStartTime = syncStartTime
+        )
+
+        // Assert - Old messages before first should be deleted, but NOT first itself
+        // NOTE: includeMessage=false means topNearIds.first() (90) is kept
+        val remainingIds = messageDao.getMessagesIds(channelId)
+        assertThat(remainingIds).containsExactly(20L, 90L, 95L, 100L, 110L, 120L)
+        assertThat(remainingIds).doesNotContain(10L)  // Deleted (old, before syncStartTime)
+        assertThat(remainingIds).contains(90L)        // Kept (includeMessage=false, in server response)
+        assertThat(remainingIds).contains(20L)        // Kept (new, after syncStartTime)
+    }
+
+    @Test
+    fun loadNear_reachedBottomEnd_withSyncStartTime_shouldRespectTimeBoundary() = runTest {
+        // Arrange - Reached bottom end, but some new messages after last
+        val syncStartTime = 1000L
+        insertMessages(
+            createMessageEntity(tid = 50, id = 50, createdAt = 100),   // Returned
+            createMessageEntity(tid = 60, id = 60, createdAt = 200),   // Returned
+            createMessageEntity(tid = 90, id = 90, createdAt = 300),   // Returned
+            createMessageEntity(tid = 100, id = 100, createdAt = 400), // Returned (messageId, in bottom)
+            createMessageEntity(tid = 110, id = 110, createdAt = 500), // Returned
+            createMessageEntity(tid = 120, id = 120, createdAt = 600), // Returned (last)
+            createMessageEntity(tid = 200, id = 200, createdAt = 900), // OLD - should DELETE
+            createMessageEntity(tid = 300, id = 300, createdAt = 1100) // NEW - should KEEP
+        )
+
+        val serverMessages = listOf(
+            createSceytMessage(id = 50),
+            createSceytMessage(id = 60),
+            createSceytMessage(id = 90),
+            createSceytMessage(id = 100),
+            createSceytMessage(id = 110),
+            createSceytMessage(id = 120)
+        )
+
+        // Act - bottomNearIds.size=3 < normalCountBottom=5, reached bottom end
+        useCase(
+            channelId = channelId,
+            messageId = 100,
+            limit = 10,
+            serverMessages = serverMessages,
+            syncStartTime = syncStartTime
+        )
+
+        // Assert - Old messages after last should be deleted, but NOT last itself
+        // NOTE: includeMessage=false means bottomNearIds.last() (120) is kept
+        val remainingIds = messageDao.getMessagesIds(channelId)
+        assertThat(remainingIds).containsExactly(50L, 60L, 90L, 100L, 110L, 120L, 300L)
+        assertThat(remainingIds).contains(120L)        // Kept (includeMessage=false, in server response)
+        assertThat(remainingIds).doesNotContain(200L)  // Deleted (old, before syncStartTime)
+        assertThat(remainingIds).contains(300L)        // Kept (new, after syncStartTime)
+    }
+
+    @Test
+    fun loadNear_reachedBothEnds_withMessageIdInBoth_shouldDeleteBothDirections() = runTest {
+        // Arrange - LoadNear from 100, only 2 top and 2 bottom messages returned
+        // messageId exists in top, reached both ends
+        insertMessages(
+            createMessageEntity(tid = 10, id = 10),   // Should be DELETED (before first)
+            createMessageEntity(tid = 95, id = 95),   // Returned (first)
+            createMessageEntity(tid = 100, id = 100), // Returned (messageId, in top)
+            createMessageEntity(tid = 110, id = 110), // Returned
+            createMessageEntity(tid = 120, id = 120), // Returned (last)
+            createMessageEntity(tid = 200, id = 200)  // Should be DELETED (after last)
+        )
+
+        val serverMessages = listOf(
+            createSceytMessage(id = 95),
+            createSceytMessage(id = 100),
+            createSceytMessage(id = 110),
+            createSceytMessage(id = 120)
+        )
+
+        // Act - topNearIds.size=2 < 5, bottomNearIds.size=2 < 5, messageId in top
+        useCase(
+            channelId = channelId,
+            messageId = 100,
+            limit = 10,
+            serverMessages = serverMessages,
+            syncStartTime = 0L
+        )
+
+        // Assert - Messages before first AND after last should be deleted, but NOT boundaries
+        // NOTE: includeMessage=false means both 95 and 120 are kept
+        val remainingIds = messageDao.getMessagesIds(channelId)
+        assertThat(remainingIds).containsExactly(95L, 100L, 110L, 120L)
+        assertThat(remainingIds).doesNotContain(10L)   // Deleted (before reached end)
+        assertThat(remainingIds).contains(95L)         // Kept (includeMessage=false, top boundary)
+        assertThat(remainingIds).contains(120L)        // Kept (includeMessage=false, bottom boundary)
+        assertThat(remainingIds).doesNotContain(200L)  // Deleted (after reached end)
+    }
+
+    @Test
+    fun loadNear_noTopMessages_andPartialBottom_shouldDeleteBothDirections() = runTest {
+        // Arrange - Combination of Case 3a (no top) + Case 3d (partial bottom with messageId)
+        // LoadNear from 100, but all returned messages are > 100
+        // MUST return exactly limit=10 messages to avoid Case 2
+        insertMessages(
+            createMessageEntity(tid = 10, id = 10),   // Should be DELETED (before first)
+            createMessageEntity(tid = 50, id = 50),   // Should be DELETED (before first)
+            createMessageEntity(tid = 90, id = 90),   // Should be DELETED (before first)
+            createMessageEntity(tid = 110, id = 110), // Returned (first, in bottom)
+            createMessageEntity(tid = 115, id = 115), // Returned (in bottom)
+            createMessageEntity(tid = 120, id = 120), // Returned (in bottom)
+            createMessageEntity(tid = 125, id = 125), // Returned
+            createMessageEntity(tid = 130, id = 130), // Returned
+            createMessageEntity(tid = 135, id = 135), // Returned
+            createMessageEntity(tid = 140, id = 140), // Returned
+            createMessageEntity(tid = 145, id = 145), // Returned
+            createMessageEntity(tid = 150, id = 150), // Returned
+            createMessageEntity(tid = 155, id = 155), // Returned (last, exactly 10 messages)
+            createMessageEntity(tid = 200, id = 200), // Outside range - KEPT
+            createMessageEntity(tid = 300, id = 300)  // Outside range - KEPT
+        )
+
+        val serverMessages = listOf(
+            createSceytMessage(id = 110),
+            createSceytMessage(id = 115),
+            createSceytMessage(id = 120),
+            createSceytMessage(id = 125),
+            createSceytMessage(id = 130),
+            createSceytMessage(id = 135),
+            createSceytMessage(id = 140),
+            createSceytMessage(id = 145),
+            createSceytMessage(id = 150),
+            createSceytMessage(id = 155)
+        )
+
+        // Act - size=10 == limit=10 (Case 3), topNearIds.isEmpty() + bottomNearIds.size=10
+        // Case 3a triggers (no top messages), deletes before first
+        useCase(
+            channelId = channelId,
+            messageId = 100,
+            limit = 10,
+            serverMessages = serverMessages,
+            syncStartTime = 0L
+        )
+
+        // Assert - Case 3a triggers (no top messages), deletes before first (110)
+        // includeMessage=false means 110 is kept
+        // Messages 200, 300 are outside range [110, 155] so they're kept
+        val remainingIds = messageDao.getMessagesIds(channelId)
+        assertThat(remainingIds).containsExactly(110L, 115L, 120L, 125L, 130L, 135L, 140L, 145L, 150L, 155L, 200L, 300L)
+        assertThat(remainingIds).doesNotContain(10L)  // Deleted (Case 3a, before 110)
+        assertThat(remainingIds).doesNotContain(50L)  // Deleted (Case 3a, before 110)
+        assertThat(remainingIds).doesNotContain(90L)  // Deleted (Case 3a, before 110)
+        assertThat(remainingIds).contains(110L)       // Kept (includeMessage=false)
+        assertThat(remainingIds).contains(200L)       // Kept (outside range)
+        assertThat(remainingIds).contains(300L)       // Kept (outside range)
+    }
+
+    @Test
+    fun loadNear_partialTop_andNoBottomMessages_shouldDeleteBothDirections() = runTest {
+        // Arrange - Combination of Case 3c (partial top with messageId) + Case 3b (no bottom)
+        // LoadNear from 100, but all returned messages are <= 100
+        insertMessages(
+            createMessageEntity(tid = 10, id = 10),   // Should be DELETED (before first, includeMessage=true)
+            createMessageEntity(tid = 20, id = 20),   // Should be DELETED (before first, includeMessage=true)
+            createMessageEntity(tid = 90, id = 90),   // Returned (first, in top)
+            createMessageEntity(tid = 95, id = 95),   // Returned (in top)
+            createMessageEntity(tid = 100, id = 100), // Returned (last, in top, messageId)
+            createMessageEntity(tid = 150, id = 150), // Should be DELETED (after last)
+            createMessageEntity(tid = 200, id = 200), // Should be DELETED (after last)
+            createMessageEntity(tid = 300, id = 300)  // Should be DELETED (after last)
+        )
+
+        val serverMessages = listOf(
+            createSceytMessage(id = 90),
+            createSceytMessage(id = 95),
+            createSceytMessage(id = 100)
+        )
+
+        // Act - topNearIds.size=3 < normalCountTop=5 (messageId in top) + bottomNearIds.isEmpty()
+        useCase(
+            channelId = channelId,
+            messageId = 100,
+            limit = 10,
+            serverMessages = serverMessages,
+            syncStartTime = 0L
+        )
+
+        // Assert - All before first deleted (Case 3c), all after last deleted (Case 3b)
+        // includeMessage=false means 90 and 100 are kept
+        val remainingIds = messageDao.getMessagesIds(channelId)
+        assertThat(remainingIds).containsExactly(90L, 95L, 100L)
+        assertThat(remainingIds).doesNotContain(10L)   // Deleted (Case 3c, before 90)
+        assertThat(remainingIds).doesNotContain(20L)   // Deleted (Case 3c, before 90)
+        assertThat(remainingIds).contains(90L)         // Kept (includeMessage=false)
+        assertThat(remainingIds).contains(100L)        // Kept (last message, Case 3b deletes after it)
+        assertThat(remainingIds).doesNotContain(150L)  // Deleted (Case 3b, after 100)
+        assertThat(remainingIds).doesNotContain(200L)  // Deleted (Case 3b, after 100)
+        assertThat(remainingIds).doesNotContain(300L)  // Deleted (Case 3b, after 100)
+    }
+
+    @Test
+    fun loadNear_messageIdEqualsFirstReturned_shouldHandleCorrectly() = runTest {
+        // Arrange - Edge case: messageId is the first message in server response
+        insertMessages(
+            createMessageEntity(tid = 10, id = 10),   // Should be DELETED
+            createMessageEntity(tid = 100, id = 100), // Returned (first, messageId)
+            createMessageEntity(tid = 110, id = 110), // Returned
+            createMessageEntity(tid = 120, id = 120), // Returned
+            createMessageEntity(tid = 130, id = 130), // Returned
+            createMessageEntity(tid = 140, id = 140)  // Returned
+        )
+
+        val serverMessages = listOf(
+            createSceytMessage(id = 100),
+            createSceytMessage(id = 110),
+            createSceytMessage(id = 120),
+            createSceytMessage(id = 130),
+            createSceytMessage(id = 140)
+        )
+
+        // Act - topNearIds=[100], bottomNearIds=[110,120,130,140]
+        useCase(
+            channelId = channelId,
+            messageId = 100,
+            limit = 10,
+            serverMessages = serverMessages,
+            syncStartTime = 0L
+        )
+
+        // Assert - Case 3c triggers (topNearIds.size=1 < 5, messageId in top)
+        // includeMessage=false means 100 (first) is kept
+        val remainingIds = messageDao.getMessagesIds(channelId)
+        assertThat(remainingIds).containsExactly(100L, 110L, 120L, 130L, 140L)
+        assertThat(remainingIds).doesNotContain(10L)   // Deleted (Case 3c, before 100)
+        assertThat(remainingIds).contains(100L)        // Kept (includeMessage=false)
+    }
+
+    @Test
+    fun loadNear_messageIdEqualsLastReturned_shouldHandleCorrectly() = runTest {
+        // Arrange - Edge case: messageId is the last message in server response
+        insertMessages(
+            createMessageEntity(tid = 50, id = 50),   // Returned
+            createMessageEntity(tid = 60, id = 60),   // Returned
+            createMessageEntity(tid = 70, id = 70),   // Returned
+            createMessageEntity(tid = 80, id = 80),   // Returned
+            createMessageEntity(tid = 100, id = 100), // Returned (last, messageId)
+            createMessageEntity(tid = 200, id = 200)  // Should be DELETED
+        )
+
+        val serverMessages = listOf(
+            createSceytMessage(id = 50),
+            createSceytMessage(id = 60),
+            createSceytMessage(id = 70),
+            createSceytMessage(id = 80),
+            createSceytMessage(id = 100)
+        )
+
+        // Act - topNearIds=[50,60,70,80,100], bottomNearIds=[]
+        useCase(
+            channelId = channelId,
+            messageId = 100,
+            limit = 10,
+            serverMessages = serverMessages,
+            syncStartTime = 0L
+        )
+
+        // Assert - Case 3b triggers (no bottom messages)
+        val remainingIds = messageDao.getMessagesIds(channelId)
+        assertThat(remainingIds).containsExactly(50L, 60L, 70L, 80L, 100L)
+        assertThat(remainingIds).doesNotContain(200L)  // Deleted (Case 3b)
+    }
+
+    @Test
+    fun loadNear_allMessagesEqualToMessageId_shouldHandleCorrectly() = runTest {
+        // Arrange - Edge case: Only messageId is returned (single message)
+        // This should trigger Case 2 (size < limit) instead of Case 3
+        insertMessages(
+            createMessageEntity(tid = 10, id = 10),   // Should be DELETED
+            createMessageEntity(tid = 100, id = 100), // Returned (only message)
+            createMessageEntity(tid = 200, id = 200)  // Should be DELETED
+        )
+
+        val serverMessages = listOf(
+            createSceytMessage(id = 100)
+        )
+
+        // Act - size=1 < limit=10, triggers Case 2 (complete list)
+        useCase(
+            channelId = channelId,
+            messageId = 100,
+            limit = 10,
+            serverMessages = serverMessages,
+            syncStartTime = 0L
+        )
+
+        // Assert - All messages except 100 deleted (Case 2)
+        val remainingIds = messageDao.getMessagesIds(channelId)
+        assertThat(remainingIds).containsExactly(100L)
+        assertThat(remainingIds).doesNotContain(10L)   // Deleted (Case 2)
+        assertThat(remainingIds).doesNotContain(200L)  // Deleted (Case 2)
+    }
+
+    @Test
+    fun loadNear_topAndBottomBothPartial_messageIdInBoth_shouldDeleteBothDirections() = runTest {
+        // Arrange - Both top and bottom are partial, messageId in top
+        // MUST return exactly limit=10 messages to avoid Case 2
+        insertMessages(
+            createMessageEntity(tid = 10, id = 10),   // Should be DELETED (before first)
+            createMessageEntity(tid = 95, id = 95),   // Returned (first)
+            createMessageEntity(tid = 100, id = 100), // Returned (messageId, in top)
+            createMessageEntity(tid = 105, id = 105), // Returned
+            createMessageEntity(tid = 110, id = 110), // Returned
+            createMessageEntity(tid = 115, id = 115), // Returned
+            createMessageEntity(tid = 120, id = 120), // Returned
+            createMessageEntity(tid = 125, id = 125), // Returned
+            createMessageEntity(tid = 130, id = 130), // Returned
+            createMessageEntity(tid = 135, id = 135), // Returned
+            createMessageEntity(tid = 140, id = 140), // Returned (last, exactly 10 messages)
+            createMessageEntity(tid = 200, id = 200)  // Outside range - KEPT
+        )
+
+        val serverMessages = listOf(
+            createSceytMessage(id = 95),
+            createSceytMessage(id = 100),
+            createSceytMessage(id = 105),
+            createSceytMessage(id = 110),
+            createSceytMessage(id = 115),
+            createSceytMessage(id = 120),
+            createSceytMessage(id = 125),
+            createSceytMessage(id = 130),
+            createSceytMessage(id = 135),
+            createSceytMessage(id = 140)
+        )
+
+        // Act - size=10 == limit=10 (Case 3), topNearIds.size=2 < 5 (messageId in top)
+        // Case 3c triggers (messageId in top), deletes before first
+        useCase(
+            channelId = channelId,
+            messageId = 100,
+            limit = 10,
+            serverMessages = serverMessages,
+            syncStartTime = 0L
+        )
+
+        // Assert - Before first deleted (Case 3c), but NOT first itself
+        // includeMessage=false means 95 is kept
+        // Message 200 is outside range [95, 140] so it's kept
+        val remainingIds = messageDao.getMessagesIds(channelId)
+        assertThat(remainingIds).containsExactly(95L, 100L, 105L, 110L, 115L, 120L, 125L, 130L, 135L, 140L, 200L)
+        assertThat(remainingIds).doesNotContain(10L)  // Deleted (Case 3c, before 95)
+        assertThat(remainingIds).contains(95L)        // Kept (includeMessage=false)
+        assertThat(remainingIds).contains(200L)       // Kept (outside range)
+    }
+
     // ========== Helper Methods ==========
 
     private fun createMessageEntity(
