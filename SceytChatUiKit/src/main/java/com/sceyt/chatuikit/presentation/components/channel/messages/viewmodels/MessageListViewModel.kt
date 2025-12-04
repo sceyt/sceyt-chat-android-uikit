@@ -147,6 +147,7 @@ class MessageListViewModel(
     private val loadNextJob: Job? = null
     private var loadNearJob: Job? = null
     private var toggleVoteJob: Job? = null
+    private var searchJob: Job? = null
 
     // Pagination sync
     internal var needSyncMessagesWhenScrollStateIdle = false
@@ -375,14 +376,28 @@ class MessageListViewModel(
     }
 
     fun searchMessages(query: String) {
-        viewModelScope.launch {
+        if (_searchResult.value?.searchQuery == query)
+            return
+
+        _searchResult.postValue(SearchResult(searchQuery = query, isLoading = true))
+
+        searchJob?.cancel()
+        searchJob = viewModelScope.launch {
             messageInteractor.searchMessages(
                 conversationId = conversationId,
                 replyInThread = replyInThread,
                 query = query
             ).onSuccess { response ->
                 val messages = response.data.sortedBy { it.id }
-                _searchResult.postValue(SearchResult(0, messages, response.hasNext))
+                _searchResult.postValue(
+                    SearchResult(
+                        searchQuery = query,
+                        currentIndex = 0,
+                        messages = messages,
+                        hasNext = response.hasNext,
+                        isLoading = false
+                    )
+                )
                 _onScrollToSearchMessageLiveData.postValue(
                     messages.firstOrNull() ?: return@launch
                 )
