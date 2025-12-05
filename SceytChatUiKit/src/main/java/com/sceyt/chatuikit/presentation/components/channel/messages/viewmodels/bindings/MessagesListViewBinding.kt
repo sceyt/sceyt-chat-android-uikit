@@ -75,6 +75,8 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
+private const val TAG = "MessagesListViewBinding"
+
 @JvmName("bind")
 fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner: LifecycleOwner) {
     val lifecycleScope = lifecycleOwner.lifecycleScope
@@ -215,9 +217,9 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                     doIfNotFound = {
                         if (response is PaginationResponse.ServerResponse) {
                             SceytLog.w(
-                                "MessagesListViewBinding",
+                                TAG,
                                 "Called load near messages in channelId: ${channel.id} for scroll to message id: ${loadKey.value}, but message not found in server response." +
-                                        "Resetting isPreparingToScrollToMessage to false to avoid infinite waiting."
+                                        " Resetting isPreparingToScrollToMessage to false to avoid infinite waiting."
                             )
                             isPreparingToScrollToMessage.set(false)
                         }
