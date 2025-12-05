@@ -43,6 +43,7 @@ import com.sceyt.chatuikit.extensions.getChildTopByPosition
 import com.sceyt.chatuikit.extensions.getString
 import com.sceyt.chatuikit.extensions.isResumed
 import com.sceyt.chatuikit.extensions.isThePositionVisible
+import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.extensions.checkIsMemberInChannel
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isPublic
@@ -211,6 +212,16 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                     messageId = loadKey.value,
                     highlight = true,
                     offset = 200,
+                    doIfNotFound = {
+                        if (response is PaginationResponse.ServerResponse) {
+                            SceytLog.w(
+                                "MessagesListViewBinding",
+                                "Called load near messages in channelId: ${channel.id} for scroll to message id: ${loadKey.value}, but message not found in server response." +
+                                        "Resetting isPreparingToScrollToMessage to false to avoid infinite waiting."
+                            )
+                            isPreparingToScrollToMessage.set(false)
+                        }
+                    },
                     awaitToScroll = {
                         if (response is PaginationResponse.ServerResponse)
                             isPreparingToScrollToMessage.set(false)
