@@ -97,6 +97,8 @@ import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
+typealias FoundToScroll = Boolean
+
 @Suppress("Unused", "MemberVisibilityCanBePrivate", "JoinDeclarationAndAssignment")
 class MessagesListView @JvmOverloads constructor(
     context: Context,
@@ -853,30 +855,31 @@ class MessagesListView @JvmOverloads constructor(
         messageId: Long,
         highlight: Boolean,
         offset: Int = 0,
-        awaitToScroll: ((Boolean) -> Unit)? = null,
-        doIfNotFound: (() -> Unit)? = null,
+        onCompleted: ((FoundToScroll) -> Unit)? = null,
     ) {
         getMessageIndexedById(messageId)?.let { (position, _) ->
-            scrollToPosition(position, highlight, offset, awaitToScroll)
-        } ?: doIfNotFound?.invoke()
+            scrollToPosition(position, highlight, offset, onScrolled = {
+                onCompleted?.invoke(true)
+            })
+        } ?: onCompleted?.invoke(false)
     }
 
     fun scrollToPosition(
         position: Int,
         highlight: Boolean,
         offset: Int = 0,
-        awaitToScroll: ((Boolean) -> Unit)? = null,
+        onScrolled: (() -> Unit)? = null,
     ) = safeScrollTo {
         (messagesRV.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(
             position,
             offset
         )
 
-        if (highlight || awaitToScroll != null) {
+        if (highlight || onScrolled != null) {
             messagesRV.awaitToScrollFinish(position, callback = {
                 if (highlight)
                     (messagesRV.findViewHolderForAdapterPosition(position) as? BaseMessageViewHolder)?.highlight()
-                awaitToScroll?.invoke(true)
+                onScrolled?.invoke()
             })
         }
     }
