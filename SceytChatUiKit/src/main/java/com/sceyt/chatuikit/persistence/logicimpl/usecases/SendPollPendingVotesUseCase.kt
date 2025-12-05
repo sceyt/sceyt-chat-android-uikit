@@ -16,19 +16,22 @@ internal class SendPollPendingVotesUseCase(
 
         val (addVotes, deleteVoted) = pendingVotes.partition { it.isAdd }
 
-        addPollVoteUseCase(
-            channelId = channelId,
-            messageId = messageId,
-            pollId = pollId,
-            optionIds = addVotes.map { it.optionId }
-        )
+        if (addVotes.isNotEmpty()) {
+            addPollVoteUseCase(
+                channelId = channelId,
+                messageId = messageId,
+                pollId = pollId,
+                optionIds = addVotes.map { it.optionId }
+            )
+        }
 
-
-        removePollVoteUseCase(
-            channelId = channelId,
-            messageId = messageId,
-            pollId = pollId,
-            optionIds = deleteVoted.map { it.optionId }
-        )
+        if (deleteVoted.isNotEmpty()) {
+            removePollVoteUseCase(
+                channelId = channelId,
+                messageId = messageId,
+                pollId = pollId,
+                optionIds = deleteVoted.map { it.optionId }
+            )
+        }
     }
 }
