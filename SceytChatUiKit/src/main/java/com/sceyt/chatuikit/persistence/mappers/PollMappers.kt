@@ -99,7 +99,7 @@ internal fun PollDb.toSceytPollDetails(): SceytPollDetails {
         name = pollEntity.name,
         messageTid = pollEntity.messageTid,
         description = pollEntity.description,
-        options = options.map { it.toPollOption() },
+        options = options.map { it.toPollOption() }.sortedBy { it.order },
         anonymous = pollEntity.anonymous,
         allowMultipleVotes = pollEntity.allowMultipleVotes,
         allowVoteRetract = pollEntity.allowVoteRetract,

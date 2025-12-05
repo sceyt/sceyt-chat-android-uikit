@@ -350,7 +350,7 @@ internal fun PollDb.toPollDetails(): PollDetails = with(pollEntity) {
         .setId(id)
         .setName(name)
         .setDescription(description)
-        .setOptions(options.map { PollOption(it.id, it.name) }.toTypedArray())
+        .setOptions(options.sortedBy { it.order }.map { PollOption(it.id, it.name) }.toTypedArray())
         .setAnonymous(anonymous)
         .setAllowMultipleVotes(allowMultipleVotes)
         .setAllowVoteRetract(allowVoteRetract)
