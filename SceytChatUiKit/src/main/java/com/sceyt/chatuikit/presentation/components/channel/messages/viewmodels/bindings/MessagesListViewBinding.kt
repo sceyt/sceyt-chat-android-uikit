@@ -214,19 +214,18 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                     messageId = loadKey.value,
                     highlight = true,
                     offset = 200,
-                    doIfNotFound = {
-                        if (response is PaginationResponse.ServerResponse) {
+                    onCompleted = { found ->
+                        if (response !is PaginationResponse.ServerResponse) {
+                            return@scrollToMessage
+                        }
+                        isPreparingToScrollToMessage.set(false)
+                        if (!found) {
                             SceytLog.w(
                                 TAG,
                                 "Called load near messages in channelId: ${channel.id} for scroll to message id: ${loadKey.value}, but message not found in server response." +
                                         " Resetting isPreparingToScrollToMessage to false to avoid infinite waiting."
                             )
-                            isPreparingToScrollToMessage.set(false)
                         }
-                    },
-                    awaitToScroll = {
-                        if (response is PaginationResponse.ServerResponse)
-                            isPreparingToScrollToMessage.set(false)
                     })
             }
         }
@@ -558,16 +557,18 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             messageId = messageId,
             offset = 200,
             highlight = true,
-            doIfNotFound = {
-                loadNearMessages(
-                    messageId = messageId,
-                    loadKey = LoadKeyData(
-                        key = LoadKeyType.ScrollToReplyMessage.longValue,
-                        value = messageId
-                    ),
-                    ignoreServer = false
-                )
-            }
+            onCompleted = { found ->
+                if (!found) {
+                    loadNearMessages(
+                        messageId = messageId,
+                        loadKey = LoadKeyData(
+                            key = LoadKeyType.ScrollToReplyMessage.longValue,
+                            value = messageId
+                        ),
+                        ignoreServer = false
+                    )
+                }
+            },
         )
     }
 
@@ -577,10 +578,11 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             messageId = message.id,
             offset = 200,
             highlight = true,
-            awaitToScroll = {
-                isPreparingToScrollToMessage.set(false)
-            },
-            doIfNotFound = {
+            onCompleted = { found ->
+                if (found) {
+                    isPreparingToScrollToMessage.set(false)
+                    return@scrollToMessage
+                }
                 loadNearMessages(
                     messageId = messageId,
                     loadKey = LoadKeyData(
@@ -589,30 +591,31 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                     ),
                     ignoreServer = false
                 )
-            }
+            },
         )
     }
 
-    onScrollToUnredMentionMessageLiveData.observe(lifecycleOwner) {
+    onScrollToUnredMentionMessageLiveData.observe(lifecycleOwner) { messageId ->
         messagesListView.scrollToMessage(
-            messageId = it,
+            messageId = messageId,
             offset = 200,
             highlight = true,
-            awaitToScroll = {
-                isPreparingToScrollToMessage.set(false)
-            },
-            doIfNotFound = {
+            onCompleted = { found ->
+                if (found) {
+                    isPreparingToScrollToMessage.set(false)
+                    return@scrollToMessage
+                }
                 loadNearMessages(
-                    messageId = it,
+                    messageId = messageId,
                     loadKey = LoadKeyData(
                         key = LoadKeyType.ScrollToMessageBy.longValue,
-                        value = it
+                        value = messageId
                     ),
                     ignoreServer = false
                 )
-            }
+            },
         )
-        pendingDisplayMsgIds.add(it)
+        pendingDisplayMsgIds.add(messageId)
     }
 
     messageMarkerLiveData.observe(lifecycleOwner) {
