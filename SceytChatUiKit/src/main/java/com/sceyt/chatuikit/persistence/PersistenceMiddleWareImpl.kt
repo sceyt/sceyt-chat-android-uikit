@@ -944,9 +944,10 @@ internal class PersistenceMiddleWareImpl(
 
     override suspend fun regenerateChannelInviteKey(
         channelId: Long,
-        key: String
+        key: String,
+        deletePermanently: Boolean
     ): SceytResponse<ChannelInviteKeyData> {
-        return channelInviteKeyLogic.regenerateChannelInviteKey(channelId, key)
+        return channelInviteKeyLogic.regenerateChannelInviteKey(channelId, key, deletePermanently)
     }
 
     override suspend fun revokeChannelInviteKeys(
