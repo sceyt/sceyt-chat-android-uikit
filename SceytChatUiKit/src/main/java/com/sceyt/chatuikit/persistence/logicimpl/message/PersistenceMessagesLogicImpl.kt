@@ -52,12 +52,14 @@ import com.sceyt.chatuikit.persistence.database.dao.LoadRangeDao
 import com.sceyt.chatuikit.persistence.database.dao.MessageDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingMarkerDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingMessageStateDao
+import com.sceyt.chatuikit.persistence.database.dao.PendingPollVoteDao
 import com.sceyt.chatuikit.persistence.database.dao.PollDao
 import com.sceyt.chatuikit.persistence.database.dao.ReactionDao
 import com.sceyt.chatuikit.persistence.database.dao.UserDao
 import com.sceyt.chatuikit.persistence.database.entity.messages.AttachmentPayLoadDb
 import com.sceyt.chatuikit.persistence.database.entity.messages.MarkerEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageDb
+import com.sceyt.chatuikit.persistence.database.entity.messages.PendingPollVoteDb
 import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingMarkerEntity
 import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingMessageStateEntity
 import com.sceyt.chatuikit.persistence.database.entity.user.UserDb
@@ -121,6 +123,7 @@ internal class PersistenceMessagesLogicImpl(
     private val userDao: UserDao,
     private val pendingMessageStateDao: PendingMessageStateDao,
     private val pollDao: PollDao,
+    private val pendingPollVoteDao: PendingPollVoteDao,
     private val fileTransferService: FileTransferService,
     private val messagesRepository: MessagesRepository,
     private val preference: SceytSharedPreference,
@@ -1479,7 +1482,10 @@ internal class PersistenceMessagesLogicImpl(
         replaceUserOnConflict: Boolean = true,
     ): List<SceytMessage> {
         if (list.isNullOrEmpty()) return emptyList()
-        val pendingStates = pendingMessageStateDao.getAll()
+        val pendingStates = pendingMessageStateDao.getAll().associateBy { it.messageId }
+        val pendingPolls = pendingPollVoteDao.getAllPendingVotesDb().groupBy {
+            it.pendingVote.messageTid
+        }
         val usersDb = mutableSetOf<UserDb>()
         val messagesDb = arrayListOf<MessageDb>()
         val parentMessagesDb = arrayListOf<MessageDb>()
@@ -1489,7 +1495,7 @@ internal class PersistenceMessagesLogicImpl(
             var updatedMessage = message
 
             // Update message states with pending states
-            updateMessageStatesWithPendingStates(message, pendingStates)?.let {
+            updateMessageStatesWithPendingStates(message, pendingStates, pendingPolls).let {
                 updatedMessage = it
             }
 
@@ -1558,13 +1564,32 @@ internal class PersistenceMessagesLogicImpl(
 
     private fun updateMessageStatesWithPendingStates(
         message: SceytMessage,
-        pendingStates: List<PendingMessageStateEntity>
-    ): SceytMessage? {
-        return pendingStates.find { it.messageId == message.id }?.let {
-            val body = if (it.state == MessageState.Edited && !it.editBody.isNullOrBlank())
-                it.editBody else message.body
-            message.copy(body = body, state = it.state)
+        pendingStates: Map<Long, PendingMessageStateEntity>,
+        pendingPolls: Map<MessageTid, List<PendingPollVoteDb>>
+    ): SceytMessage {
+        var updatedMessage = message
+
+        //  Apply pending message state (edit, delete, etc)
+        pendingStates[message.id]?.let { pending ->
+            val newBody =
+                if (pending.state == MessageState.Edited && !pending.editBody.isNullOrBlank()) {
+                    pending.editBody
+                } else updatedMessage.body
+
+            updatedMessage = updatedMessage.copy(
+                body = newBody,
+                state = pending.state
+            )
         }
+
+        //  Apply pending poll vote
+        pendingPolls[message.tid]?.let { pollPending ->
+            updatedMessage = updatedMessage.copy(
+                poll = updatedMessage.poll?.copy(pendingVotes = pollPending.map { it.toPendingVoteData() })
+            )
+        }
+
+        return updatedMessage
     }
 
     private suspend fun deletedPayloads(id: Long, tid: Long) {
