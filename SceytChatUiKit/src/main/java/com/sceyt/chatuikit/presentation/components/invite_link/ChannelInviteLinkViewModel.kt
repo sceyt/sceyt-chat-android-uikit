@@ -73,7 +73,8 @@ class ChannelInviteLinkViewModel(
             val key = state.inviteKey
             channelInviteKeyInteractor.regenerateChannelInviteKey(
                 channelId = channel.id,
-                key = key
+                key = key,
+                deletePermanently = true
             ).onSuccessNotNull { data ->
                 _uiState.update {
                     it.copy(
