@@ -306,8 +306,9 @@ class MessagesRepositoryImpl : MessagesRepository {
 
     override suspend fun sendMessage(
         channelId: Long,
-        message: Message,
+        sceytMessage: SceytMessage,
     ): SceytResponse<SceytMessage> = suspendCancellableCoroutine { continuation ->
+        val message = sceytMessage.toMessage()
         val transformMessage = SceytChatUIKit.messageTransformer?.transformToSend(message)
             ?: message
         SceytLog.i(TAG, "sending message with channelId $channelId, tid: ${message.tid}")
