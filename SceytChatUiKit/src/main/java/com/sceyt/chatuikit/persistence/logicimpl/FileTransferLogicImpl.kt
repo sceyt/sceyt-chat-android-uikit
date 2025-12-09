@@ -52,8 +52,8 @@ import java.util.UUID
 import kotlin.math.max
 
 internal class FileTransferLogicImpl(
-        private val context: Context,
-        private val attachmentLogic: PersistenceAttachmentLogic,
+    private val context: Context,
+    private val attachmentLogic: PersistenceAttachmentLogic,
 ) : FileTransferLogic, SceytKoinComponent {
     private val fileTransferService: FileTransferService by inject()
     private val transferUtility by lazy { FileTransferUtility() }
@@ -97,7 +97,10 @@ internal class FileTransferLogicImpl(
                             fileSize = getFileSize(path)
                         )
                     }
-                } else SceytLog.i("resizeResult", "Couldn't resize sharing file with reason ${it.exceptionOrNull()}")
+                } else SceytLog.i(
+                    "resizeResult",
+                    "Couldn't resize sharing file with reason ${it.exceptionOrNull()}"
+                )
 
                 uploadSharedAttachment(uploadAttachment, task)
             }
@@ -123,12 +126,14 @@ internal class FileTransferLogicImpl(
             downloadingUrlMap[downloadMapKey] = downloadMapKey
             pausedTasksMap.remove(attachment.messageTid)
 
-            task.progressCallback?.onProgress(TransferData(
-                messageTid = task.messageTid,
-                progressPercent = attachment.progressPercent ?: 0f,
-                state = Downloading,
-                filePath = attachment.filePath,
-                url = attachment.url)
+            task.progressCallback?.onProgress(
+                TransferData(
+                    messageTid = task.messageTid,
+                    progressPercent = attachment.progressPercent ?: 0f,
+                    state = Downloading,
+                    filePath = attachment.filePath,
+                    url = attachment.url
+                )
             )
 
             transferUtility.downloadFile(
@@ -136,8 +141,11 @@ internal class FileTransferLogicImpl(
                 destFile = destFile,
                 onProgress = { progressPercent ->
                     if (pausedTasksMap[attachment.messageTid] == null) {
-                        task.progressCallback?.onProgress(TransferData(
-                            task.messageTid, progressPercent, Downloading, null, attachment.url))
+                        task.progressCallback?.onProgress(
+                            TransferData(
+                                task.messageTid, progressPercent, Downloading, null, attachment.url
+                            )
+                        )
                     }
                 },
                 onResult = {
@@ -235,7 +243,10 @@ internal class FileTransferLogicImpl(
                 } else {
                     if (!transferUtility.resumeDownload(attachment)) {
                         downloadingUrlMap.remove(attachment.downloadMapKey)
-                        downloadFile(attachment, fileTransferService.findOrCreateTransferTask(attachment))
+                        downloadFile(
+                            attachment,
+                            fileTransferService.findOrCreateTransferTask(attachment)
+                        )
                     }
 
                     fileTransferService.findTransferTask(attachment)?.resumePauseCallback?.onResumePause(
@@ -248,7 +259,11 @@ internal class FileTransferLogicImpl(
         }
     }
 
-    override fun getAttachmentThumb(messageTid: Long, attachment: SceytAttachment, data: ThumbData) {
+    override fun getAttachmentThumb(
+        messageTid: Long,
+        attachment: SceytAttachment,
+        data: ThumbData
+    ) {
         attachment.filePath ?: return
         val size = data.size
         val thumbKey = getPreparingThumbKey(attachment, data)
@@ -268,8 +283,10 @@ internal class FileTransferLogicImpl(
                     task.thumbCallback?.onThumb(path, data)
                 }
             } else {
-                SceytLog.e(TAG, "Couldn't get a thumb for messageTid: $messageTid," +
-                        " path:${attachment.filePath} with reason ${result.exceptionOrNull()}")
+                SceytLog.e(
+                    TAG, "Couldn't get a thumb for messageTid: $messageTid," +
+                            " path:${attachment.filePath} with reason ${result.exceptionOrNull()}"
+                )
             }
         }
         preparingThumbsMap.remove(messageTid)
@@ -325,13 +342,21 @@ internal class FileTransferLogicImpl(
                         fileSize = getFileSize(path)
                     )
                 }
-            } else SceytLog.i("resizeResult", "Couldn't resize file with reason ${it.exceptionOrNull()}")
+            } else SceytLog.i(
+                "resizeResult",
+                "Couldn't resize file with reason ${it.exceptionOrNull()}"
+            )
 
             if (!transferUtility.resumeUpload(attachment)) {
-                transferUtility.uploadFile(uploadAttachment,
+                transferUtility.uploadFile(
+                    uploadAttachment,
                     onProgress = { progressPercent ->
-                        transferTask.progressCallback?.onProgress(TransferData(transferTask.messageTid,
-                            progressPercent, Uploading, uploadAttachment.filePath, null))
+                        transferTask.progressCallback?.onProgress(
+                            TransferData(
+                                transferTask.messageTid,
+                                progressPercent, Uploading, uploadAttachment.filePath, null
+                            )
+                        )
                     },
                     onResult = { response ->
                         transferTask.uploadResultCallback?.onResult(response)
@@ -348,8 +373,12 @@ internal class FileTransferLogicImpl(
                 if (pausedTasksMap[attachment.messageTid] != null) return@uploadFile
                 getAppropriateTasks(transferTask).forEach { task ->
                     fileTransferService.getTasks()[task.messageTid.toString()]?.state = Uploading
-                    task.progressCallback?.onProgress(TransferData(task.messageTid,
-                        progressPercent, Uploading, task.attachment.filePath, null))
+                    task.progressCallback?.onProgress(
+                        TransferData(
+                            task.messageTid,
+                            progressPercent, Uploading, task.attachment.filePath, null
+                        )
+                    )
                 }
             },
             onResult = { response ->
@@ -361,10 +390,10 @@ internal class FileTransferLogicImpl(
     }
 
     private fun checkAndResizeMessageAttachments(
-            context: Context,
-            attachment: SceytAttachment,
-            checksumData: FileChecksumData?,
-            task: TransferTask, callback: (Result<String?>) -> Unit,
+        context: Context,
+        attachment: SceytAttachment,
+        checksumData: FileChecksumData?,
+        task: TransferTask, callback: (Result<String?>) -> Unit,
     ) {
 
         val path = checksumData?.resizedFilePath
@@ -394,7 +423,12 @@ internal class FileTransferLogicImpl(
                     parentDir = context.filesDir,
                     progressCallback = {
                         if (pausedTasksMap[attachment.messageTid] == null)
-                            task.preparingCallback?.onPreparing(attachment.toTransferData(Preparing, it.progressPercent))
+                            task.preparingCallback?.onPreparing(
+                                attachment.toTransferData(
+                                    Preparing,
+                                    it.progressPercent
+                                )
+                            )
                     }) {
                     resizingAttachmentsMap.remove(attachment.messageTid)
                     callback(it)
@@ -407,7 +441,7 @@ internal class FileTransferLogicImpl(
 
     private fun removeFromSharingPath(filePath: String?) {
         val current = sharingFilesPath.firstOrNull { it.originalPath == filePath }
-                ?: return
+            ?: return
         sharingFilesPath.removeAll {
             it.originalPath == current.originalPath
         }
@@ -441,8 +475,8 @@ internal class FileTransferLogicImpl(
     }
 
     private fun checkMaybeAlreadyUploadedWithAnotherMessage(
-            checksumData: FileChecksumData?,
-            task: TransferTask,
+        checksumData: FileChecksumData?,
+        task: TransferTask,
     ): Pair<Boolean, String?> {
         checksumData ?: return false to ""
         if (checksumData.url.isNotNullOrBlank()) {
@@ -456,9 +490,9 @@ internal class FileTransferLogicImpl(
     }
 
     private fun getAttachmentThumbPath(
-            context: Context,
-            attachment: SceytAttachment,
-            size: Size,
+        context: Context,
+        attachment: SceytAttachment,
+        size: Size,
     ): Result<String?> {
         val path = attachment.filePath ?: return Result.failure(FileNotFoundException())
         val minSize = max(size.height, size.width)
@@ -480,7 +514,7 @@ internal class FileTransferLogicImpl(
     private fun getPreparingThumbKey(attachment: SceytAttachment, data: ThumbData): String {
         val path = if (attachment.originalFilePath.isNullOrBlank())
             attachment.filePath else attachment.originalFilePath
-        return "$path${data.size}"
+        return "${attachment.messageTid}_${path}_${data.size}"
     }
 
     private fun Context.getSaveFileLocationRoot(type: String): File {
@@ -511,13 +545,13 @@ internal class FileTransferLogicImpl(
     }
 
     data class ThumbPathsData(
-            val messageTid: Long,
-            val path: String,
-            val size: Size,
+        val messageTid: Long,
+        val path: String,
+        val size: Size,
     )
 
     data class ShareFilesData(
-            val originalPath: String,
-            val messageTid: Long,
+        val originalPath: String,
+        val messageTid: Long,
     )
 }
