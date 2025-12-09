@@ -16,7 +16,6 @@ data class VoiceRecorderViewStyle(
         @param:ColorInt val recordingIndicatorColor: Int,
         val slideToCancelText: String,
         val cancelText: String,
-        val recordingIcon: Drawable?,
         val deleteRecordIcon: Drawable?,
         val lockRecordingIcon: Drawable?,
         val arrowToLockIcon: Drawable?,
@@ -42,7 +41,6 @@ data class VoiceRecorderViewStyle(
         private var recordingIndicatorColor: Int = UNSET_COLOR
         private var slideToCancelText: String = ""
         private var cancelText: String = ""
-        private var recordingIcon: Drawable? = null
         private var deleteRecordIcon: Drawable? = null
         private var lockRecordingIcon: Drawable? = null
         private var arrowToLockIcon: Drawable? = null
@@ -67,10 +65,6 @@ data class VoiceRecorderViewStyle(
 
         fun cancelText(@StyleableRes index: Int, defValue: String = cancelText) = apply {
             this.cancelText = typedArray.getString(index) ?: defValue
-        }
-
-        fun recordingIcon(@StyleableRes index: Int, defValue: Drawable? = recordingIcon) = apply {
-            this.recordingIcon = typedArray.getDrawable(index) ?: defValue
         }
 
         fun deleteRecordIcon(@StyleableRes index: Int, defValue: Drawable? = deleteRecordIcon) = apply {
@@ -110,7 +104,6 @@ data class VoiceRecorderViewStyle(
             recordingIndicatorColor = recordingIndicatorColor,
             slideToCancelText = slideToCancelText,
             cancelText = cancelText,
-            recordingIcon = recordingIcon,
             deleteRecordIcon = deleteRecordIcon,
             lockRecordingIcon = lockRecordingIcon,
             arrowToLockIcon = arrowToLockIcon,

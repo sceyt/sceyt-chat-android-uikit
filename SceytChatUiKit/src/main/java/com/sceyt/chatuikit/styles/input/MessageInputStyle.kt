@@ -16,8 +16,6 @@ import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.formatters.SceytChatUIKitFormatters
 import com.sceyt.chatuikit.formatters.attributes.DraftMessageBodyFormatterAttributes
 import com.sceyt.chatuikit.presentation.components.channel.input.MessageInputView
-import com.sceyt.chatuikit.styles.messages_list.MessagesListHeaderStyle.Companion.styleCustomizer
-import com.sceyt.chatuikit.styles.search.SearchChannelInputStyle.Companion.styleCustomizer
 import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.ButtonStyle
 import com.sceyt.chatuikit.styles.common.TextInputStyle
@@ -35,7 +33,6 @@ import com.sceyt.chatuikit.styles.extensions.message_input.buildReplyMessageStyl
 import com.sceyt.chatuikit.styles.extensions.message_input.buildSelectedMediaStyle
 import com.sceyt.chatuikit.styles.extensions.message_input.buildVoiceRecordPlaybackViewStyle
 import com.sceyt.chatuikit.styles.extensions.message_input.buildVoiceRecorderViewStyle
-import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle.Companion.styleCustomizer
 import com.sceyt.chatuikit.theme.Colors
 
 /**

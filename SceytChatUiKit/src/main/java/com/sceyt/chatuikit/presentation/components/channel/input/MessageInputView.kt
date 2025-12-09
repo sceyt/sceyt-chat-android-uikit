@@ -175,7 +175,7 @@ class MessageInputView @JvmOverloads constructor(
         with(binding) {
             applyStyle()
             setOnClickListeners()
-            voiceRecordPlaybackView.setStyle(style.voiceRecordPlaybackViewStyle)
+            voiceRecordPlaybackView.setStyle(style)
             messageActionsView.setStyle(style)
             linkPreviewView.setStyle(style)
             messageInput.setMentionStyle(style.mentionTextStyle)

@@ -237,7 +237,6 @@
         <!--Voice record style -->
         <attr name="sceytUiMessageInputVoiceRecorderBackgroundColor" format="reference|color" />
         <attr name="sceytUiMessageInputVoiceRecorderRecordingIndicatorColor" format="reference|color" />
-        <attr name="sceytUiMessageInputVoiceRecorderRecordingIcon" format="reference" />
         <attr name="sceytUiMessageInputVoiceRecorderDeleteRecordIcon" format="reference" />
         <attr name="sceytUiMessageInputVoiceRecorderLockRecordingIcon" format="reference" />
         <attr name="sceytUiMessageInputVoiceRecorderArrowToLockIcon" format="reference" />

@@ -6,24 +6,24 @@ import android.view.LayoutInflater
 import androidx.constraintlayout.widget.ConstraintLayout
 import com.masoudss.lib.SeekBarOnProgressChanged
 import com.masoudss.lib.WaveformSeekBar
-import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytVoiceRecordPresenterBinding
 import com.sceyt.chatuikit.extensions.TAG_REF
 import com.sceyt.chatuikit.extensions.durationToMinSecShort
 import com.sceyt.chatuikit.extensions.mediaPlayerPositionToSeekBarProgress
 import com.sceyt.chatuikit.extensions.progressToMediaPlayerPosition
 import com.sceyt.chatuikit.extensions.setBackgroundTint
-import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
 import com.sceyt.chatuikit.media.audio.AudioPlayer
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper.OnAudioPlayer
+import com.sceyt.chatuikit.styles.input.MessageInputStyle
 import com.sceyt.chatuikit.styles.input.VoiceRecordPlaybackViewStyle
 import java.io.File
 
+@Suppress("JoinDeclarationAndAssignment")
 class VoiceRecordPlaybackView @JvmOverloads constructor(
-        context: Context,
-        attrs: AttributeSet? = null,
-        defStyleAttr: Int = 0
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0
 ) : ConstraintLayout(context, attrs, defStyleAttr) {
     private lateinit var style: VoiceRecordPlaybackViewStyle
     private val binding: SceytVoiceRecordPresenterBinding
@@ -34,7 +34,11 @@ class VoiceRecordPlaybackView @JvmOverloads constructor(
         binding = SceytVoiceRecordPresenterBinding.inflate(LayoutInflater.from(context), this)
     }
 
-    fun init(file: File, audioMetadata: AudioMetadata, listener: VoiceRecordPlaybackListeners? = null) {
+    fun init(
+        file: File,
+        audioMetadata: AudioMetadata,
+        listener: VoiceRecordPlaybackListeners? = null
+    ) {
         isShowing = true
         with(binding) {
             deleteVoiceRecord.setOnClickListener {
@@ -54,28 +58,40 @@ class VoiceRecordPlaybackView @JvmOverloads constructor(
             }
 
             audioMetadata.tmb?.let { waveformSeekBar.setSampleFrom(it) }
-            voiceRecordDuration.text = audioMetadata.dur.times(1000).toLong().durationToMinSecShort()
+            voiceRecordDuration.text =
+                audioMetadata.dur.times(1000).toLong().durationToMinSecShort()
         }
     }
 
     private fun SceytVoiceRecordPresenterBinding.onPlayVoiceRecordClick(
-            file: File,
-            audioMetadata: AudioMetadata,
-            listener: VoiceRecordPlaybackListeners? = null
+        file: File,
+        audioMetadata: AudioMetadata,
+        listener: VoiceRecordPlaybackListeners? = null
     ) {
         listener?.onPlayVoiceRecord()
 
         waveformSeekBar.onProgressChanged = object : SeekBarOnProgressChanged {
-            override fun onProgressChanged(waveformSeekBar: WaveformSeekBar, progress: Float, fromUser: Boolean) {
+            override fun onProgressChanged(
+                waveformSeekBar: WaveformSeekBar,
+                progress: Float,
+                fromUser: Boolean
+            ) {
                 if (fromUser) {
-                    val seekPosition = progressToMediaPlayerPosition(progress, audioMetadata.dur.times(1000L))
+                    val seekPosition = progressToMediaPlayerPosition(
+                        progress = progress,
+                        mediaDuration = audioMetadata.dur.times(1000L)
+                    )
                     AudioPlayerHelper.seek(file.path, seekPosition)
                 }
             }
         }
 
         AudioPlayerHelper.init(file.path, object : OnAudioPlayer {
-            override fun onInitialized(alreadyInitialized: Boolean, player: AudioPlayer, filePath: String) {
+            override fun onInitialized(
+                alreadyInitialized: Boolean,
+                player: AudioPlayer,
+                filePath: String
+            ) {
                 AudioPlayerHelper.toggle(file.path)
             }
 
@@ -118,12 +134,12 @@ class VoiceRecordPlaybackView @JvmOverloads constructor(
         binding.playVoiceRecord.setImageDrawable(icon)
     }
 
-    internal fun setStyle(style: VoiceRecordPlaybackViewStyle) {
-        this.style = style
+    internal fun setStyle(inputStyle: MessageInputStyle) {
+        this.style = inputStyle.voiceRecordPlaybackViewStyle
         with(binding) {
             root.setBackgroundColor(style.backgroundColor)
             layoutVoiceRecord.setBackgroundTint(style.playerBackgroundColor)
-            icSendMessage.setBackgroundTintColorRes(SceytChatUIKit.theme.colors.accentColor)
+            icSendMessage.setBackgroundTint(inputStyle.sendIconBackgroundColor)
             waveformSeekBar.waveBackgroundColor = style.audioWaveformStyle.trackColor
             waveformSeekBar.waveProgressColor = style.audioWaveformStyle.progressColor
             deleteVoiceRecord.setImageDrawable(style.closeIcon)
