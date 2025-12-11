@@ -52,6 +52,7 @@ import com.sceyt.chatuikit.styles.extensions.messages_list.buildOverlayMediaLoad
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildPollStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildReactionCountTextStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildReactionsContainerBackgroundStyle
+import com.sceyt.chatuikit.styles.extensions.messages_list.buildReadMoreStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildReplyMessageStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildSelectionCheckboxStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildSenderNameTextStyle
@@ -121,6 +122,8 @@ import java.util.Date
  * @property senderNameColorProvider Visual provider for the sender name color, default is [SceytChatUIKitProviders.senderNameColorProvider].
  * @property userAvatarRenderer User avatar renderer, default is [SceytChatUIKitRenderers.userAvatarRenderer].
  * @property systemMessageItemStyle Style for the system message item, default is [SystemMessageItemStyle].
+ * @property collapsedCharacterLimit Maximum number of characters to display before truncating message body and showing "Read More", default is [Int.MAX_VALUE].
+ * @property readMoreStyle Style for the "Read More" button that appears when message body exceeds character limit, default is [buildReadMoreStyle].
  * */
 data class MessageItemStyle(
     val incomingBubbleBackgroundStyle: BackgroundStyle,
@@ -178,7 +181,9 @@ data class MessageItemStyle(
     val attachmentFileSizeFormatter: Formatter<SceytAttachment>,
     val attachmentIconProvider: VisualProvider<SceytAttachment, Drawable?>,
     val senderNameColorProvider: VisualProvider<SceytUser, Int>,
-    val userAvatarRenderer: AvatarRenderer<SceytUser>
+    val userAvatarRenderer: AvatarRenderer<SceytUser>,
+    val collapsedCharacterLimit: Int,
+    val readMoreStyle: ReadMoreStyle
 ) : SceytComponentStyle() {
 
     companion object {
@@ -310,7 +315,9 @@ data class MessageItemStyle(
                     attachmentFileSizeFormatter = SceytChatUIKit.formatters.attachmentSizeFormatter,
                     attachmentIconProvider = SceytChatUIKit.providers.attachmentIconProvider,
                     senderNameColorProvider = SceytChatUIKit.providers.senderNameColorProvider,
-                    userAvatarRenderer = SceytChatUIKit.renderers.userAvatarRenderer
+                    userAvatarRenderer = SceytChatUIKit.renderers.userAvatarRenderer,
+                    collapsedCharacterLimit = Int.MAX_VALUE,
+                    readMoreStyle = buildReadMoreStyle(array)
                 ).let { styleCustomizer.apply(context, it) }
             }
         }

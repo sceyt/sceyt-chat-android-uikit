@@ -284,4 +284,5 @@
     <string name="sceyt_disappearing_message_disabled">%1$s disabled disappearing messages</string>
     <string name="sceyt_and">and</string>
     <string name="sceyt_unknown_duration">Unknown duration</string>
+    <string name="sceyt_read_more">Read More</string>
 </resources>

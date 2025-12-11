@@ -140,6 +140,17 @@
             <flag name="italic" value="2" />
         </attr>
 
+        <!--Read More text styling-->
+        <attr name="sceytUiMessagesListReadMoreText" format="string" localization="suggested" />
+        <attr name="sceytUiMessagesListReadMoreTextColor" format="reference|color" />
+        <attr name="sceytUiMessagesListReadMoreTextSize" format="dimension" />
+        <attr name="sceytUiMessagesListReadMoreTextFont" format="reference" />
+        <attr name="sceytUiMessagesListReadMoreTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+
         <!--Texts -->
         <attr name="sceytUiMessagesListEditedStateText" format="reference" />
         <attr name="sceytUiMessagesListDeletedStateText" format="reference" />
