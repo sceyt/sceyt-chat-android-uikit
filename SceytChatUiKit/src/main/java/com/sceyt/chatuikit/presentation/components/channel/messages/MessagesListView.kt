@@ -7,7 +7,6 @@ import android.os.Looper
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewTreeObserver
 import android.widget.PopupWindow
 import android.widget.Toast
 import androidx.appcompat.view.ContextThemeWrapper
@@ -40,6 +39,7 @@ import com.sceyt.chatuikit.extensions.maybeComponentActivity
 import com.sceyt.chatuikit.extensions.openLink
 import com.sceyt.chatuikit.extensions.setClipboard
 import com.sceyt.chatuikit.extensions.setLayoutTransition
+import com.sceyt.chatuikit.extensions.updateWithScrollCompensation
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.media.audio.AudioFocusHelper
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
@@ -1262,38 +1262,15 @@ class MessagesListView @JvmOverloads constructor(
         expandMessageBodyListener?.invoke(item.message.tid)
         
         val expandedItem = item.copy(message = item.message.copy(isBodyExpanded = true))
-        updateMessageWithScrollCompensation(messagesRV, vh, position, expandedItem)
-    }
-
-    private fun updateMessageWithScrollCompensation(
-        messagesRV: MessagesRV,
-        viewHolder: BaseMessageViewHolder,
-        position: Int,
-        updatedItem: MessageItem
-    ) {
-        val oldTop = viewHolder.itemView.top
+        val oldTop = vh.itemView.top
         
-        messagesRV.updateItemAt(position, updatedItem)
-        compensateScrollPosition(messagesRV, viewHolder, oldTop)
-        viewHolder.bind(updatedItem, MessageDiff.DEFAULT_FALSE.copy(bodyChanged = true))
-    }
-
-    private fun compensateScrollPosition(
-        messagesRV: MessagesRV,
-        viewHolder: BaseMessageViewHolder,
-        oldTop: Int
-    ) {
-        messagesRV.viewTreeObserver.addOnPreDrawListener(object : ViewTreeObserver.OnPreDrawListener {
-            override fun onPreDraw(): Boolean {
-                messagesRV.viewTreeObserver.removeOnPreDrawListener(this)
-                
-                val newTop = viewHolder.itemView.top
-                val scrollDelta = newTop - oldTop
-                if (scrollDelta != 0) {
-                    messagesRV.scrollBy(0, scrollDelta)
-                }
-                return true
+        messagesRV.updateWithScrollCompensation(
+            oldTop = oldTop,
+            getNewTop = { vh.itemView.top },
+            onUpdate = {
+                messagesRV.updateItemAt(position, expandedItem)
+                vh.bind(expandedItem, MessageDiff.DEFAULT_FALSE.copy(bodyChanged = true))
             }
-        })
+        )
     }
 }

@@ -54,7 +54,7 @@ object MessageBodyTruncationHelper {
         readMoreStyle: ReadMoreStyle,
         onReadMoreClick: () -> Unit
     ): CharSequence {
-        if (isExpanded || characterLimit == Integer.MAX_VALUE || formattedBody.length <= characterLimit) {
+        if (isExpanded || characterLimit !in (0..Int.MAX_VALUE) || formattedBody.length <= characterLimit) {
             return formattedBody
         }
 
@@ -67,7 +67,7 @@ object MessageBodyTruncationHelper {
         val readMoreStart = spannable.length
         spannable.append(readMoreStyle.text)
         val readMoreEnd = spannable.length
-        
+
         val spacingPx = 8.dpToPx()
         spannable.setSpan(
             SpacingSpan(spacingPx),

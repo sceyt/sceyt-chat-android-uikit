@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import androidx.annotation.ColorInt
+import androidx.annotation.IntRange
 import androidx.core.content.res.use
 import androidx.core.graphics.ColorUtils
 import com.sceyt.chatuikit.R
@@ -183,7 +184,7 @@ data class MessageItemStyle(
     val senderNameColorProvider: VisualProvider<SceytUser, Int>,
     val userAvatarRenderer: AvatarRenderer<SceytUser>,
     val collapsedCharacterLimit: Int,
-    val readMoreStyle: ReadMoreStyle
+    @param:IntRange(from = 1, to = Long.MAX_VALUE) val readMoreStyle: ReadMoreStyle
 ) : SceytComponentStyle() {
 
     companion object {
