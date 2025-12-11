@@ -138,6 +138,7 @@ class MessageListViewModel(
     internal val messageActionBridge by lazy { MessageActionBridge() }
     internal val placeToSavePathsList = mutableSetOf<Pair<AttachmentTypeEnum, String>>()
     internal val selectedMessagesMap by lazy { mutableMapOf<Long, SceytMessage>() }
+    internal val expandedMessagesMap by lazy { mutableMapOf<Long, Boolean>() }
     internal val notFoundMessagesToUpdate by lazy { mutableMapOf<Long, SceytMessage>() }
     internal val outgoingMessageMutex by lazy { Mutex() }
     internal val pendingDisplayMsgIds by lazy { Collections.synchronizedSet(mutableSetOf<Long>()) }
@@ -894,6 +895,10 @@ class MessageListViewModel(
         }
     }
 
+    fun expandMessageBody(messageTid: Long) {
+        expandedMessagesMap[messageTid] = true
+    }
+
     @Suppress("unused")
     fun showSenderAvatarAndNameIfNeeded(show: Boolean) {
         showSenderAvatarAndNameIfNeeded = show
@@ -927,6 +932,7 @@ class MessageListViewModel(
 
                 var messageWithData = initMessageInfoData(message, prevMessage, true)
                 val isSelected = selectedMessagesMap.containsKey(message.tid)
+                val isExpanded = expandedMessagesMap.containsKey(message.tid)
 
                 if (channel.lastMessage?.incoming == true && pinnedLastReadMessageId != 0L
                     && prevMessage?.id == pinnedLastReadMessageId && unreadLineMessage == null
@@ -947,7 +953,7 @@ class MessageListViewModel(
                             })
                 }
 
-                messageItems.add(MessageListItem.MessageItem(messageWithData.copy(isSelected = isSelected)))
+                messageItems.add(MessageListItem.MessageItem(messageWithData.copy(isSelected = isSelected, isBodyExpanded = isExpanded)))
             }
 
             if (hasNext)
