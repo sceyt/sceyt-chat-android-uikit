@@ -46,7 +46,7 @@ internal class CheckDeletedNearMessagesUseCase(
                 tag,
                 "LoadNear: Empty server response, deleting ALL messages in channel (except pending)"
             )
-            messageDao.deleteAllMessagesByChannelIgnorePending(
+            messageDao.deleteUntilDateExceptPending(
                 channelId = channelId,
                 deleteUntil = syncStartTime
             )
@@ -67,7 +67,7 @@ internal class CheckDeletedNearMessagesUseCase(
                 tag,
                 "LoadNear: Server returned ${serverIds.size} < limit $limit, treating as complete message list, deleting all not in response"
             )
-            val count = messageDao.deleteNotContainsMessagesIgnorePending(
+            val count = messageDao.deleteNotInMessageIdsUntilDateExceptPending(
                 channelId = channelId,
                 messageIds = serverIds,
                 deleteUntil = syncStartTime

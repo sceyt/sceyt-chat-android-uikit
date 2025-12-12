@@ -267,7 +267,7 @@ class CheckDeletedMessagesUseCaseTest {
             insertMessages(
                 createMessageEntity(tid = 800, id = 800),   // Should remain
                 createMessageEntity(tid = 900, id = 900),   // Should remain
-                createMessageEntity(tid = 1000, id = 1000), // Should be deleted (lastMessageId)
+                createMessageEntity(tid = 1000, id = 1000), // Should remain (messageId - server doesn't include it)
                 createMessageEntity(tid = 1100, id = 1100), // Should be deleted
                 createMessageEntity(tid = 1200, id = 1200)  // Should be deleted
             )
@@ -284,10 +284,10 @@ class CheckDeletedMessagesUseCaseTest {
                 syncStartTime = 0
             )
 
-            // Assert
+            // Assert - Server doesn't include messageId in LoadNext, so it should remain
             val remainingIds = messageDao.getMessagesIds(channelId)
             Log.d("Test", "Remaining messages: $remainingIds")
-            assertThat(remainingIds).containsExactly(800L, 900L)
+            assertThat(remainingIds).containsExactly(800L, 900L, 1000L)
         }
 
     @Test
@@ -957,19 +957,19 @@ class CheckDeletedMessagesUseCaseTest {
         // Arrange - Create messages with various timestamps
         val syncStartTime = 1000L
         insertMessages(
-            createMessageEntity(tid = 100, id = 100, createdAt = 100),   // Base message - will be deleted (includeMessage=true)
+            createMessageEntity(tid = 100, id = 100, createdAt = 100),   // Base message - should remain (server doesn't include it)
             createMessageEntity(tid = 200, id = 200, createdAt = 900),   // Old message - should be deleted
             createMessageEntity(tid = 300, id = 300, createdAt = 1100),  // New message - should NOT be deleted
             createMessageEntity(tid = 400, id = 400, createdAt = 1200)   // New message - should NOT be deleted
         )
 
-        // Server returns empty (messages 100+ were "deleted" on server)
+        // Server returns empty (messages > 100 were "deleted" on server)
         // But messages 300 and 400 were created AFTER sync started, so they're new messages
         val serverMessages = emptyList<SceytMessage>()
 
         Log.d("Test", "Initial messages: ${messageDao.getMessagesIds(channelId)}")
 
-        // Act - Empty response means delete all >= messageId (includeMessage=true), but respect syncStartTime
+        // Act - Empty response means delete all > messageId (includeMessage=false for LoadNext), but respect syncStartTime
         useCase(
             channelId = channelId,
             loadType = LoadType.LoadNext,
@@ -979,11 +979,11 @@ class CheckDeletedMessagesUseCaseTest {
             syncStartTime = syncStartTime
         )
 
-        // Assert - Should delete 100 and 200 (old), but keep 300 and 400 (new)
+        // Assert - Should keep 100 (messageId not included), delete 200 (old), keep 300 and 400 (new)
         val remainingIds = messageDao.getMessagesIds(channelId)
         Log.d("Test", "Remaining messages after sync: $remainingIds")
-        assertThat(remainingIds).containsExactly(300L, 400L)
-        assertThat(remainingIds).doesNotContain(100L) // Deleted (includeMessage=true)
+        assertThat(remainingIds).containsExactly(100L, 300L, 400L)
+        assertThat(remainingIds).contains(100L) // Kept (messageId not included in LoadNext)
         assertThat(remainingIds).doesNotContain(200L) // Deleted (created before syncStartTime)
         assertThat(remainingIds).contains(300L) // Kept (created after syncStartTime)
         assertThat(remainingIds).contains(400L) // Kept (created after syncStartTime)
@@ -994,7 +994,7 @@ class CheckDeletedMessagesUseCaseTest {
         // Arrange - Test boundary condition: message created AT syncStartTime
         val syncStartTime = 1000L
         insertMessages(
-            createMessageEntity(tid = 100, id = 100, createdAt = 100),   // Base - will be deleted (includeMessage=true)
+            createMessageEntity(tid = 100, id = 100, createdAt = 100),   // Base - should remain (messageId not included in LoadNext)
             createMessageEntity(tid = 200, id = 200, createdAt = 999),   // Before boundary - should delete
             createMessageEntity(tid = 300, id = 300, createdAt = 1000),  // AT boundary - should KEEP (>= not >)
             createMessageEntity(tid = 400, id = 400, createdAt = 1001)   // After boundary - should KEEP
@@ -1015,8 +1015,8 @@ class CheckDeletedMessagesUseCaseTest {
         // Assert - Messages with createdAt < syncStartTime deleted, >= syncStartTime kept
         // Condition is `createdAt < syncStartTime`, so message at exactly syncStartTime is KEPT
         val remainingIds = messageDao.getMessagesIds(channelId)
-        assertThat(remainingIds).containsExactly(300L, 400L)
-        assertThat(remainingIds).doesNotContain(100L) // Deleted (includeMessage=true in empty response)
+        assertThat(remainingIds).containsExactly(100L, 300L, 400L)
+        assertThat(remainingIds).contains(100L)       // Kept (messageId not included in LoadNext)
         assertThat(remainingIds).doesNotContain(200L) // Deleted (createdAt=999 < syncStartTime=1000)
         assertThat(remainingIds).contains(300L)       // Kept (createdAt=1000 >= syncStartTime=1000)
         assertThat(remainingIds).contains(400L)       // Kept (createdAt=1001 > syncStartTime=1000)
@@ -1026,7 +1026,7 @@ class CheckDeletedMessagesUseCaseTest {
     fun loadNext_withSyncStartTimeZero_shouldDeleteAllMessagesInRange() = runTest {
         // Arrange - syncStartTime = 0 means delete all (backward compatibility)
         insertMessages(
-            createMessageEntity(tid = 100, id = 100, createdAt = 100),   // Will be deleted (includeMessage=true)
+            createMessageEntity(tid = 100, id = 100, createdAt = 100),   // Should remain (messageId not included in LoadNext)
             createMessageEntity(tid = 200, id = 200, createdAt = 900),
             createMessageEntity(tid = 300, id = 300, createdAt = 1100),
             createMessageEntity(tid = 400, id = 400, createdAt = 1200)
@@ -1034,7 +1034,7 @@ class CheckDeletedMessagesUseCaseTest {
 
         val serverMessages = emptyList<SceytMessage>()
 
-        // Act - syncStartTime = 0 should delete all >= messageId
+        // Act - syncStartTime = 0 should delete all > messageId (not including messageId)
         useCase(
             channelId = channelId,
             loadType = LoadType.LoadNext,
@@ -1044,9 +1044,9 @@ class CheckDeletedMessagesUseCaseTest {
             syncStartTime = 0L
         )
 
-        // Assert - All messages >= 100 should be deleted (includeMessage=true)
+        // Assert - All messages > 100 should be deleted, messageId (100) should remain
         val remainingIds = messageDao.getMessagesIds(channelId)
-        assertThat(remainingIds).isEmpty()
+        assertThat(remainingIds).containsExactly(100L)
     }
 
     @Test
@@ -1197,7 +1197,7 @@ class CheckDeletedMessagesUseCaseTest {
         // Arrange - Complex scenario with multiple messages at various timestamps
         val syncStartTime = 1000L
         insertMessages(
-            createMessageEntity(tid = 100, id = 100, createdAt = 100), // Old, should delete because server returns empty
+            createMessageEntity(tid = 100, id = 100, createdAt = 100), // messageId, should remain (not included in LoadNext)
             createMessageEntity(tid = 150, id = 150, createdAt = 500),   // Old, should delete
             createMessageEntity(tid = 200, id = 200, createdAt = 800),   // Old, should delete
             createMessageEntity(tid = 250, id = 250, createdAt = 1050),  // New, should keep
@@ -1219,9 +1219,10 @@ class CheckDeletedMessagesUseCaseTest {
             syncStartTime = syncStartTime
         )
 
-        // Assert - Only old messages should be deleted
+        // Assert - messageId (100) should remain, only old messages > 100 should be deleted
         val remainingIds = messageDao.getMessagesIds(channelId)
-        assertThat(remainingIds).containsExactly( 250L, 350L, 400L)
+        assertThat(remainingIds).containsExactly(100L, 250L, 350L, 400L)
+        assertThat(remainingIds).contains(100L)       // Kept (messageId not included in LoadNext)
         assertThat(remainingIds).doesNotContain(150L) // Deleted (old)
         assertThat(remainingIds).doesNotContain(200L) // Deleted (old)
         assertThat(remainingIds).doesNotContain(300L) // Deleted (old)
