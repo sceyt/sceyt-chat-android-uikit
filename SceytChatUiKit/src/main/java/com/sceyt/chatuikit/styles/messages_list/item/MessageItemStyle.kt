@@ -90,6 +90,7 @@ import java.util.Date
  * @property deletedStateText Title for the deleted state, default is [R.string.sceyt_message_was_deleted].
  * @property forwardedText Title for the forwarded message, default is [R.string.sceyt_forwarded_message].
  * @property bodyTextStyle Style for the message body, default is [buildBodyTextStyle].
+ * @property readMoreStyle Style for the "Read More" button that appears when message body exceeds character limit, default is [buildReadMoreStyle].
  * @property deletedMessageTextStyle Style for the deleted message, default is [buildDeletedMessageTextStyle].
  * @property senderNameTextStyle Style for the sender name, default is [buildSenderNameTextStyle].
  * @property messageDateTextStyle Style for the message date, default is [buildMessageDateTextStyle].
@@ -124,7 +125,6 @@ import java.util.Date
  * @property userAvatarRenderer User avatar renderer, default is [SceytChatUIKitRenderers.userAvatarRenderer].
  * @property systemMessageItemStyle Style for the system message item, default is [SystemMessageItemStyle].
  * @property collapsedCharacterLimit Maximum number of characters to display before truncating message body and showing "Read More", default is [Int.MAX_VALUE].
- * @property readMoreStyle Style for the "Read More" button that appears when message body exceeds character limit, default is [buildReadMoreStyle].
  * */
 data class MessageItemStyle(
     val incomingBubbleBackgroundStyle: BackgroundStyle,
@@ -150,6 +150,7 @@ data class MessageItemStyle(
     val forwardedText: String,
     val messageDeliveryStatusIcons: MessageDeliveryStatusIcons,
     val bodyTextStyle: TextStyle,
+    val readMoreStyle: ReadMoreStyle,
     val deletedMessageTextStyle: TextStyle,
     val senderNameTextStyle: TextStyle,
     val messageDateTextStyle: TextStyle,
@@ -183,8 +184,7 @@ data class MessageItemStyle(
     val attachmentIconProvider: VisualProvider<SceytAttachment, Drawable?>,
     val senderNameColorProvider: VisualProvider<SceytUser, Int>,
     val userAvatarRenderer: AvatarRenderer<SceytUser>,
-    val collapsedCharacterLimit: Int,
-    @param:IntRange(from = 1, to = Long.MAX_VALUE) val readMoreStyle: ReadMoreStyle
+    @param:IntRange(from = 1, to = Long.MAX_VALUE) val collapsedCharacterLimit: Int,
 ) : SceytComponentStyle() {
 
     companion object {
@@ -284,6 +284,7 @@ data class MessageItemStyle(
                     forwardedText = forwardedText,
                     messageDeliveryStatusIcons = buildDeliveryStatusIconStyle(array),
                     bodyTextStyle = buildBodyTextStyle(array),
+                    readMoreStyle = buildReadMoreStyle(array),
                     deletedMessageTextStyle = buildDeletedMessageTextStyle(array),
                     senderNameTextStyle = buildSenderNameTextStyle(array),
                     messageDateTextStyle = buildMessageDateTextStyle(array),
@@ -318,7 +319,6 @@ data class MessageItemStyle(
                     senderNameColorProvider = SceytChatUIKit.providers.senderNameColorProvider,
                     userAvatarRenderer = SceytChatUIKit.renderers.userAvatarRenderer,
                     collapsedCharacterLimit = Int.MAX_VALUE,
-                    readMoreStyle = buildReadMoreStyle(array)
                 ).let { styleCustomizer.apply(context, it) }
             }
         }
