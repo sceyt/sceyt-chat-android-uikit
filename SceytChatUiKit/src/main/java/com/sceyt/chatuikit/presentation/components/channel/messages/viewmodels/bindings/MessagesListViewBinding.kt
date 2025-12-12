@@ -935,6 +935,10 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         onPollEvent(it)
     }
 
+    messagesListView.setExpandMessageBodyListener { messageTid ->
+        expandMessageBody(messageTid)
+    }
+
     messagesListView.setScrollStateChangeListener {
         if (it == RecyclerView.SCROLL_STATE_IDLE)
             syncNearCenterVisibleMessageIfNeeded()

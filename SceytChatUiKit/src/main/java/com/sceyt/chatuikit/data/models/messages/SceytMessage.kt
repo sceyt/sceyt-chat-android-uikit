@@ -48,6 +48,7 @@ data class SceytMessage(
     val files: List<FileListItem>? = null,
     val messageReactions: List<ReactionItem.Reaction>? = null,
     val isSelected: Boolean = false,
+    val isBodyExpanded: Boolean = false,
 ) : Parcelable, Cloneable {
 
     val isForwarded get() = (forwardingDetails?.messageId ?: 0L) > 0L

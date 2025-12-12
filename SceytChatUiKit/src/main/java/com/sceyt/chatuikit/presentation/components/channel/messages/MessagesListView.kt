@@ -15,6 +15,7 @@ import androidx.core.util.Predicate
 import androidx.core.view.isVisible
 import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
@@ -38,6 +39,7 @@ import com.sceyt.chatuikit.extensions.maybeComponentActivity
 import com.sceyt.chatuikit.extensions.openLink
 import com.sceyt.chatuikit.extensions.setClipboard
 import com.sceyt.chatuikit.extensions.setLayoutTransition
+import com.sceyt.chatuikit.extensions.updateWithScrollCompensation
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.media.audio.AudioFocusHelper
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
@@ -116,6 +118,7 @@ class MessagesListView @JvmOverloads constructor(
     private var messageCommandEventListener: ((MessageCommandEvent) -> Unit)? = null
     private var reactionEventListener: ((ReactionEvent) -> Unit)? = null
     private var pollEventListener: ((PollEvent) -> Unit)? = null
+    private var expandMessageBodyListener: ((Long) -> Unit)? = null
     private var reactionsPopupWindow: PopupWindow? = null
     private var onWindowFocusChangeListener: ((Boolean) -> Unit)? = null
     private var multiselectDestination: Map<Long, SceytMessage>? = null
@@ -281,6 +284,10 @@ class MessagesListView @JvmOverloads constructor(
                 checkMaybeInMultiSelectMode(view, item.message) {
                     clickListeners.onPollVotersClick(view, item, option)
                 }
+            }
+
+            override fun onReadMoreClick(view: View, item: MessageItem) {
+                clickListeners.onReadMoreClick(view, item)
             }
 
             override fun onScrollToDownClick(view: View) {
@@ -788,6 +795,10 @@ class MessagesListView @JvmOverloads constructor(
         messageCommandEventListener = listener
     }
 
+    internal fun setExpandMessageBodyListener(listener: (Long) -> Unit) {
+        expandMessageBodyListener = listener
+    }
+
     internal fun clearData() {
         messagesRV.clearData()
         updateViewState(PageState.StateEmpty())
@@ -1240,5 +1251,26 @@ class MessagesListView @JvmOverloads constructor(
         } else {
             messageCommandEventListener?.invoke(MessageCommandEvent.UserClick(userId))
         }
+    }
+
+    override fun onReadMoreClick(view: View, item: MessageItem) {
+        val messagesRV = getMessagesRecyclerView()
+        val vh = messagesRV.findViewHolderForItemId(item.getItemId()) as? BaseMessageViewHolder ?: return
+        val position = vh.bindingAdapterPosition
+        if (position == RecyclerView.NO_POSITION) return
+
+        expandMessageBodyListener?.invoke(item.message.tid)
+        
+        val expandedItem = item.copy(message = item.message.copy(isBodyExpanded = true))
+        val oldTop = vh.itemView.top
+        
+        messagesRV.updateWithScrollCompensation(
+            oldTop = oldTop,
+            getNewTop = { vh.itemView.top },
+            onUpdate = {
+                messagesRV.updateItemAt(position, expandedItem)
+                vh.bind(expandedItem, MessageDiff.DEFAULT_FALSE.copy(bodyChanged = true))
+            }
+        )
     }
 }
