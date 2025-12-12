@@ -59,6 +59,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.mes
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.reactions.ReactionItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.reactions.ReactionsAdapter
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.reactions.holders.ReactionViewHolderFactory
+import com.sceyt.chatuikit.presentation.components.channel.messages.helpers.MessageBodyTruncationHelper
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
 import com.sceyt.chatuikit.presentation.custom_views.AvatarView
 import com.sceyt.chatuikit.presentation.custom_views.ClickableTextView
@@ -154,7 +155,7 @@ abstract class BaseMessageViewHolder(
         checkLinks: Boolean = true,
         isLinkViewHolder: Boolean = false
     ) {
-        val body = itemStyle.messageBodyFormatter.format(
+        val formattedBody = itemStyle.messageBodyFormatter.format(
             context, MessageBodyFormatterAttributes(
                 message = message,
                 mentionTextStyle = itemStyle.mentionTextStyle,
@@ -162,8 +163,21 @@ abstract class BaseMessageViewHolder(
                     messageListeners?.onMentionClick(messageBody, it)
                 }
             ))
-        setTextAutoLinkMasks(messageBody, body, checkLinks, isLinkViewHolder)
-        messageBody.setText(body, TextView.BufferType.SPANNABLE)
+
+        val finalBody = MessageBodyTruncationHelper.applyTruncationIfNeeded(
+            formattedBody = formattedBody,
+            isExpanded = message.isBodyExpanded,
+            characterLimit = itemStyle.collapsedCharacterLimit,
+            readMoreStyle = itemStyle.readMoreStyle,
+            onReadMoreClick = {
+                (messageListItem as? MessageListItem.MessageItem)?.let { item ->
+                    messageListeners?.onReadMoreClick(messageBody, item)
+                }
+            }
+        )
+
+        setTextAutoLinkMasks(messageBody, finalBody, checkLinks, isLinkViewHolder)
+        messageBody.setText(finalBody, TextView.BufferType.SPANNABLE)
     }
 
     protected open fun setTextAutoLinkMasks(
