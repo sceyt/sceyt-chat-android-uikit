@@ -89,8 +89,8 @@ import java.util.Date
  * @property editedStateText Title for the edited state, default is [R.string.sceyt_edited].
  * @property deletedStateText Title for the deleted state, default is [R.string.sceyt_message_was_deleted].
  * @property forwardedText Title for the forwarded message, default is [R.string.sceyt_forwarded_message].
- * @property bodyTextStyle Style for the message body, default is [buildBodyTextStyle].
  * @property readMoreStyle Style for the "Read More" button that appears when message body exceeds character limit, default is [buildReadMoreStyle].
+ * @property bodyTextStyle Style for the message body, default is [buildBodyTextStyle].
  * @property deletedMessageTextStyle Style for the deleted message, default is [buildDeletedMessageTextStyle].
  * @property senderNameTextStyle Style for the sender name, default is [buildSenderNameTextStyle].
  * @property messageDateTextStyle Style for the message date, default is [buildMessageDateTextStyle].
@@ -149,8 +149,8 @@ data class MessageItemStyle(
     val deletedStateText: String,
     val forwardedText: String,
     val messageDeliveryStatusIcons: MessageDeliveryStatusIcons,
-    val bodyTextStyle: TextStyle,
     val readMoreStyle: ReadMoreStyle,
+    val bodyTextStyle: TextStyle,
     val deletedMessageTextStyle: TextStyle,
     val senderNameTextStyle: TextStyle,
     val messageDateTextStyle: TextStyle,
@@ -283,8 +283,8 @@ data class MessageItemStyle(
                     deletedStateText = deletedStateText,
                     forwardedText = forwardedText,
                     messageDeliveryStatusIcons = buildDeliveryStatusIconStyle(array),
-                    bodyTextStyle = buildBodyTextStyle(array),
                     readMoreStyle = buildReadMoreStyle(array),
+                    bodyTextStyle = buildBodyTextStyle(array),
                     deletedMessageTextStyle = buildDeletedMessageTextStyle(array),
                     senderNameTextStyle = buildSenderNameTextStyle(array),
                     messageDateTextStyle = buildMessageDateTextStyle(array),
