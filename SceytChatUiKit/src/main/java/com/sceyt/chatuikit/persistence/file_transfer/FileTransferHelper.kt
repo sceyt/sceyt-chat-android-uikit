@@ -55,7 +55,6 @@ object FileTransferHelper : SceytKoinComponent {
         }
     }
 
-    @Suppress("MemberVisibilityCanBePrivate")
     fun TransferTask.getProgressUpdateCallback() = ProgressUpdateCallback { transferData ->
         attachment = attachment.copy(
             transferState = transferData.state,
@@ -65,7 +64,6 @@ object FileTransferHelper : SceytKoinComponent {
         emitAttachmentTransferUpdate(transferData, attachment.fileSize)
     }
 
-    @Suppress("MemberVisibilityCanBePrivate")
     fun TransferTask.getPreparingCallback() = PreparingCallback { transferData ->
         attachment = attachment.copy(transferState = transferData.state)
         emitAttachmentTransferUpdate(transferData, attachment.fileSize)
@@ -74,7 +72,6 @@ object FileTransferHelper : SceytKoinComponent {
         }
     }
 
-    @Suppress("MemberVisibilityCanBePrivate")
     fun TransferTask.getResumePauseCallback() = ResumePauseCallback {
         attachment = attachment.copy(transferState = it.state)
         emitAttachmentTransferUpdate(it, attachment.fileSize)
@@ -83,7 +80,6 @@ object FileTransferHelper : SceytKoinComponent {
         }
     }
 
-    @Suppress("MemberVisibilityCanBePrivate")
     fun TransferTask.getDownloadResultCallback() = TransferResultCallback { response ->
         response.fold(
             onSuccess = { filePath ->

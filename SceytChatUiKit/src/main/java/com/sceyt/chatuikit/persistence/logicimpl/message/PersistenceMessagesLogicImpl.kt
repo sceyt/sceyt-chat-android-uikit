@@ -423,7 +423,7 @@ internal class PersistenceMessagesLogicImpl(
         withContext(dispatcherIO) {
             channels.forEach { channel ->
                 if (channel.messagesClearedAt > 0) {
-                    messageDao.deleteAllMessagesLowerThenDateIgnorePending(
+                    messageDao.deleteMessagesBeforeDateExceptPending(
                         channelId = channel.id,
                         date = channel.messagesClearedAt
                     )

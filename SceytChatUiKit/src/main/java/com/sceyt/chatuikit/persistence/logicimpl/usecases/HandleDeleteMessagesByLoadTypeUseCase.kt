@@ -78,7 +78,7 @@ internal class HandleDeleteMessagesByLoadTypeUseCase(
         Log.i(tag, "Deleting messages $operator $messageId (includeMessage=$includeMessage)")
 
         val compareMessageId = if (includeMessage) messageId else messageId - 1
-        val count = messageDao.deleteAllMessagesLowerThenMessageIdIgnorePending(
+        val count = messageDao.deleteMessagesBeforeIdExceptPending(
             channelId = channelId,
             messageId = compareMessageId
         )
@@ -108,7 +108,7 @@ internal class HandleDeleteMessagesByLoadTypeUseCase(
         Log.i(tag, "Deleting messages $operator $messageId (includeMessage=$includeMessage)")
 
         val compareMessageId = if (includeMessage) messageId else messageId + 1
-        val count = messageDao.deleteAllMessagesGreaterThenMessageIdIgnorePending(
+        val count = messageDao.deleteMessagesAfterIdUntilDateExceptPending(
             channelId = channelId,
             messageId = compareMessageId,
             deleteUntil = syncStartTime
