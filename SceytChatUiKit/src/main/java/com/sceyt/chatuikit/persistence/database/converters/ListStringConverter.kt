@@ -1,37 +1,58 @@
 package com.sceyt.chatuikit.persistence.database.converters
 
 import androidx.room.TypeConverter
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.Types
 
 object ListStringConverter {
+
+    private val moshi: Moshi = Moshi.Builder().build()
+
+    private val stringListAdapter = moshi.adapter<List<String>>(
+        Types.newParameterizedType(List::class.java, String::class.java)
+    )
+
+    private val stringIntMapAdapter = moshi.adapter<Map<String, Int>>(
+        Types.newParameterizedType(
+            Map::class.java,
+            String::class.java,
+            Int::class.javaObjectType
+        )
+    )
+
+    // ---------- List<String> ----------
+
     @TypeConverter
     fun stringToObj(json: String?): List<String> {
-        json ?: return emptyList()
-        val type = object : TypeToken<List<String>>() {}.type
-        return Gson().fromJson(json, type)
+        if (json.isNullOrEmpty()) return emptyList()
+        return try {
+            stringListAdapter.fromJson(json).orEmpty()
+        } catch (_: Exception) {
+            emptyList()
+        }
     }
 
     @TypeConverter
     fun objToString(obj: List<String>?): String? {
-        if (obj == null)
-            return null
-
-        val gson = Gson()
-        val type = object : TypeToken<List<String>>() {}.type
-        return gson.toJson(obj, type)
+        if (obj.isNullOrEmpty()) return null
+        return stringListAdapter.toJson(obj)
     }
+
+    // ---------- Map<String, Int> ----------
 
     @TypeConverter
     fun fromMap(value: Map<String, Int>?): String? {
-        return value?.let { Gson().toJson(it) }
+        if (value.isNullOrEmpty()) return null
+        return stringIntMapAdapter.toJson(value)
     }
 
     @TypeConverter
     fun toMap(value: String?): Map<String, Int>? {
-        return value?.let {
-            val mapType = object : TypeToken<Map<String, Int>>() {}.type
-            Gson().fromJson(it, mapType)
+        if (value.isNullOrEmpty()) return null
+        return try {
+            stringIntMapAdapter.fromJson(value)
+        } catch (_: Exception) {
+            null
         }
     }
 }
