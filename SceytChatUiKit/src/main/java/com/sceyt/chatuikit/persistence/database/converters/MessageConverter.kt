@@ -50,17 +50,18 @@ class MessageConverter {
 
     @TypeConverter
     fun stringToMarkerTotal(json: String?): List<MarkerTotal>? {
-        if (json.isNullOrEmpty()) return null
+        json ?: return null
         return try {
             markerTotalListAdapter.fromJson(json)
-        } catch (_: Exception) {
-            null
+        } catch (ex: Exception) {
+            println("Error converting List<MarkerTotal>: ${ex.message}")
+            emptyList()
         }
     }
 
     @TypeConverter
     fun markerTotalToString(obj: List<MarkerTotal>?): String? {
-        if (obj.isNullOrEmpty()) return null
+        obj ?: return null
         return markerTotalListAdapter.toJson(obj)
     }
 
@@ -68,27 +69,30 @@ class MessageConverter {
 
     @TypeConverter
     fun stringToBodyAttribute(json: String?): List<BodyAttribute>? {
-        if (json.isNullOrEmpty()) return null
+        json ?: return null
         return try {
             bodyAttributeListAdapter.fromJson(json)
-        } catch (_: Exception) {
-            null
+        } catch (ex: Exception) {
+            println("Error converting List<BodyAttribute>: ${ex.message}")
+            emptyList()
         }
     }
 
     @TypeConverter
     fun bodyAttributeToString(obj: List<BodyAttribute>?): String? {
-        if (obj.isNullOrEmpty()) return null
+        obj ?: return null
         return bodyAttributeListAdapter.toJson(obj)
     }
 
     // ---------- INT LIST ----------
 
     @TypeConverter
-    fun fromIntList(value: List<Int>?): String? =
-        value?.joinToString(",")
+    fun fromIntList(value: List<Int>?): String? {
+        return value?.joinToString(",")
+    }
 
     @TypeConverter
-    fun toIntList(value: String?): List<Int>? =
-        value?.split(",")?.mapNotNull { it.toIntOrNull() }
+    fun toIntList(value: String?): List<Int>? {
+        return value?.split(",")?.mapNotNull { it.toIntOrNull() }
+    }
 }

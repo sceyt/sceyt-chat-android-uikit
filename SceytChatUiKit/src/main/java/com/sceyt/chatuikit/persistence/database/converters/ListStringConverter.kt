@@ -27,14 +27,15 @@ object ListStringConverter {
         if (json.isNullOrEmpty()) return emptyList()
         return try {
             stringListAdapter.fromJson(json).orEmpty()
-        } catch (_: Exception) {
+        } catch (ex: Exception) {
+            println("Error converting List<String>: ${ex.message}")
             emptyList()
         }
     }
 
     @TypeConverter
     fun objToString(obj: List<String>?): String? {
-        if (obj.isNullOrEmpty()) return null
+        obj ?: return null
         return stringListAdapter.toJson(obj)
     }
 
@@ -42,17 +43,18 @@ object ListStringConverter {
 
     @TypeConverter
     fun fromMap(value: Map<String, Int>?): String? {
-        if (value.isNullOrEmpty()) return null
+        value ?: return null
         return stringIntMapAdapter.toJson(value)
     }
 
     @TypeConverter
     fun toMap(value: String?): Map<String, Int>? {
-        if (value.isNullOrEmpty()) return null
+        value ?: return null
         return try {
             stringIntMapAdapter.fromJson(value)
-        } catch (_: Exception) {
-            null
+        } catch (ex: Exception) {
+            println("Error converting Map<String, Int>: ${ex.message}")
+            emptyMap()
         }
     }
 }

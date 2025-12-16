@@ -125,7 +125,7 @@ internal fun PollDetails.toSceytPollDetails(
     anonymous = isAnonymous,
     allowMultipleVotes = isAllowMultipleVotes,
     allowVoteRetract = isAllowVoteRetract,
-    votesPerOption = votesPerOption,
+    votesPerOption = votesPerOption.orEmpty(),
     votes = votes?.map { vote -> vote.toVote() }.orEmpty(),
     ownVotes = ownVotes?.map { it.toVote() }.orEmpty(),
     pendingVotes = null,
