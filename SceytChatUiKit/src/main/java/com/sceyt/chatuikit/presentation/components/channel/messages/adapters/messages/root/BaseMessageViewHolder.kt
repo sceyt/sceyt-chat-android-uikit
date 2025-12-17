@@ -1,6 +1,5 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root
 
-import android.animation.ArgbEvaluator
 import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.content.Context
@@ -639,7 +638,7 @@ abstract class BaseMessageViewHolder(
         val colorFrom = itemStyle.highlightedMessageColor
         view.setBackgroundColor(colorFrom)
         val colorTo: Int = Color.TRANSPARENT
-        highlightAnim = ValueAnimator.ofObject(ArgbEvaluator(), colorFrom, colorTo)
+        highlightAnim = ValueAnimator.ofArgb(colorFrom, colorTo)
         highlightAnim?.duration = 2000
         highlightAnim?.addUpdateListener { animator -> view.setBackgroundColor(animator.animatedValue as Int) }
         highlightAnim?.start()
