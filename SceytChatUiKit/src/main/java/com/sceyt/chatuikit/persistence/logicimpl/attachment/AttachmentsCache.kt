@@ -10,11 +10,12 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 class AttachmentsCache {
-    @Volatile
     private var cachedAttachments = hashMapOf<String, HashMap<Long, SceytAttachment>>()
-    private val lock = Any()
+    private val mutex = Mutex()
 
     companion object {
         private val attachmentUpdatedFlow_ = MutableSharedFlow<List<SceytAttachment>>(
@@ -25,8 +26,8 @@ class AttachmentsCache {
     }
 
     /** Added attachments like upsert, and check is differences between attachments*/
-    fun addAll(list: List<SceytAttachment>, checkDifference: Boolean): Boolean {
-        synchronized(lock) {
+    suspend fun addAll(list: List<SceytAttachment>, checkDifference: Boolean): Boolean {
+        mutex.withLock {
             return if (checkDifference)
                 putAndCheckHasDiff(true, *list.toTypedArray())
             else {
@@ -40,8 +41,8 @@ class AttachmentsCache {
         }
     }
 
-    fun add(attachment: SceytAttachment) {
-        synchronized(lock) {
+    suspend fun add(attachment: SceytAttachment) {
+        mutex.withLock {
             val exist = cachedAttachments[attachment.type]?.get(attachment.messageTid) != null
             putToCache(attachment)
             if (exist)
@@ -49,22 +50,22 @@ class AttachmentsCache {
         }
     }
 
-    fun get(type: String, messageTid: Long): SceytAttachment? {
-        synchronized(lock) {
-            return cachedAttachments[type]?.get(messageTid)
+    suspend fun get(type: String, messageTid: Long): SceytAttachment? {
+        mutex.withLock {
+            return getImpl(type, messageTid)
         }
     }
 
-    fun clear(types: List<String>) {
-        synchronized(lock) {
+    suspend fun clear(types: List<String>) {
+        mutex.withLock {
             types.forEach { type ->
                 cachedAttachments.remove(type)
             }
         }
     }
 
-    fun getSorted(types: List<String>, desc: Boolean = true): List<SceytAttachment> {
-        synchronized(lock) {
+    suspend fun getSorted(types: List<String>, desc: Boolean = true): List<SceytAttachment> {
+        mutex.withLock {
             val filteredAttachments = cachedAttachments
                 .filterKeys { it in types }
                 .flatMap { it.value.values }
@@ -79,16 +80,16 @@ class AttachmentsCache {
         }
     }
 
-    fun deleteAttachment(messageTid: Long) {
-        synchronized(lock) {
+    suspend fun deleteAttachment(messageTid: Long) {
+        mutex.withLock {
             cachedAttachments.values.forEach {
                 it.remove(messageTid)
             }
         }
     }
 
-    fun upsertAttachments(vararg attachments: SceytAttachment) {
-        synchronized(lock) {
+    suspend fun upsertAttachments(vararg attachments: SceytAttachment) {
+        mutex.withLock {
             attachments.forEach {
                 if (putAndCheckHasDiff(false, it))
                     emitAttachmentUpdated(it)
@@ -96,8 +97,8 @@ class AttachmentsCache {
         }
     }
 
-    fun updateAttachmentTransferData(updateDate: TransferData) {
-        synchronized(lock) {
+    suspend fun updateAttachmentTransferData(updateDate: TransferData) {
+        mutex.withLock {
             fun update(attachment: SceytAttachment): SceytAttachment {
                 return attachment.copy(
                     transferState = updateDate.state,
@@ -110,7 +111,7 @@ class AttachmentsCache {
             cachedAttachments.values.forEach {
                 it[updateDate.messageTid]?.let { attachment ->
                     if (attachment.type == AttachmentTypeEnum.Link.value)
-                        return
+                        return@withLock
 
                     when (updateDate.state) {
                         TransferState.PendingUpload, TransferState.Uploading, TransferState.Uploaded,
@@ -126,16 +127,16 @@ class AttachmentsCache {
                                 it[updateDate.messageTid] = update(attachment)
                         }
 
-                        TransferState.FilePathChanged, TransferState.ThumbLoaded -> return
+                        TransferState.FilePathChanged, TransferState.ThumbLoaded -> return@withLock
                     }
                 }
             }
         }
     }
 
-    fun updateAttachmentLinkDetails(data: LinkPreviewDetails) {
-        synchronized(lock) {
-            val map = cachedAttachments[AttachmentTypeEnum.Link.value] ?: return
+    suspend fun updateAttachmentLinkDetails(data: LinkPreviewDetails) {
+        mutex.withLock {
+            val map = cachedAttachments[AttachmentTypeEnum.Link.value] ?: return@withLock
             map.entries.forEach { (key, attachment) ->
                 if (attachment.url == data.link)
                     map[key] = attachment.copy(linkPreviewDetails = data)
@@ -143,8 +144,8 @@ class AttachmentsCache {
         }
     }
 
-    fun updateLinkDetailsSize(link: String, width: Int, height: Int) {
-        synchronized(lock) {
+    suspend fun updateLinkDetailsSize(link: String, width: Int, height: Int) {
+        mutex.withLock {
             cachedAttachments[AttachmentTypeEnum.Link.value]?.entries?.forEach { entry ->
                 val (_, attachment) = entry
                 if (attachment.url == link) {
@@ -158,8 +159,8 @@ class AttachmentsCache {
         }
     }
 
-    fun updateThumb(link: String, thumb: String) {
-        synchronized(lock) {
+    suspend fun updateThumb(link: String, thumb: String) {
+        mutex.withLock {
             cachedAttachments[AttachmentTypeEnum.Link.value]?.entries?.forEach { entry ->
                 val (_, attachment) = entry
                 if (attachment.url == link) {
@@ -170,13 +171,17 @@ class AttachmentsCache {
         }
     }
 
+    private fun getImpl(type: String, messageTid: Long): SceytAttachment? {
+        return cachedAttachments[type]?.get(messageTid)
+    }
+
     /** Set attachment data from cash, which saved in local db.*/
     private fun initMessagePayLoads(attachmentToUpdate: SceytAttachment): SceytAttachment {
         return setPayloads(attachmentToUpdate)
     }
 
     private fun setPayloads(attachmentToUpdate: SceytAttachment): SceytAttachment {
-        val cashedAttachment = get(attachmentToUpdate.type, attachmentToUpdate.messageTid)
+        val cashedAttachment = getImpl(attachmentToUpdate.type, attachmentToUpdate.messageTid)
                 ?: return attachmentToUpdate
         val attachmentPayLoadData = getAttachmentPayLoads(cashedAttachment)
         val linkPreviewDetails = cashedAttachment.linkPreviewDetails
