@@ -8,17 +8,17 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.onError
-import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.interactor.UserInteractor
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import org.koin.core.component.inject
 
-class ProfileViewModel : BaseViewModel(), SceytKoinComponent {
-    private val userInteractor: UserInteractor by inject()
+class ProfileViewModel(val userId: String) : BaseViewModel() {
+    private val userInteractor: UserInteractor = SceytChatUIKit.chatUIFacade.userInteractor
 
     private val _muteUnMuteLiveData = MutableLiveData<Boolean>()
     val muteUnMuteLiveData: LiveData<Boolean> = _muteUnMuteLiveData
@@ -32,9 +32,14 @@ class ProfileViewModel : BaseViewModel(), SceytKoinComponent {
     private val _logOutLiveData = MutableLiveData<Boolean>()
     val logOutLiveData: LiveData<Boolean> = _logOutLiveData
 
-    val currentUserAsFlow
-        get() = userInteractor.getCurrentUserAsFlow()
-            ?.stateIn(viewModelScope, SharingStarted.Lazily, null)
+    private val _currentUserAsFlow = MutableStateFlow(SceytChatUIKit.currentUser)
+    val currentUserAsFlow = _currentUserAsFlow.asStateFlow()
+
+    init {
+        userInteractor.getCurrentUserAsFlow(userId)?.onEach { user ->
+            _currentUserAsFlow.value = user
+        }?.launchIn(viewModelScope)
+    }
 
     fun updateProfile(
         firstName: String?,

@@ -773,8 +773,8 @@ internal class PersistenceMiddleWareImpl(
         return usersLogic.getCurrentUserId()
     }
 
-    override fun getCurrentUserAsFlow(): Flow<SceytUser>? {
-        return usersLogic.getCurrentUserAsFlow()
+    override fun getCurrentUserAsFlow(currentUserId: String?): Flow<SceytUser>? {
+        return usersLogic.getCurrentUserAsFlow(currentUserId)
     }
 
     override suspend fun uploadAvatar(avatarUrl: String): SceytResponse<String> {
