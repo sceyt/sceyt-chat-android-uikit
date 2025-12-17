@@ -1078,11 +1078,6 @@ internal class PersistenceChannelsLogicImpl(
         }
     }
 
-    override suspend fun setUnreadCount(channelId: Long, count: Int) {
-        channelDao.updateUnreadCount(channelId, count)
-        channelsCache.updateUnreadCount(channelId, count)
-    }
-
     override suspend fun blockUnBlockUser(userId: String, block: Boolean) {
         val channels = channelDao.getChannelByPeerId(userId)
         channelsCache.upsertChannels(channels.map { it.toChannel() })

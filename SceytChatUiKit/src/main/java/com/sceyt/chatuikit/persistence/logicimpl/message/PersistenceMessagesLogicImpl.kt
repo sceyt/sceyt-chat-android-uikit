@@ -434,7 +434,7 @@ internal class PersistenceMessagesLogicImpl(
                 }
 
                 channel.lastMessage?.let { lastMessage ->
-                    val currentChannel by lazy { channelCache.getOneOf(channel.id) }
+                    val currentChannel = channelCache.getOneOf(channel.id)
                     // Check current channel last message is the same as lastMessage from synced channel,
                     // to avoid deleting messages incorrectly
                     if (channel.lastDisplayedMessageId > lastMessage.id && currentChannel?.lastMessage == lastMessage) {
