@@ -1,7 +1,6 @@
 package com.sceyt.chatuikit.presentation.custom_views.voice_recorder
 
 import android.Manifest
-import android.animation.ArgbEvaluator
 import android.animation.LayoutTransition
 import android.animation.ValueAnimator
 import android.annotation.SuppressLint
@@ -476,7 +475,7 @@ class VoiceRecorderView @JvmOverloads constructor(
     }
 
     private fun animateColor(view: View, colorFrom: Int, colorTo: Int) {
-        colorAnimation = ValueAnimator.ofObject(ArgbEvaluator(), colorFrom, colorTo)
+        colorAnimation = ValueAnimator.ofArgb( colorFrom, colorTo)
         colorAnimation?.duration = 200 // milliseconds
         colorAnimation?.addUpdateListener { animator ->
             view.backgroundTintList = ColorStateList.valueOf(animator.animatedValue as Int)
