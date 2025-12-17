@@ -62,6 +62,7 @@ import com.sceyt.chatuikit.presentation.components.channel_info.dialogs.DirectCh
 import com.sceyt.chatuikit.presentation.components.channel_info.dialogs.DirectChatActionsDialog.ActionsEnum.UnPin
 import com.sceyt.chatuikit.presentation.components.channel_info.dialogs.GroupChatActionsDialog
 import com.sceyt.chatuikit.presentation.components.channel_info.files.ChannelInfoFilesFragment
+import com.sceyt.chatuikit.presentation.components.channel_info.groups.ChannelInfoCommonGroupsFragment
 import com.sceyt.chatuikit.presentation.components.channel_info.links.ChannelInfoLinksFragment
 import com.sceyt.chatuikit.presentation.components.channel_info.media.ChannelInfoMediaFragment
 import com.sceyt.chatuikit.presentation.components.channel_info.members.ChannelMembersFragment
@@ -262,6 +263,7 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
             getChannelFilesFragment(channel),
             getChannelVoiceFragment(channel),
             getChannelLinksFragment(channel),
+            if (channel.isDirect() && SceytChatUIKit.config.showGroupsInCommon) getChannelCommonGroupsFragment(channel) else null
         ).filterNotNull()
 
         pagerAdapter = ViewPagerAdapter(this, fragments)
@@ -566,6 +568,7 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
     protected open fun setPagerAdapter(pagerAdapter: ViewPagerAdapter) {
         binding?.viewPager?.adapter = pagerAdapter
+        binding?.viewPager?.offscreenPageLimit= 5
     }
 
     protected open fun toggleToolbarViews(showDetails: Boolean) {
@@ -670,6 +673,10 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
     protected open fun getChannelVoiceFragment(channel: SceytChannel): Fragment? {
         return ChannelInfoVoiceFragment.newInstance(channel, style.voiceStyle.styleId)
+    }
+
+    protected open fun getChannelCommonGroupsFragment(channel: SceytChannel): Fragment?{
+            return ChannelInfoCommonGroupsFragment.newInstance(channel, style.commonGroupsStyle.styleId)
     }
 
     protected open fun getEditChannelFragment(channel: SceytChannel): Fragment? = EditChannelFragment.newInstance(channel)

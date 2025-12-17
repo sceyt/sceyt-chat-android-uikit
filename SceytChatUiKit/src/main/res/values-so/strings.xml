@@ -85,10 +85,6 @@
     <string name="sceyt_delete_channel">Delete channel</string>
     <string name="sceyt_kick_member">Kick member</string>
     <string name="sceyt_unblock">Unblock</string>
-    <string name="sceyt_no_media_items_yet">No media items yet</string>
-    <string name="sceyt_no_file_items_yet">No file items yet</string>
-    <string name="sceyt_no_voice_items_yet">No voice items yet</string>
-    <string name="sceyt_no_link_items_yet">No link items yet</string>
     <string name="sceyt_history_was_successfully_cleared">History was successfully cleared!</string>
     <string name="sceyt_mute_chat">Mute chat:</string>
     <string name="sceyt_for_1_hour">Hal saac</string>

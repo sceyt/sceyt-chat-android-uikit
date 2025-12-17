@@ -91,10 +91,6 @@
     <string name="sceyt_delete_channel">حذف القناة</string>
     <string name="sceyt_kick_member">طرد العضو</string>
     <string name="sceyt_unblock">إلغاء الحظر</string>
-    <string name="sceyt_no_media_items_yet">لا توجد عناصر وسائط بعد</string>
-    <string name="sceyt_no_file_items_yet">لا توجد ملفات بعد</string>
-    <string name="sceyt_no_voice_items_yet">لا توجد تسجيلات صوتية بعد</string>
-    <string name="sceyt_no_link_items_yet">لا توجد روابط بعد</string>
     <string name="sceyt_history_was_successfully_cleared">تم مسح السجل بنجاح!</string>
     <string name="sceyt_auto_delete">حذف الرسائل تلقائيًا</string>
     <string name="sceyt_1_day">يوم واحد</string>

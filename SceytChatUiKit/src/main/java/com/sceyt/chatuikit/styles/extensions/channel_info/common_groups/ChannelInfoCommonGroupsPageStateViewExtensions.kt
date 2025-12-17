@@ -1,24 +1,23 @@
-package com.sceyt.chatuikit.styles.extensions.channel_info.link
+package com.sceyt.chatuikit.styles.extensions.channel_info.common_groups
 
-import androidx.annotation.LayoutRes
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytEmptyStateBinding
 import com.sceyt.chatuikit.databinding.SceytPageLoadingStateBinding
 import com.sceyt.chatuikit.extensions.setProgressColorRes
 import com.sceyt.chatuikit.presentation.custom_views.PageStateView
-import com.sceyt.chatuikit.styles.channel_info.link.ChannelInfoLinkStyle
+import com.sceyt.chatuikit.styles.channel_info.common_groups.ChannelInfoCommonGroupsStyle
 import com.sceyt.chatuikit.styles.extensions.common.applyStyle
 
 internal fun PageStateView.setPageStatesView(
-        style: ChannelInfoLinkStyle,
+        groupsStyle: ChannelInfoCommonGroupsStyle,
 ) {
-    setEmptyState(style)
-    setLoadingState(style.loadingState)
+    setEmptyState(groupsStyle)
+    setLoadingState(groupsStyle)
 }
 
 private fun PageStateView.setEmptyState(
-        style: ChannelInfoLinkStyle,
+        style: ChannelInfoCommonGroupsStyle,
 ) {
     if (style.emptyState == R.layout.sceyt_empty_state) {
         setEmptyStateView(
@@ -31,18 +30,17 @@ private fun PageStateView.setEmptyState(
     }
 }
 
-
 private fun PageStateView.setLoadingState(
-        @LayoutRes layoutResId: Int,
+        style: ChannelInfoCommonGroupsStyle,
 ) {
-    if (layoutResId == R.layout.sceyt_page_loading_state) {
+    if (style.loadingState == R.layout.sceyt_page_loading_state) {
         setLoadingStateView(
             SceytPageLoadingStateBinding.inflate(
                 layoutInflater, this, false
             ).also { it.applyStyle() }.root
         )
     } else {
-        setLoadingStateView(layoutResId)
+        setLoadingStateView(style.loadingState)
     }
 }
 
