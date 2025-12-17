@@ -23,6 +23,7 @@ import com.sceyt.chatuikit.formatters.defaults.DefaultChannelInfoVoiceSubtitleFo
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelLastMessageSenderNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelListChannelEventTitleFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelListSubtitleFormatter
+import com.sceyt.chatuikit.formatters.defaults.DefaultCommonGroupMembersCountFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelSubtitleFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultConnectionsStateTitleFormatter
@@ -238,5 +239,13 @@ class SceytChatUIKitFormatters {
 
     var systemMessageBodyFormatter: Formatter<SceytMessage> by lazyVar {
         DefaultSystemMessageBodyFormatter()
+    }
+
+    var commonGroupMembersCountFormatter: Formatter<SceytChannel> by lazyVar {
+        DefaultCommonGroupMembersCountFormatter()
+    }
+
+    var commonGroupTitleFormatter: Formatter<SceytChannel> by lazyVar {
+        DefaultChannelNameFormatter()
     }
 }

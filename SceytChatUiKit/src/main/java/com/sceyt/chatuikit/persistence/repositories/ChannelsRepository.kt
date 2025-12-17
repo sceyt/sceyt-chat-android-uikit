@@ -69,4 +69,6 @@ interface ChannelsRepository {
     suspend fun join(channelId: Long): SceytResponse<SceytChannel>
     suspend fun joinWithInviteKey(inviteKey: String): SceytResponse<SceytChannel>
     suspend fun sendChannelEvent(channelId: Long, event: String)
+    suspend fun getCommonGroups(userId: String): SceytPagingResponse<List<SceytChannel>>
+    suspend fun loadMoreCommonGroups(): SceytPagingResponse<List<SceytChannel>>
 }

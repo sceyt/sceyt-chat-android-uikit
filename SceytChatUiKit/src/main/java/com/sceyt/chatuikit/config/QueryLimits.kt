@@ -11,4 +11,5 @@ data class QueryLimits(
         @param:IntRange(1, 50) val reactionListQueryLimit: Int = 30,
         @param:IntRange(1, 50) val unreadMentionsListQueryLimit: Int = 30,
         @param:IntRange(1, 50) val votersListQueryLimit: Int = 30,
+        @param:IntRange(1, 50) val mutualGroupsQueryLimit:Int = 10
 )

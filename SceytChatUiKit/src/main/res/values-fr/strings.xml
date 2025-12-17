@@ -85,10 +85,6 @@
     <string name="sceyt_delete_channel">Supprimer un canal</string>
     <string name="sceyt_kick_member">enlever un membre</string>
     <string name="sceyt_unblock">Débloquer</string>
-    <string name="sceyt_no_media_items_yet">Pas encore d’éléments multimédias</string>
-    <string name="sceyt_no_file_items_yet">Aucun fichier pour le moment</string>
-    <string name="sceyt_no_voice_items_yet">Pas d’éléments vocaux pour le moment</string>
-    <string name="sceyt_no_link_items_yet">Aucun élément de lien pour le moment</string>
     <string name="sceyt_history_was_successfully_cleared">L\'historique a été effacé avec succes</string>
     <string name="sceyt_mute_chat">Conversation muette</string>
     <string name="sceyt_for_1_hour">Pendant 1 heure</string>

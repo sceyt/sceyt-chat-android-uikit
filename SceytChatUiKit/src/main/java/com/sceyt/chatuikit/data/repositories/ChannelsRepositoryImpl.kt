@@ -23,6 +23,7 @@ import com.sceyt.chatuikit.config.ChannelListConfig
 import com.sceyt.chatuikit.config.SearchChannelParams
 import com.sceyt.chatuikit.data.models.SceytPagingResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
 import com.sceyt.chatuikit.data.models.channels.EditChannelData
 import com.sceyt.chatuikit.data.models.channels.GetAllChannelsResponse
@@ -43,6 +44,7 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 class ChannelsRepositoryImpl : ChannelsRepository {
 
     private lateinit var channelsQuery: ChannelListQuery
+    private lateinit var mutualChannelsQuery: ChannelListQuery
 
     private fun createMemberListQuery(
         channelId: Long,
@@ -177,6 +179,65 @@ class ChannelsRepositoryImpl : ChannelsRepository {
                 }
             })
         }
+    }
+
+    override suspend fun getCommonGroups(
+        userId: String,
+    ): SceytPagingResponse<List<SceytChannel>> {
+        return suspendCancellableCoroutine { continuation ->
+            val query = createMutualChannelsQuery(
+                userId = userId,
+                limit = SceytChatUIKit.config.queryLimits.mutualGroupsQueryLimit,
+            ).also { mutualChannelsQuery = it }
+
+            query.loadNext(object : ChannelsCallback {
+                override fun onResult(channels: MutableList<Channel>?) {
+                    continuation.safeResume(
+                        SceytPagingResponse.Success(
+                            data = channels?.map { it.toSceytUiChannel() }.orEmpty(),
+                            hasNext = query.hasNext()
+                        )
+                    )
+                }
+
+                override fun onError(e: SceytException?) {
+                    continuation.safeResume(SceytPagingResponse.Error(e))
+                    SceytLog.e(TAG, "getMutualChannels error: ${e?.message}, code: ${e?.code}")
+                }
+            })
+        }
+    }
+
+    override suspend fun loadMoreCommonGroups(): SceytPagingResponse<List<SceytChannel>> {
+        if (!::mutualChannelsQuery.isInitialized) {
+            return SceytPagingResponse.Success(data = emptyList(), hasNext = false)
+        }
+        return suspendCancellableCoroutine { continuation ->
+            mutualChannelsQuery.loadNext(object : ChannelsCallback {
+                override fun onResult(channels: MutableList<Channel>?) {
+                    continuation.safeResume(
+                        SceytPagingResponse.Success(
+                            data = channels?.map { it.toSceytUiChannel() }.orEmpty(),
+                            hasNext = mutualChannelsQuery.hasNext()
+                        )
+                    )
+                }
+
+                override fun onError(e: SceytException?) {
+                    continuation.safeResume(SceytPagingResponse.Error(e))
+                    SceytLog.e(TAG, "loadMoreMutualChannels error: ${e?.message}, code: ${e?.code}")
+                }
+            })
+        }
+    }
+
+    private fun createMutualChannelsQuery(userId: String, limit: Int): ChannelListQuery {
+        return ChannelListQuery.Builder()
+            .order(SceytChatUIKit.config.channelListOrder)
+            .limit(limit)
+            .mutualWithUserId(userId)
+            .withExcludeTypes(listOf(ChannelTypeEnum.Direct.value))
+            .build()
     }
 
     override suspend fun getAllChannels(limit: Int): Flow<GetAllChannelsResponse> = callbackFlow {

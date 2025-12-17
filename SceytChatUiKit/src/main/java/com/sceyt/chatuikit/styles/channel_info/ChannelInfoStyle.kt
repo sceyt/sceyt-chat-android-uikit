@@ -8,6 +8,7 @@ import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoActivity
 import com.sceyt.chatuikit.styles.StyleCustomizer
+import com.sceyt.chatuikit.styles.channel_info.common_groups.ChannelInfoCommonGroupsStyle
 import com.sceyt.chatuikit.styles.channel_info.files.ChannelInfoFilesStyle
 import com.sceyt.chatuikit.styles.channel_info.link.ChannelInfoLinkStyle
 import com.sceyt.chatuikit.styles.channel_info.media.ChannelInfoMediaStyle
@@ -32,6 +33,7 @@ import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
  * @property filesStyle - style for the files section
  * @property voiceStyle - style for the voice section
  * @property linkStyle - style for the link section
+ * @property commonGroupsStyle - style for the common groups section
  * */
 data class ChannelInfoStyle(
         @param:ColorInt val backgroundColor: Int,
@@ -49,6 +51,7 @@ data class ChannelInfoStyle(
         val filesStyle: ChannelInfoFilesStyle,
         val voiceStyle: ChannelInfoVoiceStyle,
         val linkStyle: ChannelInfoLinkStyle,
+        val commonGroupsStyle: ChannelInfoCommonGroupsStyle,
 ) {
 
     companion object {
@@ -76,6 +79,7 @@ data class ChannelInfoStyle(
             val filesStyle = ChannelInfoFilesStyle.Builder(context, attributeSet).build()
             val voiceStyle = ChannelInfoVoiceStyle.Builder(context, attributeSet).build()
             val linkStyle = ChannelInfoLinkStyle.Builder(context, attributeSet).build()
+            val commonGroupsStyle = ChannelInfoCommonGroupsStyle.Builder(context, attributeSet).build()
 
             return ChannelInfoStyle(
                 backgroundColor = backgroundColor,
@@ -93,6 +97,7 @@ data class ChannelInfoStyle(
                 filesStyle = filesStyle,
                 voiceStyle = voiceStyle,
                 linkStyle = linkStyle,
+                commonGroupsStyle = commonGroupsStyle,
             ).let { styleCustomizer.apply(context, it) }
         }
     }
