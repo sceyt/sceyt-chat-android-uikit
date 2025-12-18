@@ -115,6 +115,9 @@ open class ChannelInfoCommonGroupsFragment : Fragment(), SceytKoinComponent {
                     it.setOnClickListener { _, channel ->
                         onChannelClick(channel)
                     }
+                    it.setOnAvatarClickListener { _, channel ->
+                        onChannelClick(channel)
+                    }
                 }
             ).also { commonGroupsAdapter = it }
 

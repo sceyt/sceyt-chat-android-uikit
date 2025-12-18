@@ -48,6 +48,10 @@ open class CommonGroupViewHolderFactory(
         clickListeners.setListener(listener)
     }
 
+    fun setOnAvatarClickListener(listener: CommonGroupClickListeners.AvatarClickListener) {
+        clickListeners.setListener(listener)
+    }
+
     open fun getItemViewType(item: CommonGroupListItem): Int {
         return when (item) {
             is CommonGroupListItem.GroupItem -> ItemType.Group.ordinal

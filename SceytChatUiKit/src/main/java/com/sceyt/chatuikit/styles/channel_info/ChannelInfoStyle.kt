@@ -52,6 +52,7 @@ data class ChannelInfoStyle(
         val voiceStyle: ChannelInfoVoiceStyle,
         val linkStyle: ChannelInfoLinkStyle,
         val commonGroupsStyle: ChannelInfoCommonGroupsStyle,
+        val showGroupsInCommon: Boolean
 ) {
 
     companion object {
@@ -98,6 +99,7 @@ data class ChannelInfoStyle(
                 voiceStyle = voiceStyle,
                 linkStyle = linkStyle,
                 commonGroupsStyle = commonGroupsStyle,
+                showGroupsInCommon = false
             ).let { styleCustomizer.apply(context, it) }
         }
     }
