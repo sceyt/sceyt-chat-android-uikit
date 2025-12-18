@@ -10,7 +10,7 @@ import com.sceyt.chatuikit.styles.channel_info.common_groups.CommonGroupItemStyl
 class CommonGroupViewHolder(
     private val binding: SceytItemCommonGroupBinding,
     private val style: CommonGroupItemStyle,
-    private val clickListeners: CommonGroupClickListeners.ClickListener?
+    private val clickListeners: CommonGroupClickListeners.ClickListeners?
 ) : BaseViewHolder<CommonGroupListItem>(binding.root) {
 
     private lateinit var channel: SceytChannel
@@ -19,6 +19,9 @@ class CommonGroupViewHolder(
         binding.applyStyle()
         binding.root.setOnClickListener {
             clickListeners?.onGroupClick(it, channel)
+        }
+        binding.avatar.setOnClickListener {
+            clickListeners?.onAvatarClick(it, channel)
         }
     }
 
@@ -31,17 +34,17 @@ class CommonGroupViewHolder(
 
     private fun bindGroup(channel: SceytChannel) {
         with(binding) {
-            tvChannelName.text = style.commonGroupTitleFormatter.format(
+            tvChannelName.text = style.titleFormatter.format(
                 context = root.context,
                 from = channel
             )
 
-            tvChannelSubtitle.text = style.commonGroupMembersCountFormatter.format(
+            tvChannelSubtitle.text = style.membersCountFormatter.format(
                 context = root.context,
                 from = channel
             )
 
-            style.channelAvatarRenderer.render(
+            style.avatarRenderer.render(
                 context = root.context,
                 from = channel,
                 style = style.avatarStyle,
@@ -51,9 +54,8 @@ class CommonGroupViewHolder(
     }
 
     private fun SceytItemCommonGroupBinding.applyStyle() {
-        root.setBackgroundColor(style.backgroundColor)
-        style.commonGroupTitleStyle.apply(tvChannelName)
-        style.commonGroupMembersCountStyle.apply(tvChannelSubtitle)
+        style.titleStyle.apply(tvChannelName)
+        style.membersCountStyle.apply(tvChannelSubtitle)
         style.avatarStyle.apply(avatar)
     }
 }

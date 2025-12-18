@@ -11,10 +11,10 @@
     <string name="sceyt_no_channels">No Chats yet</string>
     <string name="sceyt_message">Message</string>
     <string name="sceyt_online">online</string>
-    <string name="sceyt_members_count">%1$d members</string>
-    <string name="sceyt_member_count">%1$d member</string>
-    <string name="sceyt_subscribers_count">%1$d subscribers</string>
-    <string name="sceyt_subscriber_count">%1$d subscriber</string>
+    <string name="sceyt_members_count">%1$s members</string>
+    <string name="sceyt_member_count">%1$s member</string>
+    <string name="sceyt_subscribers_count">%1$s subscribers</string>
+    <string name="sceyt_subscriber_count">%1$s subscriber</string>
     <string name="sceyt_hint_channel_subject">Subject</string>
     <string name="sceyt_add_members">Add members</string>
     <string name="sceyt_add_subscribers">Add subscribers</string>

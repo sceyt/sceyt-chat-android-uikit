@@ -11,10 +11,10 @@
     <string name="sceyt_no_channels">لا توجد محادثات بعد</string>
     <string name="sceyt_message">رسالة</string>
     <string name="sceyt_online">متصل الآن</string>
-    <string name="sceyt_members_count">%1$d أعضاء</string>
-    <string name="sceyt_member_count">%1$d عضو</string>
-    <string name="sceyt_subscribers_count">%1$d مشتركين</string>
-    <string name="sceyt_subscriber_count">%1$d مشترك</string>
+    <string name="sceyt_members_count">%1$s أعضاء</string>
+    <string name="sceyt_member_count">%1$s عضو</string>
+    <string name="sceyt_subscribers_count">%1$s مشتركين</string>
+    <string name="sceyt_subscriber_count">%1$s مشترك</string>
     <string name="sceyt_hint_channel_subject">الموضوع</string>
     <string name="sceyt_add_members">إضافة أعضاء</string>
     <string name="sceyt_add_subscribers">إضافة مشتركين</string>

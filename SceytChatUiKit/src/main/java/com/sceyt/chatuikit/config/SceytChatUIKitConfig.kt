@@ -45,6 +45,4 @@ class SceytChatUIKitConfig {
 
     @IntRange(from = 1, to = 50)
     var attachmentSelectionLimit: Int = 20
-
-    var showGroupsInCommon = false
 }

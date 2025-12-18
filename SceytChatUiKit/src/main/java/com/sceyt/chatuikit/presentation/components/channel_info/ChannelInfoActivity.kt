@@ -126,6 +126,7 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
         StyleRegistry.register(style.filesStyle)
         StyleRegistry.register(style.linkStyle)
         StyleRegistry.register(style.voiceStyle)
+        StyleRegistry.register(style.commonGroupsStyle)
     }
 
     private fun getBundleArguments() {
@@ -263,11 +264,10 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
             getChannelFilesFragment(channel),
             getChannelVoiceFragment(channel),
             getChannelLinksFragment(channel),
-            if (channel.isDirect() && SceytChatUIKit.config.showGroupsInCommon) getChannelCommonGroupsFragment(channel) else null
+            if (channel.isDirect() && style.showGroupsInCommon) getChannelCommonGroupsFragment(channel) else null
         ).filterNotNull()
 
         pagerAdapter = ViewPagerAdapter(this, fragments)
-
         setPagerAdapter(pagerAdapter)
         setupTabLayout(tabLayout ?: return, viewPager ?: return)
     }
@@ -742,7 +742,8 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
             style.mediaStyle.styleId,
             style.filesStyle.styleId,
             style.linkStyle.styleId,
-            style.voiceStyle.styleId
+            style.voiceStyle.styleId,
+            style.commonGroupsStyle.styleId
         )
     }
 

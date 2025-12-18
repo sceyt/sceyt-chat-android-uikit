@@ -63,11 +63,7 @@ data class ChannelInfoCommonGroupsStyle(
                 loadMoreProgressColor = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
 
             val typedArray = context.obtainStyledAttributes(attributeSet, R.styleable.ChannelInfoCommonGroupsView)
-            val itemStyle = try {
-                CommonGroupItemStyle.Builder(context, typedArray).build()
-            } finally {
-                typedArray.recycle()
-            }
+            val itemStyle = CommonGroupItemStyle.Builder(context, typedArray).build()
 
             val emptyState = R.layout.sceyt_empty_state
             val loadingState = R.layout.sceyt_page_loading_state

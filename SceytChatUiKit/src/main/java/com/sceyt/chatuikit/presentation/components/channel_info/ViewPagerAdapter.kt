@@ -15,7 +15,6 @@ class ViewPagerAdapter(
         private val fragments: List<Fragment>
 ) : FragmentStateAdapter(activity) {
 
-
     override fun getItemCount(): Int {
         return fragments.size
     }
@@ -25,8 +24,8 @@ class ViewPagerAdapter(
     }
 
     fun getTagByPosition(position: Int): String {
-        return fragments.getOrNull(position)?.let {
-            when (it) {
+        return fragments.getOrNull(position)?.let { fragment ->
+            when (fragment) {
                 is ChannelInfoMediaFragment -> activity.getString(R.string.sceyt_media)
                 is ChannelInfoFilesFragment -> activity.getString(R.string.sceyt_files)
                 is ChannelInfoLinksFragment -> activity.getString(R.string.sceyt_links)

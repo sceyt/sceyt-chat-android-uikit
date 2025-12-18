@@ -8,4 +8,10 @@ sealed interface CommonGroupClickListeners {
     fun interface ClickListener : CommonGroupClickListeners {
         fun onGroupClick(view: View, channel: SceytChannel)
     }
+
+    fun interface AvatarClickListener : CommonGroupClickListeners {
+        fun onAvatarClick(view: View, channel: SceytChannel)
+    }
+
+    interface ClickListeners : ClickListener, AvatarClickListener
 }
