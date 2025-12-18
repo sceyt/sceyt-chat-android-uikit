@@ -149,6 +149,7 @@ class MessageListViewModel(
     private var loadNearJob: Job? = null
     private var toggleVoteJob: Job? = null
     private var searchJob: Job? = null
+    internal var mentionJob: Job? = null
 
     // Pagination sync
     internal var needSyncMessagesWhenScrollStateIdle = false
@@ -953,7 +954,11 @@ class MessageListViewModel(
                             })
                 }
 
-                messageItems.add(MessageListItem.MessageItem(messageWithData.copy(isSelected = isSelected, isBodyExpanded = isExpanded)))
+                messageItems.add(
+                    MessageListItem.MessageItem(
+                        messageWithData.copy(isSelected = isSelected, isBodyExpanded = isExpanded)
+                    )
+                )
             }
 
             if (hasNext)

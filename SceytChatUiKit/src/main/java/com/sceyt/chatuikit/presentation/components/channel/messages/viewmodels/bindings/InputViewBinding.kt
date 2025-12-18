@@ -30,7 +30,6 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.M
 import com.sceyt.chatuikit.presentation.components.create_poll.CreatePollActivity
 import com.sceyt.chatuikit.presentation.root.PageState
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -127,7 +126,6 @@ fun MessageListViewModel.bind(
         }
         .launchIn(lifecycleOwner.lifecycleScope)
 
-    var mentionJob: Job? = null
 
     fun upsertLinkPreviewData(linkDetails: LinkPreviewDetails?) {
         if (linkDetails != null) {
