@@ -1,15 +1,14 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages.helpers
 
+import android.content.Context
 import android.graphics.Paint
 import android.text.Spannable
 import android.text.SpannableStringBuilder
 import android.text.TextPaint
 import android.text.style.ClickableSpan
-import android.text.style.ForegroundColorSpan
 import android.text.style.LineHeightSpan
 import android.view.View
 import com.sceyt.chatuikit.extensions.dpToPx
-import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
 import com.sceyt.chatuikit.styles.messages_list.item.ReadMoreStyle
 
 /**
@@ -40,6 +39,7 @@ object MessageBodyTruncationHelper {
      * Applies truncation to the message body if it exceeds the character limit.
      * If the message is already expanded or within the limit, returns the original formatted body.
      *
+     * @param context The context for accessing resources and applying text styles
      * @param formattedBody The fully formatted message body with mentions, links, etc.
      * @param isExpanded Whether the message is currently expanded
      * @param characterLimit The maximum number of characters to show when collapsed
@@ -48,6 +48,7 @@ object MessageBodyTruncationHelper {
      * @return The truncated CharSequence with "Read More" appended, or the original if no truncation needed
      */
     fun applyTruncationIfNeeded(
+        context: Context,
         formattedBody: CharSequence,
         isExpanded: Boolean,
         characterLimit: Int,
@@ -76,14 +77,7 @@ object MessageBodyTruncationHelper {
             Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
         )
 
-        if (readMoreStyle.textStyle.color != UNSET_COLOR) {
-            spannable.setSpan(
-                ForegroundColorSpan(readMoreStyle.textStyle.color),
-                readMoreStart,
-                readMoreEnd,
-                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-            )
-        }
+        readMoreStyle.textStyle.apply(context, spannable, readMoreStart, readMoreEnd)
 
         val clickableSpan = object : ClickableSpan() {
             override fun onClick(widget: View) {
@@ -93,9 +87,7 @@ object MessageBodyTruncationHelper {
             override fun updateDrawState(ds: TextPaint) {
                 super.updateDrawState(ds)
                 ds.isUnderlineText = false
-                if (readMoreStyle.textStyle.color != UNSET_COLOR) {
-                    ds.color = readMoreStyle.textStyle.color
-                }
+                readMoreStyle.textStyle.apply(context, ds)
             }
         }
 
