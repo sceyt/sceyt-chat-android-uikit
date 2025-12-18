@@ -17,9 +17,16 @@ class CommonGroupViewHolder(
 
     init {
         binding.applyStyle()
+
         binding.root.setOnClickListener {
-            clickListeners?.onGroupClick(it, channel)
+            clickListeners?.onChannelClick(it, channel)
         }
+
+        binding.root.setOnLongClickListener {
+            clickListeners?.onChannelLongClick(it, channel)
+            true
+        }
+
         binding.avatar.setOnClickListener {
             clickListeners?.onAvatarClick(it, channel)
         }
