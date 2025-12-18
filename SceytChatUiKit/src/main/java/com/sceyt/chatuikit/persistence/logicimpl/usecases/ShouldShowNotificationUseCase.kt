@@ -11,14 +11,14 @@ import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.push.PushData
 
 class ShouldShowNotificationUseCase(
-        private val context: Context
+    private val context: Context
 ) {
 
     operator fun invoke(
-            type: NotificationType,
-            channel: SceytChannel,
-            message: SceytMessage,
-            reaction: SceytReaction?
+        type: NotificationType,
+        channel: SceytChannel,
+        message: SceytMessage,
+        reaction: SceytReaction?
     ): Boolean {
         val pushData = PushData(
             type = type,
@@ -31,11 +31,11 @@ class ShouldShowNotificationUseCase(
     }
 
     operator fun invoke(
-            pushData: PushData
+        pushData: PushData
     ) = shouldShowOnlineNotification(pushData)
 
     private fun shouldShowOnlineNotification(
-            pushData: PushData
+        pushData: PushData
     ): Boolean {
         // Check config
         if (enableShowNotificationInConfig(pushData).not())
@@ -46,6 +46,10 @@ class ShouldShowNotificationUseCase(
 
         // Check if channel is muted
         if (channel.muted)
+            return false
+
+        // Check if message is silent
+        if (message.silent)
             return false
 
         // Check maybe channel was cleared
