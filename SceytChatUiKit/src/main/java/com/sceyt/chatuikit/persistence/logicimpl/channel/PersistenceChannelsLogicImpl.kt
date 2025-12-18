@@ -1186,11 +1186,11 @@ internal class PersistenceChannelsLogicImpl(
         val pendingLastMessages = messageDao.getPendingMessagesByTIds(messageTIds)
 
         pendingLastMessages.forEach { messageDb ->
-            mutableList.findIndexed { it.id == messageDb.messageEntity.channelId }
-                ?.let { (index, item) ->
-                    if (messageDb.messageEntity.createdAt > (item.lastMessage?.createdAt ?: 0))
-                        mutableList[index] = item.copy(lastMessage = messageDb.toSceytMessage())
-                }
+            mutableList.findIndexed {
+                it.id == messageDb.messageEntity.channelId
+            }?.let { (index, item) ->
+                mutableList[index] = item.copy(lastMessage = messageDb.toSceytMessage())
+            }
         }
         return mutableList
     }
