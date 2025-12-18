@@ -112,9 +112,14 @@ open class ChannelInfoCommonGroupsFragment : Fragment(), SceytKoinComponent {
         if (commonGroupsAdapter == null) {
             val adapter = CommonGroupsAdapter(
                 viewHolderFactory = CommonGroupViewHolderFactory(requireContext(), style).also {
-                    it.setOnClickListener { _, channel ->
+                    it.setOnChannelClickListener { _, channel ->
                         onChannelClick(channel)
                     }
+
+                    it.setOnChannelLongClickListener { _, channel ->
+                        onChannelClick(channel)
+                    }
+
                     it.setOnAvatarClickListener { _, channel ->
                         onChannelClick(channel)
                     }

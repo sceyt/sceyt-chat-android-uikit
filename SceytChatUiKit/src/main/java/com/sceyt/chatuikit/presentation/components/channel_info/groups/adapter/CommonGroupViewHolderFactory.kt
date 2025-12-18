@@ -44,7 +44,11 @@ open class CommonGroupViewHolderFactory(
         )
     }
 
-    fun setOnClickListener(listener: CommonGroupClickListeners.ClickListener) {
+    fun setOnChannelClickListener(listener: CommonGroupClickListeners.ChannelClickListener) {
+        clickListeners.setListener(listener)
+    }
+
+    fun setOnChannelLongClickListener(listener: CommonGroupClickListeners.ChannelLongClickListener) {
         clickListeners.setListener(listener)
     }
 

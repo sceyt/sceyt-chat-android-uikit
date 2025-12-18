@@ -5,13 +5,17 @@ import com.sceyt.chatuikit.data.models.channels.SceytChannel
 
 sealed interface CommonGroupClickListeners {
 
-    fun interface ClickListener : CommonGroupClickListeners {
-        fun onGroupClick(view: View, channel: SceytChannel)
+    fun interface ChannelClickListener : CommonGroupClickListeners {
+        fun onChannelClick(view: View, channel: SceytChannel)
+    }
+
+    fun interface ChannelLongClickListener : CommonGroupClickListeners {
+        fun onChannelLongClick(view: View, channel: SceytChannel)
     }
 
     fun interface AvatarClickListener : CommonGroupClickListeners {
         fun onAvatarClick(view: View, channel: SceytChannel)
     }
 
-    interface ClickListeners : ClickListener, AvatarClickListener
+    interface ClickListeners : ChannelClickListener, ChannelLongClickListener, AvatarClickListener
 }

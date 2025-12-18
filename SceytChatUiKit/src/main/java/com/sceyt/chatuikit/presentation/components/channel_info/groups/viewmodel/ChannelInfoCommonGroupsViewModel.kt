@@ -5,7 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chatuikit.data.models.SceytPagingResponse
-import com.sceyt.chatuikit.persistence.logicimpl.usecases.GetCommonGroupsUseCase
+import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.presentation.components.channel_info.groups.adapter.CommonGroupListItem
 import com.sceyt.chatuikit.presentation.root.PageState
 import kotlinx.coroutines.Dispatchers
@@ -15,7 +15,7 @@ import kotlinx.coroutines.launch
 
 class ChannelInfoCommonGroupsViewModel(
     private val userId: String,
-    private val getCommonGroupsUseCase: GetCommonGroupsUseCase
+    private val persistenceChannelsLogic: PersistenceChannelsLogic
 ) : ViewModel() {
 
     private val _groupsFlow = MutableSharedFlow<List<CommonGroupListItem>>(replay = 1)
@@ -40,7 +40,7 @@ class ChannelInfoCommonGroupsViewModel(
             hasMoreData = false
             isLoadingMore = false
 
-            val response = getCommonGroupsUseCase.getCommonGroups(
+            val response = persistenceChannelsLogic.getCommonGroups(
                 userId = userId,
             )
 
@@ -82,7 +82,7 @@ class ChannelInfoCommonGroupsViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             isLoadingMore = true
 
-            when (val response = getCommonGroupsUseCase.loadMore()) {
+            when (val response = persistenceChannelsLogic.loadMore()) {
                 is SceytPagingResponse.Success -> {
                     hasMoreData = response.hasNext
 

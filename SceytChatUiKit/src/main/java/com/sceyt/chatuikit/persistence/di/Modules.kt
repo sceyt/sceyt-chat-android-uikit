@@ -57,7 +57,6 @@ import com.sceyt.chatuikit.persistence.logicimpl.usecases.EndPollUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.HandleDeleteMessagesByLoadTypeUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.HandleMessagesInRangeUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.HandleChangeVoteErrorUseCase
-import com.sceyt.chatuikit.persistence.logicimpl.usecases.GetCommonGroupsUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.RemovePollVoteUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.RetractPollVoteUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.SendPollPendingVotesUseCase
@@ -174,7 +173,6 @@ internal val useCaseModule = module {
     factoryOf(::HandleMessagesInRangeUseCase)
     factoryOf(::CheckDeletedNearMessagesUseCase)
     factoryOf(::CheckDeletedMessagesUseCase)
-    factoryOf(::GetCommonGroupsUseCase)
 }
 
 internal val cacheModule = module {
