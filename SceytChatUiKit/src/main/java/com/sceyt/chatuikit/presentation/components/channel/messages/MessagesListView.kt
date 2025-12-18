@@ -74,6 +74,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.events.Messa
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.PollEvent
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.ReactionEvent
 import com.sceyt.chatuikit.presentation.components.channel.messages.fragments.ReactionsInfoBottomSheetFragment
+import com.sceyt.chatuikit.presentation.components.channel.messages.helpers.MessageCopyHelper
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.action.MessageActionsViewClickListeners
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.action.MessageActionsViewClickListeners.ActionsViewClickListeners
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.action.MessageActionsViewClickListenersImpl
@@ -1149,8 +1150,8 @@ class MessagesListView @JvmOverloads constructor(
 
     // Message popup events
     override fun onCopyMessagesClick(vararg messages: SceytMessage) {
-        val text = messages.joinToString("\n\n") { it.body.trim() }
-        context.setClipboard(text.trim())
+        val text = MessageCopyHelper.buildCopyableText(context = context, messages = messages)
+        context.setClipboard(text)
         val toastMessage = if (messages.size == 1) context.getString(R.string.sceyt_message_copied)
         else context.getString(R.string.sceyt_messages_copied)
         Toast.makeText(context, toastMessage, Toast.LENGTH_SHORT).show()
@@ -1255,21 +1256,22 @@ class MessagesListView @JvmOverloads constructor(
 
     override fun onReadMoreClick(view: View, item: MessageItem) {
         val messagesRV = getMessagesRecyclerView()
-        val vh = messagesRV.findViewHolderForItemId(item.getItemId()) as? BaseMessageViewHolder ?: return
-        val position = vh.bindingAdapterPosition
+        val holder =
+            messagesRV.findViewHolderForItemId(item.getItemId()) as? BaseMessageViewHolder ?: return
+        val position = holder.bindingAdapterPosition
         if (position == RecyclerView.NO_POSITION) return
 
         expandMessageBodyListener?.invoke(item.message.tid)
-        
+
         val expandedItem = item.copy(message = item.message.copy(isBodyExpanded = true))
-        val oldTop = vh.itemView.top
-        
+        val oldTop = holder.itemView.top
+
         messagesRV.updateWithScrollCompensation(
             oldTop = oldTop,
-            getNewTop = { vh.itemView.top },
+            getNewTop = { holder.itemView.top },
             onUpdate = {
                 messagesRV.updateItemAt(position, expandedItem)
-                vh.bind(expandedItem, MessageDiff.DEFAULT_FALSE.copy(bodyChanged = true))
+                holder.bind(expandedItem, MessageDiff.DEFAULT_FALSE.copy(bodyChanged = true))
             }
         )
     }
