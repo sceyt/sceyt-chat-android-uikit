@@ -11,6 +11,8 @@ import com.sceyt.chatuikit.presentation.components.channel_info.media.ChannelInf
 import com.sceyt.chatuikit.styles.SceytComponentStyle
 import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.channel_info.ChannelInfoDateSeparatorStyle
+import com.sceyt.chatuikit.styles.common.EmptyStateStyle
+import com.sceyt.chatuikit.styles.common.buildEmptyStateStyle
 import com.sceyt.chatuikit.theme.Colors
 
 /**
@@ -18,7 +20,7 @@ import com.sceyt.chatuikit.theme.Colors
  * @property backgroundColor - background color, default is [Colors.backgroundColor]
  * @property emptyState - layout resource for empty state, default is [R.layout.sceyt_empty_state]
  * @property loadingState - layout resource for loading state, default is [R.layout.sceyt_page_loading_state]
- * @property emptyStateTitle - title for empty state, default is [R.string.sceyt_no_voice_items_yet]
+ * @property emptyStateStyle - style for empty state view with icon, title, and subtitle customization
  * @property dateSeparatorStyle - style for date separator
  * @property itemStyle - style for voice item
  * */
@@ -26,7 +28,7 @@ data class ChannelInfoVoiceStyle(
         @param:ColorInt val backgroundColor: Int,
         @param:LayoutRes val emptyState: Int,
         @param:LayoutRes val loadingState: Int,
-        val emptyStateTitle: String,
+        val emptyStateStyle: EmptyStateStyle,
         val dateSeparatorStyle: ChannelInfoDateSeparatorStyle,
         val itemStyle: ChannelInfoVoiceItemStyle,
 ) : SceytComponentStyle() {
@@ -44,7 +46,13 @@ data class ChannelInfoVoiceStyle(
 
             val emptyState = R.layout.sceyt_empty_state
             val loadingState = R.layout.sceyt_page_loading_state
-            val emptyStateTitle = context.getString(R.string.sceyt_no_voice_items_yet)
+
+            val emptyStateStyle = buildEmptyStateStyle(
+                context = context,
+                iconRes = R.drawable.sceyt_ic_empty_voices,
+                titleText = context.getString(R.string.sceyt_no_voices_title),
+                subtitleText = context.getString(R.string.sceyt_no_voices_desc)
+            )
 
             val dateSeparatorStyle = ChannelInfoDateSeparatorStyle.Builder(context, attributeSet)
                 .build()
@@ -56,7 +64,7 @@ data class ChannelInfoVoiceStyle(
                 backgroundColor = backgroundColor,
                 emptyState = emptyState,
                 loadingState = loadingState,
-                emptyStateTitle = emptyStateTitle,
+                emptyStateStyle = emptyStateStyle,
                 dateSeparatorStyle = dateSeparatorStyle,
                 itemStyle = itemStyle
             ).let { styleCustomizer.apply(context, it) }

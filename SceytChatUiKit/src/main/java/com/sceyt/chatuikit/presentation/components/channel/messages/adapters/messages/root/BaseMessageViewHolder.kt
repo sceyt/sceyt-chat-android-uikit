@@ -164,6 +164,7 @@ abstract class BaseMessageViewHolder(
             ))
 
         val finalBody = MessageBodyTruncationHelper.applyTruncationIfNeeded(
+            context = context,
             formattedBody = formattedBody,
             isExpanded = message.isBodyExpanded,
             characterLimit = itemStyle.collapsedCharacterLimit,

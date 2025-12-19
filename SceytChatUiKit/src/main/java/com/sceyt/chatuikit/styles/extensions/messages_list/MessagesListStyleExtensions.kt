@@ -1077,7 +1077,8 @@ internal fun ReadMoreStyle.Builder.buildTextStyle() = TextStyle.Builder(typedArr
         defValue = context.resources.getDimensionPixelSize(R.dimen.mediumTextSize)
     )
     .setFont(
-        index = R.styleable.MessagesListView_sceytUiMessagesListReadMoreTextFont
+        index = R.styleable.MessagesListView_sceytUiMessagesListReadMoreTextFont,
+        defValue = R.font.roboto_medium
     )
     .setStyle(
         index = R.styleable.MessagesListView_sceytUiMessagesListReadMoreTextStyle

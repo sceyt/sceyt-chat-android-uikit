@@ -8,10 +8,10 @@
     <string name="sceyt_no_channels">Pas de canaux</string>
     <string name="sceyt_message">Message</string>
     <string name="sceyt_online">en ligne</string>
-    <string name="sceyt_members_count">%1d membres</string>
-    <string name="sceyt_member_count">%1d membre</string>
-    <string name="sceyt_subscribers_count">%1$d abonnés</string>
-    <string name="sceyt_subscriber_count">%1$d abonné</string>
+    <string name="sceyt_members_count">%1$s membres</string>
+    <string name="sceyt_member_count">%1$s membre</string>
+    <string name="sceyt_subscribers_count">%1$s abonnés</string>
+    <string name="sceyt_subscriber_count">%1$s abonné</string>
     <string name="sceyt_hint_channel_subject">Sujet</string>
     <string name="sceyt_add_members">Ajouter des membres</string>
     <string name="sceyt_add_subscribers">Ajouter des abonnés</string>
@@ -85,10 +85,6 @@
     <string name="sceyt_delete_channel">Supprimer un canal</string>
     <string name="sceyt_kick_member">enlever un membre</string>
     <string name="sceyt_unblock">Débloquer</string>
-    <string name="sceyt_no_media_items_yet">Pas encore d’éléments multimédias</string>
-    <string name="sceyt_no_file_items_yet">Aucun fichier pour le moment</string>
-    <string name="sceyt_no_voice_items_yet">Pas d’éléments vocaux pour le moment</string>
-    <string name="sceyt_no_link_items_yet">Aucun élément de lien pour le moment</string>
     <string name="sceyt_history_was_successfully_cleared">L\'historique a été effacé avec succes</string>
     <string name="sceyt_mute_chat">Conversation muette</string>
     <string name="sceyt_for_1_hour">Pendant 1 heure</string>
