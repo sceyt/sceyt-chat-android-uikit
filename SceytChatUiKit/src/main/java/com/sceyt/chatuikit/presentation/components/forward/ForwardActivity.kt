@@ -8,7 +8,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytActivityForwardBinding
-import com.sceyt.chatuikit.databinding.SceytSearchChannelsEmptyStateBinding
+import com.sceyt.chatuikit.databinding.SceytEmptyStateBinding
 import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
 import com.sceyt.chatuikit.extensions.launchActivity
 import com.sceyt.chatuikit.extensions.parcelableArrayList
@@ -19,7 +19,7 @@ import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter
 import com.sceyt.chatuikit.presentation.components.forward.viewmodel.ForwardViewModel
 import com.sceyt.chatuikit.presentation.components.shareable.ShareableActivity
 import com.sceyt.chatuikit.presentation.custom_views.PageStateView
-import com.sceyt.chatuikit.styles.extensions.shareable.applyShareableStyle
+import com.sceyt.chatuikit.styles.extensions.common.applyStyle
 import com.sceyt.chatuikit.styles.forward.ForwardStyle
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -69,9 +69,9 @@ open class ForwardActivity : ShareableActivity<ForwardStyle>() {
 
     protected open fun setupPageStateView() {
         binding.pageStateView.setEmptySearchStateView(
-            SceytSearchChannelsEmptyStateBinding.inflate(
+            SceytEmptyStateBinding.inflate(
                 layoutInflater, binding.pageStateView, false
-            ).also { it.applyShareableStyle() }.root
+            ).also { it.applyStyle(style.emptyStateStyle) }.root
         )
     }
 
