@@ -11,10 +11,10 @@
     <string name="sceyt_no_channels">لا توجد محادثات بعد</string>
     <string name="sceyt_message">رسالة</string>
     <string name="sceyt_online">متصل الآن</string>
-    <string name="sceyt_members_count">%1$d أعضاء</string>
-    <string name="sceyt_member_count">%1$d عضو</string>
-    <string name="sceyt_subscribers_count">%1$d مشتركين</string>
-    <string name="sceyt_subscriber_count">%1$d مشترك</string>
+    <string name="sceyt_members_count">%1$s أعضاء</string>
+    <string name="sceyt_member_count">%1$s عضو</string>
+    <string name="sceyt_subscribers_count">%1$s مشتركين</string>
+    <string name="sceyt_subscriber_count">%1$s مشترك</string>
     <string name="sceyt_hint_channel_subject">الموضوع</string>
     <string name="sceyt_add_members">إضافة أعضاء</string>
     <string name="sceyt_add_subscribers">إضافة مشتركين</string>
@@ -91,10 +91,6 @@
     <string name="sceyt_delete_channel">حذف القناة</string>
     <string name="sceyt_kick_member">طرد العضو</string>
     <string name="sceyt_unblock">إلغاء الحظر</string>
-    <string name="sceyt_no_media_items_yet">لا توجد عناصر وسائط بعد</string>
-    <string name="sceyt_no_file_items_yet">لا توجد ملفات بعد</string>
-    <string name="sceyt_no_voice_items_yet">لا توجد تسجيلات صوتية بعد</string>
-    <string name="sceyt_no_link_items_yet">لا توجد روابط بعد</string>
     <string name="sceyt_history_was_successfully_cleared">تم مسح السجل بنجاح!</string>
     <string name="sceyt_auto_delete">حذف الرسائل تلقائيًا</string>
     <string name="sceyt_1_day">يوم واحد</string>

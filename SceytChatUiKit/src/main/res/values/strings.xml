@@ -11,10 +11,10 @@
     <string name="sceyt_no_channels">No Chats yet</string>
     <string name="sceyt_message">Message</string>
     <string name="sceyt_online">online</string>
-    <string name="sceyt_members_count">%1$d members</string>
-    <string name="sceyt_member_count">%1$d member</string>
-    <string name="sceyt_subscribers_count">%1$d subscribers</string>
-    <string name="sceyt_subscriber_count">%1$d subscriber</string>
+    <string name="sceyt_members_count">%1$s members</string>
+    <string name="sceyt_member_count">%1$s member</string>
+    <string name="sceyt_subscribers_count">%1$s subscribers</string>
+    <string name="sceyt_subscriber_count">%1$s subscriber</string>
     <string name="sceyt_hint_channel_subject">Subject</string>
     <string name="sceyt_add_members">Add members</string>
     <string name="sceyt_add_subscribers">Add subscribers</string>
@@ -91,10 +91,17 @@
     <string name="sceyt_delete_channel">Delete channel</string>
     <string name="sceyt_kick_member">Kick member</string>
     <string name="sceyt_unblock">Unblock</string>
-    <string name="sceyt_no_media_items_yet">No media items yet</string>
-    <string name="sceyt_no_file_items_yet">No file items yet</string>
-    <string name="sceyt_no_voice_items_yet">No voice items yet</string>
-    <string name="sceyt_no_link_items_yet">No link items yet</string>
+    <string name="sceyt_no_media_title">No media</string>
+    <string name="sceyt_no_media_desc">Shared media will appear here.</string>
+    <string name="sceyt_no_files_title">No files</string>
+    <string name="sceyt_no_files_desc">Shared files will appear here.</string>
+    <string name="sceyt_no_voices_title">No voice messages</string>
+    <string name="sceyt_no_voices_desc">Shared voice messages will appear here.</string>
+    <string name="sceyt_no_links_title">No links</string>
+    <string name="sceyt_no_links_desc">Shared links will appear here.</string>
+    <string name="sceyt_no_common_groups_title">No groups is common</string>
+    <string name="sceyt_no_common_groups_desc">Groups in common will appear here.</string>
+
     <string name="sceyt_history_was_successfully_cleared">History was successfully cleared!</string>
     <string name="sceyt_auto_delete">Auto-Delete Messages</string>
     <string name="sceyt_1_day">1 day</string>
@@ -285,4 +292,5 @@
     <string name="sceyt_and">and</string>
     <string name="sceyt_unknown_duration">Unknown duration</string>
     <string name="sceyt_read_more">Read More</string>
+    <string name="sceyt_groups">Groups</string>
 </resources>

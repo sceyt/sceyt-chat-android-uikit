@@ -5,6 +5,7 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
+import com.sceyt.chatuikit.extensions.formatMemberCount
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.persistence.extensions.getChannelType
 import com.sceyt.chatuikit.persistence.extensions.getPeer
@@ -20,16 +21,18 @@ open class DefaultChannelSubtitleFormatter : Formatter<SceytChannel> {
 
             ChannelTypeEnum.Group -> {
                 val memberCount = from.memberCount
+                val formattedCount = memberCount.formatMemberCount()
                 if (memberCount > 1)
-                    context.getString(R.string.sceyt_members_count, memberCount)
-                else context.getString(R.string.sceyt_member_count, memberCount)
+                    context.getString(R.string.sceyt_members_count, formattedCount)
+                else context.getString(R.string.sceyt_member_count, formattedCount)
             }
 
             ChannelTypeEnum.Public -> {
                 val memberCount = from.memberCount
+                val formattedCount = memberCount.formatMemberCount()
                 if (memberCount > 1)
-                    context.getString(R.string.sceyt_subscribers_count, memberCount)
-                else context.getString(R.string.sceyt_subscriber_count, memberCount)
+                    context.getString(R.string.sceyt_subscribers_count, formattedCount)
+                else context.getString(R.string.sceyt_subscriber_count, formattedCount)
             }
         }
     }

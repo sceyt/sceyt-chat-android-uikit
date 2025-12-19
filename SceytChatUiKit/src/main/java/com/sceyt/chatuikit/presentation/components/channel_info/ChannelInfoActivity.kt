@@ -62,6 +62,7 @@ import com.sceyt.chatuikit.presentation.components.channel_info.dialogs.DirectCh
 import com.sceyt.chatuikit.presentation.components.channel_info.dialogs.DirectChatActionsDialog.ActionsEnum.UnPin
 import com.sceyt.chatuikit.presentation.components.channel_info.dialogs.GroupChatActionsDialog
 import com.sceyt.chatuikit.presentation.components.channel_info.files.ChannelInfoFilesFragment
+import com.sceyt.chatuikit.presentation.components.channel_info.groups.ChannelInfoCommonGroupsFragment
 import com.sceyt.chatuikit.presentation.components.channel_info.links.ChannelInfoLinksFragment
 import com.sceyt.chatuikit.presentation.components.channel_info.media.ChannelInfoMediaFragment
 import com.sceyt.chatuikit.presentation.components.channel_info.members.ChannelMembersFragment
@@ -125,6 +126,7 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
         StyleRegistry.register(style.filesStyle)
         StyleRegistry.register(style.linkStyle)
         StyleRegistry.register(style.voiceStyle)
+        StyleRegistry.register(style.commonGroupsStyle)
     }
 
     private fun getBundleArguments() {
@@ -262,10 +264,10 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
             getChannelFilesFragment(channel),
             getChannelVoiceFragment(channel),
             getChannelLinksFragment(channel),
+            if (channel.isDirect() && style.showGroupsInCommon) getChannelCommonGroupsFragment(channel) else null
         ).filterNotNull()
 
         pagerAdapter = ViewPagerAdapter(this, fragments)
-
         setPagerAdapter(pagerAdapter)
         setupTabLayout(tabLayout ?: return, viewPager ?: return)
     }
@@ -566,6 +568,7 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
     protected open fun setPagerAdapter(pagerAdapter: ViewPagerAdapter) {
         binding?.viewPager?.adapter = pagerAdapter
+        binding?.viewPager?.offscreenPageLimit= 5
     }
 
     protected open fun toggleToolbarViews(showDetails: Boolean) {
@@ -672,6 +675,10 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
         return ChannelInfoVoiceFragment.newInstance(channel, style.voiceStyle.styleId)
     }
 
+    protected open fun getChannelCommonGroupsFragment(channel: SceytChannel): Fragment?{
+            return ChannelInfoCommonGroupsFragment.newInstance(channel, style.commonGroupsStyle.styleId)
+    }
+
     protected open fun getEditChannelFragment(channel: SceytChannel): Fragment? = EditChannelFragment.newInstance(channel)
 
     //Description
@@ -735,7 +742,8 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
             style.mediaStyle.styleId,
             style.filesStyle.styleId,
             style.linkStyle.styleId,
-            style.voiceStyle.styleId
+            style.voiceStyle.styleId,
+            style.commonGroupsStyle.styleId
         )
     }
 

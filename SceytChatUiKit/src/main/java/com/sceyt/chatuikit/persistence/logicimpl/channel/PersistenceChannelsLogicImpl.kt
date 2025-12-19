@@ -24,6 +24,7 @@ import com.sceyt.chatuikit.data.managers.message.event.MessageStatusChangeData
 import com.sceyt.chatuikit.data.models.LoadKeyData
 import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNext
+import com.sceyt.chatuikit.data.models.SceytPagingResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
@@ -1176,6 +1177,13 @@ internal class PersistenceChannelsLogicImpl(
             channelsCache.updateLastMessageWithLastRead(channelId, newLastMessage)
         }
     }
+
+    override suspend fun getCommonGroups(userId: String): SceytPagingResponse<List<SceytChannel>> =
+        channelsRepository.getCommonGroups(userId)
+
+    override suspend fun loadMoreCommonGroups(): SceytPagingResponse<List<SceytChannel>> =
+        channelsRepository.loadMoreCommonGroups()
+
 
     private suspend fun updateChannelPendingLastMessages(channels: List<SceytChannel>): List<SceytChannel> {
         if (channels.isEmpty()) return channels
