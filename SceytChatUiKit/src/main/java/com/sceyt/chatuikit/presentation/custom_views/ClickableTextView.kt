@@ -13,9 +13,9 @@ import com.sceyt.chatuikit.presentation.common.RoundedBackgroundSpan
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
 class ClickableTextView @JvmOverloads constructor(
-        context: Context,
-        attrs: AttributeSet? = null,
-        defStyleAttr: Int = 0,
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0,
 ) : AppCompatTextView(context, attrs, defStyleAttr) {
     private var doOnLongClick: ((View) -> Unit)? = null
     private var doOnClickWhenNoLink: ((View) -> Unit)? = null
@@ -30,44 +30,50 @@ class ClickableTextView @JvmOverloads constructor(
     }
     private val cornerRadius by lazy { 4f * resources.displayMetrics.density }
 
-    private val gestureDetector = GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
-        override fun onSingleTapUp(event: MotionEvent): Boolean {
-            val spannable = text as? Spannable ?: return false
-            val span = getClickableSpan(event)
-            if (span != null) {
-                span.onClick(this@ClickableTextView)
-            } else {
-                doOnClickWhenNoLink?.invoke(this@ClickableTextView)
+    private val gestureDetector =
+        GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
+            override fun onSingleTapUp(event: MotionEvent): Boolean {
+                val spannable = text as? Spannable ?: return false
+                val span = getClickableSpan(event)
+                if (span != null) {
+                    span.onClick(this@ClickableTextView)
+                } else {
+                    doOnClickWhenNoLink?.invoke(this@ClickableTextView)
+                }
+                removeRippleEffect(spannable)
+                return true
             }
-            removeRippleEffect(spannable)
-            return true
-        }
 
-        override fun onLongPress(e: MotionEvent) {
-            val spannable = text as? Spannable
-            spannable?.let { removeRippleEffect(it) }
+            override fun onLongPress(e: MotionEvent) {
+                val spannable = text as? Spannable
+                spannable?.let { removeRippleEffect(it) }
 
-            val span = lastTouchEvent?.let { getClickableSpan(it) }
+                val span = lastTouchEvent?.let { getClickableSpan(it) }
 
-            when {
-                span == null -> {
-                    doOnLongClick?.invoke(this@ClickableTextView)
-                }
-                (span as? LongClickableSpan)?.onLongClick(this@ClickableTextView) == true -> Unit
-                doOnSpanLongClick != null -> {
-                    doOnSpanLongClick?.invoke(span, this@ClickableTextView)
-                }
-                else -> {
-                    doOnLongClick?.invoke(this@ClickableTextView)
+                when {
+                    span == null -> {
+                        doOnLongClick?.invoke(this@ClickableTextView)
+                    }
+
+                    span is LongClickableSpan -> {
+                        span.onLongClick(this@ClickableTextView)
+                    }
+
+                    doOnSpanLongClick != null -> {
+                        doOnSpanLongClick?.invoke(span, this@ClickableTextView)
+                    }
+
+                    else -> {
+                        doOnLongClick?.invoke(this@ClickableTextView)
+                    }
                 }
             }
-        }
 
-        override fun onDown(e: MotionEvent): Boolean {
-            lastTouchEvent = MotionEvent.obtain(e)
-            return true
-        }
-    })
+            override fun onDown(e: MotionEvent): Boolean {
+                lastTouchEvent = MotionEvent.obtain(e)
+                return true
+            }
+        })
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent): Boolean {
