@@ -4,13 +4,17 @@ import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.os.Build
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper.OnAudioPlayer
+import com.sceyt.chatuikit.persistence.logicimpl.message.MessageTid
 import com.sceyt.chatuikit.presentation.common.ConcurrentHashSet
 import java.io.IOException
 import java.util.Timer
 import java.util.TimerTask
 import java.util.concurrent.ConcurrentHashMap
 
-class AudioPlayerImpl(private val filePath: String) : AudioPlayer {
+class AudioPlayerImpl(
+    private val filePath: String,
+    private val messageTid: MessageTid
+) : AudioPlayer {
     private val player: MediaPlayer = MediaPlayer()
     private var startTime: Long = 0
     private var timer: Timer? = null
@@ -31,21 +35,30 @@ class AudioPlayerImpl(private val filePath: String) : AudioPlayer {
         try {
             player.setDataSource(filePath)
             player.setOnPreparedListener {
-                for (event in getEvents(filePath))
-                    event.second.onProgress(player.currentPosition.toLong(), player.duration.toLong(), filePath)
+                for (event in getEvents())
+                    event.second.onProgress(
+                        position = player.currentPosition.toLong(),
+                        duration = player.duration.toLong(),
+                        filePath = filePath,
+                        messageTid = messageTid
+                    )
             }
 
             player.setOnSeekCompleteListener {
-                for (event in getEvents(filePath))
-                    event.second.onSeek(player.currentPosition.toLong(), filePath)
+                for (event in getEvents())
+                    event.second.onSeek(
+                        position = player.currentPosition.toLong(),
+                        filePath = filePath,
+                        messageTid = messageTid
+                    )
             }
 
             player.setOnCompletionListener {
                 stopTimer()
                 stopped = true
                 seekToPosition(0)
-                for (event in getEvents(filePath))
-                    event.second.onStop(filePath)
+                for (event in getEvents())
+                    event.second.onStop(filePath = filePath, messageTid = messageTid)
             }
 
             player.prepare()
@@ -60,23 +73,23 @@ class AudioPlayerImpl(private val filePath: String) : AudioPlayer {
         startTime = System.currentTimeMillis()
         player.start()
         startTimer()
-        for (event in getEvents(filePath))
-            event.second.onToggle(player.isPlaying, filePath)
+        for (event in getEvents())
+            event.second.onToggle(player.isPlaying, filePath, messageTid)
     }
 
     override fun pause() {
         player.pause()
         stopTimer()
-        for (event in getEvents(filePath))
-            event.second.onPaused(filePath)
+        for (event in getEvents())
+            event.second.onPaused(filePath, messageTid)
     }
 
     override fun stop() {
         stopTimer()
         player.stop()
         stopped = true
-        for (event in getEvents(filePath))
-            event.second.onStop(filePath)
+        for (event in getEvents())
+            event.second.onStop(filePath, messageTid)
     }
 
     override fun getPlaybackPosition(): Long {
@@ -89,6 +102,10 @@ class AudioPlayerImpl(private val filePath: String) : AudioPlayer {
 
     override fun getFilePath(): String {
         return filePath
+    }
+
+    override fun getMessageTid(): MessageTid {
+        return messageTid
     }
 
     override fun isPlaying(): Boolean {
@@ -120,21 +137,27 @@ class AudioPlayerImpl(private val filePath: String) : AudioPlayer {
             startTimer()
         } else play()
 
-        for (event in getEvents(filePath))
-            event.second.onToggle(player.isPlaying, filePath)
+        for (event in getEvents())
+            event.second.onToggle(
+                playing = player.isPlaying,
+                filePath = filePath,
+                messageTid = messageTid
+            )
     }
 
     override fun setPlaybackSpeed(speed: Float) {
-        if (speed < 0.5f || speed > 2f) return
+        if (speed !in 0.5f..2f) return
         playbackSpeed = speed
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (player.audioSessionId > 0) {
-                val isPlaying = player.isPlaying
-                player.playbackParams = player.playbackParams.setSpeed(speed)
-                if (!isPlaying) pause()
-                for (event in getEvents(filePath))
-                    event.second.onSpeedChanged(speed, filePath)
-            }
+        if (player.audioSessionId > 0) {
+            val isPlaying = player.isPlaying
+            player.playbackParams = player.playbackParams.setSpeed(speed)
+            if (!isPlaying) pause()
+            for (event in getEvents())
+                event.second.onSpeedChanged(
+                    speed = speed,
+                    filePath = filePath,
+                    messageTid = messageTid
+                )
         }
     }
 
@@ -142,8 +165,8 @@ class AudioPlayerImpl(private val filePath: String) : AudioPlayer {
         return playbackSpeed
     }
 
-    override fun addEventListener(event: OnAudioPlayer, tag: String, filePath: String) {
-        addToEvents(filePath, tag, event)
+    override fun addEventListener(event: OnAudioPlayer, tag: String) {
+        addToEvents(tag, event)
     }
 
     private fun startTimer() {
@@ -153,8 +176,13 @@ class AudioPlayerImpl(private val filePath: String) : AudioPlayer {
         timer?.schedule(object : TimerTask() {
             override fun run() {
                 val currentPosition = player.currentPosition
-                for (event in getEvents(filePath))
-                    event.second.onProgress(currentPosition.toLong(), player.duration.toLong(), filePath)
+                for (event in getEvents())
+                    event.second.onProgress(
+                        position = currentPosition.toLong(),
+                        duration = player.duration.toLong(),
+                        filePath = filePath,
+                        messageTid = messageTid
+                    )
             }
         }, TIMER_PERIOD, TIMER_PERIOD)
     }
@@ -166,7 +194,7 @@ class AudioPlayerImpl(private val filePath: String) : AudioPlayer {
         }
     }
 
-    private fun addToEvents(filePath: String, tag: String, event: OnAudioPlayer) {
+    private fun addToEvents(tag: String, event: OnAudioPlayer) {
         var events = events[filePath]
         if (events == null) {
             events = ConcurrentHashSet()
@@ -175,7 +203,7 @@ class AudioPlayerImpl(private val filePath: String) : AudioPlayer {
         this.events[filePath] = events
     }
 
-    private fun getEvents(filePath: String): ConcurrentHashSet<Pair<String, OnAudioPlayer>> {
+    private fun getEvents(): ConcurrentHashSet<Pair<String, OnAudioPlayer>> {
         val events = events[filePath]
         return events ?: ConcurrentHashSet()
     }
