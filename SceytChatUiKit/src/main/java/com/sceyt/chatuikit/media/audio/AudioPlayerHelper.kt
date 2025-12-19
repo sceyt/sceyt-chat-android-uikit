@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.media.audio
 
+import com.sceyt.chatuikit.persistence.logicimpl.message.MessageTid
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
@@ -9,33 +10,46 @@ object AudioPlayerHelper {
     private var currentPlayer: AudioPlayer? = null
     private val playerToggleListeners = ConcurrentHashMap<String, OnToggleCallback>()
 
-    fun init(filePath: String, events: OnAudioPlayer, tag: String) {
+    fun init(filePath: String, messageTid: MessageTid, events: OnAudioPlayer, tag: String) {
         playerExecutor.execute {
             currentPlayer?.let {
-                if (it.getFilePath() == filePath) {
-                    events.onInitialized(true, it, filePath)
-                    currentPlayer?.addEventListener(events, tag, filePath)
+                if (it.getFilePath() == filePath && it.getMessageTid() == messageTid) {
+                    events.onInitialized(
+                        alreadyInitialized = true,
+                        player = it,
+                        filePath = filePath,
+                        messageTid = messageTid
+                    )
+                    currentPlayer?.addEventListener(event = events, tag = tag)
                     return@execute
                 }
                 it.stop()
             }
-            val player = AudioPlayerImpl(filePath)
-            player.addEventListener(events, tag, filePath)
+            val player = AudioPlayerImpl(filePath, messageTid)
+            player.addEventListener(event = events, tag = tag)
             player.initialize()
             currentPlayer = player
-            events.onInitialized(false, player, filePath)
+            events.onInitialized(
+                alreadyInitialized = false,
+                player = player,
+                filePath = filePath,
+                messageTid = messageTid
+            )
         }
     }
 
-    fun addEventListener(events: OnAudioPlayer, tag: String, filePath: String) {
+    fun addEventListener(
+        events: OnAudioPlayer,
+        tag: String,
+    ) {
         playerExecutor.execute {
-            currentPlayer?.addEventListener(events, tag, filePath)
+            currentPlayer?.addEventListener(events, tag)
         }
     }
 
-    fun seek(filePath: String?, position: Long) {
+    fun seek(filePath: String?, messageTid: MessageTid, position: Long) {
         playerExecutor.execute {
-            if (currentPlayer?.getFilePath() == filePath)
+            if (isCurrentPlayer(filePath, messageTid))
                 currentPlayer?.seekToPosition(position)
         }
     }
@@ -46,9 +60,9 @@ object AudioPlayerHelper {
         }
     }
 
-    fun stop(filePath: String) {
+    fun stop(filePath: String, messageTid: MessageTid) {
         playerExecutor.execute {
-            if (currentPlayer?.getFilePath() == filePath) {
+            if (isCurrentPlayer(filePath, messageTid)) {
                 currentPlayer?.stop()
                 currentPlayer = null
             }
@@ -64,9 +78,9 @@ object AudioPlayerHelper {
         }
     }
 
-    fun pause(filePath: String) {
+    fun pause(filePath: String, messageTid: MessageTid) {
         playerExecutor.execute {
-            if (currentPlayer?.getFilePath() == filePath)
+            if (isCurrentPlayer(filePath, messageTid))
                 currentPlayer?.pause()
         }
     }
@@ -77,9 +91,9 @@ object AudioPlayerHelper {
         }
     }
 
-    fun toggle(filePath: String) {
+    fun toggle(filePath: String, messageTid: MessageTid) {
         playerExecutor.execute {
-            if (currentPlayer?.getFilePath() == filePath) {
+            if (isCurrentPlayer(filePath, messageTid)) {
                 currentPlayer?.togglePlayPause()
                 for (callback in playerToggleListeners.values) {
                     callback.onToggle()
@@ -88,9 +102,9 @@ object AudioPlayerHelper {
         }
     }
 
-    fun setPlaybackSpeed(filePath: String?, speed: Float) {
+    fun setPlaybackSpeed(filePath: String?, messageTid: MessageTid, speed: Float) {
         playerExecutor.execute {
-            if (currentPlayer?.getFilePath().equals(filePath)) {
+            if (isCurrentPlayer(filePath, messageTid)) {
                 currentPlayer?.setPlaybackSpeed(speed)
             }
         }
@@ -100,34 +114,40 @@ object AudioPlayerHelper {
         playerToggleListeners[tag] = callback
     }
 
-    fun getCurrentPlayingAudioPath(): String? {
-        return currentPlayer?.getFilePath()
-    }
-
     fun getCurrentPlayer(): AudioPlayer? {
         return currentPlayer
     }
 
-    fun alreadyInitialized(path: String): Boolean {
-        currentPlayer ?: return false
-        return currentPlayer?.getFilePath().equals(path)
+    fun alreadyInitialized(path: String, messageTid: MessageTid): Boolean {
+        return isCurrentPlayer(path, messageTid)
     }
 
-    fun isPlaying(path: String?): Boolean {
+    fun isPlaying(path: String?, messageTid: MessageTid): Boolean {
+        return isCurrentPlayer(path, messageTid) && currentPlayer?.isPlaying() == true
+    }
+
+    fun isCurrentPlayer(path: String?, messageTid: MessageTid): Boolean {
         currentPlayer ?: return false
         path ?: return false
-        return currentPlayer?.getFilePath().equals(path) && currentPlayer?.isPlaying() == true
+        return currentPlayer?.getFilePath() == path
+                && currentPlayer?.getMessageTid() == messageTid
     }
 
     interface OnAudioPlayer {
-        fun onInitialized(alreadyInitialized: Boolean, player: AudioPlayer, filePath: String)
-        fun onProgress(position: Long, duration: Long, filePath: String)
-        fun onSeek(position: Long, filePath: String) {}
-        fun onToggle(playing: Boolean, filePath: String)
-        fun onStop(filePath: String)
-        fun onPaused(filePath: String)
-        fun onSpeedChanged(speed: Float, filePath: String)
-        fun onError(filePath: String) {}
+        fun onInitialized(
+            alreadyInitialized: Boolean,
+            player: AudioPlayer,
+            filePath: String,
+            messageTid: MessageTid
+        )
+
+        fun onProgress(position: Long, duration: Long, filePath: String, messageTid: MessageTid)
+        fun onSeek(position: Long, filePath: String, messageTid: MessageTid) {}
+        fun onToggle(playing: Boolean, filePath: String, messageTid: MessageTid)
+        fun onStop(filePath: String, messageTid: MessageTid)
+        fun onPaused(filePath: String, messageTid: MessageTid)
+        fun onSpeedChanged(speed: Float, filePath: String, messageTid: MessageTid) {}
+        fun onError(filePath: String, messageTid: MessageTid) {}
     }
 
     fun interface OnToggleCallback {

@@ -15,6 +15,7 @@ import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.media.audio.AudioPlayer
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper.OnAudioPlayer
+import com.sceyt.chatuikit.persistence.logicimpl.message.MessageTid
 import com.sceyt.chatuikit.styles.input.MessageInputStyle
 import com.sceyt.chatuikit.styles.input.VoiceRecordPlaybackViewStyle
 import java.io.File
@@ -27,6 +28,7 @@ class VoiceRecordPlaybackView @JvmOverloads constructor(
 ) : ConstraintLayout(context, attrs, defStyleAttr) {
     private lateinit var style: VoiceRecordPlaybackViewStyle
     private val binding: SceytVoiceRecordPresenterBinding
+    private val messageTid: Long = -1
     var isShowing = false
         private set
 
@@ -42,7 +44,7 @@ class VoiceRecordPlaybackView @JvmOverloads constructor(
         isShowing = true
         with(binding) {
             deleteVoiceRecord.setOnClickListener {
-                AudioPlayerHelper.stop(file.path)
+                AudioPlayerHelper.stop(file.path, messageTid)
                 isShowing = false
                 listener?.onDeleteVoiceRecord()
             }
@@ -52,7 +54,7 @@ class VoiceRecordPlaybackView @JvmOverloads constructor(
             }
 
             icSendMessage.setOnClickListener {
-                AudioPlayerHelper.stop(file.path)
+                AudioPlayerHelper.stop(file.path, messageTid)
                 isShowing = false
                 listener?.onSendVoiceMessage()
             }
@@ -81,52 +83,65 @@ class VoiceRecordPlaybackView @JvmOverloads constructor(
                         progress = progress,
                         mediaDuration = audioMetadata.dur.times(1000L)
                     )
-                    AudioPlayerHelper.seek(file.path, seekPosition)
+                    AudioPlayerHelper.seek(
+                        filePath = file.path,
+                        messageTid = messageTid,
+                        position = seekPosition
+                    )
                 }
             }
         }
 
-        AudioPlayerHelper.init(file.path, object : OnAudioPlayer {
-            override fun onInitialized(
-                alreadyInitialized: Boolean,
-                player: AudioPlayer,
-                filePath: String
-            ) {
-                AudioPlayerHelper.toggle(file.path)
-            }
-
-            override fun onProgress(position: Long, duration: Long, filePath: String) {
-                val seekBarProgress = mediaPlayerPositionToSeekBarProgress(position, duration)
-                root.post {
-                    waveformSeekBar.progress = seekBarProgress
-                    voiceRecordDuration.text = position.durationToMinSecShort()
+        AudioPlayerHelper.init(
+            filePath = file.path,
+            messageTid = -1,
+            events = object : OnAudioPlayer {
+                override fun onInitialized(
+                    alreadyInitialized: Boolean,
+                    player: AudioPlayer,
+                    filePath: String,
+                    messageTid: MessageTid
+                ) {
+                    AudioPlayerHelper.toggle(file.path, messageTid)
                 }
-            }
 
-            override fun onSeek(position: Long, filePath: String) {
-            }
-
-            override fun onToggle(playing: Boolean, filePath: String) {
-                root.post { setPlayButtonIcon(playing) }
-            }
-
-            override fun onStop(filePath: String) {
-                root.post {
-                    setPlayButtonIcon(false)
-                    waveformSeekBar.progress = 0f
+                override fun onProgress(
+                    position: Long, duration: Long, filePath: String,
+                    messageTid: MessageTid
+                ) {
+                    val seekBarProgress = mediaPlayerPositionToSeekBarProgress(position, duration)
+                    root.post {
+                        waveformSeekBar.progress = seekBarProgress
+                        voiceRecordDuration.text = position.durationToMinSecShort()
+                    }
                 }
-            }
 
-            override fun onPaused(filePath: String) {
-                root.post { setPlayButtonIcon(false) }
-            }
+                override fun onToggle(
+                    playing: Boolean, filePath: String,
+                    messageTid: MessageTid
+                ) {
+                    root.post { setPlayButtonIcon(playing) }
+                }
 
-            override fun onSpeedChanged(speed: Float, filePath: String) {
-            }
+                override fun onStop(
+                    filePath: String,
+                    messageTid: MessageTid
+                ) {
+                    root.post {
+                        setPlayButtonIcon(false)
+                        waveformSeekBar.progress = 0f
+                    }
+                }
 
-            override fun onError(filePath: String) {
-            }
-        }, TAG_REF)
+                override fun onPaused(
+                    filePath: String,
+                    messageTid: MessageTid
+                ) {
+                    root.post { setPlayButtonIcon(false) }
+                }
+            },
+            tag = TAG_REF
+        )
     }
 
     private fun setPlayButtonIcon(playing: Boolean) {
