@@ -37,22 +37,22 @@ class SceytDialog(context: Context) : Dialog(context, R.style.SceytDialogStyle) 
     }
 
     fun setTitle(title: CharSequence): SceytDialog {
-        binding.textTitle.text = title
+        binding.textTitle.setText(title, TextView.BufferType.SPANNABLE)
         return this
     }
 
     fun setDescription(description: CharSequence): SceytDialog {
-        binding.textDescription.text = description
+        binding.textDescription.setText(description, TextView.BufferType.SPANNABLE)
         return this
     }
 
     fun setPositiveButtonTitle(positiveBtnTitle: CharSequence): SceytDialog {
-        binding.buttonAccept.text = positiveBtnTitle
+        binding.buttonAccept.setText(positiveBtnTitle, TextView.BufferType.SPANNABLE)
         return this
     }
 
     fun setNegativeButtonTitle(negativeBtnTitle: CharSequence): SceytDialog {
-        binding.buttonCancel.text = negativeBtnTitle
+        binding.buttonCancel.setText(negativeBtnTitle, TextView.BufferType.SPANNABLE)
         return this
     }
 
