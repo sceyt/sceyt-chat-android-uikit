@@ -15,11 +15,10 @@ import com.sceyt.chatuikit.styles.messages_list.item.ReadMoreStyle
  * Helper object for truncating message body text and adding "Read More" functionality.
  */
 object MessageBodyTruncationHelper {
-
-    /**
-     * Custom LineHeightSpan to add extra spacing above text.
-     */
-    private class SpacingSpan(private val extraSpacingPx: Int) : LineHeightSpan {
+    private class SpacingSpan(
+        private val extraSpacingAbovePx: Int,
+        private val extraSpacingBelowPx: Int
+    ) : LineHeightSpan {
         override fun chooseHeight(
             text: CharSequence?,
             start: Int,
@@ -29,8 +28,10 @@ object MessageBodyTruncationHelper {
             fm: Paint.FontMetricsInt?
         ) {
             fm?.let {
-                it.top -= extraSpacingPx
-                it.ascent -= extraSpacingPx
+                it.top -= extraSpacingAbovePx
+                it.ascent -= extraSpacingAbovePx
+                it.bottom += extraSpacingBelowPx
+                it.descent += extraSpacingBelowPx
             }
         }
     }
@@ -69,9 +70,10 @@ object MessageBodyTruncationHelper {
         spannable.append(readMoreStyle.text)
         val readMoreEnd = spannable.length
 
-        val spacingPx = 8.dpToPx()
+        val spacingAbovePx = 8.dpToPx()
+        val spacingBelowPx = 4.dpToPx()
         spannable.setSpan(
-            SpacingSpan(spacingPx),
+            SpacingSpan(spacingAbovePx, spacingBelowPx),
             readMoreStart,
             readMoreEnd,
             Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
@@ -85,7 +87,6 @@ object MessageBodyTruncationHelper {
             }
 
             override fun updateDrawState(ds: TextPaint) {
-                super.updateDrawState(ds)
                 ds.isUnderlineText = false
             }
         }
