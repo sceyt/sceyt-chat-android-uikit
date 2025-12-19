@@ -853,6 +853,5 @@ internal fun MessageInputStyle.Builder.buildMentionTextStyle(
     )
     .setFont(
         index = R.styleable.MessageInputView_sceytUiMessageInputMentionTextFont,
-        defValue = R.font.roboto_regular
     )
     .build()
