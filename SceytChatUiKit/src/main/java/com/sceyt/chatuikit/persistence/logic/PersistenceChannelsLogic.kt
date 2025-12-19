@@ -91,5 +91,5 @@ interface PersistenceChannelsLogic {
     fun getChannelMessageCount(channelId: Long): Flow<Long>
     fun getTotalUnreadCount(channelTypes: List<String>): Flow<Long>
     suspend fun getCommonGroups(userId: String):SceytPagingResponse<List<SceytChannel>>
-    suspend fun loadMore(): SceytPagingResponse<List<SceytChannel>>
+    suspend fun loadMoreCommonGroups(): SceytPagingResponse<List<SceytChannel>>
 }
