@@ -36,6 +36,11 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+data class AddMemberResult(
+    val channel: SceytChannel,
+    val notAddedMembers: List<SceytMember>
+)
+
 class ChannelMembersViewModel(
     private val channelId: Long,
     private val channelsLogic: PersistenceChannelsLogic,
@@ -58,7 +63,7 @@ class ChannelMembersViewModel(
     private val _channelEventLiveData = MutableLiveData<ChannelActionEvent>()
     val channelEventLiveData = _channelEventLiveData.asLiveData()
 
-    private val _channelAddMemberLiveData = MutableLiveData<SceytChannel>()
+    private val _channelAddMemberLiveData = MutableLiveData<AddMemberResult>()
     val channelAddMemberLiveData = _channelAddMemberLiveData.asLiveData()
 
     private val _channelRemoveMemberLiveData = MutableLiveData<SceytChannel>()
@@ -217,7 +222,11 @@ class ChannelMembersViewModel(
                 channelId = channelId,
                 members = members
             ).onSuccessNotNull { channel ->
-                _channelAddMemberLiveData.postValue(channel)
+                val notAddedMembers = members.filter { member ->
+                    channel.members?.none { it.id == member.id } ?: true
+                }
+                val result = AddMemberResult(channel, notAddedMembers)
+                _channelAddMemberLiveData.postValue(result)
             }
 
             notifyPageStateWithResponse(response)

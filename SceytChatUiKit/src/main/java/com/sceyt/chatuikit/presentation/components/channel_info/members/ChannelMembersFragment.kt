@@ -51,6 +51,7 @@ import com.sceyt.chatuikit.presentation.components.channel_info.members.adapter.
 import com.sceyt.chatuikit.presentation.components.channel_info.members.popups.MemberActionsDialog
 import com.sceyt.chatuikit.presentation.components.channel_info.members.popups.MemberActionsDialog.ActionsEnum.Delete
 import com.sceyt.chatuikit.presentation.components.channel_info.members.popups.MemberActionsDialog.ActionsEnum.RevokeAdmin
+import com.sceyt.chatuikit.presentation.components.channel_info.members.viewmodel.AddMemberResult
 import com.sceyt.chatuikit.presentation.components.channel_info.members.viewmodel.ChannelMembersViewModel
 import com.sceyt.chatuikit.presentation.components.invite_link.ChannelInviteLinkActivity
 import com.sceyt.chatuikit.presentation.components.select_users.SelectUsersActivity
@@ -313,7 +314,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
         }
     }
 
-    protected open fun onAddedMember(channel: SceytChannel) {
+    protected open fun onAddedMember(result: AddMemberResult) {
         addMembers(channel.members)
         sendAddedMemberSystemMessage(channel.members ?: return)
     }
