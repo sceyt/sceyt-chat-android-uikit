@@ -3,12 +3,13 @@ package com.sceyt.chatuikit.presentation.components.channel_info.members.viewmod
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.google.gson.Gson
+import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.role.Role
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.managers.channel.ChannelEventManager
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelActionEvent
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventData
-import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventEnum
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelOwnerChangedEventData
 import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNext
@@ -18,11 +19,16 @@ import com.sceyt.chatuikit.data.models.channels.CreateChannelData
 import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
+import com.sceyt.chatuikit.data.models.messages.MembersMetaData
+import com.sceyt.chatuikit.data.models.messages.SceytMessageType
 import com.sceyt.chatuikit.data.models.messages.SceytUser
+import com.sceyt.chatuikit.data.models.messages.SystemMsgBodyEnum
 import com.sceyt.chatuikit.data.models.onSuccessNotNull
 import com.sceyt.chatuikit.persistence.extensions.asLiveData
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMembersLogic
+import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
+import com.sceyt.chatuikit.persistence.mappers.toUser
 import com.sceyt.chatuikit.presentation.components.channel_info.members.adapter.MemberItem
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import kotlinx.coroutines.Dispatchers
@@ -34,6 +40,7 @@ class ChannelMembersViewModel(
     private val channelId: Long,
     private val channelsLogic: PersistenceChannelsLogic,
     private val membersLogic: PersistenceMembersLogic,
+    private val messageLogic: PersistenceMessagesLogic
 ) : BaseViewModel() {
 
     private val _membersLiveData = MutableLiveData<PaginationResponse<MemberItem>>()
@@ -51,11 +58,14 @@ class ChannelMembersViewModel(
     private val _channelEventLiveData = MutableLiveData<ChannelActionEvent>()
     val channelEventLiveData = _channelEventLiveData.asLiveData()
 
-    private val _channelAddMemberLiveData = MutableLiveData<List<SceytMember>>()
+    private val _channelAddMemberLiveData = MutableLiveData<SceytChannel>()
     val channelAddMemberLiveData = _channelAddMemberLiveData.asLiveData()
 
-    private val _channelRemoveMemberLiveData = MutableLiveData<List<SceytMember>>()
+    private val _channelRemoveMemberLiveData = MutableLiveData<SceytChannel>()
     val channelRemoveMemberLiveData = _channelRemoveMemberLiveData.asLiveData()
+
+    private val _channelRoleLiveData = MutableLiveData<SceytChannel>()
+    val channelRoleLiveData = _channelRoleLiveData.asLiveData()
 
     private val _findOrCreateChatLiveData = MutableLiveData<SceytChannel>()
     val findOrCreateChatLiveData = _findOrCreateChatLiveData.asLiveData()
@@ -181,18 +191,8 @@ class ChannelMembersViewModel(
             val response = if (block) membersLogic.blockAndDeleteMember(channelId, memberId)
             else membersLogic.deleteMember(channelId, memberId)
 
-            if (response is SceytResponse.Success) {
-                val channel = response.data ?: return@launch
-                val members = channel.members ?: return@launch
-                _channelMemberEventLiveData.postValue(
-                    ChannelMembersEventData(
-                        channel = channel,
-                        members = members,
-                        eventType = if (block) ChannelMembersEventEnum.Blocked else ChannelMembersEventEnum.Kicked
-                    )
-                )
-
-                _channelRemoveMemberLiveData.postValue(members)
+            response.onSuccessNotNull { channel ->
+                _channelRemoveMemberLiveData.postValue(channel)
             }
 
             notifyPageStateWithResponse(response)
@@ -203,16 +203,8 @@ class ChannelMembersViewModel(
         if (member.isEmpty()) return
         viewModelScope.launch(Dispatchers.IO) {
             val response = membersLogic.changeChannelMemberRole(channelId, *member)
-            if (response is SceytResponse.Success) {
-                val channel = response.data ?: return@launch
-                val members = channel.members ?: return@launch
-                _channelMemberEventLiveData.postValue(
-                    ChannelMembersEventData(
-                        channel = channel,
-                        members = members,
-                        eventType = ChannelMembersEventEnum.Role
-                    )
-                )
+            response.onSuccessNotNull { channel ->
+                _channelRoleLiveData.postValue(channel)
             }
 
             notifyPageStateWithResponse(response)
@@ -221,19 +213,11 @@ class ChannelMembersViewModel(
 
     fun addMembersToChannel(channelId: Long, members: List<SceytMember>) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = membersLogic.addMembersToChannel(channelId, members)
-            if (response is SceytResponse.Success) {
-                val channel = response.data ?: return@launch
-                val responseMembers = channel.members ?: return@launch
-
-                _channelMemberEventLiveData.postValue(
-                    ChannelMembersEventData(
-                        channel = channel,
-                        members = responseMembers,
-                        eventType = ChannelMembersEventEnum.Added
-                    )
-                )
-                _channelAddMemberLiveData.postValue(responseMembers)
+            val response = membersLogic.addMembersToChannel(
+                channelId = channelId,
+                members = members
+            ).onSuccessNotNull { channel ->
+                _channelAddMemberLiveData.postValue(channel)
             }
 
             notifyPageStateWithResponse(response)
@@ -258,5 +242,41 @@ class ChannelMembersViewModel(
 
             notifyPageStateWithResponse(response)
         }
+    }
+
+    fun sendRemovedMemberMessage(
+        channelId: Long,
+        removedMembers: List<SceytMember>
+    ) = viewModelScope.launch {
+        messageLogic.sendMessage(
+            channelId = channelId,
+            message = Message(
+                Message.MessageBuilder()
+                    .setType(SceytMessageType.System.value)
+                    .setMetadata(Gson().toJson(MembersMetaData(removedMembers.map { it.id })))
+                    .setMentionedUsers(removedMembers.map { it.user.toUser() }.toTypedArray())
+                    .withDisplayCount(0)
+                    .setSilent(true)
+                    .setBody(SystemMsgBodyEnum.MemberRemoved.value)
+            )
+        )
+    }
+
+    fun sendAddedMemberMessage(
+        channelId: Long,
+        addedMembers: List<SceytMember>
+    ) = viewModelScope.launch {
+        messageLogic.sendMessage(
+            channelId = channelId,
+            message = Message(
+                Message.MessageBuilder()
+                    .setType(SceytMessageType.System.value)
+                    .setMetadata(Gson().toJson(MembersMetaData(addedMembers.map { it.id })))
+                    .setMentionedUsers(addedMembers.map { it.user.toUser() }.toTypedArray())
+                    .withDisplayCount(0)
+                    .setSilent(true)
+                    .setBody(SystemMsgBodyEnum.MemberAdded.value)
+            )
+        )
     }
 }

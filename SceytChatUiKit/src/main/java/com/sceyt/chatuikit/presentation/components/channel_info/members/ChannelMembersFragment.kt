@@ -12,10 +12,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityOptionsCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
-import com.google.gson.Gson
-import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.role.Role
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
@@ -33,9 +30,6 @@ import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum.Public
 import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
-import com.sceyt.chatuikit.data.models.messages.MembersMetaData
-import com.sceyt.chatuikit.data.models.messages.SceytMessageType
-import com.sceyt.chatuikit.data.models.messages.SystemMsgBodyEnum
 import com.sceyt.chatuikit.databinding.SceytFragmentChannelMembersBinding
 import com.sceyt.chatuikit.extensions.awaitAnimationEnd
 import com.sceyt.chatuikit.extensions.customToastSnackBar
@@ -47,7 +41,6 @@ import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.extensions.getChannelType
 import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
-import com.sceyt.chatuikit.persistence.mappers.toUser
 import com.sceyt.chatuikit.presentation.common.SceytDialog
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoActivity
 import com.sceyt.chatuikit.presentation.components.channel_info.members.adapter.ChannelMembersAdapter
@@ -65,8 +58,6 @@ import com.sceyt.chatuikit.presentation.components.select_users.SelectUsersPageA
 import com.sceyt.chatuikit.presentation.components.select_users.SelectUsersResult
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.styles.channel_members.ChannelMembersStyle
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
 
@@ -141,6 +132,8 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
         viewModel.channelAddMemberLiveData.observe(viewLifecycleOwner, ::onAddedMember)
 
         viewModel.channelRemoveMemberLiveData.observe(viewLifecycleOwner, ::onRemovedMember)
+
+        viewModel.channelRoleLiveData.observe(viewLifecycleOwner, ::onChangeRole)
 
         viewModel.pageStateLiveData.observe(viewLifecycleOwner, ::onPageStateChange)
 
@@ -320,39 +313,31 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
         }
     }
 
-    protected open fun onAddedMember(data: List<SceytMember>) {
-        if (channel.isGroup && data.isNotEmpty()) {
-            lifecycleScope.launch(Dispatchers.IO) {
-                SceytChatUIKit.chatUIFacade.messageInteractor.sendMessage(
-                    channel.id, Message(
-                        Message.MessageBuilder()
-                            .setType(SceytMessageType.System.value)
-                            .setMetadata(Gson().toJson(MembersMetaData(data.map { it.id })))
-                            .setMentionedUsers(data.map { it.user.toUser() }.toTypedArray())
-                            .withDisplayCount(0)
-                            .setSilent(true)
-                            .setBody(SystemMsgBodyEnum.MemberAdded.value)
-                    )
-                )
-            }
+    protected open fun onAddedMember(channel: SceytChannel) {
+        addMembers(channel.members)
+        sendAddedMemberSystemMessage(channel.members ?: return)
+    }
+
+    protected open fun onRemovedMember(channel: SceytChannel) {
+        channel.members?.forEach { member ->
+            removeMember(member.id)
+        }
+        sendRemovedMemberSystemMessage(channel.members ?: return)
+    }
+
+    protected open fun onChangeRole(channel: SceytChannel) {
+        handleOnRoleChanged(channel.members ?: return)
+    }
+
+    protected open fun sendRemovedMemberSystemMessage(removedMembers: List<SceytMember>) {
+        if (channel.isGroup && removedMembers.isNotEmpty()) {
+            viewModel.sendRemovedMemberMessage(channel.id, removedMembers)
         }
     }
 
-    protected open fun onRemovedMember(data: List<SceytMember>) {
-        if (channel.isGroup && data.isNotEmpty()) {
-            lifecycleScope.launch(Dispatchers.IO) {
-                SceytChatUIKit.chatUIFacade.messageInteractor.sendMessage(
-                    channel.id, Message(
-                        Message.MessageBuilder()
-                            .setType(SceytMessageType.System.value)
-                            .setMetadata(Gson().toJson(MembersMetaData(data.map { it.id })))
-                            .setMentionedUsers(data.map { it.user.toUser() }.toTypedArray())
-                            .withDisplayCount(0)
-                            .setSilent(true)
-                            .setBody(SystemMsgBodyEnum.MemberRemoved.value)
-                    )
-                )
-            }
+    protected open fun sendAddedMemberSystemMessage(addedMembers: List<SceytMember>) {
+        if (channel.isGroup && addedMembers.isNotEmpty()) {
+            viewModel.sendAddedMemberMessage(channel.id, addedMembers)
         }
     }
 
@@ -494,35 +479,39 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
         }
     }
 
-    protected open fun onChannelMembersEvent(eventData: ChannelMembersEventData) {
-        when (eventData.eventType) {
+    protected open fun onChannelMembersEvent(event: ChannelMembersEventData) {
+        when (event.eventType) {
             ChannelMembersEventEnum.Role -> {
-                eventData.members.forEach { member ->
-                    if (memberType == MemberTypeEnum.Admin && member.role.name != RoleTypeEnum.Admin.value) {
-                        removeMember(member.id)
-                    } else
-                        membersAdapter?.getMemberItemById(member.id)?.let {
-                            val memberItem = it.second as MemberItem.Member
-                            memberItem.member = member
-                            membersAdapter?.notifyItemChanged(
-                                it.first,
-                                MemberItemPayloadDiff.DEFAULT
-                            )
-                        } ?: addMembers(arrayListOf(member))
-                }
+                handleOnRoleChanged(event.members)
             }
 
             ChannelMembersEventEnum.Kicked, ChannelMembersEventEnum.Blocked -> {
-                eventData.members.forEach { member ->
+                event.members.forEach { member ->
                     removeMember(member.id)
                 }
             }
 
             ChannelMembersEventEnum.Added -> {
-                addMembers(eventData.members)
+                addMembers(event.members)
             }
 
             else -> return
+        }
+    }
+
+    protected open fun handleOnRoleChanged(members: List<SceytMember>) {
+        members.forEach { member ->
+            if (memberType == MemberTypeEnum.Admin && member.role.name != RoleTypeEnum.Admin.value) {
+                removeMember(member.id)
+            } else
+                membersAdapter?.getMemberItemById(member.id)?.let {
+                    val memberItem = it.second as MemberItem.Member
+                    memberItem.member = member
+                    membersAdapter?.notifyItemChanged(
+                        it.first,
+                        MemberItemPayloadDiff.DEFAULT
+                    )
+                } ?: addMembers(arrayListOf(member))
         }
     }
 
