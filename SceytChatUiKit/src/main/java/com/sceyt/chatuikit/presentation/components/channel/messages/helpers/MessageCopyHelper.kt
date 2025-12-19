@@ -82,7 +82,7 @@ object MessageCopyHelper {
         // and add Annotation spans. This method handles text replacement and annotation creation.
         val bodyWithMentions = MentionAnnotation.setMentionAnnotations(styledBody, mentions)
 
-        return SpannableStringBuilder(bodyWithMentions)
+        return bodyWithMentions
     }
 }
 
