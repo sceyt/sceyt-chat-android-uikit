@@ -12,7 +12,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.databinding.SceytActivityShareBinding
-import com.sceyt.chatuikit.databinding.SceytSearchChannelsEmptyStateBinding
+import com.sceyt.chatuikit.databinding.SceytEmptyStateBinding
 import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
@@ -27,7 +27,7 @@ import com.sceyt.chatuikit.presentation.components.share.viewmodel.ShareViewMode
 import com.sceyt.chatuikit.presentation.components.share.viewmodel.ShareViewModel.State.Loading
 import com.sceyt.chatuikit.presentation.components.shareable.ShareableActivity
 import com.sceyt.chatuikit.presentation.custom_views.PageStateView
-import com.sceyt.chatuikit.styles.extensions.shareable.applyShareableStyle
+import com.sceyt.chatuikit.styles.extensions.common.applyStyle
 import com.sceyt.chatuikit.styles.share.ShareStyle
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -106,9 +106,9 @@ open class ShareActivity : ShareableActivity<ShareStyle>() {
 
     protected open fun setupPageStateView() {
         binding.pageStateView.setEmptySearchStateView(
-            SceytSearchChannelsEmptyStateBinding.inflate(
+            SceytEmptyStateBinding.inflate(
                 layoutInflater, binding.pageStateView, false
-            ).also { it.applyShareableStyle() }.root
+            ).also { it.applyStyle(style.emptyStateStyle) }.root
         )
     }
 

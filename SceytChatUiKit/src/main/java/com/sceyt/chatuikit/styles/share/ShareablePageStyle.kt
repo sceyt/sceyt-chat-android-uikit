@@ -5,6 +5,7 @@ import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.renderers.AvatarRenderer
 import com.sceyt.chatuikit.styles.common.ButtonStyle
+import com.sceyt.chatuikit.styles.common.EmptyStateStyle
 import com.sceyt.chatuikit.styles.common.SearchToolbarStyle
 import com.sceyt.chatuikit.styles.common.SelectableListItemStyle
 
@@ -16,4 +17,5 @@ abstract class ShareablePageStyle(
                 Formatter<SceytChannel>,
                 Formatter<SceytChannel>,
                 AvatarRenderer<SceytChannel>>,
+        open val emptyStateStyle: EmptyStateStyle,
 )
