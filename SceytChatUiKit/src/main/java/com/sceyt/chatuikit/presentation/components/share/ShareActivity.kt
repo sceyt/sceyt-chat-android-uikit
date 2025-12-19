@@ -12,6 +12,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.databinding.SceytActivityShareBinding
+import com.sceyt.chatuikit.databinding.SceytSearchChannelsEmptyStateBinding
 import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
@@ -25,6 +26,8 @@ import com.sceyt.chatuikit.presentation.components.share.viewmodel.ShareViewMode
 import com.sceyt.chatuikit.presentation.components.share.viewmodel.ShareViewModel.State.Finish
 import com.sceyt.chatuikit.presentation.components.share.viewmodel.ShareViewModel.State.Loading
 import com.sceyt.chatuikit.presentation.components.shareable.ShareableActivity
+import com.sceyt.chatuikit.presentation.custom_views.PageStateView
+import com.sceyt.chatuikit.styles.extensions.shareable.applyShareableStyle
 import com.sceyt.chatuikit.styles.share.ShareStyle
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -88,6 +91,7 @@ open class ShareActivity : ShareableActivity<ShareStyle>() {
 
     protected open fun SceytActivityShareBinding.initViews() {
         determinateShareBtnState()
+        setupPageStateView()
 
         toolbar.setNavigationClickListener {
             finish()
@@ -98,6 +102,14 @@ open class ShareActivity : ShareableActivity<ShareStyle>() {
         btnShare.setSafeOnClickListener {
             onShareClick()
         }
+    }
+
+    protected open fun setupPageStateView() {
+        binding.pageStateView.setEmptySearchStateView(
+            SceytSearchChannelsEmptyStateBinding.inflate(
+                layoutInflater, binding.pageStateView, false
+            ).also { it.applyShareableStyle() }.root
+        )
     }
 
     protected open fun hideInputOnSharingText() {
@@ -149,6 +161,12 @@ open class ShareActivity : ShareableActivity<ShareStyle>() {
     override fun getRV(): RecyclerView? {
         return if (::binding.isInitialized)
             binding.rvChannels
+        else null
+    }
+
+    override fun getPageStateView(): PageStateView? {
+        return if (::binding.isInitialized)
+            binding.pageStateView
         else null
     }
 
