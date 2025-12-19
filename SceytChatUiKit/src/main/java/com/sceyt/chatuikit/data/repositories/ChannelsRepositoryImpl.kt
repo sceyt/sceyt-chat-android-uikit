@@ -23,7 +23,6 @@ import com.sceyt.chatuikit.config.ChannelListConfig
 import com.sceyt.chatuikit.config.SearchChannelParams
 import com.sceyt.chatuikit.data.models.SceytPagingResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
-import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
 import com.sceyt.chatuikit.data.models.channels.EditChannelData
 import com.sceyt.chatuikit.data.models.channels.GetAllChannelsResponse
@@ -236,7 +235,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
             .order(SceytChatUIKit.config.channelListOrder)
             .limit(limit)
             .mutualWithUserId(userId)
-            .withExcludeTypes(listOf(ChannelTypeEnum.Direct.value))
+            .withTypes(SceytChatUIKit.config.mutualGroupChannelTypes.getMutualGroupChannelTypes())
             .build()
     }
 
