@@ -1181,7 +1181,7 @@ internal class PersistenceChannelsLogicImpl(
     override suspend fun getCommonGroups(userId: String): SceytPagingResponse<List<SceytChannel>> =
         channelsRepository.getCommonGroups(userId)
 
-    override suspend fun loadMore(): SceytPagingResponse<List<SceytChannel>> =
+    override suspend fun loadMoreCommonGroups(): SceytPagingResponse<List<SceytChannel>> =
         channelsRepository.loadMoreCommonGroups()
 
 

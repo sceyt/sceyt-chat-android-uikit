@@ -82,7 +82,7 @@ class ChannelInfoCommonGroupsViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             isLoadingMore = true
 
-            when (val response = persistenceChannelsLogic.loadMore()) {
+            when (val response = persistenceChannelsLogic.loadMoreCommonGroups()) {
                 is SceytPagingResponse.Success -> {
                     hasMoreData = response.hasNext
 
