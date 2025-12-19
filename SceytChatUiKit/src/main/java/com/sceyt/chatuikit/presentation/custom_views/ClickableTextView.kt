@@ -2,7 +2,7 @@ package com.sceyt.chatuikit.presentation.custom_views
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.text.SpannableString
+import android.text.Spannable
 import android.text.style.ClickableSpan
 import android.util.AttributeSet
 import android.view.GestureDetector
@@ -19,7 +19,9 @@ class ClickableTextView @JvmOverloads constructor(
 ) : AppCompatTextView(context, attrs, defStyleAttr) {
     private var doOnLongClick: ((View) -> Unit)? = null
     private var doOnClickWhenNoLink: ((View) -> Unit)? = null
+    private var doOnSpanLongClick: ((ClickableSpan, View) -> Unit)? = null
     private var pressedSpanBackgroundSpan: RoundedBackgroundSpan? = null
+    private var lastTouchEvent: MotionEvent? = null
 
     private val rippleColor by lazy {
         val baseColor = linkTextColors.defaultColor
@@ -30,46 +32,61 @@ class ClickableTextView @JvmOverloads constructor(
 
     private val gestureDetector = GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
         override fun onSingleTapUp(event: MotionEvent): Boolean {
-            val spannableString = text as? SpannableString ?: return false
+            val spannable = text as? Spannable ?: return false
             val span = getClickableSpan(event)
             if (span != null) {
                 span.onClick(this@ClickableTextView)
             } else {
                 doOnClickWhenNoLink?.invoke(this@ClickableTextView)
             }
-            removeRippleEffect(spannableString)
+            removeRippleEffect(spannable)
             return true
         }
 
         override fun onLongPress(e: MotionEvent) {
-            val spannableString = text as? SpannableString
-            spannableString?.let { removeRippleEffect(it) }
-            doOnLongClick?.invoke(this@ClickableTextView)
+            val spannable = text as? Spannable
+            spannable?.let { removeRippleEffect(it) }
+
+            val span = lastTouchEvent?.let { getClickableSpan(it) }
+
+            when {
+                span == null -> {
+                    doOnLongClick?.invoke(this@ClickableTextView)
+                }
+                (span as? LongClickableSpan)?.onLongClick(this@ClickableTextView) == true -> Unit
+                doOnSpanLongClick != null -> {
+                    doOnSpanLongClick?.invoke(span, this@ClickableTextView)
+                }
+                else -> {
+                    doOnLongClick?.invoke(this@ClickableTextView)
+                }
+            }
         }
 
         override fun onDown(e: MotionEvent): Boolean {
+            lastTouchEvent = MotionEvent.obtain(e)
             return true
         }
     })
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent): Boolean {
-        if (text is SpannableString) {
-            val spannableString = text as SpannableString
+        if (text is Spannable) {
+            val spannable = text as Spannable
 
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
                     getClickableSpan(event)?.let {
-                        addRippleEffect(spannableString, it)
+                        addRippleEffect(spannable, it)
                     }
                 }
 
                 MotionEvent.ACTION_UP -> {
-                    removeRippleEffect(spannableString)
+                    removeRippleEffect(spannable)
                 }
 
                 MotionEvent.ACTION_CANCEL -> {
-                    removeRippleEffect(spannableString)
+                    removeRippleEffect(spannable)
                 }
             }
 
@@ -82,20 +99,20 @@ class ClickableTextView @JvmOverloads constructor(
     }
 
     private fun getClickableSpan(event: MotionEvent): ClickableSpan? {
-        val spannableString = text as? SpannableString ?: return null
+        val spannable = text as? Spannable ?: return null
         val x = (event.x + scrollX).toInt()
         val y = (event.y + scrollY).toInt()
         val layout = layout ?: return null
         val line = layout.getLineForVertical(y)
         val off = layout.getOffsetForHorizontal(line, x.toFloat())
-        val links = spannableString.getSpans(off, off, ClickableSpan::class.java)
+        val links = spannable.getSpans(off, off, ClickableSpan::class.java)
         return links.firstOrNull()
     }
 
-    private fun addRippleEffect(spannableString: SpannableString, clickableSpan: ClickableSpan) {
+    private fun addRippleEffect(spannable: Spannable, clickableSpan: ClickableSpan) {
         // Find the start and end of the clickable span
-        val spanStart = spannableString.getSpanStart(clickableSpan)
-        val spanEnd = spannableString.getSpanEnd(clickableSpan)
+        val spanStart = spannable.getSpanStart(clickableSpan)
+        val spanEnd = spannable.getSpanEnd(clickableSpan)
 
         if (spanStart != -1 && spanEnd != -1) {
             // Create and apply rounded background span for ripple effect
@@ -105,18 +122,18 @@ class ClickableTextView @JvmOverloads constructor(
                 spanStart = spanStart,
                 spanEnd = spanEnd
             )
-            spannableString.setSpan(
+            spannable.setSpan(
                 pressedSpanBackgroundSpan,
                 spanStart,
                 spanEnd,
-                SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
             )
         }
     }
 
-    private fun removeRippleEffect(spannableString: SpannableString) {
+    private fun removeRippleEffect(spannable: Spannable) {
         pressedSpanBackgroundSpan?.let {
-            spannableString.removeSpan(it)
+            spannable.removeSpan(it)
             pressedSpanBackgroundSpan = null
         }
     }
@@ -129,6 +146,10 @@ class ClickableTextView @JvmOverloads constructor(
         doOnClickWhenNoLink = onClick
     }
 
+    fun doOnSpanLongClick(onClick: (ClickableSpan, View) -> Unit) {
+        doOnSpanLongClick = onClick
+    }
+
     fun applyStyle(itemStyle: MessageItemStyle) {
         itemStyle.bodyTextStyle.apply(this)
         setLinkTextColor(itemStyle.linkTextColor)
@@ -136,13 +157,15 @@ class ClickableTextView @JvmOverloads constructor(
 
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
-        (text as? SpannableString)?.let { removeRippleEffect(it) }
+        (text as? Spannable)?.let { removeRippleEffect(it) }
+        lastTouchEvent?.recycle()
+        lastTouchEvent = null
     }
 
     override fun onWindowFocusChanged(hasWindowFocus: Boolean) {
         super.onWindowFocusChanged(hasWindowFocus)
         if (!hasWindowFocus) {
-            (text as? SpannableString)?.let { removeRippleEffect(it) }
+            (text as? Spannable)?.let { removeRippleEffect(it) }
         }
     }
 }
