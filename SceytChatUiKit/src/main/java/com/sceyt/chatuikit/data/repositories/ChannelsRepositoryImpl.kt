@@ -184,17 +184,19 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         userId: String,
     ): SceytPagingResponse<List<SceytChannel>> {
         return suspendCancellableCoroutine { continuation ->
+            val limit = SceytChatUIKit.config.queryLimits.mutualGroupsQueryLimit
             val query = createMutualChannelsQuery(
                 userId = userId,
-                limit = SceytChatUIKit.config.queryLimits.mutualGroupsQueryLimit,
+                limit = limit,
             ).also { mutualChannelsQuery = it }
 
             query.loadNext(object : ChannelsCallback {
                 override fun onResult(channels: MutableList<Channel>?) {
+                    val data = channels?.map { it.toSceytUiChannel() }.orEmpty()
                     continuation.safeResume(
                         SceytPagingResponse.Success(
-                            data = channels?.map { it.toSceytUiChannel() }.orEmpty(),
-                            hasNext = query.hasNext()
+                            data = data,
+                            hasNext = data.size == limit
                         )
                     )
                 }
@@ -211,13 +213,15 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         if (!::mutualChannelsQuery.isInitialized) {
             return SceytPagingResponse.Success(data = emptyList(), hasNext = false)
         }
+        val limit = SceytChatUIKit.config.queryLimits.mutualGroupsQueryLimit
         return suspendCancellableCoroutine { continuation ->
             mutualChannelsQuery.loadNext(object : ChannelsCallback {
                 override fun onResult(channels: MutableList<Channel>?) {
+                    val data = channels?.map { it.toSceytUiChannel() }.orEmpty()
                     continuation.safeResume(
                         SceytPagingResponse.Success(
-                            data = channels?.map { it.toSceytUiChannel() }.orEmpty(),
-                            hasNext = mutualChannelsQuery.hasNext()
+                            data = data,
+                            hasNext = data.size == limit
                         )
                     )
                 }
