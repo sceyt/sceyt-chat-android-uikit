@@ -226,7 +226,7 @@ internal class PersistenceMessagesLogicImpl(
                         it.toSceytReaction()
                     })
                     messagesCache.messageUpdated(updateMsg.channelId, updateMsg)
-                    messageDao.updateMessageIgnored(updateMsg.toMessageEntity(false))
+                    messageDao.upsertMessage(updateMsg.toMessageDb(false))
                 }
 
                 MessageState.Deleted -> {
