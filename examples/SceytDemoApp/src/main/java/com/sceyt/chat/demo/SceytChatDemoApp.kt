@@ -76,12 +76,13 @@ class SceytChatDemoApp : Application() {
             // Customizing the push notifications
             pushNotification.apply {
                 notificationBuilder = CustomPushNotificationBuilder(this@SceytChatDemoApp)
-                notificationChannelProvider = CustomPushNotificationChannelProvider(this@SceytChatDemoApp)
+                notificationChannelProvider =
+                    CustomPushNotificationChannelProvider(this@SceytChatDemoApp)
             }
 
             // Customizing the file transfer notification
             fileTransferServiceNotification.notificationBuilder =
-                    CustomFileTransferNotificationBuilder(this@SceytChatDemoApp)
+                CustomFileTransferNotificationBuilder(this@SceytChatDemoApp)
         }
 
         // Sets the token provider for the SceytChatUIKit.

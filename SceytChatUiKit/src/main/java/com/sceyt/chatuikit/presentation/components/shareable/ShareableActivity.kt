@@ -24,6 +24,8 @@ import com.sceyt.chatuikit.presentation.components.shareable.adapter.ShareableCh
 import com.sceyt.chatuikit.presentation.components.shareable.adapter.holders.ShareableChannelViewHolderFactory
 import com.sceyt.chatuikit.presentation.components.shareable.viewmodel.ShareableViewModel
 import com.sceyt.chatuikit.presentation.components.shareable.viewmodel.ShareableViewModelFactory
+import com.sceyt.chatuikit.presentation.custom_views.PageStateView
+import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.styles.share.ShareablePageStyle
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -37,6 +39,7 @@ abstract class ShareableActivity<Style : ShareablePageStyle> : AppCompatActivity
     protected var channelsAdapter: ShareableChannelsAdapter? = null
     protected lateinit var style: Style
     protected val viewHolderFactory by lazy { provideViewHolderFactory() }
+    protected var currentSearchQuery: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -105,6 +108,7 @@ abstract class ShareableActivity<Style : ShareablePageStyle> : AppCompatActivity
                         })
                     }
                 } else channelsAdapter?.notifyUpdate(data, recyclerView)
+                updateEmptyState(data.isEmpty(), currentSearchQuery)
             }
         }
     }
@@ -112,6 +116,8 @@ abstract class ShareableActivity<Style : ShareablePageStyle> : AppCompatActivity
     protected open fun addNewChannels(data: List<ChannelListItem>) {
         setSelectedItems(data)
         channelsAdapter?.addList(data as MutableList<ChannelListItem>)
+        val currentData = channelsAdapter?.getChannels() ?: emptyList()
+        updateEmptyState(currentData.isEmpty(), currentSearchQuery)
     }
 
     protected open fun filterOnlyAppropriateChannels(data: List<SceytChannel>): List<SceytChannel> {
@@ -155,7 +161,17 @@ abstract class ShareableActivity<Style : ShareablePageStyle> : AppCompatActivity
     }
 
     protected open fun onSearchQueryChanged(query: String) {
+        currentSearchQuery = query
         shareableViewModel.getChannels(0, query)
+    }
+
+    protected open fun updateEmptyState(isEmpty: Boolean, searchQuery: String = "") {
+        val pageStateView = getPageStateView() ?: return
+        if (isEmpty) {
+            pageStateView.updateState(PageState.StateEmpty(searchQuery))
+        } else {
+            pageStateView.updateState(PageState.Nothing)
+        }
     }
 
     protected open val selectedChannels get() = shareableViewModel.selectedChannels
@@ -173,6 +189,10 @@ abstract class ShareableActivity<Style : ShareablePageStyle> : AppCompatActivity
     }
 
     protected open fun getRV(): RecyclerView? {
+        return null
+    }
+
+    protected open fun getPageStateView(): PageStateView? {
         return null
     }
 }

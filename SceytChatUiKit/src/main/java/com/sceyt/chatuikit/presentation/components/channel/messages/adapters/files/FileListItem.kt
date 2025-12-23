@@ -2,23 +2,21 @@ package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.fi
 
 import android.graphics.Bitmap
 import android.os.Parcelable
-import android.util.Log
 import android.util.Size
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.AttachmentDataProvider
 import com.sceyt.chatuikit.presentation.custom_views.voice_recorder.AudioMetadata
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
 data class FileListItem(
-        private var _attachment: SceytAttachment,
-        private var _metadataPayload: AttachmentMetadataPayload,
-        private var _thumbPath: String?,
-        private var _transferData: TransferData?,
-        val type: AttachmentTypeEnum,
+    private var _attachment: SceytAttachment,
+    private var _metadataPayload: AttachmentMetadataPayload,
+    private var _thumbPath: String?,
+    private var _transferData: TransferData?,
+    val type: AttachmentTypeEnum,
 ) : AttachmentDataProvider, Parcelable {
 
     override val attachment: SceytAttachment
@@ -52,14 +50,6 @@ data class FileListItem(
     }
 
     override fun updateTransferData(transferData: TransferData?) {
-        val current = _transferData
-        if (transferData != null && current != null
-                && current.state == TransferState.Downloaded &&
-                (transferData.state != TransferState.Downloaded || transferData.state == TransferState.PendingDownload)) {
-            Log.e("TdsfsdfAG3", "error update transers " +
-                    " current ${_transferData?.state}, coming ${transferData.state}, file ${_attachment.filePath}, com ${transferData.filePath}")
-
-        }
         _transferData = transferData
     }
 }

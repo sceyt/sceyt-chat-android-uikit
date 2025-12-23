@@ -7,6 +7,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.formatters.UserFormatter
 import com.sceyt.chatuikit.renderers.AvatarRenderer
+import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.AvatarStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
 
@@ -22,8 +23,7 @@ data class VoterItemStyle(
 ) {
 
     companion object {
-        var styleCustomizer =
-            com.sceyt.chatuikit.styles.StyleCustomizer<VoterItemStyle> { _, style -> style }
+        var styleCustomizer = StyleCustomizer<VoterItemStyle> { _, style -> style }
     }
 
     class Builder(

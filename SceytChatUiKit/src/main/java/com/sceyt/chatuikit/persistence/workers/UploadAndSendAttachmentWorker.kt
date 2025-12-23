@@ -13,7 +13,6 @@ import androidx.work.Operation
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.sceyt.chat.ChatClient
-import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.constants.SceytConstants.SCEYT_WORKER_TAG
@@ -42,6 +41,7 @@ import com.sceyt.chatuikit.persistence.mappers.toTransferData
 import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager.FILE_TRANSFER_NOTIFICATION_ID
 import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager.IS_SHARING
 import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager.MESSAGE_TID
+import com.sceyt.chatuikit.presentation.extensions.isNotPending
 import com.sceyt.chatuikit.shared.utils.FileChecksumCalculator
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.runBlocking
@@ -183,7 +183,7 @@ class UploadAndSendAttachmentWorker(
         val tmpMessage = messageLogic.getMessageFromDbByTid(messageTid)
                 ?: return finishWorkWithFailure("Message not found: $messageTid")
 
-        if (tmpMessage.deliveryStatus != DeliveryStatus.Pending)
+        if (tmpMessage.isNotPending())
             return finishWorkWithSuccess()
 
         if (applicationContext.hasPermissions(android.Manifest.permission.FOREGROUND_SERVICE))

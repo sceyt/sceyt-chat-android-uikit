@@ -175,7 +175,7 @@ class MessageInputView @JvmOverloads constructor(
         with(binding) {
             applyStyle()
             setOnClickListeners()
-            voiceRecordPlaybackView.setStyle(style.voiceRecordPlaybackViewStyle)
+            voiceRecordPlaybackView.setStyle(style)
             messageActionsView.setStyle(style)
             linkPreviewView.setStyle(style)
             messageInput.setMentionStyle(style.mentionTextStyle)
@@ -744,6 +744,10 @@ class MessageInputView @JvmOverloads constructor(
     internal fun getEventListeners() = eventListeners
 
     internal fun onSearchMessagesResult(data: SearchResult) {
+        if (data.isLoading){
+            setInitialStateSearchMessagesResult()
+            return
+        }
         with(binding.layoutSearchControl) {
             val hasResult = data.messages.isNotEmpty()
             tvResult.text = if (hasResult)

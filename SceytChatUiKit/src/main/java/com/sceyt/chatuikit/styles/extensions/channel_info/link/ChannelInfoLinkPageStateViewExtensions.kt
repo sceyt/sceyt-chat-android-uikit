@@ -6,9 +6,9 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytEmptyStateBinding
 import com.sceyt.chatuikit.databinding.SceytPageLoadingStateBinding
 import com.sceyt.chatuikit.extensions.setProgressColorRes
-import com.sceyt.chatuikit.extensions.setTextColorRes
 import com.sceyt.chatuikit.presentation.custom_views.PageStateView
 import com.sceyt.chatuikit.styles.channel_info.link.ChannelInfoLinkStyle
+import com.sceyt.chatuikit.styles.extensions.common.applyStyle
 
 internal fun PageStateView.setPageStatesView(
         style: ChannelInfoLinkStyle,
@@ -24,7 +24,7 @@ private fun PageStateView.setEmptyState(
         setEmptyStateView(
             SceytEmptyStateBinding.inflate(
                 layoutInflater, this, false
-            ).also { it.applyStyle(style.emptyStateTitle) }.root
+            ).also { it.applyStyle(style.emptyStateStyle) }.root
         )
     } else {
         setEmptyStateView(style.emptyState)
@@ -44,11 +44,6 @@ private fun PageStateView.setLoadingState(
     } else {
         setLoadingStateView(layoutResId)
     }
-}
-
-private fun SceytEmptyStateBinding.applyStyle(emptyStateTitle: String) {
-    title.setTextColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)
-    title.text = emptyStateTitle
 }
 
 private fun SceytPageLoadingStateBinding.applyStyle() {

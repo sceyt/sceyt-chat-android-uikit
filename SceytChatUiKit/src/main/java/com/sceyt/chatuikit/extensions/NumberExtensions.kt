@@ -148,6 +148,21 @@ fun calculateScaleWidthHeight(defaultSize: Int, minSize: Int, imageWidth: Int, i
     }
 }
 
+fun Long.formatMemberCount(): String {
+    return when {
+        this < 1000 -> this.toString()
+        this < 10000 -> {
+            val decimalValue = this / 1000.0
+            if (this % 1000L == 0L) {
+                "${this / 1000}k"
+            } else {
+                String.format("%.1f", decimalValue) + "k"
+            }
+        }
+        else -> "${this / 1000}k"
+    }
+}
+
 fun Boolean.toInt() = if (this) 1 else 0
 
 fun Int.toBoolean() = this == 1

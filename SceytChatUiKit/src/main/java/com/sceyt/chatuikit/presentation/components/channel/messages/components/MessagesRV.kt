@@ -7,10 +7,10 @@ import android.util.AttributeSet
 import android.view.ViewGroup
 import android.view.animation.AnimationUtils
 import androidx.core.util.Predicate
+import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
@@ -27,6 +27,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.mes
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessagesAdapter
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.sticky_date.StickyDateHeaderUpdater
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
+import com.sceyt.chatuikit.presentation.extensions.isNotPending
 import com.sceyt.chatuikit.shared.helpers.MessageSwipeController
 import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle
 import kotlin.math.absoluteValue
@@ -154,7 +155,7 @@ class MessagesRV @JvmOverloads constructor(
     }
 
     private fun getLastSentItem() = mAdapter.getLastMessageBy {
-        it is MessageListItem.MessageItem && it.message.deliveryStatus != DeliveryStatus.Pending
+        it is MessageListItem.MessageItem && it.message.isNotPending()
     }
 
     private fun checkScrollDown() {
@@ -186,9 +187,19 @@ class MessagesRV @JvmOverloads constructor(
         viewHolderFactory.setStyle(style)
     }
 
-    fun setData(messages: List<MessageListItem>, force: Boolean = false) {
+    fun setData(
+        messages: List<MessageListItem>,
+        lifecycleScope: LifecycleCoroutineScope,
+        force: Boolean = false
+    ) {
         if (::mAdapter.isInitialized.not()) {
-            adapter = MessagesAdapter(SyncArrayList(messages), viewHolderFactory, style).also {
+            adapter = MessagesAdapter(
+                messages = SyncArrayList(collection = messages),
+                viewHolderFactory = viewHolderFactory,
+                style = style,
+                scope = lifecycleScope,
+                recyclerView = this
+            ).also {
                 it.setHasStableIds(true)
                 mAdapter = it
             }
@@ -214,7 +225,7 @@ class MessagesRV @JvmOverloads constructor(
         } else if (force)
             mAdapter.forceUpdate(messages)
         else
-            mAdapter.notifyUpdate(messages, this)
+            mAdapter.notifyUpdate(messages)
     }
 
     fun isEmpty() = ::mAdapter.isInitialized.not() || mAdapter.getSkip() == 0
@@ -249,23 +260,32 @@ class MessagesRV @JvmOverloads constructor(
         else emptyList()
     }
 
-    fun addNextPageMessages(messages: List<MessageListItem>) {
+    fun addNextPageMessages(
+        messages: List<MessageListItem>,
+        lifecycleScope: LifecycleCoroutineScope
+    ) {
         if (::mAdapter.isInitialized.not())
-            setData(messages)
+            setData(messages, lifecycleScope)
         else
             mAdapter.addNextPageMessagesList(messages)
     }
 
-    fun addPrevPageMessages(messages: List<MessageListItem>) {
+    fun addPrevPageMessages(
+        messages: List<MessageListItem>,
+        lifecycleScope: LifecycleCoroutineScope
+    ) {
         if (::mAdapter.isInitialized.not())
-            setData(messages)
+            setData(messages, lifecycleScope)
         else
             mAdapter.addPrevPageMessagesList(messages)
     }
 
-    fun addNewMessages(vararg items: MessageListItem) {
+    fun addNewMessages(
+        vararg items: MessageListItem,
+        lifecycleScope: LifecycleCoroutineScope
+    ) {
         if (::mAdapter.isInitialized.not())
-            setData(items.toList())
+            setData(items.toList(), lifecycleScope)
         else {
             mAdapter.addNewMessages(items.toList())
             var outGoing = true
@@ -330,9 +350,9 @@ class MessagesRV @JvmOverloads constructor(
         mAdapter.sort(this)
     }
 
-    fun deleteMessageByTid(tid: Long) {
+    fun deleteMessageByTid(vararg tid: Long) {
         if (::mAdapter.isInitialized)
-            mAdapter.deleteMessageByTid(tid)
+            mAdapter.deleteMessageByTIds(tid.toList())
     }
 
     fun hideLoadingPrevItem() {

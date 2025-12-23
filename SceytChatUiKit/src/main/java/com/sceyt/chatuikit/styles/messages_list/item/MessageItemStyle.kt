@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import androidx.annotation.ColorInt
+import androidx.annotation.IntRange
 import androidx.core.content.res.use
 import androidx.core.graphics.ColorUtils
 import com.sceyt.chatuikit.R
@@ -52,9 +53,11 @@ import com.sceyt.chatuikit.styles.extensions.messages_list.buildOverlayMediaLoad
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildPollStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildReactionCountTextStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildReactionsContainerBackgroundStyle
+import com.sceyt.chatuikit.styles.extensions.messages_list.buildReadMoreStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildReplyMessageStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildSelectionCheckboxStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildSenderNameTextStyle
+import com.sceyt.chatuikit.styles.extensions.messages_list.buildSystemMessageItemStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildThreadReplyCountTextStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildVideoDurationTextStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildVoiceDurationTextStyle
@@ -86,6 +89,7 @@ import java.util.Date
  * @property editedStateText Title for the edited state, default is [R.string.sceyt_edited].
  * @property deletedStateText Title for the deleted state, default is [R.string.sceyt_message_was_deleted].
  * @property forwardedText Title for the forwarded message, default is [R.string.sceyt_forwarded_message].
+ * @property readMoreStyle Style for the "Read More" button that appears when message body exceeds character limit, default is [buildReadMoreStyle].
  * @property bodyTextStyle Style for the message body, default is [buildBodyTextStyle].
  * @property deletedMessageTextStyle Style for the deleted message, default is [buildDeletedMessageTextStyle].
  * @property senderNameTextStyle Style for the sender name, default is [buildSenderNameTextStyle].
@@ -119,6 +123,8 @@ import java.util.Date
  * @property attachmentIconProvider Visual provider for the attachment icon, default is [SceytChatUIKitProviders.attachmentIconProvider].
  * @property senderNameColorProvider Visual provider for the sender name color, default is [SceytChatUIKitProviders.senderNameColorProvider].
  * @property userAvatarRenderer User avatar renderer, default is [SceytChatUIKitRenderers.userAvatarRenderer].
+ * @property systemMessageItemStyle Style for the system message item, default is [SystemMessageItemStyle].
+ * @property collapsedCharacterLimit Maximum number of characters to display before truncating message body and showing "Read More", default is [Int.MAX_VALUE].
  * */
 data class MessageItemStyle(
     val incomingBubbleBackgroundStyle: BackgroundStyle,
@@ -143,6 +149,7 @@ data class MessageItemStyle(
     val deletedStateText: String,
     val forwardedText: String,
     val messageDeliveryStatusIcons: MessageDeliveryStatusIcons,
+    val readMoreStyle: ReadMoreStyle,
     val bodyTextStyle: TextStyle,
     val deletedMessageTextStyle: TextStyle,
     val senderNameTextStyle: TextStyle,
@@ -165,6 +172,7 @@ data class MessageItemStyle(
     val overlayMediaLoaderStyle: MediaLoaderStyle,
     val voiceWaveformStyle: AudioWaveformStyle,
     val selectionCheckboxStyle: CheckboxStyle,
+    val systemMessageItemStyle: SystemMessageItemStyle,
     val senderNameFormatter: Formatter<SceytUser>,
     val messageBodyFormatter: Formatter<MessageBodyFormatterAttributes>,
     val unsupportedMessageBodyFormatter: Formatter<SceytMessage>,
@@ -176,6 +184,7 @@ data class MessageItemStyle(
     val attachmentIconProvider: VisualProvider<SceytAttachment, Drawable?>,
     val senderNameColorProvider: VisualProvider<SceytUser, Int>,
     val userAvatarRenderer: AvatarRenderer<SceytUser>,
+    @param:IntRange(from = 1, to = Long.MAX_VALUE) val collapsedCharacterLimit: Int,
 ) : SceytComponentStyle() {
 
     companion object {
@@ -274,6 +283,7 @@ data class MessageItemStyle(
                     deletedStateText = deletedStateText,
                     forwardedText = forwardedText,
                     messageDeliveryStatusIcons = buildDeliveryStatusIconStyle(array),
+                    readMoreStyle = buildReadMoreStyle(array),
                     bodyTextStyle = buildBodyTextStyle(array),
                     deletedMessageTextStyle = buildDeletedMessageTextStyle(array),
                     senderNameTextStyle = buildSenderNameTextStyle(array),
@@ -296,6 +306,7 @@ data class MessageItemStyle(
                     voiceWaveformStyle = buildAudioWaveformStyle(array),
                     overlayMediaLoaderStyle = buildOverlayMediaLoaderStyle(array),
                     selectionCheckboxStyle = buildSelectionCheckboxStyle(array),
+                    systemMessageItemStyle = buildSystemMessageItemStyle(array),
                     senderNameFormatter = SceytChatUIKit.formatters.userNameFormatter,
                     messageBodyFormatter = SceytChatUIKit.formatters.messageBodyFormatter,
                     unsupportedMessageBodyFormatter = SceytChatUIKit.formatters.unsupportedMessageBodyFormatter,
@@ -306,7 +317,8 @@ data class MessageItemStyle(
                     attachmentFileSizeFormatter = SceytChatUIKit.formatters.attachmentSizeFormatter,
                     attachmentIconProvider = SceytChatUIKit.providers.attachmentIconProvider,
                     senderNameColorProvider = SceytChatUIKit.providers.senderNameColorProvider,
-                    userAvatarRenderer = SceytChatUIKit.renderers.userAvatarRenderer
+                    userAvatarRenderer = SceytChatUIKit.renderers.userAvatarRenderer,
+                    collapsedCharacterLimit = Int.MAX_VALUE,
                 ).let { styleCustomizer.apply(context, it) }
             }
         }

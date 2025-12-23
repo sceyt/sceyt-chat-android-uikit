@@ -4,7 +4,7 @@ import android.graphics.Bitmap
 import android.util.Size
 import com.google.gson.Gson
 import com.sceyt.chat.models.attachment.Attachment
-import com.sceyt.chat.models.message.DeliveryStatus
+import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import com.sceyt.chatuikit.data.constants.SceytConstants
 import com.sceyt.chatuikit.data.models.AttachmentPayLoad
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
@@ -84,7 +84,7 @@ internal fun AttachmentDb.toAttachmentPayLoad(messageStatus: MessageEntity): Att
         val isLink = type == AttachmentTypeEnum.Link.value
         AttachmentPayLoadEntity(
             messageTid = messageTid,
-            transferState = if (!messageStatus.incoming && messageStatus.deliveryStatus == DeliveryStatus.Pending
+            transferState = if (!messageStatus.incoming && messageStatus.deliveryStatus == MessageDeliveryStatus.Pending
                     && messageStatus.forwardingDetailsDb == null && !isLink)
                 TransferState.PendingUpload else TransferState.PendingDownload,
             progressPercent = 0f,

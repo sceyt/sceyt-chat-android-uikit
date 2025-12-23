@@ -1,75 +1,90 @@
 package com.sceyt.chatuikit.persistence.database.converters
 
 import androidx.room.TypeConverter
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import com.sceyt.chat.models.message.BodyAttribute
-import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MarkerTotal
 import com.sceyt.chat.models.message.MessageState
+import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import com.sceyt.chatuikit.persistence.extensions.toEnum
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.Types
 
 class MessageConverter {
-    @TypeConverter
-    fun deliveryStatusToTnt(value: DeliveryStatus) = value.ordinal
+
+    companion object {
+        private val moshi: Moshi = Moshi.Builder().build()
+
+        private val markerTotalListAdapter =
+            moshi.adapter<List<MarkerTotal>>(
+                Types.newParameterizedType(List::class.java, MarkerTotal::class.java)
+            )
+
+        private val bodyAttributeListAdapter =
+            moshi.adapter<List<BodyAttribute>>(
+                Types.newParameterizedType(List::class.java, BodyAttribute::class.java)
+            )
+    }
+
+    // ---------- ENUMS ----------
 
     @TypeConverter
-    fun intToDeliveryStatus(value: Int) = value.toEnum<DeliveryStatus>()
+    fun deliveryStatusToInt(value: MessageDeliveryStatus) = value.ordinal
 
     @TypeConverter
-    fun messageStateToTnt(value: MessageState) = value.ordinal
+    fun intToDeliveryStatus(value: Int) = value.toEnum<MessageDeliveryStatus>()
+
+    @TypeConverter
+    fun messageStateToInt(value: MessageState) = value.ordinal
 
     @TypeConverter
     fun intToMessageState(value: Int) = value.toEnum<MessageState>()
 
     @TypeConverter
-    fun transferStateEnumToTnt(value: TransferState?) = value?.ordinal
+    fun transferStateEnumToInt(value: TransferState?) = value?.ordinal
 
     @TypeConverter
-    fun intToTransferStateTypeEnum(value: Int?) = value?.toEnum<TransferState>()
+    fun intToTransferStateEnum(value: Int?) = value?.toEnum<TransferState>()
+
+    // ---------- MARKER TOTAL ----------
 
     @TypeConverter
     fun stringToMarkerTotal(json: String?): List<MarkerTotal>? {
         json ?: return null
-        val type = object : TypeToken<List<MarkerTotal>>() {}.type
         return try {
-            Gson().fromJson(json, type)
-        } catch (e: Exception) {
-            null
+            markerTotalListAdapter.fromJson(json)
+        } catch (ex: Exception) {
+            println("Error converting List<MarkerTotal>: ${ex.message}")
+            emptyList()
         }
     }
 
     @TypeConverter
-    fun markerCountToString(obj: List<MarkerTotal>?): String? {
-        if (obj == null)
-            return null
-
-        val gson = Gson()
-        val type = object : TypeToken<List<MarkerTotal>>() {}.type
-        return gson.toJson(obj, type)
+    fun markerTotalToString(obj: List<MarkerTotal>?): String? {
+        obj ?: return null
+        return markerTotalListAdapter.toJson(obj)
     }
+
+    // ---------- BODY ATTRIBUTES ----------
 
     @TypeConverter
     fun stringToBodyAttribute(json: String?): List<BodyAttribute>? {
         json ?: return null
-        val type = object : TypeToken<List<BodyAttribute>>() {}.type
         return try {
-            Gson().fromJson(json, type)
-        } catch (e: Exception) {
-            null
+            bodyAttributeListAdapter.fromJson(json)
+        } catch (ex: Exception) {
+            println("Error converting List<BodyAttribute>: ${ex.message}")
+            emptyList()
         }
     }
 
     @TypeConverter
     fun bodyAttributeToString(obj: List<BodyAttribute>?): String? {
-        if (obj == null)
-            return null
-
-        val gson = Gson()
-        val type = object : TypeToken<List<BodyAttribute>>() {}.type
-        return gson.toJson(obj, type)
+        obj ?: return null
+        return bodyAttributeListAdapter.toJson(obj)
     }
+
+    // ---------- INT LIST ----------
 
     @TypeConverter
     fun fromIntList(value: List<Int>?): String? {

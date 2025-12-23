@@ -1,7 +1,6 @@
 package com.sceyt.chatuikit.presentation.components.create_chat.create_group
 
 import android.animation.LayoutTransition
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -13,12 +12,15 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.lifecycleScope
 import com.google.gson.Gson
+import com.sceyt.chat.models.message.Message
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.ChannelDescriptionData
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
 import com.sceyt.chatuikit.data.models.channels.SceytMember
+import com.sceyt.chatuikit.data.models.messages.SceytMessageType
+import com.sceyt.chatuikit.data.models.messages.SystemMsgBodyEnum
 import com.sceyt.chatuikit.databinding.SceytActivityCreateGroupBinding
 import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
 import com.sceyt.chatuikit.extensions.customToastSnackBar
@@ -39,9 +41,9 @@ import com.sceyt.chatuikit.presentation.components.startchat.adapters.UsersAdapt
 import com.sceyt.chatuikit.presentation.components.startchat.adapters.holders.UserViewHolderFactory
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.shared.helpers.picker.FilePickerHelper
+import com.sceyt.chatuikit.styles.common.AvatarStyle
 import com.sceyt.chatuikit.styles.create_channel.CreateGroupStyle
 import com.sceyt.chatuikit.styles.cropper.ImageCropperStyle
-import com.sceyt.chatuikit.styles.common.AvatarStyle
 import com.yalantis.ucrop.UCrop
 import kotlinx.coroutines.launch
 import java.io.File
@@ -79,6 +81,16 @@ class CreateGroupActivity : AppCompatActivity() {
     private fun initViewModel() {
         viewModel.createChatLiveData.observe(this) {
             lifecycleScope.launch {
+                SceytChatUIKit.chatUIFacade.messageInteractor.sendMessage(
+                    it.id, Message(
+                        Message.MessageBuilder()
+                            .setType(SceytMessageType.System.value)
+                            .withDisplayCount(0)
+                            .setSilent(true)
+                            .setBody(SystemMsgBodyEnum.GroupCreated.value)
+                    )
+                )
+
                 ChannelActivity.launch(this@CreateGroupActivity, it)
                 val intent = Intent()
                 setResult(RESULT_OK, intent)
@@ -183,7 +195,7 @@ class CreateGroupActivity : AppCompatActivity() {
     }
 
     private val cropperActivityResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
+        if (result.resultCode == RESULT_OK) {
             val data = result.data ?: return@registerForActivityResult
             val path = UCrop.getOutput(data)?.path
             if (path != null) {

@@ -38,6 +38,8 @@
         <attr name="sceytUiChannelListStatusReceivedIndicator" format="reference" />
         <!-- Drawable of the message displayed state indicator -->
         <attr name="sceytUiChannelListStatusDisplayedIndicator" format="reference" />
+        <!-- Drawable of the message failed state indicator -->
+        <attr name="sceytUiChannelListStatusFailedIndicator" format="reference" />
 
         <!-- Drawable of the muted channel icon  -->
         <attr name="sceytUiChannelListMutedIcon" format="reference" />

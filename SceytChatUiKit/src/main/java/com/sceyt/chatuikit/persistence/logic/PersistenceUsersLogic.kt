@@ -16,16 +16,16 @@ interface PersistenceUsersLogic {
     suspend fun getUserFromDbById(id: String): SceytUser?
     suspend fun getUsersFromDbByIds(id: List<String>): List<SceytUser>
     suspend fun searchLocaleUserByMetadata(
-            metadataKeys: List<String>, metadataValue: String
+        metadataKeys: List<String>, metadataValue: String
     ): List<SceytUser>
 
     suspend fun getCurrentUser(refreshFromServer: Boolean): SceytUser?
     fun getCurrentUserId(): String?
-    fun getCurrentUserAsFlow(): Flow<SceytUser>?
+    fun getCurrentUserAsFlow(currentUserId: String? = getCurrentUserId()): Flow<SceytUser>?
     suspend fun uploadAvatar(avatarUrl: String): SceytResponse<String>
     suspend fun updateProfile(
-            username: String, firstName: String?, lastName: String?,
-            avatarUri: String?, metadataMap: Map<String, String>?
+        username: String, firstName: String?, lastName: String?,
+        avatarUri: String?, metadataMap: Map<String, String>?
     ): SceytResponse<SceytUser>
 
     suspend fun setPresenceState(presenceState: PresenceState): SceytResponse<Boolean>

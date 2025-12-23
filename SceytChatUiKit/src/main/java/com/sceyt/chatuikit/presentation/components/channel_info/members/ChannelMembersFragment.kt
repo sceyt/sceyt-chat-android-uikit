@@ -51,6 +51,7 @@ import com.sceyt.chatuikit.presentation.components.channel_info.members.adapter.
 import com.sceyt.chatuikit.presentation.components.channel_info.members.popups.MemberActionsDialog
 import com.sceyt.chatuikit.presentation.components.channel_info.members.popups.MemberActionsDialog.ActionsEnum.Delete
 import com.sceyt.chatuikit.presentation.components.channel_info.members.popups.MemberActionsDialog.ActionsEnum.RevokeAdmin
+import com.sceyt.chatuikit.presentation.components.channel_info.members.viewmodel.AddMemberResult
 import com.sceyt.chatuikit.presentation.components.channel_info.members.viewmodel.ChannelMembersViewModel
 import com.sceyt.chatuikit.presentation.components.invite_link.ChannelInviteLinkActivity
 import com.sceyt.chatuikit.presentation.components.select_users.SelectUsersActivity
@@ -79,11 +80,13 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
     private val myId: String? get() = SceytChatUIKit.chatUIFacade.myId
     private lateinit var selectUsersActivityLauncher: ActivityResultLauncher<Intent>
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        return SceytFragmentChannelMembersBinding.inflate(inflater, container, false).also {
-            binding = it
-        }.root
-    }
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View = SceytFragmentChannelMembersBinding.inflate(inflater, container, false).also {
+        binding = it
+    }.root
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -99,17 +102,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
         super.onAttach(context)
         style = ChannelMembersStyle.Builder(context, null).build()
 
-        selectUsersActivityLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == Activity.RESULT_OK) {
-                result.data?.parcelable<SelectUsersResult>(SelectUsersActivity.SELECTED_USERS_RESULT)?.let { data ->
-                    val members = data.selectedUsers.map { SceytMember(Role(memberType.toRole()), it) }
-                    if (memberType == MemberTypeEnum.Admin) {
-                        changeRole(*members.toTypedArray())
-                    }
-                    addMembersToChannel(members)
-                }
-            }
-        }
+        registerSelectUsersActivityLauncher()
     }
 
     override fun onDestroyView() {
@@ -131,7 +124,9 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
 
         viewModel.channelMemberEventLiveData.observe(viewLifecycleOwner, ::onChannelMembersEvent)
 
-        viewModel.channelOwnerChangedEventLiveData.observe(viewLifecycleOwner, ::onChannelOwnerChanged)
+        viewModel.channelOwnerChangedEventLiveData.observe(
+            viewLifecycleOwner, ::onChannelOwnerChanged
+        )
 
         viewModel.channelEventLiveData.observe(viewLifecycleOwner, ::onChannelEvent)
 
@@ -139,12 +134,14 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
 
         viewModel.channelRemoveMemberLiveData.observe(viewLifecycleOwner, ::onRemovedMember)
 
+        viewModel.channelRoleLiveData.observe(viewLifecycleOwner, ::onChangeRole)
+
         viewModel.pageStateLiveData.observe(viewLifecycleOwner, ::onPageStateChange)
 
         viewModel.findOrCreateChatLiveData.observe(viewLifecycleOwner, ::onFindOrCreateChat)
     }
 
-    private fun initViews() {
+    protected open fun initViews() {
         with(binding ?: return) {
             layoutAddMembers.setOnClickListener {
                 onAddMembersClick(memberType)
@@ -168,7 +165,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
         loadInitialMembers()
     }
 
-    private fun initStringsWithAddType() {
+    protected open fun initStringsWithAddType() {
         with(binding ?: return) {
             when (memberType) {
                 MemberTypeEnum.Member -> {
@@ -189,7 +186,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
         }
     }
 
-    private fun getCurrentUserRole() {
+    protected fun getCurrentUserRole() {
         channel.members?.find { it.id == myId }?.let {
             currentUserRole = it.role
         }
@@ -212,8 +209,8 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
     }
 
     protected open fun updateMembersWithServerResponse(
-            data: PaginationResponse.ServerResponse<MemberItem>,
-            hasNext: Boolean,
+        data: PaginationResponse.ServerResponse<MemberItem>,
+        hasNext: Boolean,
     ) {
         val itemsDb = data.cacheData as ArrayList
         binding?.rvMembers?.awaitAnimationEnd {
@@ -264,16 +261,18 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
     protected open fun onMemberLongClick(item: MemberItem.Member) {
         if (currentUserIsOwnerOrAdmin().not() || item.member.id == myId) return
 
-        MemberActionsDialog
-            .newInstance(requireContext(), item.member, currentUserRole?.name == RoleTypeEnum.Owner.value)
-            .apply {
-                setChooseTypeCb {
-                    when (it) {
-                        RevokeAdmin -> onRevokeAdminClick(item.member)
-                        Delete -> onKickMemberClick(item.member)
-                    }
+        MemberActionsDialog.newInstance(
+            context = requireContext(),
+            member = item.member,
+            currentIsOwner = currentUserRole?.name == RoleTypeEnum.Owner.value
+        ).apply {
+            setChooseTypeCb {
+                when (it) {
+                    RevokeAdmin -> onRevokeAdminClick(item.member)
+                    Delete -> onKickMemberClick(item.member)
                 }
-            }.show()
+            }
+        }.show()
     }
 
     protected open fun setOrUpdateMembersAdapter(data: List<MemberItem>) {
@@ -283,8 +282,12 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
             }
             currentUserRole = currentUser?.role
 
-            membersAdapter = ChannelMembersAdapter(data.toArrayList(),
-                ChannelMembersViewHolderFactory(requireContext(), style = style.itemStyle).also {
+            membersAdapter = ChannelMembersAdapter(
+                members = data.toArrayList(),
+                viewHolderFactory = ChannelMembersViewHolderFactory(
+                    context = requireContext(),
+                    style = style.itemStyle
+                ).also {
                     it.setOnClickListener(object : MemberClickListeners.ClickListeners {
                         override fun onMemberClick(view: View, item: MemberItem.Member) {
                             onMemberClick(item)
@@ -311,12 +314,32 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
         }
     }
 
-    protected open fun onAddedMember(data: List<SceytMember>) {
-        if (memberType == MemberTypeEnum.Admin)
-            viewModel.changeRole(channel.id, *data.toTypedArray())
+    protected open fun onAddedMember(result: AddMemberResult) {
+        addMembers(channel.members)
+        sendAddedMemberSystemMessage(result.channel.members ?: return)
     }
 
-    protected open fun onRemovedMember(data: List<SceytMember>) {
+    protected open fun onRemovedMember(channel: SceytChannel) {
+        channel.members?.forEach { member ->
+            removeMember(member.id)
+        }
+        sendRemovedMemberSystemMessage(channel.members ?: return)
+    }
+
+    protected open fun onChangeRole(channel: SceytChannel) {
+        handleOnRoleChanged(channel.members ?: return)
+    }
+
+    protected open fun sendRemovedMemberSystemMessage(removedMembers: List<SceytMember>) {
+        if (channel.isGroup && removedMembers.isNotEmpty()) {
+            viewModel.sendRemovedMemberMessage(channel.id, removedMembers)
+        }
+    }
+
+    protected open fun sendAddedMemberSystemMessage(addedMembers: List<SceytMember>) {
+        if (channel.isGroup && addedMembers.isNotEmpty()) {
+            viewModel.sendAddedMemberMessage(channel.id, addedMembers)
+        }
     }
 
     protected open fun currentUserIsOwnerOrAdmin(): Boolean {
@@ -327,22 +350,27 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
         viewModel.getChannelMembers(channel.id, 0, getRole())
     }
 
-    protected fun loadMoreMembers(offset: Int) {
+    protected open fun loadMoreMembers(offset: Int) {
         viewModel.getChannelMembers(channel.id, offset, getRole())
     }
 
-    protected fun addMembersToChannel(members: List<SceytMember>) {
+    protected open fun addMembersToChannel(members: List<SceytMember>) {
         viewModel.addMembersToChannel(channel.id, members.toArrayList())
     }
 
     protected open fun onAddMembersClick(memberType: MemberTypeEnum) {
-        val animOptions = ActivityOptionsCompat.makeCustomAnimation(requireContext(),
-            R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold)
+        val animOptions = ActivityOptionsCompat.makeCustomAnimation(
+            requireContext(),
+            R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold
+        )
         val args = SelectUsersPageArgs(
             toolbarTitle = memberType.getPageTitle(requireContext()),
             actionButtonAlwaysEnable = true
         )
-        selectUsersActivityLauncher.launch(SelectUsersActivity.newIntent(requireContext(), args), animOptions)
+        selectUsersActivityLauncher.launch(
+            SelectUsersActivity.newIntent(requireContext(), args),
+            animOptions
+        )
     }
 
     protected open fun onInviteLinkClick() {
@@ -350,10 +378,18 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
     }
 
     protected open fun onRevokeAdminClick(member: SceytMember) {
-        SceytDialog.showDialog(requireContext(), R.string.sceyt_revoke_admin_title, R.string.sceyt_revoke_admin_desc, R.string.sceyt_revoke, positiveCb = {
-            revokeAdmin(member)
-        }).apply {
-            val name = style.itemStyle.listItemStyle.titleFormatter.format(requireContext(), member.user)
+        SceytDialog.showDialog(
+            requireContext(),
+            R.string.sceyt_revoke_admin_title,
+            R.string.sceyt_revoke_admin_desc,
+            R.string.sceyt_revoke,
+            positiveCb = {
+                revokeAdmin(member)
+            }).apply {
+            val name = style.itemStyle.listItemStyle.titleFormatter.format(
+                context = requireContext(),
+                from = member.user
+            )
             val desc = String.format(getString(R.string.sceyt_revoke_admin_desc), name)
             val nameFromIndex = desc.lastIndexOf(name.toString())
             val roleFromIndex = desc.lastIndexOf("“Admin”")
@@ -379,10 +415,17 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
 
             Direct -> return
         }
-        SceytDialog.showDialog(requireContext(), titleId = titleId, positiveBtnTitleId = R.string.sceyt_remove, positiveCb = {
-            viewModel.kickMember(channel.id, member.id, false)
-        }).apply {
-            val name = style.itemStyle.listItemStyle.titleFormatter.format(requireContext(), member.user)
+        SceytDialog.showDialog(
+            context = requireContext(),
+            titleId = titleId,
+            positiveBtnTitleId = R.string.sceyt_remove,
+            positiveCb = {
+                viewModel.kickMember(channel.id, member.id, false)
+            }).apply {
+            val name = style.itemStyle.listItemStyle.titleFormatter.format(
+                context = requireContext(),
+                from = member.user
+            )
             val desc = String.format(getString(descId), name)
             val fromIndex = desc.lastIndexOf(name.toString())
             setDescription(desc.setBoldSpan(fromIndex, fromIndex + name.length))
@@ -437,32 +480,39 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
         }
     }
 
-    protected open fun onChannelMembersEvent(eventData: ChannelMembersEventData) {
-        when (eventData.eventType) {
+    protected open fun onChannelMembersEvent(event: ChannelMembersEventData) {
+        when (event.eventType) {
             ChannelMembersEventEnum.Role -> {
-                eventData.members.forEach { member ->
-                    if (memberType == MemberTypeEnum.Admin && member.role.name != RoleTypeEnum.Admin.value) {
-                        removeMember(member.id)
-                    } else
-                        membersAdapter?.getMemberItemById(member.id)?.let {
-                            val memberItem = it.second as MemberItem.Member
-                            memberItem.member = member
-                            membersAdapter?.notifyItemChanged(it.first, MemberItemPayloadDiff.DEFAULT)
-                        } ?: addMembers(arrayListOf(member))
-                }
+                handleOnRoleChanged(event.members)
             }
 
             ChannelMembersEventEnum.Kicked, ChannelMembersEventEnum.Blocked -> {
-                eventData.members.forEach { member ->
+                event.members.forEach { member ->
                     removeMember(member.id)
                 }
             }
 
             ChannelMembersEventEnum.Added -> {
-                addMembers(eventData.members)
+                addMembers(event.members)
             }
 
             else -> return
+        }
+    }
+
+    protected open fun handleOnRoleChanged(members: List<SceytMember>) {
+        members.forEach { member ->
+            if (memberType == MemberTypeEnum.Admin && member.role.name != RoleTypeEnum.Admin.value) {
+                removeMember(member.id)
+            } else
+                membersAdapter?.getMemberItemById(member.id)?.let {
+                    val memberItem = it.second as MemberItem.Member
+                    memberItem.member = member
+                    membersAdapter?.notifyItemChanged(
+                        it.first,
+                        MemberItemPayloadDiff.DEFAULT
+                    )
+                } ?: addMembers(arrayListOf(member))
         }
     }
 
@@ -484,7 +534,25 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
         getCurrentUserRole()
     }
 
-    private fun SceytFragmentChannelMembersBinding.applyStyle() {
+    protected open fun registerSelectUsersActivityLauncher() {
+        selectUsersActivityLauncher =
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+                if (result.resultCode == Activity.RESULT_OK) {
+                    result.data?.parcelable<SelectUsersResult>(SelectUsersActivity.SELECTED_USERS_RESULT)
+                        ?.let { data ->
+                            val members = data.selectedUsers.map { user ->
+                                SceytMember(
+                                    role = Role(memberType.toRole()),
+                                    user = user
+                                )
+                            }
+                            addMembersToChannel(members)
+                        }
+                }
+            }
+    }
+
+    protected open fun SceytFragmentChannelMembersBinding.applyStyle() {
         root.setBackgroundColor(style.backgroundColor)
         style.toolbarStyle.apply(toolbar)
         style.addMemberTextStyle.apply(addMembers)
@@ -497,7 +565,10 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
         const val CHANNEL = "CHANNEL"
         const val MEMBER_TYPE = "ADD_BUTTON_TITLE"
 
-        fun newInstance(channel: SceytChannel, addMemberType: MemberTypeEnum = MemberTypeEnum.Member): ChannelMembersFragment {
+        fun newInstance(
+            channel: SceytChannel,
+            addMemberType: MemberTypeEnum = MemberTypeEnum.Member
+        ): ChannelMembersFragment {
             val fragment = ChannelMembersFragment()
             fragment.setBundleArguments {
                 putParcelable(CHANNEL, channel)

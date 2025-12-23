@@ -6,6 +6,7 @@ import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.TextPaint
 import android.text.style.ClickableSpan
+import android.text.style.UnderlineSpan
 import android.view.View
 import com.google.gson.Gson
 import com.sceyt.chat.models.message.BodyAttribute
@@ -29,31 +30,52 @@ object MentionUserHelper {
     }
 
     fun buildWithMentionedUsers(
-            context: Context,
-            body: CharSequence,
-            mentionAttributes: List<BodyAttribute>?,
-            mentionUsers: List<SceytUser>?,
-            mentionTextStyle: TextStyle,
-            mentionUserNameFormatter: Formatter<SceytUser>,
-            mentionClickListener: ((String) -> Unit)?,
+        context: Context,
+        body: CharSequence,
+        mentionAttributes: List<BodyAttribute>?,
+        mentionUsers: List<SceytUser>?,
+        mentionTextStyle: TextStyle,
+        mentionUserNameFormatter: Formatter<SceytUser>,
+        mentionClickListener: ((String) -> Unit)?,
     ): CharSequence {
         return try {
             mentionAttributes ?: return body
             val newBody = SpannableStringBuilder(body)
-            mentionAttributes.sortedByDescending { it.offset }.forEach {
-                val name = setNewBodyWithName(context, mentionUsers, newBody, it, mentionUserNameFormatter)
-                mentionTextStyle.apply(context, newBody, it.offset, it.offset + name.length)
+            mentionAttributes.sortedByDescending { it.offset }.forEach { attribute ->
+                val name = replaceMentionWithName(
+                    context = context,
+                    mentionUsers = mentionUsers,
+                    newBody = newBody,
+                    item = attribute,
+                    mentionUserNameFormatter = mentionUserNameFormatter
+                )
+                mentionTextStyle.apply(context, newBody, attribute.offset, attribute.offset + name.length)
                 if (mentionClickListener != null) {
                     val clickableSpan = object : ClickableSpan() {
                         override fun onClick(textView: View) {
-                            mentionClickListener(it.metadata ?: return)
+                            mentionClickListener(attribute.metadata ?: return)
                         }
 
                         override fun updateDrawState(ds: TextPaint) {
-                            ds.isUnderlineText = false
+                            // Check if there's an UnderlineSpan in this range
+                            val hasUnderlineSpan = if (body is Spanned) {
+                                val spanStart = attribute.offset
+                                val spanEnd = attribute.offset + name.length
+                                val spans =
+                                    newBody.getSpans(spanStart, spanEnd, UnderlineSpan::class.java)
+                                spans.isNotEmpty()
+                            } else {
+                                false
+                            }
+                            ds.isUnderlineText = hasUnderlineSpan
                         }
                     }
-                    newBody.setSpan(clickableSpan, it.offset, it.offset + name.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    newBody.setSpan(
+                        clickableSpan,
+                        attribute.offset,
+                        attribute.offset + name.length,
+                        Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                    )
                 }
             }
             newBody
@@ -64,9 +86,9 @@ object MentionUserHelper {
     }
 
     fun getMentionsIndexed(
-            context: Context,
-            attributes: List<BodyAttribute>?,
-            mentionUsers: List<SceytUser>?
+        context: Context,
+        attributes: List<BodyAttribute>?,
+        mentionUsers: List<SceytUser>?
     ): List<Mention> {
         val list = arrayListOf<Mention>()
         val data = attributes?.filter { it.type == MENTION } ?: return list
@@ -80,12 +102,12 @@ object MentionUserHelper {
         return list
     }
 
-    private fun setNewBodyWithName(
-            context: Context,
-            mentionUsers: List<SceytUser>?,
-            newBody: SpannableStringBuilder,
-            item: BodyAttribute,
-            mentionUserNameFormatter: Formatter<SceytUser>
+    private fun replaceMentionWithName(
+        context: Context,
+        mentionUsers: List<SceytUser>?,
+        newBody: SpannableStringBuilder,
+        item: BodyAttribute,
+        mentionUserNameFormatter: Formatter<SceytUser>
     ): CharSequence {
         val mentionUser = mentionUsers?.find { mentionUser -> mentionUser.id == item.metadata }
         var name = mentionUser?.let { user ->
@@ -94,9 +116,12 @@ object MentionUserHelper {
         name = "@$name".notAutoCorrectable()
 
         val end = item.offset + item.length
-        if (end > newBody.length)
-            for (i in 0..end - newBody.length)
-                newBody.append(" ")
+        if (end > newBody.length) {
+            val spacesToAdd = end - newBody.length
+            if (spacesToAdd > 0) {
+                newBody.append(" ".repeat(spacesToAdd))
+            }
+        }
 
         newBody.replace(item.offset, end, name)
         return name

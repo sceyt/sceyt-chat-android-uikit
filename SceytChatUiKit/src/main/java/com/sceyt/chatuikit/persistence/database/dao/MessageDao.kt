@@ -7,12 +7,12 @@ import androidx.room.Query
 import androidx.room.RoomWarnings
 import androidx.room.Transaction
 import androidx.room.Update
-import com.sceyt.chat.models.message.DeliveryStatus
-import com.sceyt.chat.models.message.DeliveryStatus.Displayed
-import com.sceyt.chat.models.message.DeliveryStatus.Received
-import com.sceyt.chat.models.message.DeliveryStatus.Sent
 import com.sceyt.chatuikit.data.models.LoadNearData
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
+import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
+import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus.Displayed
+import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus.Received
+import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus.Sent
 import com.sceyt.chatuikit.extensions.roundUp
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.ATTACHMENT_PAYLOAD_TABLE
@@ -452,10 +452,27 @@ internal abstract class MessageDao {
 
     @Transaction
     @Query(
-        "select * from $MESSAGE_TABLE where channelId =:channelId and deliveryStatus = $PENDING_STATUS " +
-                "order by createdAt"
+        """
+            select * from $MESSAGE_TABLE where channelId =:channelId and deliveryStatus = $PENDING_STATUS 
+            order by createdAt
+            """
     )
     abstract suspend fun getPendingMessages(channelId: Long): List<MessageDb>
+
+    @Query(
+        """
+            select message_id from $MESSAGE_TABLE where channelId =:channelId 
+            and message_id >= :startId and message_id <= :endId and deliveryStatus != $PENDING_STATUS
+            and (createdAt < :dateUntil or :dateUntil = 0)
+            order by createdAt
+            """
+    )
+    abstract suspend fun getMessagesIdsByRange(
+        channelId: Long,
+        startId: Long,
+        endId: Long,
+        dateUntil: Long = 0L,
+    ): List<Long>
 
     @Transaction
     @Query("select * from $MESSAGE_TABLE where deliveryStatus = $PENDING_STATUS order by createdAt")
@@ -497,7 +514,7 @@ internal abstract class MessageDao {
     abstract suspend fun getMessagesTidAndIdLoverThanByStatus(
         channelId: Long,
         id: Long,
-        vararg status: DeliveryStatus
+        vararg status: MessageDeliveryStatus
     ): List<MessageIdAndTid>
 
     @Transaction
@@ -513,6 +530,12 @@ internal abstract class MessageDao {
     @Query("select count(*) from $MESSAGE_TABLE where channelId = :channelId")
     abstract fun getMessagesCountAsFlow(channelId: Long): Flow<Long?>
 
+    @Query("select count(*) from $MESSAGE_TABLE where channelId = :channelId")
+    abstract suspend fun getMessagesCount(channelId: Long): Int
+
+    @Query("select message_id from $MESSAGE_TABLE where channelId = :channelId order by createdAt")
+    abstract suspend fun getMessagesIds(channelId: Long): List<Long>
+
     @Query(
         "select messageTid from $AUTO_DELETE_MESSAGES_TABLE" +
                 " where channelId = :channelId and autoDeleteAt <= :localTime"
@@ -526,12 +549,12 @@ internal abstract class MessageDao {
     abstract suspend fun existsMessageByTid(tid: Long): Boolean
 
     @Query("update $MESSAGE_TABLE set deliveryStatus =:status where message_id in (:ids)")
-    abstract suspend fun updateMessageStatus(status: DeliveryStatus, vararg ids: Long): Int
+    abstract suspend fun updateMessageStatus(status: MessageDeliveryStatus, vararg ids: Long): Int
 
     @Transaction
     open suspend fun updateMessageStatusWithBefore(
         channelId: Long,
-        status: DeliveryStatus,
+        status: MessageDeliveryStatus,
         id: Long
     ): List<MessageIdAndTid> {
         val ids = when (status) {
@@ -551,14 +574,14 @@ internal abstract class MessageDao {
     @Query("update $MESSAGE_TABLE set deliveryStatus =:deliveryStatus where channelId =:channelId and incoming")
     abstract suspend fun updateAllIncomingMessagesStatusAsRead(
         channelId: Long,
-        deliveryStatus: DeliveryStatus = Displayed
+        deliveryStatus: MessageDeliveryStatus = Displayed
     )
 
     @Query("update $MESSAGE_TABLE set deliveryStatus =:deliveryStatus where channelId =:channelId and message_id in (:messageIds)")
     abstract suspend fun updateMessagesStatus(
         channelId: Long,
         messageIds: List<Long>,
-        deliveryStatus: DeliveryStatus
+        deliveryStatus: MessageDeliveryStatus
     )
 
     @Query("update $MESSAGE_TABLE set channelId =:newChannelId where channelId =:oldChannelId")
@@ -568,16 +591,66 @@ internal abstract class MessageDao {
     abstract fun deleteMessageByTid(tid: Long)
 
     @Query("delete from $MESSAGE_TABLE where tid in (:tIds)")
-    abstract fun deleteMessagesByTid(tIds: List<Long>)
+    abstract fun deleteMessagesByTid(tIds: List<Long>): Int
 
     @Query("delete from $MESSAGE_TABLE where channelId =:channelId")
-    abstract suspend fun deleteAllMessagesByChannel(channelId: Long)
+    abstract suspend fun deleteAllMessagesByChannel(channelId: Long): Int
 
     @Query("delete from $MESSAGE_TABLE where channelId in (:channelIds)")
-    abstract suspend fun deleteAllChannelsMessages(channelIds: List<Long>)
+    abstract suspend fun deleteAllChannelsMessages(channelIds: List<Long>): Int
+
+    @Query(
+        """
+            delete from $MESSAGE_TABLE where channelId =:channelId
+            and deliveryStatus != $PENDING_STATUS
+            and (createdAt < :deleteUntil or :deleteUntil = 0)
+            """
+    )
+    abstract suspend fun deleteUntilDateExceptPending(
+        channelId: Long,
+        deleteUntil: Long,
+    ): Int
+
+    @Query(
+        """
+            delete from $MESSAGE_TABLE where channelId =:channelId
+            and message_id not in(:messageIds) 
+            and (createdAt < :deleteUntil or :deleteUntil = 0)
+            and deliveryStatus != $PENDING_STATUS
+            """
+    )
+    abstract suspend fun deleteNotInMessageIdsUntilDateExceptPending(
+        channelId: Long,
+        messageIds: List<Long>,
+        deleteUntil: Long,
+    ): Int
 
     @Query("delete from $MESSAGE_TABLE where channelId =:channelId and createdAt <=:date and deliveryStatus != $PENDING_STATUS")
-    abstract suspend fun deleteAllMessagesLowerThenDateIgnorePending(channelId: Long, date: Long)
+    abstract suspend fun deleteMessagesBeforeDateExceptPending(
+        channelId: Long,
+        date: Long
+    ): Int
+
+    @Query("delete from $MESSAGE_TABLE where channelId =:channelId and message_id <=:messageId and deliveryStatus != $PENDING_STATUS")
+    abstract suspend fun deleteMessagesBeforeIdExceptPending(
+        channelId: Long,
+        messageId: Long
+    ): Int
+
+    @Query(
+        """
+            delete from $MESSAGE_TABLE 
+            where channelId =:channelId 
+            and message_id >=:messageId 
+            and (createdAt < :deleteUntil or :deleteUntil = 0)
+            and deliveryStatus != $PENDING_STATUS
+            """
+    )
+    abstract suspend fun deleteMessagesAfterIdUntilDateExceptPending(
+        channelId: Long,
+        messageId: Long,
+        deleteUntil: Long
+    ): Int
 
     @Query("delete from $MESSAGE_TABLE where channelId =:channelId and deliveryStatus != $PENDING_STATUS")
     abstract suspend fun deleteAllMessagesExceptPending(channelId: Long)

@@ -7,6 +7,7 @@ import com.sceyt.chatuikit.data.managers.channel.event.ChannelUnreadCountUpdated
 import com.sceyt.chatuikit.data.managers.message.event.MessageStatusChangeData
 import com.sceyt.chatuikit.data.models.LoadKeyData
 import com.sceyt.chatuikit.data.models.PaginationResponse
+import com.sceyt.chatuikit.data.models.SceytPagingResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
 import com.sceyt.chatuikit.data.models.channels.DraftMessage
@@ -78,7 +79,6 @@ interface PersistenceChannelsLogic {
     suspend fun editChannel(channelId: Long, data: EditChannelData): SceytResponse<SceytChannel>
     suspend fun join(channelId: Long): SceytResponse<SceytChannel>
     suspend fun joinWithInviteKey(inviteKey: String): SceytResponse<SceytChannel>
-    suspend fun setUnreadCount(channelId: Long, count: Int)
     suspend fun updateLastMessageWithLastRead(channelId: Long, message: SceytMessage)
     suspend fun updateLastMessageOnMessagesResponseIfNeeded(channelId: Long, message: SceytMessage?)
     suspend fun blockUnBlockUser(userId: String, block: Boolean)
@@ -87,6 +87,9 @@ interface PersistenceChannelsLogic {
     suspend fun getChannelsCountFromDb(): Int
     suspend fun onUserPresenceChanged(users: List<SceytPresenceChecker.PresenceUser>)
     suspend fun checkChannelUrlUpdate(channelId: Long, oldKey: String, newKey: String)
+    suspend fun handleClearedOutdatedMessages(channelId: Long, outdatedMessageTIds: List<Long>)
     fun getChannelMessageCount(channelId: Long): Flow<Long>
     fun getTotalUnreadCount(channelTypes: List<String>): Flow<Long>
+    suspend fun getCommonGroups(userId: String):SceytPagingResponse<List<SceytChannel>>
+    suspend fun loadMoreCommonGroups(): SceytPagingResponse<List<SceytChannel>>
 }

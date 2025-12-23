@@ -5,7 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.SceytException
-import com.sceyt.chat.models.message.DeliveryStatus
+import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import com.sceyt.chatuikit.data.managers.channel.ChannelEventManager
 import com.sceyt.chatuikit.data.managers.channel.event.MessageMarkerEventData
 import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
@@ -110,11 +110,11 @@ class MessageInfoViewModel(
 
     private fun onMessageStatusChange(data: MessageStatusChangeData) {
         viewModelScope.launch(Dispatchers.Default) {
-            if ((message?.deliveryStatus ?: DeliveryStatus.Pending) < data.status)
+            if ((message?.deliveryStatus ?: MessageDeliveryStatus.Pending) < data.status)
                 message = message?.copy(deliveryStatus = data.status)
 
             when (data.status) {
-                DeliveryStatus.Displayed -> {
+                MessageDeliveryStatus.Displayed -> {
                     val state = _uiState.value
                     if (state is UIState.Success) {
                         if (state.readMarkers.any { it.userId == data.from.id }) return@launch
@@ -130,7 +130,7 @@ class MessageInfoViewModel(
                     }
                 }
 
-                DeliveryStatus.Received -> {
+                MessageDeliveryStatus.Received -> {
                     val state = _uiState.value
                     if (state is UIState.Success) {
                         if (state.deliveredMarkers.any { it.userId == data.from.id }) return@launch
@@ -170,8 +170,8 @@ class MessageInfoViewModel(
 
     private fun getAllMarkers() {
         viewModelScope.launch(Dispatchers.IO) {
-            val read = DeliveryStatus.Displayed.name.lowercase()
-            val displayed = DeliveryStatus.Received.name.lowercase()
+            val read = MessageDeliveryStatus.Displayed.name.lowercase()
+            val displayed = MessageDeliveryStatus.Received.name.lowercase()
             val played = MarkerType.Played.value
 
             markerInteractor.getMessageMarkersDb(messageId, listOf(read, displayed, played), 0, limit).let { markers ->

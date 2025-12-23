@@ -24,6 +24,7 @@ import com.sceyt.chatuikit.styles.messages_list.UnreadMessagesSeparatorStyle
 import com.sceyt.chatuikit.styles.messages_list.item.LinkPreviewStyle
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 import com.sceyt.chatuikit.styles.messages_list.item.PollStyle
+import com.sceyt.chatuikit.styles.messages_list.item.ReadMoreStyle
 import com.sceyt.chatuikit.styles.messages_list.item.ReplyMessageStyle
 
 internal fun MessagesListViewStyle.Builder.buildScrollDownTextStyle(
@@ -294,6 +295,7 @@ internal fun MessageItemStyle.Builder.buildDeliveryStatusIconStyle(
     .setSentIconFromStyle(R.styleable.MessagesListView_sceytUiMessagesListMessageDeliveryStatusSentIcon)
     .setReceivedIconIconFromStyle(R.styleable.MessagesListView_sceytUiMessagesListMessageDeliveryStatusReceivedIcon)
     .setDisplayedIconFromStyle(R.styleable.MessagesListView_sceytUiMessagesListMessageDeliveryStatusDisplayedIcon)
+    .setFailedIconFromStyle(R.styleable.MessagesListView_sceytUiMessagesListMessageDeliveryStatusFailedIcon)
     .build()
 
 /* Item Body text style */
@@ -1060,3 +1062,29 @@ internal fun MessageItemStyle.Builder.buildPollStyle(
             .build()
     )
     .build()
+
+internal fun ReadMoreStyle.Builder.buildText() =
+    typedArray.getString(R.styleable.MessagesListView_sceytUiMessagesListReadMoreText)
+        ?: context.getString(R.string.sceyt_read_more)
+
+internal fun ReadMoreStyle.Builder.buildTextStyle() = TextStyle.Builder(typedArray)
+    .setColor(
+        index = R.styleable.MessagesListView_sceytUiMessagesListReadMoreTextColor,
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
+    )
+    .setSize(
+        index = R.styleable.MessagesListView_sceytUiMessagesListReadMoreTextSize,
+        defValue = context.resources.getDimensionPixelSize(R.dimen.mediumTextSize)
+    )
+    .setFont(
+        index = R.styleable.MessagesListView_sceytUiMessagesListReadMoreTextFont,
+        defValue = R.font.roboto_medium
+    )
+    .setStyle(
+        index = R.styleable.MessagesListView_sceytUiMessagesListReadMoreTextStyle
+    )
+    .build()
+
+internal fun MessageItemStyle.Builder.buildReadMoreStyle(
+    typedArray: TypedArray,
+) = ReadMoreStyle.Builder(context, typedArray).build()

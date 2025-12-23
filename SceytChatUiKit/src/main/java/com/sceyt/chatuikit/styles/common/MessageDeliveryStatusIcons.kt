@@ -15,17 +15,19 @@ import com.sceyt.chatuikit.persistence.lazyVar
  * @property sentIcon - Icon for sent status, default is [R.drawable.sceyt_ic_status_sent].
  * @property receivedIcon - Icon for delivered status, default is [R.drawable.sceyt_ic_status_received].
  * @property displayedIcon - Icon for read status, default is [R.drawable.sceyt_ic_status_displayed].
+ * @property failedIcon - Icon for failed status, default is [R.drawable.sceyt_ic_status_failed].
  * */
 data class MessageDeliveryStatusIcons(
-        val pendingIcon: Drawable?,
-        val sentIcon: Drawable?,
-        val receivedIcon: Drawable?,
-        val displayedIcon: Drawable?
+    val pendingIcon: Drawable?,
+    val sentIcon: Drawable?,
+    val receivedIcon: Drawable?,
+    val displayedIcon: Drawable?,
+    val failedIcon: Drawable?
 ) {
 
     internal class Builder(
-            private val context: Context,
-            private val typedArray: TypedArray?
+        private val context: Context,
+        private val typedArray: TypedArray?
     ) {
         private var pendingIcon by lazyVar {
             context.getCompatDrawable(R.drawable.sceyt_ic_status_pending)
@@ -39,6 +41,9 @@ data class MessageDeliveryStatusIcons(
 
         private var displayedIcon = context.getCompatDrawable(R.drawable.sceyt_ic_status_displayed)
             ?.applyTint(context, SceytChatUIKit.theme.colors.accentColor)
+
+        private var failedIcon = context.getCompatDrawable(R.drawable.sceyt_ic_status_failed)
+            ?.applyTint(context, SceytChatUIKit.theme.colors.warningColor)
 
         fun setPendingIconFromStyle(@StyleableRes index: Int) = apply {
             typedArray?.getDrawable(index)?.let {
@@ -64,11 +69,18 @@ data class MessageDeliveryStatusIcons(
             } ?: displayedIcon
         }
 
+        fun setFailedIconFromStyle(@StyleableRes index: Int) = apply {
+            typedArray?.getDrawable(index)?.let {
+                failedIcon = it
+            } ?: failedIcon
+        }
+
         fun build() = MessageDeliveryStatusIcons(
             pendingIcon = pendingIcon,
             sentIcon = sentIcon,
             receivedIcon = receivedIcon,
-            displayedIcon = displayedIcon
+            displayedIcon = displayedIcon,
+            failedIcon = failedIcon
         )
     }
 }

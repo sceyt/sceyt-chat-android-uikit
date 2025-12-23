@@ -9,7 +9,6 @@ import androidx.lifecycle.viewModelScope
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.ConnectionState
 import com.sceyt.chat.models.message.DeleteMessageType
-import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
@@ -31,6 +30,7 @@ import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.getLoadKey
 import com.sceyt.chatuikit.data.models.messages.MarkerType
+import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import com.sceyt.chatuikit.data.models.messages.SceytMarker
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytUser
@@ -43,12 +43,14 @@ import com.sceyt.chatuikit.extensions.getChildTopByPosition
 import com.sceyt.chatuikit.extensions.getString
 import com.sceyt.chatuikit.extensions.isResumed
 import com.sceyt.chatuikit.extensions.isThePositionVisible
+import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.extensions.checkIsMemberInChannel
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isPublic
 import com.sceyt.chatuikit.persistence.extensions.safeResume
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferHelper
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
+import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelUpdatedType
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
 import com.sceyt.chatuikit.presentation.components.channel.messages.MessagesListView
@@ -57,6 +59,8 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.events.Messa
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageListViewModel
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoActivity
 import com.sceyt.chatuikit.presentation.components.poll_results.PollResultsActivity
+import com.sceyt.chatuikit.presentation.extensions.isNotPending
+import com.sceyt.chatuikit.presentation.extensions.isPending
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.services.SceytSyncManager
 import com.sceyt.chatuikit.styles.extensions.messages_list.setEmptyStateForSelfChannel
@@ -71,8 +75,11 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
+private const val TAG = "MessagesListViewBinding"
+
 @JvmName("bind")
 fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner: LifecycleOwner) {
+    val lifecycleScope = lifecycleOwner.lifecycleScope
     messageActionBridge.setMessagesListView(messagesListView)
     messagesListView.setMultiselectDestination(selectedMessagesMap)
     if (channel.isSelf) {
@@ -117,17 +124,29 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     if (channel.userRole.isNullOrEmpty())
         getChannel(channel.id)
 
-    if (channel.lastDisplayedMessageId == 0L || channel.lastMessage?.deliveryStatus == DeliveryStatus.Pending
-        || channel.lastDisplayedMessageId == channel.lastMessage?.id
-    )
-        loadPrevMessages(channel.lastMessage?.id ?: 0, 0)
-    else {
-        pinnedLastReadMessageId = channel.lastDisplayedMessageId
-        loadNearMessages(
-            messageId = pinnedLastReadMessageId,
-            loadKey = LoadKeyData(key = LoadKeyType.ScrollToUnreadMessage.longValue),
-            ignoreServer = false
-        )
+    val lastMessage = channel.lastMessage
+    val lastDisplayedMessageId = channel.lastDisplayedMessageId
+    val lastMessageId = lastMessage?.id ?: 0
+    when {
+        lastDisplayedMessageId == 0L || lastMessage?.isPending() == true
+                || lastDisplayedMessageId == lastMessageId -> {
+            loadPrevMessages(lastMessageId, 0)
+        }
+
+        // If last displayed message is less than last message id, this means some messages were deleted.
+        // Load previous messages from last displayed message id to detect deleted messages and remove them.
+        lastDisplayedMessageId >= lastMessageId -> {
+            loadPrevMessages(lastDisplayedMessageId, 0)
+        }
+
+        else -> {
+            pinnedLastReadMessageId = lastDisplayedMessageId
+            loadNearMessages(
+                messageId = pinnedLastReadMessageId,
+                loadKey = LoadKeyData(key = LoadKeyType.ScrollToUnreadMessage.longValue),
+                ignoreServer = false
+            )
+        }
     }
 
     fun setUnreadCounts(channel: SceytChannel) {
@@ -191,10 +210,23 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             }
 
             LoadKeyType.ScrollToMessageBy.longValue -> {
-                messagesListView.scrollToMessage(loadKey.value, true, 200) {
-                    if (response is PaginationResponse.ServerResponse)
+                messagesListView.scrollToMessage(
+                    messageId = loadKey.value,
+                    highlight = true,
+                    offset = 200,
+                    onCompleted = { found ->
+                        if (response !is PaginationResponse.ServerResponse) {
+                            return@scrollToMessage
+                        }
                         isPreparingToScrollToMessage.set(false)
-                }
+                        if (!found) {
+                            SceytLog.w(
+                                TAG,
+                                "Called load near messages in channelId: ${channel.id} for scroll to message id: ${loadKey.value}, but message not found in server response." +
+                                        " Resetting isPreparingToScrollToMessage to false to avoid infinite waiting."
+                            )
+                        }
+                    })
             }
         }
     }
@@ -208,7 +240,9 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                     hasNext = response.hasNext,
                     hasPrev = response.hasPrev,
                     enableDateSeparator = enableDateSeparator
-                ), force = true
+                ),
+                lifecycleScope = lifecycleScope,
+                force = true
             )
         } else {
             when (response.loadType) {
@@ -219,7 +253,8 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                             hasNext = response.hasNext,
                             hasPrev = response.hasPrev,
                             enableDateSeparator = enableDateSeparator
-                        )
+                        ),
+                        lifecycleScope = lifecycleScope,
                     )
                 }
 
@@ -233,7 +268,8 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                             hasPrev = response.hasPrev,
                             compareMessage = compareMessage,
                             enableDateSeparator = enableDateSeparator
-                        )
+                        ),
+                        lifecycleScope = lifecycleScope,
                     )
                 }
 
@@ -246,6 +282,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                             hasPrev = response.hasPrev,
                             enableDateSeparator = enableDateSeparator
                         ),
+                        lifecycleScope = lifecycleScope,
                         force = true
                     )
                 }
@@ -258,6 +295,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                             hasPrev = response.hasPrev,
                             enableDateSeparator = enableDateSeparator
                         ),
+                        lifecycleScope = lifecycleScope,
                         force = true
                     )
                 }
@@ -284,15 +322,16 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
                     if (response.dbResultWasEmpty) {
                         if (response.loadType == LoadNear)
-                            messagesListView.setMessagesList(newMessages, true)
+                            messagesListView.setMessagesList(newMessages, lifecycleScope, true)
                         else {
                             if (response.loadType == LoadNext || response.loadType == LoadNewest)
-                                messagesListView.addNextPageMessages(newMessages)
-                            else messagesListView.addPrevPageMessages(newMessages)
+                                messagesListView.addNextPageMessages(newMessages, lifecycleScope)
+                            else messagesListView.addPrevPageMessages(newMessages, lifecycleScope)
                         }
                     } else
                         messagesListView.setMessagesList(
                             data = newMessages,
+                            lifecycleScope = lifecycleScope,
                             force = response.loadKey?.key == LoadKeyType.ScrollToLastMessage.longValue
                         )
                 } else
@@ -327,9 +366,10 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         val centerPosition = messagesListView.getMessagesRecyclerView().centerVisibleItemPosition()
         if (centerPosition == RecyclerView.NO_POSITION) return
         val item = messagesListView.getData().getOrNull(centerPosition)
-        if (item is MessageItem && lastSyncCenterOffsetId != item.message.id) {
-            lastSyncCenterOffsetId = item.message.id
-            syncCenteredMessage(messageId = item.message.id)
+        val messageId = item?.getMessageId() ?: return
+        if (lastSyncCenterOffsetId != messageId) {
+            lastSyncCenterOffsetId = messageId
+            syncCenteredMessage(messageId = messageId)
         }
     }
 
@@ -351,6 +391,13 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         .onEach {
             messagesListView.context.asActivity().finish()
         }.launchIn(lifecycleOwner.lifecycleScope)
+
+    ChannelsCache.channelUpdatedFlow
+        .filter { it.channel.id == channel.id && it.eventType == ChannelUpdatedType.ClearedHistory }
+        .onEach {
+            messagesListView.clearData()
+        }
+        .launchIn(lifecycleOwner.lifecycleScope)
 
     SceytSyncManager.syncChannelMessagesFinished
         .filter { it.first.id == channel.id }
@@ -375,7 +422,8 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                                 hasPrev = false,
                                 compareMessage = messagesListView.getLastMessage()?.message,
                                 enableDateSeparator = messagesListView.style.enableDateSeparator
-                            )
+                            ),
+                            lifecycleScope = lifecycleScope,
                         )
                         if (isLastDisplaying)
                             messagesListView.scrollToLastMessage()
@@ -401,13 +449,13 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 if (stateData.state == ConnectionState.Connected) {
                     val message = messagesListView.getLastMessageBy {
                         // First trying to get last displayed message
-                        it is MessageItem && it.message.deliveryStatus == DeliveryStatus.Displayed
+                        it is MessageItem && it.message.deliveryStatus == MessageDeliveryStatus.Displayed
                     } ?: messagesListView.getFirstMessageBy {
                         // Next trying to get fist sent message
-                        it is MessageItem && it.message.deliveryStatus == DeliveryStatus.Sent
+                        it is MessageItem && it.message.deliveryStatus == MessageDeliveryStatus.Sent
                     } ?: messagesListView.getFirstMessageBy {
                         // Next trying to get fist received message
-                        it is MessageItem && it.message.deliveryStatus == DeliveryStatus.Received
+                        it is MessageItem && it.message.deliveryStatus == MessageDeliveryStatus.Received
                     }
                     (message as? MessageItem)?.let {
                         syncManager.syncConversationMessagesAfter(conversationId, it.message.id)
@@ -442,7 +490,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                     val filtered = mutableSetOf(*items.toTypedArray())
 
                     withContext(Dispatchers.Main) {
-                        messagesListView.setMessagesList(filtered.toList())
+                        messagesListView.setMessagesList(filtered.toList(), lifecycleScope)
 
                         val (position) = items.findIndexed { item ->
                             item is MessageItem && item.message.id == data.centerMessageId
@@ -462,14 +510,14 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         .filter { (channelId, _) -> channelId == channel.id }
         .onEach { (_, date) ->
             messagesListView.deleteAllMessagesBefore {
-                it.getMessageCreatedAt() <= date && (it !is MessageItem || it.message.deliveryStatus != DeliveryStatus.Pending)
+                it.getMessageCreatedAt() <= date && (it !is MessageItem || it.message.isNotPending())
             }
         }.launchIn(lifecycleOwner.lifecycleScope)
 
-    MessagesCache.messageHardDeletedFlow
+    MessagesCache.messagesHardDeletedFlow
         .filter { (channelId, _) -> channelId == channel.id }
-        .onEach { (_, message) ->
-            messagesListView.forceDeleteMessageByTid(message.tid)
+        .onEach { (_, tIds) ->
+            messagesListView.forceDeleteMessageByTid(*tIds.toLongArray())
         }.launchIn(lifecycleOwner.lifecycleScope)
 
     loadMessagesFlow
@@ -479,8 +527,6 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     onChannelUpdatedEventFlow.onEach { channel ->
         setUnreadCounts(channel)
         checkEnableDisableActions(channel)
-        if (channel.lastMessage == null)
-            messagesListView.clearData()
     }.launchIn(lifecycleOwner.lifecycleScope)
 
     onScrollToLastMessageLiveData.observe(lifecycleOwner) { lastMessage ->
@@ -511,16 +557,18 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             messageId = messageId,
             offset = 200,
             highlight = true,
-            doIfNotFound = {
-                loadNearMessages(
-                    messageId = messageId,
-                    loadKey = LoadKeyData(
-                        key = LoadKeyType.ScrollToReplyMessage.longValue,
-                        value = messageId
-                    ),
-                    ignoreServer = false
-                )
-            }
+            onCompleted = { found ->
+                if (!found) {
+                    loadNearMessages(
+                        messageId = messageId,
+                        loadKey = LoadKeyData(
+                            key = LoadKeyType.ScrollToReplyMessage.longValue,
+                            value = messageId
+                        ),
+                        ignoreServer = false
+                    )
+                }
+            },
         )
     }
 
@@ -530,10 +578,11 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             messageId = message.id,
             offset = 200,
             highlight = true,
-            awaitToScroll = {
-                isPreparingToScrollToMessage.set(false)
-            },
-            doIfNotFound = {
+            onCompleted = { found ->
+                if (found) {
+                    isPreparingToScrollToMessage.set(false)
+                    return@scrollToMessage
+                }
                 loadNearMessages(
                     messageId = messageId,
                     loadKey = LoadKeyData(
@@ -542,30 +591,31 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                     ),
                     ignoreServer = false
                 )
-            }
+            },
         )
     }
 
-    onScrollToUnredMentionMessageLiveData.observe(lifecycleOwner) {
+    onScrollToUnredMentionMessageLiveData.observe(lifecycleOwner) { messageId ->
         messagesListView.scrollToMessage(
-            messageId = it,
+            messageId = messageId,
             offset = 200,
             highlight = true,
-            awaitToScroll = {
-                isPreparingToScrollToMessage.set(false)
-            },
-            doIfNotFound = {
+            onCompleted = { found ->
+                if (found) {
+                    isPreparingToScrollToMessage.set(false)
+                    return@scrollToMessage
+                }
                 loadNearMessages(
-                    messageId = it,
+                    messageId = messageId,
                     loadKey = LoadKeyData(
                         key = LoadKeyType.ScrollToMessageBy.longValue,
-                        value = it
+                        value = messageId
                     ),
                     ignoreServer = false
                 )
-            }
+            },
         )
-        pendingDisplayMsgIds.add(it)
+        pendingDisplayMsgIds.add(messageId)
     }
 
     messageMarkerLiveData.observe(lifecycleOwner) {
@@ -609,7 +659,10 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             enableDateSeparator = messagesListView.style.enableDateSeparator
         )
 
-        messagesListView.addNewMessages(*initMessage.toTypedArray())
+        messagesListView.addNewMessages(
+            data = initMessage.toTypedArray(),
+            lifecycleScope = lifecycleScope
+        )
         messagesListView.updateViewState(PageState.Nothing)
     }
 
@@ -631,9 +684,13 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
 
         suspendCancellableCoroutine { continuation ->
-            messagesListView.addNewMessages(*initMessage.toTypedArray()) {
-                continuation.safeResume(Unit)
-            }
+            messagesListView.addNewMessages(
+                data = initMessage.toTypedArray(),
+                lifecycleScope = lifecycleScope,
+                addedCallback = {
+                    continuation.safeResume(Unit)
+                }
+            )
             messagesListView.updateViewState(PageState.Nothing)
         }
     }
@@ -876,6 +933,10 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
     messagesListView.setMessagePollEventListener {
         onPollEvent(it)
+    }
+
+    messagesListView.setExpandMessageBodyListener { messageTid ->
+        expandMessageBody(messageTid)
     }
 
     messagesListView.setScrollStateChangeListener {

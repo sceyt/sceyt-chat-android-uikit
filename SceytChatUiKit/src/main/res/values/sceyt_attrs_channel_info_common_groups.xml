@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <declare-styleable name="ChannelInfoCommonGroupsView">
+        <!-- Common group item background color -->
+        <attr name="sceytUiCommonGroupItemBackgroundColor" format="reference|color" />
+
+        <!-- Common group title text style -->
+        <attr name="sceytUiCommonGroupTitleTextColor" format="reference|color" />
+        <attr name="sceytUiCommonGroupTitleTextSize" format="dimension|integer" />
+        <attr name="sceytUiCommonGroupTitleTextStyle" format="enum">
+            <enum name="normal" value="0" />
+            <enum name="bold" value="1" />
+            <enum name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiCommonGroupTitleTextFont" format="reference" />
+
+        <!-- Common group members count text style -->
+        <attr name="sceytUiCommonGroupMembersCountTextColor" format="reference|color" />
+        <attr name="sceytUiCommonGroupMembersCountTextSize" format="dimension|integer" />
+        <attr name="sceytUiCommonGroupMembersCountTextStyle" format="enum">
+            <enum name="normal" value="0" />
+            <enum name="bold" value="1" />
+            <enum name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiCommonGroupMembersCountTextFont" format="reference" />
+    </declare-styleable>
+
+</resources>

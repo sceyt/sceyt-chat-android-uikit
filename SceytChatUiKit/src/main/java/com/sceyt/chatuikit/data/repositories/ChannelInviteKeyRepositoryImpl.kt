@@ -24,7 +24,7 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 class ChannelInviteKeyRepositoryImpl : ChannelInviteKeyRepository {
 
     override suspend fun getChannelInviteKeys(
-            channelId: Long,
+        channelId: Long,
     ): SceytResponse<List<ChannelInviteKeyData>> {
         return suspendCancellableCoroutine { continuation ->
             GetChannelInviteKeysRequest(channelId).execute(object : InviteKeysCallback {
@@ -35,16 +35,18 @@ class ChannelInviteKeyRepositoryImpl : ChannelInviteKeyRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "getChannelInviteKeys error for channelId: $channelId," +
-                            " error: ${e?.message}, code: ${e?.code}")
+                    SceytLog.e(
+                        TAG, "getChannelInviteKeys error for channelId: $channelId," +
+                                " error: ${e?.message}, code: ${e?.code}"
+                    )
                 }
             })
         }
     }
 
     override suspend fun getChannelInviteKey(
-            channelId: Long,
-            key: String,
+        channelId: Long,
+        key: String,
     ): SceytResponse<ChannelInviteKeyData> {
         return suspendCancellableCoroutine { continuation ->
             GetChannelInviteKeyRequest(channelId, key).execute(object : InviteKeyCallback {
@@ -55,18 +57,20 @@ class ChannelInviteKeyRepositoryImpl : ChannelInviteKeyRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "getChannelInviteKey error: ${e?.message}," +
-                            " code: ${e?.code}, channelId: $channelId, key: $key")
+                    SceytLog.e(
+                        TAG, "getChannelInviteKey error: ${e?.message}," +
+                                " code: ${e?.code}, channelId: $channelId, key: $key"
+                    )
                 }
             })
         }
     }
 
     override suspend fun createChannelInviteKey(
-            channelId: Long,
-            expireAt: Long,
-            maxUses: Int,
-            accessPriorHistory: Boolean,
+        channelId: Long,
+        expireAt: Long,
+        maxUses: Int,
+        accessPriorHistory: Boolean,
     ): SceytResponse<ChannelInviteKeyData> {
         return suspendCancellableCoroutine { continuation ->
             CreateChannelInviteKeyRequest.Builder(channelId)
@@ -81,19 +85,21 @@ class ChannelInviteKeyRepositoryImpl : ChannelInviteKeyRepository {
 
                     override fun onError(e: SceytException?) {
                         continuation.safeResume(SceytResponse.Error(e))
-                        SceytLog.e(TAG, "createChannelInviteLink error: ${e?.message}," +
-                                " code: ${e?.code}, channelId: $channelId")
+                        SceytLog.e(
+                            TAG, "createChannelInviteLink error: ${e?.message}," +
+                                    " code: ${e?.code}, channelId: $channelId"
+                        )
                     }
                 })
         }
     }
 
     override suspend fun updateInviteKeySettings(
-            channelId: Long,
-            key: String,
-            expireAt: Long,
-            maxUses: Int,
-            accessPriorHistory: Boolean,
+        channelId: Long,
+        key: String,
+        expireAt: Long,
+        maxUses: Int,
+        accessPriorHistory: Boolean,
     ): SceytResponse<Boolean> {
         return suspendCancellableCoroutine { continuation ->
             UpdateChannelInviteKeyRequest.Builder(channelId, key)
@@ -107,20 +113,23 @@ class ChannelInviteKeyRepositoryImpl : ChannelInviteKeyRepository {
 
                     override fun onError(e: SceytException?) {
                         continuation.safeResume(SceytResponse.Error(e))
-                        SceytLog.e(TAG, "updateInviteKeySettings error: ${e?.message}," +
-                                " code: ${e?.code}, channelId: $channelId, key: $key")
+                        SceytLog.e(
+                            TAG, "updateInviteKeySettings error: ${e?.message}," +
+                                    " code: ${e?.code}, channelId: $channelId, key: $key"
+                        )
                     }
                 })
         }
     }
 
     override suspend fun regenerateChannelInviteKey(
-            channelId: Long,
-            key: String,
+        channelId: Long,
+        key: String,
+        deletePermanently: Boolean,
     ): SceytResponse<ChannelInviteKeyData> {
         return suspendCancellableCoroutine { continuation ->
             RegenerateChannelInviteKeyRequest(
-                channelId, key
+                channelId, key, deletePermanently
             ).execute(object : InviteKeyCallback {
                 override fun onResult(inviteKey: ChannelInviteKey) {
                     val data = inviteKey.toChannelInviteKeyData()
@@ -129,16 +138,18 @@ class ChannelInviteKeyRepositoryImpl : ChannelInviteKeyRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "regenerateChannelInviteKey error: ${e?.message}," +
-                            " code: ${e?.code}, channelId: $channelId, key: $key")
+                    SceytLog.e(
+                        TAG, "regenerateChannelInviteKey error: ${e?.message}," +
+                                " code: ${e?.code}, channelId: $channelId, key: $key"
+                    )
                 }
             })
         }
     }
 
     override suspend fun revokeChannelInviteKeys(
-            channelId: Long,
-            keys: List<String>,
+        channelId: Long,
+        keys: List<String>,
     ): SceytResponse<Boolean> {
         return suspendCancellableCoroutine { continuation ->
             RevokeChannelInviteKeyRequest(
@@ -150,16 +161,18 @@ class ChannelInviteKeyRepositoryImpl : ChannelInviteKeyRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "revokeChannelInviteKeys error: ${e?.message}, " +
-                            "code: ${e?.code}, channelId: $channelId, keys: $keys")
+                    SceytLog.e(
+                        TAG, "revokeChannelInviteKeys error: ${e?.message}, " +
+                                "code: ${e?.code}, channelId: $channelId, keys: $keys"
+                    )
                 }
             })
         }
     }
 
     override suspend fun deleteRevokedChannelInviteKeys(
-            channelId: Long,
-            keys: List<String>,
+        channelId: Long,
+        keys: List<String>,
     ): SceytResponse<Boolean> {
         return suspendCancellableCoroutine { continuation ->
             DeleteRevokedInviteKeyRequest(
@@ -171,8 +184,10 @@ class ChannelInviteKeyRepositoryImpl : ChannelInviteKeyRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "deleteRevokedChannelInviteKeys error: ${e?.message}, " +
-                            "code: ${e?.code}, channelId: $channelId, keys: $keys")
+                    SceytLog.e(
+                        TAG, "deleteRevokedChannelInviteKeys error: ${e?.message}, " +
+                                "code: ${e?.code}, channelId: $channelId, keys: $keys"
+                    )
                 }
             })
         }

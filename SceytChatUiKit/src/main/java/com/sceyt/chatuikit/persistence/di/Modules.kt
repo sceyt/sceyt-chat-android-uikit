@@ -51,7 +51,11 @@ import com.sceyt.chatuikit.persistence.logicimpl.message.MessageLoadRangeUpdater
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
 import com.sceyt.chatuikit.persistence.logicimpl.message.PersistenceMessagesLogicImpl
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.AddPollVoteUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.CheckDeletedMessagesUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.CheckDeletedNearMessagesUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.EndPollUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.HandleDeleteMessagesByLoadTypeUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.HandleMessagesInRangeUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.HandleChangeVoteErrorUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.RemovePollVoteUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.RetractPollVoteUseCase
@@ -140,7 +144,7 @@ internal val interactorModule = module {
 
 internal val logicModule = module {
     single<PersistenceChannelsLogic> { PersistenceChannelsLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
-    single<PersistenceMessagesLogic> { PersistenceMessagesLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    single<PersistenceMessagesLogic> { PersistenceMessagesLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(),get(), get()) }
     single<PersistenceAttachmentLogic> { PersistenceAttachmentLogicImpl(get(), get(), get(), get(), get(), get(), get(), get()) }
     single<PersistenceReactionsLogic> { PersistenceReactionsLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     single<PersistencePollLogic> { PersistencePollLogicImpl(get(),
@@ -165,6 +169,10 @@ internal val useCaseModule = module {
     factoryOf(::SendPollPendingVotesUseCase)
     factoryOf(::HandleChangeVoteErrorUseCase)
     factoryOf(::SetUserPresenceUseCase)
+    factoryOf(::HandleDeleteMessagesByLoadTypeUseCase)
+    factoryOf(::HandleMessagesInRangeUseCase)
+    factoryOf(::CheckDeletedNearMessagesUseCase)
+    factoryOf(::CheckDeletedMessagesUseCase)
 }
 
 internal val cacheModule = module {

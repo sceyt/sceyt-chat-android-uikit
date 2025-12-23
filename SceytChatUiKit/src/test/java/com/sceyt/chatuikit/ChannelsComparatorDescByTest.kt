@@ -3,7 +3,7 @@ package com.sceyt.chatuikit
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.truth.Truth
 import com.sceyt.chat.models.channel.ChannelListQuery.ChannelListOrder
-import com.sceyt.chat.models.message.DeliveryStatus
+import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
@@ -156,7 +156,8 @@ private fun createMessage(createdAt: Long): SceytMessage {
         incoming = false,
         isTransient = false,
         silent = false,
-        deliveryStatus = DeliveryStatus.Displayed,
+        viewOnce = false,
+        deliveryStatus = MessageDeliveryStatus.Displayed,
         state = MessageState.Unmodified,
         replyCount = 0L,
         displayCount = 0,

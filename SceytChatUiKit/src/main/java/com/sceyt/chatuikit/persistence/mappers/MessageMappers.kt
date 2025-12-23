@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.persistence.mappers
 
+import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.ForwardingDetails
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.poll.PollDetails
@@ -7,6 +8,7 @@ import com.sceyt.chat.models.poll.PollOption
 import com.sceyt.chat.models.poll.PollVote
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytPollDetails
@@ -16,8 +18,6 @@ import com.sceyt.chatuikit.persistence.database.entity.messages.ForwardingDetail
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageDb
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.ParentMessageDb
-import com.sceyt.chatuikit.persistence.database.entity.messages.PollDb
-import com.sceyt.chatuikit.persistence.database.entity.messages.PollVoteDb
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 
 internal fun SceytMessage.toMessageEntity(unList: Boolean) = MessageEntity(
@@ -33,6 +33,7 @@ internal fun SceytMessage.toMessageEntity(unList: Boolean) = MessageEntity(
     incoming = incoming,
     isTransient = isTransient,
     silent = silent,
+    viewOnce = viewOnce,
     deliveryStatus = deliveryStatus,
     state = state,
     fromId = user?.id,
@@ -88,6 +89,7 @@ internal fun MessageDb.toSceytMessage(): SceytMessage {
             incoming = incoming,
             isTransient = isTransient,
             silent = silent,
+            viewOnce = viewOnce,
             deliveryStatus = deliveryStatus,
             state = state,
             user = from?.toSceytUser(),
@@ -105,7 +107,10 @@ internal fun MessageDb.toSceytMessage(): SceytMessage {
             replyCount = replyCount,
             displayCount = displayCount,
             autoDeleteAt = autoDeleteAt,
-            forwardingDetails = forwardingDetailsDb?.toForwardingDetails(channelId, forwardingUser?.toSceytUser()),
+            forwardingDetails = forwardingDetailsDb?.toForwardingDetails(
+                channelId,
+                forwardingUser?.toSceytUser()
+            ),
             pendingReactions = pendingReactions?.map { it.toReactionData() },
             bodyAttributes = bodyAttribute,
             disableMentionsCount = disableMentionsCount,
@@ -139,10 +144,10 @@ internal fun SceytMessage.toParentMessageEntity(): ParentMessageDb {
 }
 
 private fun MessageEntity.parentMessageToSceytMessage(
-        attachments: Array<SceytAttachment>?,
-        from: SceytUser?,
-        mentionedUsers: List<SceytUser>?,
-        pollDetails: SceytPollDetails?,
+    attachments: Array<SceytAttachment>?,
+    from: SceytUser?,
+    mentionedUsers: List<SceytUser>?,
+    pollDetails: SceytPollDetails?,
 ) = SceytMessage(
     id = id ?: 0,
     tid = tid,
@@ -155,6 +160,7 @@ private fun MessageEntity.parentMessageToSceytMessage(
     incoming = incoming,
     isTransient = isTransient,
     silent = silent,
+    viewOnce = viewOnce,
     deliveryStatus = deliveryStatus,
     state = state,
     user = from,
@@ -175,41 +181,23 @@ private fun MessageEntity.parentMessageToSceytMessage(
     poll = pollDetails
 )
 
-internal fun MessageDb.toMessage(): Message {
-    with(messageEntity) {
-        return Message(
-            id ?: 0,
-            tid,
-            channelId,
-            body,
-            type,
-            metadata,
-            createdAt,
-            updatedAt,
-            incoming,
-            isTransient,
-            silent,
-            deliveryStatus,
-            state,
-            from?.toUser(),
-            attachments?.map { it.toSdkAttachment(false) }?.toTypedArray(),
-            selfReactions?.map { it.toReaction() }?.toTypedArray(),
-            reactionsTotals?.map { it.toReactionTotal() }?.toTypedArray(),
-            markerCount?.toTypedArray(),
-            emptyArray(),
-            emptyArray(),
-            parent?.toSceytMessage()?.toMessage(),
-            replyCount,
-            displayCount,
-            autoDeleteAt ?: 0L,
-            forwardingDetailsDb?.toForwardingDetails(channelId, forwardingUser?.toSceytUser()),
-            bodyAttribute?.toTypedArray(),
-            disableMentionsCount,
-            poll?.toPollDetails()
-        )
+fun MessageDeliveryStatus.toDeliveryStatus(): DeliveryStatus {
+    return when (this) {
+        MessageDeliveryStatus.Pending, MessageDeliveryStatus.Failed -> DeliveryStatus.Pending
+        MessageDeliveryStatus.Sent -> DeliveryStatus.Sent
+        MessageDeliveryStatus.Received -> DeliveryStatus.Received
+        MessageDeliveryStatus.Displayed -> DeliveryStatus.Displayed
     }
 }
 
+fun DeliveryStatus.toDeliveryStatus(): MessageDeliveryStatus {
+    return when (this) {
+        DeliveryStatus.Pending -> MessageDeliveryStatus.Pending
+        DeliveryStatus.Sent -> MessageDeliveryStatus.Sent
+        DeliveryStatus.Received -> MessageDeliveryStatus.Received
+        DeliveryStatus.Displayed -> MessageDeliveryStatus.Displayed
+    }
+}
 
 fun Message.toSceytUiMessage(isGroup: Boolean? = null): SceytMessage {
     val tid = getTid(id, tid, incoming)
@@ -225,7 +213,8 @@ fun Message.toSceytUiMessage(isGroup: Boolean? = null): SceytMessage {
         incoming = incoming,
         isTransient = isTransient,
         silent = silent,
-        deliveryStatus = deliveryStatus,
+        viewOnce = isViewOnce,
+        deliveryStatus = deliveryStatus.toDeliveryStatus(),
         state = state,
         user = user?.toSceytUser(),
         attachments = attachments?.map {
@@ -271,7 +260,8 @@ fun SceytMessage.toMessage(): Message {
         incoming,
         isTransient,
         silent,
-        deliveryStatus,
+        viewOnce,
+        deliveryStatus.toDeliveryStatus(),
         state,
         user?.toUser(),
         attachments?.map { it.toAttachment() }?.toTypedArray(),
@@ -298,45 +288,13 @@ internal fun ForwardingDetails.toForwardingDetailsDb() = ForwardingDetailsDb(
 )
 
 internal fun ForwardingDetailsDb.toForwardingDetails(
-        channelId: Long,
-        user: SceytUser?,
+    channelId: Long,
+    user: SceytUser?,
 ) = ForwardingDetails(
     messageId, channelId,
     user?.toUser(),
     hops
 )
-
-internal fun PollDb.toPollDetails(): PollDetails = with(pollEntity) {
-    val myId = SceytChatUIKit.currentUserId
-    val ownVotes = mutableListOf<PollVote>()
-    val otherVotes = mutableListOf<PollVote>()
-    votes?.forEach {
-        if (it.vote.userId == myId) {
-            ownVotes.add(it.toPollVote())
-        } else {
-            otherVotes.add(it.toPollVote())
-        }
-    }
-
-    return PollDetails.Builder()
-        .setId(id)
-        .setName(name)
-        .setDescription(description)
-        .setOptions(options.map { PollOption(it.id, it.name) }.toTypedArray())
-        .setAnonymous(anonymous)
-        .setAllowMultipleVotes(allowMultipleVotes)
-        .setAllowVoteRetract(allowVoteRetract)
-        .setVotesPerOption(votesPerOption)
-        .setOwnVotes(ownVotes.toTypedArray())
-        .setVotes(otherVotes.toTypedArray())
-        .setCreatedAt(createdAt)
-        .setClosed(closed)
-        .build()
-}
-
-internal fun PollVoteDb.toPollVote(): PollVote = with(vote) {
-    return PollVote(optionId, createdAt, user?.toUser())
-}
 
 internal fun Vote.toPollVote(): PollVote {
     return PollVote(optionId, createdAt, user?.toUser())

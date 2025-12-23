@@ -31,6 +31,7 @@ import com.sceyt.chatuikit.databinding.SceytItemOutTextMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemOutUnsupportedMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemOutVideoMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemOutVoiceMessageBinding
+import com.sceyt.chatuikit.databinding.SceytItemSystemMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemUnreadMessagesSeparatorBinding
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
@@ -56,6 +57,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.mes
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.OutUnsupportedMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.OutVideoMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.OutVoiceMessageViewHolder
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.SystemMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.UnreadMessagesSeparatorViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
@@ -101,9 +103,8 @@ open class MessageViewHolderFactory(context: Context) {
             MessageViewTypeEnum.IncDeleted.ordinal -> createIncDeletedMsgViewHolder(parent)
             MessageViewTypeEnum.OutDeleted.ordinal -> createOutDeletedMsgViewHolder(parent)
             MessageViewTypeEnum.DateSeparator.ordinal -> createDateSeparatorViewHolder(parent)
-            MessageViewTypeEnum.UnreadMessagesSeparator.ordinal -> createUnreadMessagesViewHolder(
-                parent
-            )
+            MessageViewTypeEnum.UnreadMessagesSeparator.ordinal -> createUnreadMessagesViewHolder(parent)
+            MessageViewTypeEnum.System.ordinal -> createSystemMessageViewHolder(parent)
 
             MessageViewTypeEnum.Loading.ordinal -> createLoadingMoreViewHolder(parent)
             else -> throw RuntimeException("Not supported view type")
@@ -296,6 +297,14 @@ open class MessageViewHolderFactory(context: Context) {
         )
     }
 
+    open fun createSystemMessageViewHolder(parent: ViewGroup): BaseMessageViewHolder {
+        return SystemMessageViewHolder(
+            SceytItemSystemMessageBinding.inflate(layoutInflater, parent, false),
+            messageItemStyle.messageItemStyle,
+            displayedListener
+        )
+    }
+
 
     open fun getItemViewType(item: MessageListItem): Int {
         return when (item) {
@@ -327,6 +336,9 @@ open class MessageViewHolderFactory(context: Context) {
             SceytMessageType.File,
             SceytMessageType.Link ->
                 resolveContentViewType(inc, attachments).ordinal
+
+            SceytMessageType.System ->
+                MessageViewTypeEnum.System.ordinal
 
             else ->
                 pick(
@@ -418,6 +430,7 @@ open class MessageViewHolderFactory(context: Context) {
         OutUnsupported,
         DateSeparator,
         UnreadMessagesSeparator,
-        Loading
+        Loading,
+        System
     }
 }
