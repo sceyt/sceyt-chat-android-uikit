@@ -70,10 +70,10 @@ object MessageBodyTruncationHelper {
         spannable.append(readMoreStyle.text)
         val readMoreEnd = spannable.length
 
-        val spacingAbovePx = 8.dpToPx()
-        val spacingBelowPx = 4.dpToPx()
+        val paddingTop = 8.dpToPx()
+        val paddingBottom = 16.dpToPx()
         spannable.setSpan(
-            SpacingSpan(spacingAbovePx, spacingBelowPx),
+            SpacingSpan(paddingTop, paddingBottom),
             readMoreStart,
             readMoreEnd,
             Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
