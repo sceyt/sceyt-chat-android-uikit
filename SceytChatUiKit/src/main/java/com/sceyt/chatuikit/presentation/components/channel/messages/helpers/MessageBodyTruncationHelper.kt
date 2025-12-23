@@ -16,8 +16,8 @@ import com.sceyt.chatuikit.styles.messages_list.item.ReadMoreStyle
  */
 object MessageBodyTruncationHelper {
     private class SpacingSpan(
-        private val extraSpacingAbovePx: Int,
-        private val extraSpacingBelowPx: Int
+        private val paddingTopPx: Int,
+        private val paddingBottomPx: Int
     ) : LineHeightSpan {
         override fun chooseHeight(
             text: CharSequence?,
@@ -28,10 +28,10 @@ object MessageBodyTruncationHelper {
             fm: Paint.FontMetricsInt?
         ) {
             fm?.let {
-                it.top -= extraSpacingAbovePx
-                it.ascent -= extraSpacingAbovePx
-                it.bottom += extraSpacingBelowPx
-                it.descent += extraSpacingBelowPx
+                it.top -= paddingTopPx
+                it.ascent -= paddingTopPx
+                it.bottom += paddingBottomPx
+                it.descent += paddingBottomPx
             }
         }
     }
