@@ -72,7 +72,8 @@ class GetOldestThenMessagesIncludeTests{
             forwardingDetailsDb = null,
             bodyAttribute = null,
             unList = false,
-            disableMentionsCount = false
+            disableMentionsCount = false,
+            viewOnce = false
         )
     }
 

@@ -23,6 +23,7 @@ data class SceytMessage(
     val incoming: Boolean,
     val isTransient: Boolean,
     val silent: Boolean,
+    val viewOnce: Boolean,
     val deliveryStatus: MessageDeliveryStatus,
     val state: MessageState,
     val user: SceytUser?,

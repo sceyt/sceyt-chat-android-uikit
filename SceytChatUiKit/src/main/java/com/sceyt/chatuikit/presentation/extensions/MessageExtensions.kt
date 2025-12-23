@@ -213,6 +213,7 @@ fun SceytMessage.getUpdateMessage(message: SceytMessage): SceytMessage {
         incoming = message.incoming,
         isTransient = message.isTransient,
         silent = message.silent,
+        viewOnce = message.viewOnce,
         deliveryStatus = message.deliveryStatus,
         state = message.state,
         user = message.user,

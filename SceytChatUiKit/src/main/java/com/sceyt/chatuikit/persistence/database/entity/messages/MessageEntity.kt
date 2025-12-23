@@ -31,6 +31,8 @@ internal data class MessageEntity(
         val incoming: Boolean,
         val isTransient: Boolean,
         val silent: Boolean,
+        @ColumnInfo(defaultValue = "0")
+        val viewOnce: Boolean,
         @ColumnInfo(index = true)
         val deliveryStatus: MessageDeliveryStatus,
         val state: MessageState,
