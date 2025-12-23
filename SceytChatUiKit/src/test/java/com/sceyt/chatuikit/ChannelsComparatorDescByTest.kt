@@ -156,6 +156,7 @@ private fun createMessage(createdAt: Long): SceytMessage {
         incoming = false,
         isTransient = false,
         silent = false,
+        viewOnce = false,
         deliveryStatus = MessageDeliveryStatus.Displayed,
         state = MessageState.Unmodified,
         replyCount = 0L,

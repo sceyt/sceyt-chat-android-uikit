@@ -1265,7 +1265,8 @@ class CheckDeletedMessagesUseCaseTest {
             metadata = "",
             updatedAt = 0,
             unList = false,
-            disableMentionsCount = false
+            disableMentionsCount = false,
+            viewOnce = false
         )
     }
 
@@ -1286,6 +1287,7 @@ class CheckDeletedMessagesUseCaseTest {
             incoming = false,
             isTransient = false,
             silent = false,
+            viewOnce = false,
             deliveryStatus = MessageDeliveryStatus.Sent,
             state = MessageState.Unmodified,
             user = null,

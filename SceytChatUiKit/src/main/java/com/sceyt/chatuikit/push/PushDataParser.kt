@@ -53,7 +53,8 @@ object PushDataParser {
             val messageType = messageJsonObject.getString("type")
             val meta = messageJsonObject.getString("metadata")
             val createdAtString = messageJsonObject.getString("created_at")
-            val transient = messageJsonObject.getBoolean("transient")
+            val transient = messageJsonObject.optBoolean("transient",false)
+            val viewOnce = messageJsonObject.optBoolean("view_once", false)
             val deliveryStatus = getDeliveryStatusFromJson(messageJsonObject)
             val state = getStateFromJson(messageJsonObject)
             val forwardingDetails = getForwardingDetailsFromJson(messageJsonObject)
@@ -109,6 +110,7 @@ object PushDataParser {
                 /* incoming = */ true,
                 /* isTransient = */ transient,
                 /* silent = */ false,
+                /* viewOnce = */ viewOnce,
                 /* deliveryStatus = */ deliveryStatus,
                 /* state = */ state,
                 /* user = */ user,

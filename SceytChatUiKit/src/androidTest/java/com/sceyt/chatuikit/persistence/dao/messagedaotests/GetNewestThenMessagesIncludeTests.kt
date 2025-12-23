@@ -72,7 +72,8 @@ class GetNewestThenMessagesIncludeTests {
             forwardingDetailsDb = null,
             bodyAttribute = null,
             unList = false,
-            disableMentionsCount = false
+            disableMentionsCount = false,
+            viewOnce = false
         )
     }
 
