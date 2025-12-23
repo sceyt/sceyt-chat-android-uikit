@@ -72,11 +72,11 @@ object SceytChatUIKit : SceytKoinComponent {
     @JvmStatic
     @JvmOverloads
     fun initialize(
-            appContext: Context,
-            apiUrl: String,
-            appId: String,
-            clientId: String,
-            enableDatabase: Boolean = true,
+        appContext: Context,
+        apiUrl: String,
+        appId: String,
+        clientId: String,
+        enableDatabase: Boolean = true,
     ) {
         this.appContext = appContext
         ChatClient.initialize(appContext, apiUrl, appId, clientId)
@@ -112,13 +112,12 @@ object SceytChatUIKit : SceytKoinComponent {
 
     private fun initKoin(enableDatabase: Boolean) {
         val koin = GlobalContext.getOrNull()
-        if (koin == null) {
-            SceytKoinApp.koinApp = startKoin {
+        SceytKoinApp.koinApp = if (koin == null) {
+            startKoin {
                 init(enableDatabase)
             }
         } else {
-            SceytKoinApp.koinApp = koinApplication {
-                // declare used modules
+            koinApplication {
                 init(enableDatabase)
             }
         }
@@ -133,16 +132,19 @@ object SceytChatUIKit : SceytKoinComponent {
 
     private fun KoinApplication.init(enableDatabase: Boolean) {
         androidContext(appContext)
-        modules(arrayListOf(
-            appModules,
-            databaseModule(enableDatabase),
-            interactorModule,
-            logicModule,
-            useCaseModule,
-            repositoryModule,
-            cacheModule,
-            viewModelModule,
-            coroutineModule))
+        modules(
+            modules = arrayListOf(
+                appModules,
+                databaseModule(enableDatabase),
+                interactorModule,
+                logicModule,
+                useCaseModule,
+                repositoryModule,
+                cacheModule,
+                viewModelModule,
+                coroutineModule
+            )
+        )
     }
 }
 

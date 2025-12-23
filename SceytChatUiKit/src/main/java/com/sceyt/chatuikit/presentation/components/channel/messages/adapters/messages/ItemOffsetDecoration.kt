@@ -17,7 +17,7 @@ class ItemOffsetDecoration(private val style: MessagesListViewStyle) : RecyclerV
             if (needOffset)
                 outRect[0, style.differentSenderMessageDistance, 0] = 0
             else outRect[0, style.sameSenderMessageDistance, 0] = 0
-        } catch (ignored: Exception) {
+        } catch (_: Exception) {
         }
     }
 }

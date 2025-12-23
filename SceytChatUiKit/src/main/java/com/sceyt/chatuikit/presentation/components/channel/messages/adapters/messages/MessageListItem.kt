@@ -4,7 +4,12 @@ import com.sceyt.chatuikit.data.models.messages.SceytMessage
 
 sealed class MessageListItem {
     data class MessageItem(val message: SceytMessage) : MessageListItem()
-    data class DateSeparatorItem(val createdAt: Long, val msgTid: Long) : MessageListItem()
+    data class DateSeparatorItem(
+        val createdAt: Long,
+        val messageTid: Long,
+        val messageId: Long
+    ) : MessageListItem()
+
     data class UnreadMessagesSeparatorItem(val createdAt: Long, val msgId: Long) : MessageListItem()
     data object LoadingPrevItem : MessageListItem()
     data object LoadingNextItem : MessageListItem()
@@ -36,6 +41,16 @@ sealed class MessageListItem {
             is UnreadMessagesSeparatorItem -> hashCode().toLong()
             is LoadingPrevItem -> hashCode().toLong()
             is LoadingNextItem -> hashCode().toLong()
+        }
+    }
+
+    fun getMessageId(): Long? {
+        return when (this) {
+            is MessageItem -> message.id
+            is DateSeparatorItem -> messageId
+            is UnreadMessagesSeparatorItem -> msgId
+            is LoadingPrevItem -> null
+            is LoadingNextItem -> null
         }
     }
 

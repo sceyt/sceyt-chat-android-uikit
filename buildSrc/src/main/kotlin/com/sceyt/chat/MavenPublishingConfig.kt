@@ -5,6 +5,8 @@ import org.gradle.api.Project
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.getByType
+import org.gradle.kotlin.dsl.withType
+import org.gradle.plugins.signing.Sign
 import java.io.File
 import java.util.Properties
 
@@ -12,8 +14,13 @@ fun Project.configureMavenPublishing() {
     plugins.apply("com.vanniktech.maven.publish")
     plugins.apply("maven-publish")
 
-    // First try to copy credentials from local.properties to gradle.properties
-    copyCredentialsToGradleProperties(this)
+    // Detect if we are publishing to Maven Local
+    val isLocalPublish = gradle.startParameter.taskNames.any { it.contains("publishToMavenLocal") }
+
+    // Only copy credentials for remote publishing
+    if (!isLocalPublish) {
+        copyCredentialsToGradleProperties(this)
+    }
 
     configure<MavenPublishBaseExtension> {
         coordinates(
@@ -49,21 +56,29 @@ fun Project.configureMavenPublishing() {
             }
         }
 
-        if (Config.mavenCentralVersion.contains("-SNAPSHOT")) {
-            publishSnapshotToMavenCentral()
-        } else {
-            // For release versions, use the Central Portal
-            publishToMavenCentral(true)
-        }
+        // Remote publishing only
+        if (!isLocalPublish) {
+            if (Config.mavenCentralVersion.contains("-SNAPSHOT")) {
+                publishSnapshotToMavenCentral()
+            } else {
+                publishToMavenCentral(true)
+            }
 
-        signAllPublications()
+            // Sign only for remote publishing
+            signAllPublications()
+        }
+    }
+
+    // Disable signing tasks for local publishing
+    if (isLocalPublish) {
+        tasks.withType<Sign>().configureEach {
+            enabled = false
+        }
     }
 }
 
 private fun Project.publishSnapshotToMavenCentral() {
-    // For SNAPSHOT versions, we need to manually add the repository
     afterEvaluate {
-        // Access the publishing extension after plugins are applied
         val publishing = project.extensions.getByType<PublishingExtension>()
         publishing.repositories {
             maven {
@@ -80,7 +95,6 @@ private fun Project.publishSnapshotToMavenCentral() {
 
 private fun copyCredentialsToGradleProperties(project: Project) {
     try {
-        // Load properties from local.properties
         val localProperties = Properties()
         val localPropertiesFile = File(project.rootProject.rootDir, "local.properties")
         if (localPropertiesFile.exists()) {
@@ -90,20 +104,16 @@ private fun copyCredentialsToGradleProperties(project: Project) {
             return
         }
 
-        // Check if gradle.properties exists in user home
-        val userGradlePropertiesFile = File(System.getProperty("user.home"), ".gradle/gradle.properties")
+        val userGradlePropertiesFile =
+            File(System.getProperty("user.home"), ".gradle/gradle.properties")
         if (!userGradlePropertiesFile.exists()) {
-            // Create directory if it doesn't exist
             userGradlePropertiesFile.parentFile.mkdirs()
-            // Create the file
             userGradlePropertiesFile.createNewFile()
         }
 
-        // Load existing gradle.properties
         val gradleProperties = Properties()
         userGradlePropertiesFile.inputStream().use { gradleProperties.load(it) }
 
-        // Check if we need to update gradle.properties
         var needsUpdate = false
         val propertiesToCopy = listOf(
             "mavenCentralUsername",
@@ -113,7 +123,6 @@ private fun copyCredentialsToGradleProperties(project: Project) {
             "signing.secretKeyRingFile"
         )
 
-        // Copy missing properties
         for (prop in propertiesToCopy) {
             val value = localProperties.getProperty(prop)
             if (value != null && gradleProperties.getProperty(prop) == null) {
@@ -124,7 +133,6 @@ private fun copyCredentialsToGradleProperties(project: Project) {
 
         project.logger.lifecycle("Gradle properties need update: $needsUpdate")
 
-        // Update gradle.properties if needed
         if (needsUpdate) {
             userGradlePropertiesFile.outputStream().use {
                 gradleProperties.store(it, "Updated by Sceyt build script")
@@ -134,4 +142,4 @@ private fun copyCredentialsToGradleProperties(project: Project) {
     } catch (e: Exception) {
         project.logger.error("Error copying credentials to gradle.properties: ${e.message}")
     }
-} 
+}

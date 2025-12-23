@@ -25,7 +25,7 @@ import com.sceyt.chatuikit.styles.input.VoiceRecorderViewStyle
 import com.sceyt.chatuikit.styles.messages_list.item.AudioWaveformStyle
 
 internal fun MessageInputStyle.Builder.buildInputTextStyle(
-        array: TypedArray
+    array: TypedArray
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputTextColor,
@@ -44,7 +44,7 @@ internal fun MessageInputStyle.Builder.buildInputTextStyle(
     .build()
 
 internal fun MessageInputStyle.Builder.buildInputHintStyle(
-        array: TypedArray
+    array: TypedArray
 ) = HintStyle.Builder(array)
     .color(
         index = R.styleable.MessageInputView_sceytUiMessageInputHintTextColor,
@@ -57,7 +57,7 @@ internal fun MessageInputStyle.Builder.buildInputHintStyle(
     .build()
 
 internal fun MessageInputStyle.Builder.buildInputTextInputStyle(
-        array: TypedArray
+    array: TypedArray
 ) = TextInputStyle.Builder(array)
     .setBackgroundColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputTextInputBackgroundColor,
@@ -83,7 +83,7 @@ internal fun MessageInputStyle.Builder.buildInputTextInputStyle(
     .build()
 
 internal fun MessageInputStyle.Builder.buildJoinButtonTextStyle(
-        array: TypedArray
+    array: TypedArray
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputJoinButtonTextColor,
@@ -102,7 +102,7 @@ internal fun MessageInputStyle.Builder.buildJoinButtonTextStyle(
     .build()
 
 internal fun MessageInputStyle.Builder.buildJoinButtonStyle(
-        array: TypedArray
+    array: TypedArray
 ) = ButtonStyle.Builder(array)
     .setBackgroundColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputJoinButtonBackgroundColor,
@@ -124,7 +124,7 @@ internal fun MessageInputStyle.Builder.buildJoinButtonStyle(
     .build()
 
 internal fun MessageInputStyle.Builder.buildClearChatTextStyle(
-        array: TypedArray
+    array: TypedArray
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputClearChatTextColor,
@@ -143,7 +143,7 @@ internal fun MessageInputStyle.Builder.buildClearChatTextStyle(
     .build()
 
 internal fun MessageInputStyle.Builder.buildLinkPreviewTitleTextStyle(
-        array: TypedArray
+    array: TypedArray
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputLinkPreviewTitleTextColor,
@@ -162,7 +162,7 @@ internal fun MessageInputStyle.Builder.buildLinkPreviewTitleTextStyle(
     .build()
 
 internal fun MessageInputStyle.Builder.buildLinkPreviewDescriptionTextStyle(
-        array: TypedArray
+    array: TypedArray
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputLinkPreviewDescriptionTextColor,
@@ -181,7 +181,7 @@ internal fun MessageInputStyle.Builder.buildLinkPreviewDescriptionTextStyle(
     .build()
 
 internal fun MessageInputStyle.Builder.buildLinkPreviewStyle(
-        array: TypedArray
+    array: TypedArray
 ) = InputLinkPreviewStyle.Builder(context, array)
     .backgroundColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputLinkPreviewBackgroundColor,
@@ -206,7 +206,7 @@ internal fun MessageInputStyle.Builder.buildLinkPreviewStyle(
     .build()
 
 internal fun MessageInputStyle.Builder.buildReplyMessageTitleTextStyle(
-        array: TypedArray
+    array: TypedArray
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputReplyMessageTitleTextColor,
@@ -225,7 +225,7 @@ internal fun MessageInputStyle.Builder.buildReplyMessageTitleTextStyle(
     .build()
 
 internal fun MessageInputStyle.Builder.buildReplyMessageSenderNameTextStyle(
-        array: TypedArray
+    array: TypedArray
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputReplyMessageSenderNameTextColor,
@@ -244,7 +244,7 @@ internal fun MessageInputStyle.Builder.buildReplyMessageSenderNameTextStyle(
     .build()
 
 internal fun MessageInputStyle.Builder.buildReplyMessageBodyTextStyle(
-        array: TypedArray
+    array: TypedArray
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputReplyMessageBodyTextColor,
@@ -263,7 +263,7 @@ internal fun MessageInputStyle.Builder.buildReplyMessageBodyTextStyle(
     .build()
 
 internal fun MessageInputStyle.Builder.buildReplyMessageMentionTextStyle(
-        array: TypedArray
+    array: TypedArray
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputReplyMessageMentionTextColor,
@@ -283,7 +283,7 @@ internal fun MessageInputStyle.Builder.buildReplyMessageMentionTextStyle(
     .build()
 
 internal fun MessageInputStyle.Builder.buildReplyMessageAttachmentDurationTextStyle(
-        array: TypedArray
+    array: TypedArray
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputReplyMessageAttachmentDurationTextColor,
@@ -302,7 +302,7 @@ internal fun MessageInputStyle.Builder.buildReplyMessageAttachmentDurationTextSt
     .build()
 
 internal fun MessageInputStyle.Builder.buildReplyMessageStyle(
-        array: TypedArray
+    array: TypedArray
 ) = InputReplyMessageStyle.Builder(context, array)
     .backgroundColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputReplyMessageBackgroundColor,
@@ -332,7 +332,7 @@ internal fun MessageInputStyle.Builder.buildReplyMessageStyle(
     .build()
 
 internal fun MessageInputStyle.Builder.buildEditMessageTitleTextStyle(
-        array: TypedArray
+    array: TypedArray
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputEditMessageTitleTextColor,
@@ -351,7 +351,7 @@ internal fun MessageInputStyle.Builder.buildEditMessageTitleTextStyle(
     .build()
 
 internal fun MessageInputStyle.Builder.buildEditMessageBodyTextStyle(
-        array: TypedArray
+    array: TypedArray
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputEditMessageBodyTextColor,
@@ -371,7 +371,7 @@ internal fun MessageInputStyle.Builder.buildEditMessageBodyTextStyle(
 
 //Edit mention text style
 internal fun MessageInputStyle.Builder.buildEditMessageMentionTextStyle(
-        array: TypedArray
+    array: TypedArray
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputEditMessageMentionTextColor,
@@ -392,7 +392,7 @@ internal fun MessageInputStyle.Builder.buildEditMessageMentionTextStyle(
 
 
 internal fun MessageInputStyle.Builder.buildEditMessageAttachmentDurationTextStyle(
-        array: TypedArray
+    array: TypedArray
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputEditMessageAttachmentDurationTextColor,
@@ -411,7 +411,7 @@ internal fun MessageInputStyle.Builder.buildEditMessageAttachmentDurationTextSty
     .build()
 
 internal fun MessageInputStyle.Builder.buildEditMessageStyle(
-        array: TypedArray
+    array: TypedArray
 ) = InputEditMessageStyle.Builder(context, array)
     .backgroundColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputEditMessageBackgroundColor,
@@ -438,7 +438,7 @@ internal fun MessageInputStyle.Builder.buildEditMessageStyle(
     .build()
 
 internal fun MessageInputStyle.Builder.buildSelectedMediaAttachmentDurationTextStyle(
-        array: TypedArray
+    array: TypedArray
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputSelectedMediaAttachmentDurationTextColor,
@@ -457,7 +457,7 @@ internal fun MessageInputStyle.Builder.buildSelectedMediaAttachmentDurationTextS
     .build()
 
 internal fun MessageInputStyle.Builder.buildSelectedMediaFileAttachmentNameTextStyle(
-        array: TypedArray
+    array: TypedArray
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputSelectedMediaFileAttachmentNameTextColor,
@@ -476,7 +476,7 @@ internal fun MessageInputStyle.Builder.buildSelectedMediaFileAttachmentNameTextS
     .build()
 
 internal fun MessageInputStyle.Builder.buildSelectedMediaFileAttachmentSizeTextStyle(
-        array: TypedArray
+    array: TypedArray
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputSelectedMediaFileAttachmentSizeTextColor,
@@ -495,7 +495,7 @@ internal fun MessageInputStyle.Builder.buildSelectedMediaFileAttachmentSizeTextS
     .build()
 
 internal fun MessageInputStyle.Builder.buildSelectedMediaStyle(
-        array: TypedArray
+    array: TypedArray
 ) = InputSelectedMediaStyle.Builder(context, array)
     .backgroundColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputSelectedMediaBackgroundColor,
@@ -523,7 +523,7 @@ internal fun MessageInputStyle.Builder.buildSelectedMediaStyle(
     .build()
 
 internal fun MessageInputStyle.Builder.buildVoiceRecorderViewSlideToCancelTextStyle(
-        array: TypedArray
+    array: TypedArray
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputVoiceRecorderSlideToCancelTextColor,
@@ -542,7 +542,7 @@ internal fun MessageInputStyle.Builder.buildVoiceRecorderViewSlideToCancelTextSt
     .build()
 
 internal fun MessageInputStyle.Builder.buildVoiceRecorderViewDurationTextStyle(
-        array: TypedArray
+    array: TypedArray
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputVoiceRecorderDurationTextColor,
@@ -561,7 +561,7 @@ internal fun MessageInputStyle.Builder.buildVoiceRecorderViewDurationTextStyle(
     .build()
 
 internal fun MessageInputStyle.Builder.buildVoiceRecorderViewCancelTextStyle(
-        array: TypedArray
+    array: TypedArray
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputVoiceRecorderCancelTextColor,
@@ -580,7 +580,7 @@ internal fun MessageInputStyle.Builder.buildVoiceRecorderViewCancelTextStyle(
     .build()
 
 internal fun MessageInputStyle.Builder.buildVoiceRecorderViewStyle(
-        array: TypedArray,
+    array: TypedArray,
 ) = VoiceRecorderViewStyle.Builder(context, array)
     .backgroundColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputVoiceRecorderBackgroundColor,
@@ -597,12 +597,6 @@ internal fun MessageInputStyle.Builder.buildVoiceRecorderViewStyle(
     .cancelText(
         index = R.styleable.MessageInputView_sceytUiMessageInputVoiceRecorderCancelText,
         defValue = context.getString(R.string.sceyt_cancel)
-    )
-    .recordingIcon(
-        index = R.styleable.MessageInputView_sceytUiMessageInputVoiceRecorderRecordingIcon,
-        defValue = context.getCompatDrawable(R.drawable.sceyt_ic_voice_white).applyTint(
-            context, SceytChatUIKit.theme.colors.onPrimaryColor
-        )
     )
     .deleteRecordIcon(
         index = R.styleable.MessageInputView_sceytUiMessageInputVoiceRecorderDeleteRecordIcon,
@@ -647,7 +641,7 @@ internal fun MessageInputStyle.Builder.buildVoiceRecorderViewStyle(
 
 /*VoiceRecordPlaybackViewStyle*/
 internal fun MessageInputStyle.Builder.buildVoiceRecordPlaybackViewDurationTextStyle(
-        array: TypedArray
+    array: TypedArray
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputVoiceRecordPlaybackDurationTextColor,
@@ -667,7 +661,7 @@ internal fun MessageInputStyle.Builder.buildVoiceRecordPlaybackViewDurationTextS
 
 /*AudioWaveForm style*/
 internal fun MessageInputStyle.Builder.buildVoiceRecordPlaybackViewAudioWaveFormStyle(
-        array: TypedArray
+    array: TypedArray
 ) = AudioWaveformStyle.Builder(context, array)
     .trackColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputVoiceRecordPlaybackTrackColor,
@@ -680,7 +674,7 @@ internal fun MessageInputStyle.Builder.buildVoiceRecordPlaybackViewAudioWaveForm
     .build()
 
 internal fun MessageInputStyle.Builder.buildVoiceRecordPlaybackViewStyle(
-        array: TypedArray,
+    array: TypedArray,
 ) = VoiceRecordPlaybackViewStyle.Builder(context, array)
     .backgroundColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputVoiceRecordPlaybackBackgroundColor,
@@ -732,7 +726,7 @@ internal fun MessageInputStyle.Builder.buildVoiceRecordPlaybackViewStyle(
 
 /* Message search control style */
 internal fun MessageInputStyle.Builder.buildMessageSearchControlTextStyle(
-        array: TypedArray
+    array: TypedArray
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputSearchControlResultTextColor,
@@ -751,7 +745,7 @@ internal fun MessageInputStyle.Builder.buildMessageSearchControlTextStyle(
     .build()
 
 internal fun MessageInputStyle.Builder.buildMessageSearchControlStyle(
-        array: TypedArray
+    array: TypedArray
 ) = MessageSearchControlsStyle.Builder(context, array)
     .backgroundColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputSearchControlBackgroundColor,
@@ -777,7 +771,7 @@ internal fun MessageInputStyle.Builder.buildMessageSearchControlStyle(
 
 /* InputCoverStyle */
 internal fun MessageInputStyle.Builder.buildInputCoverTextStyle(
-        array: TypedArray
+    array: TypedArray
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputCoverTextColor,
@@ -795,7 +789,7 @@ internal fun MessageInputStyle.Builder.buildInputCoverTextStyle(
     .build()
 
 internal fun MessageInputStyle.Builder.buildInputCoverStyle(
-        array: TypedArray
+    array: TypedArray
 ) = InputCoverStyle.Builder(context, array)
     .backgroundColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputCoverBackgroundColor,
@@ -812,7 +806,7 @@ internal fun MessageInputStyle.Builder.buildInputCoverStyle(
 
 /* Mention users list */
 internal fun MessageInputStyle.Builder.buildMentionUsersListTextStyle(
-        array: TypedArray
+    array: TypedArray
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputMentionUsersListTextColor,
@@ -831,7 +825,7 @@ internal fun MessageInputStyle.Builder.buildMentionUsersListTextStyle(
     .build()
 
 internal fun MessageInputStyle.Builder.buildMentionUsersListStyle(
-        array: TypedArray
+    array: TypedArray
 ) = MentionUsersListStyle.Builder(context, array)
     .backgroundColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputMentionUsersListBackgroundColor,
@@ -845,7 +839,7 @@ internal fun MessageInputStyle.Builder.buildMentionUsersListStyle(
 
 /*Mention text style */
 internal fun MessageInputStyle.Builder.buildMentionTextStyle(
-        array: TypedArray
+    array: TypedArray
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputMentionTextColor,
@@ -859,6 +853,5 @@ internal fun MessageInputStyle.Builder.buildMentionTextStyle(
     )
     .setFont(
         index = R.styleable.MessageInputView_sceytUiMessageInputMentionTextFont,
-        defValue = R.font.roboto_regular
     )
     .build()

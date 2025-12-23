@@ -8,7 +8,6 @@ import androidx.work.ExistingWorkPolicy
 import com.sceyt.chat.models.Types
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.DeleteMessageType
-import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chatuikit.SceytChatUIKit
@@ -36,9 +35,9 @@ import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.MessageId
-import com.sceyt.chatuikit.data.models.messages.SceytMessageType
 import com.sceyt.chatuikit.data.models.messages.PollOption
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.data.models.messages.SceytMessageType
 import com.sceyt.chatuikit.data.models.messages.SceytReactionTotal
 import com.sceyt.chatuikit.data.models.onSuccess
 import com.sceyt.chatuikit.data.models.onSuccessNotNull
@@ -91,6 +90,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.rea
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageCommandEvent
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.PollEvent
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.ReactionEvent
+import com.sceyt.chatuikit.presentation.extensions.isNotPending
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import com.sceyt.chatuikit.services.SceytSyncManager
 import com.sceyt.chatuikit.shared.helpers.LinkPreviewHelper
@@ -138,6 +138,7 @@ class MessageListViewModel(
     internal val messageActionBridge by lazy { MessageActionBridge() }
     internal val placeToSavePathsList = mutableSetOf<Pair<AttachmentTypeEnum, String>>()
     internal val selectedMessagesMap by lazy { mutableMapOf<Long, SceytMessage>() }
+    internal val expandedMessagesMap by lazy { mutableMapOf<Long, Boolean>() }
     internal val notFoundMessagesToUpdate by lazy { mutableMapOf<Long, SceytMessage>() }
     internal val outgoingMessageMutex by lazy { Mutex() }
     internal val pendingDisplayMsgIds by lazy { Collections.synchronizedSet(mutableSetOf<Long>()) }
@@ -147,6 +148,8 @@ class MessageListViewModel(
     private val loadNextJob: Job? = null
     private var loadNearJob: Job? = null
     private var toggleVoteJob: Job? = null
+    private var searchJob: Job? = null
+    internal var mentionJob: Job? = null
 
     // Pagination sync
     internal var needSyncMessagesWhenScrollStateIdle = false
@@ -375,14 +378,28 @@ class MessageListViewModel(
     }
 
     fun searchMessages(query: String) {
-        viewModelScope.launch {
+        if (_searchResult.value?.searchQuery == query)
+            return
+
+        _searchResult.postValue(SearchResult(searchQuery = query, isLoading = true))
+
+        searchJob?.cancel()
+        searchJob = viewModelScope.launch {
             messageInteractor.searchMessages(
                 conversationId = conversationId,
                 replyInThread = replyInThread,
                 query = query
             ).onSuccess { response ->
-                val messages = response.data
-                _searchResult.postValue(SearchResult(0, messages, response.hasNext))
+                val messages = response.data.sortedBy { it.id }
+                _searchResult.postValue(
+                    SearchResult(
+                        searchQuery = query,
+                        currentIndex = 0,
+                        messages = messages,
+                        hasNext = response.hasNext,
+                        isLoading = false
+                    )
+                )
                 _onScrollToSearchMessageLiveData.postValue(
                     messages.firstOrNull() ?: return@launch
                 )
@@ -824,7 +841,7 @@ class MessageListViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             val count = channelMemberInteractor.getMembersCountFromDb(channel.id)
             if (channel.memberCount > count)
-                loadChannelMembers(0, null).collect()
+                loadChannelMembers(offset = 0, nextToken = "", role = null).collect()
         }
     }
 
@@ -832,8 +849,16 @@ class MessageListViewModel(
     fun loadChannelAllMembers() {
         viewModelScope.launch(Dispatchers.IO) {
 
-            suspend fun loadMembers(offset: Int): PaginationResponse.ServerResponse<SceytMember>? {
-                return channelMemberInteractor.loadChannelMembers(channel.id, offset, null)
+            suspend fun loadMembers(
+                offset: Int,
+                nextToken: String
+            ): PaginationResponse.ServerResponse<SceytMember>? {
+                return channelMemberInteractor.loadChannelMembers(
+                    channel.id,
+                    offset,
+                    nextToken,
+                    null
+                )
                     .firstOrNull {
                         it is PaginationResponse.ServerResponse
                     } as? PaginationResponse.ServerResponse<SceytMember>
@@ -842,24 +867,37 @@ class MessageListViewModel(
             val count = channelMemberInteractor.getMembersCountFromDb(channel.id)
             if (channel.memberCount > count) {
                 var offset = 0
-                var rest = loadMembers(0)
+                var rest = loadMembers(0, "")
                 while (rest?.hasNext == true) {
                     offset += rest.data.data?.size ?: return@launch
-                    rest = loadMembers(offset)
+                    rest = loadMembers(offset, rest.nextToken)
                 }
             }
         }
     }
 
     @SuppressWarnings("WeakerAccess")
-    fun loadChannelMembers(offset: Int, role: String?): Flow<PaginationResponse<SceytMember>> {
-        return channelMemberInteractor.loadChannelMembers(channel.id, offset, role)
+    fun loadChannelMembers(
+        offset: Int,
+        nextToken: String,
+        role: String?
+    ): Flow<PaginationResponse<SceytMember>> {
+        return channelMemberInteractor.loadChannelMembers(
+            channelId = channel.id,
+            offset = offset,
+            nextToken = nextToken,
+            role = role
+        )
     }
 
     fun clearHistory(forEveryOne: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
             channelInteractor.clearHistory(channel.id, forEveryOne)
         }
+    }
+
+    fun expandMessageBody(messageTid: Long) {
+        expandedMessagesMap[messageTid] = true
     }
 
     @Suppress("unused")
@@ -888,12 +926,14 @@ class MessageListViewModel(
                     messageItems.add(
                         MessageListItem.DateSeparatorItem(
                             createdAt = message.createdAt,
-                            msgTid = message.tid
+                            messageTid = message.tid,
+                            messageId = message.id
                         )
                     )
 
                 var messageWithData = initMessageInfoData(message, prevMessage, true)
                 val isSelected = selectedMessagesMap.containsKey(message.tid)
+                val isExpanded = expandedMessagesMap.containsKey(message.tid)
 
                 if (channel.lastMessage?.incoming == true && pinnedLastReadMessageId != 0L
                     && prevMessage?.id == pinnedLastReadMessageId && unreadLineMessage == null
@@ -914,7 +954,11 @@ class MessageListViewModel(
                             })
                 }
 
-                messageItems.add(MessageListItem.MessageItem(messageWithData.copy(isSelected = isSelected)))
+                messageItems.add(
+                    MessageListItem.MessageItem(
+                        messageWithData.copy(isSelected = isSelected, isBodyExpanded = isExpanded)
+                    )
+                )
             }
 
             if (hasNext)
@@ -947,9 +991,7 @@ class MessageListViewModel(
         var hasNext = response.hasNext
         if (!hasNext) {
             response.data.lastOrNull()?.let { lastMsg ->
-                if (lastMsg.deliveryStatus != DeliveryStatus.Pending
-                    && lastMsg.id < (channel.lastMessage?.id ?: 0)
-                ) {
+                if (lastMsg.isNotPending() && lastMsg.id < (channel.lastMessage?.id ?: 0)) {
                     hasNext = true
                 }
             }

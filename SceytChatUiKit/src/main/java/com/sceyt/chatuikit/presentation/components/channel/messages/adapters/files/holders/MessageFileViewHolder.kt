@@ -1,6 +1,5 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.holders
 
-import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytMessageFileItemBinding
@@ -28,6 +27,7 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState.WaitingToUplo
 import com.sceyt.chatuikit.persistence.file_transfer.getProgressWithState
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
+import com.sceyt.chatuikit.presentation.extensions.isNotPending
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
 class MessageFileViewHolder(
@@ -76,7 +76,7 @@ class MessageFileViewHolder(
         if (!viewHolderHelper.updateTransferData(data, fileItem, ::isValidThumb)) return
 
         binding.loadProgress.getProgressWithState(data.state, style.mediaLoaderStyle,
-            message.deliveryStatus != DeliveryStatus.Pending, data.progressPercent)
+            message.isNotPending(), data.progressPercent)
         when (data.state) {
             PendingUpload -> {
                 binding.icFile.setImageResource(0)

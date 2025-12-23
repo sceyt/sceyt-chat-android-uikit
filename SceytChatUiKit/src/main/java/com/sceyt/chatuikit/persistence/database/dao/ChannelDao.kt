@@ -204,7 +204,7 @@ internal abstract class ChannelDao {
 
     @Query("update $CHANNEL_TABLE  set lastMessageTid =:lastMessageTid, lastMessageAt =:lastMessageAt," +
             "lastDisplayedMessageId =:lastMessageId where chat_id= :channelId")
-    abstract suspend fun updateLastMessageWithLastRead(channelId: Long, lastMessageTid: Long?, lastMessageId: Long?, lastMessageAt: Long?)
+    abstract suspend fun updateLastMessageWithLastRead(channelId: Long, lastMessageTid: Long?, lastMessageId: Long, lastMessageAt: Long?)
 
     @Query("update $CHANNEL_TABLE  set newMessageCount =:count, unread = 0 where chat_id= :channelId")
     abstract suspend fun updateUnreadCount(channelId: Long, count: Int)

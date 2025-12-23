@@ -133,9 +133,9 @@ internal class PersistenceUsersLogicImpl(
         return preference.getUserId()
     }
 
-    override fun getCurrentUserAsFlow(): Flow<SceytUser>? {
-        val currentUserId = getCurrentUserId() ?: return null
-        return userDao.getUserByIdAsFlow(currentUserId)
+    override fun getCurrentUserAsFlow(currentUserId: String?): Flow<SceytUser>? {
+        val userId = currentUserId ?: getCurrentUserId() ?: return null
+        return userDao.getUserByIdAsFlow(userId)
             .filterNotNull()
             .map { userDb -> userDb.toSceytUser() }
             .distinctUntilChanged { old, new -> !old.diff(new).hasDifference() }

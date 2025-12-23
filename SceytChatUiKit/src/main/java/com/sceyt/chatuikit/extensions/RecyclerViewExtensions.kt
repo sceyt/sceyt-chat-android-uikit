@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.extensions
 
+import android.view.ViewTreeObserver
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.LinearSmoothScroller
@@ -237,4 +238,25 @@ fun RecyclerView.isThePositionVisible(position: Int): Boolean {
     val firstVisiblePosition = (layoutManager as LinearLayoutManager).findFirstVisibleItemPosition()
     val lastVisiblePosition = layoutManager.findLastVisibleItemPosition()
     return position in firstVisiblePosition..lastVisiblePosition
+}
+
+fun RecyclerView.updateWithScrollCompensation(
+    oldTop: Int,
+    getNewTop: () -> Int,
+    onUpdate: () -> Unit
+) {
+    onUpdate()
+    
+    viewTreeObserver.addOnPreDrawListener(object : ViewTreeObserver.OnPreDrawListener {
+        override fun onPreDraw(): Boolean {
+            viewTreeObserver.removeOnPreDrawListener(this)
+            
+            val newTop = getNewTop()
+            val scrollDelta = newTop - oldTop
+            if (scrollDelta != 0) {
+                scrollBy(0, scrollDelta)
+            }
+            return true
+        }
+    })
 }

@@ -101,12 +101,11 @@
 
         <ViewStub
             android:id="@+id/layoutLinkPreview"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="8dp"
             android:layout="@layout/sceyt_message_link_preview_container"
             android:visibility="gone"
-            app:layout_constrainedWidth="true"
             app:layout_constraintBottom_toTopOf="@+id/messageDate"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0"

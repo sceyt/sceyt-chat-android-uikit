@@ -12,6 +12,8 @@ import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 class ChannelsCache {
     private var cachedData = hashMapOf<ChannelListConfig, HashMap<Long, SceytChannel>>()
@@ -20,7 +22,7 @@ class ChannelsCache {
     /** fromPendingToRealChannelsData is used to store created pending channel ids and their real channel ids,
      * to escape creating channel every time when sending message*/
     private var fromPendingToRealChannelsData = hashMapOf<Long, Long>()
-    private val lock = Any()
+    private val mutex = Mutex()
 
     companion object {
         private val channelUpdatedFlow_ = MutableSharedFlow<ChannelUpdateData>(
@@ -59,18 +61,23 @@ class ChannelsCache {
         )
         val channelDraftMessageChangesFlow = channelDraftMessageChangesFlow_.asSharedFlow()
 
-        private val newChannelsOnSync_ = MutableSharedFlow<Pair<ChannelListConfig, List<SceytChannel>>>(
-            extraBufferCapacity = 50,
-            onBufferOverflow = BufferOverflow.DROP_OLDEST
-        )
+        private val newChannelsOnSync_ =
+            MutableSharedFlow<Pair<ChannelListConfig, List<SceytChannel>>>(
+                extraBufferCapacity = 50,
+                onBufferOverflow = BufferOverflow.DROP_OLDEST
+            )
         val newChannelsOnSync = newChannelsOnSync_.asSharedFlow()
 
         var currentChannelId: Long? = null
     }
 
     /** Added channels like upsert, and check is differences between channels*/
-    fun addAll(config: ChannelListConfig, list: List<SceytChannel>, checkDifference: Boolean): Boolean {
-        synchronized(lock) {
+    suspend fun addAll(
+        config: ChannelListConfig,
+        list: List<SceytChannel>,
+        checkDifference: Boolean
+    ): Boolean {
+        mutex.withLock {
             // Create config map if not exists
             getOrCreateMap(config)
             return if (checkDifference)
@@ -82,68 +89,68 @@ class ChannelsCache {
         }
     }
 
-    fun addPendingChannel(channel: SceytChannel) {
-        synchronized(lock) {
+    suspend fun addPendingChannel(channel: SceytChannel) {
+        mutex.withLock {
             pendingChannelsData[channel.id] = channel
             if (channel.lastMessage != null)
                 channelAdded(channel)
         }
     }
 
-    fun clear(config: ChannelListConfig) {
-        synchronized(lock) {
+    suspend fun clear(config: ChannelListConfig) {
+        mutex.withLock {
             cachedData[config]?.clear()
         }
     }
 
-    fun clearAll() {
-        synchronized(lock) {
+    suspend fun clearAll() {
+        mutex.withLock {
             cachedData.clear()
         }
     }
 
-    fun getSorted(config: ChannelListConfig): List<SceytChannel> {
-        synchronized(lock) {
+    suspend fun getSorted(config: ChannelListConfig): List<SceytChannel> {
+        mutex.withLock {
             return channelsByConfig(config).sortedWith(ChannelsComparatorDescBy(config.order))
         }
     }
 
-    fun getData(config: ChannelListConfig): List<SceytChannel> {
-        synchronized(lock) {
+    suspend fun getData(config: ChannelListConfig): List<SceytChannel> {
+        mutex.withLock {
             return channelsByConfig(config)
         }
     }
 
-    fun getCachedData(): HashMap<ChannelListConfig, HashMap<Long, SceytChannel>> {
-        synchronized(lock) {
+    suspend fun getCachedData(): HashMap<ChannelListConfig, HashMap<Long, SceytChannel>> {
+        mutex.withLock {
             return cachedData
         }
     }
 
-    fun getOneOf(channelId: Long, config: ChannelListConfig? = null): SceytChannel? {
-        synchronized(lock) {
+    suspend fun getOneOf(channelId: Long, config: ChannelListConfig? = null): SceytChannel? {
+        mutex.withLock {
             return getChannelImpl(channelId, config)
         }
     }
 
-    fun isPending(channelId: Long): Boolean {
-        synchronized(lock) {
+    suspend fun isPending(channelId: Long): Boolean {
+        mutex.withLock {
             return pendingChannelsData.containsKey(channelId)
         }
     }
 
-    fun getRealChannelIdWithPendingChannelId(pendingChannelId: Long): Long? {
-        synchronized(lock) {
+    suspend fun getRealChannelIdWithPendingChannelId(pendingChannelId: Long): Long? {
+        mutex.withLock {
             return fromPendingToRealChannelsData[pendingChannelId]
         }
     }
 
-    fun upsertChannel(channel: SceytChannel) {
+    suspend fun upsertChannel(channel: SceytChannel) {
         upsertChannels(listOf(channel))
     }
 
-    fun upsertChannels(channels: List<SceytChannel>) {
-        synchronized(lock) {
+    suspend fun upsertChannels(channels: List<SceytChannel>) {
+        mutex.withLock {
             channels.forEach { channel ->
                 cachedData.keys
                     .filter { it.isValidForConfig(channel) }
@@ -156,13 +163,16 @@ class ChannelsCache {
         newChannelsOnSync_.tryEmit(Pair(config, channels))
     }
 
-    fun updateChannel(config: ChannelListConfig, vararg channels: SceytChannel) {
-        synchronized(lock) {
+    suspend fun updateChannel(config: ChannelListConfig, vararg channels: SceytChannel) {
+        mutex.withLock {
             updateChannelsImpl(config, *channels)
         }
     }
 
-    private fun upsertChannelImpl(config: ChannelListConfig, vararg channels: SceytChannel) {
+    private suspend fun upsertChannelImpl(
+        config: ChannelListConfig,
+        vararg channels: SceytChannel
+    ) {
         val map = getOrCreateMap(config)
         channels.forEach { channel ->
             val cachedChannel = map[channel.id] ?: pendingChannelsData[channel.id]
@@ -176,36 +186,48 @@ class ChannelsCache {
                 val oldMsg = cachedChannel.lastMessage
                 val diff = putAndCheckHasDiff(config, channel)
                 if (diff.hasDifference()) {
-                    val needSort = checkNeedSortByLastMessage(oldMsg, channel.lastMessage) || diff.pinStateChanged
+                    val needSort = checkNeedSortByLastMessage(
+                        oldMsg = oldMsg,
+                        newMsg = channel.lastMessage
+                    ) || diff.pinStateChanged
                     channelUpdated(config, channel, diff, needSort, ChannelUpdatedType.Updated)
                 }
             }
         }
     }
 
-    private fun updateChannelsImpl(config: ChannelListConfig, vararg channels: SceytChannel) {
+    private suspend fun updateChannelsImpl(
+        config: ChannelListConfig,
+        vararg channels: SceytChannel
+    ) {
         val map = getOrCreateMap(config)
         channels.forEach { channel ->
             val cachedChannel = map[channel.id]
-                    ?: pendingChannelsData[channel.id] ?: return@forEach
+                ?: pendingChannelsData[channel.id] ?: return@forEach
 
             checkMaybePendingChannelCreated(cachedChannel, channel)
             val oldMsg = cachedChannel.lastMessage
             val diff = putAndCheckHasDiff(config, channel)
             if (diff.hasDifference()) {
-                val needSort = checkNeedSortByLastMessage(oldMsg, channel.lastMessage) || diff.pinStateChanged
+                val needSort = checkNeedSortByLastMessage(
+                    oldMsg = oldMsg,
+                    newMsg = channel.lastMessage
+                ) || diff.pinStateChanged
                 channelUpdated(config, channel, diff, needSort, ChannelUpdatedType.Updated)
             }
         }
     }
 
-    private fun checkMaybePendingChannelCreated(cachedChannel: SceytChannel, newChannel: SceytChannel) {
+    private suspend fun checkMaybePendingChannelCreated(
+        cachedChannel: SceytChannel,
+        newChannel: SceytChannel
+    ) {
         if (!cachedChannel.pending || newChannel.pending) return
         pendingChannelCreated(cachedChannel.id, newChannel)
     }
 
-    fun updateLastMessage(channelId: Long, message: SceytMessage?) {
-        synchronized(lock) {
+    suspend fun updateLastMessage(channelId: Long, message: SceytMessage?) {
+        mutex.withLock {
             cachedData.forEachKeyValue { config, map ->
                 map[channelId]?.let { channel ->
                     if (message != null && channel.lastMessage != null)
@@ -215,30 +237,42 @@ class ChannelsCache {
                     val needSort = checkNeedSortByLastMessage(channel.lastMessage, message)
                     val updatedChannel = channel.copy(lastMessage = message)
                     val diff = channel.diff(updatedChannel)
-                    channelUpdated(config, updatedChannel, diff, needSort, ChannelUpdatedType.LastMessage)
+                    channelUpdated(
+                        config = config,
+                        channel = updatedChannel,
+                        diff = diff,
+                        needSort = needSort,
+                        type = ChannelUpdatedType.LastMessage
+                    )
                 }
             }
         }
     }
 
-    fun updateLastMessageWithLastRead(channelId: Long, message: SceytMessage) {
-        synchronized(lock) {
+    suspend fun updateLastMessageWithLastRead(channelId: Long, message: SceytMessage?) {
+        mutex.withLock {
             cachedData.forEachKeyValue { config, map ->
                 map[channelId]?.let { channel ->
                     val needSort = checkNeedSortByLastMessage(channel.lastMessage, message)
                     val updatedChannel = channel.copy(
                         lastMessage = message,
-                        lastDisplayedMessageId = message.id
+                        lastDisplayedMessageId = message?.id ?: 0
                     )
                     val diff = channel.diff(updatedChannel)
-                    channelUpdated(config, updatedChannel, diff, needSort, ChannelUpdatedType.LastMessage)
+                    channelUpdated(
+                        config = config,
+                        channel = updatedChannel,
+                        diff = diff,
+                        needSort = needSort,
+                        type = ChannelUpdatedType.LastMessage
+                    )
                 }
             }
         }
     }
 
-    fun clearedHistory(channelId: Long) {
-        synchronized(lock) {
+    suspend fun clearedHistory(channelId: Long) {
+        mutex.withLock {
             cachedData.forEachKeyValue { key, value ->
                 value[channelId]?.let { channel ->
                     val updatedChannel = channel.copy(
@@ -250,14 +284,20 @@ class ChannelsCache {
                         pendingReactions = null
                     )
                     val diff = channel.diff(updatedChannel)
-                    channelUpdated(key, updatedChannel, diff, true, ChannelUpdatedType.ClearedHistory)
+                    channelUpdated(
+                        config = key,
+                        channel = updatedChannel,
+                        diff = diff,
+                        needSort = true,
+                        type = ChannelUpdatedType.ClearedHistory
+                    )
                 }
             }
         }
     }
 
-    fun updateMuteState(channelId: Long, muted: Boolean, muteUntil: Long = 0) {
-        synchronized(lock) {
+    suspend fun updateMuteState(channelId: Long, muted: Boolean, muteUntil: Long = 0) {
+        mutex.withLock {
             cachedData.forEachKeyValue { key, value ->
                 value[channelId]?.let { channel ->
                     val updatedChannel = channel.copy(
@@ -271,20 +311,26 @@ class ChannelsCache {
         }
     }
 
-    fun updateAutoDeleteState(channelId: Long, period: Long) {
-        synchronized(lock) {
+    suspend fun updateAutoDeleteState(channelId: Long, period: Long) {
+        mutex.withLock {
             cachedData.forEachKeyValue { key, value ->
                 value[channelId]?.let { channel ->
                     val updatedChannel = channel.copy(messageRetentionPeriod = period)
                     val diff = channel.diff(updatedChannel)
-                    channelUpdated(key, updatedChannel, diff, false, ChannelUpdatedType.AutoDeleteState)
+                    channelUpdated(
+                        config = key,
+                        channel = updatedChannel,
+                        diff = diff,
+                        needSort = false,
+                        type = ChannelUpdatedType.AutoDeleteState
+                    )
                 }
             }
         }
     }
 
-    fun updateChannelUri(channelId: Long, newUri: String) {
-        synchronized(lock) {
+    suspend fun updateChannelUri(channelId: Long, newUri: String) {
+        mutex.withLock {
             cachedData.forEachKeyValue { key, value ->
                 value[channelId]?.let { channel ->
                     val updatedChannel = channel.copy(uri = newUri)
@@ -295,28 +341,8 @@ class ChannelsCache {
         }
     }
 
-    fun messagesDeletedWithAutoDelete(channelId: Long, messageTIds: List<Long>) {
-        val messageTIds = messageTIds.associateWith { true }
-        cachedData.forEachKeyValue { _, value ->
-            value[channelId]?.let { channel ->
-                channel.lastMessage?.tid?.let {
-                    if (messageTIds.containsKey(it)) {
-                        val updatedChannel = channel.copy(lastMessage = null)
-                        val diff = channel.diff(updatedChannel)
-                        channelUpdatedFlow_.tryEmit(ChannelUpdateData(
-                            channel = updatedChannel,
-                            needSorting = true,
-                            diff = diff,
-                            eventType = ChannelUpdatedType.LastMessage)
-                        )
-                    }
-                }
-            }
-        }
-    }
-
-    fun updatePinState(channelId: Long, pinnedAt: Long?) {
-        synchronized(lock) {
+    suspend fun updatePinState(channelId: Long, pinnedAt: Long?) {
+        mutex.withLock {
             cachedData.forEachKeyValue { key, value ->
                 value[channelId]?.let { channel ->
                     val updatedChannel = channel.copy(pinnedAt = pinnedAt)
@@ -327,20 +353,8 @@ class ChannelsCache {
         }
     }
 
-    fun updateUnreadCount(channelId: Long, count: Int) {
-        synchronized(lock) {
-            cachedData.forEachKeyValue { key, value ->
-                value[channelId]?.let { channel ->
-                    val updatedChannel = channel.copy(newMessageCount = count.toLong(), unread = false)
-                    val diff = channel.diff(updatedChannel)
-                    channelUpdated(key, updatedChannel, diff, false, ChannelUpdatedType.UnreadCount)
-                }
-            }
-        }
-    }
-
-    fun deleteChannel(vararg ids: Long) {
-        synchronized(lock) {
+    suspend fun deleteChannel(vararg ids: Long) {
+        mutex.withLock {
             ids.forEach { id ->
                 cachedData.forEach { (_, map) ->
                     map.remove(id)
@@ -350,14 +364,14 @@ class ChannelsCache {
         }
     }
 
-    fun removeFromPendingToRealChannelsData(pendingChannelId: Long) {
-        synchronized(lock) {
+    suspend fun removeFromPendingToRealChannelsData(pendingChannelId: Long) {
+        mutex.withLock {
             fromPendingToRealChannelsData.remove(pendingChannelId)
         }
     }
 
-    fun pendingChannelCreated(pendingChannelId: Long, newChannel: SceytChannel) {
-        synchronized(lock) {
+    suspend fun pendingChannelCreated(pendingChannelId: Long, newChannel: SceytChannel) {
+        mutex.withLock {
             // Removing pending channel
             pendingChannelsData.remove(pendingChannelId)
             // Adding already created channel to cache
@@ -373,8 +387,8 @@ class ChannelsCache {
         }
     }
 
-    fun updateChannelDraftMessage(channelId: Long, draftMessage: DraftMessage?) {
-        synchronized(lock) {
+    suspend fun updateChannelDraftMessage(channelId: Long, draftMessage: DraftMessage?) {
+        mutex.withLock {
             cachedData.values.forEach { value ->
                 value[channelId]?.let {
                     val updatedChannel = it.copy(draftMessage = draftMessage)
@@ -385,8 +399,8 @@ class ChannelsCache {
         }
     }
 
-    fun updateChannelPeer(channelId: Long, user: SceytUser) {
-        synchronized(lock) {
+    suspend fun updateChannelPeer(channelId: Long, user: SceytUser) {
+        mutex.withLock {
             cachedData.forEachKeyValue { key, value ->
                 value[channelId]?.let { channel ->
                     var needToUpdate = false
@@ -402,18 +416,26 @@ class ChannelsCache {
                     )
                     if (needToUpdate) {
                         val diff = channel.diff(updatedChannel)
-                        channelUpdated(key, updatedChannel, diff, false, ChannelUpdatedType.Presence)
+                        channelUpdated(
+                            config = key,
+                            channel = updatedChannel,
+                            diff = diff,
+                            needSort = false,
+                            type = ChannelUpdatedType.Presence
+                        )
                     }
                 }
             }
         }
     }
 
-    fun removeChannelMessageReactions(channelId: Long, messageId: Long) {
-        synchronized(lock) {
+    suspend fun removeChannelMessageReactions(channelId: Long, messageId: Long) {
+        mutex.withLock {
             cachedData.values.forEach { value ->
                 value[channelId]?.let { channel ->
-                    val filteredReactions = channel.newReactions?.filter { it.messageId != messageId }
+                    val filteredReactions = channel.newReactions?.filter {
+                        it.messageId != messageId
+                    }
                     val updatedChannel = channel.copy(newReactions = filteredReactions)
                     value[channelId] = updatedChannel
                 }
@@ -421,8 +443,8 @@ class ChannelsCache {
         }
     }
 
-    fun channelLastReactionLoaded(channelId: Long) {
-        synchronized(lock) {
+    suspend fun channelLastReactionLoaded(channelId: Long) {
+        mutex.withLock {
             cachedData.values.forEach { value ->
                 value[channelId]?.let { channel ->
                     channelReactionMsgLoadedFlow_.tryEmit(channel)
@@ -431,8 +453,8 @@ class ChannelsCache {
         }
     }
 
-    fun onChannelMarkedAsReadOrUnread(channel: SceytChannel) {
-        synchronized(lock) {
+    suspend fun onChannelMarkedAsReadOrUnread(channel: SceytChannel) {
+        mutex.withLock {
             cachedData.forEachKeyValue { key, value ->
                 value[channel.id]?.let {
                     val updatedChannel = it.copy(
@@ -447,11 +469,11 @@ class ChannelsCache {
     }
 
     private fun channelUpdated(
-            config: ChannelListConfig,
-            channel: SceytChannel,
-            diff: ChannelDiff,
-            needSort: Boolean,
-            type: ChannelUpdatedType,
+        config: ChannelListConfig,
+        channel: SceytChannel,
+        diff: ChannelDiff,
+        needSort: Boolean,
+        type: ChannelUpdatedType,
     ) {
         getOrCreateMap(config)[channel.id] = channel
         channelUpdatedFlow_.tryEmit(ChannelUpdateData(channel, needSort, diff, type))

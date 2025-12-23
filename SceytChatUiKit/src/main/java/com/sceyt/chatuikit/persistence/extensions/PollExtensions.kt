@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.persistence.extensions
 
 import com.sceyt.chatuikit.data.models.messages.SceytPollDetails
+import com.sceyt.chatuikit.data.models.messages.Vote
 import java.util.UUID
 
 internal fun SceytPollDetails.getRealCountsWithPendingVotes(): Map<String, Int> {
@@ -38,6 +39,15 @@ internal fun SceytPollDetails.getRealCountsWithPendingVotes(): Map<String, Int> 
     }
 
     return realCounts
+}
+
+
+fun SceytPollDetails.getVoteCountForOption(optionId: String): Int {
+    return getRealCountsWithPendingVotes()[optionId] ?: 0
+}
+
+fun SceytPollDetails.getOwnVoteForOption(optionId: String): Vote? {
+    return ownVotes.firstOrNull { it.optionId == optionId }
 }
 
 fun SceytPollDetails?.newPoll(): SceytPollDetails? {

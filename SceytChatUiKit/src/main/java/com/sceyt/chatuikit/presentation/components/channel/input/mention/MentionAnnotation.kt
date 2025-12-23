@@ -39,9 +39,10 @@ object MentionAnnotation {
             try {
                 val newName = "@$name".notAutoCorrectable()
                 newBody.replace(start, start + length, newName)
-                newBody.setSpan(mentionAnnotationForRecipientId(recipientId, name), start, start + newName.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                val span = mentionAnnotationForRecipientId(recipientId, name)
+                newBody.setSpan(span, start, start + newName.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             } catch (e: Exception) {
-                Log.e(TAG, "Couldn't set mention annotation for recipient id: $recipientId")
+                Log.e(TAG, "Couldn't set mention annotation for recipient id: $recipientId, error: ${e.message}")
             }
         }
         return SpannableString(newBody)

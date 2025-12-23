@@ -140,6 +140,17 @@
             <flag name="italic" value="2" />
         </attr>
 
+        <!--Read More text styling-->
+        <attr name="sceytUiMessagesListReadMoreText" format="string" localization="suggested" />
+        <attr name="sceytUiMessagesListReadMoreTextColor" format="reference|color" />
+        <attr name="sceytUiMessagesListReadMoreTextSize" format="dimension" />
+        <attr name="sceytUiMessagesListReadMoreTextFont" format="reference" />
+        <attr name="sceytUiMessagesListReadMoreTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+
         <!--Texts -->
         <attr name="sceytUiMessagesListEditedStateText" format="reference" />
         <attr name="sceytUiMessagesListDeletedStateText" format="reference" />
@@ -345,6 +356,7 @@
         <attr name="sceytUiMessagesListMessageDeliveryStatusSentIcon" format="reference" />
         <attr name="sceytUiMessagesListMessageDeliveryStatusReceivedIcon" format="reference" />
         <attr name="sceytUiMessagesListMessageDeliveryStatusDisplayedIcon" format="reference" />
+        <attr name="sceytUiMessagesListMessageDeliveryStatusFailedIcon" format="reference" />
 
         <!--Poll style-->
         <!--Poll question text style-->
@@ -427,7 +439,19 @@
         <attr name="sceytUiMessagesListPollVoterAvatarBorderWidth" format="dimension" />
         <attr name="sceytUiMessagesListPollVoterAvatarBorderColor" format="reference|color" />
 
-        
+        <!--System message style-->
+        <attr name="sceytUiMessagesListSystemMessageTextColor" format="reference|color" />
+        <attr name="sceytUiMessagesListSystemMessageTextSize" format="dimension" />
+        <attr name="sceytUiMessagesListSystemMessageTextFont" format="reference" />
+        <attr name="sceytUiMessagesListSystemMessageTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiMessagesListSystemMessageBackgroundColor" format="reference|color" />
+        <attr name="sceytUiMessagesListSystemMessageCornersRadius" format="dimension" />
+        <attr name="sceytUiMessagesListSystemMessageBorderWidth" format="dimension" />
+        <attr name="sceytUiMessagesListSystemMessageBorderColor" format="reference|color" />
 
     </declare-styleable>
 </resources>

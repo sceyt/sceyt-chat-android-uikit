@@ -14,11 +14,13 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentContainerView
 import androidx.fragment.app.commit
+import androidx.lifecycle.lifecycleScope
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.appbar.CollapsingToolbarLayout
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
+import com.google.gson.Gson
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventData
@@ -26,8 +28,11 @@ import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum.Direct
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum.Group
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum.Public
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
-import com.sceyt.chatuikit.data.models.channels.SceytMember
+import com.sceyt.chatuikit.data.models.messages.DisappearingMessageMetadata
+import com.sceyt.chatuikit.data.models.messages.SceytMessageType
 import com.sceyt.chatuikit.data.models.messages.SceytUser
+import com.sceyt.chatuikit.data.models.messages.SystemMsgBodyEnum
+import com.sceyt.chatuikit.data.models.messages.SystemMsgBodyEnum.DisappearingMessage
 import com.sceyt.chatuikit.databinding.SceytActivityChannelInfoBinding
 import com.sceyt.chatuikit.extensions.TAG_NAME
 import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
@@ -57,6 +62,7 @@ import com.sceyt.chatuikit.presentation.components.channel_info.dialogs.DirectCh
 import com.sceyt.chatuikit.presentation.components.channel_info.dialogs.DirectChatActionsDialog.ActionsEnum.UnPin
 import com.sceyt.chatuikit.presentation.components.channel_info.dialogs.GroupChatActionsDialog
 import com.sceyt.chatuikit.presentation.components.channel_info.files.ChannelInfoFilesFragment
+import com.sceyt.chatuikit.presentation.components.channel_info.groups.ChannelInfoCommonGroupsFragment
 import com.sceyt.chatuikit.presentation.components.channel_info.links.ChannelInfoLinksFragment
 import com.sceyt.chatuikit.presentation.components.channel_info.media.ChannelInfoMediaFragment
 import com.sceyt.chatuikit.presentation.components.channel_info.members.ChannelMembersFragment
@@ -77,6 +83,7 @@ import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.services.SceytPresenceChecker.PresenceUser
 import com.sceyt.chatuikit.styles.StyleRegistry
 import com.sceyt.chatuikit.styles.channel_info.ChannelInfoStyle
+import kotlinx.coroutines.launch
 
 @Suppress("MemberVisibilityCanBePrivate")
 open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
@@ -119,6 +126,7 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
         StyleRegistry.register(style.filesStyle)
         StyleRegistry.register(style.linkStyle)
         StyleRegistry.register(style.voiceStyle)
+        StyleRegistry.register(style.commonGroupsStyle)
     }
 
     private fun getBundleArguments() {
@@ -256,10 +264,10 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
             getChannelFilesFragment(channel),
             getChannelVoiceFragment(channel),
             getChannelLinksFragment(channel),
+            if (channel.isDirect() && style.showGroupsInCommon) getChannelCommonGroupsFragment(channel) else null
         ).filterNotNull()
 
         pagerAdapter = ViewPagerAdapter(this, fragments)
-
         setPagerAdapter(pagerAdapter)
         setupTabLayout(tabLayout ?: return, viewPager ?: return)
     }
@@ -282,10 +290,6 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
     protected open fun leaveChannel() {
         viewModel.leaveChannel(channel.id)
-    }
-
-    protected open fun blockAndLeaveChannel() {
-        viewModel.blockAndLeaveChannel(channel.id)
     }
 
     protected open fun blockUser(userId: String) {
@@ -316,8 +320,25 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
         viewModel.disableAutoDelete(channel.id)
     }
 
-    protected open fun addMembers(members: List<SceytMember>) {
-        viewModel.addMembersToChannel(channel.id, members)
+    private fun sendDisappearingMessageSystemMessage(channelId: Long, duration: Long) {
+        lifecycleScope.launch {
+            SceytChatUIKit.chatUIFacade.messageInteractor.sendMessage(
+                channelId,
+                com.sceyt.chat.models.message.Message(
+                    com.sceyt.chat.models.message.Message.MessageBuilder()
+                        .setType(SceytMessageType.System.value)
+                        .setMetadata(
+                            Gson().toJson(
+                            DisappearingMessageMetadata(
+                                duration.toString()
+                            )
+                        ))
+                        .withDisplayCount(0)
+                        .setSilent(true)
+                        .setBody(DisappearingMessage.value)
+                )
+            )
+        }
     }
 
     protected open fun getMembersType(): MemberTypeEnum {
@@ -473,6 +494,19 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
     }
 
     protected open fun onLeftChannel(channelId: Long) {
+        if (channel.isGroup) {
+            lifecycleScope.launch {
+                SceytChatUIKit.chatUIFacade.messageInteractor.sendMessage(
+                    channelId, com.sceyt.chat.models.message.Message(
+                        com.sceyt.chat.models.message.Message.MessageBuilder()
+                            .setType(SceytMessageType.System.value)
+                            .withDisplayCount(0)
+                            .setSilent(true)
+                            .setBody(SystemMsgBodyEnum.MemberLeaved.value)
+                    )
+                )
+            }
+        }
         finish()
     }
 
@@ -485,6 +519,8 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
     }
 
     protected open fun onAutoDeletedModeOnOrOff(sceytChannel: SceytChannel) {
+        val duration = sceytChannel.messageRetentionPeriod
+        sendDisappearingMessageSystemMessage(sceytChannel.id, duration)
         setChannelSettings(sceytChannel)
     }
 
@@ -532,6 +568,7 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
     protected open fun setPagerAdapter(pagerAdapter: ViewPagerAdapter) {
         binding?.viewPager?.adapter = pagerAdapter
+        binding?.viewPager?.offscreenPageLimit= 5
     }
 
     protected open fun toggleToolbarViews(showDetails: Boolean) {
@@ -638,6 +675,10 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
         return ChannelInfoVoiceFragment.newInstance(channel, style.voiceStyle.styleId)
     }
 
+    protected open fun getChannelCommonGroupsFragment(channel: SceytChannel): Fragment?{
+            return ChannelInfoCommonGroupsFragment.newInstance(channel, style.commonGroupsStyle.styleId)
+    }
+
     protected open fun getEditChannelFragment(channel: SceytChannel): Fragment? = EditChannelFragment.newInstance(channel)
 
     //Description
@@ -701,7 +742,8 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
             style.mediaStyle.styleId,
             style.filesStyle.styleId,
             style.linkStyle.styleId,
-            style.voiceStyle.styleId
+            style.voiceStyle.styleId,
+            style.commonGroupsStyle.styleId
         )
     }
 

@@ -26,6 +26,7 @@ import com.sceyt.chatuikit.presentation.components.channel_list.channels.listene
 import com.sceyt.chatuikit.presentation.custom_views.AvatarView
 import com.sceyt.chatuikit.presentation.custom_views.DecoratedTextView
 import com.sceyt.chatuikit.presentation.custom_views.PresenceStateIndicatorView
+import com.sceyt.chatuikit.presentation.extensions.isSystemMessage
 import com.sceyt.chatuikit.presentation.extensions.setChannelMessageDateAndStatusIcon
 import com.sceyt.chatuikit.styles.channel.ChannelItemStyle
 import java.util.Date
@@ -264,6 +265,7 @@ open class ChannelViewHolder(
             }
 
             channel.lastMessage != null -> {
+                shouldShowStatus = !channel.lastMessage.isSystemMessage()
                 val lastMessageCreatedAt = channel.lastMessage.createdAt
                 val lastReactionCreatedAt = channel.newReactions?.maxByOrNull { it.id }?.createdAt
                     ?: 0

@@ -4,7 +4,7 @@ import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.channel.ChannelEvent
 import com.sceyt.chat.models.member.Member
-import com.sceyt.chat.models.message.DeliveryStatus
+import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.sceyt_listeners.ChannelListener
@@ -212,7 +212,7 @@ object ChannelEventManager : ChannelEventHandler.AllEvents {
 
             override fun onDeliveryReceiptReceived(channel: Channel, from: User, marker: MessageListMarker) {
                 eventManager.onMessageStatusEvent(MessageStatusChangeData(channel.toSceytUiChannel(),
-                    from.toSceytUser(), DeliveryStatus.Received, marker))
+                    from.toSceytUser(), MessageDeliveryStatus.Received, marker))
             }
 
             override fun onMarkerReceived(channel: Channel, user: User, marker: MessageListMarker) {
@@ -222,7 +222,7 @@ object ChannelEventManager : ChannelEventHandler.AllEvents {
 
             override fun onReadReceiptReceived(channel: Channel, from: User, marker: MessageListMarker) {
                 eventManager.onMessageStatusEvent(MessageStatusChangeData(channel.toSceytUiChannel(),
-                    from.toSceytUser(), DeliveryStatus.Displayed, marker))
+                    from.toSceytUser(), MessageDeliveryStatus.Displayed, marker))
             }
 
             override fun onChannelEvent(channel: Channel?, event: ChannelEvent?) {

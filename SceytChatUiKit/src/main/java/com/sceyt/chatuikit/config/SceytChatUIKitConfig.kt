@@ -5,6 +5,7 @@ import com.sceyt.chat.models.channel.ChannelListQuery.ChannelListOrder
 import com.sceyt.chatuikit.config.defaults.DefaultAutoDeleteMessagesOptions
 import com.sceyt.chatuikit.config.defaults.DefaultAvatarBackgroundColors
 import com.sceyt.chatuikit.config.defaults.DefaultMuteNotificationOptions
+import com.sceyt.chatuikit.config.defaults.DefaultMutualGroupChannelTypes
 import com.sceyt.chatuikit.persistence.lazyVar
 import kotlin.time.Duration.Companion.hours
 
@@ -27,6 +28,7 @@ class SceytChatUIKitConfig {
     var channelListOrder: ChannelListOrder = ChannelListOrder.ListQueryChannelOrderLastMessage
     var defaultReactions: List<String> = listOf("😎", "😂", "👌", "😍", "👍", "😏")
     var mentionTriggerPrefix = '@'
+
     var muteChannelNotificationOptions: MuteNotificationOptions by lazyVar {
         DefaultMuteNotificationOptions
     }
@@ -35,6 +37,9 @@ class SceytChatUIKitConfig {
     }
     var defaultAvatarBackgroundColors: AvatarBackgroundColors by lazyVar {
         DefaultAvatarBackgroundColors
+    }
+    var mutualGroupChannelTypes: MutualGroupChannelTypes by lazyVar {
+        DefaultMutualGroupChannelTypes
     }
 
     @IntRange(from = 1, to = 6)

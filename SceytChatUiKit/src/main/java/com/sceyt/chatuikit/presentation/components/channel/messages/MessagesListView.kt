@@ -13,8 +13,9 @@ import androidx.appcompat.view.ContextThemeWrapper
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.util.Predicate
 import androidx.core.view.isVisible
+import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.sceyt.chat.models.message.DeliveryStatus
+import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
@@ -38,6 +39,7 @@ import com.sceyt.chatuikit.extensions.maybeComponentActivity
 import com.sceyt.chatuikit.extensions.openLink
 import com.sceyt.chatuikit.extensions.setClipboard
 import com.sceyt.chatuikit.extensions.setLayoutTransition
+import com.sceyt.chatuikit.extensions.updateWithScrollCompensation
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.media.audio.AudioFocusHelper
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
@@ -72,6 +74,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.events.Messa
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.PollEvent
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.ReactionEvent
 import com.sceyt.chatuikit.presentation.components.channel.messages.fragments.ReactionsInfoBottomSheetFragment
+import com.sceyt.chatuikit.presentation.components.channel.messages.helpers.MessageCopyHelper
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.action.MessageActionsViewClickListeners
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.action.MessageActionsViewClickListeners.ActionsViewClickListeners
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.action.MessageActionsViewClickListenersImpl
@@ -90,13 +93,16 @@ import com.sceyt.chatuikit.presentation.components.forward.ForwardActivity
 import com.sceyt.chatuikit.presentation.components.media.MediaPreviewActivity
 import com.sceyt.chatuikit.presentation.components.message_info.MessageInfoActivity
 import com.sceyt.chatuikit.presentation.extensions.getUpdateMessage
+import com.sceyt.chatuikit.presentation.extensions.isPending
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.styles.extensions.messages_list.setPageStateViews
 import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-@Suppress("Unused", "MemberVisibilityCanBePrivate")
+typealias FoundToScroll = Boolean
+
+@Suppress("Unused", "MemberVisibilityCanBePrivate", "JoinDeclarationAndAssignment")
 class MessagesListView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
@@ -113,6 +119,7 @@ class MessagesListView @JvmOverloads constructor(
     private var messageCommandEventListener: ((MessageCommandEvent) -> Unit)? = null
     private var reactionEventListener: ((ReactionEvent) -> Unit)? = null
     private var pollEventListener: ((PollEvent) -> Unit)? = null
+    private var expandMessageBodyListener: ((Long) -> Unit)? = null
     private var reactionsPopupWindow: PopupWindow? = null
     private var onWindowFocusChangeListener: ((Boolean) -> Unit)? = null
     private var multiselectDestination: Map<Long, SceytMessage>? = null
@@ -280,6 +287,10 @@ class MessagesListView @JvmOverloads constructor(
                 }
             }
 
+            override fun onReadMoreClick(view: View, item: MessageItem) {
+                clickListeners.onReadMoreClick(view, item)
+            }
+
             override fun onScrollToDownClick(view: View) {
                 clickListeners.onScrollToDownClick(view)
             }
@@ -328,7 +339,7 @@ class MessagesListView @JvmOverloads constructor(
     }
 
     private fun showModifyReactionsPopup(view: View, message: SceytMessage): ReactionsPopup? {
-        if (message.deliveryStatus == DeliveryStatus.Pending) return null
+        if (message.isPending()) return null
         val maxSize = SceytChatUIKit.config.messageReactionPerUserLimit
         val reactions = message.messageReactions
             ?.sortedByDescending { it.reaction.containsSelf }
@@ -471,24 +482,38 @@ class MessagesListView @JvmOverloads constructor(
             ?.itemUpdated(item)
     }
 
-    internal fun setMessagesList(data: List<MessageListItem>, force: Boolean = false) {
-        messagesRV.setData(data, force)
+    internal fun setMessagesList(
+        data: List<MessageListItem>,
+        lifecycleScope: LifecycleCoroutineScope,
+        force: Boolean = false
+    ) {
+        messagesRV.setData(messages = data, lifecycleScope = lifecycleScope, force = force)
         if (data.isNotEmpty())
             binding.pageStateView.updateState(PageState.Nothing)
     }
 
-    internal fun addNextPageMessages(data: List<MessageListItem>) {
-        messagesRV.addNextPageMessages(data)
+    internal fun addNextPageMessages(
+        data: List<MessageListItem>,
+        lifecycleScope: LifecycleCoroutineScope
+    ) {
+        messagesRV.addNextPageMessages(data, lifecycleScope)
     }
 
-    internal fun addPrevPageMessages(data: List<MessageListItem>) {
-        messagesRV.addPrevPageMessages(data)
+    internal fun addPrevPageMessages(
+        data: List<MessageListItem>,
+        lifecycleScope: LifecycleCoroutineScope
+    ) {
+        messagesRV.addPrevPageMessages(messages = data, lifecycleScope = lifecycleScope)
     }
 
-    internal fun addNewMessages(vararg data: MessageListItem, addedCallback: () -> Unit = {}) {
+    internal fun addNewMessages(
+        vararg data: MessageListItem,
+        lifecycleScope: LifecycleCoroutineScope,
+        addedCallback: () -> Unit = {},
+    ) {
         if (data.isEmpty()) return
         messagesRV.awaitAnimationEnd {
-            messagesRV.addNewMessages(*data)
+            messagesRV.addNewMessages(items = data, lifecycleScope = lifecycleScope)
             addedCallback.invoke()
         }
     }
@@ -549,7 +574,7 @@ class MessagesListView @JvmOverloads constructor(
     }
 
     internal fun messageEditedOrDeleted(updateMessage: SceytMessage) {
-        if (updateMessage.deliveryStatus == DeliveryStatus.Pending && updateMessage.state == MessageState.Deleted) {
+        if (updateMessage.isPending() && updateMessage.state == MessageState.Deleted) {
             messagesRV.deleteMessageByTid(updateMessage.tid)
             if (messagesRV.isEmpty())
                 binding.pageStateView.updateState(PageState.StateEmpty())
@@ -584,8 +609,8 @@ class MessagesListView @JvmOverloads constructor(
         }
     }
 
-    internal fun forceDeleteMessageByTid(tid: Long) {
-        messagesRV.deleteMessageByTid(tid)
+    internal fun forceDeleteMessageByTid(vararg tid: Long) {
+        messagesRV.deleteMessageByTid(*tid)
         if (messagesRV.isEmpty())
             binding.pageStateView.updateState(PageState.StateEmpty())
     }
@@ -721,18 +746,6 @@ class MessagesListView @JvmOverloads constructor(
         }
     }
 
-    internal fun messageSendFailed(tid: Long) {
-        messagesRV.getData().findIndexed {
-            it is MessageItem && it.message.tid == tid
-        }?.let { (index, item) ->
-            val message = (item as MessageItem).message
-            val updatedItem = item.copy(
-                message = item.message.copy(deliveryStatus = DeliveryStatus.Pending)
-            )
-            updateAdapterItem(index, updatedItem, message.diff(updatedItem.message))
-        }
-    }
-
     internal fun updateReplyCount(replyMessage: SceytMessage?) {
         messagesRV.getData().findIndexed {
             it is MessageItem && it.message.id == replyMessage?.parentMessage?.id
@@ -781,6 +794,10 @@ class MessagesListView @JvmOverloads constructor(
 
     internal fun setMessageCommandEventListener(listener: (MessageCommandEvent) -> Unit) {
         messageCommandEventListener = listener
+    }
+
+    internal fun setExpandMessageBodyListener(listener: (Long) -> Unit) {
+        expandMessageBodyListener = listener
     }
 
     internal fun clearData() {
@@ -850,30 +867,31 @@ class MessagesListView @JvmOverloads constructor(
         messageId: Long,
         highlight: Boolean,
         offset: Int = 0,
-        awaitToScroll: ((Boolean) -> Unit)? = null,
-        doIfNotFound: (() -> Unit)? = null,
+        onCompleted: ((FoundToScroll) -> Unit)? = null,
     ) {
         getMessageIndexedById(messageId)?.let { (position, _) ->
-            scrollToPosition(position, highlight, offset, awaitToScroll)
-        } ?: doIfNotFound?.invoke()
+            scrollToPosition(position, highlight, offset, onScrolled = {
+                onCompleted?.invoke(true)
+            })
+        } ?: onCompleted?.invoke(false)
     }
 
     fun scrollToPosition(
         position: Int,
         highlight: Boolean,
         offset: Int = 0,
-        awaitToScroll: ((Boolean) -> Unit)? = null,
+        onScrolled: (() -> Unit)? = null,
     ) = safeScrollTo {
         (messagesRV.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(
             position,
             offset
         )
 
-        if (highlight || awaitToScroll != null) {
+        if (highlight || onScrolled != null) {
             messagesRV.awaitToScrollFinish(position, callback = {
                 if (highlight)
                     (messagesRV.findViewHolderForAdapterPosition(position) as? BaseMessageViewHolder)?.highlight()
-                awaitToScroll?.invoke(true)
+                onScrolled?.invoke()
             })
         }
     }
@@ -1132,8 +1150,8 @@ class MessagesListView @JvmOverloads constructor(
 
     // Message popup events
     override fun onCopyMessagesClick(vararg messages: SceytMessage) {
-        val text = messages.joinToString("\n\n") { it.body.trim() }
-        context.setClipboard(text.trim())
+        val text = MessageCopyHelper.buildCopyableText(context = context, messages = messages)
+        context.setClipboard(text)
         val toastMessage = if (messages.size == 1) context.getString(R.string.sceyt_message_copied)
         else context.getString(R.string.sceyt_messages_copied)
         Toast.makeText(context, toastMessage, Toast.LENGTH_SHORT).show()
@@ -1234,5 +1252,27 @@ class MessagesListView @JvmOverloads constructor(
         } else {
             messageCommandEventListener?.invoke(MessageCommandEvent.UserClick(userId))
         }
+    }
+
+    override fun onReadMoreClick(view: View, item: MessageItem) {
+        val messagesRV = getMessagesRecyclerView()
+        val holder =
+            messagesRV.findViewHolderForItemId(item.getItemId()) as? BaseMessageViewHolder ?: return
+        val position = holder.bindingAdapterPosition
+        if (position == RecyclerView.NO_POSITION) return
+
+        expandMessageBodyListener?.invoke(item.message.tid)
+
+        val expandedItem = item.copy(message = item.message.copy(isBodyExpanded = true))
+        val oldTop = holder.itemView.top
+
+        messagesRV.updateWithScrollCompensation(
+            oldTop = oldTop,
+            getNewTop = { holder.itemView.top },
+            onUpdate = {
+                messagesRV.updateItemAt(position, expandedItem)
+                holder.bind(expandedItem, MessageDiff.DEFAULT_FALSE.copy(bodyChanged = true))
+            }
+        )
     }
 }

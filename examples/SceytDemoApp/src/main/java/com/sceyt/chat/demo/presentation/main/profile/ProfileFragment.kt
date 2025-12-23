@@ -17,6 +17,7 @@ import com.sceyt.chat.demo.databinding.FragmentProfileBinding
 import com.sceyt.chat.demo.presentation.main.profile.dialogs.LogoutDialog
 import com.sceyt.chat.demo.presentation.main.profile.edit.EditProfileFragment
 import com.sceyt.chat.demo.presentation.welcome.WelcomeActivity
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.config.defaults.DefaultMuteNotificationOptions
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.customToastSnackBar
@@ -36,7 +37,9 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 class ProfileFragment : Fragment() {
     private lateinit var binding: FragmentProfileBinding
     private var displayNameDefaultBg: Drawable? = null
-    private val viewModel by viewModels<ProfileViewModel>()
+    private val viewModel by viewModels<ProfileViewModel>(
+        factoryProducer = { factory }
+    )
     private val userProfileViewModel: UserProfileViewModel by viewModel()
     private val preference by inject<AppSharedPreference>()
     private var currentUser: SceytUser? = null
@@ -44,10 +47,17 @@ class ProfileFragment : Fragment() {
     private var muted: Boolean = false
     private var updateThemeJob: Job? = null
 
+    private val factory: ProfileViewModelFactory by lazy(LazyThreadSafetyMode.NONE) {
+        ProfileViewModelFactory(
+            SceytChatUIKit.currentUserId
+                ?: preference.getString(AppSharedPreference.PREF_USER_ID).orEmpty()
+        )
+    }
+
     override fun onCreateView(
-            inflater: LayoutInflater,
-            container: ViewGroup?,
-            savedInstanceState: Bundle?,
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?,
     ): View {
         return FragmentProfileBinding.inflate(inflater, container, false).also {
             binding = it
@@ -65,8 +75,8 @@ class ProfileFragment : Fragment() {
 
     private fun initViewModel() {
         viewModel.currentUserAsFlow
-            ?.onEach(::setUserDetails)
-            ?.launchIn(lifecycleScope)
+            .onEach(::setUserDetails)
+            .launchIn(lifecycleScope)
 
         viewModel.settingsLiveData.observe(viewLifecycleOwner) {
             muted = it.mute.isMuted

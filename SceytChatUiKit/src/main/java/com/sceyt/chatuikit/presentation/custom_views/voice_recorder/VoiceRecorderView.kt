@@ -1,7 +1,6 @@
 package com.sceyt.chatuikit.presentation.custom_views.voice_recorder
 
 import android.Manifest
-import android.animation.ArgbEvaluator
 import android.animation.LayoutTransition
 import android.animation.ValueAnimator
 import android.annotation.SuppressLint
@@ -30,7 +29,6 @@ import androidx.core.view.updateLayoutParams
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytRecordViewBinding
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.animatorListener
@@ -46,20 +44,21 @@ import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.chatuikit.presentation.common.SceytDialog
 import com.sceyt.chatuikit.styles.input.MessageInputStyle
-import com.sceyt.chatuikit.styles.input.VoiceRecorderViewStyle
 import java.util.Timer
 import java.util.TimerTask
 import kotlin.math.abs
 
 class VoiceRecorderView @JvmOverloads constructor(
-        context: Context,
-        attrs: AttributeSet? = null,
-        defStyleAttr: Int = 0,
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0,
 ) : ConstraintLayout(context, attrs, defStyleAttr) {
     private lateinit var binding: SceytRecordViewBinding
     private val animBlink by lazy { AnimationUtils.loadAnimation(context, R.anim.sceyt_anim_blink) }
     private val animJump by lazy { AnimationUtils.loadAnimation(context, R.anim.sceyt_anim_jump) }
-    private val animJumpFast by lazy { AnimationUtils.loadAnimation(context, R.anim.sceyt_anim_jump_fast) }
+    private val animJumpFast by lazy {
+        AnimationUtils.loadAnimation(context, R.anim.sceyt_anim_jump_fast)
+    }
     private var stopTrackingAction = false
     var isRecording = false
         private set
@@ -77,9 +76,10 @@ class VoiceRecorderView @JvmOverloads constructor(
     private var userBehaviour = UserBehaviour.NONE
     private var isLayoutDirectionRightToLeft = false
     private var colorAnimation: ValueAnimator? = null
-    private lateinit var style: VoiceRecorderViewStyle
+    private lateinit var style: MessageInputStyle
     private var recordingListener: RecordingListener? = null
     private var isRecordingAllowed: () -> Boolean = { true }
+    private val recorderViewStyle get() = style.voiceRecorderViewStyle
 
     init {
         init()
@@ -123,7 +123,7 @@ class VoiceRecorderView @JvmOverloads constructor(
     }
 
     internal fun setStyle(style: MessageInputStyle) {
-        this.style = style.voiceRecorderViewStyle
+        this.style = style
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -135,9 +135,14 @@ class VoiceRecorderView @JvmOverloads constructor(
                         // If its already locked, unlock and send
                         isLocked = false
                     } else {
-                        if (!context.checkAndAskPermissions(requestVoicePermissionLauncher, Manifest.permission.RECORD_AUDIO)
-                                || layoutTransition.isRunning)
+                        if (!context.checkAndAskPermissions(
+                                requestVoicePermissionLauncher,
+                                Manifest.permission.RECORD_AUDIO
+                            )
+                            || layoutTransition.isRunning
+                        ) {
                             return@OnTouchListener false
+                        }
 
                         if (!isRecordingAllowed())
                             return@OnTouchListener false
@@ -320,7 +325,8 @@ class VoiceRecorderView @JvmOverloads constructor(
                 -> {
                 isRecording = false
                 moveToInitialState()
-                val shouldShowPreview = recordingBehaviour == RecordingBehaviour.LOCK_DONE_SHOW_PREVIEW
+                val shouldShowPreview =
+                    recordingBehaviour == RecordingBehaviour.LOCK_DONE_SHOW_PREVIEW
                 recordingListener?.onRecordingCompleted(shouldShowPreview)
             }
         }
@@ -384,7 +390,7 @@ class VoiceRecorderView @JvmOverloads constructor(
         timerTask = object : TimerTask() {
             override fun run() {
                 tvDuration.post {
-                    tvDuration.text = style.durationFormatter.format(
+                    tvDuration.text = recorderViewStyle.durationFormatter.format(
                         context = context,
                         from = audioTotalTimeSeconds,
                     )
@@ -407,8 +413,8 @@ class VoiceRecorderView @JvmOverloads constructor(
         recording.isInvisible = true
         with(imageAudio) {
             setPadding(paddingNormal)
-            backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytChatUIKit.theme.colors.accentColor))
-            setImageDrawable(style.recordingIcon)
+            backgroundTintList = ColorStateList.valueOf(style.sendIconBackgroundColor)
+            setImageDrawable(style.voiceRecordIcon)
             setColorFilter(getCompatColor(R.color.sceyt_color_on_primary))
         }
     }
@@ -419,8 +425,8 @@ class VoiceRecorderView @JvmOverloads constructor(
         recording.isVisible = true
         with(imageAudio) {
             setPadding(paddingRecording)
-            backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytChatUIKit.theme.colors.accentColor))
-            setImageDrawable(style.recordingIcon)
+            backgroundTintList = ColorStateList.valueOf(style.sendIconBackgroundColor)
+            setImageDrawable(style.voiceRecordIcon)
             setColorFilter(getCompatColor(R.color.sceyt_color_on_primary))
         }
     }
@@ -429,10 +435,12 @@ class VoiceRecorderView @JvmOverloads constructor(
         imageViewAudio.translationZ = buttonZ
         imageViewAudio.cardElevation = buttonZ
         with(imageAudio) {
-            backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytChatUIKit.theme.colors.accentColor))
-            setImageDrawable(style.sendVoiceIcon)
-            setPadding(paddingRecording, paddingRecording,
-                (paddingRecording - 2), paddingRecording)
+            backgroundTintList = ColorStateList.valueOf(style.sendIconBackgroundColor)
+            setImageDrawable(recorderViewStyle.sendVoiceIcon)
+            setPadding(
+                paddingRecording, paddingRecording,
+                (paddingRecording - 2), paddingRecording
+            )
         }
     }
 
@@ -441,9 +449,13 @@ class VoiceRecorderView @JvmOverloads constructor(
         imageViewAudio.cardElevation = buttonZ
         with(imageAudio) {
             setPadding(paddingRecording)
-            backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytChatUIKit.theme.colors.accentColor))
-            setImageDrawable(style.deleteRecordIcon)
-            animateColor(this, getCompatColor(SceytChatUIKit.theme.colors.accentColor), getCompatColor(R.color.sceyt_color_warning))
+            backgroundTintList = ColorStateList.valueOf(style.sendIconBackgroundColor)
+            setImageDrawable(recorderViewStyle.deleteRecordIcon)
+            animateColor(
+                this,
+                style.sendIconBackgroundColor,
+                getCompatColor(R.color.sceyt_color_warning)
+            )
         }
     }
 
@@ -452,14 +464,18 @@ class VoiceRecorderView @JvmOverloads constructor(
         imageViewAudio.cardElevation = buttonZ
         with(imageAudio) {
             setPadding(paddingRecording)
-            setImageDrawable(style.recordingIcon)
+            setImageDrawable(style.voiceRecordIcon)
             setColorFilter(context.getCompatColor(R.color.sceyt_color_on_primary))
-            animateColor(this, context.getCompatColor(R.color.sceyt_color_warning), context.getCompatColor(SceytChatUIKit.theme.colors.accentColor))
+            animateColor(
+                this,
+                context.getCompatColor(R.color.sceyt_color_warning),
+                style.sendIconBackgroundColor
+            )
         }
     }
 
     private fun animateColor(view: View, colorFrom: Int, colorTo: Int) {
-        colorAnimation = ValueAnimator.ofObject(ArgbEvaluator(), colorFrom, colorTo)
+        colorAnimation = ValueAnimator.ofArgb( colorFrom, colorTo)
         colorAnimation?.duration = 200 // milliseconds
         colorAnimation?.addUpdateListener { animator ->
             view.backgroundTintList = ColorStateList.valueOf(animator.animatedValue as Int)
@@ -467,25 +483,29 @@ class VoiceRecorderView @JvmOverloads constructor(
         colorAnimation?.start()
     }
 
-    internal fun SceytRecordViewBinding.applyStyle(style: VoiceRecorderViewStyle) {
-        recording.setBackgroundColor(style.backgroundColor)
-        recordingIndicatorView.setBackgroundTint(style.recordingIndicatorColor)
-        tvSlideCancel.text = style.slideToCancelText
-        tvCancel.text = style.cancelText
-        icLock.setImageDrawable(style.lockRecordingIcon)
-        icArrowToLock.setImageDrawable(style.arrowToLockIcon)
-        icStopRecording.setImageDrawable(style.stopRecordingIcon)
-        style.slideToCancelTextStyle.apply(tvSlideCancel)
-        style.durationTextStyle.apply(tvDuration)
-        style.cancelTextStyle.apply(tvCancel)
-        layoutEffect2.background = createMirroredGradientDrawable()
+    internal fun SceytRecordViewBinding.applyStyle(style: MessageInputStyle) {
+        with(style.voiceRecorderViewStyle) {
+            recording.setBackgroundColor(style.backgroundColor)
+            recordingIndicatorView.setBackgroundTint(recordingIndicatorColor)
+            imageAudio.setBackgroundTint(style.sendIconBackgroundColor)
+            imageAudio.setImageDrawable(style.voiceRecordIcon)
+            tvSlideCancel.text = slideToCancelText
+            tvCancel.text = cancelText
+            icLock.setImageDrawable(lockRecordingIcon)
+            icArrowToLock.setImageDrawable(arrowToLockIcon)
+            icStopRecording.setImageDrawable(stopRecordingIcon)
+            slideToCancelTextStyle.apply(tvSlideCancel)
+            durationTextStyle.apply(tvDuration)
+            cancelTextStyle.apply(tvCancel)
+            layoutEffect2.background = createMirroredGradientDrawable()
+        }
     }
 
     private fun createMirroredGradientDrawable(): GradientDrawable {
         val isRtl = resources.configuration.layoutDirection == LAYOUT_DIRECTION_RTL
         return GradientDrawable(
             GradientDrawable.Orientation.LEFT_RIGHT.takeIf { isRtl }
-                    ?: GradientDrawable.Orientation.RIGHT_LEFT,
+                ?: GradientDrawable.Orientation.RIGHT_LEFT,
             intArrayOf(
                 "#00FFFFFF".toColorInt(),
                 getCompatColor(R.color.sceyt_color_primary)
@@ -494,7 +514,8 @@ class VoiceRecorderView @JvmOverloads constructor(
     }
 
     private fun showPermissionSettingsDialog() {
-        SceytDialog.showDialog(context,
+        SceytDialog.showDialog(
+            context = context,
             titleId = R.string.sceyt_voice_permission_disabled_title,
             descId = R.string.sceyt_voice_permission_disabled_desc,
             positiveBtnTitleId = R.string.sceyt_settings,
@@ -507,13 +528,14 @@ class VoiceRecorderView @JvmOverloads constructor(
             })
     }
 
-    private val requestVoicePermissionLauncher = if (isInEditMode) null else context.maybeComponentActivity()?.run {
-        if (!lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
-            initPermissionLauncher {
-                onVoicePermissionResult(it)
-            }
-        } else null
-    }
+    private val requestVoicePermissionLauncher =
+        if (isInEditMode) null else context.maybeComponentActivity()?.run {
+            if (!lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
+                initPermissionLauncher {
+                    onVoicePermissionResult(it)
+                }
+            } else null
+        }
 
     private fun onVoicePermissionResult(isGranted: Boolean) {
         if (!isGranted && context.permissionIgnored(Manifest.permission.RECORD_AUDIO))

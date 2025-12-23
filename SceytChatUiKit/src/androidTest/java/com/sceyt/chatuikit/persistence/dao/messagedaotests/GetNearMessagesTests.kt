@@ -7,7 +7,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
 import com.google.common.truth.Truth
-import com.sceyt.chat.models.message.DeliveryStatus
+import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chatuikit.persistence.database.SceytDatabase
 import com.sceyt.chatuikit.persistence.database.dao.LoadRangeDao
@@ -47,7 +47,7 @@ class GetNearMessagesTests {
         database.close()
     }
 
-    private fun createMessage(tid: Long, id: Long, deliveryStatus: DeliveryStatus = DeliveryStatus.Displayed): MessageEntity {
+    private fun createMessage(tid: Long, id: Long, deliveryStatus: MessageDeliveryStatus = MessageDeliveryStatus.Displayed): MessageEntity {
         return MessageEntity(
             tid = tid,
             id = id,
@@ -72,7 +72,8 @@ class GetNearMessagesTests {
             forwardingDetailsDb = null,
             bodyAttribute = null,
             unList = false,
-            disableMentionsCount = false
+            disableMentionsCount = false,
+            viewOnce = false
         )
     }
 

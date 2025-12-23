@@ -14,6 +14,12 @@ interface AttachmentDataProvider : AttachmentDataUpdater {
     val duration: Long?
     val audioMetadata: AudioMetadata?
     val transferData: TransferData?
+
+    val filePath: String?
+        get() = attachment.filePath
+
+    val messageTid: Long
+        get() = attachment.messageTid
 }
 
 interface AttachmentDataUpdater {

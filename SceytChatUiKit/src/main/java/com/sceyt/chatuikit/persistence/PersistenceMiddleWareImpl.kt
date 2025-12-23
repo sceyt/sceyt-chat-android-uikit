@@ -376,9 +376,10 @@ internal class PersistenceMiddleWareImpl(
     override fun loadChannelMembers(
         channelId: Long,
         offset: Int,
+        nextToken: String,
         role: String?
     ): Flow<PaginationResponse<SceytMember>> {
-        return membersLogic.loadChannelMembers(channelId, offset, role)
+        return membersLogic.loadChannelMembers(channelId, offset, nextToken, role)
     }
 
     override suspend fun loadChannelMembersByIds(
@@ -772,8 +773,8 @@ internal class PersistenceMiddleWareImpl(
         return usersLogic.getCurrentUserId()
     }
 
-    override fun getCurrentUserAsFlow(): Flow<SceytUser>? {
-        return usersLogic.getCurrentUserAsFlow()
+    override fun getCurrentUserAsFlow(currentUserId: String?): Flow<SceytUser>? {
+        return usersLogic.getCurrentUserAsFlow(currentUserId)
     }
 
     override suspend fun uploadAvatar(avatarUrl: String): SceytResponse<String> {
@@ -943,9 +944,10 @@ internal class PersistenceMiddleWareImpl(
 
     override suspend fun regenerateChannelInviteKey(
         channelId: Long,
-        key: String
+        key: String,
+        deletePermanently: Boolean
     ): SceytResponse<ChannelInviteKeyData> {
-        return channelInviteKeyLogic.regenerateChannelInviteKey(channelId, key)
+        return channelInviteKeyLogic.regenerateChannelInviteKey(channelId, key, deletePermanently)
     }
 
     override suspend fun revokeChannelInviteKeys(

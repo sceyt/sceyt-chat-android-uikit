@@ -5,6 +5,9 @@ import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
 
+fun SceytResponse<*>.isSuccess(): Boolean {
+    return this is SceytResponse.Success
+}
 
 @OptIn(ExperimentalContracts::class)
 @SinceKotlin("1.3")
@@ -55,6 +58,36 @@ inline fun <R, T> SceytResponse<T>.fold(
     return when (this) {
         is SceytResponse.Success -> onSuccess(data)
         is SceytResponse.Error -> onError(exception)
+    }
+}
+
+@OptIn(ExperimentalContracts::class)
+@SinceKotlin("1.3")
+inline fun <R, T> SceytResponse<T>.map(transform: (value: T?) -> R): SceytResponse<R> {
+    contract {
+        callsInPlace(transform, InvocationKind.AT_MOST_ONCE)
+    }
+    return when (this) {
+        is SceytResponse.Success -> SceytResponse.Success(transform(data))
+        is SceytResponse.Error -> SceytResponse.Error(exception)
+    }
+}
+
+@OptIn(ExperimentalContracts::class)
+@SinceKotlin("1.3")
+inline fun <R, T> SceytResponse<T>.mapNotNull(transform: (value: T) -> R): SceytResponse<R> {
+    contract {
+        callsInPlace(transform, InvocationKind.AT_MOST_ONCE)
+    }
+    return when (this) {
+        is SceytResponse.Success -> {
+            if (data != null) {
+                SceytResponse.Success(transform(data))
+            } else {
+                SceytResponse.Success(null)
+            }
+        }
+        is SceytResponse.Error -> SceytResponse.Error(exception)
     }
 }
 

@@ -71,6 +71,8 @@ class MemberActionsDialog(context: Context) : Dialog(context, R.style.SceytDialo
 
     private fun SceytDialogMembrerActionsBinding.applyStyle() {
         style.backgroundStyle.apply(root)
+        style.optionButtonStyle.apply(revokeAdmin)
+        style.warningOptionButtonStyle.apply(remove)
     }
 
     companion object {

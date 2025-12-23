@@ -26,6 +26,15 @@
         tools:itemCount="5"
         tools:listitem="@layout/sceyt_item_share_channel" />
 
+    <com.sceyt.chatuikit.presentation.custom_views.PageStateView
+        android:id="@+id/pageStateView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@+id/btnForward"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/toolbar" />
+
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btnForward"
         android:layout_width="match_parent"

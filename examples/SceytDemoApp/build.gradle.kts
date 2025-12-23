@@ -107,7 +107,6 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.koin.android)
     implementation(libs.converter.moshi)
-    implementation(libs.jsoup)
     implementation(libs.sdp.android)
     implementation(libs.ssp.android)
     implementation(libs.converter.gson)

@@ -1,6 +1,5 @@
 package com.sceyt.chatuikit.persistence.logicimpl.usecases
 
-import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chatuikit.data.models.ChangeVoteResponseData
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.createErrorResponse
@@ -10,6 +9,7 @@ import com.sceyt.chatuikit.persistence.database.dao.PendingPollVoteDao
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
 import com.sceyt.chatuikit.persistence.mappers.toSceytMessage
 import com.sceyt.chatuikit.persistence.repositories.PollRepository
+import com.sceyt.chatuikit.presentation.extensions.isPending
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -36,7 +36,7 @@ internal class RetractPollVoteUseCase(
         pendingPollVoteDao.deletePendingVotesByPollId(messageTid, pollId)
 
         // If message is pending, update it locally without server call
-        if (message.deliveryStatus == DeliveryStatus.Pending) {
+        if (message.isPending()) {
             val updatedMessage = message.copy(
                 poll = poll.copy(
                     ownVotes = emptyList(),

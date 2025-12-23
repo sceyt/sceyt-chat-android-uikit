@@ -1,13 +1,14 @@
 package com.sceyt.chatuikit.persistence.logicimpl.message
 
-import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chatuikit.data.models.messages.AttachmentPayLoadData
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
+import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.removeAllIf
+import com.sceyt.chatuikit.extensions.removeAllIfCollect
 import com.sceyt.chatuikit.persistence.differs.diffContent
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Downloaded
@@ -25,6 +26,7 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploaded
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploading
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.WaitingToUpload
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.comporators.MessageComparator
+import com.sceyt.chatuikit.presentation.extensions.isNotPending
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -32,6 +34,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 typealias ChannelId = Long
+typealias MessageTid = Long
 typealias MessageDeletionDate = Long
 
 class MessagesCache {
@@ -51,11 +54,11 @@ class MessagesCache {
         )
         val messagesClearedFlow = messagesClearedFlow_.asSharedFlow()
 
-        private val messageHardDeletedFlow_ = MutableSharedFlow<Pair<ChannelId, SceytMessage>>(
+        private val messagesHardDeletedFlow_ = MutableSharedFlow<Pair<ChannelId, List<MessageTid>>>(
             extraBufferCapacity = 30,
             onBufferOverflow = BufferOverflow.DROP_OLDEST
         )
-        val messageHardDeletedFlow = messageHardDeletedFlow_.asSharedFlow()
+        val messagesHardDeletedFlow = messagesHardDeletedFlow_.asSharedFlow()
     }
 
 
@@ -105,17 +108,13 @@ class MessagesCache {
         return@withLock getMessageByTid(channelId, tid)
     }
 
-    suspend fun getChannelMessages(channelId: Long): List<SceytMessage>? = mutex.withLock {
-        return@withLock cachedMessages[channelId]?.values?.toList()
-    }
-
     suspend fun clear(channelId: Long) = mutex.withLock {
         cachedMessages[channelId]?.clear()
     }
 
     suspend fun clearAllExceptPending(channelId: Long) = mutex.withLock {
         getMessagesMap(channelId)?.values
-            ?.filter { it.deliveryStatus != DeliveryStatus.Pending }
+            ?.filter { it.isNotPending() }
             ?.map { it.tid }?.forEach {
                 cachedMessages[channelId]?.remove(it)
             }
@@ -133,7 +132,11 @@ class MessagesCache {
         emitMessageUpdated(channelId, *messages.toTypedArray())
     }
 
-    suspend fun updateMessagesStatus(channelId: Long, status: DeliveryStatus, vararg tIds: Long) = mutex.withLock {
+    suspend fun updateMessagesStatus(
+        channelId: Long,
+        status: MessageDeliveryStatus,
+        vararg tIds: Long
+    ) = mutex.withLock {
         val updatesMessages = mutableListOf<SceytMessage>()
         tIds.forEach {
             getMessageByTid(channelId, it)?.let { message ->
@@ -147,18 +150,40 @@ class MessagesCache {
 
     suspend fun hardDeleteMessage(channelId: Long, message: SceytMessage) = mutex.withLock {
         cachedMessages[channelId]?.remove(message.tid)
-        messageHardDeletedFlow_.tryEmit(Pair(channelId, message))
+        messagesHardDeletedFlow_.tryEmit(channelId to listOf(message.tid))
     }
 
-    suspend fun deleteAllMessagesLowerThenDate(channelId: Long, messagesDeletionDate: Long) = mutex.withLock {
-        if (getMessagesMap(channelId)?.removeAllIf { it.createdAt <= messagesDeletionDate && it.deliveryStatus != DeliveryStatus.Pending } == true) {
-            messagesClearedFlow_.tryEmit(Pair(channelId, messagesDeletionDate))
+    suspend fun hardDeleteMessage(channelId: Long, vararg tIds: Long) = mutex.withLock {
+        tIds.forEach { tid ->
+            cachedMessages[channelId]?.remove(tid)
+        }
+        messagesHardDeletedFlow_.tryEmit(channelId to tIds.toList())
+    }
+
+    internal suspend fun deleteAllMessagesWhere(
+        predicate: (SceytMessage) -> Boolean
+    ) = mutex.withLock {
+        cachedMessages.forEach { (_, map) ->
+            map.removeAllIf(predicate)
         }
     }
 
-    suspend fun deleteAllMessagesWhere(predicate: (SceytMessage) -> Boolean) = mutex.withLock {
-        cachedMessages.forEach { (_, map) ->
-            map.removeAllIf(predicate)
+    suspend fun forceDeleteAllMessagesWhere(predicate: (SceytMessage) -> Boolean) = mutex.withLock {
+        cachedMessages.forEach { (channelId, map) ->
+            val removedMessages = map.removeAllIfCollect(predicate)
+            if (removedMessages.isNotEmpty()) {
+                val tIds = removedMessages.map { it.tid }
+                messagesHardDeletedFlow_.tryEmit(channelId to tIds)
+            }
+        }
+    }
+
+    suspend fun deleteAllClearedMessages(
+        channelId: Long,
+        messagesDeletionDate: Long
+    ) = mutex.withLock {
+        if (getMessagesMap(channelId)?.removeAllIf { it.createdAt <= messagesDeletionDate && it.isNotPending() } == true) {
+            messagesClearedFlow_.tryEmit(Pair(channelId, messagesDeletionDate))
         }
     }
 
@@ -168,7 +193,10 @@ class MessagesCache {
         }
     }
 
-    suspend fun upsertNotifyUpdateAnyway(channelId: Long, vararg message: SceytMessage) = mutex.withLock {
+    suspend fun upsertNotifyUpdateAnyway(
+        channelId: Long,
+        vararg message: SceytMessage
+    ) = mutex.withLock {
         message.forEach {
             emitMessageUpdated(channelId, updateMessage(channelId, it, true))
         }
@@ -390,7 +418,11 @@ class MessagesCache {
         }
     }
 
-    suspend fun updateAttachmentFilePathAndMeta(messageTid: Long, path: String?, metadata: String?) = mutex.withLock {
+    suspend fun updateAttachmentFilePathAndMeta(
+        messageTid: Long,
+        path: String?,
+        metadata: String?
+    ) = mutex.withLock {
         cachedMessages.values.forEach { messageHashMap ->
             messageHashMap[messageTid]?.let { message ->
                 val attachments = message.attachments?.toMutableList() ?: return@let
@@ -430,12 +462,19 @@ class MessagesCache {
         })
     }
 
-    suspend fun moveMessagesToNewChannel(pendingChannelId: Long, newChannelId: Long) = mutex.withLock {
+    suspend fun moveMessagesToNewChannel(
+        pendingChannelId: Long,
+        newChannelId: Long
+    ) = mutex.withLock {
         cachedMessages[newChannelId] = cachedMessages[pendingChannelId] ?: return@withLock
         cachedMessages.remove(pendingChannelId)
     }
 
-    internal suspend fun deletePendingReaction(channelId: Long, tid: Long, key: String): SceytMessage? = mutex.withLock {
+    internal suspend fun deletePendingReaction(
+        channelId: Long,
+        tid: Long,
+        key: String
+    ): SceytMessage? = mutex.withLock {
         return@withLock cachedMessages[channelId]?.get(tid)?.let {
             val newReactions = it.pendingReactions?.toMutableSet()?.apply {
                 find { data -> data.key == key }?.let { reactionData ->

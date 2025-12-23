@@ -18,6 +18,11 @@ import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.media.audio.AudioPlayer
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper.OnAudioPlayer
+import com.sceyt.chatuikit.media.audio.alreadyInitialized
+import com.sceyt.chatuikit.media.audio.isCurrentPlayer
+import com.sceyt.chatuikit.media.audio.isPlaying
+import com.sceyt.chatuikit.media.audio.seek
+import com.sceyt.chatuikit.media.audio.toggle
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
@@ -35,6 +40,7 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState.ThumbLoaded
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploaded
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploading
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.WaitingToUpload
+import com.sceyt.chatuikit.persistence.logicimpl.message.MessageTid
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem.MessageItem
@@ -46,14 +52,16 @@ import com.sceyt.chatuikit.presentation.custom_views.CircularProgressView
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
 class OutVoiceMessageViewHolder(
-        private val binding: SceytItemOutVoiceMessageBinding,
-        private val viewPoolReactions: RecyclerView.RecycledViewPool,
-        private val style: MessageItemStyle,
-        private val messageListeners: MessageClickListeners.ClickListeners?,
-        private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
-        private val voicePlayPauseListener: ((FileListItem, SceytMessage, playing: Boolean) -> Unit)?,
-) : BaseMediaMessageViewHolder(binding.root, style, messageListeners,
-    needMediaDataCallback = needMediaDataCallback) {
+    private val binding: SceytItemOutVoiceMessageBinding,
+    private val viewPoolReactions: RecyclerView.RecycledViewPool,
+    private val style: MessageItemStyle,
+    private val messageListeners: MessageClickListeners.ClickListeners?,
+    private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
+    private val voicePlayPauseListener: ((FileListItem, SceytMessage, playing: Boolean) -> Unit)?,
+) : BaseMediaMessageViewHolder(
+    binding.root, style, messageListeners,
+    needMediaDataCallback = needMediaDataCallback
+) {
     private var lastFilePath: String? = ""
 
     private var currentPlaybackSpeed: PlaybackSpeed = PlaybackSpeed.X1
@@ -78,7 +86,11 @@ class OutVoiceMessageViewHolder(
             playBackSpeed.setOnClickListener {
                 val nextPlaybackSpeed = currentPlaybackSpeed.next()
                 currentPlaybackSpeed = nextPlaybackSpeed
-                AudioPlayerHelper.setPlaybackSpeed(lastFilePath, nextPlaybackSpeed.value)
+                AudioPlayerHelper.setPlaybackSpeed(
+                    filePath = lastFilePath,
+                    messageTid = fileItem.messageTid,
+                    speed = nextPlaybackSpeed.value
+                )
             }
 
             loadProgress.setOnClickListener {
@@ -127,15 +139,18 @@ class OutVoiceMessageViewHolder(
     override val layoutBubbleConfig get() = Pair(binding.layoutDetails, false)
 
     private fun SceytItemOutVoiceMessageBinding.initVoiceMessage() {
-        val metaDuration: Long = fileItem.duration?.times(1000L) //convert to milliseconds
-                ?: 0
+        val metaDuration: Long = fileItem.duration?.times(1000L) ?: 0
         fileItem.audioMetadata?.tmb?.let { binding.seekBar.setSampleFrom(it) }
 
         seekBar.onProgressChanged = object : SeekBarOnProgressChanged {
-            override fun onProgressChanged(waveformSeekBar: WaveformSeekBar, progress: Float, fromUser: Boolean) {
+            override fun onProgressChanged(
+                waveformSeekBar: WaveformSeekBar,
+                progress: Float,
+                fromUser: Boolean
+            ) {
                 if (fromUser) {
                     val seekPosition = progressToMediaPlayerPosition(progress, metaDuration)
-                    AudioPlayerHelper.seek(fileItem.attachment.filePath, seekPosition)
+                    AudioPlayerHelper.seek(fileItem, seekPosition)
                 }
             }
         }
@@ -144,21 +159,26 @@ class OutVoiceMessageViewHolder(
         seekBar.isEnabled = isPlaying
         playBackSpeed.isEnabled = isPlaying
 
-        if (AudioPlayerHelper.alreadyInitialized(fileItem.attachment.filePath ?: ""))
+        if (AudioPlayerHelper.alreadyInitialized(fileItem.attachment))
             initAudioPlayer()
     }
 
     private fun checkIsPlayingAndSetState(): Boolean {
-        return if (AudioPlayerHelper.getCurrentPlayingAudioPath() == fileItem.attachment.filePath) {
+        return if (AudioPlayerHelper.isCurrentPlayer(fileItem)) {
             val playBackPos = AudioPlayerHelper.getCurrentPlayer()?.getPlaybackPosition() ?: 0
             binding.voiceDuration.text = style.voiceDurationFormatter.format(context, playBackPos)
-            binding.seekBar.progress = mediaPlayerPositionToSeekBarProgress(playBackPos, fileItem.duration?.times(1000L)
-                    ?: 0)
-            currentPlaybackSpeed = fromValue(AudioPlayerHelper.getCurrentPlayer()?.getPlaybackSpeed())
+            binding.seekBar.progress = mediaPlayerPositionToSeekBarProgress(
+                playBackPos, fileItem.duration?.times(1000L)
+                    ?: 0
+            )
+            currentPlaybackSpeed =
+                fromValue(AudioPlayerHelper.getCurrentPlayer()?.getPlaybackSpeed())
             true
         } else {
-            binding.voiceDuration.text = style.voiceDurationFormatter.format(context,
-                fileItem.duration?.times(1000L) ?: 0)
+            binding.voiceDuration.text = style.voiceDurationFormatter.format(
+                context = context,
+                from = fileItem.duration?.times(1000L) ?: 0
+            )
             binding.seekBar.progress = 0f
             currentPlaybackSpeed = PlaybackSpeed.X1
             false
@@ -169,22 +189,34 @@ class OutVoiceMessageViewHolder(
         if (attachment.transferState != Uploaded && attachment.transferState != Downloaded)
             return
 
-        val path = attachment.filePath ?: return
-        if (AudioPlayerHelper.alreadyInitialized(path)) {
-            AudioPlayerHelper.getCurrentPlayer()?.addEventListener(playerListener, TAG_REF, path)
-            AudioPlayerHelper.toggle(path)
+        if (AudioPlayerHelper.alreadyInitialized(attachment)) {
+            AudioPlayerHelper.getCurrentPlayer()?.addEventListener(
+                event = playerListener,
+                tag = TAG_REF,
+            )
+            AudioPlayerHelper.toggle(attachment)
         } else
             initAudioPlayer()
     }
 
     private fun initAudioPlayer() {
-        AudioPlayerHelper.init(lastFilePath ?: return, playerListener, TAG_REF)
+        AudioPlayerHelper.init(
+            filePath = lastFilePath ?: return,
+            messageTid = fileItem.attachment.messageTid,
+            events = playerListener,
+            tag = TAG_REF
+        )
     }
 
     private val playerListener: OnAudioPlayer by lazy {
         object : OnAudioPlayer {
-            override fun onInitialized(alreadyInitialized: Boolean, player: AudioPlayer, filePath: String) {
-                if (!checkIsValid(filePath)) return
+            override fun onInitialized(
+                alreadyInitialized: Boolean,
+                player: AudioPlayer,
+                filePath: String,
+                messageTid: MessageTid
+            ) {
+                if (!checkIsValid(filePath, messageTid)) return
 
                 if (!alreadyInitialized)
                     player.togglePlayPause()
@@ -195,45 +227,64 @@ class OutVoiceMessageViewHolder(
                 }
             }
 
-            override fun onProgress(position: Long, duration: Long, filePath: String) {
-                if (!checkIsValid(filePath)) return
+            override fun onProgress(
+                position: Long, duration: Long, filePath: String,
+                messageTid: MessageTid
+            ) {
+                if (!checkIsValid(filePath, messageTid)) return
                 val seekBarProgress = mediaPlayerPositionToSeekBarProgress(position, duration)
                 runOnMainThread {
                     binding.seekBar.progress = seekBarProgress
                     binding.seekBar.isEnabled = true
                     binding.playBackSpeed.isEnabled = true
-                    binding.voiceDuration.text = style.voiceDurationFormatter.format(context, position)
+                    binding.voiceDuration.text =
+                        style.voiceDurationFormatter.format(context, position)
                 }
             }
 
-            override fun onToggle(playing: Boolean, filePath: String) {
-                if (!checkIsValid(filePath)) return
+            override fun onToggle(
+                playing: Boolean, filePath: String,
+                messageTid: MessageTid
+            ) {
+                if (!checkIsValid(filePath, messageTid)) return
                 runOnMainThread {
                     setPlayButtonIcon(playing)
                     voicePlayPauseListener?.invoke(fileItem, requireMessage, playing)
                 }
             }
 
-            override fun onStop(filePath: String) {
-                if (!checkIsValid(filePath)) return
+            override fun onStop(
+                filePath: String,
+                messageTid: MessageTid
+            ) {
+                if (!checkIsValid(filePath, messageTid)) return
                 runOnMainThread {
                     setPlayButtonIcon(false)
+                    currentPlaybackSpeed = PlaybackSpeed.X1
                     binding.seekBar.progress = 0f
-                    binding.voiceDuration.text = style.voiceDurationFormatter.format(context,
+                    binding.voiceDuration.text = style.voiceDurationFormatter.format(
+                        context,
                         fileItem.duration?.times(1000L) ?: 0 // convert to milliseconds
                     )
                     binding.seekBar.isEnabled = false
                     binding.playBackSpeed.isEnabled = false
+                    binding.playBackSpeed.text = currentPlaybackSpeed.displayValue
                 }
             }
 
-            override fun onPaused(filePath: String) {
-                if (!checkIsValid(filePath)) return
+            override fun onPaused(
+                filePath: String,
+                messageTid: MessageTid
+            ) {
+                if (!checkIsValid(filePath, messageTid)) return
                 runOnMainThread { setPlayButtonIcon(false) }
             }
 
-            override fun onSpeedChanged(speed: Float, filePath: String) {
-                if (!checkIsValid(filePath)) return
+            override fun onSpeedChanged(
+                speed: Float, filePath: String,
+                messageTid: MessageTid
+            ) {
+                if (!checkIsValid(filePath, messageTid)) return
                 runOnMainThread {
                     currentPlaybackSpeed = PlaybackSpeed.fromValue(speed)
                 }
@@ -271,7 +322,7 @@ class OutVoiceMessageViewHolder(
     }
 
     private fun getPlayPauseItem(
-            isPlaying: Boolean = AudioPlayerHelper.isPlaying(fileItem.attachment.filePath),
+        isPlaying: Boolean = AudioPlayerHelper.isPlaying(fileItem),
     ): Drawable? {
         return if (isPlaying) style.voicePauseIcon else style.voicePlayIcon
     }
@@ -280,10 +331,10 @@ class OutVoiceMessageViewHolder(
         binding.playPauseButton.setImageDrawable(getPlayPauseItem(playing))
     }
 
-    private fun checkIsValid(filePath: String?): Boolean {
+    private fun checkIsValid(filePath: String?, messageTid: MessageTid): Boolean {
         filePath ?: return false
         if (!viewHolderHelper.isFileItemInitialized) return false
-        return fileItem.attachment.filePath == filePath
+        return fileItem.attachment.filePath == filePath && fileItem.attachment.messageTid == messageTid
     }
 
     override val loadingProgressView: CircularProgressView
