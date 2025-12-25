@@ -11,7 +11,6 @@ import android.graphics.drawable.Drawable
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -38,7 +37,6 @@ import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.Locale
-
 
 fun Context.getCompatColor(@ColorRes colorId: Int) = ContextCompat.getColor(this, colorId)
 
@@ -236,16 +234,10 @@ fun Context.checkActiveInternetConnection(timeout: Int = 2000): Boolean {
     return false
 }
 
-@Suppress("DEPRECATION")
 fun Context.hasActiveNetwork(): Boolean {
     val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-        val capability =
-            connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
-        capability?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) ?: false
-    } else {
-        connectivityManager.activeNetworkInfo != null && connectivityManager.activeNetworkInfo?.isConnected == true
-    }
+    val capability = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+    return capability?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) ?: false
 }
 
 internal fun Context?.getFragmentManager(): FragmentManager? {
@@ -261,4 +253,12 @@ fun Context.openLink(url: String?) {
         startActivity(Intent(Intent.ACTION_VIEW, URLUtil.guessUrl(url).toUri()))
     } catch (_: Exception) {
     }
+}
+
+fun Context.getSelectableItemBackground(): Drawable? {
+    val attrs = intArrayOf(android.R.attr.selectableItemBackgroundBorderless)
+    val typedArray = obtainStyledAttributes(attrs)
+    val backgroundResource = typedArray.getResourceId(0, 0)
+    typedArray.recycle()
+    return getCompatDrawable(backgroundResource)
 }
