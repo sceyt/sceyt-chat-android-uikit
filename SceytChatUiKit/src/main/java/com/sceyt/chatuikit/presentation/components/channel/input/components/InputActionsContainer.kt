@@ -15,8 +15,8 @@ class InputActionsContainer(
     private val trailingActionsView: InputActionsView
 ) {
 
-    private var leadingStyle: InputActionStyle = InputActionStyle()
-    private var trailingStyle: InputActionStyle = InputActionStyle()
+    private var leadingStyle: InputActionStyle? = null
+    private var trailingStyle: InputActionStyle? = null
 
     /**
      * Sets actions, automatically filtering by position.
@@ -38,7 +38,7 @@ class InputActionsContainer(
         if (trailingActions.isNotEmpty())
             trailingActionsView.setActions(trailingActions)
 
-        // Update visibility with container animations
+        // Hide/show with animation, clear ONLY after hide animation ends
         updateVisibility(ActionsPosition.LEADING, leadingActions.isNotEmpty()) {
             if (leadingActions.isEmpty()) {
                 leadingActionsView.clearActions()
@@ -58,67 +58,42 @@ class InputActionsContainer(
     fun setStyle(style: InputActionsStyle) {
         leadingStyle = style.leadingActionsStyle
         trailingStyle = style.trailingActionsStyle
-        leadingActionsView.applyStyle(style = leadingStyle)
-        trailingActionsView.applyStyle(style = trailingStyle)
+        leadingActionsView.applyStyle(style = style.leadingActionsStyle)
+        trailingActionsView.applyStyle(style = style.trailingActionsStyle)
     }
 
     private fun updateVisibility(
         position: ActionsPosition,
         visible: Boolean,
-        onEnd: () -> Unit = { }
+        onEnd: () -> Unit = {}
     ) {
-        // Determine which view and style to use
-        val actionsView: InputActionsView
-        val style: InputActionStyle
-
-        when (position) {
-            ActionsPosition.LEADING -> {
-                actionsView = leadingActionsView
-                style = leadingStyle
-            }
-
-            ActionsPosition.TRAILING -> {
-                actionsView = trailingActionsView
-                style = trailingStyle
-            }
+        val (actionsView, style) = when (position) {
+            ActionsPosition.LEADING -> leadingActionsView to leadingStyle
+            ActionsPosition.TRAILING -> trailingActionsView to trailingStyle
         }
 
-        if (visible) {
-            // Show animation
-            if (!actionsView.isVisible) {
-                if (style.containerAnimation != null && actionsView.isAttachedToWindow) {
-                    // Disable LayoutTransition to avoid conflict with custom animation
-                    actionsView.disableLayoutTransition()
+        // No-op if state already matches
+        if (actionsView.isVisible == visible) return
 
-                    style.containerAnimation.animateShow(actionsView, position) {
-                        // Re-enable LayoutTransition after animation completes
-                        onEnd()
-                        actionsView.restoreLayoutTransition()
-                    }
-                } else {
-                    // Use LayoutTransition for automatic animation
-                    actionsView.isVisible = true
-                    onEnd()
-                }
+        val animation = style?.containerAnimation
+        val canAnimate = animation != null && actionsView.isAttachedToWindow
+
+        if (canAnimate) {
+            actionsView.disableLayoutTransition()
+
+            val endCallback = {
+                onEnd()
+                actionsView.restoreLayoutTransition()
+            }
+
+            if (visible) {
+                animation.animateShow(actionsView, position, endCallback)
+            } else {
+                animation.animateHide(actionsView, position, endCallback)
             }
         } else {
-            // Hide animation
-            if (actionsView.isVisible) {
-                if (style.containerAnimation != null && actionsView.isAttachedToWindow) {
-                    // Disable LayoutTransition to avoid conflict with custom animation
-                    actionsView.disableLayoutTransition()
-
-                    style.containerAnimation.animateHide(actionsView, position) {
-                        // Re-enable LayoutTransition after animation completes
-                        onEnd()
-                        actionsView.restoreLayoutTransition()
-                    }
-                } else {
-                    // Use LayoutTransition for automatic animation
-                    actionsView.isVisible = false
-                    onEnd()
-                }
-            }
+            actionsView.isVisible = visible
+            onEnd()
         }
     }
 }

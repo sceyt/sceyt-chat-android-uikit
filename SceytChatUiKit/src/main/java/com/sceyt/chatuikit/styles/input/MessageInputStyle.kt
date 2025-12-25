@@ -222,7 +222,7 @@ data class MessageInputStyle(
                     messageSearchControlsStyle = buildMessageSearchControlStyle(array),
                     inputCoverStyle = buildInputCoverStyle(array),
                     mentionTextStyle = buildMentionTextStyle(array),
-                    inputActionsStyle = InputActionsStyle(),
+                    inputActionsStyle = InputActionsStyle.Builder(context, array).build(),
                     mentionUserNameFormatter = SceytChatUIKit.formatters.userNameFormatter,
                     draftMessageBodyFormatterAttributes = SceytChatUIKit.formatters.draftMessageBodyFormatter,
                 ).let {

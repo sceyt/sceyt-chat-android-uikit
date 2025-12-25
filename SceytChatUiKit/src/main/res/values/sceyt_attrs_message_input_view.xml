@@ -317,5 +317,19 @@
 
         <!-- Not implemented yet-->
         <attr name="sceytUiMessageInputEnableLinkPreview" format="boolean" />
+
+        <!-- Input Actions - Leading -->
+        <attr name="sceytUiInputLeadingActionsBackgroundColor" format="reference|color" />
+        <attr name="sceytUiInputLeadingActionsIconTint" format="reference|color" />
+        <attr name="sceytUiInputLeadingActionsIconSize" format="dimension" />
+        <attr name="sceytUiInputLeadingActionsSpacing" format="dimension" />
+        <attr name="sceytUiInputLeadingActionsAnimationDuration" format="integer" />
+
+        <!-- Input Actions - Trailing -->
+        <attr name="sceytUiInputTrailingActionsBackgroundColor" format="reference|color" />
+        <attr name="sceytUiInputTrailingActionsIconTint" format="reference|color" />
+        <attr name="sceytUiInputTrailingActionsIconSize" format="dimension" />
+        <attr name="sceytUiInputTrailingActionsSpacing" format="dimension" />
+        <attr name="sceytUiInputTrailingActionsAnimationDuration" format="integer" />
     </declare-styleable>
 </resources>
