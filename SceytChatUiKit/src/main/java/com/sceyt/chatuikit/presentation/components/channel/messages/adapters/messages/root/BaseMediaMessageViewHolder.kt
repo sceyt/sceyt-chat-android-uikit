@@ -75,7 +75,7 @@ abstract class BaseMediaMessageViewHolder(
         }
     }
 
-    protected open fun setImageSize(fileImage: View) {
+    protected open fun setImageSize(fileImage: View, ignoreBody: Boolean = false) {
         val layoutBubble = (layoutBubble as? ConstraintLayout) ?: return
         val size = calculateScaleWidthHeight(
             maxSize, minSize, imageWidth = fileItem.size?.width
@@ -92,7 +92,7 @@ abstract class BaseMediaMessageViewHolder(
         val message = requireMessage
         with(fileImage) {
             val defaultMargin = marginLeft
-            if (message.isForwarded || message.isReplied || message.shouldShowAvatarAndName || message.body.isNotNullOrBlank()) {
+            if (message.isForwarded || message.isReplied || message.shouldShowAvatarAndName ||  (!ignoreBody && message.body.isNotNullOrBlank())) {
                 setMargins(defaultMargin, defaultMargin + dpToPx(4f), defaultMargin, defaultMargin)
             } else setMargins(defaultMargin)
         }
@@ -128,9 +128,9 @@ abstract class BaseMediaMessageViewHolder(
         return thumbData?.size == getThumbSize() && thumbData.key == ThumbFor.MessagesLisView.value
     }
 
-    protected open fun setImageTopCorners(fileImage: ShapeableImageView) {
+    protected open fun setImageTopCorners(fileImage: ShapeableImageView, ignoreBody: Boolean = false) {
         val message = requireMessage
-        val corner = (if (message.isForwarded || message.body.isNotBlank() || message.isReplied) {
+        val corner = (if (message.isForwarded ||  (!ignoreBody && message.body.isNotBlank()) || message.isReplied) {
             dpToPx(5f)
         } else dpToPx(17f)).toFloat()
 

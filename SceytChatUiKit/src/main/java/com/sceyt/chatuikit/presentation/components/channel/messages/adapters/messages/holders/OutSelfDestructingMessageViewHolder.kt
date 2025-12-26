@@ -30,13 +30,15 @@ import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
 
 class OutSelfDestructingMessageViewHolder(
-        private val binding: SceytItemOutSelfDestructingMessageBinding,
-        private val viewPoolReactions: RecyclerView.RecycledViewPool,
-        private val style: MessageItemStyle,
-        private val messageListeners: MessageClickListeners.ClickListeners?,
-        private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
-) : BaseMediaMessageViewHolder(binding.root, style, messageListeners,
-    needMediaDataCallback = needMediaDataCallback) {
+    private val binding: SceytItemOutSelfDestructingMessageBinding,
+    private val viewPoolReactions: RecyclerView.RecycledViewPool,
+    private val style: MessageItemStyle,
+    private val messageListeners: MessageClickListeners.ClickListeners?,
+    private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
+) : BaseMediaMessageViewHolder(
+    binding.root, style, messageListeners,
+    needMediaDataCallback = needMediaDataCallback
+) {
 
     init {
         with(binding) {
@@ -49,14 +51,6 @@ class OutSelfDestructingMessageViewHolder(
             root.setOnLongClickListener {
                 messageListeners?.onMessageLongClick(it, requireMessageItem)
                 return@setOnLongClickListener true
-            }
-
-            messageBody.doOnLongClick {
-                messageListeners?.onMessageLongClick(it, requireMessageItem)
-            }
-
-            messageBody.doOnClickWhenNoLink {
-                messageListeners?.onMessageClick(it, requireMessageItem)
             }
 
             fileImage.setOnClickListener {
@@ -85,13 +79,9 @@ class OutSelfDestructingMessageViewHolder(
             val message = (item as MessageListItem.MessageItem).message
             tvForwarded.isVisible = message.isForwarded
 
-            val body = message.body.trim()
-            if (body.isNotBlank()) {
-                messageBody.isVisible = true
-                setMessageBody(messageBody, message)
-            } else messageBody.isVisible = false
-
             if (!diff.hasDifference()) return
+
+            setImageSize(fileContainer, ignoreBody = true)
 
             if (diff.edited || diff.statusChanged)
                 setMessageStatusAndDateText(message, messageDate)
@@ -101,7 +91,7 @@ class OutSelfDestructingMessageViewHolder(
 
             if (diff.filesChanged) {
                 initAttachment()
-                setImageTopCorners(fileImage)
+                setImageTopCorners(fileImage, ignoreBody = true)
             }
 
             if (diff.replyContainerChanged)
@@ -109,9 +99,6 @@ class OutSelfDestructingMessageViewHolder(
 
             if (diff.reactionsChanged || diff.edited)
                 setOrUpdateReactions(item, rvReactions, viewPoolReactions)
-
-            if (diff.bodyChanged && !diff.reactionsChanged && recyclerViewReactions != null)
-                initWidthsDependReactions(recyclerViewReactions, layoutDetails)
         }
     }
 
@@ -174,7 +161,7 @@ class OutSelfDestructingMessageViewHolder(
         applyCommonStyle(
             layoutDetails = layoutDetails,
             tvForwarded = tvForwarded,
-            messageBody = messageBody,
+            messageBody = null,
             tvThreadReplyCount = tvReplyCount,
             toReplyLine = toReplyLine
         )
