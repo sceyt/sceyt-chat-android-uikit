@@ -82,7 +82,7 @@ import com.sceyt.chatuikit.persistence.database.entity.user.UserMetadataEntity
         PollVoteEntity::class,
         PendingPollVoteEntity::class,
     ],
-    version = 25,
+    version = 26,
     autoMigrations = [
         AutoMigration(from = 1, to = 2),
         AutoMigration(from = 2, to = 3),
@@ -106,6 +106,7 @@ import com.sceyt.chatuikit.persistence.database.entity.user.UserMetadataEntity
         AutoMigration(from = 22, to = 23),
         AutoMigration(from = 23, to = 24),
         AutoMigration(from = 24, to = 25),
+        AutoMigration(from = 25, to = 26),
     ])
 
 @TypeConverters(ChannelConverter::class, MessageConverter::class, ListStringConverter::class)

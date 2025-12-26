@@ -144,6 +144,7 @@ class MessageListViewModel(
     internal val pendingDisplayMsgIds by lazy { Collections.synchronizedSet(mutableSetOf<Long>()) }
     internal val needToUpdateTransferAfterOnResume = hashMapOf<Long, TransferData>()
     private var showSenderAvatarAndNameIfNeeded = true
+    internal var viewOnceSelected = false
     private var loadPrevJob: Job? = null
     private val loadNextJob: Job? = null
     private var loadNearJob: Job? = null
@@ -800,6 +801,9 @@ class MessageListViewModel(
                     } ?: return@mapNotNull null
                 )
             }
+            if (viewOnceSelected && attachments.size != 1) {
+                viewOnceSelected = false
+            }
 
             val dratMessage = DraftMessage(
                 channelId = conversationId,
@@ -812,7 +816,8 @@ class MessageListViewModel(
                 isReply = isReply,
                 bodyAttributes = bodyAttributes.toList(),
                 attachments = draftAttachments,
-                voiceAttachment = audioRecordData?.toVoiceAttachmentData(conversationId)
+                voiceAttachment = audioRecordData?.toVoiceAttachmentData(conversationId),
+                viewOnce = viewOnceSelected
             )
 
             channelInteractor.updateDraftMessage(dratMessage)
