@@ -6,7 +6,7 @@
         android:id="@+id/sceyt_self_destruct_indicator"
         android:icon="@drawable/sceyt_ic_view_once_white"
         android:title="@string/sceyt_view_once_message"
-        android:enabled="false"
+        android:enabled="true"
         app:showAsAction="always" />
 
 </menu>

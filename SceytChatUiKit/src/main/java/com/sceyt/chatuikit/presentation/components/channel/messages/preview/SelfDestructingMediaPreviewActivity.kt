@@ -7,6 +7,7 @@ import android.view.View
 import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.viewModels
+import androidx.annotation.OptIn
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.WindowInsetsCompat
@@ -25,21 +26,21 @@ import com.sceyt.chatuikit.extensions.applySystemWindowInsetsPadding
 import com.sceyt.chatuikit.extensions.launchActivity
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.koin.SceytKoinComponent
-import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
+import com.sceyt.chatuikit.presentation.common.dialogs.ViewOnceInfoDialog
 import com.sceyt.chatuikit.presentation.custom_views.PlayPauseImage
 import com.sceyt.chatuikit.presentation.helpers.ExoPlayerHelper
 import com.sceyt.chatuikit.styles.preview.SelfDestructingMediaPreviewStyle
-import org.koin.core.component.inject
 import java.util.Date
 
 class SelfDestructingMediaPreviewActivity : AppCompatActivity(), SceytKoinComponent {
 
     private lateinit var binding: SceytActivitySelfDestructingMediaPreviewBinding
     private lateinit var style: SelfDestructingMediaPreviewStyle
-    private val messageInteractor: MessageInteractor by inject()
 
     private val viewModel: SelfDestructingMediaPreviewViewModel by viewModels {
-        SelfDestructingMediaPreviewViewModelFactory(messageInteractor)
+        val message = intent.parcelable<SceytMessage>(MESSAGE_KEY)
+            ?: throw IllegalArgumentException("Message is required")
+        SelfDestructingMediaPreviewViewModelFactory(message)
     }
 
     private var message: SceytMessage? = null
@@ -73,7 +74,7 @@ class SelfDestructingMediaPreviewActivity : AppCompatActivity(), SceytKoinCompon
         getBundleArguments()
 
         displayMedia()
-        message?.let { viewModel.sendOpenedMarker(it) }
+        viewModel.sendOpenedMarker(message!!)
     }
     private fun initViews() {
         binding.toolbar.applySystemWindowInsetsPadding(applyTop = true, applyRight = true, applyLeft = true)
@@ -93,6 +94,7 @@ class SelfDestructingMediaPreviewActivity : AppCompatActivity(), SceytKoinCompon
         binding.root.post { toggleFullScreen(false) }
 
         binding.toolbar.setNavigationClickListener { finish() }
+        binding.toolbar.setMenuClickListener { onMenuItemClick(it) }
         binding.imageView.setOnPhotoTapListener { _, _, _ -> onMediaClick() }
 
         initVideoController()
@@ -218,6 +220,21 @@ class SelfDestructingMediaPreviewActivity : AppCompatActivity(), SceytKoinCompon
             else show(WindowInsetsCompat.Type.systemBars())
             systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         }
+    }
+
+    private fun onMenuItemClick(itemId: Int) {
+        when (itemId) {
+            R.id.sceyt_self_destruct_indicator -> {
+                showViewOnceInfoDialog()
+            }
+        }
+    }
+
+    private fun showViewOnceInfoDialog() {
+        ViewOnceInfoDialog.showDialog(
+            context = this,
+            acceptListener = {}
+        )
     }
 
     override fun onDestroy() {
