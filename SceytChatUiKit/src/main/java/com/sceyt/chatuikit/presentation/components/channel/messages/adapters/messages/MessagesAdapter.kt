@@ -13,8 +13,8 @@ import com.sceyt.chatuikit.extensions.dispatchUpdatesToSafetySuspend
 import com.sceyt.chatuikit.extensions.findIndexed
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
-import com.sceyt.chatuikit.presentation.common.DebounceHelper
-import com.sceyt.chatuikit.presentation.common.SyncArrayList
+import com.sceyt.chatuikit.presentation.helpers.DebounceHelper
+import com.sceyt.chatuikit.presentation.common.collections.SyncArrayList
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem.MessageItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.comporators.MessageItemComparator
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMessageViewHolder

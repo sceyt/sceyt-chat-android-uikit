@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.presentation.common
+package com.sceyt.chatuikit.presentation.common.recyclerview
 
 import android.content.Context
 import android.os.Parcelable
@@ -7,7 +7,6 @@ import android.util.DisplayMetrics
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.LinearSmoothScroller
 import androidx.recyclerview.widget.RecyclerView
-
 
 class SpeedyLinearLayoutManager : LinearLayoutManager {
     private val millisecondsPerInch = 25f //default is 25f (bigger = slower)

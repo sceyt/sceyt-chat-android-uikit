@@ -16,7 +16,7 @@ import com.sceyt.chatuikit.extensions.addRVScrollListener
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.extensions.setBundleArguments
 import com.sceyt.chatuikit.koin.SceytKoinComponent
-import com.sceyt.chatuikit.presentation.common.DebounceHelper
+import com.sceyt.chatuikit.presentation.helpers.DebounceHelper
 import com.sceyt.chatuikit.presentation.components.channel.messages.fragments.viewmodel.ReactionsInfoViewModel
 import com.sceyt.chatuikit.styles.StyleRegistry
 import com.sceyt.chatuikit.styles.reactions_info.ReactedUserListStyle

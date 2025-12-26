@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.presentation.common
+package com.sceyt.chatuikit.presentation.common.collections
 
 import java.util.concurrent.ConcurrentHashMap
 

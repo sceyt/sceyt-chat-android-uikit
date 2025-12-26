@@ -20,7 +20,7 @@ import com.sceyt.chatuikit.persistence.extensions.getChannelType
 import com.sceyt.chatuikit.persistence.extensions.isPublic
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.persistence.mappers.isDeleted
-import com.sceyt.chatuikit.presentation.common.SceytDialog
+import com.sceyt.chatuikit.presentation.common.dialogs.SceytDialog
 import com.sceyt.chatuikit.presentation.components.channel.input.MessageInputView
 import com.sceyt.chatuikit.presentation.components.channel.input.data.InputUserAction
 import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
@@ -52,6 +52,7 @@ fun MessageListViewModel.bind(
     messageInputView.checkIsParticipant(channel)
     messageInputView.setSaveUrlsPlace(placeToSavePathsList)
     messageInputView.isViewOnceSelected = { viewOnceSelected }
+    messageInputView.shouldShowViewOnceInfoDialog = { shouldShowViewOnceDialog() }
 
     viewModelScope.launch(Dispatchers.IO) {
         channelInteractor.getChannelFromDb(channel.id)?.let {
@@ -228,6 +229,10 @@ fun MessageListViewModel.bind(
 
         override fun toggleViewOnce(selected: Boolean) {
             viewOnceSelected = selected
+        }
+
+        override fun acceptedViewOnceInfoDialog() {
+            setShouldShowViewOnceDialog(false)
         }
     })
 }

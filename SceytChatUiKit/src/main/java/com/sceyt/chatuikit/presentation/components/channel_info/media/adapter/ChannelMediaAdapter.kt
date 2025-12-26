@@ -7,7 +7,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.databinding.SceytItemChannelMediaDateSeparatorBinding
 import com.sceyt.chatuikit.extensions.dispatchUpdatesToSafety
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
-import com.sceyt.chatuikit.presentation.common.SyncArrayList
+import com.sceyt.chatuikit.presentation.common.collections.SyncArrayList
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.holders.BaseFileViewHolder
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelFileItem
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil

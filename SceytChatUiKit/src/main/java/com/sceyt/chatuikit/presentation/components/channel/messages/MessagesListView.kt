@@ -57,8 +57,8 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploaded
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploading
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.WaitingToUpload
 import com.sceyt.chatuikit.persistence.mappers.isLink
-import com.sceyt.chatuikit.presentation.common.KeyboardEventListener
-import com.sceyt.chatuikit.presentation.common.SceytDialog
+import com.sceyt.chatuikit.presentation.helpers.KeyboardEventListener
+import com.sceyt.chatuikit.presentation.common.dialogs.SceytDialog
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.openFile
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
