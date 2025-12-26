@@ -51,13 +51,6 @@ class IncSelfDestructingMessageViewHolder(
                 return@setOnLongClickListener true
             }
 
-            messageBody.doOnLongClick {
-                messageListeners?.onMessageLongClick(it, requireMessageItem)
-            }
-
-            messageBody.doOnClickWhenNoLink {
-                messageListeners?.onMessageClick(it, requireMessageItem)
-            }
             fileImage.setOnClickListener {
                 SelfDestructingMediaPreviewActivity.launchActivity(
                     context = it.context,
@@ -85,16 +78,12 @@ class IncSelfDestructingMessageViewHolder(
             val message = (item as MessageListItem.MessageItem).message
             tvForwarded.isVisible = message.isForwarded
 
-            val body = message.body.trim()
-            if (body.isNotBlank()) {
-                messageBody.isVisible = true
-                setMessageBody(messageBody, message)
-            } else messageBody.isVisible = false
-
             if (!diff.hasDifference()) return
 
             if (diff.edited || diff.statusChanged)
                 setMessageStatusAndDateText(message, messageDate)
+
+            setImageSize(fileContainer, ignoreBody = true)
 
             if (diff.avatarChanged || diff.showAvatarAndNameChanged)
                 setMessageUserAvatarAndName(avatar, tvUserName, message)
@@ -104,7 +93,7 @@ class IncSelfDestructingMessageViewHolder(
 
             if (diff.filesChanged) {
                 initAttachment()
-                setImageTopCorners(fileImage)
+                setImageTopCorners(fileImage, ignoreBody = true)
             }
 
             if (diff.replyContainerChanged)
@@ -112,9 +101,6 @@ class IncSelfDestructingMessageViewHolder(
 
             if (diff.reactionsChanged || diff.edited)
                 setOrUpdateReactions(item, rvReactions, viewPoolReactions)
-
-            if (diff.bodyChanged && !diff.reactionsChanged && recyclerViewReactions != null)
-                initWidthsDependReactions(recyclerViewReactions, layoutDetails)
 
             if (item.message.shouldShowAvatarAndName)
                 avatar.setOnClickListener {
@@ -189,7 +175,7 @@ class IncSelfDestructingMessageViewHolder(
         applyCommonStyle(
             layoutDetails = layoutDetails,
             tvForwarded = tvForwarded,
-            messageBody = messageBody,
+            messageBody = null,
             tvThreadReplyCount = tvReplyCount,
             toReplyLine = toReplyLine,
             tvSenderName = tvUserName,
