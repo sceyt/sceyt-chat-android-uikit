@@ -98,7 +98,7 @@
             android:layout_marginTop="4dp"
             android:layout_marginEnd="12dp"
             android:layout_marginBottom="8dp"
-            android:drawablePadding="8dp"
+            android:drawablePadding="6dp"
             android:text="@string/sceyt_message_self_destructed"
             android:textColor="@color/sceyt_color_text_secondary"
             android:textSize="@dimen/mediumTextSize"
