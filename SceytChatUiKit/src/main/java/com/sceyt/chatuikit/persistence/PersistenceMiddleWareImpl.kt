@@ -141,14 +141,14 @@ internal class PersistenceMiddleWareImpl(
     }
 
     private fun onMessageStatusChangeEvent(data: MessageStatusChangeData) {
+        scope.launch(Dispatchers.IO) { messageMarkerLogic.onMessageStatusChangeEvent(data) }
         scope.launch(Dispatchers.IO) { messagesLogic.onMessageStatusChangeEvent(data) }
         scope.launch(Dispatchers.IO) { channelLogic.onMessageStatusChangeEvent(data) }
-        scope.launch(Dispatchers.IO) { messageMarkerLogic.onMessageStatusChangeEvent(data) }
     }
 
     private fun onMessageMarkerEvent(data: MessageMarkerEventData) {
-        scope.launch(Dispatchers.IO) { messagesLogic.onMessageMarkerEvent(data) }
         scope.launch(Dispatchers.IO) { messageMarkerLogic.onMessageMarkerEvent(data) }
+        scope.launch(Dispatchers.IO) { messagesLogic.onMessageMarkerEvent(data) }
     }
 
     private fun onMessage(data: Pair<SceytChannel, SceytMessage>) {

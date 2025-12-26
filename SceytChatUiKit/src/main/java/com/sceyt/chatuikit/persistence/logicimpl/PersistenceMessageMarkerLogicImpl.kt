@@ -43,7 +43,6 @@ internal class PersistenceMessageMarkerLogicImpl(
             MarkerEntity(it, data.user.id, data.marker.name, data.marker.createdAt)
         }
         messageDao.insertUserMarkersIfExistMessage(markers)
-
     }
 
     override suspend fun getMessageMarkers(
