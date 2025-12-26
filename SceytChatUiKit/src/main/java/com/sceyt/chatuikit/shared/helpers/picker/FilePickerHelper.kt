@@ -30,9 +30,9 @@ import com.sceyt.chatuikit.extensions.initVideoCameraLauncher
 import com.sceyt.chatuikit.extensions.oneOfPermissionsIgnored
 import com.sceyt.chatuikit.extensions.permissionIgnored
 import com.sceyt.chatuikit.logger.SceytLog
-import com.sceyt.chatuikit.presentation.common.DebounceHelper
-import com.sceyt.chatuikit.presentation.common.SceytDialog
-import com.sceyt.chatuikit.presentation.common.SceytLoader
+import com.sceyt.chatuikit.presentation.helpers.DebounceHelper
+import com.sceyt.chatuikit.presentation.common.dialogs.SceytDialog
+import com.sceyt.chatuikit.presentation.common.dialogs.SceytLoader
 import com.sceyt.chatuikit.presentation.components.picker.BottomSheetMediaPicker
 import com.sceyt.chatuikit.presentation.components.picker.BottomSheetMediaPicker.Companion.MAX_SELECT_MEDIA_COUNT
 import com.sceyt.chatuikit.shared.utils.FilePathUtil

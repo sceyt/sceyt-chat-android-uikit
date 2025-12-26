@@ -44,6 +44,7 @@ import com.sceyt.chatuikit.extensions.isEqualsVideoOrImage
 import com.sceyt.chatuikit.extensions.notAutoCorrectable
 import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.extensions.setTextAndMoveSelectionEnd
+import com.sceyt.chatuikit.extensions.showSafety
 import com.sceyt.chatuikit.extensions.showSoftInput
 import com.sceyt.chatuikit.formatters.attributes.DraftMessageBodyFormatterAttributes
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
@@ -53,8 +54,9 @@ import com.sceyt.chatuikit.media.audio.AudioRecorderHelper.OnRecorderStop
 import com.sceyt.chatuikit.persistence.extensions.getChannelType
 import com.sceyt.chatuikit.persistence.extensions.isPeerBlocked
 import com.sceyt.chatuikit.persistence.lazyVar
-import com.sceyt.chatuikit.presentation.common.DebounceHelper
-import com.sceyt.chatuikit.presentation.common.SceytDialog
+import com.sceyt.chatuikit.presentation.helpers.DebounceHelper
+import com.sceyt.chatuikit.presentation.common.dialogs.SceytDialog
+import com.sceyt.chatuikit.presentation.common.dialogs.ViewOnceInfoDialog
 import com.sceyt.chatuikit.presentation.components.channel.input.adapters.attachments.AttachmentItem
 import com.sceyt.chatuikit.presentation.components.channel.input.adapters.attachments.AttachmentsAdapter
 import com.sceyt.chatuikit.presentation.components.channel.input.adapters.attachments.AttachmentsViewHolderFactory
@@ -156,6 +158,7 @@ class MessageInputView @JvmOverloads constructor(
     }
     private var recordingUpdateJob: Job? = null
     internal var isViewOnceSelected: () -> Boolean = { false }
+    internal var shouldShowViewOnceInfoDialog: () -> Boolean = { false }
     var enableVoiceRecord = true
         private set
     var enableSendAttachment = true
@@ -1251,14 +1254,26 @@ class MessageInputView @JvmOverloads constructor(
     }
 
     override fun onActionClick(action: InputAction) {
+        fun doActionClicked(selected: Boolean) {
+            messageInputActionCallback?.toggleViewOnce(selected)
+            updateDraftMessage()
+            updateInputActions()
+        }
+
         val selected = when (action.id) {
             INPUT_ACTION_VIEW_ONCE_ID -> true
             INPUT_ACTION_VIEW_ONCE_SELECTED_ID -> false
             else -> false
         }
-        messageInputActionCallback?.toggleViewOnce(selected)
-        updateDraftMessage()
-        updateInputActions()
+        if (selected && shouldShowViewOnceInfoDialog()) {
+            ViewOnceInfoDialog.showDialog(
+                context = context,
+                acceptListener = {
+                    messageInputActionCallback?.acceptedViewOnceInfoDialog()
+                    doActionClicked(true)
+                }
+            )
+        } else doActionClicked(selected)
     }
 
     override fun onMultiselectModeListener(isMultiselectMode: Boolean) {

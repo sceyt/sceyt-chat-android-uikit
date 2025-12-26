@@ -13,7 +13,7 @@ import com.sceyt.chatuikit.databinding.SceytSearchViewBinding
 import com.sceyt.chatuikit.extensions.hideSoftInput
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.database.SceytDatabase
-import com.sceyt.chatuikit.presentation.common.DebounceHelper
+import com.sceyt.chatuikit.presentation.helpers.DebounceHelper
 import com.sceyt.chatuikit.presentation.components.channel_list.search.listeners.click.SearchInputClickListeners
 import com.sceyt.chatuikit.presentation.components.channel_list.search.listeners.click.SearchInputClickListeners.ClickListeners
 import com.sceyt.chatuikit.presentation.components.channel_list.search.listeners.click.SearchInputClickListenersImpl

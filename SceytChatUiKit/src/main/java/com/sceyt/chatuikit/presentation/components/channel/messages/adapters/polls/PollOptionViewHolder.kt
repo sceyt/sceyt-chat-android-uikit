@@ -7,7 +7,7 @@ import com.sceyt.chatuikit.data.models.messages.PollOptionUiModel
 import com.sceyt.chatuikit.databinding.SceytItemPollOptionBinding
 import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.persistence.differs.PollOptionDiff
-import com.sceyt.chatuikit.presentation.common.OverlapDecoration
+import com.sceyt.chatuikit.presentation.common.recyclerview.OverlapDecoration
 import com.sceyt.chatuikit.presentation.custom_views.apply
 import com.sceyt.chatuikit.styles.common.BackgroundStyle
 import com.sceyt.chatuikit.styles.messages_list.item.PollStyle

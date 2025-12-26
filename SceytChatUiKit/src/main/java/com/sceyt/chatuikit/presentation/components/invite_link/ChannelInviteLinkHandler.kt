@@ -10,7 +10,7 @@ import com.sceyt.chatuikit.data.models.onError
 import com.sceyt.chatuikit.data.models.onSuccessNotNull
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
-import com.sceyt.chatuikit.presentation.common.SceytLoader
+import com.sceyt.chatuikit.presentation.common.dialogs.SceytLoader
 import com.sceyt.chatuikit.presentation.components.invite_link.join.BottomSheetJoinByInviteLink
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withTimeout

@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.presentation.common
+package com.sceyt.chatuikit.presentation.common.recyclerview
 
 import androidx.annotation.MainThread
 import androidx.annotation.WorkerThread
@@ -25,19 +25,19 @@ import kotlin.coroutines.cancellation.CancellationException
 import kotlin.coroutines.resume
 
 class AsyncListDiffer<T : Any>(
-        private val updateCallback: ListUpdateCallback,
-        private val diffCallback: DiffUtil.ItemCallback<T>,
-        private val mainDispatcher: CoroutineDispatcher = Dispatchers.Main,
-        private val backgroundDispatcher: CoroutineDispatcher = Dispatchers.Default,
-        private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + backgroundDispatcher)
+    private val updateCallback: ListUpdateCallback,
+    private val diffCallback: DiffUtil.ItemCallback<T>,
+    private val mainDispatcher: CoroutineDispatcher = Dispatchers.Main,
+    private val backgroundDispatcher: CoroutineDispatcher = Dispatchers.Default,
+    private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + backgroundDispatcher)
 ) {
 
     private val mutex = Mutex()
 
     constructor(
-            adapter: RecyclerView.Adapter<*>,
-            diffCallback: DiffUtil.ItemCallback<T>,
-            scope: CoroutineScope
+        adapter: RecyclerView.Adapter<*>,
+        diffCallback: DiffUtil.ItemCallback<T>,
+        scope: CoroutineScope
     ) : this(AdapterListUpdateCallback(adapter), diffCallback, scope = scope)
 
 
@@ -173,23 +173,29 @@ class AsyncListDiffer<T : Any>(
                     return diffCallback.areItemsTheSame(oldItem, newItem)
                 }
 
-                override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+                override fun areContentsTheSame(
+                    oldItemPosition: Int,
+                    newItemPosition: Int
+                ): Boolean {
                     val oldItem = oldList[oldItemPosition]
                     val newItem = newList[newItemPosition]
                     return diffCallback.areContentsTheSame(oldItem, newItem)
                 }
 
                 override fun getChangePayload(oldItemPosition: Int, newItemPosition: Int): Any? {
-                    return diffCallback.getChangePayload(oldList[oldItemPosition], newList[newItemPosition])
+                    return diffCallback.getChangePayload(
+                        oldList[oldItemPosition],
+                        newList[newItemPosition]
+                    )
                 }
             })
         }
     }
 
     private suspend fun latchList(
-            newList: List<T>,
-            diffResult: DiffUtil.DiffResult,
-            commitCallback: (() -> Unit)?,
+        newList: List<T>,
+        diffResult: DiffUtil.DiffResult,
+        commitCallback: (() -> Unit)?,
     ) = withContext(mainDispatcher) {
         if (!isActive) return@withContext
         performWithRetry {

@@ -50,7 +50,7 @@ import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.persistence.extensions.isPublic
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
-import com.sceyt.chatuikit.presentation.common.SceytDialog.Companion.showDialog
+import com.sceyt.chatuikit.presentation.common.dialogs.SceytDialog.Companion.showDialog
 import com.sceyt.chatuikit.presentation.components.channel_info.description.ChannelInfoDescriptionFragment
 import com.sceyt.chatuikit.presentation.components.channel_info.details.ChannelInfoDetailsFragment
 import com.sceyt.chatuikit.presentation.components.channel_info.dialogs.DirectChatActionsDialog
