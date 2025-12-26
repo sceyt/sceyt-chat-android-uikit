@@ -139,10 +139,13 @@ class MessagesCache {
         vararg tIds: Long
     ) = mutex.withLock {
         val updatesMessages = mutableListOf<SceytMessage>()
-        tIds.forEach {
-            getMessageByTid(channelId, it)?.let { message ->
+        getMessagesMap(channelId)?.let { map ->
+            tIds.forEach { tid ->
+                val message = map.get(tid) ?: return@forEach
                 if (message.deliveryStatus < status) {
-                    updatesMessages.add(message.copy(deliveryStatus = status))
+                    val updatedMessage = message.copy(deliveryStatus = status)
+                    map[tid] = updatedMessage
+                    updatesMessages.add(updatedMessage)
                 }
             }
         }
@@ -155,14 +158,17 @@ class MessagesCache {
         tIds: LongArray
     ) = mutex.withLock {
         val updatesMessages = mutableListOf<SceytMessage>()
-        tIds.forEach { tid ->
-            getMessageByTid(channelId, tid)?.let { message ->
-                updatesMessages.add(message.copy(userMarkers = message.userMarkers.orEmpty() + markers))
+        getMessagesMap(channelId)?.let { map ->
+            tIds.forEach { tid ->
+                val message = map.get(tid) ?: return@forEach
+                val newMarkers = (message.userMarkers.orEmpty() + markers).toSet()
+                val updatedMessage = message.copy(userMarkers = newMarkers.toList())
+                map[tid] = updatedMessage
+                updatesMessages.add(updatedMessage)
             }
         }
         emitMessageUpdated(channelId, *updatesMessages.toTypedArray())
     }
-
 
     suspend fun hardDeleteMessage(channelId: Long, message: SceytMessage) = mutex.withLock {
         cachedMessages[channelId]?.remove(message.tid)
