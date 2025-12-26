@@ -3,7 +3,7 @@ package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.me
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.databinding.SceytItemIncSelfDestructedMessageBinding
-import com.sceyt.chatuikit.extensions.setDrawableStart
+import com.sceyt.chatuikit.extensions.setCompoundDrawableStart
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMessageViewHolder
@@ -59,7 +59,8 @@ class IncSelfDestructedMessageViewHolder(
                     setMessageStatusAndDateText(message, messageDate)
 
                 if (diff.edited || diff.bodyChanged) {
-                    val body = style.selfDestructedMessageItemStyle.bodyFormatter.format(context, message)
+                    val body =
+                        style.selfDestructedMessageItemStyle.bodyFormatter.format(context, message)
                     messageBody.setText(body, TextView.BufferType.SPANNABLE)
                     setBodyTextPosition(messageBody, messageDate, layoutDetails)
                 }
@@ -104,10 +105,9 @@ class IncSelfDestructedMessageViewHolder(
             avatarView = avatar
         )
 
-        messageBody.setDrawableStart(
+        messageBody.setCompoundDrawableStart(
             drawable = selfDestructedStyle.drawable,
             tint = selfDestructedStyle.iconColor,
-            relative = false
         )
     }
 }
