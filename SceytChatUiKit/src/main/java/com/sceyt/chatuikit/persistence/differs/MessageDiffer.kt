@@ -3,6 +3,7 @@ package com.sceyt.chatuikit.persistence.differs
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytPollDetails
 import com.sceyt.chatuikit.persistence.extensions.equalsIgnoreNull
+import com.sceyt.chatuikit.presentation.extensions.isSelfDestructed
 
 data class MessageDiff(
     val edited: Boolean,
@@ -18,11 +19,12 @@ data class MessageDiff(
     val selectionChanged: Boolean,
     val metadataChanged: Boolean,
     val pollChanged: Boolean,
+    val isSelfDestructedChanged: Boolean
 ) {
     fun hasDifference(): Boolean {
         return edited || bodyChanged || statusChanged || avatarChanged || nameChanged || replyCountChanged
                 || replyContainerChanged || reactionsChanged || showAvatarAndNameChanged || filesChanged
-                || selectionChanged || metadataChanged || pollChanged
+                || selectionChanged || metadataChanged || pollChanged || isSelfDestructedChanged
     }
 
     companion object {
@@ -39,7 +41,8 @@ data class MessageDiff(
             filesChanged = true,
             selectionChanged = true,
             metadataChanged = true,
-            pollChanged = true
+            pollChanged = true,
+            isSelfDestructedChanged = true
         )
         val DEFAULT_FALSE = MessageDiff(
             edited = false,
@@ -54,7 +57,8 @@ data class MessageDiff(
             filesChanged = false,
             selectionChanged = false,
             metadataChanged = false,
-            pollChanged = false
+            pollChanged = false,
+            isSelfDestructedChanged = false
         )
     }
 
@@ -62,7 +66,7 @@ data class MessageDiff(
         return "edited: $edited, bodyChanged: $bodyChanged, statusChanged: $statusChanged, avatarChanged: $avatarChanged, " +
                 "nameChanged: $nameChanged, replyCountChanged: $replyCountChanged, reactionsChanged: $reactionsChanged, " +
                 "showAvatarAndNameChanged: $showAvatarAndNameChanged, filesChanged: $filesChanged, selectionChanged: $selectionChanged, " +
-                "metadataChanged: $metadataChanged, pollChanged: $pollChanged"
+                "metadataChanged: $metadataChanged, pollChanged: $pollChanged viewOnceStateChanged: $isSelfDestructedChanged"
     }
 }
 
@@ -83,7 +87,8 @@ fun SceytMessage.diff(other: SceytMessage): MessageDiff {
         filesChanged = attachments?.size != other.attachments?.size,
         selectionChanged = isSelected != other.isSelected,
         metadataChanged = metadata != other.metadata,
-        pollChanged = poll?.pollChanged(other.poll) ?: (other.poll != null)
+        pollChanged = poll?.pollChanged(other.poll) ?: (other.poll != null),
+        isSelfDestructedChanged = isSelfDestructedChanged(other)
     )
 }
 
@@ -103,8 +108,16 @@ fun SceytMessage.diffContent(other: SceytMessage): MessageDiff {
         filesChanged = attachments?.size != other.attachments?.size,
         selectionChanged = isSelected != other.isSelected,
         metadataChanged = metadata != other.metadata,
-        pollChanged = poll?.pollChanged(other.poll) ?: (other.poll != null)
+        pollChanged = poll?.pollChanged(other.poll) ?: (other.poll != null),
+        isSelfDestructedChanged = isSelfDestructedChanged(other)
     )
+}
+
+fun SceytMessage.isSelfDestructedChanged(other: SceytMessage): Boolean {
+    if (!viewOnce || !other.viewOnce)
+        return false
+
+    return isSelfDestructed() != other.isSelfDestructed()
 }
 
 fun SceytPollDetails.pollChanged(other: SceytPollDetails?): Boolean {
