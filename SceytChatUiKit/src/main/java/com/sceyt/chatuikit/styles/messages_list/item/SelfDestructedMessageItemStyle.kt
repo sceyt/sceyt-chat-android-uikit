@@ -8,6 +8,7 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.extensions.getCompatDrawable
+import com.sceyt.chatuikit.extensions.resizeByMaxSize
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildSelfDestructedMessageIconColor
@@ -26,7 +27,8 @@ data class SelfDestructedMessageItemStyle(
         internal val typedArray: TypedArray
     ) {
         fun build() = SelfDestructedMessageItemStyle(
-            drawable = context.getCompatDrawable(R.drawable.sceyt_ic_message_self_destructed),
+            drawable = context.getCompatDrawable(R.drawable.sceyt_ic_view_once)
+                ?.resizeByMaxSize(20),
             iconColor = buildSelfDestructedMessageIconColor(),
             bodyFormatter = SceytChatUIKit.formatters.selfDestructedMessageBodyFormatter
         ).let { styleCustomizer.apply(context, it) }
