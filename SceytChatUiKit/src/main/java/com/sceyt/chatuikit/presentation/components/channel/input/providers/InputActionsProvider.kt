@@ -8,25 +8,14 @@ import com.sceyt.chatuikit.presentation.components.channel.input.data.InputState
  * Provider for input actions inside MessageInputView.
  * Implement this interface to provide custom actions based on input state.
  *
- * Example:
- * ```
- * class MyActionsProvider : InputActionsProvider {
- *     override fun getActions(context: Context, inputState: InputState): List<InputAction> {
- *         return when (inputState) {
- *             is InputState.Text -> listOf(emojiAction, mentionAction)
- *             is InputState.Voice -> listOf(micAction)
- *             else -> emptyList()
- *         }
- *     }
- * }
- * ```
+ * @see CompositeInputActionsProvider
  */
 interface InputActionsProvider {
     /**
      * Returns list of actions to display based on current input state.
      *
      * @param context Android context
-     * @param inputState Current state of the input (Text, Voice, etc.)
+     * @param inputState Current state of the input (Voice, Recording, Text, TextWithAttachments, Attachments)
      * @return List of actions to display
      */
     fun getActions(context: Context, inputState: InputState): List<InputAction>

@@ -51,10 +51,12 @@ fun MessageListViewModel.bind(
     messageInputView.setReplyInThreadMessageId(replyInThreadMessage?.id)
     messageInputView.checkIsParticipant(channel)
     messageInputView.setSaveUrlsPlace(placeToSavePathsList)
+    messageInputView.isViewOnceSelected = { viewOnceSelected }
 
     viewModelScope.launch(Dispatchers.IO) {
         channelInteractor.getChannelFromDb(channel.id)?.let {
             withContext(Dispatchers.Main) {
+                viewOnceSelected = it.draftMessage?.viewOnce == true
                 messageInputView.setDraftMessage(it.draftMessage)
             }
         }
@@ -222,6 +224,10 @@ fun MessageListViewModel.bind(
 
         override fun createPoll() {
             CreatePollActivity.launch(messageInputView.context, channel.id)
+        }
+
+        override fun toggleViewOnce(selected: Boolean) {
+            viewOnceSelected = selected
         }
     })
 }
