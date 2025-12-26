@@ -11,6 +11,7 @@ open class DefaultMarkerTitleProvider : VisualProvider<MarkerType, String> {
             MarkerType.Displayed -> context.getString(R.string.sceyt_seen_by)
             MarkerType.Received -> context.getString(R.string.sceyt_delivered_to)
             MarkerType.Played -> context.getString(R.string.sceyt_played_by)
+            MarkerType.Opened -> context.getString(R.string.sceyt_opened_by)
             is MarkerType.Custom -> from.value
         }
     }
