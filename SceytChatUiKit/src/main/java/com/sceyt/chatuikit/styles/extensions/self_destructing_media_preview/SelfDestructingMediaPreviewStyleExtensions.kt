@@ -27,12 +27,10 @@ internal fun buildMessageBodyBackgroundStyle(
     background = android.graphics.drawable.GradientDrawable(
         android.graphics.drawable.GradientDrawable.Orientation.TOP_BOTTOM,
         intArrayOf(
-            Color.parseColor("#0017191C"),
-            Color.parseColor("#2617191C"),
-            Color.parseColor("#3317191C"),
-            Color.parseColor("#5917191C"),
-            Color.parseColor("#8017191C"),
-            Color.parseColor("#BF17191C")
+            Color.parseColor("#0017191C"), // 0%
+            Color.parseColor("#4017191C"), // 25%
+            Color.parseColor("#8017191C"), // 50%
+            Color.parseColor("#BF17191C")  // 75%
         )
     )
 )

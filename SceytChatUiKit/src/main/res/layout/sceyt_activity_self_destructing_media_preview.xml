@@ -43,6 +43,7 @@
             android:id="@+id/messageBodyScrollView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:paddingTop="48dp"
             android:overScrollMode="never"
             android:scrollbars="none">
 

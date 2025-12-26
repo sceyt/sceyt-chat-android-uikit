@@ -84,7 +84,8 @@ interface MessageInteractor {
     ): List<SceytResponse<MessageListMarker>>
 
     suspend fun addMessagesMarker(
-            channelId: Long, marker: String,
+            channelId: Long,
+            marker: String,
             vararg ids: Long,
     ): List<SceytResponse<MessageListMarker>>
 
