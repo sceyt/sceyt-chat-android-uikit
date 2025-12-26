@@ -79,6 +79,22 @@ fun TextView.setDrawableStart(
         )
 }
 
+fun TextView.setCompoundDrawableStart(
+    drawable: Drawable?,
+    @ColorInt tint: Int = 0,
+) {
+    val drawables = compoundDrawables
+    if (tint != 0)
+        drawable?.mutate()?.setTint(tint)
+
+        setCompoundDrawables(
+            drawable,
+            drawables[1],
+            drawables[2],
+            drawables[3]
+        )
+}
+
 fun TextView.setDrawableTop(
     @DrawableRes id: Int,
     @ColorRes tint: Int = 0,
