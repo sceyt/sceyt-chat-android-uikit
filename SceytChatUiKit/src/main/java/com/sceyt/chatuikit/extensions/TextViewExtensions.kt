@@ -12,39 +12,97 @@ import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import androidx.core.view.isVisible
 
-fun TextView.setDrawableEnd(@DrawableRes id: Int, @ColorRes tint: Int = 0) {
-    val drawables = compoundDrawablesRelative
+fun TextView.setDrawableEnd(
+    @DrawableRes id: Int,
+    @ColorRes tint: Int = 0,
+    relative: Boolean = true
+) {
+    val drawables = if (relative) compoundDrawablesRelative else compoundDrawables
     val drawableEnd = context.getCompatDrawable(id)
     if (tint != 0)
         drawableEnd?.mutate()?.setTint(context.getCompatColor(tint))
 
-    setCompoundDrawablesRelativeWithIntrinsicBounds(drawables[0], drawables[2], drawableEnd, drawables[3])
+    if (relative)
+        setCompoundDrawablesRelativeWithIntrinsicBounds(
+            drawables[0],
+            drawables[1],
+            drawableEnd,
+            drawables[3]
+        )
+    else
+        setCompoundDrawablesWithIntrinsicBounds(
+            drawables[0],
+            drawables[1],
+            drawableEnd,
+            drawables[3]
+        )
 }
 
-fun TextView.setDrawableStart(@DrawableRes id: Int, @ColorRes tint: Int = 0) {
-    val drawables = compoundDrawablesRelative
+fun TextView.setDrawableStart(
+    @DrawableRes id: Int,
+    @ColorRes tint: Int = 0,
+    relative: Boolean = true
+) {
     val drawableStart = context.getCompatDrawable(id)
     if (tint != 0)
         drawableStart?.mutate()?.setTint(context.getCompatColor(tint))
 
-    setCompoundDrawablesRelativeWithIntrinsicBounds(drawableStart, drawables[1], drawables[2], drawables[3])
+    setDrawableStart(
+        drawable = drawableStart,
+        tint = if (tint != 0) context.getCompatColor(tint) else 0,
+        relative = relative
+    )
 }
 
-fun TextView.setDrawableStart(drawable: Drawable?, @ColorInt tint: Int = 0) {
-    val drawables = compoundDrawablesRelative
+fun TextView.setDrawableStart(
+    drawable: Drawable?,
+    @ColorInt tint: Int = 0,
+    relative: Boolean = true
+) {
+    val drawables = if (relative) compoundDrawablesRelative else compoundDrawables
     if (tint != 0)
         drawable?.mutate()?.setTint(tint)
 
-    setCompoundDrawablesRelativeWithIntrinsicBounds(drawable, drawables[1], drawables[2], drawables[3])
+    if (relative)
+        setCompoundDrawablesRelativeWithIntrinsicBounds(
+            drawable,
+            drawables[1],
+            drawables[2],
+            drawables[3]
+        )
+    else
+        setCompoundDrawablesWithIntrinsicBounds(
+            drawable,
+            drawables[1],
+            drawables[2],
+            drawables[3]
+        )
 }
 
-fun TextView.setDrawableTop(@DrawableRes id: Int, @ColorRes tint: Int = 0) {
-    val drawables = compoundDrawablesRelative
+fun TextView.setDrawableTop(
+    @DrawableRes id: Int,
+    @ColorRes tint: Int = 0,
+    relative: Boolean = true
+) {
+    val drawables = if (relative) compoundDrawablesRelative else compoundDrawables
     val drawableTop = context.getCompatDrawable(id)
     if (tint != 0)
         drawableTop?.mutate()?.setTint(context.getCompatColor(tint))
 
-    setCompoundDrawablesRelativeWithIntrinsicBounds(drawables[0], drawableTop, drawables[2], drawables[3])
+    if (relative)
+        setCompoundDrawablesRelativeWithIntrinsicBounds(
+            drawables[0],
+            drawableTop,
+            drawables[2],
+            drawables[3]
+        )
+    else
+        setCompoundDrawablesWithIntrinsicBounds(
+            drawables[0],
+            drawableTop,
+            drawables[2],
+            drawables[3]
+        )
 }
 
 

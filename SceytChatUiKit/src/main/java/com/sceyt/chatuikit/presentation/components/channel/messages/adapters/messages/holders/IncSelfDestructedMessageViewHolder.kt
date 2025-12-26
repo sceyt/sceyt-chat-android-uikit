@@ -106,7 +106,8 @@ class IncSelfDestructedMessageViewHolder(
 
         messageBody.setDrawableStart(
             drawable = selfDestructedStyle.drawable,
-            tint = selfDestructedStyle.iconColor
+            tint = selfDestructedStyle.iconColor,
+            relative = false
         )
     }
 }

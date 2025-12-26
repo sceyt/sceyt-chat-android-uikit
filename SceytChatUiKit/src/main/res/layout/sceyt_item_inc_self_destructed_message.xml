@@ -102,14 +102,14 @@
             android:text="@string/sceyt_message_self_destructed"
             android:textColor="@color/sceyt_color_text_secondary"
             android:textSize="@dimen/mediumTextSize"
-            tools:textStyle="italic"
             app:layout_constrainedWidth="true"
             app:layout_constraintBottom_toBottomOf="@+id/layoutDetails"
-            app:layout_constraintEnd_toStartOf="@+id/messageDate"
+            app:layout_constraintEnd_toEndOf="@+id/layoutDetails"
             app:layout_constraintHorizontal_bias="0"
             app:layout_constraintStart_toStartOf="@+id/layoutDetails"
             app:layout_constraintTop_toBottomOf="@+id/viewReply"
-            tools:text="@string/sceyt_message_self_destructed" />
+            tools:text="@string/sceyt_message_self_destructed"
+            tools:textStyle="italic" />
 
         <com.sceyt.chatuikit.presentation.custom_views.DecoratedTextView
             android:id="@+id/messageDate"
