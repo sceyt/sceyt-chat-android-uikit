@@ -293,4 +293,7 @@
     <string name="sceyt_unknown_duration">Unknown duration</string>
     <string name="sceyt_read_more">Read More</string>
     <string name="sceyt_groups">Groups</string>
+    <string name="sceyt_opened_by">Opened by</string>
+    <string name="sceyt_view_once_message">View Once</string>
+    <string name="sceyt_unsupported_media">Unsupported media type</string>
 </resources>
