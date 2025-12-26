@@ -5,8 +5,6 @@ import com.sceyt.chat.models.message.DeleteMessageType
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.data.managers.channel.event.MessageMarkerEventData
-import com.sceyt.chatuikit.data.managers.message.event.MessageStatusChangeData
 import com.sceyt.chatuikit.data.models.LoadKeyData
 import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.SceytPagingResponse
@@ -27,8 +25,6 @@ interface PersistenceMessagesLogic {
     )
 
     suspend fun handlePush(data: PushData): Boolean
-    suspend fun onMessageStatusChangeEvent(data: MessageStatusChangeData)
-    suspend fun onMessageMarkerEvent(data: MessageMarkerEventData)
     suspend fun onMessageEditedOrDeleted(message: SceytMessage)
     suspend fun loadPrevMessages(
         conversationId: Long, lastMessageId: Long, replyInThread: Boolean, offset: Int,

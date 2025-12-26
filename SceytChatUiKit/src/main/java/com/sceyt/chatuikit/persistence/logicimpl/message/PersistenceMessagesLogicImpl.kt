@@ -12,10 +12,8 @@ import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.data.managers.channel.event.MessageMarkerEventData
 import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.managers.message.MessageEventManager
-import com.sceyt.chatuikit.data.managers.message.event.MessageStatusChangeData
 import com.sceyt.chatuikit.data.managers.message.event.ReactionUpdateEventData
 import com.sceyt.chatuikit.data.managers.message.event.ReactionUpdateEventEnum
 import com.sceyt.chatuikit.data.models.LoadKeyData
@@ -199,38 +197,6 @@ internal class PersistenceMessagesLogicImpl(
             )
 
         return@withContext true
-    }
-
-    override suspend fun onMessageStatusChangeEvent(data: MessageStatusChangeData) =
-        withContext(dispatcherIO) {
-            val updatedMessages = messageDao.updateMessageStatusWithBefore(
-                channelId = data.channel.id,
-                status = data.status,
-                id = data.marker.messageIds.maxOf { it }
-            )
-            messagesCache.updateMessagesStatus(
-                channelId = data.channel.id,
-                status = data.status,
-                tIds = updatedMessages.map { it.tid }.toLongArray()
-            )
-        }
-
-    override suspend fun onMessageMarkerEvent(data: MessageMarkerEventData) {
-        val tIds = messageDao.getMessageTIdsByIds(ids = data.marker.messageIds.toLongArray())
-        if (tIds.isEmpty()) return
-        messagesCache.addMessageMarker(
-            channelId = data.channel.id,
-            markers = data.marker.messageIds.map {
-                SceytMarker(
-                    messageId = it,
-                    userId = data.user.id,
-                    user = data.user,
-                    name = data.marker.name,
-                    createdAt = data.marker.createdAt
-                )
-            },
-            tIds = tIds.toLongArray()
-        )
     }
 
     override suspend fun onMessageEditedOrDeleted(message: SceytMessage) =
