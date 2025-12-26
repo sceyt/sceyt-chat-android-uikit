@@ -75,42 +75,6 @@ class SelfDestructingMediaPreviewActivity : AppCompatActivity(), SceytKoinCompon
         displayMedia()
         message?.let { viewModel.sendOpenedMarker(it) }
     }
-
-    private fun SceytActivitySelfDestructingMediaPreviewBinding.applyStyle() {
-        root.setBackgroundColor(style.backgroundColor)
-        style.toolbarStyle.apply(toolbar)
-        applyVideoPlayerStyle()
-        applyMessageBodyStyle()
-    }
-
-    @OptIn(UnstableApi::class)
-    private fun SceytActivitySelfDestructingMediaPreviewBinding.applyVideoPlayerStyle() {
-        with(videoView) {
-            findViewById<View>(R.id.videoTimeContainer)?.setBackgroundColor(style.videoControllerBackgroundColor)
-
-            findViewById<PlayPauseImage>(R.id.exo_play_pause)?.apply {
-                setPlayIcon(style.playIcon)
-                setPauseIcon(style.pauseIcon)
-            }
-
-            findViewById<DefaultTimeBar>(R.id.exo_progress)?.apply {
-                setPlayedColor(style.progressColor)
-                setScrubberColor(style.thumbColor)
-                setUnplayedColor(style.trackColor)
-                setBufferedColor(style.trackColor)
-            }
-
-            style.timelineTextStyle.apply(findViewById(R.id.exo_position))
-            style.timelineTextStyle.apply(findViewById(R.id.tvMiddle))
-            style.timelineTextStyle.apply(findViewById(R.id.exo_duration))
-        }
-    }
-
-    private fun SceytActivitySelfDestructingMediaPreviewBinding.applyMessageBodyStyle() {
-        style.messageBodyTextStyle.apply(tvMessageBody)
-        style.messageBodyBackgroundStyle.apply(messageBodyContainer)
-    }
-
     private fun initViews() {
         binding.toolbar.applySystemWindowInsetsPadding(applyTop = true, applyRight = true, applyLeft = true)
 
@@ -216,7 +180,7 @@ class SelfDestructingMediaPreviewActivity : AppCompatActivity(), SceytKoinCompon
 
         binding.messageBodyContainer.isVisible = true
         textExpandCollapseHelper.setText(body)
-        
+
         binding.messageBodyContainer.post {
             adjustMessageBodyPosition(videoController?.isVisible == true)
         }
@@ -226,17 +190,17 @@ class SelfDestructingMediaPreviewActivity : AppCompatActivity(), SceytKoinCompon
         val newVisibility = !binding.toolbar.isVisible
         binding.toolbar.isVisible = newVisibility
         videoController?.isVisible = newVisibility
-        
+
         adjustMessageBodyPosition(newVisibility)
-        
+
         toggleFullScreen(!newVisibility)
     }
 
     private fun adjustMessageBodyPosition(controllerVisible: Boolean) {
         if (!isVideoAttachment) return
-        
+
         val controller = videoController ?: return
-        
+
         if (controllerVisible) {
             controller.post {
                 val controllerHeight = controller.height
@@ -262,6 +226,42 @@ class SelfDestructingMediaPreviewActivity : AppCompatActivity(), SceytKoinCompon
         playerHelper = null
         textExpandCollapseHelper.cleanup()
     }
+
+    private fun SceytActivitySelfDestructingMediaPreviewBinding.applyStyle() {
+        root.setBackgroundColor(style.backgroundColor)
+        style.toolbarStyle.apply(toolbar)
+        applyVideoPlayerStyle()
+        applyMessageBodyStyle()
+    }
+
+    @OptIn(UnstableApi::class)
+    private fun SceytActivitySelfDestructingMediaPreviewBinding.applyVideoPlayerStyle() {
+        with(videoView) {
+            findViewById<View>(R.id.videoTimeContainer)?.setBackgroundColor(style.videoControllerBackgroundColor)
+
+            findViewById<PlayPauseImage>(R.id.exo_play_pause)?.apply {
+                setPlayIcon(style.playIcon)
+                setPauseIcon(style.pauseIcon)
+            }
+
+            findViewById<DefaultTimeBar>(R.id.exo_progress)?.apply {
+                setPlayedColor(style.progressColor)
+                setScrubberColor(style.thumbColor)
+                setUnplayedColor(style.trackColor)
+                setBufferedColor(style.trackColor)
+            }
+
+            style.timelineTextStyle.apply(findViewById(R.id.exo_position))
+            style.timelineTextStyle.apply(findViewById(R.id.tvMiddle))
+            style.timelineTextStyle.apply(findViewById(R.id.exo_duration))
+        }
+    }
+
+    private fun SceytActivitySelfDestructingMediaPreviewBinding.applyMessageBodyStyle() {
+        style.messageBodyTextStyle.apply(tvMessageBody)
+        style.messageBodyBackgroundStyle.apply(messageBodyContainer)
+    }
+
 
     companion object {
         private const val MESSAGE_KEY = "message"
