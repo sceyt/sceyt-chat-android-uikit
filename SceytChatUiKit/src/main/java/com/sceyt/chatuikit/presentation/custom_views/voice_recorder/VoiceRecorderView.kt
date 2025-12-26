@@ -359,9 +359,8 @@ class VoiceRecorderView @JvmOverloads constructor(
     }
 
     private fun SceytRecordViewBinding.startRecord() {
-        recordingListener?.onRecordingStarted()
-
         isRecording = true
+        recordingListener?.onRecordingStarted()
 
         showRecordingRecordButton()
 

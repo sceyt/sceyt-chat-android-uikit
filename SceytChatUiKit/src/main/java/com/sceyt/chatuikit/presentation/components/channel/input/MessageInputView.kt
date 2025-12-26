@@ -61,8 +61,6 @@ import com.sceyt.chatuikit.presentation.components.channel.input.adapters.attach
 import com.sceyt.chatuikit.presentation.components.channel.input.components.InputActionsContainer
 import com.sceyt.chatuikit.presentation.components.channel.input.components.MentionUsersListView
 import com.sceyt.chatuikit.presentation.components.channel.input.data.InputState
-import com.sceyt.chatuikit.presentation.components.channel.input.data.InputState.Text
-import com.sceyt.chatuikit.presentation.components.channel.input.data.InputState.Voice
 import com.sceyt.chatuikit.presentation.components.channel.input.data.InputUserAction
 import com.sceyt.chatuikit.presentation.components.channel.input.data.SearchResult
 import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
@@ -90,7 +88,10 @@ import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.MessageBodyStyleHelper
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.query.InlineQuery
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.query.InlineQueryChangedListener
+import com.sceyt.chatuikit.presentation.components.channel.input.providers.INPUT_ACTION_VIEW_ONCE_ID
+import com.sceyt.chatuikit.presentation.components.channel.input.providers.INPUT_ACTION_VIEW_ONCE_SELECTED_ID
 import com.sceyt.chatuikit.presentation.components.channel.input.providers.InputActionsProvider
+import com.sceyt.chatuikit.presentation.components.channel.input.providers.ViewOnceIconProvider
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.openFile
 import com.sceyt.chatuikit.presentation.components.channel.messages.dialogs.ChooseFileTypeDialog
 import com.sceyt.chatuikit.presentation.components.picker.BottomSheetMediaPicker
@@ -142,7 +143,7 @@ class MessageInputView @JvmOverloads constructor(
     private var filePickerHelper: FilePickerHelper? = null
     private val channelEventDebounceHelper by lazy { DebounceHelper(100, getScope()) }
     private var typingTimeoutJob: Job? = null
-    private var inputState = Voice
+    private var inputState: InputState = InputState.Voice
     private var disabledInputByGesture: Boolean = false
     private var voiceRecorderView: VoiceRecorderView? = null
     private var mentionUsersListView: MentionUsersListView? = null
@@ -154,6 +155,7 @@ class MessageInputView @JvmOverloads constructor(
         AudioRecorderHelper(scope = getScope(), context = context)
     }
     private var recordingUpdateJob: Job? = null
+    internal var isViewOnceSelected: () -> Boolean = { false }
     var enableVoiceRecord = true
         private set
     var enableSendAttachment = true
@@ -307,13 +309,17 @@ class MessageInputView @JvmOverloads constructor(
 
         icSendMessage.setOnClickListener {
             when (inputState) {
-                Text -> clickListeners.onSendMsgClick(it)
-                Voice -> clickListeners.onVoiceClick(it)
+                is InputState.Text, is InputState.TextWithAttachments, is InputState.Attachments ->
+                    clickListeners.onSendMsgClick(it)
+
+                is InputState.Voice -> clickListeners.onVoiceClick(it)
+                is InputState.Recording -> {} // No action during recording
             }
         }
 
         icSendMessage.setOnLongClickListener {
-            if (inputState == Voice) clickListeners.onVoiceLongClick(it)
+            if (inputState is InputState.Voice)
+                clickListeners.onVoiceLongClick(it)
             return@setOnLongClickListener true
         }
 
@@ -373,7 +379,8 @@ class MessageInputView @JvmOverloads constructor(
                 editMessage = editMessage,
                 replyMessage = replyMessage,
                 replyThreadMessageId = replyThreadMessageId,
-                linkDetails = linkDetails
+                linkDetails = linkDetails,
+                viewOnce = isViewOnceSelected()
             )
             reset(clearInput = true, closeLinkPreview = true)
         }
@@ -403,7 +410,7 @@ class MessageInputView @JvmOverloads constructor(
     }
 
     private fun canShowRecorderView() = !disabledInputByGesture &&
-            !isInputHidden && inputState == Voice && isVisible
+            !isInputHidden && inputState is InputState.Voice && isVisible
 
     private fun VoiceRecorderView.setRecordingListener() {
         setListener(object : RecordingListener {
@@ -438,6 +445,7 @@ class MessageInputView @JvmOverloads constructor(
         voiceRecorderView?.keepScreenOn = true
         (context as? Activity)?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LOCKED
 
+        determineInputState()
         onUserActionStateChange(InputUserAction.Recording(recording = true))
         startRecordingUpdateJob()
     }
@@ -446,6 +454,7 @@ class MessageInputView @JvmOverloads constructor(
         voiceRecorderView?.keepScreenOn = false
         (context as? Activity)?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
 
+        determineInputState()
         onUserActionStateChange(InputUserAction.Recording(recording = false))
         stopRecordingUpdateJob()
         updateDraftMessage()
@@ -520,17 +529,28 @@ class MessageInputView @JvmOverloads constructor(
         if (!isEnabledInput() || isInMultiSelectMode || isInSearchMode || isInEditMode)
             return
 
-        val showVoiceIcon = enableVoiceRecord && binding.messageInput.text?.trim().isNullOrEmpty()
-                && allAttachments.isEmpty() && !binding.voiceRecordPlaybackView.isShowing && !isEditingMessage()
-        val newState = if (showVoiceIcon) Voice else Text
+        val hasText = binding.messageInput.text?.trim().isNullOrEmpty().not()
+        val hasAttachments = allAttachments.isNotEmpty()
+        val isEditing = isEditingMessage()
+
+        val newState = when {
+            isRecording() -> InputState.Recording
+            hasText && hasAttachments -> InputState.TextWithAttachments(allAttachments.size)
+            hasText -> InputState.Text
+            hasAttachments -> InputState.Attachments(allAttachments.size)
+            else -> InputState.Voice
+        }
+
+
         if (inputState != newState) {
             inputState = newState
             onStateChanged(newState)
         }
 
+        val showVoiceIcon = newState == InputState.Voice || newState == InputState.Recording
         binding.icSendMessage.isInvisible = showVoiceIcon
-        binding.icAddAttachments.isVisible = enableSendAttachment && !isEditingMessage()
-        binding.viewAttachments.isVisible = allAttachments.isNotEmpty()
+        binding.icAddAttachments.isVisible = enableSendAttachment && !isEditing
+        binding.viewAttachments.isVisible = hasAttachments
         if (showVoiceIcon) {
             showVoiceRecorder()
         } else hideAndStopVoiceRecorder()
@@ -571,6 +591,16 @@ class MessageInputView @JvmOverloads constructor(
             trailingActionsView = binding.rvTrailingActions
         )
         inputActionsContainer?.setStyle(style.inputActionsStyle)
+        val actionProvider = ViewOnceIconProvider(
+            onActionClick = { action ->
+                clickListeners.onActionClick(action)
+            },
+            isViewOnceSelected = {
+                isViewOnceSelected()
+            },
+        )
+        this.actionsProvider = actionProvider
+        setInputActionsProvider(actionProvider)
     }
 
     private fun showHideJoinButton(show: Boolean) {
@@ -1154,8 +1184,10 @@ class MessageInputView @JvmOverloads constructor(
     }
 
     override fun onInputStateChanged(sendImage: ImageView, state: InputState) {
-        val iconResId = if (state == Voice) style.voiceRecordIcon
-        else style.sendMessageIcon
+        val iconResId = when (state) {
+            is InputState.Voice -> style.voiceRecordIcon
+            is InputState.Text, is InputState.TextWithAttachments, is InputState.Attachments, is InputState.Recording -> style.sendMessageIcon
+        }
         binding.icSendMessage.setImageDrawable(iconResId)
     }
 
@@ -1216,6 +1248,17 @@ class MessageInputView @JvmOverloads constructor(
         val name = style.mentionUserNameFormatter.format(context, member.user).notAutoCorrectable()
         binding.messageInput.replaceTextWithMention(name, member.id)
         messageToSendHelper.mentionedUsersCache[member.id] = member.user
+    }
+
+    override fun onActionClick(action: InputAction) {
+        val selected = when (action.id) {
+            INPUT_ACTION_VIEW_ONCE_ID -> true
+            INPUT_ACTION_VIEW_ONCE_SELECTED_ID -> false
+            else -> false
+        }
+        messageInputActionCallback?.toggleViewOnce(selected)
+        updateDraftMessage()
+        updateInputActions()
     }
 
     override fun onMultiselectModeListener(isMultiselectMode: Boolean) {
