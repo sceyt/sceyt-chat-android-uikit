@@ -44,7 +44,6 @@ import com.sceyt.chatuikit.extensions.isEqualsVideoOrImage
 import com.sceyt.chatuikit.extensions.notAutoCorrectable
 import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.extensions.setTextAndMoveSelectionEnd
-import com.sceyt.chatuikit.extensions.showSafety
 import com.sceyt.chatuikit.extensions.showSoftInput
 import com.sceyt.chatuikit.formatters.attributes.DraftMessageBodyFormatterAttributes
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
@@ -54,7 +53,6 @@ import com.sceyt.chatuikit.media.audio.AudioRecorderHelper.OnRecorderStop
 import com.sceyt.chatuikit.persistence.extensions.getChannelType
 import com.sceyt.chatuikit.persistence.extensions.isPeerBlocked
 import com.sceyt.chatuikit.persistence.lazyVar
-import com.sceyt.chatuikit.presentation.helpers.DebounceHelper
 import com.sceyt.chatuikit.presentation.common.dialogs.SceytDialog
 import com.sceyt.chatuikit.presentation.common.dialogs.ViewOnceInfoDialog
 import com.sceyt.chatuikit.presentation.components.channel.input.adapters.attachments.AttachmentItem
@@ -101,6 +99,7 @@ import com.sceyt.chatuikit.presentation.custom_views.voice_recorder.AudioMetadat
 import com.sceyt.chatuikit.presentation.custom_views.voice_recorder.RecordingListener
 import com.sceyt.chatuikit.presentation.custom_views.voice_recorder.VoiceRecordPlaybackView.VoiceRecordPlaybackListeners
 import com.sceyt.chatuikit.presentation.custom_views.voice_recorder.VoiceRecorderView
+import com.sceyt.chatuikit.presentation.helpers.DebounceHelper
 import com.sceyt.chatuikit.shared.helpers.picker.FilePickerHelper
 import com.sceyt.chatuikit.shared.helpers.picker.PickType
 import com.sceyt.chatuikit.styles.input.InputCoverStyle

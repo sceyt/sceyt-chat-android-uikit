@@ -3,7 +3,7 @@ package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.me
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.databinding.SceytItemIncSelfDestructedMessageBinding
-import com.sceyt.chatuikit.extensions.setTextViewDrawableColor
+import com.sceyt.chatuikit.extensions.setDrawableStart
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMessageViewHolder
@@ -104,13 +104,9 @@ class IncSelfDestructedMessageViewHolder(
             avatarView = avatar
         )
 
-        messageBody.setCompoundDrawablesWithIntrinsicBounds(
-            selfDestructedStyle.drawable,
-            null,
-            null,
-            null
+        messageBody.setDrawableStart(
+            drawable = selfDestructedStyle.drawable,
+            tint = selfDestructedStyle.iconColor
         )
-
-        messageBody.setTextViewDrawableColor(selfDestructedStyle.iconColor)
     }
 }
