@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.presentation.common
+package com.sceyt.chatuikit.presentation.common.recyclerview
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -8,9 +8,9 @@ import com.sceyt.chatuikit.databinding.SceytItemOptionBinding
 import com.sceyt.chatuikit.styles.common.ButtonStyle
 
 class IntervalOptionsAdapter(
-        private val data: List<IntervalOption>,
-        private val buttonStyle: ButtonStyle,
-        private val clickListener: (IntervalOption) -> Unit,
+    private val data: List<IntervalOption>,
+    private val buttonStyle: ButtonStyle,
+    private val clickListener: (IntervalOption) -> Unit,
 ) : RecyclerView.Adapter<IntervalOptionsAdapter.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -25,7 +25,7 @@ class IntervalOptionsAdapter(
     override fun getItemCount(): Int = data.size
 
     inner class ViewHolder(
-            private val binding: SceytItemOptionBinding,
+        private val binding: SceytItemOptionBinding,
     ) : RecyclerView.ViewHolder(binding.root) {
 
         init {

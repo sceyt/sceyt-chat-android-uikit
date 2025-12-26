@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.presentation.common
+package com.sceyt.chatuikit.presentation.common.collections
 
 import android.os.Build
 import androidx.annotation.RequiresApi

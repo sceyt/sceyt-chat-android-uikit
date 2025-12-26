@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.presentation.common
+package com.sceyt.chatuikit.presentation.common.recyclerview
 
 import android.graphics.Rect
 import android.view.View

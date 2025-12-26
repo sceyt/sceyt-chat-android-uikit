@@ -1,14 +1,14 @@
-package com.sceyt.chatuikit.presentation.common
+package com.sceyt.chatuikit.presentation.common.dialogs
 
 import android.app.Dialog
 import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
+import androidx.core.graphics.drawable.toDrawable
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytDialogLoadingBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
-import androidx.core.graphics.drawable.toDrawable
 
 class SceytLoadingDialog(context: Context) : Dialog(context) {
     private lateinit var binding: SceytDialogLoadingBinding
