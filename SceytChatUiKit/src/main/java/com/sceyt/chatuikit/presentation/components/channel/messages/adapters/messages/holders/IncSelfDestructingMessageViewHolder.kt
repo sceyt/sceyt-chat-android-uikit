@@ -8,19 +8,8 @@ import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Downloaded
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Downloading
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState.ErrorDownload
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState.ErrorUpload
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState.FilePathChanged
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState.PauseDownload
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState.PauseUpload
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.PendingDownload
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState.PendingUpload
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Preparing
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState.ThumbLoaded
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploaded
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploading
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState.WaitingToUpload
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMediaMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
@@ -30,13 +19,19 @@ import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
 
 class IncSelfDestructingMessageViewHolder(
-        private val binding: SceytItemIncSelfDestructingMessageBinding,
-        private val viewPoolReactions: RecyclerView.RecycledViewPool,
-        private val style: MessageItemStyle,
-        private val messageListeners: MessageClickListeners.ClickListeners?,
-        displayedListener: ((MessageListItem) -> Unit)?,
-        private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
-) : BaseMediaMessageViewHolder(binding.root, style, messageListeners, displayedListener, needMediaDataCallback) {
+    private val binding: SceytItemIncSelfDestructingMessageBinding,
+    private val viewPoolReactions: RecyclerView.RecycledViewPool,
+    private val style: MessageItemStyle,
+    private val messageListeners: MessageClickListeners.ClickListeners?,
+    displayedListener: ((MessageListItem) -> Unit)?,
+    private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
+) : BaseMediaMessageViewHolder(
+    binding.root,
+    style,
+    messageListeners,
+    displayedListener,
+    needMediaDataCallback
+) {
 
     init {
         with(binding) {
@@ -106,44 +101,24 @@ class IncSelfDestructingMessageViewHolder(
                 avatar.setOnClickListener {
                     messageListeners?.onAvatarClick(it, item)
                 }
+
+            viewHolderHelper.loadBlurThumb(imageView = fileContainer)
         }
     }
 
     override fun updateState(data: TransferData, isOnBind: Boolean) {
-        super.updateState(data, isOnBind)  // Updates progress indicator
-
+        super.updateState(data, isOnBind)
         when (data.state) {
             Downloaded, Uploaded -> {
-                // ALWAYS show blur, NEVER actual image
-                viewHolderHelper.loadBlurThumb(imageView = fileContainer)
                 showSelfDestructIcon()
             }
 
-            PendingUpload, ErrorUpload, PauseUpload,
-            Uploading, Preparing, WaitingToUpload -> {
-                viewHolderHelper.loadBlurThumb(imageView = fileContainer)
-                hideSelfDestructIcon()
-            }
-
             PendingDownload -> {
-                viewHolderHelper.loadBlurThumb(imageView = fileContainer)
-                hideSelfDestructIcon()
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.attachment))
-            }
-
-            Downloading, PauseDownload, ErrorDownload -> {
-                viewHolderHelper.loadBlurThumb(imageView = fileContainer)
                 hideSelfDestructIcon()
             }
 
-            ThumbLoaded -> {
-                viewHolderHelper.loadBlurThumb(imageView = fileContainer)
-            }
-
-            FilePathChanged -> {
-                if (fileItem.thumbPath.isNullOrBlank())
-                    requestThumb()
-            }
+            else -> hideSelfDestructIcon()
         }
     }
 

@@ -7,6 +7,7 @@ import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.channels.DraftMessage
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
+import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
@@ -245,4 +246,10 @@ fun SceytMessage.isSupportedType(): Boolean {
 
 fun SceytMessage.isSystemMessage(): Boolean {
     return getMessageType() is SceytMessageType.System
+}
+
+fun SceytMessage.isSelfDestructed(): Boolean {
+    return if (incoming) {
+        userMarkers?.any { it.name == MarkerType.Opened.value } ?: false
+    } else markerTotals?.any { it.name == MarkerType.Opened.value } ?: false
 }

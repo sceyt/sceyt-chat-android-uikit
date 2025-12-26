@@ -6,7 +6,6 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
-import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytMessageType
@@ -72,6 +71,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.mes
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListenersImpl
 import com.sceyt.chatuikit.presentation.extensions.getMessageType
+import com.sceyt.chatuikit.presentation.extensions.isSelfDestructed
 import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle
 
 open class MessageViewHolderFactory(context: Context) {
@@ -375,34 +375,39 @@ open class MessageViewHolderFactory(context: Context) {
         val inc = message.incoming
         val attachments = message.attachments.orEmpty()
 
+        if (message.state == MessageState.Deleted) {
+            return pick(
+                inc = inc,
+                incType = MessageViewTypeEnum.IncDeleted,
+                outType = MessageViewTypeEnum.OutDeleted
+            ).ordinal
+        }
+
         if (message.viewOnce) {
             return resolveViewOnceType(inc, message).ordinal
         }
 
-        if (message.state == MessageState.Deleted) {
-            return pick(inc, MessageViewTypeEnum.IncDeleted, MessageViewTypeEnum.OutDeleted).ordinal
-        }
-
         return when (message.getMessageType()) {
-            SceytMessageType.Poll ->
-                pick(inc, MessageViewTypeEnum.IncPoll, MessageViewTypeEnum.OutPoll).ordinal
+            SceytMessageType.System -> MessageViewTypeEnum.System.ordinal
+            SceytMessageType.Poll -> pick(
+                inc = inc,
+                incType = MessageViewTypeEnum.IncPoll,
+                outType = MessageViewTypeEnum.OutPoll
+            ).ordinal
 
             SceytMessageType.Text,
             SceytMessageType.Media,
             SceytMessageType.File,
-            SceytMessageType.Link ->
-                resolveContentViewType(inc, attachments).ordinal
+            SceytMessageType.Link -> resolveContentViewType(
+                inc = inc,
+                attachments = attachments
+            ).ordinal
 
-            SceytMessageType.System ->
-                MessageViewTypeEnum.System.ordinal
-
-            else ->
-                pick(
-                    inc,
-                    MessageViewTypeEnum.IncUnsupported,
-                    MessageViewTypeEnum.OutUnsupported
-                ).ordinal
-
+            else -> pick(
+                inc = inc,
+                incType = MessageViewTypeEnum.IncUnsupported,
+                outType = MessageViewTypeEnum.OutUnsupported
+            ).ordinal
         }
     }
 
@@ -410,22 +415,20 @@ open class MessageViewHolderFactory(context: Context) {
         inc: Boolean,
         message: SceytMessage
     ): MessageViewTypeEnum {
-        val hasOpenedMarker = message.userMarkers?.any {
-            it.name == MarkerType.Opened.value
-        } == true
+        val hasOpenedMarker = message.isSelfDestructed()
 
         if (hasOpenedMarker) {
             return pick(
-                inc,
-                MessageViewTypeEnum.IncSelfDestructed,
-                MessageViewTypeEnum.OutSelfDestructed
+                inc = inc,
+                incType = MessageViewTypeEnum.IncSelfDestructed,
+                outType = MessageViewTypeEnum.OutSelfDestructed
             )
         }
 
         return pick(
-            inc,
-            MessageViewTypeEnum.IncSelfDestructing,
-            MessageViewTypeEnum.OutSelfDestructing
+            inc = inc,
+            incType = MessageViewTypeEnum.IncSelfDestructing,
+            outType = MessageViewTypeEnum.OutSelfDestructing
         )
     }
 

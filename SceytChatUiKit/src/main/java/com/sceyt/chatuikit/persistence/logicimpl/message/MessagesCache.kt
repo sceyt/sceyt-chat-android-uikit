@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.persistence.logicimpl.message
 
+import com.sceyt.chat.models.message.MarkerTotal
 import com.sceyt.chatuikit.data.models.messages.AttachmentPayLoadData
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
@@ -138,18 +139,18 @@ class MessagesCache {
         status: MessageDeliveryStatus,
         vararg tIds: Long
     ) = mutex.withLock {
-        val updatesMessages = mutableListOf<SceytMessage>()
+        val updatedMessages = mutableListOf<SceytMessage>()
         getMessagesMap(channelId)?.let { map ->
             tIds.forEach { tid ->
                 val message = map.get(tid) ?: return@forEach
                 if (message.deliveryStatus < status) {
                     val updatedMessage = message.copy(deliveryStatus = status)
                     map[tid] = updatedMessage
-                    updatesMessages.add(updatedMessage)
+                    updatedMessages.add(updatedMessage)
                 }
             }
         }
-        emitMessageUpdated(channelId, *updatesMessages.toTypedArray())
+        emitMessageUpdated(channelId, *updatedMessages.toTypedArray())
     }
 
     suspend fun addMessageMarker(
@@ -157,17 +158,36 @@ class MessagesCache {
         markers: List<SceytMarker>,
         tIds: LongArray
     ) = mutex.withLock {
-        val updatesMessages = mutableListOf<SceytMessage>()
+        val updatedMessages = mutableListOf<SceytMessage>()
         getMessagesMap(channelId)?.let { map ->
             tIds.forEach { tid ->
                 val message = map.get(tid) ?: return@forEach
-                val newMarkers = (message.userMarkers.orEmpty() + markers).toSet()
-                val updatedMessage = message.copy(userMarkers = newMarkers.toList())
+                // Merge user markers
+                val newUserMarkers = (message.userMarkers.orEmpty() + markers).toSet()
+
+                // Update markerTotals
+                val markerTotalMap = message.markerTotals
+                    ?.associateBy { it.name }?.toMutableMap() ?: mutableMapOf()
+
+                markers.forEach { marker ->
+                    val existingTotal = markerTotalMap[marker.name]
+                    val updatedTotal = if (existingTotal != null) {
+                        MarkerTotal(existingTotal.name, existingTotal.count + 1)
+                    } else {
+                        MarkerTotal(marker.name, 1)
+                    }
+                    markerTotalMap[marker.name] = updatedTotal
+                }
+                val updatedMessage = message.copy(
+                    userMarkers = newUserMarkers.toList(),
+                    markerTotals = markerTotalMap.values.toList()
+                )
+
                 map[tid] = updatedMessage
-                updatesMessages.add(updatedMessage)
+                updatedMessages.add(updatedMessage)
             }
         }
-        emitMessageUpdated(channelId, *updatesMessages.toTypedArray())
+        emitMessageUpdated(channelId, *updatedMessages.toTypedArray())
     }
 
     suspend fun hardDeleteMessage(channelId: Long, message: SceytMessage) = mutex.withLock {

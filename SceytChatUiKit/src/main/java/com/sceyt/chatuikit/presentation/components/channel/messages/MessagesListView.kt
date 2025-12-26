@@ -57,7 +57,6 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploaded
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploading
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.WaitingToUpload
 import com.sceyt.chatuikit.persistence.mappers.isLink
-import com.sceyt.chatuikit.presentation.helpers.KeyboardEventListener
 import com.sceyt.chatuikit.presentation.common.dialogs.SceytDialog
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.openFile
@@ -94,6 +93,7 @@ import com.sceyt.chatuikit.presentation.components.media.MediaPreviewActivity
 import com.sceyt.chatuikit.presentation.components.message_info.MessageInfoActivity
 import com.sceyt.chatuikit.presentation.extensions.getUpdateMessage
 import com.sceyt.chatuikit.presentation.extensions.isPending
+import com.sceyt.chatuikit.presentation.helpers.KeyboardEventListener
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.styles.extensions.messages_list.setPageStateViews
 import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle
@@ -574,36 +574,56 @@ class MessagesListView @JvmOverloads constructor(
     }
 
     internal fun messageEditedOrDeleted(updateMessage: SceytMessage) {
+        val data = messagesRV.getData()
         if (updateMessage.isPending() && updateMessage.state == MessageState.Deleted) {
             messagesRV.deleteMessageByTid(updateMessage.tid)
-            if (messagesRV.isEmpty())
+            if (messagesRV.isEmpty()) {
                 binding.pageStateView.updateState(PageState.StateEmpty())
+            }
             return
         }
-        val data = messagesRV.getData()
-        messagesRV.getData().findIndexed {
+
+        // Update main message
+        data.findIndexed {
             it is MessageItem && it.message.id == updateMessage.id
         }?.let { (index, item) ->
-            val message = (item as MessageItem).message
-            val updatedItem = item.copy(message = message.getUpdateMessage(updateMessage))
+            val oldMessage = (item as MessageItem).message
+            val updatedItem = item.copy(message = oldMessage.getUpdateMessage(updateMessage))
             messagesRV.updateItemAt(index, updatedItem)
 
-            if (updateMessage.state == MessageState.Deleted && message.state != MessageState.Deleted)
+            if (updateMessage.state == MessageState.Deleted && oldMessage.state != MessageState.Deleted)
                 messagesRV.adapter?.notifyItemChanged(index)
             else
-                updateItem(index, updatedItem, message.diff(updatedItem.message))
+                updateItem(index, updatedItem, oldMessage.diff(updatedItem.message))
         }
 
-        // Check reply message to update
-        data.filter {
-            it is MessageItem && it.message.parentMessage?.id == updateMessage.id
-        }.forEach { item ->
-            data.findIndexed {
-                it is MessageItem && it.message.id == (item as MessageItem).message.id
-            }?.let { (index, msg) ->
-                val oldMessage = (msg as MessageItem).message
-                val updatedItem =
-                    msg.copy(message = oldMessage.copy(parentMessage = updateMessage))
+        // Update replies
+        data.forEachIndexed { index, it ->
+            if (it is MessageItem && it.message.parentMessage?.id == updateMessage.id) {
+                val oldMessage = it.message
+                val updatedItem = it.copy(message = oldMessage.copy(parentMessage = updateMessage))
+                updateAdapterItem(index, updatedItem, oldMessage.diff(updatedItem.message))
+            }
+        }
+    }
+
+    internal fun messageSelfDestructed(updateMessage: SceytMessage) {
+        val data = messagesRV.getData()
+        // Update main message
+        data.findIndexed {
+            it is MessageItem && it.message.id == updateMessage.id
+        }?.let { (index, item) ->
+            val oldMessage = (item as MessageItem).message
+            val updatedItem = item.copy(message = oldMessage.getUpdateMessage(updateMessage))
+            messagesRV.updateItemAt(index, updatedItem)
+            messagesRV.adapter?.notifyItemChanged(index)
+        }
+
+        // Update replies
+        data.forEachIndexed { index, it ->
+            if (it is MessageItem && it.message.parentMessage?.id == updateMessage.id) {
+                val oldMessage = it.message
+                val updatedItem = it.copy(message = oldMessage.copy(parentMessage = updateMessage))
                 updateAdapterItem(index, updatedItem, oldMessage.diff(updatedItem.message))
             }
         }
