@@ -21,6 +21,7 @@
     <string name="sceyt_add_admins">Add admins</string>
     <string name="sceyt_edited">edited</string>
     <string name="sceyt_message_was_deleted">Message was deleted.</string>
+    <string name="sceyt_message_self_destructed">Message self-destructed</string>
     <string name="sceyt_today">Today</string>
     <string name="sceyt_clear_history">Clear history</string>
     <string name="sceyt_members">Members</string>

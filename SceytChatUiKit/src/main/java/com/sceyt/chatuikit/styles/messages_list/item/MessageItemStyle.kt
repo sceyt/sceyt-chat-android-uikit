@@ -56,6 +56,7 @@ import com.sceyt.chatuikit.styles.extensions.messages_list.buildReactionsContain
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildReadMoreStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildReplyMessageStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildSelectionCheckboxStyle
+import com.sceyt.chatuikit.styles.extensions.messages_list.buildSelfDestructedMessageItemStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildSenderNameTextStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildSystemMessageItemStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildThreadReplyCountTextStyle
@@ -124,6 +125,7 @@ import java.util.Date
  * @property senderNameColorProvider Visual provider for the sender name color, default is [SceytChatUIKitProviders.senderNameColorProvider].
  * @property userAvatarRenderer User avatar renderer, default is [SceytChatUIKitRenderers.userAvatarRenderer].
  * @property systemMessageItemStyle Style for the system message item, default is [SystemMessageItemStyle].
+ * @property selfDestructedMessageItemStyle Style for the self-destructed message item, default is [SelfDestructedMessageItemStyle].
  * @property collapsedCharacterLimit Maximum number of characters to display before truncating message body and showing "Read More", default is [Int.MAX_VALUE].
  * */
 data class MessageItemStyle(
@@ -173,6 +175,7 @@ data class MessageItemStyle(
     val voiceWaveformStyle: AudioWaveformStyle,
     val selectionCheckboxStyle: CheckboxStyle,
     val systemMessageItemStyle: SystemMessageItemStyle,
+    val selfDestructedMessageItemStyle: SelfDestructedMessageItemStyle,
     val senderNameFormatter: Formatter<SceytUser>,
     val messageBodyFormatter: Formatter<MessageBodyFormatterAttributes>,
     val unsupportedMessageBodyFormatter: Formatter<SceytMessage>,
@@ -307,6 +310,7 @@ data class MessageItemStyle(
                     overlayMediaLoaderStyle = buildOverlayMediaLoaderStyle(array),
                     selectionCheckboxStyle = buildSelectionCheckboxStyle(array),
                     systemMessageItemStyle = buildSystemMessageItemStyle(array),
+                    selfDestructedMessageItemStyle = buildSelfDestructedMessageItemStyle(array),
                     senderNameFormatter = SceytChatUIKit.formatters.userNameFormatter,
                     messageBodyFormatter = SceytChatUIKit.formatters.messageBodyFormatter,
                     unsupportedMessageBodyFormatter = SceytChatUIKit.formatters.unsupportedMessageBodyFormatter,

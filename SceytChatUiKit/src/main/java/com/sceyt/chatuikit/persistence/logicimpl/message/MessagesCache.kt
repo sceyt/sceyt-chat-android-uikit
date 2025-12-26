@@ -5,6 +5,7 @@ import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
+import com.sceyt.chatuikit.data.models.messages.SceytMarker
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.removeAllIf
@@ -147,6 +148,21 @@ class MessagesCache {
         }
         emitMessageUpdated(channelId, *updatesMessages.toTypedArray())
     }
+
+    suspend fun addMessageMarker(
+        channelId: Long,
+        markers: List<SceytMarker>,
+        tIds: LongArray
+    ) = mutex.withLock {
+        val updatesMessages = mutableListOf<SceytMessage>()
+        tIds.forEach { tid ->
+            getMessageByTid(channelId, tid)?.let { message ->
+                updatesMessages.add(message.copy(userMarkers = message.userMarkers.orEmpty() + markers))
+            }
+        }
+        emitMessageUpdated(channelId, *updatesMessages.toTypedArray())
+    }
+
 
     suspend fun hardDeleteMessage(channelId: Long, message: SceytMessage) = mutex.withLock {
         cachedMessages[channelId]?.remove(message.tid)

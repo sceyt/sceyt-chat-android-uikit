@@ -147,6 +147,7 @@ internal class PersistenceMiddleWareImpl(
     }
 
     private fun onMessageMarkerEvent(data: MessageMarkerEventData) {
+        scope.launch(Dispatchers.IO) { messagesLogic.onMessageMarkerEvent(data) }
         scope.launch(Dispatchers.IO) { messageMarkerLogic.onMessageMarkerEvent(data) }
     }
 

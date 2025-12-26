@@ -112,6 +112,8 @@
             <flag name="bold" value="1" />
             <flag name="italic" value="2" />
         </attr>
+        <!--Self-destructed message style-->
+        <attr name="sceytUiMessagesListSelfDestructedMessageIconTint" format="reference|color" />
         <!--Sender name text style-->
         <attr name="sceytUiMessagesListSenderNameTextColor" format="reference|color" />
         <attr name="sceytUiMessagesListSenderNameTextSize" format="dimension" />
@@ -154,6 +156,7 @@
         <!--Texts -->
         <attr name="sceytUiMessagesListEditedStateText" format="reference" />
         <attr name="sceytUiMessagesListDeletedStateText" format="reference" />
+        <attr name="sceytUiMessagesListSelfDestructedStateText" format="reference" />
         <attr name="sceytUiMessagesListForwardedText" format="reference" />
 
         <!--Mention text style-->
