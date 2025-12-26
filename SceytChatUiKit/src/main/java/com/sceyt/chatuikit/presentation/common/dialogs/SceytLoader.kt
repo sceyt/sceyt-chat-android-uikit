@@ -1,8 +1,9 @@
-package com.sceyt.chatuikit.presentation.common
+package com.sceyt.chatuikit.presentation.common.dialogs
 
 import android.content.Context
 import com.sceyt.chatuikit.extensions.checkAndDismissSafety
 import com.sceyt.chatuikit.extensions.showSafety
+import com.sceyt.chatuikit.presentation.common.dialogs.SceytLoadingDialog
 
 object SceytLoader {
     private var progressDialog: SceytLoadingDialog? = null

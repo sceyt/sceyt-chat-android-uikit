@@ -5,7 +5,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.persistence.differs.ChannelDiff
 import com.sceyt.chatuikit.persistence.differs.diff
-import com.sceyt.chatuikit.presentation.common.AsyncListDiffer
+import com.sceyt.chatuikit.presentation.common.recyclerview.AsyncListDiffer
 import com.sceyt.chatuikit.presentation.common.ClickAvailableData
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.holders.BaseChannelViewHolder
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.holders.ChannelViewHolderFactory

@@ -32,4 +32,5 @@ interface MessageInputActionCallback {
     fun scrollToPrev()
     fun createPoll()
     fun toggleViewOnce(selected: Boolean)
+    fun acceptedViewOnceInfoDialog()
 }

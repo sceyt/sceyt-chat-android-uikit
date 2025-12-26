@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.presentation.common
+package com.sceyt.chatuikit.presentation.common.dialogs
 
 import android.app.Dialog
 import android.content.Context

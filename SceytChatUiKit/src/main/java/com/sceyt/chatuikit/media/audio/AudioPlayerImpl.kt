@@ -5,7 +5,7 @@ import android.media.MediaPlayer
 import android.os.Build
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper.OnAudioPlayer
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessageTid
-import com.sceyt.chatuikit.presentation.common.ConcurrentHashSet
+import com.sceyt.chatuikit.presentation.common.collections.ConcurrentHashSet
 import java.io.IOException
 import java.util.Timer
 import java.util.TimerTask

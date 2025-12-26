@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.presentation.common
+package com.sceyt.chatuikit.presentation.helpers
 
 import androidx.emoji2.text.EmojiCompat
 import com.sceyt.chatuikit.extensions.processEmojiCompat
@@ -11,8 +11,8 @@ class EmojiProcessor {
      * Returns text immediately without blocking, and optionally calls callback when EmojiCompat is ready.
      */
     fun processEmojiSafe(
-            text: CharSequence,
-            onEmojiReady: ((CharSequence) -> Unit)? = null,
+        text: CharSequence,
+        onEmojiReady: ((CharSequence) -> Unit)? = null,
     ): CharSequence {
         return when (getEmojiCompatLoadState()) {
             EmojiCompat.LOAD_STATE_SUCCEEDED -> text.processEmojiCompat() ?: text
@@ -54,7 +54,7 @@ class EmojiProcessor {
     private fun getEmojiCompatLoadState(): Int {
         return try {
             EmojiCompat.get().loadState
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             EmojiCompat.LOAD_STATE_DEFAULT
         }
     }
@@ -63,7 +63,7 @@ class EmojiProcessor {
         emojiInitCallback?.let {
             try {
                 EmojiCompat.get().unregisterInitCallback(it)
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 // EmojiCompat might not be available
             }
             emojiInitCallback = null

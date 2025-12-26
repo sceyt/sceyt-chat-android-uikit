@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.presentation.common
+package com.sceyt.chatuikit.presentation.helpers
 
 import android.view.ViewTreeObserver
 import androidx.activity.ComponentActivity
@@ -7,10 +7,9 @@ import androidx.lifecycle.LifecycleOwner
 import com.sceyt.chatuikit.extensions.getContentView
 import com.sceyt.chatuikit.extensions.isKeyboardOpen
 
-
 class KeyboardEventListener(
-        private val activity: ComponentActivity,
-        private val callback: (isOpen: Boolean) -> Unit
+    private val activity: ComponentActivity,
+    private val callback: (isOpen: Boolean) -> Unit
 ) : DefaultLifecycleObserver {
 
     private val listener = object : ViewTreeObserver.OnGlobalLayoutListener {

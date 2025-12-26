@@ -293,4 +293,7 @@
     <string name="sceyt_unknown_duration">Unknown duration</string>
     <string name="sceyt_read_more">Read More</string>
     <string name="sceyt_groups">Groups</string>
+    <string name="view_once_messages_title">View once messages</string>
+    <string name="view_once_messages_desc">Any photo, video, or voice message you send will disappear from the chat after it’s been opened. To keep your content private, recipients won’t be able to share, forward, copy, save, or take screenshots.</string>
+    <string name="sceyt_ok">Ok</string>
 </resources>

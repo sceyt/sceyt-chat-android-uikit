@@ -41,6 +41,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytMessageType
 import com.sceyt.chatuikit.data.models.messages.SceytReactionTotal
 import com.sceyt.chatuikit.data.models.onSuccess
 import com.sceyt.chatuikit.data.models.onSuccessNotNull
+import com.sceyt.chatuikit.data.repositories.Keys.KEY_VIEW_ONCE_INFO_SHOWN
 import com.sceyt.chatuikit.data.toFileListItem
 import com.sceyt.chatuikit.extensions.findIndexed
 import com.sceyt.chatuikit.koin.SceytKoinComponent
@@ -78,8 +79,8 @@ import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.persistence.mappers.createEmptyUser
 import com.sceyt.chatuikit.persistence.mappers.toBodyAttribute
 import com.sceyt.chatuikit.persistence.mappers.toVoiceAttachmentData
+import com.sceyt.chatuikit.persistence.repositories.SceytSharedPreference
 import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager
-import com.sceyt.chatuikit.presentation.common.DebounceHelper
 import com.sceyt.chatuikit.presentation.components.channel.input.data.InputUserAction
 import com.sceyt.chatuikit.presentation.components.channel.input.data.SearchResult
 import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
@@ -91,6 +92,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.events.Messa
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.PollEvent
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.ReactionEvent
 import com.sceyt.chatuikit.presentation.extensions.isNotPending
+import com.sceyt.chatuikit.presentation.helpers.DebounceHelper
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import com.sceyt.chatuikit.services.SceytSyncManager
 import com.sceyt.chatuikit.shared.helpers.LinkPreviewHelper
@@ -132,6 +134,7 @@ class MessageListViewModel(
     private val application: Application by inject()
     internal val syncManager: SceytSyncManager by inject()
     private val fileTransferService: FileTransferService by inject()
+    private val preferences: SceytSharedPreference by inject()
     private val linkPreviewHelper by lazy { LinkPreviewHelper(application, viewModelScope) }
     internal var pinnedLastReadMessageId: Long = 0
     internal val sendDisplayedHelper by lazy { DebounceHelper(200L, viewModelScope) }
@@ -908,6 +911,14 @@ class MessageListViewModel(
     @Suppress("unused")
     fun showSenderAvatarAndNameIfNeeded(show: Boolean) {
         showSenderAvatarAndNameIfNeeded = show
+    }
+
+    fun shouldShowViewOnceDialog(): Boolean {
+        return preferences.getBoolean(KEY_VIEW_ONCE_INFO_SHOWN, true)
+    }
+
+    fun setShouldShowViewOnceDialog(show: Boolean) = viewModelScope.launch(Dispatchers.IO) {
+        preferences.setBoolean(KEY_VIEW_ONCE_INFO_SHOWN, show)
     }
 
     internal suspend fun mapToMessageListItem(
