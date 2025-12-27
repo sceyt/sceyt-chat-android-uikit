@@ -34,6 +34,10 @@ open class DefaultNotificationBodyFormatter : Formatter<PushData> {
                     append(SceytConstants.emojiPoll.whitSpace())
                 }
 
+                SceytMessageType.ViewOnce.value -> {
+                    append(SceytConstants.emojiViewOnce.whitSpace())
+                }
+
                 else -> {
                     if (!attachmentIcon.isNullOrBlank())
                         append(attachmentIcon.whitSpace())
