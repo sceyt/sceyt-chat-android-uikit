@@ -24,6 +24,7 @@ import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.PollOption
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.data.models.messages.SceytMessageType
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
 import com.sceyt.chatuikit.data.models.messages.SceytReactionTotal
 import com.sceyt.chatuikit.databinding.SceytMessagesListViewBinding
@@ -90,6 +91,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.popups.Popup
 import com.sceyt.chatuikit.presentation.components.channel.messages.popups.ReactionsPopup
 import com.sceyt.chatuikit.presentation.components.forward.ForwardActivity
 import com.sceyt.chatuikit.presentation.components.media.MediaPreviewActivity
+import com.sceyt.chatuikit.presentation.components.channel.messages.preview.SelfDestructingMediaPreviewActivity
 import com.sceyt.chatuikit.presentation.components.message_info.MessageInfoActivity
 import com.sceyt.chatuikit.presentation.extensions.getUpdateMessage
 import com.sceyt.chatuikit.presentation.extensions.isPending
@@ -1094,6 +1096,15 @@ class MessagesListView @JvmOverloads constructor(
     }
 
     override fun onAttachmentClick(view: View, item: FileListItem, message: SceytMessage) {
+        if (message.type == SceytMessageType.ViewOnce.value) {
+            SelfDestructingMediaPreviewActivity.launchActivity(
+                context = context,
+                message = message,
+                attachment = item.attachment
+            )
+            return
+        }
+
         when (item.type) {
             AttachmentTypeEnum.Image -> {
                 MediaPreviewActivity.launch(
