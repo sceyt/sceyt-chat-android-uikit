@@ -8,6 +8,7 @@ abstract class SceytMessageType(val value: String) {
     data object Link : SceytMessageType("link")
     data object System : SceytMessageType("system")
     data object Poll : SceytMessageType("poll")
+    data object ViewOnce : SceytMessageType("view_once")
     data class Unsupported(val type: String) : SceytMessageType(type)
 
     companion object Registry {
@@ -23,7 +24,7 @@ abstract class SceytMessageType(val value: String) {
 
         init {
             // Register built-in types
-            listOf(Text, Media, File, Link, System, Poll)
+            listOf(Text, Media, File, Link, System, Poll, ViewOnce)
         }
     }
 

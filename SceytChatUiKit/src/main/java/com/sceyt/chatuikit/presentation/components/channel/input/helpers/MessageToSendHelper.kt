@@ -9,6 +9,7 @@ import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.data.models.messages.SceytMessageType
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.extractLinks
 import com.sceyt.chatuikit.extensions.getFileSize
@@ -102,10 +103,11 @@ class MessageToSendHelper(
         type: String = "text",
         viewOnce: Boolean,
     ): Message {
+        val messageType = if (viewOnce) SceytMessageType.ViewOnce.value else type
         val message = Message.MessageBuilder()
             .setTid(ClientWrapper.generateTid())
             .setAttachments(attachments)
-            .setType(type)
+            .setType(messageType)
             .setBody(body.toString())
             .setCreatedAt(System.currentTimeMillis())
             .setViewOnce(viewOnce)
