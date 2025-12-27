@@ -103,7 +103,10 @@ class MessageActionsView @JvmOverloads constructor(
                 append(senderName)
             }
 
-            loadAttachmentImage(message.attachments, style.attachmentIconProvider)
+            //do not load attachment image for view once messages
+            if (!message.viewOnce) {
+                loadAttachmentImage(message.attachments, style.attachmentIconProvider)
+            }
 
             tvMessageBody.text = style.messageBodyFormatter.format(
                 context = context,
