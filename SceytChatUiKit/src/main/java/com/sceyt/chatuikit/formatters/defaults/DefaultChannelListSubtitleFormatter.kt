@@ -64,6 +64,10 @@ open class DefaultChannelListSubtitleFormatter : Formatter<ChannelItemSubtitleFo
             return body
         }
 
+        if (message.type == SceytMessageType.ViewOnce.value){
+            return body
+        }
+
         val senderName = style.lastMessageSenderNameFormatter.format(context, channel)
         val attachmentIcon = message.attachments?.firstOrNull()?.let {
             style.attachmentIconProvider.provide(context, it)
