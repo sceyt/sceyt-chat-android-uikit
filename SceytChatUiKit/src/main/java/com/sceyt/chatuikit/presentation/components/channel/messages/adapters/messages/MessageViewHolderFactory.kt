@@ -383,10 +383,6 @@ open class MessageViewHolderFactory(context: Context) {
             ).ordinal
         }
 
-        if (message.viewOnce) {
-            return resolveViewOnceType(inc, message).ordinal
-        }
-
         return when (message.getMessageType()) {
             SceytMessageType.System -> MessageViewTypeEnum.System.ordinal
             SceytMessageType.Poll -> pick(
@@ -394,7 +390,6 @@ open class MessageViewHolderFactory(context: Context) {
                 incType = MessageViewTypeEnum.IncPoll,
                 outType = MessageViewTypeEnum.OutPoll
             ).ordinal
-
             SceytMessageType.Text,
             SceytMessageType.Media,
             SceytMessageType.File,
@@ -403,6 +398,7 @@ open class MessageViewHolderFactory(context: Context) {
                 attachments = attachments
             ).ordinal
 
+            SceytMessageType.ViewOnce -> resolveViewOnceType(inc,message).ordinal
             else -> pick(
                 inc = inc,
                 incType = MessageViewTypeEnum.IncUnsupported,
