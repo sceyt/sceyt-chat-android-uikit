@@ -9,11 +9,11 @@ import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Downloaded
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.PendingDownload
+import com.sceyt.chatuikit.persistence.file_transfer.TransferState.ThumbLoaded
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploaded
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMediaMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
-import com.sceyt.chatuikit.presentation.components.channel.messages.preview.SelfDestructingMediaPreviewActivity
 import com.sceyt.chatuikit.presentation.custom_views.CircularProgressView
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
@@ -43,11 +43,7 @@ class OutSelfDestructingMessageViewHolder(
             }
 
             fileImage.setOnClickListener {
-                SelfDestructingMediaPreviewActivity.launchActivity(
-                    context = it.context,
-                    message = requireMessage,
-                    attachment = fileItem.attachment
-                )
+                messageListeners?.onAttachmentClick(it, fileItem, requireMessage)
             }
 
             fileImage.setOnLongClickListener {
@@ -96,7 +92,7 @@ class OutSelfDestructingMessageViewHolder(
     override fun updateState(data: TransferData, isOnBind: Boolean) {
         super.updateState(data, isOnBind)
         when (data.state) {
-            Downloaded, Uploaded -> {
+            Downloaded, Uploaded, ThumbLoaded -> {
                 showSelfDestructIcon()
             }
 
