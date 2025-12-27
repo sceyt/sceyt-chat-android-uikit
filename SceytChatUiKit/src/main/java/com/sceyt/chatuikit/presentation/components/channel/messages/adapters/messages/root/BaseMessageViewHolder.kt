@@ -258,7 +258,7 @@ abstract class BaseMessageViewHolder(
                 )
             }
 
-            if (parent.attachments.isNullOrEmpty()) {
+            if (parent.attachments.isNullOrEmpty() || parent.viewOnce) {
                 imageAttachment.isVisible = false
                 icFile.isVisible = false
             } else {
