@@ -570,6 +570,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
         val anyPending = messages.any { it.isPending() }
         val anyPollInSelection = messages.any { it.type == SceytMessageType.Poll.value }
         val anyUnsupportedInSelection = messages.any { !it.isSupportedType() }
+        val anyViewOnceMessage = messages.any { it.viewOnce }
 
         val poll = firstMessage.poll
         val isPollMessage = poll != null
@@ -583,10 +584,13 @@ class MessagesListHeaderView @JvmOverloads constructor(
         val hasText = firstMessage.body.isNotNullOrBlank()
 
         val canReply = isSingle && !anyPending
-        val canForward = !anyPending && !isPollMessage && !anyPollInSelection &&  !anyUnsupportedInSelection
-        val canEdit = isSingle && !isUnsupportedFirst && isOutgoing && hasText && !editExpired && !isPollMessage
+        val canForward =
+            !anyPending && !isPollMessage && !anyPollInSelection && !anyUnsupportedInSelection && !anyViewOnceMessage
+        val canEdit =
+            isSingle && !isUnsupportedFirst && isOutgoing && hasText && !editExpired && !isPollMessage && !anyViewOnceMessage
         val canShowInfo = isSingle && isOutgoing && !anyPending
-        val canCopy = messages.any { it.body.isNotNullOrBlank() } && !anyPollInSelection && !anyUnsupportedInSelection
+        val canCopy =
+            messages.any { it.body.isNotNullOrBlank() } && !anyPollInSelection && !anyUnsupportedInSelection && anyViewOnceMessage
 
         val canRetractVote = !anyPending && isSingle && allowRetract && hasVoted && !pollClosed
         val canEndVote = !anyPending && isSingle && isOutgoing && isPollMessage && !pollClosed
@@ -598,7 +602,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
         menu.setVisible(R.id.sceyt_copy_message, canCopy)
         menu.setVisible(R.id.sceyt_retract_vote, canRetractVote)
         menu.setVisible(R.id.sceyt_end_vote, canEndVote)
-     // menu.setVisible(R.id.sceyt_reply_in_thread, isSingle && !anyPending) // keep commented if not used
+        // menu.setVisible(R.id.sceyt_reply_in_thread, isSingle && !anyPending) // keep commented if not used
     }
 
     override fun showSearchMessagesBar(event: MessageCommandEvent.SearchMessages) {
