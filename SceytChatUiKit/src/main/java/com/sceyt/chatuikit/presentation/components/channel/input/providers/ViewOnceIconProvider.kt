@@ -37,8 +37,8 @@ class ViewOnceIconProvider(
                         context.getCompatDrawable(R.drawable.sceyt_ic_view_once_selected_with_layers)
                             .applyTintBackgroundLayer(
                                 context = context,
-                                tintColor = R.id.backgroundLayer,
-                                bgLayerId = SceytChatUIKit.theme.colors.accentColor
+                                bgLayerId = R.id.backgroundLayer,
+                                tintColor = SceytChatUIKit.theme.colors.accentColor
                             )
                     } else {
                         context.getCompatDrawable(R.drawable.sceyt_ic_view_once)
