@@ -36,7 +36,7 @@ data class DialogStyle(
             ),
             positiveButtonStyle = ButtonStyle(
                 textStyle = TextStyle(
-                    color = context.getCompatColor(SceytChatUIKit.theme.colors.warningColor),
+                    color = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor),
                     font = R.font.roboto_medium
                 )
             ),

@@ -26,7 +26,7 @@ open class DefaultUserAndNotesAvatarRenderer : AvatarRenderer<SceytUser> {
 
         if (from.id == SceytChatUIKit.currentUserId) {
             defaultAvatar =
-                context.getCompatDrawable(R.drawable.sceyt_ic_notes_with_bachgriund_layers)
+                context.getCompatDrawable(R.drawable.sceyt_ic_notes_with_background_layers)
                     .applyTintBackgroundLayer(
                         context = context,
                         tintColor = SceytChatUIKit.theme.colors.accentColor,

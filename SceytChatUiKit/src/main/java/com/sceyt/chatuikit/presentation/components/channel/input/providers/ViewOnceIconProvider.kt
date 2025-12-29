@@ -2,8 +2,10 @@ package com.sceyt.chatuikit.presentation.components.channel.input.providers
 
 import android.content.Context
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.ActionsPosition
 import com.sceyt.chatuikit.data.models.channels.InputAction
+import com.sceyt.chatuikit.extensions.applyTintBackgroundLayer
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.presentation.components.channel.input.data.InputState
 
@@ -32,7 +34,12 @@ class ViewOnceIconProvider(
                     id = if (isSelected) INPUT_ACTION_VIEW_ONCE_SELECTED_ID else INPUT_ACTION_VIEW_ONCE_ID,
                     position = ActionsPosition.TRAILING,
                     icon = if (isSelected) {
-                        context.getCompatDrawable(R.drawable.sceyt_ic_view_once_selected)
+                        context.getCompatDrawable(R.drawable.sceyt_ic_view_once_selected_with_layers)
+                            .applyTintBackgroundLayer(
+                                context = context,
+                                tintColor = R.id.backgroundLayer,
+                                bgLayerId = SceytChatUIKit.theme.colors.accentColor
+                            )
                     } else {
                         context.getCompatDrawable(R.drawable.sceyt_ic_view_once)
                     },
