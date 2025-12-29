@@ -49,7 +49,6 @@ class IncSelfDestructingMessageViewHolder(
 
             fileImage.setOnClickListener {
                 val allowedStates = setOf(Downloaded, Uploaded, ThumbLoaded)
-
                 if (fileItem.attachment.transferState !in allowedStates) return@setOnClickListener
 
                 messageListeners?.onAttachmentClick(it, fileItem, requireMessage)
