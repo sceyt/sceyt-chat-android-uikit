@@ -67,6 +67,9 @@ open class ViewOnceInfoDialog(
                 positiveButtonStyle = default.positiveButtonStyle.copy(
                     textStyle = default.titleStyle.copy(
                         color = Color.WHITE
+                    ),
+                    backgroundStyle = default.backgroundStyle.copy(
+                        backgroundColor = context.getColor(R.color.colorAccent)
                     )
                 )
             )
