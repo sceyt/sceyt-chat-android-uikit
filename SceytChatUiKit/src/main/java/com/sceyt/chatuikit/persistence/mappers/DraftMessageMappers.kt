@@ -22,7 +22,8 @@ internal fun DraftMessageDb.toDraftMessage() = DraftMessage(
     isReply = draftMessageEntity.isReplyMessage ?: false,
     bodyAttributes = draftMessageEntity.styleRanges,
     attachments = attachments?.map { it.toDraftAttachment() },
-    voiceAttachment = voiceAttachment?.toDraftVoiceAttachment()
+    voiceAttachment = voiceAttachment?.toDraftVoiceAttachment(),
+    viewOnce = draftMessageEntity.viewOnce,
 )
 
 internal fun DraftAttachmentEntity.toDraftAttachment() = DraftAttachment(
@@ -46,7 +47,8 @@ internal fun DraftMessage.toDraftMessageEntity(
     createdAt = createdAt,
     replyOrEditMessageId = replyOrEditMessage?.id,
     isReplyMessage = isReply,
-    styleRanges = bodyAttributes
+    styleRanges = bodyAttributes,
+    viewOnce = viewOnce,
 )
 
 internal fun DraftAttachment.toDraftAttachmentEntity() = DraftAttachmentEntity(

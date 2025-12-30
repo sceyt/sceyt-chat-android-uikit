@@ -42,7 +42,7 @@ import com.sceyt.chatuikit.extensions.runOnMainThread
 import com.sceyt.chatuikit.extensions.screenWidthPx
 import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
-import com.sceyt.chatuikit.presentation.common.SceytDialog
+import com.sceyt.chatuikit.presentation.common.dialogs.SceytDialog
 import com.sceyt.chatuikit.styles.input.MessageInputStyle
 import java.util.Timer
 import java.util.TimerTask
@@ -359,9 +359,8 @@ class VoiceRecorderView @JvmOverloads constructor(
     }
 
     private fun SceytRecordViewBinding.startRecord() {
-        recordingListener?.onRecordingStarted()
-
         isRecording = true
+        recordingListener?.onRecordingStarted()
 
         showRecordingRecordButton()
 

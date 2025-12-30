@@ -14,6 +14,7 @@ open class DefaultMessageTypeIconProvider : VisualProvider<SceytMessage, Drawabl
     override fun provide(context: Context, from: SceytMessage): Drawable? {
         val drawableId = when (from.type) {
             SceytMessageType.Poll.value -> R.drawable.sceyt_ic_poll_filled
+            SceytMessageType.ViewOnce.value -> R.drawable.sceyt_ic_view_once
             else -> return null
         }
         return context.getCompatDrawable(drawableId)?.applyTint(

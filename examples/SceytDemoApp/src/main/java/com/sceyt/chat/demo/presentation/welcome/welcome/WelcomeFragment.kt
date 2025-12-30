@@ -14,8 +14,8 @@ import com.sceyt.chat.demo.presentation.welcome.WelcomeActivity
 import com.sceyt.chat.demo.presentation.welcome.accounts_bottomsheet.SelectAccountBottomSheetFragment
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.launchActivity
-import com.sceyt.chatuikit.presentation.common.SceytLoader.hideLoading
-import com.sceyt.chatuikit.presentation.common.SceytLoader.showLoading
+import com.sceyt.chatuikit.presentation.common.dialogs.SceytLoader.hideLoading
+import com.sceyt.chatuikit.presentation.common.dialogs.SceytLoader.showLoading
 import com.sceyt.chatuikit.presentation.root.PageState
 import org.koin.androidx.viewmodel.ext.android.viewModel
 

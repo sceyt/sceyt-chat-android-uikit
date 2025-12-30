@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:animateLayoutChanges="true"
+    android:background="@color/sceyt_color_black">
+
+    <com.github.chrisbanes.photoview.PhotoView
+        android:id="@+id/imageView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="fitCenter"
+        android:visibility="gone"
+        tools:visibility="visible" />
+
+    <androidx.media3.ui.PlayerView
+        android:id="@+id/videoView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        app:auto_show="true"
+        app:controller_layout_id="@layout/sceyt_player_control_view"
+        app:repeat_toggle_modes="none"
+        app:resize_mode="fit"
+        app:show_timeout="0"
+        app:surface_type="texture_view"
+        app:use_controller="true" />
+
+    <FrameLayout
+        android:id="@+id/messageBodyContainer"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:visibility="visible">
+
+        <ScrollView
+            android:id="@+id/messageBodyScrollView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="48dp"
+            android:overScrollMode="never"
+            android:scrollbars="none">
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tvMessageBody"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="16dp"
+                android:textColor="@android:color/white"
+                android:textSize="@dimen/mediumTextSize"
+                tools:text="Long body…" />
+        </ScrollView>
+    </FrameLayout>
+
+    <com.sceyt.chatuikit.presentation.custom_views.CustomToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/sceyt_media_primary_color"
+        app:layout_constraintTop_toTopOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

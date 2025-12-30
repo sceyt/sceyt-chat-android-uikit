@@ -10,7 +10,14 @@ import com.sceyt.chatuikit.persistence.database.entity.messages.MarkerWithUserDb
 internal interface MarkerDao {
 
     @Transaction
-    @Query("select * from $MARKER_TABLE where messageId =:messageId and name in (:names) " +
-            "order by createdAt desc limit :limit offset :offset")
-    suspend fun getMessageMarkers(messageId: Long, names: List<String>, offset: Int, limit: Int): List<MarkerWithUserDb>
+    @Query(
+        "select * from $MARKER_TABLE where messageId =:messageId and name in (:names) " +
+                "order by createdAt desc limit :limit offset :offset"
+    )
+    suspend fun getMessageMarkers(
+        messageId: Long,
+        names: List<String>,
+        offset: Int,
+        limit: Int
+    ): List<MarkerWithUserDb>
 }

@@ -20,22 +20,22 @@ import kotlin.math.max
 @Dao
 internal abstract class AttachmentDao {
     @Transaction
-    @Query("select * from $ATTACHMENT_TABLE where channelId =:channelId and id != 0 and id <:attachmentId and type in (:types)" +
+    @Query("select * from $ATTACHMENT_TABLE where channelId =:channelId and id != 0 and id <:attachmentId and type in (:types) and viewOnce != 1 " +
             "order by createdAt desc, id desc limit :limit")
     abstract suspend fun getOldestThenAttachment(channelId: Long, attachmentId: Long, limit: Int, types: List<String>): List<AttachmentDb>
 
     @Transaction
-    @Query("select * from $ATTACHMENT_TABLE where channelId =:channelId and id != 0 and id <= :attachmentId and type in (:types)" +
+    @Query("select * from $ATTACHMENT_TABLE where channelId =:channelId and id != 0 and id <= :attachmentId and type in (:types) and viewOnce != 1 " +
             "order by createdAt desc, id desc limit :limit")
     abstract suspend fun getOldestThenAttachmentInclude(channelId: Long, attachmentId: Long, limit: Int, types: List<String>): List<AttachmentDb>
 
     @Transaction
-    @Query("select * from $ATTACHMENT_TABLE where channelId =:channelId and id != 0 and id >:attachmentId and type in (:types)" +
+    @Query("select * from $ATTACHMENT_TABLE where channelId =:channelId and id != 0 and id >:attachmentId and type in (:types) and viewOnce != 1 " +
             "order by createdAt, id limit :limit")
     abstract suspend fun getNewestThenAttachment(channelId: Long, attachmentId: Long, limit: Int, types: List<String>): List<AttachmentDb>
 
     @Transaction
-    @Query("select * from $ATTACHMENT_TABLE where channelId =:channelId and id >=:attachmentId and type in (:types)" +
+    @Query("select * from $ATTACHMENT_TABLE where channelId =:channelId and id >=:attachmentId and type in (:types) and viewOnce != 1 " +
             "order by createdAt, id limit :limit")
     abstract suspend fun getNewestThenAttachmentInclude(channelId: Long, attachmentId: Long, limit: Int, types: List<String>): List<AttachmentDb>
 
@@ -75,9 +75,6 @@ internal abstract class AttachmentDao {
     @Transaction
     @Query("select * from $ATTACHMENT_PAYLOAD_TABLE where messageTid in (:tid)")
     abstract suspend fun getAllAttachmentPayLoadsByMsgTid(vararg tid: Long): List<AttachmentPayLoadDb>
-
-    @Query("select * from $ATTACHMENT_TABLE where type =:type and url <> ''")
-    abstract fun getAllFileAttachments(type: String = AttachmentTypeEnum.File.value): List<AttachmentEntity>
 
     @Query("update $ATTACHMENT_TABLE set id =:attachmentId, messageId =:messageId where messageTid =:messageTid and url =:attachmentUrl")
     abstract suspend fun updateAttachmentIdAndMessageId(attachmentId: Long?, messageId: Long, messageTid: Long, attachmentUrl: String?)

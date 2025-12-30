@@ -33,7 +33,7 @@ open class DefaultChannelAvatarRenderer : AvatarRenderer<SceytChannel> {
             }
 
             from.isSelf -> {
-                val notsDrawable = context.getCompatDrawable(R.drawable.sceyt_ic_notes_with_bachgriund_layers).applyTintBackgroundLayer(
+                val notsDrawable = context.getCompatDrawable(R.drawable.sceyt_ic_notes_with_background_layers).applyTintBackgroundLayer(
                     context.getCompatColor(SceytChatUIKit.theme.colors.accentColor), R.id.backgroundLayer
                 )
                 appearanceBuilder.setDefaultAvatar(notsDrawable)

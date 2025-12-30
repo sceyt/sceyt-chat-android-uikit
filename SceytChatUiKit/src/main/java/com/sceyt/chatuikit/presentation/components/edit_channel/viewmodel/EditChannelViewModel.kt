@@ -10,7 +10,7 @@ import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.extensions.asLiveData
 import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
-import com.sceyt.chatuikit.presentation.common.DebounceHelper
+import com.sceyt.chatuikit.presentation.helpers.DebounceHelper
 import com.sceyt.chatuikit.presentation.components.create_chat.viewmodel.URIValidation
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import kotlinx.coroutines.Dispatchers

@@ -14,7 +14,6 @@ import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.managers.message.MessageEventManager
-import com.sceyt.chatuikit.data.managers.message.event.MessageStatusChangeData
 import com.sceyt.chatuikit.data.managers.message.event.ReactionUpdateEventData
 import com.sceyt.chatuikit.data.managers.message.event.ReactionUpdateEventEnum
 import com.sceyt.chatuikit.data.models.LoadKeyData
@@ -37,6 +36,7 @@ import com.sceyt.chatuikit.data.models.isSuccess
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.MarkerType.Received
+import com.sceyt.chatuikit.data.models.messages.SceytMarker
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.data.models.onError
@@ -198,20 +198,6 @@ internal class PersistenceMessagesLogicImpl(
 
         return@withContext true
     }
-
-    override suspend fun onMessageStatusChangeEvent(data: MessageStatusChangeData) =
-        withContext(dispatcherIO) {
-            val updatedMessages = messageDao.updateMessageStatusWithBefore(
-                channelId = data.channel.id,
-                status = data.status,
-                id = data.marker.messageIds.maxOf { it }
-            )
-            messagesCache.updateMessagesStatus(
-                channelId = data.channel.id,
-                status = data.status,
-                tIds = updatedMessages.map { it.tid }.toLongArray()
-            )
-        }
 
     override suspend fun onMessageEditedOrDeleted(message: SceytMessage) =
         withContext(dispatcherIO) {
@@ -1693,10 +1679,10 @@ internal class PersistenceMessagesLogicImpl(
                         "name: ${data.name}"
             )
             val responseIds = data.messageIds.toList()
+            val tIds = messageDao.getMessageTIdsByIds(*responseIds.toLongArray())
 
             marker.toDeliveryStatus()?.let { deliveryStatus ->
                 messageDao.updateMessagesStatus(channelId, responseIds, deliveryStatus)
-                val tIds = messageDao.getMessageTIdsByIds(*responseIds.toLongArray())
                 messagesCache.updateMessagesStatus(
                     channelId = channelId,
                     status = deliveryStatus,
@@ -1709,6 +1695,20 @@ internal class PersistenceMessagesLogicImpl(
                 messageDao.insertUserMarkersIfExistMessage(responseIds.map {
                     MarkerEntity(messageId = it, userId = userId, name = data.name)
                 })
+
+                messagesCache.addMessageMarker(
+                    channelId = channelId,
+                    markers = responseIds.map {
+                        SceytMarker(
+                            messageId = it,
+                            userId = userId,
+                            user = SceytChatUIKit.currentUser,
+                            name = marker,
+                            createdAt = data.createdAt
+                        )
+                    },
+                    tIds = tIds.toLongArray()
+                )
             }
         }.onError { exception ->
             val errorType = SDKErrorTypeEnum.fromValue(exception?.type) ?: return@onError

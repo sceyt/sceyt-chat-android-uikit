@@ -20,7 +20,7 @@ import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.parcelableArrayList
 import com.sceyt.chatuikit.extensions.setSafeOnClickListener
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
-import com.sceyt.chatuikit.presentation.common.SceytLoader
+import com.sceyt.chatuikit.presentation.common.dialogs.SceytLoader
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem
 import com.sceyt.chatuikit.presentation.components.share.viewmodel.ShareViewModel
 import com.sceyt.chatuikit.presentation.components.share.viewmodel.ShareViewModel.State.Finish

@@ -20,7 +20,7 @@ import com.sceyt.chatuikit.persistence.extensions.getChannelType
 import com.sceyt.chatuikit.persistence.extensions.isPublic
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.persistence.mappers.isDeleted
-import com.sceyt.chatuikit.presentation.common.SceytDialog
+import com.sceyt.chatuikit.presentation.common.dialogs.SceytDialog
 import com.sceyt.chatuikit.presentation.components.channel.input.MessageInputView
 import com.sceyt.chatuikit.presentation.components.channel.input.data.InputUserAction
 import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
@@ -51,10 +51,16 @@ fun MessageListViewModel.bind(
     messageInputView.setReplyInThreadMessageId(replyInThreadMessage?.id)
     messageInputView.checkIsParticipant(channel)
     messageInputView.setSaveUrlsPlace(placeToSavePathsList)
+    if (!channel.isSelf) {
+        messageInputView.isViewOnceSelected = { viewOnceSelected }
+        messageInputView.shouldShowViewOnceInfoDialog = { shouldShowViewOnceDialog() }
+        messageInputView.setupInputActions()
+    }
 
     viewModelScope.launch(Dispatchers.IO) {
         channelInteractor.getChannelFromDb(channel.id)?.let {
             withContext(Dispatchers.Main) {
+                viewOnceSelected = it.draftMessage?.viewOnce == true
                 messageInputView.setDraftMessage(it.draftMessage)
             }
         }
@@ -222,6 +228,14 @@ fun MessageListViewModel.bind(
 
         override fun createPoll() {
             CreatePollActivity.launch(messageInputView.context, channel.id)
+        }
+
+        override fun toggleViewOnce(selected: Boolean) {
+            viewOnceSelected = selected
+        }
+
+        override fun acceptedViewOnceInfoDialog() {
+            setShouldShowViewOnceDialog(false)
         }
     })
 }

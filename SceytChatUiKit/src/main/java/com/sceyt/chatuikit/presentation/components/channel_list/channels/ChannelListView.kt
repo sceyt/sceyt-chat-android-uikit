@@ -14,7 +14,7 @@ import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytChannelListViewBinding
 import com.sceyt.chatuikit.persistence.differs.ChannelDiff
 import com.sceyt.chatuikit.persistence.extensions.checkIsMemberInChannel
-import com.sceyt.chatuikit.presentation.common.DebounceHelper
+import com.sceyt.chatuikit.presentation.helpers.DebounceHelper
 import com.sceyt.chatuikit.presentation.components.channel.header.helpers.ChannelEventData
 import com.sceyt.chatuikit.presentation.components.channel.messages.ChannelActivity
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem

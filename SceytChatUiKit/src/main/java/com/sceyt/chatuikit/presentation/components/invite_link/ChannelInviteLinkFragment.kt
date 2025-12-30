@@ -20,8 +20,8 @@ import com.sceyt.chatuikit.extensions.setClipboard
 import com.sceyt.chatuikit.extensions.setDrawableStart
 import com.sceyt.chatuikit.extensions.setOnlyClickable
 import com.sceyt.chatuikit.koin.SceytKoinComponent
-import com.sceyt.chatuikit.presentation.common.SceytDialog
-import com.sceyt.chatuikit.presentation.common.SceytLoader
+import com.sceyt.chatuikit.presentation.common.dialogs.SceytDialog
+import com.sceyt.chatuikit.presentation.common.dialogs.SceytLoader
 import com.sceyt.chatuikit.presentation.components.invite_link.shareqr.BottomSheetShareInviteQR
 import com.sceyt.chatuikit.presentation.components.invite_link.shareqr.LinkQrData
 import com.sceyt.chatuikit.styles.StyleRegistry
