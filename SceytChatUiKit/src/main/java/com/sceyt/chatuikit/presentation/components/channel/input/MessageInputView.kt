@@ -202,7 +202,6 @@ class MessageInputView @JvmOverloads constructor(
             determineInputState()
             addInputTextWatcher()
             setupAttachmentsList()
-            setupInputActions()
             if (enableVoiceRecord) {
                 // Init SceytVoiceMessageRecorderView outside of post, because it's using permission launcher
                 val voiceRecorderView = VoiceRecorderView(context).also { it.setStyle(style) }
@@ -587,7 +586,7 @@ class MessageInputView @JvmOverloads constructor(
         binding.rvAttachments.adapter = attachmentsAdapter
     }
 
-    private fun setupInputActions() {
+    internal fun setupInputActions() {
         inputActionsContainer = InputActionsContainer(
             leadingActionsView = binding.rvLeadingActions,
             trailingActionsView = binding.rvTrailingActions
