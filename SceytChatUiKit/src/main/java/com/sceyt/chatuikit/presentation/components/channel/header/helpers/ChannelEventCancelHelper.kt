@@ -1,7 +1,7 @@
 package com.sceyt.chatuikit.presentation.components.channel.header.helpers
 
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMemberActivityEvent
-import com.sceyt.chatuikit.presentation.common.DebounceHelper
+import com.sceyt.chatuikit.presentation.helpers.DebounceHelper
 import com.sceyt.chatuikit.presentation.components.channel.input.data.ChannelEventEnum
 import java.util.concurrent.ConcurrentHashMap
 

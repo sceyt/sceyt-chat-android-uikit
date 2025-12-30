@@ -21,6 +21,7 @@
     <string name="sceyt_add_admins">Add admins</string>
     <string name="sceyt_edited">edited</string>
     <string name="sceyt_message_was_deleted">Message was deleted.</string>
+    <string name="sceyt_message_self_destructed">Message self-destructed</string>
     <string name="sceyt_today">Today</string>
     <string name="sceyt_clear_history">Clear history</string>
     <string name="sceyt_members">Members</string>
@@ -293,4 +294,10 @@
     <string name="sceyt_unknown_duration">Unknown duration</string>
     <string name="sceyt_read_more">Read More</string>
     <string name="sceyt_groups">Groups</string>
+    <string name="sceyt_opened_by">Opened by</string>
+    <string name="sceyt_view_once_message">View Once</string>
+    <string name="sceyt_unsupported_media">Unsupported media type</string>
+    <string name="view_once_messages_title">View once messages</string>
+    <string name="view_once_messages_desc">Any photo, video, or voice message you send will disappear from the chat after it’s been opened. To keep your content private, recipients won’t be able to share, forward, copy, save, or take screenshots.</string>
+    <string name="sceyt_ok">Ok</string>
 </resources>

@@ -15,6 +15,8 @@ import com.sceyt.chatuikit.databinding.SceytItemIncFileMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemIncImageMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemIncLinkMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemIncPollMessageBinding
+import com.sceyt.chatuikit.databinding.SceytItemIncSelfDestructedMessageBinding
+import com.sceyt.chatuikit.databinding.SceytItemIncSelfDestructingMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemIncTextMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemIncUnsupportedMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemIncVideoMessageBinding
@@ -27,6 +29,8 @@ import com.sceyt.chatuikit.databinding.SceytItemOutFileMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemOutImageMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemOutLinkMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemOutPollMessageBinding
+import com.sceyt.chatuikit.databinding.SceytItemOutSelfDestructedMessageBinding
+import com.sceyt.chatuikit.databinding.SceytItemOutSelfDestructingMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemOutTextMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemOutUnsupportedMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemOutVideoMessageBinding
@@ -42,6 +46,8 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.mes
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.IncImageMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.IncLinkMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.IncPollMessageViewHolder
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.IncSelfDestructedMessageViewHolder
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.IncSelfDestructingMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.IncTextMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.IncUnsupportedMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.IncVideoMessageViewHolder
@@ -53,6 +59,8 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.mes
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.OutImageMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.OutLinkMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.OutPollMessageViewHolder
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.OutSelfDestructedMessageViewHolder
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.OutSelfDestructingMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.OutTextMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.OutUnsupportedMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.OutVideoMessageViewHolder
@@ -63,6 +71,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.mes
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListenersImpl
 import com.sceyt.chatuikit.presentation.extensions.getMessageType
+import com.sceyt.chatuikit.presentation.extensions.isSelfDestructed
 import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle
 
 open class MessageViewHolderFactory(context: Context) {
@@ -98,6 +107,10 @@ open class MessageViewHolderFactory(context: Context) {
             MessageViewTypeEnum.OutFiles.ordinal -> createOutFilesMsgViewHolder(parent)
             MessageViewTypeEnum.IncPoll.ordinal -> createIncPollMsgViewHolder(parent)
             MessageViewTypeEnum.OutPoll.ordinal -> createOutPollMsgViewHolder(parent)
+            MessageViewTypeEnum.IncSelfDestructing.ordinal -> createIncSelfDestructingMessageViewHolder(parent)
+            MessageViewTypeEnum.OutSelfDestructing.ordinal -> createOutSelfDestructingMessageViewHolder(parent)
+            MessageViewTypeEnum.IncSelfDestructed.ordinal -> createIncSelfDestructedMessageViewHolder(parent)
+            MessageViewTypeEnum.OutSelfDestructed.ordinal -> createOutSelfDestructedMessageViewHolder(parent)
             MessageViewTypeEnum.IncUnsupported.ordinal -> createIncUnsupportedMsgViewHolder(parent)
             MessageViewTypeEnum.OutUnsupported.ordinal -> createOutUnsupportedMsgViewHolder(parent)
             MessageViewTypeEnum.IncDeleted.ordinal -> createIncDeletedMsgViewHolder(parent)
@@ -105,7 +118,6 @@ open class MessageViewHolderFactory(context: Context) {
             MessageViewTypeEnum.DateSeparator.ordinal -> createDateSeparatorViewHolder(parent)
             MessageViewTypeEnum.UnreadMessagesSeparator.ordinal -> createUnreadMessagesViewHolder(parent)
             MessageViewTypeEnum.System.ordinal -> createSystemMessageViewHolder(parent)
-
             MessageViewTypeEnum.Loading.ordinal -> createLoadingMoreViewHolder(parent)
             else -> throw RuntimeException("Not supported view type")
         }
@@ -305,6 +317,46 @@ open class MessageViewHolderFactory(context: Context) {
         )
     }
 
+    open fun createOutSelfDestructingMessageViewHolder(parent: ViewGroup): BaseMessageViewHolder {
+        return OutSelfDestructingMessageViewHolder(
+            SceytItemOutSelfDestructingMessageBinding.inflate(layoutInflater, parent, false),
+            viewPoolReactions,
+            messageItemStyle.messageItemStyle,
+            clickListeners,
+            needMediaDataCallback
+        )
+    }
+
+    open fun createIncSelfDestructingMessageViewHolder(parent: ViewGroup): BaseMessageViewHolder {
+        return IncSelfDestructingMessageViewHolder(
+            SceytItemIncSelfDestructingMessageBinding.inflate(layoutInflater, parent, false),
+            viewPoolReactions,
+            messageItemStyle.messageItemStyle,
+            clickListeners,
+            displayedListener,
+            needMediaDataCallback
+        )
+    }
+
+    open fun createOutSelfDestructedMessageViewHolder(parent: ViewGroup): BaseMessageViewHolder {
+        return OutSelfDestructedMessageViewHolder(
+            SceytItemOutSelfDestructedMessageBinding.inflate(layoutInflater, parent, false),
+            viewPoolReactions,
+            messageItemStyle.messageItemStyle,
+            clickListeners
+        )
+    }
+
+    open fun createIncSelfDestructedMessageViewHolder(parent: ViewGroup): BaseMessageViewHolder {
+        return IncSelfDestructedMessageViewHolder(
+            SceytItemIncSelfDestructedMessageBinding.inflate(layoutInflater, parent, false),
+            viewPoolReactions,
+            messageItemStyle.messageItemStyle,
+            clickListeners,
+            displayedListener
+        )
+    }
+
 
     open fun getItemViewType(item: MessageListItem): Int {
         return when (item) {
@@ -324,30 +376,56 @@ open class MessageViewHolderFactory(context: Context) {
         val attachments = message.attachments.orEmpty()
 
         if (message.state == MessageState.Deleted) {
-            return pick(inc, MessageViewTypeEnum.IncDeleted, MessageViewTypeEnum.OutDeleted).ordinal
+            return pick(
+                inc = inc,
+                incType = MessageViewTypeEnum.IncDeleted,
+                outType = MessageViewTypeEnum.OutDeleted
+            ).ordinal
         }
 
         return when (message.getMessageType()) {
-            SceytMessageType.Poll ->
-                pick(inc, MessageViewTypeEnum.IncPoll, MessageViewTypeEnum.OutPoll).ordinal
-
+            SceytMessageType.System -> MessageViewTypeEnum.System.ordinal
+            SceytMessageType.Poll -> pick(
+                inc = inc,
+                incType = MessageViewTypeEnum.IncPoll,
+                outType = MessageViewTypeEnum.OutPoll
+            ).ordinal
             SceytMessageType.Text,
             SceytMessageType.Media,
             SceytMessageType.File,
-            SceytMessageType.Link ->
-                resolveContentViewType(inc, attachments).ordinal
+            SceytMessageType.Link -> resolveContentViewType(
+                inc = inc,
+                attachments = attachments
+            ).ordinal
 
-            SceytMessageType.System ->
-                MessageViewTypeEnum.System.ordinal
-
-            else ->
-                pick(
-                    inc,
-                    MessageViewTypeEnum.IncUnsupported,
-                    MessageViewTypeEnum.OutUnsupported
-                ).ordinal
-
+            SceytMessageType.ViewOnce -> resolveViewOnceType(inc,message).ordinal
+            else -> pick(
+                inc = inc,
+                incType = MessageViewTypeEnum.IncUnsupported,
+                outType = MessageViewTypeEnum.OutUnsupported
+            ).ordinal
         }
+    }
+
+    private fun resolveViewOnceType(
+        inc: Boolean,
+        message: SceytMessage
+    ): MessageViewTypeEnum {
+        val hasOpenedMarker = message.isSelfDestructed()
+
+        if (hasOpenedMarker) {
+            return pick(
+                inc = inc,
+                incType = MessageViewTypeEnum.IncSelfDestructed,
+                outType = MessageViewTypeEnum.OutSelfDestructed
+            )
+        }
+
+        return pick(
+            inc = inc,
+            incType = MessageViewTypeEnum.IncSelfDestructing,
+            outType = MessageViewTypeEnum.OutSelfDestructing
+        )
     }
 
     private fun resolveContentViewType(
@@ -426,6 +504,10 @@ open class MessageViewHolderFactory(context: Context) {
         OutFiles,
         IncPoll,
         OutPoll,
+        IncSelfDestructing,
+        OutSelfDestructing,
+        IncSelfDestructed,
+        OutSelfDestructed,
         IncUnsupported,
         OutUnsupported,
         DateSeparator,

@@ -336,14 +336,14 @@ internal abstract class MessageDao {
     }
 
     @Transaction
-    open suspend fun insertUserMarkersIfExistMessage(entities: List<MarkerEntity>) {
+    open suspend fun insertUserMarkersIfExistMessage(entities: List<MarkerEntity>): List<Long> {
         val existMessageIds = getExistMessageByIds(entities.map { it.messageId })
         // Filter markers which message exist in db
         val filtered = entities
             .filter { it.messageId in existMessageIds }
-            .takeIf { it.isNotEmpty() } ?: return
+            .takeIf { it.isNotEmpty() } ?: return emptyList()
 
-        insertUserMarkers(filtered)
+        return insertUserMarkers(filtered)
     }
 
     @SuppressWarnings(RoomWarnings.QUERY_MISMATCH)
@@ -481,6 +481,9 @@ internal abstract class MessageDao {
     @Transaction
     @Query("select * from $MESSAGE_TABLE where message_id =:id")
     abstract suspend fun getMessageById(id: Long): MessageDb?
+
+    @Query("select * from $MESSAGE_TABLE where message_id  in (:ids)")
+    abstract suspend fun getMessageEntitiesByIds(ids: List<Long>): List<MessageEntity>
 
     @Query("select message_id as id, tid from $MESSAGE_TABLE where message_id in (:ids)")
     abstract suspend fun getExistMessagesIdTidByIds(ids: List<Long>): List<MessageIdAndTid>

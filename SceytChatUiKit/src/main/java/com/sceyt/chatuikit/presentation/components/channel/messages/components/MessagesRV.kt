@@ -18,8 +18,8 @@ import com.sceyt.chatuikit.extensions.addRVScrollListener
 import com.sceyt.chatuikit.extensions.getFirstVisibleItemPosition
 import com.sceyt.chatuikit.extensions.getLastVisibleItemPosition
 import com.sceyt.chatuikit.extensions.lastVisibleItemPosition
-import com.sceyt.chatuikit.presentation.common.SpeedyLinearLayoutManager
-import com.sceyt.chatuikit.presentation.common.SyncArrayList
+import com.sceyt.chatuikit.presentation.common.recyclerview.SpeedyLinearLayoutManager
+import com.sceyt.chatuikit.presentation.common.collections.SyncArrayList
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.ItemOffsetDecoration
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem

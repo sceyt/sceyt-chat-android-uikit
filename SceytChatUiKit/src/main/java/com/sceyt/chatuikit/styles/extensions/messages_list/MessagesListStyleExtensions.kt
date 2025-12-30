@@ -26,6 +26,7 @@ import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 import com.sceyt.chatuikit.styles.messages_list.item.PollStyle
 import com.sceyt.chatuikit.styles.messages_list.item.ReadMoreStyle
 import com.sceyt.chatuikit.styles.messages_list.item.ReplyMessageStyle
+import com.sceyt.chatuikit.styles.messages_list.item.SelfDestructedMessageItemStyle
 
 internal fun MessagesListViewStyle.Builder.buildScrollDownTextStyle(
     typedArray: TypedArray,
@@ -336,6 +337,13 @@ internal fun MessageItemStyle.Builder.buildDeletedMessageTextStyle(
         index = R.styleable.MessagesListView_sceytUiMessagesListDeletedMessageTextFont
     )
     .build()
+
+/*SelfDestructedMessageIconColor*/
+internal fun SelfDestructedMessageItemStyle.Builder.buildSelfDestructedMessageIconColor(
+) = typedArray.getColor(
+    R.styleable.MessagesListView_sceytUiMessagesListSelfDestructedMessageIconTint,
+    context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor)
+)
 
 /*SenderNameTextStyle*/
 internal fun MessageItemStyle.Builder.buildSenderNameTextStyle(
