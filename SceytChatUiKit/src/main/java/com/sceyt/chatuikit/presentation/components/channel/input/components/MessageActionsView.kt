@@ -22,6 +22,7 @@ import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
 import com.sceyt.chatuikit.formatters.attributes.MessageBodyFormatterAttributes
 import com.sceyt.chatuikit.persistence.mappers.getThumbFromMetadata
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.MessageInputClickListeners.CancelReplyMessageViewClickListener
+import com.sceyt.chatuikit.presentation.extensions.isSupportedType
 import com.sceyt.chatuikit.providers.VisualProvider
 import com.sceyt.chatuikit.shared.utils.ViewUtil
 import com.sceyt.chatuikit.styles.input.InputEditMessageStyle
@@ -104,7 +105,7 @@ class MessageActionsView @JvmOverloads constructor(
             }
 
             //do not load attachment image for view once messages
-            if (!message.viewOnce) {
+            if (!message.viewOnce && message.isSupportedType()) {
                 loadAttachmentImage(message.attachments, style.attachmentIconProvider)
             }
 

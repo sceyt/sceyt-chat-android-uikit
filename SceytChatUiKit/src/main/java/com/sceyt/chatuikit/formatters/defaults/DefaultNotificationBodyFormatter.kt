@@ -25,6 +25,7 @@ open class DefaultNotificationBodyFormatter : Formatter<PushData> {
             mentionTextStyle = TextStyle(style = Typeface.BOLD),
             mentionUserNameFormatter = SceytChatUIKit.formatters.mentionUserNameFormatter,
             attachmentNameFormatter = SceytChatUIKit.formatters.attachmentNameFormatter,
+            unsupportedMessageBodyFormatter = SceytChatUIKit.formatters.unsupportedMessageShortBodyFormatter,
             mentionClickListener = null
         )
 
