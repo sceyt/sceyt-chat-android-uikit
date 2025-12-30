@@ -51,6 +51,7 @@ import com.sceyt.chatuikit.theme.Colors
  * @property enableSendAttachment Enable send attachment, default is true
  * @property enableMention Enable mention, default is true
  * @property enableTextStyling Enable text styling, default is true
+ * @property enableSendViewOnceMessage Enable send viewOnce message, default is true
  * @property inputStyle Style for the input text, default is [buildInputTextInputStyle]
  * @property joinButtonStyle Style for the join button, default is [buildJoinButtonStyle]
  * @property clearChatTextStyle Style for the clear chat text, default is [buildClearChatTextStyle]
@@ -80,6 +81,7 @@ data class MessageInputStyle(
     val enableSendAttachment: Boolean,
     val enableMention: Boolean,
     val enableTextStyling: Boolean,
+    val enableSendViewOnceMessage: Boolean,
     val inputStyle: TextInputStyle,
     val joinButtonStyle: ButtonStyle,
     val clearChatTextStyle: TextStyle,
@@ -196,6 +198,11 @@ data class MessageInputStyle(
                     true
                 )
 
+                val enableSendViewOnceMessages = array.getBoolean(
+                    R.styleable.MessageInputView_sceytUiMessageInputEnableSendViewOnceMessage,
+                    true
+                )
+
                 return MessageInputStyle(
                     backgroundColor = inputBackgroundColor,
                     dividerColor = dividerColor,
@@ -209,6 +216,7 @@ data class MessageInputStyle(
                     enableSendAttachment = enableSendAttachment,
                     enableMention = enableMention,
                     enableTextStyling = enableTextStyling,
+                    enableSendViewOnceMessage = enableSendViewOnceMessages,
                     inputStyle = buildInputTextInputStyle(array),
                     joinButtonStyle = buildJoinButtonStyle(array),
                     clearChatTextStyle = buildClearChatTextStyle(array),
