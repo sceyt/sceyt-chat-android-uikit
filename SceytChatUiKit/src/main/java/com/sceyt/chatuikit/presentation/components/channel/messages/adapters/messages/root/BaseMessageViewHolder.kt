@@ -64,6 +64,7 @@ import com.sceyt.chatuikit.presentation.custom_views.AvatarView
 import com.sceyt.chatuikit.presentation.custom_views.ClickableTextView
 import com.sceyt.chatuikit.presentation.custom_views.DecoratedTextView
 import com.sceyt.chatuikit.presentation.custom_views.ToReplyLineView
+import com.sceyt.chatuikit.presentation.extensions.isSupportedType
 import com.sceyt.chatuikit.presentation.extensions.setChatMessageDateAndStatusIcon
 import com.sceyt.chatuikit.shared.helpers.RecyclerItemOffsetDecoration
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
@@ -245,17 +246,30 @@ abstract class BaseMessageViewHolder(
             tvName.text = parent.user?.let {
                 replyStyle.senderNameFormatter.format(context, it)
             } ?: ""
-            if (parent.state == MessageState.Deleted) {
-                val deletedText = itemStyle.deletedStateText.toSpannable()
-                replyStyle.deletedMessageTextStyle.apply(context, deletedText)
-                tvMessageBody.setText(deletedText, TextView.BufferType.SPANNABLE)
-            } else {
-                tvMessageBody.text = replyStyle.messageBodyFormatter.format(
-                    context, MessageBodyFormatterAttributes(
-                        message = parent,
-                        mentionTextStyle = replyStyle.mentionTextStyle
+
+            when {
+                parent.state == MessageState.Deleted -> {
+                    val deletedText = itemStyle.deletedStateText.toSpannable()
+                    replyStyle.deletedMessageTextStyle.apply(context, deletedText)
+                    tvMessageBody.setText(deletedText, TextView.BufferType.SPANNABLE)
+                }
+
+                !message.isSupportedType() -> {
+                    imageAttachment.isVisible = false
+                    icFile.isVisible = false
+                    tvMessageBody.text =
+                        replyStyle.unsupportedMessageBodyFormatter.format(context, parent)
+                    return@with
+                }
+
+                else -> {
+                    tvMessageBody.text = replyStyle.messageBodyFormatter.format(
+                        context, MessageBodyFormatterAttributes(
+                            message = parent,
+                            mentionTextStyle = replyStyle.mentionTextStyle
+                        )
                     )
-                )
+                }
             }
 
             if (parent.attachments.isNullOrEmpty() || parent.viewOnce) {
