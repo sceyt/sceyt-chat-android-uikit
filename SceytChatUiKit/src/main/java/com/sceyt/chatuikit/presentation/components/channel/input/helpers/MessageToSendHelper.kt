@@ -103,7 +103,7 @@ class MessageToSendHelper(
         type: String = "text",
         viewOnce: Boolean,
     ): Message {
-        val messageType = "sasa"
+        val messageType = if (viewOnce) SceytMessageType.ViewOnce.value else type
         val message = Message.MessageBuilder()
             .setTid(ClientWrapper.generateTid())
             .setAttachments(attachments)
