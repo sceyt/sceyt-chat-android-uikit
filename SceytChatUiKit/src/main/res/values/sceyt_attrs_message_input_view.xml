@@ -37,6 +37,7 @@
         <attr name="sceytUiMessageInputEnableSendAttachment" format="boolean" />
         <attr name="sceytUiMessageInputEnableMention" format="boolean" />
         <attr name="sceytUiMessageInputEnableTextStyling" format="boolean" />
+        <attr name="sceytUiMessageInputEnableSendViewOnceMessage" format="boolean" />
 
         <attr name="sceytUiMessageInputSendIconBackgroundColor" format="reference|color" />
 

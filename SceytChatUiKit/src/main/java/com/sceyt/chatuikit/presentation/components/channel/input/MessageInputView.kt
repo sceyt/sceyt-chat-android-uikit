@@ -178,6 +178,8 @@ class MessageInputView @JvmOverloads constructor(
         private set
     var linkDetails: LinkPreviewDetails? = null
         private set
+    var enableSendViewOnceMessage = true
+        private set
 
     init {
         binding = SceytMessageInputViewBinding.inflate(LayoutInflater.from(context), this)
@@ -599,6 +601,9 @@ class MessageInputView @JvmOverloads constructor(
             isViewOnceSelected = {
                 isViewOnceSelected()
             },
+            isEnabled = {
+                enableSendViewOnceMessage
+            }
         )
         this.actionsProvider = actionProvider
         setInputActionsProvider(actionProvider)
@@ -1325,6 +1330,7 @@ class MessageInputView @JvmOverloads constructor(
         enableVoiceRecord = style.enableVoiceRecord
         enableSendAttachment = style.enableSendAttachment
         enableMention = style.enableMention
+        enableSendViewOnceMessage = style.enableSendViewOnceMessage
         style.inputStyle.apply(messageInput, layoutInputWithActions)
         style.joinButtonStyle.apply(btnJoin)
         style.clearChatTextStyle.apply(btnClearChat)

@@ -14,13 +14,16 @@ const val INPUT_ACTION_VIEW_ONCE_SELECTED_ID = "view_once_selected"
 
 class ViewOnceIconProvider(
     private val isViewOnceSelected: () -> Boolean = { false },
-    private val onActionClick: (InputAction) -> Unit = {}
+    private val onActionClick: (InputAction) -> Unit = {},
+    private val isEnabled: () -> Boolean = { true }
 ) : InputActionsProvider {
 
     override fun getActions(
         context: Context,
         inputState: InputState
     ): List<InputAction> {
+        if (!isEnabled()) return emptyList()
+
         val shouldShowViewOnce = when (inputState) {
             is InputState.Attachments if (inputState.count == 1) -> true
             is InputState.TextWithAttachments if (inputState.attachmentsCount == 1) -> true
