@@ -51,8 +51,11 @@ fun MessageListViewModel.bind(
     messageInputView.setReplyInThreadMessageId(replyInThreadMessage?.id)
     messageInputView.checkIsParticipant(channel)
     messageInputView.setSaveUrlsPlace(placeToSavePathsList)
-    messageInputView.isViewOnceSelected = { viewOnceSelected }
-    messageInputView.shouldShowViewOnceInfoDialog = { shouldShowViewOnceDialog() }
+    if (!channel.isSelf) {
+        messageInputView.isViewOnceSelected = { viewOnceSelected }
+        messageInputView.shouldShowViewOnceInfoDialog = { shouldShowViewOnceDialog() }
+        messageInputView.setupInputActions()
+    }
 
     viewModelScope.launch(Dispatchers.IO) {
         channelInteractor.getChannelFromDb(channel.id)?.let {
