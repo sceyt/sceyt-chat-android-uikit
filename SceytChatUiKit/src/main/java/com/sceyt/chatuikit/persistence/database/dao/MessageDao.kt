@@ -464,10 +464,11 @@ internal abstract class MessageDao {
             select message_id from $MESSAGE_TABLE where channelId =:channelId 
             and message_id >= :startId and message_id <= :endId and deliveryStatus != $PENDING_STATUS
             and (createdAt < :dateUntil or :dateUntil = 0)
+            and not unList
             order by createdAt
             """
     )
-    abstract suspend fun getMessagesIdsByRange(
+    abstract suspend fun getMessagesIdsByRangeIgnoreUnlist(
         channelId: Long,
         startId: Long,
         endId: Long,
@@ -620,6 +621,7 @@ internal abstract class MessageDao {
             and message_id not in(:messageIds) 
             and (createdAt < :deleteUntil or :deleteUntil = 0)
             and deliveryStatus != $PENDING_STATUS
+            and not unList
             """
     )
     abstract suspend fun deleteNotInMessageIdsUntilDateExceptPending(
@@ -628,13 +630,19 @@ internal abstract class MessageDao {
         deleteUntil: Long,
     ): Int
 
-    @Query("delete from $MESSAGE_TABLE where channelId =:channelId and createdAt <=:date and deliveryStatus != $PENDING_STATUS")
+    @Query("""
+        delete from $MESSAGE_TABLE where channelId =:channelId 
+        and createdAt <=:date and deliveryStatus != $PENDING_STATUS
+        """)
     abstract suspend fun deleteMessagesBeforeDateExceptPending(
         channelId: Long,
         date: Long
     ): Int
 
-    @Query("delete from $MESSAGE_TABLE where channelId =:channelId and message_id <=:messageId and deliveryStatus != $PENDING_STATUS")
+    @Query("""
+        delete from $MESSAGE_TABLE where channelId =:channelId 
+        and message_id <=:messageId and deliveryStatus != $PENDING_STATUS
+        """)
     abstract suspend fun deleteMessagesBeforeIdExceptPending(
         channelId: Long,
         messageId: Long
