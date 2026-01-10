@@ -43,6 +43,7 @@ import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.media.audio.AudioPlayer
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
+import com.sceyt.chatuikit.media.audio.VoiceStateCoordinator
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessageTid
 import com.sceyt.chatuikit.presentation.common.dialogs.ViewOnceInfoDialog
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.PlaybackSpeed
@@ -344,6 +345,9 @@ class SelfDestructingMediaPreviewActivity : AppCompatActivity(), SceytKoinCompon
 
     private fun toggleVoicePlayback() {
         val filePath = voiceFilePath ?: return
+
+        // Stop any active recording before starting playback
+        VoiceStateCoordinator.stopRecordingIfActive()
 
         if (AudioPlayerHelper.alreadyInitialized(filePath, voiceMessageTid)) {
             AudioPlayerHelper.getCurrentPlayer()?.addEventListener(
