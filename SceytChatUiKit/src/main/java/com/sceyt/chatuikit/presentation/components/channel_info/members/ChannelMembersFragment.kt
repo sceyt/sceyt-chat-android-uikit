@@ -315,7 +315,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
     }
 
     protected open fun onAddedMember(result: AddMemberResult) {
-        addMembers(channel.members)
+        addMembers(result.channel.members)
         sendAddedMemberSystemMessage(result.channel.members ?: return)
     }
 
