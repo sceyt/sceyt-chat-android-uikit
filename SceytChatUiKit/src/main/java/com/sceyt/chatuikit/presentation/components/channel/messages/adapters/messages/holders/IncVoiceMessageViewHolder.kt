@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders
 
 import android.graphics.drawable.Drawable
+import android.graphics.drawable.GradientDrawable
 import android.view.View
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
@@ -9,8 +10,10 @@ import com.masoudss.lib.WaveformSeekBar
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.data.models.messages.SceytMessageType
 import com.sceyt.chatuikit.databinding.SceytItemIncVoiceMessageBinding
 import com.sceyt.chatuikit.extensions.TAG_REF
+import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.mediaPlayerPositionToSeekBarProgress
 import com.sceyt.chatuikit.extensions.progressToMediaPlayerPosition
@@ -47,6 +50,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.mes
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMediaMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
 import com.sceyt.chatuikit.presentation.custom_views.CircularProgressView
+import com.sceyt.chatuikit.presentation.extensions.getMessageType
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
 class IncVoiceMessageViewHolder(
@@ -70,13 +74,21 @@ class IncVoiceMessageViewHolder(
             binding.playBackSpeed.text = value.displayValue
         }
     private var lastFilePath: String? = ""
+    private var isViewOnceMessage: Boolean = false
 
     init {
         with(binding) {
             setMessageItemStyle()
 
             root.setOnClickListener {
-                messageListeners.onMessageClick(it, requireMessageItem)
+                if (isViewOnceMessage) {
+                    val allowedStates = setOf(Downloaded, Uploaded, ThumbLoaded)
+                    if (fileItem.attachment.transferState !in allowedStates) return@setOnClickListener
+
+                    messageListeners.onAttachmentClick(it, fileItem, requireMessage)
+                } else {
+                    messageListeners.onMessageClick(it, requireMessageItem)
+                }
             }
 
             root.setOnLongClickListener {
@@ -110,6 +122,7 @@ class IncVoiceMessageViewHolder(
 
         with(binding) {
             val message = (item as MessageListItem.MessageItem).message
+            isViewOnceMessage = message.getMessageType() == SceytMessageType.ViewOnce
             tvForwarded.isVisible = message.isForwarded
 
             val body = message.body.trim()
@@ -142,6 +155,16 @@ class IncVoiceMessageViewHolder(
                 }
 
             initVoiceMessage()
+            updateViewOnceUI()
+        }
+    }
+    
+    private fun updateViewOnceUI() {
+        with(binding) {
+            ivViewOnceIcon.isVisible = isViewOnceMessage
+            playPauseButton.isClickable = !isViewOnceMessage
+            playBackSpeed.isClickable = !isViewOnceMessage
+            seekBar.isEnabled = !isViewOnceMessage
         }
     }
 
@@ -352,12 +375,21 @@ class IncVoiceMessageViewHolder(
 
     private fun SceytItemIncVoiceMessageBinding.setMessageItemStyle() {
         val accentColor = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
+        val backgroundColor = context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColor)
         playPauseButton.setBackgroundTint(accentColor)
         seekBar.waveProgressColor = style.voiceWaveformStyle.progressColor
         seekBar.waveBackgroundColor = style.voiceWaveformStyle.trackColor
         style.voiceSpeedTextStyle.apply(playBackSpeed)
         style.voiceDurationTextStyle.apply(voiceDuration)
         style.mediaLoaderStyle.apply(loadProgress)
+        
+        ivViewOnceIcon.background = GradientDrawable().apply {
+            shape = GradientDrawable.OVAL
+            setColor(accentColor)
+            setStroke(dpToPx(1f), backgroundColor)
+        }
+        ivViewOnceIcon.setImageDrawable(style.viewOnceBadgeIcon)
+        
         applyCommonStyle(
             layoutDetails = layoutDetails,
             tvForwarded = tvForwarded,
