@@ -628,6 +628,16 @@ internal fun MessageInputStyle.Builder.buildVoiceRecorderViewStyle(
             context, SceytChatUIKit.theme.colors.onPrimaryColor
         )
     )
+    .viewOnceIcon(
+        index = R.styleable.MessageInputView_sceytUiMessageInputVoiceRecorderViewOnceIcon,
+        defValue = context.getCompatDrawable(R.drawable.sceyt_ic_view_once)?.applyTint(
+            context, SceytChatUIKit.theme.colors.accentColor
+        )
+    )
+    .viewOnceSelectedIcon(
+        index = R.styleable.MessageInputView_sceytUiMessageInputVoiceRecorderViewOnceSelectedIcon,
+        defValue = context.getCompatDrawable(R.drawable.sceyt_ic_view_once_selected_with_layers)
+    )
     .slideToCancelTextStyle(
         slideToCancelTextStyle = buildVoiceRecorderViewSlideToCancelTextStyle(array)
     )
@@ -715,6 +725,16 @@ internal fun MessageInputStyle.Builder.buildVoiceRecordPlaybackViewStyle(
         defValue = context.getCompatDrawable(R.drawable.sceyt_ic_send_message)?.applyTint(
             context, SceytChatUIKit.theme.colors.onPrimaryColor
         )
+    )
+    .viewOnceIcon(
+        index = R.styleable.MessageInputView_sceytUiMessageInputVoiceRecordPlaybackViewOnceIcon,
+        defValue = context.getCompatDrawable(R.drawable.sceyt_ic_view_once)?.applyTint(
+            context, SceytChatUIKit.theme.colors.accentColor
+        )
+    )
+    .viewOnceSelectedIcon(
+        index = R.styleable.MessageInputView_sceytUiMessageInputVoiceRecordPlaybackViewOnceSelectedIcon,
+        defValue = context.getCompatDrawable(R.drawable.sceyt_ic_view_once_selected_with_layers)
     )
     .durationTextStyle(
         durationTextStyle = buildVoiceRecordPlaybackViewDurationTextStyle(array)

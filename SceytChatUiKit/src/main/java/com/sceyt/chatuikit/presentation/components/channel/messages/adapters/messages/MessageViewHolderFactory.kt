@@ -420,6 +420,15 @@ open class MessageViewHolderFactory(context: Context) {
                 outType = MessageViewTypeEnum.OutSelfDestructed
             )
         }
+        
+        val isVoice = message.attachments?.firstOrNull()?.type == AttachmentTypeEnum.Voice.value
+        if (isVoice) {
+            return pick(
+                inc = inc,
+                incType = MessageViewTypeEnum.IncVoice,
+                outType = MessageViewTypeEnum.OutVoice
+            )
+        }
 
         return pick(
             inc = inc,

@@ -4,10 +4,14 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.view.isVisible
 import com.masoudss.lib.SeekBarOnProgressChanged
 import com.masoudss.lib.WaveformSeekBar
+import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytVoiceRecordPresenterBinding
 import com.sceyt.chatuikit.extensions.TAG_REF
+import com.sceyt.chatuikit.extensions.applyTintBackgroundLayer
 import com.sceyt.chatuikit.extensions.durationToMinSecShort
 import com.sceyt.chatuikit.extensions.mediaPlayerPositionToSeekBarProgress
 import com.sceyt.chatuikit.extensions.progressToMediaPlayerPosition
@@ -31,6 +35,9 @@ class VoiceRecordPlaybackView @JvmOverloads constructor(
     private val messageTid: Long = -1
     var isShowing = false
         private set
+    var isViewOnce: Boolean = false
+        private set
+    var enableViewOnce: Boolean = true
 
     init {
         binding = SceytVoiceRecordPresenterBinding.inflate(LayoutInflater.from(context), this)
@@ -39,13 +46,16 @@ class VoiceRecordPlaybackView @JvmOverloads constructor(
     fun init(
         file: File,
         audioMetadata: AudioMetadata,
+        initialViewOnce: Boolean = false,
         listener: VoiceRecordPlaybackListeners? = null
     ) {
         isShowing = true
+        isViewOnce = initialViewOnce
         with(binding) {
             deleteVoiceRecord.setOnClickListener {
                 AudioPlayerHelper.stop(file.path, messageTid)
                 isShowing = false
+                isViewOnce = false
                 listener?.onDeleteVoiceRecord()
             }
 
@@ -56,12 +66,41 @@ class VoiceRecordPlaybackView @JvmOverloads constructor(
             icSendMessage.setOnClickListener {
                 AudioPlayerHelper.stop(file.path, messageTid)
                 isShowing = false
-                listener?.onSendVoiceMessage()
+                listener?.onSendVoiceMessage(isViewOnce)
+                isViewOnce = false
             }
+            
+            icViewOnce.setOnClickListener {
+                toggleViewOnce()
+            }
+            
+            icViewOnce.isVisible = enableViewOnce
+            updateViewOnceIcon()
 
             audioMetadata.tmb?.let { waveformSeekBar.setSampleFrom(it) }
             voiceRecordDuration.text =
                 audioMetadata.dur.times(1000).toLong().durationToMinSecShort()
+        }
+    }
+    
+    private fun toggleViewOnce() {
+        isViewOnce = !isViewOnce
+        updateViewOnceIcon()
+    }
+    
+    private fun updateViewOnceIcon() {
+        with(binding.icViewOnce) {
+            if (isViewOnce) {
+                setImageDrawable(
+                    style.viewOnceSelectedIcon.applyTintBackgroundLayer(
+                        context = context,
+                        bgLayerId = R.id.backgroundLayer,
+                        tintColor = SceytChatUIKit.theme.colors.accentColor
+                    )
+                )
+            } else {
+                setImageDrawable(style.viewOnceIcon)
+            }
         }
     }
 
@@ -159,6 +198,7 @@ class VoiceRecordPlaybackView @JvmOverloads constructor(
             waveformSeekBar.waveProgressColor = style.audioWaveformStyle.progressColor
             deleteVoiceRecord.setImageDrawable(style.closeIcon)
             icSendMessage.setImageDrawable(style.sendVoiceIcon)
+            icViewOnce.setImageDrawable(style.viewOnceIcon)
             style.durationTextStyle.apply(voiceRecordDuration)
         }
     }
@@ -166,6 +206,6 @@ class VoiceRecordPlaybackView @JvmOverloads constructor(
     interface VoiceRecordPlaybackListeners {
         fun onDeleteVoiceRecord() {}
         fun onPlayVoiceRecord() {}
-        fun onSendVoiceMessage() {}
+        fun onSendVoiceMessage(isViewOnce: Boolean) {}
     }
 }

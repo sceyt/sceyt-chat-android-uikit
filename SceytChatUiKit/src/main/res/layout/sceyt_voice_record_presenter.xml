@@ -29,9 +29,10 @@
         android:orientation="horizontal"
         android:padding="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/icSendMessage"
+        app:layout_constraintEnd_toStartOf="@id/icViewOnce"
         app:layout_constraintStart_toEndOf="@id/delete_voice_record"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_goneMarginEnd="8dp">
 
         <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/play_voice_record"
@@ -77,6 +78,19 @@
             tools:text="00:00" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/icViewOnce"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_marginEnd="8dp"
+        android:background="?selectableItemBackgroundBorderless"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/icSendMessage"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:src="@drawable/sceyt_ic_view_once"
+        tools:visibility="visible" />
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/icSendMessage"

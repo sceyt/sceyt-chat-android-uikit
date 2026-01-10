@@ -206,7 +206,10 @@ class MessageInputView @JvmOverloads constructor(
             setupAttachmentsList()
             if (enableVoiceRecord) {
                 // Init SceytVoiceMessageRecorderView outside of post, because it's using permission launcher
-                val voiceRecorderView = VoiceRecorderView(context).also { it.setStyle(style) }
+                val voiceRecorderView = VoiceRecorderView(context).also { 
+                    it.setStyle(style)
+                    it.enableViewOnce = enableSendViewOnceMessage
+                }
                 this@MessageInputView.voiceRecorderView = voiceRecorderView
                 post {
                     onStateChanged(inputState)
@@ -391,14 +394,30 @@ class MessageInputView @JvmOverloads constructor(
 
     private fun isEditingMessage() = editMessage != null
 
-    private fun tryToSendRecording(file: File?, amplitudes: IntArray, duration: Int) {
+    private fun tryToSendRecording(file: File?, amplitudes: IntArray, duration: Int, viewOnce: Boolean = false) {
         file ?: return
         val metadata = Gson().toJson(AudioMetadata(amplitudes, duration))
         createAttachmentWithPaths(
             AttachmentTypeEnum.Voice to file.path, metadata = metadata,
         ).firstOrNull()?.let {
             allAttachments.add(it)
-            sendMessage()
+            sendVoiceMessage(viewOnce)
+        }
+    }
+    
+    private fun sendVoiceMessage(viewOnce: Boolean) {
+        val body = binding.messageInput.text
+        closeReplyOrEditView {
+            messageToSendHelper.sendMessage(
+                allAttachments = allAttachments,
+                body = body,
+                editMessage = editMessage,
+                replyMessage = replyMessage,
+                replyThreadMessageId = replyThreadMessageId,
+                linkDetails = linkDetails,
+                viewOnce = viewOnce
+            )
+            reset(clearInput = true, closeLinkPreview = true)
         }
     }
 
@@ -421,8 +440,8 @@ class MessageInputView @JvmOverloads constructor(
                 this@MessageInputView.onRecordingStarted()
             }
 
-            override fun onRecordingCompleted(shouldShowPreview: Boolean) {
-                audioRecorderHelper.stopRecording(onStopRecordingCompleted(shouldShowPreview))
+            override fun onRecordingCompleted(shouldShowPreview: Boolean, isViewOnce: Boolean) {
+                audioRecorderHelper.stopRecording(onStopRecordingCompleted(shouldShowPreview, isViewOnce))
                 if (shouldShowPreview)
                     onRecordingCompletedOrCanceled()
             }
@@ -481,16 +500,17 @@ class MessageInputView @JvmOverloads constructor(
 
     private fun onStopRecordingCompleted(
         shouldShowPreview: Boolean,
+        isViewOnce: Boolean,
     ) = OnRecorderStop { isTooShort, file, duration, amplitudes ->
         if (isTooShort) {
             finishRecording()
             return@OnRecorderStop
         }
         if (shouldShowPreview) {
-            showRecordPreview(file, amplitudes, duration)
+            showRecordPreview(file, amplitudes, duration, isViewOnce)
         } else {
             finishRecording()
-            tryToSendRecording(file, amplitudes.toIntArray(), duration)
+            tryToSendRecording(file, amplitudes.toIntArray(), duration, isViewOnce)
         }
     }
 
@@ -498,17 +518,19 @@ class MessageInputView @JvmOverloads constructor(
         file: File?,
         amplitudes: Array<Int>,
         duration: Int,
+        initialViewOnce: Boolean = false,
     ) {
         file ?: return
         val metadata = AudioMetadata(amplitudes.toIntArray(), duration)
-        binding.voiceRecordPlaybackView.init(file, metadata, object : VoiceRecordPlaybackListeners {
+        binding.voiceRecordPlaybackView.enableViewOnce = enableSendViewOnceMessage
+        binding.voiceRecordPlaybackView.init(file, metadata, initialViewOnce, object : VoiceRecordPlaybackListeners {
             override fun onDeleteVoiceRecord() {
                 file.deleteOnExit()
                 finishRecording()
             }
 
-            override fun onSendVoiceMessage() {
-                tryToSendRecording(file, amplitudes.toIntArray(), duration)
+            override fun onSendVoiceMessage(isViewOnce: Boolean) {
+                tryToSendRecording(file, amplitudes.toIntArray(), duration, isViewOnce)
                 finishRecording()
             }
         })

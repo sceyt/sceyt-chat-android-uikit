@@ -40,9 +40,11 @@ import com.sceyt.chatuikit.extensions.maybeComponentActivity
 import com.sceyt.chatuikit.extensions.permissionIgnored
 import com.sceyt.chatuikit.extensions.runOnMainThread
 import com.sceyt.chatuikit.extensions.screenWidthPx
+import com.sceyt.chatuikit.extensions.applyTintBackgroundLayer
 import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.chatuikit.presentation.common.dialogs.SceytDialog
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.styles.input.MessageInputStyle
 import java.util.Timer
 import java.util.TimerTask
@@ -80,6 +82,10 @@ class VoiceRecorderView @JvmOverloads constructor(
     private var recordingListener: RecordingListener? = null
     private var isRecordingAllowed: () -> Boolean = { true }
     private val recorderViewStyle get() = style.voiceRecorderViewStyle
+    
+    var isViewOnce: Boolean = false
+        private set
+    var enableViewOnce: Boolean = true
 
     init {
         init()
@@ -114,6 +120,32 @@ class VoiceRecorderView @JvmOverloads constructor(
         icStopRecording.setOnClickListener {
             isLocked = false
             stopRecording(RecordingBehaviour.LOCK_DONE_SHOW_PREVIEW)
+        }
+        
+        icViewOnce.setOnClickListener {
+            toggleViewOnce()
+        }
+    }
+    
+    private fun toggleViewOnce() {
+        isViewOnce = !isViewOnce
+        updateViewOnceIcon()
+    }
+    
+    private fun updateViewOnceIcon() {
+        with(binding.icViewOnce) {
+            if (isViewOnce) {
+                setImageDrawable(
+                    recorderViewStyle.viewOnceSelectedIcon.applyTintBackgroundLayer(
+                        context = context,
+                        bgLayerId = R.id.backgroundLayer,
+                        tintColor = SceytChatUIKit.theme.colors.accentColor
+                    )
+                )
+                clearColorFilter()
+            } else {
+                setImageDrawable(recorderViewStyle.viewOnceIcon)
+            }
         }
     }
 
@@ -303,6 +335,10 @@ class VoiceRecorderView @JvmOverloads constructor(
             RecordingBehaviour.LOCKED -> {
                 lockViewContainer.visibility = VISIBLE
                 tvCancel.visibility = VISIBLE
+                if (enableViewOnce) {
+                    icViewOnce.visibility = VISIBLE
+                    updateViewOnceIcon()
+                }
                 imageViewAudio.animate()
                     .translationX(0f)
                     .translationY(0f)
@@ -324,16 +360,18 @@ class VoiceRecorderView @JvmOverloads constructor(
             RecordingBehaviour.LOCK_DONE_SEND_IMMEDIATELY,
                 -> {
                 isRecording = false
+                val currentViewOnce = isViewOnce
                 moveToInitialState()
                 val shouldShowPreview =
                     recordingBehaviour == RecordingBehaviour.LOCK_DONE_SHOW_PREVIEW
-                recordingListener?.onRecordingCompleted(shouldShowPreview)
+                recordingListener?.onRecordingCompleted(shouldShowPreview, currentViewOnce)
             }
         }
     }
 
     private fun SceytRecordViewBinding.moveToInitialState() {
         isRecording = false
+        isViewOnce = false
         imageViewAudio.animate().apply {
             scaleX(1f)
             scaleY(1f)
@@ -352,6 +390,7 @@ class VoiceRecorderView @JvmOverloads constructor(
         tvDuration.visibility = GONE
         recordingIndicatorView.visibility = GONE
         lockViewContainer.visibility = GONE
+        icViewOnce.visibility = GONE
         layoutEffect2.visibility = GONE
         layoutEffect1.visibility = GONE
         tvCancel.visibility = GONE
