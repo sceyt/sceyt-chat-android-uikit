@@ -5,6 +5,7 @@ import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadPrev
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.extensions.roundUp
+import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.database.dao.MessageDao
 import com.sceyt.chatuikit.persistence.logicimpl.message.ChannelId
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
@@ -30,7 +31,7 @@ internal class CheckDeletedNearMessagesUseCase(
     private val deleteByLoadType: HandleDeleteMessagesByLoadTypeUseCase,
     private val handleMessagesInRange: HandleMessagesInRangeUseCase
 ) {
-    private val tag = "CheckDeletedMessages"
+    private val tag = "MessageDeletion"
 
     suspend operator fun invoke(
         channelId: ChannelId,
@@ -42,7 +43,7 @@ internal class CheckDeletedNearMessagesUseCase(
         // Case 1: Empty response means server has no messages at all
         // Delete ALL messages in the channel (except pending)
         if (serverMessages.isEmpty()) {
-            Log.i(
+            SceytLog.d(
                 tag,
                 "LoadNear: Empty server response, deleting ALL messages in channel (except pending)"
             )
@@ -63,7 +64,7 @@ internal class CheckDeletedNearMessagesUseCase(
         // This means we have the COMPLETE message list from server, so delete all local messages
         // that don't exist in this complete list (except pending)
         if (serverIds.size < limit) {
-            Log.i(
+            Log.d(
                 tag,
                 "LoadNear: Server returned ${serverIds.size} < limit $limit, treating as complete message list, deleting all not in response"
             )
@@ -77,10 +78,15 @@ internal class CheckDeletedNearMessagesUseCase(
                         message.isNotPending() &&
                         (syncStartTime == 0L || message.createdAt < syncStartTime)
             }
-            Log.i(
-                tag,
-                "LoadNear: Deleted $count messages from DB as they do not exist on server (syncStartTime: $syncStartTime)"
-            )
+            if (count > 0) {
+                SceytLog.d(
+                    tag,
+                    "LoadNear: Deleted $count messages from DB as they do not exist " +
+                            "on server (syncStartTime: $syncStartTime)"
+                )
+            } else {
+                Log.d(tag, "LoadNear: No messages deleted from DB")
+            }
             return
         }
 
@@ -95,7 +101,7 @@ internal class CheckDeletedNearMessagesUseCase(
         // Case 3a: No top messages found
         // This means there are no messages ≤ messageId on the server, delete all messages < first returned message
         if (topNearIds.isEmpty()) {
-            Log.i(
+            Log.d(
                 tag,
                 "LoadNear: No top messages found (topNearIds is empty), deleting all messages before ${bottomNearIds.first()}"
             )
@@ -112,7 +118,7 @@ internal class CheckDeletedNearMessagesUseCase(
         // Case 3b: No bottom messages found
         // This means there are no messages > messageId on the server, delete all messages > last returned message
         if (bottomNearIds.isEmpty()) {
-            Log.i(
+            Log.d(
                 tag,
                 "LoadNear: No bottom messages found (bottomNearIds is empty), deleting all messages after ${topNearIds.last()}"
             )
@@ -131,7 +137,7 @@ internal class CheckDeletedNearMessagesUseCase(
         if (topNearIds.size < normalCountTop) {
             val existInTop = topNearIds.contains(messageId)
             if (existInTop) {
-                Log.i(
+                Log.d(
                     tag,
                     "LoadNear: Top count ${topNearIds.size} < normalCountTop $normalCountTop, reached end in top direction"
                 )
@@ -153,7 +159,7 @@ internal class CheckDeletedNearMessagesUseCase(
         if (bottomNearIds.size < normalCountBottom) {
             val existInBottom = bottomNearIds.contains(messageId)
             if (existInBottom) {
-                Log.i(
+                Log.d(
                     tag,
                     "LoadNear: Bottom count ${bottomNearIds.size} < normalCountBottom $normalCountBottom, reached end in bottom direction"
                 )
@@ -172,7 +178,7 @@ internal class CheckDeletedNearMessagesUseCase(
 
         // Case 4: Check for within-range deletions (messages that exist locally but not in server response)
         // This handles gap detection and any missing messages within the returned range
-        Log.i(
+        Log.d(
             tag,
             "LoadNear: Checking for within-range deletions between [${serverIds.first()}, ${serverIds.last()}]"
         )
