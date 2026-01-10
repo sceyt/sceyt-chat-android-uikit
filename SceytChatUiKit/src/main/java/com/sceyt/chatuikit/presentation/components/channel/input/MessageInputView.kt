@@ -50,6 +50,7 @@ import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.chatuikit.media.audio.AudioRecordData
 import com.sceyt.chatuikit.media.audio.AudioRecorderHelper
 import com.sceyt.chatuikit.media.audio.AudioRecorderHelper.OnRecorderStop
+import com.sceyt.chatuikit.media.audio.VoiceStateCoordinator
 import com.sceyt.chatuikit.persistence.extensions.getChannelType
 import com.sceyt.chatuikit.persistence.extensions.isPeerBlocked
 import com.sceyt.chatuikit.persistence.lazyVar
@@ -1160,6 +1161,15 @@ class MessageInputView @JvmOverloads constructor(
         BottomSheetMediaPicker.pickerListener?.let {
             BottomSheetMediaPicker.pickerListener = getPickerListener()
         }
+        VoiceStateCoordinator.registerRecordingController(
+            isRecordingProvider = { isRecording() },
+            stopRecordingCallback = { stopRecording() }
+        )
+    }
+
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        VoiceStateCoordinator.unregisterRecordingController()
     }
 
     override fun onWindowFocusChanged(hasWindowFocus: Boolean) {
