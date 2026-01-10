@@ -93,6 +93,7 @@
         <attr name="sceytUiMessagesListVideoPlayIcon" format="reference" />
         <attr name="sceytUiMessagesListVoicePlayIcon" format="reference" />
         <attr name="sceytUiMessagesListVoicePauseIcon" format="reference" />
+        <attr name="sceytUiMessagesListViewOnceBadgeIcon" format="reference" />
         <attr name="sceytUiMessagesListViewCountIcon" format="reference" />
         <!--Message body text style-->
         <attr name="sceytUiMessagesListBodyTextColor" format="reference|color" />

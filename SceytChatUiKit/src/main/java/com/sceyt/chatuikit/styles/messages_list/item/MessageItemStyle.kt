@@ -85,6 +85,7 @@ import java.util.Date
  * @property videoPlayIcon Icon for the video play, default is [R.drawable.sceyt_ic_play]
  * @property voicePlayIcon Icon for the voice play, default is [R.drawable.sceyt_ic_play]
  * @property voicePauseIcon Icon for the voice pause, default is [R.drawable.sceyt_ic_pause]
+ * @property viewOnceBadgeIcon Icon for the view once badge on voice messages, default is [R.drawable.sceyt_ic_view_once]
  * @property viewCountIcon Icon for the view count, default is [R.drawable.sceyt_ic_display_count]
  * @property messageDeliveryStatusIcons Icons for the message delivery status.
  * @property editedStateText Title for the edited state, default is [R.string.sceyt_edited].
@@ -146,6 +147,7 @@ data class MessageItemStyle(
     val videoPlayIcon: Drawable?,
     val voicePlayIcon: Drawable?,
     val voicePauseIcon: Drawable?,
+    val viewOnceBadgeIcon: Drawable?,
     val viewCountIcon: Drawable?,
     val editedStateText: String,
     val deletedStateText: String,
@@ -234,6 +236,11 @@ data class MessageItemStyle(
                             context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor)
                         )
 
+                val viewOnceBadgeIcon = array.getDrawable(R.styleable.MessagesListView_sceytUiMessagesListViewOnceBadgeIcon)
+                        ?: context.getCompatDrawable(R.drawable.sceyt_ic_view_once).applyTint(
+                            context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor)
+                        )
+
                 val viewCountIcon = array.getDrawable(R.styleable.MessagesListView_sceytUiMessagesListViewCountIcon)
                         ?: context.getCompatDrawable(R.drawable.sceyt_ic_display_count).applyTint(
                             context.getCompatColor(SceytChatUIKit.theme.colors.iconSecondaryColor)
@@ -281,6 +288,7 @@ data class MessageItemStyle(
                     videoPlayIcon = videoPlayIcon,
                     voicePlayIcon = voicePlayIcon,
                     voicePauseIcon = voicePauseIcon,
+                    viewOnceBadgeIcon = viewOnceBadgeIcon,
                     viewCountIcon = viewCountIcon,
                     editedStateText = editedStateText,
                     deletedStateText = deletedStateText,
