@@ -23,6 +23,7 @@ import com.sceyt.chatuikit.styles.extensions.self_destructing_media_preview.buil
 import com.sceyt.chatuikit.styles.extensions.self_destructing_media_preview.buildMessageBodyTextStyle
 import com.sceyt.chatuikit.styles.extensions.self_destructing_media_preview.buildTimelineTextStyle
 import com.sceyt.chatuikit.styles.extensions.self_destructing_media_preview.buildToolbarStyle
+import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 import com.sceyt.chatuikit.theme.Colors
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 import java.util.Date
@@ -41,6 +42,7 @@ import java.util.Date
  * @property pauseIcon Icon for the pause button, default is [R.drawable.sceyt_ic_pause].
  * @property playIcon Icon for the play button, default is [R.drawable.sceyt_ic_play].
  * @property timelineTextStyle Style for the timeline text, default is [buildTimelineTextStyle] with primary color.
+ * @property messageItemStyle Style for voice message items, used for consistency with message holders.
  * */
 
 data class SelfDestructingMediaPreviewStyle(
@@ -56,7 +58,8 @@ data class SelfDestructingMediaPreviewStyle(
     @param:ColorInt val thumbColor: Int,
     val pauseIcon: Drawable?,
     val playIcon: Drawable?,
-    val timelineTextStyle: TextStyle
+    val timelineTextStyle: TextStyle,
+    val messageItemStyle: MessageItemStyle
 ) {
     companion object {
         var styleCustomizer =
@@ -99,7 +102,8 @@ data class SelfDestructingMediaPreviewStyle(
                         thumbColor = opPrimaryColor,
                         pauseIcon = pauseIcon,
                         playIcon = playIcon,
-                        timelineTextStyle = buildTimelineTextStyle(array)
+                        timelineTextStyle = buildTimelineTextStyle(array),
+                        messageItemStyle = MessageItemStyle.Builder(context, null).build()
                     ).let { styleCustomizer.apply(context, it) }
                 }
         }
