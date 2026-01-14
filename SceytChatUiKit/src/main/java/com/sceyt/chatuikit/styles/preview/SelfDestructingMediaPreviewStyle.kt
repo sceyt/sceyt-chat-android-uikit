@@ -13,7 +13,6 @@ import com.sceyt.chatuikit.extensions.applyTint
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.formatters.Formatter
-import com.sceyt.chatuikit.formatters.SceytChatUIKitFormatters
 import com.sceyt.chatuikit.presentation.components.channel.messages.preview.SelfDestructingMediaPreviewActivity
 import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.BackgroundStyle
@@ -23,7 +22,6 @@ import com.sceyt.chatuikit.styles.extensions.self_destructing_media_preview.buil
 import com.sceyt.chatuikit.styles.extensions.self_destructing_media_preview.buildMessageBodyTextStyle
 import com.sceyt.chatuikit.styles.extensions.self_destructing_media_preview.buildTimelineTextStyle
 import com.sceyt.chatuikit.styles.extensions.self_destructing_media_preview.buildToolbarStyle
-import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 import com.sceyt.chatuikit.theme.Colors
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 import java.util.Date
@@ -31,8 +29,8 @@ import java.util.Date
 /** Style for [SelfDestructingMediaPreviewActivity].
  * @property backgroundColor Background color of the media preview, default is [Color.BLACK].
  * @property toolbarStyle Style for the toolbar with self-destruct indicator.
- * @property userNameFormatter Formatter for the user name, default is [SceytChatUIKitFormatters.userNameFormatter].
- * @property mediaDateFormatter Formatter for the media date, default is [SceytChatUIKitFormatters.mediaPreviewDateFormatter].
+ * @property userNameFormatter Formatter for the user name, default is [SceytChatUIKit.formatters.userNameFormatter].
+ * @property mediaDateFormatter Formatter for the media date, default is [SceytChatUIKit.formatters.mediaPreviewDateFormatter].
  * @property messageBodyBackgroundStyle Background style for the message body container (supports color, gradient, borders, etc).
  * @property messageBodyTextStyle Style for the message body text.
  * @property videoControllerBackgroundColor Color of the video controller, default is [R.color.sceyt_media_primary_color].
@@ -42,7 +40,6 @@ import java.util.Date
  * @property pauseIcon Icon for the pause button, default is [R.drawable.sceyt_ic_pause].
  * @property playIcon Icon for the play button, default is [R.drawable.sceyt_ic_play].
  * @property timelineTextStyle Style for the timeline text, default is [buildTimelineTextStyle] with primary color.
- * @property messageItemStyle Style for voice message items, used for consistency with message holders.
  * */
 
 data class SelfDestructingMediaPreviewStyle(
@@ -58,8 +55,7 @@ data class SelfDestructingMediaPreviewStyle(
     @param:ColorInt val thumbColor: Int,
     val pauseIcon: Drawable?,
     val playIcon: Drawable?,
-    val timelineTextStyle: TextStyle,
-    val messageItemStyle: MessageItemStyle
+    val timelineTextStyle: TextStyle
 ) {
     companion object {
         var styleCustomizer =
@@ -102,8 +98,7 @@ data class SelfDestructingMediaPreviewStyle(
                         thumbColor = opPrimaryColor,
                         pauseIcon = pauseIcon,
                         playIcon = playIcon,
-                        timelineTextStyle = buildTimelineTextStyle(array),
-                        messageItemStyle = MessageItemStyle.Builder(context, null).build()
+                        timelineTextStyle = buildTimelineTextStyle(array)
                     ).let { styleCustomizer.apply(context, it) }
                 }
         }

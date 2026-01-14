@@ -7,11 +7,8 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
 import com.masoudss.lib.SeekBarOnProgressChanged
 import com.masoudss.lib.WaveformSeekBar
-import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytVoiceRecordPresenterBinding
 import com.sceyt.chatuikit.extensions.TAG_REF
-import com.sceyt.chatuikit.extensions.applyTintBackgroundLayer
 import com.sceyt.chatuikit.extensions.durationToMinSecShort
 import com.sceyt.chatuikit.extensions.mediaPlayerPositionToSeekBarProgress
 import com.sceyt.chatuikit.extensions.progressToMediaPlayerPosition
@@ -46,11 +43,11 @@ class VoiceRecordPlaybackView @JvmOverloads constructor(
     fun init(
         file: File,
         audioMetadata: AudioMetadata,
-        initialViewOnce: Boolean = false,
+        viewOnceSelected: Boolean = false,
         listener: VoiceRecordPlaybackListeners? = null
     ) {
         isShowing = true
-        isViewOnce = initialViewOnce
+        isViewOnce = viewOnceSelected
         with(binding) {
             deleteVoiceRecord.setOnClickListener {
                 AudioPlayerHelper.stop(file.path, messageTid)
@@ -69,11 +66,11 @@ class VoiceRecordPlaybackView @JvmOverloads constructor(
                 listener?.onSendVoiceMessage(isViewOnce)
                 isViewOnce = false
             }
-            
+
             icViewOnce.setOnClickListener {
                 toggleViewOnce()
             }
-            
+
             icViewOnce.isVisible = enableViewOnce
             updateViewOnceIcon()
 
@@ -82,22 +79,16 @@ class VoiceRecordPlaybackView @JvmOverloads constructor(
                 audioMetadata.dur.times(1000).toLong().durationToMinSecShort()
         }
     }
-    
+
     private fun toggleViewOnce() {
         isViewOnce = !isViewOnce
         updateViewOnceIcon()
     }
-    
+
     private fun updateViewOnceIcon() {
         with(binding.icViewOnce) {
             if (isViewOnce) {
-                setImageDrawable(
-                    style.viewOnceSelectedIcon.applyTintBackgroundLayer(
-                        context = context,
-                        bgLayerId = R.id.backgroundLayer,
-                        tintColor = SceytChatUIKit.theme.colors.accentColor
-                    )
-                )
+                setImageDrawable(style.viewOnceSelectedIcon)
             } else {
                 setImageDrawable(style.viewOnceIcon)
             }
