@@ -19,6 +19,7 @@ import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.media.audio.AudioPlayer
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper.OnAudioPlayer
+import com.sceyt.chatuikit.media.audio.VoiceStateCoordinator
 import com.sceyt.chatuikit.media.audio.alreadyInitialized
 import com.sceyt.chatuikit.media.audio.isPlaying
 import com.sceyt.chatuikit.media.audio.seek
@@ -53,6 +54,7 @@ class IncVoiceMessageViewHolder(
     private val binding: SceytItemIncVoiceMessageBinding,
     private val viewPoolReactions: RecyclerView.RecycledViewPool,
     private val style: MessageItemStyle,
+    private val isViewOnce: Boolean,
     private val messageListeners: MessageClickListeners.ClickListeners,
     displayedListener: ((MessageListItem) -> Unit)?,
     private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
@@ -76,7 +78,11 @@ class IncVoiceMessageViewHolder(
             setMessageItemStyle()
 
             root.setOnClickListener {
-                messageListeners.onMessageClick(it, requireMessageItem)
+                if (isViewOnce) {
+                    messageListeners.onAttachmentClick(it, fileItem, requireMessage)
+                } else {
+                    messageListeners.onMessageClick(it, requireMessageItem)
+                }
             }
 
             root.setOnLongClickListener {
@@ -142,6 +148,16 @@ class IncVoiceMessageViewHolder(
                 }
 
             initVoiceMessage()
+            updateViewOnceUI()
+        }
+    }
+    
+    private fun updateViewOnceUI() {
+        with(binding) {
+            ivViewOnceIcon.isVisible = isViewOnce
+            playPauseButton.isClickable = !isViewOnce
+            playBackSpeed.isClickable = !isViewOnce
+            seekBar.isEnabled = !isViewOnce
         }
     }
 
@@ -199,6 +215,10 @@ class IncVoiceMessageViewHolder(
     private fun onPlayPauseClick(attachment: SceytAttachment) {
         if (attachment.transferState != Uploaded && attachment.transferState != Downloaded)
             return
+
+        // Stop any active recording before starting playback
+        VoiceStateCoordinator.stopRecordingIfActive()
+
         if (AudioPlayerHelper.alreadyInitialized(attachment)) {
             AudioPlayerHelper.getCurrentPlayer()?.addEventListener(
                 event = playerListener,
@@ -358,6 +378,8 @@ class IncVoiceMessageViewHolder(
         style.voiceSpeedTextStyle.apply(playBackSpeed)
         style.voiceDurationTextStyle.apply(voiceDuration)
         style.mediaLoaderStyle.apply(loadProgress)
+        style.viewOnceBadgeStyle.apply(ivViewOnceIcon)
+        
         applyCommonStyle(
             layoutDetails = layoutDetails,
             tvForwarded = tvForwarded,

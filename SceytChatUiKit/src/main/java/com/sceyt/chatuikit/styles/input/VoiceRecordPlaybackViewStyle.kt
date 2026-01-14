@@ -19,6 +19,8 @@ data class VoiceRecordPlaybackViewStyle(
         val playIcon: Drawable?,
         val pauseIcon: Drawable?,
         val sendVoiceIcon: Drawable?,
+        val viewOnceIcon: Drawable?,
+        val viewOnceSelectedIcon: Drawable?,
         val durationTextStyle: TextStyle,
         val audioWaveformStyle: AudioWaveformStyle,
         val durationFormatter: Formatter<Long>
@@ -46,6 +48,8 @@ data class VoiceRecordPlaybackViewStyle(
         private var playIcon: Drawable? = null
         private var pauseIcon: Drawable? = null
         private var sendVoiceIcon: Drawable? = null
+        private var viewOnceIcon: Drawable? = null
+        private var viewOnceSelectedIcon: Drawable? = null
         private var durationTextStyle: TextStyle = TextStyle()
         private var audioWaveformStyle: AudioWaveformStyle = AudioWaveformStyle.Builder(context, typedArray).build()
         private var durationFormatter = SceytChatUIKit.formatters.mediaDurationFormatter
@@ -83,6 +87,14 @@ data class VoiceRecordPlaybackViewStyle(
             this.sendVoiceIcon = typedArray.getDrawable(index) ?: defValue
         }
 
+        fun viewOnceIcon(@StyleableRes index: Int, defValue: Drawable? = viewOnceIcon) = apply {
+            this.viewOnceIcon = typedArray.getDrawable(index) ?: defValue
+        }
+
+        fun viewOnceSelectedIcon(@StyleableRes index: Int, defValue: Drawable? = viewOnceSelectedIcon) = apply {
+            this.viewOnceSelectedIcon = typedArray.getDrawable(index) ?: defValue
+        }
+
         fun durationTextStyle(durationTextStyle: TextStyle) = apply {
             this.durationTextStyle = durationTextStyle
         }
@@ -98,6 +110,8 @@ data class VoiceRecordPlaybackViewStyle(
             playIcon = playIcon,
             pauseIcon = pauseIcon,
             sendVoiceIcon = sendVoiceIcon,
+            viewOnceIcon = viewOnceIcon,
+            viewOnceSelectedIcon = viewOnceSelectedIcon,
             durationTextStyle = durationTextStyle,
             audioWaveformStyle = audioWaveformStyle,
             durationFormatter = durationFormatter

@@ -4,11 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 
-class SelfDestructingMediaPreviewViewModelFactory(
+class SelfDestructingVoiceMessageViewModelFactory(
     private val message: SceytMessage
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         @Suppress("UNCHECKED_CAST")
-        return SelfDestructingMediaPreviewViewModel(message) as T
+        return SelfDestructingVoiceMessageViewModel(message) as T
     }
 }

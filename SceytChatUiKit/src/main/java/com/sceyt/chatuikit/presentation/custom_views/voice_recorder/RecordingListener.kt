@@ -3,6 +3,6 @@ package com.sceyt.chatuikit.presentation.custom_views.voice_recorder
 interface RecordingListener {
     fun onRecordingStarted() {}
     fun onRecordingLocked() {}
-    fun onRecordingCompleted(shouldShowPreview: Boolean) {}
+    fun onRecordingCompleted(shouldShowPreview: Boolean, isViewOnce: Boolean) {}
     fun onRecordingCanceled() {}
 }

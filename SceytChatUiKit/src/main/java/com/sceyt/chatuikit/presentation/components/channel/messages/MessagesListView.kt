@@ -49,7 +49,7 @@ import com.sceyt.chatuikit.persistence.differs.diff
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.persistence.file_transfer.ThumbFor
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState
+import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Downloaded
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.PauseUpload
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.PendingUpload
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Preparing
@@ -89,9 +89,10 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.cl
 import com.sceyt.chatuikit.presentation.components.channel.messages.popups.MessageActionsPopupMenu
 import com.sceyt.chatuikit.presentation.components.channel.messages.popups.PopupReactionsAdapter
 import com.sceyt.chatuikit.presentation.components.channel.messages.popups.ReactionsPopup
+import com.sceyt.chatuikit.presentation.components.channel.messages.preview.SelfDestructingMediaPreviewActivity
+import com.sceyt.chatuikit.presentation.components.channel.messages.preview.SelfDestructingVoiceMessageActivity
 import com.sceyt.chatuikit.presentation.components.forward.ForwardActivity
 import com.sceyt.chatuikit.presentation.components.media.MediaPreviewActivity
-import com.sceyt.chatuikit.presentation.components.channel.messages.preview.SelfDestructingMediaPreviewActivity
 import com.sceyt.chatuikit.presentation.components.message_info.MessageInfoActivity
 import com.sceyt.chatuikit.presentation.extensions.getUpdateMessage
 import com.sceyt.chatuikit.presentation.extensions.isPending
@@ -716,7 +717,7 @@ class MessagesListView @JvmOverloads constructor(
         }
 
         // Update reply message
-        if (data.state == TransferState.Downloaded) {
+        if (data.state == Downloaded) {
             messages.forEachIndexed { index, item ->
                 if (item is MessageItem && item.message.parentMessage?.tid == data.messageTid) {
                     val message = item.message
@@ -1097,11 +1098,23 @@ class MessagesListView @JvmOverloads constructor(
 
     override fun onAttachmentClick(view: View, item: FileListItem, message: SceytMessage) {
         if (message.type == SceytMessageType.ViewOnce.value) {
-            SelfDestructingMediaPreviewActivity.launchActivity(
-                context = context,
-                message = message,
-                attachment = item.attachment
-            )
+            val allowedStates = setOf(Downloaded, Uploaded, ThumbLoaded)
+            if (item.attachment.transferState !in allowedStates) return
+
+            if (item.type == AttachmentTypeEnum.Voice) {
+                SelfDestructingVoiceMessageActivity.launch(
+                    context = context,
+                    message = message,
+                    attachment = item.attachment,
+                    styleId = style.messageItemStyle.styleId
+                )
+            } else {
+                SelfDestructingMediaPreviewActivity.launchActivity(
+                    context = context,
+                    message = message,
+                    attachment = item.attachment
+                )
+            }
             return
         }
 
