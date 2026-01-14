@@ -111,10 +111,14 @@ fun SceytMessage.getFormattedBodyWithAttachments(
     mentionTextStyle: TextStyle,
     attachmentNameFormatter: Formatter<SceytAttachment>,
     mentionUserNameFormatter: Formatter<SceytUser>,
+    unsupportedMessageBodyFormatter: Formatter<SceytMessage>,
     mentionClickListener: ((String) -> Unit)?,
 ): CharSequence {
     val body = when {
         state == MessageState.Deleted -> context.getString(R.string.sceyt_message_was_deleted)
+        !isSupportedType() ->{
+            unsupportedMessageBodyFormatter.format(context, this)
+        }
         type == SceytMessageType.ViewOnce.value && !attachments.isNullOrEmpty() -> {
             //viewOnce type always has one attachment
             attachmentNameFormatter.format(context, attachments[0])

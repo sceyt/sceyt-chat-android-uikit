@@ -13,7 +13,6 @@ import com.sceyt.chatuikit.extensions.applyTint
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.formatters.Formatter
-import com.sceyt.chatuikit.formatters.SceytChatUIKitFormatters
 import com.sceyt.chatuikit.presentation.components.channel.messages.preview.SelfDestructingMediaPreviewActivity
 import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.BackgroundStyle
@@ -30,8 +29,8 @@ import java.util.Date
 /** Style for [SelfDestructingMediaPreviewActivity].
  * @property backgroundColor Background color of the media preview, default is [Color.BLACK].
  * @property toolbarStyle Style for the toolbar with self-destruct indicator.
- * @property userNameFormatter Formatter for the user name, default is [SceytChatUIKitFormatters.userNameFormatter].
- * @property mediaDateFormatter Formatter for the media date, default is [SceytChatUIKitFormatters.mediaPreviewDateFormatter].
+ * @property userNameFormatter Formatter for the user name, default is [SceytChatUIKit.formatters.userNameFormatter].
+ * @property mediaDateFormatter Formatter for the media date, default is [SceytChatUIKit.formatters.mediaPreviewDateFormatter].
  * @property messageBodyBackgroundStyle Background style for the message body container (supports color, gradient, borders, etc).
  * @property messageBodyTextStyle Style for the message body text.
  * @property videoControllerBackgroundColor Color of the video controller, default is [R.color.sceyt_media_primary_color].

@@ -9,9 +9,7 @@ import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
 import kotlinx.coroutines.launch
 import org.koin.core.component.inject
 
-class SelfDestructingMediaPreviewViewModel(
-    message: SceytMessage
-) : ViewModel(), SceytKoinComponent {
+class SelfDestructingMediaPreviewViewModel() : ViewModel(), SceytKoinComponent {
 
     private val messageInteractor: MessageInteractor by inject()
 

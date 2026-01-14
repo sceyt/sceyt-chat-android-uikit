@@ -20,4 +20,5 @@ data class BodyFormatterAttributes<Message>(
     val messageTypeIconProvider: VisualProvider<SceytMessage, Drawable?> = SceytChatUIKit.providers.messageTypeIconProvider,
     val attachmentNameFormatter: Formatter<SceytAttachment> = SceytChatUIKit.formatters.attachmentNameFormatter,
     val mentionUserNameFormatter: Formatter<SceytUser> = SceytChatUIKit.formatters.mentionUserNameFormatter,
+    val unsupportedMessageShortBodyFormatter: Formatter<SceytMessage> = SceytChatUIKit.formatters.unsupportedMessageShortBodyFormatter
 )

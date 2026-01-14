@@ -37,11 +37,7 @@ class SelfDestructingMediaPreviewActivity : AppCompatActivity(), SceytKoinCompon
     private lateinit var binding: SceytActivitySelfDestructingMediaPreviewBinding
     private lateinit var style: SelfDestructingMediaPreviewStyle
 
-    private val viewModel: SelfDestructingMediaPreviewViewModel by viewModels {
-        val message = intent.parcelable<SceytMessage>(MESSAGE_KEY)
-            ?: throw IllegalArgumentException("Message is required")
-        SelfDestructingMediaPreviewViewModelFactory(message)
-    }
+    private val viewModel: SelfDestructingMediaPreviewViewModel by viewModels()
 
     private var message: SceytMessage? = null
     private var attachment: SceytAttachment? = null
@@ -76,6 +72,7 @@ class SelfDestructingMediaPreviewActivity : AppCompatActivity(), SceytKoinCompon
         displayMedia()
         viewModel.sendOpenedMarker(message!!)
     }
+
     private fun initViews() {
         binding.toolbar.applySystemWindowInsetsPadding(applyTop = true, applyRight = true, applyLeft = true)
 
@@ -278,7 +275,6 @@ class SelfDestructingMediaPreviewActivity : AppCompatActivity(), SceytKoinCompon
         style.messageBodyTextStyle.apply(tvMessageBody)
         style.messageBodyBackgroundStyle.apply(messageBodyContainer)
     }
-
 
     companion object {
         private const val MESSAGE_KEY = "message"
