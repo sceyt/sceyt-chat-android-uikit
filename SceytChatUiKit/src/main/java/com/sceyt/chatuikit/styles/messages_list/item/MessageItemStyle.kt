@@ -13,16 +13,17 @@ import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.applyTint
+import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.formatters.SceytChatUIKitFormatters
 import com.sceyt.chatuikit.formatters.attributes.MessageBodyFormatterAttributes
-import com.sceyt.chatuikit.styles.SceytComponentStyle
 import com.sceyt.chatuikit.providers.SceytChatUIKitProviders
 import com.sceyt.chatuikit.providers.VisualProvider
 import com.sceyt.chatuikit.renderers.AvatarRenderer
 import com.sceyt.chatuikit.renderers.SceytChatUIKitRenderers
+import com.sceyt.chatuikit.styles.SceytComponentStyle
 import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.AvatarStyle
 import com.sceyt.chatuikit.styles.common.BackgroundStyle
@@ -30,6 +31,7 @@ import com.sceyt.chatuikit.styles.common.CheckboxStyle
 import com.sceyt.chatuikit.styles.common.MediaLoaderStyle
 import com.sceyt.chatuikit.styles.common.MessageDeliveryStatusIcons
 import com.sceyt.chatuikit.styles.common.TextStyle
+import com.sceyt.chatuikit.styles.common.ViewOnceBadgeStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildAttachmentFileNameTextStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildAttachmentFileSizeTextStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildAudioWaveformStyle
@@ -85,7 +87,7 @@ import java.util.Date
  * @property videoPlayIcon Icon for the video play, default is [R.drawable.sceyt_ic_play]
  * @property voicePlayIcon Icon for the voice play, default is [R.drawable.sceyt_ic_play]
  * @property voicePauseIcon Icon for the voice pause, default is [R.drawable.sceyt_ic_pause]
- * @property viewOnceBadgeIcon Icon for the view once badge on voice messages, default is [R.drawable.sceyt_ic_view_once]
+ * @property viewOnceBadgeStyle Style for the view once badge on voice messages (icon + background).
  * @property viewCountIcon Icon for the view count, default is [R.drawable.sceyt_ic_display_count]
  * @property messageDeliveryStatusIcons Icons for the message delivery status.
  * @property editedStateText Title for the edited state, default is [R.string.sceyt_edited].
@@ -147,7 +149,7 @@ data class MessageItemStyle(
     val videoPlayIcon: Drawable?,
     val voicePlayIcon: Drawable?,
     val voicePauseIcon: Drawable?,
-    val viewOnceBadgeIcon: Drawable?,
+    val viewOnceBadgeStyle: ViewOnceBadgeStyle,
     val viewCountIcon: Drawable?,
     val editedStateText: String,
     val deletedStateText: String,
@@ -240,6 +242,13 @@ data class MessageItemStyle(
                         ?: context.getCompatDrawable(R.drawable.sceyt_ic_view_once).applyTint(
                             context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor)
                         )
+                
+                val viewOnceBadgeStyle = ViewOnceBadgeStyle(
+                    icon = viewOnceBadgeIcon,
+                    backgroundColor = accentColor,
+                    strokeColor = bgColor,
+                    strokeWidth = dpToPx(1f)
+                )
 
                 val viewCountIcon = array.getDrawable(R.styleable.MessagesListView_sceytUiMessagesListViewCountIcon)
                         ?: context.getCompatDrawable(R.drawable.sceyt_ic_display_count).applyTint(
@@ -288,7 +297,7 @@ data class MessageItemStyle(
                     videoPlayIcon = videoPlayIcon,
                     voicePlayIcon = voicePlayIcon,
                     voicePauseIcon = voicePauseIcon,
-                    viewOnceBadgeIcon = viewOnceBadgeIcon,
+                    viewOnceBadgeStyle = viewOnceBadgeStyle,
                     viewCountIcon = viewCountIcon,
                     editedStateText = editedStateText,
                     deletedStateText = deletedStateText,

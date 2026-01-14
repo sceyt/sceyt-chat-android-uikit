@@ -1,0 +1,419 @@
+package com.sceyt.chatuikit.presentation.components.channel.messages.preview
+
+import android.content.Context
+import android.graphics.drawable.Drawable
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.WindowManager
+import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.WindowInsetsControllerCompat
+import androidx.core.view.isVisible
+import androidx.lifecycle.lifecycleScope
+import com.google.gson.Gson
+import com.masoudss.lib.SeekBarOnProgressChanged
+import com.masoudss.lib.WaveformSeekBar
+import com.sceyt.chat.models.message.MessageState
+import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.data.models.messages.SceytAttachment
+import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.databinding.SceytActivitySelfDestructingVoiceMessageBinding
+import com.sceyt.chatuikit.extensions.applySystemWindowInsetsPadding
+import com.sceyt.chatuikit.extensions.durationToMinSecShort
+import com.sceyt.chatuikit.extensions.getCompatColor
+import com.sceyt.chatuikit.extensions.getCompatDrawable
+import com.sceyt.chatuikit.extensions.launchActivity
+import com.sceyt.chatuikit.extensions.mediaPlayerPositionToSeekBarProgress
+import com.sceyt.chatuikit.extensions.parcelable
+import com.sceyt.chatuikit.extensions.progressToMediaPlayerPosition
+import com.sceyt.chatuikit.extensions.setBackgroundTint
+import com.sceyt.chatuikit.koin.SceytKoinComponent
+import com.sceyt.chatuikit.media.audio.AudioPlayer
+import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
+import com.sceyt.chatuikit.media.audio.VoiceStateCoordinator
+import com.sceyt.chatuikit.persistence.logicimpl.message.MessageTid
+import com.sceyt.chatuikit.presentation.common.dialogs.ViewOnceInfoDialog
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.PlaybackSpeed
+import com.sceyt.chatuikit.presentation.custom_views.voice_recorder.AudioMetadata
+import com.sceyt.chatuikit.presentation.extensions.setChatMessageDateAndStatusIcon
+import com.sceyt.chatuikit.styles.StyleRegistry
+import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
+import com.sceyt.chatuikit.styles.preview.SelfDestructingVoiceMessageStyle
+import kotlinx.coroutines.launch
+import java.util.Date
+
+class SelfDestructingVoiceMessageActivity : AppCompatActivity(), SceytKoinComponent {
+
+    private lateinit var binding: SceytActivitySelfDestructingVoiceMessageBinding
+    private lateinit var style: SelfDestructingVoiceMessageStyle
+    private lateinit var messageItemStyle: MessageItemStyle
+
+    private val viewModel: SelfDestructingVoiceMessageViewModel by viewModels {
+        val message = intent.parcelable<SceytMessage>(MESSAGE_KEY)
+            ?: throw IllegalArgumentException("Message is required")
+        SelfDestructingVoiceMessageViewModelFactory(message)
+    }
+
+    private var message: SceytMessage? = null
+    private var attachment: SceytAttachment? = null
+
+    private var voiceFilePath: String? = null
+    private var voiceDuration: Long = 0
+    private var currentPlaybackSpeed: PlaybackSpeed = PlaybackSpeed.X1
+    private var voiceMessageTid: Long = -1
+    private var isIncomingMessage: Boolean = false
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        window.setFlags(
+            WindowManager.LayoutParams.FLAG_SECURE,
+            WindowManager.LayoutParams.FLAG_SECURE
+        )
+
+        binding = SceytActivitySelfDestructingVoiceMessageBinding.inflate(LayoutInflater.from(this))
+        setContentView(binding.root)
+
+        WindowInsetsControllerCompat(window, binding.root).apply {
+            isAppearanceLightStatusBars = false
+            isAppearanceLightNavigationBars = false
+        }
+
+        getMessageItemStyle()
+        style = SelfDestructingVoiceMessageStyle.Builder(this, messageItemStyle).build()
+        binding.applyStyle()
+        initViews()
+        getBundleArguments()
+
+        displayVoiceMessage()
+        observeMessageUpdates()
+        viewModel.sendOpenedMarker(message!!)
+    }
+
+    private fun initViews() {
+        binding.toolbar.applySystemWindowInsetsPadding(applyTop = true, applyRight = true, applyLeft = true)
+
+        binding.toolbar.setNavigationClickListener { finish() }
+        binding.toolbar.setMenuClickListener { onMenuItemClick(it) }
+    }
+
+    private fun getBundleArguments() {
+        message = intent.parcelable(MESSAGE_KEY)
+        attachment = intent.parcelable(ATTACHMENT_KEY)
+    }
+
+    private fun getMessageItemStyle() {
+        val styleId = intent.getStringExtra(STYLE_ID_KEY)
+            ?: throw IllegalArgumentException("Style ID is required")
+        messageItemStyle = StyleRegistry.getOrDefault(styleId) {
+            MessageItemStyle.Builder(this, null).build()
+        }
+    }
+
+    private fun observeMessageUpdates() {
+        lifecycleScope.launch {
+            viewModel.messageUpdatedFlow.collect { updatedMessage ->
+                message = updatedMessage
+                setMessageDateAndStatus(updatedMessage)
+            }
+        }
+    }
+
+    private fun displayVoiceMessage() {
+        val attach = attachment ?: return
+        val msg = message ?: return
+
+        voiceFilePath = attach.filePath ?: attach.url ?: return
+
+        voiceMessageTid = attach.messageTid
+
+        isIncomingMessage = msg.incoming
+
+        val audioMetadata = try {
+            Gson().fromJson(attach.metadata, AudioMetadata::class.java)
+        } catch (_: Exception) {
+            AudioMetadata(intArrayOf(0), 0)
+        }
+
+        voiceDuration = audioMetadata?.dur?.times(1000L) ?: 0
+        audioMetadata?.tmb?.let { binding.voiceWaveformSeekBar.setSampleFrom(it) }
+        binding.voiceDuration.text = voiceDuration.durationToMinSecShort()
+
+        applyVoicePlayerStyle()
+
+        binding.ivVoiceViewOnceIcon.isVisible = true
+
+        setMessageDateAndStatus(msg)
+
+        setupToolbar()
+        setupVoicePlayerControls()
+    }
+
+    private fun setupToolbar() {
+        val msg = message ?: return
+        val attach = attachment ?: return
+
+        val userName = msg.user?.let { messageItemStyle.senderNameFormatter.format(this, it) }
+            ?: getString(R.string.sceyt_view_once_message)
+        binding.toolbar.setTitle(userName)
+
+        val formattedDate = messageItemStyle.messageDateFormatter.format(this, Date(attach.createdAt))
+        binding.toolbar.setSubtitle(formattedDate)
+    }
+
+    private fun applyVoicePlayerStyle() {
+        val accentColor = getCompatColor(SceytChatUIKit.theme.colors.accentColor)
+
+        val bubbleBackgroundStyle = if (isIncomingMessage) {
+            messageItemStyle.incomingBubbleBackgroundStyle
+        } else {
+            messageItemStyle.outgoingBubbleBackgroundStyle
+        }
+        bubbleBackgroundStyle.apply(binding.voicePlayerContainer)
+
+        binding.voicePlayPauseButton.setBackgroundTint(accentColor)
+
+        binding.voiceWaveformSeekBar.apply {
+            waveProgressColor = messageItemStyle.voiceWaveformStyle.progressColor
+            waveBackgroundColor = messageItemStyle.voiceWaveformStyle.trackColor
+        }
+
+        messageItemStyle.voiceSpeedTextStyle.apply(binding.voicePlaybackSpeed)
+        messageItemStyle.voiceDurationTextStyle.apply(binding.voiceDuration)
+        messageItemStyle.viewOnceBadgeStyle.apply(binding.ivVoiceViewOnceIcon)
+    }
+
+    private fun setMessageDateAndStatus(message: SceytMessage) {
+        val dateText = messageItemStyle.messageDateFormatter.format(this, Date(message.createdAt))
+        val isEdited = message.state == MessageState.Edited
+
+        message.setChatMessageDateAndStatusIcon(
+            binding.voiceMessageDate,
+            messageItemStyle,
+            dateText,
+            isEdited
+        )
+    }
+
+    private fun setupVoicePlayerControls() {
+        binding.voicePlayPauseButton.setOnClickListener {
+            toggleVoicePlayback()
+        }
+
+        binding.voicePlaybackSpeed.setOnClickListener {
+            val nextSpeed = currentPlaybackSpeed.next()
+            currentPlaybackSpeed = nextSpeed
+            binding.voicePlaybackSpeed.text = nextSpeed.displayValue
+            AudioPlayerHelper.setPlaybackSpeed(
+                filePath = voiceFilePath,
+                messageTid = voiceMessageTid,
+                speed = nextSpeed.value
+            )
+        }
+
+        binding.voiceWaveformSeekBar.onProgressChanged = object : SeekBarOnProgressChanged {
+            override fun onProgressChanged(
+                waveformSeekBar: WaveformSeekBar,
+                progress: Float,
+                fromUser: Boolean
+            ) {
+                if (fromUser) {
+                    val seekPosition = progressToMediaPlayerPosition(progress, voiceDuration)
+                    AudioPlayerHelper.seek(
+                        filePath = voiceFilePath,
+                        messageTid = voiceMessageTid,
+                        position = seekPosition
+                    )
+                }
+            }
+        }
+
+        voiceFilePath?.let { filePath ->
+            val isPlaying = AudioPlayerHelper.isPlaying(filePath, voiceMessageTid)
+            binding.voiceWaveformSeekBar.isEnabled = isPlaying
+            binding.voicePlaybackSpeed.isEnabled = isPlaying
+
+            if (AudioPlayerHelper.alreadyInitialized(filePath, voiceMessageTid)) {
+                AudioPlayerHelper.getCurrentPlayer()?.addEventListener(
+                    event = voicePlayerListener,
+                    tag = "SelfDestructingVoice"
+                )
+            }
+        }
+    }
+
+    private fun toggleVoicePlayback() {
+        val filePath = voiceFilePath ?: return
+
+        VoiceStateCoordinator.stopRecordingIfActive()
+
+        if (AudioPlayerHelper.alreadyInitialized(filePath, voiceMessageTid)) {
+            AudioPlayerHelper.getCurrentPlayer()?.addEventListener(
+                event = voicePlayerListener,
+                tag = "SelfDestructingVoice"
+            )
+            AudioPlayerHelper.toggle(filePath, voiceMessageTid)
+        } else {
+            initVoiceAudioPlayer()
+        }
+    }
+
+    private fun initVoiceAudioPlayer() {
+        val filePath = voiceFilePath ?: return
+        AudioPlayerHelper.init(
+            filePath = filePath,
+            messageTid = voiceMessageTid,
+            events = voicePlayerListener,
+            tag = "SelfDestructingVoice"
+        )
+    }
+
+    private val voicePlayerListener: AudioPlayerHelper.OnAudioPlayer by lazy {
+        object : AudioPlayerHelper.OnAudioPlayer {
+            override fun onInitialized(
+                alreadyInitialized: Boolean,
+                player: AudioPlayer,
+                filePath: String,
+                messageTid: MessageTid
+            ) {
+                if (filePath != voiceFilePath || messageTid != voiceMessageTid) return
+
+                if (!alreadyInitialized) {
+                    player.togglePlayPause()
+                }
+
+                runOnUiThread {
+                    binding.voiceWaveformSeekBar.isEnabled = true
+                    binding.voicePlaybackSpeed.isEnabled = true
+                }
+            }
+
+            override fun onProgress(
+                position: Long,
+                duration: Long,
+                filePath: String,
+                messageTid: MessageTid
+            ) {
+                if (filePath != voiceFilePath || messageTid != voiceMessageTid) return
+
+                val seekBarProgress = mediaPlayerPositionToSeekBarProgress(position, duration)
+                runOnUiThread {
+                    binding.voiceWaveformSeekBar.progress = seekBarProgress
+                    binding.voiceWaveformSeekBar.isEnabled = true
+                    binding.voicePlaybackSpeed.isEnabled = true
+                    binding.voiceDuration.text = position.durationToMinSecShort()
+                }
+            }
+
+            override fun onToggle(
+                playing: Boolean,
+                filePath: String,
+                messageTid: MessageTid
+            ) {
+                if (filePath != voiceFilePath || messageTid != voiceMessageTid) return
+
+                runOnUiThread {
+                    setVoicePlayButtonIcon(playing)
+                }
+            }
+
+            override fun onStop(
+                filePath: String,
+                messageTid: MessageTid
+            ) {
+                if (filePath != voiceFilePath || messageTid != voiceMessageTid) return
+
+                runOnUiThread {
+                    setVoicePlayButtonIcon(false)
+                    currentPlaybackSpeed = PlaybackSpeed.X1
+                    binding.voiceWaveformSeekBar.progress = 0f
+                    binding.voiceDuration.text = voiceDuration.durationToMinSecShort()
+                    binding.voiceWaveformSeekBar.isEnabled = false
+                    binding.voicePlaybackSpeed.isEnabled = false
+                    binding.voicePlaybackSpeed.text = currentPlaybackSpeed.displayValue
+                }
+            }
+
+            override fun onPaused(
+                filePath: String,
+                messageTid: MessageTid
+            ) {
+                if (filePath != voiceFilePath || messageTid != voiceMessageTid) return
+
+                runOnUiThread {
+                    setVoicePlayButtonIcon(false)
+                }
+            }
+
+            override fun onSpeedChanged(
+                speed: Float,
+                filePath: String,
+                messageTid: MessageTid
+            ) {
+                if (filePath != voiceFilePath || messageTid != voiceMessageTid) return
+
+                runOnUiThread {
+                    currentPlaybackSpeed = PlaybackSpeed.fromValue(speed)
+                    binding.voicePlaybackSpeed.text = currentPlaybackSpeed.displayValue
+                }
+            }
+        }
+    }
+
+    private fun setVoicePlayButtonIcon(playing: Boolean) {
+        val icon: Drawable? = if (playing) {
+            getCompatDrawable(R.drawable.sceyt_ic_pause)
+        } else {
+            getCompatDrawable(R.drawable.sceyt_ic_play)
+        }
+        binding.voicePlayPauseButton.setImageDrawable(icon)
+    }
+
+    private fun onMenuItemClick(itemId: Int) {
+        when (itemId) {
+            R.id.sceyt_self_destruct_indicator -> {
+                showViewOnceInfoDialog()
+            }
+        }
+    }
+
+    private fun showViewOnceInfoDialog() {
+        ViewOnceInfoDialog.showDialog(
+            context = this,
+            acceptListener = {}
+        )
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        voiceFilePath?.let {
+            AudioPlayerHelper.stop(it, voiceMessageTid)
+        }
+        StyleRegistry.unregister(intent.getStringExtra(STYLE_ID_KEY))
+    }
+
+    private fun SceytActivitySelfDestructingVoiceMessageBinding.applyStyle() {
+        root.setBackgroundColor(style.backgroundColor)
+        style.toolbarStyle.apply(toolbar)
+    }
+
+    companion object {
+        private const val MESSAGE_KEY = "message"
+        private const val ATTACHMENT_KEY = "attachment"
+        private const val STYLE_ID_KEY = "style_id"
+
+        fun launch(
+            context: Context,
+            message: SceytMessage,
+            attachment: SceytAttachment,
+            styleId: String
+        ) {
+            context.launchActivity<SelfDestructingVoiceMessageActivity> {
+                putExtra(MESSAGE_KEY, message)
+                putExtra(ATTACHMENT_KEY, attachment)
+                putExtra(STYLE_ID_KEY, styleId)
+            }
+        }
+    }
+}

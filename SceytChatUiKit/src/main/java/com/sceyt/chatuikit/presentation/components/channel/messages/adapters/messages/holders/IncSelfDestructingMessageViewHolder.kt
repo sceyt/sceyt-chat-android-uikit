@@ -7,7 +7,6 @@ import com.sceyt.chatuikit.databinding.SceytItemIncSelfDestructingMessageBinding
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Downloaded
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.PendingDownload
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.ThumbLoaded
@@ -48,9 +47,6 @@ class IncSelfDestructingMessageViewHolder(
             }
 
             fileImage.setOnClickListener {
-                val allowedStates = setOf(Downloaded, Uploaded, ThumbLoaded)
-                if (fileItem.attachment.transferState !in allowedStates) return@setOnClickListener
-
                 messageListeners?.onAttachmentClick(it, fileItem, requireMessage)
             }
 

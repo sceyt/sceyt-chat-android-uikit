@@ -40,11 +40,9 @@ import com.sceyt.chatuikit.extensions.maybeComponentActivity
 import com.sceyt.chatuikit.extensions.permissionIgnored
 import com.sceyt.chatuikit.extensions.runOnMainThread
 import com.sceyt.chatuikit.extensions.screenWidthPx
-import com.sceyt.chatuikit.extensions.applyTintBackgroundLayer
 import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.chatuikit.presentation.common.dialogs.SceytDialog
-import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.styles.input.MessageInputStyle
 import java.util.Timer
 import java.util.TimerTask
@@ -135,14 +133,7 @@ class VoiceRecorderView @JvmOverloads constructor(
     private fun updateViewOnceIcon() {
         with(binding.icViewOnce) {
             if (isViewOnce) {
-                setImageDrawable(
-                    recorderViewStyle.viewOnceSelectedIcon.applyTintBackgroundLayer(
-                        context = context,
-                        bgLayerId = R.id.backgroundLayer,
-                        tintColor = SceytChatUIKit.theme.colors.accentColor
-                    )
-                )
-                clearColorFilter()
+              setImageDrawable(recorderViewStyle.viewOnceSelectedIcon)
             } else {
                 setImageDrawable(recorderViewStyle.viewOnceIcon)
             }
@@ -350,7 +341,6 @@ class VoiceRecorderView @JvmOverloads constructor(
             }
 
             RecordingBehaviour.CANCELED -> {
-                isRecording = false
                 moveToInitialState()
                 recordingListener?.onRecordingCanceled()
             }
@@ -359,12 +349,11 @@ class VoiceRecorderView @JvmOverloads constructor(
             RecordingBehaviour.LOCK_DONE_SHOW_PREVIEW,
             RecordingBehaviour.LOCK_DONE_SEND_IMMEDIATELY,
                 -> {
-                isRecording = false
-                val currentViewOnce = isViewOnce
+                val isViewOnceSelected = isViewOnce
                 moveToInitialState()
                 val shouldShowPreview =
                     recordingBehaviour == RecordingBehaviour.LOCK_DONE_SHOW_PREVIEW
-                recordingListener?.onRecordingCompleted(shouldShowPreview, currentViewOnce)
+                recordingListener?.onRecordingCompleted(shouldShowPreview, isViewOnceSelected)
             }
         }
     }
