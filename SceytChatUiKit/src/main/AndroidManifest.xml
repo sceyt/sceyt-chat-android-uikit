@@ -57,8 +57,7 @@
             android:theme="@style/SceytPreviewThemeDark" />
         <activity
             android:name=".presentation.components.channel.messages.preview.SelfDestructingVoiceMessageActivity"
-            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
-            android:theme="@style/SceytPreviewThemeDark" />
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"/>
         <activity
             android:name=".presentation.components.role.ChangeRoleActivity"
             android:exported="false"
