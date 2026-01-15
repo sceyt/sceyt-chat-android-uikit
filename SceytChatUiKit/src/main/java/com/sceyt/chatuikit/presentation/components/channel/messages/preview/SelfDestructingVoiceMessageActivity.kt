@@ -7,7 +7,6 @@ import android.view.LayoutInflater
 import android.view.WindowManager
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import com.google.gson.Gson
@@ -55,7 +54,7 @@ class SelfDestructingVoiceMessageActivity : AppCompatActivity(), SceytKoinCompon
         SelfDestructingVoiceMessageViewModelFactory(message)
     }
 
-    private var message: SceytMessage? = null
+    private lateinit var message: SceytMessage
     private var attachment: SceytAttachment? = null
 
     private var voiceFilePath: String? = null
@@ -66,7 +65,6 @@ class SelfDestructingVoiceMessageActivity : AppCompatActivity(), SceytKoinCompon
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         window.setFlags(
             WindowManager.LayoutParams.FLAG_SECURE,
             WindowManager.LayoutParams.FLAG_SECURE
@@ -74,11 +72,6 @@ class SelfDestructingVoiceMessageActivity : AppCompatActivity(), SceytKoinCompon
 
         binding = SceytActivitySelfDestructingVoiceMessageBinding.inflate(LayoutInflater.from(this))
         setContentView(binding.root)
-
-        WindowInsetsControllerCompat(window, binding.root).apply {
-            isAppearanceLightStatusBars = false
-            isAppearanceLightNavigationBars = false
-        }
 
         getMessageItemStyle()
         style = SelfDestructingVoiceMessageStyle.Builder(this, messageItemStyle).build()
@@ -88,7 +81,7 @@ class SelfDestructingVoiceMessageActivity : AppCompatActivity(), SceytKoinCompon
 
         displayVoiceMessage()
         observeMessageUpdates()
-        viewModel.sendOpenedMarker(message!!)
+        viewModel.sendOpenedMarker(message)
     }
 
     private fun initViews() {
@@ -99,13 +92,12 @@ class SelfDestructingVoiceMessageActivity : AppCompatActivity(), SceytKoinCompon
     }
 
     private fun getBundleArguments() {
-        message = intent.parcelable(MESSAGE_KEY)
+        message = requireNotNull(intent.parcelable(MESSAGE_KEY))
         attachment = intent.parcelable(ATTACHMENT_KEY)
     }
 
     private fun getMessageItemStyle() {
         val styleId = intent.getStringExtra(STYLE_ID_KEY)
-            ?: throw IllegalArgumentException("Style ID is required")
         messageItemStyle = StyleRegistry.getOrDefault(styleId) {
             MessageItemStyle.Builder(this, null).build()
         }
@@ -122,13 +114,12 @@ class SelfDestructingVoiceMessageActivity : AppCompatActivity(), SceytKoinCompon
 
     private fun displayVoiceMessage() {
         val attach = attachment ?: return
-        val msg = message ?: return
 
         voiceFilePath = attach.filePath ?: attach.url ?: return
 
         voiceMessageTid = attach.messageTid
 
-        isIncomingMessage = msg.incoming
+        isIncomingMessage = message.incoming
 
         val audioMetadata = try {
             Gson().fromJson(attach.metadata, AudioMetadata::class.java)
@@ -144,21 +135,21 @@ class SelfDestructingVoiceMessageActivity : AppCompatActivity(), SceytKoinCompon
 
         binding.ivVoiceViewOnceIcon.isVisible = true
 
-        setMessageDateAndStatus(msg)
+        setMessageDateAndStatus(message)
 
         setupToolbar()
         setupVoicePlayerControls()
     }
 
     private fun setupToolbar() {
-        val msg = message ?: return
         val attach = attachment ?: return
 
-        val userName = msg.user?.let { messageItemStyle.senderNameFormatter.format(this, it) }
+        val userName = message.user?.let { messageItemStyle.senderNameFormatter.format(this, it) }
             ?: getString(R.string.sceyt_view_once_message)
         binding.toolbar.setTitle(userName)
 
-        val formattedDate = messageItemStyle.messageDateFormatter.format(this, Date(attach.createdAt))
+        val formattedDate =
+            messageItemStyle.messageDateFormatter.format(this, Date(attach.createdAt))
         binding.toolbar.setSubtitle(formattedDate)
     }
 
