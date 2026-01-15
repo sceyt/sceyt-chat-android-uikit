@@ -669,24 +669,25 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
     suspend fun onOutgoingMessage(message: SceytMessage) {
         if (hasNext || hasNextDb) return
-        val initMessage = mapToMessageListItem(
-            data = arrayListOf(message),
+
+        // Use the message from notFoundMessagesToUpdate if available.
+        // It was already updated, but for some reason was not found in the UI to apply the update.
+        val messageToRender = notFoundMessagesToUpdate.remove(message.tid)?.let {
+            SceytLog.d(TAG, "Rendering previously not found updated message with tid: ${it.tid}")
+            it
+        } ?: message
+
+        val messageItems = mapToMessageListItem(
+            data = arrayListOf(messageToRender),
             hasNext = false,
             hasPrev = false,
             compareMessage = messagesListView.getLastMessage()?.message,
             enableDateSeparator = messagesListView.style.enableDateSeparator
         )
 
-        if (notFoundMessagesToUpdate.containsKey(message.tid)) {
-            notFoundMessagesToUpdate.remove(message.tid)?.let {
-                onOutgoingMessage(it)
-                return
-            }
-        }
-
         suspendCancellableCoroutine { continuation ->
             messagesListView.addNewMessages(
-                data = initMessage.toTypedArray(),
+                data = messageItems.toTypedArray(),
                 lifecycleScope = lifecycleScope,
                 addedCallback = {
                     continuation.safeResume(Unit)

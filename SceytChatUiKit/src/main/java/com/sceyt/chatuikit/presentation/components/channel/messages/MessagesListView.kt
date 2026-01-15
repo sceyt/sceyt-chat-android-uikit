@@ -28,7 +28,6 @@ import com.sceyt.chatuikit.data.models.messages.SceytMessageType
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
 import com.sceyt.chatuikit.data.models.messages.SceytReactionTotal
 import com.sceyt.chatuikit.databinding.SceytMessagesListViewBinding
-import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.asActivity
 import com.sceyt.chatuikit.extensions.awaitAnimationEnd
 import com.sceyt.chatuikit.extensions.awaitToScrollFinish
@@ -523,23 +522,25 @@ class MessagesListView @JvmOverloads constructor(
 
     internal fun updateMessage(message: SceytMessage): Boolean {
         var foundToUpdate = false
-        SceytLog.i(
-            TAG,
-            "Message updated: id ${message.id}, tid ${message.tid}, deliveryStatus ${message.deliveryStatus}"
-        )
         val data = messagesRV.getData()
         for ((index, item) in data.withIndex()) {
             if (item is MessageItem && item.message.tid == message.tid) {
                 val updatedItem = item.copy(message = item.message.getUpdateMessage(message))
                 val diff = item.message.diff(updatedItem.message)
                 updateAdapterItem(index, updatedItem, diff)
-                SceytLog.i(
-                    TAG, "Found to update: id ${item.message.id}, tid ${item.message.tid}," +
-                            " diff ${diff.statusChanged}, newStatus ${message.deliveryStatus}, index $index, size ${messagesRV.getData().size}"
+                SceytLog.d(
+                    TAG, "Found to update message: id ${item.message.id}, tid ${item.message.tid}," +
+                            " diff ${diff.statusChanged}, newStatus ${message.deliveryStatus}, index $index, size ${data.size}"
                 )
                 foundToUpdate = true
                 break
             }
+        }
+        if (!foundToUpdate) {
+            SceytLog.d(
+                TAG, "Not found to update message: id ${message.id}, tid ${message.tid}," +
+                        " deliveryStatus ${message.deliveryStatus}, data size ${data.size}"
+            )
         }
         return foundToUpdate
     }
@@ -1318,5 +1319,9 @@ class MessagesListView @JvmOverloads constructor(
                 holder.bind(expandedItem, MessageDiff.DEFAULT_FALSE.copy(bodyChanged = true))
             }
         )
+    }
+
+    companion object {
+        private const val TAG = "MessagesListView"
     }
 }
