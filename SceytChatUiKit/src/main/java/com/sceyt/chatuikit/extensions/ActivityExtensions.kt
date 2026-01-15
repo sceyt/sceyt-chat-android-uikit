@@ -2,10 +2,12 @@ package com.sceyt.chatuikit.extensions
 
 import android.app.Activity
 import android.app.Activity.OVERRIDE_TRANSITION_OPEN
-import android.graphics.Color
+import android.content.Context
+import android.content.res.Configuration
 import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import android.os.Build.VERSION_CODES.M
+import android.view.ContextThemeWrapper
 import android.view.View
 import android.view.WindowInsetsController
 import android.view.inputmethod.InputMethodManager
@@ -25,9 +27,9 @@ fun Activity.overrideTransitions(enterAnim: Int, exitAnim: Int, isOpen: Boolean)
 
 @Suppress("DEPRECATION")
 fun Activity.statusBarIconsColorWithBackground(
-        isDark: Boolean = isNightMode(),
-        @ColorRes statusBarColor: Int = SceytChatUIKit.theme.colors.statusBarColor,
-        @ColorRes navigationBarColor: Int = SceytChatUIKit.theme.colors.primaryColor
+    isDark: Boolean = isNightMode(),
+    @ColorRes statusBarColor: Int = SceytChatUIKit.theme.colors.statusBarColor,
+    @ColorRes navigationBarColor: Int = SceytChatUIKit.theme.colors.primaryColor
 ) {
 
     window.statusBarColor = getCompatColor(statusBarColor)
@@ -58,7 +60,7 @@ fun Activity.customToastSnackBar(message: String?) {
         findViewById<View>(android.R.id.content)?.let {
             customToastSnackBar(it, message)
         }
-    } catch (ex: Exception) {
+    } catch (_: Exception) {
         if (!isFinishing)
             Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
@@ -73,4 +75,15 @@ fun Activity.hideSoftInput() {
         view = View(this)
     }
     inputMethodManager.hideSoftInputFromWindow(view.windowToken, 0)
+}
+
+fun Activity.darkModeContext(): Context {
+    // Copy current configuration and force night mode
+    val nightConfig = Configuration(resources.configuration).apply {
+        uiMode = Configuration.UI_MODE_NIGHT_YES
+    }
+
+    return ContextThemeWrapper(this, theme).apply {
+        applyOverrideConfiguration(nightConfig)
+    }
 }
