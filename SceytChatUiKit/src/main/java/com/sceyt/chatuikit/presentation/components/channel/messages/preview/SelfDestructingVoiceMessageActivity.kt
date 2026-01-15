@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.WindowManager
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import com.google.gson.Gson
@@ -72,6 +73,11 @@ class SelfDestructingVoiceMessageActivity : AppCompatActivity(), SceytKoinCompon
 
         binding = SceytActivitySelfDestructingVoiceMessageBinding.inflate(LayoutInflater.from(this))
         setContentView(binding.root)
+
+        WindowInsetsControllerCompat(window, binding.root).apply {
+            isAppearanceLightStatusBars = false
+            isAppearanceLightNavigationBars = false
+        }
 
         getMessageItemStyle()
         style = SelfDestructingVoiceMessageStyle.Builder(this, messageItemStyle).build()
