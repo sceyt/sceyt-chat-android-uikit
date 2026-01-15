@@ -19,6 +19,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytActivitySelfDestructingVoiceMessageBinding
 import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
+import com.sceyt.chatuikit.extensions.darkModeContext
 import com.sceyt.chatuikit.extensions.durationToMinSecShort
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
@@ -373,7 +374,7 @@ class SelfDestructingVoiceMessageActivity : AppCompatActivity(), SceytKoinCompon
 
     private fun showViewOnceInfoDialog() {
         ViewOnceInfoDialog.showDialog(
-            context = this,
+            context = darkModeContext(),
             acceptListener = {}
         )
     }

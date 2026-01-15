@@ -23,6 +23,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytActivitySelfDestructingMediaPreviewBinding
 import com.sceyt.chatuikit.extensions.applySystemWindowInsetsPadding
+import com.sceyt.chatuikit.extensions.darkModeContext
 import com.sceyt.chatuikit.extensions.launchActivity
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.koin.SceytKoinComponent
@@ -229,7 +230,7 @@ class SelfDestructingMediaPreviewActivity : AppCompatActivity(), SceytKoinCompon
 
     private fun showViewOnceInfoDialog() {
         ViewOnceInfoDialog.showDialog(
-            context = this,
+            context = darkModeContext(),
             acceptListener = {}
         )
     }
