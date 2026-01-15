@@ -7,7 +7,6 @@ import android.view.LayoutInflater
 import android.view.WindowManager
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import com.google.gson.Gson
@@ -19,7 +18,7 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytActivitySelfDestructingVoiceMessageBinding
-import com.sceyt.chatuikit.extensions.applySystemWindowInsetsPadding
+import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
 import com.sceyt.chatuikit.extensions.durationToMinSecShort
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
@@ -28,6 +27,7 @@ import com.sceyt.chatuikit.extensions.mediaPlayerPositionToSeekBarProgress
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.progressToMediaPlayerPosition
 import com.sceyt.chatuikit.extensions.setBackgroundTint
+import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.media.audio.AudioPlayer
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
@@ -74,10 +74,8 @@ class SelfDestructingVoiceMessageActivity : AppCompatActivity(), SceytKoinCompon
         binding = SceytActivitySelfDestructingVoiceMessageBinding.inflate(LayoutInflater.from(this))
         setContentView(binding.root)
 
-        WindowInsetsControllerCompat(window, binding.root).apply {
-            isAppearanceLightStatusBars = false
-            isAppearanceLightNavigationBars = false
-        }
+        applyInsetsAndWindowColor(binding.root)
+        statusBarIconsColorWithBackground(isDark = true)
 
         getMessageItemStyle()
         style = SelfDestructingVoiceMessageStyle.Builder(this, messageItemStyle).build()
@@ -91,8 +89,6 @@ class SelfDestructingVoiceMessageActivity : AppCompatActivity(), SceytKoinCompon
     }
 
     private fun initViews() {
-        binding.toolbar.applySystemWindowInsetsPadding(applyTop = true, applyRight = true, applyLeft = true)
-
         binding.toolbar.setNavigationClickListener { finish() }
         binding.toolbar.setMenuClickListener { onMenuItemClick(it) }
     }
