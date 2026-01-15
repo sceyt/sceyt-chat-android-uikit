@@ -31,9 +31,7 @@ open class ChannelActivity : AppCompatActivity() {
             .root)
 
         applyInsetsAndWindowColor(binding.root)
-        statusBarIconsColorWithBackground(
-            statusBarColor = SceytChatUIKit.theme.colors.statusBarColor,
-            navigationBarColor = SceytChatUIKit.theme.colors.primaryColor)
+        statusBarIconsColorWithBackground()
 
         viewModel.bind(binding.messagesListView, lifecycleOwner = this)
         viewModel.bind(binding.messageInputView, null, lifecycleOwner = this)
