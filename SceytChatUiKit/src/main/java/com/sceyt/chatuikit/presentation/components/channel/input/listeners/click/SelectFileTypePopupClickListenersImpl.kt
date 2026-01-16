@@ -7,6 +7,7 @@ import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.SelectFileTypePopupClickListeners.PollClickListener
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.SelectFileTypePopupClickListeners.TakePhotoClickListener
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.SelectFileTypePopupClickListeners.TakeVideoClickListener
+import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.SelectFileTypePopupClickListeners.CustomCameraClickListener
 
 open class SelectFileTypePopupClickListenersImpl : ClickListeners {
     @Suppress("unused")
@@ -22,6 +23,7 @@ open class SelectFileTypePopupClickListenersImpl : ClickListeners {
     private var takeVideoClickListener: TakeVideoClickListener? = null
     private var fileClickListener: FileClickListener? = null
     private var pollClickListener: PollClickListener? = null
+    private var customCameraClickListener: CustomCameraClickListener? = null
 
 
     override fun onGalleryClick() {
@@ -50,6 +52,11 @@ open class SelectFileTypePopupClickListenersImpl : ClickListeners {
         pollClickListener?.onPollClick()
     }
 
+    override fun onCustomCameraClick() {
+        defaultListeners?.onCustomCameraClick()
+        customCameraClickListener?.onCustomCameraClick()
+    }
+
     fun setListener(listener: SelectFileTypePopupClickListeners) {
         when (listener) {
             is ClickListeners -> {
@@ -58,6 +65,7 @@ open class SelectFileTypePopupClickListenersImpl : ClickListeners {
                 takeVideoClickListener = listener
                 fileClickListener = listener
                 pollClickListener = listener
+                customCameraClickListener = listener
             }
 
             is GalleryClickListener -> {
@@ -78,6 +86,10 @@ open class SelectFileTypePopupClickListenersImpl : ClickListeners {
 
             is PollClickListener -> {
                 pollClickListener = listener
+            }
+
+            is CustomCameraClickListener -> {
+                customCameraClickListener = listener
             }
         }
     }

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="CameraMediaPreview">
+        <attr name="sceytUiCameraMediaPreviewBackgroundColor" format="color|reference" />
+        <attr name="sceytUiCameraMediaPreviewBottomControlsBackgroundColor" format="color|reference" />
+
+        <attr name="sceytUiCameraMediaPreviewRetakeIcon" format="reference" />
+        <attr name="sceytUiCameraMediaPreviewConfirmIcon" format="reference" />
+        <attr name="sceytUiCameraMediaPreviewPlayIcon" format="reference" />
+        <attr name="sceytUiCameraMediaPreviewPauseIcon" format="reference" />
+    </declare-styleable>
+</resources>

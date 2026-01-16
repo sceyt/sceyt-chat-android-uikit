@@ -37,4 +37,6 @@
     <item name="sceyt_underline" type="id" />
     <item name="sceyt_clear_formatting" type="id" />
 
+    <item name="sceyt_capture_state" type="id" />
+
 </resources>

@@ -298,6 +298,19 @@
     <string name="sceyt_view_once_message">View Once</string>
     <string name="sceyt_unsupported_media">Unsupported media type</string>
     <string name="view_once_messages_title">View once messages</string>
-    <string name="view_once_messages_desc">Any photo, video, or voice message you send will disappear from the chat after it’s been opened. To keep your content private, recipients won’t be able to share, forward, copy, save, or take screenshots.</string>
+    <string name="view_once_messages_desc">Any photo, video, or voice message you send will disappear from the chat after it\'s been opened. To keep your content private, recipients won\'t be able to share, forward, copy, save, or take screenshots.</string>
     <string name="sceyt_ok">Ok</string>
+
+    <!-- Camera Activity -->
+    <string name="sceyt_camera_error">Camera initialization failed</string>
+    <string name="sceyt_switch_camera">Switch Camera</string>
+    <string name="sceyt_toggle_flash">Toggle Flash</string>
+    <string name="sceyt_camera_mode_photo">PHOTO</string>
+    <string name="sceyt_camera_mode_video">VIDEO</string>
+    <string name="sceyt_retake">Retake</string>
+    <string name="sceyt_confirm">Confirm</string>
+    <string name="sceyt_play">Play</string>
+    <string name="sceyt_pause">Pause</string>
+    <string name="sceyt_stop">Stop</string>
+    <string name="sceyt_zoom">Zoom</string>
 </resources>

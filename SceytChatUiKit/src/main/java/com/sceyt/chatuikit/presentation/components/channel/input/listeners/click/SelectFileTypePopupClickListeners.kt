@@ -21,11 +21,16 @@ sealed interface SelectFileTypePopupClickListeners {
         fun onPollClick()
     }
 
+    fun interface CustomCameraClickListener : SelectFileTypePopupClickListeners {
+        fun onCustomCameraClick()
+    }
+
     /** Use this if you want to implement all callbacks */
     interface ClickListeners :
             GalleryClickListener,
             TakePhotoClickListener,
             TakeVideoClickListener,
             FileClickListener,
-            PollClickListener
+            PollClickListener,
+            CustomCameraClickListener
 }
