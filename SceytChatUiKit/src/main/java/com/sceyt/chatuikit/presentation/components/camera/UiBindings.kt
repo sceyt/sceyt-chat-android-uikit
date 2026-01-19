@@ -67,10 +67,10 @@ object UiBindings {
                 if (state.isPaused) R.string.sceyt_play else R.string.sceyt_pause
             )
         }
-
         binding.btnGallery.isVisible = !state.isRecording
-
+        binding.btnSwitchCamera.isVisible = !state.isRecording
         binding.modeSelector.isVisible = true
+        binding.modeSelector.setModesVisible(!state.isRecording)
         binding.modeSelector.isEnabled =
             !state.isRecording && state.allowedMode == CameraState.AllowedMode.BOTH
         binding.modeSelector.setAllowedMode(state.allowedMode)
