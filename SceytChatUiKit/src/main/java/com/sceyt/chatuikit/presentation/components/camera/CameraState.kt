@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.presentation.components.camera
 
 import androidx.camera.core.ImageCapture
+import java.util.Locale
 
 data class CameraState(
     val currentMode: CameraMode = CameraMode.PHOTO,
@@ -25,6 +26,11 @@ data class CameraState(
     fun getFormattedRecordingTime(): String {
         val seconds = (recordingDuration / 1000) % 60
         val minutes = (recordingDuration / 1000) / 60
-        return String.format("%02d:%02d", minutes, seconds)
+        return String.format(Locale.US,"%02d:%02d", minutes, seconds)
     }
 }
+
+data class PendingPreview(
+    val filePath: String,
+    val isVideo: Boolean
+)

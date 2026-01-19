@@ -41,8 +41,8 @@
         android:textStyle="bold"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="@id/btnClose"
-        app:layout_constraintEnd_toStartOf="@id/btnFlash"
-        app:layout_constraintStart_toEndOf="@id/btnClose"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@id/btnClose"
         tools:text="00:00"
         tools:visibility="visible" />

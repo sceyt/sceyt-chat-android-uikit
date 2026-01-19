@@ -8,6 +8,7 @@ import androidx.camera.core.CameraSelector
 import androidx.camera.core.FocusMeteringAction
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
+import androidx.camera.core.MirrorMode
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.video.FileOutputOptions
@@ -56,6 +57,7 @@ class CameraXController(
         }, ContextCompat.getMainExecutor(appContext))
     }
 
+    @SuppressLint("RestrictedApi")
     fun bind(
         lensFacing: Int,
         mode: CameraState.CameraMode,
@@ -81,7 +83,9 @@ class CameraXController(
         val recorder = Recorder.Builder()
             .setQualitySelector(QualitySelector.from(Quality.HD))
             .build()
-        videoCapture = VideoCapture.withOutput(recorder)
+        videoCapture = VideoCapture.Builder(recorder)
+            .setMirrorMode(MirrorMode.MIRROR_MODE_ON_FRONT_ONLY)
+            .build()
 
         camera = when (mode) {
             CameraState.CameraMode.PHOTO -> p.bindToLifecycle(
@@ -137,12 +141,18 @@ class CameraXController(
 
     fun takePhoto(
         file: File,
+        shouldMirror: Boolean,
         onSaved: (File) -> Unit,
         onError: (ImageCaptureException) -> Unit
     ) {
         val ic = imageCapture ?: return
 
-        val output = ImageCapture.OutputFileOptions.Builder(file).build()
+        val metadata = ImageCapture.Metadata().apply {
+            isReversedHorizontal = shouldMirror
+        }
+        val output = ImageCapture.OutputFileOptions.Builder(file)
+            .setMetadata(metadata)
+            .build()
         ic.takePicture(
             output,
             ContextCompat.getMainExecutor(appContext),
@@ -176,10 +186,10 @@ class CameraXController(
                 }
             }
             .start(ContextCompat.getMainExecutor(appContext)) { event ->
-                callbacks.onVideoEvent(event)
                 if (event is VideoRecordEvent.Finalize) {
                     recording = null
                 }
+                callbacks.onVideoEvent(event)
             }
     }
 

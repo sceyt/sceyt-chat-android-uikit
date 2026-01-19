@@ -151,7 +151,10 @@ object FileResizeUtil {
             size = getImageDimensionsSize(path)
             val exif = ExifInterface(path)
             when (exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)) {
-                ExifInterface.ORIENTATION_ROTATE_270, ExifInterface.ORIENTATION_ROTATE_90 ->
+                ExifInterface.ORIENTATION_ROTATE_270,
+                ExifInterface.ORIENTATION_ROTATE_90,
+                ExifInterface.ORIENTATION_TRANSPOSE,
+                ExifInterface.ORIENTATION_TRANSVERSE ->
                     size = Size(size.height, size.width)
             }
         } catch (e: Exception) {
@@ -276,21 +279,15 @@ object FileResizeUtil {
     }
 
     fun getOrientationCorrectedBitmap(bitmap: Bitmap, filePath: String): Bitmap {
-        val matrix = Matrix()
-        val rotationAngle = getFileOrientation(imagePath = filePath)
-        return if (rotationAngle != 0) {
-            matrix.setRotate(rotationAngle.toFloat())
-            Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
-        } else bitmap
+        val orientation = getFileOrientation(imagePath = filePath)
+        val matrix = createOrientationMatrix(orientation) ?: return bitmap
+        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
     }
 
     fun getOrientationCorrectedBitmap(bitmap: Bitmap, byteArray: ByteArray): Bitmap {
-        val matrix = Matrix()
-        val rotationAngle = getFileOrientation(ByteArrayInputStream(byteArray))
-        return if (rotationAngle != 0) {
-            matrix.setRotate(rotationAngle.toFloat())
-            Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
-        } else bitmap
+        val orientation = getFileOrientation(ByteArrayInputStream(byteArray))
+        val matrix = createOrientationMatrix(orientation) ?: return bitmap
+        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
     }
 
     fun createFileFromBitmap(context: Context, bitmap: Bitmap): File? {
@@ -339,32 +336,54 @@ object FileResizeUtil {
     }
 
     private fun getFileOrientation(imagePath: String): Int {
-        var rotate = 0
+        var orientation = ExifInterface.ORIENTATION_NORMAL
         try {
             val exif = ExifInterface(imagePath)
-            when (exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)) {
-                ExifInterface.ORIENTATION_ROTATE_270 -> rotate = 270
-                ExifInterface.ORIENTATION_ROTATE_180 -> rotate = 180
-                ExifInterface.ORIENTATION_ROTATE_90 -> rotate = 90
-            }
+            orientation = exif.getAttributeInt(
+                ExifInterface.TAG_ORIENTATION,
+                ExifInterface.ORIENTATION_NORMAL
+            )
         } catch (e: Exception) {
             e.printStackTrace()
         }
-        return rotate
+        return orientation
     }
 
     private fun getFileOrientation(inputStream: ByteArrayInputStream): Int {
-        var rotate = 0
+        var orientation = ExifInterface.ORIENTATION_NORMAL
         try {
             val exif = ExifInterface(inputStream)
-            when (exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)) {
-                ExifInterface.ORIENTATION_ROTATE_270 -> rotate = 270
-                ExifInterface.ORIENTATION_ROTATE_180 -> rotate = 180
-                ExifInterface.ORIENTATION_ROTATE_90 -> rotate = 90
-            }
+            orientation = exif.getAttributeInt(
+                ExifInterface.TAG_ORIENTATION,
+                ExifInterface.ORIENTATION_NORMAL
+            )
         } catch (e: Exception) {
             e.printStackTrace()
         }
-        return rotate
+        return orientation
+    }
+
+    private fun createOrientationMatrix(orientation: Int): Matrix? {
+        val matrix = Matrix()
+        when (orientation) {
+            ExifInterface.ORIENTATION_FLIP_HORIZONTAL -> matrix.setScale(-1f, 1f)
+            ExifInterface.ORIENTATION_ROTATE_180 -> matrix.setRotate(180f)
+            ExifInterface.ORIENTATION_FLIP_VERTICAL -> {
+                matrix.setRotate(180f)
+                matrix.postScale(-1f, 1f)
+            }
+            ExifInterface.ORIENTATION_TRANSPOSE -> {
+                matrix.setRotate(90f)
+                matrix.postScale(-1f, 1f)
+            }
+            ExifInterface.ORIENTATION_ROTATE_90 -> matrix.setRotate(90f)
+            ExifInterface.ORIENTATION_TRANSVERSE -> {
+                matrix.setRotate(-90f)
+                matrix.postScale(-1f, 1f)
+            }
+            ExifInterface.ORIENTATION_ROTATE_270 -> matrix.setRotate(-90f)
+            else -> return null
+        }
+        return matrix
     }
 }
