@@ -57,5 +57,5 @@ interface PersistenceAttachmentLogic {
     suspend fun upsertLinkPreviewData(linkDetails: LinkPreviewDetails)
     suspend fun updateLinkDetailsSize(link: String, size: Size)
     suspend fun updateLinkDetailsThumb(link: String, thumb: String)
-    fun onTransferProgressPercentUpdated(transferData: TransferData)
+    suspend fun onTransferProgressPercentUpdated(transferData: TransferData)
 }

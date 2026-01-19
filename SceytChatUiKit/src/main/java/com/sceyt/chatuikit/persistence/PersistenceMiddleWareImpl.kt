@@ -703,10 +703,6 @@ internal class PersistenceMiddleWareImpl(
         attachmentsLogic.updateTransferDataByMsgTid(data)
     }
 
-    override suspend fun updateAttachmentWithTransferData(data: TransferData) {
-        attachmentsLogic.updateAttachmentWithTransferData(data)
-    }
-
     override suspend fun updateAttachmentFilePathAndMetadata(
         messageTid: Long,
         newPath: String,

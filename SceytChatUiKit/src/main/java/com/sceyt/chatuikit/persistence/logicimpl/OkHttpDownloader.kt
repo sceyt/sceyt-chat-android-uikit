@@ -154,9 +154,9 @@ class OkHttpDownloader {
     fun resumeDownload(attachment: SceytAttachment): Boolean {
         // Check if there's already a download in progress
         return if (downloadCalls.containsKey(attachment.messageTid)) {
-            false // Already downloading
+            true // Already downloading
         } else {
-            true // Can resume - the downloadFile method will handle partial download
+            false // Can resume - the downloadFile method will handle partial download
         }
     }
 

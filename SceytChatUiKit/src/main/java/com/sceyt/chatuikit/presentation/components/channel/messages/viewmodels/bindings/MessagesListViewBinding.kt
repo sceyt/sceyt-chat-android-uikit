@@ -49,7 +49,6 @@ import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isPublic
 import com.sceyt.chatuikit.persistence.extensions.safeResume
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferHelper
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelUpdatedType
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
@@ -761,12 +760,14 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
           messagesListView.newReplyMessage(it.parentMessage?.id)
       }.launchIn(lifecycleOwner.lifecycleScope)
   */
-    FileTransferHelper.onTransferUpdatedLiveData.asFlow().onEach {
+
+    FileTransferHelper.onTransferUpdatedLiveData.asFlow().onEach { transfer ->
         viewModelScope.launch(Dispatchers.Default) {
             if (lifecycleOwner.isResumed()) {
-                messagesListView.updateProgress(it, false)
-            } else if (it.state != TransferState.Downloading && it.state != TransferState.Uploading)
-                needToUpdateTransferAfterOnResume[it.messageTid] = it
+                messagesListView.updateProgress(transfer, false)
+            } else if (shouldDeferTransferUpdate(transfer)) {
+                needToUpdateTransferAfterOnResume[transfer.messageTid] = transfer
+            }
         }
     }.launchIn(viewModelScope)
 

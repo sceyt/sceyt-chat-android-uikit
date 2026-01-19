@@ -8,6 +8,7 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.view.isVisible
 import androidx.core.view.marginLeft
+import androidx.lifecycle.Observer
 import com.google.android.material.imageview.ShapeableImageView
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.extensions.asComponentActivity
@@ -92,7 +93,7 @@ abstract class BaseMediaMessageViewHolder(
         val message = requireMessage
         with(fileImage) {
             val defaultMargin = marginLeft
-            if (message.isForwarded || message.isReplied || message.shouldShowAvatarAndName ||  (!ignoreBody && message.body.isNotNullOrBlank())) {
+            if (message.isForwarded || message.isReplied || message.shouldShowAvatarAndName || (!ignoreBody && message.body.isNotNullOrBlank())) {
                 setMargins(defaultMargin, defaultMargin + dpToPx(4f), defaultMargin, defaultMargin)
             } else setMargins(defaultMargin)
         }
@@ -164,9 +165,14 @@ abstract class BaseMediaMessageViewHolder(
     private fun setListener() {
         if (addedLister) return
         addedLister = true
-        FileTransferHelper.onTransferUpdatedLiveData.observe(context.asComponentActivity()) {
-            if (viewHolderHelper.updateTransferData(it, fileItem, ::isValidThumb))
-                updateState(it)
-        }
+        FileTransferHelper.onTransferUpdatedLiveData.removeObserver(observer)
+        FileTransferHelper.onTransferUpdatedLiveData.observe(
+            context.asComponentActivity(), observer
+        )
+    }
+
+    private val observer: Observer<TransferData> = Observer { transferData ->
+        if (viewHolderHelper.updateTransferData(transferData, fileItem, ::isValidThumb))
+            updateState(transferData)
     }
 }

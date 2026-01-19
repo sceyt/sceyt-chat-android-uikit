@@ -25,9 +25,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import org.koin.core.component.inject
 import org.koin.core.qualifier.named
 import java.io.File
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.coroutines.CoroutineContext
 
 object FileTransferHelper : SceytKoinComponent {
@@ -40,11 +43,40 @@ object FileTransferHelper : SceytKoinComponent {
     private val onTransferUpdatedLiveData_ = MutableLiveData<TransferData>()
     val onTransferUpdatedLiveData: LiveData<TransferData> = onTransferUpdatedLiveData_
 
+    // Per-attachment mutex for sequential updates
+    private val attachmentMutexes = ConcurrentHashMap<Long, Mutex>()
+
+    /**
+     * Gets or creates a mutex for the given messageTid to ensure sequential updates per attachment.
+     */
+    private fun getMutexForAttachment(messageTid: Long): Mutex {
+        return attachmentMutexes.getOrPut(messageTid) { Mutex() }
+    }
+
+    /**
+     * Removes the mutex when transfer is complete to prevent memory leaks.
+     */
+    private fun removeMutexForAttachment(messageTid: Long) {
+        attachmentMutexes.remove(messageTid)
+    }
+
+    /**
+     * Enqueues a database update to be processed sequentially for a specific attachment.
+     */
+    private fun enqueueDbUpdate(messageTid: Long, update: suspend () -> Unit) {
+        scope.launch {
+            getMutexForAttachment(messageTid).withLock {
+                update()
+            }
+        }
+    }
+
     fun createTransferTask(attachment: SceytAttachment): TransferTask {
         return TransferTask(
             attachment = attachment,
             messageTid = attachment.messageTid,
-            state = attachment.transferState).apply {
+            state = attachment.transferState
+        ).apply {
             progressCallback = getProgressUpdateCallback()
             preparingCallback = getPreparingCallback()
             resumePauseCallback = getResumePauseCallback()
@@ -56,53 +88,111 @@ object FileTransferHelper : SceytKoinComponent {
     }
 
     fun TransferTask.getProgressUpdateCallback() = ProgressUpdateCallback { transferData ->
-        attachment = attachment.copy(
-            transferState = transferData.state,
-            progressPercent = transferData.progressPercent
-        )
-        attachmentLogic.onTransferProgressPercentUpdated(transferData)
-        emitAttachmentTransferUpdate(transferData, attachment.fileSize)
+        val updatedAttachment = updateAttachmentAndStateIfValid(
+            validate = { current ->
+                TransferStateValidator.isValidStateTransition(
+                    currentState = current.transferState,
+                    newState = transferData.state,
+                    currentProgress = current.progressPercent ?: 0f,
+                    newProgress = transferData.progressPercent
+                )
+            },
+            update = { current ->
+                current.copy(
+                    transferState = transferData.state,
+                    progressPercent = transferData.progressPercent
+                )
+            }
+        ) ?: return@ProgressUpdateCallback
+
+        emitAttachmentTransferUpdate(transferData, updatedAttachment.fileSize)
+        scope.launch {
+            attachmentLogic.onTransferProgressPercentUpdated(transferData)
+        }
     }
 
     fun TransferTask.getPreparingCallback() = PreparingCallback { transferData ->
-        attachment = attachment.copy(transferState = transferData.state)
-        emitAttachmentTransferUpdate(transferData, attachment.fileSize)
-        scope.launch {
+        val updatedAttachment = updateAttachmentAndStateIfValid(
+            validate = { current ->
+                TransferStateValidator.isValidStateTransition(
+                    currentState = current.transferState,
+                    newState = transferData.state,
+                    currentProgress = current.progressPercent ?: 0f,
+                    newProgress = transferData.progressPercent
+                )
+            },
+            update = { current ->
+                current.copy(transferState = transferData.state)
+            }
+        ) ?: return@PreparingCallback
+
+        emitAttachmentTransferUpdate(transferData, updatedAttachment.fileSize)
+        enqueueDbUpdate(messageTid) {
             attachmentLogic.updateTransferDataByMsgTid(transferData)
         }
     }
 
-    fun TransferTask.getResumePauseCallback() = ResumePauseCallback {
-        attachment = attachment.copy(transferState = it.state)
-        emitAttachmentTransferUpdate(it, attachment.fileSize)
-        scope.launch {
-            attachmentLogic.updateTransferDataByMsgTid(it)
+    fun TransferTask.getResumePauseCallback() = ResumePauseCallback { transferData ->
+        val updatedAttachment = updateAttachmentAndStateIfValid(
+            validate = { current ->
+                TransferStateValidator.isValidStateTransition(
+                    currentState = current.transferState,
+                    newState = transferData.state,
+                    currentProgress = current.progressPercent ?: 0f,
+                    newProgress = transferData.progressPercent
+                )
+            },
+            update = { current ->
+                current.copy(transferState = transferData.state)
+            }
+        ) ?: return@ResumePauseCallback
+
+        emitAttachmentTransferUpdate(transferData, updatedAttachment.fileSize)
+        enqueueDbUpdate(messageTid) {
+            attachmentLogic.updateTransferDataByMsgTid(transferData)
         }
     }
 
     fun TransferTask.getDownloadResultCallback() = TransferResultCallback { response ->
         response.fold(
             onSuccess = { filePath ->
-                val transferData = TransferData(attachment.messageTid, 100f,
-                    TransferState.Downloaded, filePath, attachment.url)
+                val currentAttachment = attachment
+                val transferData = TransferData(
+                    currentAttachment.messageTid, 100f,
+                    TransferState.Downloaded, filePath, currentAttachment.url
+                )
 
-                attachment = attachment.getUpdatedWithTransferData(transferData)
-                emitAttachmentTransferUpdate(transferData, attachment.fileSize)
-                scope.launch {
+                val updatedAttachment = updateAttachmentAndStateIfValid(
+                    validate = { true }, // Result callbacks always succeed
+                    update = { it.getUpdatedWithTransferData(transferData) }
+                ) ?: return@fold
+
+                emitAttachmentTransferUpdate(transferData, updatedAttachment.fileSize)
+                enqueueDbUpdate(messageTid) {
                     attachmentLogic.updateAttachmentWithTransferData(transferData)
+                    removeMutexForAttachment(messageTid)
                 }
             },
             onError = { exception ->
+                val currentAttachment = attachment
                 val transferData = TransferData(
-                    attachment.messageTid, attachment.progressPercent ?: 0f,
-                    ErrorDownload, null, attachment.url)
+                    currentAttachment.messageTid, currentAttachment.progressPercent ?: 0f,
+                    ErrorDownload, null, currentAttachment.url
+                )
 
-                attachment = attachment.getUpdatedWithTransferData(transferData)
-                emitAttachmentTransferUpdate(transferData, attachment.fileSize)
-                scope.launch {
+                val updatedAttachment = updateAttachmentAndStateIfValid(
+                    validate = { true }, // Result callbacks always succeed
+                    update = { it.getUpdatedWithTransferData(transferData) }
+                ) ?: return@fold
+
+                emitAttachmentTransferUpdate(transferData, updatedAttachment.fileSize)
+                enqueueDbUpdate(messageTid) {
                     attachmentLogic.updateAttachmentWithTransferData(transferData)
                 }
-                SceytLog.e(this.TAG, "Couldn't download file url:${attachment.url} error:${exception?.message}")
+                SceytLog.e(
+                    this.TAG,
+                    "Couldn't download file url:${currentAttachment.url} error:${exception?.message}"
+                )
             }
         )
     }
@@ -111,26 +201,47 @@ object FileTransferHelper : SceytKoinComponent {
     fun TransferTask.getUploadResultCallback() = TransferResultCallback { response ->
         val result: Result<SceytAttachment> = when (response) {
             is SceytResponse.Success -> {
-                val transferData = TransferData(attachment.messageTid, 100f,
-                    Uploaded, attachment.filePath, response.data.toString())
+                val currentAttachment = attachment
+                val transferData = TransferData(
+                    currentAttachment.messageTid, 100f,
+                    Uploaded, currentAttachment.filePath, response.data.toString()
+                )
 
-                attachment = attachment.getUpdatedWithTransferData(transferData)
-                emitAttachmentTransferUpdate(transferData, attachment.fileSize)
-                scope.launch {
-                    attachmentLogic.updateAttachmentWithTransferData(transferData)
+                val updatedAttachment = updateAttachmentAndStateIfValid(
+                    validate = { true }, // Result callbacks always succeed
+                    update = { it.getUpdatedWithTransferData(transferData) }
+                )
+
+                if (updatedAttachment != null) {
+                    emitAttachmentTransferUpdate(transferData, updatedAttachment.fileSize)
+                    enqueueDbUpdate(messageTid) {
+                        attachmentLogic.updateAttachmentWithTransferData(transferData)
+                        removeMutexForAttachment(messageTid)
+                    }
+                    Result.success(updatedAttachment)
+                } else {
+                    Result.failure(Throwable("Failed to update attachment"))
                 }
-                Result.success(attachment)
             }
 
             is SceytResponse.Error -> {
-                val transferData = TransferData(attachment.messageTid,
-                    attachment.progressPercent ?: 0f,
-                    ErrorUpload, attachment.filePath, null)
+                val currentAttachment = attachment
+                val transferData = TransferData(
+                    currentAttachment.messageTid,
+                    currentAttachment.progressPercent ?: 0f,
+                    ErrorUpload, currentAttachment.filePath, null
+                )
 
-                attachment = attachment.getUpdatedWithTransferData(transferData)
-                emitAttachmentTransferUpdate(transferData, attachment.fileSize)
-                scope.launch {
-                    attachmentLogic.updateAttachmentWithTransferData(transferData)
+                val updatedAttachment = updateAttachmentAndStateIfValid(
+                    validate = { true }, // Result callbacks always succeed
+                    update = { it.getUpdatedWithTransferData(transferData) }
+                )
+
+                if (updatedAttachment != null) {
+                    emitAttachmentTransferUpdate(transferData, updatedAttachment.fileSize)
+                    enqueueDbUpdate(messageTid) {
+                        attachmentLogic.updateAttachmentWithTransferData(transferData)
+                    }
                 }
                 SceytLog.e(this.TAG, "Couldn't upload file " + response.message.toString())
                 Result.failure(Throwable(response.message.orEmpty()))
@@ -143,34 +254,48 @@ object FileTransferHelper : SceytKoinComponent {
 
     @Suppress("MemberVisibilityCanBePrivate")
     fun TransferTask.getUpdateFileLocationCallback() = UpdateFileLocationCallback { newPath ->
-        val transferData = TransferData(attachment.messageTid, 0f,
-            TransferState.FilePathChanged, newPath, attachment.url)
-
-        val originalFilePath = attachment.filePath
         val newFile = File(newPath)
-        if (newFile.exists()) {
-            val fileSize = getFileSize(newPath)
-            val dimensions = getDimensions(attachment.type, newPath)
-            val metadata = attachment.getUpsertSizeMetadata(dimensions)
-            attachment = attachment.copy(filePath = newPath, fileSize = fileSize, metadata = metadata)
+        if (!newFile.exists()) return@UpdateFileLocationCallback
 
-            emitAttachmentTransferUpdate(transferData, fileSize)
-            scope.launch {
-                attachmentLogic.updateAttachmentFilePathAndMetadata(attachment.messageTid, newPath, fileSize, metadata)
+        val currentAttachment = attachment
+        val transferData = TransferData(
+            currentAttachment.messageTid, 0f,
+            TransferState.FilePathChanged, newPath, currentAttachment.url
+        )
 
-                originalFilePath?.let {
-                    val checksum = FileChecksumCalculator.calculateFileChecksum(originalFilePath)
-                    if (checksum != null)
-                        fileChecksumDao.updateResizedFilePathAndSize(checksum, newPath, fileSize)
-                }
+        val originalFilePath = currentAttachment.filePath
+        val fileSize = getFileSize(newPath)
+        val dimensions = getDimensions(currentAttachment.type, newPath)
+        val metadata = currentAttachment.getUpsertSizeMetadata(dimensions)
+
+        val updatedAttachment = updateAttachmentAndStateIfValid(
+            validate = { true }, // FilePathChanged is always allowed
+            update = { it.copy(filePath = newPath, fileSize = fileSize, metadata = metadata) }
+        ) ?: return@UpdateFileLocationCallback
+
+        emitAttachmentTransferUpdate(transferData, fileSize)
+        enqueueDbUpdate(messageTid) {
+            attachmentLogic.updateAttachmentFilePathAndMetadata(
+                updatedAttachment.messageTid,
+                newPath,
+                fileSize,
+                metadata
+            )
+
+            originalFilePath?.let {
+                val checksum = FileChecksumCalculator.calculateFileChecksum(originalFilePath)
+                if (checksum != null)
+                    fileChecksumDao.updateResizedFilePathAndSize(checksum, newPath, fileSize)
             }
         }
     }
 
     @Suppress("MemberVisibilityCanBePrivate")
     fun TransferTask.getThumbCallback() = ThumbCallback { newPath, thumbData ->
-        val transferData = TransferData(attachment.messageTid, attachment.progressPercent ?: 0f,
-            TransferState.ThumbLoaded, newPath, attachment.url, thumbData)
+        val transferData = TransferData(
+            attachment.messageTid, attachment.progressPercent ?: 0f,
+            TransferState.ThumbLoaded, newPath, attachment.url, thumbData
+        )
 
         emitAttachmentTransferUpdate(transferData, attachment.fileSize)
     }
@@ -181,10 +306,9 @@ object FileTransferHelper : SceytKoinComponent {
             transferData.copy(fileLoadedSize = size.first, fileTotalSize = size.second)
         } ?: transferData
 
-        if (transferData.state == TransferState.Downloading
-                || transferData.state == TransferState.Uploading)
+        if (transferData.state == TransferState.Downloading || transferData.state == TransferState.Uploading) {
             onTransferUpdatedLiveData_.postValue(data)
-        else {
+        } else {
             scope.launch(Dispatchers.Main.immediate) {
                 onTransferUpdatedLiveData_.value = data
             }
