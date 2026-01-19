@@ -15,6 +15,6 @@ object Config {
     const val mavenCentralVersion = "2.0.609-SNAPSHOT"
 
     /** App version */
-    const val versionCode = 46
-    const val versionName = "1.1.1"
+    const val versionCode = 47
+    const val versionName = "1.1.2"
 }
