@@ -38,10 +38,10 @@ enum class TransferState {
 }
 
 fun CircularProgressView.getProgressWithState(
-        state: TransferState,
-        style: MediaLoaderStyle,
-        hideOnThumbLoaded: Boolean,
-        progressPercent: Float = 0f,
+    state: TransferState,
+    style: MediaLoaderStyle,
+    hideOnThumbLoaded: Boolean,
+    progressPercent: Float = 0f,
 ) {
     when (state) {
         PendingUpload, ErrorUpload, PauseUpload -> {
@@ -75,4 +75,24 @@ fun CircularProgressView.getProgressWithState(
                 isVisible = false
         }
     }
+}
+
+fun TransferState.isRunning(): Boolean {
+    return this == Downloading || this == Uploading || this == Preparing
+}
+
+fun TransferState.isError(): Boolean {
+    return this == ErrorDownload || this == ErrorUpload
+}
+
+fun TransferState.isPaused(): Boolean {
+    return this == PauseDownload || this == PauseUpload
+}
+
+fun TransferState.isPending(): Boolean {
+    return this == PendingDownload || this == PendingUpload
+}
+
+fun TransferState.isCompleted(): Boolean {
+    return this == Downloaded || this == Uploaded
 }

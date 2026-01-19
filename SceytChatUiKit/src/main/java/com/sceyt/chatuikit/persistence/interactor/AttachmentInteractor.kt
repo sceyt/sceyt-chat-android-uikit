@@ -28,7 +28,6 @@ interface AttachmentInteractor {
 
     suspend fun updateAttachmentIdAndMessageId(message: SceytMessage)
     suspend fun updateTransferDataByMsgTid(data: TransferData)
-    suspend fun updateAttachmentWithTransferData(data: TransferData)
     suspend fun updateAttachmentFilePathAndMetadata(
         messageTid: Long,
         newPath: String,

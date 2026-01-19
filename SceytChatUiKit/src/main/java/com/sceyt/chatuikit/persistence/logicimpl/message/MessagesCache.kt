@@ -27,6 +27,7 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState.ThumbLoaded
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploaded
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploading
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.WaitingToUpload
+import com.sceyt.chatuikit.persistence.file_transfer.TransferStateValidator
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.comporators.MessageComparator
 import com.sceyt.chatuikit.presentation.extensions.isNotPending
 import kotlinx.coroutines.channels.BufferOverflow
@@ -420,7 +421,22 @@ class MessagesCache {
     }
 
     suspend fun updateAttachmentTransferData(updateDate: TransferData) = mutex.withLock {
-        fun update(attachment: SceytAttachment): SceytAttachment {
+        fun update(attachment: SceytAttachment): SceytAttachment? {
+            // Validate state transition to prevent out-of-order updates
+            val isValid = TransferStateValidator.isValidStateTransition(
+                currentState = attachment.transferState,
+                newState = updateDate.state,
+                currentProgress = attachment.progressPercent ?: 0f,
+                newProgress = updateDate.progressPercent
+            )
+            
+            if (!isValid) {
+                println("MessagesCache: Skipping invalid update for attachment ${attachment.messageTid} - " +
+                        "current: ${attachment.transferState}/${attachment.progressPercent}%, " +
+                        "new: ${updateDate.state}/${updateDate.progressPercent}%")
+                return null
+            }
+            
             return attachment.copy(
                 transferState = updateDate.state,
                 progressPercent = updateDate.progressPercent,
@@ -439,17 +455,21 @@ class MessagesCache {
                     when (updateDate.state) {
                         PendingUpload, Uploading, Uploaded, ErrorUpload, PauseUpload, Preparing, WaitingToUpload -> {
                             if (attachment.filePath == updateDate.filePath) {
-                                attachments[index] = update(attachment)
-                                messageHashMap[updateDate.messageTid] =
-                                    message.copy(attachments = attachments)
+                                update(attachment)?.let { updatedAttachment ->
+                                    attachments[index] = updatedAttachment
+                                    messageHashMap[updateDate.messageTid] =
+                                        message.copy(attachments = attachments)
+                                }
                             }
                         }
 
                         Downloading, Downloaded, PendingDownload, ErrorDownload, PauseDownload -> {
                             if (attachment.url == updateDate.url) {
-                                attachments[index] = update(attachment)
-                                messageHashMap[updateDate.messageTid] =
-                                    message.copy(attachments = attachments)
+                                update(attachment)?.let { updatedAttachment ->
+                                    attachments[index] = updatedAttachment
+                                    messageHashMap[updateDate.messageTid] =
+                                        message.copy(attachments = attachments)
+                                }
                             }
                         }
 
