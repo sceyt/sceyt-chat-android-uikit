@@ -7,9 +7,11 @@ import android.os.Bundle
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.camera.core.CameraSelector
 import androidx.camera.video.VideoRecordEvent
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.isVisible
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chatuikit.databinding.SceytActivityCustomCameraBinding
 import com.sceyt.chatuikit.extensions.applySystemWindowInsetsPadding
@@ -40,6 +42,7 @@ class CustomCameraActivity : AppCompatActivity() {
     private var touchController: PreviewTouchController? = null
     private var pendingAudioStart = false
     private var audioPermissionJustGranted = false
+    private var pendingPreview: PendingPreview? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -129,7 +132,6 @@ class CustomCameraActivity : AppCompatActivity() {
             flashMode = state.flashMode,
             callbacks = cameraCallbacks
         )
-
         attachTouchController()
     }
 
@@ -203,8 +205,11 @@ class CustomCameraActivity : AppCompatActivity() {
 
     private fun capturePhoto() {
         val photoFile = fileFactory.createPhotoFile()
+        val shouldMirror = viewModel.state.value.lensFacing ==
+                CameraSelector.LENS_FACING_FRONT
         cameraController.takePhoto(
             file = photoFile,
+            shouldMirror = shouldMirror,
             onSaved = { navigator.openPhotoPreview(photoFile.absolutePath) },
             onError = { /* handle */ }
         )
@@ -267,7 +272,7 @@ class CustomCameraActivity : AppCompatActivity() {
                         is VideoRecordEvent.Finalize -> {
                             if (!event.hasError()) {
                                 viewModel.stopRecording()
-                                navigator.openVideoPreview(videoFile.absolutePath)
+                                handleVideoPreview(videoFile.absolutePath)
                             } else {
                                 viewModel.stopRecording()
                             }
@@ -276,6 +281,21 @@ class CustomCameraActivity : AppCompatActivity() {
                 }
             }
         )
+    }
+
+    override fun onResume() {
+        super.onResume()
+        pendingPreview?.let { preview ->
+            pendingPreview = null
+            openPendingPreview(preview)
+        }
+    }
+
+    override fun onPause() {
+        if (cameraController.isRecording()) {
+            cameraController.stopRecording()
+        }
+        super.onPause()
     }
 
     private fun togglePauseResume() {
@@ -288,6 +308,22 @@ class CustomCameraActivity : AppCompatActivity() {
         } else {
             cameraController.pauseRecording()
             viewModel.pauseRecording()
+        }
+    }
+
+    private fun handleVideoPreview(filePath: String) {
+        if (lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) && !isFinishing && !isDestroyed) {
+            navigator.openVideoPreview(filePath)
+        } else {
+            pendingPreview = PendingPreview(filePath, true)
+        }
+    }
+
+    private fun openPendingPreview(pending: PendingPreview) {
+        if (pending.isVideo) {
+            navigator.openVideoPreview(pending.filePath)
+        } else {
+            navigator.openPhotoPreview(pending.filePath)
         }
     }
 

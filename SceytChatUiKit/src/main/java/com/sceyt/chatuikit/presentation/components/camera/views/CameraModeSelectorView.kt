@@ -157,6 +157,40 @@ class CameraModeSelectorView @JvmOverloads constructor(
         updateHighlightSizeAndSelection()
     }
 
+    fun setModesVisible(visible: Boolean) {
+        val currentlyVisible = modesContainer.isVisible && modeHighlight.isVisible
+        if (currentlyVisible == visible) return
+
+        val targetAlpha = if (visible) 1f else 0f
+        val durationMs = 180L
+
+        if (visible) {
+            modesContainer.alpha = 0f
+            modeHighlight.alpha = 0f
+            modesContainer.isVisible = true
+            modeHighlight.isVisible = true
+        }
+
+        modesContainer.animate().cancel()
+        modeHighlight.animate().cancel()
+
+        modesContainer.animate()
+            .alpha(targetAlpha)
+            .setDuration(durationMs)
+            .withEndAction {
+                if (!visible) modesContainer.visibility = INVISIBLE
+            }
+            .start()
+
+        modeHighlight.animate()
+            .alpha(targetAlpha)
+            .setDuration(durationMs)
+            .withEndAction {
+                if (!visible) modeHighlight.visibility = INVISIBLE
+            }
+            .start()
+    }
+
     fun setModeTextStyle(textStyle: TextStyle) {
         textStyle.apply(tvPhoto)
         textStyle.apply(tvVideo)
@@ -177,7 +211,7 @@ class CameraModeSelectorView @JvmOverloads constructor(
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent): Boolean {
-        if (allowedMode != AllowedMode.BOTH) return false
+        if (allowedMode != AllowedMode.BOTH || !modesContainer.isVisible) return false
         return gestureDetector.onTouchEvent(event) || super.onTouchEvent(event)
     }
 
