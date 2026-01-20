@@ -930,13 +930,16 @@ internal class PersistenceMessagesLogicImpl(
         message: SceytMessage,
         deleteType: DeleteMessageType,
     ): SceytResponse<SceytMessage> = withContext(dispatcherIO) {
-        if (message.isPending()) {
+        val storedMessage = messagesCache.get(channelId, message.tid)
+            ?: getMessageFromDbByTid(message.tid)
+            ?: message
+        if (storedMessage.isPending()) {
             val clonedMessage = message.copy(state = MessageState.Deleted)
             messageDao.deleteMessageByTid(message.tid)
             messagesCache.hardDeleteMessage(channelId, message)
             persistenceChannelsLogic.onMessageEditedOrDeleted(clonedMessage)
             UploadAndSendAttachmentWorkManager.cancelWorksByTag(context, message.tid.toString())
-            message.attachments?.firstOrNull()?.let {
+            storedMessage.attachments?.firstOrNull()?.let {
                 fileTransferService.pause(
                     messageTid = it.messageTid,
                     attachment = it,
@@ -967,7 +970,7 @@ internal class PersistenceMessagesLogicImpl(
         }
         pendingMessageStateDao.insert(
             entity = PendingMessageStateEntity(
-                messageId = message.id,
+                messageId = storedMessage.id,
                 channelId = channelId,
                 state = state,
                 editBody = null,
@@ -976,11 +979,11 @@ internal class PersistenceMessagesLogicImpl(
         )
 
         // Update message state in db and cache
-        val deletedMessage = message.copy(state = state)
+        val deletedMessage = storedMessage.copy(state = state)
         onMessageEditedOrDeleted(deletedMessage)
         persistenceChannelsLogic.onMessageEditedOrDeleted(deletedMessage)
 
-        return@withContext deleteMessageImpl(channelId, message.id, deleteType)
+        return@withContext deleteMessageImpl(channelId, storedMessage.id, deleteType)
     }
 
     private suspend fun editMessageImpl(

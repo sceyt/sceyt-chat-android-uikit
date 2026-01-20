@@ -613,7 +613,8 @@ internal class PersistenceMiddleWareImpl(
     }
 
     override suspend fun deleteMessage(
-        channelId: Long, message: SceytMessage,
+        channelId: Long,
+        message: SceytMessage,
         deleteType: DeleteMessageType,
     ): SceytResponse<SceytMessage> {
         return messagesLogic.deleteMessage(channelId, message, deleteType)

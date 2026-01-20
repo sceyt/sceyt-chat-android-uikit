@@ -78,6 +78,7 @@ import com.sceyt.chatuikit.persistence.interactor.MessageReactionInteractor
 import com.sceyt.chatuikit.persistence.interactor.UserInteractor
 import com.sceyt.chatuikit.persistence.logic.PersistenceConnectionLogic
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
+import com.sceyt.chatuikit.persistence.logicimpl.message.MessageTid
 import com.sceyt.chatuikit.persistence.mappers.createEmptyUser
 import com.sceyt.chatuikit.persistence.mappers.toBodyAttribute
 import com.sceyt.chatuikit.persistence.mappers.toVoiceAttachmentData
@@ -142,7 +143,7 @@ class MessageListViewModel(
     internal val sendDisplayedHelper by lazy { DebounceHelper(200L, viewModelScope) }
     internal val messageActionBridge by lazy { MessageActionBridge() }
     internal val placeToSavePathsList = mutableSetOf<Pair<AttachmentTypeEnum, String>>()
-    internal val selectedMessagesMap by lazy { mutableMapOf<Long, SceytMessage>() }
+    internal val selectedMessagesMap by lazy { mutableMapOf<MessageTid, SceytMessage>() }
     internal val expandedMessagesMap by lazy { mutableMapOf<Long, Boolean>() }
     internal val notFoundMessagesToUpdate by lazy { mutableMapOf<Long, SceytMessage>() }
     internal val outgoingMessageMutex by lazy { Mutex() }
@@ -236,6 +237,11 @@ class MessageListViewModel(
             checkUnreadMentionsOnMessageUpdated(message)
         }.launchIn(viewModelScope)
 
+        ChannelEventManager.onChannelMembersEventFlow
+            .filter { it.channel.id == channel.id }
+            .onEach(::onChannelMemberEvent)
+            .launchIn(viewModelScope)
+
         /*
        // todo reply in thread
         onNewThreadMessageFlow = MessageEventsObserver.onMessageFlow
@@ -254,12 +260,6 @@ class MessageListViewModel(
                 updateChannel { it.channel }
             }
             .launchIn(viewModelScope)
-
-        viewModelScope.launch(Dispatchers.IO) {
-            ChannelEventManager.onChannelMembersEventFlow
-                .filter { it.channel.id == channel.id }
-                .collect(::onChannelMemberEvent)
-        }
 
         ChannelsCache.pendingChannelCreatedFlow
             .filter { (pendingChannelId, _) -> pendingChannelId == channel.id }
@@ -727,9 +727,9 @@ class MessageListViewModel(
         }
     }
 
-    fun deleteMessages(message: List<SceytMessage>, deleteType: DeleteMessageType) {
-        message.forEach {
-            deleteMessage(it, deleteType)
+    fun deleteMessages(messages: List<SceytMessage>, deleteType: DeleteMessageType) {
+        messages.forEach { message ->
+            deleteMessage(message, deleteType)
         }
     }
 
