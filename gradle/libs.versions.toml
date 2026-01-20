@@ -47,6 +47,7 @@ google-services = "4.4.4"
 firebase-crashlytics = "3.0.6"
 ksp = "2.3.2"
 documentfile = "1.1.0"
+cameraX = "1.5.2"
 
 [libraries]
 appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
@@ -102,6 +103,11 @@ waveformSeekBar = { module = "com.github.massoudss:waveformSeekBar", version.ref
 work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
 lifecycle-process = { group = "androidx.lifecycle", name = "lifecycle-process", version.ref = "lifecycleProcess" }
 documentfile = { group = "androidx.documentfile", name = "documentfile", version.ref = "documentfile" }
+camera-core = { module = "androidx.camera:camera-core", version.ref = "cameraX" }
+camera-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "cameraX" }
+camera-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "cameraX" }
+camera-video = { module = "androidx.camera:camera-video", version.ref = "cameraX" }
+camera-view = { module = "androidx.camera:camera-view", version.ref = "cameraX" }
 
 [plugins]
 google-services = { id = "com.google.gms.google-services", version.ref = "google-services" }

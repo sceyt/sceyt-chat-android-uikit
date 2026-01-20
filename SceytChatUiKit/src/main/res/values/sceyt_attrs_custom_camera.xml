@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="CustomCamera">
+        <attr name="sceytUiCustomCameraBackgroundColor" format="color|reference" />
+        <attr name="sceytUiCustomCameraTopControlsBackgroundColor" format="color|reference" />
+        <attr name="sceytUiCustomCameraModeSelectorBackgroundColor" format="color|reference" />
+
+        <attr name="sceytUiCustomCameraCaptureBackground" format="reference" />
+        <attr name="sceytUiCustomCameraRecordingTimeBackground" format="reference" />
+        <attr name="sceytUiCustomCameraZoomBackground" format="reference" />
+        <attr name="sceytUiCustomCameraFocusIndicatorBackground" format="reference" />
+        <attr name="sceytUiCustomCameraModeHighlightBackground" format="reference" />
+        <attr name="sceytUiCustomCameraIconTintColor" format="color|reference" />
+        <attr name="sceytUiCustomCameraIconBackground" format="reference" />
+        <attr name="sceytUiCustomCameraIconBackgroundTintColor" format="color|reference" />
+
+        <attr name="sceytUiCustomCameraCloseIcon" format="reference" />
+        <attr name="sceytUiCustomCameraSwitchCameraIcon" format="reference" />
+        <attr name="sceytUiCustomCameraGalleryIcon" format="reference" />
+        <attr name="sceytUiCustomCameraFlashOffIcon" format="reference" />
+        <attr name="sceytUiCustomCameraFlashOnIcon" format="reference" />
+        <attr name="sceytUiCustomCameraFlashAutoIcon" format="reference" />
+        <attr name="sceytUiCustomCameraCapturePhotoIcon" format="reference" />
+        <attr name="sceytUiCustomCameraCaptureVideoIcon" format="reference" />
+        <attr name="sceytUiCustomCameraStopRecordingIcon" format="reference" />
+        <attr name="sceytUiCustomCameraPauseIcon" format="reference" />
+        <attr name="sceytUiCustomCameraPlayIcon" format="reference" />
+
+        <attr name="sceytUiCustomCameraModePhotoText" format="string" />
+        <attr name="sceytUiCustomCameraModeVideoText" format="string" />
+        <attr name="sceytUiCustomCameraModeTextColor" format="color|reference" />
+        <attr name="sceytUiCustomCameraModeTextUnselectedColor" format="color|reference" />
+        <attr name="sceytUiCustomCameraModeTextSize" format="dimension" />
+        <attr name="sceytUiCustomCameraModeTextFont" format="reference" />
+        <attr name="sceytUiCustomCameraModeTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+
+        <attr name="sceytUiCustomCameraRecordingTimeTextColor" format="color|reference" />
+        <attr name="sceytUiCustomCameraRecordingTimeTextSize" format="dimension" />
+        <attr name="sceytUiCustomCameraRecordingTimeTextFont" format="reference" />
+        <attr name="sceytUiCustomCameraRecordingTimeTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+
+        <attr name="sceytUiCustomCameraZoomTextColor" format="color|reference" />
+        <attr name="sceytUiCustomCameraZoomTextSize" format="dimension" />
+        <attr name="sceytUiCustomCameraZoomTextFont" format="reference" />
+        <attr name="sceytUiCustomCameraZoomTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+
+        <attr name="sceytUiCustomCameraFocusIndicatorAnimDuration" format="integer" />
+    </declare-styleable>
+</resources>
