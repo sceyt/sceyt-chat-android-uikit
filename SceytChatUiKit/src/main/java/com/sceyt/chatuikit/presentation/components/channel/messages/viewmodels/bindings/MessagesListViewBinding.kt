@@ -698,6 +698,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
     fun onMessageUpdated(data: Pair<Long, List<SceytMessage>>) {
         val (_, messages) = data
+
         suspend fun update(sceytMessage: SceytMessage) {
             val message = initMessageInfoData(sceytMessage)
             withContext(Dispatchers.Main) {
@@ -805,8 +806,8 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             messagesListView.updateViewState(it, false)
     }
 
-    messagesListView.setMessageCommandEventListener {
-        when (val event = it) {
+    messagesListView.setMessageCommandEventListener { event ->
+        when (event) {
             is MessageCommandEvent.DeleteMessage -> {
                 val type = if (event.onlyForMe)
                     DeleteMessageType.DeleteForMe
