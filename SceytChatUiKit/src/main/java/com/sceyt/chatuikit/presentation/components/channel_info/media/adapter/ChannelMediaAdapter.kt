@@ -101,8 +101,8 @@ class ChannelMediaAdapter(
     fun notifyUpdate(data: List<ChannelFileItem>, recyclerView: RecyclerView) {
         val myDiffUtil = com.sceyt.chatuikit.presentation.components.channel.messages.adapters.AttachmentsDiffUtil(attachments, data)
         val productDiffResult = DiffUtil.calculateDiff(myDiffUtil, true)
-        productDiffResult.dispatchUpdatesToSafety(recyclerView)
         attachments = SyncArrayList(data)
+        productDiffResult.dispatchUpdatesToSafety(recyclerView)
     }
 
     override fun bindHeaderData(header: SceytItemChannelMediaDateSeparatorBinding, headerPosition: Int) {
