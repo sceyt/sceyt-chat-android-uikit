@@ -183,8 +183,8 @@ class MessagesAdapter(
                 productDiffResult = DiffUtil.calculateDiff(myDiffUtil, true)
             }
             withContext(Dispatchers.Main) {
+                 this@MessagesAdapter.messages = SyncArrayList(messages)
                 productDiffResult.dispatchUpdatesToSafetySuspend(recyclerView)
-                this@MessagesAdapter.messages = SyncArrayList(messages)
             }
         }
     }
@@ -278,13 +278,15 @@ class MessagesAdapter(
 
     fun sort(recyclerView: RecyclerView) {
         debounceHelper.submit {
+            val sortedList = messages.sortedWith(MessageItemComparator())
             val myDiffUtil = MessagesDiffUtil(
                 oldList = ArrayList(this@MessagesAdapter.messages),
-                newList = messages.sortedWith(MessageItemComparator())
+                newList = sortedList
             )
             val productDiffResult = DiffUtil.calculateDiff(myDiffUtil, true)
 
             val isLastItemVisible = recyclerView.isLastItemDisplaying()
+            this@MessagesAdapter.messages = SyncArrayList(sortedList)
             productDiffResult.dispatchUpdatesToSafety(recyclerView)
             if (isLastItemVisible)
                 recyclerView.scrollToPosition(itemCount - 1)
