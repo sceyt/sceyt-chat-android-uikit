@@ -23,6 +23,7 @@ import com.sceyt.chatuikit.config.ChannelListConfig
 import com.sceyt.chatuikit.config.SearchChannelParams
 import com.sceyt.chatuikit.data.models.SceytPagingResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.data.retryOnResendableError
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
 import com.sceyt.chatuikit.data.models.channels.EditChannelData
 import com.sceyt.chatuikit.data.models.channels.GetAllChannelsResponse
@@ -277,6 +278,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
     }
 
     override suspend fun createChannel(channelData: CreateChannelData): SceytResponse<SceytChannel> {
+        // Upload avatar first (outside retry loop as it's a separate operation)
         if (channelData.avatarUrl.isBlank().not() && channelData.avatarUploaded.not()) {
             when (val uploadResult = uploadAvatar(channelData.avatarUrl)) {
                 is SceytResponse.Success -> {
@@ -294,18 +296,24 @@ class ChannelsRepositoryImpl : ChannelsRepository {
             }
         }
 
-        return suspendCancellableCoroutine { continuation ->
-            initCreateChannelRequest(channelData).execute(object : ChannelCallback {
-                override fun onResult(channel: Channel) {
-                    continuation.safeResume(SceytResponse.Success(channel.toSceytUiChannel()))
-                }
-
-                override fun onError(e: SceytException?) {
-                    continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "createChannel error: ${e?.message}, code: ${e?.code}")
-                }
-            })
+        return retryOnResendableError {
+            createChannelImpl(channelData)
         }
+    }
+
+    private suspend fun createChannelImpl(
+        channelData: CreateChannelData
+    ): SceytResponse<SceytChannel> = suspendCancellableCoroutine { continuation ->
+        initCreateChannelRequest(channelData).execute(object : ChannelCallback {
+            override fun onResult(channel: Channel) {
+                continuation.safeResume(SceytResponse.Success(channel.toSceytUiChannel()))
+            }
+
+            override fun onError(e: SceytException?) {
+                continuation.safeResume(SceytResponse.Error(e))
+                SceytLog.e(TAG, "createChannel error: ${e?.message}, code: ${e?.code}")
+            }
+        })
     }
 
     private fun initCreateChannelRequest(channelData: CreateChannelData): CreateChannelRequest {
