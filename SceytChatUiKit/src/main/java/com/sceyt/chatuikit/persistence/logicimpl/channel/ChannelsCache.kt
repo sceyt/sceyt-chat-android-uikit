@@ -409,17 +409,16 @@ class ChannelsCache {
                             if (member.user.id == user.id) {
                                 if (user.diff(member.user).hasDifference()) {
                                     needToUpdate = true
-                                    member.copy(user = user.copy())
+                                    member.copy(user = user)
                                 } else member
                             } else member
                         }
                     )
                     if (needToUpdate) {
-                        val diff = channel.diff(updatedChannel)
                         channelUpdated(
                             config = key,
                             channel = updatedChannel,
-                            diff = diff,
+                            diff = ChannelDiff.DEFAULT_FALSE.copy(presenceStateChanged = true),
                             needSort = false,
                             type = ChannelUpdatedType.Presence
                         )
