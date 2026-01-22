@@ -21,6 +21,7 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.SceytPagingResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.createErrorResponse
+import com.sceyt.chatuikit.data.retryOnResendableError
 import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.extensions.TAG
@@ -305,6 +306,13 @@ class MessagesRepositoryImpl : MessagesRepository {
     }
 
     override suspend fun sendMessage(
+        channelId: Long,
+        sceytMessage: SceytMessage,
+    ): SceytResponse<SceytMessage> = retryOnResendableError {
+        sendMessageImpl(channelId, sceytMessage)
+    }
+
+    private suspend fun sendMessageImpl(
         channelId: Long,
         sceytMessage: SceytMessage,
     ): SceytResponse<SceytMessage> = suspendCancellableCoroutine { continuation ->
