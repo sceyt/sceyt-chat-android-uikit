@@ -399,32 +399,25 @@ class ChannelsCache {
         }
     }
 
-    suspend fun updateChannelPeer(channelId: Long, user: SceytUser) {
-        mutex.withLock {
-            cachedData.forEachKeyValue { key, value ->
-                value[channelId]?.let { channel ->
-                    var needToUpdate = false
-                    val updatedChannel = channel.copy(
-                        members = channel.members?.map { member ->
-                            if (member.user.id == user.id) {
-                                if (user.diff(member.user).hasDifference()) {
-                                    needToUpdate = true
-                                    member.copy(user = user)
-                                } else member
-                            } else member
-                        }
-                    )
-                    if (needToUpdate) {
-                        channelUpdated(
-                            config = key,
-                            channel = updatedChannel,
-                            diff = ChannelDiff.DEFAULT_FALSE.copy(presenceStateChanged = true),
-                            needSort = false,
-                            type = ChannelUpdatedType.Presence
-                        )
-                    }
-                }
+    suspend fun updateChannelPeer(channelId: Long, user: SceytUser) = mutex.withLock {
+        cachedData.forEachKeyValue { key, value ->
+            val channel = value[channelId] ?: return@forEachKeyValue
+            var membersUpdated = false
+            val updatedMembers = channel.members?.map { member ->
+                if (member.user.id == user.id && user.diff(member.user).hasDifference()) {
+                    membersUpdated = true
+                    member.copy(user = user)
+                } else member
             }
+            if (!membersUpdated) return@forEachKeyValue
+            val updatedChannel = channel.copy(members = updatedMembers)
+            channelUpdated(
+                config = key,
+                channel = updatedChannel,
+                diff = ChannelDiff.DEFAULT_FALSE.copy(presenceStateChanged = true),
+                needSort = false,
+                type = ChannelUpdatedType.Presence
+            )
         }
     }
 
