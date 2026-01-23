@@ -82,6 +82,13 @@ dependencies {
     api(libs.moshi)
     api(libs.moshi.kotlin)
 
+    // CameraX dependencies
+    api(libs.camera.core)
+    api(libs.camera.camera2)
+    api(libs.camera.lifecycle)
+    api(libs.camera.video)
+    api(libs.camera.view)
+
     // Instrumented Unit Tests
     androidTestImplementation(libs.junit.ktx)
     androidTestImplementation(libs.core.testing)

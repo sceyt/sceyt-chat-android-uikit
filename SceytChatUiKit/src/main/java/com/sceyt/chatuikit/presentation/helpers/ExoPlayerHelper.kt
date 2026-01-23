@@ -1,10 +1,13 @@
 package com.sceyt.chatuikit.presentation.helpers
 
 import android.content.Context
+import androidx.annotation.OptIn
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.ui.PlayerView
 
 class ExoPlayerHelper(
@@ -26,10 +29,14 @@ class ExoPlayerHelper(
         var lastPlayer: ExoPlayer? = null
     }
 
+    @OptIn(UnstableApi::class)
     private fun initializePlayer() {
         lastPlayer?.stop()
         lastPlayer?.release()
-        exoPlayer = ExoPlayer.Builder(context).build().also {
+        exoPlayer = ExoPlayer.Builder(
+            context,
+            DefaultRenderersFactory(context).setEnableDecoderFallback(true)
+        ).build().also {
             lastPlayer = it
         }
         player.repeatMode = Player.REPEAT_MODE_OFF

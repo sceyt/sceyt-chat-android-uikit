@@ -6,6 +6,7 @@ import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNear
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNewest
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadPrev
+import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.database.dao.MessageDao
 import com.sceyt.chatuikit.persistence.logicimpl.message.ChannelId
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
@@ -59,7 +60,7 @@ internal class HandleDeleteMessagesByLoadTypeUseCase(
 
             LoadNear -> {
                 // LoadNear has separate bidirectional handling logic
-                Log.i(tag, "LoadNear not handled by this use case")
+                SceytLog.d(tag, "LoadNear not handled by this use case")
                 false
             }
         }
@@ -75,7 +76,7 @@ internal class HandleDeleteMessagesByLoadTypeUseCase(
         includeMessage: Boolean
     ) {
         val operator = if (includeMessage) "<=" else "<"
-        Log.i(tag, "Deleting messages $operator $messageId (includeMessage=$includeMessage)")
+        Log.d(tag, "Deleting messages $operator $messageId (includeMessage=$includeMessage)")
 
         val compareMessageId = if (includeMessage) messageId else messageId - 1
         val count = messageDao.deleteMessagesBeforeIdExceptPending(
@@ -84,13 +85,13 @@ internal class HandleDeleteMessagesByLoadTypeUseCase(
         )
 
         if (count > 0) {
-            Log.i(tag, "Deleted $count messages from DB, updating cache")
+            SceytLog.d(tag, "Deleted $count messages from DB, updating cache")
             messagesCache.forceDeleteAllMessagesWhere { message ->
                 message.channelId == channelId && message.isNotPending() &&
                         message.id <= compareMessageId
             }
         } else {
-            Log.i(tag, "No messages to delete")
+            Log.d(tag, "No messages to delete")
         }
     }
 
@@ -105,7 +106,7 @@ internal class HandleDeleteMessagesByLoadTypeUseCase(
         syncStartTime: Long
     ) {
         val operator = if (includeMessage) ">=" else ">"
-        Log.i(tag, "Deleting messages $operator $messageId (includeMessage=$includeMessage)")
+        Log.d(tag, "Deleting messages $operator $messageId (includeMessage=$includeMessage)")
 
         val compareMessageId = if (includeMessage) messageId else messageId + 1
         val count = messageDao.deleteMessagesAfterIdUntilDateExceptPending(
@@ -115,14 +116,14 @@ internal class HandleDeleteMessagesByLoadTypeUseCase(
         )
 
         if (count > 0) {
-            Log.i(tag, "Deleted $count messages from DB, updating cache")
+            SceytLog.d(tag, "Deleted $count messages from DB, updating cache")
             messagesCache.forceDeleteAllMessagesWhere { message ->
                 message.channelId == channelId && message.isNotPending() &&
                         message.id >= compareMessageId &&
                         (syncStartTime == 0L || message.createdAt < syncStartTime)
             }
         } else {
-            Log.i(tag, "No messages to delete")
+            Log.d(tag, "No messages to delete")
         }
     }
 }

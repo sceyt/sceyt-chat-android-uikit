@@ -5,6 +5,7 @@ import android.graphics.Typeface
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.applyTint
+import com.sceyt.chatuikit.extensions.applyTintBackgroundLayer
 import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
@@ -628,6 +629,21 @@ internal fun MessageInputStyle.Builder.buildVoiceRecorderViewStyle(
             context, SceytChatUIKit.theme.colors.onPrimaryColor
         )
     )
+    .viewOnceIcon(
+        index = R.styleable.MessageInputView_sceytUiMessageInputVoiceRecorderViewOnceIcon,
+        defValue = context.getCompatDrawable(R.drawable.sceyt_ic_view_once)?.applyTint(
+            context, SceytChatUIKit.theme.colors.accentColor
+        )
+    )
+    .viewOnceSelectedIcon(
+        index = R.styleable.MessageInputView_sceytUiMessageInputVoiceRecorderViewOnceSelectedIcon,
+        defValue = context.getCompatDrawable(R.drawable.sceyt_ic_view_once_selected_with_layers)
+            .applyTintBackgroundLayer(
+                context = context,
+                bgLayerId = R.id.backgroundLayer,
+                tintColor = SceytChatUIKit.theme.colors.accentColor
+            )
+    )
     .slideToCancelTextStyle(
         slideToCancelTextStyle = buildVoiceRecorderViewSlideToCancelTextStyle(array)
     )
@@ -715,6 +731,21 @@ internal fun MessageInputStyle.Builder.buildVoiceRecordPlaybackViewStyle(
         defValue = context.getCompatDrawable(R.drawable.sceyt_ic_send_message)?.applyTint(
             context, SceytChatUIKit.theme.colors.onPrimaryColor
         )
+    )
+    .viewOnceIcon(
+        index = R.styleable.MessageInputView_sceytUiMessageInputVoiceRecordPlaybackViewOnceIcon,
+        defValue = context.getCompatDrawable(R.drawable.sceyt_ic_view_once)?.applyTint(
+            context, SceytChatUIKit.theme.colors.accentColor
+        )
+    )
+    .viewOnceSelectedIcon(
+        index = R.styleable.MessageInputView_sceytUiMessageInputVoiceRecordPlaybackViewOnceSelectedIcon,
+        defValue = context.getCompatDrawable(R.drawable.sceyt_ic_view_once_selected_with_layers)
+            .applyTintBackgroundLayer(
+                context = context,
+                bgLayerId = R.id.backgroundLayer,
+                tintColor = SceytChatUIKit.theme.colors.accentColor
+            )
     )
     .durationTextStyle(
         durationTextStyle = buildVoiceRecordPlaybackViewDurationTextStyle(array)

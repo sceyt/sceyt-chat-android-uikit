@@ -1,13 +1,16 @@
 package com.sceyt.chatuikit.presentation.components.channel.input.listeners.click
 
 import android.view.View
+import com.sceyt.chatuikit.data.models.channels.InputAction
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.presentation.components.channel.input.MessageInputView
 import com.sceyt.chatuikit.presentation.components.channel.input.adapters.attachments.AttachmentItem
+import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.MessageInputClickListeners.AttachmentClickListener
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.MessageInputClickListeners.CancelLinkPreviewClickListener
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.MessageInputClickListeners.CancelReplyMessageViewClickListener
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.MessageInputClickListeners.ClearChatClickListener
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.MessageInputClickListeners.ClickListeners
+import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.MessageInputClickListeners.InputActionClickListener
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.MessageInputClickListeners.JoinClickListener
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.MessageInputClickListeners.RemoveAttachmentClickListener
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.MessageInputClickListeners.ScrollToNextMessageClickListener
@@ -34,12 +37,13 @@ open class MessageInputClickListenersImpl : ClickListeners {
     private var cancelReplyMessageViewClickListener: CancelReplyMessageViewClickListener? = null
     private var cancelLinkPreviewClickListener: CancelLinkPreviewClickListener? = null
     private var removeAttachmentClickListener: RemoveAttachmentClickListener? = null
-    private var onAttachmentClickListener: MessageInputClickListeners.AttachmentClickListener? = null
+    private var onAttachmentClickListener: AttachmentClickListener? = null
     private var joinClickListener: JoinClickListener? = null
     private var clearChatClickListener: ClearChatClickListener? = null
     private var scrollToNextMessageClickListener: ScrollToNextMessageClickListener? = null
     private var scrollToPreviousMessageClickListener: ScrollToPreviousMessageClickListener? = null
     private var onSelectUserToMentionClickListener: SelectedUserToMentionClickListener? = null
+    private var onInputActionClickListener: InputActionClickListener? = null
 
     override fun onSendMsgClick(view: View) {
         defaultListeners?.onSendMsgClick(view)
@@ -106,6 +110,11 @@ open class MessageInputClickListenersImpl : ClickListeners {
         onSelectUserToMentionClickListener?.onSelectedUserToMentionClick(member)
     }
 
+    override fun onActionClick(action: InputAction) {
+        defaultListeners?.onActionClick(action)
+        onInputActionClickListener?.onActionClick(action)
+    }
+
     fun setListener(listener: MessageInputClickListeners) {
         when (listener) {
             is ClickListeners -> {
@@ -121,6 +130,8 @@ open class MessageInputClickListenersImpl : ClickListeners {
                 scrollToNextMessageClickListener = listener
                 scrollToPreviousMessageClickListener = listener
                 onSelectUserToMentionClickListener = listener
+                cancelLinkPreviewClickListener = listener
+                onInputActionClickListener = listener
             }
 
             is SendMsgClickListener -> {
@@ -151,7 +162,7 @@ open class MessageInputClickListenersImpl : ClickListeners {
                 removeAttachmentClickListener = listener
             }
 
-            is MessageInputClickListeners.AttachmentClickListener -> {
+            is AttachmentClickListener -> {
                 onAttachmentClickListener = listener
             }
 
@@ -173,6 +184,10 @@ open class MessageInputClickListenersImpl : ClickListeners {
 
             is SelectedUserToMentionClickListener -> {
                 onSelectUserToMentionClickListener = listener
+            }
+
+            is InputActionClickListener -> {
+                onInputActionClickListener = listener
             }
         }
     }

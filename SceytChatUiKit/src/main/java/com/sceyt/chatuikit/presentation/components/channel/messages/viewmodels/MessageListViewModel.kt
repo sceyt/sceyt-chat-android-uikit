@@ -41,6 +41,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytMessageType
 import com.sceyt.chatuikit.data.models.messages.SceytReactionTotal
 import com.sceyt.chatuikit.data.models.onSuccess
 import com.sceyt.chatuikit.data.models.onSuccessNotNull
+import com.sceyt.chatuikit.data.repositories.Keys.KEY_VIEW_ONCE_INFO_SHOWN
 import com.sceyt.chatuikit.data.toFileListItem
 import com.sceyt.chatuikit.extensions.findIndexed
 import com.sceyt.chatuikit.koin.SceytKoinComponent
@@ -51,6 +52,7 @@ import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferHelper
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
+import com.sceyt.chatuikit.persistence.file_transfer.ThumbFor
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Downloaded
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Downloading
@@ -66,6 +68,7 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState.ThumbLoaded
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploaded
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploading
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.WaitingToUpload
+import com.sceyt.chatuikit.persistence.file_transfer.isCompleted
 import com.sceyt.chatuikit.persistence.interactor.AttachmentInteractor
 import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
 import com.sceyt.chatuikit.persistence.interactor.ChannelMemberInteractor
@@ -75,11 +78,12 @@ import com.sceyt.chatuikit.persistence.interactor.MessageReactionInteractor
 import com.sceyt.chatuikit.persistence.interactor.UserInteractor
 import com.sceyt.chatuikit.persistence.logic.PersistenceConnectionLogic
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
+import com.sceyt.chatuikit.persistence.logicimpl.message.MessageTid
 import com.sceyt.chatuikit.persistence.mappers.createEmptyUser
 import com.sceyt.chatuikit.persistence.mappers.toBodyAttribute
 import com.sceyt.chatuikit.persistence.mappers.toVoiceAttachmentData
+import com.sceyt.chatuikit.persistence.repositories.SceytSharedPreference
 import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager
-import com.sceyt.chatuikit.presentation.common.DebounceHelper
 import com.sceyt.chatuikit.presentation.components.channel.input.data.InputUserAction
 import com.sceyt.chatuikit.presentation.components.channel.input.data.SearchResult
 import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
@@ -91,6 +95,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.events.Messa
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.PollEvent
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.ReactionEvent
 import com.sceyt.chatuikit.presentation.extensions.isNotPending
+import com.sceyt.chatuikit.presentation.helpers.DebounceHelper
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import com.sceyt.chatuikit.services.SceytSyncManager
 import com.sceyt.chatuikit.shared.helpers.LinkPreviewHelper
@@ -132,18 +137,20 @@ class MessageListViewModel(
     private val application: Application by inject()
     internal val syncManager: SceytSyncManager by inject()
     private val fileTransferService: FileTransferService by inject()
+    private val preferences: SceytSharedPreference by inject()
     private val linkPreviewHelper by lazy { LinkPreviewHelper(application, viewModelScope) }
     internal var pinnedLastReadMessageId: Long = 0
     internal val sendDisplayedHelper by lazy { DebounceHelper(200L, viewModelScope) }
     internal val messageActionBridge by lazy { MessageActionBridge() }
     internal val placeToSavePathsList = mutableSetOf<Pair<AttachmentTypeEnum, String>>()
-    internal val selectedMessagesMap by lazy { mutableMapOf<Long, SceytMessage>() }
+    internal val selectedMessagesMap by lazy { mutableMapOf<MessageTid, SceytMessage>() }
     internal val expandedMessagesMap by lazy { mutableMapOf<Long, Boolean>() }
     internal val notFoundMessagesToUpdate by lazy { mutableMapOf<Long, SceytMessage>() }
     internal val outgoingMessageMutex by lazy { Mutex() }
     internal val pendingDisplayMsgIds by lazy { Collections.synchronizedSet(mutableSetOf<Long>()) }
     internal val needToUpdateTransferAfterOnResume = hashMapOf<Long, TransferData>()
     private var showSenderAvatarAndNameIfNeeded = true
+    internal var viewOnceSelected = false
     private var loadPrevJob: Job? = null
     private val loadNextJob: Job? = null
     private var loadNearJob: Job? = null
@@ -230,6 +237,11 @@ class MessageListViewModel(
             checkUnreadMentionsOnMessageUpdated(message)
         }.launchIn(viewModelScope)
 
+        ChannelEventManager.onChannelMembersEventFlow
+            .filter { it.channel.id == channel.id }
+            .onEach(::onChannelMemberEvent)
+            .launchIn(viewModelScope)
+
         /*
        // todo reply in thread
         onNewThreadMessageFlow = MessageEventsObserver.onMessageFlow
@@ -248,12 +260,6 @@ class MessageListViewModel(
                 updateChannel { it.channel }
             }
             .launchIn(viewModelScope)
-
-        viewModelScope.launch(Dispatchers.IO) {
-            ChannelEventManager.onChannelMembersEventFlow
-                .filter { it.channel.id == channel.id }
-                .collect(::onChannelMemberEvent)
-        }
 
         ChannelsCache.pendingChannelCreatedFlow
             .filter { (pendingChannelId, _) -> pendingChannelId == channel.id }
@@ -721,9 +727,9 @@ class MessageListViewModel(
         }
     }
 
-    fun deleteMessages(message: List<SceytMessage>, deleteType: DeleteMessageType) {
-        message.forEach {
-            deleteMessage(it, deleteType)
+    fun deleteMessages(messages: List<SceytMessage>, deleteType: DeleteMessageType) {
+        messages.forEach { message ->
+            deleteMessage(message, deleteType)
         }
     }
 
@@ -800,6 +806,9 @@ class MessageListViewModel(
                     } ?: return@mapNotNull null
                 )
             }
+            if (viewOnceSelected && attachments.size != 1) {
+                viewOnceSelected = false
+            }
 
             val dratMessage = DraftMessage(
                 channelId = conversationId,
@@ -812,7 +821,8 @@ class MessageListViewModel(
                 isReply = isReply,
                 bodyAttributes = bodyAttributes.toList(),
                 attachments = draftAttachments,
-                voiceAttachment = audioRecordData?.toVoiceAttachmentData(conversationId)
+                voiceAttachment = audioRecordData?.toVoiceAttachmentData(conversationId),
+                viewOnce = viewOnceSelected
             )
 
             channelInteractor.updateDraftMessage(dratMessage)
@@ -903,6 +913,14 @@ class MessageListViewModel(
     @Suppress("unused")
     fun showSenderAvatarAndNameIfNeeded(show: Boolean) {
         showSenderAvatarAndNameIfNeeded = show
+    }
+
+    fun shouldShowViewOnceDialog(): Boolean {
+        return preferences.getBoolean(KEY_VIEW_ONCE_INFO_SHOWN, true)
+    }
+
+    fun setShouldShowViewOnceDialog(show: Boolean) = viewModelScope.launch(Dispatchers.IO) {
+        preferences.setBoolean(KEY_VIEW_ONCE_INFO_SHOWN, show)
     }
 
     internal suspend fun mapToMessageListItem(
@@ -1178,6 +1196,15 @@ class MessageListViewModel(
                 }
             }
         }
+    }
+
+    internal fun shouldDeferTransferUpdate(transfer: TransferData): Boolean {
+        return transfer.state.isCompleted() ||
+                transfer.state == FilePathChanged || isMessageListThumbLoaded(transfer)
+    }
+
+    internal fun isMessageListThumbLoaded(transfer: TransferData): Boolean {
+        return transfer.state == ThumbLoaded && transfer.thumbData?.key == ThumbFor.MessagesLisView.value
     }
 
     internal fun clearPreparingThumbs() {

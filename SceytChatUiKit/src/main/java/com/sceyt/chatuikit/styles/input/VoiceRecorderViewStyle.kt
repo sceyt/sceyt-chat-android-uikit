@@ -21,6 +21,8 @@ data class VoiceRecorderViewStyle(
         val arrowToLockIcon: Drawable?,
         val stopRecordingIcon: Drawable?,
         val sendVoiceIcon: Drawable?,
+        val viewOnceIcon: Drawable?,
+        val viewOnceSelectedIcon: Drawable?,
         val slideToCancelTextStyle: TextStyle,
         val durationTextStyle: TextStyle,
         val cancelTextStyle: TextStyle,
@@ -46,6 +48,8 @@ data class VoiceRecorderViewStyle(
         private var arrowToLockIcon: Drawable? = null
         private var stopRecordingIcon: Drawable? = null
         private var sendVoiceIcon: Drawable? = null
+        private var viewOnceIcon: Drawable? = null
+        private var viewOnceSelectedIcon: Drawable? = null
         private var slideToCancelTextStyle: TextStyle = TextStyle()
         private var durationTextStyle: TextStyle = TextStyle()
         private var cancelTextStyle: TextStyle = TextStyle()
@@ -87,6 +91,14 @@ data class VoiceRecorderViewStyle(
             this.sendVoiceIcon = typedArray.getDrawable(index) ?: defValue
         }
 
+        fun viewOnceIcon(@StyleableRes index: Int, defValue: Drawable? = viewOnceIcon) = apply {
+            this.viewOnceIcon = typedArray.getDrawable(index) ?: defValue
+        }
+
+        fun viewOnceSelectedIcon(@StyleableRes index: Int, defValue: Drawable? = viewOnceSelectedIcon) = apply {
+            this.viewOnceSelectedIcon = typedArray.getDrawable(index) ?: defValue
+        }
+
         fun slideToCancelTextStyle(slideToCancelTextStyle: TextStyle) = apply {
             this.slideToCancelTextStyle = slideToCancelTextStyle
         }
@@ -109,6 +121,8 @@ data class VoiceRecorderViewStyle(
             arrowToLockIcon = arrowToLockIcon,
             stopRecordingIcon = stopRecordingIcon,
             sendVoiceIcon = sendVoiceIcon,
+            viewOnceIcon = viewOnceIcon,
+            viewOnceSelectedIcon = viewOnceSelectedIcon,
             slideToCancelTextStyle = slideToCancelTextStyle,
             durationTextStyle = durationTextStyle,
             cancelTextStyle = cancelTextStyle,

@@ -7,6 +7,7 @@ import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNewest
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadPrev
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.logicimpl.message.ChannelId
 import kotlin.math.max
 import kotlin.math.min
@@ -26,7 +27,7 @@ internal class CheckDeletedMessagesUseCase(
     private val deleteByLoadType: HandleDeleteMessagesByLoadTypeUseCase,
     private val handleMessagesInRange: HandleMessagesInRangeUseCase
 ) {
-    private val tag = "CheckDeletedMessages"
+    private val tag = "MessageDeletion"
 
     suspend operator fun invoke(
         channelId: ChannelId,
@@ -52,7 +53,7 @@ internal class CheckDeletedMessagesUseCase(
 
         // Case 1: Empty response - delete all messages in the load direction
         if (serverMessages.isEmpty()) {
-            Log.i(
+            Log.d(
                 tag,
                 "Empty response for $loadType from messageId=$messageId, deleting all in direction"
             )
@@ -68,7 +69,7 @@ internal class CheckDeletedMessagesUseCase(
 
         // Case 2: Single message edge case - only the messageId itself was returned
         if (serverMessages.size == 1 && serverMessages.first().id == messageId) {
-            Log.i(
+            Log.d(
                 tag,
                 "Single message ($messageId) returned for $loadType, reached end in that direction"
             )
@@ -113,7 +114,7 @@ internal class CheckDeletedMessagesUseCase(
 
             LoadNear -> {
                 // Handled above, but required for when expression completeness
-                Log.e(tag, "LoadNear should not reach here")
+                SceytLog.e(tag, "LoadNear should not reach here")
                 return
             }
         }
@@ -139,18 +140,18 @@ internal class CheckDeletedMessagesUseCase(
 
             LoadNear -> {
                 // Handled above, but required for when expression completeness
-                Log.e(tag, "LoadNear should not reach here")
+                SceytLog.e(tag, "LoadNear should not reach here")
                 return
             }
         }
 
         // Validation
         if (startId > endId) {
-            Log.e(tag, "Invalid range: startId ($startId) > endId ($endId)")
+            SceytLog.e(tag, "Invalid range: startId ($startId) > endId ($endId)")
             return
         }
 
-        Log.i(
+        Log.d(
             tag,
             "Checking range [$startId, $endId] for deletions (returned ${serverIds.size} messages, reachedEnd=$reachedEnd)"
         )

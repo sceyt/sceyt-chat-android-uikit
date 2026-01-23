@@ -125,6 +125,19 @@
             app:sceytUiProgressTrackColor="@android:color/transparent"
             tools:visibility="visible" />
 
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/ivViewOnceIcon"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:padding="2dp"
+            android:translationX="3dp"
+            android:translationY="3dp"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="@+id/playPauseButton"
+            app:layout_constraintEnd_toEndOf="@+id/playPauseButton"
+            tools:src="@drawable/sceyt_ic_view_once"
+            tools:visibility="visible" />
+
         <com.masoudss.lib.WaveformSeekBar
             android:id="@+id/seekBar"
             android:layout_width="0dp"

@@ -50,13 +50,10 @@ import com.sceyt.chatuikit.persistence.mappers.toSceytAttachment
 import com.sceyt.chatuikit.persistence.mappers.toSceytUser
 import com.sceyt.chatuikit.persistence.repositories.AttachmentsRepository
 import com.sceyt.chatuikit.shared.utils.FileChecksumCalculator
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.core.component.inject
 
@@ -73,7 +70,6 @@ internal class PersistenceAttachmentLogicImpl(
 
     private val messagesLogic: PersistenceMessagesLogic by inject()
     private val attachmentsLoadSize get() = SceytChatUIKit.config.queryLimits.attachmentListQueryLimit
-    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     override suspend fun setupFileTransferUpdateObserver() {
         FileTransferHelper.onTransferUpdatedLiveData.asFlow().collect {
@@ -236,10 +232,8 @@ internal class PersistenceAttachmentLogicImpl(
             attachmentsCache.updateThumb(link, thumb)
         }
 
-    override fun onTransferProgressPercentUpdated(transferData: TransferData) {
-        scope.launch {
-            messagesCache.updateAttachmentTransferData(transferData)
-        }
+    override suspend fun onTransferProgressPercentUpdated(transferData: TransferData) {
+        messagesCache.updateAttachmentTransferData(transferData)
     }
 
     private fun loadAttachments(

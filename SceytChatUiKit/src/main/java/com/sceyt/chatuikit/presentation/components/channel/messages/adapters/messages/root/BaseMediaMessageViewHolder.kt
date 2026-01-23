@@ -8,6 +8,7 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.view.isVisible
 import androidx.core.view.marginLeft
+import androidx.lifecycle.Observer
 import com.google.android.material.imageview.ShapeableImageView
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.extensions.asComponentActivity
@@ -75,7 +76,7 @@ abstract class BaseMediaMessageViewHolder(
         }
     }
 
-    protected open fun setImageSize(fileImage: View) {
+    protected open fun setImageSize(fileImage: View, ignoreBody: Boolean = false) {
         val layoutBubble = (layoutBubble as? ConstraintLayout) ?: return
         val size = calculateScaleWidthHeight(
             maxSize, minSize, imageWidth = fileItem.size?.width
@@ -92,7 +93,7 @@ abstract class BaseMediaMessageViewHolder(
         val message = requireMessage
         with(fileImage) {
             val defaultMargin = marginLeft
-            if (message.isForwarded || message.isReplied || message.shouldShowAvatarAndName || message.body.isNotNullOrBlank()) {
+            if (message.isForwarded || message.isReplied || message.shouldShowAvatarAndName || (!ignoreBody && message.body.isNotNullOrBlank())) {
                 setMargins(defaultMargin, defaultMargin + dpToPx(4f), defaultMargin, defaultMargin)
             } else setMargins(defaultMargin)
         }
@@ -128,9 +129,9 @@ abstract class BaseMediaMessageViewHolder(
         return thumbData?.size == getThumbSize() && thumbData.key == ThumbFor.MessagesLisView.value
     }
 
-    protected open fun setImageTopCorners(fileImage: ShapeableImageView) {
+    protected open fun setImageTopCorners(fileImage: ShapeableImageView, ignoreBody: Boolean = false) {
         val message = requireMessage
-        val corner = (if (message.isForwarded || message.body.isNotBlank() || message.isReplied) {
+        val corner = (if (message.isForwarded ||  (!ignoreBody && message.body.isNotBlank()) || message.isReplied) {
             dpToPx(5f)
         } else dpToPx(17f)).toFloat()
 
@@ -164,9 +165,14 @@ abstract class BaseMediaMessageViewHolder(
     private fun setListener() {
         if (addedLister) return
         addedLister = true
-        FileTransferHelper.onTransferUpdatedLiveData.observe(context.asComponentActivity()) {
-            if (viewHolderHelper.updateTransferData(it, fileItem, ::isValidThumb))
-                updateState(it)
-        }
+        FileTransferHelper.onTransferUpdatedLiveData.removeObserver(observer)
+        FileTransferHelper.onTransferUpdatedLiveData.observe(
+            context.asComponentActivity(), observer
+        )
+    }
+
+    private val observer: Observer<TransferData> = Observer { transferData ->
+        if (viewHolderHelper.updateTransferData(transferData, fileItem, ::isValidThumb))
+            updateState(transferData)
     }
 }

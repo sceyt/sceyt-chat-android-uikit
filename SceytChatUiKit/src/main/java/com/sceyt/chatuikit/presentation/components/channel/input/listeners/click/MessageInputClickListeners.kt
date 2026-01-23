@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.presentation.components.channel.input.listeners.click
 
 import android.view.View
+import com.sceyt.chatuikit.data.models.channels.InputAction
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.presentation.components.channel.input.adapters.attachments.AttachmentItem
 
@@ -35,7 +36,7 @@ sealed interface MessageInputClickListeners {
     }
 
     fun interface AttachmentClickListener : MessageInputClickListeners {
-        fun onAttachmentClick( item: AttachmentItem)
+        fun onAttachmentClick(item: AttachmentItem)
     }
 
     fun interface JoinClickListener : MessageInputClickListeners {
@@ -58,21 +59,26 @@ sealed interface MessageInputClickListeners {
         fun onSelectedUserToMentionClick(member: SceytMember)
     }
 
+    fun interface InputActionClickListener : MessageInputClickListeners {
+        fun onActionClick(action: InputAction)
+    }
+
     /** Use this if you want to implement all callbacks */
     interface ClickListeners :
-            SendMsgClickListener,
-            SendAttachmentClickListener,
-            CancelReplyMessageViewClickListener,
-            CancelLinkPreviewClickListener,
-            RemoveAttachmentClickListener,
-            AttachmentClickListener,
-            JoinClickListener,
-            VoiceClickListener,
-            VoiceLongClickListener,
-            ClearChatClickListener,
-            ScrollToNextMessageClickListener,
-            ScrollToPreviousMessageClickListener,
-            SelectedUserToMentionClickListener
+        SendMsgClickListener,
+        SendAttachmentClickListener,
+        CancelReplyMessageViewClickListener,
+        CancelLinkPreviewClickListener,
+        RemoveAttachmentClickListener,
+        AttachmentClickListener,
+        JoinClickListener,
+        VoiceClickListener,
+        VoiceLongClickListener,
+        ClearChatClickListener,
+        ScrollToNextMessageClickListener,
+        ScrollToPreviousMessageClickListener,
+        SelectedUserToMentionClickListener,
+        InputActionClickListener
 }
 
 internal fun MessageInputClickListeners.setListener(listener: MessageInputClickListeners) {

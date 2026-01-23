@@ -49,7 +49,6 @@ import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isPublic
 import com.sceyt.chatuikit.persistence.extensions.safeResume
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferHelper
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelUpdatedType
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
@@ -61,6 +60,7 @@ import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoActiv
 import com.sceyt.chatuikit.presentation.components.poll_results.PollResultsActivity
 import com.sceyt.chatuikit.presentation.extensions.isNotPending
 import com.sceyt.chatuikit.presentation.extensions.isPending
+import com.sceyt.chatuikit.presentation.extensions.isSelfDestructed
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.services.SceytSyncManager
 import com.sceyt.chatuikit.styles.extensions.messages_list.setEmptyStateForSelfChannel
@@ -668,24 +668,25 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
     suspend fun onOutgoingMessage(message: SceytMessage) {
         if (hasNext || hasNextDb) return
-        val initMessage = mapToMessageListItem(
-            data = arrayListOf(message),
+
+        // Use the message from notFoundMessagesToUpdate if available.
+        // It was already updated, but for some reason was not found in the UI to apply the update.
+        val messageToRender = notFoundMessagesToUpdate.remove(message.tid)?.let {
+            SceytLog.d(TAG, "Rendering previously not found updated message with tid: ${it.tid}")
+            it
+        } ?: message
+
+        val messageItems = mapToMessageListItem(
+            data = arrayListOf(messageToRender),
             hasNext = false,
             hasPrev = false,
             compareMessage = messagesListView.getLastMessage()?.message,
             enableDateSeparator = messagesListView.style.enableDateSeparator
         )
 
-        if (notFoundMessagesToUpdate.containsKey(message.tid)) {
-            notFoundMessagesToUpdate.remove(message.tid)?.let {
-                onOutgoingMessage(it)
-                return
-            }
-        }
-
         suspendCancellableCoroutine { continuation ->
             messagesListView.addNewMessages(
-                data = initMessage.toTypedArray(),
+                data = messageItems.toTypedArray(),
                 lifecycleScope = lifecycleScope,
                 addedCallback = {
                     continuation.safeResume(Unit)
@@ -697,15 +698,24 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
     fun onMessageUpdated(data: Pair<Long, List<SceytMessage>>) {
         val (_, messages) = data
+
         suspend fun update(sceytMessage: SceytMessage) {
             val message = initMessageInfoData(sceytMessage)
             withContext(Dispatchers.Main) {
-                if (message.state == MessageState.Deleted || message.state == MessageState.Edited)
-                    messagesListView.messageEditedOrDeleted(message)
-                else {
-                    val foundToUpdate = messagesListView.updateMessage(message)
-                    if (!foundToUpdate) {
-                        notFoundMessagesToUpdate[message.tid] = message
+                when {
+                    message.state == MessageState.Deleted || message.state == MessageState.Edited -> {
+                        messagesListView.messageEditedOrDeleted(updateMessage = message)
+                    }
+
+                    message.isSelfDestructed() -> {
+                        messagesListView.messageSelfDestructed(message)
+                    }
+
+                    else -> {
+                        val foundToUpdate = messagesListView.updateMessage(message)
+                        if (!foundToUpdate) {
+                            notFoundMessagesToUpdate[message.tid] = message
+                        }
                     }
                 }
             }
@@ -751,12 +761,14 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
           messagesListView.newReplyMessage(it.parentMessage?.id)
       }.launchIn(lifecycleOwner.lifecycleScope)
   */
-    FileTransferHelper.onTransferUpdatedLiveData.asFlow().onEach {
+
+    FileTransferHelper.onTransferUpdatedLiveData.asFlow().onEach { transfer ->
         viewModelScope.launch(Dispatchers.Default) {
             if (lifecycleOwner.isResumed()) {
-                messagesListView.updateProgress(it, false)
-            } else if (it.state != TransferState.Downloading && it.state != TransferState.Uploading)
-                needToUpdateTransferAfterOnResume[it.messageTid] = it
+                messagesListView.updateProgress(transfer, false)
+            } else if (shouldDeferTransferUpdate(transfer)) {
+                needToUpdateTransferAfterOnResume[transfer.messageTid] = transfer
+            }
         }
     }.launchIn(viewModelScope)
 
@@ -794,8 +806,8 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             messagesListView.updateViewState(it, false)
     }
 
-    messagesListView.setMessageCommandEventListener {
-        when (val event = it) {
+    messagesListView.setMessageCommandEventListener { event ->
+        when (event) {
             is MessageCommandEvent.DeleteMessage -> {
                 val type = if (event.onlyForMe)
                     DeleteMessageType.DeleteForMe

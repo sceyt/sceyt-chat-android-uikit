@@ -62,7 +62,12 @@ internal fun SceytMessage.toMessageDb(unList: Boolean): MessageDb {
         from = user?.toUserDb(),
         parent = parentMessage?.toParentMessageEntity(),
         attachments = attachments?.map {
-            it.toAttachmentDb(messageId = id, messageTid = tid, channelId = channelId)
+            it.toAttachmentDb(
+                messageId = id,
+                messageTid = tid,
+                channelId = channelId,
+                viewOnce = viewOnce
+            )
         },
         userMarkers = userMarkers?.map { it.toMarkerEntity() },
         reactions = userReactions?.map { it.toReactionDb() },
@@ -136,7 +141,12 @@ internal fun SceytMessage.toParentMessageEntity(): ParentMessageDb {
         messageEntity = toMessageEntity(unList = true),
         from = user?.toUserDb(),
         attachments = attachments?.map {
-            it.toAttachmentDb(messageId = id, messageTid = messageTid, channelId = channelId)
+            it.toAttachmentDb(
+                messageId = id,
+                messageTid = messageTid,
+                channelId = channelId,
+                viewOnce = viewOnce
+            )
         },
         mentionedUsers = null,
         poll = poll?.toPollDb()

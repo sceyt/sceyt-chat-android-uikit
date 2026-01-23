@@ -14,7 +14,8 @@ open class DefaultMessageBodyWithAttachmentsFormatter : Formatter<MessageBodyFor
             mentionTextStyle = from.mentionTextStyle,
             mentionUserNameFormatter = from.mentionUserNameFormatter,
             attachmentNameFormatter = from.attachmentNameFormatter,
-            mentionClickListener = from.mentionClickListener
+            mentionClickListener = from.mentionClickListener,
+            unsupportedMessageBodyFormatter = from.unsupportedMessageShortBodyFormatter
         )
 
         val messageTypeIcon = from.messageTypeIconProvider.provide(context, from.message)

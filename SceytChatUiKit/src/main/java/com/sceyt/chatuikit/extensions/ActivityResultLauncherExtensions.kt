@@ -40,3 +40,11 @@ fun ComponentActivity.initAttachmentLauncher(callback: ActivityResultCallback<Ac
 fun Fragment.initAttachmentLauncher(callback: ActivityResultCallback<ActivityResult>): ActivityResultLauncher<Intent> {
     return registerForActivityResult(ActivityResultContracts.StartActivityForResult(), callback)
 }
+
+fun ComponentActivity.initCustomCameraLauncher(callback: ActivityResultCallback<ActivityResult>): ActivityResultLauncher<Intent> {
+    return registerForActivityResult(ActivityResultContracts.StartActivityForResult(), callback)
+}
+
+fun Fragment.initCustomCameraLauncher(callback: ActivityResultCallback<ActivityResult>): ActivityResultLauncher<Intent> {
+    return registerForActivityResult(ActivityResultContracts.StartActivityForResult(), callback)
+}

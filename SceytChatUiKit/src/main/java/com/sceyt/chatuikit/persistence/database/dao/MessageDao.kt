@@ -336,14 +336,14 @@ internal abstract class MessageDao {
     }
 
     @Transaction
-    open suspend fun insertUserMarkersIfExistMessage(entities: List<MarkerEntity>) {
+    open suspend fun insertUserMarkersIfExistMessage(entities: List<MarkerEntity>): List<Long> {
         val existMessageIds = getExistMessageByIds(entities.map { it.messageId })
         // Filter markers which message exist in db
         val filtered = entities
             .filter { it.messageId in existMessageIds }
-            .takeIf { it.isNotEmpty() } ?: return
+            .takeIf { it.isNotEmpty() } ?: return emptyList()
 
-        insertUserMarkers(filtered)
+        return insertUserMarkers(filtered)
     }
 
     @SuppressWarnings(RoomWarnings.QUERY_MISMATCH)
@@ -464,10 +464,11 @@ internal abstract class MessageDao {
             select message_id from $MESSAGE_TABLE where channelId =:channelId 
             and message_id >= :startId and message_id <= :endId and deliveryStatus != $PENDING_STATUS
             and (createdAt < :dateUntil or :dateUntil = 0)
+            and not unList
             order by createdAt
             """
     )
-    abstract suspend fun getMessagesIdsByRange(
+    abstract suspend fun getMessagesIdsByRangeIgnoreUnlist(
         channelId: Long,
         startId: Long,
         endId: Long,
@@ -481,6 +482,9 @@ internal abstract class MessageDao {
     @Transaction
     @Query("select * from $MESSAGE_TABLE where message_id =:id")
     abstract suspend fun getMessageById(id: Long): MessageDb?
+
+    @Query("select * from $MESSAGE_TABLE where message_id  in (:ids)")
+    abstract suspend fun getMessageEntitiesByIds(ids: List<Long>): List<MessageEntity>
 
     @Query("select message_id as id, tid from $MESSAGE_TABLE where message_id in (:ids)")
     abstract suspend fun getExistMessagesIdTidByIds(ids: List<Long>): List<MessageIdAndTid>
@@ -617,6 +621,7 @@ internal abstract class MessageDao {
             and message_id not in(:messageIds) 
             and (createdAt < :deleteUntil or :deleteUntil = 0)
             and deliveryStatus != $PENDING_STATUS
+            and not unList
             """
     )
     abstract suspend fun deleteNotInMessageIdsUntilDateExceptPending(
@@ -625,13 +630,19 @@ internal abstract class MessageDao {
         deleteUntil: Long,
     ): Int
 
-    @Query("delete from $MESSAGE_TABLE where channelId =:channelId and createdAt <=:date and deliveryStatus != $PENDING_STATUS")
+    @Query("""
+        delete from $MESSAGE_TABLE where channelId =:channelId 
+        and createdAt <=:date and deliveryStatus != $PENDING_STATUS
+        """)
     abstract suspend fun deleteMessagesBeforeDateExceptPending(
         channelId: Long,
         date: Long
     ): Int
 
-    @Query("delete from $MESSAGE_TABLE where channelId =:channelId and message_id <=:messageId and deliveryStatus != $PENDING_STATUS")
+    @Query("""
+        delete from $MESSAGE_TABLE where channelId =:channelId 
+        and message_id <=:messageId and deliveryStatus != $PENDING_STATUS
+        """)
     abstract suspend fun deleteMessagesBeforeIdExceptPending(
         channelId: Long,
         messageId: Long

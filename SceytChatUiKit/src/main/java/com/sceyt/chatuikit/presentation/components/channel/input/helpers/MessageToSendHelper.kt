@@ -9,6 +9,7 @@ import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.data.models.messages.SceytMessageType
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.extractLinks
 import com.sceyt.chatuikit.extensions.getFileSize
@@ -32,18 +33,19 @@ import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
 import java.io.File
 
 class MessageToSendHelper(
-        private val context: Context,
-        private val listeners: InputActionsListener.InputActionListeners?
+    private val context: Context,
+    private val listeners: InputActionsListener.InputActionListeners?
 ) {
     val mentionedUsersCache = mutableMapOf<String, SceytUser>()
 
     fun sendMessage(
-            allAttachments: List<Attachment>,
-            body: CharSequence?,
-            editMessage: SceytMessage?,
-            replyMessage: SceytMessage?,
-            replyThreadMessageId: Long?,
-            linkDetails: LinkPreviewDetails?
+        allAttachments: List<Attachment>,
+        body: CharSequence?,
+        editMessage: SceytMessage?,
+        replyMessage: SceytMessage?,
+        replyThreadMessageId: Long?,
+        linkDetails: LinkPreviewDetails?,
+        viewOnce: Boolean
     ) {
         val replacedBody = replaceBodyMentions(body)
 
@@ -56,34 +58,59 @@ class MessageToSendHelper(
                     val message = if (index == 0) {
                         if (link != null)
                             attachments = attachments.plus(link)
-                        buildMessage(replacedBody, attachments, true, replyMessage, replyThreadMessageId)
-                    } else buildMessage("", attachments, false, replyMessage, replyThreadMessageId)
+                        buildMessage(
+                            body = replacedBody,
+                            attachments = attachments,
+                            withMentionedUsers = true,
+                            replyMessage = replyMessage,
+                            replyThreadMessageId = replyThreadMessageId,
+                            viewOnce = viewOnce
+                        )
+                    } else buildMessage(
+                        body = "",
+                        attachments = attachments,
+                        withMentionedUsers = false,
+                        replyMessage = replyMessage,
+                        replyThreadMessageId = replyThreadMessageId,
+                        viewOnce = viewOnce
+                    )
 
                     messages.add(message)
                 }
                 listeners?.sendMessages(messages, linkDetails)
             } else {
                 val attachment = if (link != null) arrayOf(link) else arrayOf()
-                listeners?.sendMessage(buildMessage(replacedBody, attachment, true,
-                    replyMessage, replyThreadMessageId), linkDetails)
+                listeners?.sendMessage(
+                    buildMessage(
+                        body = replacedBody,
+                        attachments = attachment,
+                        withMentionedUsers = true,
+                        replyMessage = replyMessage,
+                        replyThreadMessageId = replyThreadMessageId,
+                        viewOnce = viewOnce
+                    ), linkDetails
+                )
             }
         }
     }
 
     private fun buildMessage(
-            body: CharSequence,
-            attachments: Array<Attachment>,
-            withMentionedUsers: Boolean,
-            replyMessage: SceytMessage?,
-            replyThreadMessageId: Long?,
-            type: String = "text"
+        body: CharSequence,
+        attachments: Array<Attachment>,
+        withMentionedUsers: Boolean,
+        replyMessage: SceytMessage?,
+        replyThreadMessageId: Long?,
+        type: String = "text",
+        viewOnce: Boolean,
     ): Message {
+        val messageType = if (viewOnce) SceytMessageType.ViewOnce.value else type
         val message = Message.MessageBuilder()
             .setTid(ClientWrapper.generateTid())
             .setAttachments(attachments)
-            .setType(type)
+            .setType(messageType)
             .setBody(body.toString())
             .setCreatedAt(System.currentTimeMillis())
+            .setViewOnce(viewOnce)
             .initRelyMessage(replyMessage, replyThreadMessageId)
 
         if (withMentionedUsers) {
@@ -108,8 +135,8 @@ class MessageToSendHelper(
     }
 
     private fun initBodyAttributes(
-            styling: List<BodyStyleRange>?,
-            mentions: List<Mention>?
+        styling: List<BodyStyleRange>?,
+        mentions: List<Mention>?
     ): List<BodyAttribute> {
         val attributes = styling?.map { it.toBodyAttribute() }?.toArrayList() ?: arrayListOf()
 
@@ -122,13 +149,17 @@ class MessageToSendHelper(
     }
 
     private fun checkIsEditingMessage(
-            body: CharSequence,
-            message: SceytMessage?,
-            linkDetails: LinkPreviewDetails?
+        body: CharSequence,
+        message: SceytMessage?,
+        linkDetails: LinkPreviewDetails?
     ): Boolean {
         if (message == null) return false
         val linkAttachment = getLinkAttachmentFromBody(body, linkDetails)
-            ?.toSceytAttachment(message.tid, TransferState.Uploaded, linkPreviewDetails = linkDetails)
+            ?.toSceytAttachment(
+                messageTid = message.tid,
+                transferState = TransferState.Uploaded,
+                linkPreviewDetails = linkDetails
+            )
 
         val attachments = if (linkAttachment != null) {
             if (message.attachments.isNullOrEmpty())
@@ -156,14 +187,15 @@ class MessageToSendHelper(
             body = body.toString(),
             attachments = attachments,
             bodyAttributes = bodyAttributes,
-            mentionedUsers = mentionedUsers)
+            mentionedUsers = mentionedUsers
+        )
 
         listeners?.sendEditMessage(editedMessage, linkDetails)
         return true
     }
 
     private fun getMentionUsersAndAttributes(
-            body: CharSequence
+        body: CharSequence
     ): Pair<List<BodyAttribute>, List<SceytUser>> {
         val bodyAttributes = arrayListOf<BodyAttribute>()
         var mentionUsers = listOf<SceytUser>()
@@ -180,11 +212,11 @@ class MessageToSendHelper(
     }
 
     private fun getLinkAttachmentFromBody(
-            body: CharSequence?,
-            linkDetails: LinkPreviewDetails?
+        body: CharSequence?,
+        linkDetails: LinkPreviewDetails?
     ): Attachment? {
         val validLink = linkDetails?.link
-                ?: body.extractLinks().firstOrNull { it.isValidUrl(context) }
+            ?: body.extractLinks().firstOrNull { it.isValidUrl(context) }
         if (validLink != null) {
             val metadata = linkDetails?.toMetadata() ?: ""
             return Attachment.Builder("", validLink, AttachmentTypeEnum.Link.value)
@@ -199,8 +231,8 @@ class MessageToSendHelper(
     }
 
     private fun Message.MessageBuilder.initRelyMessage(
-            replyMessage: SceytMessage?,
-            replyThreadMessageId: Long?
+        replyMessage: SceytMessage?,
+        replyThreadMessageId: Long?
     ): Message.MessageBuilder {
         replyMessage?.let {
             setParentMessageId(it.id)
@@ -214,10 +246,10 @@ class MessageToSendHelper(
     }
 
     fun buildAttachment(
-            path: String,
-            url: String = "",
-            metadata: String = "",
-            attachmentType: String? = null
+        path: String,
+        url: String = "",
+        metadata: String = "",
+        attachmentType: String? = null
     ): Attachment? {
         val file = File(path)
         if (file.exists()) {

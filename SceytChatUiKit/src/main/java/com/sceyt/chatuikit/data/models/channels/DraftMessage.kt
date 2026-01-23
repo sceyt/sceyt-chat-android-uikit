@@ -8,15 +8,16 @@ import kotlinx.parcelize.Parcelize
 
 @Parcelize
 data class DraftMessage(
-        val channelId: Long,
-        val body: String?,
-        val createdAt: Long,
-        val mentionUsers: List<SceytUser>?,
-        val replyOrEditMessage: SceytMessage?,
-        val isReply: Boolean,
-        val bodyAttributes: List<BodyAttribute>?,
-        val attachments: List<DraftAttachment>?,
-        val voiceAttachment: DraftVoiceAttachment?,
+    val channelId: Long,
+    val body: String?,
+    val createdAt: Long,
+    val mentionUsers: List<SceytUser>?,
+    val replyOrEditMessage: SceytMessage?,
+    val isReply: Boolean,
+    val bodyAttributes: List<BodyAttribute>?,
+    val attachments: List<DraftAttachment>?,
+    val voiceAttachment: DraftVoiceAttachment?,
+    val viewOnce: Boolean,
 ) : Parcelable {
 
     fun hasContent() = !body.isNullOrBlank()

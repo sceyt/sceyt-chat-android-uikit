@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="#40FFFFFF">
+    <item>
+        <layer-list>
+            <item
+                android:id="@+id/backgroundLayer"
+                android:drawable="@drawable/sceyt_bg_circle_mode_highlight" />
+            <item
+                android:drawable="@drawable/sceyt_ic_camera_gallery"
+                android:gravity="center" />
+        </layer-list>
+    </item>
+</ripple>

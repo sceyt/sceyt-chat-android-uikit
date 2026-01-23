@@ -52,6 +52,13 @@
             android:name=".presentation.components.channel_info.preview.ImagePreviewActivity"
             android:theme="@style/DefaultFontTheme" />
         <activity
+            android:name=".presentation.components.channel.messages.preview.SelfDestructingMediaPreviewActivity"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
+            android:theme="@style/SceytPreviewThemeDark" />
+        <activity
+            android:name=".presentation.components.channel.messages.preview.SelfDestructingVoiceMessageActivity"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"/>
+        <activity
             android:name=".presentation.components.role.ChangeRoleActivity"
             android:exported="false"
             android:theme="@style/DefaultFontTheme" />
@@ -81,6 +88,19 @@
             android:name=".presentation.components.create_chat.create_group.CreateGroupActivity"
             android:exported="false"
             android:theme="@style/DefaultFontTheme" />
+
+        <activity
+            android:name=".presentation.components.camera.CustomCameraActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/SceytCameraTheme" />
+
+        <activity
+            android:name=".presentation.components.camera.CameraMediaPreviewActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/SceytCameraTheme" />
+
         <activity android:name="com.yalantis.ucrop.UCropActivity" />
 
         <activity

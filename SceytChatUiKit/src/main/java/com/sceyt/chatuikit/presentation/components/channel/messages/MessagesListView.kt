@@ -24,10 +24,10 @@ import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.PollOption
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.data.models.messages.SceytMessageType
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
 import com.sceyt.chatuikit.data.models.messages.SceytReactionTotal
 import com.sceyt.chatuikit.databinding.SceytMessagesListViewBinding
-import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.asActivity
 import com.sceyt.chatuikit.extensions.awaitAnimationEnd
 import com.sceyt.chatuikit.extensions.awaitToScrollFinish
@@ -48,7 +48,7 @@ import com.sceyt.chatuikit.persistence.differs.diff
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.persistence.file_transfer.ThumbFor
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState
+import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Downloaded
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.PauseUpload
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.PendingUpload
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Preparing
@@ -57,8 +57,7 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploaded
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploading
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.WaitingToUpload
 import com.sceyt.chatuikit.persistence.mappers.isLink
-import com.sceyt.chatuikit.presentation.common.KeyboardEventListener
-import com.sceyt.chatuikit.presentation.common.SceytDialog
+import com.sceyt.chatuikit.presentation.common.dialogs.SceytDialog
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.openFile
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
@@ -89,11 +88,14 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.cl
 import com.sceyt.chatuikit.presentation.components.channel.messages.popups.MessageActionsPopupMenu
 import com.sceyt.chatuikit.presentation.components.channel.messages.popups.PopupReactionsAdapter
 import com.sceyt.chatuikit.presentation.components.channel.messages.popups.ReactionsPopup
+import com.sceyt.chatuikit.presentation.components.channel.messages.preview.SelfDestructingMediaPreviewActivity
+import com.sceyt.chatuikit.presentation.components.channel.messages.preview.SelfDestructingVoiceMessageActivity
 import com.sceyt.chatuikit.presentation.components.forward.ForwardActivity
 import com.sceyt.chatuikit.presentation.components.media.MediaPreviewActivity
 import com.sceyt.chatuikit.presentation.components.message_info.MessageInfoActivity
 import com.sceyt.chatuikit.presentation.extensions.getUpdateMessage
 import com.sceyt.chatuikit.presentation.extensions.isPending
+import com.sceyt.chatuikit.presentation.helpers.KeyboardEventListener
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.styles.extensions.messages_list.setPageStateViews
 import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle
@@ -520,23 +522,25 @@ class MessagesListView @JvmOverloads constructor(
 
     internal fun updateMessage(message: SceytMessage): Boolean {
         var foundToUpdate = false
-        SceytLog.i(
-            TAG,
-            "Message updated: id ${message.id}, tid ${message.tid}, deliveryStatus ${message.deliveryStatus}"
-        )
         val data = messagesRV.getData()
         for ((index, item) in data.withIndex()) {
             if (item is MessageItem && item.message.tid == message.tid) {
                 val updatedItem = item.copy(message = item.message.getUpdateMessage(message))
                 val diff = item.message.diff(updatedItem.message)
                 updateAdapterItem(index, updatedItem, diff)
-                SceytLog.i(
-                    TAG, "Found to update: id ${item.message.id}, tid ${item.message.tid}," +
-                            " diff ${diff.statusChanged}, newStatus ${message.deliveryStatus}, index $index, size ${messagesRV.getData().size}"
+                SceytLog.d(
+                    TAG, "Found to update message: id ${item.message.id}, tid ${item.message.tid}," +
+                            " diff ${diff.statusChanged}, newStatus ${message.deliveryStatus}, index $index, size ${data.size}"
                 )
                 foundToUpdate = true
                 break
             }
+        }
+        if (!foundToUpdate) {
+            SceytLog.d(
+                TAG, "Not found to update message: id ${message.id}, tid ${message.tid}," +
+                        " deliveryStatus ${message.deliveryStatus}, data size ${data.size}"
+            )
         }
         return foundToUpdate
     }
@@ -574,36 +578,56 @@ class MessagesListView @JvmOverloads constructor(
     }
 
     internal fun messageEditedOrDeleted(updateMessage: SceytMessage) {
+        val data = messagesRV.getData()
         if (updateMessage.isPending() && updateMessage.state == MessageState.Deleted) {
             messagesRV.deleteMessageByTid(updateMessage.tid)
-            if (messagesRV.isEmpty())
+            if (messagesRV.isEmpty()) {
                 binding.pageStateView.updateState(PageState.StateEmpty())
+            }
             return
         }
-        val data = messagesRV.getData()
-        messagesRV.getData().findIndexed {
+
+        // Update main message
+        data.findIndexed {
             it is MessageItem && it.message.id == updateMessage.id
         }?.let { (index, item) ->
-            val message = (item as MessageItem).message
-            val updatedItem = item.copy(message = message.getUpdateMessage(updateMessage))
+            val oldMessage = (item as MessageItem).message
+            val updatedItem = item.copy(message = oldMessage.getUpdateMessage(updateMessage))
             messagesRV.updateItemAt(index, updatedItem)
 
-            if (updateMessage.state == MessageState.Deleted && message.state != MessageState.Deleted)
+            if (updateMessage.state == MessageState.Deleted && oldMessage.state != MessageState.Deleted)
                 messagesRV.adapter?.notifyItemChanged(index)
             else
-                updateItem(index, updatedItem, message.diff(updatedItem.message))
+                updateItem(index, updatedItem, oldMessage.diff(updatedItem.message))
         }
 
-        // Check reply message to update
-        data.filter {
-            it is MessageItem && it.message.parentMessage?.id == updateMessage.id
-        }.forEach { item ->
-            data.findIndexed {
-                it is MessageItem && it.message.id == (item as MessageItem).message.id
-            }?.let { (index, msg) ->
-                val oldMessage = (msg as MessageItem).message
-                val updatedItem =
-                    msg.copy(message = oldMessage.copy(parentMessage = updateMessage))
+        // Update replies
+        data.forEachIndexed { index, it ->
+            if (it is MessageItem && it.message.parentMessage?.id == updateMessage.id) {
+                val oldMessage = it.message
+                val updatedItem = it.copy(message = oldMessage.copy(parentMessage = updateMessage))
+                updateAdapterItem(index, updatedItem, oldMessage.diff(updatedItem.message))
+            }
+        }
+    }
+
+    internal fun messageSelfDestructed(updateMessage: SceytMessage) {
+        val data = messagesRV.getData()
+        // Update main message
+        data.findIndexed {
+            it is MessageItem && it.message.id == updateMessage.id
+        }?.let { (index, item) ->
+            val oldMessage = (item as MessageItem).message
+            val updatedItem = item.copy(message = oldMessage.getUpdateMessage(updateMessage))
+            messagesRV.updateItemAt(index, updatedItem)
+            messagesRV.adapter?.notifyItemChanged(index)
+        }
+
+        // Update replies
+        data.forEachIndexed { index, it ->
+            if (it is MessageItem && it.message.parentMessage?.id == updateMessage.id) {
+                val oldMessage = it.message
+                val updatedItem = it.copy(message = oldMessage.copy(parentMessage = updateMessage))
                 updateAdapterItem(index, updatedItem, oldMessage.diff(updatedItem.message))
             }
         }
@@ -694,7 +718,7 @@ class MessagesListView @JvmOverloads constructor(
         }
 
         // Update reply message
-        if (data.state == TransferState.Downloaded) {
+        if (data.state == Downloaded) {
             messages.forEachIndexed { index, item ->
                 if (item is MessageItem && item.message.parentMessage?.tid == data.messageTid) {
                     val message = item.message
@@ -1074,6 +1098,27 @@ class MessagesListView @JvmOverloads constructor(
     }
 
     override fun onAttachmentClick(view: View, item: FileListItem, message: SceytMessage) {
+        if (message.type == SceytMessageType.ViewOnce.value) {
+            val allowedStates = setOf(Downloaded, Uploaded, ThumbLoaded)
+            if (item.attachment.transferState !in allowedStates) return
+
+            if (item.type == AttachmentTypeEnum.Voice) {
+                SelfDestructingVoiceMessageActivity.launch(
+                    context = context,
+                    message = message,
+                    attachment = item.attachment,
+                    styleId = style.messageItemStyle.styleId
+                )
+            } else {
+                SelfDestructingMediaPreviewActivity.launchActivity(
+                    context = context,
+                    message = message,
+                    attachment = item.attachment
+                )
+            }
+            return
+        }
+
         when (item.type) {
             AttachmentTypeEnum.Image -> {
                 MediaPreviewActivity.launch(
@@ -1274,5 +1319,9 @@ class MessagesListView @JvmOverloads constructor(
                 holder.bind(expandedItem, MessageDiff.DEFAULT_FALSE.copy(bodyChanged = true))
             }
         )
+    }
+
+    companion object {
+        private const val TAG = "MessagesListView"
     }
 }
