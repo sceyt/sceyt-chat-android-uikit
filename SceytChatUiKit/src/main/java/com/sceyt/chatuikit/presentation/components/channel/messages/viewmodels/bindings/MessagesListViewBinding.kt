@@ -374,6 +374,9 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     }
 
     fun onMessageDisplayed(message: SceytMessage) {
+        if (channel.userRole.isNullOrEmpty())
+            return
+
         if (!message.incoming || message.userMarkers?.any { it.name == MarkerType.Displayed.value } == true)
             return
 
