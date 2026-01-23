@@ -129,6 +129,14 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         query: String,
         config: ChannelListConfig,
         params: SearchChannelParams,
+    ): SceytResponse<List<SceytChannel>> = retryOnResendableError {
+        getChannelsImpl(query, config, params)
+    }
+
+    private suspend fun getChannelsImpl(
+        query: String,
+        config: ChannelListConfig,
+        params: SearchChannelParams,
     ): SceytResponse<List<SceytChannel>> {
         return suspendCancellableCoroutine { continuation ->
             val channelListQuery = createChannelListQuery(config, query, params).also {
@@ -157,14 +165,17 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         config: ChannelListConfig,
         params: SearchChannelParams,
     ): SceytResponse<List<SceytChannel>> {
-        val channelListQuery = if (::channelsQuery.isInitialized)
-            channelsQuery
-        else {
+        if (!::channelsQuery.isInitialized) {
             return getChannels(query, config, params)
         }
+        return retryOnResendableError {
+            loadMoreChannelsImpl()
+        }
+    }
 
+    private suspend fun loadMoreChannelsImpl(): SceytResponse<List<SceytChannel>> {
         return suspendCancellableCoroutine { continuation ->
-            channelListQuery.loadNext(object : ChannelsCallback {
+            channelsQuery.loadNext(object : ChannelsCallback {
                 override fun onResult(channels: MutableList<Channel>?) {
                     if (channels.isNullOrEmpty())
                         continuation.safeResume(SceytResponse.Success(emptyList()))
