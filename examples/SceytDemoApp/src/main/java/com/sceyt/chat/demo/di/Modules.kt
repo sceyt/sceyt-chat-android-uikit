@@ -19,7 +19,7 @@ import com.sceyt.chat.demo.presentation.welcome.welcome.WelcomeViewModel
 import com.sceyt.chatuikit.presentation.components.role.viewmodel.RoleViewModel
 import com.sceyt.chatuikit.presentation.components.select_users.viewmodel.UsersViewModel
 import okhttp3.OkHttpClient
-import org.koin.androidx.viewmodel.dsl.viewModel
+import org.koin.core.module.dsl.viewModelOf
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import retrofit2.Retrofit
@@ -37,14 +37,14 @@ val appModules = module {
 }
 
 val viewModelModules = module {
-    viewModel { UsersViewModel() }
-    viewModel { RoleViewModel() }
-    viewModel { CreateAccountViewModel(get(), get(), get()) }
-    viewModel { EditProfileViewModel(get()) }
-    viewModel { SelectAccountsBottomSheetViewModel(get()) }
-    viewModel { WelcomeViewModel(get(), get()) }
-    viewModel { SplashViewModel(get()) }
-    viewModel { UserProfileViewModel(get(), get()) }
+    viewModelOf(::UsersViewModel)
+    viewModelOf(::RoleViewModel)
+    viewModelOf(::CreateAccountViewModel)
+    viewModelOf(::EditProfileViewModel)
+    viewModelOf(::SelectAccountsBottomSheetViewModel)
+    viewModelOf(::WelcomeViewModel)
+    viewModelOf(::SplashViewModel)
+    viewModelOf(::UserProfileViewModel)
 }
 
 val apiModule = module {
