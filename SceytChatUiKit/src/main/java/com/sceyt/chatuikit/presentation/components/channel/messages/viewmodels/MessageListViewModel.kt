@@ -24,6 +24,7 @@ import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNear
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNewest
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadPrev
+import com.sceyt.chatuikit.data.models.PaginationResponse.Nothing
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.SyncNearMessagesResult
 import com.sceyt.chatuikit.data.models.channels.DraftAttachment
@@ -39,6 +40,7 @@ import com.sceyt.chatuikit.data.models.messages.PollOption
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytMessageType
 import com.sceyt.chatuikit.data.models.messages.SceytReactionTotal
+import com.sceyt.chatuikit.data.models.onErrorNonNull
 import com.sceyt.chatuikit.data.models.onSuccess
 import com.sceyt.chatuikit.data.models.onSuccessNotNull
 import com.sceyt.chatuikit.data.repositories.Keys.KEY_VIEW_ONCE_INFO_SHOWN
@@ -97,6 +99,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.events.React
 import com.sceyt.chatuikit.presentation.extensions.isNotPending
 import com.sceyt.chatuikit.presentation.helpers.DebounceHelper
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
+import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.services.SceytSyncManager
 import com.sceyt.chatuikit.shared.helpers.LinkPreviewHelper
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
@@ -105,8 +108,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.firstOrNull
@@ -168,13 +171,8 @@ class MessageListViewModel(
     val channel: SceytChannel get() = _channel
     val conversationId: Long get() = _conversationId
 
-    private val _loadMessagesFlow = MutableStateFlow<PaginationResponse<SceytMessage>>(
-        PaginationResponse.Nothing()
-    )
-    val loadMessagesFlow: StateFlow<PaginationResponse<SceytMessage>> = _loadMessagesFlow
-
-    private val _joinLiveData = MutableLiveData<SceytResponse<SceytChannel>>()
-    val joinLiveData = _joinLiveData.asLiveData()
+    private val _loadMessagesFlow = MutableStateFlow<PaginationResponse<SceytMessage>>(Nothing())
+    val loadMessagesFlow = _loadMessagesFlow.asStateFlow()
 
     private val _messageMarkerLiveData = MutableLiveData<List<SceytResponse<MessageListMarker>>>()
     val messageMarkerLiveData = _messageMarkerLiveData.asLiveData()
@@ -197,7 +195,7 @@ class MessageListViewModel(
     // Chanel events
     val onChannelEventFlow: Flow<ChannelActionEvent>
     val onChannelMemberActivityEventFlow: Flow<ChannelMemberActivityEvent>
-    private val _onChannelUpdatedEventFlow = broadcastSharedFlow<SceytChannel>()
+    private val _onChannelUpdatedEventFlow = broadcastSharedFlow<SceytChannel>(replay = 1)
     val onChannelUpdatedEventFlow = _onChannelUpdatedEventFlow.asSharedFlow()
 
     //Command events
@@ -831,7 +829,9 @@ class MessageListViewModel(
 
     fun join() {
         viewModelScope.launch(Dispatchers.IO) {
-            channelInteractor.join(channel.id)
+            channelInteractor.join(channel.id).onErrorNonNull {
+                pageStateLiveDataInternal.postValue(PageState.StateError(it))
+            }
         }
     }
 
@@ -843,7 +843,9 @@ class MessageListViewModel(
 
     fun markChannelAsRead(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            channelInteractor.markChannelAsRead(channelId)
+            channelInteractor.markChannelAsRead(channelId).onErrorNonNull {
+                pageStateLiveDataInternal.postValue(PageState.StateError(it))
+            }
         }
     }
 
@@ -902,7 +904,9 @@ class MessageListViewModel(
 
     fun clearHistory(forEveryOne: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
-            channelInteractor.clearHistory(channel.id, forEveryOne)
+            channelInteractor.clearHistory(channel.id, forEveryOne).onErrorNonNull {
+                pageStateLiveDataInternal.postValue(PageState.StateError(it))
+            }
         }
     }
 
