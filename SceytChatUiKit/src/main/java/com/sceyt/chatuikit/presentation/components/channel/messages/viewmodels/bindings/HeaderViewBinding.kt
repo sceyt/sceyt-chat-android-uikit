@@ -4,7 +4,6 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.managers.connection.event.ConnectionStateData
-import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isDirect
@@ -73,10 +72,4 @@ fun MessageListViewModel.bind(
         .onEach(headerView::handleMemberActivityEvent)
         .flowOn(Dispatchers.Main)
         .launchIn(lifecycleOwner.lifecycleScope)
-
-    joinLiveData.observe(lifecycleOwner) {
-        if (!replyInThread && it is SceytResponse.Success) {
-            headerView.setChannel(it.data ?: return@observe, false)
-        }
-    }
 }
