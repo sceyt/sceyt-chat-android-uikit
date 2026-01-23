@@ -9,7 +9,7 @@ import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
 import androidx.appcompat.widget.AppCompatTextView
-import com.sceyt.chatuikit.presentation.common.RoundedBackgroundSpan
+import com.sceyt.chatuikit.presentation.common.spans.RoundedBackgroundSpan
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
 class ClickableTextView @JvmOverloads constructor(

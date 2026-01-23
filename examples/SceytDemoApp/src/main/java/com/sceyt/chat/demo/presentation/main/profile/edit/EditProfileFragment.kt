@@ -18,7 +18,7 @@ import com.sceyt.chat.demo.presentation.common.ui.handleUsernameValidation
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
-import com.sceyt.chatuikit.presentation.common.SceytLoader
+import com.sceyt.chatuikit.presentation.common.dialogs.SceytLoader
 import com.sceyt.chatuikit.presentation.components.channel_info.dialogs.EditAvatarTypeDialog
 import com.sceyt.chatuikit.shared.helpers.picker.FilePickerHelper
 import com.sceyt.chatuikit.styles.cropper.ImageCropperStyle

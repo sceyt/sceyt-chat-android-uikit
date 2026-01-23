@@ -7,6 +7,7 @@ import androidx.annotation.ColorInt
 import androidx.annotation.StyleableRes
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
+import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.formatters.attributes.MessageBodyFormatterAttributes
@@ -26,6 +27,7 @@ data class ReplyMessageStyle(
         val attachmentDurationFormatter: Formatter<Long>,
         val senderNameFormatter: Formatter<SceytUser>,
         val messageBodyFormatter: Formatter<MessageBodyFormatterAttributes>,
+        val unsupportedMessageBodyFormatter: Formatter<SceytMessage>,
         val attachmentIconProvider: VisualProvider<SceytAttachment, Drawable?>
 ) {
     companion object {
@@ -86,6 +88,7 @@ data class ReplyMessageStyle(
             attachmentDurationFormatter = SceytChatUIKit.formatters.mediaDurationFormatter,
             senderNameFormatter = SceytChatUIKit.formatters.userNameFormatter,
             messageBodyFormatter = SceytChatUIKit.formatters.repliedMessageBodyFormatter,
+            unsupportedMessageBodyFormatter = SceytChatUIKit.formatters.unsupportedMessageShortBodyFormatter,
             attachmentIconProvider = SceytChatUIKit.providers.attachmentIconProvider
         ).let { styleCustomizer.apply(context, it) }
     }

@@ -22,24 +22,26 @@ import com.sceyt.chatuikit.persistence.database.DatabaseConstants.ATTACHMENT_TAB
     indices = [Index(value = ["messageTid", "url"], unique = true)]
 )
 internal data class AttachmentEntity(
-        @PrimaryKey(autoGenerate = true)
-        val primaryKey: Int = 0,
-        @ColumnInfo(index = true)
-        val id: Long?,
-        val messageId: Long,
-        @ColumnInfo(index = true)
-        val messageTid: Long,
-        val channelId: Long,
-        val userId: String?,
-        val name: String,
-        @ColumnInfo(index = true)
-        val type: String,
-        val metadata: String?,
-        val fileSize: Long,
-        @ColumnInfo(index = true)
-        val createdAt: Long,
-        @ColumnInfo(index = true)
-        val url: String?,
-        val filePath: String?,
-        val originalFilePath: String?
+    @PrimaryKey(autoGenerate = true)
+    val primaryKey: Int = 0,
+    @ColumnInfo(index = true)
+    val id: Long?,
+    val messageId: Long,
+    @ColumnInfo(index = true)
+    val messageTid: Long,
+    val channelId: Long,
+    val userId: String?,
+    val name: String,
+    @ColumnInfo(index = true)
+    val type: String,
+    val metadata: String?,
+    val fileSize: Long,
+    @ColumnInfo(index = true)
+    val createdAt: Long,
+    @ColumnInfo(index = true)
+    val url: String?,
+    val filePath: String?,
+    val originalFilePath: String?,
+    @ColumnInfo(defaultValue = "0")
+    val viewOnce: Boolean
 )

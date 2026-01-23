@@ -17,7 +17,7 @@ import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.hideSoftInput
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.launchActivity
-import com.sceyt.chatuikit.presentation.common.SceytLoader
+import com.sceyt.chatuikit.presentation.common.dialogs.SceytLoader
 import com.sceyt.chatuikit.presentation.root.PageState
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach

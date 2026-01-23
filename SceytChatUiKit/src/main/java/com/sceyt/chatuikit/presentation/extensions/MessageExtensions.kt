@@ -7,6 +7,7 @@ import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.channels.DraftMessage
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
+import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
@@ -110,10 +111,18 @@ fun SceytMessage.getFormattedBodyWithAttachments(
     mentionTextStyle: TextStyle,
     attachmentNameFormatter: Formatter<SceytAttachment>,
     mentionUserNameFormatter: Formatter<SceytUser>,
+    unsupportedMessageBodyFormatter: Formatter<SceytMessage>,
     mentionClickListener: ((String) -> Unit)?,
 ): CharSequence {
     val body = when {
         state == MessageState.Deleted -> context.getString(R.string.sceyt_message_was_deleted)
+        !isSupportedType() ->{
+            unsupportedMessageBodyFormatter.format(context, this)
+        }
+        type == SceytMessageType.ViewOnce.value && !attachments.isNullOrEmpty() -> {
+            //viewOnce type always has one attachment
+            attachmentNameFormatter.format(context, attachments[0])
+        }
         attachments.isNullOrEmpty() || attachments.firstOrNull()?.type == AttachmentTypeEnum.Link.value -> {
             buildWithAttributes(
                 context = context,
@@ -124,7 +133,7 @@ fun SceytMessage.getFormattedBodyWithAttachments(
         }
 
         attachments.size == 1 -> {
-            body.ifEmpty { attachmentNameFormatter.format(context, attachments[0]) }
+            body.ifEmpty  { attachmentNameFormatter.format(context, attachments[0]) }
         }
 
         else -> context.getString(R.string.sceyt_file)
@@ -245,4 +254,10 @@ fun SceytMessage.isSupportedType(): Boolean {
 
 fun SceytMessage.isSystemMessage(): Boolean {
     return getMessageType() is SceytMessageType.System
+}
+
+fun SceytMessage.isSelfDestructed(): Boolean {
+    return if (incoming) {
+        userMarkers?.any { it.name == MarkerType.Opened.value } ?: false
+    } else markerTotals?.any { it.name == MarkerType.Opened.value } ?: false
 }

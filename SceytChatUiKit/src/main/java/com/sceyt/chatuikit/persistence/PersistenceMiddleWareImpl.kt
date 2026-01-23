@@ -141,9 +141,8 @@ internal class PersistenceMiddleWareImpl(
     }
 
     private fun onMessageStatusChangeEvent(data: MessageStatusChangeData) {
-        scope.launch(Dispatchers.IO) { messagesLogic.onMessageStatusChangeEvent(data) }
-        scope.launch(Dispatchers.IO) { channelLogic.onMessageStatusChangeEvent(data) }
         scope.launch(Dispatchers.IO) { messageMarkerLogic.onMessageStatusChangeEvent(data) }
+        scope.launch(Dispatchers.IO) { channelLogic.onMessageStatusChangeEvent(data) }
     }
 
     private fun onMessageMarkerEvent(data: MessageMarkerEventData) {
@@ -614,7 +613,8 @@ internal class PersistenceMiddleWareImpl(
     }
 
     override suspend fun deleteMessage(
-        channelId: Long, message: SceytMessage,
+        channelId: Long,
+        message: SceytMessage,
         deleteType: DeleteMessageType,
     ): SceytResponse<SceytMessage> {
         return messagesLogic.deleteMessage(channelId, message, deleteType)
@@ -702,10 +702,6 @@ internal class PersistenceMiddleWareImpl(
 
     override suspend fun updateTransferDataByMsgTid(data: TransferData) {
         attachmentsLogic.updateTransferDataByMsgTid(data)
-    }
-
-    override suspend fun updateAttachmentWithTransferData(data: TransferData) {
-        attachmentsLogic.updateAttachmentWithTransferData(data)
     }
 
     override suspend fun updateAttachmentFilePathAndMetadata(

@@ -5,6 +5,7 @@ import androidx.recyclerview.widget.ListUpdateCallback
 import com.sceyt.chatuikit.TestLogger
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.logger.SceytLogLevel
+import com.sceyt.chatuikit.presentation.common.recyclerview.AsyncListDiffer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher

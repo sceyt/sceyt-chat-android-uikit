@@ -7,6 +7,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.persistence.differs.diffBetweenServerData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
+import com.sceyt.chatuikit.persistence.file_transfer.TransferStateValidator
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -99,7 +100,22 @@ class AttachmentsCache {
 
     suspend fun updateAttachmentTransferData(updateDate: TransferData) {
         mutex.withLock {
-            fun update(attachment: SceytAttachment): SceytAttachment {
+            fun update(attachment: SceytAttachment): SceytAttachment? {
+                // Validate state transition to prevent out-of-order updates
+                val isValid = TransferStateValidator.isValidStateTransition(
+                    currentState = attachment.transferState,
+                    newState = updateDate.state,
+                    currentProgress = attachment.progressPercent ?: 0f,
+                    newProgress = updateDate.progressPercent
+                )
+                
+                if (!isValid) {
+                    println("AttachmentsCache: Skipping invalid update for attachment ${attachment.messageTid} - " +
+                            "current: ${attachment.transferState}/${attachment.progressPercent}%, " +
+                            "new: ${updateDate.state}/${updateDate.progressPercent}%")
+                    return null
+                }
+                
                 return attachment.copy(
                     transferState = updateDate.state,
                     progressPercent = updateDate.progressPercent,
@@ -118,13 +134,18 @@ class AttachmentsCache {
                         TransferState.ErrorUpload, TransferState.PauseUpload, TransferState.Preparing,
                         TransferState.WaitingToUpload ->
                             if (attachment.filePath == updateDate.filePath) {
-                                it[updateDate.messageTid] = update(attachment)
+                                update(attachment)?.let { updatedAttachment ->
+                                    it[updateDate.messageTid] = updatedAttachment
+                                }
                             }
 
                         TransferState.Downloading, TransferState.Downloaded, TransferState.PendingDownload,
                         TransferState.ErrorDownload, TransferState.PauseDownload -> {
-                            if (attachment.url == updateDate.url)
-                                it[updateDate.messageTid] = update(attachment)
+                            if (attachment.url == updateDate.url) {
+                                update(attachment)?.let { updatedAttachment ->
+                                    it[updateDate.messageTid] = updatedAttachment
+                                }
+                            }
                         }
 
                         TransferState.FilePathChanged, TransferState.ThumbLoaded -> return@withLock

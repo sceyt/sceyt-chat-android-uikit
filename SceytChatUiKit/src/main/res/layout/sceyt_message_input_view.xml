@@ -64,30 +64,6 @@
         android:paddingVertical="8dp"
         app:layout_constraintTop_toBottomOf="@+id/linkPreviewView">
 
-        <com.sceyt.chatuikit.presentation.components.channel.input.mention.MentionSupportEditText
-            android:id="@+id/messageInput"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="8dp"
-            android:gravity="center_vertical"
-            android:hint="@string/sceyt_write_a_message"
-            android:includeFontPadding="false"
-            android:inputType="textMultiLine|textCapSentences"
-            android:maxLength="5000"
-            android:maxLines="6"
-            android:minHeight="35dp"
-            android:paddingHorizontal="13dp"
-            android:paddingVertical="8dp"
-            android:textColor="@color/sceyt_color_text_primary"
-            android:textColorHint="@color/sceyt_color_text_footnote"
-            android:textSize="16sp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/icSendMessage"
-            app:layout_constraintStart_toEndOf="@+id/icAddAttachments"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:background="@drawable/sceyt_bg_corners_20"
-            tools:backgroundTint="@color/sceyt_color_surface_1" />
-
         <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/icAddAttachments"
             android:layout_width="28dp"
@@ -99,6 +75,75 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@+id/icSendMessage"
             app:srcCompat="@drawable/sceyt_ic_upload_file" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/layoutInputWithActions"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="8dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/icSendMessage"
+            app:layout_constraintStart_toEndOf="@+id/icAddAttachments"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:background="@drawable/sceyt_bg_corners_20"
+            tools:backgroundTint="@color/sceyt_color_surface_1">
+
+            <com.sceyt.chatuikit.presentation.components.channel.input.components.InputActionsView
+                android:id="@+id/rvLeadingActions"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:clipToPadding="false"
+                android:gravity="center_vertical"
+                android:layoutDirection="locale"
+                android:paddingStart="8dp"
+                android:paddingEnd="0dp"
+                android:visibility="gone"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintHeight_min="35dp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_bias="1" />
+
+            <com.sceyt.chatuikit.presentation.components.channel.input.mention.MentionSupportEditText
+                android:id="@+id/messageInput"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:background="@android:color/transparent"
+                android:gravity="center_vertical"
+                android:hint="@string/sceyt_write_a_message"
+                android:includeFontPadding="false"
+                android:inputType="textMultiLine|textCapSentences"
+                android:maxLength="5000"
+                android:maxLines="6"
+                android:padding="8dp"
+                android:textColor="@color/sceyt_color_text_primary"
+                android:textColorHint="@color/sceyt_color_text_footnote"
+                android:textSize="16sp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/rvTrailingActions"
+                app:layout_constraintHeight_min="35dp"
+                app:layout_constraintStart_toEndOf="@+id/rvLeadingActions"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_goneMarginEnd="@dimen/sceyt_space_8dp"
+                app:layout_goneMarginStart="8dp" />
+
+            <com.sceyt.chatuikit.presentation.components.channel.input.components.InputActionsView
+                android:id="@+id/rvTrailingActions"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:clipToPadding="false"
+                android:gravity="center_vertical"
+                android:layoutDirection="locale"
+                android:paddingStart="0dp"
+                android:paddingEnd="8dp"
+                android:visibility="gone"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHeight_min="35dp"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_bias="1" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
         <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/icSendMessage"

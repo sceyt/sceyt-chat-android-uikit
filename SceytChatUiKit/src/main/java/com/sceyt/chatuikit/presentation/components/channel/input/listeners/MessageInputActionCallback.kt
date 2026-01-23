@@ -16,13 +16,13 @@ interface MessageInputActionCallback {
     fun sendEditMessage(message: SceytMessage, linkDetails: LinkPreviewDetails?)
     fun sendChannelEvent(action: InputUserAction)
     fun updateDraftMessage(
-            text: Editable?,
-            attachments: List<Attachment>,
-            audioRecordData: AudioRecordData?,
-            mentionUserIds: List<Mention>,
-            styling: List<BodyStyleRange>?,
-            replyOrEditMessage: SceytMessage?,
-            isReply: Boolean,
+        text: Editable?,
+        attachments: List<Attachment>,
+        audioRecordData: AudioRecordData?,
+        mentionUserIds: List<Mention>,
+        styling: List<BodyStyleRange>?,
+        replyOrEditMessage: SceytMessage?,
+        isReply: Boolean,
     )
 
     fun mention(query: String)
@@ -31,4 +31,6 @@ interface MessageInputActionCallback {
     fun scrollToNext()
     fun scrollToPrev()
     fun createPoll()
+    fun toggleViewOnce(selected: Boolean)
+    fun acceptedViewOnceInfoDialog()
 }

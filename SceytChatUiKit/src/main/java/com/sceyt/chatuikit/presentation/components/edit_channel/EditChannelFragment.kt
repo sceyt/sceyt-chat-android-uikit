@@ -28,8 +28,8 @@ import com.sceyt.chatuikit.extensions.setBundleArguments
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.extensions.isPublic
 import com.sceyt.chatuikit.persistence.extensions.resizeImage
-import com.sceyt.chatuikit.presentation.common.SceytLoader
-import com.sceyt.chatuikit.presentation.common.SceytLoader.showLoading
+import com.sceyt.chatuikit.presentation.common.dialogs.SceytLoader
+import com.sceyt.chatuikit.presentation.common.dialogs.SceytLoader.showLoading
 import com.sceyt.chatuikit.presentation.components.channel_info.dialogs.EditAvatarTypeDialog
 import com.sceyt.chatuikit.presentation.components.channel_info.members.ChannelMembersFragment
 import com.sceyt.chatuikit.presentation.components.create_chat.viewmodel.URIValidation

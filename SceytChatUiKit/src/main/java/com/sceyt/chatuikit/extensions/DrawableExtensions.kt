@@ -27,6 +27,16 @@ fun Drawable?.toSpannableString(
     return builder
 }
 
+fun Drawable.resizeByMaxSize(maxSizeDp: Int): Drawable {
+    return resize(calculateScaledSize(maxSizeDp))
+}
+
+fun Drawable.resize(size: Size): Drawable {
+    return mutate().apply {
+        setBounds(0, 0, size.width, size.height)
+    }
+}
+
 fun Drawable?.applyTint(@ColorInt tintColor: Int): Drawable? {
     this ?: return null
     if (tintColor == 0) return this

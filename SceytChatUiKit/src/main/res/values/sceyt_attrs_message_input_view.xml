@@ -37,6 +37,7 @@
         <attr name="sceytUiMessageInputEnableSendAttachment" format="boolean" />
         <attr name="sceytUiMessageInputEnableMention" format="boolean" />
         <attr name="sceytUiMessageInputEnableTextStyling" format="boolean" />
+        <attr name="sceytUiMessageInputEnableSendViewOnceMessage" format="boolean" />
 
         <attr name="sceytUiMessageInputSendIconBackgroundColor" format="reference|color" />
 
@@ -242,6 +243,8 @@
         <attr name="sceytUiMessageInputVoiceRecorderArrowToLockIcon" format="reference" />
         <attr name="sceytUiMessageInputVoiceRecorderStopRecordingIcon" format="reference" />
         <attr name="sceytUiMessageInputVoiceRecorderSendVoiceIcon" format="reference" />
+        <attr name="sceytUiMessageInputVoiceRecorderViewOnceIcon" format="reference" />
+        <attr name="sceytUiMessageInputVoiceRecorderViewOnceSelectedIcon" format="reference" />
 
         <attr name="sceytUiMessageInputVoiceRecorderSlideToCancelText" format="string" localization="suggested" />
         <attr name="sceytUiMessageInputVoiceRecorderSlideToCancelTextColor" format="reference|color" />
@@ -282,6 +285,8 @@
         <attr name="sceytUiMessageInputVoiceRecordPlaybackPlayIcon" format="reference" />
         <attr name="sceytUiMessageInputVoiceRecordPlaybackPauseIcon" format="reference" />
         <attr name="sceytUiMessageInputVoiceRecordPlaybackSendVoiceIcon" format="reference" />
+        <attr name="sceytUiMessageInputVoiceRecordPlaybackViewOnceIcon" format="reference" />
+        <attr name="sceytUiMessageInputVoiceRecordPlaybackViewOnceSelectedIcon" format="reference" />
 
         <attr name="sceytUiMessageInputVoiceRecordPlaybackDurationTextColor" format="reference|color" />
         <attr name="sceytUiMessageInputVoiceRecordPlaybackDurationTextSize" format="dimension" />
@@ -317,5 +322,19 @@
 
         <!-- Not implemented yet-->
         <attr name="sceytUiMessageInputEnableLinkPreview" format="boolean" />
+
+        <!-- Input Actions - Leading -->
+        <attr name="sceytUiInputLeadingActionsBackgroundColor" format="reference|color" />
+        <attr name="sceytUiInputLeadingActionsIconTint" format="reference|color" />
+        <attr name="sceytUiInputLeadingActionsIconSize" format="dimension" />
+        <attr name="sceytUiInputLeadingActionsSpacing" format="dimension" />
+        <attr name="sceytUiInputLeadingActionsAnimationDuration" format="integer" />
+
+        <!-- Input Actions - Trailing -->
+        <attr name="sceytUiInputTrailingActionsBackgroundColor" format="reference|color" />
+        <attr name="sceytUiInputTrailingActionsIconTint" format="reference|color" />
+        <attr name="sceytUiInputTrailingActionsIconSize" format="dimension" />
+        <attr name="sceytUiInputTrailingActionsSpacing" format="dimension" />
+        <attr name="sceytUiInputTrailingActionsAnimationDuration" format="integer" />
     </declare-styleable>
 </resources>

@@ -25,6 +25,7 @@ open class DefaultNotificationBodyFormatter : Formatter<PushData> {
             mentionTextStyle = TextStyle(style = Typeface.BOLD),
             mentionUserNameFormatter = SceytChatUIKit.formatters.mentionUserNameFormatter,
             attachmentNameFormatter = SceytChatUIKit.formatters.attachmentNameFormatter,
+            unsupportedMessageBodyFormatter = SceytChatUIKit.formatters.unsupportedMessageShortBodyFormatter,
             mentionClickListener = null
         )
 
@@ -32,6 +33,10 @@ open class DefaultNotificationBodyFormatter : Formatter<PushData> {
             when (from.message.type) {
                 SceytMessageType.Poll.value -> {
                     append(SceytConstants.emojiPoll.whitSpace())
+                }
+
+                SceytMessageType.ViewOnce.value -> {
+                    append(SceytConstants.emojiViewOnce.whitSpace())
                 }
 
                 else -> {

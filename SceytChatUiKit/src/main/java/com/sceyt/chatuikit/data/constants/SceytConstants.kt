@@ -29,4 +29,5 @@ object SceytConstants {
     const val emojiVoice = "🎤"
     const val emojiFile = "📄"
     const val emojiPoll = "📊"
+    const val emojiViewOnce = "➀"
 }

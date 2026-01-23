@@ -59,7 +59,8 @@ class GetNearAttachmentsTests {
             createdAt = id,
             url = "url_$id",
             filePath = "path_$id",
-            originalFilePath = null
+            originalFilePath = null,
+            viewOnce = false
         )
     }
 

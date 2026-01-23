@@ -21,7 +21,7 @@ import com.sceyt.chatuikit.extensions.setMultiLineWithImeOptions
 import com.sceyt.chatuikit.extensions.setOnlyClickable
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.logicimpl.message.ChannelId
-import com.sceyt.chatuikit.presentation.common.SceytDialog
+import com.sceyt.chatuikit.presentation.common.dialogs.SceytDialog
 import com.sceyt.chatuikit.presentation.components.create_poll.adapters.CreatePollOptionsAdapter
 import com.sceyt.chatuikit.presentation.components.create_poll.adapters.PollOptionItemAnimator
 import com.sceyt.chatuikit.shared.helpers.ReorderSwipeController

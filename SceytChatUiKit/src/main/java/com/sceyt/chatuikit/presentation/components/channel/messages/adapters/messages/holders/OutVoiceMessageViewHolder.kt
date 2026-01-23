@@ -18,6 +18,7 @@ import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.media.audio.AudioPlayer
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper.OnAudioPlayer
+import com.sceyt.chatuikit.media.audio.VoiceStateCoordinator
 import com.sceyt.chatuikit.media.audio.alreadyInitialized
 import com.sceyt.chatuikit.media.audio.isCurrentPlayer
 import com.sceyt.chatuikit.media.audio.isPlaying
@@ -55,6 +56,7 @@ class OutVoiceMessageViewHolder(
     private val binding: SceytItemOutVoiceMessageBinding,
     private val viewPoolReactions: RecyclerView.RecycledViewPool,
     private val style: MessageItemStyle,
+    private val isViewOnce: Boolean,
     private val messageListeners: MessageClickListeners.ClickListeners?,
     private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
     private val voicePlayPauseListener: ((FileListItem, SceytMessage, playing: Boolean) -> Unit)?,
@@ -63,7 +65,6 @@ class OutVoiceMessageViewHolder(
     needMediaDataCallback = needMediaDataCallback
 ) {
     private var lastFilePath: String? = ""
-
     private var currentPlaybackSpeed: PlaybackSpeed = PlaybackSpeed.X1
         set(value) {
             field = value
@@ -75,7 +76,11 @@ class OutVoiceMessageViewHolder(
             setMessageItemStyle()
 
             root.setOnClickListener {
-                messageListeners?.onMessageClick(it, messageListItem as MessageItem)
+                if (isViewOnce) {
+                    messageListeners?.onAttachmentClick(it, fileItem, requireMessage)
+                } else {
+                    messageListeners?.onMessageClick(it, messageListItem as MessageItem)
+                }
             }
 
             root.setOnLongClickListener {
@@ -133,6 +138,16 @@ class OutVoiceMessageViewHolder(
                 initAttachment()
 
             initVoiceMessage()
+            updateViewOnceUI()
+        }
+    }
+    
+    private fun updateViewOnceUI() {
+        with(binding) {
+            ivViewOnceIcon.isVisible = isViewOnce
+            playPauseButton.isClickable = !isViewOnce
+            playBackSpeed.isClickable = !isViewOnce
+            seekBar.isEnabled = !isViewOnce
         }
     }
 
@@ -188,6 +203,9 @@ class OutVoiceMessageViewHolder(
     private fun onPlayPauseClick(attachment: SceytAttachment) {
         if (attachment.transferState != Uploaded && attachment.transferState != Downloaded)
             return
+
+        // Stop any active recording before starting playback
+        VoiceStateCoordinator.stopRecordingIfActive()
 
         if (AudioPlayerHelper.alreadyInitialized(attachment)) {
             AudioPlayerHelper.getCurrentPlayer()?.addEventListener(
@@ -357,6 +375,8 @@ class OutVoiceMessageViewHolder(
         style.voiceSpeedTextStyle.apply(playBackSpeed)
         style.voiceDurationTextStyle.apply(voiceDuration)
         style.mediaLoaderStyle.apply(loadProgress)
+        style.viewOnceBadgeStyle.apply(ivViewOnceIcon)
+        
         applyCommonStyle(
             layoutDetails = layoutDetails,
             tvForwarded = tvForwarded,

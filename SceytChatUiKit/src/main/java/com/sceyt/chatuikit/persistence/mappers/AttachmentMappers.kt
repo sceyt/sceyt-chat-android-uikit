@@ -4,12 +4,12 @@ import android.graphics.Bitmap
 import android.util.Size
 import com.google.gson.Gson
 import com.sceyt.chat.models.attachment.Attachment
-import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import com.sceyt.chatuikit.data.constants.SceytConstants
 import com.sceyt.chatuikit.data.models.AttachmentPayLoad
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.FileChecksumData
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
+import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.extensions.decodeByteArrayToBitmap
 import com.sceyt.chatuikit.extensions.getMimeTypeTakeFirstPart
@@ -29,7 +29,12 @@ import com.sceyt.chatuikit.shared.utils.BitmapUtil
 import com.sceyt.chatuikit.shared.utils.ThumbHash
 import org.json.JSONObject
 
-internal fun SceytAttachment.toAttachmentDb(messageId: Long, messageTid: Long, channelId: Long) = AttachmentDb(
+internal fun SceytAttachment.toAttachmentDb(
+    messageId: Long,
+    messageTid: Long,
+    channelId: Long,
+    viewOnce: Boolean
+) = AttachmentDb(
     AttachmentEntity(
         id = id,
         messageId = messageId,
@@ -43,7 +48,10 @@ internal fun SceytAttachment.toAttachmentDb(messageId: Long, messageTid: Long, c
         fileSize = fileSize,
         url = url,
         filePath = filePath,
-        originalFilePath = originalFilePath), null, linkPreviewDetails?.toLinkDetailsEntity())
+        originalFilePath = originalFilePath,
+        viewOnce = viewOnce
+    ), null, linkPreviewDetails?.toLinkDetailsEntity()
+)
 
 internal fun AttachmentDb.toAttachment(): SceytAttachment {
     with(attachmentEntity) {
@@ -63,19 +71,8 @@ internal fun AttachmentDb.toAttachment(): SceytAttachment {
             transferState = if (isLink) TransferState.PendingDownload else payLoad?.transferState,
             progressPercent = if (isLink) 0f else payLoad?.progressPercent,
             originalFilePath = if (isLink) null else originalFilePath,
-            linkPreviewDetails = linkDetails?.toLinkPreviewDetails(isHiddenLinkDetails()))
-    }
-}
-
-internal fun AttachmentDb.toSdkAttachment(upload: Boolean): Attachment {
-    with(attachmentEntity) {
-        val isLink = type == AttachmentTypeEnum.Link.value
-        return Attachment.Builder(if (isLink) "" else filePath ?: "", url ?: "", type)
-            .setMetadata(metadata ?: "")
-            .setName(name)
-            .setFileSize(fileSize)
-            .setUpload(upload)
-            .build()
+            linkPreviewDetails = linkDetails?.toLinkPreviewDetails(isHiddenLinkDetails())
+        )
     }
 }
 
@@ -85,17 +82,19 @@ internal fun AttachmentDb.toAttachmentPayLoad(messageStatus: MessageEntity): Att
         AttachmentPayLoadEntity(
             messageTid = messageTid,
             transferState = if (!messageStatus.incoming && messageStatus.deliveryStatus == MessageDeliveryStatus.Pending
-                    && messageStatus.forwardingDetailsDb == null && !isLink)
+                && messageStatus.forwardingDetailsDb == null && !isLink
+            )
                 TransferState.PendingUpload else TransferState.PendingDownload,
             progressPercent = 0f,
             url = url,
-            filePath = if (isLink) null else filePath)
+            filePath = if (isLink) null else filePath
+        )
     }
 }
 
 internal fun AttachmentPayLoad.toTransferData(
-        state: TransferState,
-        progress: Float = 0f
+    state: TransferState,
+    progress: Float = 0f
 ): TransferData {
     return TransferData(
         messageTid = messageTid,
@@ -130,8 +129,8 @@ fun SceytAttachment.toTransferData(): TransferData? {
 }
 
 fun SceytAttachment.toTransferData(
-        transferState: TransferState,
-        progress: Float = progressPercent ?: 0f
+    transferState: TransferState,
+    progress: Float = progressPercent ?: 0f
 ): TransferData {
     return TransferData(
         messageTid = messageTid,
@@ -143,10 +142,10 @@ fun SceytAttachment.toTransferData(
 }
 
 fun Attachment.toSceytAttachment(
-        messageTid: Long,
-        transferState: TransferState,
-        progress: Float = 0f,
-        linkPreviewDetails: LinkPreviewDetails? = null
+    messageTid: Long,
+    transferState: TransferState,
+    progress: Float = 0f,
+    linkPreviewDetails: LinkPreviewDetails? = null
 ) = SceytAttachment(
     id = id,
     messageTid = messageTid,
@@ -192,8 +191,10 @@ fun SceytAttachment.getInfoFromMetadata(): AttachmentMetadataPayload {
     var audioMetadata: AudioMetadata? = null
 
     try {
-        val jsonObject = JSONObject(metadata
-                ?: return AttachmentMetadataPayload())
+        val jsonObject = JSONObject(
+            metadata
+                ?: return AttachmentMetadataPayload()
+        )
         when (type) {
             AttachmentTypeEnum.File.value -> {
                 return AttachmentMetadataPayload()

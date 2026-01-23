@@ -14,13 +14,19 @@ import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.SceytMarker
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.data.models.messages.SceytMessageType
 import com.sceyt.chatuikit.databinding.SceytFragmentMessageInfoBinding
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.setBundleArguments
+import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Downloaded
+import com.sceyt.chatuikit.persistence.file_transfer.TransferState.ThumbLoaded
+import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploaded
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.openFile
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageInfoViewProvider
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
+import com.sceyt.chatuikit.presentation.components.channel.messages.preview.SelfDestructingMediaPreviewActivity
+import com.sceyt.chatuikit.presentation.components.channel.messages.preview.SelfDestructingVoiceMessageActivity
 import com.sceyt.chatuikit.presentation.components.media.MediaPreviewActivity
 import com.sceyt.chatuikit.presentation.components.message_info.adapter.UserMarkerAdapter
 import com.sceyt.chatuikit.presentation.components.message_info.viewmodel.MessageInfoViewModel
@@ -184,6 +190,27 @@ open class MessageInfoFragment : Fragment() {
     }
 
     protected open fun onAttachmentClick(item: FileListItem, message: SceytMessage) {
+        if (message.type == SceytMessageType.ViewOnce.value) {
+            val allowedStates = setOf(Downloaded, Uploaded, ThumbLoaded)
+            if (item.attachment.transferState !in allowedStates) return
+
+            if (item.type == AttachmentTypeEnum.Voice) {
+                val styleId = arguments?.getString(STYLE_ID_KEY) ?: return
+                SelfDestructingVoiceMessageActivity.launch(
+                    context = requireContext(),
+                    message = message,
+                    attachment = item.attachment,
+                    styleId = styleId
+                )
+            } else {
+                SelfDestructingMediaPreviewActivity.launchActivity(
+                    context = requireContext(),
+                    message = message,
+                    attachment = item.attachment
+                )
+            }
+            return
+        }
         when (item.type) {
             AttachmentTypeEnum.Image -> {
                 MediaPreviewActivity.launch(requireContext(), item.attachment, message.user, message.channelId)

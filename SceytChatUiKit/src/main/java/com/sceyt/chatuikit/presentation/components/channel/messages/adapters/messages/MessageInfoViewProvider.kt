@@ -14,6 +14,8 @@ import com.sceyt.chatuikit.databinding.SceytItemOutFileMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemOutImageMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemOutLinkMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemOutPollMessageBinding
+import com.sceyt.chatuikit.databinding.SceytItemOutSelfDestructedMessageBinding
+import com.sceyt.chatuikit.databinding.SceytItemOutSelfDestructingMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemOutTextMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemOutUnsupportedMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemOutVideoMessageBinding
@@ -25,6 +27,8 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.mes
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.OutImageMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.OutLinkMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.OutPollMessageViewHolder
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.OutSelfDestructedMessageViewHolder
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.OutSelfDestructingMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.OutTextMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.OutUnsupportedMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.OutVideoMessageViewHolder
@@ -33,6 +37,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.mes
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListenersImpl
 import com.sceyt.chatuikit.presentation.extensions.getMessageType
+import com.sceyt.chatuikit.presentation.extensions.isSelfDestructed
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
 open class MessageInfoViewProvider(
@@ -70,7 +75,8 @@ open class MessageInfoViewProvider(
 
             MessageViewTypeEnum.OutVoice.ordinal -> createOutVoiceMsgViewHolder(
                 viewStub,
-                R.layout.sceyt_item_out_voice_message
+                R.layout.sceyt_item_out_voice_message,
+                false
             )
 
             MessageViewTypeEnum.OutImage.ordinal -> createOutImageMsgViewHolder(
@@ -93,6 +99,21 @@ open class MessageInfoViewProvider(
                 R.layout.sceyt_item_out_poll_message
             )
 
+            MessageViewTypeEnum.OutSelfDestructingMedia.ordinal -> createOutSelfDestructingMessageViewHolder(
+                viewStub,
+                R.layout.sceyt_item_out_self_destructing_message
+            )
+
+            MessageViewTypeEnum.OutSelfDestructingVoice.ordinal -> createOutVoiceMsgViewHolder(
+                viewStub,
+                R.layout.sceyt_item_out_voice_message,
+                true
+            )
+            MessageViewTypeEnum.OutSelfDestructed.ordinal -> createOutSelfDestructedMessageViewHolder(
+                viewStub,
+                R.layout.sceyt_item_out_self_destructed_message
+            )
+
             MessageViewTypeEnum.OutUnsupported.ordinal -> createOutUnsupportedMsgViewHolder(
                 viewStub,
                 R.layout.sceyt_item_out_unsupported_message
@@ -110,10 +131,10 @@ open class MessageInfoViewProvider(
         viewStub.layoutResource = layoutId
         val binding = SceytItemOutTextMessageBinding.bind(viewStub.inflate())
         return OutTextMessageViewHolder(
-            binding,
-            viewPoolReactions,
-            messageItemStyle,
-            clickListeners
+            binding = binding,
+            viewPool = viewPoolReactions,
+            style = messageItemStyle,
+            messageListeners = clickListeners
         )
     }
 
@@ -124,20 +145,29 @@ open class MessageInfoViewProvider(
         viewStub.layoutResource = layoutId
         val binding = SceytItemOutLinkMessageBinding.bind(viewStub.inflate())
         return OutLinkMessageViewHolder(
-            binding, viewPoolReactions,
-            messageItemStyle, clickListeners, needMediaDataCallback
+            binding = binding,
+            viewPool = viewPoolReactions,
+            style = messageItemStyle,
+            messageListeners = clickListeners,
+            needMediaDataCallback = needMediaDataCallback
         )
     }
 
     protected open fun createOutVoiceMsgViewHolder(
         viewStub: ViewStub,
-        layoutId: Int
+        layoutId: Int,
+        isViewOnce: Boolean
     ): BaseMessageViewHolder {
         viewStub.layoutResource = layoutId
         val binding = SceytItemOutVoiceMessageBinding.bind(viewStub.inflate())
         return OutVoiceMessageViewHolder(
-            binding, viewPoolReactions, messageItemStyle, clickListeners,
-            needMediaDataCallback, null
+            binding = binding,
+            viewPoolReactions = viewPoolReactions,
+            style = messageItemStyle,
+            isViewOnce = isViewOnce,
+            messageListeners = clickListeners,
+            needMediaDataCallback = needMediaDataCallback,
+            voicePlayPauseListener = null
         )
     }
 
@@ -148,8 +178,11 @@ open class MessageInfoViewProvider(
         viewStub.layoutResource = layoutId
         val binding = SceytItemOutImageMessageBinding.bind(viewStub.inflate())
         return OutImageMessageViewHolder(
-            binding, viewPoolReactions, messageItemStyle,
-            clickListeners, needMediaDataCallback
+            binding = binding,
+            viewPoolReactions = viewPoolReactions,
+            style = messageItemStyle,
+            messageListeners = clickListeners,
+            needMediaDataCallback = needMediaDataCallback
         )
     }
 
@@ -160,8 +193,11 @@ open class MessageInfoViewProvider(
         viewStub.layoutResource = layoutId
         val binding = SceytItemOutVideoMessageBinding.bind(viewStub.inflate())
         return OutVideoMessageViewHolder(
-            binding, viewPoolReactions, messageItemStyle,
-            clickListeners, needMediaDataCallback
+            binding = binding,
+            viewPoolReactions = viewPoolReactions,
+            style = messageItemStyle,
+            messageListeners = clickListeners,
+            needMediaDataCallback = needMediaDataCallback
         )
     }
 
@@ -172,8 +208,11 @@ open class MessageInfoViewProvider(
         viewStub.layoutResource = layoutId
         val binding = SceytItemOutFileMessageBinding.bind(viewStub.inflate())
         return OutFileMessageViewHolder(
-            binding, viewPoolReactions, messageItemStyle,
-            clickListeners, needMediaDataCallback
+            binding = binding,
+            viewPoolReactions = viewPoolReactions,
+            style = messageItemStyle,
+            messageListeners = clickListeners,
+            needMediaDataCallback = needMediaDataCallback
         )
     }
 
@@ -191,6 +230,35 @@ open class MessageInfoViewProvider(
         )
     }
 
+    protected open fun createOutSelfDestructingMessageViewHolder(
+        viewStub: ViewStub,
+        layoutId: Int
+    ): BaseMessageViewHolder {
+        viewStub.layoutResource = layoutId
+        val binding = SceytItemOutSelfDestructingMessageBinding.bind(viewStub.inflate())
+        return OutSelfDestructingMessageViewHolder(
+            binding = binding,
+            viewPoolReactions = viewPoolReactions,
+            style = messageItemStyle,
+            messageListeners = clickListeners,
+            needMediaDataCallback = needMediaDataCallback
+        )
+    }
+
+    protected open fun createOutSelfDestructedMessageViewHolder(
+        viewStub: ViewStub,
+        layoutId: Int
+    ): BaseMessageViewHolder {
+        viewStub.layoutResource = layoutId
+        val binding = SceytItemOutSelfDestructedMessageBinding.bind(viewStub.inflate())
+        return OutSelfDestructedMessageViewHolder(
+            binding = binding,
+            viewPool = viewPoolReactions,
+            style = messageItemStyle,
+            messageListeners = clickListeners
+        )
+    }
+
     protected open fun createOutUnsupportedMsgViewHolder(
         viewStub: ViewStub,
         layoutId: Int
@@ -198,10 +266,10 @@ open class MessageInfoViewProvider(
         viewStub.layoutResource = layoutId
         val binding = SceytItemOutUnsupportedMessageBinding.bind(viewStub.inflate())
         return OutUnsupportedMessageViewHolder(
-            binding,
-            viewPoolReactions,
-            messageItemStyle,
-            clickListeners
+            binding = binding,
+            viewPool = viewPoolReactions,
+            style = messageItemStyle,
+            messageListeners = clickListeners
         )
     }
 
@@ -226,6 +294,8 @@ open class MessageInfoViewProvider(
             SceytMessageType.Link ->
                 resolveContentViewType(inc, attachments).ordinal
 
+            SceytMessageType.ViewOnce -> resolveViewOnceType(inc, message).ordinal
+
             else ->
                 pick(
                     inc,
@@ -234,6 +304,27 @@ open class MessageInfoViewProvider(
                 ).ordinal
 
         }
+    }
+
+    private fun resolveViewOnceType(
+        inc: Boolean,
+        message: SceytMessage
+    ): MessageViewTypeEnum {
+        val hasOpenedMarker = message.isSelfDestructed()
+
+        if (hasOpenedMarker) {
+            return pick(
+                inc = inc,
+                incType = MessageViewTypeEnum.IncSelfDestructed,
+                outType = MessageViewTypeEnum.OutSelfDestructed
+            )
+        }
+
+        return pick(
+            inc = inc,
+            incType = MessageViewTypeEnum.IncSelfDestructingMedia,
+            outType = MessageViewTypeEnum.OutSelfDestructingMedia
+        )
     }
 
     private fun resolveContentViewType(

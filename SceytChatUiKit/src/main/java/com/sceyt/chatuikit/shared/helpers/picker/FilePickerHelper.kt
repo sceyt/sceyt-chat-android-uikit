@@ -25,16 +25,19 @@ import com.sceyt.chatuikit.extensions.getFileUriWithProvider
 import com.sceyt.chatuikit.extensions.getPermissionsForMangeStorage
 import com.sceyt.chatuikit.extensions.initAttachmentLauncher
 import com.sceyt.chatuikit.extensions.initCameraLauncher
+import com.sceyt.chatuikit.extensions.initCustomCameraLauncher
 import com.sceyt.chatuikit.extensions.initPermissionLauncher
 import com.sceyt.chatuikit.extensions.initVideoCameraLauncher
 import com.sceyt.chatuikit.extensions.oneOfPermissionsIgnored
 import com.sceyt.chatuikit.extensions.permissionIgnored
 import com.sceyt.chatuikit.logger.SceytLog
-import com.sceyt.chatuikit.presentation.common.DebounceHelper
-import com.sceyt.chatuikit.presentation.common.SceytDialog
-import com.sceyt.chatuikit.presentation.common.SceytLoader
+import com.sceyt.chatuikit.presentation.common.dialogs.SceytDialog
+import com.sceyt.chatuikit.presentation.common.dialogs.SceytLoader
+import com.sceyt.chatuikit.presentation.components.camera.CameraState
+import com.sceyt.chatuikit.presentation.components.camera.CustomCameraActivity
 import com.sceyt.chatuikit.presentation.components.picker.BottomSheetMediaPicker
 import com.sceyt.chatuikit.presentation.components.picker.BottomSheetMediaPicker.Companion.MAX_SELECT_MEDIA_COUNT
+import com.sceyt.chatuikit.presentation.helpers.DebounceHelper
 import com.sceyt.chatuikit.shared.utils.FilePathUtil
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -48,9 +51,11 @@ class FilePickerHelper {
     private var requestCameraPermissionLauncher: ActivityResultLauncher<String>? = null
     private var requestVideoCameraPermissionLauncher: ActivityResultLauncher<String>? = null
     private var requestSceytGalleryPermissionLauncher: ActivityResultLauncher<String>? = null
+    private var requestCustomCameraPermissionLauncher: ActivityResultLauncher<String>? = null
     private var takePhotoLauncher: ActivityResultLauncher<Uri>? = null
     private var takeVideoLauncher: ActivityResultLauncher<Uri>? = null
     private var addAttachmentLauncher: ActivityResultLauncher<Intent>? = null
+    private var customCameraLauncher: ActivityResultLauncher<Intent>? = null
     private var allowMultiple: Boolean = true
     private var onlyImages: Boolean = true
     private var sceytGalleryFilter = BottomSheetMediaPicker.PickerFilterType.All
@@ -59,6 +64,8 @@ class FilePickerHelper {
     private var parentDirToCopyProvider: () -> File = { context.cacheDir }
     private var takePictureCb: ((String) -> Unit)? = null
     private var takeVideoCb: ((String) -> Unit)? = null
+    private var customCameraCb: ((String, Boolean) -> Unit)? = null
+    private var pendingCustomCameraMode: CameraState.AllowedMode? = null
     private var scope: CoroutineScope
     private var placeToSavePathsList: MutableSet<Pair<AttachmentTypeEnum, String>> = mutableSetOf()
     private val contextProvider: () -> Context
@@ -85,6 +92,10 @@ class FilePickerHelper {
                 onSceytGalleryPermissionResult(it)
             }
 
+            requestCustomCameraPermissionLauncher = initPermissionLauncher {
+                onCustomCameraPermissionResult(it)
+            }
+
             takePhotoLauncher = initCameraLauncher {
                 onTakePhotoResult(it)
             }
@@ -95,6 +106,10 @@ class FilePickerHelper {
 
             addAttachmentLauncher = initAttachmentLauncher {
                 onChooseFileResult(it)
+            }
+
+            customCameraLauncher = initCustomCameraLauncher {
+                onCustomCameraResult(it)
             }
         }
     }
@@ -119,6 +134,10 @@ class FilePickerHelper {
                 onSceytGalleryPermissionResult(it)
             }
 
+            requestCustomCameraPermissionLauncher = initPermissionLauncher {
+                onCustomCameraPermissionResult(it)
+            }
+
             takePhotoLauncher = initCameraLauncher {
                 onTakePhotoResult(it)
             }
@@ -130,21 +149,24 @@ class FilePickerHelper {
             addAttachmentLauncher = initAttachmentLauncher {
                 onChooseFileResult(it)
             }
+
+            customCameraLauncher = initCustomCameraLauncher {
+                onCustomCameraResult(it)
+            }
         }
     }
 
     fun takePicture(result: (uri: String) -> Unit) {
         takePictureCb = result
-        if (context.checkAndAskPermissions(requestCameraPermissionLauncher,
-                    Manifest.permission.CAMERA)) {
-            takePhotoLauncher?.launch(getPhotoFileUri())
+        openCustomCamera(CameraState.AllowedMode.PHOTO_ONLY) { filePath, isVideo ->
+            if (!isVideo) takePictureCb?.invoke(filePath)
         }
     }
 
     fun takeVideo(result: (uri: String) -> Unit) {
         takeVideoCb = result
-        if (context.checkAndAskPermissions(requestVideoCameraPermissionLauncher, Manifest.permission.CAMERA)) {
-            takeVideoLauncher?.launch(getVideoFileUri())
+        openCustomCamera(CameraState.AllowedMode.VIDEO_ONLY) { filePath, isVideo ->
+            if (isVideo) takeVideoCb?.invoke(filePath)
         }
     }
 
@@ -185,6 +207,28 @@ class FilePickerHelper {
         if (context.checkAndAskPermissions(requestSceytGalleryPermissionLauncher, *permissions)) {
             openSceytGalleryPicker(pickerListener, filter = filter, maxSelectCount = maxSelectCount, *selections)
         } else BottomSheetMediaPicker.pickerListener = pickerListener
+    }
+
+    fun openCustomCamera(result: (filePath: String, isVideo: Boolean) -> Unit) {
+        openCustomCamera(CameraState.AllowedMode.BOTH, result)
+    }
+
+    fun openCustomCamera(
+            allowedMode: CameraState.AllowedMode,
+            result: (filePath: String, isVideo: Boolean) -> Unit
+    ) {
+        customCameraCb = result
+        pendingCustomCameraMode = allowedMode
+        if (context.checkAndAskPermissions(requestCustomCameraPermissionLauncher,
+                    Manifest.permission.CAMERA)) {
+            launchCustomCamera(allowedMode)
+            pendingCustomCameraMode = null
+        }
+    }
+
+    private fun launchCustomCamera(allowedMode: CameraState.AllowedMode) {
+        val intent = CustomCameraActivity.newIntent(context, allowedMode)
+        customCameraLauncher?.launch(intent)
     }
 
     private fun onTakePhotoResult(success: Boolean) {
@@ -306,6 +350,29 @@ class FilePickerHelper {
             openSceytGalleryPicker()
         } else if (context.oneOfPermissionsIgnored(*getPermissionsForMangeStorage()))
             showPermissionDeniedDialog(R.string.sceyt_media_permission_disabled_title, R.string.sceyt_media_permission_disabled_desc)
+    }
+
+    private fun onCustomCameraResult(result: ActivityResult) {
+        if (result.resultCode == AppCompatActivity.RESULT_OK) {
+            val filePath = result.data?.getStringExtra(CustomCameraActivity.EXTRA_RESULT_URI)
+            val isVideo = result.data?.getBooleanExtra(CustomCameraActivity.EXTRA_IS_VIDEO, false) ?: false
+
+            filePath?.let { path ->
+                placeToSavePathsList.add(
+                    (if (isVideo) AttachmentTypeEnum.Video else AttachmentTypeEnum.Image) to path
+                )
+                customCameraCb?.invoke(path, isVideo)
+            }
+        }
+    }
+
+    private fun onCustomCameraPermissionResult(isGranted: Boolean) {
+        if (isGranted) {
+            launchCustomCamera(pendingCustomCameraMode ?: CameraState.AllowedMode.BOTH)
+            pendingCustomCameraMode = null
+        } else if (context.permissionIgnored(Manifest.permission.CAMERA))
+            showPermissionDeniedDialog(R.string.sceyt_camera_permission_disabled_title,
+                R.string.sceyt_camera_permission_disabled_desc)
     }
 
     private fun openGallery() {

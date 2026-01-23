@@ -26,7 +26,7 @@ import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.extensions.getFirstCharIsEmoji
 import com.sceyt.chatuikit.extensions.roundUp
-import com.sceyt.chatuikit.presentation.common.EmojiProcessor
+import com.sceyt.chatuikit.presentation.helpers.EmojiProcessor
 import com.sceyt.chatuikit.presentation.custom_views.AvatarView.DefaultAvatar
 import com.sceyt.chatuikit.presentation.helpers.AvatarImageLoader
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_BORDER_WIDTH

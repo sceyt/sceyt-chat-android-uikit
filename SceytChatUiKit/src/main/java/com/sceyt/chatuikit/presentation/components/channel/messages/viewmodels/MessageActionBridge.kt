@@ -22,7 +22,8 @@ internal class MessageActionBridge {
     fun setHeaderView(headerView: MessagesListHeaderView) {
         this.headerView = headerView
         headerView.setToolbarActionHiddenCallback {
-            messagesListView?.getMessageCommandEventListener()?.invoke(MessageCommandEvent.CancelMultiselectEvent)
+            messagesListView?.getMessageCommandEventListener()
+                ?.invoke(MessageCommandEvent.CancelMultiselectEvent)
             inputView?.getEventListeners()?.onMultiselectModeListener(false)
         }
 
@@ -36,12 +37,13 @@ internal class MessageActionBridge {
     }
 
     fun showMessageActions(vararg selectedMessages: SceytMessage) {
-        val messageActionListener = messagesListView?.messageActionsViewClickListeners
-                ?: return
+        val messageActionListener = messagesListView?.messageActionsViewClickListeners ?: return
         inputView?.getEventListeners()?.onMultiselectModeListener(true)
         val menuStyle = headerView?.style ?: return
-        headerView?.uiElementsListeners?.onShowMessageActionsMenu(*selectedMessages,
-            menuStyle = menuStyle.messageActionsMenuStyle) { it, actionFinish ->
+        headerView?.uiElementsListeners?.onShowMessageActionsMenu(
+            messages = selectedMessages,
+            menuStyle = menuStyle.messageActionsMenuStyle
+        ) { it, actionFinish ->
             val firstMessage = selectedMessages.firstOrNull()
             when (it.itemId) {
                 R.id.sceyt_edit_message -> firstMessage?.let { message ->
@@ -75,8 +77,10 @@ internal class MessageActionBridge {
                 }
 
                 R.id.sceyt_delete_message -> {
-                    messageActionListener.onDeleteMessageClick(*selectedMessages,
-                        requireForMe = selectedMessages.any { it.incoming }, actionFinish = {
+                    messageActionListener.onDeleteMessageClick(
+                        messages = selectedMessages,
+                        requireForMe = selectedMessages.any { it.incoming },
+                        actionFinish = {
                             actionFinish.invoke()
                         })
                 }

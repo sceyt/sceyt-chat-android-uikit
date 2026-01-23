@@ -70,6 +70,10 @@ object SceytChatUIKit : SceytKoinComponent {
         get() = ClientWrapper.currentUser?.toSceytUser()
 
     @JvmStatic
+    val version: String
+        get() = BuildConfig.MAVEN_VERSION
+
+    @JvmStatic
     @JvmOverloads
     fun initialize(
         appContext: Context,

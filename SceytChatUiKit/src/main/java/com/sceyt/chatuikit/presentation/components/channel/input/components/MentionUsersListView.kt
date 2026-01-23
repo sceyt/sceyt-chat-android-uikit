@@ -21,7 +21,7 @@ import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.extensions.screenHeightPx
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
-import com.sceyt.chatuikit.presentation.common.MaxHeightLinearLayoutManager
+import com.sceyt.chatuikit.presentation.common.recyclerview.MaxHeightLinearLayoutManager
 import com.sceyt.chatuikit.presentation.components.channel.input.MessageInputView
 import com.sceyt.chatuikit.presentation.components.channel.input.adapters.metions.MentionUserViewHolderFactory
 import com.sceyt.chatuikit.presentation.components.channel.input.adapters.metions.UsersAdapter

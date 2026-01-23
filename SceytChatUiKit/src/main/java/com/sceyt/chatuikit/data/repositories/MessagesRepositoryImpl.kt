@@ -21,6 +21,7 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.SceytPagingResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.createErrorResponse
+import com.sceyt.chatuikit.data.retryOnResendableError
 import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.extensions.TAG
@@ -43,6 +44,15 @@ class MessagesRepositoryImpl : MessagesRepository {
      * @param replyInThread reply message in thread mode.
      * @param limit count of messages. */
     override suspend fun getPrevMessages(
+        conversationId: Long,
+        lastMessageId: Long,
+        replyInThread: Boolean,
+        limit: Int
+    ): SceytResponse<List<SceytMessage>> = retryOnResendableError {
+        getPrevMessagesImpl(conversationId, lastMessageId, replyInThread, limit)
+    }
+
+    private suspend fun getPrevMessagesImpl(
         conversationId: Long,
         lastMessageId: Long,
         replyInThread: Boolean,
@@ -82,6 +92,15 @@ class MessagesRepositoryImpl : MessagesRepository {
         lastMessageId: Long,
         replyInThread: Boolean,
         limit: Int
+    ): SceytResponse<List<SceytMessage>> = retryOnResendableError {
+        getNextMessagesImpl(conversationId, lastMessageId, replyInThread, limit)
+    }
+
+    private suspend fun getNextMessagesImpl(
+        conversationId: Long,
+        lastMessageId: Long,
+        replyInThread: Boolean,
+        limit: Int
     ): SceytResponse<List<SceytMessage>> {
         return suspendCancellableCoroutine { continuation ->
             getQuery(
@@ -113,6 +132,15 @@ class MessagesRepositoryImpl : MessagesRepository {
      * @param replyInThread reply message in thread mode.
      * @param limit count of messages */
     override suspend fun getNearMessages(
+        conversationId: Long,
+        messageId: Long,
+        replyInThread: Boolean,
+        limit: Int
+    ): SceytResponse<List<SceytMessage>> = retryOnResendableError {
+        getNearMessagesImpl(conversationId, messageId, replyInThread, limit)
+    }
+
+    private suspend fun getNearMessagesImpl(
         conversationId: Long,
         messageId: Long,
         replyInThread: Boolean,
@@ -305,6 +333,13 @@ class MessagesRepositoryImpl : MessagesRepository {
     }
 
     override suspend fun sendMessage(
+        channelId: Long,
+        sceytMessage: SceytMessage,
+    ): SceytResponse<SceytMessage> = retryOnResendableError {
+        sendMessageImpl(channelId, sceytMessage)
+    }
+
+    private suspend fun sendMessageImpl(
         channelId: Long,
         sceytMessage: SceytMessage,
     ): SceytResponse<SceytMessage> = suspendCancellableCoroutine { continuation ->

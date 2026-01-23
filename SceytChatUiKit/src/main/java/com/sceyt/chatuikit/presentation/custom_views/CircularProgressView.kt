@@ -25,9 +25,9 @@ import kotlin.math.max
 import kotlin.math.min
 
 class CircularProgressView @JvmOverloads constructor(
-        context: Context,
-        attrs: AttributeSet? = null,
-        defStyleAttr: Int = 0,
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0,
 ) : View(context, attrs, defStyleAttr) {
     private lateinit var progressPaint: Paint
     private lateinit var trackPaint: Paint
@@ -64,24 +64,45 @@ class CircularProgressView @JvmOverloads constructor(
     private var drawingProgressAnimEndCb: ((Boolean) -> Unit)? = null
     private var visibleAnim: AnimationSet? = null
     private var goneAnim: AnimationSet? = null
+    private var currentVisibility: Int = visibility
 
     init {
         attrs?.let {
             val a = context.obtainStyledAttributes(attrs, R.styleable.CircularProgressView)
-            progressColor = a.getColor(R.styleable.CircularProgressView_sceytUiProgressColor, progressColor)
-            trackColor = a.getColor(R.styleable.CircularProgressView_sceytUiProgressTrackColor, trackColor)
-            minProgress = a.getFloat(R.styleable.CircularProgressView_sceytUiProgressMinProgress, minProgress)
-            progress = a.getFloat(R.styleable.CircularProgressView_sceytUiProgressValue, minProgress)
-            roundedProgress = a.getBoolean(R.styleable.CircularProgressView_sceytUiProgressRoundedProgress, roundedProgress)
+            progressColor =
+                a.getColor(R.styleable.CircularProgressView_sceytUiProgressColor, progressColor)
+            trackColor =
+                a.getColor(R.styleable.CircularProgressView_sceytUiProgressTrackColor, trackColor)
+            minProgress =
+                a.getFloat(R.styleable.CircularProgressView_sceytUiProgressMinProgress, minProgress)
+            progress =
+                a.getFloat(R.styleable.CircularProgressView_sceytUiProgressValue, minProgress)
+            roundedProgress = a.getBoolean(
+                R.styleable.CircularProgressView_sceytUiProgressRoundedProgress,
+                roundedProgress
+            )
             centerIcon = a.getDrawable(R.styleable.CircularProgressView_sceytUiProgressCenterIcon)
-            rotateAnimEnabled = a.getBoolean(R.styleable.CircularProgressView_sceytUiProgressRotateAnimEnabled, rotateAnimEnabled)
-            enableProgressDownAnimation = a.getBoolean(R.styleable.CircularProgressView_sceytUiProgressEnableProgressDownAnimation,
-                enableProgressDownAnimation)
-            iconTintColor = a.getColor(R.styleable.CircularProgressView_sceytUiProgressIconTint, iconTintColor)
+            rotateAnimEnabled = a.getBoolean(
+                R.styleable.CircularProgressView_sceytUiProgressRotateAnimEnabled,
+                rotateAnimEnabled
+            )
+            enableProgressDownAnimation = a.getBoolean(
+                R.styleable.CircularProgressView_sceytUiProgressEnableProgressDownAnimation,
+                enableProgressDownAnimation
+            )
+            iconTintColor =
+                a.getColor(R.styleable.CircularProgressView_sceytUiProgressIconTint, iconTintColor)
             bgColor = a.getColor(R.styleable.CircularProgressView_sceytUiProgressBackgroundColor, 0)
-            iconSizeInPercent = getNormalizedPercent(a.getFloat(R.styleable.CircularProgressView_sceytUiProgressIconSizeInPercent,
-                iconSizeInPercent))
-            val trackThickness = a.getDimensionPixelSize(R.styleable.CircularProgressView_sceytUiProgressTrackThickness, 0)
+            iconSizeInPercent = getNormalizedPercent(
+                a.getFloat(
+                    R.styleable.CircularProgressView_sceytUiProgressIconSizeInPercent,
+                    iconSizeInPercent
+                )
+            )
+            val trackThickness = a.getDimensionPixelSize(
+                R.styleable.CircularProgressView_sceytUiProgressTrackThickness,
+                0
+            )
             if (trackThickness > 0)
                 this.trackThickness = trackThickness.toFloat()
             a.recycle()
@@ -210,7 +231,12 @@ class CircularProgressView @JvmOverloads constructor(
 
     private fun updateRect() {
         val strokeWidth = trackPaint.strokeWidth
-        rect.set(strokeWidth + paddingStart, strokeWidth + paddingTop, diameter - strokeWidth - paddingEnd, diameter - strokeWidth - paddingBottom)
+        rect.set(
+            strokeWidth + paddingStart,
+            strokeWidth + paddingTop,
+            diameter - strokeWidth - paddingEnd,
+            diameter - strokeWidth - paddingBottom
+        )
         rectBg.set(0f, 0f, width.toFloat(), height.toFloat())
     }
 
@@ -368,8 +394,10 @@ class CircularProgressView @JvmOverloads constructor(
             if (visibility == VISIBLE)
                 setVisibleWithAnim()
             else setGoneWithAnim()
+            currentVisibility = visibility
         } else {
             super.setVisibility(visibility)
+            currentVisibility = visibility
             if (visibility == GONE) {
                 cancelProgressAnimations()
             }
@@ -381,6 +409,13 @@ class CircularProgressView @JvmOverloads constructor(
         bgColor = color
         backgroundPaint.color = color
         invalidate()
+    }
+
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        visibleAnim?.cancel()
+        goneAnim?.cancel()
+        super.setVisibility(currentVisibility)
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
