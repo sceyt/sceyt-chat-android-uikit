@@ -48,6 +48,15 @@ class MessagesRepositoryImpl : MessagesRepository {
         lastMessageId: Long,
         replyInThread: Boolean,
         limit: Int
+    ): SceytResponse<List<SceytMessage>> = retryOnResendableError {
+        getPrevMessagesImpl(conversationId, lastMessageId, replyInThread, limit)
+    }
+
+    private suspend fun getPrevMessagesImpl(
+        conversationId: Long,
+        lastMessageId: Long,
+        replyInThread: Boolean,
+        limit: Int
     ): SceytResponse<List<SceytMessage>> {
         return suspendCancellableCoroutine { continuation ->
             getQuery(
@@ -83,6 +92,15 @@ class MessagesRepositoryImpl : MessagesRepository {
         lastMessageId: Long,
         replyInThread: Boolean,
         limit: Int
+    ): SceytResponse<List<SceytMessage>> = retryOnResendableError {
+        getNextMessagesImpl(conversationId, lastMessageId, replyInThread, limit)
+    }
+
+    private suspend fun getNextMessagesImpl(
+        conversationId: Long,
+        lastMessageId: Long,
+        replyInThread: Boolean,
+        limit: Int
     ): SceytResponse<List<SceytMessage>> {
         return suspendCancellableCoroutine { continuation ->
             getQuery(
@@ -114,6 +132,15 @@ class MessagesRepositoryImpl : MessagesRepository {
      * @param replyInThread reply message in thread mode.
      * @param limit count of messages */
     override suspend fun getNearMessages(
+        conversationId: Long,
+        messageId: Long,
+        replyInThread: Boolean,
+        limit: Int
+    ): SceytResponse<List<SceytMessage>> = retryOnResendableError {
+        getNearMessagesImpl(conversationId, messageId, replyInThread, limit)
+    }
+
+    private suspend fun getNearMessagesImpl(
         conversationId: Long,
         messageId: Long,
         replyInThread: Boolean,
