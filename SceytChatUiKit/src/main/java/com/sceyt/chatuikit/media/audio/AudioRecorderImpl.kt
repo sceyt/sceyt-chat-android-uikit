@@ -127,6 +127,10 @@ class AudioRecorderImpl(
         }
     }
 
+    override fun isRecording(): Boolean {
+        return recording.get()
+    }
+
     private fun startTimer() {
         if (timer != null) {
             timer?.cancel()

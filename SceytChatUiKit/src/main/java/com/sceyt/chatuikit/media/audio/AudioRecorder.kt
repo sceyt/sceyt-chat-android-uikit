@@ -9,4 +9,5 @@ interface AudioRecorder {
     fun stopRecording()
     fun getRecordingDuration(): Int
     fun getRecordingAmplitudes(): Array<Int>
+    fun isRecording(): Boolean
 }
