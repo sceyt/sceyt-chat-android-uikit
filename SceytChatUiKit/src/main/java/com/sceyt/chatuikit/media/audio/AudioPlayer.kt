@@ -12,6 +12,7 @@ interface AudioPlayer {
     fun seekToPosition(position: Long)
     fun togglePlayPause()
     fun addEventListener(event: OnAudioPlayer, tag: String)
+    fun removeEventListener(tag: String)
     fun setPlaybackSpeed(speed: Float)
     fun getPlaybackSpeed(): Float
     fun getPlaybackPosition(): Long

@@ -56,9 +56,10 @@ class AudioPlayerImpl(
             player.setOnCompletionListener {
                 stopTimer()
                 stopped = true
-                seekToPosition(0)
+                // Clear currentPlayer and update saved state (keep speed if not default)
+                AudioPlayerHelper.onPlaybackCompleted(filePath, messageTid)
                 for (event in getEvents())
-                    event.second.onStop(filePath = filePath, messageTid = messageTid)
+                    event.second.onStop(filePath = filePath, messageTid = messageTid, savedState = null)
             }
 
             player.prepare()
@@ -85,11 +86,15 @@ class AudioPlayerImpl(
     }
 
     override fun stop() {
+        stop(null)
+    }
+
+    fun stop(savedState: AudioPlaybackState?) {
         stopTimer()
         player.stop()
         stopped = true
         for (event in getEvents())
-            event.second.onStop(filePath, messageTid)
+            event.second.onStop(filePath, messageTid, savedState)
     }
 
     override fun getPlaybackPosition(): Long {
@@ -167,6 +172,10 @@ class AudioPlayerImpl(
 
     override fun addEventListener(event: OnAudioPlayer, tag: String) {
         addToEvents(tag, event)
+    }
+
+    override fun removeEventListener(tag: String) {
+        events[filePath]?.removeIf { it.first == tag }
     }
 
     private fun startTimer() {
