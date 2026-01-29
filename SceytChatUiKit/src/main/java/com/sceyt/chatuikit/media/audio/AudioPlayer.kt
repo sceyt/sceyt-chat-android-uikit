@@ -8,10 +8,11 @@ interface AudioPlayer {
     fun initialize(): Boolean
     fun play()
     fun pause()
-    fun stop()
+    fun stop(savedState: AudioPlaybackState? = null)
     fun seekToPosition(position: Long)
     fun togglePlayPause()
     fun addEventListener(event: OnAudioPlayer, tag: String)
+    fun removeEventListener(tag: String)
     fun setPlaybackSpeed(speed: Float)
     fun getPlaybackSpeed(): Float
     fun getPlaybackPosition(): Long
