@@ -21,59 +21,62 @@ object AudioPlayerHelper {
     /** Pending listeners that will be added to the player when it's initialized */
     private val pendingListeners = ConcurrentHashMap<String, OnAudioPlayer>()
 
-    fun init(filePath: String, messageTid: MessageTid, events: OnAudioPlayer, tag: String) {
-        playerExecutor.execute {
-            currentPlayer?.let { player ->
-                if (player.getFilePath() == filePath && player.getMessageTid() == messageTid) {
-                    events.onInitialized(
-                        alreadyInitialized = true,
-                        player = player,
-                        filePath = filePath,
-                        messageTid = messageTid
-                    )
-                    currentPlayer?.addEventListener(event = events, tag = tag)
-                    return@execute
-                }
-                // Save current player's state before stopping
-                val savedState = savePlaybackState(player)
-                (player as? AudioPlayerImpl)?.stop(savedState) ?: player.stop()
+    fun init(
+        filePath: String,
+        messageTid: MessageTid,
+        events: OnAudioPlayer,
+        tag: String
+    ) = playerExecutor.execute {
+        currentPlayer?.let { player ->
+            if (player.getFilePath() == filePath && player.getMessageTid() == messageTid) {
+                events.onInitialized(
+                    alreadyInitialized = true,
+                    player = player,
+                    filePath = filePath,
+                    messageTid = messageTid
+                )
+                currentPlayer?.addEventListener(event = events, tag = tag)
+                return@execute
             }
-
-            val player = AudioPlayerImpl(filePath, messageTid)
-            player.addEventListener(event = events, tag = tag)
-            // Add all pending listeners to the new player
-            for ((listenerTag, listener) in pendingListeners) {
-                player.addEventListener(event = listener, tag = listenerTag)
-            }
-            player.initialize()
-            currentPlayer = player
-
-            // Apply saved state and start playing
-            val stateKey = getStateKey(filePath, messageTid)
-            val savedState = playbackStates[stateKey]
-
-            if (savedState != null) {
-                // Apply saved speed (individual per message)
-                if (savedState.speed != 1f) {
-                    player.setPlaybackSpeed(savedState.speed)
-                }
-
-                player.play()
-
-                if (savedState.position > 0) {
-                    player.seekToPosition(savedState.position)
-                }
-            } else {
-                player.play()
-            }
-
-            events.onInitialized(
-                alreadyInitialized = false,
-                player = player,
-                filePath = filePath,
-                messageTid = messageTid
-            )
+            // Save current player's state before stopping
+            val savedState = savePlaybackState(player)
+            player.stop(savedState)
         }
+
+        val player = AudioPlayerImpl(filePath, messageTid)
+        player.addEventListener(event = events, tag = tag)
+        // Add all pending listeners to the new player
+        for ((listenerTag, listener) in pendingListeners) {
+            player.addEventListener(event = listener, tag = listenerTag)
+        }
+        player.initialize()
+        currentPlayer = player
+
+        // Apply saved state and start playing
+        val stateKey = getStateKey(filePath, messageTid)
+        val savedState = playbackStates[stateKey]
+
+        if (savedState != null) {
+            // Apply saved speed (individual per message)
+            if (savedState.speed != 1f) {
+                player.setPlaybackSpeed(savedState.speed)
+            }
+
+            player.play()
+
+            if (savedState.position > 0) {
+                player.seekToPosition(savedState.position)
+            }
+        } else {
+            player.play()
+        }
+
+        events.onInitialized(
+            alreadyInitialized = false,
+            player = player,
+            filePath = filePath,
+            messageTid = messageTid
+        )
     }
 
     fun addEventListener(
@@ -207,9 +210,6 @@ object AudioPlayerHelper {
      */
     fun onPlaybackCompleted(filePath: String, messageTid: MessageTid) {
         playerExecutor.execute {
-            // Clear current player
-            currentPlayer = null
-
             // Reset position to 0 but keep speed
             val stateKey = getStateKey(filePath, messageTid)
             val existingState = playbackStates[stateKey]
@@ -251,7 +251,8 @@ object AudioPlayerHelper {
             player: AudioPlayer,
             filePath: String,
             messageTid: MessageTid
-        ){}
+        ) {
+        }
 
         fun onProgress(position: Long, duration: Long, filePath: String, messageTid: MessageTid)
         fun onSeek(position: Long, filePath: String, messageTid: MessageTid) {}
