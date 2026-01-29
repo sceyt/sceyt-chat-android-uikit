@@ -1358,7 +1358,7 @@ class MessageInputView @JvmOverloads constructor(
 
     private fun showHideInputOnModeChange(isInSelectMode: Boolean) {
         with(binding) {
-            layoutInput.isInvisible = isInSelectMode
+            layoutInput.isInvisible = isInSelectMode || getRecordingState().isActive
             viewAttachments.isVisible = !isInSelectMode && allAttachments.isNotEmpty()
             if (isInSelectMode) {
                 hideAndStopVoiceRecorder()
