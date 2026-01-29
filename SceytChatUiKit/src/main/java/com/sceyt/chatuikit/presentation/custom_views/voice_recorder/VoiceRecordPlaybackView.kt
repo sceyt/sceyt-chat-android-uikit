@@ -13,7 +13,7 @@ import com.sceyt.chatuikit.extensions.durationToMinSecShort
 import com.sceyt.chatuikit.extensions.mediaPlayerPositionToSeekBarProgress
 import com.sceyt.chatuikit.extensions.progressToMediaPlayerPosition
 import com.sceyt.chatuikit.extensions.setBackgroundTint
-import com.sceyt.chatuikit.media.audio.AudioPlayer
+import com.sceyt.chatuikit.media.audio.AudioPlaybackState
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper.OnAudioPlayer
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessageTid
@@ -57,7 +57,11 @@ class VoiceRecordPlaybackView @JvmOverloads constructor(
             }
 
             playVoiceRecord.setOnClickListener {
-                onPlayVoiceRecordClick(file, audioMetadata, listener)
+                if (AudioPlayerHelper.alreadyInitialized(file.path, messageTid)) {
+                    AudioPlayerHelper.toggle(file.path, messageTid)
+                } else {
+                    onPlayVoiceRecordClick(file, audioMetadata)
+                }
             }
 
             icSendMessage.setOnClickListener {
@@ -77,6 +81,8 @@ class VoiceRecordPlaybackView @JvmOverloads constructor(
             audioMetadata.tmb?.let { waveformSeekBar.setSampleFrom(it) }
             voiceRecordDuration.text =
                 audioMetadata.dur.times(1000).toLong().durationToMinSecShort()
+
+            setPlayedState(file, audioMetadata)
         }
     }
 
@@ -95,13 +101,26 @@ class VoiceRecordPlaybackView @JvmOverloads constructor(
         }
     }
 
-    private fun SceytVoiceRecordPresenterBinding.onPlayVoiceRecordClick(
+    private fun setPlayedState(
         file: File,
         audioMetadata: AudioMetadata,
-        listener: VoiceRecordPlaybackListeners? = null
     ) {
-        listener?.onPlayVoiceRecord()
+        val savedState = AudioPlayerHelper.getPlaybackState(
+            filePath = file.path ?: return,
+            messageTid = messageTid
+        )
+        if (savedState != null) {
+            // Restore the saved position and speed in UI
+            binding.waveformSeekBar.progress = mediaPlayerPositionToSeekBarProgress(
+                savedState.position, audioMetadata.dur.times(1000L)
+            )
+        }
+    }
 
+    private fun SceytVoiceRecordPresenterBinding.onPlayVoiceRecordClick(
+        file: File,
+        audioMetadata: AudioMetadata
+    ) {
         waveformSeekBar.onProgressChanged = object : SeekBarOnProgressChanged {
             override fun onProgressChanged(
                 waveformSeekBar: WaveformSeekBar,
@@ -124,17 +143,8 @@ class VoiceRecordPlaybackView @JvmOverloads constructor(
 
         AudioPlayerHelper.init(
             filePath = file.path,
-            messageTid = -1,
+            messageTid = messageTid,
             events = object : OnAudioPlayer {
-                override fun onInitialized(
-                    alreadyInitialized: Boolean,
-                    player: AudioPlayer,
-                    filePath: String,
-                    messageTid: MessageTid
-                ) {
-                    AudioPlayerHelper.toggle(file.path, messageTid)
-                }
-
                 override fun onProgress(
                     position: Long, duration: Long, filePath: String,
                     messageTid: MessageTid
@@ -155,7 +165,8 @@ class VoiceRecordPlaybackView @JvmOverloads constructor(
 
                 override fun onStop(
                     filePath: String,
-                    messageTid: MessageTid
+                    messageTid: MessageTid,
+                    savedState: AudioPlaybackState?
                 ) {
                     root.post {
                         setPlayButtonIcon(false)
@@ -196,7 +207,6 @@ class VoiceRecordPlaybackView @JvmOverloads constructor(
 
     interface VoiceRecordPlaybackListeners {
         fun onDeleteVoiceRecord() {}
-        fun onPlayVoiceRecord() {}
         fun onSendVoiceMessage(isViewOnce: Boolean) {}
     }
 }

@@ -15,6 +15,7 @@ import com.sceyt.chatuikit.extensions.mediaPlayerPositionToSeekBarProgress
 import com.sceyt.chatuikit.extensions.progressToMediaPlayerPosition
 import com.sceyt.chatuikit.extensions.runOnMainThread
 import com.sceyt.chatuikit.extensions.setBackgroundTint
+import com.sceyt.chatuikit.media.audio.AudioPlaybackState
 import com.sceyt.chatuikit.media.audio.AudioPlayer
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper.OnAudioPlayer
@@ -141,7 +142,7 @@ class OutVoiceMessageViewHolder(
             updateViewOnceUI()
         }
     }
-    
+
     private fun updateViewOnceUI() {
         with(binding) {
             ivViewOnceIcon.isVisible = isViewOnce
@@ -174,8 +175,7 @@ class OutVoiceMessageViewHolder(
         seekBar.isEnabled = isPlaying
         playBackSpeed.isEnabled = isPlaying
 
-        if (AudioPlayerHelper.alreadyInitialized(fileItem.attachment))
-            initAudioPlayer()
+        AudioPlayerHelper.addEventListener(playerListener, TAG_REF)
     }
 
     private fun checkIsPlayingAndSetState(): Boolean {
@@ -183,19 +183,34 @@ class OutVoiceMessageViewHolder(
             val playBackPos = AudioPlayerHelper.getCurrentPlayer()?.getPlaybackPosition() ?: 0
             binding.voiceDuration.text = style.voiceDurationFormatter.format(context, playBackPos)
             binding.seekBar.progress = mediaPlayerPositionToSeekBarProgress(
-                playBackPos, fileItem.duration?.times(1000L)
-                    ?: 0
+                playBackPos, fileItem.duration?.times(1000L) ?: 0
             )
             currentPlaybackSpeed =
                 fromValue(AudioPlayerHelper.getCurrentPlayer()?.getPlaybackSpeed())
             true
         } else {
-            binding.voiceDuration.text = style.voiceDurationFormatter.format(
-                context = context,
-                from = fileItem.duration?.times(1000L) ?: 0
+            // Check if there's a saved state for this voice message
+            val savedState = AudioPlayerHelper.getPlaybackState(
+                fileItem.attachment.filePath ?: "",
+                fileItem.attachment.messageTid
             )
-            binding.seekBar.progress = 0f
-            currentPlaybackSpeed = PlaybackSpeed.X1
+            if (savedState != null) {
+                // Restore the saved position and speed in UI
+                binding.voiceDuration.text =
+                    style.voiceDurationFormatter.format(context, savedState.position)
+                binding.seekBar.progress = mediaPlayerPositionToSeekBarProgress(
+                    savedState.position, fileItem.duration?.times(1000L) ?: 0
+                )
+                currentPlaybackSpeed = fromValue(savedState.speed)
+            } else {
+                // No saved state, show default values
+                binding.voiceDuration.text = style.voiceDurationFormatter.format(
+                    context = context,
+                    from = fileItem.duration?.times(1000L) ?: 0
+                )
+                binding.seekBar.progress = 0f
+                currentPlaybackSpeed = PlaybackSpeed.X1
+            }
             false
         }
     }
@@ -236,9 +251,6 @@ class OutVoiceMessageViewHolder(
             ) {
                 if (!checkIsValid(filePath, messageTid)) return
 
-                if (!alreadyInitialized)
-                    player.togglePlayPause()
-
                 runOnMainThread {
                     binding.seekBar.isEnabled = true
                     binding.playBackSpeed.isEnabled = true
@@ -273,20 +285,30 @@ class OutVoiceMessageViewHolder(
 
             override fun onStop(
                 filePath: String,
-                messageTid: MessageTid
+                messageTid: MessageTid,
+                savedState: AudioPlaybackState?
             ) {
                 if (!checkIsValid(filePath, messageTid)) return
                 runOnMainThread {
                     setPlayButtonIcon(false)
-                    currentPlaybackSpeed = PlaybackSpeed.X1
-                    binding.seekBar.progress = 0f
-                    binding.voiceDuration.text = style.voiceDurationFormatter.format(
-                        context,
-                        fileItem.duration?.times(1000L) ?: 0 // convert to milliseconds
-                    )
+                    if (savedState != null) {
+                        // Switched to another voice message - show saved position and speed
+                        binding.voiceDuration.text =
+                            style.voiceDurationFormatter.format(context, savedState.position)
+                        binding.seekBar.progress = mediaPlayerPositionToSeekBarProgress(
+                            savedState.position, fileItem.duration?.times(1000L) ?: 0
+                        )
+                        currentPlaybackSpeed = fromValue(savedState.speed)
+                    } else {
+                        // Natural completion - reset position to beginning but keep speed
+                        binding.seekBar.progress = 0f
+                        binding.voiceDuration.text = style.voiceDurationFormatter.format(
+                            context,
+                            fileItem.duration?.times(1000L) ?: 0
+                        )
+                    }
                     binding.seekBar.isEnabled = false
                     binding.playBackSpeed.isEnabled = false
-                    binding.playBackSpeed.text = currentPlaybackSpeed.displayValue
                 }
             }
 
@@ -376,7 +398,7 @@ class OutVoiceMessageViewHolder(
         style.voiceDurationTextStyle.apply(voiceDuration)
         style.mediaLoaderStyle.apply(loadProgress)
         style.viewOnceBadgeStyle.apply(ivViewOnceIcon)
-        
+
         applyCommonStyle(
             layoutDetails = layoutDetails,
             tvForwarded = tvForwarded,
@@ -384,5 +406,10 @@ class OutVoiceMessageViewHolder(
             tvThreadReplyCount = tvReplyCount,
             toReplyLine = toReplyLine
         )
+    }
+
+    override fun onViewDetachedFromWindow() {
+        super.onViewDetachedFromWindow()
+        AudioPlayerHelper.removeEventListener(TAG_REF)
     }
 }

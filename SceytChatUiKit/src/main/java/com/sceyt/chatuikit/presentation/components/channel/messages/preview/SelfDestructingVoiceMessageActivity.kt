@@ -30,6 +30,7 @@ import com.sceyt.chatuikit.extensions.progressToMediaPlayerPosition
 import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.chatuikit.koin.SceytKoinComponent
+import com.sceyt.chatuikit.media.audio.AudioPlaybackState
 import com.sceyt.chatuikit.media.audio.AudioPlayer
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.chatuikit.media.audio.VoiceStateCoordinator
@@ -273,10 +274,6 @@ class SelfDestructingVoiceMessageActivity : AppCompatActivity(), SceytKoinCompon
             ) {
                 if (filePath != voiceFilePath || messageTid != voiceMessageTid) return
 
-                if (!alreadyInitialized) {
-                    player.togglePlayPause()
-                }
-
                 runOnUiThread {
                     binding.voiceWaveformSeekBar.isEnabled = true
                     binding.voicePlaybackSpeed.isEnabled = true
@@ -314,7 +311,8 @@ class SelfDestructingVoiceMessageActivity : AppCompatActivity(), SceytKoinCompon
 
             override fun onStop(
                 filePath: String,
-                messageTid: MessageTid
+                messageTid: MessageTid,
+                savedState: AudioPlaybackState?
             ) {
                 if (filePath != voiceFilePath || messageTid != voiceMessageTid) return
 

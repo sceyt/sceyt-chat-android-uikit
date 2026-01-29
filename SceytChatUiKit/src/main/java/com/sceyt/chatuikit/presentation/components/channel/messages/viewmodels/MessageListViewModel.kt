@@ -682,8 +682,12 @@ class MessageListViewModel(
     ) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = messageReactionInteractor.addReaction(
-                channelId = channel.id, messageId = message.id, key = scoreKey,
-                score = score, reason = reason, enforceUnique = enforceUnique
+                channelId = channel.id,
+                messageId = message.id,
+                key = scoreKey,
+                score = score,
+                reason = reason,
+                enforceUnique = enforceUnique
             )
             notifyPageStateWithResponse(response, showError = false)
         }

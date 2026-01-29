@@ -10,28 +10,32 @@ import java.io.File
 import java.util.concurrent.Executors
 
 data class AudioRecordData(
-        val file: File,
-        val duration: Int,
-        val amplitudes: List<Int>,
+    val file: File,
+    val duration: Int,
+    val amplitudes: List<Int>,
 )
 
 class AudioRecorderHelper(
-        private val scope: CoroutineScope,
-        private val context: Context,
+    private val scope: CoroutineScope,
+    private val context: Context,
 ) {
-    private val recorderDispatcher = Executors.newSingleThreadScheduledExecutor().asCoroutineDispatcher()
+    private val recorderDispatcher =
+        Executors.newSingleThreadScheduledExecutor().asCoroutineDispatcher()
     private var audioFile: File? = null
     private var currentRecorder: AudioRecorder? = null
     private val audioFocusHelper: AudioFocusHelper by lazy { AudioFocusHelper(context) }
 
     fun startRecording(
-            directoryToSaveFile: String,
-            onRecorderStart: OnRecorderStart? = null,
-            onRecordReachedMaxDurationListener: ReachedMaxDurationListener? = null,
+        directoryToSaveFile: String,
+        onRecorderStart: OnRecorderStart? = null,
+        onRecordReachedMaxDurationListener: ReachedMaxDurationListener? = null,
     ) {
         scope.launch(recorderDispatcher) {
             audioFocusHelper.requestAudioFocusCompat()
-            val audioFile = FileManager.createFile(AudioRecorderImpl.AUDIO_FORMAT, directoryToSaveFile).also {
+            val audioFile = FileManager.createFile(
+                extension = AudioRecorderImpl.AUDIO_FORMAT,
+                directory = directoryToSaveFile
+            ).also {
                 this@AudioRecorderHelper.audioFile = it
             }
             val recorder = AudioRecorderImpl(context, audioFile).also { currentRecorder = it }
@@ -76,6 +80,10 @@ class AudioRecorderHelper(
                 onRecorderCancel?.onCancel()
             }
         }
+    }
+
+    fun isRecording(): Boolean {
+        return currentRecorder?.isRecording() == true
     }
 
     private val currentAmplitudes: Array<Int>
