@@ -10,11 +10,13 @@ import retrofit2.HttpException
 import java.io.IOException
 import java.net.SocketTimeoutException
 
-class RetryInterceptor(private val maxRetries: Int,
-                       private val retryIntervalMillis: Long) : Interceptor {
+class RetryInterceptor(
+    private val maxRetries: Int,
+    private val retryIntervalMillis: Long
+) : Interceptor {
 
     private companion object {
-        private const val Tag = "RetryInterceptor"
+        private const val TAG = "RetryInterceptor"
     }
 
     override fun intercept(chain: Interceptor.Chain): Response {
@@ -28,10 +30,13 @@ class RetryInterceptor(private val maxRetries: Int,
             retryCount++
 
             if (retryCount >= maxRetries) {
-                SceytLog.i(Tag, "intercept: error :  reach the maximum retry count retryCount:$retryCount, error:${throwable.message} ")
+                SceytLog.i(
+                    TAG,
+                    "intercept: error :  reach the maximum retry count retryCount:$retryCount, error:${throwable.message} "
+                )
                 return
             }
-            SceytLog.i(Tag, "intercept: error : ${throwable.message} $retryCount")
+            SceytLog.i(TAG, "intercept: error : ${throwable.message} $retryCount")
             delay(delayMillis)
             delayMillis *= 2
         }
@@ -39,15 +44,18 @@ class RetryInterceptor(private val maxRetries: Int,
         runBlocking {
             while (retryCount < maxRetries) {
                 try {
-                    SceytLog.i(Tag, "intercept: start process retryCount: $retryCount delay: $delayMillis")
+                    SceytLog.i(
+                        TAG,
+                        "intercept: start process retryCount: $retryCount delay: $delayMillis"
+                    )
                     response = chain.proceed(chain.request())
-                    val responseCode = response?.code
-                    val responseIsSuccessful = response?.isSuccessful
+                    val responseCode = response.code
+                    val responseIsSuccessful = response.isSuccessful
 
-                    if (responseIsSuccessful == true) {
+                    if (responseIsSuccessful) {
                         break
                     } else {
-                        response?.close()
+                        response.close()
                         doRetry(IllegalStateException("Response is not successful, code == $responseCode"))
                     }
                 } catch (e: Throwable) {

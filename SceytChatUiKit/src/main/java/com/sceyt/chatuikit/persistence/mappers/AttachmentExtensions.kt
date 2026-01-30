@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit
 fun createMetadata(currentMetadata: String?, data: Map<String, Any>): String? {
     return try {
         val obj = if (currentMetadata.isNullOrBlank()) JSONObject()
-        else JSONObject(currentMetadata.toString())
+        else JSONObject(currentMetadata)
         data.forEach {
             obj.put(it.key, it.value)
         }
@@ -54,7 +54,7 @@ fun LinkPreviewDetails.toMetadata(): String? {
 fun SceytAttachment.getUpsertSizeMetadata(size: Size?): String? {
     return try {
         val obj = if (metadata.isNullOrBlank()) JSONObject()
-        else JSONObject(metadata.toString())
+        else JSONObject(metadata)
         size?.let {
             obj.put(SceytConstants.Width, it.width)
             obj.put(SceytConstants.Height, it.height)
@@ -140,7 +140,7 @@ fun SceytAttachment.getLinkPreviewDetails(): LinkPreviewDetails? {
         val thumbnailUrl = jsonObject.getStringOrNull(SceytConstants.ThumbnailUrl)
         val hideLinkDetails = jsonObject.getBooleanOrNull(SceytConstants.HideLinkDetails)
         return LinkPreviewDetails(
-            link = url.toString(),
+            link = url,
             url = url,
             title = name,
             description = description,

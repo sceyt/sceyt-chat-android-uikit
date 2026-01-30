@@ -88,7 +88,7 @@ internal class PersistencePollLogicImpl(
     private suspend fun sendPendingVotesSync(
         messageTid: Long,
         votes: List<PendingPollVoteEntity>
-    ) = pollMutexForMessage(messageTid).withLock {
+    ): Unit = pollMutexForMessage(messageTid).withLock {
         val messageDb = messageDao.getMessageByTid(messageTid) ?: return
         val poll = messageDb.poll ?: return
         sendPollPendingVotesUseCase(
