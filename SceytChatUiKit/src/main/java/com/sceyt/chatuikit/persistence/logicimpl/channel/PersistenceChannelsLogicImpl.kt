@@ -1088,7 +1088,9 @@ internal class PersistenceChannelsLogicImpl(
         channelsRepository.sendChannelEvent(channelId, event)
     }
 
-    override suspend fun updateDraftMessage(draftMessage: DraftMessage) = with(draftMessage) {
+    override suspend fun updateDraftMessage(
+        draftMessage: DraftMessage
+    ): Unit = with(draftMessage) {
         if (!hasContent()) {
             draftMessageDao.deleteDraftByChannelId(channelId)
             channelsCache.updateChannelDraftMessage(channelId, null)

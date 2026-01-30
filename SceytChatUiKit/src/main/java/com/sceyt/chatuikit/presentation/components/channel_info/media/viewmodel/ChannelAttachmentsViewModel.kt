@@ -38,21 +38,23 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 class ChannelAttachmentsViewModel(
-        private val attachmentLogic: PersistenceAttachmentLogic,
-        private val fileTransferService: FileTransferService,
-        private val application: Application,
+    private val attachmentLogic: PersistenceAttachmentLogic,
+    private val fileTransferService: FileTransferService,
+    private val application: Application,
 ) : BaseViewModel() {
     private val linkPreviewHelper by lazy { LinkPreviewHelper(application, viewModelScope) }
     private val needToUpdateTransferAfterOnResume = hashMapOf<Long, TransferData>()
 
     private val _filesFlow = MutableSharedFlow<List<ChannelFileItem>>(
         extraBufferCapacity = 5,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST)
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
     val filesFlow: SharedFlow<List<ChannelFileItem>> = _filesFlow
 
     private val _loadMoreAttachmentsFlow = MutableSharedFlow<List<ChannelFileItem>>(
         extraBufferCapacity = 5,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST)
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
     val loadMoreAttachmentsFlow: SharedFlow<List<ChannelFileItem>> = _loadMoreAttachmentsFlow
 
     private val _linkPreviewLiveData = MutableLiveData<LinkPreviewDetails>()
@@ -64,13 +66,24 @@ class ChannelAttachmentsViewModel(
         }
     }
 
-    fun loadAttachments(channelId: Long, lastAttachmentId: Long, isLoadingMore: Boolean, type: List<String>, offset: Int) {
+    fun loadAttachments(
+        channelId: Long,
+        lastAttachmentId: Long,
+        isLoadingMore: Boolean,
+        type: List<String>,
+        offset: Int
+    ) {
         setPagingLoadingStarted(PaginationResponse.LoadType.LoadPrev)
 
         notifyPageLoadingState(isLoadingMore)
 
         viewModelScope.launch(Dispatchers.IO) {
-            attachmentLogic.getPrevAttachments(channelId, lastAttachmentId, type, offset).collect { response ->
+            attachmentLogic.getPrevAttachments(
+                conversationId = channelId,
+                lastAttachmentId = lastAttachmentId,
+                types = type,
+                offset = offset
+            ).collect { response ->
                 initPaginationResponse(response)
             }
         }
@@ -98,15 +111,21 @@ class ChannelAttachmentsViewModel(
             _filesFlow.tryEmit(data)
         } else _loadMoreAttachmentsFlow.tryEmit(data)
 
-        notifyPageStateWithResponse(SceytResponse.Success(null), response.offset > 0, response.data.isEmpty())
+        notifyPageStateWithResponse(
+            response = SceytResponse.Success(null),
+            wasLoadingMore = response.offset > 0,
+            isEmpty = response.data.isEmpty()
+        )
     }
 
     private fun initPaginationServerResponse(response: PaginationResponse.ServerResponse<AttachmentWithUserData>) {
         when (response.data) {
             is SceytResponse.Success -> {
                 if (response.hasDiff) {
-                    val newMessages = mapToFileListItem(data = response.cacheData,
-                        hasPrev = response.hasPrev)
+                    val newMessages = mapToFileListItem(
+                        data = response.cacheData,
+                        hasPrev = response.hasPrev
+                    )
                     _filesFlow.tryEmit(newMessages)
                 } else if (response.hasPrev.not())
                     _loadMoreAttachmentsFlow.tryEmit(emptyList())
@@ -117,18 +136,27 @@ class ChannelAttachmentsViewModel(
                     _loadMoreAttachmentsFlow.tryEmit(emptyList())
             }
         }
-        notifyPageStateWithResponse(response.data, response.offset > 0, response.cacheData.isEmpty())
+        notifyPageStateWithResponse(
+            response = response.data,
+            wasLoadingMore = response.offset > 0,
+            isEmpty = response.cacheData.isEmpty()
+        )
     }
 
-    private fun mapToFileListItem(data: List<AttachmentWithUserData>?, hasPrev: Boolean): List<ChannelFileItem> {
+    private fun mapToFileListItem(
+        data: List<AttachmentWithUserData>?,
+        hasPrev: Boolean
+    ): List<ChannelFileItem> {
         if (data.isNullOrEmpty()) return arrayListOf()
         val fileItems = arrayListOf<ChannelFileItem>()
         var prevItem: AttachmentWithUserData? = null
 
         data.sortedByDescending { it.attachment.createdAt }.forEach { item ->
-            if (prevItem == null || !DateTimeUtil.isSameDay(prevItem?.attachment?.createdAt
-                            ?: 0, item.attachment.createdAt)) {
-
+            if (prevItem == null || !DateTimeUtil.isSameDay(
+                    epochOne = prevItem.attachment.createdAt,
+                    epochTwo = item.attachment.createdAt
+                )
+            ) {
                 fileItems.add(ChannelFileItem.DateSeparator(data = item))
             }
 
@@ -142,13 +170,15 @@ class ChannelAttachmentsViewModel(
             }
 
             if (type != null) {
-                fileItems.add(ChannelFileItem.Item(
-                    data = item,
-                    type = type,
-                    _metadataPayload = item.attachment.getInfoFromMetadata(),
-                    _thumbPath = null,
-                    _transferData = item.attachment.toTransferData()
-                ))
+                fileItems.add(
+                    ChannelFileItem.Item(
+                        data = item,
+                        type = type,
+                        _metadataPayload = item.attachment.getInfoFromMetadata(),
+                        _thumbPath = null,
+                        _transferData = item.attachment.toTransferData()
+                    )
+                )
 
             }
             prevItem = item
@@ -185,12 +215,23 @@ class ChannelAttachmentsViewModel(
                     // Update transfer state to Uploading, otherwise SendAttachmentWorkManager will
                     // not start uploading.
                     viewModelScope.launch(Dispatchers.IO) {
-                        attachmentLogic.updateTransferDataByMsgTid(TransferData(
-                            item.messageTid, item.progressPercent
-                                    ?: 0f, TransferState.Uploading, item.filePath, item.url))
+                        attachmentLogic.updateTransferDataByMsgTid(
+                            TransferData(
+                                messageTid = item.messageTid,
+                                progressPercent = item.progressPercent ?: 0f,
+                                state = TransferState.Uploading,
+                                filePath = item.filePath,
+                                url = item.url
+                            )
+                        )
                     }
 
-                    UploadAndSendAttachmentWorkManager.schedule(application, item.messageTid, channelId, ExistingWorkPolicy.REPLACE)
+                    UploadAndSendAttachmentWorkManager.schedule(
+                        context = application,
+                        messageTid = item.messageTid,
+                        channelId = channelId,
+                        workPolicy = ExistingWorkPolicy.REPLACE
+                    )
                 }
             }
 
@@ -200,8 +241,12 @@ class ChannelAttachmentsViewModel(
 
             TransferState.Uploaded, TransferState.Downloaded, TransferState.ThumbLoaded -> {
                 val transferData = TransferData(
-                    item.messageTid, item.progressPercent ?: 0f,
-                    item.transferState, item.filePath, item.url)
+                    messageTid = item.messageTid,
+                    progressPercent = item.progressPercent ?: 0f,
+                    state = item.transferState,
+                    filePath = item.filePath,
+                    url = item.url
+                )
 
                 FileTransferHelper.emitAttachmentTransferUpdate(transferData)
             }
@@ -213,7 +258,10 @@ class ChannelAttachmentsViewModel(
         when (data) {
             is NeedMediaInfoData.NeedDownload -> {
                 viewModelScope.launch(Dispatchers.IO) {
-                    fileTransferService.download(attachment, fileTransferService.findOrCreateTransferTask(attachment))
+                    fileTransferService.download(
+                        attachment = attachment,
+                        transferTask = fileTransferService.findOrCreateTransferTask(attachment)
+                    )
                 }
             }
 
