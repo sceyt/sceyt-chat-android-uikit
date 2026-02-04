@@ -12,6 +12,7 @@ import androidx.core.graphics.toColorInt
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.demo.R
 import com.sceyt.chat.demo.databinding.ActivityMainBinding
+import com.sceyt.chat.demo.presentation.CustomChannelListFragment
 import com.sceyt.chat.demo.presentation.main.adapters.MainViewPagerAdapter
 import com.sceyt.chat.demo.presentation.main.profile.ProfileFragment
 import com.sceyt.chat.demo.presentation.welcome.create.CreateAccountViewModel
@@ -20,7 +21,6 @@ import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.chatuikit.presentation.components.channel.messages.ChannelActivity
-import com.sceyt.chatuikit.presentation.components.channel_list.channels.ChannelListFragment
 import com.sceyt.chatuikit.presentation.components.invite_link.ChannelInviteLinkHandler
 import com.sceyt.chatuikit.presentation.components.invite_link.JoinByInviteLinkResult
 import com.sceyt.chatuikit.presentation.root.PageState
@@ -100,7 +100,7 @@ class MainActivity : AppCompatActivity() {
     private fun setPagerAdapter() {
         val adapter = MainViewPagerAdapter(
             activity = this,
-            mFragments = arrayListOf(ChannelListFragment(), ProfileFragment())
+            mFragments = arrayListOf(CustomChannelListFragment(), ProfileFragment())
         )
         binding.viewPager.adapter = adapter
         binding.viewPager.isUserInputEnabled = false

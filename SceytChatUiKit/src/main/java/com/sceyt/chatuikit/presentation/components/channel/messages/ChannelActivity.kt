@@ -19,13 +19,14 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.M
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.bindings.bind
 
 open class ChannelActivity : AppCompatActivity() {
-    private lateinit var binding: SceytActivityChannelBinding
+    protected lateinit var binding: SceytActivityChannelBinding
     private val viewModel: MessageListViewModel by viewModels(factoryProducer = { factory })
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContentView(SceytActivityChannelBinding.inflate(layoutInflater)
+        setContentView(
+            SceytActivityChannelBinding.inflate(layoutInflater)
             .also { binding = it }
             .root)
 
@@ -55,7 +56,10 @@ open class ChannelActivity : AppCompatActivity() {
         const val CHANNEL = "CHANNEL"
 
         fun launch(context: Context, channel: SceytChannel) {
-            context.launchActivity<ChannelActivity>(R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold) {
+            context.launchActivity<ChannelActivity>(
+                R.anim.sceyt_anim_slide_in_right,
+                R.anim.sceyt_anim_slide_hold
+            ) {
                 putExtra(CHANNEL, channel)
             }
         }
