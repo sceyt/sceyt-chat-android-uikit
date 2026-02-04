@@ -96,6 +96,10 @@ android {
 dependencies {
     implementation(project(":SceytChatUiKit"))
 
+    implementation(project(":ToneManager"))
+    implementation(project(":AudioRouting"))
+    implementation("com.sceyt:sceyt-call-android-sdk:1.4.6")
+
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.core.ktx)

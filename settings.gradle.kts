@@ -23,3 +23,11 @@ rootProject.name = "SceytUiKit"
 include(":SceytChatUiKit")
 include(":SceytDemoApp")
 project(":SceytDemoApp").projectDir = file("./examples/SceytDemoApp")
+
+// ToneManager module
+include(":ToneManager")
+project(":ToneManager").projectDir = file("../ToneManager/tonemanager")
+
+// AudioRouting module
+include(":AudioRouting")
+project(":AudioRouting").projectDir = file("../AudioRouting/audiorouting")
