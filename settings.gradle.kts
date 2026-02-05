@@ -26,8 +26,8 @@ project(":SceytDemoApp").projectDir = file("./examples/SceytDemoApp")
 
 // ToneManager module
 include(":ToneManager")
-project(":ToneManager").projectDir = file("../ToneManager/tonemanager")
+project(":ToneManager").projectDir = file("/Users/marat/AndroidStudioProjects/ToneManager/tonemanager")
 
 // AudioRouting module
 include(":AudioRouting")
-project(":AudioRouting").projectDir = file("../AudioRouting/audiorouting")
+project(":AudioRouting").projectDir = file("/Users/marat/AndroidStudioProjects/AudioRouting/audiorouting")
