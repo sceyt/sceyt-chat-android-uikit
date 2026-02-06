@@ -17,6 +17,16 @@
         android:name="com.google.android.gms.permission.AD_ID"
         tools:node="remove" />
 
+    <!-- Call permissions -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL" />
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+
     <uses-feature
         android:name="android.hardware.camera"
         android:required="false" />
@@ -84,6 +94,26 @@
             android:theme="@style/SceytAppTheme.Default"
             android:windowSoftInputMode="adjustResize" />
 
+        <!-- Call Activity -->
+        <activity
+            android:name=".call.ui.CallActivity"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:showOnLockScreen="true"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true"
+            android:theme="@style/SceytAppTheme.Default" />
+
+        <!-- Call Broadcast Receiver for notification actions -->
+        <receiver
+            android:name=".call.receiver.CallBroadcastReceiver"
+            android:exported="false" />
+
+        <!-- WorkManager foreground service for calls -->
+        <service
+            android:name="androidx.work.impl.foreground.SystemForegroundService"
+            android:foregroundServiceType="phoneCall"
+            tools:node="merge" />
         <service
             android:name="com.sceyt.chatuikit.services.SceytFirebaseMessageReceiver"
             android:enabled="true"

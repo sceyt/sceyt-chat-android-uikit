@@ -20,7 +20,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.b
 
 open class ChannelActivity : AppCompatActivity() {
     protected lateinit var binding: SceytActivityChannelBinding
-    private val viewModel: MessageListViewModel by viewModels(factoryProducer = { factory })
+    protected val viewModel: MessageListViewModel by viewModels(factoryProducer = { factory })
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

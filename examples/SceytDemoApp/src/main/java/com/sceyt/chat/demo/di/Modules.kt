@@ -1,6 +1,9 @@
 package com.sceyt.chat.demo.di
 
 import com.sceyt.chat.demo.BuildConfig
+import com.sceyt.chat.demo.call.manager.CallManager
+import com.sceyt.chat.demo.call.manager.CallManagerImpl
+import com.sceyt.chat.demo.call.ui.CallViewModel
 import com.sceyt.chat.demo.connection.ChatClientConnectionInterceptor
 import com.sceyt.chat.demo.connection.SceytConnectionProvider
 import com.sceyt.chat.demo.data.AppSharedPreference
@@ -85,4 +88,12 @@ val apiModule = module {
 val repositoryModule = module {
     factory { ConnectionRepo(get()) }
     single { UserRepository(get()) }
+}
+
+val callModule = module {
+    // CallManager singleton - orchestrates all call SDKs
+    single<CallManager> { CallManagerImpl(get()) }
+
+    // CallViewModel for UI
+    viewModelOf(::CallViewModel)
 }
