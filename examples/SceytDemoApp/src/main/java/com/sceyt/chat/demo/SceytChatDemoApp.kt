@@ -2,11 +2,17 @@ package com.sceyt.chat.demo
 
 import android.app.Application
 import android.util.Log
+import com.callclient.CallClient
+import com.callclient.call.Call
 import com.sceyt.chat.ChatClient
+import com.sceyt.chat.demo.call.manager.CallManager
+import com.sceyt.chat.demo.call.notification.CallNotificationChannels
+import com.sceyt.chat.demo.call.ui.CallActivity
 import com.sceyt.chat.demo.connection.ChatClientConnectionInterceptor
 import com.sceyt.chat.demo.connection.SceytConnectionProvider
 import com.sceyt.chat.demo.di.apiModule
 import com.sceyt.chat.demo.di.appModules
+import com.sceyt.chat.demo.di.callModule
 import com.sceyt.chat.demo.di.repositoryModule
 import com.sceyt.chat.demo.di.viewModelModules
 import com.sceyt.chat.demo.notifications.CustomFileTransferNotificationBuilder
@@ -18,6 +24,10 @@ import com.sceyt.chatuikit.config.ChannelInviteDeepLinkConfig
 import com.sceyt.chatuikit.config.PushNotificationConfig
 import com.sceyt.chatuikit.providers.ChatTokenProvider
 import com.sceyt.chatuikit.push.providers.firebase.FirebasePushServiceProvider
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
@@ -26,15 +36,19 @@ import java.util.UUID
 class SceytChatDemoApp : Application() {
     private val connectionProvider by inject<SceytConnectionProvider>()
     private val chatClientConnectionInterceptor by inject<ChatClientConnectionInterceptor>()
+    private val callManager by inject<CallManager>()
+
+    private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
     override fun onCreate() {
         super.onCreate()
         startKoin {
             androidContext(this@SceytChatDemoApp)
-            modules(arrayListOf(appModules, viewModelModules, apiModule, repositoryModule))
+            modules(arrayListOf(appModules, viewModelModules, apiModule, repositoryModule, callModule))
         }
 
         initSceyt()
+        initCallClient()
         connectionProvider.init()
     }
 
@@ -93,5 +107,44 @@ class SceytChatDemoApp : Application() {
             val userId = SceytChatUIKit.currentUserId ?: return@ChatTokenProvider null
             chatClientConnectionInterceptor.getChatToken(userId)
         }
+    }
+
+    private fun initCallClient() {
+        // Create call notification channels
+        CallNotificationChannels.createChannels(this)
+
+        // Initialize CallClient with ChatClient
+        val chatClient = ChatClient.getClient()
+        CallClient.initialize(this, chatClient)
+
+        // Register listener for incoming calls
+        CallClient.requireInstance().addListener(CALL_CLIENT_LISTENER_KEY, object : CallClient.ClientListener {
+            override fun onInvitedToCall(from: String, call: Call) {
+                Log.d(TAG, "Invited to call from: $from, video: ${call.videoCall}")
+
+                // Handle incoming call through CallManager
+                appScope.launch {
+                    callManager.handleIncomingCall(from, call)
+
+                    // Launch incoming call UI
+                    CallActivity.launchIncoming(
+                        context = this@SceytChatDemoApp,
+                        callerId = from,
+                        isVideo = call.videoCall
+                    )
+                }
+            }
+
+            override fun onOngoingCallsUpdated(calls: List<Call>) {
+                Log.d(TAG, "Ongoing calls updated: ${calls.size}")
+            }
+        })
+
+        Log.d(TAG, "CallClient initialized, version: ${CallClient.getVersion()}")
+    }
+
+    companion object {
+        private const val TAG = "SceytChatDemoApp"
+        private const val CALL_CLIENT_LISTENER_KEY = "app_call_listener"
     }
 }
