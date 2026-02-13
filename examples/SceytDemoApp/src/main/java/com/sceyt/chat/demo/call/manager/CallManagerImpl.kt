@@ -299,7 +299,7 @@ class CallManagerImpl(
 
     override fun switchCamera(): Result<Unit> {
         return try {
-            cameraCapturer?.switchCamera()
+            cameraCapturer?.switch()
             val newFrontCamera = !_mediaState.value.isFrontCamera
             _mediaState.value = _mediaState.value.copy(isFrontCamera = newFrontCamera)
             Log.d(TAG, "Camera switched: front=$newFrontCamera")
