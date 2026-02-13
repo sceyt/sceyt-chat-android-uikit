@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.BluetoothAudio
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Headset
@@ -120,5 +121,5 @@ private val AudioDevice.icon: ImageVector
         is AudioDevice.BluetoothHeadset -> Icons.Default.BluetoothAudio
         is AudioDevice.WiredHeadset -> Icons.Default.Headset
         is AudioDevice.Earpiece -> Icons.Default.Phone
-        is AudioDevice.Speakerphone -> Icons.Default.VolumeUp
+        is AudioDevice.Speakerphone -> Icons.AutoMirrored.Filled.VolumeUp
     }
