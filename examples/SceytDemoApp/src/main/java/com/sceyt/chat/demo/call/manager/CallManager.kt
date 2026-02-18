@@ -74,7 +74,7 @@ interface CallManager {
      *
      * @return Result indicating success or failure
      */
-    suspend fun answerIncomingCall(): Result<Unit>
+    suspend fun answerIncomingCall(call: Call): Result<Unit>
 
     /**
      * Decline an incoming call.

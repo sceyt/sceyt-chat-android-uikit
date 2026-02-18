@@ -65,7 +65,9 @@ class CallViewModel(
      */
     fun onAnswerClick() {
         viewModelScope.launch {
-            callManager.answerIncomingCall()
+            callManager.answerIncomingCall(
+                ((callManager.callUiState.value as? CallUiState.Incoming)?.call) ?: return@launch
+            )
         }
     }
 

@@ -5,7 +5,9 @@ import android.util.Log
 import com.callclient.CallClient
 import com.callclient.call.Call
 import com.callclient.call.calllisteners.CallEventsListener
+import com.callclient.call.data.AudioSettings
 import com.callclient.call.data.CallState
+import com.callclient.call.data.CreateCallOptions
 import com.callclient.call.data.JoinCallOptions
 import com.callclient.call.data.Participant
 import com.callclient.call.data.ParticipantConnectionState
@@ -129,19 +131,31 @@ class CallManagerImpl(
             // Set audio routing preference based on call type
             setupAudioRouting(isVideo)
 
-            // Build join options
-            val options = JoinCallOptions.Builder(generateCallId())
-                .setVideoCall(isVideo)
-                .setParticipantsIds(listOf(userId))
-                .setMediaFlow(MediaFlow.P2P)
-                .setLocalAudioTracks(listOfNotNull(localAudioTrack))
-                .setLocalVideoTracks(listOfNotNull(localVideoTrack))
-                .build()
 
             // Join call
-            val result = callClient.join(options)
-
+            val result = runCatching {
+                callClient.prepareCall(
+                    callId = generateCallId(),
+                    mediaFlow = MediaFlow.P2P,
+                )
+            }
             result.onSuccess { call ->
+                // Build join options
+                val joinCallOptions = JoinCallOptions(
+                    localAudioTracks = listOfNotNull(localAudioTrack),
+                    localVideoTracks = listOfNotNull(localVideoTrack),
+                    audioSettings = AudioSettings(
+                        publishVideo = isVideo
+                    )
+                )
+
+                val createCallOptions = CreateCallOptions(
+                    participantsIds = listOf(userId),
+                    videoCall = isVideo,
+                )
+
+                call.join(joinCallOptions, createCallOptions)
+
                 _currentCall = call
                 setupCallListeners(call)
                 startNoAnswerTimeout()
@@ -167,7 +181,7 @@ class CallManagerImpl(
         }
     }
 
-    override suspend fun answerIncomingCall(): Result<Unit> {
+    override suspend fun answerIncomingCall(call: Call): Result<Unit> {
         val currentState = _callUiState.value
         if (currentState !is CallUiState.Incoming) {
             return Result.failure(IllegalStateException("No incoming call to answer"))
@@ -187,16 +201,16 @@ class CallManagerImpl(
             setupAudioRouting(currentState.isVideo)
 
             // Build join options
-            val options = JoinCallOptions.Builder(currentState.call.id)
-                .setSessionId(currentState.call.sessionId)
-                .setVideoCall(currentState.isVideo)
-                .setMediaFlow(MediaFlow.P2P)
-                .setLocalAudioTracks(listOfNotNull(localAudioTrack))
-                .setLocalVideoTracks(listOfNotNull(localVideoTrack))
-                .build()
+            val options = JoinCallOptions(
+                localAudioTracks = listOfNotNull(localAudioTrack),
+                localVideoTracks = (listOfNotNull(localVideoTrack)),
+                audioSettings = AudioSettings(
+                    publishVideo = currentState.isVideo
+                )
+            )
 
             // Join call
-            val result = callClient.join(options)
+            val result = call.join(options)
 
             result.onSuccess { call ->
                 _currentCall = call
@@ -703,8 +717,14 @@ class CallManagerImpl(
     }
 
     private val audioRouterListener = object : AudioRouterListener {
-        override fun onAudioDevicesChanged(devices: List<AudioDevice>, selectedDevice: AudioDevice?) {
-            Log.d(TAG, "Audio devices changed: ${devices.map { it.name }}, selected: ${selectedDevice?.name}")
+        override fun onAudioDevicesChanged(
+            devices: List<AudioDevice>,
+            selectedDevice: AudioDevice?
+        ) {
+            Log.d(
+                TAG,
+                "Audio devices changed: ${devices.map { it.name }}, selected: ${selectedDevice?.name}"
+            )
             updateSpeakerState(selectedDevice)
         }
 
@@ -716,7 +736,10 @@ class CallManagerImpl(
             device: AudioDevice.BluetoothHeadset,
             fallbackDevice: AudioDevice?
         ) {
-            Log.w(TAG, "Bluetooth SCO connection failed for ${device.name}, fallback: ${fallbackDevice?.name}")
+            Log.w(
+                TAG,
+                "Bluetooth SCO connection failed for ${device.name}, fallback: ${fallbackDevice?.name}"
+            )
         }
 
         override fun onPermissionMissing(permission: String) {
@@ -851,7 +874,7 @@ class CallManagerImpl(
         }
     }
 
-    private  fun stopTone() {
+    private fun stopTone() {
         scope.launch {
             try {
                 toneManager.stopCurrentTone()
