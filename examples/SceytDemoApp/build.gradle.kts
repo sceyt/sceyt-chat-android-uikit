@@ -103,7 +103,6 @@ dependencies {
     implementation(project(":SceytChatUiKit"))
 
     implementation(project(":ToneManager"))
-    implementation(project(":AudioRouting"))
     implementation(project(":SceytCallSdk"))
 
     implementation(libs.appcompat)
