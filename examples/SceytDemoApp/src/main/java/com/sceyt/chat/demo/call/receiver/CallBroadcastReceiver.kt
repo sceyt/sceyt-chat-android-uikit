@@ -4,8 +4,9 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Log
+import com.callclient.CallClient
 import com.sceyt.chat.demo.call.manager.CallManager
-import com.sceyt.chat.demo.call.manager.CallUiState
+import com.sceyt.chat.demo.call.notification.CallNotificationManager
 import com.sceyt.chat.demo.call.ui.CallActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -33,18 +34,21 @@ class CallBroadcastReceiver : BroadcastReceiver(), KoinComponent {
 
     override fun onReceive(context: Context, intent: Intent) {
         Log.d(TAG, "Received action: ${intent.action}")
+        val callId = intent.getStringExtra(CallNotificationManager.CALL_ID) ?: return
 
         when (intent.action) {
-            ACTION_ANSWER -> handleAnswer(context)
+            ACTION_ANSWER -> handleAnswer(context,callId)
             ACTION_DECLINE -> handleDecline()
             ACTION_END_CALL -> handleEndCall()
             ACTION_TOGGLE_MUTE -> handleToggleMute()
         }
     }
 
-    private fun handleAnswer(context: Context) {
+    private fun handleAnswer(context: Context, callId: String) {
         scope.launch {
-            val result = callManager.answerIncomingCall()
+            val result = callManager.answerIncomingCall(
+                CallClient.instance?.getOngoingCall(callId) ?: return@launch
+            )
             if (result.isSuccess) {
                 // Launch call activity
                 context.startActivity(CallActivity.createOngoingIntent(context).apply {

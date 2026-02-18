@@ -23,6 +23,7 @@ class CallNotificationManager(
         private const val ACTION_DECLINE = "com.sceyt.call.ACTION_DECLINE"
         private const val ACTION_END_CALL = "com.sceyt.call.ACTION_END_CALL"
         private const val ACTION_TOGGLE_MUTE = "com.sceyt.call.ACTION_TOGGLE_MUTE"
+         const val CALL_ID = "CallId"
     }
 
     /**
@@ -30,7 +31,8 @@ class CallNotificationManager(
      */
     fun buildIncomingCallNotification(
         callerName: String,
-        isVideo: Boolean
+        isVideo: Boolean,
+        callId: String
     ): Notification {
         val callType = if (isVideo) "Video call" else "Voice call"
 
@@ -55,6 +57,7 @@ class CallNotificationManager(
         // Action: Answer
         val answerIntent = Intent(context, CallBroadcastReceiver::class.java).apply {
             action = ACTION_ANSWER
+            putExtra(CALL_ID, callId) // Pass actual call ID if needed
         }
         val answerPendingIntent = PendingIntent.getBroadcast(
             context,
@@ -66,6 +69,7 @@ class CallNotificationManager(
         // Action: Decline
         val declineIntent = Intent(context, CallBroadcastReceiver::class.java).apply {
             action = ACTION_DECLINE
+            putExtra(CALL_ID, callId)
         }
         val declinePendingIntent = PendingIntent.getBroadcast(
             context,

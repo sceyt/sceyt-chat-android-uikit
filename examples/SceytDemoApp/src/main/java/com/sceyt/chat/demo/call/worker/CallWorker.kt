@@ -151,7 +151,8 @@ class CallWorker(
             is CallUiState.Incoming -> {
                 notificationManager.buildIncomingCallNotification(
                     callerName = state.callerName ?: state.callerId,
-                    isVideo = state.isVideo
+                    isVideo = state.isVideo,
+                    callId = state.call.id
                 )
             }
             is CallUiState.Connected -> {
