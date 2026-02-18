@@ -28,11 +28,5 @@ project(":SceytDemoApp").projectDir = file("./examples/SceytDemoApp")
 include(":ToneManager")
 project(":ToneManager").projectDir = file("/Users/marat/AndroidStudioProjects/ToneManager/tonemanager")
 
-// AudioRouting module
-include(":AudioRouting")
-project(":AudioRouting").projectDir = file("/Users/marat/AndroidStudioProjects/AudioRouting/audiorouting")
-
-
-// AudioRouting module
 include(":SceytCallSdk")
 project(":SceytCallSdk").projectDir = file("../sceyt-call-android-sdk-source/callclient")
