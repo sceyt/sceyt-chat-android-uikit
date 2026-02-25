@@ -6,7 +6,7 @@ package com.sceyt.chatuikit.data.models.channels
 fun SceytChannel.toIntentPayload(): SceytChannel {
     return copy(
         messages = null,
-        members = if (isGroup) null else members,
+        members = members?.take(30),
         newReactions = null,
         pendingReactions = null,
         events = null
