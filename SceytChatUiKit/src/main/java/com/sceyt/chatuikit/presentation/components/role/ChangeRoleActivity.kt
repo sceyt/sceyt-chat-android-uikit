@@ -1,6 +1,5 @@
 package com.sceyt.chatuikit.presentation.components.role
 
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -27,7 +26,8 @@ class ChangeRoleActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContentView(SceytActivityChooseRoleBinding.inflate(layoutInflater)
+        setContentView(
+            SceytActivityChooseRoleBinding.inflate(layoutInflater)
             .also { binding = it }
             .root)
 
@@ -86,14 +86,22 @@ class ChangeRoleActivity : AppCompatActivity() {
         val result = Intent()
         result.putExtra(CHOSEN_ROLE, roleItem.role.name)
         result.putExtra(MEMBER, intent.parcelable<SceytMember>(MEMBER))
-        setResult(Activity.RESULT_OK, result)
+        setResult(RESULT_OK, result)
         finish()
-        overrideTransitions(com.sceyt.chatuikit.R.anim.sceyt_anim_slide_hold, com.sceyt.chatuikit.R.anim.sceyt_anim_slide_out_right, false)
+        overrideTransitions(
+            enterAnim = com.sceyt.chatuikit.R.anim.sceyt_anim_slide_hold,
+            exitAnim = com.sceyt.chatuikit.R.anim.sceyt_anim_slide_out_right,
+            isOpen = false
+        )
     }
 
     override fun finish() {
         super.finish()
-        overrideTransitions(com.sceyt.chatuikit.R.anim.sceyt_anim_slide_hold, com.sceyt.chatuikit.R.anim.sceyt_anim_slide_out_right, false)
+        overrideTransitions(
+            enterAnim = com.sceyt.chatuikit.R.anim.sceyt_anim_slide_hold,
+            exitAnim = com.sceyt.chatuikit.R.anim.sceyt_anim_slide_out_right,
+            isOpen = false
+        )
     }
 
     companion object {
