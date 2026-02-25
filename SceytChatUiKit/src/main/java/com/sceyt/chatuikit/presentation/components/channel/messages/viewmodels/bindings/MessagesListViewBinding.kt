@@ -347,7 +347,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 checkToHildeLoadingMoreItemByLoadType(response.loadType)
 
                 // set isSearchingMessageToScroll value to false, to enable jumping to next message
-                if (response.loadKey?.value == LoadKeyType.ScrollToMessageBy.longValue)
+                if (response.loadKey?.key == LoadKeyType.ScrollToMessageBy.longValue)
                     isPreparingToScrollToMessage.set(false)
             }
         }
