@@ -34,7 +34,6 @@ import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import com.sceyt.chatuikit.data.models.messages.SceytMarker
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytUser
-import com.sceyt.chatuikit.data.models.onSuccessNotNull
 import com.sceyt.chatuikit.extensions.asActivity
 import com.sceyt.chatuikit.extensions.centerVisibleItemPosition
 import com.sceyt.chatuikit.extensions.customToastSnackBar
@@ -374,6 +373,9 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     }
 
     fun onMessageDisplayed(message: SceytMessage) {
+        if (channel.userRole.isNullOrEmpty())
+            return
+
         if (!message.incoming || message.userMarkers?.any { it.name == MarkerType.Displayed.value } == true)
             return
 
@@ -792,12 +794,6 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             else -> return@onEach
         }
     }.launchIn(lifecycleOwner.lifecycleScope)
-
-    joinLiveData.observe(lifecycleOwner) { response ->
-        response.onSuccessNotNull { channel ->
-            checkEnableDisableActions(channel)
-        }
-    }
 
     pageStateLiveData.observe(lifecycleOwner) {
         if (it is PageState.StateError && messagesListView.getData().isEmpty())

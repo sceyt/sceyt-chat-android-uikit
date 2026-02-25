@@ -3,21 +3,25 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:paddingHorizontal="15dp">
 
     <TextView
         android:id="@+id/title"
-        app:layout_constraintTop_toTopOf="parent"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
         android:gravity="center"
+        android:includeFontPadding="false"
         android:paddingHorizontal="8dp"
         android:paddingVertical="5dp"
-        android:includeFontPadding="false"
         android:visibility="visible"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        tools:text="The group created" />
+        app:layout_constraintTop_toTopOf="parent"
+        tools:background="@drawable/sceyt_bg_corners_30"
+        tools:backgroundTint="@color/sceyt_color_overlay_background"
+        tools:text="The group created"
+        tools:textColor="#FFFFFF" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

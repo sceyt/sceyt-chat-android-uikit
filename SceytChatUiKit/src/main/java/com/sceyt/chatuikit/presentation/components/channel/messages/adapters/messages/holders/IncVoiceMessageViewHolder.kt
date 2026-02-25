@@ -16,6 +16,7 @@ import com.sceyt.chatuikit.extensions.mediaPlayerPositionToSeekBarProgress
 import com.sceyt.chatuikit.extensions.progressToMediaPlayerPosition
 import com.sceyt.chatuikit.extensions.runOnMainThread
 import com.sceyt.chatuikit.extensions.setBackgroundTint
+import com.sceyt.chatuikit.media.audio.AudioPlaybackState
 import com.sceyt.chatuikit.media.audio.AudioPlayer
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper.OnAudioPlayer
@@ -184,8 +185,7 @@ class IncVoiceMessageViewHolder(
         seekBar.isEnabled = isPlaying
         playBackSpeed.isEnabled = isPlaying
 
-        if (AudioPlayerHelper.alreadyInitialized(fileItem))
-            initAudioPlayer()
+        AudioPlayerHelper.addEventListener(playerListener, TAG_REF)
     }
 
     private fun checkIsPlayingAndSetState(): Boolean {
@@ -202,12 +202,28 @@ class IncVoiceMessageViewHolder(
             )
             true
         } else {
-            binding.voiceDuration.text = style.voiceDurationFormatter.format(
-                context = context,
-                from = fileItem.duration?.times(1000L) ?: 0 // convert to milliseconds
+            // Check if there's a saved state for this voice message
+            val savedState = AudioPlayerHelper.getPlaybackState(
+                filePath = fileItem.attachment.filePath ?: "",
+                messageTid = fileItem.attachment.messageTid
             )
-            binding.seekBar.progress = 0f
-            currentPlaybackSpeed = PlaybackSpeed.X1
+            if (savedState != null) {
+                // Restore the saved position and speed in UI
+                binding.voiceDuration.text = style.voiceDurationFormatter.format(context, savedState.position)
+                binding.seekBar.progress = mediaPlayerPositionToSeekBarProgress(
+                    currentPosition = savedState.position,
+                    mediaDuration = fileItem.duration?.times(1000L) ?: 0
+                )
+                currentPlaybackSpeed = PlaybackSpeed.fromValue(savedState.speed)
+            } else {
+                // No saved state, show default values
+                binding.voiceDuration.text = style.voiceDurationFormatter.format(
+                    context = context,
+                    from = fileItem.duration?.times(1000L) ?: 0
+                )
+                binding.seekBar.progress = 0f
+                currentPlaybackSpeed = PlaybackSpeed.X1
+            }
             false
         }
     }
@@ -248,9 +264,6 @@ class IncVoiceMessageViewHolder(
             ) {
                 if (!checkIsValid(filePath, messageTid)) return
 
-                if (!alreadyInitialized)
-                    player.togglePlayPause()
-
                 runOnMainThread {
                     binding.seekBar.isEnabled = true
                     binding.playBackSpeed.isEnabled = true
@@ -282,19 +295,32 @@ class IncVoiceMessageViewHolder(
                 }
             }
 
-            override fun onStop(filePath: String, messageTid: MessageTid) {
+            override fun onStop(
+                filePath: String,
+                messageTid: MessageTid,
+                savedState: AudioPlaybackState?
+            ) {
                 if (!checkIsValid(filePath, messageTid)) return
                 runOnMainThread {
                     setPlayButtonIcon(false)
-                    currentPlaybackSpeed = PlaybackSpeed.X1
-                    binding.seekBar.progress = 0f
-                    binding.voiceDuration.text = style.voiceDurationFormatter.format(
-                        context = context,
-                        from = fileItem.duration?.times(1000L) ?: 0 // convert to milliseconds
-                    )
+                    if (savedState != null) {
+                        // Switched to another voice message - show saved position and speed
+                        binding.voiceDuration.text = style.voiceDurationFormatter.format(context, savedState.position)
+                        binding.seekBar.progress = mediaPlayerPositionToSeekBarProgress(
+                            currentPosition = savedState.position,
+                            mediaDuration = fileItem.duration?.times(1000L) ?: 0
+                        )
+                        currentPlaybackSpeed = PlaybackSpeed.fromValue(savedState.speed)
+                    } else {
+                        // Natural completion - reset position to beginning but keep speed
+                        binding.seekBar.progress = 0f
+                        binding.voiceDuration.text = style.voiceDurationFormatter.format(
+                            context = context,
+                            from = fileItem.duration?.times(1000L) ?: 0
+                        )
+                    }
                     binding.seekBar.isEnabled = false
                     binding.playBackSpeed.isEnabled = false
-                    binding.playBackSpeed.text = currentPlaybackSpeed.displayValue
                 }
             }
 
@@ -389,5 +415,10 @@ class IncVoiceMessageViewHolder(
             tvSenderName = tvUserName,
             avatarView = avatar
         )
+    }
+
+    override fun onViewDetachedFromWindow() {
+        super.onViewDetachedFromWindow()
+        AudioPlayerHelper.removeEventListener(TAG_REF)
     }
 }

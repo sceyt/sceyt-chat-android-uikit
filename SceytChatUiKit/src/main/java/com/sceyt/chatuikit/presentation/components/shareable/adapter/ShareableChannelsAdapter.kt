@@ -55,8 +55,8 @@ class ShareableChannelsAdapter(
     fun notifyUpdate(channels: List<ChannelListItem>, recyclerView: RecyclerView) {
         val myDiffUtil = ChannelsDiffUtil(this.channels, channels)
         val productDiffResult = DiffUtil.calculateDiff(myDiffUtil, true)
-        productDiffResult.dispatchUpdatesToSafety(recyclerView)
         this.channels = channels.toMutableList()
+        productDiffResult.dispatchUpdatesToSafety(recyclerView)
     }
 
     @SuppressLint("NotifyDataSetChanged")
