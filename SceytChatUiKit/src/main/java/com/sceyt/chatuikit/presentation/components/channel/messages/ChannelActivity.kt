@@ -8,6 +8,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
+import com.sceyt.chatuikit.data.models.channels.toIntentPayload
 import com.sceyt.chatuikit.databinding.SceytActivityChannelBinding
 import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
 import com.sceyt.chatuikit.extensions.launchActivity
@@ -46,7 +47,7 @@ open class ChannelActivity : AppCompatActivity() {
         val channel = intent.parcelable<SceytChannel>(CHANNEL) ?: return
         if (channel.id == viewModel.channel.id) return
         launchActivity<ChannelActivity> {
-            putExtra(CHANNEL, channel)
+            putExtra(CHANNEL, channel.toIntentPayload())
         }
         super.finish()
     }
@@ -56,7 +57,7 @@ open class ChannelActivity : AppCompatActivity() {
 
         fun launch(context: Context, channel: SceytChannel) {
             context.launchActivity<ChannelActivity>(R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold) {
-                putExtra(CHANNEL, channel)
+                putExtra(CHANNEL, channel.toIntentPayload())
             }
         }
     }

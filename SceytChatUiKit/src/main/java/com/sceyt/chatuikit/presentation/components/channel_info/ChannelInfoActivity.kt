@@ -28,6 +28,7 @@ import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum.Direct
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum.Group
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum.Public
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
+import com.sceyt.chatuikit.data.models.channels.toIntentPayload
 import com.sceyt.chatuikit.data.models.messages.DisappearingMessageMetadata
 import com.sceyt.chatuikit.data.models.messages.SceytMessageType
 import com.sceyt.chatuikit.data.models.messages.SceytUser
@@ -754,14 +755,14 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
         fun launch(context: Context, channel: SceytChannel) {
             context.launchActivity<ChannelInfoActivity>(R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold) {
-                putExtra(CHANNEL, channel)
+                putExtra(CHANNEL, channel.toIntentPayload())
                 putExtra(ENABLE_SEARCH_MESSAGES, false)
             }
         }
 
         fun startHandleSearchClick(context: Context, channel: SceytChannel, launcher: ActivityResultLauncher<Intent>) {
             val intent = context.createIntent<ChannelInfoActivity>().apply {
-                putExtra(CHANNEL, channel)
+                putExtra(CHANNEL, channel.toIntentPayload())
                 putExtra(ENABLE_SEARCH_MESSAGES, true)
             }
             val animOptions = ActivityOptionsCompat.makeCustomAnimation(context, R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold)
