@@ -49,6 +49,12 @@ class SyncArrayList<T> : ArrayList<T> {
         }
     }
 
+    fun getOrNull(index: Int): T? {
+        synchronized(syncObj) {
+            return if (index in 0 until super.size) super.get(index) else null
+        }
+    }
+
     override fun set(index: Int, element: T): T {
         synchronized(syncObj) {
             return super.set(index, element)
@@ -120,6 +126,11 @@ class SyncArrayList<T> : ArrayList<T> {
             return super.isEmpty()
         }
     }
+
+    override val size: Int
+        get() = synchronized(syncObj) {
+            super.size
+        }
 
     override fun indexOf(element: T): Int {
         synchronized(syncObj) {

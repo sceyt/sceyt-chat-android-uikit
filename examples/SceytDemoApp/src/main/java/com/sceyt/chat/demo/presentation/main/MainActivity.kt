@@ -69,9 +69,9 @@ class MainActivity : AppCompatActivity() {
         checkChannelInviteLink(intent)
     }
 
-    override fun onNewIntent(intent: Intent?) {
+    override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        checkChannelInviteLink(intent ?: return)
+        checkChannelInviteLink(intent)
     }
 
     private fun initViewModel() {
