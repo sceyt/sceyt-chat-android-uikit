@@ -7,7 +7,6 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -53,7 +52,8 @@ fun OutgoingCallScreen(
     remoteName: String,
     remoteAvatar: String?,
     isVideo: Boolean,
-    onEndCall: () -> Unit
+    onEndCall: () -> Unit,
+    isRinging: Boolean
 ) {
     // Pulsing animation for the avatar ring
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
@@ -181,7 +181,7 @@ fun OutgoingCallScreen(
             Spacer(modifier = Modifier.height(12.dp))
 
             // Calling status with animated dots
-            CallingText()
+            CallingText(isRinging)
 
             Spacer(modifier = Modifier.weight(1f))
 
@@ -222,7 +222,9 @@ fun OutgoingCallScreen(
 }
 
 @Composable
-private fun CallingText() {
+private fun CallingText(
+    isRinging: Boolean = false
+) {
     val infiniteTransition = rememberInfiniteTransition(label = "dots")
     val dotsCount by infiniteTransition.animateFloat(
         initialValue = 0f,
@@ -237,7 +239,7 @@ private fun CallingText() {
     val dots = ".".repeat(dotsCount.toInt().coerceIn(0, 3))
 
     Text(
-        text = "Calling$dots",
+        text = if (isRinging) "Ringing$dots" else "Calling$dots",
         color = CallColors.AccentGreen,
         fontSize = 16.sp,
         fontWeight = FontWeight.Medium
