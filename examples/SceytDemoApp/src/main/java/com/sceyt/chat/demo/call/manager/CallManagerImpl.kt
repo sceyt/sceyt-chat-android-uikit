@@ -12,10 +12,8 @@ import com.callclient.call.data.JoinCallOptions
 import com.callclient.call.data.Participant
 import com.callclient.call.data.ParticipantConnectionState
 import com.callclient.call.data.ParticipantEvent
-import com.callclient.call.tracks.CameraCapturer
-import com.callclient.call.tracks.CapturerDevicePosition
-import com.callclient.call.tracks.SCTAudioTrack
-import com.callclient.call.tracks.SCTVideoTrack
+import com.callclient.call.data.VideoSettings
+import com.callclient.call.data.fold
 import com.sceyt.audiorouting.AudioDevice
 import com.sceyt.audiorouting.AudioRouter
 import com.sceyt.audiorouting.AudioRouterConfig
@@ -52,8 +50,6 @@ class CallManagerImpl(
     companion object {
         private const val TAG = "CallManagerImpl"
         private const val CALL_LISTENER_KEY = "call_manager_listener"
-        private const val AUDIO_TRACK_ID = "audio_track_local"
-        private const val VIDEO_TRACK_ID = "video_track_local"
     }
 
     // SDK instances
@@ -93,11 +89,6 @@ class CallManagerImpl(
     private var reconnectTimeoutJob: Job? = null
     private var endedDismissJob: Job? = null
 
-    // Media components
-    private var localAudioTrack: SCTAudioTrack? = null
-    private var localVideoTrack: SCTVideoTrack? = null
-    private var cameraCapturer: CameraCapturer? = null
-
     // State tracking
     private var reconnectAttempts = 0
     private var lastConnectedAt: Long = 0
@@ -107,7 +98,8 @@ class CallManagerImpl(
     override suspend fun startOutgoingCall(
         userId: String,
         channelId: Long,
-        isVideo: Boolean
+        isVideo: Boolean,
+        callPrepared: (Call) -> Unit
     ): Result<Call> {
         if (_callUiState.value !is CallUiState.Idle) {
             return Result.failure(IllegalStateException("Call already in progress"))
@@ -125,9 +117,6 @@ class CallManagerImpl(
                 isVideo = isVideo
             )
 
-            // Initialize media
-            initializeMediaTracks(isVideo)
-
             // Set audio routing preference based on call type
             setupAudioRouting(isVideo)
 
@@ -136,33 +125,33 @@ class CallManagerImpl(
             val result = runCatching {
                 callClient.prepareCall(
                     callId = generateCallId(),
-                    mediaFlow = MediaFlow.P2P,
+                    CreateCallOptions(
+                        participantsIds = listOf(userId),
+                        videoCall = isVideo,
+                        mediaFlow = MediaFlow.P2P
+                    )
                 )
             }
             result.onSuccess { call ->
+                callPrepared(call)
                 // Build join options
-                val joinCallOptions = JoinCallOptions(
-                    localAudioTracks = listOfNotNull(localAudioTrack),
-                    localVideoTracks = listOfNotNull(localVideoTrack),
+                val joinCallOptions = JoinCallOptions.default().copy(
                     audioSettings = AudioSettings(
-                        publishVideo = isVideo
-                    )
+                       disableManageAudioRoute = true
+                    ),
+                    videoSettings = if (isVideo) {
+                        VideoSettings(publishVideo = true)
+                    } else null
                 )
 
-                val createCallOptions = CreateCallOptions(
-                    participantsIds = listOf(userId),
-                    videoCall = isVideo,
-                )
-
-                call.join(joinCallOptions, createCallOptions)
-
-                _currentCall = call
                 setupCallListeners(call)
+                _currentCall = call
                 startNoAnswerTimeout()
-                playTone(ToneConfig.ringback())
 
                 // Update remote participant info
                 _remoteParticipant.value = userInfo
+                call.join(joinCallOptions)
+                playTone(ToneConfig.ringback())
 
                 Log.d(TAG, "Outgoing call started: ${call.id}")
             }.onFailure { error ->
@@ -194,44 +183,45 @@ class CallManagerImpl(
             // Update state to Connecting
             _callUiState.value = CallUiState.Connecting
 
-            // Initialize media
-            initializeMediaTracks(currentState.isVideo)
-
             // Set audio routing preference
             setupAudioRouting(currentState.isVideo)
 
             // Build join options
-            val options = JoinCallOptions(
-                localAudioTracks = listOfNotNull(localAudioTrack),
-                localVideoTracks = (listOfNotNull(localVideoTrack)),
+            val options = JoinCallOptions.default().copy(
                 audioSettings = AudioSettings(
+                    disableManageAudioRoute = true
+                ),
+                videoSettings = VideoSettings(
                     publishVideo = currentState.isVideo
                 )
             )
+            setupCallListeners(call)
 
             // Join call
             val result = call.join(options)
 
-            result.onSuccess { call ->
-                _currentCall = call
-                setupCallListeners(call)
+            result.fold(
+                onSuccess = { call ->
+                    _currentCall = call
 
-                // Update remote participant info
-                _remoteParticipant.value = RemoteParticipantInfo(
-                    id = currentState.callerId,
-                    name = currentState.callerName,
-                    avatar = currentState.callerAvatar
-                )
+                    // Update remote participant info
+                    _remoteParticipant.value = RemoteParticipantInfo(
+                        id = currentState.callerId,
+                        name = currentState.callerName,
+                        avatar = currentState.callerAvatar
+                    )
 
-                Log.d(TAG, "Answered incoming call: ${call.id}")
-            }.onFailure { error ->
-                Log.e(TAG, "Failed to answer call", error)
-                cleanupCall()
-                _callUiState.value =
-                    CallUiState.Ended.Failed(error.message ?: "Failed to answer call")
-            }
-
-            result.map { }
+                    Log.d(TAG, "Answered incoming call: ${call.id}")
+                    Result.success(Unit)
+                },
+                onFailure = { error ->
+                    Log.e(TAG, "Failed to answer call", error)
+                    cleanupCall()
+                    _callUiState.value =
+                        CallUiState.Ended.Failed(error.message ?: "Failed to answer call")
+                    Result.failure(error)
+                }
+            )
         } catch (e: Exception) {
             Log.e(TAG, "Error answering call", e)
             cleanupCall()
@@ -247,7 +237,7 @@ class CallManagerImpl(
         }
 
         return try {
-            callClient.reject(currentState.call, reason)
+            currentState.call.reject(reason)
             stopTone()
             _callUiState.value = CallUiState.Idle
             Log.d(TAG, "Declined incoming call")
@@ -262,7 +252,7 @@ class CallManagerImpl(
         val call = _currentCall ?: return Result.failure(IllegalStateException("No active call"))
 
         return try {
-            callClient.leave(call)
+            call.leave()
             handleCallEnded(CallUiState.Ended.LocalHangup)
             Log.d(TAG, "Ended call")
             Result.success(Unit)
@@ -281,39 +271,22 @@ class CallManagerImpl(
     override fun toggleMute(): Boolean {
         val newMuteState = !_mediaState.value.isMuted
         _currentCall?.mute(newMuteState)
-        _mediaState.value = _mediaState.value.copy(isMuted = newMuteState)
         Log.d(TAG, "Mute toggled: $newMuteState")
         return newMuteState
     }
 
     override fun toggleCamera(): Boolean {
         val newCameraState = !_mediaState.value.isCameraEnabled
-
-        // Video components are always initialized during call setup
-        if (cameraCapturer == null) {
-            Log.e(TAG, "Camera capturer not initialized")
-            return false
-        }
-
-        if (newCameraState) {
-            cameraCapturer?.start()
-        } else {
-            cameraCapturer?.stop()
-        }
-
         _currentCall?.setVideoEnabled(newCameraState)
 
-        _mediaState.value = _mediaState.value.copy(
-            isCameraEnabled = newCameraState,
-            localVideoTrack = if (newCameraState) localVideoTrack?.videoTrack else null
-        )
         Log.d(TAG, "Camera toggled: $newCameraState")
         return newCameraState
     }
 
     override fun switchCamera(): Result<Unit> {
         return try {
-            cameraCapturer?.switch()
+            val capturer = _currentCall?.localParticipant?.getVideoTracks()?.firstOrNull()?.capturer
+            capturer?.switch()
             val newFrontCamera = !_mediaState.value.isFrontCamera
             _mediaState.value = _mediaState.value.copy(isFrontCamera = newFrontCamera)
             Log.d(TAG, "Camera switched: front=$newFrontCamera")
@@ -369,7 +342,7 @@ class CallManagerImpl(
     override suspend fun handleIncomingCall(from: String, call: Call) {
         if (_callUiState.value !is CallUiState.Idle) {
             Log.w(TAG, "Rejecting incoming call - already in a call")
-            callClient.reject(call, "Busy")
+            call.reject("Busy")
             return
         }
 
@@ -451,14 +424,17 @@ class CallManagerImpl(
                     }
 
                     ParticipantState.Left -> {
+                        call.leave()
                         handleCallEnded(CallUiState.Ended.RemoteHangup)
                     }
 
                     ParticipantState.Declined -> {
+                        call.leave()
                         handleCallEnded(CallUiState.Ended.Declined(reason))
                     }
 
                     ParticipantState.NoAnswer -> {
+                        call.leave()
                         handleCallEnded(CallUiState.Ended.NoAnswer)
                     }
 
@@ -511,7 +487,7 @@ class CallManagerImpl(
                 }
             }
 
-            override fun onParticipantEvent(
+            override fun onRemoteParticipantEvent(
                 call: Call,
                 participant: Participant,
                 event: ParticipantEvent
@@ -538,6 +514,31 @@ class CallManagerImpl(
                         is ParticipantEvent.ScreenShare -> {
                             // Handle screen share if needed
                         }
+                    }
+                }
+            }
+
+            override fun onLocalParticipantEvent(
+                call: Call,
+                participant: Participant,
+                event: ParticipantEvent
+            ) {
+                when (event) {
+                    is ParticipantEvent.Hold -> {
+                        _mediaState.value = _mediaState.value.copy(isOnHold = event.hold)
+                    }
+
+                    is ParticipantEvent.Mute -> {
+                        _mediaState.value = _mediaState.value.copy(isMuted = event.muted)
+                    }
+
+                    is ParticipantEvent.ScreenShare -> {}
+                    is ParticipantEvent.Video -> {
+                        _mediaState.value = _mediaState.value.copy(
+                            isCameraEnabled = event.enabled,
+                            localVideoTrack = if (event.enabled)
+                                participant.getVideoTracks().firstOrNull()?.videoTrack else null
+                        )
                     }
                 }
             }
@@ -599,6 +600,17 @@ class CallManagerImpl(
             ) {
                 // Handle dominant speaker if needed
             }
+
+            override fun onParticipantsRemoved(
+                call: Call,
+                participants: List<Participant>
+            ) {
+
+            }
+
+            override fun onSessionRenewed(call: Call) {
+
+            }
         })
     }
 
@@ -657,13 +669,6 @@ class CallManagerImpl(
         _currentCall?.removeListener(CALL_LISTENER_KEY)
         _currentCall = null
 
-        // Release media
-        cameraCapturer?.stop()
-        cameraCapturer = null
-        localAudioTrack = null
-        localVideoTrack = null
-
-        // Stop audio routing
         audioRouter.stop()
 
         // Reset state
@@ -675,45 +680,6 @@ class CallManagerImpl(
 
         // Stop any playing tones
         scope.launch { stopTone() }
-    }
-
-    private fun initializeMediaTracks(isVideo: Boolean) {
-        // Create audio track
-        localAudioTrack = SCTAudioTrack(AUDIO_TRACK_ID)
-
-        // Always create video components to support enabling camera mid-call
-        cameraCapturer = CameraCapturer(
-            context = context,
-            targetWidth = 960,
-            targetHeight = 540,
-            frameLimit = 20,
-            position = CapturerDevicePosition.Front
-        )
-
-        localVideoTrack = SCTVideoTrack(
-            cameraCapturer!!,
-            VIDEO_TRACK_ID,
-            isScreencast = false
-        )
-
-        // Only start capturer and enable video for video calls
-        if (isVideo) {
-            cameraCapturer?.start()
-
-            _mediaState.value = _mediaState.value.copy(
-                isCameraEnabled = true,
-                isFrontCamera = true,
-                localVideoTrack = localVideoTrack?.videoTrack
-            )
-        } else {
-            _mediaState.value = _mediaState.value.copy(
-                isCameraEnabled = false,
-                isFrontCamera = true,
-                localVideoTrack = null
-            )
-        }
-
-        Log.d(TAG, "Media tracks initialized: video=$isVideo")
     }
 
     private val audioRouterListener = object : AudioRouterListener {

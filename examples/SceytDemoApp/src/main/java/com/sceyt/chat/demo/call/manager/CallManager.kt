@@ -65,7 +65,8 @@ interface CallManager {
     suspend fun startOutgoingCall(
         userId: String,
         channelId: Long,
-        isVideo: Boolean
+        isVideo: Boolean,
+        callPrepared: (Call) -> Unit = {}
     ): Result<Call>
 
     /**

@@ -4,6 +4,9 @@ import android.app.Application
 import android.util.Log
 import com.callclient.CallClient
 import com.callclient.call.Call
+import com.callclient.logger.CallLog
+import com.callclient.logger.CallLogLevel
+import com.callclient.logger.CallLogPriority
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.demo.call.manager.CallManager
 import com.sceyt.chat.demo.call.notification.CallNotificationChannels
@@ -44,7 +47,15 @@ class SceytChatDemoApp : Application() {
         super.onCreate()
         startKoin {
             androidContext(this@SceytChatDemoApp)
-            modules(arrayListOf(appModules, viewModelModules, apiModule, repositoryModule, callModule))
+            modules(
+                arrayListOf(
+                    appModules,
+                    viewModelModules,
+                    apiModule,
+                    repositoryModule,
+                    callModule
+                )
+            )
         }
 
         initSceyt()
@@ -65,9 +76,22 @@ class SceytChatDemoApp : Application() {
 
         ChatClient.setSceytLogLevel(SCTLogLevel.Info) { i: Int, s: String, s1: String ->
             when (i) {
-                Log.DEBUG, Log.INFO, Log.VERBOSE -> Log.i(s, s1)
+                Log.INFO -> Log.i(s, s1)
+                Log.DEBUG -> Log.d(s, s1)
+                Log.VERBOSE -> Log.v(s, s1)
                 Log.WARN -> Log.w(s, s1)
                 Log.ERROR, Log.ASSERT -> Log.e(s, s1)
+            }
+        }
+
+        CallLog.setLogger(CallLogLevel.Verbose) { priority, tag, message, throwable ->
+            when (priority) {
+                CallLogPriority.Info -> Log.i("[CALL_LOG] $tag", message ?: "", throwable)
+                CallLogPriority.Debug -> Log.d("[CALL_LOG] $tag", message ?: "", throwable)
+                CallLogPriority.Verbose -> Log.v("[CALL_LOG] $tag", message ?: "", throwable)
+                CallLogPriority.Warning -> Log.w("[CALL_LOG] $tag", message ?: "", throwable)
+                CallLogPriority.Error -> Log.e("[CALL_LOG] $tag", message ?: "", throwable)
+                CallLogPriority.Assert -> Log.wtf("[CALL_LOG] $tag", message ?: "", throwable)
             }
         }
     }
@@ -118,27 +142,28 @@ class SceytChatDemoApp : Application() {
         CallClient.initialize(this, chatClient)
 
         // Register listener for incoming calls
-        CallClient.requireInstance().addListener(CALL_CLIENT_LISTENER_KEY, object : CallClient.ClientListener {
-            override fun onInvitedToCall(from: String, call: Call) {
-                Log.d(TAG, "Invited to call from: $from, video: ${call.videoCall}")
+        CallClient.requireInstance()
+            .addListener(CALL_CLIENT_LISTENER_KEY, object : CallClient.ClientListener {
+                override fun onInvitedToCall(from: String, call: Call) {
+                    Log.d(TAG, "Invited to call from: $from, video: ${call.videoCall}")
 
-                // Handle incoming call through CallManager
-                appScope.launch {
-                    callManager.handleIncomingCall(from, call)
+                    // Handle incoming call through CallManager
+                    appScope.launch {
+                        callManager.handleIncomingCall(from, call)
 
-                    // Launch incoming call UI
-                    CallActivity.launchIncoming(
-                        context = this@SceytChatDemoApp,
-                        callerId = from,
-                        isVideo = call.videoCall
-                    )
+                        // Launch incoming call UI
+                        CallActivity.launchIncoming(
+                            context = this@SceytChatDemoApp,
+                            callerId = from,
+                            isVideo = call.videoCall
+                        )
+                    }
                 }
-            }
 
-            override fun onOngoingCallsUpdated(calls: List<Call>) {
-                Log.d(TAG, "Ongoing calls updated: ${calls.size}")
-            }
-        })
+                override fun onOngoingCallsUpdated(calls: List<Call>) {
+                    Log.d(TAG, "Ongoing calls updated: ${calls.size}")
+                }
+            })
 
         Log.d(TAG, "CallClient initialized, version: ${CallClient.getVersion()}")
     }
