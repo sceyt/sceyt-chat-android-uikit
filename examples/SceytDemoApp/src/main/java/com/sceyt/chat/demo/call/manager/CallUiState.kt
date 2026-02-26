@@ -22,7 +22,7 @@ sealed class CallUiState {
         val remoteUserName: String?,
         val remoteUserAvatar: String?,
         val isVideo: Boolean,
-        val startTime: Long = System.currentTimeMillis()
+        val startTime: Long = System.currentTimeMillis(),
     ) : CallUiState()
 
     /**

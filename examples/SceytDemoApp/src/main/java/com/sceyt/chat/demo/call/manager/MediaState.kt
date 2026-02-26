@@ -89,5 +89,6 @@ data class RemoteParticipantInfo(
     val avatar: String?,
     val isMuted: Boolean = false,
     val isVideoEnabled: Boolean = false,
-    val isOnHold: Boolean = false
+    val isOnHold: Boolean = false,
+    val ringing: Boolean = false
 )

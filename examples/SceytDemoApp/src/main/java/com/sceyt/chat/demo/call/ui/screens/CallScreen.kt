@@ -45,6 +45,7 @@ fun CallScreen(
                     remoteName = state.remoteUserName ?: state.remoteUserId,
                     remoteAvatar = state.remoteUserAvatar,
                     isVideo = state.isVideo,
+                    isRinging = remoteParticipant?.ringing ?: false,
                     onEndCall = { viewModel.onEndCallClick() }
                 )
             }

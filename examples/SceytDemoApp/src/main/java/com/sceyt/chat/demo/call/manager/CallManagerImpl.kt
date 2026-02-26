@@ -360,6 +360,7 @@ class CallManagerImpl(
         // Play ringtone
         playTone(ToneConfig.ring())
 
+        call.sendRinging()
         Log.d(TAG, "Incoming call from: $from, video: ${call.videoCall}")
     }
 
@@ -416,7 +417,8 @@ class CallManagerImpl(
 
                 when (state) {
                     ParticipantState.Ringing -> {
-                        // Remote is ringing - keep playing ringback
+                        _remoteParticipant.value =
+                            _remoteParticipant.value?.copy(ringing = true)
                     }
 
                     ParticipantState.Joined -> {
