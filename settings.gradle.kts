@@ -27,6 +27,7 @@ project(":SceytDemoApp").projectDir = file("./examples/SceytDemoApp")
 // ToneManager module
 include(":ToneManager")
 project(":ToneManager").projectDir = file("/Users/marat/AndroidStudioProjects/ToneManager/tonemanager")
+/*
 
 include(":SceytCallSdk")
-project(":SceytCallSdk").projectDir = file("../sceyt-call-android-sdk-source/callclient")
+project(":SceytCallSdk").projectDir = file("../sceyt-call-android-sdk-source/callclient")*/

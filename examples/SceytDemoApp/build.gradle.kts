@@ -103,7 +103,7 @@ dependencies {
     implementation(project(":SceytChatUiKit"))
 
     implementation(project(":ToneManager"))
-    implementation(project(":SceytCallSdk"))
+    implementation("com.sceyt:sceyt-call-android-sdk:1.4.600004-SNAPSHOT")
 
     implementation(libs.appcompat)
     implementation(libs.material)
