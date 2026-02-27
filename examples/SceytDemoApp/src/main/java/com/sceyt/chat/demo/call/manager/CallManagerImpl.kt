@@ -137,7 +137,7 @@ class CallManagerImpl(
                 // Build join options
                 val joinCallOptions = JoinCallOptions.default().copy(
                     audioSettings = AudioSettings(
-                       disableManageAudioRoute = true
+                        disableManageAudioRoute = true
                     ),
                     videoSettings = if (isVideo) {
                         VideoSettings(publishVideo = true)
@@ -349,6 +349,7 @@ class CallManagerImpl(
         // Fetch caller info
         val userInfo = fetchUserInfo(from)
 
+        setupCallListeners(call)
         _callUiState.value = CallUiState.Incoming(
             callerId = from,
             callerName = userInfo?.name,
