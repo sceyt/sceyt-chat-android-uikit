@@ -16,6 +16,7 @@ import com.sceyt.chat.demo.call.ui.CallActivity
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.extensions.launchActivity
 import com.sceyt.chatuikit.persistence.extensions.getPeer
+import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.presentation.components.channel.header.MessagesListHeaderView
 import com.sceyt.chatuikit.presentation.components.channel.messages.ChannelActivity
 import kotlinx.coroutines.launch
@@ -49,6 +50,9 @@ class CustomChannelActivity : ChannelActivity() {
     }
 
     private fun MessagesListHeaderView.setToolbarMenu() {
+        if (!viewModel.channel.isDirect() || viewModel.channel.isSelf) {
+            return
+        }
         setToolbarMenu(R.menu.menu_conversation, Toolbar.OnMenuItemClickListener {
             when (it.itemId) {
                 R.id.action_audio_call -> makeCall(false)
