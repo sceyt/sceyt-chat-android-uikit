@@ -32,7 +32,11 @@ data class CallUiState(
 ) {
 
     enum class CallPhase {
-        Idle, Incoming, Outgoing, Connecting, Connected, Reconnecting, Ended
+        Idle, Incoming, Outgoing, Connecting, Connected, Reconnecting, Ended;
+
+        fun canAnswerOrMakeCall(): Boolean {
+            return this == Idle || this == Ended
+        }
     }
 
     sealed class EndedReason {
@@ -53,7 +57,7 @@ data class CallUiState(
 
         val dismissTimeoutMs: Long
             get() = when (this) {
-                is LocalHangup -> 1_000L
+                is LocalHangup -> 0L
                 is RemoteHangup -> 2_000L
                 is Declined -> 10_000L
                 is NoAnswer -> 3_000L

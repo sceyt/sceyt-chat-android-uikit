@@ -104,11 +104,12 @@ class CallManagerImpl(
         isCallAgain: Boolean,
         callPrepared: (Call) -> Unit
     ): Result<Call> {
-        if (_callUiState.value.phase != CallPhase.Idle && !isCallAgain) {
+        if (!_callUiState.value.phase.canAnswerOrMakeCall() && !isCallAgain) {
             return Result.failure(IllegalStateException("Call already in progress"))
         }
 
         return try {
+            endedDismissJob?.cancel()
             val userInfo = fetchUserInfo(userId)
 
             lastOutgoingUserId = userId
@@ -226,6 +227,7 @@ class CallManagerImpl(
         return try {
             call.reject(reason)
             stopTone()
+            endedDismissJob?.cancel()
             _callUiState.update { CallUiState.IDLE }
             Log.d(TAG, "Declined incoming call")
             Result.success(Unit)
@@ -340,12 +342,12 @@ class CallManagerImpl(
     // ========== Incoming Call Handling ==========
 
     override suspend fun handleIncomingCall(from: String, call: Call) {
-        if (_callUiState.value.phase != CallPhase.Idle) {
+        if (!_callUiState.value.phase.canAnswerOrMakeCall()) {
             Log.w(TAG, "Rejecting incoming call - already in a call")
             call.reject("Busy")
             return
         }
-
+        endedDismissJob?.cancel()
         val userInfo = fetchUserInfo(from)
 
         setupCallListeners(call)
@@ -620,8 +622,8 @@ class CallManagerImpl(
 
         endedDismissJob?.cancel()
         endedDismissJob = scope.launch {
-            delay(reason.dismissTimeoutMs)
             cleanupCall()
+            delay(reason.dismissTimeoutMs)
             _callUiState.update { CallUiState.IDLE }
         }
     }
