@@ -87,20 +87,18 @@ class CustomChannelActivity : ChannelActivity() {
         lifecycleScope.launch {
             val result = callManager.startOutgoingCall(
                 userId = peerUserId,
-                channelId = channel.id,
                 isVideo = isVideo,
-                callPrepared = {
-                    // Launch call UI
-                    CallActivity.launchOutgoing(
-                        context = this@CustomChannelActivity,
-                        userId = peerUserId,
-                        isVideo = isVideo
-                    )
-                }
-            )
+                isCallAgain = false
+            ) {
+                // Launch call UI
+                CallActivity.launchOutgoing(
+                    context = this@CustomChannelActivity,
+                    userId = peerUserId,
+                    isVideo = isVideo
+                )
+            }
 
             result.onFailure { error ->
-                finish()
                 Toast.makeText(
                     this@CustomChannelActivity,
                     "Failed to start call: ${error.message}",

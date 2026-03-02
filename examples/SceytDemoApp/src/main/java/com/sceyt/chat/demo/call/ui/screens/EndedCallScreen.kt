@@ -1,115 +1,174 @@
 package com.sceyt.chat.demo.call.ui.screens
 
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CallEnd
-import androidx.compose.material3.Icon
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.sceyt.chat.demo.call.ui.components.CallActionButton
+import com.sceyt.chat.demo.call.ui.components.UserAvatar
 import com.sceyt.chat.demo.call.ui.theme.CallColors
 
 /**
- * Call ended screen - shows reason with fade-in animation.
+ * Screen shown when a call fails, is declined, or gets no answer.
+ * Matches Figma design: avatar + name + status + Cancel/Call Again buttons.
+ * NOT shown for normal hangup (LocalHangup/RemoteHangup) — activity closes directly for those.
  */
 @Composable
 fun EndedCallScreen(
+    remoteName: String,
+    remoteAvatar: String?,
     reason: String,
-    onDismiss: () -> Unit
+    onCancel: (() -> Unit)?,
+    onCallAgain: (() -> Unit)?
 ) {
-    val scale = remember { Animatable(0.8f) }
-    val alpha = remember { Animatable(0f) }
-
-    LaunchedEffect(Unit) {
-        scale.animateTo(1f, animationSpec = tween(300))
-    }
-    LaunchedEffect(Unit) {
-        alpha.animateTo(1f, animationSpec = tween(300))
-    }
-
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        CallColors.GradientStart,
-                        CallColors.GradientMiddle,
-                        CallColors.GradientEnd
-                    )
-                )
-            )
+            .background(CallColors.BackgroundDark)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .statusBarsPadding()
                 .navigationBarsPadding()
-                .padding(24.dp)
-                .scale(scale.value)
-                .alpha(alpha.value),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+                .padding(horizontal = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Icon with background
+            Spacer(modifier = Modifier.fillMaxHeight(0.1f))
+
+            // Avatar with outer ring
             Box(
-                modifier = Modifier
-                    .size(100.dp)
-                    .background(
-                        color = CallColors.AccentRed.copy(alpha = 0.15f),
-                        shape = CircleShape
-                    ),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.size(164.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Default.CallEnd,
-                    contentDescription = "Call Ended",
-                    modifier = Modifier.size(48.dp),
-                    tint = CallColors.AccentRed
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            color = Color.White.copy(alpha = 0.06f),
+                            shape = CircleShape
+                        )
+                )
+                UserAvatar(
+                    avatarUrl = remoteAvatar,
+                    name = remoteName,
+                    size = 140.dp
                 )
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(48.dp))
 
+            // Name
             Text(
-                text = "Call Ended",
+                text = remoteName,
                 color = CallColors.TextPrimary,
-                fontSize = 28.sp,
-                fontWeight = FontWeight.SemiBold,
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Medium,
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-            Text(
-                text = reason,
-                color = CallColors.TextSecondary,
-                fontSize = 16.sp,
-                textAlign = TextAlign.Center
-            )
+            // Status pill (e.g. "Call Failed", "Call Declined", "No Answer")
+            Box(
+                modifier = Modifier
+                    .background(
+                        color = Color.Transparent,
+                        shape = RoundedCornerShape(20.dp)
+                    )
+                    .padding(horizontal = 10.dp, vertical = 2.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = reason,
+                    color = CallColors.TextPrimary,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Normal
+                )
+            }
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            // Cancel and Call Again buttons (hidden for RemoteHangup)
+            if (onCancel != null || onCallAgain != null) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(0.8f)
+                        .padding(bottom = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    // Cancel button
+                    if (onCancel != null) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            CallActionButton(
+                                icon = Icons.Default.Close,
+                                backgroundColor = CallColors.ButtonSurface,
+                                iconTint = Color.White,
+                                contentDescription = "Cancel",
+                                onClick = onCancel,
+                                size = 64.dp,
+                                iconSize = 34.dp
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "Cancel",
+                                color = Color.White,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Normal
+                            )
+                        }
+                    }
+
+                    // Call Again button
+                    if (onCallAgain != null) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            CallActionButton(
+                                icon = Icons.Default.Phone,
+                                backgroundColor = CallColors.CallAgainGreen,
+                                iconTint = Color.White,
+                                contentDescription = "Call Again",
+                                onClick = onCallAgain,
+                                size = 64.dp,
+                                iconSize = 34.dp
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "Call Again",
+                                color = Color.White,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Normal
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }

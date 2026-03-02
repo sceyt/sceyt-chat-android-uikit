@@ -109,7 +109,7 @@ class CallActivity : ComponentActivity() {
         }
 
         setContent {
-            CallTheme {
+            CallTheme(darkTheme = true) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
@@ -121,7 +121,10 @@ class CallActivity : ComponentActivity() {
                         onDismiss = { finishAndRemoveTask() }
                     )
 
-                    // Auto-close when call ends and dismiss timeout completes
+                    // Auto-close on Idle:
+                    // - LocalHangup: immediate dismiss via CallScreen LaunchedEffect
+                    // - RemoteHangup: brief "Call Ended" screen (2s), then transitions to Idle here
+                    // - Failed/Declined/NoAnswer: EndedCallScreen shown, dismissed via endedDismissJob
                     if (callState is CallUiState.Idle) {
                         finishAndRemoveTask()
                     }
