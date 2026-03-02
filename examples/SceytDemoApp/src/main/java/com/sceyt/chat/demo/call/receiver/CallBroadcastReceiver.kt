@@ -47,7 +47,7 @@ class CallBroadcastReceiver : BroadcastReceiver(), KoinComponent {
     private fun handleAnswer(context: Context, callId: String) {
         scope.launch {
             val result = callManager.answerIncomingCall(
-                CallClient.instance?.getOngoingCall(callId) ?: return@launch
+                CallClient.getInstance()?.getOngoingCall(callId) ?: return@launch
             )
             if (result.isSuccess) {
                 // Launch call activity
