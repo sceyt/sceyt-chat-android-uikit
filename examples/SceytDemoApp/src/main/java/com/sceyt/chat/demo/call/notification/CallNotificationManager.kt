@@ -4,7 +4,6 @@ import android.app.Notification
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import androidx.core.app.NotificationCompat
 import com.sceyt.chat.demo.R
 import com.sceyt.chat.demo.call.manager.CallUiState
@@ -23,7 +22,6 @@ class CallNotificationManager(
         private const val ACTION_DECLINE = "com.sceyt.call.ACTION_DECLINE"
         private const val ACTION_END_CALL = "com.sceyt.call.ACTION_END_CALL"
         private const val ACTION_TOGGLE_MUTE = "com.sceyt.call.ACTION_TOGGLE_MUTE"
-         const val CALL_ID = "CallId"
     }
 
     /**
@@ -31,8 +29,7 @@ class CallNotificationManager(
      */
     fun buildIncomingCallNotification(
         callerName: String,
-        isVideo: Boolean,
-        callId: String
+        isVideo: Boolean
     ): Notification {
         val callType = if (isVideo) "Video call" else "Voice call"
 
@@ -57,7 +54,6 @@ class CallNotificationManager(
         // Action: Answer
         val answerIntent = Intent(context, CallBroadcastReceiver::class.java).apply {
             action = ACTION_ANSWER
-            putExtra(CALL_ID, callId) // Pass actual call ID if needed
         }
         val answerPendingIntent = PendingIntent.getBroadcast(
             context,
@@ -69,7 +65,6 @@ class CallNotificationManager(
         // Action: Decline
         val declineIntent = Intent(context, CallBroadcastReceiver::class.java).apply {
             action = ACTION_DECLINE
-            putExtra(CALL_ID, callId)
         }
         val declinePendingIntent = PendingIntent.getBroadcast(
             context,
@@ -78,7 +73,10 @@ class CallNotificationManager(
             immutablePendingIntentFlags()
         )
 
-        return NotificationCompat.Builder(context, CallNotificationChannels.INCOMING_CALL_CHANNEL_ID)
+        return NotificationCompat.Builder(
+            context,
+            CallNotificationChannels.INCOMING_CALL_CHANNEL_ID
+        )
             .setSmallIcon(R.drawable.ic_call_up_blue)
             .setContentTitle(callerName)
             .setContentText("Incoming $callType")
@@ -176,10 +174,10 @@ class CallNotificationManager(
         remoteName: String,
         state: CallUiState
     ): Notification {
-        val statusText = when (state) {
-            is CallUiState.Connecting -> "Connecting..."
-            is CallUiState.Reconnecting -> "Reconnecting... (Attempt ${state.attempt})"
-            is CallUiState.Outgoing -> "Calling..."
+        val statusText = when (state.phase) {
+            CallUiState.CallPhase.Connecting -> "Connecting..."
+            CallUiState.CallPhase.Reconnecting -> "Reconnecting... (Attempt ${state.reconnectAttempt})"
+            CallUiState.CallPhase.Outgoing -> "Calling..."
             else -> "Call in progress"
         }
 
@@ -222,10 +220,6 @@ class CallNotificationManager(
     }
 
     private fun immutablePendingIntentFlags(): Int {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        } else {
-            PendingIntent.FLAG_UPDATE_CURRENT
-        }
+        return PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
     }
 }

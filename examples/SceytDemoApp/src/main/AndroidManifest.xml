@@ -99,10 +99,11 @@
             android:name=".call.ui.CallActivity"
             android:exported="false"
             android:launchMode="singleTask"
+            android:screenOrientation="portrait"
             android:showOnLockScreen="true"
             android:showWhenLocked="true"
-            android:turnScreenOn="true"
-            android:theme="@style/SceytAppTheme.Default" />
+            android:theme="@style/SceytAppTheme.Default"
+            android:turnScreenOn="true" />
 
         <!-- Call Broadcast Receiver for notification actions -->
         <receiver
