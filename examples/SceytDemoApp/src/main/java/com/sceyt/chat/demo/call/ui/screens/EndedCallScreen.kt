@@ -118,7 +118,7 @@ fun EndedCallScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth(0.8f)
-                        .padding(bottom = 16.dp),
+                        .padding(bottom = 24.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
