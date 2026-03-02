@@ -93,21 +93,29 @@ class CallManagerImpl(
     private var reconnectAttempts = 0
     private var lastConnectedAt: Long = 0
 
+    // Last outgoing call info for "Call Again" feature
+    private var lastOutgoingUserId: String? = null
+    private var lastOutgoingIsVideo: Boolean = false
+
     // ========== Call Control ==========
 
     override suspend fun startOutgoingCall(
         userId: String,
-        channelId: Long,
         isVideo: Boolean,
+        isCallAgain: Boolean,
         callPrepared: (Call) -> Unit
     ): Result<Call> {
-        if (_callUiState.value !is CallUiState.Idle) {
+        if (_callUiState.value !is CallUiState.Idle && !isCallAgain) {
             return Result.failure(IllegalStateException("Call already in progress"))
         }
 
         return try {
             // Fetch user info
             val userInfo = fetchUserInfo(userId)
+
+            // Save for "call again"
+            lastOutgoingUserId = userId
+            lastOutgoingIsVideo = isVideo
 
             // Update state to Outgoing
             _callUiState.value = CallUiState.Outgoing(
@@ -264,6 +272,22 @@ class CallManagerImpl(
 
     override fun sendRinging() {
         _currentCall?.sendRinging()
+    }
+
+    override suspend fun callAgain(): Result<Unit> {
+        val userId = lastOutgoingUserId
+            ?: return Result.failure(IllegalStateException("No previous outgoing call to retry"))
+
+        // Cancel the ended-dismiss timer and reset to idle
+        endedDismissJob?.cancel()
+        endedDismissJob = null
+        cleanupCall()
+
+        return startOutgoingCall(
+            userId = userId,
+            isVideo = lastOutgoingIsVideo,
+            isCallAgain = true
+        ).map { }
     }
 
     // ========== Media Control ==========
@@ -618,6 +642,15 @@ class CallManagerImpl(
     }
 
     private fun handleCallEnded(reason: CallUiState.Ended) {
+        // If we're already in a terminal Ended state, don't overwrite it with a generic
+        // RemoteHangup that arrives from CallState.Closed / ParticipantState.Left after
+        // a Declined / NoAnswer / Failed has already been set.
+        val currentState = _callUiState.value
+        if (reason is CallUiState.Ended.RemoteHangup && currentState is CallUiState.Ended) {
+            Log.d(TAG, "Ignoring RemoteHangup — already in ended state: $currentState")
+            return
+        }
+
         Log.d(TAG, "Call ended: $reason")
 
         // Cancel all timers

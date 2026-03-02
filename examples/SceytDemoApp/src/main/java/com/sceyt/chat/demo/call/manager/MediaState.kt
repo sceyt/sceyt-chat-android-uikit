@@ -1,11 +1,13 @@
 package com.sceyt.chat.demo.call.manager
 
+import androidx.compose.runtime.Immutable
 import org.webrtc.VideoTrack
 
 /**
  * Represents the current media state of an active call.
  * This is exposed as a StateFlow for UI observation.
  */
+@Immutable
 data class MediaState(
     /** Whether local microphone is muted */
     val isMuted: Boolean = false,

@@ -58,14 +58,13 @@ interface CallManager {
      * Start an outgoing call to the specified user.
      *
      * @param userId The remote user ID to call
-     * @param channelId The channel ID for context (used to fetch user info)
      * @param isVideo Whether to start with video enabled
      * @return Result containing the Call object on success
      */
     suspend fun startOutgoingCall(
         userId: String,
-        channelId: Long,
         isVideo: Boolean,
+        isCallAgain: Boolean,
         callPrepared: (Call) -> Unit = {}
     ): Result<Call>
 
@@ -158,6 +157,13 @@ interface CallManager {
      * @param call The incoming Call object from SDK
      */
     suspend fun handleIncomingCall(from: String, call: Call)
+
+    /**
+     * Retry calling the last outgoing call recipient.
+     * Cancels the current ended-dismiss timer, resets state, and starts a new outgoing call.
+     * Only valid when state is a terminal [CallUiState.Ended] (Failed, Declined, NoAnswer).
+     */
+    suspend fun callAgain(): Result<Unit>
 
     /**
      * Release all resources.

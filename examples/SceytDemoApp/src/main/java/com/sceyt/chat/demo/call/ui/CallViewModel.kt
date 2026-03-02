@@ -124,6 +124,15 @@ class CallViewModel(
     }
 
     /**
+     * Retry the last outgoing call (used from the "Call Again" button on the failed screen).
+     */
+    fun onCallAgain() {
+        viewModelScope.launch {
+            callManager.callAgain()
+        }
+    }
+
+    /**
      * Send ringing signal to caller (for incoming calls).
      */
     fun sendRinging() {

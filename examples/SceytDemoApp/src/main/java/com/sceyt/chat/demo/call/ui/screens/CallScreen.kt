@@ -3,6 +3,7 @@ package com.sceyt.chat.demo.call.ui.screens
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -10,7 +11,9 @@ import com.sceyt.chat.demo.call.manager.CallUiState
 import com.sceyt.chat.demo.call.ui.CallViewModel
 
 /**
- * Main call screen that routes to appropriate sub-screen based on call state.
+ * Main call screen that routes to the appropriate sub-screen based on call state.
+ * All active call states (Outgoing, Connecting, Connected, Reconnecting) use a single
+ * OngoingCallScreen composable, preventing remounts and UI blink on state transitions.
  */
 @Composable
 fun CallScreen(
@@ -40,57 +43,64 @@ fun CallScreen(
                 )
             }
 
-            is CallUiState.Outgoing -> {
-                OutgoingCallScreen(
-                    remoteName = state.remoteUserName ?: state.remoteUserId,
-                    remoteAvatar = state.remoteUserAvatar,
-                    isVideo = state.isVideo,
-                    isRinging = remoteParticipant?.ringing ?: false,
-                    onEndCall = { viewModel.onEndCallClick() }
-                )
-            }
-
-            is CallUiState.Connecting -> {
-                ConnectingScreen(
-                    remoteName = remoteParticipant?.name ?: "Connecting...",
-                    remoteAvatar = remoteParticipant?.avatar,
-                    onEndCall = { viewModel.onEndCallClick() }
-                )
-            }
-
-            is CallUiState.Connected -> {
-                ConnectedCallScreen(
-                    remoteName = remoteParticipant?.name ?: "Unknown",
-                    remoteAvatar = remoteParticipant?.avatar,
-                    duration = duration,
+            is CallUiState.Outgoing,
+            is CallUiState.Connecting,
+            is CallUiState.Connected,
+            is CallUiState.Reconnecting -> {
+                OngoingCallScreen(
+                    callState = state,
+                    remoteName = when (state) {
+                        is CallUiState.Outgoing -> state.remoteUserName ?: state.remoteUserId
+                        else -> remoteParticipant?.name ?: ""
+                    },
+                    remoteAvatar = when (state) {
+                        is CallUiState.Outgoing -> state.remoteUserAvatar
+                        else -> remoteParticipant?.avatar
+                    },
                     mediaState = mediaState,
-                    availableDevices = availableDevices,
-                    selectedDevice = selectedDevice,
+                    duration = duration,
+                    isRinging = remoteParticipant?.ringing ?: false,
+                    audioDeviceData = AudioDeviceData(
+                        availableDevices = availableDevices,
+                        selectedDevice = selectedDevice
+                    ),
                     onToggleMute = { viewModel.onToggleMute() },
                     onToggleCamera = { viewModel.onToggleCamera() },
                     onSwitchCamera = { viewModel.onSwitchCamera() },
-                    onToggleSpeaker = { viewModel.onToggleSpeaker() },
                     onSelectDevice = { viewModel.onSelectAudioDevice(it) },
                     onEndCall = { viewModel.onEndCallClick() }
                 )
             }
 
-            is CallUiState.Reconnecting -> {
-                ReconnectingScreen(
-                    remoteName = remoteParticipant?.name ?: "Unknown",
-                    attempt = state.attempt,
-                    maxAttempts = state.maxAttempts,
-                    isMuted = mediaState.isMuted,
-                    onToggleMute = { viewModel.onToggleMute() },
-                    onEndCall = { viewModel.onEndCallClick() }
-                )
-            }
-
             is CallUiState.Ended -> {
-                EndedCallScreen(
-                    reason = state.displayMessage,
-                    onDismiss = onDismiss
-                )
+                when (state) {
+                    // Local hangup — close immediately, no screen shown
+                    is CallUiState.Ended.LocalHangup -> {
+                        LaunchedEffect(Unit) { onDismiss() }
+                    }
+
+                    // Remote hangup — show "Call Ended" briefly, then auto-close via Idle state
+                    is CallUiState.Ended.RemoteHangup -> {
+                        EndedCallScreen(
+                            remoteName = remoteParticipant?.name ?: "Unknown",
+                            remoteAvatar = remoteParticipant?.avatar,
+                            reason = state.displayMessage,
+                            onCancel = null,
+                            onCallAgain = null
+                        )
+                    }
+
+                    // Failed, declined, or no-answer — show the ended screen with actions
+                    else -> {
+                        EndedCallScreen(
+                            remoteName = remoteParticipant?.name ?: "Unknown",
+                            remoteAvatar = remoteParticipant?.avatar,
+                            reason = state.displayMessage,
+                            onCancel = onDismiss,
+                            onCallAgain = { viewModel.onCallAgain() }
+                        )
+                    }
+                }
             }
         }
     }
