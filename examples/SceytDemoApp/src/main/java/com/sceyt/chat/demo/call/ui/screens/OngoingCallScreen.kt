@@ -96,11 +96,8 @@ data class AudioDeviceData(
 @Composable
 fun OngoingCallScreen(
     callState: CallUiState,
-    remoteName: String,
-    remoteAvatar: String?,
     mediaState: MediaState,
     duration: String,
-    isRinging: Boolean,
     audioDeviceData: AudioDeviceData,
     onToggleMute: () -> Unit,
     onToggleCamera: () -> Unit,
@@ -108,12 +105,16 @@ fun OngoingCallScreen(
     onSelectDevice: (AudioDevice) -> Unit,
     onEndCall: () -> Unit
 ) {
-    val (availableDevices, selectedDevice) = audioDeviceData
-    val isConnected = callState is CallUiState.Connected || callState is CallUiState.Reconnecting
+    val remoteName = callState.remoteUserName ?: callState.remoteUserId
+    val remoteAvatar = callState.remoteUserAvatar
 
-    val showVideoLayout = when (callState) {
-        is CallUiState.Outgoing -> callState.isVideo && mediaState.localVideoTrack != null
-        is CallUiState.Connecting -> mediaState.shouldShowLocalPreview
+    val (availableDevices, selectedDevice) = audioDeviceData
+    val isConnected = callState.phase == CallUiState.CallPhase.Connected ||
+            callState.phase == CallUiState.CallPhase.Reconnecting
+
+    val showVideoLayout = when (callState.phase) {
+        CallUiState.CallPhase.Outgoing -> callState.isVideo && mediaState.localVideoTrack != null
+        CallUiState.CallPhase.Connecting -> mediaState.shouldShowLocalPreview
         else -> mediaState.hasActiveVideo  // Connected or Reconnecting
     }
 
@@ -137,7 +138,6 @@ fun OngoingCallScreen(
                 callState = callState,
                 remoteName = remoteName,
                 duration = duration,
-                isRinging = isRinging,
                 mediaState = mediaState,
                 showControls = controlsVisible,
                 onTap = { showControls = !showControls }
@@ -147,8 +147,7 @@ fun OngoingCallScreen(
                 callState = callState,
                 remoteName = remoteName,
                 remoteAvatar = remoteAvatar,
-                duration = duration,
-                isRinging = isRinging
+                duration = duration
             )
         }
 
@@ -194,8 +193,7 @@ private fun AudioOngoingLayout(
     callState: CallUiState,
     remoteName: String,
     remoteAvatar: String?,
-    duration: String,
-    isRinging: Boolean
+    duration: String
 ) {
     Box(
         modifier = Modifier
@@ -246,7 +244,6 @@ private fun AudioOngoingLayout(
 
             CallStatusContent(
                 callState = callState,
-                isRinging = isRinging,
                 duration = duration
             )
 
@@ -262,7 +259,6 @@ private fun VideoOngoingLayout(
     callState: CallUiState,
     remoteName: String,
     duration: String,
-    isRinging: Boolean,
     mediaState: MediaState,
     showControls: Boolean,
     onTap: () -> Unit
@@ -347,7 +343,6 @@ private fun VideoOngoingLayout(
 
                     CallStatusContent(
                         callState = callState,
-                        isRinging = isRinging,
                         duration = duration
                     )
                 }
@@ -361,13 +356,16 @@ private fun VideoOngoingLayout(
 @Composable
 private fun CallStatusContent(
     callState: CallUiState,
-    isRinging: Boolean,
     duration: String
 ) {
-    when (callState) {
-        is CallUiState.Outgoing -> DotsText(if (isRinging) "ringing" else "calling")
-        is CallUiState.Connecting -> DotsText("connecting")
-        is CallUiState.Connected -> {
+    when (callState.phase) {
+        CallUiState.CallPhase.Outgoing ->
+            DotsText(if (callState.isRemoteRinging) "ringing" else "calling")
+
+        CallUiState.CallPhase.Connecting ->
+            DotsText("connecting")
+
+        CallUiState.CallPhase.Connected -> {
             Text(
                 text = duration,
                 color = Color.White,
@@ -376,8 +374,8 @@ private fun CallStatusContent(
             )
         }
 
-        is CallUiState.Reconnecting -> {
-            DotsText("reconnecting (${callState.attempt}/${callState.maxAttempts})")
+        CallUiState.CallPhase.Reconnecting -> {
+            DotsText("reconnecting (${callState.reconnectAttempt}/${callState.maxReconnectAttempts})")
         }
 
         else -> {}

@@ -125,7 +125,7 @@ class CallActivity : ComponentActivity() {
                     // - LocalHangup: immediate dismiss via CallScreen LaunchedEffect
                     // - RemoteHangup: brief "Call Ended" screen (2s), then transitions to Idle here
                     // - Failed/Declined/NoAnswer: EndedCallScreen shown, dismissed via endedDismissJob
-                    if (callState is CallUiState.Idle) {
+                    if (callState.phase == CallUiState.CallPhase.Idle) {
                         finishAndRemoveTask()
                     }
                 }

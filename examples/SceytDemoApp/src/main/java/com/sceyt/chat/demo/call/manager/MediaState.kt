@@ -82,15 +82,3 @@ data class MediaState(
     }
 }
 
-/**
- * Represents information about a remote participant in the call.
- */
-data class RemoteParticipantInfo(
-    val id: String,
-    val name: String?,
-    val avatar: String?,
-    val isMuted: Boolean = false,
-    val isVideoEnabled: Boolean = false,
-    val isOnHold: Boolean = false,
-    val ringing: Boolean = false
-)

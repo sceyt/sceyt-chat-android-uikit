@@ -19,6 +19,8 @@ import com.sceyt.audiorouting.AudioRouter
 import com.sceyt.audiorouting.AudioRouterConfig
 import com.sceyt.audiorouting.AudioRouterListener
 import com.sceyt.audiorouting.RoutingState
+import com.sceyt.chat.demo.call.manager.CallUiState.CallPhase
+import com.sceyt.chat.demo.call.manager.CallUiState.EndedReason
 import com.sceyt.chat.models.signal.MediaFlow
 import com.sceyt.chat.models.signal.ParticipantState
 import com.sceyt.chatuikit.SceytChatUIKit
@@ -35,6 +37,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.webrtc.VideoTrack
@@ -63,7 +66,7 @@ class CallManagerImpl(
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     // State flows
-    private val _callUiState = MutableStateFlow<CallUiState>(CallUiState.Idle)
+    private val _callUiState = MutableStateFlow(CallUiState.IDLE)
     override val callUiState: StateFlow<CallUiState> = _callUiState.asStateFlow()
 
     private val _mediaState = MutableStateFlow(MediaState())
@@ -71,10 +74,6 @@ class CallManagerImpl(
 
     private val _callDuration = MutableStateFlow(0L)
     override val callDuration: StateFlow<Long> = _callDuration.asStateFlow()
-
-    private val _remoteParticipant = MutableStateFlow<RemoteParticipantInfo?>(null)
-    override val remoteParticipant: StateFlow<RemoteParticipantInfo?> =
-        _remoteParticipant.asStateFlow()
 
     override val availableAudioDevices: StateFlow<List<AudioDevice>> = audioRouter.availableDevices
     override val selectedAudioDevice: StateFlow<AudioDevice?> = audioRouter.selectedDevice
@@ -105,31 +104,28 @@ class CallManagerImpl(
         isCallAgain: Boolean,
         callPrepared: (Call) -> Unit
     ): Result<Call> {
-        if (_callUiState.value !is CallUiState.Idle && !isCallAgain) {
+        if (_callUiState.value.phase != CallPhase.Idle && !isCallAgain) {
             return Result.failure(IllegalStateException("Call already in progress"))
         }
 
         return try {
-            // Fetch user info
             val userInfo = fetchUserInfo(userId)
 
-            // Save for "call again"
             lastOutgoingUserId = userId
             lastOutgoingIsVideo = isVideo
 
-            // Update state to Outgoing
-            _callUiState.value = CallUiState.Outgoing(
-                remoteUserId = userId,
-                remoteUserName = userInfo?.name,
-                remoteUserAvatar = userInfo?.avatar,
-                isVideo = isVideo
-            )
+            _callUiState.update {
+                CallUiState(
+                    phase = CallPhase.Outgoing,
+                    remoteUserId = userId,
+                    remoteUserName = userInfo?.name,
+                    remoteUserAvatar = userInfo?.avatar,
+                    isVideo = isVideo
+                )
+            }
 
-            // Set audio routing preference based on call type
             setupAudioRouting(isVideo)
 
-
-            // Join call
             val result = runCatching {
                 callClient.prepareCall(
                     callId = generateCallId(),
@@ -142,22 +138,14 @@ class CallManagerImpl(
             }
             result.onSuccess { call ->
                 callPrepared(call)
-                // Build join options
                 val joinCallOptions = JoinCallOptions.default().copy(
-                    audioSettings = AudioSettings(
-                        disableManageAudioRoute = true
-                    ),
-                    videoSettings = if (isVideo) {
-                        VideoSettings(publishVideo = true)
-                    } else null
+                    audioSettings = AudioSettings(disableManageAudioRoute = true),
+                    videoSettings = if (isVideo) VideoSettings(publishVideo = true) else null
                 )
 
                 setupCallListeners(call)
                 _currentCall = call
                 startNoAnswerTimeout()
-
-                // Update remote participant info
-                _remoteParticipant.value = userInfo
                 call.join(joinCallOptions)
                 playTone(ToneConfig.ringback())
 
@@ -165,89 +153,80 @@ class CallManagerImpl(
             }.onFailure { error ->
                 Log.e(TAG, "Failed to start outgoing call", error)
                 cleanupCall()
-                _callUiState.value =
-                    CallUiState.Ended.Failed(error.message ?: "Failed to start call")
+                setEndedState(EndedReason.Failed(error.message ?: "Failed to start call"))
             }
 
             result
         } catch (e: Exception) {
             Log.e(TAG, "Error starting outgoing call", e)
             cleanupCall()
-            _callUiState.value = CallUiState.Ended.Failed(e.message ?: "Unknown error")
+            setEndedState(EndedReason.Failed(e.message ?: "Unknown error"))
             Result.failure(e)
         }
     }
 
-    override suspend fun answerIncomingCall(call: Call): Result<Unit> {
+    override suspend fun answerIncomingCall(): Result<Unit> {
         val currentState = _callUiState.value
-        if (currentState !is CallUiState.Incoming) {
+        if (currentState.phase != CallPhase.Incoming) {
             return Result.failure(IllegalStateException("No incoming call to answer"))
         }
+        val call = currentState.incomingCall
+            ?: return Result.failure(IllegalStateException("Missing Call object in state"))
 
         return try {
-            // Stop ringtone
             stopTone()
 
-            // Update state to Connecting
-            _callUiState.value = CallUiState.Connecting
+            // Transition to Connecting — user info is preserved via .update { it.copy() }
+            _callUiState.update {
+                it.copy(
+                    phase = CallPhase.Connecting,
+                    incomingCall = null
+                )
+            }
 
-            // Set audio routing preference
             setupAudioRouting(currentState.isVideo)
 
-            // Build join options
             val options = JoinCallOptions.default().copy(
-                audioSettings = AudioSettings(
-                    disableManageAudioRoute = true
-                ),
-                videoSettings = VideoSettings(
-                    publishVideo = currentState.isVideo
-                )
+                audioSettings = AudioSettings(disableManageAudioRoute = true),
+                videoSettings = VideoSettings(publishVideo = currentState.isVideo)
             )
             setupCallListeners(call)
 
-            // Join call
             val result = call.join(options)
 
             result.fold(
-                onSuccess = { call ->
-                    _currentCall = call
-
-                    // Update remote participant info
-                    _remoteParticipant.value = RemoteParticipantInfo(
-                        id = currentState.callerId,
-                        name = currentState.callerName,
-                        avatar = currentState.callerAvatar
-                    )
-
-                    Log.d(TAG, "Answered incoming call: ${call.id}")
+                onSuccess = { answeredCall ->
+                    _currentCall = answeredCall
+                    Log.d(TAG, "Answered incoming call: ${answeredCall.id}")
                     Result.success(Unit)
                 },
                 onFailure = { error ->
                     Log.e(TAG, "Failed to answer call", error)
                     cleanupCall()
-                    _callUiState.value =
-                        CallUiState.Ended.Failed(error.message ?: "Failed to answer call")
+                    setEndedState(EndedReason.Failed(error.message ?: "Failed to answer call"))
                     Result.failure(error)
                 }
             )
         } catch (e: Exception) {
             Log.e(TAG, "Error answering call", e)
             cleanupCall()
-            _callUiState.value = CallUiState.Ended.Failed(e.message ?: "Unknown error")
+            setEndedState(EndedReason.Failed(e.message ?: "Unknown error"))
             Result.failure(e)
         }
     }
 
     override fun declineIncomingCall(reason: String?): Result<Unit> {
         val currentState = _callUiState.value
-        if (currentState !is CallUiState.Incoming) {
+        if (currentState.phase != CallPhase.Incoming) {
             return Result.failure(IllegalStateException("No incoming call to decline"))
         }
+        val call = currentState.incomingCall
+            ?: return Result.failure(IllegalStateException("Missing Call object in state"))
 
         return try {
-            currentState.call.reject(reason)
+            call.reject(reason)
             stopTone()
-            _callUiState.value = CallUiState.Idle
+            _callUiState.update { CallUiState.IDLE }
             Log.d(TAG, "Declined incoming call")
             Result.success(Unit)
         } catch (e: Exception) {
@@ -261,7 +240,7 @@ class CallManagerImpl(
 
         return try {
             call.leave()
-            handleCallEnded(CallUiState.Ended.LocalHangup)
+            handleCallEnded(EndedReason.LocalHangup)
             Log.d(TAG, "Ended call")
             Result.success(Unit)
         } catch (e: Exception) {
@@ -278,7 +257,6 @@ class CallManagerImpl(
         val userId = lastOutgoingUserId
             ?: return Result.failure(IllegalStateException("No previous outgoing call to retry"))
 
-        // Cancel the ended-dismiss timer and reset to idle
         endedDismissJob?.cancel()
         endedDismissJob = null
         cleanupCall()
@@ -302,7 +280,6 @@ class CallManagerImpl(
     override fun toggleCamera(): Boolean {
         val newCameraState = !_mediaState.value.isCameraEnabled
         _currentCall?.setVideoEnabled(newCameraState)
-
         Log.d(TAG, "Camera toggled: $newCameraState")
         return newCameraState
     }
@@ -312,7 +289,7 @@ class CallManagerImpl(
             val capturer = _currentCall?.localParticipant?.getVideoTracks()?.firstOrNull()?.capturer
             capturer?.switch()
             val newFrontCamera = !_mediaState.value.isFrontCamera
-            _mediaState.value = _mediaState.value.copy(isFrontCamera = newFrontCamera)
+            _mediaState.update { it.copy(isFrontCamera = newFrontCamera) }
             Log.d(TAG, "Camera switched: front=$newFrontCamera")
             Result.success(Unit)
         } catch (e: Exception) {
@@ -336,7 +313,6 @@ class CallManagerImpl(
                 .firstOrNull()
             speaker?.let { audioRouter.selectDevice(it) }
         } else {
-            // Switch to earpiece or available device
             val earpiece =
                 availableAudioDevices.value.filterIsInstance<AudioDevice.Earpiece>().firstOrNull()
             val wired = availableAudioDevices.value.filterIsInstance<AudioDevice.WiredHeadset>()
@@ -347,7 +323,7 @@ class CallManagerImpl(
             audioRouter.selectDevice(bluetooth ?: wired ?: earpiece)
         }
 
-        _mediaState.value = _mediaState.value.copy(isSpeakerOn = newSpeakerState)
+        _mediaState.update { it.copy(isSpeakerOn = newSpeakerState) }
         Log.d(TAG, "Speaker toggled: $newSpeakerState")
         return newSpeakerState
     }
@@ -364,27 +340,27 @@ class CallManagerImpl(
     // ========== Incoming Call Handling ==========
 
     override suspend fun handleIncomingCall(from: String, call: Call) {
-        if (_callUiState.value !is CallUiState.Idle) {
+        if (_callUiState.value.phase != CallPhase.Idle) {
             Log.w(TAG, "Rejecting incoming call - already in a call")
             call.reject("Busy")
             return
         }
 
-        // Fetch caller info
         val userInfo = fetchUserInfo(from)
 
         setupCallListeners(call)
-        _callUiState.value = CallUiState.Incoming(
-            callerId = from,
-            callerName = userInfo?.name,
-            callerAvatar = userInfo?.avatar,
-            isVideo = call.videoCall,
-            call = call
-        )
+        _callUiState.update {
+            CallUiState(
+                phase = CallPhase.Incoming,
+                remoteUserId = from,
+                remoteUserName = userInfo?.name,
+                remoteUserAvatar = userInfo?.avatar,
+                isVideo = call.videoCall,
+                incomingCall = call
+            )
+        }
 
-        // Play ringtone
         playTone(ToneConfig.ring())
-
         call.sendRinging()
         Log.d(TAG, "Incoming call from: $from, video: ${call.videoCall}")
     }
@@ -406,21 +382,14 @@ class CallManagerImpl(
             override fun onCallStateChanged(call: Call, state: CallState) {
                 Log.d(TAG, "Call state changed: $state")
                 when (state) {
-                    is CallState.Connecting -> {
-                        if (_callUiState.value is CallUiState.Outgoing) {
-                            // Already in outgoing state, wait for remote ringing
-                        }
+                    is CallState.Connecting -> { /* wait for participant connection state */
                     }
 
-                    is CallState.Connected -> {
-                        // Will be handled by participant connection state
+                    is CallState.Connected -> { /* handled by participant connection state */
                     }
 
-                    is CallState.Closed -> {
-                        handleCallEnded(CallUiState.Ended.RemoteHangup)
-                    }
-
-                    is CallState.Idle -> { /* Ignore */
+                    is CallState.Closed -> handleCallEnded(EndedReason.RemoteHangup)
+                    is CallState.Idle -> { /* ignore */
                     }
                 }
             }
@@ -436,36 +405,32 @@ class CallManagerImpl(
                 reason: String?
             ) {
                 Log.d(TAG, "Participant ${participant.id} state changed: $state, reason: $reason")
-
-                // Only handle remote participant state changes
                 if (participant.id == call.localParticipant.id) return
 
                 when (state) {
                     ParticipantState.Ringing -> {
-                        _remoteParticipant.value =
-                            _remoteParticipant.value?.copy(ringing = true)
+                        _callUiState.update { it.copy(isRemoteRinging = true) }
                     }
 
-                    ParticipantState.Joined -> {
-                        // Remote answered - state will be updated by connection state
+                    ParticipantState.Joined -> { /* handled by connection state */
                     }
 
                     ParticipantState.Left -> {
                         call.leave()
-                        handleCallEnded(CallUiState.Ended.RemoteHangup)
+                        handleCallEnded(EndedReason.RemoteHangup)
                     }
 
                     ParticipantState.Declined -> {
                         call.leave()
-                        handleCallEnded(CallUiState.Ended.Declined(reason))
+                        handleCallEnded(EndedReason.Declined(reason))
                     }
 
                     ParticipantState.NoAnswer -> {
                         call.leave()
-                        handleCallEnded(CallUiState.Ended.NoAnswer)
+                        handleCallEnded(EndedReason.NoAnswer)
                     }
 
-                    else -> { /* Ignore other states */
+                    else -> { /* ignore */
                     }
                 }
             }
@@ -476,13 +441,11 @@ class CallManagerImpl(
                 state: ParticipantConnectionState
             ) {
                 Log.d(TAG, "Participant ${participant.id} connection state: $state")
-
-                // Only handle remote participant connection changes
                 if (participant.id == call.localParticipant.id) return
 
                 when (state) {
                     ParticipantConnectionState.Connecting -> {
-                        _callUiState.value = CallUiState.Connecting
+                        _callUiState.update { it.copy(phase = CallPhase.Connecting) }
                         stopTone()
                     }
 
@@ -491,25 +454,25 @@ class CallManagerImpl(
                         cancelReconnectTimeout()
                         reconnectAttempts = 0
                         lastConnectedAt = System.currentTimeMillis()
-                        _callUiState.value = CallUiState.Connected(connectedAt = lastConnectedAt)
+                        _callUiState.update {
+                            it.copy(
+                                phase = CallPhase.Connected,
+                                connectedAt = lastConnectedAt
+                            )
+                        }
                         stopTone()
                         startDurationTimer()
                     }
 
-                    ParticipantConnectionState.Reconnecting -> {
-                        handleReconnecting()
-                    }
+                    ParticipantConnectionState.Reconnecting -> handleReconnecting()
 
                     ParticipantConnectionState.Disconnected -> {
-                        // May transition to reconnecting or ended
-                        if (_callUiState.value is CallUiState.Reconnecting) {
-                            // Already handling reconnection
-                        } else {
-                            handleCallEnded(CallUiState.Ended.Failed("Connection lost"))
+                        if (_callUiState.value.phase != CallPhase.Reconnecting) {
+                            handleCallEnded(EndedReason.Failed("Connection lost"))
                         }
                     }
 
-                    ParticipantConnectionState.Idle -> { /* Ignore */
+                    ParticipantConnectionState.Idle -> { /* ignore */
                     }
                 }
             }
@@ -520,26 +483,21 @@ class CallManagerImpl(
                 event: ParticipantEvent
             ) {
                 Log.d(TAG, "Participant ${participant.id} event: $event")
-
-                // Update remote participant state
                 if (participant.id != call.localParticipant.id) {
                     when (event) {
                         is ParticipantEvent.Mute -> {
-                            _mediaState.value = _mediaState.value.copy(isRemoteMuted = event.muted)
+                            _mediaState.update { it.copy(isRemoteMuted = event.muted) }
                         }
 
                         is ParticipantEvent.Video -> {
-                            _mediaState.value =
-                                _mediaState.value.copy(isRemoteVideoEnabled = event.enabled)
+                            _mediaState.update { it.copy(isRemoteVideoEnabled = event.enabled) }
                         }
 
                         is ParticipantEvent.Hold -> {
-                            _remoteParticipant.value =
-                                _remoteParticipant.value?.copy(isOnHold = event.hold)
+                            _mediaState.update { it.copy(isOnHold = event.hold) }
                         }
 
-                        is ParticipantEvent.ScreenShare -> {
-                            // Handle screen share if needed
+                        is ParticipantEvent.ScreenShare -> { /* handle if needed */
                         }
                     }
                 }
@@ -552,20 +510,22 @@ class CallManagerImpl(
             ) {
                 when (event) {
                     is ParticipantEvent.Hold -> {
-                        _mediaState.value = _mediaState.value.copy(isOnHold = event.hold)
+                        _mediaState.update { it.copy(isOnHold = event.hold) }
                     }
 
                     is ParticipantEvent.Mute -> {
-                        _mediaState.value = _mediaState.value.copy(isMuted = event.muted)
+                        _mediaState.update { it.copy(isMuted = event.muted) }
                     }
 
                     is ParticipantEvent.ScreenShare -> {}
                     is ParticipantEvent.Video -> {
-                        _mediaState.value = _mediaState.value.copy(
-                            isCameraEnabled = event.enabled,
-                            localVideoTrack = if (event.enabled)
-                                participant.getVideoTracks().firstOrNull()?.videoTrack else null
-                        )
+                        _mediaState.update {
+                            it.copy(
+                                isCameraEnabled = event.enabled,
+                                localVideoTrack = if (event.enabled)
+                                    participant.getVideoTracks().firstOrNull()?.videoTrack else null
+                            )
+                        }
                     }
                 }
             }
@@ -576,10 +536,12 @@ class CallManagerImpl(
                 videoTrack: VideoTrack
             ) {
                 Log.d(TAG, "Remote video track added from ${participant.id}")
-                _mediaState.value = _mediaState.value.copy(
-                    remoteVideoTrack = videoTrack,
-                    isRemoteVideoEnabled = participant.videoEnabled
-                )
+                _mediaState.update {
+                    it.copy(
+                        remoteVideoTrack = videoTrack,
+                        isRemoteVideoEnabled = participant.videoEnabled
+                    )
+                }
             }
 
             override fun onRemoteVideoTrackRemoved(
@@ -588,10 +550,12 @@ class CallManagerImpl(
                 videoTrack: VideoTrack
             ) {
                 Log.d(TAG, "Remote video track removed from ${participant.id}")
-                _mediaState.value = _mediaState.value.copy(
-                    remoteVideoTrack = null,
-                    isRemoteVideoEnabled = false
-                )
+                _mediaState.update {
+                    it.copy(
+                        remoteVideoTrack = null,
+                        isRemoteVideoEnabled = false
+                    )
+                }
             }
 
             override fun onRemoteAudioTrackAdded(
@@ -617,63 +581,54 @@ class CallManagerImpl(
             override fun onActiveSpeakersChanged(
                 call: Call,
                 speakers: List<com.callclient.call.data.ActiveSpeakerInfo>
-            ) {
-                // Handle active speakers if needed
+            ) { /* handle if needed */
             }
 
             override fun onDominantSpeakerChanged(
                 call: Call,
                 speaker: com.callclient.call.data.ActiveSpeakerInfo?
-            ) {
-                // Handle dominant speaker if needed
+            ) { /* handle if needed */
             }
 
-            override fun onParticipantsRemoved(
-                call: Call,
-                participants: List<Participant>
-            ) {
+            override fun onParticipantsRemoved(call: Call, participants: List<Participant>) {}
 
-            }
-
-            override fun onSessionRenewed(call: Call) {
-
-            }
+            override fun onSessionRenewed(call: Call) {}
         })
     }
 
-    private fun handleCallEnded(reason: CallUiState.Ended) {
-        // If we're already in a terminal Ended state, don't overwrite it with a generic
-        // RemoteHangup that arrives from CallState.Closed / ParticipantState.Left after
-        // a Declined / NoAnswer / Failed has already been set.
-        val currentState = _callUiState.value
-        if (reason is CallUiState.Ended.RemoteHangup && currentState is CallUiState.Ended) {
-            Log.d(TAG, "Ignoring RemoteHangup — already in ended state: $currentState")
+    private fun handleCallEnded(reason: EndedReason) {
+        // If already in a terminal Ended state, ignore duplicate signals
+        val currentPhase = _callUiState.value.phase
+        if (reason is EndedReason.RemoteHangup && currentPhase == CallPhase.Ended) {
+            Log.d(TAG, "Ignoring RemoteHangup — already in Ended state")
             return
         }
 
         Log.d(TAG, "Call ended: $reason")
 
-        // Cancel all timers
         cancelDurationTimer()
         cancelNoAnswerTimeout()
         cancelReconnectTimeout()
 
-        // Play hangup tone
         scope.launch {
             playTone(ToneConfig.hangup())
-            delay(1000) // Let hangup tone play
+            delay(1000)
             stopTone()
         }
 
-        // Update state
-        _callUiState.value = reason
+        setEndedState(reason)
 
-        // Schedule dismiss and cleanup
         endedDismissJob?.cancel()
         endedDismissJob = scope.launch {
             delay(reason.dismissTimeoutMs)
             cleanupCall()
-            _callUiState.value = CallUiState.Idle
+            _callUiState.update { CallUiState.IDLE }
+        }
+    }
+
+    private fun setEndedState(reason: EndedReason) {
+        _callUiState.update {
+            it.copy(phase = CallPhase.Ended, endedReason = reason, incomingCall = null)
         }
     }
 
@@ -682,39 +637,33 @@ class CallManagerImpl(
         Log.d(TAG, "Reconnecting attempt: $reconnectAttempts")
 
         if (reconnectAttempts > CallUiState.MAX_RECONNECT_ATTEMPTS) {
-            handleCallEnded(CallUiState.Ended.Failed("Connection lost"))
+            handleCallEnded(EndedReason.Failed("Connection lost"))
             return
         }
 
-        _callUiState.value = CallUiState.Reconnecting(
-            attempt = reconnectAttempts,
-            lastConnectedAt = lastConnectedAt
-        )
+        _callUiState.update {
+            it.copy(
+                phase = CallPhase.Reconnecting,
+                reconnectAttempt = reconnectAttempts
+            )
+        }
 
-        // Play reconnecting tone
         scope.launch { playTone(ToneConfig.reconnecting()) }
-
-        // Start reconnect timeout
         startReconnectTimeout()
     }
 
     private fun cleanupCall() {
         Log.d(TAG, "Cleaning up call")
-
-        // Remove listeners
         _currentCall?.removeListener(CALL_LISTENER_KEY)
         _currentCall = null
 
         audioRouter.stop()
 
-        // Reset state
-        _mediaState.value = MediaState()
-        _remoteParticipant.value = null
-        _callDuration.value = 0
+        _mediaState.update { MediaState() }
+        _callDuration.update { 0 }
         reconnectAttempts = 0
         lastConnectedAt = 0
 
-        // Stop any playing tones
         scope.launch { stopTone() }
     }
 
@@ -750,12 +699,9 @@ class CallManagerImpl(
     }
 
     private fun setupAudioRouting(isVideo: Boolean) {
-        // Start audio router with listener
         audioRouter.start(audioRouterListener)
 
-        // Set device priority based on call type
         val priority: List<KClass<out AudioDevice>> = if (isVideo) {
-            // Video calls: prefer speaker after Bluetooth/wired
             listOf(
                 AudioDevice.BluetoothHeadset::class,
                 AudioDevice.WiredHeadset::class,
@@ -763,7 +709,6 @@ class CallManagerImpl(
                 AudioDevice.Earpiece::class
             )
         } else {
-            // Audio calls: prefer earpiece after Bluetooth/wired
             listOf(
                 AudioDevice.BluetoothHeadset::class,
                 AudioDevice.WiredHeadset::class,
@@ -774,9 +719,7 @@ class CallManagerImpl(
 
         audioRouter.setPreferredDeviceOrder(priority)
 
-        // Update speaker state based on initial selection
         scope.launch {
-            // Small delay to let audio router initialize
             delay(100)
             updateSpeakerState(selectedAudioDevice.value)
         }
@@ -785,22 +728,16 @@ class CallManagerImpl(
     }
 
     private fun updateSpeakerState(device: AudioDevice?) {
-        _mediaState.value = _mediaState.value.copy(
-            isSpeakerOn = device is AudioDevice.Speakerphone
-        )
+        _mediaState.update { it.copy(isSpeakerOn = device is AudioDevice.Speakerphone) }
     }
 
-    private suspend fun fetchUserInfo(userId: String): RemoteParticipantInfo? {
+    private suspend fun fetchUserInfo(userId: String): UserInfo? {
         return try {
             val result = SceytChatUIKit.chatUIFacade.userInteractor.getUserById(userId)
             result.fold(
                 onSuccess = { user ->
                     user ?: return@fold null
-                    RemoteParticipantInfo(
-                        id = user.id,
-                        name = user.getPresentableName(),
-                        avatar = user.avatarURL
-                    )
+                    UserInfo(name = user.getPresentableName(), avatar = user.avatarURL)
                 },
                 onError = {
                     Log.e(TAG, "Error fetching user info: ${it?.message}")
@@ -813,20 +750,21 @@ class CallManagerImpl(
         }
     }
 
+    private data class UserInfo(val name: String?, val avatar: String?)
+
     private fun generateCallId(): String {
         return "call_${System.currentTimeMillis()}_${(1000..9999).random()}"
     }
 
-    // ========== Timer Methods ==========
+    // ========== Timers ==========
 
     private fun startDurationTimer() {
         durationJob?.cancel()
-        _callDuration.value = 0
-
+        _callDuration.update { 0 }
         durationJob = scope.launch {
             while (isActive) {
                 delay(1000)
-                _callDuration.value += 1
+                _callDuration.update { it + 1 }
             }
         }
     }
@@ -840,8 +778,8 @@ class CallManagerImpl(
         noAnswerJob?.cancel()
         noAnswerJob = scope.launch {
             delay(CallUiState.NO_ANSWER_TIMEOUT_MS)
-            if (_callUiState.value is CallUiState.Outgoing) {
-                handleCallEnded(CallUiState.Ended.NoAnswer)
+            if (_callUiState.value.phase == CallPhase.Outgoing) {
+                handleCallEnded(EndedReason.NoAnswer)
             }
         }
     }
@@ -855,8 +793,8 @@ class CallManagerImpl(
         reconnectTimeoutJob?.cancel()
         reconnectTimeoutJob = scope.launch {
             delay(CallUiState.RECONNECT_TIMEOUT_MS)
-            if (_callUiState.value is CallUiState.Reconnecting) {
-                handleCallEnded(CallUiState.Ended.Failed("Reconnection timed out"))
+            if (_callUiState.value.phase == CallPhase.Reconnecting) {
+                handleCallEnded(EndedReason.Failed("Reconnection timed out"))
             }
         }
     }
@@ -866,7 +804,7 @@ class CallManagerImpl(
         reconnectTimeoutJob = null
     }
 
-    // ========== Tone Methods ==========
+    // ========== Tones ==========
 
     private suspend fun playTone(config: ToneConfig) {
         try {

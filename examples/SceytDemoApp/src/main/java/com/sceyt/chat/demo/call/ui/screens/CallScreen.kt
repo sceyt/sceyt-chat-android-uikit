@@ -8,12 +8,14 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import com.sceyt.chat.demo.call.manager.CallUiState
+import com.sceyt.chat.demo.call.manager.CallUiState.CallPhase
 import com.sceyt.chat.demo.call.ui.CallViewModel
 
 /**
- * Main call screen that routes to the appropriate sub-screen based on call state.
- * All active call states (Outgoing, Connecting, Connected, Reconnecting) use a single
- * OngoingCallScreen composable, preventing remounts and UI blink on state transitions.
+ * Main call screen that routes to the appropriate sub-screen based on call phase.
+ * All active phases (Outgoing, Connecting, Connected, Reconnecting) use a single
+ * OngoingCallScreen composable, preventing remounts and UI blink on phase transitions.
+ * User info (name, avatar) is now part of CallUiState and persists across all phases.
  */
 @Composable
 fun CallScreen(
@@ -23,47 +25,34 @@ fun CallScreen(
     val callState by viewModel.callUiState.collectAsState()
     val mediaState by viewModel.mediaState.collectAsState()
     val duration by viewModel.formattedDuration.collectAsState()
-    val remoteParticipant by viewModel.remoteParticipant.collectAsState()
     val availableDevices by viewModel.availableAudioDevices.collectAsState()
     val selectedDevice by viewModel.selectedAudioDevice.collectAsState()
 
     Box(modifier = Modifier.fillMaxSize()) {
-        when (val state = callState) {
-            is CallUiState.Idle -> {
-                // Should dismiss, handled by activity
+        when (callState.phase) {
+            CallPhase.Idle -> {
+                // Auto-close handled by CallActivity
             }
 
-            is CallUiState.Incoming -> {
+            CallPhase.Incoming -> {
                 IncomingCallScreen(
-                    callerName = state.callerName ?: state.callerId,
-                    callerAvatar = state.callerAvatar,
-                    isVideo = state.isVideo,
+                    callerName = callState.remoteUserName ?: callState.remoteUserId,
+                    callerAvatar = callState.remoteUserAvatar,
+                    isVideo = callState.isVideo,
                     onAnswer = { viewModel.onAnswerClick() },
                     onDecline = { viewModel.onDeclineClick() }
                 )
             }
 
-            is CallUiState.Outgoing,
-            is CallUiState.Connecting,
-            is CallUiState.Connected,
-            is CallUiState.Reconnecting -> {
+            CallPhase.Outgoing,
+            CallPhase.Connecting,
+            CallPhase.Connected,
+            CallPhase.Reconnecting -> {
                 OngoingCallScreen(
-                    callState = state,
-                    remoteName = when (state) {
-                        is CallUiState.Outgoing -> state.remoteUserName ?: state.remoteUserId
-                        else -> remoteParticipant?.name ?: ""
-                    },
-                    remoteAvatar = when (state) {
-                        is CallUiState.Outgoing -> state.remoteUserAvatar
-                        else -> remoteParticipant?.avatar
-                    },
+                    callState = callState,
                     mediaState = mediaState,
                     duration = duration,
-                    isRinging = remoteParticipant?.ringing ?: false,
-                    audioDeviceData = AudioDeviceData(
-                        availableDevices = availableDevices,
-                        selectedDevice = selectedDevice
-                    ),
+                    audioDeviceData = AudioDeviceData(availableDevices, selectedDevice),
                     onToggleMute = { viewModel.onToggleMute() },
                     onToggleCamera = { viewModel.onToggleCamera() },
                     onSwitchCamera = { viewModel.onSwitchCamera() },
@@ -72,30 +61,30 @@ fun CallScreen(
                 )
             }
 
-            is CallUiState.Ended -> {
-                when (state) {
+            CallPhase.Ended -> {
+                when (val reason = callState.endedReason) {
                     // Local hangup — close immediately, no screen shown
-                    is CallUiState.Ended.LocalHangup -> {
+                    is CallUiState.EndedReason.LocalHangup -> {
                         LaunchedEffect(Unit) { onDismiss() }
                     }
 
-                    // Remote hangup — show "Call Ended" briefly, then auto-close via Idle state
-                    is CallUiState.Ended.RemoteHangup -> {
+                    // Remote hangup — show "Call Ended" briefly, then auto-close via Idle
+                    is CallUiState.EndedReason.RemoteHangup -> {
                         EndedCallScreen(
-                            remoteName = remoteParticipant?.name ?: "Unknown",
-                            remoteAvatar = remoteParticipant?.avatar,
-                            reason = state.displayMessage,
+                            remoteName = callState.remoteUserName ?: "Unknown",
+                            remoteAvatar = callState.remoteUserAvatar,
+                            reason = reason.displayMessage,
                             onCancel = null,
                             onCallAgain = null
                         )
                     }
 
-                    // Failed, declined, or no-answer — show the ended screen with actions
+                    // Failed, declined, or no-answer — show ended screen with actions
                     else -> {
                         EndedCallScreen(
-                            remoteName = remoteParticipant?.name ?: "Unknown",
-                            remoteAvatar = remoteParticipant?.avatar,
-                            reason = state.displayMessage,
+                            remoteName = callState.remoteUserName ?: "Unknown",
+                            remoteAvatar = callState.remoteUserAvatar,
+                            reason = reason?.displayMessage ?: "Call Ended",
                             onCancel = onDismiss,
                             onCallAgain = { viewModel.onCallAgain() }
                         )

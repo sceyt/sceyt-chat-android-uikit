@@ -26,7 +26,7 @@ interface CallManager {
 
     /**
      * Call duration in seconds since connected.
-     * Only updates when state is [CallUiState.Connected].
+     * Only updates when state is [CallUiState.CallPhase.Connected].
      */
     val callDuration: StateFlow<Long>
 
@@ -41,11 +41,6 @@ interface CallManager {
      * Proxied from AudioRouter SDK.
      */
     val selectedAudioDevice: StateFlow<AudioDevice?>
-
-    /**
-     * Remote participant info (name, avatar) for display.
-     */
-    val remoteParticipant: StateFlow<RemoteParticipantInfo?>
 
     /**
      * Current active Call object, if any.
@@ -69,16 +64,16 @@ interface CallManager {
     ): Result<Call>
 
     /**
-     * Answer an incoming call.
-     * Only valid when state is [CallUiState.Incoming].
+     * Answer the current incoming call.
+     * The Call object is read from [callUiState] — only valid when phase is [CallUiState.CallPhase.Incoming].
      *
      * @return Result indicating success or failure
      */
-    suspend fun answerIncomingCall(call: Call): Result<Unit>
+    suspend fun answerIncomingCall(): Result<Unit>
 
     /**
      * Decline an incoming call.
-     * Only valid when state is [CallUiState.Incoming].
+     * Only valid when state is [CallUiState.CallPhase.Incoming].
      *
      * @param reason Optional reason for declining
      * @return Result indicating success or failure
@@ -161,7 +156,7 @@ interface CallManager {
     /**
      * Retry calling the last outgoing call recipient.
      * Cancels the current ended-dismiss timer, resets state, and starts a new outgoing call.
-     * Only valid when state is a terminal [CallUiState.Ended] (Failed, Declined, NoAnswer).
+     * Only valid when state is a terminal [CallUiState.CallPhase.Ended] (Failed, Declined, NoAnswer).
      */
     suspend fun callAgain(): Result<Unit>
 

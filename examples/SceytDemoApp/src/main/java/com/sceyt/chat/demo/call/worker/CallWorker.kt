@@ -15,7 +15,7 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.sceyt.chat.demo.call.manager.CallManager
 import com.sceyt.chat.demo.call.manager.CallUiState
-import com.sceyt.chat.demo.call.manager.isActive
+import com.sceyt.chat.demo.call.manager.CallUiState.CallPhase
 import com.sceyt.chat.demo.call.notification.CallNotificationChannels
 import com.sceyt.chat.demo.call.notification.CallNotificationManager
 import kotlinx.coroutines.flow.collectLatest
@@ -80,9 +80,13 @@ class CallWorker(
                 callManager.callUiState,
                 callManager.mediaState,
                 callManager.callDuration,
-                callManager.remoteParticipant
-            ) { state, media, duration, remote ->
-                CallStateSnapshot(state, media.isMuted, duration, remote?.name ?: "Unknown")
+            ) { state, media, duration ->
+                CallStateSnapshot(
+                    state = state,
+                    isMuted = media.isMuted,
+                    duration = duration,
+                    remoteName = state.remoteUserName ?: "Unknown"
+                )
             }
                 .takeWhile { it.state.isActive }
                 .collectLatest { snapshot ->
@@ -147,32 +151,30 @@ class CallWorker(
         isMuted: Boolean = false,
         duration: String = "00:00"
     ): android.app.Notification {
-        return when (state) {
-            is CallUiState.Incoming -> {
+        return when (state.phase) {
+            CallPhase.Incoming -> {
                 notificationManager.buildIncomingCallNotification(
-                    callerName = state.callerName ?: state.callerId,
-                    isVideo = state.isVideo,
-                    callId = state.call.id
+                    callerName = state.remoteUserName ?: state.remoteUserId,
+                    isVideo = state.isVideo
                 )
             }
-            is CallUiState.Connected -> {
+            CallPhase.Connected -> {
                 notificationManager.buildOngoingCallNotification(
                     remoteName = remoteName,
                     duration = duration,
                     isMuted = isMuted,
-                    isVideo = false // TODO: get from state
+                    isVideo = state.isVideo
                 )
             }
-            is CallUiState.Outgoing,
-            is CallUiState.Connecting,
-            is CallUiState.Reconnecting -> {
+            CallPhase.Outgoing,
+            CallPhase.Connecting,
+            CallPhase.Reconnecting -> {
                 notificationManager.buildConnectingNotification(
                     remoteName = remoteName,
                     state = state
                 )
             }
             else -> {
-                // For ended/idle states, build a basic notification
                 notificationManager.buildConnectingNotification(
                     remoteName = remoteName,
                     state = state
@@ -182,8 +184,8 @@ class CallWorker(
     }
 
     private fun getNotificationId(state: CallUiState): Int {
-        return when (state) {
-            is CallUiState.Incoming -> CallNotificationChannels.INCOMING_CALL_NOTIFICATION_ID
+        return when (state.phase) {
+            CallPhase.Incoming -> CallNotificationChannels.INCOMING_CALL_NOTIFICATION_ID
             else -> CallNotificationChannels.ONGOING_CALL_NOTIFICATION_ID
         }
     }
