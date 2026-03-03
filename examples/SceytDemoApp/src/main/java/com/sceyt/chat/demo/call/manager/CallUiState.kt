@@ -1,5 +1,6 @@
 package com.sceyt.chat.demo.call.manager
 
+import androidx.compose.runtime.Immutable
 import com.callclient.call.Call
 
 /**
@@ -7,6 +8,7 @@ import com.callclient.call.Call
  * A single data class with a [CallPhase] enum eliminates state loss when transitioning
  * between phases — user info (name, avatar, isVideo) is written once and survives all transitions.
  */
+@Immutable
 data class CallUiState(
     val phase: CallPhase = CallPhase.Idle,
 
