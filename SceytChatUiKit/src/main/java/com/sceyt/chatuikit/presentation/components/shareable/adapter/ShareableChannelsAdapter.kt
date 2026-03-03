@@ -5,6 +5,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.extensions.dispatchUpdatesToSafety
+import com.sceyt.chatuikit.extensions.findIndexed
 import com.sceyt.chatuikit.persistence.differs.ChannelDiff
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelsDiffUtil
@@ -12,8 +13,8 @@ import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter
 import com.sceyt.chatuikit.presentation.components.shareable.adapter.holders.ShareableChannelViewHolderFactory
 
 class ShareableChannelsAdapter(
-        private var channels: MutableList<ChannelListItem>,
-        private var viewHolderFactory: ShareableChannelViewHolderFactory
+    private var channels: MutableList<ChannelListItem>,
+    private var viewHolderFactory: ShareableChannelViewHolderFactory
 ) : RecyclerView.Adapter<BaseChannelViewHolder>() {
     private val mLoadingItem by lazy { ChannelListItem.LoadingMoreItem }
 
@@ -25,9 +26,13 @@ class ShareableChannelsAdapter(
         holder.bind(item = channels[position], diff = ChannelDiff.DEFAULT)
     }
 
-    override fun onBindViewHolder(holder: BaseChannelViewHolder, position: Int, payloads: MutableList<Any>) {
+    override fun onBindViewHolder(
+        holder: BaseChannelViewHolder,
+        position: Int,
+        payloads: MutableList<Any>
+    ) {
         val diff = payloads.find { it is ChannelDiff } as? ChannelDiff
-                ?: ChannelDiff.DEFAULT
+            ?: ChannelDiff.DEFAULT
         holder.bind(item = channels[position], diff)
     }
 
@@ -91,9 +96,10 @@ class ShareableChannelsAdapter(
     }
 
     fun updateChannelSelectedState(selected: Boolean, channelItem: ChannelListItem.ChannelItem) {
-        val index = channels.indexOf(channelItem)
-        if (index >= 0) {
-            channelItem.selected = selected
+        channels.findIndexed {
+            it is ChannelListItem.ChannelItem && it.channel.id == channelItem.channel.id
+        }?.let { (index, item) ->
+            item.selected = selected
             notifyItemChanged(index, Unit)
         }
     }
