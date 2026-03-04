@@ -1,5 +1,9 @@
 package com.sceyt.chat.demo.call.ui.screens
 
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -7,6 +11,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
 import com.sceyt.chat.demo.call.manager.CallUiState
 import com.sceyt.chat.demo.call.manager.CallUiState.CallPhase
 import com.sceyt.chat.demo.call.ui.CallViewModel
@@ -28,6 +34,41 @@ fun CallScreen(
     val availableDevices by viewModel.availableAudioDevices.collectAsState()
     val selectedDevice by viewModel.selectedAudioDevice.collectAsState()
 
+    val context = LocalContext.current
+
+    fun hasCameraPermission() = ContextCompat.checkSelfPermission(
+        context, Manifest.permission.CAMERA
+    ) == PackageManager.PERMISSION_GRANTED
+
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) viewModel.onToggleCamera()
+    }
+    val onToggleCameraWithPermission: () -> Unit = {
+        if (mediaState.isCameraEnabled) {
+            viewModel.onToggleCamera()  // turning off — no permission needed
+        } else if (hasCameraPermission()) {
+            viewModel.onToggleCamera()
+        } else {
+            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+        }
+    }
+
+    val answerPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        // Answer regardless — user still gets audio even if camera is denied
+        viewModel.onAnswerClick()
+    }
+    val onAnswerWithPermission: () -> Unit = {
+        if (callState.isVideo && !hasCameraPermission()) {
+            answerPermissionLauncher.launch(Manifest.permission.CAMERA)
+        } else {
+            viewModel.onAnswerClick()
+        }
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         when (callState.phase) {
             CallPhase.Idle -> {
@@ -39,8 +80,8 @@ fun CallScreen(
                     callerName = callState.remoteUserName ?: callState.remoteUserId,
                     callerAvatar = callState.remoteUserAvatar,
                     isVideo = callState.isVideo,
-                    onAnswer = { viewModel.onAnswerClick() },
-                    onDecline = { viewModel.onDeclineClick() }
+                    onAnswer = onAnswerWithPermission,
+                    onDecline = viewModel::onDeclineClick
                 )
             }
 
@@ -53,11 +94,11 @@ fun CallScreen(
                     mediaState = mediaState,
                     duration = duration,
                     audioDeviceData = AudioDeviceData(availableDevices, selectedDevice),
-                    onToggleMute = { viewModel.onToggleMute() },
-                    onToggleCamera = { viewModel.onToggleCamera() },
-                    onSwitchCamera = { viewModel.onSwitchCamera() },
-                    onSelectDevice = { viewModel.onSelectAudioDevice(it) },
-                    onEndCall = { viewModel.onEndCallClick() }
+                    onToggleMute = viewModel::onToggleMute,
+                    onToggleCamera = onToggleCameraWithPermission,
+                    onSwitchCamera = viewModel::onSwitchCamera,
+                    onSelectDevice = viewModel::onSelectAudioDevice,
+                    onEndCall = viewModel::onEndCallClick
                 )
             }
 
@@ -86,7 +127,7 @@ fun CallScreen(
                             remoteAvatar = callState.remoteUserAvatar,
                             reason = reason?.displayMessage ?: "Call Ended",
                             onCancel = onDismiss,
-                            onCallAgain = { viewModel.onCallAgain() }
+                            onCallAgain = viewModel::onCallAgain
                         )
                     }
                 }

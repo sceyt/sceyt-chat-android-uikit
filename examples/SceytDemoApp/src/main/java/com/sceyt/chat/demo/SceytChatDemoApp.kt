@@ -10,7 +10,6 @@ import com.callclient.logger.CallLogPriority
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.demo.call.manager.CallManager
 import com.sceyt.chat.demo.call.notification.CallNotificationChannels
-import com.sceyt.chat.demo.call.ui.CallActivity
 import com.sceyt.chat.demo.connection.ChatClientConnectionInterceptor
 import com.sceyt.chat.demo.connection.SceytConnectionProvider
 import com.sceyt.chat.demo.di.apiModule
@@ -146,17 +145,8 @@ class SceytChatDemoApp : Application() {
             .addListener(CALL_CLIENT_LISTENER_KEY, object : CallClient.ClientListener {
                 override fun onInvitedToCall(from: String, call: Call) {
                     Log.d(TAG, "Invited to call from: $from, video: ${call.videoCall}")
-
-                    // Handle incoming call through CallManager
                     appScope.launch {
                         callManager.handleIncomingCall(from, call)
-
-                        // Launch incoming call UI
-                        CallActivity.launchIncoming(
-                            context = this@SceytChatDemoApp,
-                            callerId = from,
-                            isVideo = call.videoCall
-                        )
                     }
                 }
 
