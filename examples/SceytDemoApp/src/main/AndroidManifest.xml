@@ -94,6 +94,11 @@
             android:theme="@style/SceytAppTheme.Default"
             android:windowSoftInputMode="adjustResize" />
 
+        <activity
+            android:name=".presentation.CustomStartChatActivity"
+            android:theme="@style/SceytAppTheme.Default"
+            android:windowSoftInputMode="adjustResize" />
+
         <!-- Call Activity -->
         <activity
             android:name=".call.ui.CallActivity"
