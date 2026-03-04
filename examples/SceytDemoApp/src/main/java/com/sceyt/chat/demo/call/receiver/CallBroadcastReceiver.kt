@@ -5,11 +5,6 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import com.sceyt.chat.demo.call.manager.CallManager
-import com.sceyt.chat.demo.call.ui.CallActivity
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -21,35 +16,23 @@ class CallBroadcastReceiver : BroadcastReceiver(), KoinComponent {
     companion object {
         private const val TAG = "CallBroadcastReceiver"
 
-        const val ACTION_ANSWER = "com.sceyt.call.ACTION_ANSWER"
+        // Note: ACTION_ANSWER is intentionally absent — the notification "Answer" action uses
+        // PendingIntent.getActivity() → CallActivity instead, because Android 10+ blocks
+        // background activity starts from BroadcastReceiver.
         const val ACTION_DECLINE = "com.sceyt.call.ACTION_DECLINE"
         const val ACTION_END_CALL = "com.sceyt.call.ACTION_END_CALL"
         const val ACTION_TOGGLE_MUTE = "com.sceyt.call.ACTION_TOGGLE_MUTE"
     }
 
     private val callManager: CallManager by inject()
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
     override fun onReceive(context: Context, intent: Intent) {
         Log.d(TAG, "Received action: ${intent.action}")
 
         when (intent.action) {
-            ACTION_ANSWER -> handleAnswer(context)
             ACTION_DECLINE -> handleDecline()
             ACTION_END_CALL -> handleEndCall()
             ACTION_TOGGLE_MUTE -> handleToggleMute()
-        }
-    }
-
-    private fun handleAnswer(context: Context) {
-        scope.launch {
-            val result = callManager.answerIncomingCall()
-            if (result.isSuccess) {
-                // Launch call activity
-                context.startActivity(CallActivity.createOngoingIntent(context).apply {
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                })
-            }
         }
     }
 

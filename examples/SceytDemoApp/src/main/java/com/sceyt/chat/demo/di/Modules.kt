@@ -22,6 +22,8 @@ import com.sceyt.chat.demo.presentation.welcome.welcome.WelcomeViewModel
 import com.sceyt.chatuikit.presentation.components.role.viewmodel.RoleViewModel
 import com.sceyt.chatuikit.presentation.components.select_users.viewmodel.UsersViewModel
 import okhttp3.OkHttpClient
+import org.koin.core.module.dsl.bind
+import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
@@ -91,8 +93,7 @@ val repositoryModule = module {
 }
 
 val callModule = module {
-    // CallManager singleton - orchestrates all call SDKs
-    single<CallManager> { CallManagerImpl(get()) }
+    singleOf(::CallManagerImpl) { bind<CallManager>() }
 
     // CallViewModel for UI
     viewModelOf(::CallViewModel)

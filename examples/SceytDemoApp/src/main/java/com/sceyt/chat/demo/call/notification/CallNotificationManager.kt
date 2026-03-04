@@ -18,7 +18,6 @@ class CallNotificationManager(
 ) {
 
     companion object {
-        private const val ACTION_ANSWER = "com.sceyt.call.ACTION_ANSWER"
         private const val ACTION_DECLINE = "com.sceyt.call.ACTION_DECLINE"
         private const val ACTION_END_CALL = "com.sceyt.call.ACTION_END_CALL"
         private const val ACTION_TOGGLE_MUTE = "com.sceyt.call.ACTION_TOGGLE_MUTE"
@@ -27,22 +26,19 @@ class CallNotificationManager(
     /**
      * Builds a notification for incoming call.
      */
+    /**
+     * @param suppressFullScreenIntent When true (app in foreground), use low priority without
+     *   full-screen intent — the UI is already open. When false (app in background), use high
+     *   priority with full-screen intent to surface the incoming call to the user.
+     */
     fun buildIncomingCallNotification(
         callerName: String,
-        isVideo: Boolean
+        isVideo: Boolean,
+        suppressFullScreenIntent: Boolean
     ): Notification {
         val callType = if (isVideo) "Video call" else "Voice call"
 
-        // Full-screen intent for incoming call
-        val fullScreenIntent = CallActivity.createIncomingIntent(context)
-        val fullScreenPendingIntent = PendingIntent.getActivity(
-            context,
-            0,
-            fullScreenIntent,
-            immutablePendingIntentFlags()
-        )
-
-        // Content intent
+        // Content intent — tap notification to open call screen
         val contentIntent = CallActivity.createIncomingIntent(context)
         val contentPendingIntent = PendingIntent.getActivity(
             context,
@@ -51,14 +47,13 @@ class CallNotificationManager(
             immutablePendingIntentFlags()
         )
 
-        // Action: Answer
-        val answerIntent = Intent(context, CallBroadcastReceiver::class.java).apply {
-            action = ACTION_ANSWER
-        }
-        val answerPendingIntent = PendingIntent.getBroadcast(
+        // Action: Answer — must use getActivity() because background activity starts from a
+        // BroadcastReceiver are blocked on Android 10+. CallActivity reads EXTRA_AUTO_ANSWER
+        // and calls viewModel.onAnswerClick() immediately on launch.
+        val answerPendingIntent = PendingIntent.getActivity(
             context,
             2,
-            answerIntent,
+            CallActivity.createAnswerIntent(context),
             immutablePendingIntentFlags()
         )
 
@@ -73,31 +68,42 @@ class CallNotificationManager(
             immutablePendingIntentFlags()
         )
 
-        return NotificationCompat.Builder(
-            context,
+        val channelId = if (suppressFullScreenIntent) {
+            CallNotificationChannels.INCOMING_CALL_SILENT_CHANNEL_ID
+        } else {
             CallNotificationChannels.INCOMING_CALL_CHANNEL_ID
-        )
+        }
+
+        val builder = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(R.drawable.ic_call_up_blue)
             .setContentTitle(callerName)
             .setContentText("Incoming $callType")
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_CALL)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setOngoing(true)
             .setAutoCancel(false)
-            .setFullScreenIntent(fullScreenPendingIntent, true)
             .setContentIntent(contentPendingIntent)
-            .addAction(
-                R.drawable.ic_call_up_blue,
-                "Answer",
-                answerPendingIntent
+            .addAction(R.drawable.ic_call_up_blue, "Answer", answerPendingIntent)
+            .addAction(R.drawable.ic_call_up_blue, "Decline", declinePendingIntent)
+
+        if (suppressFullScreenIntent) {
+            // App is in foreground — CallActivity is already launching; keep notification silent
+            builder.setPriority(NotificationCompat.PRIORITY_LOW)
+        } else {
+            // App is in background — surface the call with heads-up and full-screen intent
+            val fullScreenIntent = CallActivity.createIncomingIntent(context)
+            val fullScreenPendingIntent = PendingIntent.getActivity(
+                context,
+                0,
+                fullScreenIntent,
+                immutablePendingIntentFlags()
             )
-            .addAction(
-                R.drawable.ic_call_up_blue,
-                "Decline",
-                declinePendingIntent
-            )
-            .build()
+            builder
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setFullScreenIntent(fullScreenPendingIntent, true)
+        }
+
+        return builder.build()
     }
 
     /**
@@ -176,7 +182,7 @@ class CallNotificationManager(
     ): Notification {
         val statusText = when (state.phase) {
             CallUiState.CallPhase.Connecting -> "Connecting..."
-            CallUiState.CallPhase.Reconnecting -> "Reconnecting... (Attempt ${state.reconnectAttempt})"
+            CallUiState.CallPhase.Reconnecting -> "Reconnecting..."
             CallUiState.CallPhase.Outgoing -> "Calling..."
             else -> "Call in progress"
         }

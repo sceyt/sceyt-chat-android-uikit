@@ -2,6 +2,8 @@ package com.sceyt.chat.demo.call.manager
 
 import android.content.Context
 import android.util.Log
+import androidx.work.WorkInfo
+import androidx.work.WorkManager
 import com.callclient.CallClient
 import com.callclient.call.Call
 import com.callclient.call.calllisteners.CallEventsListener
@@ -21,11 +23,16 @@ import com.sceyt.audiorouting.AudioRouterListener
 import com.sceyt.audiorouting.RoutingState
 import com.sceyt.chat.demo.call.manager.CallUiState.CallPhase
 import com.sceyt.chat.demo.call.manager.CallUiState.EndedReason
+import com.sceyt.chat.demo.call.ui.CallActivity
+import com.sceyt.chat.demo.call.worker.CallWorker
+import com.sceyt.chat.demo.connection.SceytConnectionProvider
 import com.sceyt.chat.models.signal.MediaFlow
 import com.sceyt.chat.models.signal.ParticipantState
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.models.fold
 import com.sceyt.chatuikit.extensions.getPresentableName
+import com.sceyt.chatuikit.extensions.isAppOnForeground
 import com.sceyt.tonemanager.audio.tone.ToneConfig
 import com.sceyt.tonemanager.manager.ToneManager
 import com.sceyt.tonemanager.manager.ToneManagerFactory
@@ -37,17 +44,21 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import org.webrtc.VideoTrack
 import kotlin.reflect.KClass
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Implementation of [CallManager] that orchestrates CallClient, ToneManager, and AudioRouter SDKs.
  */
 class CallManagerImpl(
-    private val context: Context
+    private val context: Context,
+    private val connectionProvider: SceytConnectionProvider
 ) : CallManager {
 
     companion object {
@@ -110,7 +121,6 @@ class CallManagerImpl(
 
         return try {
             endedDismissJob?.cancel()
-            val userInfo = fetchUserInfo(userId)
 
             lastOutgoingUserId = userId
             lastOutgoingIsVideo = isVideo
@@ -119,10 +129,22 @@ class CallManagerImpl(
                 CallUiState(
                     phase = CallPhase.Outgoing,
                     remoteUserId = userId,
-                    remoteUserName = userInfo?.name,
-                    remoteUserAvatar = userInfo?.avatar,
                     isVideo = isVideo
                 )
+            }
+
+            // Fetch user info in background and update state when ready
+            scope.launch {
+                fetchUserInfo(userId)?.let { userInfo ->
+                    _callUiState.update { state ->
+                        if (state.remoteUserId == userId)
+                            state.copy(
+                                remoteUserName = userInfo.name,
+                                remoteUserAvatar = userInfo.avatar
+                            )
+                        else state
+                    }
+                }
             }
 
             setupAudioRouting(isVideo)
@@ -139,6 +161,9 @@ class CallManagerImpl(
             }
             result.onSuccess { call ->
                 callPrepared(call)
+
+                CallWorker.start(context)
+
                 val joinCallOptions = JoinCallOptions.default().copy(
                     audioSettings = AudioSettings(disableManageAudioRoute = true),
                     videoSettings = if (isVideo) VideoSettings(publishVideo = true) else null
@@ -341,30 +366,79 @@ class CallManagerImpl(
 
     // ========== Incoming Call Handling ==========
 
-    override suspend fun handleIncomingCall(from: String, call: Call) {
+    override fun handleIncomingCall(from: String, call: Call) {
         if (!_callUiState.value.phase.canAnswerOrMakeCall()) {
             Log.w(TAG, "Rejecting incoming call - already in a call")
             call.reject("Busy")
             return
         }
         endedDismissJob?.cancel()
-        val userInfo = fetchUserInfo(from)
 
         setupCallListeners(call)
         _callUiState.update {
             CallUiState(
                 phase = CallPhase.Incoming,
                 remoteUserId = from,
-                remoteUserName = userInfo?.name,
-                remoteUserAvatar = userInfo?.avatar,
                 isVideo = call.videoCall,
                 incomingCall = call
             )
         }
+        // Fetch user info in background and update state when ready
+        scope.launch {
+            fetchUserInfo(from)?.let { userInfo ->
+                _callUiState.update { state ->
+                    if (state.remoteUserId == from)
+                        state.copy(
+                            remoteUserName = userInfo.name,
+                            remoteUserAvatar = userInfo.avatar
+                        )
+                    else state
+                }
+            }
+        }
 
-        playTone(ToneConfig.ring())
-        call.sendRinging()
+
+        if (context.isAppOnForeground()) {
+            CallActivity.launchIncoming(
+                context = context,
+                callerId = from,
+                isVideo = call.videoCall
+            )
+        }
+
         Log.d(TAG, "Incoming call from: $from, video: ${call.videoCall}")
+        connectionProvider.connectChatClient()
+
+        scope.launch {
+            CallWorker.start(context)
+            call.sendRinging()
+            startRinging()
+        }
+    }
+
+    /**
+     * Starts ringtone and vibration for the incoming call.
+     * Must be called after a foreground service is running (e.g., from CallWorker after
+     * setForeground()) to satisfy Android 15+ audio focus requirements.
+     */
+    private suspend fun startRinging() {
+        Log.d(TAG, "startRinging: ringtone and vibration started")
+        if (!context.isAppOnForeground()) {
+            awaitWorkStart()
+        }
+        toneManager.playRingtoneAndVibrate()
+    }
+
+    private suspend fun awaitWorkStart() = withTimeoutOrNull(5.seconds.inWholeMilliseconds) {
+        WorkManager.getInstance(context)
+            .getWorkInfosByTagFlow(CallWorker.CALL_WORK_NAME)
+            .first { infos ->
+                val running = infos.find { it.state == WorkInfo.State.RUNNING }
+                return@first running != null && running.progress.getBoolean(
+                    key = CallWorker.KEY_FOREGROUND_READY,
+                    defaultValue = false
+                )
+            }
     }
 
     // ========== Lifecycle ==========
@@ -735,6 +809,14 @@ class CallManagerImpl(
 
     private suspend fun fetchUserInfo(userId: String): UserInfo? {
         return try {
+            val userFromDb = SceytChatUIKit.chatUIFacade.userInteractor.getUserFromDbById(userId)
+            if (userFromDb != null) {
+                return UserInfo(
+                    name = userFromDb.getPresentableName(),
+                    avatar = userFromDb.avatarURL
+                )
+            }
+            ConnectionEventManager.awaitToConnectSceytWithTimeout(10.seconds.inWholeMilliseconds)
             val result = SceytChatUIKit.chatUIFacade.userInteractor.getUserById(userId)
             result.fold(
                 onSuccess = { user ->

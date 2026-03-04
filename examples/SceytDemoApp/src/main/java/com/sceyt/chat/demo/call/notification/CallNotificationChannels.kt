@@ -4,7 +4,6 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
-import android.media.AudioAttributes
 import android.os.Build
 import androidx.core.content.getSystemService
 
@@ -13,7 +12,10 @@ import androidx.core.content.getSystemService
  */
 object CallNotificationChannels {
 
+    /** High-importance channel — used when app is in background (heads-up + full-screen intent). */
     const val INCOMING_CALL_CHANNEL_ID = "sceyt_incoming_call"
+    /** Low-importance channel — used when app is in foreground (no heads-up, call UI opens directly). */
+    const val INCOMING_CALL_SILENT_CHANNEL_ID = "sceyt_incoming_call_silent"
     const val ONGOING_CALL_CHANNEL_ID = "sceyt_ongoing_call"
 
     const val INCOMING_CALL_NOTIFICATION_ID = 10001
@@ -28,19 +30,30 @@ object CallNotificationChannels {
 
         val notificationManager = context.getSystemService<NotificationManager>() ?: return
 
-        // Incoming call channel - high priority for heads-up display
+        // Background incoming call channel — IMPORTANCE_HIGH so heads-up and full-screen intent work
         val incomingChannel = NotificationChannel(
             INCOMING_CALL_CHANNEL_ID,
             "Incoming Calls",
-            NotificationManager.IMPORTANCE_LOW// todo: change to HIGH when implementing notifications for incoming calls
+            NotificationManager.IMPORTANCE_HIGH
         ).apply {
             description = "Notifications for incoming voice and video calls"
-            // Don't play sound through notification - ToneManager handles ringtone
+            // ToneManager handles both ringtone and vibration via playRingtoneAndVibrate()
             setSound(null, null)
-            enableVibration(true)
-            vibrationPattern = longArrayOf(0, 1000, 500, 1000, 500, 1000)
+            enableVibration(false)
             lockscreenVisibility = Notification.VISIBILITY_PUBLIC
             setBypassDnd(true)
+        }
+
+        // Foreground incoming call channel — IMPORTANCE_LOW, app is already visible so no heads-up needed
+        val incomingCallSilentChannel = NotificationChannel(
+            INCOMING_CALL_SILENT_CHANNEL_ID,
+            "Incoming Calls (Silent)",
+            NotificationManager.IMPORTANCE_LOW
+        ).apply {
+            description = "Silent foreground service notification when call UI is already visible"
+            setSound(null, null)
+            enableVibration(false)
+            lockscreenVisibility = Notification.VISIBILITY_PUBLIC
         }
 
         // Ongoing call channel - low priority, persistent but quiet
@@ -55,6 +68,8 @@ object CallNotificationChannels {
             lockscreenVisibility = Notification.VISIBILITY_PUBLIC
         }
 
-        notificationManager.createNotificationChannels(listOf(incomingChannel, ongoingChannel))
+        notificationManager.createNotificationChannels(
+            listOf(incomingChannel, incomingCallSilentChannel, ongoingChannel)
+        )
     }
 }

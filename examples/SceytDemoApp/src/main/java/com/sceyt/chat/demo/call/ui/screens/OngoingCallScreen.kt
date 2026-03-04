@@ -408,7 +408,7 @@ private fun CallStatusContent(
         }
 
         CallUiState.CallPhase.Reconnecting -> {
-            DotsText("reconnecting (${callState.reconnectAttempt}/${callState.maxReconnectAttempts})")
+            DotsText("reconnecting")
         }
 
         else -> {}

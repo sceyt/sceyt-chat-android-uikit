@@ -116,7 +116,7 @@
             android:foregroundServiceType="phoneCall"
             tools:node="merge" />
         <service
-            android:name="com.sceyt.chatuikit.services.SceytFirebaseMessageReceiver"
+            android:name=".call.service.CallFirebaseMessageReceiver"
             android:enabled="true"
             android:exported="false">
             <intent-filter>

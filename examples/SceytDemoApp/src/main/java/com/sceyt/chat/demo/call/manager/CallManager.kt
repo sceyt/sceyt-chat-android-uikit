@@ -151,7 +151,7 @@ interface CallManager {
      * @param from The caller's user ID
      * @param call The incoming Call object from SDK
      */
-    suspend fun handleIncomingCall(from: String, call: Call)
+    fun handleIncomingCall(from: String, call: Call)
 
     /**
      * Retry calling the last outgoing call recipient.

@@ -10,19 +10,23 @@ import androidx.work.CoroutineWorker
 import androidx.work.ExistingWorkPolicy
 import androidx.work.ForegroundInfo
 import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.Operation
 import androidx.work.OutOfQuotaPolicy
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import androidx.work.workDataOf
 import com.sceyt.chat.demo.call.manager.CallManager
 import com.sceyt.chat.demo.call.manager.CallUiState
 import com.sceyt.chat.demo.call.manager.CallUiState.CallPhase
 import com.sceyt.chat.demo.call.notification.CallNotificationChannels
 import com.sceyt.chat.demo.call.notification.CallNotificationManager
+import com.sceyt.chatuikit.extensions.isAppOnForeground
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.takeWhile
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import java.util.Locale
 
 /**
  * WorkManager worker for maintaining call foreground execution.
@@ -35,24 +39,26 @@ class CallWorker(
 
     companion object {
         private const val TAG = "CallWorker"
-        private const val CALL_WORK_NAME = "sceyt_call_work"
+        const val CALL_WORK_NAME = "sceyt_call_work"
+        const val KEY_FOREGROUND_READY = "foreground_ready"
 
         /**
          * Starts the call worker to maintain foreground execution.
          */
-        fun start(context: Context) {
+        fun start(context: Context): Operation {
             val workRequest = OneTimeWorkRequestBuilder<CallWorker>()
                 .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
+                .addTag(CALL_WORK_NAME)
                 .build()
 
-            WorkManager.getInstance(context)
+            Log.d(TAG, "Call worker started")
+
+            return WorkManager.getInstance(context)
                 .enqueueUniqueWork(
-                    CALL_WORK_NAME,
+                    uniqueWorkName = CALL_WORK_NAME,
                     ExistingWorkPolicy.KEEP,
                     workRequest
                 )
-
-            Log.d(TAG, "Call worker started")
         }
 
         /**
@@ -72,8 +78,9 @@ class CallWorker(
         Log.d(TAG, "Call worker doWork started")
 
         try {
-            // Create initial foreground notification
-            setForeground(createForegroundInfo())
+            // Create initial foreground notification.
+            setForeground(createForegroundInfo(applicationContext.isAppOnForeground()))
+            setProgress(workDataOf(KEY_FOREGROUND_READY to true))
 
             // Observe call state and update notification until call ends
             combine(
@@ -85,7 +92,7 @@ class CallWorker(
                     state = state,
                     isMuted = media.isMuted,
                     duration = duration,
-                    remoteName = state.remoteUserName ?: "Unknown"
+                    remoteName = state.remoteUserName ?: state.remoteUserId
                 )
             }
                 .takeWhile { it.state.isActive }
@@ -106,9 +113,9 @@ class CallWorker(
         }
     }
 
-    private fun createForegroundInfo(): ForegroundInfo {
+    private fun createForegroundInfo(isAppInForeground: Boolean = false): ForegroundInfo {
         val state = callManager.callUiState.value
-        val notification = buildNotificationForState(state)
+        val notification = buildNotificationForState(state, isAppInForeground = isAppInForeground)
 
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             ForegroundInfo(
@@ -136,7 +143,8 @@ class CallWorker(
             state = snapshot.state,
             remoteName = snapshot.remoteName,
             isMuted = snapshot.isMuted,
-            duration = formatDuration(snapshot.duration)
+            duration = formatDuration(snapshot.duration),
+            isAppInForeground = applicationContext.isAppOnForeground()
         )
 
         systemNotificationManager?.notify(newNotificationId, notification)
@@ -149,15 +157,18 @@ class CallWorker(
         state: CallUiState,
         remoteName: String = "Unknown",
         isMuted: Boolean = false,
-        duration: String = "00:00"
+        duration: String = "00:00",
+        isAppInForeground: Boolean
     ): android.app.Notification {
         return when (state.phase) {
             CallPhase.Incoming -> {
                 notificationManager.buildIncomingCallNotification(
                     callerName = state.remoteUserName ?: state.remoteUserId,
-                    isVideo = state.isVideo
+                    isVideo = state.isVideo,
+                    suppressFullScreenIntent = isAppInForeground
                 )
             }
+
             CallPhase.Connected -> {
                 notificationManager.buildOngoingCallNotification(
                     remoteName = remoteName,
@@ -166,6 +177,7 @@ class CallWorker(
                     isVideo = state.isVideo
                 )
             }
+
             CallPhase.Outgoing,
             CallPhase.Connecting,
             CallPhase.Reconnecting -> {
@@ -174,6 +186,7 @@ class CallWorker(
                     state = state
                 )
             }
+
             else -> {
                 notificationManager.buildConnectingNotification(
                     remoteName = remoteName,
@@ -196,9 +209,9 @@ class CallWorker(
         val secs = seconds % 60
 
         return if (hours > 0) {
-            String.format("%02d:%02d:%02d", hours, minutes, secs)
+            String.format(Locale.getDefault(), "%02d:%02d:%02d", hours, minutes, secs)
         } else {
-            String.format("%02d:%02d", minutes, secs)
+            String.format(Locale.getDefault(), "%02d:%02d", minutes, secs)
         }
     }
 

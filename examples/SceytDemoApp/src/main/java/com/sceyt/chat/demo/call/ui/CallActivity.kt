@@ -1,23 +1,26 @@
 package com.sceyt.chat.demo.call.ui
 
+import android.Manifest
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.core.content.ContextCompat
 import com.sceyt.chat.demo.call.manager.CallUiState
 import com.sceyt.chat.demo.call.ui.screens.CallScreen
 import com.sceyt.chat.demo.call.ui.theme.CallTheme
-import com.sceyt.chat.demo.call.worker.CallWorker
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 /**
@@ -35,6 +38,8 @@ class CallActivity : ComponentActivity() {
         private const val CALL_TYPE_OUTGOING = "outgoing"
         private const val CALL_TYPE_ONGOING = "ongoing"
 
+        private const val EXTRA_AUTO_ANSWER = "extra_auto_answer"
+
         /**
          * Creates intent to launch for incoming call (full-screen).
          */
@@ -42,6 +47,17 @@ class CallActivity : ComponentActivity() {
             return Intent(context, CallActivity::class.java).apply {
                 putExtra(EXTRA_CALL_TYPE, CALL_TYPE_INCOMING)
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            }
+        }
+
+        /**
+         * Creates intent that launches the incoming call screen and immediately answers the call.
+         * Used by the notification "Answer" action — getActivity() is required since background
+         * activity starts from BroadcastReceiver are blocked on Android 10+.
+         */
+        fun createAnswerIntent(context: Context): Intent {
+            return createIncomingIntent(context).apply {
+                putExtra(EXTRA_AUTO_ANSWER, true)
             }
         }
 
@@ -92,6 +108,14 @@ class CallActivity : ComponentActivity() {
 
     private val viewModel: CallViewModel by viewModel()
 
+    // Used only for the notification "Answer" action on a video call where CAMERA is not yet granted
+    private val autoAnswerCameraPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { _ ->
+        // Answer regardless of result — camera denied means audio-only, which is acceptable
+        viewModel.onAnswerClick()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -100,12 +124,14 @@ class CallActivity : ComponentActivity() {
 
         enableEdgeToEdge()
 
-        // Start foreground worker for call persistence
-        CallWorker.start(this)
-
         // Send ringing signal if this is an incoming call
         if (intent.getStringExtra(EXTRA_CALL_TYPE) == CALL_TYPE_INCOMING) {
             viewModel.sendRinging()
+        }
+
+        // Answer immediately if launched via notification "Answer" action
+        if (intent.getBooleanExtra(EXTRA_AUTO_ANSWER, false)) {
+            answerWithCameraPermissionIfNeeded()
         }
 
         setContent {
@@ -136,7 +162,23 @@ class CallActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        // Activity is being brought back to foreground
+        // Answer immediately if activity was already running when user tapped "Answer"
+        if (intent.getBooleanExtra(EXTRA_AUTO_ANSWER, false)) {
+            answerWithCameraPermissionIfNeeded()
+        }
+    }
+
+    private fun answerWithCameraPermissionIfNeeded() {
+        val isVideoCall = viewModel.callUiState.value.isVideo
+        val hasCameraPermission = ContextCompat.checkSelfPermission(
+            this, Manifest.permission.CAMERA
+        ) == PackageManager.PERMISSION_GRANTED
+
+        if (isVideoCall && !hasCameraPermission) {
+            autoAnswerCameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+        } else {
+            viewModel.onAnswerClick()
+        }
     }
 
     private fun setupWindowFlags() {
