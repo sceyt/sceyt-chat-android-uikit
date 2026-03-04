@@ -102,8 +102,8 @@ android {
 dependencies {
     implementation(project(":SceytChatUiKit"))
 
-    implementation(project(":ToneManager"))
     implementation("com.sceyt:sceyt-call-android-sdk:1.4.600005-SNAPSHOT")
+    implementation("com.sceyt:sceyt-tonemanager-android-sdk:1.0.0-SNAPSHOT")
 
     implementation(libs.appcompat)
     implementation(libs.material)
