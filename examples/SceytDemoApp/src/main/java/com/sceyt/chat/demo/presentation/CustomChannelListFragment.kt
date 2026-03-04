@@ -28,4 +28,8 @@ class CustomChannelListFragment : ChannelListFragment() {
             }
         })
     }
+
+    override fun openStartChatActivity() {
+        CustomStartChatActivity.launch(requireContext())
+    }
 }
