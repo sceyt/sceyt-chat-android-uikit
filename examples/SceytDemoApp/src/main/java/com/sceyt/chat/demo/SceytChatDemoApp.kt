@@ -3,7 +3,6 @@ package com.sceyt.chat.demo
 import android.app.Application
 import android.util.Log
 import com.callclient.CallClient
-import com.callclient.call.Call
 import com.callclient.logger.CallLog
 import com.callclient.logger.CallLogLevel
 import com.callclient.logger.CallLogPriority
@@ -26,10 +25,6 @@ import com.sceyt.chatuikit.config.ChannelInviteDeepLinkConfig
 import com.sceyt.chatuikit.config.PushNotificationConfig
 import com.sceyt.chatuikit.providers.ChatTokenProvider
 import com.sceyt.chatuikit.push.providers.firebase.FirebasePushServiceProvider
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
@@ -39,8 +34,6 @@ class SceytChatDemoApp : Application() {
     private val connectionProvider by inject<SceytConnectionProvider>()
     private val chatClientConnectionInterceptor by inject<ChatClientConnectionInterceptor>()
     private val callManager by inject<CallManager>()
-
-    private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
     override fun onCreate() {
         super.onCreate()
@@ -137,29 +130,7 @@ class SceytChatDemoApp : Application() {
         CallNotificationChannels.createChannels(this)
 
         // Initialize CallClient with ChatClient
-        val chatClient = ChatClient.getClient()
-        CallClient.initialize(this, chatClient)
-
-        // Register listener for incoming calls
-        CallClient.requireInstance()
-            .addListener(CALL_CLIENT_LISTENER_KEY, object : CallClient.ClientListener {
-                override fun onInvitedToCall(from: String, call: Call) {
-                    Log.d(TAG, "Invited to call from: $from, video: ${call.videoCall}")
-                    appScope.launch {
-                        callManager.handleIncomingCall(from, call)
-                    }
-                }
-
-                override fun onOngoingCallsUpdated(calls: List<Call>) {
-                    Log.d(TAG, "Ongoing calls updated: ${calls.size}")
-                }
-            })
-
-        Log.d(TAG, "CallClient initialized, version: ${CallClient.getVersion()}")
-    }
-
-    companion object {
-        private const val TAG = "SceytChatDemoApp"
-        private const val CALL_CLIENT_LISTENER_KEY = "app_call_listener"
+        CallClient.initialize(this, ChatClient.getClient())
+        callManager.init()
     }
 }

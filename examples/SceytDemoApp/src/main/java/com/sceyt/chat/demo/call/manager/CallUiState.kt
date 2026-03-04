@@ -76,7 +76,7 @@ data class CallUiState(
     companion object {
         val IDLE = CallUiState()
         const val MAX_RECONNECT_ATTEMPTS = 3
-        const val NO_ANSWER_TIMEOUT_MS = 60_000L
-        const val RECONNECT_TIMEOUT_MS = 30_000L
+        const val NO_ANSWER_TIMEOUT_MS = 60_000L // 1 minute
+        const val RECONNECT_TIMEOUT_MS = 60_000L // 1 minute
     }
 }

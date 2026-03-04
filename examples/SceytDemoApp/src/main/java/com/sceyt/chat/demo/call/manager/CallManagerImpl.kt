@@ -20,7 +20,6 @@ import com.sceyt.audiorouting.AudioDevice
 import com.sceyt.audiorouting.AudioRouter
 import com.sceyt.audiorouting.AudioRouterConfig
 import com.sceyt.audiorouting.AudioRouterListener
-import com.sceyt.audiorouting.RoutingState
 import com.sceyt.chat.demo.call.manager.CallUiState.CallPhase
 import com.sceyt.chat.demo.call.manager.CallUiState.EndedReason
 import com.sceyt.chat.demo.call.ui.CallActivity
@@ -50,6 +49,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import org.webrtc.VideoTrack
+import java.util.UUID
 import kotlin.reflect.KClass
 import kotlin.time.Duration.Companion.seconds
 
@@ -64,6 +64,7 @@ class CallManagerImpl(
     companion object {
         private const val TAG = "CallManagerImpl"
         private const val CALL_LISTENER_KEY = "call_manager_listener"
+        private const val CALL_CLIENT_LISTENER_KEY = "app_call_listener"
     }
 
     // SDK instances
@@ -106,6 +107,16 @@ class CallManagerImpl(
     // Last outgoing call info for "Call Again" feature
     private var lastOutgoingUserId: String? = null
     private var lastOutgoingIsVideo: Boolean = false
+
+    override fun init() {
+        // Register listener for incoming calls
+        callClient.addListener(CALL_CLIENT_LISTENER_KEY, object : CallClient.ClientListener {
+            override fun onInvitedToCall(from: String, call: Call) {
+                Log.d(TAG, "Invited to call from: $from, callId: ${call.id}")
+                handleIncomingCall(from, call)
+            }
+        })
+    }
 
     // ========== Call Control ==========
 
@@ -151,7 +162,7 @@ class CallManagerImpl(
 
             val result = runCatching {
                 callClient.prepareCall(
-                    callId = generateCallId(),
+                    callId = UUID.randomUUID().toString(),
                     CreateCallOptions(
                         participantsIds = listOf(userId),
                         videoCall = isVideo,
@@ -754,24 +765,6 @@ class CallManagerImpl(
             )
             updateSpeakerState(selectedDevice)
         }
-
-        override fun onRoutingStateChanged(state: RoutingState) {
-            Log.d(TAG, "Audio routing state changed: $state")
-        }
-
-        override fun onBluetoothScoConnectionFailed(
-            device: AudioDevice.BluetoothHeadset,
-            fallbackDevice: AudioDevice?
-        ) {
-            Log.w(
-                TAG,
-                "Bluetooth SCO connection failed for ${device.name}, fallback: ${fallbackDevice?.name}"
-            )
-        }
-
-        override fun onPermissionMissing(permission: String) {
-            Log.w(TAG, "Audio routing permission missing: $permission")
-        }
     }
 
     private fun setupAudioRouting(isVideo: Boolean) {
@@ -836,10 +829,6 @@ class CallManagerImpl(
 
     private data class UserInfo(val name: String?, val avatar: String?)
 
-    private fun generateCallId(): String {
-        return "call_${System.currentTimeMillis()}_${(1000..9999).random()}"
-    }
-
     // ========== Timers ==========
 
     private fun startDurationTimer() {
@@ -891,20 +880,12 @@ class CallManagerImpl(
     // ========== Tones ==========
 
     private suspend fun playTone(config: ToneConfig) {
-        try {
-            toneManager.playTone(config)
-        } catch (e: Exception) {
-            Log.e(TAG, "Error playing tone", e)
-        }
+        toneManager.playTone(config)
     }
 
     private fun stopTone() {
         scope.launch {
-            try {
-                toneManager.stopCurrentTone()
-            } catch (e: Exception) {
-                Log.e(TAG, "Error stopping tone", e)
-            }
+            toneManager.stopCurrentTone()
         }
     }
 }
