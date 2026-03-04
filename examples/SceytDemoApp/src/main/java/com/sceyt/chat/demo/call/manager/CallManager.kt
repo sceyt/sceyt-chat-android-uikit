@@ -47,6 +47,11 @@ interface CallManager {
      */
     val currentCall: Call?
 
+    /**
+     * Initialize the CallManager and start observing SDK events.
+     * */
+    fun init()
+
     // ========== Call Control ==========
 
     /**
