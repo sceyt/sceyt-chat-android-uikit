@@ -5,30 +5,33 @@ import com.callclient.CallClient
 import com.callclient.call.data.CallNotificationType
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import com.sceyt.chat.demo.call.manager.CallManager
 import com.sceyt.chat.demo.call.worker.CallWorker
 import com.sceyt.chatuikit.push.delegates.FirebaseMessagingDelegate
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
 /**
  * FCM service that intercepts push notifications and routes them:
  *  - Call notifications  → [CallClient.handleNotification], then start [CallWorker] on invite
  *  - Chat notifications  → [FirebaseMessagingDelegate] (standard SDK path)
  */
-class CallFirebaseMessageReceiver : FirebaseMessagingService() {
+class CallFirebaseMessageReceiver : FirebaseMessagingService(), KoinComponent {
+    private val callManager by inject<CallManager>()
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
-        when (val notificationType = handleCallNotification(remoteMessage.data)) {
-            CallNotificationType.InviteToCall -> {
-                // SDK has processed the invite internally and will fire
-                // CallClient.ClientListener.onInvitedToCall(), which sets CallManager state.
+        when (val result = handleCallNotification(remoteMessage.data)) {
+            is CallNotificationType.InviteToCall -> {
                 Log.d(TAG, "Call invite push received — starting CallWorker")
+                callManager.handleIncomingCall(result.from, result.call)
             }
 
-            CallNotificationType.MissedCall,
-            CallNotificationType.JoinToCall -> {
-                Log.d(TAG, "Call push received: $notificationType")
+            is CallNotificationType.MissedCall,
+            is CallNotificationType.JoinToCall -> {
+                Log.d(TAG, "Call push received: $result")
             }
 
-            CallNotificationType.None -> {
+            is CallNotificationType.None -> {
                 // Not a call notification — delegate to the chat SDK
                 if (FirebaseMessagingDelegate.isChatPushNotification(remoteMessage)) {
                     FirebaseMessagingDelegate.handleRemoteMessage(remoteMessage)

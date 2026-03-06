@@ -108,7 +108,8 @@
             android:showOnLockScreen="true"
             android:showWhenLocked="true"
             android:theme="@style/SceytAppTheme.Default"
-            android:turnScreenOn="true" />
+            android:turnScreenOn="true"
+            tools:targetApi="o_mr1" />
 
         <!-- Call Broadcast Receiver for notification actions -->
         <receiver
