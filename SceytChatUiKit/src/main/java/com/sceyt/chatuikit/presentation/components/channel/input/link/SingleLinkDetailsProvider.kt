@@ -17,7 +17,6 @@ import com.sceyt.chatuikit.shared.utils.ThumbHash
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.core.component.inject
@@ -29,26 +28,23 @@ class SingleLinkDetailsProvider : SceytKoinComponent {
     private var loadDetailsJob: Job? = null
     private var loadedLinks = mutableMapOf<String, LinkPreviewDetails>()
 
-    constructor(context: Context) {
-        this.context = context
-        scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-    }
-
     constructor(context: Context, scope: CoroutineScope) {
         this.context = context
         this.scope = scope
     }
 
-    fun loadLinkDetails(text: String,
-                        detailsCallback: (LinkPreviewDetails?) -> Unit,
-                        imageSizeCallback: (Size) -> Unit,
-                        thumbCallback: (String) -> Unit) {
+    fun loadLinkDetails(
+        text: String,
+        detailsCallback: (LinkPreviewDetails?) -> Unit,
+        imageSizeCallback: (Size) -> Unit,
+        thumbCallback: (String) -> Unit
+    ) {
         loadDetailsJob?.cancel()
         if (loadedLinks.containsKey(text)) {
             detailsCallback(loadedLinks[text])
             return
         }
-        loadDetailsJob = scope.launch(Dispatchers.IO) {
+        loadDetailsJob = scope.launch {
             val link = text.extractLinks().firstOrNull { it.isValidUrl(context) }
             if (link == null) {
                 withContext(Dispatchers.Main) { detailsCallback(null) }
@@ -64,7 +60,10 @@ class SingleLinkDetailsProvider : SceytKoinComponent {
                 }
 
                 if (linkPreviewDetails.imageUrl != null && linkPreviewDetails.imageWidth == null) {
-                    val bitmap = getImageBitmapWithGlideWithTimeout(context, linkPreviewDetails.imageUrl)
+                    val bitmap = getImageBitmapWithGlideWithTimeout(
+                        context = context,
+                        url = linkPreviewDetails.imageUrl
+                    )
 
                     if (bitmap == null) {
                         withContext(Dispatchers.Main) { detailsCallback(linkPreviewDetails) }
@@ -74,7 +73,10 @@ class SingleLinkDetailsProvider : SceytKoinComponent {
                     withContext(Dispatchers.Main) {
                         imageSizeCallback(Size(bitmap.width, bitmap.height))
                     }
-                    attachmentsMiddleWare.updateLinkDetailsSize(link, Size(bitmap.width, bitmap.height))
+                    attachmentsMiddleWare.updateLinkDetailsSize(
+                        link = link,
+                        size = Size(bitmap.width, bitmap.height)
+                    )
                     if (linkPreviewDetails.thumb == null) {
                         val thumb = getImageThumb(bitmap)
                         thumb?.let {

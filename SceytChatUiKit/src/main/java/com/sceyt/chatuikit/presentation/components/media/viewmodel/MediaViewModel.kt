@@ -132,8 +132,6 @@ class MediaViewModel : BaseViewModel(), SceytKoinComponent {
                     fileTransferService.getThumb(attachment.messageTid, attachment, data.thumbData)
                 }
             }
-
-            is NeedMediaInfoData.NeedLinkPreview -> return
         }
     }
 

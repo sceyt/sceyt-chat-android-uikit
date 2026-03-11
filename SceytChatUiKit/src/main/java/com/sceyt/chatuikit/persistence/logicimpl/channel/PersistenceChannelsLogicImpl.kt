@@ -1090,31 +1090,33 @@ internal class PersistenceChannelsLogicImpl(
 
     override suspend fun updateDraftMessage(
         draftMessage: DraftMessage
-    ): Unit = with(draftMessage) {
-        if (!hasContent()) {
-            draftMessageDao.deleteDraftByChannelId(channelId)
-            channelsCache.updateChannelDraftMessage(channelId, null)
-            return
-        } else {
-            val draftMessageEntity = this.toDraftMessageEntity(bodyAttributes = bodyAttributes)
+    ) = withContext(Dispatchers.IO) {
+        with(draftMessage) {
+            if (!hasContent()) {
+                draftMessageDao.deleteDraftByChannelId(channelId)
+                channelsCache.updateChannelDraftMessage(channelId, null)
+                return@withContext
+            } else {
+                val draftMessageEntity = this.toDraftMessageEntity(bodyAttributes = bodyAttributes)
 
-            val links = mentionUsers?.map {
-                DraftMessageUserLinkEntity(chatId = channelId, userId = it.id)
+                val links = mentionUsers?.map {
+                    DraftMessageUserLinkEntity(chatId = channelId, userId = it.id)
+                }
+
+                val attachmentsDb = attachments?.map { attachment ->
+                    attachment.toDraftAttachmentEntity()
+                }
+
+                draftMessageDao.insertDraftMessage(
+                    entity = draftMessageEntity,
+                    links = links,
+                    attachments = attachmentsDb,
+                    voiceAttachment = voiceAttachment?.toDraftVoiceAttachmentEntity()
+                )
             }
 
-            val attachmentsDb = attachments?.map { attachment ->
-                attachment.toDraftAttachmentEntity()
-            }
-
-            draftMessageDao.insertDraftMessage(
-                entity = draftMessageEntity,
-                links = links,
-                attachments = attachmentsDb,
-                voiceAttachment = voiceAttachment?.toDraftVoiceAttachmentEntity()
-            )
+            channelsCache.updateChannelDraftMessage(channelId, draftMessage)
         }
-
-        channelsCache.updateChannelDraftMessage(channelId, draftMessage)
     }
 
     override suspend fun getChannelsCountFromDb(): Int {
@@ -1145,7 +1147,11 @@ internal class PersistenceChannelsLogicImpl(
         }.distinctUntilChanged()
     }
 
-    override suspend fun checkChannelUrlUpdate(channelId: Long, oldKey: String, newKey: String) {
+    override suspend fun checkChannelUrlUpdate(
+        channelId: Long,
+        oldKey: String,
+        newKey: String
+    ) {
         val channel = getChannelFromDb(channelId) ?: return
         if (channel.uri == oldKey) {
             val updatedChannel = channel.copy(uri = newKey)
