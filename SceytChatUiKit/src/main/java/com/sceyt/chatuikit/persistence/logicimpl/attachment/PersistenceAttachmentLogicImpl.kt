@@ -185,31 +185,30 @@ internal class PersistenceAttachmentLogicImpl(
 
     override suspend fun getLinkPreviewData(
         link: String?
-    ): SceytResponse<LinkPreviewDetails> =
-        withContext(Dispatchers.IO) {
-            if (link.isNullOrBlank()) return@withContext SceytResponse.Error(
-                exception = SceytException(0, "Link is null or blank: link -> $link")
-            )
+    ): SceytResponse<LinkPreviewDetails> = withContext(Dispatchers.IO) {
+        if (link.isNullOrBlank()) return@withContext SceytResponse.Error(
+            exception = SceytException(0, "Link is null or blank: link -> $link")
+        )
 
-            linkDao.getLinkDetailsEntity(link)?.let {
-                return@withContext SceytResponse.Success(it.toLinkPreviewDetails(false))
-            }
-
-            return@withContext attachmentsRepository.getLinkPreviewData(link).fold(
-                onSuccess = { data ->
-                    if (data != null) {
-                        val details = data.toLinkPreviewDetails(link)
-                        messagesCache.updateAttachmentLinkDetails(details)
-                        attachmentsCache.updateAttachmentLinkDetails(details)
-                        linkDao.insert(details.toLinkDetailsEntity(link, null))
-                        SceytResponse.Success(details)
-                    } else
-                        createErrorResponse("Link is null or blank: link -> $link")
-                },
-                onError = {
-                    SceytResponse.Error(it)
-                })
+        linkDao.getLinkDetailsEntity(link)?.let {
+            return@withContext SceytResponse.Success(it.toLinkPreviewDetails(false))
         }
+
+        return@withContext attachmentsRepository.getLinkPreviewData(link).fold(
+            onSuccess = { data ->
+                if (data != null) {
+                    val details = data.toLinkPreviewDetails(link)
+                    messagesCache.updateAttachmentLinkDetails(details)
+                    attachmentsCache.updateAttachmentLinkDetails(details)
+                    linkDao.insert(details.toLinkDetailsEntity(link, null))
+                    SceytResponse.Success(details)
+                } else
+                    createErrorResponse("Link is null or blank: link -> $link")
+            },
+            onError = {
+                SceytResponse.Error(it)
+            })
+    }
 
     override suspend fun upsertLinkPreviewData(linkDetails: LinkPreviewDetails) =
         withContext(Dispatchers.IO) {

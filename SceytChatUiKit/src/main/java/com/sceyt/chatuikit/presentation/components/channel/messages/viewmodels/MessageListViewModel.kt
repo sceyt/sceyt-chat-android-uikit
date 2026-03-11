@@ -33,7 +33,6 @@ import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.fold
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
-import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.MessageId
 import com.sceyt.chatuikit.data.models.messages.PollOption
@@ -101,7 +100,6 @@ import com.sceyt.chatuikit.presentation.helpers.DebounceHelper
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.services.SceytSyncManager
-import com.sceyt.chatuikit.shared.helpers.LinkPreviewHelper
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -141,7 +139,6 @@ class MessageListViewModel(
     internal val syncManager: SceytSyncManager by inject()
     private val fileTransferService: FileTransferService by inject()
     private val preferences: SceytSharedPreference by inject()
-    private val linkPreviewHelper by lazy { LinkPreviewHelper(application, viewModelScope) }
     internal var pinnedLastReadMessageId: Long = 0
     internal val sendDisplayedHelper by lazy { DebounceHelper(200L, viewModelScope) }
     internal val messageActionBridge by lazy { MessageActionBridge() }
@@ -179,10 +176,6 @@ class MessageListViewModel(
 
     private val _syncCenteredMessageLiveData = MutableLiveData<SyncNearMessagesResult>()
     val syncCenteredMessageLiveData = _syncCenteredMessageLiveData.asLiveData()
-
-    private val _linkPreviewLiveData = MutableLiveData<LinkPreviewDetails>()
-    val linkPreviewLiveData = _linkPreviewLiveData.asLiveData()
-
 
     // Message events
     val onNewMessageFlow: Flow<SceytMessage>
@@ -706,14 +699,18 @@ class MessageListViewModel(
     }
 
     fun sendMessage(message: Message) {
-        viewModelScope.launch(NonCancellable) {
-            messageInteractor.sendMessageAsFlow(channel.id, message).collect()
+        viewModelScope.launch {
+            withContext(NonCancellable) {
+                messageInteractor.sendMessageAsFlow(channel.id, message).collect()
+            }
         }
     }
 
     fun sendMessages(messages: List<Message>) {
-        viewModelScope.launch(NonCancellable) {
-            messageInteractor.sendMessages(channel.id, messages)
+        viewModelScope.launch {
+            withContext(NonCancellable) {
+                messageInteractor.sendMessages(channel.id, messages)
+            }
         }
     }
 
@@ -793,41 +790,43 @@ class MessageListViewModel(
         replyOrEditMessage: SceytMessage?,
         isReply: Boolean,
     ) {
-        viewModelScope.launch(NonCancellable) {
-            val bodyAttributes = mentionUsers.map { it.toBodyAttribute() }.toMutableSet()
-            styling?.let {
-                bodyAttributes.addAll(it.map { styleRange -> styleRange.toBodyAttribute() })
-            }
+        viewModelScope.launch {
+            withContext(NonCancellable) {
+                val bodyAttributes = mentionUsers.map { it.toBodyAttribute() }.toMutableSet()
+                styling?.let {
+                    bodyAttributes.addAll(it.map { styleRange -> styleRange.toBodyAttribute() })
+                }
 
-            val draftAttachments = attachments.mapNotNull { attachment ->
-                DraftAttachment(
+                val draftAttachments = attachments.mapNotNull { attachment ->
+                    DraftAttachment(
+                        channelId = conversationId,
+                        filePath = attachment.filePath ?: return@mapNotNull null,
+                        type = AttachmentTypeEnum.entries.find {
+                            it.value == attachment.type
+                        } ?: return@mapNotNull null
+                    )
+                }
+                if (viewOnceSelected && attachments.size != 1) {
+                    viewOnceSelected = false
+                }
+
+                val dratMessage = DraftMessage(
                     channelId = conversationId,
-                    filePath = attachment.filePath ?: return@mapNotNull null,
-                    type = AttachmentTypeEnum.entries.find {
-                        it.value == attachment.type
-                    } ?: return@mapNotNull null
+                    body = text?.toString(),
+                    createdAt = System.currentTimeMillis(),
+                    mentionUsers = mentionUsers.map {
+                        createEmptyUser(it.recipientId, it.name)
+                    },
+                    replyOrEditMessage = replyOrEditMessage,
+                    isReply = isReply,
+                    bodyAttributes = bodyAttributes.toList(),
+                    attachments = draftAttachments,
+                    voiceAttachment = audioRecordData?.toVoiceAttachmentData(conversationId),
+                    viewOnce = viewOnceSelected
                 )
-            }
-            if (viewOnceSelected && attachments.size != 1) {
-                viewOnceSelected = false
-            }
 
-            val dratMessage = DraftMessage(
-                channelId = conversationId,
-                body = text?.toString(),
-                createdAt = System.currentTimeMillis(),
-                mentionUsers = mentionUsers.map {
-                    createEmptyUser(it.recipientId, it.name)
-                },
-                replyOrEditMessage = replyOrEditMessage,
-                isReply = isReply,
-                bodyAttributes = bodyAttributes.toList(),
-                attachments = draftAttachments,
-                voiceAttachment = audioRecordData?.toVoiceAttachmentData(conversationId),
-                viewOnce = viewOnceSelected
-            )
-
-            channelInteractor.updateDraftMessage(dratMessage)
+                channelInteractor.updateDraftMessage(dratMessage)
+            }
         }
     }
 
@@ -1189,18 +1188,6 @@ class MessageListViewModel(
             is NeedMediaInfoData.NeedThumb -> {
                 viewModelScope.launch(Dispatchers.IO) {
                     fileTransferService.getThumb(attachment.messageTid, attachment, data.thumbData)
-                }
-            }
-
-            is NeedMediaInfoData.NeedLinkPreview -> {
-                if (data.onlyCheckMissingData && attachment.linkPreviewDetails != null) {
-                    linkPreviewHelper.checkMissedData(attachment.linkPreviewDetails) {
-                        _linkPreviewLiveData.postValue(it)
-                    }
-                } else {
-                    linkPreviewHelper.getPreview(attachment, true, successListener = {
-                        _linkPreviewLiveData.postValue(it)
-                    })
                 }
             }
         }
