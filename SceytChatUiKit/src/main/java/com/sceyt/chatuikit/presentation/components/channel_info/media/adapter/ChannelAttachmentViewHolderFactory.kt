@@ -31,12 +31,12 @@ import com.sceyt.chatuikit.styles.channel_info.media.ChannelInfoMediaStyle
 import com.sceyt.chatuikit.styles.channel_info.voice.ChannelInfoVoiceStyle
 
 open class ChannelAttachmentViewHolderFactory(
-        context: Context,
-        val mediaStyleProvider: () -> ChannelInfoMediaStyle = { throw RuntimeException("Media style not provided") },
-        val filesStyleProvider: () -> ChannelInfoFilesStyle = { throw RuntimeException("Files style not provided") },
-        val voiceStyleProvider: () -> ChannelInfoVoiceStyle = { throw RuntimeException("Voice style not provided") },
-        val linkStyleProvider: () -> ChannelInfoLinkStyle = { throw RuntimeException("Link style not provided") },
-        val dateSeparatorStyle: ChannelInfoDateSeparatorStyle,
+    context: Context,
+    val mediaStyleProvider: () -> ChannelInfoMediaStyle = { throw RuntimeException("Media style not provided") },
+    val filesStyleProvider: () -> ChannelInfoFilesStyle = { throw RuntimeException("Files style not provided") },
+    val voiceStyleProvider: () -> ChannelInfoVoiceStyle = { throw RuntimeException("Voice style not provided") },
+    val linkStyleProvider: () -> ChannelInfoLinkStyle = { throw RuntimeException("Link style not provided") },
+    val dateSeparatorStyle: ChannelInfoDateSeparatorStyle,
 ) {
     protected val layoutInflater = LayoutInflater.from(context)
     protected var clickListeners = AttachmentClickListenersImpl()
@@ -62,7 +62,8 @@ open class ChannelAttachmentViewHolderFactory(
             binding = SceytItemChannelImageBinding.inflate(layoutInflater, parent, false),
             style = mediaStyleProvider().itemStyle,
             clickListeners = clickListeners,
-            needMediaDataCallback = needMediaDataCallback)
+            needMediaDataCallback = needMediaDataCallback
+        )
     }
 
     open fun createVideoViewHolder(parent: ViewGroup): BaseFileViewHolder<ChannelFileItem> {
@@ -70,7 +71,8 @@ open class ChannelAttachmentViewHolderFactory(
             binding = SceytItemChannelVideoBinding.inflate(layoutInflater, parent, false),
             style = mediaStyleProvider().itemStyle,
             clickListeners = clickListeners,
-            needMediaDataCallback = needMediaDataCallback)
+            needMediaDataCallback = needMediaDataCallback
+        )
     }
 
     open fun createFileViewHolder(parent: ViewGroup): BaseFileViewHolder<ChannelFileItem> {
@@ -78,7 +80,8 @@ open class ChannelAttachmentViewHolderFactory(
             binding = SceytItemChannelFileBinding.inflate(layoutInflater, parent, false),
             style = filesStyleProvider().itemStyle,
             clickListeners = clickListeners,
-            needMediaDataCallback = needMediaDataCallback)
+            needMediaDataCallback = needMediaDataCallback
+        )
     }
 
     open fun createVoiceViewHolder(parent: ViewGroup): BaseFileViewHolder<ChannelFileItem> {
@@ -86,7 +89,8 @@ open class ChannelAttachmentViewHolderFactory(
             binding = SceytItemChannelVoiceBinding.inflate(layoutInflater, parent, false),
             style = voiceStyleProvider().itemStyle,
             clickListener = clickListeners,
-            needMediaDataCallback = needMediaDataCallback)
+            needMediaDataCallback = needMediaDataCallback
+        )
     }
 
     open fun createLinkViewHolder(parent: ViewGroup): BaseFileViewHolder<ChannelFileItem> {
@@ -94,11 +98,12 @@ open class ChannelAttachmentViewHolderFactory(
             binding = SceytItemChannelLinkBinding.inflate(layoutInflater, parent, false),
             style = linkStyleProvider().itemStyle,
             clickListener = clickListeners,
-            needMediaDataCallback = needMediaDataCallback)
+        )
     }
 
     open fun createMediaDateViewHolder(parent: ViewGroup): BaseFileViewHolder<ChannelFileItem> {
-        val binding = SceytItemChannelMediaDateSeparatorBinding.inflate(layoutInflater, parent, false)
+        val binding =
+            SceytItemChannelMediaDateSeparatorBinding.inflate(layoutInflater, parent, false)
         return ChannelMediaDateSeparatorViewHolder(binding, dateSeparatorStyle)
     }
 

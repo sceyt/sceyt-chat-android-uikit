@@ -9,6 +9,7 @@ import com.sceyt.chat.models.message.Message.MessageBuilder
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.data.models.SendMessageResult
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
+import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.SceytMessageType
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.copyFile
@@ -17,6 +18,7 @@ import com.sceyt.chatuikit.extensions.getFileSize
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
 import com.sceyt.chatuikit.persistence.mappers.getAttachmentType
+import com.sceyt.chatuikit.persistence.mappers.toMetadata
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import com.sceyt.chatuikit.shared.utils.FilePathUtil
 import kotlinx.coroutines.Dispatchers
@@ -47,9 +49,21 @@ class ShareViewModel : BaseViewModel(), SceytKoinComponent {
                     .setTid(ClientWrapper.generateTid())
                     .setType(SceytMessageType.Text.value)
                     .apply {
-                        if (isContainsLink)
-                            setAttachments(arrayOf(buildAttachment("", links[0],
-                                AttachmentTypeEnum.Link, "", 0)))
+                        if (isContainsLink) {
+                            val link = links[0]
+                            setAttachments(
+                                arrayOf(
+                                    buildAttachment(
+                                        path = "",
+                                        url = link,
+                                        typeEnum = AttachmentTypeEnum.Link,
+                                        fileName = "",
+                                        fileSize = 0,
+                                        metadata = LinkPreviewDetails.hiddenLink(link).toMetadata()
+                                    )
+                                )
+                            )
+                        }
                     }
                     .build()
 
@@ -69,49 +83,71 @@ class ShareViewModel : BaseViewModel(), SceytKoinComponent {
     }
 
 
-    fun sendFilesMessage(vararg channelIds: Long, uris: List<Uri>, messageBody: String) = callbackFlow {
-        trySend(State.Loading)
-        val links = messageBody.extractLinks()
-        val isContainsLink = links.isNotEmpty()
+    fun sendFilesMessage(vararg channelIds: Long, uris: List<Uri>, messageBody: String) =
+        callbackFlow {
+            trySend(State.Loading)
+            val links = messageBody.extractLinks()
+            val isContainsLink = links.isNotEmpty()
 
-        withContext(Dispatchers.IO) {
-            val paths = getPathFromFile(*uris.toTypedArray()).toMutableList()
+            withContext(Dispatchers.IO) {
+                val paths = getPathFromFile(*uris.toTypedArray()).toMutableList()
 
-            channelIds.forEach { channelId ->
-                val attachments = paths.map { path ->
-                    val fileName = File(path).name
-                    buildAttachment(path, "", getAttachmentType(path), fileName, getFileSize(path))
-                }
-                attachments.mapIndexed { index, attachment ->
-                    val message = MessageBuilder(channelId)
-                        .setBody(if (index == 0) messageBody else "")
-                        .apply {
-                            if (index == 0 && isContainsLink) {
-                                val link = buildAttachment("", links[0], AttachmentTypeEnum.Link, "", 0)
-                                setAttachments(arrayOf(attachment, link))
-                            } else setAttachments(arrayOf(attachment))
-                        }
-                        .setTid(ClientWrapper.generateTid())
-                        .setType(SceytMessageType.Media.value)
-                        .build()
+                channelIds.forEach { channelId ->
+                    val attachments = paths.map { path ->
+                        val fileName = File(path).name
+                        buildAttachment(
+                            path = path,
+                            url = "",
+                            typeEnum = getAttachmentType(path),
+                            fileName = fileName,
+                            fileSize = getFileSize(path),
+                            metadata = ""
+                        )
+                    }
+                    attachments.mapIndexed { index, attachment ->
+                        val message = MessageBuilder(channelId)
+                            .setBody(if (index == 0) messageBody else "")
+                            .apply {
+                                if (index == 0 && isContainsLink) {
+                                    val linkUrl = links[0]
+                                    val link = buildAttachment(
+                                        path = "",
+                                        url = linkUrl,
+                                        typeEnum = AttachmentTypeEnum.Link,
+                                        fileName = "",
+                                        fileSize = 0,
+                                        metadata = LinkPreviewDetails.hiddenLink(linkUrl).toMetadata()
+                                    )
+                                    setAttachments(arrayOf(attachment, link))
+                                } else setAttachments(arrayOf(attachment))
+                            }
+                            .setTid(ClientWrapper.generateTid())
+                            .setType(SceytMessageType.Media.value)
+                            .build()
 
-                    messageInteractor.sendSharedFileMessage(channelId, message)
+                        messageInteractor.sendSharedFileMessage(channelId, message)
+                    }
                 }
             }
+
+            trySend(State.Finish)
+            awaitClose()
         }
 
-        trySend(State.Finish)
-        awaitClose()
-    }
-
-    private fun buildAttachment(path: String, url: String, typeEnum: AttachmentTypeEnum, fileName: String, fileSize: Long) =
-            Attachment.Builder(path, url, typeEnum.value)
-                .setName(fileName)
-                .withTid(ClientWrapper.generateTid())
-                .setFileSize(fileSize)
-                .setMetadata("")
-                .setUpload(false)
-                .build()
+    private fun buildAttachment(
+        path: String,
+        url: String,
+        typeEnum: AttachmentTypeEnum,
+        fileName: String,
+        fileSize: Long,
+        metadata: String
+    ) = Attachment.Builder(path, url, typeEnum.value)
+        .setName(fileName)
+        .withTid(ClientWrapper.generateTid())
+        .setFileSize(fileSize)
+        .setMetadata(metadata)
+        .setUpload(false)
+        .build()
 
     private fun getPathFromFile(vararg uris: Uri): List<String> {
         val paths = mutableListOf<String>()

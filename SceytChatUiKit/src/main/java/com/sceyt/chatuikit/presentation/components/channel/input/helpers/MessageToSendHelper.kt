@@ -218,7 +218,8 @@ class MessageToSendHelper(
         val validLink = linkDetails?.link
             ?: body.extractLinks().firstOrNull { it.isValidUrl(context) }
         if (validLink != null) {
-            val metadata = linkDetails?.toMetadata() ?: ""
+            val metadata =
+                (linkDetails ?: LinkPreviewDetails.hiddenLink(validLink)).toMetadata()
             return Attachment.Builder("", validLink, AttachmentTypeEnum.Link.value)
                 .withTid(ClientWrapper.generateTid())
                 .setName(linkDetails?.title ?: "")
