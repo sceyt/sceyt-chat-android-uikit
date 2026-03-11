@@ -12,6 +12,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.getBooleanOrNull
 import com.sceyt.chatuikit.extensions.getStringOrNull
+import com.sceyt.chatuikit.extensions.ifNotEmpty
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.toBase64
 import com.sceyt.chatuikit.logger.SceytLog
@@ -36,19 +37,27 @@ fun createMetadata(currentMetadata: String?, data: Map<String, Any>): String? {
     }
 }
 
-fun LinkPreviewDetails.toMetadata(): String? {
+fun LinkPreviewDetails.toMetadata(): String {
     val data = hashMapOf<String, Any>()
-    data[SceytConstants.Thumb] = thumb ?: ""
     if (imageWidth != null && imageHeight != null) {
         data[SceytConstants.Width] = imageWidth
         data[SceytConstants.Height] = imageHeight
     }
+    thumb?.ifNotEmpty()?.let {
+        data[SceytConstants.Thumb] = it
+    }
+    description.ifNotEmpty()?.let {
+        data[SceytConstants.Description] = it
+    }
+    imageUrl.ifNotEmpty()?.let {
+        data[SceytConstants.ImageUrl] = it
+    }
+    faviconUrl.ifNotEmpty()?.let {
+        data[SceytConstants.ThumbnailUrl] = it
+    }
 
-    data[SceytConstants.Description] = description ?: ""
-    data[SceytConstants.ImageUrl] = imageUrl ?: ""
-    data[SceytConstants.ThumbnailUrl] = faviconUrl ?: ""
     data[SceytConstants.HideLinkDetails] = hideDetails
-    return createMetadata(null, data)
+    return createMetadata(null, data).orEmpty()
 }
 
 fun SceytAttachment.getUpsertSizeMetadata(size: Size?): String? {
@@ -72,49 +81,60 @@ fun SceytAttachment.addAttachmentMetadata(context: Context): String {
     }
 }
 
-fun getBlurredBytesAndSizeAsString(context: Context, metadata: String?, filePath: String?, type: String): String? {
-    return try {
-        filePath?.let { path ->
-            val size: Size?
-            var durationMilliSec: Long? = null
-            var base64String: String? = null
-            when (type) {
-                AttachmentTypeEnum.Image.value -> {
-                    size = FileResizeUtil.getImageSizeOriented(path)
-                    FileResizeUtil.resizeAndCompressBitmapWithFilePath(path, 100)?.let { bm ->
-                        val bytes = ThumbHash.rgbaToThumbHash(bm.width, bm.height, BitmapUtil.bitmapToRgba(bm))
-                        base64String = bytes.toBase64()
-                    }
+fun getBlurredBytesAndSizeAsString(
+    context: Context,
+    metadata: String?,
+    filePath: String?,
+    type: String
+): String? = try {
+    filePath?.let { path ->
+        val size: Size?
+        var durationMilliSec: Long? = null
+        var base64String: String? = null
+        when (type) {
+            AttachmentTypeEnum.Image.value -> {
+                size = FileResizeUtil.getImageSizeOriented(path)
+                FileResizeUtil.resizeAndCompressBitmapWithFilePath(path, 100)?.let { bm ->
+                    val bytes = ThumbHash.rgbaToThumbHash(
+                        bm.width,
+                        bm.height,
+                        BitmapUtil.bitmapToRgba(bm)
+                    )
+                    base64String = bytes.toBase64()
                 }
+            }
 
-                AttachmentTypeEnum.Video.value -> {
-                    size = FileResizeUtil.getVideoSizeOriented(path)
-                    durationMilliSec = FileResizeUtil.getVideoDuration(context, filePath)
-                    FileResizeUtil.getVideoThumbByUrlAsByteArray(path, 100f)?.let { bm ->
-                        val bytes = ThumbHash.rgbaToThumbHash(bm.width, bm.height, BitmapUtil.bitmapToRgba(bm))
-                        base64String = bytes.toBase64()
-                    }
+            AttachmentTypeEnum.Video.value -> {
+                size = FileResizeUtil.getVideoSizeOriented(path)
+                durationMilliSec = FileResizeUtil.getVideoDuration(context, filePath)
+                FileResizeUtil.getVideoThumbByUrlAsByteArray(path, 100f)?.let { bm ->
+                    val bytes = ThumbHash.rgbaToThumbHash(
+                        bm.width,
+                        bm.height,
+                        BitmapUtil.bitmapToRgba(bm)
+                    )
+                    base64String = bytes.toBase64()
                 }
-
-                else -> return null
             }
 
-            val data = hashMapOf<String, Any>()
-            data[SceytConstants.Thumb] = base64String ?: ""
-            size?.let {
-                data[SceytConstants.Width] = it.width
-                data[SceytConstants.Height] = it.height
-            }
-            durationMilliSec?.let {
-                val durSec = TimeUnit.MILLISECONDS.toSeconds(it)
-                data[SceytConstants.Duration] = durSec
-            }
-            createMetadata(metadata, data)
+            else -> return null
         }
-    } catch (ex: Exception) {
-        Log.e(TAG, "Couldn't get an blurred image or sizes. Error: ${ex.message}")
-        null
+
+        val data = hashMapOf<String, Any>()
+        data[SceytConstants.Thumb] = base64String ?: ""
+        size?.let {
+            data[SceytConstants.Width] = it.width
+            data[SceytConstants.Height] = it.height
+        }
+        durationMilliSec?.let {
+            val durSec = TimeUnit.MILLISECONDS.toSeconds(it)
+            data[SceytConstants.Duration] = durSec
+        }
+        createMetadata(metadata, data)
     }
+} catch (ex: Exception) {
+    Log.e(TAG, "Couldn't get an blurred image or sizes. Error: ${ex.message}")
+    null
 }
 
 fun SceytAttachment.existThumb(): Boolean {
@@ -150,7 +170,8 @@ fun SceytAttachment.getLinkPreviewDetails(): LinkPreviewDetails? {
             imageWidth = width?.toIntOrNull(),
             imageHeight = height?.toIntOrNull(),
             thumb = thumb,
-            hideDetails = hideLinkDetails == true)
+            hideDetails = hideLinkDetails == true
+        )
     } catch (_: Exception) {
         return null
     }
@@ -179,7 +200,8 @@ fun Attachment.getLinkPreviewDetails(): LinkPreviewDetails? {
             imageWidth = width?.toIntOrNull(),
             imageHeight = height?.toIntOrNull(),
             thumb = thumb,
-            hideDetails = hideLinkDetails == true)
+            hideDetails = hideLinkDetails == true
+        )
     } catch (_: Exception) {
         return null
     }

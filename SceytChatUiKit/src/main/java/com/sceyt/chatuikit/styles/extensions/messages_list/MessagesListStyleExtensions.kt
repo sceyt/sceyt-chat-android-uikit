@@ -595,7 +595,8 @@ internal fun MessageItemStyle.Builder.buildLinkPreviewTitleTextStyle(
         index = R.styleable.MessagesListView_sceytUiMessagesListLinkPreviewTitleTextStyle
     )
     .setFont(
-        index = R.styleable.MessagesListView_sceytUiMessagesListLinkPreviewTitleTextFont
+        index = R.styleable.MessagesListView_sceytUiMessagesListLinkPreviewTitleTextFont,
+        defValue = R.font.roboto_medium
     )
     .build()
 

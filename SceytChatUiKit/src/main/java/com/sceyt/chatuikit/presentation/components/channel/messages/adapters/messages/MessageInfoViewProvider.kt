@@ -8,8 +8,8 @@ import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
-import com.sceyt.chatuikit.data.models.messages.SceytMessageType
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.data.models.messages.SceytMessageType
 import com.sceyt.chatuikit.databinding.SceytItemOutFileMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemOutImageMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemOutLinkMessageBinding
@@ -109,6 +109,7 @@ open class MessageInfoViewProvider(
                 R.layout.sceyt_item_out_voice_message,
                 true
             )
+
             MessageViewTypeEnum.OutSelfDestructed.ordinal -> createOutSelfDestructedMessageViewHolder(
                 viewStub,
                 R.layout.sceyt_item_out_self_destructed_message
@@ -149,7 +150,6 @@ open class MessageInfoViewProvider(
             viewPool = viewPoolReactions,
             style = messageItemStyle,
             messageListeners = clickListeners,
-            needMediaDataCallback = needMediaDataCallback
         )
     }
 

@@ -774,12 +774,6 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     }.launchIn(viewModelScope)
 
-    linkPreviewLiveData.asFlow().onEach {
-        lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
-            messagesListView.updateLinkPreview(it)
-        }
-    }.launchIn(lifecycleOwner.lifecycleScope)
-
     onChannelEventFlow.onEach { event ->
         when (event) {
             is ClearedHistory -> messagesListView.clearData()

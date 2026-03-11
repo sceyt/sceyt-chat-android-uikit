@@ -9,9 +9,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
-import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.databinding.SceytFragmentChannelInfoLinksBinding
-import com.sceyt.chatuikit.extensions.findIndexed
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.extensions.openLink
 import com.sceyt.chatuikit.extensions.parcelable
@@ -83,8 +81,6 @@ open class ChannelInfoLinksFragment : Fragment(), SceytKoinComponent, HistoryCle
             viewModel.loadMoreAttachmentsFlow.collect(::onMoreLinksList)
         }
 
-        viewModel.linkPreviewLiveData.observe(viewLifecycleOwner, ::onLinkPreview)
-
         viewModel.pageStateLiveData.observe(viewLifecycleOwner, ::onPageStateChange)
     }
 
@@ -139,14 +135,6 @@ open class ChannelInfoLinksFragment : Fragment(), SceytKoinComponent, HistoryCle
 
     protected open fun onMoreLinksList(list: List<ChannelFileItem>) {
         mediaAdapter?.addNewItems(list)
-    }
-
-    protected open fun onLinkPreview(previewDetails: LinkPreviewDetails) {
-        val data = mediaAdapter?.getData() ?: return
-        data.findIndexed { it.isMediaItem() && it.attachment.url == previewDetails.link }?.let { (index, item) ->
-            item.updateAttachment(item.attachment.copy(linkPreviewDetails = previewDetails))
-            mediaAdapter?.updateItemAt(index, item)
-        }
     }
 
     protected open fun onPageStateChange(pageState: PageState) {
