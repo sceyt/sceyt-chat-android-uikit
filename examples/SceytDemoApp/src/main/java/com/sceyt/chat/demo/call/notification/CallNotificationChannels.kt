@@ -4,7 +4,6 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
-import android.os.Build
 import androidx.core.content.getSystemService
 
 /**
@@ -18,16 +17,13 @@ object CallNotificationChannels {
     const val INCOMING_CALL_SILENT_CHANNEL_ID = "sceyt_incoming_call_silent"
     const val ONGOING_CALL_CHANNEL_ID = "sceyt_ongoing_call"
 
-    const val INCOMING_CALL_NOTIFICATION_ID = 10001
-    const val ONGOING_CALL_NOTIFICATION_ID = 10002
+    const val CALL_NOTIFICATION_ID = 10001
 
     /**
      * Creates notification channels for calls.
      * Must be called before posting any call notifications.
      */
     fun createChannels(context: Context) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
-
         val notificationManager = context.getSystemService<NotificationManager>() ?: return
 
         // Background incoming call channel — IMPORTANCE_HIGH so heads-up and full-screen intent work

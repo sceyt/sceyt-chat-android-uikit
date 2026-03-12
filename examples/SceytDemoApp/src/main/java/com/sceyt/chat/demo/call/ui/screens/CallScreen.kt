@@ -36,6 +36,10 @@ fun CallScreen(
 
     val context = LocalContext.current
 
+    fun hasMicPermission() = ContextCompat.checkSelfPermission(
+        context, Manifest.permission.RECORD_AUDIO
+    ) == PackageManager.PERMISSION_GRANTED
+
     fun hasCameraPermission() = ContextCompat.checkSelfPermission(
         context, Manifest.permission.CAMERA
     ) == PackageManager.PERMISSION_GRANTED
@@ -55,15 +59,24 @@ fun CallScreen(
         }
     }
 
-    val answerPermissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        // Answer regardless — user still gets audio even if camera is denied
-        viewModel.onAnswerClick()
+    // Mic is required for all calls; camera additionally required for video calls.
+    // Answer is only proceeded if microphone is granted.
+    val answerPermissionsLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { results ->
+        if (results[Manifest.permission.RECORD_AUDIO] == true) {
+            viewModel.onAnswerClick()
+        }
     }
     val onAnswerWithPermission: () -> Unit = {
-        if (callState.isVideo && !hasCameraPermission()) {
-            answerPermissionLauncher.launch(Manifest.permission.CAMERA)
+        val needsMic = !hasMicPermission()
+        val needsCamera = callState.isVideo && !hasCameraPermission()
+        if (needsMic || needsCamera) {
+            val permissions = buildList {
+                if (needsMic) add(Manifest.permission.RECORD_AUDIO)
+                if (needsCamera) add(Manifest.permission.CAMERA)
+            }.toTypedArray()
+            answerPermissionsLauncher.launch(permissions)
         } else {
             viewModel.onAnswerClick()
         }

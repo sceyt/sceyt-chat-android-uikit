@@ -25,7 +25,9 @@
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    <uses-permission android:name="android.permission.MANAGE_OWN_CALLS" />
 
     <uses-feature
         android:name="android.hardware.camera"
@@ -119,8 +121,9 @@
         <!-- WorkManager foreground service for calls -->
         <service
             android:name="androidx.work.impl.foreground.SystemForegroundService"
-            android:foregroundServiceType="phoneCall"
+            android:foregroundServiceType="phoneCall|microphone"
             tools:node="merge" />
+
         <service
             android:name=".call.service.CallFirebaseMessageReceiver"
             android:enabled="true"

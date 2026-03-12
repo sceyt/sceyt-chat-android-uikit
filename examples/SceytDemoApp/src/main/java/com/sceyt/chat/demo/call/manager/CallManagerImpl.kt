@@ -23,7 +23,8 @@ import com.sceyt.audiorouting.AudioRouterListener
 import com.sceyt.chat.demo.call.manager.CallUiState.CallPhase
 import com.sceyt.chat.demo.call.manager.CallUiState.EndedReason
 import com.sceyt.chat.demo.call.ui.CallActivity
-import com.sceyt.chat.demo.call.worker.CallWorker
+import com.sceyt.chat.demo.call.worker.IncomingCallWorker
+import com.sceyt.chat.demo.call.worker.OngoingCallWorker
 import com.sceyt.chat.demo.connection.SceytConnectionProvider
 import com.sceyt.chat.models.signal.MediaFlow
 import com.sceyt.chat.models.signal.ParticipantState
@@ -173,7 +174,7 @@ class CallManagerImpl(
             result.onSuccess { call ->
                 callPrepared(call)
 
-                CallWorker.start(context)
+                OngoingCallWorker.start(context)
 
                 val joinCallOptions = JoinCallOptions.default().copy(
                     audioSettings = AudioSettings(disableManageAudioRoute = true),
@@ -220,6 +221,9 @@ class CallManagerImpl(
                     incomingCall = null
                 )
             }
+
+            // Start active worker (PHONE_CALL + MICROPHONE); IncomingCallWorker auto-stops
+            OngoingCallWorker.start(context)
 
             setupAudioRouting(currentState.isVideo)
 
@@ -421,7 +425,7 @@ class CallManagerImpl(
         connectionProvider.connectChatClient()
 
         scope.launch {
-            CallWorker.start(context)
+            IncomingCallWorker.start(context)
             call.sendRinging()
             startRinging()
         }
@@ -429,8 +433,8 @@ class CallManagerImpl(
 
     /**
      * Starts ringtone and vibration for the incoming call.
-     * Must be called after a foreground service is running (e.g., from CallWorker after
-     * setForeground()) to satisfy Android 15+ audio focus requirements.
+     * Must be called after a foreground service is running (IncomingCallWorker.setForeground())
+     * to satisfy Android 15+ audio focus requirements.
      */
     private suspend fun startRinging() {
         Log.d(TAG, "startRinging: ringtone and vibration started")
@@ -442,11 +446,11 @@ class CallManagerImpl(
 
     private suspend fun awaitWorkStart() = withTimeoutOrNull(5.seconds.inWholeMilliseconds) {
         WorkManager.getInstance(context)
-            .getWorkInfosByTagFlow(CallWorker.CALL_WORK_NAME)
+            .getWorkInfosByTagFlow(IncomingCallWorker.INCOMING_CALL_WORK_NAME)
             .first { infos ->
                 val running = infos.find { it.state == WorkInfo.State.RUNNING }
                 return@first running != null && running.progress.getBoolean(
-                    key = CallWorker.KEY_FOREGROUND_READY,
+                    key = IncomingCallWorker.KEY_FOREGROUND_READY,
                     defaultValue = false
                 )
             }

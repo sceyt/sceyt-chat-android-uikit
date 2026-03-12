@@ -6,14 +6,13 @@ import com.callclient.call.data.CallNotificationType
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.sceyt.chat.demo.call.manager.CallManager
-import com.sceyt.chat.demo.call.worker.CallWorker
 import com.sceyt.chatuikit.push.delegates.FirebaseMessagingDelegate
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 /**
  * FCM service that intercepts push notifications and routes them:
- *  - Call notifications  → [CallClient.handleNotification], then start [CallWorker] on invite
+ *  - Call notifications  → [CallClient.handleNotification], then [CallManager.handleIncomingCall]
  *  - Chat notifications  → [FirebaseMessagingDelegate] (standard SDK path)
  */
 class CallFirebaseMessageReceiver : FirebaseMessagingService(), KoinComponent {
@@ -22,7 +21,7 @@ class CallFirebaseMessageReceiver : FirebaseMessagingService(), KoinComponent {
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         when (val result = handleCallNotification(remoteMessage.data)) {
             is CallNotificationType.InviteToCall -> {
-                Log.d(TAG, "Call invite push received — starting CallWorker")
+                Log.d(TAG, "Call invite push received — handling incoming call")
                 callManager.handleIncomingCall(result.from, result.call)
             }
 
