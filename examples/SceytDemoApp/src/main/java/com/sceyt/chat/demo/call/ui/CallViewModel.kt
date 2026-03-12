@@ -52,6 +52,22 @@ class CallViewModel(
 
     fun onToggleCamera(): Boolean = callManager.toggleCamera()
 
+    private var cameraDisabledForBackground = false
+
+    fun onAppBackground() {
+        if (mediaState.value.isCameraEnabled) {
+            cameraDisabledForBackground = true
+            callManager.setCameraEnabled(false)
+        }
+    }
+
+    fun onAppForeground() {
+        if (cameraDisabledForBackground) {
+            cameraDisabledForBackground = false
+            callManager.setCameraEnabled(true)
+        }
+    }
+
     fun onSwitchCamera() {
         callManager.switchCamera()
     }

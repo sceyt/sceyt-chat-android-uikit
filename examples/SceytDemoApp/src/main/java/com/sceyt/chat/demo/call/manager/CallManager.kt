@@ -116,6 +116,14 @@ interface CallManager {
     fun toggleCamera(): Boolean
 
     /**
+     * Set camera enabled state directly.
+     * No-op if the camera is already in the requested state.
+     *
+     * @param enabled Whether to enable or disable the camera
+     */
+    fun setCameraEnabled(enabled: Boolean)
+
+    /**
      * Switch between front and back camera.
      *
      * @return Result indicating success or failure

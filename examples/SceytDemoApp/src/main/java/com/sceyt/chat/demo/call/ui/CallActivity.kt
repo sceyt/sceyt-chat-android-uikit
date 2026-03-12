@@ -212,6 +212,16 @@ class CallActivity : ComponentActivity() {
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
 
+    override fun onStop() {
+        super.onStop()
+        viewModel.onAppBackground()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        viewModel.onAppForeground()
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         // Worker will stop itself when call ends
