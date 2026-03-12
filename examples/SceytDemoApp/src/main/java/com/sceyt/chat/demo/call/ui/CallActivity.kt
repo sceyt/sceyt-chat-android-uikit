@@ -108,12 +108,14 @@ class CallActivity : ComponentActivity() {
 
     private val viewModel: CallViewModel by viewModel()
 
-    // Used only for the notification "Answer" action on a video call where CAMERA is not yet granted
-    private val autoAnswerCameraPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { _ ->
-        // Answer regardless of result — camera denied means audio-only, which is acceptable
-        viewModel.onAnswerClick()
+    // Used for the notification "Answer" action — requests mic (required) and camera (video only).
+    // Answer proceeds only if microphone is granted.
+    private val autoAnswerPermissionsLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { results ->
+        if (results[Manifest.permission.RECORD_AUDIO] == true) {
+            viewModel.onAnswerClick()
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -131,7 +133,7 @@ class CallActivity : ComponentActivity() {
 
         // Answer immediately if launched via notification "Answer" action
         if (intent.getBooleanExtra(EXTRA_AUTO_ANSWER, false)) {
-            answerWithCameraPermissionIfNeeded()
+            answerWithPermissionsIfNeeded()
         }
 
         setContent {
@@ -164,20 +166,28 @@ class CallActivity : ComponentActivity() {
         setIntent(intent)
         // Answer immediately if activity was already running when user tapped "Answer"
         if (intent.getBooleanExtra(EXTRA_AUTO_ANSWER, false)) {
-            answerWithCameraPermissionIfNeeded()
+            answerWithPermissionsIfNeeded()
         }
     }
 
-    private fun answerWithCameraPermissionIfNeeded() {
+    private fun answerWithPermissionsIfNeeded() {
+        val hasMicPermission = ContextCompat.checkSelfPermission(
+            this, Manifest.permission.RECORD_AUDIO
+        ) == PackageManager.PERMISSION_GRANTED
         val isVideoCall = viewModel.callUiState.value.isVideo
         val hasCameraPermission = ContextCompat.checkSelfPermission(
             this, Manifest.permission.CAMERA
         ) == PackageManager.PERMISSION_GRANTED
 
-        if (isVideoCall && !hasCameraPermission) {
-            autoAnswerCameraPermissionLauncher.launch(Manifest.permission.CAMERA)
-        } else {
+        val permissionsNeeded = buildList {
+            if (!hasMicPermission) add(Manifest.permission.RECORD_AUDIO)
+            if (isVideoCall && !hasCameraPermission) add(Manifest.permission.CAMERA)
+        }
+
+        if (permissionsNeeded.isEmpty()) {
             viewModel.onAnswerClick()
+        } else {
+            autoAnswerPermissionsLauncher.launch(permissionsNeeded.toTypedArray())
         }
     }
 
