@@ -36,51 +36,44 @@ class SingleLinkDetailsProvider(
         thumbCallback: (String) -> Unit
     ) {
         loadDetailsJob?.cancel()
-        val link = text.extractLinks().firstOrNull { it.isValidUrl(context) }
-        if (link == null) {
-            detailsCallback(null)
-            return
-        }
-        if (loadedLinks.containsKey(link)) {
-            detailsCallback(loadedLinks[link])
-            return
-        }
         loadDetailsJob = scope.launch {
+            val link = withContext(Dispatchers.Default) {
+                text.extractLinks().firstOrNull { it.isValidUrl(context) }
+            }
+            if (link == null) {
+                detailsCallback(null)
+                return@launch
+            }
+
+            val cached = loadedLinks[link]
+            if (cached != null) {
+                detailsCallback(cached)
+                if (!cached.isFullyLoaded()) {
+                    val updated = fetchImageDimensionsAndThumb(link, cached)
+                    withContext(Dispatchers.Main) {
+                        if (updated.imageWidth != null && cached.imageWidth == null)
+                            imageSizeCallback(Size(updated.imageWidth, updated.imageHeight!!))
+                        if (updated.thumb != null && cached.thumb == null)
+                            thumbCallback(updated.thumb)
+                    }
+                }
+                return@launch
+            }
 
             val response = attachmentsMiddleWare.getLinkPreviewData(link)
             if (response is SceytResponse.Success && response.data != null) {
-                var linkPreviewDetails = response.data
+                val linkPreviewDetails = response.data
                 loadedLinks[link] = linkPreviewDetails
                 withContext(Dispatchers.Main) {
                     detailsCallback(linkPreviewDetails)
                 }
 
-                if (linkPreviewDetails.imageUrl != null && linkPreviewDetails.imageWidth == null) {
-                    val bitmap = getImageBitmapWithGlideWithTimeout(
-                        context = context,
-                        url = linkPreviewDetails.imageUrl
-                    )
-
-                    if (bitmap == null) return@launch
-
-                    val size = Size(bitmap.width, bitmap.height)
-                    linkPreviewDetails = linkPreviewDetails.copy(
-                        imageWidth = size.width,
-                        imageHeight = size.height
-                    )
-                    withContext(Dispatchers.Main) {
-                        imageSizeCallback(size)
-                    }
-                    val thumb =
-                        if (linkPreviewDetails.thumb == null) getImageThumb(bitmap) else null
-                    if (thumb != null) {
-                        linkPreviewDetails = linkPreviewDetails.copy(thumb = thumb)
-                        withContext(Dispatchers.Main) {
-                            thumbCallback(thumb)
-                        }
-                    }
-                    attachmentsMiddleWare.updateLinkDetails(link = link, size = size, thumb = thumb)
-                    loadedLinks[link] = linkPreviewDetails
+                val updated = fetchImageDimensionsAndThumb(link, linkPreviewDetails)
+                withContext(Dispatchers.Main) {
+                    if (updated.imageWidth != null && linkPreviewDetails.imageWidth == null)
+                        imageSizeCallback(Size(updated.imageWidth, updated.imageHeight!!))
+                    if (updated.thumb != null && linkPreviewDetails.thumb == null)
+                        thumbCallback(updated.thumb)
                 }
             } else withContext(Dispatchers.Main) { detailsCallback(null) }
         }
@@ -96,32 +89,44 @@ class SingleLinkDetailsProvider(
 
     suspend fun loadLinkDetailsSuspend(text: String): LinkPreviewDetails? {
         val link = text.extractLinks().firstOrNull { it.isValidUrl(context) } ?: return null
-        loadedLinks[link]?.let { return it }
+
+        loadedLinks[link]?.let { cached ->
+            return if (cached.isFullyLoaded()) cached
+            else fetchImageDimensionsAndThumb(link, cached)
+        }
 
         val response = attachmentsMiddleWare.getLinkPreviewData(link)
         if (response !is SceytResponse.Success || response.data == null) return null
 
-        var linkPreviewDetails = response.data
+        val linkPreviewDetails = response.data
         loadedLinks[link] = linkPreviewDetails
 
-        if (linkPreviewDetails.imageUrl != null && linkPreviewDetails.imageWidth == null) {
-            val bitmap = getImageBitmapWithGlideWithTimeout(
-                context = context,
-                url = linkPreviewDetails.imageUrl
-            ) ?: return linkPreviewDetails
-
-            val size = Size(bitmap.width, bitmap.height)
-            linkPreviewDetails =
-                linkPreviewDetails.copy(imageWidth = size.width, imageHeight = size.height)
-            val thumb = if (linkPreviewDetails.thumb == null) getImageThumb(bitmap) else null
-            if (thumb != null)
-                linkPreviewDetails = linkPreviewDetails.copy(thumb = thumb)
-            attachmentsMiddleWare.updateLinkDetails(link = link, size = size, thumb = thumb)
-            loadedLinks[link] = linkPreviewDetails
-        }
-
-        return linkPreviewDetails
+        return fetchImageDimensionsAndThumb(link, linkPreviewDetails)
     }
+
+    private suspend fun fetchImageDimensionsAndThumb(
+        link: String,
+        details: LinkPreviewDetails,
+    ): LinkPreviewDetails {
+        if (details.imageUrl == null || details.imageWidth != null) return details
+        val bitmap = getImageBitmapWithGlideWithTimeout(
+            context = context,
+            url = details.imageUrl
+        ) ?: return details
+
+        val size = Size(bitmap.width, bitmap.height)
+        var updated = details.copy(imageWidth = size.width, imageHeight = size.height)
+        val thumb = if (details.thumb == null) getImageThumb(bitmap) else null
+        if (thumb != null)
+            updated = updated.copy(thumb = thumb)
+
+        attachmentsMiddleWare.updateLinkDetails(link = link, size = size, thumb = thumb)
+        loadedLinks[link] = updated
+        return updated
+    }
+
+    private fun LinkPreviewDetails.isFullyLoaded(): Boolean =
+        imageUrl == null || (imageWidth != null && thumb != null)
 
     fun cancel() {
         loadDetailsJob?.cancel()
