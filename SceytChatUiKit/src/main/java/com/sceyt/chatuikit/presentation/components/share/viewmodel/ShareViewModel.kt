@@ -17,7 +17,6 @@ import com.sceyt.chatuikit.extensions.copyFile
 import com.sceyt.chatuikit.extensions.extractLinks
 import com.sceyt.chatuikit.extensions.getFileSize
 import com.sceyt.chatuikit.koin.SceytKoinComponent
-import com.sceyt.chatuikit.persistence.extensions.safeResume
 import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
 import com.sceyt.chatuikit.persistence.mappers.getAttachmentType
 import com.sceyt.chatuikit.persistence.mappers.toMetadata
@@ -28,7 +27,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import org.koin.core.component.inject
@@ -153,18 +151,8 @@ class ShareViewModel : BaseViewModel(), SceytKoinComponent {
     }
 
     private suspend fun loadLinkPreview(link: String): LinkPreviewDetails? {
-        return withTimeoutOrNull(3.seconds) {
-            suspendCancellableCoroutine { cont ->
-                linkDetailsProvider.loadLinkDetails(
-                    text = link,
-                    detailsCallback = { details ->
-                        cont.safeResume(details)
-                    },
-                    imageSizeCallback = { },
-                    thumbCallback = { }
-                )
-                cont.invokeOnCancellation { linkDetailsProvider.cancel() }
-            }
+        return withTimeoutOrNull(5.seconds) {
+            linkDetailsProvider.loadLinkDetailsSuspend(link)
         }
     }
 

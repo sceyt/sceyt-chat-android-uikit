@@ -21,17 +21,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.core.component.inject
 
-class SingleLinkDetailsProvider : SceytKoinComponent {
-    private val context: Context
+class SingleLinkDetailsProvider(
+    private val context: Context,
+    private val scope: CoroutineScope,
+) : SceytKoinComponent {
     private val attachmentsMiddleWare: PersistenceAttachmentLogic by inject()
-    private var scope: CoroutineScope
     private var loadDetailsJob: Job? = null
-    private var loadedLinks = mutableMapOf<String, LinkPreviewDetails>()
-
-    constructor(context: Context, scope: CoroutineScope) {
-        this.context = context
-        this.scope = scope
-    }
+    private val loadedLinks = mutableMapOf<String, LinkPreviewDetails>()
 
     fun loadLinkDetails(
         text: String,
@@ -40,20 +36,20 @@ class SingleLinkDetailsProvider : SceytKoinComponent {
         thumbCallback: (String) -> Unit
     ) {
         loadDetailsJob?.cancel()
-        if (loadedLinks.containsKey(text)) {
-            detailsCallback(loadedLinks[text])
+        val link = text.extractLinks().firstOrNull { it.isValidUrl(context) }
+        if (link == null) {
+            detailsCallback(null)
+            return
+        }
+        if (loadedLinks.containsKey(link)) {
+            detailsCallback(loadedLinks[link])
             return
         }
         loadDetailsJob = scope.launch {
-            val link = text.extractLinks().firstOrNull { it.isValidUrl(context) }
-            if (link == null) {
-                withContext(Dispatchers.Main) { detailsCallback(null) }
-                return@launch
-            }
 
             val response = attachmentsMiddleWare.getLinkPreviewData(link)
             if (response is SceytResponse.Success && response.data != null) {
-                val linkPreviewDetails = response.data
+                var linkPreviewDetails = response.data
                 loadedLinks[link] = linkPreviewDetails
                 withContext(Dispatchers.Main) {
                     detailsCallback(linkPreviewDetails)
@@ -65,27 +61,26 @@ class SingleLinkDetailsProvider : SceytKoinComponent {
                         url = linkPreviewDetails.imageUrl
                     )
 
-                    if (bitmap == null) {
-                        withContext(Dispatchers.Main) { detailsCallback(linkPreviewDetails) }
-                        return@launch
-                    }
+                    if (bitmap == null) return@launch
 
-                    withContext(Dispatchers.Main) {
-                        imageSizeCallback(Size(bitmap.width, bitmap.height))
-                    }
-                    attachmentsMiddleWare.updateLinkDetailsSize(
-                        link = link,
-                        size = Size(bitmap.width, bitmap.height)
+                    val size = Size(bitmap.width, bitmap.height)
+                    linkPreviewDetails = linkPreviewDetails.copy(
+                        imageWidth = size.width,
+                        imageHeight = size.height
                     )
-                    if (linkPreviewDetails.thumb == null) {
-                        val thumb = getImageThumb(bitmap)
-                        thumb?.let {
-                            withContext(Dispatchers.Main) {
-                                thumbCallback.invoke(it)
-                            }
-                            attachmentsMiddleWare.updateLinkDetailsThumb(link, it)
+                    withContext(Dispatchers.Main) {
+                        imageSizeCallback(size)
+                    }
+                    val thumb =
+                        if (linkPreviewDetails.thumb == null) getImageThumb(bitmap) else null
+                    if (thumb != null) {
+                        linkPreviewDetails = linkPreviewDetails.copy(thumb = thumb)
+                        withContext(Dispatchers.Main) {
+                            thumbCallback(thumb)
                         }
                     }
+                    attachmentsMiddleWare.updateLinkDetails(link = link, size = size, thumb = thumb)
+                    loadedLinks[link] = linkPreviewDetails
                 }
             } else withContext(Dispatchers.Main) { detailsCallback(null) }
         }
@@ -97,6 +92,35 @@ class SingleLinkDetailsProvider : SceytKoinComponent {
             return bytes.toBase64()
         }
         return null
+    }
+
+    suspend fun loadLinkDetailsSuspend(text: String): LinkPreviewDetails? {
+        val link = text.extractLinks().firstOrNull { it.isValidUrl(context) } ?: return null
+        loadedLinks[link]?.let { return it }
+
+        val response = attachmentsMiddleWare.getLinkPreviewData(link)
+        if (response !is SceytResponse.Success || response.data == null) return null
+
+        var linkPreviewDetails = response.data
+        loadedLinks[link] = linkPreviewDetails
+
+        if (linkPreviewDetails.imageUrl != null && linkPreviewDetails.imageWidth == null) {
+            val bitmap = getImageBitmapWithGlideWithTimeout(
+                context = context,
+                url = linkPreviewDetails.imageUrl
+            ) ?: return linkPreviewDetails
+
+            val size = Size(bitmap.width, bitmap.height)
+            linkPreviewDetails =
+                linkPreviewDetails.copy(imageWidth = size.width, imageHeight = size.height)
+            val thumb = if (linkPreviewDetails.thumb == null) getImageThumb(bitmap) else null
+            if (thumb != null)
+                linkPreviewDetails = linkPreviewDetails.copy(thumb = thumb)
+            attachmentsMiddleWare.updateLinkDetails(link = link, size = size, thumb = thumb)
+            loadedLinks[link] = linkPreviewDetails
+        }
+
+        return linkPreviewDetails
     }
 
     fun cancel() {
