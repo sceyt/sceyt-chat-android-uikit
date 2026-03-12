@@ -326,6 +326,12 @@ class CallManagerImpl(
         return newCameraState
     }
 
+    override fun setCameraEnabled(enabled: Boolean) {
+        if (_mediaState.value.isCameraEnabled == enabled) return
+        _currentCall?.setVideoEnabled(enabled)
+        Log.d(TAG, "Camera set to: $enabled")
+    }
+
     override fun switchCamera(): Result<Unit> {
         return try {
             val capturer = _currentCall?.localParticipant?.getVideoTracks()?.firstOrNull()?.capturer
