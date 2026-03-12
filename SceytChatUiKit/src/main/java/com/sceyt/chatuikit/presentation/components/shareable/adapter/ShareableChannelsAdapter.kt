@@ -32,8 +32,7 @@ class ShareableChannelsAdapter(
         payloads: MutableList<Any>
     ) {
         val diff = payloads.find { it is ChannelDiff } as? ChannelDiff
-            ?: ChannelDiff.DEFAULT
-        holder.bind(item = channels[position], diff)
+        holder.bind(item = channels[position], diff ?: ChannelDiff.DEFAULT)
     }
 
     override fun getItemCount(): Int = channels.size
