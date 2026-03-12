@@ -191,7 +191,9 @@ internal class PersistenceAttachmentLogicImpl(
         )
 
         linkDao.getLinkDetailsEntity(link)?.let {
-            return@withContext SceytResponse.Success(it.toLinkPreviewDetails(false))
+            // If the data is already loaded, return it. Otherwise, load it from the server.
+            if (!it.title.isNullOrBlank() || !it.description.isNullOrBlank() || !it.imageUrl.isNullOrBlank())
+                return@withContext SceytResponse.Success(it.toLinkPreviewDetails(false))
         }
 
         return@withContext attachmentsRepository.getLinkPreviewData(link).fold(
@@ -217,18 +219,12 @@ internal class PersistenceAttachmentLogicImpl(
             attachmentsCache.updateAttachmentLinkDetails(linkDetails)
         }
 
-    override suspend fun updateLinkDetailsSize(link: String, size: Size) =
+    override suspend fun updateLinkDetails(link: String, size: Size, thumb: String?) =
         withContext(Dispatchers.IO) {
             linkDao.updateSizes(link, size.width, size.height)
-            messagesCache.updateLinkDetailsSize(link, size.width, size.height)
-            attachmentsCache.updateLinkDetailsSize(link, size.width, size.height)
-        }
-
-    override suspend fun updateLinkDetailsThumb(link: String, thumb: String) =
-        withContext(Dispatchers.IO) {
-            linkDao.updateThumb(link, thumb)
-            messagesCache.updateThumb(link, thumb)
-            attachmentsCache.updateThumb(link, thumb)
+            if (thumb != null) linkDao.updateThumb(link, thumb)
+            messagesCache.updateLinkDetails(link, size.width, size.height, thumb)
+            attachmentsCache.updateLinkDetails(link, size.width, size.height, thumb)
         }
 
     override suspend fun onTransferProgressPercentUpdated(transferData: TransferData) {
@@ -314,7 +310,7 @@ internal class PersistenceAttachmentLogicImpl(
 
         val data = arrayListOf<AttachmentWithUserData>()
 
-        attachments.map {
+        attachments.forEach {
             data.add(
                 AttachmentWithUserData(
                     attachment = it,
