@@ -1232,6 +1232,90 @@ class CheckDeletedMessagesUseCaseTest {
     }
 
 
+    // ========== messageId=0 Guard Tests ==========
+
+    @Test
+    fun zeroMessageId_withLoadNext_shouldNotDeleteAnyMessages() = runTest {
+        // Arrange - Simulates the bug: pending/unassigned message has id=0,
+        // triggering deletion of ALL messages (id >= 1)
+        insertMessages(
+            createMessageEntity(tid = 100, id = 100),
+            createMessageEntity(tid = 200, id = 200),
+            createMessageEntity(tid = 300, id = 300)
+        )
+
+        val initialCount = messageDao.getMessagesCount(channelId)
+
+        // Act - messageId=0 is invalid; no deletion should occur
+        useCase(
+            channelId = channelId,
+            loadType = LoadType.LoadNext,
+            messageId = 0,
+            limit = 30,
+            serverMessages = emptyList(),
+            syncStartTime = 0L
+        )
+
+        // Assert - Nothing deleted
+        val finalCount = messageDao.getMessagesCount(channelId)
+        assertThat(finalCount).isEqualTo(initialCount)
+    }
+
+    @Test
+    fun zeroMessageId_singleMessageWithId0_withLoadNext_shouldNotDeleteAnyMessages() = runTest {
+        // Arrange - Reproduces the exact bug scenario:
+        // channel.lastMessage has id=0 (pending), passed as both messageId and serverMessages.
+        // The single-message edge case (serverMessages.size==1 && first.id==messageId) would
+        // match (0==0) and previously deleted all messages with id > 0.
+        insertMessages(
+            createMessageEntity(tid = 100, id = 100),
+            createMessageEntity(tid = 200, id = 200),
+            createMessageEntity(tid = 300, id = 300)
+        )
+
+        val initialCount = messageDao.getMessagesCount(channelId)
+
+        // Act - messageId=0 with a single server message with id=0
+        useCase(
+            channelId = channelId,
+            loadType = LoadType.LoadNext,
+            messageId = 0,
+            limit = 30,
+            serverMessages = listOf(createSceytMessage(id = 0)),
+            syncStartTime = 0L
+        )
+
+        // Assert - Nothing deleted; guard prevents the cascade deletion
+        val finalCount = messageDao.getMessagesCount(channelId)
+        assertThat(finalCount).isEqualTo(initialCount)
+    }
+
+    @Test
+    fun zeroMessageId_withLoadPrev_shouldNotDeleteAnyMessages() = runTest {
+        // Arrange
+        insertMessages(
+            createMessageEntity(tid = 100, id = 100),
+            createMessageEntity(tid = 200, id = 200),
+            createMessageEntity(tid = 300, id = 300)
+        )
+
+        val initialCount = messageDao.getMessagesCount(channelId)
+
+        // Act - messageId=0 for LoadPrev should also be skipped
+        useCase(
+            channelId = channelId,
+            loadType = LoadType.LoadPrev,
+            messageId = 0,
+            limit = 30,
+            serverMessages = emptyList(),
+            syncStartTime = 0L
+        )
+
+        // Assert - Nothing deleted
+        val finalCount = messageDao.getMessagesCount(channelId)
+        assertThat(finalCount).isEqualTo(initialCount)
+    }
+
     // ========== Helper Methods ==========
 
     private fun createMessageEntity(
