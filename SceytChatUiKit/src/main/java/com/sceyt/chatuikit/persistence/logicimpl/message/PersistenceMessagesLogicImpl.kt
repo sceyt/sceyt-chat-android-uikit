@@ -393,7 +393,7 @@ internal class PersistenceMessagesLogicImpl(
                 messageId = messageId,
                 limit = 30,
                 serverMessages = updatedMessages,
-                syncStartTime = ServerTimeSync.getLastAuthTime()
+                syncStartTime = ServerTimeSync.getLastAuthTimeOrNow()
             )
 
             updateMessageLoadRange(
@@ -431,7 +431,7 @@ internal class PersistenceMessagesLogicImpl(
                             messageId = lastMessage.id,
                             limit = messagesLoadSize,
                             serverMessages = listOf(lastMessage),
-                            syncStartTime = ServerTimeSync.getLastAuthTime()
+                            syncStartTime = ServerTimeSync.getLastAuthTimeOrNow()
                         )
                     }
                 }
