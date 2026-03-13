@@ -29,10 +29,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.sceyt.chat.demo.call.ui.components.UserAvatar
+import com.sceyt.chat.demo.call.ui.components.UserAvatarWithOuter
 import com.sceyt.chat.demo.call.ui.theme.CallColors
+import com.sceyt.chat.demo.call.ui.theme.callBackground
 
 private val DeclineRed = CallColors.HangupRed
 private val AcceptGreen = CallColors.CallAgainGreen
@@ -48,34 +51,20 @@ fun IncomingCallScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(CallColors.BackgroundDark)
+            .callBackground()
             .statusBarsPadding()
             .navigationBarsPadding()
             .padding(horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.fillMaxHeight(0.1f))
-        // Avatar with outer ring
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier.size(164.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        color = Color.White.copy(alpha = 0.06f),
-                        shape = CircleShape
-                    )
-            )
-            UserAvatar(
-                avatarUrl = callerAvatar,
-                name = callerName,
-                size = 140.dp
-            )
-        }
+        Spacer(modifier = Modifier.fillMaxHeight(0.15f))
 
-        Spacer(modifier = Modifier.height(48.dp))
+        UserAvatarWithOuter(
+            avatarUrl = callerAvatar,
+            name = callerName
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
 
         // Name
         Text(
@@ -86,7 +75,7 @@ fun IncomingCallScreen(
             textAlign = TextAlign.Center
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(4.dp))
 
         // Call type subtitle
         Text(
@@ -134,6 +123,20 @@ fun IncomingCallScreen(
             )
         }
     }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF19191B)
+@Composable
+private fun IncomingCallScreenPreview(
+    @PreviewParameter(IncomingCallIsVideoProvider::class) isVideo: Boolean
+) {
+    IncomingCallScreen(
+        callerName = "Alice Johnson",
+        callerAvatar = null,
+        isVideo = isVideo,
+        onAnswer = {},
+        onDecline = {}
+    )
 }
 
 @Composable

@@ -12,9 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -26,11 +24,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sceyt.chat.demo.call.ui.components.CallActionButton
-import com.sceyt.chat.demo.call.ui.components.UserAvatar
+import com.sceyt.chat.demo.call.ui.components.UserAvatarWithOuter
 import com.sceyt.chat.demo.call.ui.theme.CallColors
+import com.sceyt.chat.demo.call.ui.theme.callBackground
 
 /**
  * Screen shown when a call fails, is declined, or gets no answer.
@@ -48,7 +49,7 @@ fun EndedCallScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(CallColors.BackgroundDark)
+            .callBackground()
     ) {
         Column(
             modifier = Modifier
@@ -58,29 +59,15 @@ fun EndedCallScreen(
                 .padding(horizontal = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.fillMaxHeight(0.1f))
+            Spacer(modifier = Modifier.fillMaxHeight(0.15f))
 
             // Avatar with outer ring
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier.size(164.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            color = Color.White.copy(alpha = 0.06f),
-                            shape = CircleShape
-                        )
-                )
-                UserAvatar(
-                    avatarUrl = remoteAvatar,
-                    name = remoteName,
-                    size = 140.dp
-                )
-            }
+            UserAvatarWithOuter(
+                avatarUrl = remoteAvatar,
+                name = remoteName
+            )
 
-            Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             // Name
             Text(
@@ -91,7 +78,7 @@ fun EndedCallScreen(
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
             // Status pill (e.g. "Call Failed", "Call Declined", "No Answer")
             Box(
@@ -171,4 +158,18 @@ fun EndedCallScreen(
             Spacer(modifier = Modifier.height(32.dp))
         }
     }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF19191B)
+@Composable
+private fun EndedCallScreenPreview(
+    @PreviewParameter(EndedCallPreviewProvider::class) data: EndedCallPreviewData
+) {
+    EndedCallScreen(
+        remoteName = data.remoteName,
+        remoteAvatar = data.remoteAvatar,
+        reason = data.reason,
+        onCancel = if (data.showActions) ({}) else null,
+        onCallAgain = if (data.showActions) ({}) else null
+    )
 }
