@@ -63,6 +63,19 @@ object ServerTimeSync {
     }
 
     /**
+     * Returns the last authentication time, falling back to the current local time if
+     * the server has not authenticated yet (i.e. auth time is 0).
+     *
+     * Use this when the result is used as a time boundary for deletion guards, so that
+     * messages created after this point are never accidentally deleted during a sync.
+     *
+     * @return Last authentication time in milliseconds, or [System.currentTimeMillis] if not yet available.
+     */
+    fun getLastAuthTimeOrNow(): Long {
+        return ClientWrapper.getLastAuthTime().takeIf { it > 0 } ?: System.currentTimeMillis()
+    }
+
+    /**
      * Returns the time difference between server and local time in milliseconds.
      * Positive value means server is ahead of local time.
      *
