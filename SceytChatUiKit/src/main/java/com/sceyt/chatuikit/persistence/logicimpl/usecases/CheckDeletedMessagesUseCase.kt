@@ -39,6 +39,12 @@ internal class CheckDeletedMessagesUseCase(
     ) {
         val serverIds = serverMessages.map { it.id }.sorted()
 
+        // Guard against invalid messageId=0 (pending/unassigned messages)
+        if (messageId <= 0) {
+            SceytLog.e(tag, "Skipping deletion check: invalid messageId=$messageId for $loadType")
+            return
+        }
+
         // LoadNear only checks within the returned range (no beyond-range or gap deletion)
         if (loadType == LoadNear) {
             deletedNearMessagesUseCase(
