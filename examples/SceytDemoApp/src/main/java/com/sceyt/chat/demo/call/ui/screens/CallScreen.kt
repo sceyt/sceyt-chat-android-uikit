@@ -12,7 +12,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.core.content.ContextCompat
+import com.sceyt.chat.demo.R
 import com.sceyt.chat.demo.call.manager.CallUiState
 import com.sceyt.chat.demo.call.manager.CallUiState.CallPhase
 import com.sceyt.chat.demo.call.ui.CallViewModel
@@ -26,6 +28,7 @@ import com.sceyt.chat.demo.call.ui.CallViewModel
 @Composable
 fun CallScreen(
     viewModel: CallViewModel,
+    isInPipMode: Boolean = false,
     onDismiss: () -> Unit
 ) {
     val callState by viewModel.callUiState.collectAsState()
@@ -82,6 +85,17 @@ fun CallScreen(
         }
     }
 
+    // PiP mode handling
+    if (isInPipMode) {
+        when {
+            callState.phase in pipPhases ->
+                PipCallContent(callState = callState, mediaState = mediaState, duration = duration)
+            // Call ended/idle in PiP — close immediately (EndedCallScreen buttons are unusable in PiP)
+            else -> LaunchedEffect(Unit) { onDismiss() }
+        }
+        return
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         when (callState.phase) {
             CallPhase.Idle -> {
@@ -125,7 +139,7 @@ fun CallScreen(
                     // Remote hangup — show "Call Ended" briefly, then auto-close via Idle
                     is CallUiState.EndedReason.RemoteHangup -> {
                         EndedCallScreen(
-                            remoteName = callState.remoteUserName ?: "Unknown",
+                            remoteName = callState.remoteUserName ?: callState.remoteUserId,
                             remoteAvatar = callState.remoteUserAvatar,
                             reason = reason.displayMessage,
                             onCancel = null,
@@ -136,9 +150,9 @@ fun CallScreen(
                     // Failed, declined, or no-answer — show ended screen with actions
                     else -> {
                         EndedCallScreen(
-                            remoteName = callState.remoteUserName ?: "Unknown",
+                            remoteName = callState.remoteUserName ?: callState.remoteUserId,
                             remoteAvatar = callState.remoteUserAvatar,
-                            reason = reason?.displayMessage ?: "Call Ended",
+                            reason = reason?.displayMessage ?: stringResource(R.string.call_ended),
                             onCancel = onDismiss,
                             onCallAgain = viewModel::onCallAgain
                         )
