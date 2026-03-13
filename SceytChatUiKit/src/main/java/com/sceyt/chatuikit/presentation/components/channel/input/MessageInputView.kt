@@ -1176,7 +1176,7 @@ class MessageInputView @JvmOverloads constructor(
         }
         VoiceStateCoordinator.registerRecordingController(
             isRecordingProvider = { getRecordingState().isRecording },
-            stopRecordingCallback = { stopRecording() }
+            stopRecordingCallback = { stopRecordAndShowPreviewIfNeeded() }
         )
     }
 
