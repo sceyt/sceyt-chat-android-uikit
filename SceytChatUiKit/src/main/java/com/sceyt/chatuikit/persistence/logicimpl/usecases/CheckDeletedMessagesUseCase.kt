@@ -41,7 +41,7 @@ internal class CheckDeletedMessagesUseCase(
 
         // Guard against invalid messageId=0 (pending/unassigned messages)
         if (messageId <= 0) {
-            SceytLog.e(tag, "Skipping deletion check: invalid messageId=$messageId for $loadType")
+            SceytLog.w(tag, "Skipping deletion check: invalid messageId=$messageId for $loadType")
             return
         }
 
