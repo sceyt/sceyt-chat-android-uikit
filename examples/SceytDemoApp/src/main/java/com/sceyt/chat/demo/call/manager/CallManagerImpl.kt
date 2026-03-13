@@ -843,7 +843,6 @@ class CallManagerImpl(
 
     private fun startDurationTimer() {
         durationJob?.cancel()
-        _callDuration.update { 0 }
         durationJob = scope.launch {
             while (isActive) {
                 delay(1000)
