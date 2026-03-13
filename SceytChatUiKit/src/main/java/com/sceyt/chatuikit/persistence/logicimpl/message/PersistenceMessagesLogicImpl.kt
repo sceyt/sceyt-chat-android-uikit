@@ -422,8 +422,9 @@ internal class PersistenceMessagesLogicImpl(
                 channel.lastMessage?.let { lastMessage ->
                     val currentChannel = channelCache.getOneOf(channel.id)
                     // Check current channel last message is the same as lastMessage from synced channel,
-                    // to avoid deleting messages incorrectly
-                    if (channel.lastDisplayedMessageId > lastMessage.id && currentChannel?.lastMessage == lastMessage) {
+                    // to avoid deleting messages incorrectly.
+                    // Also guard against id=0 (pending/unassigned messages) to avoid deleting all messages.
+                    if (lastMessage.id > 0 && channel.lastDisplayedMessageId > lastMessage.id && currentChannel?.lastMessage == lastMessage) {
                         checkDeletedMessagesUseCase(
                             channelId = channel.id,
                             loadType = LoadNext,
