@@ -104,11 +104,13 @@
         <!-- Call Activity -->
         <activity
             android:name=".call.ui.CallActivity"
+            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation"
             android:exported="false"
             android:launchMode="singleTask"
             android:screenOrientation="portrait"
             android:showOnLockScreen="true"
             android:showWhenLocked="true"
+            android:supportsPictureInPicture="true"
             android:theme="@style/SceytAppTheme.Default"
             android:turnScreenOn="true"
             tools:targetApi="o_mr1" />

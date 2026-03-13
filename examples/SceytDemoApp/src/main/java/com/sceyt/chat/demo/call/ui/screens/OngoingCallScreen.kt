@@ -370,48 +370,6 @@ private fun VideoOngoingLayout(
     }
 }
 
-// ── Status content ────────────────────────────────────────────────────────────
-
-@Composable
-private fun CallStatusContent(
-    callState: CallUiState,
-    duration: String
-) {
-    when (callState.phase) {
-        CallUiState.CallPhase.Outgoing ->
-            DotsText(if (callState.isRemoteRinging) "ringing" else "calling")
-
-        CallUiState.CallPhase.Connecting ->
-            DotsText("connecting")
-
-        CallUiState.CallPhase.Connected -> {
-            Text(
-                text = duration,
-                color = Color.White,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Normal
-            )
-        }
-
-        CallUiState.CallPhase.Reconnecting -> {
-            DotsText("reconnecting")
-        }
-
-        else -> {}
-    }
-}
-
-@Composable
-private fun DotsText(base: String) {
-    val dots = ".".repeat(3)
-    Text(
-        text = "$base$dots",
-        color = CallColors.TextPrimary,
-        fontSize = 16.sp,
-        fontWeight = FontWeight.Normal
-    )
-}
-
 // ── Control bar ───────────────────────────────────────────────────────────────
 
 /**
