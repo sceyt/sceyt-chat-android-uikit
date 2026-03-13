@@ -1250,8 +1250,7 @@ internal class PersistenceMessagesLogicImpl(
         var messages: List<SceytMessage> = emptyList()
         val response: SceytResponse<List<SceytMessage>>
 
-        if (loadType != LoadNear)
-            ConnectionEventManager.awaitToConnectSceytWithTimeout(10.seconds.inWholeMilliseconds)
+        ConnectionEventManager.awaitToConnectSceytWithTimeout(10.seconds.inWholeMilliseconds)
 
         val syncStartTime = ServerTimeSync.getCurrentServerTime()
 

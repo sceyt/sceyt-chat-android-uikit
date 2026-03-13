@@ -790,10 +790,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     }.launchIn(lifecycleOwner.lifecycleScope)
 
     pageStateLiveData.observe(lifecycleOwner) {
-        if (it is PageState.StateError && messagesListView.getData().isEmpty())
-            messagesListView.updateViewState(PageState.StateEmpty())
-        else
-            messagesListView.updateViewState(it, false)
+        messagesListView.updateViewState(it, false)
     }
 
     messagesListView.setMessageCommandEventListener { event ->

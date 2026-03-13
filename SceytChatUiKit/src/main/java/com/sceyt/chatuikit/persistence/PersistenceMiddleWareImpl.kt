@@ -483,8 +483,11 @@ internal class PersistenceMiddleWareImpl(
     }
 
     override suspend fun loadNewestMessages(
-        conversationId: Long, replyInThread: Boolean, limit: Int,
-        loadKey: LoadKeyData, ignoreDb: Boolean,
+        conversationId: Long,
+        replyInThread: Boolean,
+        limit: Int,
+        loadKey: LoadKeyData,
+        ignoreDb: Boolean,
     ): Flow<PaginationResponse<SceytMessage>> {
         return messagesLogic.loadNewestMessages(
             conversationId = conversationId,
