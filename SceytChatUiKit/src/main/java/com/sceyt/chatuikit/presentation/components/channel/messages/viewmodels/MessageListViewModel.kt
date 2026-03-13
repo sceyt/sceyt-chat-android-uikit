@@ -324,6 +324,8 @@ class MessageListViewModel(
 
     fun loadNearMessages(messageId: Long, loadKey: LoadKeyData, ignoreServer: Boolean) {
         setPagingLoadingStarted(LoadNear, ignoreServer = ignoreServer)
+        notifyPageLoadingState(false)
+
         loadPrevJob?.cancel()
         loadNextJob?.cancel()
         loadNearJob?.cancel()
