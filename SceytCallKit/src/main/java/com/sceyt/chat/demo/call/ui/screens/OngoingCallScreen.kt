@@ -1,5 +1,6 @@
 package com.sceyt.chat.demo.call.ui.screens
 
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -24,13 +25,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.BluetoothAudio
 import androidx.compose.material.icons.filled.CallEnd
@@ -40,6 +42,7 @@ import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.MicOff
 import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
@@ -69,12 +72,12 @@ import com.sceyt.audiorouting.AudioDevice
 import com.sceyt.chat.demo.call.manager.CallUiState
 import com.sceyt.chat.demo.call.manager.MediaState
 import com.sceyt.chat.demo.call.ui.components.AudioDeviceSelector
-import com.sceyt.chat.demo.call.ui.theme.callBackground
 import com.sceyt.chat.demo.call.ui.components.CallActionButton
 import com.sceyt.chat.demo.call.ui.components.LocalVideoPreview
 import com.sceyt.chat.demo.call.ui.components.RemoteVideoView
 import com.sceyt.chat.demo.call.ui.components.UserAvatarWithOuter
 import com.sceyt.chat.demo.call.ui.theme.CallColors
+import com.sceyt.chat.demo.call.ui.theme.callBackground
 import kotlinx.coroutines.delay
 import org.webrtc.VideoTrack
 import kotlin.math.roundToInt
@@ -200,6 +203,8 @@ private fun AudioOngoingLayout(
     isRemoteMuted: Boolean,
     duration: String
 ) {
+    val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -253,6 +258,20 @@ private fun AudioOngoingLayout(
             )
 
             Spacer(modifier = Modifier.weight(1f))
+        }
+
+        IconButton(
+            onClick = { backDispatcher?.onBackPressed() },
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .statusBarsPadding()
+                .padding(start = 4.dp, top = 4.dp)
+        ) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = "Back",
+                tint = Color.White
+            )
         }
     }
 }
@@ -311,45 +330,47 @@ private fun VideoOngoingLayout(
             }
         }
 
-        // Top bar: name + status
+        // Top bar: back + name + status (left-aligned)
         AnimatedVisibility(
             visible = showControls,
             enter = fadeIn() + slideInVertically { -it },
             exit = fadeOut() + slideOutVertically { -it },
-            modifier = Modifier.align(Alignment.TopCenter)
+            modifier = Modifier.align(Alignment.TopStart)
         ) {
-            Box(
+            val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(
                         Brush.verticalGradient(
                             colors = listOf(
-                                Color(0xFF17191C).copy(alpha = 0.8f),
+                                Color(0xFF17191C).copy(alpha = 0.55f),
                                 Color.Transparent
                             )
                         )
                     )
                     .statusBarsPadding()
-                    .padding(
-                        top = 16.dp,
-                        bottom = 40.dp
-                    ),
-                contentAlignment = Alignment.Center
+                    .padding(start = 4.dp, top = 8.dp, end = 16.dp, bottom = 40.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
-                    ) {
+                IconButton(onClick = { backDispatcher?.onBackPressed() }) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back",
+                        tint = Color.White
+                    )
+                }
+                Column(modifier = Modifier.padding(start = 10.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             text = remoteName,
                             color = Color.White,
                             fontSize = 16.sp,
-                            fontWeight = FontWeight.Medium,
-                            textAlign = TextAlign.Center
+                            fontWeight = FontWeight.Medium
                         )
                         if (mediaState.isRemoteMuted) {
                             Spacer(modifier = Modifier.width(6.dp))
+
                             Icon(
                                 imageVector = Icons.Default.MicOff,
                                 contentDescription = "Remote microphone muted",
@@ -358,7 +379,7 @@ private fun VideoOngoingLayout(
                             )
                         }
                     }
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(2.dp))
 
                     CallStatusContent(
                         callState = callState,
