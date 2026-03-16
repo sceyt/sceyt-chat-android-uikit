@@ -53,7 +53,10 @@ fun VideoRenderer(
                     currentTrack?.removeSink(renderer)
 
                     // Add to new track
-                    videoTrack?.addSink(renderer)
+                    // Skip is is on edit mode
+                    if (!renderer.isInEditMode) {
+                        videoTrack?.addSink(renderer)
+                    }
 
                     currentTrack = videoTrack
                 }

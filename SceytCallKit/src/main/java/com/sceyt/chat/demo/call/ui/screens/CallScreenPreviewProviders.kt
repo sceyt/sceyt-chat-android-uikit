@@ -3,6 +3,7 @@ package com.sceyt.chat.demo.call.ui.screens
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.sceyt.chat.demo.call.manager.CallUiState
 import com.sceyt.chat.demo.call.manager.MediaState
+import org.webrtc.VideoTrack
 
 // ── IncomingCallScreen ────────────────────────────────────────────────────────
 
@@ -103,5 +104,20 @@ class OngoingCallPreviewProvider : PreviewParameterProvider<OngoingCallPreviewDa
             mediaState = MediaState.DEFAULT_AUDIO,
             duration = "02:30"
         ),
+
+        // Connected video
+        OngoingCallPreviewData(
+            callState = CallUiState(
+                phase = CallUiState.CallPhase.Connected,
+                remoteUserId = "user5",
+                remoteUserName = "Eve Adams",
+                isVideo = true,
+                connectedAt = System.currentTimeMillis() - 125_000
+            ),
+            mediaState = MediaState.DEFAULT_VIDEO.copy(
+                localVideoTrack = VideoTrack(1)
+            ),
+            duration = "02:05"
+        )
     )
 }
