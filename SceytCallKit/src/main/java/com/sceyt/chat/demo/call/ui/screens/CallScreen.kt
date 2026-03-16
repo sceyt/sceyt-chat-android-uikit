@@ -14,7 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.core.content.ContextCompat
-import com.sceyt.chat.demo.R
+import com.sceyt.chat.call.R
 import com.sceyt.chat.demo.call.manager.CallUiState
 import com.sceyt.chat.demo.call.manager.CallUiState.CallPhase
 import com.sceyt.chat.demo.call.ui.CallViewModel

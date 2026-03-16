@@ -1,4 +1,4 @@
-package com.sceyt.chat.demo.presentation.call.ui
+package com.sceyt.chat.demo.call.ui.components
 
 import android.content.Context
 import android.content.res.Resources
@@ -9,14 +9,11 @@ import android.util.AttributeSet
 import android.util.Log
 import android.util.Size
 import android.view.TextureView
-import android.view.TextureView.SurfaceTextureListener
 import com.callclient.call.providers.GlobalEGLProvider
 import org.webrtc.EglBase
 import org.webrtc.EglRenderer
 import org.webrtc.GlRectDrawer
-import org.webrtc.RendererCommon.RendererEvents
-import org.webrtc.RendererCommon.ScalingType
-import org.webrtc.RendererCommon.VideoLayoutMeasure
+import org.webrtc.RendererCommon
 import org.webrtc.ThreadUtils
 import org.webrtc.VideoFrame
 import org.webrtc.VideoSink
@@ -28,11 +25,11 @@ class VideoTextureView @JvmOverloads constructor(
     attrs: AttributeSet? = null,
     defStyle: Int = 0
 ) :
-    TextureView(context, attrs, defStyle), SurfaceTextureListener, VideoSink {
+    TextureView(context, attrs, defStyle), TextureView.SurfaceTextureListener, VideoSink {
 
     private val resourceName: String = getResourceName()
-    private val videoLayoutMeasure = VideoLayoutMeasure()
-    private var rendererEvents: RendererEvents? = null
+    private val videoLayoutMeasure = RendererCommon.VideoLayoutMeasure()
+    private var rendererEvents: RendererCommon.RendererEvents? = null
     private val eglRenderer: EglRenderer = EglRenderer(resourceName)
     private val uiThreadHandler = Handler(Looper.getMainLooper())
     private var isFirstFrameRendered = false
@@ -48,7 +45,7 @@ class VideoTextureView @JvmOverloads constructor(
     /**
      * Initialise the renderer. Should be called from the main thread.
      *
-     * @param sharedContext [EglBase.Context]
+     * @param sharedContext [org.webrtc.EglBase.Context]
      * @param configType Configuration type to use
      */
     private fun init(sharedContext: EglBase.Context, configType: IntArray = EglBase.CONFIG_PLAIN) {
@@ -117,15 +114,15 @@ class VideoTextureView @JvmOverloads constructor(
         eglRenderer.setMirror(mirror)
     }
 
-    fun setScalingType(scalingType: ScalingType?) {
+    fun setScalingType(scalingType: RendererCommon.ScalingType?) {
         ThreadUtils.checkIsOnMainThread()
         videoLayoutMeasure.setScalingType(scalingType)
         requestLayout()
     }
 
     fun setScalingType(
-        scalingTypeMatchOrientation: ScalingType?,
-        scalingTypeMismatchOrientation: ScalingType?,
+        scalingTypeMatchOrientation: RendererCommon.ScalingType?,
+        scalingTypeMismatchOrientation: RendererCommon.ScalingType?,
     ) {
         ThreadUtils.checkIsOnMainThread()
         videoLayoutMeasure.setScalingType(
@@ -138,7 +135,7 @@ class VideoTextureView @JvmOverloads constructor(
     /**
      * Called when a new frame is received. Sends the frame to be rendered.
      *
-     * @param videoFrame The [VideoFrame] received from WebRTC connection to draw on the screen.
+     * @param videoFrame The [org.webrtc.VideoFrame] received from WebRTC connection to draw on the screen.
      */
     override fun onFrame(videoFrame: VideoFrame) {
         eglRenderer.onFrame(videoFrame)
@@ -210,7 +207,7 @@ class VideoTextureView @JvmOverloads constructor(
         eglRenderer.setLayoutAspectRatio((right - left) / (bottom.toFloat() - top))
     }
 
-    fun setRendererEventListener(listener: RendererEvents) {
+    fun setRendererEventListener(listener: RendererCommon.RendererEvents) {
         rendererEvents = listener
     }
 

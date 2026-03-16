@@ -17,18 +17,6 @@
         android:name="com.google.android.gms.permission.AD_ID"
         tools:node="remove" />
 
-    <!-- Call permissions -->
-    <uses-permission android:name="android.permission.RECORD_AUDIO" />
-    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
-    <uses-permission android:name="android.permission.BLUETOOTH" />
-    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
-    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
-    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
-    <uses-permission android:name="android.permission.MANAGE_OWN_CALLS" />
-
     <uses-feature
         android:name="android.hardware.camera"
         android:required="false" />
@@ -101,39 +89,11 @@
             android:theme="@style/SceytAppTheme.Default"
             android:windowSoftInputMode="adjustResize" />
 
-        <!-- Call Activity -->
-        <activity
-            android:name=".call.ui.CallActivity"
-            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation"
-            android:exported="false"
-            android:launchMode="singleTask"
-            android:screenOrientation="portrait"
-            android:showOnLockScreen="true"
-            android:showWhenLocked="true"
-            android:supportsPictureInPicture="true"
-            android:theme="@style/SceytAppTheme.Default"
-            android:turnScreenOn="true"
-            tools:targetApi="o_mr1" />
-
-        <!-- Call Broadcast Receiver for notification actions -->
-        <receiver
-            android:name=".call.receiver.CallBroadcastReceiver"
-            android:exported="false" />
-
         <!-- WorkManager foreground service for calls -->
         <service
             android:name="androidx.work.impl.foreground.SystemForegroundService"
             android:foregroundServiceType="phoneCall|microphone"
             tools:node="merge" />
-
-        <service
-            android:name=".call.service.CallFirebaseMessageReceiver"
-            android:enabled="true"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="com.google.firebase.MESSAGING_EVENT" />
-            </intent-filter>
-        </service>
 
         <meta-data
             android:name="firebase_crashlytics_collection_enabled"

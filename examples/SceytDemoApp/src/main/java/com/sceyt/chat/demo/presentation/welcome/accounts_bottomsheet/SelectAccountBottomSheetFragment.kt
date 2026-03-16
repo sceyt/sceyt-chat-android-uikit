@@ -22,7 +22,10 @@ class SelectAccountBottomSheetFragment : BottomSheetDialogFragment() {
 
     private val usersAdapter = SceytUsersAdapter { user ->
         val id = user.id
-        setFragmentResult(KEY_USER_ID_REQUEST, bundleOf(KEY_USER_ID to id))
+        bundleOf()
+        setFragmentResult(KEY_USER_ID_REQUEST, Bundle().apply {
+            putString(KEY_USER_ID, id)
+        })
         dismiss()
     }
 

@@ -12,7 +12,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.viewinterop.AndroidView
-import com.sceyt.chat.demo.presentation.call.ui.VideoTextureView
+import com.sceyt.chat.demo.call.ui.components.VideoTextureView
 import org.webrtc.RendererCommon
 import org.webrtc.VideoTrack
 

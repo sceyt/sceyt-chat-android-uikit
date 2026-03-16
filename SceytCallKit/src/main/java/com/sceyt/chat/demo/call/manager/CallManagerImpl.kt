@@ -26,7 +26,6 @@ import com.sceyt.chat.demo.call.notification.CallNotificationChannels
 import com.sceyt.chat.demo.call.ui.CallActivity
 import com.sceyt.chat.demo.call.worker.IncomingCallWorker
 import com.sceyt.chat.demo.call.worker.OngoingCallWorker
-import com.sceyt.chat.demo.connection.SceytConnectionProvider
 import com.sceyt.chat.models.signal.MediaFlow
 import com.sceyt.chat.models.signal.ParticipantState
 import com.sceyt.chatuikit.SceytChatUIKit
@@ -60,7 +59,7 @@ import kotlin.time.Duration.Companion.seconds
  */
 class CallManagerImpl(
     private val context: Context,
-    private val connectionProvider: SceytConnectionProvider
+    private val onChatConnectNeeded: () -> Unit = {}
 ) : CallManager {
 
     companion object {
@@ -432,7 +431,7 @@ class CallManagerImpl(
         }
 
         Log.d(TAG, "Incoming call from: $from, video: ${call.videoCall}")
-        connectionProvider.connectChatClient()
+        onChatConnectNeeded()
 
         scope.launch {
             IncomingCallWorker.start(context)
