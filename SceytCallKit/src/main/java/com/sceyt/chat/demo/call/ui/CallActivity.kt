@@ -290,6 +290,7 @@ class CallActivity : ComponentActivity() {
         private const val EXTRA_AUTO_ANSWER = "extra_auto_answer"
 
         private val PIP_PHASES = setOf(
+            CallUiState.CallPhase.Incoming,
             CallUiState.CallPhase.Outgoing,
             CallUiState.CallPhase.Connecting,
             CallUiState.CallPhase.Connected,

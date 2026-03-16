@@ -17,17 +17,16 @@ internal fun CallStatusContent(
     fontSize: TextUnit = 16.sp
 ) {
     val text = when (callState.phase) {
+        CallUiState.CallPhase.Incoming -> stringResource(R.string.incoming_call)
         CallUiState.CallPhase.Outgoing ->
-            stringResource(if (callState.isRemoteRinging) R.string.ringing else R.string.calling)
+            stringResource(
+                if (callState.isRemoteRinging)
+                    R.string.ringing else R.string.calling
+            )
 
-        CallUiState.CallPhase.Connecting ->
-            stringResource(R.string.connecting)
-
-        CallUiState.CallPhase.Connected ->
-            duration
-
-        CallUiState.CallPhase.Reconnecting ->
-            stringResource(R.string.reconnecting)
+        CallUiState.CallPhase.Connecting -> stringResource(R.string.connecting)
+        CallUiState.CallPhase.Connected -> duration
+        CallUiState.CallPhase.Reconnecting -> stringResource(R.string.reconnecting)
 
         else -> return
     }
