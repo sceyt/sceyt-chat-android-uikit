@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="call_ended">Call Ended</string>
+    <string name="ringing">ringing…</string>
+    <string name="calling">calling…</string>
+    <string name="connecting">connecting…</string>
+    <string name="reconnecting">reconnecting…</string>
+</resources>

@@ -7,7 +7,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
-import com.sceyt.chat.demo.R
+import com.sceyt.chat.call.R
 import com.sceyt.chat.demo.call.manager.CallUiState
 
 @Composable

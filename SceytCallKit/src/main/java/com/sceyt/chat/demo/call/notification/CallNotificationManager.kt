@@ -5,7 +5,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import androidx.core.app.NotificationCompat
-import com.sceyt.chat.demo.R
+import com.sceyt.chat.call.R
 import com.sceyt.chat.demo.call.manager.CallUiState
 import com.sceyt.chat.demo.call.receiver.CallBroadcastReceiver
 import com.sceyt.chat.demo.call.ui.CallActivity

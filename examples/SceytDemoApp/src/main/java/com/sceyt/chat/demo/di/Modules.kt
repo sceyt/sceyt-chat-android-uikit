@@ -1,9 +1,6 @@
 package com.sceyt.chat.demo.di
 
 import com.sceyt.chat.demo.BuildConfig
-import com.sceyt.chat.demo.call.manager.CallManager
-import com.sceyt.chat.demo.call.manager.CallManagerImpl
-import com.sceyt.chat.demo.call.ui.CallViewModel
 import com.sceyt.chat.demo.connection.ChatClientConnectionInterceptor
 import com.sceyt.chat.demo.connection.SceytConnectionProvider
 import com.sceyt.chat.demo.data.AppSharedPreference
@@ -22,8 +19,6 @@ import com.sceyt.chat.demo.presentation.welcome.welcome.WelcomeViewModel
 import com.sceyt.chatuikit.presentation.components.role.viewmodel.RoleViewModel
 import com.sceyt.chatuikit.presentation.components.select_users.viewmodel.UsersViewModel
 import okhttp3.OkHttpClient
-import org.koin.core.module.dsl.bind
-import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
@@ -90,11 +85,4 @@ val apiModule = module {
 val repositoryModule = module {
     factory { ConnectionRepo(get()) }
     single { UserRepository(get()) }
-}
-
-val callModule = module {
-    singleOf(::CallManagerImpl) { bind<CallManager>() }
-
-    // CallViewModel for UI
-    viewModelOf(::CallViewModel)
 }
