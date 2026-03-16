@@ -22,6 +22,7 @@ import com.sceyt.audiorouting.AudioRouterConfig
 import com.sceyt.audiorouting.AudioRouterListener
 import com.sceyt.chat.demo.call.manager.CallUiState.CallPhase
 import com.sceyt.chat.demo.call.manager.CallUiState.EndedReason
+import com.sceyt.chat.demo.call.notification.CallNotificationChannels
 import com.sceyt.chat.demo.call.ui.CallActivity
 import com.sceyt.chat.demo.call.worker.IncomingCallWorker
 import com.sceyt.chat.demo.call.worker.OngoingCallWorker
@@ -110,6 +111,9 @@ class CallManagerImpl(
     private var lastOutgoingIsVideo: Boolean = false
 
     override fun init() {
+        // Create call notification channels
+        CallNotificationChannels.createChannels(context)
+
         // Register listener for incoming calls
         callClient.addListener(CALL_CLIENT_LISTENER_KEY, object : CallClient.ClientListener {
             override fun onInvitedToCall(from: String, call: Call) {

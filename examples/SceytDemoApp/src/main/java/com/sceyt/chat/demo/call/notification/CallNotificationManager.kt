@@ -69,9 +69,9 @@ class CallNotificationManager(
         )
 
         val channelId = if (suppressFullScreenIntent) {
-            CallNotificationChannels.INCOMING_CALL_SILENT_CHANNEL_ID
+            CallNotificationChannels.LOW_PRIORITY_CALL_CHANNEL_ID
         } else {
-            CallNotificationChannels.INCOMING_CALL_CHANNEL_ID
+            CallNotificationChannels.HIGH_PRIORITY_CALL_CHANNEL_ID
         }
 
         val builder = NotificationCompat.Builder(context, channelId)
@@ -149,7 +149,10 @@ class CallNotificationManager(
             immutablePendingIntentFlags()
         )
 
-        return NotificationCompat.Builder(context, CallNotificationChannels.ONGOING_CALL_CHANNEL_ID)
+        return NotificationCompat.Builder(
+            context,
+            CallNotificationChannels.LOW_PRIORITY_CALL_CHANNEL_ID
+        )
             .setSmallIcon(R.drawable.ic_call_up_blue)
             .setContentTitle("$remoteName$muteStatus")
             .setContentText("$callType - $duration")
@@ -207,7 +210,10 @@ class CallNotificationManager(
             immutablePendingIntentFlags()
         )
 
-        return NotificationCompat.Builder(context, CallNotificationChannels.ONGOING_CALL_CHANNEL_ID)
+        return NotificationCompat.Builder(
+            context,
+            CallNotificationChannels.LOW_PRIORITY_CALL_CHANNEL_ID
+        )
             .setSmallIcon(R.drawable.ic_call_up_blue)
             .setContentTitle(remoteName)
             .setContentText(statusText)
