@@ -5,4 +5,5 @@
     <string name="calling">calling…</string>
     <string name="connecting">connecting…</string>
     <string name="reconnecting">reconnecting…</string>
+    <string name="incoming_call">Incoming call</string>
 </resources>

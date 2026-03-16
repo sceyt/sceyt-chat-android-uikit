@@ -36,6 +36,7 @@ import com.sceyt.chat.demo.call.ui.components.UserAvatar
 import com.sceyt.chat.demo.call.ui.theme.callBackground
 
 internal val pipPhases = setOf(
+    CallPhase.Incoming,
     CallPhase.Outgoing,
     CallPhase.Connecting,
     CallPhase.Connected,
