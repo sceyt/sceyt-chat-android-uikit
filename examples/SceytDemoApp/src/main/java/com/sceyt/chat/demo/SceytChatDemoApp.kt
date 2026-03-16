@@ -8,7 +8,6 @@ import com.callclient.logger.CallLogLevel
 import com.callclient.logger.CallLogPriority
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.demo.call.manager.CallManager
-import com.sceyt.chat.demo.call.notification.CallNotificationChannels
 import com.sceyt.chat.demo.connection.ChatClientConnectionInterceptor
 import com.sceyt.chat.demo.connection.SceytConnectionProvider
 import com.sceyt.chat.demo.di.apiModule
@@ -126,9 +125,6 @@ class SceytChatDemoApp : Application() {
     }
 
     private fun initCallClient() {
-        // Create call notification channels
-        CallNotificationChannels.createChannels(this)
-
         // Initialize CallClient with ChatClient
         CallClient.initialize(this, ChatClient.getClient())
         callManager.init()
