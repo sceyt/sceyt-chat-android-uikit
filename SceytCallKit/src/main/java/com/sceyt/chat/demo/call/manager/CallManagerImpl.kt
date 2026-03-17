@@ -153,13 +153,47 @@ class CallManagerImpl(
             mediaFlow = MediaFlow.SFU,
             metadata = mapOf(
                 GroupCallMetadata.CHANNEL_ID to channel.id.toString(),
-                GroupCallMetadata.CHANNEL_NAME to channel.subject.orEmpty().ifBlank { DEFAULT_GROUP_NAME },
+                GroupCallMetadata.CHANNEL_NAME to channel.subject.orEmpty()
+                    .ifBlank { DEFAULT_GROUP_NAME },
             ),
             includeRemotePlaceholders = false,
             shouldPlayRingback = false,
             isCallAgain = isCallAgain,
             callPrepared = callPrepared,
         )
+    }
+
+    override suspend fun joinCall(call: Call, callPrepared: (Call) -> Unit): Result<Unit> {
+        if (call.isGroupCall) {
+            val channelId = call.channelIdOrNull
+                ?: return Result.failure(IllegalStateException("Missing channel id for group call"))
+            val channel = groupCallParticipantResolver.getChannel(channelId)
+                ?: return Result.failure(IllegalStateException("Unable to resolve group channel"))
+            primeParticipantInfos(channel.members.orEmpty())
+
+            joinToCall(
+                call = call,
+                participantIds = groupCallParticipantResolver.resolveParticipantIds(channel),
+                isVideo = call.isVideoCall,
+                includeRemotePlaceholders = false,
+                shouldPlayRingback = false,
+                callPrepared = callPrepared,
+            )
+        } else {
+            val userId = call.primaryRemoteUserIdOrNull
+                ?: return Result.failure(IllegalStateException("Missing remote participant for direct call"))
+
+            joinToCall(
+                call = call,
+                participantIds = listOf(userId),
+                isVideo = call.isVideoCall,
+                includeRemotePlaceholders = true,
+                shouldPlayRingback = true,
+                callPrepared = callPrepared,
+            )
+        }
+
+        return Result.success(Unit)
     }
 
     override suspend fun answerIncomingCall(): Result<Unit> {
@@ -431,31 +465,14 @@ class CallManagerImpl(
             }
 
             result.onSuccess { call ->
-                initialiseOutgoingState(
+                joinToCall(
                     call = call,
-                    remoteIds = participantIds,
+                    participantIds = participantIds,
+                    isVideo = isVideo,
                     includeRemotePlaceholders = includeRemotePlaceholders,
+                    shouldPlayRingback = shouldPlayRingback,
+                    callPrepared = callPrepared,
                 )
-                setupAudioRouting(isVideo)
-                setupCallListeners(call)
-                _currentCall = call
-                syncParticipantsFromCall(call)
-                if (call.isDirectCall) {
-                    startNoAnswerTimeout()
-                } else {
-                    cancelNoAnswerTimeout()
-                }
-                callPrepared(call)
-                OngoingCallWorker.start(context)
-
-                val joinCallOptions = JoinCallOptions.default().copy(
-                    audioSettings = AudioSettings(disableManageAudioRoute = true),
-                    videoSettings = if (isVideo) VideoSettings(publishVideo = true) else null,
-                )
-                call.join(joinCallOptions)
-                if (shouldPlayRingback) {
-                    playTone(ToneConfig.ringback())
-                }
             }.onFailure { error ->
                 Log.e(TAG, "Failed to start outgoing call", error)
                 cleanupCall()
@@ -468,6 +485,47 @@ class CallManagerImpl(
             cleanupCall()
             setEndedState(EndedReason.Failed(e.message ?: "Unknown error"))
             Result.failure(e)
+        }
+    }
+
+    private suspend fun joinToCall(
+        call: Call,
+        participantIds: List<String>,
+        isVideo: Boolean,
+        includeRemotePlaceholders: Boolean,
+        shouldPlayRingback: Boolean,
+        callPrepared: (Call) -> Unit,
+    ) {
+        try {
+            initialiseOutgoingState(
+                call = call,
+                remoteIds = participantIds,
+                includeRemotePlaceholders = includeRemotePlaceholders,
+            )
+            setupAudioRouting(isVideo)
+            setupCallListeners(call)
+            _currentCall = call
+            syncParticipantsFromCall(call)
+            if (call.isDirectCall) {
+                startNoAnswerTimeout()
+            } else {
+                cancelNoAnswerTimeout()
+            }
+            callPrepared(call)
+            OngoingCallWorker.start(context)
+
+            val joinCallOptions = JoinCallOptions.default().copy(
+                audioSettings = AudioSettings(disableManageAudioRoute = true),
+                videoSettings = if (isVideo) VideoSettings(publishVideo = true) else null,
+            )
+            call.join(joinCallOptions)
+            if (shouldPlayRingback) {
+                playTone(ToneConfig.ringback())
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to join ongoing call", e)
+            cleanupCall()
+            setEndedState(EndedReason.Failed(e.message ?: "Failed to join call"))
         }
     }
 

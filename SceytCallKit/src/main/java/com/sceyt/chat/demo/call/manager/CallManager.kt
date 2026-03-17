@@ -79,6 +79,11 @@ interface CallManager {
         callPrepared: (Call) -> Unit = {}
     ): Result<Call>
 
+    suspend fun joinCall(
+        call: Call,
+        callPrepared: (Call) -> Unit = {}
+    ): Result<Unit>
+
     /**
      * Answer the current incoming call.
      * The Call object is read from [callUiState] — only valid when phase is [CallUiState.CallPhase.Incoming].

@@ -10,8 +10,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import com.callclient.CallClient
 import com.sceyt.chat.demo.R
 import com.sceyt.chat.demo.call.manager.CallManager
+import com.sceyt.chat.demo.call.manager.channelIdOrNull
 import com.sceyt.chat.demo.call.ui.CallActivity
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.extensions.launchActivity
@@ -67,10 +69,30 @@ class CustomChannelActivity : ChannelActivity() {
         val missingPermissions = getMissingPermissions(isVideo)
 
         if (missingPermissions.isEmpty()) {
-            initiateCall(isVideo)
+            if (!tryToFindChannelCallAndJoin()) {
+                initiateCall(isVideo)
+            }
         } else {
             permissionLauncher.launch(missingPermissions.toTypedArray())
         }
+    }
+
+    private fun tryToFindChannelCallAndJoin(): Boolean {
+        val channel = viewModel.channel
+        val currentCall = CallClient.requireInstance().getOngoingCalls().firstOrNull { call ->
+            val callChannelId = call.channelIdOrNull ?: return@firstOrNull false
+            callChannelId == channel.id
+        } ?: return false
+        lifecycleScope.launch {
+            callManager.joinCall(currentCall, callPrepared = {
+                CallActivity.launchOutgoing(
+                    context = this@CustomChannelActivity,
+                    userId = channel.id.toString(),
+                    isVideo = it.videoCall
+                )
+            })
+        }
+        return true
     }
 
     private fun initiateCall(isVideo: Boolean) {
@@ -92,7 +114,11 @@ class CustomChannelActivity : ChannelActivity() {
             } else {
                 val peerUserId = channel.getPeer()?.id
                 if (peerUserId == null) {
-                    Toast.makeText(this@CustomChannelActivity, "Cannot determine peer user", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this@CustomChannelActivity,
+                        "Cannot determine peer user",
+                        Toast.LENGTH_SHORT
+                    ).show()
                     return@launch
                 }
                 callManager.startOutgoingCall(

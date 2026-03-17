@@ -57,6 +57,7 @@ dependencies {
     implementation(libs.lifecycle.runtime.compose)
     debugImplementation(libs.ui.tooling)
     implementation(libs.coil.compose)
+    implementation(libs.kotlinx.collections.immutable)
 
     testImplementation(libs.junit)
     testImplementation(libs.truth)

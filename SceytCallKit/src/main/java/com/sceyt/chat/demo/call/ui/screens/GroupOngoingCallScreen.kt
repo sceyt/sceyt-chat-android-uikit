@@ -2,9 +2,15 @@ package com.sceyt.chat.demo.call.ui.screens
 
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.animateBounds
+import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
@@ -41,6 +47,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -48,10 +55,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.LookaheadScope
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -71,6 +80,8 @@ import com.sceyt.chat.demo.call.ui.components.AudioDeviceSelector
 import com.sceyt.chat.demo.call.ui.components.UserAvatar
 import com.sceyt.chat.demo.call.ui.components.VideoRenderer
 import com.sceyt.chat.demo.call.ui.theme.CallColors
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.delay
 import org.webrtc.RendererCommon
 
@@ -132,7 +143,7 @@ internal fun GroupOngoingCallScreen(
                 .padding(start = 4.dp, end = 4.dp, top = 4.dp, bottom = GroupGridBottomPadding)
         ) { pageIndex ->
             GroupParticipantsPage(
-                participants = pages.getOrNull(pageIndex).orEmpty(),
+                participants = pages.getOrNull(pageIndex).orEmpty().toImmutableList(),
                 modifier = Modifier.fillMaxSize()
             )
         }
@@ -264,32 +275,57 @@ private fun GroupTopBar(
 
 @Composable
 private fun GroupParticipantsPage(
-    participants: List<CallParticipantUiState>,
+    participants: ImmutableList<CallParticipantUiState>,
     modifier: Modifier = Modifier,
 ) {
-    val rows = remember(participants) { buildPageRows(participants) }
+    val rows = buildPageRows(participants)
+    val boundsSpec = spring<Rect>(
+        dampingRatio = Spring.DampingRatioNoBouncy,
+        stiffness = Spring.StiffnessMedium
+    )
 
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        rows.forEach { row ->
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                row.forEach { participant ->
-                    ParticipantTile(
-                        participant = participant,
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight()
-                    )
-                }
-                if (row.size == 1 && participants.size % 2 == 0 && participants.size > 2) {
-                    Spacer(modifier = Modifier.weight(1f))
+    LookaheadScope {
+        Column(
+            modifier = modifier,
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            rows.forEach { row ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    row.forEach { participant ->
+                        key(participant.userId) {
+                            val visibleState = remember {
+                                MutableTransitionState(false).apply { targetState = true }
+                            }
+                            AnimatedVisibility(
+                                visibleState = visibleState,
+                                enter = scaleIn(
+                                    animationSpec = spring(
+                                        dampingRatio = Spring.DampingRatioNoBouncy,
+                                        stiffness = Spring.StiffnessMedium
+                                    ),
+                                    initialScale = 0.8f
+                                ),
+                                exit = ExitTransition.None,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight()
+                                    .animateBounds(
+                                        lookaheadScope = this@LookaheadScope,
+                                        boundsTransform = { _, _ -> boundsSpec }
+                                    )
+                            ) {
+                                ParticipantTile(
+                                    participant = participant,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
