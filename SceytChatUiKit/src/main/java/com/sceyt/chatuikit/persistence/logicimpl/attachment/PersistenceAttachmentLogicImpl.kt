@@ -192,7 +192,7 @@ internal class PersistenceAttachmentLogicImpl(
 
         linkDao.getLinkDetailsEntity(link)?.let {
             // If the data is already loaded, return it. Otherwise, load it from the server.
-            if (!it.title.isNullOrBlank() || !it.description.isNullOrBlank() || !it.imageUrl.isNullOrBlank())
+            if (!it.title.isNullOrBlank() && !it.description.isNullOrBlank())
                 return@withContext SceytResponse.Success(it.toLinkPreviewDetails(false))
         }
 
