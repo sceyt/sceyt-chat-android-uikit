@@ -27,9 +27,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.sceyt.chat.demo.call.manager.CallParticipantUiState
 import com.sceyt.chat.demo.call.manager.CallUiState
 import com.sceyt.chat.demo.call.manager.CallUiState.CallPhase
 import com.sceyt.chat.demo.call.manager.MediaState
+import com.sceyt.chat.demo.call.manager.displayTitle
 import com.sceyt.chat.demo.call.ui.components.LocalVideoPreview
 import com.sceyt.chat.demo.call.ui.components.RemoteVideoView
 import com.sceyt.chat.demo.call.ui.components.UserAvatar
@@ -43,49 +45,46 @@ internal val pipPhases = setOf(
     CallPhase.Reconnecting
 )
 
-/**
- * Compact call UI shown inside the PiP floating window.
- * Audio calls: dark call background + avatar + name + mute state + status.
- * Video calls: video stream(s) full-bleed; local preview overlaid bottom-right when both are active.
- */
 @Composable
 internal fun PipCallContent(
     callState: CallUiState,
     mediaState: MediaState,
     duration: String
 ) {
-    val remoteName = callState.remoteUserName ?: callState.remoteUserId
+    val focusParticipant = rememberPipFocusParticipant(callState)
+    val displayTitle = callState.call?.displayTitle(callState.participants)
+        ?: focusParticipant?.displayName.orEmpty()
+    val hasRemoteVideo = focusParticipant?.videoTrack != null
+    val hasLocalVideo = mediaState.shouldShowLocalPreview
 
-    if (mediaState.hasActiveVideo) {
-        // Video PiP — at least one video stream is active
+    if (hasRemoteVideo || hasLocalVideo) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Black)
         ) {
-            if (mediaState.shouldShowRemoteVideo) {
+            if (hasRemoteVideo) {
                 RemoteVideoView(
-                    videoTrack = mediaState.remoteVideoTrack,
+                    videoTrack = focusParticipant.videoTrack,
                     modifier = Modifier.fillMaxSize()
                 )
             } else {
-                // Only local video on — show it full screen
                 LocalVideoPreview(
                     videoTrack = mediaState.localVideoTrack,
                     modifier = Modifier.fillMaxSize()
                 )
             }
-            // Local preview overlay — only when both streams are active
-            if (mediaState.shouldShowRemoteVideo && mediaState.shouldShowLocalPreview) {
-                val localPreviewShape = RoundedCornerShape(4.dp)
+
+            if (hasRemoteVideo && hasLocalVideo) {
+                val shape = RoundedCornerShape(4.dp)
                 Box(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
                         .fillMaxWidth(0.43f)
                         .fillMaxHeight(0.40f)
                         .padding(bottom = 8.dp, end = 8.dp)
-                        .border(1.dp, Color.White.copy(alpha = 0.1f), localPreviewShape)
-                        .clip(localPreviewShape)
+                        .border(1.dp, Color.White.copy(alpha = 0.1f), shape)
+                        .clip(shape)
                 ) {
                     LocalVideoPreview(
                         videoTrack = mediaState.localVideoTrack,
@@ -94,49 +93,57 @@ internal fun PipCallContent(
                 }
             }
         }
-    } else {
-        // Audio PiP — same dark call background, centered avatar + name + mute + status
-        Box(
+        return
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .callBackground()
+    ) {
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .callBackground()
+                .padding(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                UserAvatar(
-                    modifier = Modifier.size(48.dp),
-                    avatarUrl = callState.remoteUserAvatar,
-                    name = remoteName
+            UserAvatar(
+                modifier = Modifier.size(48.dp),
+                avatarUrl = focusParticipant?.avatarUrl,
+                name = focusParticipant?.displayName ?: displayTitle
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = displayTitle,
+                    color = Color.White,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium
                 )
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = remoteName,
-                        color = Color.White,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Medium
+                if (focusParticipant?.isMuted == true) {
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Icon(
+                        imageVector = Icons.Default.MicOff,
+                        contentDescription = "Muted",
+                        tint = Color.White.copy(alpha = 0.6f),
+                        modifier = Modifier.size(12.dp)
                     )
-                    if (mediaState.isRemoteMuted) {
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Icon(
-                            imageVector = Icons.Default.MicOff,
-                            contentDescription = "Muted",
-                            tint = Color.White.copy(alpha = 0.6f),
-                            modifier = Modifier.size(12.dp)
-                        )
-                    }
                 }
-                CallStatusContent(
-                    callState = callState,
-                    duration = duration,
-                    fontSize = 11.sp
-                )
             }
+            CallStatusContent(
+                callState = callState,
+                duration = duration,
+                fontSize = 11.sp
+            )
         }
     }
+}
+
+private fun rememberPipFocusParticipant(callState: CallUiState): CallParticipantUiState? {
+    return callState.remoteParticipants
+        .firstOrNull { it.isActiveSpeaker && it.videoTrack != null }
+        ?: callState.remoteParticipants.firstOrNull { it.isConnected && it.videoTrack != null }
+        ?: callState.remoteParticipants.firstOrNull { it.videoTrack != null }
+        ?: callState.remoteParticipant
 }

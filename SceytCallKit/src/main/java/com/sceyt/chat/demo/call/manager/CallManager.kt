@@ -2,6 +2,7 @@ package com.sceyt.chat.demo.call.manager
 
 import com.callclient.call.Call
 import com.sceyt.audiorouting.AudioDevice
+import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import kotlinx.coroutines.flow.StateFlow
 
 /**
@@ -26,7 +27,7 @@ interface CallManager {
 
     /**
      * Call duration in seconds since connected.
-     * Only updates when state is [CallUiState.CallPhase.Connected].
+     * Only updates while the current call should show the running timer.
      */
     val callDuration: StateFlow<Long>
 
@@ -63,6 +64,16 @@ interface CallManager {
      */
     suspend fun startOutgoingCall(
         userId: String,
+        isVideo: Boolean,
+        isCallAgain: Boolean,
+        callPrepared: (Call) -> Unit = {}
+    ): Result<Call>
+
+    /**
+     * Start an outgoing group call for a channel.
+     */
+    suspend fun startOutgoingGroupCall(
+        channel: SceytChannel,
         isVideo: Boolean,
         isCallAgain: Boolean,
         callPrepared: (Call) -> Unit = {}
@@ -167,7 +178,7 @@ interface CallManager {
     fun handleIncomingCall(from: String, call: Call)
 
     /**
-     * Retry calling the last outgoing call recipient.
+     * Retry the last finished call using the retained [CallUiState.call] metadata.
      * Cancels the current ended-dismiss timer, resets state, and starts a new outgoing call.
      * Only valid when state is a terminal [CallUiState.CallPhase.Ended] (Failed, Declined, NoAnswer).
      */

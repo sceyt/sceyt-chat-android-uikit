@@ -58,4 +58,9 @@ dependencies {
     debugImplementation(libs.ui.tooling)
     implementation(libs.coil.compose)
 
+    testImplementation(libs.junit)
+    testImplementation(libs.truth)
+    testImplementation(libs.mockito.kotlin)
+    testImplementation(libs.mockito.inline)
+
 }

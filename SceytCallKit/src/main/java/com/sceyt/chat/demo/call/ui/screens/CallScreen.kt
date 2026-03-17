@@ -17,13 +17,17 @@ import androidx.core.content.ContextCompat
 import com.sceyt.chat.call.R
 import com.sceyt.chat.demo.call.manager.CallUiState
 import com.sceyt.chat.demo.call.manager.CallUiState.CallPhase
+import com.sceyt.chat.demo.call.manager.displayTitle
+import com.sceyt.chat.demo.call.manager.isGroupCall
+import com.sceyt.chat.demo.call.manager.isVideoCall
 import com.sceyt.chat.demo.call.ui.CallViewModel
+import com.sceyt.chat.demo.call.ui.theme.callBackground
 
 /**
  * Main call screen that routes to the appropriate sub-screen based on call phase.
  * All active phases (Outgoing, Connecting, Connected, Reconnecting) use a single
  * OngoingCallScreen composable, preventing remounts and UI blink on phase transitions.
- * User info (name, avatar) is now part of CallUiState and persists across all phases.
+ * Call-level display data is derived from the active [com.callclient.call.Call] when available.
  */
 @Composable
 fun CallScreen(
@@ -73,7 +77,7 @@ fun CallScreen(
     }
     val onAnswerWithPermission: () -> Unit = {
         val needsMic = !hasMicPermission()
-        val needsCamera = callState.isVideo && !hasCameraPermission()
+        val needsCamera = callState.call?.isVideoCall == true && !hasCameraPermission()
         if (needsMic || needsCamera) {
             val permissions = buildList {
                 if (needsMic) add(Manifest.permission.RECORD_AUDIO)
@@ -96,7 +100,15 @@ fun CallScreen(
         return
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier
+        .fillMaxSize()
+        .callBackground()) {
+        val call = callState.call
+        val displayTitle = call?.displayTitle(callState.participants)
+            ?: callState.remoteParticipant?.displayName.orEmpty()
+        val isGroupCall = call?.isGroupCall == true
+        val isVideoCall = call?.isVideoCall == true
+
         when (callState.phase) {
             CallPhase.Idle -> {
                 // Auto-close handled by CallActivity
@@ -104,9 +116,9 @@ fun CallScreen(
 
             CallPhase.Incoming -> {
                 IncomingCallScreen(
-                    callerName = callState.remoteUserName ?: callState.remoteUserId,
-                    callerAvatar = callState.remoteUserAvatar,
-                    isVideo = callState.isVideo,
+                    callerName = displayTitle,
+                    callerAvatar = if (isGroupCall) null else callState.remoteParticipant?.avatarUrl,
+                    isVideo = isVideoCall,
                     onAnswer = onAnswerWithPermission,
                     onDecline = viewModel::onDeclineClick
                 )
@@ -139,8 +151,8 @@ fun CallScreen(
                     // Remote hangup — show "Call Ended" briefly, then auto-close via Idle
                     is CallUiState.EndedReason.RemoteHangup -> {
                         EndedCallScreen(
-                            remoteName = callState.remoteUserName ?: callState.remoteUserId,
-                            remoteAvatar = callState.remoteUserAvatar,
+                            remoteName = displayTitle,
+                            remoteAvatar = if (isGroupCall) null else callState.remoteParticipant?.avatarUrl,
                             reason = reason.displayMessage,
                             onCancel = null,
                             onCallAgain = null
@@ -150,8 +162,8 @@ fun CallScreen(
                     // Failed, declined, or no-answer — show ended screen with actions
                     else -> {
                         EndedCallScreen(
-                            remoteName = callState.remoteUserName ?: callState.remoteUserId,
-                            remoteAvatar = callState.remoteUserAvatar,
+                            remoteName = displayTitle,
+                            remoteAvatar = if (isGroupCall) null else callState.remoteParticipant?.avatarUrl,
                             reason = reason?.displayMessage ?: stringResource(R.string.call_ended),
                             onCancel = onDismiss,
                             onCallAgain = viewModel::onCallAgain

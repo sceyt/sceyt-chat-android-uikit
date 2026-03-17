@@ -19,6 +19,8 @@ import androidx.work.workDataOf
 import com.sceyt.chat.demo.call.manager.CallManager
 import com.sceyt.chat.demo.call.manager.CallUiState
 import com.sceyt.chat.demo.call.manager.CallUiState.CallPhase
+import com.sceyt.chat.demo.call.manager.displayTitle
+import com.sceyt.chat.demo.call.manager.isVideoCall
 import com.sceyt.chat.demo.call.notification.CallNotificationChannels
 import com.sceyt.chat.demo.call.notification.CallNotificationManager
 import com.sceyt.chatuikit.extensions.isAppOnForeground
@@ -103,8 +105,9 @@ class IncomingCallWorker(
         state: CallUiState = callManager.callUiState.value
     ): Notification {
         return notificationManager.buildIncomingCallNotification(
-            callerName = state.remoteUserName ?: state.remoteUserId,
-            isVideo = state.isVideo,
+            callerName = state.call?.displayTitle(state.participants)
+                ?: state.remoteParticipant?.displayName.orEmpty(),
+            isVideo = state.call?.isVideoCall == true,
             suppressFullScreenIntent = applicationContext.isAppOnForeground()
         )
     }

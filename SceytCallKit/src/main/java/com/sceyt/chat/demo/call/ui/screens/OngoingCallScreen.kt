@@ -69,8 +69,12 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sceyt.audiorouting.AudioDevice
+import com.sceyt.chat.demo.call.manager.CallParticipantUiState
 import com.sceyt.chat.demo.call.manager.CallUiState
 import com.sceyt.chat.demo.call.manager.MediaState
+import com.sceyt.chat.demo.call.manager.displayTitle
+import com.sceyt.chat.demo.call.manager.isGroupCall
+import com.sceyt.chat.demo.call.manager.isVideoCall
 import com.sceyt.chat.demo.call.ui.components.AudioDeviceSelector
 import com.sceyt.chat.demo.call.ui.components.CallActionButton
 import com.sceyt.chat.demo.call.ui.components.LocalVideoPreview
@@ -82,7 +86,7 @@ import kotlinx.coroutines.delay
 import org.webrtc.VideoTrack
 import kotlin.math.roundToInt
 
-private val SurfaceDark = Color(0xFF1A1A28)
+private val SurfaceDark = Color(0xFF232324)
 
 private enum class VideoCorner { TopStart, TopEnd, BottomStart, BottomEnd }
 
@@ -91,13 +95,6 @@ data class AudioDeviceData(
     val availableDevices: List<AudioDevice>,
     val selectedDevice: AudioDevice?
 )
-
-/**
- * Unified ongoing call screen covering Outgoing, Connecting, Connected and Reconnecting states.
- * A single composable for all active call states prevents layout remounts and eliminates
- * UI blink when transitioning between states (especially Outgoing→Connected for video calls).
- * The control bar is rendered once here and overlaid on whichever layout is active.
- */
 
 @Composable
 fun OngoingCallScreen(
@@ -109,25 +106,70 @@ fun OngoingCallScreen(
     onToggleCamera: () -> Unit,
     onSwitchCamera: () -> Unit,
     onSelectDevice: (AudioDevice) -> Unit,
+    onEndCall: () -> Unit,
+    onAddParticipant: () -> Unit = {}
+) {
+    if (callState.call?.isGroupCall == true) {
+        GroupOngoingCallScreen(
+            callState = callState,
+            mediaState = mediaState,
+            duration = duration,
+            audioDeviceData = audioDeviceData,
+            onToggleMute = onToggleMute,
+            onToggleCamera = onToggleCamera,
+            onSwitchCamera = onSwitchCamera,
+            onSelectDevice = onSelectDevice,
+            onEndCall = onEndCall,
+            onAddParticipant = onAddParticipant
+        )
+        return
+    }
+
+    DirectOngoingCallScreen(
+        callState = callState,
+        mediaState = mediaState,
+        duration = duration,
+        audioDeviceData = audioDeviceData,
+        onToggleMute = onToggleMute,
+        onToggleCamera = onToggleCamera,
+        onSwitchCamera = onSwitchCamera,
+        onSelectDevice = onSelectDevice,
+        onEndCall = onEndCall
+    )
+}
+
+@Composable
+private fun DirectOngoingCallScreen(
+    callState: CallUiState,
+    mediaState: MediaState,
+    duration: String,
+    audioDeviceData: AudioDeviceData,
+    onToggleMute: () -> Unit,
+    onToggleCamera: () -> Unit,
+    onSwitchCamera: () -> Unit,
+    onSelectDevice: (AudioDevice) -> Unit,
     onEndCall: () -> Unit
 ) {
-    val remoteName = callState.remoteUserName ?: callState.remoteUserId
-    val remoteAvatar = callState.remoteUserAvatar
+    val remoteParticipant = callState.remoteParticipant
+    val remoteName = callState.call?.displayTitle(callState.participants)
+        ?: remoteParticipant?.displayName.orEmpty()
+    val remoteAvatar = remoteParticipant?.avatarUrl
+    val hasRemoteVideo = remoteParticipant?.videoTrack != null && remoteParticipant.isVideoEnabled
+    val hasLocalVideo = mediaState.shouldShowLocalPreview
 
     val (availableDevices, selectedDevice) = audioDeviceData
     val isConnected = callState.phase == CallUiState.CallPhase.Connected ||
-            callState.phase == CallUiState.CallPhase.Reconnecting
+        callState.phase == CallUiState.CallPhase.Reconnecting
 
     val showVideoLayout = when (callState.phase) {
-        CallUiState.CallPhase.Outgoing -> callState.isVideo && mediaState.localVideoTrack != null
-        CallUiState.CallPhase.Connecting -> mediaState.shouldShowLocalPreview
-        else -> mediaState.hasActiveVideo  // Connected or Reconnecting
+        CallUiState.CallPhase.Outgoing -> callState.call?.isVideoCall == true && mediaState.localVideoTrack != null
+        CallUiState.CallPhase.Connecting -> hasLocalVideo
+        else -> hasRemoteVideo || hasLocalVideo
     }
 
     var showAudioDeviceSelector by remember { mutableStateOf(false) }
     var showControls by remember { mutableStateOf(true) }
 
-    // Auto-hide controls in video mode after 4s once connected
     LaunchedEffect(showControls, isConnected, showVideoLayout) {
         if (showControls && isConnected && showVideoLayout) {
             delay(4000)
@@ -135,30 +177,29 @@ fun OngoingCallScreen(
         }
     }
 
-    // Controls always visible in audio mode or pre-answer video
     val controlsVisible = !showVideoLayout || !isConnected || showControls
 
     Box(modifier = Modifier.fillMaxSize()) {
         if (showVideoLayout) {
-            VideoOngoingLayout(
+            DirectVideoOngoingLayout(
                 callState = callState,
                 remoteName = remoteName,
                 duration = duration,
+                remoteParticipant = remoteParticipant,
                 mediaState = mediaState,
                 showControls = controlsVisible,
                 onTap = { showControls = !showControls }
             )
         } else {
-            AudioOngoingLayout(
+            DirectAudioOngoingLayout(
                 callState = callState,
                 remoteName = remoteName,
                 remoteAvatar = remoteAvatar,
-                isRemoteMuted = mediaState.isRemoteMuted,
+                isRemoteMuted = remoteParticipant?.isMuted == true,
                 duration = duration
             )
         }
 
-        // Single control bar — animated for video (tap to show/hide), always visible for audio
         AnimatedVisibility(
             visible = controlsVisible,
             enter = fadeIn() + slideInVertically { it },
@@ -193,10 +234,8 @@ fun OngoingCallScreen(
     }
 }
 
-// ── Audio layout ──────────────────────────────────────────────────────────────
-
 @Composable
-private fun AudioOngoingLayout(
+private fun DirectAudioOngoingLayout(
     callState: CallUiState,
     remoteName: String,
     remoteAvatar: String?,
@@ -276,19 +315,18 @@ private fun AudioOngoingLayout(
     }
 }
 
-// ── Video layout ──────────────────────────────────────────────────────────────
-
 @Composable
-private fun VideoOngoingLayout(
+private fun DirectVideoOngoingLayout(
     callState: CallUiState,
     remoteName: String,
     duration: String,
+    remoteParticipant: CallParticipantUiState?,
     mediaState: MediaState,
     showControls: Boolean,
     onTap: () -> Unit
 ) {
-    val hasRemoteVideo = mediaState.remoteVideoTrack != null && mediaState.isRemoteVideoEnabled
-    val hasLocalVideo = mediaState.isCameraEnabled && mediaState.localVideoTrack != null
+    val hasRemoteVideo = remoteParticipant?.videoTrack != null && remoteParticipant.isVideoEnabled
+    val hasLocalVideo = mediaState.shouldShowLocalPreview
 
     Box(
         modifier = Modifier
@@ -298,11 +336,10 @@ private fun VideoOngoingLayout(
                 detectTapGestures(onTap = { onTap() })
             }
     ) {
-        // Main video content
         when {
             hasRemoteVideo -> {
                 RemoteVideoView(
-                    videoTrack = mediaState.remoteVideoTrack,
+                    videoTrack = remoteParticipant.videoTrack,
                     modifier = Modifier.fillMaxSize()
                 )
                 if (hasLocalVideo) {
@@ -330,7 +367,6 @@ private fun VideoOngoingLayout(
             }
         }
 
-        // Top bar: back + name + status (left-aligned)
         AnimatedVisibility(
             visible = showControls,
             enter = fadeIn() + slideInVertically { -it },
@@ -368,9 +404,8 @@ private fun VideoOngoingLayout(
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Medium
                         )
-                        if (mediaState.isRemoteMuted) {
+                        if (remoteParticipant?.isMuted == true) {
                             Spacer(modifier = Modifier.width(6.dp))
-
                             Icon(
                                 imageVector = Icons.Default.MicOff,
                                 contentDescription = "Remote microphone muted",
@@ -380,7 +415,6 @@ private fun VideoOngoingLayout(
                         }
                     }
                     Spacer(modifier = Modifier.height(2.dp))
-
                     CallStatusContent(
                         callState = callState,
                         duration = duration
@@ -391,12 +425,6 @@ private fun VideoOngoingLayout(
     }
 }
 
-// ── Control bar ───────────────────────────────────────────────────────────────
-
-/**
- * 4(+1) button action bar.
- * Buttons: [flip-camera (shown only when video on)] | mute | speaker | video | hangup
- */
 @Composable
 @Preview
 fun CallControlBar(
@@ -416,7 +444,7 @@ fun CallControlBar(
         is AudioDevice.BluetoothHeadset -> Icons.Default.BluetoothAudio
         is AudioDevice.WiredHeadset -> Icons.Default.Headset
         is AudioDevice.Earpiece -> Icons.AutoMirrored.Filled.VolumeUp
-        else -> Icons.AutoMirrored.Filled.VolumeUp  // Speakerphone or null
+        else -> Icons.AutoMirrored.Filled.VolumeUp
     }
 
     Row(
@@ -481,8 +509,6 @@ fun CallControlBar(
         )
     }
 }
-
-// ── Video overlay composables ─────────────────────────────────────────────────
 
 @Composable
 private fun DraggableLocalVideoPreview(

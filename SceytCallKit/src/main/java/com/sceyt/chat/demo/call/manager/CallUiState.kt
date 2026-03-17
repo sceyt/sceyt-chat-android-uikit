@@ -4,32 +4,16 @@ import androidx.compose.runtime.Immutable
 import com.callclient.call.Call
 
 /**
- * Application-level call state that maps SDK states to UI states.
- * A single data class with a [CallPhase] enum eliminates state loss when transitioning
- * between phases — user info (name, avatar, isVideo) is written once and survives all transitions.
+ * Application-level call state shared by all call screens.
  */
 @Immutable
 data class CallUiState(
     val phase: CallPhase = CallPhase.Idle,
-
-    // Participant identity — set when call starts, persists through all phases
-    val remoteUserId: String = "",
-    val remoteUserName: String? = null,
-    val remoteUserAvatar: String? = null,
-    val isVideo: Boolean = false,
-
-    // Incoming-phase only: the Call object needed to answer/reject
-    val incomingCall: Call? = null,
-
-    // Outgoing-phase: remote device has started ringing
+    val call: Call? = null,
+    val participants: List<CallParticipantUiState> = emptyList(),
     val isRemoteRinging: Boolean = false,
-
-    // Connected / Reconnecting
     val connectedAt: Long = 0,
-    val reconnectAttempt: Int = 0,
     val maxReconnectAttempts: Int = MAX_RECONNECT_ATTEMPTS,
-
-    // Ended phase: non-null describes why the call ended
     val endedReason: EndedReason? = null,
 ) {
 
@@ -67,6 +51,24 @@ data class CallUiState(
             }
     }
 
+    val localParticipant: CallParticipantUiState?
+        get() = participants.firstOrNull { it.isSelf }
+
+    val remoteParticipants: List<CallParticipantUiState>
+        get() = participants.filterNot { it.isSelf }
+
+    val remoteParticipant: CallParticipantUiState?
+        get() = remoteParticipants.firstOrNull()
+
+    val connectedRemoteCount: Int
+        get() = remoteParticipants.count { it.isConnected }
+
+    val hasConnectedRemote: Boolean
+        get() = connectedRemoteCount > 0
+
+    val shouldShowRunningTimer: Boolean
+        get() = phase == CallPhase.Connected && hasConnectedRemote
+
     val isActive: Boolean
         get() = phase != CallPhase.Idle && phase != CallPhase.Ended
 
@@ -76,7 +78,7 @@ data class CallUiState(
     companion object {
         val IDLE = CallUiState()
         const val MAX_RECONNECT_ATTEMPTS = 3
-        const val NO_ANSWER_TIMEOUT_MS = 60_000L // 1 minute
-        const val RECONNECT_TIMEOUT_MS = 60_000L // 1 minute
+        const val NO_ANSWER_TIMEOUT_MS = 60_000L
+        const val RECONNECT_TIMEOUT_MS = 60_000L
     }
 }
