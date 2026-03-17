@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import com.sceyt.chat.demo.call.manager.CallUiState
+import com.sceyt.chat.demo.call.manager.isVideoCall
 import com.sceyt.chat.demo.call.ui.screens.CallScreen
 import com.sceyt.chat.demo.call.ui.theme.CallTheme
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -222,7 +223,7 @@ class CallActivity : ComponentActivity() {
         val hasMicPermission = ContextCompat.checkSelfPermission(
             this, Manifest.permission.RECORD_AUDIO
         ) == PackageManager.PERMISSION_GRANTED
-        val isVideoCall = viewModel.callUiState.value.isVideo
+        val isVideoCall = viewModel.callUiState.value.call?.isVideoCall == true
         val hasCameraPermission = ContextCompat.checkSelfPermission(
             this, Manifest.permission.CAMERA
         ) == PackageManager.PERMISSION_GRANTED

@@ -110,7 +110,7 @@ class CallNotificationManager(
      * Builds a notification for ongoing call.
      */
     fun buildOngoingCallNotification(
-        remoteName: String,
+        title: String,
         duration: String,
         isMuted: Boolean,
         isVideo: Boolean
@@ -154,7 +154,7 @@ class CallNotificationManager(
             CallNotificationChannels.LOW_PRIORITY_CALL_CHANNEL_ID
         )
             .setSmallIcon(R.drawable.ic_call_up_blue)
-            .setContentTitle("$remoteName$muteStatus")
+            .setContentTitle("$title$muteStatus")
             .setContentText("$callType - $duration")
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setCategory(NotificationCompat.CATEGORY_CALL)
@@ -180,16 +180,9 @@ class CallNotificationManager(
      * Builds a notification for connecting/reconnecting states.
      */
     fun buildConnectingNotification(
-        remoteName: String,
-        state: CallUiState
+        title: String,
+        statusText: String,
     ): Notification {
-        val statusText = when (state.phase) {
-            CallUiState.CallPhase.Connecting -> "Connecting..."
-            CallUiState.CallPhase.Reconnecting -> "Reconnecting..."
-            CallUiState.CallPhase.Outgoing -> "Calling..."
-            else -> "Call in progress"
-        }
-
         // Content intent to return to call
         val contentIntent = CallActivity.createOngoingIntent(context)
         val contentPendingIntent = PendingIntent.getActivity(
@@ -215,7 +208,7 @@ class CallNotificationManager(
             CallNotificationChannels.LOW_PRIORITY_CALL_CHANNEL_ID
         )
             .setSmallIcon(R.drawable.ic_call_up_blue)
-            .setContentTitle(remoteName)
+            .setContentTitle(title)
             .setContentText(statusText)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setCategory(NotificationCompat.CATEGORY_CALL)

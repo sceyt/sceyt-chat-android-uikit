@@ -16,7 +16,6 @@ import com.sceyt.chat.demo.call.ui.CallActivity
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.extensions.launchActivity
 import com.sceyt.chatuikit.persistence.extensions.getPeer
-import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.presentation.components.channel.header.MessagesListHeaderView
 import com.sceyt.chatuikit.presentation.components.channel.messages.ChannelActivity
 import kotlinx.coroutines.launch
@@ -50,7 +49,7 @@ class CustomChannelActivity : ChannelActivity() {
     }
 
     private fun MessagesListHeaderView.setToolbarMenu() {
-        if (!viewModel.channel.isDirect() || viewModel.channel.isSelf) {
+        if (viewModel.channel.isSelf) {
             return
         }
         setToolbarMenu(R.menu.menu_conversation, Toolbar.OnMenuItemClickListener {
@@ -77,25 +76,36 @@ class CustomChannelActivity : ChannelActivity() {
     private fun initiateCall(isVideo: Boolean) {
         val channel = viewModel.channel
 
-        // Get peer user ID from direct channel
-        val peerUserId = channel.getPeer()?.id
-        if (peerUserId == null) {
-            Toast.makeText(this, "Cannot determine peer user", Toast.LENGTH_SHORT).show()
-            return
-        }
-
         lifecycleScope.launch {
-            val result = callManager.startOutgoingCall(
-                userId = peerUserId,
-                isVideo = isVideo,
-                isCallAgain = false
-            ) {
-                // Launch call UI
-                CallActivity.launchOutgoing(
-                    context = this@CustomChannelActivity,
+            val result = if (channel.isGroup) {
+                callManager.startOutgoingGroupCall(
+                    channel = channel,
+                    isVideo = isVideo,
+                    isCallAgain = false
+                ) {
+                    CallActivity.launchOutgoing(
+                        context = this@CustomChannelActivity,
+                        userId = channel.id.toString(),
+                        isVideo = isVideo
+                    )
+                }
+            } else {
+                val peerUserId = channel.getPeer()?.id
+                if (peerUserId == null) {
+                    Toast.makeText(this@CustomChannelActivity, "Cannot determine peer user", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
+                callManager.startOutgoingCall(
                     userId = peerUserId,
-                    isVideo = isVideo
-                )
+                    isVideo = isVideo,
+                    isCallAgain = false
+                ) {
+                    CallActivity.launchOutgoing(
+                        context = this@CustomChannelActivity,
+                        userId = peerUserId,
+                        isVideo = isVideo
+                    )
+                }
             }
 
             result.onFailure { error ->

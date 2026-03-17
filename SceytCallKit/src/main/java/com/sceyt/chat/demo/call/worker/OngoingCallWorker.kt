@@ -17,6 +17,9 @@ import com.sceyt.chat.demo.call.manager.CallManager
 import com.sceyt.chat.demo.call.manager.CallManagerImpl
 import com.sceyt.chat.demo.call.manager.CallUiState
 import com.sceyt.chat.demo.call.manager.CallUiState.CallPhase
+import com.sceyt.chat.demo.call.manager.displayTitle
+import com.sceyt.chat.demo.call.manager.isVideoCall
+import com.sceyt.chat.demo.call.manager.resolveStatusText
 import com.sceyt.chat.demo.call.notification.CallNotificationChannels
 import com.sceyt.chat.demo.call.notification.CallNotificationManager
 import kotlinx.coroutines.flow.collectLatest
@@ -112,12 +115,22 @@ class OngoingCallWorker(
         isMuted: Boolean = false,
         duration: String = "00:00"
     ): android.app.Notification {
-        val remoteName = state.remoteUserName ?: state.remoteUserId
+        val title = state.call?.displayTitle(state.participants)
+            ?: state.remoteParticipant?.displayName.orEmpty()
+        val isVideoCall = state.call?.isVideoCall == true
         return when (state.phase) {
             CallPhase.Connected ->
-                notificationManager.buildOngoingCallNotification(remoteName, duration, isMuted, state.isVideo)
+                notificationManager.buildOngoingCallNotification(
+                    title = title,
+                    duration = duration,
+                    isMuted = isMuted,
+                    isVideo = isVideoCall
+                )
             else ->
-                notificationManager.buildConnectingNotification(remoteName, state)
+                notificationManager.buildConnectingNotification(
+                    title = title,
+                    statusText = state.resolveStatusText(duration).ifBlank { "Call in progress" }
+                )
         }
     }
 

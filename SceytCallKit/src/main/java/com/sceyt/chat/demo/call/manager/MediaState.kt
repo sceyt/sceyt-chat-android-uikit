@@ -24,40 +24,12 @@ data class MediaState(
     /** Local video track for rendering preview */
     val localVideoTrack: VideoTrack? = null,
 
-    /** Remote participant's video track */
-    val remoteVideoTrack: VideoTrack? = null,
-
-    /** Whether remote participant has muted their audio */
-    val isRemoteMuted: Boolean = false,
-
-    /** Whether remote participant has video enabled */
-    val isRemoteVideoEnabled: Boolean = false,
-
     /** Whether local participant is on hold */
     val isOnHold: Boolean = false,
 
     /** Whether screen sharing is active */
     val isScreenSharing: Boolean = false
 ) {
-    /**
-     * Whether this is a video call (either local or remote has video enabled).
-     */
-    val isVideoCall: Boolean
-        get() = isCameraEnabled || isRemoteVideoEnabled || localVideoTrack != null || remoteVideoTrack != null
-
-    /**
-     * Whether any video should be rendered (for UI layout decisions).
-     */
-    val hasActiveVideo: Boolean
-        get() = (isCameraEnabled && localVideoTrack != null) ||
-                (isRemoteVideoEnabled && remoteVideoTrack != null)
-
-    /**
-     * Whether to show full-screen remote video.
-     */
-    val shouldShowRemoteVideo: Boolean
-        get() = isRemoteVideoEnabled && remoteVideoTrack != null
-
     /**
      * Whether to show local video preview overlay.
      */
@@ -81,4 +53,3 @@ data class MediaState(
         )
     }
 }
-

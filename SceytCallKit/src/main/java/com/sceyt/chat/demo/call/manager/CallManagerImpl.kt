@@ -7,6 +7,7 @@ import androidx.work.WorkManager
 import com.callclient.CallClient
 import com.callclient.call.Call
 import com.callclient.call.calllisteners.CallEventsListener
+import com.callclient.call.data.ActiveSpeakerInfo
 import com.callclient.call.data.AudioSettings
 import com.callclient.call.data.CallState
 import com.callclient.call.data.CreateCallOptions
@@ -15,7 +16,6 @@ import com.callclient.call.data.Participant
 import com.callclient.call.data.ParticipantConnectionState
 import com.callclient.call.data.ParticipantEvent
 import com.callclient.call.data.VideoSettings
-import com.callclient.call.data.fold
 import com.sceyt.audiorouting.AudioDevice
 import com.sceyt.audiorouting.AudioRouter
 import com.sceyt.audiorouting.AudioRouterConfig
@@ -30,7 +30,8 @@ import com.sceyt.chat.models.signal.MediaFlow
 import com.sceyt.chat.models.signal.ParticipantState
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
-import com.sceyt.chatuikit.data.models.fold
+import com.sceyt.chatuikit.data.models.channels.SceytChannel
+import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.extensions.getPresentableName
 import com.sceyt.chatuikit.extensions.isAppOnForeground
 import com.sceyt.tonemanager.audio.tone.ToneConfig
@@ -53,6 +54,8 @@ import org.webrtc.VideoTrack
 import java.util.UUID
 import kotlin.reflect.KClass
 import kotlin.time.Duration.Companion.seconds
+import com.callclient.call.data.fold as callFold
+import com.sceyt.chatuikit.data.models.fold as sceytFold
 
 /**
  * Implementation of [CallManager] that orchestrates CallClient, ToneManager, and AudioRouter SDKs.
@@ -68,17 +71,20 @@ class CallManagerImpl(
         private const val CALL_CLIENT_LISTENER_KEY = "app_call_listener"
     }
 
-    // SDK instances
+    private data class UserInfo(
+        val name: String?,
+        val avatar: String?,
+    )
+
     private val callClient: CallClient by lazy { CallClient.requireInstance() }
     private val toneManager: ToneManager by lazy { ToneManagerFactory.getInstance(context) }
     private val audioRouter: AudioRouter by lazy {
         AudioRouter.create(context, AudioRouterConfig(loggingEnabled = true))
     }
-
-    // Coroutine scope
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private val groupCallParticipantResolver = GroupCallParticipantResolver()
+    private val participantInfoCache = LinkedHashMap<String, UserInfo>()
 
-    // State flows
     private val _callUiState = MutableStateFlow(CallUiState.IDLE)
     override val callUiState: StateFlow<CallUiState> = _callUiState.asStateFlow()
 
@@ -91,29 +97,18 @@ class CallManagerImpl(
     override val availableAudioDevices: StateFlow<List<AudioDevice>> = audioRouter.availableDevices
     override val selectedAudioDevice: StateFlow<AudioDevice?> = audioRouter.selectedDevice
 
-    // Current call
     private var _currentCall: Call? = null
     override val currentCall: Call? get() = _currentCall
 
-    // Timers and jobs
     private var durationJob: Job? = null
     private var noAnswerJob: Job? = null
     private var reconnectTimeoutJob: Job? = null
     private var endedDismissJob: Job? = null
 
-    // State tracking
-    private var reconnectAttempts = 0
     private var lastConnectedAt: Long = 0
 
-    // Last outgoing call info for "Call Again" feature
-    private var lastOutgoingUserId: String? = null
-    private var lastOutgoingIsVideo: Boolean = false
-
     override fun init() {
-        // Create call notification channels
         CallNotificationChannels.createChannels(context)
-
-        // Register listener for incoming calls
         callClient.addListener(CALL_CLIENT_LISTENER_KEY, object : CallClient.ClientListener {
             override fun onInvitedToCall(from: String, call: Call) {
                 Log.d(TAG, "Invited to call from: $from, callId: ${call.id}")
@@ -122,88 +117,49 @@ class CallManagerImpl(
         })
     }
 
-    // ========== Call Control ==========
-
     override suspend fun startOutgoingCall(
         userId: String,
         isVideo: Boolean,
         isCallAgain: Boolean,
-        callPrepared: (Call) -> Unit
+        callPrepared: (Call) -> Unit,
     ): Result<Call> {
-        if (!_callUiState.value.phase.canAnswerOrMakeCall() && !isCallAgain) {
-            return Result.failure(IllegalStateException("Call already in progress"))
+        return startOutgoingCallInternal(
+            participantIds = listOf(userId),
+            isVideo = isVideo,
+            mediaFlow = MediaFlow.P2P,
+            metadata = emptyMap(),
+            includeRemotePlaceholders = true,
+            shouldPlayRingback = true,
+            isCallAgain = isCallAgain,
+            callPrepared = callPrepared,
+        )
+    }
+
+    override suspend fun startOutgoingGroupCall(
+        channel: SceytChannel,
+        isVideo: Boolean,
+        isCallAgain: Boolean,
+        callPrepared: (Call) -> Unit,
+    ): Result<Call> {
+        primeParticipantInfos(channel.members.orEmpty())
+        val participantIds = groupCallParticipantResolver.resolveParticipantIds(channel)
+        if (participantIds.isEmpty()) {
+            return Result.failure(IllegalStateException("No remote participants available"))
         }
 
-        return try {
-            endedDismissJob?.cancel()
-
-            lastOutgoingUserId = userId
-            lastOutgoingIsVideo = isVideo
-
-            _callUiState.update {
-                CallUiState(
-                    phase = CallPhase.Outgoing,
-                    remoteUserId = userId,
-                    isVideo = isVideo
-                )
-            }
-
-            // Fetch user info in background and update state when ready
-            scope.launch {
-                fetchUserInfo(userId)?.let { userInfo ->
-                    _callUiState.update { state ->
-                        if (state.remoteUserId == userId)
-                            state.copy(
-                                remoteUserName = userInfo.name,
-                                remoteUserAvatar = userInfo.avatar
-                            )
-                        else state
-                    }
-                }
-            }
-
-            setupAudioRouting(isVideo)
-
-            val result = runCatching {
-                callClient.prepareCall(
-                    callId = UUID.randomUUID().toString(),
-                    CreateCallOptions(
-                        participantsIds = listOf(userId),
-                        videoCall = isVideo,
-                        mediaFlow = MediaFlow.P2P
-                    )
-                )
-            }
-            result.onSuccess { call ->
-                callPrepared(call)
-
-                OngoingCallWorker.start(context)
-
-                val joinCallOptions = JoinCallOptions.default().copy(
-                    audioSettings = AudioSettings(disableManageAudioRoute = true),
-                    videoSettings = if (isVideo) VideoSettings(publishVideo = true) else null
-                )
-
-                setupCallListeners(call)
-                _currentCall = call
-                startNoAnswerTimeout()
-                call.join(joinCallOptions)
-                playTone(ToneConfig.ringback())
-
-                Log.d(TAG, "Outgoing call started: ${call.id}")
-            }.onFailure { error ->
-                Log.e(TAG, "Failed to start outgoing call", error)
-                cleanupCall()
-                setEndedState(EndedReason.Failed(error.message ?: "Failed to start call"))
-            }
-
-            result
-        } catch (e: Exception) {
-            Log.e(TAG, "Error starting outgoing call", e)
-            cleanupCall()
-            setEndedState(EndedReason.Failed(e.message ?: "Unknown error"))
-            Result.failure(e)
-        }
+        return startOutgoingCallInternal(
+            participantIds = participantIds,
+            isVideo = isVideo,
+            mediaFlow = MediaFlow.SFU,
+            metadata = mapOf(
+                GroupCallMetadata.CHANNEL_ID to channel.id.toString(),
+                GroupCallMetadata.CHANNEL_NAME to channel.subject.orEmpty().ifBlank { DEFAULT_GROUP_NAME },
+            ),
+            includeRemotePlaceholders = false,
+            shouldPlayRingback = false,
+            isCallAgain = isCallAgain,
+            callPrepared = callPrepared,
+        )
     }
 
     override suspend fun answerIncomingCall(): Result<Unit> {
@@ -211,36 +167,27 @@ class CallManagerImpl(
         if (currentState.phase != CallPhase.Incoming) {
             return Result.failure(IllegalStateException("No incoming call to answer"))
         }
-        val call = currentState.incomingCall
+        val call = currentState.call
             ?: return Result.failure(IllegalStateException("Missing Call object in state"))
 
         return try {
             stopTone()
-
-            // Transition to Connecting — user info is preserved via .update { it.copy() }
-            _callUiState.update {
-                it.copy(
-                    phase = CallPhase.Connecting,
-                    incomingCall = null
-                )
-            }
-
-            // Start active worker (PHONE_CALL + MICROPHONE); IncomingCallWorker auto-stops
+            _callUiState.update { it.copy(phase = CallPhase.Connecting) }
             OngoingCallWorker.start(context)
-
-            setupAudioRouting(currentState.isVideo)
+            setupAudioRouting(call.isVideoCall)
 
             val options = JoinCallOptions.default().copy(
                 audioSettings = AudioSettings(disableManageAudioRoute = true),
-                videoSettings = VideoSettings(publishVideo = currentState.isVideo)
+                videoSettings = VideoSettings(publishVideo = call.isVideoCall),
             )
+
             setupCallListeners(call)
-
             val result = call.join(options)
-
-            result.fold(
+            result.callFold(
                 onSuccess = { answeredCall ->
                     _currentCall = answeredCall
+                    syncParticipantsFromCall(answeredCall)
+                    refreshDurationTimer()
                     Log.d(TAG, "Answered incoming call: ${answeredCall.id}")
                     Result.success(Unit)
                 },
@@ -249,7 +196,7 @@ class CallManagerImpl(
                     cleanupCall()
                     setEndedState(EndedReason.Failed(error.message ?: "Failed to answer call"))
                     Result.failure(error)
-                }
+                },
             )
         } catch (e: Exception) {
             Log.e(TAG, "Error answering call", e)
@@ -264,13 +211,14 @@ class CallManagerImpl(
         if (currentState.phase != CallPhase.Incoming) {
             return Result.failure(IllegalStateException("No incoming call to decline"))
         }
-        val call = currentState.incomingCall
+        val call = currentState.call
             ?: return Result.failure(IllegalStateException("Missing Call object in state"))
 
         return try {
             call.reject(reason)
             stopTone()
             endedDismissJob?.cancel()
+            cleanupCall()
             _callUiState.update { CallUiState.IDLE }
             Log.d(TAG, "Declined incoming call")
             Result.success(Unit)
@@ -282,7 +230,6 @@ class CallManagerImpl(
 
     override fun endCall(): Result<Unit> {
         val call = _currentCall ?: return Result.failure(IllegalStateException("No active call"))
-
         return try {
             call.leave()
             handleCallEnded(EndedReason.LocalHangup)
@@ -295,25 +242,8 @@ class CallManagerImpl(
     }
 
     override fun sendRinging() {
-        _currentCall?.sendRinging()
+        (_currentCall ?: _callUiState.value.call)?.sendRinging()
     }
-
-    override suspend fun callAgain(): Result<Unit> {
-        val userId = lastOutgoingUserId
-            ?: return Result.failure(IllegalStateException("No previous outgoing call to retry"))
-
-        endedDismissJob?.cancel()
-        endedDismissJob = null
-        cleanupCall()
-
-        return startOutgoingCall(
-            userId = userId,
-            isVideo = lastOutgoingIsVideo,
-            isCallAgain = true
-        ).map { }
-    }
-
-    // ========== Media Control ==========
 
     override fun toggleMute(): Boolean {
         val newMuteState = !_mediaState.value.isMuted
@@ -360,9 +290,9 @@ class CallManagerImpl(
         val newSpeakerState = currentDevice !is AudioDevice.Speakerphone
 
         if (newSpeakerState) {
-            val speaker = availableAudioDevices.value.filterIsInstance<AudioDevice.Speakerphone>()
+            availableAudioDevices.value.filterIsInstance<AudioDevice.Speakerphone>()
                 .firstOrNull()
-            speaker?.let { audioRouter.selectDevice(it) }
+                ?.let(audioRouter::selectDevice)
         } else {
             val earpiece =
                 availableAudioDevices.value.filterIsInstance<AudioDevice.Earpiece>().firstOrNull()
@@ -388,51 +318,46 @@ class CallManagerImpl(
         Log.d(TAG, "Audio devices refreshed")
     }
 
-    // ========== Incoming Call Handling ==========
-
     override fun handleIncomingCall(from: String, call: Call) {
         if (!_callUiState.value.phase.canAnswerOrMakeCall()) {
             Log.w(TAG, "Rejecting incoming call - already in a call")
             call.reject("Busy")
             return
         }
-        endedDismissJob?.cancel()
 
+        endedDismissJob?.cancel()
         setupCallListeners(call)
+
+        val remoteIds = buildIncomingRemoteIds(from = from, call = call)
         _callUiState.update {
             CallUiState(
                 phase = CallPhase.Incoming,
-                remoteUserId = from,
-                isVideo = call.videoCall,
-                incomingCall = call
+                call = call,
+                participants = buildInitialParticipants(
+                    remoteIds = remoteIds,
+                    includeRemotePlaceholders = !call.isGroupCall,
+                ),
             )
         }
-        // Fetch user info in background and update state when ready
-        scope.launch {
-            fetchUserInfo(from)?.let { userInfo ->
-                _callUiState.update { state ->
-                    if (state.remoteUserId == from)
-                        state.copy(
-                            remoteUserName = userInfo.name,
-                            remoteUserAvatar = userInfo.avatar
-                        )
-                    else state
-                }
-            }
-        }
 
+        syncParticipantsFromCall(call)
+        if (call.isGroupCall) {
+            call.channelIdOrNull?.let(::primeGroupParticipantInfo)
+            remoteIds.forEach(::loadParticipantInfoAsync)
+        } else {
+            loadParticipantInfoAsync(from)
+        }
 
         if (context.isAppOnForeground()) {
             CallActivity.launchIncoming(
                 context = context,
                 callerId = from,
-                isVideo = call.videoCall
+                isVideo = call.isVideoCall
             )
         }
 
         Log.d(TAG, "Incoming call from: $from, video: ${call.videoCall}")
         onChatConnectNeeded()
-
         scope.launch {
             IncomingCallWorker.start(context)
             call.sendRinging()
@@ -440,32 +365,34 @@ class CallManagerImpl(
         }
     }
 
-    /**
-     * Starts ringtone and vibration for the incoming call.
-     * Must be called after a foreground service is running (IncomingCallWorker.setForeground())
-     * to satisfy Android 15+ audio focus requirements.
-     */
-    private suspend fun startRinging() {
-        Log.d(TAG, "startRinging: ringtone and vibration started")
-        if (!context.isAppOnForeground()) {
-            awaitWorkStart()
+    override suspend fun callAgain(): Result<Unit> {
+        val previousCall = _callUiState.value.call
+            ?: return Result.failure(IllegalStateException("No previous outgoing call to retry"))
+
+        endedDismissJob?.cancel()
+        endedDismissJob = null
+        cleanupCall()
+
+        return if (previousCall.isGroupCall) {
+            val channelId = previousCall.channelIdOrNull
+                ?: return Result.failure(IllegalStateException("Missing group channel id"))
+            val channel = groupCallParticipantResolver.getChannel(channelId)
+                ?: return Result.failure(IllegalStateException("Unable to resolve group channel"))
+            startOutgoingGroupCall(
+                channel = channel,
+                isVideo = previousCall.isVideoCall,
+                isCallAgain = true,
+            ).map { }
+        } else {
+            val userId = previousCall.primaryRemoteUserIdOrNull
+                ?: return Result.failure(IllegalStateException("Missing direct participant"))
+            startOutgoingCall(
+                userId = userId,
+                isVideo = previousCall.isVideoCall,
+                isCallAgain = true,
+            ).map { }
         }
-        toneManager.playRingtoneAndVibrate()
     }
-
-    private suspend fun awaitWorkStart() = withTimeoutOrNull(5.seconds.inWholeMilliseconds) {
-        WorkManager.getInstance(context)
-            .getWorkInfosByTagFlow(IncomingCallWorker.INCOMING_CALL_WORK_NAME)
-            .first { infos ->
-                val running = infos.find { it.state == WorkInfo.State.RUNNING }
-                return@first running != null && running.progress.getBoolean(
-                    key = IncomingCallWorker.KEY_FOREGROUND_READY,
-                    defaultValue = false
-                )
-            }
-    }
-
-    // ========== Lifecycle ==========
 
     override fun release() {
         cleanupCall()
@@ -474,139 +401,276 @@ class CallManagerImpl(
         Log.d(TAG, "CallManager released")
     }
 
-    // ========== Private Methods ==========
+    private suspend fun startOutgoingCallInternal(
+        participantIds: List<String>,
+        isVideo: Boolean,
+        mediaFlow: MediaFlow,
+        metadata: Map<String, String>,
+        includeRemotePlaceholders: Boolean,
+        shouldPlayRingback: Boolean,
+        isCallAgain: Boolean,
+        callPrepared: (Call) -> Unit,
+    ): Result<Call> {
+        if (!_callUiState.value.phase.canAnswerOrMakeCall() && !isCallAgain) {
+            return Result.failure(IllegalStateException("Call already in progress"))
+        }
+
+        return try {
+            endedDismissJob?.cancel()
+
+            val result = runCatching {
+                callClient.prepareCall(
+                    callId = UUID.randomUUID().toString(),
+                    CreateCallOptions(
+                        participantsIds = participantIds,
+                        videoCall = isVideo,
+                        mediaFlow = mediaFlow,
+                        metadata = metadata,
+                    )
+                )
+            }
+
+            result.onSuccess { call ->
+                initialiseOutgoingState(
+                    call = call,
+                    remoteIds = participantIds,
+                    includeRemotePlaceholders = includeRemotePlaceholders,
+                )
+                setupAudioRouting(isVideo)
+                setupCallListeners(call)
+                _currentCall = call
+                syncParticipantsFromCall(call)
+                if (call.isDirectCall) {
+                    startNoAnswerTimeout()
+                } else {
+                    cancelNoAnswerTimeout()
+                }
+                callPrepared(call)
+                OngoingCallWorker.start(context)
+
+                val joinCallOptions = JoinCallOptions.default().copy(
+                    audioSettings = AudioSettings(disableManageAudioRoute = true),
+                    videoSettings = if (isVideo) VideoSettings(publishVideo = true) else null,
+                )
+                call.join(joinCallOptions)
+                if (shouldPlayRingback) {
+                    playTone(ToneConfig.ringback())
+                }
+            }.onFailure { error ->
+                Log.e(TAG, "Failed to start outgoing call", error)
+                cleanupCall()
+                setEndedState(EndedReason.Failed(error.message ?: "Failed to start call"))
+            }
+
+            result
+        } catch (e: Exception) {
+            Log.e(TAG, "Error starting outgoing call", e)
+            cleanupCall()
+            setEndedState(EndedReason.Failed(e.message ?: "Unknown error"))
+            Result.failure(e)
+        }
+    }
+
+    private fun initialiseOutgoingState(
+        call: Call,
+        remoteIds: List<String>,
+        includeRemotePlaceholders: Boolean,
+    ) {
+        _callUiState.update {
+            CallUiState(
+                phase = CallPhase.Outgoing,
+                call = call,
+                participants = buildInitialParticipants(
+                    remoteIds = remoteIds,
+                    includeRemotePlaceholders = includeRemotePlaceholders,
+                ),
+            )
+        }
+        remoteIds.forEach(::loadParticipantInfoAsync)
+    }
+
+    private fun buildInitialParticipants(
+        remoteIds: List<String>,
+        includeRemotePlaceholders: Boolean = true,
+    ): List<CallParticipantUiState> {
+        val participants = mutableListOf(buildSelfParticipant())
+        if (includeRemotePlaceholders) {
+            remoteIds.distinct().forEach { userId ->
+                participants += buildPlaceholderParticipant(userId = userId, isSelf = false)
+            }
+        }
+        return participants.stabilizeParticipantOrder()
+    }
+
+    private fun buildSelfParticipant(): CallParticipantUiState {
+        val currentUser = SceytChatUIKit.currentUser
+        val userId = currentUser?.id ?: SceytChatUIKit.currentUserId.orEmpty()
+        val info = participantInfoCache[userId] ?: UserInfo(
+            name = currentUser?.getPresentableName(),
+            avatar = currentUser?.avatarURL,
+        )
+        participantInfoCache[userId] = info
+        return CallParticipantUiState(
+            userId = userId,
+            name = info.name,
+            avatarUrl = info.avatar,
+            isSelf = true,
+            isMuted = _mediaState.value.isMuted,
+            isVideoEnabled = _mediaState.value.isCameraEnabled,
+            videoTrack = _mediaState.value.localVideoTrack,
+        )
+    }
+
+    private fun buildPlaceholderParticipant(
+        userId: String,
+        isSelf: Boolean,
+    ): CallParticipantUiState {
+        val info = participantInfoCache[userId]
+        return CallParticipantUiState(
+            userId = userId,
+            name = info?.name,
+            avatarUrl = info?.avatar,
+            isSelf = isSelf,
+            isMuted = if (isSelf) _mediaState.value.isMuted else false,
+            isVideoEnabled = if (isSelf) _mediaState.value.isCameraEnabled else false,
+            videoTrack = if (isSelf) _mediaState.value.localVideoTrack else null,
+        )
+    }
+
+    private fun buildIncomingRemoteIds(from: String, call: Call): List<String> {
+        return call.getRemoteParticipants()
+            .map(Participant::id)
+            .ifEmpty { listOf(from) }
+    }
 
     private fun setupCallListeners(call: Call) {
         call.addListener(CALL_LISTENER_KEY, object : CallEventsListener.CallAllEventsListener {
-
             override fun onCallStateChanged(call: Call, state: CallState) {
                 Log.d(TAG, "Call state changed: $state")
                 when (state) {
-                    is CallState.Connecting -> { /* wait for participant connection state */
-                    }
-
-                    is CallState.Connected -> { /* handled by participant connection state */
-                    }
-
                     is CallState.Closed -> handleCallEnded(EndedReason.RemoteHangup)
-                    is CallState.Idle -> { /* ignore */
-                    }
+                    is CallState.Connecting,
+                    is CallState.Connected,
+                    is CallState.Idle -> Unit
                 }
             }
 
             override fun onParticipantsAdded(call: Call, participants: List<Participant>) {
-                Log.d(TAG, "Participants added: ${participants.map { it.id }}")
+                participants.forEach {
+                    upsertParticipantFromSdk(it, isSelf = it.id == call.localParticipant.id)
+                    if (it.id != call.localParticipant.id) {
+                        loadParticipantInfoAsync(it.id)
+                    }
+                }
+                refreshDurationTimer()
             }
 
             override fun onParticipantStateChanged(
                 call: Call,
                 participant: Participant,
                 state: ParticipantState,
-                reason: String?
+                reason: String?,
             ) {
-                Log.d(TAG, "Participant ${participant.id} state changed: $state, reason: $reason")
-                if (participant.id == call.localParticipant.id) return
+                val isLocal = participant.id == call.localParticipant.id
+                updateParticipant(participant.id) {
+                    val base = participant.toUiState(existing = it, isSelf = isLocal)
+                    base.copy(participantState = state)
+                }
 
-                when (state) {
-                    ParticipantState.Ringing -> {
-                        _callUiState.update { it.copy(isRemoteRinging = true) }
-                    }
+                if (!isLocal) {
+                    when (state) {
+                        ParticipantState.Ringing -> {
+                            if (_callUiState.value.call?.isGroupCall != true) {
+                                _callUiState.update { uiState -> uiState.copy(isRemoteRinging = true) }
+                            }
+                        }
 
-                    ParticipantState.Joined -> { /* handled by connection state */
-                    }
+                        ParticipantState.Left -> {
+                            if (_callUiState.value.call?.isGroupCall == true) {
+                                removeParticipant(participant.id)
+                            } else {
+                                call.leave()
+                                handleCallEnded(EndedReason.RemoteHangup)
+                            }
+                        }
 
-                    ParticipantState.Left -> {
-                        call.leave()
-                        handleCallEnded(EndedReason.RemoteHangup)
-                    }
+                        ParticipantState.Declined -> {
+                            if (_callUiState.value.call?.isGroupCall == true) {
+                                removeParticipant(participant.id)
+                            } else {
+                                call.leave()
+                                handleCallEnded(EndedReason.Declined(reason))
+                            }
+                        }
 
-                    ParticipantState.Declined -> {
-                        call.leave()
-                        handleCallEnded(EndedReason.Declined(reason))
-                    }
+                        ParticipantState.NoAnswer -> {
+                            if (_callUiState.value.call?.isGroupCall == true) {
+                                removeParticipant(participant.id)
+                            } else {
+                                call.leave()
+                                handleCallEnded(EndedReason.NoAnswer)
+                            }
+                        }
 
-                    ParticipantState.NoAnswer -> {
-                        call.leave()
-                        handleCallEnded(EndedReason.NoAnswer)
-                    }
-
-                    else -> { /* ignore */
+                        else -> Unit
                     }
                 }
+                refreshDurationTimer()
             }
 
             override fun onParticipantConnectionStateChanged(
                 call: Call,
                 participant: Participant,
-                state: ParticipantConnectionState
+                state: ParticipantConnectionState,
             ) {
-                Log.d(TAG, "Participant ${participant.id} connection state: $state")
-                if (participant.id == call.localParticipant.id) return
-
-                when (state) {
-                    ParticipantConnectionState.Connecting -> {
-                        _callUiState.update { it.copy(phase = CallPhase.Connecting) }
-                        stopTone()
-                    }
-
-                    ParticipantConnectionState.Connected -> {
-                        cancelNoAnswerTimeout()
-                        cancelReconnectTimeout()
-                        reconnectAttempts = 0
-                        lastConnectedAt = System.currentTimeMillis()
-                        _callUiState.update {
-                            it.copy(
-                                phase = CallPhase.Connected,
-                                connectedAt = lastConnectedAt
-                            )
-                        }
-                        stopTone()
-                        startDurationTimer()
-                    }
-
-                    ParticipantConnectionState.Reconnecting -> handleReconnecting()
-
-                    ParticipantConnectionState.Disconnected -> {
-                        if (_callUiState.value.phase != CallPhase.Reconnecting) {
-                            handleCallEnded(EndedReason.Failed("Connection lost"))
-                        }
-                    }
-
-                    ParticipantConnectionState.Idle -> { /* ignore */
-                    }
+                val isLocal = participant.id == call.localParticipant.id
+                updateParticipant(participant.id) {
+                    participant.toUiState(existing = it, isSelf = isLocal)
+                        .copy(connectionState = state)
                 }
+
+                if (isLocal && _callUiState.value.call?.isGroupCall == true) {
+                    handleLocalConnectionStateChanged(state)
+                } else if (!isLocal && _callUiState.value.call?.isGroupCall == true) {
+                    if (state == ParticipantConnectionState.Connected) {
+                        stopTone()
+                    }
+                } else if (!isLocal) {
+                    handleDirectRemoteConnectionState(state)
+                }
+
+                refreshDurationTimer()
             }
 
             override fun onRemoteParticipantEvent(
                 call: Call,
                 participant: Participant,
-                event: ParticipantEvent
+                event: ParticipantEvent,
             ) {
-                Log.d(TAG, "Participant ${participant.id} event: $event")
-                if (participant.id != call.localParticipant.id) {
-                    when (event) {
-                        is ParticipantEvent.Mute -> {
-                            _mediaState.update { it.copy(isRemoteMuted = event.muted) }
-                        }
-
-                        is ParticipantEvent.Video -> {
-                            _mediaState.update { it.copy(isRemoteVideoEnabled = event.enabled) }
-                        }
-
-                        is ParticipantEvent.Hold -> {
-                            _mediaState.update { it.copy(isOnHold = event.hold) }
-                        }
-
-                        is ParticipantEvent.ScreenShare -> { /* handle if needed */
+                when (event) {
+                    is ParticipantEvent.Mute -> {
+                        updateParticipant(participant.id) { existing ->
+                            participant.toUiState(existing = existing, isSelf = false)
+                                .copy(isMuted = event.muted)
                         }
                     }
+
+                    is ParticipantEvent.Video -> {
+                        updateParticipant(participant.id) { existing ->
+                            participant.toUiState(existing = existing, isSelf = false)
+                                .copy(isVideoEnabled = event.enabled)
+                        }
+                    }
+
+                    is ParticipantEvent.Hold,
+                    is ParticipantEvent.ScreenShare -> Unit
                 }
             }
 
             override fun onLocalParticipantEvent(
                 call: Call,
                 participant: Participant,
-                event: ParticipantEvent
+                event: ParticipantEvent,
             ) {
                 when (event) {
                     is ParticipantEvent.Hold -> {
@@ -615,31 +679,43 @@ class CallManagerImpl(
 
                     is ParticipantEvent.Mute -> {
                         _mediaState.update { it.copy(isMuted = event.muted) }
+                        updateParticipant(participant.id) { existing ->
+                            participant.toUiState(existing = existing, isSelf = true)
+                                .copy(isMuted = event.muted)
+                        }
                     }
 
-                    is ParticipantEvent.ScreenShare -> {}
                     is ParticipantEvent.Video -> {
+                        val track = if (event.enabled) {
+                            participant.getVideoTracks().firstOrNull()?.videoTrack
+                        } else null
                         _mediaState.update {
                             it.copy(
                                 isCameraEnabled = event.enabled,
-                                localVideoTrack = if (event.enabled)
-                                    participant.getVideoTracks().firstOrNull()?.videoTrack else null
+                                localVideoTrack = track,
+                            )
+                        }
+                        updateParticipant(participant.id) { existing ->
+                            participant.toUiState(existing = existing, isSelf = true).copy(
+                                isVideoEnabled = event.enabled,
+                                videoTrack = track,
                             )
                         }
                     }
+
+                    is ParticipantEvent.ScreenShare -> Unit
                 }
             }
 
             override fun onRemoteVideoTrackAdded(
                 call: Call,
                 participant: Participant,
-                videoTrack: VideoTrack
+                videoTrack: VideoTrack,
             ) {
-                Log.d(TAG, "Remote video track added from ${participant.id}")
-                _mediaState.update {
-                    it.copy(
-                        remoteVideoTrack = videoTrack,
-                        isRemoteVideoEnabled = participant.videoEnabled
+                updateParticipant(participant.id) { existing ->
+                    participant.toUiState(existing = existing, isSelf = false).copy(
+                        videoTrack = videoTrack,
+                        isVideoEnabled = participant.videoEnabled,
                     )
                 }
             }
@@ -647,13 +723,12 @@ class CallManagerImpl(
             override fun onRemoteVideoTrackRemoved(
                 call: Call,
                 participant: Participant,
-                videoTrack: VideoTrack
+                videoTrack: VideoTrack,
             ) {
-                Log.d(TAG, "Remote video track removed from ${participant.id}")
-                _mediaState.update {
-                    it.copy(
-                        remoteVideoTrack = null,
-                        isRemoteVideoEnabled = false
+                updateParticipant(participant.id) { existing ->
+                    participant.toUiState(existing = existing, isSelf = false).copy(
+                        videoTrack = null,
+                        isVideoEnabled = false,
                     )
                 }
             }
@@ -661,50 +736,111 @@ class CallManagerImpl(
             override fun onRemoteAudioTrackAdded(
                 call: Call,
                 participant: Participant,
-                audioTrack: org.webrtc.AudioTrack
-            ) {
-                Log.d(TAG, "Remote audio track added from ${participant.id}")
-            }
+                audioTrack: org.webrtc.AudioTrack,
+            ) = Unit
 
             override fun onRemoteAudioTrackRemoved(
                 call: Call,
                 participant: Participant,
-                audioTrack: org.webrtc.AudioTrack
-            ) {
-                Log.d(TAG, "Remote audio track removed from ${participant.id}")
-            }
+                audioTrack: org.webrtc.AudioTrack,
+            ) = Unit
 
             override fun onCallMediaFlowChanged(call: Call) {
                 Log.d(TAG, "Media flow changed: ${call.mediaFlow}")
             }
 
-            override fun onActiveSpeakersChanged(
-                call: Call,
-                speakers: List<com.callclient.call.data.ActiveSpeakerInfo>
-            ) { /* handle if needed */
+            override fun onActiveSpeakersChanged(call: Call, speakers: List<ActiveSpeakerInfo>) {
+                updateActiveSpeakerUsers(speakers.map { it.participant.id }.toSet())
             }
 
-            override fun onDominantSpeakerChanged(
-                call: Call,
-                speaker: com.callclient.call.data.ActiveSpeakerInfo?
-            ) { /* handle if needed */
+            override fun onDominantSpeakerChanged(call: Call, speaker: ActiveSpeakerInfo?) {
+                if (speaker != null && call.getActiveSpeakers().isEmpty()) {
+                    updateActiveSpeakerUsers(setOf(speaker.participant.id))
+                }
             }
 
-            override fun onParticipantsRemoved(call: Call, participants: List<Participant>) {}
+            override fun onParticipantsRemoved(call: Call, participants: List<Participant>) {
+                if (_callUiState.value.call?.isGroupCall == true) {
+                    participants.forEach { participant ->
+                        removeParticipant(participant.id)
+                    }
+                    refreshDurationTimer()
+                }
+            }
 
-            override fun onSessionRenewed(call: Call) {}
+            override fun onSessionRenewed(call: Call) = Unit
         })
     }
 
+    private fun handleDirectRemoteConnectionState(state: ParticipantConnectionState) {
+        when (state) {
+            ParticipantConnectionState.Connecting -> {
+                _callUiState.update { it.copy(phase = CallPhase.Connecting) }
+                stopTone()
+            }
+
+            ParticipantConnectionState.Connected -> {
+                cancelNoAnswerTimeout()
+                cancelReconnectTimeout()
+                lastConnectedAt = System.currentTimeMillis()
+                _callUiState.update {
+                    it.copy(
+                        phase = CallPhase.Connected,
+                        connectedAt = lastConnectedAt
+                    )
+                }
+                stopTone()
+            }
+
+            ParticipantConnectionState.Reconnecting -> handleReconnecting()
+
+            ParticipantConnectionState.Disconnected -> {
+                if (_callUiState.value.phase != CallPhase.Reconnecting) {
+                    handleCallEnded(EndedReason.Failed("Connection lost"))
+                }
+            }
+
+            ParticipantConnectionState.Idle -> Unit
+        }
+    }
+
+    private fun handleLocalConnectionStateChanged(state: ParticipantConnectionState) {
+        when (state) {
+            ParticipantConnectionState.Connecting -> {
+                _callUiState.update { it.copy(phase = CallPhase.Connecting) }
+                stopTone()
+            }
+
+            ParticipantConnectionState.Connected -> {
+                cancelReconnectTimeout()
+                if (_callUiState.value.connectedAt == 0L) {
+                    lastConnectedAt = System.currentTimeMillis()
+                }
+                _callUiState.update {
+                    it.copy(
+                        phase = CallPhase.Connected,
+                        connectedAt = if (it.connectedAt == 0L) lastConnectedAt else it.connectedAt,
+                    )
+                }
+                stopTone()
+            }
+
+            ParticipantConnectionState.Reconnecting -> handleReconnecting()
+
+            ParticipantConnectionState.Disconnected -> {
+                if (_callUiState.value.phase != CallPhase.Reconnecting) {
+                    handleCallEnded(EndedReason.Failed("Connection lost"))
+                }
+            }
+
+            ParticipantConnectionState.Idle -> Unit
+        }
+    }
+
     private fun handleCallEnded(reason: EndedReason) {
-        // If already in a terminal Ended state, ignore duplicate signals
-        val currentPhase = _callUiState.value.phase
-        if (reason is EndedReason.RemoteHangup && currentPhase == CallPhase.Ended) {
-            Log.d(TAG, "Ignoring RemoteHangup — already in Ended state")
+        if (reason is EndedReason.RemoteHangup && _callUiState.value.phase == CallPhase.Ended) {
             return
         }
-
-        Log.d(TAG, "Call ended: $reason")
 
         cancelDurationTimer()
         cancelNoAnswerTimeout()
@@ -717,7 +853,6 @@ class CallManagerImpl(
         }
 
         setEndedState(reason)
-
         endedDismissJob?.cancel()
         endedDismissJob = scope.launch {
             cleanupCall()
@@ -728,49 +863,39 @@ class CallManagerImpl(
 
     private fun setEndedState(reason: EndedReason) {
         _callUiState.update {
-            it.copy(phase = CallPhase.Ended, endedReason = reason, incomingCall = null)
+            it.copy(
+                phase = CallPhase.Ended,
+                endedReason = reason,
+                call = it.call ?: _currentCall,
+            )
         }
     }
 
     private fun handleReconnecting() {
-        reconnectAttempts++
-        Log.d(TAG, "Reconnecting attempt: $reconnectAttempts")
-
-        if (reconnectAttempts > CallUiState.MAX_RECONNECT_ATTEMPTS) {
-            handleCallEnded(EndedReason.Failed("Connection lost"))
-            return
-        }
-
         _callUiState.update {
             it.copy(
                 phase = CallPhase.Reconnecting,
-                reconnectAttempt = reconnectAttempts
             )
         }
-
         scope.launch { playTone(ToneConfig.reconnecting()) }
         startReconnectTimeout()
     }
 
     private fun cleanupCall() {
-        Log.d(TAG, "Cleaning up call")
         _currentCall?.removeListener(CALL_LISTENER_KEY)
         _currentCall = null
-
         audioRouter.stop()
-
         _mediaState.update { MediaState() }
-        _callDuration.update { 0 }
-        reconnectAttempts = 0
+        _callDuration.value = 0L
         lastConnectedAt = 0
-
+        updateActiveSpeakerUsers(emptySet())
         scope.launch { stopTone() }
     }
 
     private val audioRouterListener = object : AudioRouterListener {
         override fun onAudioDevicesChanged(
             devices: List<AudioDevice>,
-            selectedDevice: AudioDevice?
+            selectedDevice: AudioDevice?,
         ) {
             Log.d(
                 TAG,
@@ -782,35 +907,182 @@ class CallManagerImpl(
 
     private fun setupAudioRouting(isVideo: Boolean) {
         audioRouter.start(audioRouterListener)
-
         val priority: List<KClass<out AudioDevice>> = if (isVideo) {
             listOf(
                 AudioDevice.BluetoothHeadset::class,
                 AudioDevice.WiredHeadset::class,
                 AudioDevice.Speakerphone::class,
-                AudioDevice.Earpiece::class
+                AudioDevice.Earpiece::class,
             )
         } else {
             listOf(
                 AudioDevice.BluetoothHeadset::class,
                 AudioDevice.WiredHeadset::class,
                 AudioDevice.Earpiece::class,
-                AudioDevice.Speakerphone::class
+                AudioDevice.Speakerphone::class,
             )
         }
 
         audioRouter.setPreferredDeviceOrder(priority)
-
         scope.launch {
             delay(100)
             updateSpeakerState(selectedAudioDevice.value)
         }
-
-        Log.d(TAG, "Audio routing setup: video=$isVideo")
     }
 
     private fun updateSpeakerState(device: AudioDevice?) {
         _mediaState.update { it.copy(isSpeakerOn = device is AudioDevice.Speakerphone) }
+    }
+
+    private fun syncParticipantsFromCall(call: Call) {
+        upsertParticipantFromSdk(call.localParticipant, isSelf = true)
+        call.getRemoteParticipants().forEach {
+            upsertParticipantFromSdk(it, isSelf = false)
+        }
+    }
+
+    private fun upsertParticipantFromSdk(participant: Participant, isSelf: Boolean) {
+        updateParticipant(participant.id) { existing ->
+            participant.toUiState(existing = existing, isSelf = isSelf)
+        }
+    }
+
+    private fun updateParticipant(
+        userId: String,
+        transform: (CallParticipantUiState?) -> CallParticipantUiState,
+    ) {
+        _callUiState.update { state ->
+            val participants = state.participants.toMutableList()
+            val index = participants.indexOfFirst { it.userId == userId }
+            val existing = participants.getOrNull(index)
+            val updated = transform(existing)
+            if (index >= 0) {
+                participants[index] = updated
+            } else {
+                participants += updated
+            }
+            state.copy(participants = participants.stabilizeParticipantOrder())
+        }
+    }
+
+    private fun removeParticipant(userId: String) {
+        val currentUserId = SceytChatUIKit.currentUserId
+        if (userId == currentUserId) return
+
+        _callUiState.update { state ->
+            state.copy(
+                participants = state.participants
+                    .filterNot { it.userId == userId }
+                    .stabilizeParticipantOrder()
+            )
+        }
+    }
+
+    private fun updateActiveSpeakerUsers(userIds: Set<String>) {
+        _callUiState.update { state ->
+            state.copy(
+                participants = state.participants.map { participant ->
+                    participant.copy(isActiveSpeaker = participant.userId in userIds)
+                }
+            )
+        }
+    }
+
+    private fun Participant.toUiState(
+        existing: CallParticipantUiState?,
+        isSelf: Boolean,
+    ): CallParticipantUiState {
+        val cachedInfo = participantInfoCache[id]
+        val currentUser = if (isSelf) SceytChatUIKit.currentUser else null
+        return CallParticipantUiState(
+            userId = id,
+            clientId = clientId.ifBlank { existing?.clientId.orEmpty() },
+            name = cachedInfo?.name ?: existing?.name ?: currentUser?.getPresentableName(),
+            avatarUrl = cachedInfo?.avatar ?: existing?.avatarUrl ?: currentUser?.avatarURL,
+            isSelf = isSelf || existing?.isSelf == true,
+            participantState = state,
+            connectionState = connectionState,
+            isMuted = muted,
+            isVideoEnabled = videoEnabled,
+            videoTrack = getVideoTracks().firstOrNull()?.videoTrack ?: existing?.videoTrack,
+            isActiveSpeaker = existing?.isActiveSpeaker == true,
+        )
+    }
+
+    private fun List<CallParticipantUiState>.stabilizeParticipantOrder(): List<CallParticipantUiState> {
+        return distinctBy { it.userId }.sortedByDescending { it.isSelf }
+    }
+
+    private fun primeParticipantInfos(members: List<SceytMember>) {
+        members.forEach { member ->
+            participantInfoCache[member.id] = UserInfo(
+                name = member.fullName.ifBlank { member.user.id },
+                avatar = member.avatarUrl,
+            )
+        }
+    }
+
+    private fun loadParticipantInfoAsync(userId: String) {
+        if (participantInfoCache.containsKey(userId)) {
+            updateParticipantInfo(userId, participantInfoCache[userId])
+            return
+        }
+
+        scope.launch {
+            val info = fetchUserInfo(userId) ?: return@launch
+            participantInfoCache[userId] = info
+            updateParticipantInfo(userId, info)
+        }
+    }
+
+    private fun updateParticipantInfo(userId: String, info: UserInfo?) {
+        info ?: return
+        _callUiState.update { state ->
+            val participants = state.participants.toMutableList()
+            val index = participants.indexOfFirst { it.userId == userId }
+
+            when {
+                index >= 0 -> {
+                    val existing = participants[index]
+                    participants[index] = existing.copy(
+                        name = info.name ?: existing.name,
+                        avatarUrl = info.avatar ?: existing.avatarUrl,
+                    )
+                    state.copy(participants = participants.stabilizeParticipantOrder())
+                }
+
+                userId == SceytChatUIKit.currentUserId -> {
+                    participants += buildPlaceholderParticipant(
+                        userId = userId,
+                        isSelf = true,
+                    ).copy(
+                        name = info.name,
+                        avatarUrl = info.avatar,
+                    )
+                    state.copy(participants = participants.stabilizeParticipantOrder())
+                }
+
+                else -> state
+            }
+        }
+    }
+
+    private fun primeGroupParticipantInfo(channelId: Long) {
+        scope.launch {
+            val channel = groupCallParticipantResolver.getChannel(channelId)
+                ?: return@launch
+
+            primeParticipantInfos(channel.members.orEmpty())
+            channel.members.orEmpty().forEach { member ->
+                updateParticipantInfo(
+                    userId = member.id,
+                    info = UserInfo(
+                        name = member.fullName.ifBlank { member.user.id },
+                        avatar = member.avatarUrl,
+                    ),
+                )
+            }
+        }
     }
 
     private suspend fun fetchUserInfo(userId: String): UserInfo? {
@@ -819,20 +1091,20 @@ class CallManagerImpl(
             if (userFromDb != null) {
                 return UserInfo(
                     name = userFromDb.getPresentableName(),
-                    avatar = userFromDb.avatarURL
+                    avatar = userFromDb.avatarURL,
                 )
             }
+
             ConnectionEventManager.awaitToConnectSceytWithTimeout(10.seconds.inWholeMilliseconds)
-            val result = SceytChatUIKit.chatUIFacade.userInteractor.getUserById(userId)
-            result.fold(
+            SceytChatUIKit.chatUIFacade.userInteractor.getUserById(userId).sceytFold(
                 onSuccess = { user ->
-                    user ?: return@fold null
+                    user ?: return@sceytFold null
                     UserInfo(name = user.getPresentableName(), avatar = user.avatarURL)
                 },
                 onError = {
                     Log.e(TAG, "Error fetching user info: ${it?.message}")
                     null
-                }
+                },
             )
         } catch (e: Exception) {
             Log.e(TAG, "Error fetching user info", e)
@@ -840,12 +1112,16 @@ class CallManagerImpl(
         }
     }
 
-    private data class UserInfo(val name: String?, val avatar: String?)
-
-    // ========== Timers ==========
+    private fun refreshDurationTimer() {
+        if (_callUiState.value.shouldShowRunningTimer) {
+            startDurationTimer()
+        } else {
+            cancelDurationTimer()
+        }
+    }
 
     private fun startDurationTimer() {
-        durationJob?.cancel()
+        if (durationJob?.isActive == true) return
         durationJob = scope.launch {
             while (isActive) {
                 delay(1000)
@@ -889,7 +1165,25 @@ class CallManagerImpl(
         reconnectTimeoutJob = null
     }
 
-    // ========== Tones ==========
+    private suspend fun startRinging() {
+        Log.d(TAG, "startRinging: ringtone and vibration started")
+        if (!context.isAppOnForeground()) {
+            awaitWorkStart()
+        }
+        toneManager.playRingtoneAndVibrate()
+    }
+
+    private suspend fun awaitWorkStart() = withTimeoutOrNull(5.seconds.inWholeMilliseconds) {
+        WorkManager.getInstance(context)
+            .getWorkInfosByTagFlow(IncomingCallWorker.INCOMING_CALL_WORK_NAME)
+            .first { infos ->
+                val running = infos.find { it.state == WorkInfo.State.RUNNING }
+                running != null && running.progress.getBoolean(
+                    key = IncomingCallWorker.KEY_FOREGROUND_READY,
+                    defaultValue = false,
+                )
+            }
+    }
 
     private suspend fun playTone(config: ToneConfig) {
         toneManager.playTone(config)
