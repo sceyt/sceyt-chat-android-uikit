@@ -21,7 +21,6 @@ import com.sceyt.chat.demo.call.manager.displayTitle
 import com.sceyt.chat.demo.call.manager.isGroupCall
 import com.sceyt.chat.demo.call.manager.isVideoCall
 import com.sceyt.chat.demo.call.ui.CallViewModel
-import com.sceyt.chat.demo.call.ui.theme.callBackground
 
 /**
  * Main call screen that routes to the appropriate sub-screen based on call phase.
@@ -100,9 +99,7 @@ fun CallScreen(
         return
     }
 
-    Box(modifier = Modifier
-        .fillMaxSize()
-        .callBackground()) {
+    Box(modifier = Modifier.fillMaxSize()) {
         val call = callState.call
         val displayTitle = call?.displayTitle(callState.participants)
             ?: callState.remoteParticipant?.displayName.orEmpty()

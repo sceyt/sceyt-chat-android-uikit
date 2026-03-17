@@ -6,10 +6,10 @@ import com.sceyt.chat.models.signal.MediaFlow
 internal val Call.isGroupCall: Boolean
     get() = mediaFlow == MediaFlow.SFU
 
-internal val Call.isDirectCall: Boolean
+val Call.isDirectCall: Boolean
     get() = !isGroupCall
 
-internal val Call.channelIdOrNull: Long?
+val Call.channelIdOrNull: Long?
     get() = metadata.orEmpty()[GroupCallMetadata.CHANNEL_ID]?.toLongOrNull()
 
 internal val Call.channelSubjectOrNull: String?
