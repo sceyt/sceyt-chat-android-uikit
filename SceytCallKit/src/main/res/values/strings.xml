@@ -6,4 +6,9 @@
     <string name="connecting">connecting…</string>
     <string name="reconnecting">reconnecting…</string>
     <string name="incoming_call">Incoming call</string>
+    <string name="haven_t_joined">Haven\'t joined</string>
+    <string name="in_call">In call</string>
+    <string name="call_again">Call again</string>
+    <string name="call">Call</string>
+    <string name="call_participants">Call participants (%1$d)</string>
 </resources>

@@ -108,7 +108,7 @@ fun OngoingCallScreen(
     onSwitchCamera: () -> Unit,
     onSelectDevice: (AudioDevice) -> Unit,
     onEndCall: () -> Unit,
-    onAddParticipant: () -> Unit = {}
+    onAddParticipant: () -> Unit = {},
 ) {
     if (callState.call?.isGroupCall == true) {
         GroupOngoingCallScreen(
@@ -120,7 +120,7 @@ fun OngoingCallScreen(
             onSwitchCamera = onSwitchCamera,
             onSelectDevice = onSelectDevice,
             onEndCall = onEndCall,
-            onAddParticipant = onAddParticipant
+            onAddParticipant = onAddParticipant,
         )
         return
     }
@@ -343,7 +343,7 @@ private fun DirectVideoOngoingLayout(
                 )
                 if (hasLocalVideo) {
                     DraggableLocalVideoPreview(
-                        videoTrack = localParticipant?.videoTrack,
+                        videoTrack = localParticipant.videoTrack,
                         showControls = showControls,
                         modifier = Modifier.fillMaxSize()
                     )
@@ -352,7 +352,7 @@ private fun DirectVideoOngoingLayout(
 
             hasLocalVideo -> {
                 LocalVideoPreview(
-                    videoTrack = localParticipant?.videoTrack,
+                    videoTrack = localParticipant.videoTrack,
                     modifier = Modifier.fillMaxSize()
                 )
             }

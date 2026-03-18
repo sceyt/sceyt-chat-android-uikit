@@ -85,7 +85,7 @@ internal fun PipCallContent(
                         .clip(shape)
                 ) {
                     LocalVideoPreview(
-                        videoTrack = callState.localParticipant?.videoTrack,
+                        videoTrack = callState.localParticipant.videoTrack,
                         modifier = Modifier.fillMaxSize()
                     )
                 }

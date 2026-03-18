@@ -41,6 +41,7 @@ dependencies {
     implementation(libs.work.runtime.ktx)
     // Koin
     implementation(libs.koin.android)
+    implementation(libs.koin.androidx.compose)
     // Firebase Messaging
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.messaging.ktx)
@@ -57,6 +58,7 @@ dependencies {
     implementation(libs.lifecycle.runtime.compose)
     debugImplementation(libs.ui.tooling)
     implementation(libs.coil.compose)
+    implementation(libs.lottie.compose)
     implementation(libs.kotlinx.collections.immutable)
 
     testImplementation(libs.junit)
