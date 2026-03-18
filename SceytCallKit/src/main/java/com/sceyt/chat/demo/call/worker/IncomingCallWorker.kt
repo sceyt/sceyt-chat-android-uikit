@@ -105,7 +105,7 @@ class IncomingCallWorker(
         state: CallUiState = callManager.callUiState.value
     ): Notification {
         return notificationManager.buildIncomingCallNotification(
-            callerName = state.call?.displayTitle(state.participants)
+            callerName = state.call?.displayTitle(state.remoteParticipants)
                 ?: state.remoteParticipant?.displayName.orEmpty(),
             isVideo = state.call?.isVideoCall == true,
             suppressFullScreenIntent = applicationContext.isAppOnForeground()

@@ -18,12 +18,18 @@ data class CallParticipantUiState(
     val isVideoEnabled: Boolean = false,
     val videoTrack: VideoTrack? = null,
     val isActiveSpeaker: Boolean = false,
+    val isFrontCamera: Boolean = true,
+    val isOnHold: Boolean = false,
+    val isScreenSharing: Boolean = false,
 ) {
     val displayName: String
         get() = name ?: userId
 
     val isConnected: Boolean
         get() = connectionState == ParticipantConnectionState.Connected
+
+    val shouldShowLocalPreview: Boolean
+        get() = isSelf && isVideoEnabled && videoTrack != null
 
     val isVisibleInGroupGrid: Boolean
         get() = if (isSelf) {

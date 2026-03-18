@@ -22,13 +22,13 @@ internal val Call.isVideoCall: Boolean
     get() = videoCall
 
 internal fun Call.displayTitle(
-    participants: List<CallParticipantUiState>,
+    remoteParticipants: List<CallParticipantUiState>,
     fallbackGroupName: String = DEFAULT_GROUP_NAME,
 ): String {
-    val remoteParticipant = participants.firstOrNull { !it.isSelf }
+    val firstRemote = remoteParticipants.firstOrNull()
     return if (isGroupCall) {
-        channelSubjectOrNull ?: remoteParticipant?.displayName ?: fallbackGroupName
+        channelSubjectOrNull ?: firstRemote?.displayName ?: fallbackGroupName
     } else {
-        remoteParticipant?.displayName ?: primaryRemoteUserIdOrNull.orEmpty()
+        firstRemote?.displayName ?: primaryRemoteUserIdOrNull.orEmpty()
     }
 }

@@ -10,7 +10,8 @@ import com.callclient.call.Call
 data class CallUiState(
     val phase: CallPhase = CallPhase.Idle,
     val call: Call? = null,
-    val participants: List<CallParticipantUiState> = emptyList(),
+    val localParticipant: CallParticipantUiState? = null,
+    val remoteParticipants: List<CallParticipantUiState> = emptyList(),
     val isRemoteRinging: Boolean = false,
     val connectedAt: Long = 0,
     val maxReconnectAttempts: Int = MAX_RECONNECT_ATTEMPTS,
@@ -50,12 +51,6 @@ data class CallUiState(
                 is Failed -> 10_000L
             }
     }
-
-    val localParticipant: CallParticipantUiState?
-        get() = participants.firstOrNull { it.isSelf }
-
-    val remoteParticipants: List<CallParticipantUiState>
-        get() = participants.filterNot { it.isSelf }
 
     val remoteParticipant: CallParticipantUiState?
         get() = remoteParticipants.firstOrNull()

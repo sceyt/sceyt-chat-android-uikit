@@ -30,7 +30,6 @@ import androidx.compose.ui.unit.sp
 import com.sceyt.chat.demo.call.manager.CallParticipantUiState
 import com.sceyt.chat.demo.call.manager.CallUiState
 import com.sceyt.chat.demo.call.manager.CallUiState.CallPhase
-import com.sceyt.chat.demo.call.manager.MediaState
 import com.sceyt.chat.demo.call.manager.displayTitle
 import com.sceyt.chat.demo.call.ui.components.LocalVideoPreview
 import com.sceyt.chat.demo.call.ui.components.RemoteVideoView
@@ -48,14 +47,13 @@ internal val pipPhases = setOf(
 @Composable
 internal fun PipCallContent(
     callState: CallUiState,
-    mediaState: MediaState,
     duration: String
 ) {
     val focusParticipant = rememberPipFocusParticipant(callState)
-    val displayTitle = callState.call?.displayTitle(callState.participants)
+    val displayTitle = callState.call?.displayTitle(callState.remoteParticipants)
         ?: focusParticipant?.displayName.orEmpty()
     val hasRemoteVideo = focusParticipant?.videoTrack != null
-    val hasLocalVideo = mediaState.shouldShowLocalPreview
+    val hasLocalVideo = callState.localParticipant?.shouldShowLocalPreview == true
 
     if (hasRemoteVideo || hasLocalVideo) {
         Box(
@@ -70,7 +68,7 @@ internal fun PipCallContent(
                 )
             } else {
                 LocalVideoPreview(
-                    videoTrack = mediaState.localVideoTrack,
+                    videoTrack = callState.localParticipant?.videoTrack,
                     modifier = Modifier.fillMaxSize()
                 )
             }
@@ -87,7 +85,7 @@ internal fun PipCallContent(
                         .clip(shape)
                 ) {
                     LocalVideoPreview(
-                        videoTrack = mediaState.localVideoTrack,
+                        videoTrack = callState.localParticipant?.videoTrack,
                         modifier = Modifier.fillMaxSize()
                     )
                 }

@@ -4,7 +4,6 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.callclient.call.data.ParticipantConnectionState
 import com.sceyt.chat.demo.call.manager.CallParticipantUiState
 import com.sceyt.chat.demo.call.manager.CallUiState
-import com.sceyt.chat.demo.call.manager.MediaState
 
 class IncomingCallIsVideoProvider : PreviewParameterProvider<Boolean> {
     override val values = sequenceOf(false, true)
@@ -28,7 +27,6 @@ class EndedCallPreviewProvider : PreviewParameterProvider<EndedCallPreviewData> 
 
 data class OngoingCallPreviewData(
     val callState: CallUiState,
-    val mediaState: MediaState,
     val duration: String
 )
 
@@ -37,19 +35,18 @@ class OngoingCallPreviewProvider : PreviewParameterProvider<OngoingCallPreviewDa
         OngoingCallPreviewData(
             callState = CallUiState(
                 phase = CallUiState.CallPhase.Outgoing,
-                participants = listOf(
-                    CallParticipantUiState(userId = "me", name = "You", isSelf = true),
+                localParticipant = CallParticipantUiState(userId = "me", name = "You", isSelf = true),
+                remoteParticipants = listOf(
                     CallParticipantUiState(userId = "user1", name = "Alice Johnson")
                 )
             ),
-            mediaState = MediaState.DEFAULT_AUDIO,
             duration = ""
         ),
         OngoingCallPreviewData(
             callState = CallUiState(
                 phase = CallUiState.CallPhase.Connected,
-                participants = listOf(
-                    CallParticipantUiState(userId = "me", name = "You", isSelf = true),
+                localParticipant = CallParticipantUiState(userId = "me", name = "You", isSelf = true),
+                remoteParticipants = listOf(
                     CallParticipantUiState(
                         userId = "user3",
                         name = "Charlie Brown",
@@ -58,7 +55,6 @@ class OngoingCallPreviewProvider : PreviewParameterProvider<OngoingCallPreviewDa
                 ),
                 connectedAt = System.currentTimeMillis() - 65_000
             ),
-            mediaState = MediaState.DEFAULT_AUDIO,
             duration = "01:05"
         )
     )

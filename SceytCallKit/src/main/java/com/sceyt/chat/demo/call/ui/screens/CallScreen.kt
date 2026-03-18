@@ -35,7 +35,6 @@ fun CallScreen(
     onDismiss: () -> Unit
 ) {
     val callState by viewModel.callUiState.collectAsState()
-    val mediaState by viewModel.mediaState.collectAsState()
     val duration by viewModel.formattedDuration.collectAsState()
     val availableDevices by viewModel.availableAudioDevices.collectAsState()
     val selectedDevice by viewModel.selectedAudioDevice.collectAsState()
@@ -56,7 +55,7 @@ fun CallScreen(
         if (isGranted) viewModel.onToggleCamera()
     }
     val onToggleCameraWithPermission: () -> Unit = {
-        if (mediaState.isCameraEnabled) {
+        if (callState.localParticipant?.isVideoEnabled == true) {
             viewModel.onToggleCamera()  // turning off — no permission needed
         } else if (hasCameraPermission()) {
             viewModel.onToggleCamera()
@@ -92,7 +91,7 @@ fun CallScreen(
     if (isInPipMode) {
         when {
             callState.phase in pipPhases ->
-                PipCallContent(callState = callState, mediaState = mediaState, duration = duration)
+                PipCallContent(callState = callState, duration = duration)
             // Call ended/idle in PiP — close immediately (EndedCallScreen buttons are unusable in PiP)
             else -> LaunchedEffect(Unit) { onDismiss() }
         }
@@ -101,7 +100,7 @@ fun CallScreen(
 
     Box(modifier = Modifier.fillMaxSize()) {
         val call = callState.call
-        val displayTitle = call?.displayTitle(callState.participants)
+        val displayTitle = call?.displayTitle(callState.remoteParticipants)
             ?: callState.remoteParticipant?.displayName.orEmpty()
         val isGroupCall = call?.isGroupCall == true
         val isVideoCall = call?.isVideoCall == true
@@ -127,7 +126,6 @@ fun CallScreen(
             CallPhase.Reconnecting -> {
                 OngoingCallScreen(
                     callState = callState,
-                    mediaState = mediaState,
                     duration = duration,
                     audioDeviceData = AudioDeviceData(availableDevices, selectedDevice),
                     onToggleMute = viewModel::onToggleMute,

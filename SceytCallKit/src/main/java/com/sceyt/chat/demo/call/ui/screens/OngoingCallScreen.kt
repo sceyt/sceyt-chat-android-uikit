@@ -74,7 +74,6 @@ import androidx.compose.ui.unit.sp
 import com.sceyt.audiorouting.AudioDevice
 import com.sceyt.chat.demo.call.manager.CallParticipantUiState
 import com.sceyt.chat.demo.call.manager.CallUiState
-import com.sceyt.chat.demo.call.manager.MediaState
 import com.sceyt.chat.demo.call.manager.displayTitle
 import com.sceyt.chat.demo.call.manager.isGroupCall
 import com.sceyt.chat.demo.call.manager.isVideoCall
@@ -102,7 +101,6 @@ data class AudioDeviceData(
 @Composable
 fun OngoingCallScreen(
     callState: CallUiState,
-    mediaState: MediaState,
     duration: String,
     audioDeviceData: AudioDeviceData,
     onToggleMute: () -> Unit,
@@ -115,7 +113,6 @@ fun OngoingCallScreen(
     if (callState.call?.isGroupCall == true) {
         GroupOngoingCallScreen(
             callState = callState,
-            mediaState = mediaState,
             duration = duration,
             audioDeviceData = audioDeviceData,
             onToggleMute = onToggleMute,
@@ -130,7 +127,6 @@ fun OngoingCallScreen(
 
     DirectOngoingCallScreen(
         callState = callState,
-        mediaState = mediaState,
         duration = duration,
         audioDeviceData = audioDeviceData,
         onToggleMute = onToggleMute,
@@ -144,7 +140,6 @@ fun OngoingCallScreen(
 @Composable
 private fun DirectOngoingCallScreen(
     callState: CallUiState,
-    mediaState: MediaState,
     duration: String,
     audioDeviceData: AudioDeviceData,
     onToggleMute: () -> Unit,
@@ -153,19 +148,20 @@ private fun DirectOngoingCallScreen(
     onSelectDevice: (AudioDevice) -> Unit,
     onEndCall: () -> Unit
 ) {
+    val local = callState.localParticipant
     val remoteParticipant = callState.remoteParticipant
-    val remoteName = callState.call?.displayTitle(callState.participants)
+    val remoteName = callState.call?.displayTitle(callState.remoteParticipants)
         ?: remoteParticipant?.displayName.orEmpty()
     val remoteAvatar = remoteParticipant?.avatarUrl
     val hasRemoteVideo = remoteParticipant?.videoTrack != null && remoteParticipant.isVideoEnabled
-    val hasLocalVideo = mediaState.shouldShowLocalPreview
+    val hasLocalVideo = local?.shouldShowLocalPreview == true
 
     val (availableDevices, selectedDevice) = audioDeviceData
     val isConnected = callState.phase == CallUiState.CallPhase.Connected ||
             callState.phase == CallUiState.CallPhase.Reconnecting
 
     val showVideoLayout = when (callState.phase) {
-        CallUiState.CallPhase.Outgoing -> callState.call?.isVideoCall == true && mediaState.localVideoTrack != null
+        CallUiState.CallPhase.Outgoing -> callState.call?.isVideoCall == true && local?.videoTrack != null
         CallUiState.CallPhase.Connecting -> hasLocalVideo
         else -> hasRemoteVideo || hasLocalVideo
     }
@@ -189,7 +185,7 @@ private fun DirectOngoingCallScreen(
                 remoteName = remoteName,
                 duration = duration,
                 remoteParticipant = remoteParticipant,
-                mediaState = mediaState,
+                localParticipant = local,
                 showControls = controlsVisible,
                 onTap = { showControls = !showControls }
             )
@@ -214,9 +210,9 @@ private fun DirectOngoingCallScreen(
                     .navigationBarsPadding()
                     .padding(bottom = 10.dp)
                     .padding(horizontal = 16.dp),
-                isMuted = mediaState.isMuted,
+                isMuted = local?.isMuted == true,
                 selectedAudioDevice = selectedDevice,
-                isVideoEnabled = mediaState.isCameraEnabled,
+                isVideoEnabled = local?.isVideoEnabled == true,
                 videoDisabled = !isConnected,
                 onToggleMute = onToggleMute,
                 onToggleSpeaker = { showAudioDeviceSelector = true },
@@ -324,12 +320,12 @@ private fun DirectVideoOngoingLayout(
     remoteName: String,
     duration: String,
     remoteParticipant: CallParticipantUiState?,
-    mediaState: MediaState,
+    localParticipant: CallParticipantUiState?,
     showControls: Boolean,
     onTap: () -> Unit
 ) {
     val hasRemoteVideo = remoteParticipant?.videoTrack != null && remoteParticipant.isVideoEnabled
-    val hasLocalVideo = mediaState.shouldShowLocalPreview
+    val hasLocalVideo = localParticipant?.shouldShowLocalPreview == true
 
     Box(
         modifier = Modifier
@@ -347,7 +343,7 @@ private fun DirectVideoOngoingLayout(
                 )
                 if (hasLocalVideo) {
                     DraggableLocalVideoPreview(
-                        videoTrack = mediaState.localVideoTrack,
+                        videoTrack = localParticipant?.videoTrack,
                         showControls = showControls,
                         modifier = Modifier.fillMaxSize()
                     )
@@ -356,7 +352,7 @@ private fun DirectVideoOngoingLayout(
 
             hasLocalVideo -> {
                 LocalVideoPreview(
-                    videoTrack = mediaState.localVideoTrack,
+                    videoTrack = localParticipant?.videoTrack,
                     modifier = Modifier.fillMaxSize()
                 )
             }
@@ -633,7 +629,6 @@ private fun OngoingCallScreenPreview(
 ) {
     OngoingCallScreen(
         callState = data.callState,
-        mediaState = data.mediaState,
         duration = data.duration,
         audioDeviceData = AudioDeviceData(emptyList(), null),
         onToggleMute = {},
