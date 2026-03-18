@@ -2,6 +2,7 @@ package com.sceyt.chat.demo.call.ui.screens
 
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.BoundsTransform
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.animateBounds
 import androidx.compose.animation.core.MutableTransitionState
@@ -55,7 +56,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
@@ -279,10 +279,11 @@ private fun GroupParticipantsPage(
     modifier: Modifier = Modifier,
 ) {
     val rows = buildPageRows(participants)
-    val boundsSpec = spring<Rect>(
-        dampingRatio = Spring.DampingRatioNoBouncy,
-        stiffness = Spring.StiffnessMedium
-    )
+    val boundsTransform = remember {
+        BoundsTransform { _, _ ->
+            spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessMedium)
+        }
+    }
 
     LookaheadScope {
         Column(
@@ -316,7 +317,7 @@ private fun GroupParticipantsPage(
                                     .fillMaxHeight()
                                     .animateBounds(
                                         lookaheadScope = this@LookaheadScope,
-                                        boundsTransform = { _, _ -> boundsSpec }
+                                        boundsTransform = boundsTransform
                                     )
                             ) {
                                 ParticipantTile(
