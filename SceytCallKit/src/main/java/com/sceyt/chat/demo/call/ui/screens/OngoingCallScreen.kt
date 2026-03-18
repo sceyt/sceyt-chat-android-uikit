@@ -2,6 +2,8 @@ package com.sceyt.chat.demo.call.ui.screens
 
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.BoundsTransform
+import androidx.compose.animation.animateBounds
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateOffsetAsState
@@ -60,6 +62,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.LookaheadScope
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -159,7 +162,7 @@ private fun DirectOngoingCallScreen(
 
     val (availableDevices, selectedDevice) = audioDeviceData
     val isConnected = callState.phase == CallUiState.CallPhase.Connected ||
-        callState.phase == CallUiState.CallPhase.Reconnecting
+            callState.phase == CallUiState.CallPhase.Reconnecting
 
     val showVideoLayout = when (callState.phase) {
         CallUiState.CallPhase.Outgoing -> callState.call?.isVideoCall == true && mediaState.localVideoTrack != null
@@ -447,66 +450,86 @@ fun CallControlBar(
         else -> Icons.AutoMirrored.Filled.VolumeUp
     }
 
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(CallColors.ActionBarBg, RoundedCornerShape(20.dp))
-            .padding(vertical = 16.dp),
-        horizontalArrangement = Arrangement.SpaceAround,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        if (isVideoEnabled) {
+    val boundsTransform = remember {
+        BoundsTransform { _, _ ->
+            spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessMedium)
+        }
+    }
+
+    LookaheadScope {
+        val animationModifier = Modifier.animateBounds(
+            lookaheadScope = this@LookaheadScope,
+            boundsTransform = boundsTransform
+        )
+        Row(
+            modifier = modifier
+                .fillMaxWidth()
+                .background(CallColors.ActionBarBg, RoundedCornerShape(20.dp))
+                .padding(vertical = 16.dp),
+            horizontalArrangement = Arrangement.SpaceAround,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (isVideoEnabled) {
+                CallActionButton(
+                    modifier = animationModifier,
+                    icon = Icons.Default.Cameraswitch,
+                    backgroundColor = CallColors.ButtonSurface,
+                    iconTint = Color.White,
+                    contentDescription = "Flip Camera",
+                    onClick = onFlipCamera,
+                    size = 48.dp,
+                    iconSize = 28.dp
+                )
+            }
+
             CallActionButton(
-                icon = Icons.Default.Cameraswitch,
+                modifier = animationModifier,
+                icon = if (isMuted) Icons.Default.MicOff else Icons.Default.Mic,
                 backgroundColor = CallColors.ButtonSurface,
                 iconTint = Color.White,
-                contentDescription = "Flip Camera",
-                onClick = onFlipCamera,
+                contentDescription = if (isMuted) "Unmute" else "Mute",
+                onClick = onToggleMute,
+                size = 48.dp,
+                iconSize = 28.dp
+            )
+
+            CallActionButton(
+                modifier = animationModifier,
+                icon = audioRouteIcon,
+                backgroundColor = if (isSpeakerActive) Color.White else CallColors.ButtonSurface,
+                iconTint = if (isSpeakerActive) CallColors.BackgroundDark else Color.White,
+                contentDescription = "Audio Route",
+                onClick = onToggleSpeaker,
+                size = 48.dp,
+                iconSize = 28.dp
+            )
+
+            CallActionButton(
+                modifier = animationModifier,
+                icon = Icons.Default.Videocam,
+                backgroundColor = if (isVideoEnabled) Color.White else CallColors.ButtonSurface,
+                iconTint = if (isVideoEnabled) CallColors.BackgroundDark else Color.White,
+                contentDescription = "Video",
+                onClick = onToggleVideo,
+                size = 48.dp,
+                iconSize = 28.dp,
+                enabled = !videoDisabled
+            )
+
+            CallActionButton(
+                modifier = Modifier.animateBounds(
+                    lookaheadScope = this@LookaheadScope,
+                    boundsTransform = boundsTransform
+                ),
+                icon = Icons.Default.CallEnd,
+                backgroundColor = CallColors.HangupRed,
+                iconTint = Color.White,
+                contentDescription = "End Call",
+                onClick = onHangup,
                 size = 48.dp,
                 iconSize = 28.dp
             )
         }
-
-        CallActionButton(
-            icon = if (isMuted) Icons.Default.MicOff else Icons.Default.Mic,
-            backgroundColor = CallColors.ButtonSurface,
-            iconTint = Color.White,
-            contentDescription = if (isMuted) "Unmute" else "Mute",
-            onClick = onToggleMute,
-            size = 48.dp,
-            iconSize = 28.dp
-        )
-
-        CallActionButton(
-            icon = audioRouteIcon,
-            backgroundColor = if (isSpeakerActive) Color.White else CallColors.ButtonSurface,
-            iconTint = if (isSpeakerActive) CallColors.BackgroundDark else Color.White,
-            contentDescription = "Audio Route",
-            onClick = onToggleSpeaker,
-            size = 48.dp,
-            iconSize = 28.dp
-        )
-
-        CallActionButton(
-            icon = Icons.Default.Videocam,
-            backgroundColor = if (isVideoEnabled) Color.White else CallColors.ButtonSurface,
-            iconTint = if (isVideoEnabled) CallColors.BackgroundDark else Color.White,
-            contentDescription = "Video",
-            onClick = onToggleVideo,
-            size = 48.dp,
-            iconSize = 28.dp,
-            enabled = !videoDisabled
-        )
-
-        CallActionButton(
-            icon = Icons.Default.CallEnd,
-            backgroundColor = CallColors.HangupRed,
-            iconTint = Color.White,
-            contentDescription = "End Call",
-            onClick = onHangup,
-            size = 48.dp,
-            iconSize = 28.dp
-        )
     }
 }
 
