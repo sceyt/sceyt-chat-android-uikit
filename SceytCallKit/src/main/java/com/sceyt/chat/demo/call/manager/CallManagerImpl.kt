@@ -88,9 +88,6 @@ class CallManagerImpl(
     private val _callUiState = MutableStateFlow(CallUiState.IDLE)
     override val callUiState: StateFlow<CallUiState> = _callUiState.asStateFlow()
 
-    private val _mediaState = MutableStateFlow(MediaState())
-    override val mediaState: StateFlow<MediaState> = _mediaState.asStateFlow()
-
     private val _callDuration = MutableStateFlow(0L)
     override val callDuration: StateFlow<Long> = _callDuration.asStateFlow()
 
@@ -280,21 +277,21 @@ class CallManagerImpl(
     }
 
     override fun toggleMute(): Boolean {
-        val newMuteState = !_mediaState.value.isMuted
+        val newMuteState = !(_callUiState.value.localParticipant?.isMuted ?: false)
         _currentCall?.mute(newMuteState)
         Log.d(TAG, "Mute toggled: $newMuteState")
         return newMuteState
     }
 
     override fun toggleCamera(): Boolean {
-        val newCameraState = !_mediaState.value.isCameraEnabled
+        val newCameraState = !(_callUiState.value.localParticipant?.isVideoEnabled ?: false)
         _currentCall?.setVideoEnabled(newCameraState)
         Log.d(TAG, "Camera toggled: $newCameraState")
         return newCameraState
     }
 
     override fun setCameraEnabled(enabled: Boolean) {
-        if (_mediaState.value.isCameraEnabled == enabled) return
+        if (_callUiState.value.localParticipant?.isVideoEnabled == enabled) return
         _currentCall?.setVideoEnabled(enabled)
         Log.d(TAG, "Camera set to: $enabled")
     }
@@ -303,8 +300,8 @@ class CallManagerImpl(
         return try {
             val capturer = _currentCall?.localParticipant?.getVideoTracks()?.firstOrNull()?.capturer
             capturer?.switch()
-            val newFrontCamera = !_mediaState.value.isFrontCamera
-            _mediaState.update { it.copy(isFrontCamera = newFrontCamera) }
+            val newFrontCamera = !(_callUiState.value.localParticipant?.isFrontCamera ?: true)
+            updateLocalParticipant { it.copy(isFrontCamera = newFrontCamera) }
             Log.d(TAG, "Camera switched: front=$newFrontCamera")
             Result.success(Unit)
         } catch (e: Exception) {
@@ -315,7 +312,6 @@ class CallManagerImpl(
 
     override fun selectAudioDevice(device: AudioDevice) {
         audioRouter.selectDevice(device)
-        updateSpeakerState(device)
         Log.d(TAG, "Audio device selected: ${device.name}")
     }
 
@@ -338,7 +334,6 @@ class CallManagerImpl(
             audioRouter.selectDevice(bluetooth ?: wired ?: earpiece)
         }
 
-        _mediaState.update { it.copy(isSpeakerOn = newSpeakerState) }
         Log.d(TAG, "Speaker toggled: $newSpeakerState")
         return newSpeakerState
     }
@@ -367,10 +362,10 @@ class CallManagerImpl(
             CallUiState(
                 phase = CallPhase.Incoming,
                 call = call,
-                participants = buildInitialParticipants(
-                    remoteIds = remoteIds,
-                    includeRemotePlaceholders = !call.isGroupCall,
-                ),
+                localParticipant = buildLocalParticipant(),
+                remoteParticipants = if (!call.isGroupCall) {
+                    remoteIds.distinct().map { buildPlaceholderRemoteParticipant(it) }
+                } else emptyList(),
             )
         }
 
@@ -538,29 +533,16 @@ class CallManagerImpl(
             CallUiState(
                 phase = CallPhase.Outgoing,
                 call = call,
-                participants = buildInitialParticipants(
-                    remoteIds = remoteIds,
-                    includeRemotePlaceholders = includeRemotePlaceholders,
-                ),
+                localParticipant = buildLocalParticipant(),
+                remoteParticipants = if (includeRemotePlaceholders) {
+                    remoteIds.distinct().map { buildPlaceholderRemoteParticipant(it) }
+                } else emptyList(),
             )
         }
         remoteIds.forEach(::loadParticipantInfoAsync)
     }
 
-    private fun buildInitialParticipants(
-        remoteIds: List<String>,
-        includeRemotePlaceholders: Boolean = true,
-    ): List<CallParticipantUiState> {
-        val participants = mutableListOf(buildSelfParticipant())
-        if (includeRemotePlaceholders) {
-            remoteIds.distinct().forEach { userId ->
-                participants += buildPlaceholderParticipant(userId = userId, isSelf = false)
-            }
-        }
-        return participants.stabilizeParticipantOrder()
-    }
-
-    private fun buildSelfParticipant(): CallParticipantUiState {
+    private fun buildLocalParticipant(): CallParticipantUiState {
         val currentUser = SceytChatUIKit.currentUser
         val userId = currentUser?.id ?: SceytChatUIKit.currentUserId.orEmpty()
         val info = participantInfoCache[userId] ?: UserInfo(
@@ -573,25 +555,15 @@ class CallManagerImpl(
             name = info.name,
             avatarUrl = info.avatar,
             isSelf = true,
-            isMuted = _mediaState.value.isMuted,
-            isVideoEnabled = _mediaState.value.isCameraEnabled,
-            videoTrack = _mediaState.value.localVideoTrack,
         )
     }
 
-    private fun buildPlaceholderParticipant(
-        userId: String,
-        isSelf: Boolean,
-    ): CallParticipantUiState {
+    private fun buildPlaceholderRemoteParticipant(userId: String): CallParticipantUiState {
         val info = participantInfoCache[userId]
         return CallParticipantUiState(
             userId = userId,
             name = info?.name,
             avatarUrl = info?.avatar,
-            isSelf = isSelf,
-            isMuted = if (isSelf) _mediaState.value.isMuted else false,
-            isVideoEnabled = if (isSelf) _mediaState.value.isCameraEnabled else false,
-            videoTrack = if (isSelf) _mediaState.value.localVideoTrack else null,
         )
     }
 
@@ -615,10 +587,8 @@ class CallManagerImpl(
 
             override fun onParticipantsAdded(call: Call, participants: List<Participant>) {
                 participants.forEach {
-                    upsertParticipantFromSdk(it, isSelf = it.id == call.localParticipant.id)
-                    if (it.id != call.localParticipant.id) {
-                        loadParticipantInfoAsync(it.id)
-                    }
+                    upsertRemoteFromSdk(it)
+                    loadParticipantInfoAsync(it.id)
                 }
                 refreshDurationTimer()
             }
@@ -630,9 +600,12 @@ class CallManagerImpl(
                 reason: String?,
             ) {
                 val isLocal = participant.id == call.localParticipant.id
-                updateParticipant(participant.id) {
-                    val base = participant.toUiState(existing = it, isSelf = isLocal)
-                    base.copy(participantState = state)
+                if (isLocal) {
+                    updateLocalParticipant { it.copy(participantState = state) }
+                } else {
+                    updateParticipant(participant.id) {
+                        participant.toUiState(existing = it).copy(participantState = state)
+                    }
                 }
 
                 if (!isLocal) {
@@ -682,9 +655,12 @@ class CallManagerImpl(
                 state: ParticipantConnectionState,
             ) {
                 val isLocal = participant.id == call.localParticipant.id
-                updateParticipant(participant.id) {
-                    participant.toUiState(existing = it, isSelf = isLocal)
-                        .copy(connectionState = state)
+                if (isLocal) {
+                    updateLocalParticipant { it.copy(connectionState = state) }
+                } else {
+                    updateParticipant(participant.id) {
+                        participant.toUiState(existing = it).copy(connectionState = state)
+                    }
                 }
 
                 if (isLocal && _callUiState.value.call?.isGroupCall == true) {
@@ -708,14 +684,13 @@ class CallManagerImpl(
                 when (event) {
                     is ParticipantEvent.Mute -> {
                         updateParticipant(participant.id) { existing ->
-                            participant.toUiState(existing = existing, isSelf = false)
-                                .copy(isMuted = event.muted)
+                            participant.toUiState(existing = existing).copy(isMuted = event.muted)
                         }
                     }
 
                     is ParticipantEvent.Video -> {
                         updateParticipant(participant.id) { existing ->
-                            participant.toUiState(existing = existing, isSelf = false)
+                            participant.toUiState(existing = existing)
                                 .copy(isVideoEnabled = event.enabled)
                         }
                     }
@@ -732,31 +707,21 @@ class CallManagerImpl(
             ) {
                 when (event) {
                     is ParticipantEvent.Hold -> {
-                        _mediaState.update { it.copy(isOnHold = event.hold) }
+                        updateLocalParticipant { it.copy(isOnHold = event.hold) }
                     }
 
                     is ParticipantEvent.Mute -> {
-                        _mediaState.update { it.copy(isMuted = event.muted) }
-                        updateParticipant(participant.id) { existing ->
-                            participant.toUiState(existing = existing, isSelf = true)
-                                .copy(isMuted = event.muted)
-                        }
+                        updateLocalParticipant { it.copy(isMuted = event.muted) }
                     }
 
                     is ParticipantEvent.Video -> {
                         val track = if (event.enabled) {
                             participant.getVideoTracks().firstOrNull()?.videoTrack
                         } else null
-                        _mediaState.update {
+                        updateLocalParticipant {
                             it.copy(
-                                isCameraEnabled = event.enabled,
-                                localVideoTrack = track,
-                            )
-                        }
-                        updateParticipant(participant.id) { existing ->
-                            participant.toUiState(existing = existing, isSelf = true).copy(
                                 isVideoEnabled = event.enabled,
-                                videoTrack = track,
+                                videoTrack = track
                             )
                         }
                     }
@@ -771,7 +736,7 @@ class CallManagerImpl(
                 videoTrack: VideoTrack,
             ) {
                 updateParticipant(participant.id) { existing ->
-                    participant.toUiState(existing = existing, isSelf = false).copy(
+                    participant.toUiState(existing = existing).copy(
                         videoTrack = videoTrack,
                         isVideoEnabled = participant.videoEnabled,
                     )
@@ -784,7 +749,7 @@ class CallManagerImpl(
                 videoTrack: VideoTrack,
             ) {
                 updateParticipant(participant.id) { existing ->
-                    participant.toUiState(existing = existing, isSelf = false).copy(
+                    participant.toUiState(existing = existing).copy(
                         videoTrack = null,
                         isVideoEnabled = false,
                     )
@@ -943,7 +908,6 @@ class CallManagerImpl(
         _currentCall?.removeListener(CALL_LISTENER_KEY)
         _currentCall = null
         audioRouter.stop()
-        _mediaState.update { MediaState() }
         _callDuration.value = 0L
         lastConnectedAt = 0
         updateActiveSpeakerUsers(emptySet())
@@ -959,7 +923,6 @@ class CallManagerImpl(
                 TAG,
                 "Audio devices changed: ${devices.map { it.name }}, selected: ${selectedDevice?.name}"
             )
-            updateSpeakerState(selectedDevice)
         }
     }
 
@@ -982,26 +945,37 @@ class CallManagerImpl(
         }
 
         audioRouter.setPreferredDeviceOrder(priority)
-        scope.launch {
-            delay(100)
-            updateSpeakerState(selectedAudioDevice.value)
-        }
-    }
-
-    private fun updateSpeakerState(device: AudioDevice?) {
-        _mediaState.update { it.copy(isSpeakerOn = device is AudioDevice.Speakerphone) }
     }
 
     private fun syncParticipantsFromCall(call: Call) {
-        upsertParticipantFromSdk(call.localParticipant, isSelf = true)
-        call.getRemoteParticipants().forEach {
-            upsertParticipantFromSdk(it, isSelf = false)
+        upsertLocalFromSdk(call.localParticipant)
+        call.getRemoteParticipants().forEach { upsertRemoteFromSdk(it) }
+    }
+
+    private fun upsertLocalFromSdk(participant: Participant) {
+        updateLocalParticipant { existing ->
+            existing.copy(
+                clientId = participant.clientId.ifBlank { existing.clientId },
+                participantState = participant.state,
+                connectionState = participant.connectionState,
+                isMuted = participant.muted,
+                isVideoEnabled = participant.videoEnabled,
+                videoTrack = participant.getVideoTracks().firstOrNull()?.videoTrack
+                    ?: existing.videoTrack,
+            )
         }
     }
 
-    private fun upsertParticipantFromSdk(participant: Participant, isSelf: Boolean) {
+    private fun upsertRemoteFromSdk(participant: Participant) {
         updateParticipant(participant.id) { existing ->
-            participant.toUiState(existing = existing, isSelf = isSelf)
+            participant.toUiState(existing = existing)
+        }
+    }
+
+    private fun updateLocalParticipant(transform: (CallParticipantUiState) -> CallParticipantUiState) {
+        _callUiState.update { state ->
+            val local = state.localParticipant ?: return@update state
+            state.copy(localParticipant = transform(local))
         }
     }
 
@@ -1010,54 +984,45 @@ class CallManagerImpl(
         transform: (CallParticipantUiState?) -> CallParticipantUiState,
     ) {
         _callUiState.update { state ->
-            val participants = state.participants.toMutableList()
-            val index = participants.indexOfFirst { it.userId == userId }
-            val existing = participants.getOrNull(index)
+            val remotes = state.remoteParticipants.toMutableList()
+            val index = remotes.indexOfFirst { it.userId == userId }
+            val existing = remotes.getOrNull(index)
             val updated = transform(existing)
             if (index >= 0) {
-                participants[index] = updated
+                remotes[index] = updated
             } else {
-                participants += updated
+                remotes += updated
             }
-            state.copy(participants = participants.stabilizeParticipantOrder())
+            state.copy(remoteParticipants = remotes.distinctBy { it.userId })
         }
     }
 
     private fun removeParticipant(userId: String) {
-        val currentUserId = SceytChatUIKit.currentUserId
-        if (userId == currentUserId) return
-
         _callUiState.update { state ->
-            state.copy(
-                participants = state.participants
-                    .filterNot { it.userId == userId }
-                    .stabilizeParticipantOrder()
-            )
+            state.copy(remoteParticipants = state.remoteParticipants.filterNot { it.userId == userId })
         }
     }
 
     private fun updateActiveSpeakerUsers(userIds: Set<String>) {
         _callUiState.update { state ->
             state.copy(
-                participants = state.participants.map { participant ->
+                localParticipant = state.localParticipant?.copy(
+                    isActiveSpeaker = state.localParticipant.userId in userIds
+                ),
+                remoteParticipants = state.remoteParticipants.map { participant ->
                     participant.copy(isActiveSpeaker = participant.userId in userIds)
                 }
             )
         }
     }
 
-    private fun Participant.toUiState(
-        existing: CallParticipantUiState?,
-        isSelf: Boolean,
-    ): CallParticipantUiState {
+    private fun Participant.toUiState(existing: CallParticipantUiState?): CallParticipantUiState {
         val cachedInfo = participantInfoCache[id]
-        val currentUser = if (isSelf) SceytChatUIKit.currentUser else null
         return CallParticipantUiState(
             userId = id,
             clientId = clientId.ifBlank { existing?.clientId.orEmpty() },
-            name = cachedInfo?.name ?: existing?.name ?: currentUser?.getPresentableName(),
-            avatarUrl = cachedInfo?.avatar ?: existing?.avatarUrl ?: currentUser?.avatarURL,
-            isSelf = isSelf || existing?.isSelf == true,
+            name = cachedInfo?.name ?: existing?.name,
+            avatarUrl = cachedInfo?.avatar ?: existing?.avatarUrl,
             participantState = state,
             connectionState = connectionState,
             isMuted = muted,
@@ -1065,10 +1030,6 @@ class CallManagerImpl(
             videoTrack = getVideoTracks().firstOrNull()?.videoTrack ?: existing?.videoTrack,
             isActiveSpeaker = existing?.isActiveSpeaker == true,
         )
-    }
-
-    private fun List<CallParticipantUiState>.stabilizeParticipantOrder(): List<CallParticipantUiState> {
-        return distinctBy { it.userId }.sortedByDescending { it.isSelf }
     }
 
     private fun primeParticipantInfos(members: List<SceytMember>) {
@@ -1095,32 +1056,27 @@ class CallManagerImpl(
 
     private fun updateParticipantInfo(userId: String, info: UserInfo?) {
         info ?: return
-        _callUiState.update { state ->
-            val participants = state.participants.toMutableList()
-            val index = participants.indexOfFirst { it.userId == userId }
-
-            when {
-                index >= 0 -> {
-                    val existing = participants[index]
-                    participants[index] = existing.copy(
+        if (userId == SceytChatUIKit.currentUserId) {
+            updateLocalParticipant { existing ->
+                existing.copy(
+                    name = info.name ?: existing.name,
+                    avatarUrl = info.avatar ?: existing.avatarUrl,
+                )
+            }
+        } else {
+            _callUiState.update { state ->
+                val remotes = state.remoteParticipants.toMutableList()
+                val index = remotes.indexOfFirst { it.userId == userId }
+                if (index >= 0) {
+                    val existing = remotes[index]
+                    remotes[index] = existing.copy(
                         name = info.name ?: existing.name,
                         avatarUrl = info.avatar ?: existing.avatarUrl,
                     )
-                    state.copy(participants = participants.stabilizeParticipantOrder())
+                    state.copy(remoteParticipants = remotes)
+                } else {
+                    state
                 }
-
-                userId == SceytChatUIKit.currentUserId -> {
-                    participants += buildPlaceholderParticipant(
-                        userId = userId,
-                        isSelf = true,
-                    ).copy(
-                        name = info.name,
-                        avatarUrl = info.avatar,
-                    )
-                    state.copy(participants = participants.stabilizeParticipantOrder())
-                }
-
-                else -> state
             }
         }
     }

@@ -21,11 +21,6 @@ interface CallManager {
     val callUiState: StateFlow<CallUiState>
 
     /**
-     * Current media state (mute, camera, speaker, video tracks).
-     */
-    val mediaState: StateFlow<MediaState>
-
-    /**
      * Call duration in seconds since connected.
      * Only updates while the current call should show the running timer.
      */

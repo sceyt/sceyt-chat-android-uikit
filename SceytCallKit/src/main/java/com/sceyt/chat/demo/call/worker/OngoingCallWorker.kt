@@ -61,7 +61,8 @@ class OngoingCallWorker(
 
     private val callManager: CallManager by inject()
     private val notificationManager = CallNotificationManager(applicationContext)
-    private val systemNotificationManager = applicationContext.getSystemService<NotificationManager>()
+    private val systemNotificationManager =
+        applicationContext.getSystemService<NotificationManager>()
 
     override suspend fun doWork(): Result {
         Log.d(TAG, "doWork started")
@@ -70,16 +71,15 @@ class OngoingCallWorker(
 
             combine(
                 callManager.callUiState,
-                callManager.mediaState,
                 callManager.callDuration,
-            ) { state, media, duration ->
-                Triple(state, media, duration)
+            ) { state, duration ->
+                Pair(state, duration)
             }
-                .takeWhile { (state, _, _) -> state.isActive }
-                .collectLatest { (state, media, duration) ->
+                .takeWhile { (state, _) -> state.isActive }
+                .collectLatest { (state, duration) ->
                     val notification = buildNotificationForState(
                         state = state,
-                        isMuted = media.isMuted,
+                        isMuted = state.localParticipant?.isMuted == true,
                         duration = formatDuration(duration)
                     )
                     systemNotificationManager?.notify(
@@ -115,7 +115,7 @@ class OngoingCallWorker(
         isMuted: Boolean = false,
         duration: String = "00:00"
     ): android.app.Notification {
-        val title = state.call?.displayTitle(state.participants)
+        val title = state.call?.displayTitle(state.remoteParticipants)
             ?: state.remoteParticipant?.displayName.orEmpty()
         val isVideoCall = state.call?.isVideoCall == true
         return when (state.phase) {
@@ -126,6 +126,7 @@ class OngoingCallWorker(
                     isMuted = isMuted,
                     isVideo = isVideoCall
                 )
+
             else ->
                 notificationManager.buildConnectingNotification(
                     title = title,

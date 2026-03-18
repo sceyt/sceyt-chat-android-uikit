@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.sceyt.audiorouting.AudioDevice
 import com.sceyt.chat.demo.call.manager.CallManager
 import com.sceyt.chat.demo.call.manager.CallUiState
-import com.sceyt.chat.demo.call.manager.MediaState
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
@@ -21,8 +20,6 @@ class CallViewModel(
 ) : ViewModel() {
 
     val callUiState: StateFlow<CallUiState> = callManager.callUiState
-
-    val mediaState: StateFlow<MediaState> = callManager.mediaState
 
     val formattedDuration: StateFlow<String> = callManager.callDuration
         .map { formatDuration(it) }
@@ -55,7 +52,7 @@ class CallViewModel(
     private var cameraDisabledForBackground = false
 
     fun onAppBackground() {
-        if (mediaState.value.isCameraEnabled) {
+        if (callUiState.value.localParticipant?.isVideoEnabled == true) {
             cameraDisabledForBackground = true
             callManager.setCameraEnabled(false)
         }

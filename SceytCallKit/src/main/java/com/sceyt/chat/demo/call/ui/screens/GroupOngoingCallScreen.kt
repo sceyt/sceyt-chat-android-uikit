@@ -41,7 +41,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.MicOff
-import androidx.compose.material.icons.filled.PersonAdd
+import androidx.compose.material.icons.filled.People
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -71,7 +71,6 @@ import com.sceyt.audiorouting.AudioDevice
 import com.sceyt.chat.demo.call.manager.CallParticipantUiState
 import com.sceyt.chat.demo.call.manager.CallUiState
 import com.sceyt.chat.demo.call.manager.GROUP_CALL_PAGE_SIZE
-import com.sceyt.chat.demo.call.manager.MediaState
 import com.sceyt.chat.demo.call.manager.buildPageRows
 import com.sceyt.chat.demo.call.manager.displayTitle
 import com.sceyt.chat.demo.call.manager.paginateParticipants
@@ -92,7 +91,6 @@ private val GroupGridBottomPadding = 4.dp
 @Composable
 internal fun GroupOngoingCallScreen(
     callState: CallUiState,
-    mediaState: MediaState,
     duration: String,
     audioDeviceData: AudioDeviceData,
     onToggleMute: () -> Unit,
@@ -103,10 +101,11 @@ internal fun GroupOngoingCallScreen(
     onAddParticipant: () -> Unit,
 ) {
     val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
-    val title = callState.call?.displayTitle(callState.participants)
+    val title = callState.call?.displayTitle(callState.remoteParticipants)
         ?: callState.remoteParticipant?.displayName.orEmpty()
-    val visibleParticipants = remember(callState.participants) {
-        callState.participants.filter { it.isVisibleInGroupGrid }
+    val visibleParticipants = remember(callState.localParticipant, callState.remoteParticipants) {
+        listOfNotNull(callState.localParticipant) +
+            callState.remoteParticipants.filter { it.isVisibleInGroupGrid }
     }
     val pages = remember(visibleParticipants) {
         paginateParticipants(visibleParticipants, GROUP_CALL_PAGE_SIZE)
@@ -184,9 +183,9 @@ internal fun GroupOngoingCallScreen(
 
                 CallControlBar(
                     modifier = Modifier.padding(horizontal = 12.dp),
-                    isMuted = mediaState.isMuted,
+                    isMuted = callState.localParticipant?.isMuted == true,
                     selectedAudioDevice = selectedDevice,
-                    isVideoEnabled = mediaState.isCameraEnabled,
+                    isVideoEnabled = callState.localParticipant?.isVideoEnabled == true,
                     videoDisabled = false,
                     onToggleMute = onToggleMute,
                     onToggleSpeaker = { showAudioDeviceSelector = true },
@@ -265,7 +264,7 @@ private fun GroupTopBar(
 
         IconButton(onClick = onAddParticipant) {
             Icon(
-                imageVector = Icons.Default.PersonAdd,
+                imageVector = Icons.Default.People,
                 contentDescription = "Add participant",
                 tint = Color.White
             )
