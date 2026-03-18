@@ -113,6 +113,7 @@ internal fun GroupOngoingCallScreen(
     val pagerState = rememberPagerState(pageCount = { pages.size })
     val (availableDevices, selectedDevice) = audioDeviceData
     var showAudioDeviceSelector by remember { mutableStateOf(false) }
+    var showMembersSheet by remember { mutableStateOf(false) }
     var showChrome by remember { mutableStateOf(true) }
     val isConnected = callState.phase == CallUiState.CallPhase.Connected ||
             callState.phase == CallUiState.CallPhase.Reconnecting
@@ -157,7 +158,7 @@ internal fun GroupOngoingCallScreen(
                 title = title,
                 status = callState.resolveStatusText(duration),
                 onBack = { backDispatcher?.onBackPressed() },
-                onAddParticipant = onAddParticipant,
+                onAddParticipant = { showMembersSheet = true },
             )
         }
 
@@ -202,6 +203,12 @@ internal fun GroupOngoingCallScreen(
                 selectedDevice = selectedDevice,
                 onDeviceSelected = onSelectDevice,
                 onDismiss = { showAudioDeviceSelector = false }
+            )
+        }
+
+        if (showMembersSheet) {
+            CallMembersBottomSheet(
+                onDismiss = { showMembersSheet = false },
             )
         }
     }

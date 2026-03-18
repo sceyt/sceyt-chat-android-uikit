@@ -28,6 +28,9 @@ data class CallParticipantUiState(
     val isConnected: Boolean
         get() = connectionState == ParticipantConnectionState.Connected
 
+    val isRinging: Boolean
+        get() = participantState == ParticipantState.Ringing
+
     val shouldShowLocalPreview: Boolean
         get() = isSelf && isVideoEnabled && videoTrack != null
 

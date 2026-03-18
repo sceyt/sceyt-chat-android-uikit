@@ -45,6 +45,10 @@ class CallViewModel(
         callManager.endCall()
     }
 
+    fun onCallMemberClick(id: String) {
+        callManager.reinvite(id)
+    }
+
     fun onToggleMute(): Boolean = callManager.toggleMute()
 
     fun onToggleCamera(): Boolean = callManager.toggleCamera()

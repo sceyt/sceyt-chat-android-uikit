@@ -185,6 +185,11 @@ interface CallManager {
     suspend fun callAgain(): Result<Unit>
 
     /**
+     * Re-invite a participant to the current call. Only valid for group calls and when the participant is not currently in the call.
+     * */
+    fun reinvite(participantId: String)
+
+    /**
      * Release all resources.
      * Should be called when the app is being destroyed.
      */

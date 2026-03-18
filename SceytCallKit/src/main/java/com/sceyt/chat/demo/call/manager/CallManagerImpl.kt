@@ -423,6 +423,14 @@ class CallManagerImpl(
         }
     }
 
+    override fun reinvite(participantId: String) {
+        val call = _currentCall ?: return
+        if (call.isGroupCall) {
+            call.invite(participantId)
+            Log.d(TAG, "Re-invited participant: $participantId")
+        }
+    }
+
     override fun release() {
         cleanupCall()
         toneManager.stopAll()
@@ -617,27 +625,21 @@ class CallManagerImpl(
                         }
 
                         ParticipantState.Left -> {
-                            if (_callUiState.value.call?.isGroupCall == true) {
-                                removeParticipant(participant.id)
-                            } else {
+                            if (_callUiState.value.call?.isGroupCall != true) {
                                 call.leave()
                                 handleCallEnded(EndedReason.RemoteHangup)
                             }
                         }
 
                         ParticipantState.Declined -> {
-                            if (_callUiState.value.call?.isGroupCall == true) {
-                                removeParticipant(participant.id)
-                            } else {
+                            if (_callUiState.value.call?.isGroupCall != true) {
                                 call.leave()
                                 handleCallEnded(EndedReason.Declined(reason))
                             }
                         }
 
                         ParticipantState.NoAnswer -> {
-                            if (_callUiState.value.call?.isGroupCall == true) {
-                                removeParticipant(participant.id)
-                            } else {
+                            if (_callUiState.value.call?.isGroupCall != true) {
                                 call.leave()
                                 handleCallEnded(EndedReason.NoAnswer)
                             }
@@ -783,12 +785,7 @@ class CallManagerImpl(
             }
 
             override fun onParticipantsRemoved(call: Call, participants: List<Participant>) {
-                if (_callUiState.value.call?.isGroupCall == true) {
-                    participants.forEach { participant ->
-                        removeParticipant(participant.id)
-                    }
-                    refreshDurationTimer()
-                }
+                refreshDurationTimer()
             }
 
             override fun onSessionRenewed(call: Call) = Unit
@@ -983,6 +980,7 @@ class CallManagerImpl(
         userId: String,
         transform: (CallParticipantUiState?) -> CallParticipantUiState,
     ) {
+        if (userId == SceytChatUIKit.currentUserId) return
         _callUiState.update { state ->
             val remotes = state.remoteParticipants.toMutableList()
             val index = remotes.indexOfFirst { it.userId == userId }
