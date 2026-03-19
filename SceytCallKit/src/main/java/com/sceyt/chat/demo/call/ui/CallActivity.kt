@@ -24,6 +24,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.Lifecycle
 import com.sceyt.chat.demo.call.manager.CallUiState
 import com.sceyt.chat.demo.call.manager.isGroupCall
@@ -122,6 +123,18 @@ class CallActivity : ComponentActivity() {
         // Answer immediately if activity was already running when user tapped "Answer"
         if (intent.getBooleanExtra(EXTRA_AUTO_ANSWER, false)) {
             answerWithPermissionsIfNeeded()
+        }
+    }
+
+    /**
+     * Re-applies status bar appearance after PIP transition. The system resets window flags
+     * during the PIP configuration change, after Compose's SideEffect has already run.
+     * onWindowFocusChanged fires last — after all transitions have settled.
+     */
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) {
+            WindowCompat.getInsetsController(window, window.decorView).isAppearanceLightStatusBars = false
         }
     }
 
