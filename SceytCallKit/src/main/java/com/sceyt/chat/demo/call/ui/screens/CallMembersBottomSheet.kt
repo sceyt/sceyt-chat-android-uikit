@@ -22,7 +22,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MicOff
-import androidx.compose.material.icons.filled.VideocamOff
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
@@ -36,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -220,7 +220,7 @@ private fun InCallRow(
             Row {
                 Spacer(modifier = Modifier.width(8.dp))
                 Icon(
-                    imageVector = Icons.Default.VideocamOff,
+                    painter = painterResource(R.drawable.ic_call_video_off),
                     contentDescription = "Camera off",
                     tint = MicOffColor,
                     modifier = Modifier.size(20.dp),
@@ -239,8 +239,7 @@ private fun NotJoinedRow(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .height(52.dp)
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = 16.dp, vertical = 6.5.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         UserAvatar(

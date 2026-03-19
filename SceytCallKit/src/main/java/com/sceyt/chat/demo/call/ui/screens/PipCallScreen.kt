@@ -69,7 +69,7 @@ internal fun PipCallContent(
     val focusParticipant = rememberPipFocusParticipant(callState)
     val displayTitle = callState.call?.displayTitle(callState.remoteParticipants)
         ?: focusParticipant?.displayName.orEmpty()
-    val hasRemoteVideo = focusParticipant?.videoTrack != null
+    val hasRemoteVideo = focusParticipant?.videoTrack != null && focusParticipant.isVideoEnabled
     val hasLocalVideo = callState.localParticipant?.shouldShowLocalPreview == true
 
     if (hasRemoteVideo || hasLocalVideo) {

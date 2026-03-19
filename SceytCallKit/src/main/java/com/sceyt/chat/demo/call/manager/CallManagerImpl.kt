@@ -1147,6 +1147,7 @@ class CallManagerImpl(
         noAnswerJob = scope.launch {
             delay(CallUiState.NO_ANSWER_TIMEOUT_MS)
             if (_callUiState.value.phase == CallPhase.Outgoing) {
+                _callUiState.value.call?.leave()
                 handleCallEnded(EndedReason.NoAnswer)
             }
         }
@@ -1162,6 +1163,7 @@ class CallManagerImpl(
         reconnectTimeoutJob = scope.launch {
             delay(CallUiState.RECONNECT_TIMEOUT_MS)
             if (_callUiState.value.phase == CallPhase.Reconnecting) {
+                _callUiState.value.call?.leave()
                 handleCallEnded(EndedReason.Failed("Reconnection timed out"))
             }
         }
