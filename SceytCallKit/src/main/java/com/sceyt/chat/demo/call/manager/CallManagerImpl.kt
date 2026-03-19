@@ -348,6 +348,11 @@ class CallManagerImpl(
     }
 
     override fun handleIncomingCall(from: String, call: Call) {
+        if (_callUiState.value.call?.id == call.id) {
+            call.sendRinging()
+            Log.w(TAG, "Already handling this incoming call: ${call.id}")
+            return
+        }
         if (!_callUiState.value.phase.canAnswerOrMakeCall()) {
             Log.w(TAG, "Rejecting incoming call - already in a call")
             call.reject("Busy")
@@ -992,12 +997,6 @@ class CallManagerImpl(
                 remotes += updated
             }
             state.copy(remoteParticipants = remotes.distinctBy { it.userId })
-        }
-    }
-
-    private fun removeParticipant(userId: String) {
-        _callUiState.update { state ->
-            state.copy(remoteParticipants = state.remoteParticipants.filterNot { it.userId == userId })
         }
     }
 

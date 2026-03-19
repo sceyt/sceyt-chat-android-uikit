@@ -14,7 +14,6 @@ data class CallUiState(
     val remoteParticipants: List<CallParticipantUiState> = emptyList(),
     val isRemoteRinging: Boolean = false,
     val connectedAt: Long = 0,
-    val maxReconnectAttempts: Int = MAX_RECONNECT_ATTEMPTS,
     val endedReason: EndedReason? = null,
 ) {
 
@@ -67,12 +66,8 @@ data class CallUiState(
     val isActive: Boolean
         get() = phase != CallPhase.Idle && phase != CallPhase.Ended
 
-    val isRinging: Boolean
-        get() = phase == CallPhase.Incoming || phase == CallPhase.Outgoing
-
     companion object {
         val IDLE = CallUiState()
-        const val MAX_RECONNECT_ATTEMPTS = 3
         const val NO_ANSWER_TIMEOUT_MS = 60_000L
         const val RECONNECT_TIMEOUT_MS = 60_000L
     }
