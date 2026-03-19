@@ -1,6 +1,7 @@
 package com.sceyt.chat.demo.call.ui.screens
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -30,6 +31,7 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -43,7 +45,7 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.sceyt.chat.call.R
-import com.sceyt.chat.demo.call.manager.CallParticipantUiState
+import com.sceyt.chat.demo.call.ui.CallMemberUiState
 import com.sceyt.chat.demo.call.ui.CallMembersViewModel
 import com.sceyt.chat.demo.call.ui.MemberCallState
 import com.sceyt.chat.demo.call.ui.components.UserAvatar
@@ -102,8 +104,11 @@ internal fun CallMembersBottomSheet(
                         modifier = Modifier.animateItem(),
                     )
                 }
-                items(inCall, key = { it.userId }) { participant ->
-                    InCallRow(participant = participant, modifier = Modifier.animateItem())
+                items(
+                    items = inCall,
+                    key = { it.participant.userId }
+                ) { member ->
+                    InCallRow(member = member, modifier = Modifier.animateItem())
                 }
             }
 
@@ -123,12 +128,13 @@ internal fun CallMembersBottomSheet(
                         modifier = Modifier.animateItem(),
                     )
                 }
-                items(notJoined, key = { it.userId }) { participant ->
+                items(
+                    items = notJoined,
+                    key = { it.participant.userId }
+                ) { member ->
                     NotJoinedRow(
-                        participant = participant,
-                        memberCallState = uiState.memberCallStates[participant.userId]
-                            ?: MemberCallState.Idle,
-                        onCall = { viewModel.onCallMember(participant.userId) },
+                        member = member,
+                        onCall = { viewModel.onCallMember(member.participant.userId) },
                         modifier = Modifier.animateItem(),
                     )
                 }
@@ -152,7 +158,7 @@ private fun MembersSectionHeader(text: String, modifier: Modifier = Modifier) {
 
 @Composable
 private fun InCallRow(
-    participant: CallParticipantUiState,
+    member: CallMemberUiState,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -166,14 +172,14 @@ private fun InCallRow(
             modifier = Modifier
                 .size(40.dp)
                 .clip(CircleShape),
-            avatarUrl = participant.avatarUrl,
-            name = participant.displayName,
+            avatarUrl = member.participant.avatarUrl,
+            name = member.participant.displayName,
         )
 
         Spacer(modifier = Modifier.width(12.dp))
 
         Text(
-            text = participant.displayName,
+            text = member.participant.displayName,
             modifier = Modifier.weight(1f),
             color = MembersTitleColor,
             fontSize = 16.sp,
@@ -181,10 +187,22 @@ private fun InCallRow(
             maxLines = 1,
         )
 
+        val enterAnim = remember {
+            fadeIn(animationSpec = tween(120)) + scaleIn(
+                initialScale = 0.7f,
+                animationSpec = tween(120)
+            )
+        }
+        val exitAnim = remember {
+            fadeOut(animationSpec = tween(120)) + scaleOut(
+                targetScale = 0.7f,
+                animationSpec = tween(120)
+            )
+        }
         AnimatedVisibility(
-            visible = participant.isMuted,
-            enter = fadeIn() + scaleIn(initialScale = 0.7f),
-            exit = fadeOut() + scaleOut(targetScale = 0.7f),
+            visible = member.participant.isMuted,
+            enter = enterAnim,
+            exit = exitAnim
         ) {
             Icon(
                 imageVector = Icons.Default.MicOff,
@@ -195,9 +213,9 @@ private fun InCallRow(
         }
 
         AnimatedVisibility(
-            visible = !participant.isVideoEnabled,
-            enter = fadeIn() + scaleIn(initialScale = 0.7f),
-            exit = fadeOut() + scaleOut(targetScale = 0.7f),
+            visible = !member.participant.isVideoEnabled,
+            enter = enterAnim,
+            exit = exitAnim
         ) {
             Row {
                 Spacer(modifier = Modifier.width(8.dp))
@@ -214,13 +232,10 @@ private fun InCallRow(
 
 @Composable
 private fun NotJoinedRow(
-    participant: CallParticipantUiState,
-    memberCallState: MemberCallState,
+    member: CallMemberUiState,
     onCall: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val showLottie = participant.isRinging || memberCallState == MemberCallState.Pending
-
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -232,14 +247,14 @@ private fun NotJoinedRow(
             modifier = Modifier
                 .size(40.dp)
                 .clip(CircleShape),
-            avatarUrl = participant.avatarUrl,
-            name = participant.displayName,
+            avatarUrl = member.participant.avatarUrl,
+            name = member.participant.displayName,
         )
 
         Spacer(modifier = Modifier.width(12.dp))
 
         Text(
-            text = participant.displayName,
+            text = member.participant.displayName,
             modifier = Modifier.weight(1f),
             color = MembersTitleColor,
             fontSize = 16.sp,
@@ -247,14 +262,13 @@ private fun NotJoinedRow(
             maxLines = 1,
         )
 
-        when {
-            showLottie -> RingingLottie()
-            memberCallState == MemberCallState.CallAgain -> CallChip(
-                label = stringResource(R.string.call_again),
+        when (member.state) {
+            MemberCallState.Joined -> Unit
+            MemberCallState.Ringing -> RingingLottie()
+            MemberCallState.Idle -> CallChip(
+                label = stringResource(R.string.call),
                 onClick = onCall
             )
-
-            else -> CallChip(label = stringResource(R.string.call), onClick = onCall)
         }
     }
 }
