@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import com.sceyt.chat.demo.call.manager.CallUiState
+import com.sceyt.chat.demo.call.manager.isGroupCall
 import com.sceyt.chat.demo.call.manager.isVideoCall
 import com.sceyt.chat.demo.call.ui.screens.CallScreen
 import com.sceyt.chat.demo.call.ui.theme.CallTheme
@@ -169,8 +170,9 @@ class CallActivity : ComponentActivity() {
      */
     @RequiresApi(Build.VERSION_CODES.O)
     private fun isPipAllowed(): Boolean {
-        val phase = viewModel.callUiState.value.phase
-        if (phase !in PIP_PHASES) return false
+        val callState = viewModel.callUiState.value
+        if (callState.phase !in PIP_PHASES) return false
+        if (callState.call?.isGroupCall == true && callState.localParticipant?.isVideoEnabled != true) return false
         if (!packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)) return false
         return hasPipPermission()
     }
@@ -281,13 +283,7 @@ class CallActivity : ComponentActivity() {
 
     companion object {
         private const val EXTRA_CALL_TYPE = "extra_call_type"
-        private const val EXTRA_CALLER_ID = "extra_caller_id"
-        private const val EXTRA_IS_VIDEO = "extra_is_video"
-
         private const val CALL_TYPE_INCOMING = "incoming"
-        private const val CALL_TYPE_OUTGOING = "outgoing"
-        private const val CALL_TYPE_ONGOING = "ongoing"
-
         private const val EXTRA_AUTO_ANSWER = "extra_auto_answer"
 
         private val PIP_PHASES = setOf(
@@ -320,27 +316,10 @@ class CallActivity : ComponentActivity() {
         }
 
         /**
-         * Creates intent to launch for outgoing call.
-         */
-        fun createOutgoingIntent(
-            context: Context,
-            userId: String,
-            isVideo: Boolean
-        ): Intent {
-            return Intent(context, CallActivity::class.java).apply {
-                putExtra(EXTRA_CALL_TYPE, CALL_TYPE_OUTGOING)
-                putExtra(EXTRA_CALLER_ID, userId)
-                putExtra(EXTRA_IS_VIDEO, isVideo)
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-            }
-        }
-
-        /**
          * Creates intent to return to ongoing call.
          */
         fun createOngoingIntent(context: Context): Intent {
             return Intent(context, CallActivity::class.java).apply {
-                putExtra(EXTRA_CALL_TYPE, CALL_TYPE_ONGOING)
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
             }
         }
@@ -348,19 +327,16 @@ class CallActivity : ComponentActivity() {
         /**
          * Launches incoming call UI.
          */
-        fun launchIncoming(context: Context, callerId: String, isVideo: Boolean) {
-            val intent = createIncomingIntent(context).apply {
-                putExtra(EXTRA_CALLER_ID, callerId)
-                putExtra(EXTRA_IS_VIDEO, isVideo)
-            }
+        fun launchIncoming(context: Context) {
+            val intent = createIncomingIntent(context)
             context.startActivity(intent)
         }
 
         /**
-         * Launches outgoing call UI.
+         * Launches ongoing call UI.
          */
-        fun launchOutgoing(context: Context, userId: String, isVideo: Boolean) {
-            context.startActivity(createOutgoingIntent(context, userId, isVideo))
+        fun launchOngoing(context: Context) {
+            context.startActivity(createOngoingIntent(context))
         }
     }
 }

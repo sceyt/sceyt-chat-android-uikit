@@ -383,11 +383,7 @@ class CallManagerImpl(
         }
 
         if (context.isAppOnForeground()) {
-            CallActivity.launchIncoming(
-                context = context,
-                callerId = from,
-                isVideo = call.isVideoCall
-            )
+            CallActivity.launchIncoming(context = context)
         }
 
         Log.d(TAG, "Incoming call from: $from, video: ${call.videoCall}")

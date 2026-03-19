@@ -85,11 +85,7 @@ class CustomChannelActivity : ChannelActivity() {
         } ?: return false
         lifecycleScope.launch {
             callManager.joinCall(currentCall, callPrepared = {
-                CallActivity.launchOutgoing(
-                    context = this@CustomChannelActivity,
-                    userId = channel.id.toString(),
-                    isVideo = it.videoCall
-                )
+                CallActivity.launchOngoing(context = this@CustomChannelActivity)
             })
         }
         return true
@@ -105,11 +101,7 @@ class CustomChannelActivity : ChannelActivity() {
                     isVideo = isVideo,
                     isCallAgain = false
                 ) {
-                    CallActivity.launchOutgoing(
-                        context = this@CustomChannelActivity,
-                        userId = channel.id.toString(),
-                        isVideo = isVideo
-                    )
+                    CallActivity.launchOngoing(context = this@CustomChannelActivity)
                 }
             } else {
                 val peerUserId = channel.getPeer()?.id
@@ -126,11 +118,7 @@ class CustomChannelActivity : ChannelActivity() {
                     isVideo = isVideo,
                     isCallAgain = false
                 ) {
-                    CallActivity.launchOutgoing(
-                        context = this@CustomChannelActivity,
-                        userId = peerUserId,
-                        isVideo = isVideo
-                    )
+                    CallActivity.launchOngoing(context = this@CustomChannelActivity)
                 }
             }
 
