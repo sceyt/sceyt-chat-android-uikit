@@ -31,6 +31,7 @@ import com.sceyt.chat.demo.call.manager.CallParticipantUiState
 import com.sceyt.chat.demo.call.manager.CallUiState
 import com.sceyt.chat.demo.call.manager.CallUiState.CallPhase
 import com.sceyt.chat.demo.call.manager.displayTitle
+import com.sceyt.chat.demo.call.manager.isGroupCall
 import com.sceyt.chat.demo.call.ui.components.LocalVideoPreview
 import com.sceyt.chat.demo.call.ui.components.RemoteVideoView
 import com.sceyt.chat.demo.call.ui.components.UserAvatar
@@ -49,6 +50,22 @@ internal fun PipCallContent(
     callState: CallUiState,
     duration: String
 ) {
+    // Group call PIP: show only self video
+    if (callState.call?.isGroupCall == true) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black)
+        ) {
+            LocalVideoPreview(
+                videoTrack = callState.localParticipant?.videoTrack,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+        return
+    }
+
+    // P2P call PIP: show remote video (with local overlay), or audio-only fallback
     val focusParticipant = rememberPipFocusParticipant(callState)
     val displayTitle = callState.call?.displayTitle(callState.remoteParticipants)
         ?: focusParticipant?.displayName.orEmpty()
