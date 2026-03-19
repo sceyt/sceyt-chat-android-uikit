@@ -185,7 +185,15 @@ class CallActivity : ComponentActivity() {
     private fun isPipAllowed(): Boolean {
         val callState = viewModel.callUiState.value
         if (callState.phase !in PIP_PHASES) return false
-        if (callState.call?.isGroupCall == true && callState.localParticipant?.isVideoEnabled != true) return false
+        val isLocalVideoOn = callState.localParticipant?.isVideoEnabled == true
+        if (callState.call?.isGroupCall == true) {
+            // Group call: only allow PIP when local video is on (shows self video in PIP)
+            if (!isLocalVideoOn) return false
+        } else {
+            // P2P call: only allow PIP when at least one side has video
+            val isRemoteVideoOn = callState.remoteParticipant?.isVideoEnabled == true
+            if (!isLocalVideoOn && !isRemoteVideoOn) return false
+        }
         if (!packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)) return false
         return hasPipPermission()
     }

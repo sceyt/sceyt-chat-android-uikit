@@ -15,6 +15,7 @@ import com.sceyt.chat.demo.R
 import com.sceyt.chat.demo.call.manager.CallManager
 import com.sceyt.chat.demo.call.manager.channelIdOrNull
 import com.sceyt.chat.demo.call.ui.CallActivity
+import com.sceyt.chat.demo.call.ui.attachActiveCallBanner
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.extensions.launchActivity
 import com.sceyt.chatuikit.persistence.extensions.getPeer
@@ -46,8 +47,8 @@ class CustomChannelActivity : ChannelActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         binding.headerView.setToolbarMenu()
+        attachActiveCallBanner(callManager, binding.root, binding.headerView.id)
     }
 
     private fun MessagesListHeaderView.setToolbarMenu() {
