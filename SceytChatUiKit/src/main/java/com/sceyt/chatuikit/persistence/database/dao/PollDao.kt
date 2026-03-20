@@ -19,10 +19,10 @@ import com.sceyt.chatuikit.persistence.database.entity.messages.PollVoteEntity
 internal abstract class PollDao {
 
     @Transaction
-    @Query("SELECT * FROM $POLL_TABLE WHERE messageTid =:messageTid AND id = :pollId")
+    @Query("SELECT * FROM $POLL_TABLE WHERE messageTid = :messageTid AND id = :pollId")
     abstract suspend fun getPollById(messageTid: Long, pollId: String): PollDb?
 
-    @Query("SELECT * FROM $POLL_TABLE WHERE messageTid =:messageTid AND id = :pollId")
+    @Query("SELECT * FROM $POLL_TABLE WHERE messageTid = :messageTid AND id = :pollId")
     abstract suspend fun getPollEntityById(messageTid: Long, pollId: String): PollEntity?
 
     @Transaction
@@ -102,6 +102,6 @@ internal abstract class PollDao {
     @Query("DELETE FROM $POLL_OPTION_TABLE WHERE pollId = :pollId")
     protected abstract suspend fun deletePollOptions(pollId: String)
 
-    @Query("select exists(select * from $MESSAGE_TABLE where tid =:tid)")
+    @Query("SELECT EXISTS(SELECT * FROM $MESSAGE_TABLE WHERE tid = :tid)")
     abstract suspend fun existsMessageByTid(tid: Long): Boolean
 }

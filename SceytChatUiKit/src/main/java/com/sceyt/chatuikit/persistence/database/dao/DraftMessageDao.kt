@@ -30,10 +30,10 @@ internal abstract class DraftMessageDao {
 
     @Transaction
     open suspend fun insertDraftMessage(
-            entity: DraftMessageEntity,
-            links: List<DraftMessageUserLinkEntity>?,
-            attachments: List<DraftAttachmentEntity>?,
-            voiceAttachment: DraftVoiceAttachmentEntity?,
+        entity: DraftMessageEntity,
+        links: List<DraftMessageUserLinkEntity>?,
+        attachments: List<DraftAttachmentEntity>?,
+        voiceAttachment: DraftVoiceAttachmentEntity?,
     ) {
         if (existsChannel(entity.chatId)) {
             insert(entity)
@@ -52,13 +52,13 @@ internal abstract class DraftMessageDao {
         }
     }
 
-    @Query("select exists(select 1 from $CHANNEL_TABLE where chat_id = :chatId)")
+    @Query("SELECT EXISTS(SELECT 1 FROM $CHANNEL_TABLE WHERE chat_id = :chatId)")
     abstract suspend fun existsChannel(chatId: Long): Boolean
 
     @Transaction
-    @Query("select * from $DRAFT_MESSAGE_TABLE where chatId = :chatId")
+    @Query("SELECT * FROM $DRAFT_MESSAGE_TABLE WHERE chatId = :chatId")
     abstract suspend fun getDraftByChannelId(chatId: Long): DraftMessageDb?
 
-    @Query("delete from $DRAFT_MESSAGE_TABLE where chatId = :chatId")
+    @Query("DELETE FROM $DRAFT_MESSAGE_TABLE WHERE chatId = :chatId")
     abstract suspend fun deleteDraftByChannelId(chatId: Long)
 }
