@@ -27,8 +27,8 @@ internal abstract class ChannelDao {
 
     @Transaction
     open suspend fun insertChannelsAndLinks(
-            channels: List<ChannelEntity>,
-            userChatLinks: List<UserChatLinkEntity>,
+        channels: List<ChannelEntity>,
+        userChatLinks: List<UserChatLinkEntity>,
     ) {
         insertMany(channels)
         insertUserChatLinks(userChatLinks)
@@ -36,8 +36,8 @@ internal abstract class ChannelDao {
 
     @Transaction
     open suspend fun insertChannelAndLinks(
-            channel: ChannelEntity,
-            userChatLinks: List<UserChatLinkEntity>,
+        channel: ChannelEntity,
+        userChatLinks: List<UserChatLinkEntity>,
     ) {
         insert(channel)
         insertUserChatLinks(userChatLinks)
@@ -50,52 +50,71 @@ internal abstract class ChannelDao {
     abstract suspend fun insertUserChatLink(userChatLink: UserChatLinkEntity): Long
 
     @Transaction
-    @Query("""
-        select * from $CHANNEL_TABLE 
-            where (case when :onlyMine then userRole <> '' else 1 end) 
-            and (not pending or lastMessageTid != 0) 
-            and (:isEmptyTypes = 1 or type in (:types)) 
-            order by 
-            case when pinnedAt > 0 then pinnedAt end desc,
-            case when :orderByLastMessage = 1 and lastMessageAt is not null then lastMessageAt end desc,
-            createdAt desc 
-            limit :limit offset :offset
-    """)
+    @Query(
+        """
+        SELECT *
+        FROM $CHANNEL_TABLE
+        WHERE (NOT :onlyMine OR userRole <> '')
+          AND (NOT pending OR lastMessageTid != 0)
+          AND (:typesEmpty OR type IN (:types))
+        ORDER BY
+          CASE WHEN pinnedAt > 0 THEN pinnedAt END DESC,
+          CASE WHEN :orderByLastMessage AND lastMessageAt IS NOT NULL THEN lastMessageAt END DESC,
+          createdAt DESC
+        LIMIT :limit OFFSET :offset
+        """
+    )
     abstract suspend fun getChannels(
-            limit: Int,
-            offset: Int,
-            types: List<String>,
-            orderByLastMessage: Boolean,
-            onlyMine: Boolean,
-            isEmptyTypes: Int = if (types.isEmpty()) 1 else 0,
+        limit: Int,
+        offset: Int,
+        types: List<String>,
+        orderByLastMessage: Boolean,
+        onlyMine: Boolean,
+        typesEmpty: Boolean = types.isEmpty()
     ): List<ChannelDb>
 
-    @SuppressWarnings(RoomWarnings.QUERY_MISMATCH)
     @Transaction
-    @Query("""
-      select * from $CHANNEL_TABLE as channel  
-            left join $USER_CHAT_LINK_TABLE as link on link.chat_id = channel.chat_id 
-            where (((subject like '%' || :query || '%' and (not pending or lastMessageTid != 0) and type <> :directType 
-            and (case when :onlyMine then channel.userRole <> '' else 1 end)) 
-            or (type =:directType and (link.user_id in (:userIds) or isSelf and link.user_id like '%' || :query || '%')))
-            and (:isEmptyTypes = 1 or type in (:types))) 
-            group by channel.chat_id 
-            order by 
-            case when pinnedAt > 0 then pinnedAt end desc,
-            case when :orderByLastMessage = 1 and lastMessageAt is not null then lastMessageAt end desc, 
-            createdAt desc 
-            limit :limit offset :offset
-    """)
+    @Query(
+        """
+        SELECT * FROM $CHANNEL_TABLE AS channel
+        WHERE (
+            (
+                type <> :directType
+                AND (NOT pending OR lastMessageTid != 0)
+                AND (NOT :onlyMine OR channel.userRole <> '')
+                AND subject LIKE '%' || :query || '%'
+            )
+            OR (
+                type = :directType
+                AND EXISTS (
+                    SELECT 1
+                    FROM $USER_CHAT_LINK_TABLE AS link
+                    WHERE link.chat_id = channel.chat_id
+                      AND (
+                          link.user_id IN (:userIds)
+                          OR (channel.isSelf AND link.user_id LIKE '%' || :query || '%')
+                      )
+                )
+            )
+        )
+        AND (:typesEmpty OR type IN (:types))
+        ORDER BY
+          CASE WHEN pinnedAt > 0 THEN pinnedAt END DESC,
+          CASE WHEN :orderByLastMessage AND lastMessageAt IS NOT NULL THEN lastMessageAt END DESC,
+          createdAt DESC
+        LIMIT :limit OFFSET :offset
+        """
+    )
     abstract suspend fun searchChannelsByUserIds(
-            query: String,
-            userIds: List<String>,
-            limit: Int,
-            offset: Int,
-            onlyMine: Boolean,
-            types: List<String>,
-            orderByLastMessage: Boolean,
-            isEmptyTypes: Int = if (types.isEmpty()) 1 else 0,
-            directType: String = ChannelTypeEnum.Direct.value,
+        query: String,
+        userIds: List<String>,
+        limit: Int,
+        offset: Int,
+        onlyMine: Boolean,
+        types: List<String>,
+        orderByLastMessage: Boolean,
+        typesEmpty: Boolean = types.isEmpty(),
+        directType: String = ChannelTypeEnum.Direct.value,
     ): List<ChannelDb>
 
     @Transaction
@@ -103,14 +122,14 @@ internal abstract class ChannelDao {
     abstract suspend fun getChannelsBySQLiteQuery(query: SimpleSQLiteQuery): List<ChannelDb>
 
     @Transaction
-    @Query("select * from $CHANNEL_TABLE  where chat_id =:id")
+    @Query("""SELECT * FROM $CHANNEL_TABLE WHERE chat_id = :id""")
     abstract suspend fun getChannelById(id: Long): ChannelDb?
 
     @Transaction
-    @Query("select * from $CHANNEL_TABLE  where chat_id in (:ids)")
+    @Query("""SELECT * FROM $CHANNEL_TABLE WHERE chat_id IN (:ids)""")
     abstract suspend fun getChannelsById(ids: List<Long>): List<ChannelDb>
 
-    @Query("select * from $USER_CHAT_LINK_TABLE where user_id =:userId")
+    @Query("""SELECT * FROM $USER_CHAT_LINK_TABLE WHERE user_id = :userId""")
     abstract suspend fun getUserChannelLinksByPeerId(userId: String): List<UserChatLinkEntity>
 
     @Transaction
@@ -121,119 +140,165 @@ internal abstract class ChannelDao {
 
     @SuppressWarnings(RoomWarnings.QUERY_MISMATCH)
     @Transaction
-    @Query("select * from $CHANNEL_TABLE as channel join $USER_CHAT_LINK_TABLE as link " +
-            "on link.chat_id = channel.chat_id " +
-            "where link.user_id =:peerId and type =:channelType")
+    @Query(
+        """
+        SELECT * FROM $CHANNEL_TABLE AS channel
+        JOIN $USER_CHAT_LINK_TABLE AS link ON link.chat_id = channel.chat_id
+        WHERE link.user_id = :peerId
+          AND type = :channelType
+        """
+    )
     abstract suspend fun getChannelByUserAndType(
-            peerId: String,
-            channelType: String,
+        peerId: String,
+        channelType: String,
     ): ChannelDb?
 
     @SuppressWarnings(RoomWarnings.QUERY_MISMATCH)
     @Transaction
-    @Query("""
-    select * from $CHANNEL_TABLE  
-    where chat_id in (
-        select link.chat_id from $USER_CHAT_LINK_TABLE as link 
-        where link.user_id in (:users)
-        group by link.chat_id
-        having COUNT(link.user_id) = :userCount
-    ) 
-    and type = :channelType
-""")
+    @Query(
+        """
+        SELECT * FROM $CHANNEL_TABLE
+        WHERE chat_id IN (
+            SELECT link.chat_id
+            FROM $USER_CHAT_LINK_TABLE AS link
+            WHERE link.user_id IN (:users)
+            GROUP BY link.chat_id
+            HAVING COUNT(link.user_id) = :userCount
+        )
+        AND type = :channelType
+        """
+    )
     abstract suspend fun getChannelByUsersAndType(
-            users: List<String>,
-            channelType: String,
-            userCount: Int = users.size,
+        users: List<String>,
+        channelType: String,
+        userCount: Int = users.size,
     ): ChannelDb?
 
     @Transaction
-    @Query("select * from $CHANNEL_TABLE  where uri =:uri")
+    @Query("""SELECT * FROM $CHANNEL_TABLE WHERE uri = :uri""")
     abstract suspend fun getChannelByUri(uri: String): ChannelDb?
 
     @SuppressWarnings(RoomWarnings.QUERY_MISMATCH)
     @Transaction
-    @Query("select * from $CHANNEL_TABLE  where isSelf = 1")
+    @Query("""SELECT * FROM $CHANNEL_TABLE WHERE isSelf = 1""")
     abstract suspend fun getSelfChannel(): ChannelDb?
 
-    @Query("select chat_id from $CHANNEL_TABLE  where chat_id not in (:ids) " +
-            "and (:isEmptyTypes = 1 or type in (:types))" +
-            "and pending != 1")
+    @Query(
+        """
+        SELECT chat_id
+        FROM $CHANNEL_TABLE
+        WHERE chat_id NOT IN (:ids)
+          AND (:typesEmpty OR type IN (:types))
+          AND (NOT :onlyMine OR userRole <> '')
+          AND pending != 1
+        """
+    )
     abstract suspend fun getNotExistingChannelIdsByIdsAndTypes(
-            ids: List<Long>,
-            types: List<String>,
-            isEmptyTypes: Int = if (types.isEmpty()) 1 else 0,
+        ids: List<Long>,
+        types: List<String>,
+        onlyMine: Boolean,
+        typesEmpty: Boolean = types.isEmpty()
     ): List<Long>
 
-    @Query("select chat_id from $CHANNEL_TABLE  where pending != 1 and (:isEmptyTypes = 1 or type in (:types))")
+    @Query(
+        """
+        SELECT chat_id
+        FROM $CHANNEL_TABLE
+        WHERE pending != 1
+          AND (:typesEmpty OR type IN (:types))
+          AND (NOT :onlyMine OR userRole <> '')
+        """
+    )
     abstract suspend fun getAllChannelIdsByTypes(
-            types: List<String>,
-            isEmptyTypes: Int = if (types.isEmpty()) 1 else 0,
+        types: List<String>,
+        onlyMine: Boolean,
+        typesEmpty: Boolean = types.isEmpty()
     ): List<Long>
 
-    @Query("select chat_id from $CHANNEL_TABLE ")
+    @Query("""SELECT chat_id FROM $CHANNEL_TABLE""")
     abstract suspend fun getAllChannelsIds(): List<Long>
 
-    @Query("select lastMessageTid from $CHANNEL_TABLE  where chat_id in (:ids)")
+    @Query("""SELECT lastMessageTid FROM $CHANNEL_TABLE WHERE chat_id IN (:ids)""")
     abstract suspend fun getChannelsLastMessageTIds(ids: List<Long>): List<Long>
 
-    @Query("select lastMessageTid from $CHANNEL_TABLE  where chat_id = :id")
+    @Query("""SELECT lastMessageTid FROM $CHANNEL_TABLE WHERE chat_id = :id""")
     abstract suspend fun getChannelLastMessageTid(id: Long): Long?
 
     @Transaction
-    @Query("""
-        select sum(newMessageCount) from $CHANNEL_TABLE 
-        where :isEmptyTypes = 1 or type in (:channelTypes)
-           """)
+    @Query(
+        """
+        SELECT SUM(newMessageCount)
+        FROM $CHANNEL_TABLE
+        WHERE :typesEmpty OR type IN (:channelTypes)
+        """
+    )
     abstract fun getTotalUnreadCountAsFlow(
-            channelTypes: List<String>,
-            isEmptyTypes: Int = if (channelTypes.isEmpty()) 1 else 0,
+        channelTypes: List<String>,
+        typesEmpty: Boolean = channelTypes.isEmpty(),
     ): Flow<Long?>
 
-    @Query("select count(chat_id) from $CHANNEL_TABLE ")
+    @Query("""SELECT COUNT(chat_id) FROM $CHANNEL_TABLE""")
     abstract suspend fun getAllChannelsCount(): Int
 
-    @Query("select messageRetentionPeriod from $CHANNEL_TABLE  where chat_id = :channelId")
+    @Query("""SELECT messageRetentionPeriod FROM $CHANNEL_TABLE WHERE chat_id = :channelId""")
     abstract suspend fun getRetentionPeriodByChannelId(channelId: Long): Long?
 
     @Update
     abstract suspend fun updateChannel(channelEntity: ChannelEntity): Int
 
-    @Query("update $CHANNEL_TABLE  set lastMessageTid =:lastMessageTid, lastMessageAt =:lastMessageAt where chat_id= :channelId")
-    abstract suspend fun updateLastMessage(channelId: Long, lastMessageTid: Long?, lastMessageAt: Long?)
+    @Query(
+        """UPDATE $CHANNEL_TABLE SET lastMessageTid = :lastMessageTid, lastMessageAt = :lastMessageAt WHERE chat_id = :channelId"""
+    )
+    abstract suspend fun updateLastMessage(
+        channelId: Long,
+        lastMessageTid: Long?,
+        lastMessageAt: Long?
+    )
 
-    @Query("update $CHANNEL_TABLE  set lastMessageTid =:lastMessageTid, lastMessageAt =:lastMessageAt," +
-            "lastDisplayedMessageId =:lastMessageId where chat_id= :channelId")
-    abstract suspend fun updateLastMessageWithLastRead(channelId: Long, lastMessageTid: Long?, lastMessageId: Long, lastMessageAt: Long?)
+    @Query(
+        """
+        UPDATE $CHANNEL_TABLE
+        SET lastMessageTid = :lastMessageTid,
+            lastMessageAt = :lastMessageAt,
+            lastDisplayedMessageId = :lastMessageId
+        WHERE chat_id = :channelId
+        """
+    )
+    abstract suspend fun updateLastMessageWithLastRead(
+        channelId: Long,
+        lastMessageTid: Long?,
+        lastMessageId: Long,
+        lastMessageAt: Long?
+    )
 
-    @Query("update $CHANNEL_TABLE  set newMessageCount =:count, unread = 0 where chat_id= :channelId")
+    @Query("""UPDATE $CHANNEL_TABLE SET newMessageCount = :count, unread = 0 WHERE chat_id = :channelId""")
     abstract suspend fun updateUnreadCount(channelId: Long, count: Int)
 
-    @Query("update $CHANNEL_TABLE  set memberCount =:count where chat_id= :channelId")
+    @Query("""UPDATE $CHANNEL_TABLE SET memberCount = :count WHERE chat_id = :channelId""")
     abstract suspend fun updateMemberCount(channelId: Long, count: Int)
 
-    @Query("update $CHANNEL_TABLE  set muted =:muted, mutedTill =:muteUntil where chat_id =:channelId")
+    @Query("""UPDATE $CHANNEL_TABLE SET muted = :muted, mutedTill = :muteUntil WHERE chat_id = :channelId""")
     abstract suspend fun updateMuteState(channelId: Long, muted: Boolean, muteUntil: Long? = 0)
 
-    @Query("update $CHANNEL_TABLE  set messageRetentionPeriod =:period where chat_id =:channelId")
+    @Query("""UPDATE $CHANNEL_TABLE SET messageRetentionPeriod = :period WHERE chat_id = :channelId""")
     abstract suspend fun updateAutoDeleteState(channelId: Long, period: Long)
 
-    @Query("update $CHANNEL_TABLE  set pinnedAt =:pinnedAt where chat_id =:channelId")
+    @Query("""UPDATE $CHANNEL_TABLE SET pinnedAt = :pinnedAt WHERE chat_id = :channelId""")
     abstract suspend fun updatePinState(channelId: Long, pinnedAt: Long?)
 
-    @Query("delete from $CHANNEL_TABLE  where chat_id =:channelId")
+    @Query("""DELETE FROM $CHANNEL_TABLE WHERE chat_id = :channelId""")
     abstract suspend fun deleteChannel(channelId: Long)
 
-    @Query("delete from $USER_CHAT_LINK_TABLE where chat_id =:channelId and user_id in (:userIds)")
+    @Query("""DELETE FROM $USER_CHAT_LINK_TABLE WHERE chat_id = :channelId AND user_id IN (:userIds)""")
     abstract suspend fun deleteUserChatLinks(channelId: Long, vararg userIds: String)
 
-    @Query("delete from $USER_CHAT_LINK_TABLE where chat_id =:channelId")
+    @Query("""DELETE FROM $USER_CHAT_LINK_TABLE WHERE chat_id = :channelId""")
     abstract suspend fun deleteChatLinks(channelId: Long)
 
-    @Query("delete from $USER_CHAT_LINK_TABLE where chat_id in (:channelIds)")
+    @Query("""DELETE FROM $USER_CHAT_LINK_TABLE WHERE chat_id IN (:channelIds)""")
     abstract suspend fun deleteChannelsLinks(channelIds: List<Long>)
 
-    @Query("delete from $USER_CHAT_LINK_TABLE where chat_id =:channelId and user_id != :exceptUserId")
+    @Query("""DELETE FROM $USER_CHAT_LINK_TABLE WHERE chat_id = :channelId AND user_id != :exceptUserId""")
     abstract suspend fun deleteChatLinksExceptUser(channelId: Long, exceptUserId: String)
 
     @Transaction
@@ -242,7 +307,7 @@ internal abstract class ChannelDao {
         deleteChatLinks(channelId)
     }
 
-    @Query("delete from $CHANNEL_TABLE  where chat_id in (:ids)")
+    @Query("""DELETE FROM $CHANNEL_TABLE WHERE chat_id IN (:ids)""")
     abstract suspend fun deleteAllChannelByIds(ids: List<Long>): Int
 
     @Transaction
