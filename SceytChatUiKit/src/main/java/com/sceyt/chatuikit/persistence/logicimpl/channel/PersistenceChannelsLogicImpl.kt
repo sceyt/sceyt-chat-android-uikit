@@ -491,7 +491,8 @@ internal class PersistenceChannelsLogicImpl(
                             val deletedChannelIds =
                                 channelDao.getNotExistingChannelIdsByIdsAndTypes(
                                     ids = syncedIds,
-                                    types = config.types
+                                    types = config.types,
+                                    onlyMine = true
                                 )
                             deleteChannelsFromDbAndCache(channelIds = deletedChannelIds)
                             val newChannelsIds = syncedIds.minus(oldChannelsIds)
@@ -508,7 +509,7 @@ internal class PersistenceChannelsLogicImpl(
                                         " syncedChannelsCount: ${syncedChannels.size} "
                             )
                         } else {
-                            val ids = channelDao.getAllChannelIdsByTypes(config.types)
+                            val ids = channelDao.getAllChannelIdsByTypes(config.types, true)
                             deleteChannelsFromDbAndCache(ids)
                             SceytLog.i(
                                 TAG, "syncChannelsResult: syncedChannels is empty, " +

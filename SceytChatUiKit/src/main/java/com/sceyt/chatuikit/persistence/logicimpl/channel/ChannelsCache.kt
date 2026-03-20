@@ -355,12 +355,16 @@ class ChannelsCache {
 
     suspend fun deleteChannel(vararg ids: Long) {
         mutex.withLock {
+            var found = false
             ids.forEach { id ->
                 cachedData.forEach { (_, map) ->
-                    map.remove(id)
+                    val removed = map.remove(id)
+                    if (removed != null)
+                        found = true
                 }
             }
-            channelsDeletedFlow_.tryEmit(ids.toList())
+            if (found)
+                channelsDeletedFlow_.tryEmit(ids.toList())
         }
     }
 
