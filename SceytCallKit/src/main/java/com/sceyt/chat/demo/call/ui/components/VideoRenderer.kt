@@ -12,7 +12,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.viewinterop.AndroidView
-import com.sceyt.chat.demo.call.ui.components.VideoTextureView
 import org.webrtc.RendererCommon
 import org.webrtc.VideoTrack
 
@@ -22,7 +21,7 @@ import org.webrtc.VideoTrack
  */
 @Composable
 fun VideoRenderer(
-    videoTrack: VideoTrack?,
+    videoTrack: StableVideoTrack?,
     modifier: Modifier = Modifier,
     mirror: Boolean = false,
     scalingType: RendererCommon.ScalingType = RendererCommon.ScalingType.SCALE_ASPECT_FIT
@@ -43,28 +42,21 @@ fun VideoRenderer(
             },
             modifier = Modifier.fillMaxSize(),
             update = { renderer ->
-                // Update mirror and scaling if changed
                 renderer.setMirror(mirror)
                 renderer.setScalingType(scalingType)
 
-                // Handle track changes
-                if (videoTrack != currentTrack) {
-                    // Remove from old track
+                val track = videoTrack?.value
+                if (track != currentTrack) {
                     currentTrack?.removeSink(renderer)
-
-                    // Add to new track
-                    // Skip is is on edit mode
                     if (!renderer.isInEditMode) {
-                        videoTrack?.addSink(renderer)
+                        track?.addSink(renderer)
                     }
-
-                    currentTrack = videoTrack
+                    currentTrack = track
                 }
             }
         )
     }
 
-    // Cleanup when composable is disposed
     DisposableEffect(Unit) {
         onDispose {
             currentTrack?.removeSink(currentRenderer)
@@ -79,7 +71,7 @@ fun VideoRenderer(
  */
 @Composable
 fun LocalVideoPreview(
-    videoTrack: VideoTrack?,
+    videoTrack: StableVideoTrack?,
     modifier: Modifier = Modifier
 ) {
     VideoRenderer(
@@ -95,7 +87,7 @@ fun LocalVideoPreview(
  */
 @Composable
 fun RemoteVideoView(
-    videoTrack: VideoTrack?,
+    videoTrack: StableVideoTrack?,
     modifier: Modifier = Modifier
 ) {
     VideoRenderer(

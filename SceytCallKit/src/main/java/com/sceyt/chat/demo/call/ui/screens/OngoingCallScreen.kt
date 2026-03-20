@@ -77,11 +77,11 @@ import com.sceyt.chat.demo.call.ui.components.AudioDeviceSelector
 import com.sceyt.chat.demo.call.ui.components.CallActionButton
 import com.sceyt.chat.demo.call.ui.components.LocalVideoPreview
 import com.sceyt.chat.demo.call.ui.components.RemoteVideoView
+import com.sceyt.chat.demo.call.ui.components.StableVideoTrack
 import com.sceyt.chat.demo.call.ui.components.UserAvatarWithOuter
 import com.sceyt.chat.demo.call.ui.theme.CallColors
 import com.sceyt.chat.demo.call.ui.theme.callBackground
 import kotlinx.coroutines.delay
-import org.webrtc.VideoTrack
 import kotlin.math.roundToInt
 
 private val SurfaceDark = Color(0xFF232324)
@@ -322,6 +322,8 @@ private fun DirectVideoOngoingLayout(
 ) {
     val hasRemoteVideo = remoteParticipant?.videoTrack != null && remoteParticipant.isVideoEnabled
     val hasLocalVideo = localParticipant?.shouldShowLocalPreview == true
+    val stableRemoteTrack = remember(remoteParticipant?.videoTrack) { StableVideoTrack(remoteParticipant?.videoTrack) }
+    val stableLocalTrack = remember(localParticipant?.videoTrack) { StableVideoTrack(localParticipant?.videoTrack) }
 
     Box(
         modifier = Modifier
@@ -334,12 +336,12 @@ private fun DirectVideoOngoingLayout(
         when {
             hasRemoteVideo -> {
                 RemoteVideoView(
-                    videoTrack = remoteParticipant.videoTrack,
+                    videoTrack = stableRemoteTrack,
                     modifier = Modifier.fillMaxSize()
                 )
                 if (hasLocalVideo) {
                     DraggableLocalVideoPreview(
-                        videoTrack = localParticipant.videoTrack,
+                        videoTrack = stableLocalTrack,
                         showControls = showControls,
                         modifier = Modifier.fillMaxSize()
                     )
@@ -348,7 +350,7 @@ private fun DirectVideoOngoingLayout(
 
             hasLocalVideo -> {
                 LocalVideoPreview(
-                    videoTrack = localParticipant.videoTrack,
+                    videoTrack = stableLocalTrack,
                     modifier = Modifier.fillMaxSize()
                 )
             }
@@ -545,7 +547,7 @@ fun CallControlBar(
 
 @Composable
 private fun DraggableLocalVideoPreview(
-    videoTrack: VideoTrack?,
+    videoTrack: StableVideoTrack?,
     showControls: Boolean,
     modifier: Modifier = Modifier
 ) {
