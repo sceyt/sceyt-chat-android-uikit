@@ -42,7 +42,7 @@ class ChannelsViewModel(
             offset: Int,
             query: String = searchQuery,
             loadKey: LoadKeyData? = null,
-            onlyMine: Boolean = true,
+            onlyMine: Boolean = query.isEmpty(),
             ignoreDatabase: Boolean = false,
     ) {
         searchQuery = query
