@@ -11,16 +11,17 @@ import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingMessageSt
 
 @Dao
 internal interface PendingMessageStateDao {
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(entity: PendingMessageStateEntity)
 
-    @Query("select * from $PENDING_MESSAGE_STATE_TABLE")
+    @Query("SELECT * FROM $PENDING_MESSAGE_STATE_TABLE")
     suspend fun getAll(): List<PendingMessageStateEntity>
 
     @Transaction
-    @Query("select * from $PENDING_MESSAGE_STATE_TABLE")
+    @Query("SELECT * FROM $PENDING_MESSAGE_STATE_TABLE")
     suspend fun getAllWithMessage(): List<PendingMessageStateDb>
 
-    @Query("delete from $PENDING_MESSAGE_STATE_TABLE where messageId =:messageId")
+    @Query("DELETE FROM $PENDING_MESSAGE_STATE_TABLE WHERE messageId = :messageId")
     suspend fun deleteByMessageId(messageId: Long)
 }

@@ -13,12 +13,12 @@ internal interface FileChecksumDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(fileChecksum: FileChecksumEntity)
 
-    @Query("select * from $FILE_CHECKSUM_TABLE where checksum = :checksum")
+    @Query("SELECT * FROM $FILE_CHECKSUM_TABLE WHERE checksum = :checksum")
     suspend fun getChecksum(checksum: Long): FileChecksumEntity?
 
-    @Query("update $FILE_CHECKSUM_TABLE set url = :url where checksum = :checksum")
+    @Query("UPDATE $FILE_CHECKSUM_TABLE SET url = :url WHERE checksum = :checksum")
     suspend fun updateUrl(checksum: Long, url: String?)
 
-    @Query("update $FILE_CHECKSUM_TABLE set resizedFilePath = :path, fileSize =:fileSize where checksum = :checksum")
+    @Query("UPDATE $FILE_CHECKSUM_TABLE SET resizedFilePath = :path, fileSize = :fileSize WHERE checksum = :checksum")
     suspend fun updateResizedFilePathAndSize(checksum: Long, path: String?, fileSize: Long?)
 }

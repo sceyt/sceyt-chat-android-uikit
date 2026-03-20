@@ -8,9 +8,9 @@ import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingMarkerEnt
 @Dao
 internal interface PendingMarkerDao {
 
-    @Query("select * from $PENDING_MARKER_TABLE")
+    @Query("SELECT * FROM $PENDING_MARKER_TABLE")
     suspend fun getAllMarkers(): List<PendingMarkerEntity>
 
-    @Query("delete from $PENDING_MARKER_TABLE where messageId in (:messageIds) and name =:status")
+    @Query("DELETE FROM $PENDING_MARKER_TABLE WHERE messageId IN (:messageIds) AND name = :status")
     suspend fun deleteMessagesMarkersByStatus(messageIds: List<Long>, status: String)
 }

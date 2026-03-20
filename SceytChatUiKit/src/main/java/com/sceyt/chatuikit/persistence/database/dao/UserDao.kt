@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 internal abstract class UserDao {
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     protected abstract suspend fun insertUser(user: UserEntity)
 
@@ -38,8 +39,8 @@ internal abstract class UserDao {
 
     @Transaction
     open suspend fun insertUsersWithMetadata(
-            users: List<UserDb>,
-            replaceUserOnConflict: Boolean = true
+        users: List<UserDb>,
+        replaceUserOnConflict: Boolean = true
     ) {
         if (users.isEmpty()) return
         if (replaceUserOnConflict) {
@@ -57,40 +58,49 @@ internal abstract class UserDao {
     }
 
     @Transaction
-    @Query("select * from $USER_TABLE  where user_id =:id")
+    @Query("SELECT * FROM $USER_TABLE WHERE user_id = :id")
     abstract suspend fun getUserById(id: String): UserDb?
 
     @Transaction
-    @Query("select * from $USER_TABLE  where user_id =:id")
+    @Query("SELECT * FROM $USER_TABLE WHERE user_id = :id")
     abstract fun getUserByIdAsFlow(id: String): Flow<UserDb?>
 
     @Transaction
-    @Query("select * from $USER_TABLE  where user_id in (:id)")
+    @Query("SELECT * FROM $USER_TABLE WHERE user_id IN (:id)")
     abstract suspend fun getUsersById(id: List<String>): List<UserDb>
 
-    @Query("""
-           select user_id from $USER_TABLE  where 
-           firstName like '%' || :searchQuery || '%' 
-           or lastName like  '%' || :searchQuery || '%'
-           or (firstName || ' ' || lastName) like :searchQuery || '%'
-           """)
+    @Query(
+        """
+        SELECT user_id
+        FROM $USER_TABLE
+        WHERE firstName LIKE '%' || :searchQuery || '%'
+           OR lastName LIKE '%' || :searchQuery || '%'
+           OR (firstName || ' ' || lastName) LIKE :searchQuery || '%'
+        """
+    )
     abstract suspend fun getUserIdsByDisplayName(searchQuery: String): List<String>
 
     @Transaction
-    @Query("""
-           select * from $USER_TABLE  where user_id in (
-           select user_id from $USER_METADATA_TABLE
-           where `key` in (:key) and value like '%' || :value || '%')
-           """
+    @Query(
+        """
+        SELECT *
+        FROM $USER_TABLE
+        WHERE user_id IN (
+            SELECT user_id
+            FROM $USER_METADATA_TABLE
+            WHERE `key` IN (:key)
+              AND value LIKE '%' || :value || '%'
+        )
+        """
     )
     abstract suspend fun searchUsersByMetadata(key: List<String>, value: String): List<UserDb>
 
     @Update(onConflict = OnConflictStrategy.REPLACE)
     abstract suspend fun updateUsers(users: List<UserEntity>)
 
-    @Query("update $USER_TABLE set status =:status where user_id =:userId")
+    @Query("UPDATE $USER_TABLE SET status = :status WHERE user_id = :userId")
     abstract suspend fun updateUserStatus(userId: String, status: String)
 
-    @Query("update $USER_TABLE set blocked =:blocked where user_id =:userId")
+    @Query("UPDATE $USER_TABLE SET blocked = :blocked WHERE user_id = :userId")
     abstract suspend fun blockUnBlockUser(userId: String, blocked: Boolean)
 }
