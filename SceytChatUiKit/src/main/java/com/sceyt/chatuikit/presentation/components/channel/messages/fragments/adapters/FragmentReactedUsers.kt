@@ -16,8 +16,8 @@ import com.sceyt.chatuikit.extensions.addRVScrollListener
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.extensions.setBundleArguments
 import com.sceyt.chatuikit.koin.SceytKoinComponent
-import com.sceyt.chatuikit.presentation.helpers.DebounceHelper
 import com.sceyt.chatuikit.presentation.components.channel.messages.fragments.viewmodel.ReactionsInfoViewModel
+import com.sceyt.chatuikit.presentation.helpers.DebounceHelper
 import com.sceyt.chatuikit.styles.StyleRegistry
 import com.sceyt.chatuikit.styles.reactions_info.ReactedUserListStyle
 import kotlinx.coroutines.launch
@@ -47,7 +47,11 @@ class FragmentReactedUsers : Fragment(), SceytKoinComponent {
         }
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
         return SceytFragmentReactedUsersBinding.inflate(inflater, container, false).also {
             binding = it
         }.root
@@ -124,6 +128,7 @@ class FragmentReactedUsers : Fragment(), SceytKoinComponent {
     }
 
     fun update() {
+        if (!isAdded) return
         viewModel.getReactions(0)
     }
 
@@ -142,9 +147,9 @@ class FragmentReactedUsers : Fragment(), SceytKoinComponent {
         private const val STYLE_ID_KEY = "STYLE_ID_KEY"
 
         fun newInstance(
-                messageId: Long,
-                key: String,
-                styleId: String,
+            messageId: Long,
+            key: String,
+            styleId: String,
         ) = FragmentReactedUsers().setBundleArguments {
             putString(REACTIONS_KEY, key)
             putLong(MESSAGE_ID_KEY, messageId)
