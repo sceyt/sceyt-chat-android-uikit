@@ -102,7 +102,6 @@
     <string name="sceyt_no_links_desc">Shared links will appear here.</string>
     <string name="sceyt_no_common_groups_title">No groups is common</string>
     <string name="sceyt_no_common_groups_desc">Groups in common will appear here.</string>
-
     <string name="sceyt_history_was_successfully_cleared">History was successfully cleared!</string>
     <string name="sceyt_auto_delete">Auto-Delete Messages</string>
     <string name="sceyt_1_day">1 day</string>
