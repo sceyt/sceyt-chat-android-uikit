@@ -24,6 +24,7 @@ import com.sceyt.chatuikit.data.managers.message.event.MessageStatusChangeData
 import com.sceyt.chatuikit.data.models.LoadKeyData
 import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNext
+import com.sceyt.chatuikit.data.models.SDKErrorTypeEnum
 import com.sceyt.chatuikit.data.models.SceytPagingResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
@@ -965,9 +966,13 @@ internal class PersistenceChannelsLogicImpl(
                 }
             }
             .onError {
-                getChannelFromDb(channelId)?.let {
-                    if (it.pending)
-                        return@withContext SceytResponse.Success(it)
+                getChannelFromDb(channelId)?.let { channel ->
+                    if (channel.pending)
+                        return@withContext SceytResponse.Success(channel)
+                }
+                val errorType = SDKErrorTypeEnum.fromValue(it?.type) ?: return@onError
+                if (!errorType.isResendable) {
+                    deleteChannelFromDbAndCache(channelId)
                 }
             }
     }
