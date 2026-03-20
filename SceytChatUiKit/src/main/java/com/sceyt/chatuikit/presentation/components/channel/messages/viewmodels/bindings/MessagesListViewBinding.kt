@@ -790,7 +790,9 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     }.launchIn(lifecycleOwner.lifecycleScope)
 
     pageStateLiveData.observe(lifecycleOwner) {
-        if (it is PageState.StateError && messagesListView.getData().isEmpty())
+        // If the page state is error, and channel is pending and there is no last message,
+        // this means that there is no messages to show, so set empty state instead of error state.
+        if (it is PageState.StateError && channel.pending && channel.lastMessage == null)
             messagesListView.updateViewState(PageState.StateEmpty())
         else
             messagesListView.updateViewState(it, false)
