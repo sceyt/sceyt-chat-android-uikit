@@ -75,13 +75,16 @@ fun ActiveCallBanner(
     val callState by callManager.callUiState.collectAsState()
     val duration by callManager.callDuration.collectAsState()
 
-    // Delay showing the banner so it never appears during the CallActivity open animation.
-    // Once visible it stays until the call ends — no lifecycle toggling, no repeated animation.
-    var showBanner by remember { mutableStateOf(false) }
+    // Start visible immediately if a call is already active (e.g. navigating back from CallActivity).
+    // Delay only when a call becomes active while we're already on screen, so the banner doesn't
+    // flash briefly in the background during CallActivity's opening animation.
+    var showBanner by remember { mutableStateOf(callState.isActive) }
     LaunchedEffect(callState.isActive) {
         if (callState.isActive) {
-            delay(500)
-            showBanner = true
+            if (!showBanner) {
+                delay(500)
+                showBanner = true
+            }
         } else {
             showBanner = false
         }
