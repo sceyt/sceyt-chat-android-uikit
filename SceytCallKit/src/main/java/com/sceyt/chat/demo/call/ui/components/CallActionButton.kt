@@ -1,5 +1,6 @@
 package com.sceyt.chat.demo.call.ui.components
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -12,11 +13,44 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 /**
- * Circular action button for call controls.
+ * Circular action button for call controls — drawable resource variant.
+ */
+@Composable
+fun CallActionButton(
+    @DrawableRes iconRes: Int,
+    backgroundColor: Color,
+    contentDescription: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    size: Dp = 64.dp,
+    iconSize: Dp = 32.dp,
+    iconTint: Color = Color.White,
+    enabled: Boolean = true
+) {
+    Box(
+        modifier = modifier
+            .size(size)
+            .clip(CircleShape)
+            .background(if (enabled) backgroundColor else backgroundColor.copy(alpha = 0.5f))
+            .clickable(enabled = enabled, onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            painter = painterResource(iconRes),
+            contentDescription = contentDescription,
+            tint = iconTint,
+            modifier = Modifier.size(iconSize)
+        )
+    }
+}
+
+/**
+ * Circular action button for call controls — ImageVector variant (Material icons).
  */
 @Composable
 fun CallActionButton(

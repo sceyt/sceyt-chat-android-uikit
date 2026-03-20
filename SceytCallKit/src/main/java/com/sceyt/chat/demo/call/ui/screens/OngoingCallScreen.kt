@@ -35,14 +35,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.BluetoothAudio
-import androidx.compose.material.icons.filled.CallEnd
-import androidx.compose.material.icons.filled.Cameraswitch
 import androidx.compose.material.icons.filled.Headset
-import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.MicOff
-import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -72,6 +67,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sceyt.audiorouting.AudioDevice
+import com.sceyt.chat.call.R
 import com.sceyt.chat.demo.call.manager.CallParticipantUiState
 import com.sceyt.chat.demo.call.manager.CallUiState
 import com.sceyt.chat.demo.call.manager.displayTitle
@@ -439,12 +435,6 @@ fun CallControlBar(
     onFlipCamera: () -> Unit = {}
 ) {
     val isSpeakerActive = selectedAudioDevice is AudioDevice.Speakerphone
-    val audioRouteIcon = when (selectedAudioDevice) {
-        is AudioDevice.BluetoothHeadset -> Icons.Default.BluetoothAudio
-        is AudioDevice.WiredHeadset -> Icons.Default.Headset
-        is AudioDevice.Earpiece -> Icons.AutoMirrored.Filled.VolumeUp
-        else -> Icons.AutoMirrored.Filled.VolumeUp
-    }
 
     val boundsTransform = remember {
         BoundsTransform { _, _ ->
@@ -468,7 +458,7 @@ fun CallControlBar(
             if (isVideoEnabled) {
                 CallActionButton(
                     modifier = animationModifier,
-                    icon = Icons.Default.Cameraswitch,
+                    iconRes = R.drawable.ic_call_flip,
                     backgroundColor = CallColors.ButtonSurface,
                     iconTint = Color.White,
                     contentDescription = "Flip Camera",
@@ -480,29 +470,53 @@ fun CallControlBar(
 
             CallActionButton(
                 modifier = animationModifier,
-                icon = if (isMuted) Icons.Default.MicOff else Icons.Default.Mic,
-                backgroundColor = CallColors.ButtonSurface,
-                iconTint = Color.White,
+                iconRes = R.drawable.ic_call_mic_muted,
+                backgroundColor = if (isMuted) Color.White else CallColors.ButtonSurface,
+                iconTint = if (isMuted) CallColors.BackgroundDark else Color.White,
                 contentDescription = if (isMuted) "Unmute" else "Mute",
                 onClick = onToggleMute,
                 size = 48.dp,
                 iconSize = 28.dp
             )
 
-            CallActionButton(
-                modifier = animationModifier,
-                icon = audioRouteIcon,
-                backgroundColor = if (isSpeakerActive) Color.White else CallColors.ButtonSurface,
-                iconTint = if (isSpeakerActive) CallColors.BackgroundDark else Color.White,
-                contentDescription = "Audio Route",
-                onClick = onToggleSpeaker,
-                size = 48.dp,
-                iconSize = 28.dp
-            )
+            when (selectedAudioDevice) {
+                is AudioDevice.BluetoothHeadset -> CallActionButton(
+                    modifier = animationModifier,
+                    icon = Icons.Default.BluetoothAudio,
+                    backgroundColor = if (isSpeakerActive) Color.White else CallColors.ButtonSurface,
+                    iconTint = if (isSpeakerActive) CallColors.BackgroundDark else Color.White,
+                    contentDescription = "Audio Route",
+                    onClick = onToggleSpeaker,
+                    size = 48.dp,
+                    iconSize = 28.dp
+                )
+
+                is AudioDevice.WiredHeadset -> CallActionButton(
+                    modifier = animationModifier,
+                    icon = Icons.Default.Headset,
+                    backgroundColor = if (isSpeakerActive) Color.White else CallColors.ButtonSurface,
+                    iconTint = if (isSpeakerActive) CallColors.BackgroundDark else Color.White,
+                    contentDescription = "Audio Route",
+                    onClick = onToggleSpeaker,
+                    size = 48.dp,
+                    iconSize = 28.dp
+                )
+
+                else -> CallActionButton(
+                    modifier = animationModifier,
+                    iconRes = R.drawable.ic_call_volume,
+                    backgroundColor = if (isSpeakerActive) Color.White else CallColors.ButtonSurface,
+                    iconTint = if (isSpeakerActive) CallColors.BackgroundDark else Color.White,
+                    contentDescription = "Audio Route",
+                    onClick = onToggleSpeaker,
+                    size = 48.dp,
+                    iconSize = 28.dp
+                )
+            }
 
             CallActionButton(
                 modifier = animationModifier,
-                icon = Icons.Default.Videocam,
+                iconRes = R.drawable.ic_call_video,
                 backgroundColor = if (isVideoEnabled) Color.White else CallColors.ButtonSurface,
                 iconTint = if (isVideoEnabled) CallColors.BackgroundDark else Color.White,
                 contentDescription = "Video",
@@ -517,7 +531,7 @@ fun CallControlBar(
                     lookaheadScope = this@LookaheadScope,
                     boundsTransform = boundsTransform
                 ),
-                icon = Icons.Default.CallEnd,
+                iconRes = R.drawable.ic_call_hangup,
                 backgroundColor = CallColors.HangupRed,
                 iconTint = Color.White,
                 contentDescription = "End Call",
