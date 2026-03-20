@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.MicOff
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,6 +35,7 @@ import com.sceyt.chat.demo.call.manager.displayTitle
 import com.sceyt.chat.demo.call.manager.isGroupCall
 import com.sceyt.chat.demo.call.ui.components.LocalVideoPreview
 import com.sceyt.chat.demo.call.ui.components.RemoteVideoView
+import com.sceyt.chat.demo.call.ui.components.StableVideoTrack
 import com.sceyt.chat.demo.call.ui.components.UserAvatar
 import com.sceyt.chat.demo.call.ui.theme.callBackground
 
@@ -52,13 +54,16 @@ internal fun PipCallContent(
 ) {
     // Group call PIP: show only self video
     if (callState.call?.isGroupCall == true) {
+        val stableLocalTrack = remember(callState.localParticipant?.videoTrack) {
+            StableVideoTrack(callState.localParticipant?.videoTrack)
+        }
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Black)
         ) {
             LocalVideoPreview(
-                videoTrack = callState.localParticipant?.videoTrack,
+                videoTrack = stableLocalTrack,
                 modifier = Modifier.fillMaxSize()
             )
         }
@@ -71,6 +76,12 @@ internal fun PipCallContent(
         ?: focusParticipant?.displayName.orEmpty()
     val hasRemoteVideo = focusParticipant?.videoTrack != null && focusParticipant.isVideoEnabled
     val hasLocalVideo = callState.localParticipant?.shouldShowLocalPreview == true
+    val stableRemoteTrack = remember(focusParticipant?.videoTrack) {
+        StableVideoTrack(focusParticipant?.videoTrack)
+    }
+    val stableLocalTrack = remember(callState.localParticipant?.videoTrack) {
+        StableVideoTrack(callState.localParticipant?.videoTrack)
+    }
 
     if (hasRemoteVideo || hasLocalVideo) {
         Box(
@@ -80,12 +91,12 @@ internal fun PipCallContent(
         ) {
             if (hasRemoteVideo) {
                 RemoteVideoView(
-                    videoTrack = focusParticipant.videoTrack,
+                    videoTrack = stableRemoteTrack,
                     modifier = Modifier.fillMaxSize()
                 )
             } else {
                 LocalVideoPreview(
-                    videoTrack = callState.localParticipant?.videoTrack,
+                    videoTrack = stableLocalTrack,
                     modifier = Modifier.fillMaxSize()
                 )
             }
@@ -102,7 +113,7 @@ internal fun PipCallContent(
                         .clip(shape)
                 ) {
                     LocalVideoPreview(
-                        videoTrack = callState.localParticipant.videoTrack,
+                        videoTrack = stableLocalTrack,
                         modifier = Modifier.fillMaxSize()
                     )
                 }

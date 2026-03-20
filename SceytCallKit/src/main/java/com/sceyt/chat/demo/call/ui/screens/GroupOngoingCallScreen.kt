@@ -77,6 +77,7 @@ import com.sceyt.chat.demo.call.manager.paginateParticipants
 import com.sceyt.chat.demo.call.manager.resolveStatusText
 import com.sceyt.chat.demo.call.ui.components.AudioDeviceSelector
 import com.sceyt.chat.demo.call.ui.components.UserAvatar
+import com.sceyt.chat.demo.call.ui.components.StableVideoTrack
 import com.sceyt.chat.demo.call.ui.components.VideoRenderer
 import com.sceyt.chat.demo.call.ui.theme.CallColors
 import kotlinx.collections.immutable.ImmutableList
@@ -350,6 +351,7 @@ private fun ParticipantTile(
         label = "active_speaker_border"
     )
     val hasVideo = participant.videoTrack != null && participant.isVideoEnabled
+    val stableVideoTrack = remember(participant.videoTrack) { StableVideoTrack(participant.videoTrack) }
 
     Box(
         modifier = modifier
@@ -359,7 +361,7 @@ private fun ParticipantTile(
     ) {
         if (hasVideo) {
             VideoRenderer(
-                videoTrack = participant.videoTrack,
+                videoTrack = stableVideoTrack,
                 modifier = Modifier.fillMaxSize(),
                 mirror = participant.isSelf,
                 scalingType = RendererCommon.ScalingType.SCALE_ASPECT_FILL
