@@ -3,11 +3,10 @@ package com.sceyt.chatuikit.presentation.components.channel.messages.fragments.a
 import androidx.fragment.app.Fragment
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
-import com.sceyt.chatuikit.extensions.findIndexed
 
 class ViewPagerAdapterReactedUsers(
-        fragment: Fragment,
-        fragments: List<FragmentReactedUsers>
+    fragment: Fragment,
+    fragments: List<FragmentReactedUsers>
 ) : FragmentStateAdapter(fragment) {
     private val fragments = fragments.toMutableList()
 
@@ -28,14 +27,16 @@ class ViewPagerAdapterReactedUsers(
     }
 
     fun removeFragment(key: String) {
-        fragments.findIndexed { it.getKey() == key }?.let { (position, _) ->
-            fragments.removeAt(position)
-            notifyItemRemoved(position)
-        }
+        fragments
+            .indexOfFirst { it.getKey() == key }
+            .takeIf { it != -1 }?.let { position ->
+                fragments.removeAt(position)
+                notifyItemRemoved(position)
+            }
     }
 
     fun addOrUpdateItem(fragment: FragmentReactedUsers, reaction: SceytReaction) {
-        fragments.findIndexed { it.getKey() == reaction.key }?.second?.update() ?: run {
+        fragments.find { it.getKey() == reaction.key }?.update() ?: run {
             this.fragments.add(fragment)
             notifyItemInserted(fragments.lastIndex)
         }
