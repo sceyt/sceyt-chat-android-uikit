@@ -23,7 +23,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -38,7 +37,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.sceyt.chat.demo.call.manager.CallManager
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import com.sceyt.chat.demo.call.manager.CallParticipantUiState
 import com.sceyt.chat.demo.call.manager.CallUiState
 import com.sceyt.chat.demo.call.manager.displayTitle
 import com.sceyt.chat.demo.call.manager.resolveStatusText
@@ -68,13 +70,13 @@ private fun Modifier.bannerGradient(): Modifier = drawBehind {
 
 @Composable
 fun ActiveCallBanner(
-    callManager: CallManager,
+    callState: CallUiState,
+    duration: Long,
+    onToggleMute: () -> Unit,
+    onEndCall: () -> Unit,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val callState by callManager.callUiState.collectAsState()
-    val duration by callManager.callDuration.collectAsState()
-
     // Start visible immediately if a call is already active (e.g. navigating back from CallActivity).
     // Delay only when a call becomes active while we're already on screen, so the banner doesn't
     // flash briefly in the background during CallActivity's opening animation.
@@ -133,9 +135,7 @@ fun ActiveCallBanner(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     if (callState.phase != CallUiState.CallPhase.Incoming) {
-                        BannerIconButton(
-                            onClick = { callManager.toggleMute() },
-                        ) {
+                        BannerIconButton(onClick = onToggleMute) {
                             Icon(
                                 imageVector = if (isMuted) Icons.Rounded.MicOff else Icons.Rounded.Mic,
                                 contentDescription = null,
@@ -145,15 +145,7 @@ fun ActiveCallBanner(
                         }
                     }
 
-                    BannerIconButton(
-                        onClick = {
-                            if (callState.phase == CallUiState.CallPhase.Incoming) {
-                                callManager.declineIncomingCall()
-                            } else {
-                                callManager.endCall()
-                            }
-                        },
-                    ) {
+                    BannerIconButton(onClick = onEndCall) {
                         Icon(
                             imageVector = Icons.Rounded.CallEnd,
                             contentDescription = null,
@@ -192,4 +184,38 @@ private fun formatCallDuration(seconds: Long): String {
     val m = seconds / 60
     val s = seconds % 60
     return "%02d:%02d".format(m, s)
+}
+
+private class ActiveCallBannerPreviewProvider : PreviewParameterProvider<CallUiState> {
+    override val values = sequenceOf(
+        CallUiState(
+            phase = CallUiState.CallPhase.Outgoing,
+            localParticipant = CallParticipantUiState(userId = "me", isSelf = true),
+            remoteParticipants = listOf(CallParticipantUiState(userId = "u1", name = "Alice Johnson")),
+        ),
+        CallUiState(
+            phase = CallUiState.CallPhase.Incoming,
+            localParticipant = CallParticipantUiState(userId = "me", isSelf = true),
+            remoteParticipants = listOf(CallParticipantUiState(userId = "u1", name = "Bob Smith")),
+        ),
+        CallUiState(
+            phase = CallUiState.CallPhase.Connected,
+            localParticipant = CallParticipantUiState(userId = "me", isSelf = true, isMuted = true),
+            remoteParticipants = listOf(CallParticipantUiState(userId = "u1", name = "Charlie Brown")),
+        ),
+    )
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF19191B)
+@Composable
+private fun ActiveCallBannerPreview(
+    @PreviewParameter(ActiveCallBannerPreviewProvider::class) callState: CallUiState,
+) {
+    ActiveCallBanner(
+        callState = callState,
+        duration = 75L,
+        onToggleMute = {},
+        onEndCall = {},
+        onClick = {},
+    )
 }

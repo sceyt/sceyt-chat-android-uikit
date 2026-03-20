@@ -2,11 +2,14 @@ package com.sceyt.chat.demo.call.ui
 
 import android.view.View
 import androidx.activity.ComponentActivity
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 import com.sceyt.chat.demo.call.manager.CallManager
+import com.sceyt.chat.demo.call.manager.CallUiState
 import com.sceyt.chat.demo.call.ui.components.ActiveCallBanner
 
 /**
@@ -23,8 +26,18 @@ fun ComponentActivity.attachActiveCallBanner(
         id = View.generateViewId()
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(lifecycle))
         setContent {
+            val callState by callManager.callUiState.collectAsState()
+            val duration by callManager.callDuration.collectAsState()
             ActiveCallBanner(
-                callManager = callManager,
+                callState = callState,
+                duration = duration,
+                onToggleMute = { callManager.toggleMute() },
+                onEndCall = {
+                    if (callState.phase == CallUiState.CallPhase.Incoming)
+                        callManager.declineIncomingCall()
+                    else
+                        callManager.endCall()
+                },
                 onClick = { startActivity(CallActivity.createOngoingIntent(this@attachActiveCallBanner)) },
             )
         }
