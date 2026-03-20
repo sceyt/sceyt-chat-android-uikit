@@ -14,16 +14,20 @@ internal interface LinkDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(entity: LinkDetailsEntity)
 
-    @Query("update $LINK_DETAILS_TABLE set url =:url, description =:desc, siteName =:siteName, " +
-            "faviconUrl =:favicon, imageUrl =:image where link = :link")
-    suspend fun update(link: String, url: String?, desc: String?,
-                       siteName: String?, favicon: String?, image: String?)
+    @Query(
+        """
+        UPDATE $LINK_DETAILS_TABLE
+        SET url = :url, description = :desc, siteName = :siteName,
+            faviconUrl = :favicon, imageUrl = :image
+        WHERE link = :link
+        """
+    )
+    suspend fun update(link: String, url: String?, desc: String?, siteName: String?, favicon: String?, image: String?)
 
-
-    @Query("update $LINK_DETAILS_TABLE set imageWidth =:imageWidth, imageHeight =:imageHeight where link = :link")
+    @Query("UPDATE $LINK_DETAILS_TABLE SET imageWidth = :imageWidth, imageHeight = :imageHeight WHERE link = :link")
     suspend fun updateSizes(link: String, imageWidth: Int, imageHeight: Int)
 
-    @Query("update $LINK_DETAILS_TABLE set thumb =:thumb where link = :link")
+    @Query("UPDATE $LINK_DETAILS_TABLE SET thumb = :thumb WHERE link = :link")
     suspend fun updateThumb(link: String, thumb: String)
 
     @Transaction
@@ -40,6 +44,6 @@ internal interface LinkDao {
         }
     }
 
-    @Query("select * from $LINK_DETAILS_TABLE WHERE link = :link")
+    @Query("SELECT * FROM $LINK_DETAILS_TABLE WHERE link = :link")
     suspend fun getLinkDetailsEntity(link: String): LinkDetailsEntity?
 }

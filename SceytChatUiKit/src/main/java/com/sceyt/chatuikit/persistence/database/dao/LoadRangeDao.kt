@@ -17,20 +17,29 @@ internal interface LoadRangeDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(entities: List<LoadRangeEntity>)
 
-    @Query("select * from $LOAD_RANGE_TABLE where channelId =:channelId and ((startId >=:end and endId <=:start)" +
-            " or (endId >=:start and startId <= :end) or startId =:messageId or endId =:messageId)")
+    @Query(
+        """
+        SELECT *
+        FROM $LOAD_RANGE_TABLE
+        WHERE channelId = :channelId
+          AND ((startId >= :end AND endId <= :start)
+           OR (endId >= :start AND startId <= :end)
+           OR startId = :messageId
+           OR endId = :messageId)
+        """
+    )
     suspend fun getLoadRanges(start: Long, end: Long, messageId: Long, channelId: Long): List<LoadRangeEntity>
 
-    @Query("select * from $LOAD_RANGE_TABLE where channelId =:channelId order by startId")
+    @Query("SELECT * FROM $LOAD_RANGE_TABLE WHERE channelId = :channelId ORDER BY startId")
     suspend fun getAll(channelId: Long): List<LoadRangeEntity>
 
-    @Query("delete from $LOAD_RANGE_TABLE where channelId =:channelId")
+    @Query("DELETE FROM $LOAD_RANGE_TABLE WHERE channelId = :channelId")
     suspend fun deleteChannelLoadRanges(channelId: Long)
 
-    @Query("delete from $LOAD_RANGE_TABLE where channelId in (:channelIds)")
+    @Query("DELETE FROM $LOAD_RANGE_TABLE WHERE channelId IN (:channelIds)")
     suspend fun deleteChannelsLoadRanges(channelIds: List<Long>)
 
-    @Query("delete from $LOAD_RANGE_TABLE where rowId in (:rowIds)")
+    @Query("DELETE FROM $LOAD_RANGE_TABLE WHERE rowId IN (:rowIds)")
     suspend fun deleteLoadRanges(vararg rowIds: Long)
 
     @Transaction
