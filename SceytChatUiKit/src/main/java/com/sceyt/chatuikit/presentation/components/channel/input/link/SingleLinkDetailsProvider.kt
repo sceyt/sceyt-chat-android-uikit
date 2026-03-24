@@ -21,17 +21,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.core.component.inject
 
-class SingleLinkDetailsProvider : SceytKoinComponent {
-    private val context: Context
+class SingleLinkDetailsProvider(
+    private val context: Context,
+    private val scope: CoroutineScope,
+) : SceytKoinComponent {
     private val attachmentsMiddleWare: PersistenceAttachmentLogic by inject()
-    private var scope: CoroutineScope
     private var loadDetailsJob: Job? = null
-    private var loadedLinks = mutableMapOf<String, LinkPreviewDetails>()
-
-    constructor(context: Context, scope: CoroutineScope) {
-        this.context = context
-        this.scope = scope
-    }
+    private val loadedLinks = mutableMapOf<String, LinkPreviewDetails>()
 
     fun loadLinkDetails(
         text: String,
@@ -40,14 +36,27 @@ class SingleLinkDetailsProvider : SceytKoinComponent {
         thumbCallback: (String) -> Unit
     ) {
         loadDetailsJob?.cancel()
-        if (loadedLinks.containsKey(text)) {
-            detailsCallback(loadedLinks[text])
-            return
-        }
         loadDetailsJob = scope.launch {
-            val link = text.extractLinks().firstOrNull { it.isValidUrl(context) }
+            val link = withContext(Dispatchers.Default) {
+                text.extractLinks().firstOrNull { it.isValidUrl(context) }
+            }
             if (link == null) {
-                withContext(Dispatchers.Main) { detailsCallback(null) }
+                detailsCallback(null)
+                return@launch
+            }
+
+            val cached = loadedLinks[link]
+            if (cached != null) {
+                detailsCallback(cached)
+                if (!cached.isFullyLoaded()) {
+                    val updated = fetchImageDimensionsAndThumb(link, cached)
+                    withContext(Dispatchers.Main) {
+                        if (updated.imageWidth != null && cached.imageWidth == null)
+                            imageSizeCallback(Size(updated.imageWidth, updated.imageHeight!!))
+                        if (updated.thumb != null && cached.thumb == null)
+                            thumbCallback(updated.thumb)
+                    }
+                }
                 return@launch
             }
 
@@ -59,33 +68,12 @@ class SingleLinkDetailsProvider : SceytKoinComponent {
                     detailsCallback(linkPreviewDetails)
                 }
 
-                if (linkPreviewDetails.imageUrl != null && linkPreviewDetails.imageWidth == null) {
-                    val bitmap = getImageBitmapWithGlideWithTimeout(
-                        context = context,
-                        url = linkPreviewDetails.imageUrl
-                    )
-
-                    if (bitmap == null) {
-                        withContext(Dispatchers.Main) { detailsCallback(linkPreviewDetails) }
-                        return@launch
-                    }
-
-                    withContext(Dispatchers.Main) {
-                        imageSizeCallback(Size(bitmap.width, bitmap.height))
-                    }
-                    attachmentsMiddleWare.updateLinkDetailsSize(
-                        link = link,
-                        size = Size(bitmap.width, bitmap.height)
-                    )
-                    if (linkPreviewDetails.thumb == null) {
-                        val thumb = getImageThumb(bitmap)
-                        thumb?.let {
-                            withContext(Dispatchers.Main) {
-                                thumbCallback.invoke(it)
-                            }
-                            attachmentsMiddleWare.updateLinkDetailsThumb(link, it)
-                        }
-                    }
+                val updated = fetchImageDimensionsAndThumb(link, linkPreviewDetails)
+                withContext(Dispatchers.Main) {
+                    if (updated.imageWidth != null && linkPreviewDetails.imageWidth == null)
+                        imageSizeCallback(Size(updated.imageWidth, updated.imageHeight!!))
+                    if (updated.thumb != null && linkPreviewDetails.thumb == null)
+                        thumbCallback(updated.thumb)
                 }
             } else withContext(Dispatchers.Main) { detailsCallback(null) }
         }
@@ -98,6 +86,47 @@ class SingleLinkDetailsProvider : SceytKoinComponent {
         }
         return null
     }
+
+    suspend fun loadLinkDetailsSuspend(text: String): LinkPreviewDetails? {
+        val link = text.extractLinks().firstOrNull { it.isValidUrl(context) } ?: return null
+
+        loadedLinks[link]?.let { cached ->
+            return if (cached.isFullyLoaded()) cached
+            else fetchImageDimensionsAndThumb(link, cached)
+        }
+
+        val response = attachmentsMiddleWare.getLinkPreviewData(link)
+        if (response !is SceytResponse.Success || response.data == null) return null
+
+        val linkPreviewDetails = response.data
+        loadedLinks[link] = linkPreviewDetails
+
+        return fetchImageDimensionsAndThumb(link, linkPreviewDetails)
+    }
+
+    private suspend fun fetchImageDimensionsAndThumb(
+        link: String,
+        details: LinkPreviewDetails,
+    ): LinkPreviewDetails {
+        if (details.imageUrl == null || details.imageWidth != null) return details
+        val bitmap = getImageBitmapWithGlideWithTimeout(
+            context = context,
+            url = details.imageUrl
+        ) ?: return details
+
+        val size = Size(bitmap.width, bitmap.height)
+        var updated = details.copy(imageWidth = size.width, imageHeight = size.height)
+        val thumb = if (details.thumb == null) getImageThumb(bitmap) else null
+        if (thumb != null)
+            updated = updated.copy(thumb = thumb)
+
+        attachmentsMiddleWare.updateLinkDetails(link = link, size = size, thumb = thumb)
+        loadedLinks[link] = updated
+        return updated
+    }
+
+    private fun LinkPreviewDetails.isFullyLoaded(): Boolean =
+        imageUrl == null || (imageWidth != null && thumb != null)
 
     fun cancel() {
         loadDetailsJob?.cancel()

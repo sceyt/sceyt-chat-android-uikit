@@ -165,27 +165,16 @@ class AttachmentsCache {
         }
     }
 
-    suspend fun updateLinkDetailsSize(link: String, width: Int, height: Int) {
+    suspend fun updateLinkDetails(link: String, width: Int, height: Int, thumb: String?) {
         mutex.withLock {
             cachedAttachments[AttachmentTypeEnum.Link.value]?.entries?.forEach { entry ->
                 val (_, attachment) = entry
                 if (attachment.url == link) {
                     val linkPreviewDetails = attachment.linkPreviewDetails?.copy(
                         imageWidth = width,
-                        imageHeight = height
+                        imageHeight = height,
+                        thumb = thumb ?: attachment.linkPreviewDetails.thumb
                     )
-                    entry.setValue(attachment.copy(linkPreviewDetails = linkPreviewDetails))
-                }
-            }
-        }
-    }
-
-    suspend fun updateThumb(link: String, thumb: String) {
-        mutex.withLock {
-            cachedAttachments[AttachmentTypeEnum.Link.value]?.entries?.forEach { entry ->
-                val (_, attachment) = entry
-                if (attachment.url == link) {
-                    val linkPreviewDetails = attachment.linkPreviewDetails?.copy(thumb = thumb)
                     entry.setValue(attachment.copy(linkPreviewDetails = linkPreviewDetails))
                 }
             }

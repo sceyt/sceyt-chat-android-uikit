@@ -30,7 +30,11 @@ open class ChannelListFragment : Fragment() {
         ChannelsViewModelFactory()
     })
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
         return SceytFragmentChannelsBinding.inflate(inflater, container, false)
             .also { binding = it }
             .root
@@ -46,7 +50,8 @@ open class ChannelListFragment : Fragment() {
         viewModel.bind(binding.searchView)
 
         binding.searchView.post {
-            binding.channelListView.getPageStateView().setMargins(bottom = binding.searchView.height)
+            binding.channelListView.getPageStateView()
+                .setMargins(bottom = binding.searchView.height)
         }
     }
 
@@ -60,8 +65,12 @@ open class ChannelListFragment : Fragment() {
         }
 
         binding.fabNewChannel.setOnClickListener {
-            StartChatActivity.launch(requireContext())
+            openStartChatActivity()
         }
+    }
+
+    protected open fun openStartChatActivity() {
+        StartChatActivity.launch(requireContext())
     }
 
     protected open fun setupConnectionStatus(state: ConnectionState) {

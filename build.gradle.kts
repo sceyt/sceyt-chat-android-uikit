@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.firebase.crashlytics) apply false
     alias(libs.plugins.ksp) apply false
     alias(libs.plugins.room) apply false
+    id("org.jetbrains.kotlin.plugin.compose") version "2.3.10"
 }
 
 tasks.register<Delete>("clean") {

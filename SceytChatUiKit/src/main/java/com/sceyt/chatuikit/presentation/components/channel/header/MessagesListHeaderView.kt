@@ -590,7 +590,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
             isSingle && !isUnsupportedFirst && isOutgoing && hasText && !editExpired && !isPollMessage && !anyViewOnceMessage
         val canShowInfo = isSingle && isOutgoing && !anyPending
         val canCopy =
-            messages.any { it.body.isNotNullOrBlank() } && !anyPollInSelection && !anyUnsupportedInSelection && anyViewOnceMessage
+            messages.any { it.body.isNotNullOrBlank() } && !anyPollInSelection && !anyUnsupportedInSelection && !anyViewOnceMessage
 
         val canRetractVote = !anyPending && isSingle && allowRetract && hasVoted && !pollClosed
         val canEndVote = !anyPending && isSingle && isOutgoing && isPollMessage && !pollClosed

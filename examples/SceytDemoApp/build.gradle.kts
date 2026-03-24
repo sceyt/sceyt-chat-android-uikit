@@ -95,6 +95,7 @@ android {
 
 dependencies {
     implementation(project(":SceytChatUiKit"))
+    implementation(project(":SceytCallKit"))
 
     implementation(libs.appcompat)
     implementation(libs.material)
