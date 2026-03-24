@@ -286,6 +286,15 @@ class CallManagerImpl(
     override fun toggleCamera(): Boolean {
         val newCameraState = !(_callUiState.value.localParticipant?.isVideoEnabled ?: false)
         _currentCall?.setVideoEnabled(newCameraState)
+        if (newCameraState) {
+            val currentDevice = selectedAudioDevice.value
+            // If enabling camera while on earpiece, switch to speakerphone for better audio experience
+            if (currentDevice is AudioDevice.Earpiece) {
+                availableAudioDevices.value.firstOrNull { it is AudioDevice.Speakerphone }?.let {
+                    audioRouter.selectDevice(it)
+                }
+            }
+        }
         Log.d(TAG, "Camera toggled: $newCameraState")
         return newCameraState
     }
@@ -866,6 +875,7 @@ class CallManagerImpl(
         cancelDurationTimer()
         cancelNoAnswerTimeout()
         cancelReconnectTimeout()
+        audioRouter.clearManualSelection()
 
         scope.launch {
             playTone(ToneConfig.hangup())
