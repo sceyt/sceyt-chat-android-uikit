@@ -13,7 +13,6 @@ import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.onSuccess
 import com.sceyt.chatuikit.data.models.onSuccessNotNull
 import com.sceyt.chatuikit.data.toMember
-import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.database.dao.ChannelDao
 import com.sceyt.chatuikit.persistence.database.dao.LoadRangeDao
 import com.sceyt.chatuikit.persistence.database.dao.MemberDao
@@ -41,7 +40,7 @@ internal class PersistenceMembersLogicImpl(
     private val memberDao: MemberDao,
     private val usersDao: UserDao,
     private val channelsCache: ChannelsCache,
-) : PersistenceMembersLogic, SceytKoinComponent {
+) : PersistenceMembersLogic {
 
     private val channelMembersLoadSize get() = SceytChatUIKit.config.queryLimits.channelMemberListQueryLimit
 

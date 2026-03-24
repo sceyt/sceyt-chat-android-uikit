@@ -67,8 +67,10 @@ abstract class BaseLinkMessageViewHolder(
             }
 
         with(linkPreviewContainerBinding ?: return) {
-            if (!data.imageUrl.isNullOrBlank()) {
-                val isSmallImage = (data.imageWidth ?: 0) in 1 until SMALL_IMAGE_THRESHOLD_PX
+            val imageWidth = data.imageWidth ?: 0
+            val imageHeight = data.imageHeight ?: 0
+            if (!data.imageUrl.isNullOrBlank() && imageWidth > 0 && imageHeight > 0) {
+                val isSmallImage = imageWidth in 1 until SMALL_IMAGE_THRESHOLD_PX
                 val targetImage = if (isSmallImage) smallPreviewImage else previewImage
                 previewImage.isVisible = !isSmallImage
                 smallPreviewImage.isVisible = isSmallImage
@@ -82,8 +84,8 @@ abstract class BaseLinkMessageViewHolder(
                     calculateScaleWidthHeight(
                         defaultSize = maxSize,
                         minSize = minSize,
-                        imageWidth = data.imageWidth ?: 0,
-                        imageHeight = data.imageHeight ?: 0
+                        imageWidth = imageWidth,
+                        imageHeight = imageHeight
                     )
                 } else null
                 var builder = Glide.with(context.applicationContext)
@@ -123,17 +125,17 @@ abstract class BaseLinkMessageViewHolder(
         details: LinkPreviewDetails?,
         isSmallImage: Boolean = false
     ) {
-        if (details?.imageWidth == null || details.imageHeight == null
-            || details.imageWidth == 0 || details.imageHeight == 0
-        ) {
+        val imageWidth = details?.imageWidth ?: 0
+        val imageHeight = details?.imageHeight ?: 0
+        if (imageWidth == 0 || imageHeight == 0) {
             image.isVisible = false
             return
         }
         if (!isSmallImage) {
             val size = calculateScaleWidthHeight(
                 maxSize, minSize,
-                imageWidth = details.imageWidth,
-                imageHeight = details.imageHeight
+                imageWidth = imageWidth,
+                imageHeight = imageHeight
             )
             image.updateLayoutParams<ViewGroup.LayoutParams> {
                 width = maxSize
@@ -149,6 +151,8 @@ abstract class BaseLinkMessageViewHolder(
             style.incomingLinkPreviewBackgroundStyle
         else style.outgoingLinkPreviewBackgroundStyle
         backgroundStyle.apply(root)
+        backgroundStyle.apply(previewImage)
+        backgroundStyle.apply(smallPreviewImage)
         linkStyle.titleStyle.apply(tvLinkTitle)
         linkStyle.descriptionStyle.apply(tvLinkDesc)
     }

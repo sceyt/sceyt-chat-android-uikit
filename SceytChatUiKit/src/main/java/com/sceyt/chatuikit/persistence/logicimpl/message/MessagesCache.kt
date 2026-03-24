@@ -143,7 +143,7 @@ class MessagesCache {
         val updatedMessages = mutableListOf<SceytMessage>()
         getMessagesMap(channelId)?.let { map ->
             tIds.forEach { tid ->
-                val message = map.get(tid) ?: return@forEach
+                val message = map[tid] ?: return@forEach
                 if (message.deliveryStatus < status) {
                     val updatedMessage = message.copy(deliveryStatus = status)
                     map[tid] = updatedMessage
@@ -162,7 +162,7 @@ class MessagesCache {
         val updatedMessages = mutableListOf<SceytMessage>()
         getMessagesMap(channelId)?.let { map ->
             tIds.forEach { tid ->
-                val message = map.get(tid) ?: return@forEach
+                val message = map[tid] ?: return@forEach
                 // Merge user markers
                 val newUserMarkers = (message.userMarkers.orEmpty() + markers).toSet()
 
@@ -507,20 +507,15 @@ class MessagesCache {
         })
     }
 
-    suspend fun updateLinkDetailsSize(link: String, width: Int, height: Int) = mutex.withLock {
+    suspend fun updateLinkDetails(link: String, width: Int, height: Int, thumb: String?) = mutex.withLock {
         updateAllAttachments(predicate = { it.url == link }, updater = {
             copy(
                 linkPreviewDetails = linkPreviewDetails?.copy(
                     imageWidth = width,
-                    imageHeight = height
+                    imageHeight = height,
+                    thumb = thumb ?: linkPreviewDetails.thumb
                 )
             )
-        })
-    }
-
-    suspend fun updateThumb(link: String, thumb: String) = mutex.withLock {
-        updateAllAttachments(predicate = { it.url == link }, updater = {
-            copy(linkPreviewDetails = linkPreviewDetails?.copy(thumb = thumb))
         })
     }
 
