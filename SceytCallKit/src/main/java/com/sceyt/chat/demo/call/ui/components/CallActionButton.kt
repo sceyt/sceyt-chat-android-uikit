@@ -43,7 +43,7 @@ fun CallActionButton(
         Icon(
             painter = painterResource(iconRes),
             contentDescription = contentDescription,
-            tint = iconTint,
+            tint = if (enabled) iconTint else iconTint.copy(alpha = 0.5f),
             modifier = Modifier.size(iconSize)
         )
     }
@@ -75,7 +75,7 @@ fun CallActionButton(
         Icon(
             imageVector = icon,
             contentDescription = contentDescription,
-            tint = iconTint,
+            tint = if (enabled) iconTint else iconTint.copy(alpha = 0.5f),
             modifier = Modifier.size(iconSize)
         )
     }
