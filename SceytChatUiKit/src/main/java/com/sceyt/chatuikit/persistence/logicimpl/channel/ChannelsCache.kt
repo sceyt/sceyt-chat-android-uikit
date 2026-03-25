@@ -160,6 +160,15 @@ class ChannelsCache {
     }
 
     fun newChannelsOnSync(config: ChannelListConfig, channels: List<SceytChannel>) {
+        channels.forEach { channel ->
+            val map = getOrCreateMap(config)
+            val cachedChannel = map[channel.id] ?: pendingChannelsData[channel.id]
+            if (cachedChannel == null) {
+                if (!channel.pending) {
+                    map[channel.id] = channel
+                }
+            }
+        }
         newChannelsOnSync_.tryEmit(Pair(config, channels))
     }
 
