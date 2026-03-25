@@ -67,7 +67,8 @@ class ShareableChannelsAdapter(
     fun addList(items: MutableList<ChannelListItem>) {
         removeLoading()
 
-        val filteredItems = items.minus(channels.toSet())
+        val existingIds = channels.mapNotNull { (it as? ChannelListItem.ChannelItem)?.channel?.id }.toSet()
+        val filteredItems = items.filter { it !is ChannelListItem.ChannelItem || it.channel.id !in existingIds }
 
         if (filteredItems.find { it is ChannelListItem.ChannelItem } == null)
             return

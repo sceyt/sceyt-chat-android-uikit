@@ -3,10 +3,9 @@ package com.sceyt.chatuikit.presentation.components.channel_list.channels.compon
 import android.content.Context
 import android.util.AttributeSet
 import androidx.lifecycle.LifecycleCoroutineScope
+import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chat.models.channel.ChannelListQuery.ChannelListOrder
-import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.extensions.addRVScrollListener
 import com.sceyt.chatuikit.extensions.awaitAnimationEnd
@@ -16,15 +15,14 @@ import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.persistence.lazyVar
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelsAdapter
-import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelsItemComparatorBy
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.holders.ChannelViewHolderFactory
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.listeners.click.ChannelClickListeners
 import com.sceyt.chatuikit.styles.channel.ChannelListViewStyle
 
 class ChannelsRV @JvmOverloads constructor(
-        context: Context,
-        attrs: AttributeSet? = null,
-        defStyleAttr: Int = 0,
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0,
 ) : RecyclerView(context, attrs, defStyleAttr) {
 
     private lateinit var channelListStyle: ChannelListViewStyle
@@ -41,7 +39,10 @@ class ChannelsRV @JvmOverloads constructor(
     private fun init() {
         setHasFixedSize(true)
         setItemViewCacheSize(10)
-        itemAnimator = null
+        itemAnimator = DefaultItemAnimator().apply {
+            moveDuration = 100
+            changeDuration = 0
+        }
         layoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
         // edgeEffectFactory = BounceEdgeEffectFactory()
         addOnScrollListener()
@@ -58,7 +59,10 @@ class ChannelsRV @JvmOverloads constructor(
     private fun checkReachToEnd() {
         val adapter = channelsAdapter ?: return
         if (isLastItemDisplaying() && adapter.itemCount != 0)
-            reachToEndListener?.invoke(adapter.getSkip(), adapter.getChannels().lastOrNull()?.channel)
+            reachToEndListener?.invoke(
+                adapter.getSkip(),
+                adapter.getChannels().lastOrNull()?.channel
+            )
     }
 
     fun setData(scope: LifecycleCoroutineScope, channels: List<ChannelListItem>) = post {
@@ -86,17 +90,6 @@ class ChannelsRV @JvmOverloads constructor(
         return channelsAdapter
     }
 
-    fun addNewChannels(scope: LifecycleCoroutineScope, channels: List<ChannelListItem>) {
-        if (channelsAdapter == null)
-            setData(scope, channels)
-        else
-            channelsAdapter?.addList(channels)
-    }
-
-    fun deleteChannel(id: Long, commitCallback: (() -> Unit)? = null) {
-        channelsAdapter?.deleteChannel(id, commitCallback)
-    }
-
     fun getChannels(): List<ChannelListItem.ChannelItem>? {
         return channelsAdapter?.getChannels()
     }
@@ -121,10 +114,10 @@ class ChannelsRV @JvmOverloads constructor(
     }
 
     fun updateChannel(
-            predicate: (ChannelListItem) -> Boolean,
-            newItem: ChannelListItem,
-            payloads: Any? = null,
-            commitCallback: (() -> Unit)? = null,
+        predicate: (ChannelListItem) -> Boolean,
+        newItem: ChannelListItem,
+        payloads: Any? = null,
+        commitCallback: (() -> Unit)? = null,
     ) {
         post {
             channelsAdapter?.updateChannel(
@@ -155,40 +148,10 @@ class ChannelsRV @JvmOverloads constructor(
         channelViewHolderFactory.setChannelListener(listener)
     }
 
-    fun sortBy(
-            scope: LifecycleCoroutineScope,
-            sortChannelsBy: ChannelListOrder = SceytChatUIKit.config.channelListOrder,
-    ) {
-        sortAndUpdate(scope, sortChannelsBy, channelsAdapter?.currentList ?: return)
-    }
-
-    fun sortByAndSetNewData(
-            scope: LifecycleCoroutineScope,
-            sortChannelsBy: ChannelListOrder,
-            data: List<ChannelListItem>,
-    ) {
-        sortAndUpdate(scope, sortChannelsBy, data)
-    }
-
-    fun hideLoadingMore() {
-        channelsAdapter?.removeLoading()
-    }
-
     @Suppress("unused")
     fun getViewHolderFactory() = channelViewHolderFactory
 
     internal fun setStyle(style: ChannelListViewStyle) {
         channelListStyle = style
-    }
-
-    private fun sortAndUpdate(
-            scope: LifecycleCoroutineScope,
-            sortChannelsBy: ChannelListOrder,
-            data: List<ChannelListItem>,
-    ) {
-        val sortedList = data.sortedWith(ChannelsItemComparatorBy(sortChannelsBy))
-        awaitAnimationEnd {
-            post { setData(scope, sortedList) }
-        }
     }
 }
