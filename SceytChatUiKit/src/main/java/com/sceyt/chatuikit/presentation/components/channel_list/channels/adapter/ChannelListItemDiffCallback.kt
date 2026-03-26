@@ -3,7 +3,7 @@ package com.sceyt.chatuikit.presentation.components.channel_list.channels.adapte
 import androidx.recyclerview.widget.DiffUtil
 import com.sceyt.chatuikit.persistence.differs.diff
 
-object ChannelListItemDiffCallback : DiffUtil.ItemCallback<ChannelListItem>() {
+class ChannelListItemDiffCallback  : DiffUtil.ItemCallback<ChannelListItem>() {
     override fun areItemsTheSame(oldItem: ChannelListItem, newItem: ChannelListItem): Boolean {
         if (oldItem is ChannelListItem.ChannelItem && newItem is ChannelListItem.ChannelItem)
             return oldItem.channel.id == newItem.channel.id

@@ -22,7 +22,7 @@ class ChannelsAdapter(
 
     private val differ = AsyncListDiffer(
         adapter = this,
-        diffCallback = ChannelListItemDiffCallback,
+        diffCallback = ChannelListItemDiffCallback(),
         scope = scope
     )
 
