@@ -10,6 +10,7 @@ sealed class ChannelListItem : SelectableItem() {
             if (this === other) return true
             if (other !is ChannelItem) return false
             if (channel.id != other.channel.id) return false
+            if (selected != other.selected) return false
             return !channel.diff(other.channel).hasDifference()
         }
 

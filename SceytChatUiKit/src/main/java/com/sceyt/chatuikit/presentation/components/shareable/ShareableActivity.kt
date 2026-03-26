@@ -4,13 +4,12 @@ import android.os.Bundle
 import androidx.activity.viewModels
 import androidx.annotation.CallSuper
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.withResumed
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.data.models.LoadKeyData
-import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.extensions.customToastSnackBar
@@ -20,6 +19,7 @@ import com.sceyt.chatuikit.persistence.extensions.isPeerBlocked
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
 import com.sceyt.chatuikit.persistence.extensions.isPublic
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem
+import com.sceyt.chatuikit.presentation.components.channel_list.channels.viewmodel.ChannelListState
 import com.sceyt.chatuikit.presentation.components.shareable.adapter.ShareableChannelsAdapter
 import com.sceyt.chatuikit.presentation.components.shareable.adapter.holders.ShareableChannelViewHolderFactory
 import com.sceyt.chatuikit.presentation.components.shareable.viewmodel.ShareableViewModel
@@ -29,7 +29,6 @@ import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.styles.share.ShareablePageStyle
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.launch
 
 abstract class ShareableActivity<Style : ShareablePageStyle> : AppCompatActivity(),
     SceytKoinComponent {
@@ -46,78 +45,48 @@ abstract class ShareableActivity<Style : ShareablePageStyle> : AppCompatActivity
 
         style = initStyle()
         initViewModel()
-        shareableViewModel.getChannels(0)
     }
 
     protected abstract fun initStyle(): Style
 
     private fun initViewModel() {
-        shareableViewModel.loadChannelsFlow.onEach(::initChannelsResponse).launchIn(lifecycleScope)
+        shareableViewModel.state
+            .flowWithLifecycle(lifecycle, Lifecycle.State.RESUMED)
+            .onEach(::initStateUpdate)
+            .launchIn(lifecycleScope)
     }
 
-    protected open suspend fun initChannelsResponse(response: PaginationResponse<SceytChannel>) {
-        if (response is PaginationResponse.DBResponse)
-            initPaginationDbResponse(response)
-    }
-
-    protected open suspend fun initPaginationDbResponse(response: PaginationResponse.DBResponse<SceytChannel>) {
-        val filteredData = filterOnlyAppropriateChannels(response.data)
-        val data = shareableViewModel.mapToChannelItem(
-            data = filteredData,
-            hasNext = response.hasNext,
-            includeDirectChannelsWithDeletedPeers = false
-        )
-        if (response.offset == 0) {
-            setChannelsList(data)
-        } else addNewChannels(data)
+    protected open suspend fun initStateUpdate(state: ChannelListState) {
+        val filteredChannels = filterOnlyAppropriateChannels(state.channels)
+        val data = filteredChannels.map { ChannelListItem.ChannelItem(it) } +
+                if (state.hasNext) listOf(ChannelListItem.LoadingMoreItem) else emptyList()
+        setChannelsList(data)
     }
 
     protected open fun setChannelsList(data: List<ChannelListItem>) {
-        lifecycleScope.launch {
-            lifecycle.withResumed {
-                val recyclerView = getRV() ?: return@withResumed
-                setSelectedItems(data)
-                if (channelsAdapter == null || recyclerView.adapter !is ShareableChannelsAdapter) {
-                    channelsAdapter = ShareableChannelsAdapter(
-                        channels = data.toMutableList(),
-                        viewHolderFactory = viewHolderFactory.also {
-                            it.setChannelClickListener { view, item ->
-                                onChannelClick(item)
-                            }
-                        })
-                        .also { adapter ->
-                            channelsAdapter = adapter
-                        }
-
-                    with(recyclerView) {
-                        adapter = channelsAdapter
-                        layoutManager = LinearLayoutManager(this@ShareableActivity)
-                        addOnScrollListener(object : RecyclerView.OnScrollListener() {
-                            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                                super.onScrolled(recyclerView, dx, dy)
-                                if (adapter is ShareableChannelsAdapter && isLastItemDisplaying() && shareableViewModel.canLoadNext())
-                                    shareableViewModel.getChannels(
-                                        offset = channelsAdapter?.getSkip() ?: 0,
-                                        query = shareableViewModel.searchQuery,
-                                        loadKey = LoadKeyData(
-                                            value = channelsAdapter?.getChannels()
-                                                ?.lastOrNull()?.channel?.id ?: 0
-                                        )
-                                    )
-                            }
-                        })
-                    }
-                } else channelsAdapter?.notifyUpdate(data, recyclerView)
-                updateEmptyState(data.isEmpty(), currentSearchQuery)
-            }
-        }
-    }
-
-    protected open fun addNewChannels(data: List<ChannelListItem>) {
+        val recyclerView = getRV() ?: return
         setSelectedItems(data)
-        channelsAdapter?.addList(data as MutableList<ChannelListItem>)
-        val currentData = channelsAdapter?.getChannels() ?: emptyList()
-        updateEmptyState(currentData.isEmpty(), currentSearchQuery)
+        if (channelsAdapter == null || recyclerView.adapter !is ShareableChannelsAdapter) {
+            channelsAdapter = ShareableChannelsAdapter(
+                scope = lifecycleScope,
+                viewHolderFactory = viewHolderFactory.also {
+                    it.setChannelClickListener { _, item -> onChannelClick(item) }
+                })
+
+            with(recyclerView) {
+                adapter = channelsAdapter
+                layoutManager = LinearLayoutManager(this@ShareableActivity)
+                addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                    override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                        super.onScrolled(recyclerView, dx, dy)
+                        if (adapter is ShareableChannelsAdapter && isLastItemDisplaying())
+                            shareableViewModel.loadMoreChannels()
+                    }
+                })
+            }
+            channelsAdapter?.notifyUpdate(data)
+        } else channelsAdapter?.notifyUpdate(data)
+        updateEmptyState(data.isEmpty(), currentSearchQuery)
     }
 
     protected open fun filterOnlyAppropriateChannels(data: List<SceytChannel>): List<SceytChannel> {
@@ -162,7 +131,7 @@ abstract class ShareableActivity<Style : ShareablePageStyle> : AppCompatActivity
 
     protected open fun onSearchQueryChanged(query: String) {
         currentSearchQuery = query
-        shareableViewModel.getChannels(0, query)
+        shareableViewModel.onSearchQueryChanged(query)
     }
 
     protected open fun updateEmptyState(isEmpty: Boolean, searchQuery: String = "") {

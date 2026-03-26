@@ -2,6 +2,8 @@ package com.sceyt.chatuikit.presentation.custom_views
 
 import android.content.Context
 import android.graphics.drawable.Drawable
+import android.os.Parcel
+import android.os.Parcelable
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import androidx.annotation.ColorInt
@@ -26,6 +28,7 @@ import com.sceyt.chatuikit.styles.common.TextInputStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.styles.common.ToolbarStyle
 
+@Suppress("JoinDeclarationAndAssignment")
 class SearchableToolbar @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
@@ -225,5 +228,39 @@ class SearchableToolbar @JvmOverloads constructor(
 
     fun cancelSearchMode() {
         binding.serSearchMode(false)
+    }
+
+    override fun onSaveInstanceState(): Parcelable {
+        val superState = super.onSaveInstanceState()
+        return SavedState(superState).also { it.isSearchMode = isSearchMode }
+    }
+
+    override fun onRestoreInstanceState(state: Parcelable?) {
+        if (state !is SavedState) {
+            super.onRestoreInstanceState(state)
+            return
+        }
+        super.onRestoreInstanceState(state.superState)
+        if (state.isSearchMode) binding.serSearchMode(true)
+    }
+
+    private class SavedState : BaseSavedState {
+        var isSearchMode: Boolean = false
+
+        constructor(superState: Parcelable?) : super(superState)
+
+        constructor(parcel: Parcel) : super(parcel) {
+            isSearchMode = parcel.readInt() != 0
+        }
+
+        override fun writeToParcel(out: Parcel, flags: Int) {
+            super.writeToParcel(out, flags)
+            out.writeInt(if (isSearchMode) 1 else 0)
+        }
+
+        companion object CREATOR : Parcelable.Creator<SavedState> {
+            override fun createFromParcel(parcel: Parcel) = SavedState(parcel)
+            override fun newArray(size: Int) = arrayOfNulls<SavedState>(size)
+        }
     }
 }
