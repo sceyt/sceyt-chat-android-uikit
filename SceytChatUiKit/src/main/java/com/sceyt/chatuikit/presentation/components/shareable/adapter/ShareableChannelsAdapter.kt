@@ -5,6 +5,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.persistence.differs.ChannelDiff
 import com.sceyt.chatuikit.presentation.common.recyclerview.AsyncListDiffer
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem
+import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem.ChannelItem
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItemDiffCallback
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.holders.BaseChannelViewHolder
 import com.sceyt.chatuikit.presentation.components.shareable.adapter.holders.ShareableChannelViewHolderFactory
@@ -15,7 +16,7 @@ class ShareableChannelsAdapter(
     private var viewHolderFactory: ShareableChannelViewHolderFactory,
 ) : RecyclerView.Adapter<BaseChannelViewHolder>() {
 
-    private val differ = AsyncListDiffer(this, ChannelListItemDiffCallback, scope)
+    private val differ = AsyncListDiffer(this, ChannelListItemDiffCallback(), scope)
 
     val currentList get() = differ.currentList
 
@@ -56,20 +57,21 @@ class ShareableChannelsAdapter(
         differ.submitList(channels)
     }
 
-    fun getSkip() = currentList.filterIsInstance<ChannelListItem.ChannelItem>().size
+    fun getSkip() = currentList.filterIsInstance<ChannelItem>().size
 
     fun getData() = currentList
 
-    fun getChannels() = currentList.filterIsInstance<ChannelListItem.ChannelItem>()
+    fun getChannels() = currentList.filterIsInstance<ChannelItem>()
 
-    fun updateChannelSelectedState(selected: Boolean, channelItem: ChannelListItem.ChannelItem) {
+    fun updateChannelSelectedState(selected: Boolean, channelItem: ChannelItem) {
         differ.updateItem(
-            predicate = { it is ChannelListItem.ChannelItem && it.channel.id == channelItem.channel.id },
-            newItem = ChannelListItem.ChannelItem(channelItem.channel).apply { this.selected = selected },
+            predicate = { it is ChannelItem && it.channel.id == channelItem.channel.id },
+            newItem = ChannelItem(channelItem.channel).apply { this.selected = selected },
             payloads = Unit,
         )
     }
 
+    @Suppress("unused")
     fun setViewHolderFactory(viewHolderFactory: ShareableChannelViewHolderFactory) {
         this.viewHolderFactory = viewHolderFactory
     }
