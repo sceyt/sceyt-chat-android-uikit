@@ -21,9 +21,8 @@ fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: Lif
     val lifecycleScope = lifecycleOwner.lifecycleScope
     val channelEventHelpersMap by lazy { ConcurrentHashMap<Long, ChannelEventChangeHelper>() }
 
-    // Observe channel list — StateFlow replays the latest value immediately after rotation
-    channelItems
-        .onEach { channelListView.setChannelsList(lifecycleScope, it) }
+    state
+        .onEach { channelListView.setChannelsList(lifecycleScope, it.channelItems) }
         .launchIn(lifecycleScope)
 
     pageStateLiveData.observe(lifecycleOwner) { channelListView.updateStateView(it) }

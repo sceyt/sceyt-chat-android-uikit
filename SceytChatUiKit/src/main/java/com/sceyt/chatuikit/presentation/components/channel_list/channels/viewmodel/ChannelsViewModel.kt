@@ -17,7 +17,6 @@ import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem.ChannelItem
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelsComparatorDescBy
-import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelsItemComparatorBy
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.data.ChannelEvent
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import com.sceyt.chatuikit.presentation.root.PageState
@@ -34,6 +33,27 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.core.component.inject
 
+/**
+ * Holds both the raw channel list (for business logic) and the pre-computed adapter list.
+ * [channelItems] is derived from [channels] and [hasNext] — copy() recomputes it automatically.
+ * equals() compares [channelItems] via [ChannelListItem.equals] so StateFlow emits on content changes.
+ */
+data class ChannelListState(
+    val channels: List<SceytChannel> = emptyList(),
+    val hasNext: Boolean = false,
+) {
+    val channelItems: List<ChannelListItem> = channels.map(::ChannelItem) +
+            if (hasNext) listOf(ChannelListItem.LoadingMoreItem) else emptyList()
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is ChannelListState) return false
+        return hasNext == other.hasNext && channelItems == other.channelItems
+    }
+
+    override fun hashCode(): Int = channelItems.hashCode()
+}
+
 class ChannelsViewModel(
     internal val config: ChannelListConfig = ChannelListConfig.default,
 ) : BaseViewModel(), SceytKoinComponent {
@@ -44,94 +64,75 @@ class ChannelsViewModel(
     var searchQuery = ""
         private set
 
-    private val _channelItems = MutableStateFlow<List<ChannelListItem>>(emptyList())
-    val channelItems: StateFlow<List<ChannelListItem>> = _channelItems
+    private val _state = MutableStateFlow(ChannelListState())
+    val state: StateFlow<ChannelListState> = _state
 
     init {
         // Initial load — triggers server sync and populates from DB
         getChannels(0, query = searchQuery)
 
         ChannelsCache.channelsDeletedFlow.onEach { ids ->
-            _channelItems.update { items ->
-                val filtered = items.filter { (it as? ChannelItem)?.channel?.id !in ids }
-                if (filtered.none { it is ChannelItem })
+            _state.update { current ->
+                val filtered = current.channels.filter { it.id !in ids }
+                if (filtered.isEmpty())
                     pageStateLiveDataInternal.postValue(PageState.StateEmpty(searchQuery))
-                filtered
+                current.copy(channels = filtered)
             }
         }.launchIn(viewModelScope)
 
         ChannelsCache.channelUpdatedFlow
             .filter { config.isValidForConfig(it.channel) }
             .onEach { data ->
-                _channelItems.update { items ->
-                    var found = false
-                    val updated = items.map {
-                        if (it is ChannelItem && it.channel.id == data.channel.id) {
-                            found = true; it.copy(channel = data.channel)
-                        } else it
-                    }
-                    if (found) updated else updated + ChannelItem(data.channel)
+                _state.update { current ->
+                    val updated = if (current.channels.any { it.id == data.channel.id })
+                        current.channels.map { if (it.id == data.channel.id) data.channel else it }
+                    else current.channels + data.channel
+                    current.copy(channels = updated)
                 }
                 if (data.diff.lastMessageChanged || data.needSorting)
                     sortItemsDebounced()
             }.launchIn(viewModelScope)
 
         ChannelsCache.channelReactionMsgLoadedFlow.onEach { channel ->
-            _channelItems.update { items ->
-                items.map {
-                    if (it is ChannelItem && it.channel.id == channel.id)
-                        it.copy(channel = channel) else it
-                }
+            _state.update { current ->
+                current.copy(channels = current.channels.map { if (it.id == channel.id) channel else it })
             }
         }.launchIn(viewModelScope)
 
         ChannelsCache.channelAddedFlow
             .filter { config.isValidForConfig(it) }
             .onEach { channel ->
-                _channelItems.update { items ->
-                    if (items.none { (it as? ChannelItem)?.channel?.id == channel.id }) {
-                        (items + ChannelItem(channel))
-                            .filterIsInstance<ChannelItem>()
-                            .sortedWith(ChannelsItemComparatorBy(config.order))
-                            .withLoadingMore()
-                    } else items
+                _state.update { current ->
+                    if (current.channels.none { it.id == channel.id })
+                        current.copy(
+                            channels = (current.channels + channel)
+                                .sortedWith(ChannelsComparatorDescBy(config.order))
+                        )
+                    else current
                 }
             }.launchIn(viewModelScope)
 
         ChannelsCache.pendingChannelCreatedFlow
             .filter { (_, channel) -> config.isValidForConfig(channel) }
             .onEach { (pendingId, newChannel) ->
-                _channelItems.update { items ->
-                    val without = items.filter { (it as? ChannelItem)?.channel?.id != pendingId }
-                    if (without.none { (it as? ChannelItem)?.channel?.id == newChannel.id })
-                        without + ChannelItem(newChannel)
-                    else without
+                _state.update { current ->
+                    val without = current.channels.filter { it.id != pendingId }
+                    val merged = if (without.none { it.id == newChannel.id }) without + newChannel else without
+                    current.copy(channels = merged)
                 }
             }.launchIn(viewModelScope)
 
         ChannelsCache.channelDraftMessageChangesFlow.onEach { channel ->
-            _channelItems.update { items ->
-                items.map {
-                    if (it is ChannelItem && it.channel.id == channel.id)
-                        it.copy(channel = channel) else it
-                }
+            _state.update { current ->
+                current.copy(channels = current.channels.map { if (it.id == channel.id) channel else it })
             }
         }.launchIn(viewModelScope)
 
         ChannelsCache.newChannelsOnSync.onEach { (_, channels) ->
-            _channelItems.update { items ->
-                val existing = items.mapNotNull { (it as? ChannelItem)?.channel }
-                val newItems =
-                    initDataOnNewChannelsOnSync(existing, channels) ?: return@update items
-                newItems
-            }
+            val current = _state.value.channels
+            val newChannels = initDataOnNewChannelsOnSync(current, channels) ?: return@onEach
+            _state.update { it.copy(channels = newChannels, hasNext = hasNext || hasNextDb) }
         }.launchIn(viewModelScope)
-    }
-
-    // Appends or removes LoadingMoreItem based on current pagination state
-    private fun List<ChannelListItem>.withLoadingMore(): List<ChannelListItem> {
-        val base = filter { it !is ChannelListItem.LoadingMoreItem }
-        return if (hasNext || hasNextDb) base + ChannelListItem.LoadingMoreItem else base
     }
 
     // Debounced sort — cancels the previous sort if a newer update arrives within 300 ms
@@ -139,10 +140,8 @@ class ChannelsViewModel(
         sortJob?.cancel()
         sortJob = viewModelScope.launch(Dispatchers.Default) {
             delay(300)
-            _channelItems.update { items ->
-                items.filterIsInstance<ChannelItem>()
-                    .sortedWith(ChannelsItemComparatorBy(config.order))
-                    .withLoadingMore()
+            _state.update { current ->
+                current.copy(channels = current.channels.sortedWith(ChannelsComparatorDescBy(config.order)))
             }
         }
     }
@@ -243,10 +242,12 @@ class ChannelsViewModel(
         when (response) {
             is PaginationResponse.DBResponse -> {
                 if (!checkIgnoreDatabasePagingResponse(response)) {
-                    val items = mapToChannelItem(response.data, response.hasNext)
-                    _channelItems.update { current ->
-                        if (response.offset == 0) items
-                        else current.filter { it !is ChannelListItem.LoadingMoreItem } + items
+                    val channels = mapToChannels(response.data)
+                    _state.update { current ->
+                        if (response.offset == 0)
+                            current.copy(channels = channels, hasNext = response.hasNext)
+                        else
+                            current.copy(channels = current.channels + channels, hasNext = response.hasNext)
                     }
                     notifyPageStateWithResponse(
                         response = SceytResponse.Success(null),
@@ -258,10 +259,9 @@ class ChannelsViewModel(
 
             is PaginationResponse.ServerResponse -> {
                 if (response.data is SceytResponse.Success && response.hasDiff) {
-                    val items = mapToChannelItem(response.cacheData, response.hasNext)
-                    _channelItems.update { items }
+                    _state.update { it.copy(channels = mapToChannels(response.cacheData), hasNext = response.hasNext) }
                 } else if (!hasNextDb) {
-                    _channelItems.update { it.withLoadingMore() }
+                    _state.update { it.copy(hasNext = hasNext || hasNextDb) }
                 }
                 notifyPageStateWithResponse(
                     response = response.data,
@@ -279,7 +279,7 @@ class ChannelsViewModel(
     internal suspend fun initDataOnNewChannelsOnSync(
         existingChannels: List<SceytChannel>,
         syncChannels: List<SceytChannel>,
-    ): List<ChannelListItem>? = withContext(Dispatchers.Default) {
+    ): List<SceytChannel>? = withContext(Dispatchers.Default) {
         // Filter channels by config
         val filtered = syncChannels.filter { config.isValidForConfig(it) }
         if (filtered.isEmpty()) return@withContext null
@@ -291,12 +291,11 @@ class ChannelsViewModel(
         if (existing.isEmpty()) {
             if (loadingFromServer || loadingFromDb) return@withContext null
             val sorted = filtered.sortedWith(ChannelsComparatorDescBy(config.order))
-            val date = mapToChannelItem(data = sorted, hasNext = false)
             SceytLog.i(
                 "syncResultUpdate",
                 "loaded channels are empty, set data : ${sorted.map { it.id }}"
             )
-            return@withContext date
+            return@withContext sorted
         } else {
             // Get last channel to understand where to insert new channels
             val lastChannel = existing.last()
@@ -310,40 +309,22 @@ class ChannelsViewModel(
                 return@withContext null
             }
             // Get channels which need to be inserted
-            sorted.subList(0, index).forEach {
-                existing.add(it)
-            }
-            var newData: List<ChannelListItem> =
-                existing.sortedWith(ChannelsComparatorDescBy(config.order)).map(::ChannelItem)
-
-            if (hasNext || hasNextDb)
-                newData = newData.plus(ChannelListItem.LoadingMoreItem)
+            sorted.subList(0, index).forEach { existing.add(it) }
+            val newData = existing.sortedWith(ChannelsComparatorDescBy(config.order))
 
             SceytLog.i(
-                "syncResultUpdate", "should be applied synced channels : ${
-                    newData.map { (it as? ChannelItem)?.channel?.id ?: it.toString() }
-                }")
+                "syncResultUpdate", "should be applied synced channels : ${newData.map { it.id }}"
+            )
             return@withContext newData
         }
     }
 
-    internal fun mapToChannelItem(
-        data: List<SceytChannel>?, hasNext: Boolean,
+    internal fun mapToChannels(
+        data: List<SceytChannel>?,
         includeDirectChannelsWithDeletedPeers: Boolean = true,
-    ): List<ChannelListItem> {
-
-        val filteredChannels = if (includeDirectChannelsWithDeletedPeers) data.orEmpty()
+    ): List<SceytChannel> {
+        return if (includeDirectChannelsWithDeletedPeers) data.orEmpty()
         else data?.filter { channel -> !channel.isPeerDeleted() }.orEmpty()
-
-        if (filteredChannels.isEmpty())
-            return emptyList()
-
-        val channelItems = filteredChannels.map { ChannelItem(it) }
-
-        return if (hasNext)
-            channelItems + ChannelListItem.LoadingMoreItem
-        else
-            channelItems
     }
 
     fun markChannelAsRead(channelId: Long) {
