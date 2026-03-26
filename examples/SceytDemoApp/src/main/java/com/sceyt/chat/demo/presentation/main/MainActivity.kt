@@ -104,7 +104,7 @@ class MainActivity : AppCompatActivity() {
     private fun setPagerAdapter() {
         val adapter = MainViewPagerAdapter(
             activity = this,
-            mFragments = arrayListOf(CustomChannelListFragment(), ProfileFragment())
+            fragments = listOf(CustomChannelListFragment(), ProfileFragment())
         )
         binding.viewPager.adapter = adapter
         binding.viewPager.isUserInputEnabled = false
