@@ -17,7 +17,7 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 
 fun Drawable?.toSpannableString(
-    maxSizeDp: Int = 18
+    maxSizeDp: Int = 17
 ): SpannableStringBuilder {
     this ?: return SpannableStringBuilder()
     val builder = SpannableStringBuilder(". ")
