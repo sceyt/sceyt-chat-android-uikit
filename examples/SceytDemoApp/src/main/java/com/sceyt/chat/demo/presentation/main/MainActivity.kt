@@ -49,7 +49,7 @@ class MainActivity : AppCompatActivity() {
         setPagerAdapter()
         setBottomNavClickListeners()
         initViewModel()
-        attachActiveCallBanner(callManager, binding.mainContent, R.id.viewPager)
+        attachActiveCallBanner(callManager, binding.root, R.id.viewPager)
 
         SceytChatUIKit.chatUIFacade.channelInteractor.getTotalUnreadCount().onEach {
             binding.bottomNavigationView.getOrCreateBadge(R.id.channelsFragment).apply {
