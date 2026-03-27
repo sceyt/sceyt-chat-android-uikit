@@ -139,7 +139,7 @@ class ChannelsViewModel(
     private fun sortItemsDebounced() {
         sortJob?.cancel()
         sortJob = viewModelScope.launch(Dispatchers.Default) {
-            delay(300)
+            delay(200)
             _state.update { current ->
                 current.copy(channels = current.channels.sortedWith(ChannelsComparatorDescBy(config.order)))
             }
