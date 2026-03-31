@@ -1531,7 +1531,7 @@ internal class PersistenceMessagesLogicImpl(
             forceUpdatedList.groupBy { it.channelId }.forEach { (key, value) ->
                 messagesCache.deleteAllMessagesWhere(key) {
                     return@deleteAllMessagesWhere value.any { entity ->
-                        it.channelId == entity.channelId && (it.tid == entity.tid || it.id == entity.id)
+                        it.tid == entity.tid || it.id == entity.id
                     }
                 }
             }
