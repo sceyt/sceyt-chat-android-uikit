@@ -41,7 +41,7 @@ typealias MessageTid = Long
 typealias MessageDeletionDate = Long
 
 class MessagesCache {
-    private var cachedMessages = hashMapOf<Long, HashMap<Long, SceytMessage>>()
+    private var cachedMessages = hashMapOf<ChannelId, HashMap<MessageTid, SceytMessage>>()
     private val mutex = Mutex()
 
     companion object {
@@ -204,15 +204,17 @@ class MessagesCache {
     }
 
     internal suspend fun deleteAllMessagesWhere(
+        channelId: ChannelId,
         predicate: (SceytMessage) -> Boolean
     ) = mutex.withLock {
-        cachedMessages.forEach { (_, map) ->
-            map.removeAllIf(predicate)
-        }
+        cachedMessages[channelId]?.removeAllIf(predicate)
     }
 
-    suspend fun forceDeleteAllMessagesWhere(predicate: (SceytMessage) -> Boolean) = mutex.withLock {
-        cachedMessages.forEach { (channelId, map) ->
+    suspend fun forceDeleteAllMessagesWhere(
+        channelId: ChannelId,
+        predicate: (SceytMessage) -> Boolean
+    ) = mutex.withLock {
+        cachedMessages[channelId]?.let { map ->
             val removedMessages = map.removeAllIfCollect(predicate)
             if (removedMessages.isNotEmpty()) {
                 val tIds = removedMessages.map { it.tid }
@@ -429,14 +431,16 @@ class MessagesCache {
                 currentProgress = attachment.progressPercent ?: 0f,
                 newProgress = updateDate.progressPercent
             )
-            
+
             if (!isValid) {
-                println("MessagesCache: Skipping invalid update for attachment ${attachment.messageTid} - " +
-                        "current: ${attachment.transferState}/${attachment.progressPercent}%, " +
-                        "new: ${updateDate.state}/${updateDate.progressPercent}%")
+                println(
+                    "MessagesCache: Skipping invalid update for attachment ${attachment.messageTid} - " +
+                            "current: ${attachment.transferState}/${attachment.progressPercent}%, " +
+                            "new: ${updateDate.state}/${updateDate.progressPercent}%"
+                )
                 return null
             }
-            
+
             return attachment.copy(
                 transferState = updateDate.state,
                 progressPercent = updateDate.progressPercent,
@@ -507,17 +511,18 @@ class MessagesCache {
         })
     }
 
-    suspend fun updateLinkDetails(link: String, width: Int, height: Int, thumb: String?) = mutex.withLock {
-        updateAllAttachments(predicate = { it.url == link }, updater = {
-            copy(
-                linkPreviewDetails = linkPreviewDetails?.copy(
-                    imageWidth = width,
-                    imageHeight = height,
-                    thumb = thumb ?: linkPreviewDetails.thumb
+    suspend fun updateLinkDetails(link: String, width: Int, height: Int, thumb: String?) =
+        mutex.withLock {
+            updateAllAttachments(predicate = { it.url == link }, updater = {
+                copy(
+                    linkPreviewDetails = linkPreviewDetails?.copy(
+                        imageWidth = width,
+                        imageHeight = height,
+                        thumb = thumb ?: linkPreviewDetails.thumb
+                    )
                 )
-            )
-        })
-    }
+            })
+        }
 
     suspend fun moveMessagesToNewChannel(
         pendingChannelId: Long,

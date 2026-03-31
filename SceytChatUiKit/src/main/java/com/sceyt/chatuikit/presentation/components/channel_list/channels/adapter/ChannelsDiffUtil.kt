@@ -3,8 +3,10 @@ package com.sceyt.chatuikit.presentation.components.channel_list.channels.adapte
 import androidx.recyclerview.widget.DiffUtil
 import com.sceyt.chatuikit.persistence.differs.diff
 
-class ChannelsDiffUtil(private var oldList: List<ChannelListItem>,
-                       private var newList: List<ChannelListItem>) : DiffUtil.Callback() {
+class ChannelsDiffUtil(
+    private var oldList: List<ChannelListItem>,
+    private var newList: List<ChannelListItem>
+) : DiffUtil.Callback() {
 
     override fun getOldListSize(): Int {
         return oldList.size
@@ -17,7 +19,10 @@ class ChannelsDiffUtil(private var oldList: List<ChannelListItem>,
     override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
         val oldItem = oldList[oldItemPosition]
         val newItem = newList[newItemPosition]
-        return (oldItem == newItem)
+        if (oldItem is ChannelListItem.ChannelItem && newItem is ChannelListItem.ChannelItem)
+            return oldItem.channel.id == newItem.channel.id
+
+        return false
     }
 
     override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {

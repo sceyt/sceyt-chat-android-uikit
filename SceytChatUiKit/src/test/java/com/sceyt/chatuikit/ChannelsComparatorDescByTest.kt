@@ -3,9 +3,9 @@ package com.sceyt.chatuikit
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.truth.Truth
 import com.sceyt.chat.models.channel.ChannelListQuery.ChannelListOrder
-import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
+import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelsComparatorDescBy
 import org.junit.Test
@@ -108,46 +108,51 @@ class ChannelsComparatorDescByTest {
 }
 
 @VisibleForTesting
-fun createChannel(id: Long, pinnedAt: Long, createdAt: Long, lastMessage: SceytMessage? = null) = SceytChannel(
-    id = id,
-    parentChannelId = 0,
-    uri = null,
-    type = "direct",
-    subject = "",
-    avatarUrl = "",
-    metadata = null,
-    createdAt = createdAt,
-    updatedAt = 0,
-    messagesClearedAt = 0,
-    memberCount = 1,
-    createdBy = null,
-    userRole = null,
-    unread = false,
-    newMessageCount = 0,
-    newMentionCount = 0,
-    newReactedMessageCount = 0,
-    hidden = false,
-    archived = false,
-    muted = false,
-    mutedTill = 0,
-    pinnedAt = pinnedAt,
-    lastReceivedMessageId = 0,
-    lastDisplayedMessageId = 0,
-    messageRetentionPeriod = 0,
-    lastMessage = lastMessage,
-    messages = null,
-    members = null,
-    newReactions = null,
-    pendingReactions = null,
-    pending = false,
-    draftMessage = null,
-    events = null
-)
+fun createChannel(id: Long, pinnedAt: Long, createdAt: Long, lastMessage: SceytMessage? = null) =
+    SceytChannel(
+        id = id,
+        parentChannelId = 0,
+        uri = null,
+        type = "direct",
+        subject = "",
+        avatarUrl = "",
+        metadata = null,
+        createdAt = createdAt,
+        updatedAt = 0,
+        messagesClearedAt = 0,
+        memberCount = 1,
+        createdBy = null,
+        userRole = null,
+        unread = false,
+        newMessageCount = 0,
+        newMentionCount = 0,
+        newReactedMessageCount = 0,
+        hidden = false,
+        archived = false,
+        muted = false,
+        mutedTill = 0,
+        pinnedAt = pinnedAt,
+        lastReceivedMessageId = 0,
+        lastDisplayedMessageId = 0,
+        messageRetentionPeriod = 0,
+        lastMessage = lastMessage,
+        messages = null,
+        members = null,
+        newReactions = null,
+        pendingReactions = null,
+        pending = false,
+        draftMessage = null,
+        events = null
+    )
 
-private fun createMessage(createdAt: Long): SceytMessage {
+internal fun createMessage(
+    createdAt: Long,
+    id: Long = 0,
+    tid: Long = 0,
+): SceytMessage {
     return SceytMessage(
-        id = 0,
-        tid = 0,
+        id = id,
+        tid = tid,
         0,
         "",
         "",

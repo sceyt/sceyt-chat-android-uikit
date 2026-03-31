@@ -354,7 +354,7 @@ abstract class BaseMessageViewHolder(
         )?.toDrawable(context.resources)?.mutate()
 
         fun loadImage(filePath: String?) {
-            Glide.with(itemView.context)
+            Glide.with(itemView.context.applicationContext)
                 .load(filePath)
                 .placeholder(placeHolder)
                 .error(placeHolder)
