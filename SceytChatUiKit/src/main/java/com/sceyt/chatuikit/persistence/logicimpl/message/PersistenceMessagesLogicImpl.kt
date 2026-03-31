@@ -33,6 +33,7 @@ import com.sceyt.chatuikit.data.models.SyncNearMessagesResult
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.createErrorResponse
 import com.sceyt.chatuikit.data.models.isSuccess
+import com.sceyt.chatuikit.data.models.map
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.MarkerType.Received
@@ -1353,7 +1354,7 @@ internal class PersistenceMessagesLogicImpl(
         if (forceHasDiff) hasDiff = true
 
         return PaginationResponse.ServerResponse(
-            data = response,
+            data = response.map { updatedMessages },
             cacheData = messagesCache.getSorted(channelId),
             loadKey = loadKey,
             offset = offset,
@@ -1527,9 +1528,11 @@ internal class PersistenceMessagesLogicImpl(
         val forceUpdatedList = messageDao.upsertMessages(messagesDb)
         // Delete messages from cache which were force updated.
         if (forceUpdatedList.isNotEmpty()) {
-            messagesCache.deleteAllMessagesWhere {
-                return@deleteAllMessagesWhere forceUpdatedList.any { entity ->
-                    it.channelId == entity.channelId && (it.tid == entity.tid || it.id == entity.id)
+            forceUpdatedList.groupBy { it.channelId }.forEach { (key, value) ->
+                messagesCache.deleteAllMessagesWhere(key) {
+                    return@deleteAllMessagesWhere value.any { entity ->
+                        it.channelId == entity.channelId && (it.tid == entity.tid || it.id == entity.id)
+                    }
                 }
             }
         }
