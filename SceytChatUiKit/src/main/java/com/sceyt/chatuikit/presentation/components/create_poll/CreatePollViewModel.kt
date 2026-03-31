@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.presentation.components.create_poll
 
 import android.view.inputmethod.EditorInfo
+import android.widget.EditText
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.message.Message
@@ -15,6 +16,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.UUID
 
 data class PollOptionItem(
@@ -136,7 +138,7 @@ class CreatePollViewModel(
         }
     }
 
-    fun onOptionClick(view: android.widget.EditText, option: PollOptionItem) {
+    fun onOptionClick(view: EditText, option: PollOptionItem) {
         view.requestFocus()
         view.setSelection(view.text.length)
         _uiState.update { state ->
@@ -178,7 +180,7 @@ class CreatePollViewModel(
             return false
         }
 
-        viewModelScope.launch(NonCancellable) {
+        viewModelScope.launch {
             val messageTid = ClientWrapper.generateTid()
             val options = state.options
                 .filter { it.text.isNotBlank() }
@@ -199,7 +201,9 @@ class CreatePollViewModel(
                 .setPoll(pollDetails)
                 .build()
 
-            messageInteractor.sendMessage(channelId, message)
+            withContext(NonCancellable) {
+                messageInteractor.sendMessage(channelId, message)
+            }
         }
 
         return true
