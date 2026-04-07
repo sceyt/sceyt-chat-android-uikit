@@ -17,6 +17,7 @@ import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
 import com.sceyt.chatuikit.extensions.setMargins
 import com.sceyt.chatuikit.extensions.setTextColorRes
 import com.sceyt.chatuikit.extensions.setTintColorRes
+import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchActivity
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.viewmodel.ChannelsViewModel
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.viewmodel.ChannelsViewModelFactory
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.viewmodel.bind
@@ -47,7 +48,9 @@ open class ChannelListFragment : Fragment() {
         binding.applyStyle()
 
         viewModel.bind(binding.channelListView, viewLifecycleOwner)
-        viewModel.bind(binding.searchView)
+        binding.searchView.setLauncherMode(true) {
+            openGlobalSearch(binding.searchView)
+        }
 
         binding.searchView.post {
             binding.channelListView.getPageStateView()
@@ -71,6 +74,12 @@ open class ChannelListFragment : Fragment() {
 
     protected open fun openStartChatActivity() {
         StartChatActivity.launch(requireContext())
+    }
+
+    protected open fun openGlobalSearch(sourceView: View?) {
+        activity?.let { hostActivity ->
+            GlobalSearchActivity.launch(hostActivity, sourceView)
+        }
     }
 
     protected open fun setupConnectionStatus(state: ConnectionState) {

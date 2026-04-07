@@ -126,6 +126,7 @@ class MessageListViewModel(
     private var _conversationId: Long,
     private var _channel: SceytChannel,
     val replyInThread: Boolean = false,
+    val initialTargetMessageId: Long? = null,
 ) : BaseViewModel(), SceytKoinComponent {
     private val messageInteractor: MessageInteractor by inject()
     internal val channelInteractor: ChannelInteractor by inject()

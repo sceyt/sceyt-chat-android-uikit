@@ -4,7 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 
-class MessageListViewModelFactory(private val channel: SceytChannel) : ViewModelProvider.Factory {
+class MessageListViewModelFactory(
+    private val channel: SceytChannel,
+    private val targetMessageId: Long? = null,
+) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         val conversationId = channel.id
 
@@ -13,6 +16,7 @@ class MessageListViewModelFactory(private val channel: SceytChannel) : ViewModel
             _conversationId = conversationId,
             _channel = channel,
             replyInThread = false,
+            initialTargetMessageId = targetMessageId,
         ) as T
     }
 }

@@ -127,6 +127,17 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     val lastDisplayedMessageId = channel.lastDisplayedMessageId
     val lastMessageId = lastMessage?.id ?: 0
     when {
+        initialTargetMessageId != null -> {
+            loadNearMessages(
+                messageId = initialTargetMessageId,
+                loadKey = LoadKeyData(
+                    key = LoadKeyType.ScrollToMessageBy.longValue,
+                    value = initialTargetMessageId
+                ),
+                ignoreServer = false
+            )
+        }
+
         lastDisplayedMessageId == 0L || lastMessage?.isPending() == true
                 || lastDisplayedMessageId == lastMessageId -> {
             loadPrevMessages(lastMessageId, 0)
