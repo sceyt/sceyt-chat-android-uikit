@@ -15,8 +15,10 @@ import com.sceyt.chatuikit.extensions.launchActivity
 import com.sceyt.chatuikit.extensions.overrideTransitions
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
+import com.sceyt.chatuikit.data.models.LoadKeyData
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageListViewModel
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageListViewModelFactory
+import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.bindings.LoadKeyType
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.bindings.bind
 
 open class ChannelActivity : AppCompatActivity() {
@@ -40,25 +42,45 @@ open class ChannelActivity : AppCompatActivity() {
     }
 
     private val factory: MessageListViewModelFactory by lazy(LazyThreadSafetyMode.NONE) {
-        MessageListViewModelFactory(requireNotNull(intent.parcelable(CHANNEL)))
+        MessageListViewModelFactory(
+            channel = requireNotNull(intent.parcelable(CHANNEL)),
+            targetMessageId = intent.getTargetMessageId()
+        )
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        setIntent(intent)
         val channel = intent.parcelable<SceytChannel>(CHANNEL) ?: return
-        if (channel.id == viewModel.channel.id) return
+        val targetMessageId = intent.getTargetMessageId()
+        if (channel.id == viewModel.channel.id) {
+            targetMessageId?.let {
+                viewModel.loadNearMessages(
+                    messageId = it,
+                    loadKey = LoadKeyData(
+                        key = LoadKeyType.ScrollToMessageBy.longValue,
+                        value = it
+                    ),
+                    ignoreServer = false
+                )
+            }
+            return
+        }
         launchActivity<ChannelActivity> {
             putExtra(CHANNEL, channel.toIntentPayload())
+            targetMessageId?.let { putExtra(TARGET_MESSAGE_ID, it) }
         }
         super.finish()
     }
 
     companion object {
         const val CHANNEL = "CHANNEL"
+        const val TARGET_MESSAGE_ID = "TARGET_MESSAGE_ID"
 
-        fun launch(context: Context, channel: SceytChannel) {
+        fun launch(context: Context, channel: SceytChannel, targetMessageId: Long? = null) {
             context.launchActivity<ChannelActivity>(R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold) {
                 putExtra(CHANNEL, channel.toIntentPayload())
+                targetMessageId?.let { putExtra(TARGET_MESSAGE_ID, it) }
             }
         }
     }
@@ -73,5 +95,9 @@ open class ChannelActivity : AppCompatActivity() {
         }
         super.finish()
         overrideTransitions(R.anim.sceyt_anim_slide_hold, R.anim.sceyt_anim_slide_out_right, false)
+    }
+
+    private fun Intent.getTargetMessageId(): Long? {
+        return if (hasExtra(TARGET_MESSAGE_ID)) getLongExtra(TARGET_MESSAGE_ID, 0L) else null
     }
 }

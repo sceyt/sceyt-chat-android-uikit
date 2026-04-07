@@ -23,6 +23,11 @@
     <application android:requestLegacyExternalStorage="true">
 
         <activity
+            android:name=".presentation.components.global_search.GlobalSearchActivity"
+            android:exported="false"
+            android:theme="@style/DefaultFontTheme"
+            android:windowSoftInputMode="adjustNothing" />
+        <activity
             android:name=".presentation.components.channel.messages.ChannelActivity"
             android:exported="false"
             android:launchMode="singleTask"

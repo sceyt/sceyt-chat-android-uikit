@@ -17,6 +17,7 @@ import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.ATTACHMENT_PAYLOAD_TABLE
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.ATTACHMENT_TABLE
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.AUTO_DELETE_MESSAGES_TABLE
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.CHANNEL_TABLE
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.LOAD_RANGE_TABLE
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.MESSAGE_TABLE
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.POLL_TABLE
@@ -796,6 +797,35 @@ internal abstract class MessageDao {
     protected open suspend fun deleteAllReactionsAndTotals(messageIds: List<Long>) {
         deleteAllReactionTotalsByMessageId(messageIds)
     }
+
+    @Transaction
+    @Query(
+        """
+        SELECT message.*
+        FROM $MESSAGE_TABLE AS message
+        JOIN $CHANNEL_TABLE AS channel ON channel.chat_id = message.channelId
+        WHERE message.message_id IS NOT NULL
+          AND message.deliveryStatus != :pendingStatus
+          AND message.unList = 0
+          AND (:senderIgnored OR message.fromId = :senderId)
+          AND (:queryEmpty OR message.body LIKE '%' || :query || '%')
+        ORDER BY message.createdAt DESC, message.message_id DESC
+        LIMIT :limit OFFSET :offset
+        """
+    )
+    abstract suspend fun searchMessagesGlobally(
+        query: String,
+        senderId: String?,
+        limit: Int,
+        offset: Int,
+        queryEmpty: Boolean,
+        senderIgnored: Boolean,
+        pendingStatus: MessageDeliveryStatus = MessageDeliveryStatus.Pending,
+    ): List<MessageDb>
+
+    @Transaction
+    @Query("SELECT * FROM $MESSAGE_TABLE WHERE tid IN (:tids)")
+    abstract suspend fun getMessagesByTids(tids: List<Long>): List<MessageDb>
 
     @Query("DELETE FROM $REACTION_TOTAL_TABLE WHERE messageId IN (:messageId)")
     protected abstract fun deleteAllReactionTotalsByMessageId(messageId: List<Long>)
