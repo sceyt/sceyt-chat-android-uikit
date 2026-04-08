@@ -1,7 +1,9 @@
 package com.sceyt.chatuikit.presentation.components.global_search
 
 import com.google.common.truth.Truth.assertThat
+import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.messages.SceytUser
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -29,10 +31,10 @@ class GlobalSearchTabViewModelTest {
     }
 
     @Test
-    fun `revisiting a loaded tab reuses cached results`() = runTest(dispatcher) {
+    fun `revisiting chats tab does not reload already loaded results`() = runTest(dispatcher) {
         val dataSource = FakeGlobalSearchDataSource()
         val session = GlobalSearchSessionStore(GlobalSearchSessionState(activeTab = GlobalSearchTab.Chats))
-        ChatsSearchViewModel(session, dataSource, dispatcher)
+        TestChatsSearchViewModel(session, dataSource, dispatcher)
         MediaSearchViewModel(session, dataSource, dispatcher)
         advanceUntilIdle()
 
@@ -58,10 +60,10 @@ class GlobalSearchTabViewModelTest {
     }
 
     @Test
-    fun `new query creates a new cache key and each tab loads once for it`() = runTest(dispatcher) {
+    fun `chats tab loads when query changes but not when only tab changes`() = runTest(dispatcher) {
         val dataSource = FakeGlobalSearchDataSource()
         val session = GlobalSearchSessionStore(GlobalSearchSessionState(activeTab = GlobalSearchTab.Chats))
-        ChatsSearchViewModel(session, dataSource, dispatcher)
+        TestChatsSearchViewModel(session, dataSource, dispatcher)
         MediaSearchViewModel(session, dataSource, dispatcher)
         advanceUntilIdle()
 
@@ -181,5 +183,85 @@ class GlobalSearchTabViewModelTest {
         assertThat(viewModel.state.value.showMediaGrid).isFalse()
         assertThat(viewModel.state.value.listItems).isNotEmpty()
         assertThat(viewModel.state.value.query).isEqualTo("cat")
+    }
+
+    @Test
+    fun `custom chats viewmodel subclass can observe session and publish custom state`() = runTest(dispatcher) {
+        val session = GlobalSearchSessionStore(GlobalSearchSessionState(activeTab = GlobalSearchTab.Chats))
+        val viewModel = object : ChatsSearchViewModel(session, dispatcher) {
+            override suspend fun performLoad(
+                criteria: SearchCriteria,
+                offset: Int,
+                pageSize: Int,
+            ): SearchResultPage {
+                return SearchResultPage(
+                    listItems = if (criteria.query == "override") {
+                        listOf(GlobalSearchListItem.SectionHeader(R.string.sceyt_chats))
+                    } else {
+                        emptyList()
+                    },
+                    loadedCount = if (criteria.query == "override") 1 else 0,
+                    emptyState = null
+                )
+            }
+        }
+        advanceUntilIdle()
+
+        session.update { it.copy(query = "override") }
+        advanceTimeBy(300)
+        advanceUntilIdle()
+
+        assertThat(viewModel.state.value.listItems)
+            .containsExactly(GlobalSearchListItem.SectionHeader(R.string.sceyt_chats))
+    }
+}
+
+private class TestChatsSearchViewModel(
+    session: GlobalSearchSession,
+    private val dataSource: FakeGlobalSearchDataSource,
+    ioDispatcher: CoroutineDispatcher,
+) : ChatsSearchViewModel(session, ioDispatcher) {
+    override suspend fun performLoad(
+        criteria: SearchCriteria,
+        offset: Int,
+        pageSize: Int,
+    ): SearchResultPage {
+        return when {
+            criteria.selectedMemberId != null -> {
+                val page = dataSource.searchMessages(criteria.query, criteria.selectedMemberId, offset, pageSize)
+                SearchResultPage(
+                    listItems = page.data.map { GlobalSearchListItem.MessageItem(it) },
+                    hasMore = page.hasMore,
+                    loadedCount = page.data.size
+                )
+            }
+
+            criteria.query.isBlank() -> {
+                val page = dataSource.getRecentChats(offset, pageSize)
+                SearchResultPage(
+                    listItems = page.data.map { GlobalSearchListItem.ChannelItem(it) },
+                    hasMore = page.hasMore,
+                    loadedCount = page.data.size
+                )
+            }
+
+            else -> {
+                val chatsPage = dataSource.searchChats(criteria.query, pageSize)
+                val messagesPage = dataSource.searchMessages(criteria.query, null, 0, pageSize)
+                SearchResultPage(
+                    listItems = buildList {
+                        if (chatsPage.data.isNotEmpty()) {
+                            add(GlobalSearchListItem.SectionHeader(R.string.sceyt_chats))
+                            addAll(chatsPage.data.map { GlobalSearchListItem.ChannelItem(it) })
+                        }
+                        if (messagesPage.data.isNotEmpty()) {
+                            add(GlobalSearchListItem.SectionHeader(R.string.sceyt_messages))
+                            addAll(messagesPage.data.map { GlobalSearchListItem.MessageItem(it) })
+                        }
+                    },
+                    loadedCount = chatsPage.data.size + messagesPage.data.size
+                )
+            }
+        }
     }
 }

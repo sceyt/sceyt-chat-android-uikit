@@ -337,7 +337,7 @@ internal abstract class MessageDao {
 
     @Transaction
     open suspend fun insertUserMarkersIfExistMessage(entities: List<MarkerEntity>): List<Long> {
-        val existMessageIds = getExistMessageByIds(entities.map { it.messageId })
+        val existMessageIds = getExistMessageByIds(entities.map { it.messageId }.toSet().toList())
         // Filter markers which message exist in db
         val filtered = entities
             .filter { it.messageId in existMessageIds }

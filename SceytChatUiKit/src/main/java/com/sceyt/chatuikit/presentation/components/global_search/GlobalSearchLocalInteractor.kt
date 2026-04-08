@@ -1,7 +1,6 @@
 package com.sceyt.chatuikit.presentation.components.global_search
 
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytUser
@@ -85,11 +84,7 @@ internal class GlobalSearchLocalInteractor :
         limit: Int,
     ): GlobalSearchPage<SceytChannel> {
         if (query.isBlank()) return GlobalSearchPage(emptyList(), false)
-        val userIds = userDao.searchUsersLinkedToJoinedChannelsByDisplayName(
-            searchQuery = query,
-            excludedUserId = myUserId,
-            limit = limit * 2
-        ).map { it.user.id }
+        val userIds = userDao.getUserIdsByDisplayName(query)
 
         val data = channelDao.searchChannelsByUserIds(
             query = query,

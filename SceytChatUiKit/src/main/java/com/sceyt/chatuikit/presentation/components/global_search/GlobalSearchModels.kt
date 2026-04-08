@@ -35,8 +35,8 @@ data class GlobalSearchHeaderState(
 
 data class GlobalSearchRequestKey(
     val tab: GlobalSearchTab,
-    val query: String,
-    val selectedMemberId: String?,
+    val query: String = "",
+    val selectedMemberId: String? = null,
 )
 
 data class GlobalSearchTabState(
@@ -96,7 +96,11 @@ data class GlobalSearchEmptyState(
 data class GlobalSearchPage<T>(
     val data: List<T>,
     val hasMore: Boolean,
-)
+) {
+    companion object {
+        fun <T> empty() = GlobalSearchPage<T>(emptyList(), false)
+    }
+}
 
 fun SceytUser.displayName(): String {
     val fullName = fullName

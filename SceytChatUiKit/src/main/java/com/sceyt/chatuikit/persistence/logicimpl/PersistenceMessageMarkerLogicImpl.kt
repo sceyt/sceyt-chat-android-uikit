@@ -18,6 +18,7 @@ import com.sceyt.chatuikit.persistence.mappers.toMarkerEntity
 import com.sceyt.chatuikit.persistence.repositories.MessageMarkersRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlin.collections.toLongArray
 
 internal class PersistenceMessageMarkerLogicImpl(
     private val messageMarkersRepository: MessageMarkersRepository,
@@ -107,9 +108,10 @@ internal class PersistenceMessageMarkerLogicImpl(
             MarkerEntity(messageId, userId, markerName, createdAt)
         }
         messageDao.insertUserMarkersIfExistMessage(userMarkers)
+        val messages = messageDao.getMessageEntitiesByIds(ids = messageIds)
 
         // 2️⃣ Get tIds for cache update
-        val tIds = messageDao.getMessageTIdsByIds(ids = messageIds.toLongArray())
+        val tIds = messages.map { it.tid }
         if (tIds.isNotEmpty()) {
             val sceytMarkers = messageIds.map { messageId ->
                 SceytMarker(
@@ -129,7 +131,6 @@ internal class PersistenceMessageMarkerLogicImpl(
         }
 
         // 3️⃣ Update marker totals in DB (batch)
-        val messages = messageDao.getMessageEntitiesByIds(ids = messageIds)
         val updatedMessages = messages.map { messageEntity ->
             val currentTotals = messageEntity.markerCount.orEmpty().toMutableList()
             val existingIndex = currentTotals.indexOfFirst { it.name == markerName }

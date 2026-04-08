@@ -105,8 +105,8 @@ internal abstract class GlobalSearchSessionTabViewModel(
         current: GlobalSearchSessionState,
     ): Boolean {
         return previous.activeTab == tab &&
-            previous.query != current.query &&
-            current.query.isNotBlank()
+                previous.query != current.query &&
+                current.query.isNotBlank()
     }
 
     private fun ensureLoaded(
@@ -282,81 +282,6 @@ internal abstract class GlobalSearchSessionTabViewModel(
         pageSize: Int,
     ): SearchResultPage
 
-    protected suspend fun loadChats(
-        criteria: SearchCriteria,
-        offset: Int,
-        pageSize: Int,
-    ): SearchResultPage {
-        return when {
-            criteria.selectedMemberId != null -> {
-                val page = interactor.searchMessages(
-                    query = criteria.query,
-                    senderId = criteria.selectedMemberId,
-                    offset = offset,
-                    limit = pageSize
-                )
-                SearchResultPage(
-                    listItems = page.data.map { GlobalSearchListItem.MessageItem(it) },
-                    hasMore = page.hasMore,
-                    loadedCount = page.data.size,
-                    emptyState = page.toEmptyState(
-                        blankState = if (criteria.query.isBlank()) {
-                            GlobalSearchEmptyState(
-                                iconRes = R.drawable.sceyt_ic_search_messages_with_layers,
-                                titleRes = R.string.sceyt_ui_channel_list_empty,
-                                subtitleRes = R.string.sceyt_ui_channel_list_empty_desc
-                            )
-                        } else {
-                            null
-                        }
-                    )
-                )
-            }
-
-            criteria.query.isBlank() -> {
-                val page = interactor.getRecentChats(offset = offset, limit = pageSize)
-                SearchResultPage(
-                    listItems = page.data.map { GlobalSearchListItem.ChannelItem(it) },
-                    hasMore = page.hasMore,
-                    loadedCount = page.data.size,
-                    emptyState = page.toEmptyState(
-                        blankState = GlobalSearchEmptyState(
-                            iconRes = R.drawable.sceyt_ic_channels_empty_state,
-                            titleRes = R.string.sceyt_no_channels,
-                            subtitleRes = R.string.sceyt_empty_channels_description
-                        )
-                    )
-                )
-            }
-
-            else -> {
-                val chatsPage = interactor.searchChats(criteria.query, SEARCH_PAGE_SIZE)
-                val messagesPage = interactor.searchMessages(
-                    query = criteria.query,
-                    senderId = null,
-                    offset = 0,
-                    limit = SEARCH_PAGE_SIZE
-                )
-                val items = buildList {
-                    if (chatsPage.data.isNotEmpty()) {
-                        add(GlobalSearchListItem.SectionHeader(R.string.sceyt_chats))
-                        addAll(chatsPage.data.map { GlobalSearchListItem.ChannelItem(it) })
-                    }
-                    if (messagesPage.data.isNotEmpty()) {
-                        add(GlobalSearchListItem.SectionHeader(R.string.sceyt_messages))
-                        addAll(messagesPage.data.map { GlobalSearchListItem.MessageItem(it) })
-                    }
-                }
-                SearchResultPage(
-                    listItems = items,
-                    hasMore = false,
-                    loadedCount = chatsPage.data.size + messagesPage.data.size,
-                    emptyState = if (items.isEmpty()) genericEmptyState() else null
-                )
-            }
-        }
-    }
-
     protected suspend fun loadChannels(
         criteria: SearchCriteria,
         offset: Int,
@@ -509,25 +434,6 @@ internal abstract class GlobalSearchSessionTabViewModel(
     }
 }
 
-internal class ChatsSearchViewModel(
-    session: GlobalSearchSession,
-    interactor: GlobalSearchDataSource = GlobalSearchLocalInteractor(),
-    ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
-) : GlobalSearchSessionTabViewModel(
-    tab = GlobalSearchTab.Chats,
-    session = session,
-    interactor = interactor,
-    ioDispatcher = ioDispatcher
-) {
-    override suspend fun performLoad(
-        criteria: SearchCriteria,
-        offset: Int,
-        pageSize: Int,
-    ): SearchResultPage {
-        return loadChats(criteria, offset, pageSize)
-    }
-}
-
 internal class ChannelsSearchViewModel(
     session: GlobalSearchSession,
     interactor: GlobalSearchDataSource = GlobalSearchLocalInteractor(),
@@ -629,7 +535,7 @@ internal class GlobalSearchTabViewModelFactory(
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         val viewModel = when (tab) {
-            GlobalSearchTab.Chats -> ChatsSearchViewModel(session, interactor, ioDispatcher)
+            GlobalSearchTab.Chats -> throw IllegalStateException("Use ChatsSearchViewModelFactory for chats tab.")
             GlobalSearchTab.Channels -> ChannelsSearchViewModel(session, interactor, ioDispatcher)
             GlobalSearchTab.Media -> MediaSearchViewModel(session, interactor, ioDispatcher)
             GlobalSearchTab.Files -> FilesSearchViewModel(session, interactor, ioDispatcher)

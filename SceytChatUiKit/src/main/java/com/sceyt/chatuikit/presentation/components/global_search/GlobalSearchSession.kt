@@ -13,7 +13,9 @@ data class GlobalSearchSessionState(
     val query: String = "",
     val selectedMember: SceytUser? = null,
     val activeTab: GlobalSearchTab = GlobalSearchTab.Chats,
-)
+) {
+    fun isCurrent(tab: GlobalSearchTab) = activeTab == tab
+}
 
 interface GlobalSearchSession {
     val state: StateFlow<GlobalSearchSessionState>
