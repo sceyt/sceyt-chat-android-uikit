@@ -3,7 +3,7 @@ package com.sceyt.chatuikit.presentation.components.global_search
 import android.graphics.Color
 import android.view.View
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import androidx.recyclerview.widget.RecyclerView
+import androidx.lifecycle.ViewModelProvider
 import com.google.common.truth.Truth.assertThat
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.ChannelListFragment
@@ -121,14 +121,17 @@ class GlobalSearchCustomizationTest {
     fun `custom activity and fragment adapter factories are used`() {
         val activity = InspectableGlobalSearchActivity()
         val fragment = TrackingChatsSearchFragment()
+        val session = GlobalSearchSessionStore(GlobalSearchSessionState(activeTab = GlobalSearchTab.Chats))
 
         activity.exposeCreateTabsAdapter()
         activity.exposeCreateSuggestionsAdapter()
         fragment.exposeCreateListAdapter()
+        fragment.exposeCreateViewModelFactory(session)
 
         assertThat(activity.tabsAdapterCreated).isTrue()
         assertThat(activity.suggestionsAdapterCreated).isTrue()
         assertThat(fragment.listAdapterCreated).isTrue()
+        assertThat(fragment.viewModelFactoryCreated).isTrue()
     }
 
     @Test
@@ -201,12 +204,12 @@ class GlobalSearchCustomizationTest {
 
         override fun createFragment(tab: GlobalSearchTab) = TrackingChatsSearchFragment()
 
-        override fun createTabsAdapter(): RecyclerView.Adapter<*> {
+        override fun createTabsAdapter(): GlobalSearchTabsAdapter {
             tabsAdapterCreated = true
             return GlobalSearchTabsAdapter(createTestGlobalSearchStyle(), provideTabs()) {}
         }
 
-        override fun createSuggestionsAdapter(): RecyclerView.Adapter<*> {
+        override fun createSuggestionsAdapter(): GlobalSearchSuggestionsAdapter {
             suggestionsAdapterCreated = true
             return GlobalSearchSuggestionsAdapter(createTestGlobalSearchStyle()) {}
         }
@@ -220,6 +223,8 @@ class GlobalSearchCustomizationTest {
     class TrackingChatsSearchFragment : ChatsSearchFragment() {
         var listAdapterCreated = false
             private set
+        var viewModelFactoryCreated = false
+            private set
 
         override fun createListAdapter(): GlobalSearchListAdapter {
             listAdapterCreated = true
@@ -231,6 +236,13 @@ class GlobalSearchCustomizationTest {
             ) {}
         }
 
+        override fun createViewModelFactory(session: GlobalSearchSession): ViewModelProvider.Factory {
+            viewModelFactoryCreated = true
+            return ChatsSearchViewModelFactory(session)
+        }
+
         fun exposeCreateListAdapter() = createListAdapter()
+
+        fun exposeCreateViewModelFactory(session: GlobalSearchSession) = createViewModelFactory(session)
     }
 }
