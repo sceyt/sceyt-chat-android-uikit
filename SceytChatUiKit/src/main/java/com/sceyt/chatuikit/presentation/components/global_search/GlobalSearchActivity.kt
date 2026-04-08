@@ -1,13 +1,13 @@
 package com.sceyt.chatuikit.presentation.components.global_search
 
 import android.app.Activity
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.transition.ChangeBounds
 import android.transition.ChangeClipBounds
 import android.transition.ChangeTransform
 import android.transition.Fade
 import android.transition.Transition
-import android.transition.TransitionManager
 import android.transition.TransitionSet
 import android.view.View
 import android.view.Window
@@ -17,6 +17,7 @@ import androidx.activity.viewModels
 import androidx.annotation.CallSuper
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityOptionsCompat
+import androidx.core.graphics.ColorUtils
 import androidx.core.view.doOnPreDraw
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -231,6 +232,13 @@ open class GlobalSearchActivity : AppCompatActivity() {
         binding.root.setBackgroundColor(style.backgroundColor)
         binding.divider.setBackgroundColor(style.dividerColor)
         binding.btnBack.setColorFilter(style.navigationIconColor)
+        binding.suggestionsRecyclerView.background = GradientDrawable(
+            GradientDrawable.Orientation.TOP_BOTTOM,
+            intArrayOf(
+                ColorUtils.setAlphaComponent(style.backgroundColor, 0),
+                style.backgroundColor
+            )
+        )
         binding.searchInputView.applyStyle(style)
     }
 
@@ -317,20 +325,6 @@ open class GlobalSearchActivity : AppCompatActivity() {
     }
 
     private fun updateSuggestionsVisibility(visible: Boolean) {
-        val previous = lastSuggestionsVisible
-        lastSuggestionsVisible = visible
-        if (previous == null) {
-            binding.suggestionsRecyclerView.isVisible = visible
-            return
-        }
-        if (previous == visible) return
-
-        TransitionManager.beginDelayedTransition(binding.root, TransitionSet().apply {
-            ordering = TransitionSet.ORDERING_TOGETHER
-            duration = 180L
-            addTransition(ChangeBounds())
-            addTransition(Fade())
-        })
         binding.suggestionsRecyclerView.isVisible = visible
     }
 
