@@ -6,12 +6,12 @@ import android.content.res.ColorStateList
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.core.animation.doOnEnd
-import androidx.appcompat.content.res.AppCompatResources
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.databinding.SceytItemGlobalSearchChipBinding
 import com.sceyt.chatuikit.data.models.messages.SceytUser
+import com.sceyt.chatuikit.databinding.SceytItemGlobalSearchChipBinding
+import com.sceyt.chatuikit.databinding.SceytItemSearchSuggestionUserBinding
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchTab
 import com.sceyt.chatuikit.presentation.components.global_search.displayName
 import com.sceyt.chatuikit.styles.search.GlobalSearchStyle
@@ -24,6 +24,7 @@ open class GlobalSearchTabsAdapter(
     private companion object {
         private const val PAYLOAD_SELECTION_CHANGED = "payload_selection_changed"
     }
+
     private var selectedTab: GlobalSearchTab = tabs.firstOrNull() ?: GlobalSearchTab.Chats
 
     init {
@@ -86,7 +87,8 @@ open class GlobalSearchTabsAdapter(
             binding.root.text = binding.root.context.getString(tab.titleRes)
             binding.root.chipIcon = null
             binding.root.isChipIconVisible = false
-            val shouldAnimate = animate && boundTab == tab && lastIsSelected != null && lastIsSelected != isSelected
+            val shouldAnimate =
+                animate && boundTab == tab && lastIsSelected != null && lastIsSelected != isSelected
             if (shouldAnimate) {
                 animateSelectionChange(isSelected)
             } else {
@@ -120,7 +122,8 @@ open class GlobalSearchTabsAdapter(
             } else {
                 style.tabUnselectedTextColor
             }
-            val fromStroke = if (lastIsSelected == true) 0f else binding.root.resources.displayMetrics.density
+            val fromStroke =
+                if (lastIsSelected == true) 0f else binding.root.resources.displayMetrics.density
             val toStroke = if (isSelected) 0f else binding.root.resources.displayMetrics.density
 
             selectionAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
@@ -128,7 +131,8 @@ open class GlobalSearchTabsAdapter(
                 interpolator = FastOutSlowInInterpolator()
                 addUpdateListener { animator ->
                     val fraction = animator.animatedFraction
-                    val backgroundColor = ArgbEvaluator().evaluate(fraction, fromBackground, toBackground) as Int
+                    val backgroundColor =
+                        ArgbEvaluator().evaluate(fraction, fromBackground, toBackground) as Int
                     val textColor = ArgbEvaluator().evaluate(fraction, fromText, toText) as Int
                     binding.root.chipBackgroundColor = ColorStateList.valueOf(backgroundColor)
                     binding.root.chipStrokeColor = ColorStateList.valueOf(style.tabStrokeColor)
@@ -169,7 +173,7 @@ open class GlobalSearchSuggestionsAdapter(
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SuggestionViewHolder {
-        val binding = SceytItemGlobalSearchChipBinding.inflate(
+        val binding = SceytItemSearchSuggestionUserBinding.inflate(
             LayoutInflater.from(parent.context),
             parent,
             false
@@ -184,22 +188,27 @@ open class GlobalSearchSuggestionsAdapter(
     override fun getItemCount(): Int = items.size
 
     open class SuggestionViewHolder(
-        private val binding: SceytItemGlobalSearchChipBinding,
+        private val binding: SceytItemSearchSuggestionUserBinding,
         private val style: GlobalSearchStyle,
     ) : RecyclerView.ViewHolder(binding.root) {
-        open fun bind(user: SceytUser, onClick: (SceytUser) -> Unit) {
-            binding.root.text = user.displayName()
-            binding.root.chipBackgroundColor = ColorStateList.valueOf(style.suggestionChipBackgroundColor)
-            binding.root.chipStrokeWidth = 0f
-            binding.root.setTextColor(style.suggestionChipTextColor)
-            binding.root.chipIcon = AppCompatResources.getDrawable(
-                binding.root.context,
-                R.drawable.sceyt_ic_bottom_nav_profile
-            )
-            binding.root.isChipIconVisible = true
-            binding.root.chipIconTint = ColorStateList.valueOf(style.suggestionChipIconColor)
-            binding.root.chipIconSize = binding.root.resources.displayMetrics.density * 20
+
+        init {
+            binding.applyStyle()
+        }
+
+        open fun bind(user: SceytUser, onClick: (SceytUser) -> Unit) = with(binding) {
+            name.text = user.displayName()
+            avatar.appearanceBuilder()
+                .setImageUrl(user.avatarURL)
+                .setDefaultAvatar(R.drawable.sceyt_ic_default_avatar)
+                .build()
+                .applyToAvatar()
+
             binding.root.setOnClickListener { onClick(user) }
+        }
+
+        private fun SceytItemSearchSuggestionUserBinding.applyStyle() {
+            name.setTextColor(style.suggestionChipTextColor)
         }
     }
 }
