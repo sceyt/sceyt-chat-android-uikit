@@ -1,6 +1,5 @@
 package com.sceyt.chatuikit.presentation.components.global_search
 
-import android.os.Parcelable
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import com.sceyt.chatuikit.R
@@ -64,9 +63,20 @@ data class GlobalSearchTabState(
 
 sealed interface GlobalSearchListItem {
     data class SectionHeader(@param:StringRes val titleRes: Int) : GlobalSearchListItem
-    data class ChannelItem(val channel: SceytChannel) : GlobalSearchListItem
-    data class MessageItem(val result: GlobalSearchMessageResult) : GlobalSearchListItem
-    data class AttachmentItem(val result: GlobalSearchAttachmentResult) : GlobalSearchListItem
+    data class ChannelItem(
+        val channel: SceytChannel,
+        val query: String,
+    ) : GlobalSearchListItem
+
+    data class MessageItem(
+        val result: GlobalSearchMessageResult,
+        val query: String,
+    ) : GlobalSearchListItem
+
+    data class AttachmentItem(
+        val result: GlobalSearchAttachmentResult,
+        val query: String,
+    ) : GlobalSearchListItem
 }
 
 data class GlobalSearchMessageResult(

@@ -275,7 +275,7 @@ internal abstract class GlobalSearchSessionTabViewModel(
         }
 
         return SearchResultPage(
-            listItems = page.data.map { GlobalSearchListItem.ChannelItem(it) },
+            listItems = page.data.map { GlobalSearchListItem.ChannelItem(it, criteria.query) },
             hasMore = criteria.query.isBlank() && page.hasMore,
             loadedCount = page.data.size,
             emptyState = page.toEmptyState(
@@ -318,7 +318,12 @@ internal abstract class GlobalSearchSessionTabViewModel(
             val items = buildList {
                 if (page.data.isNotEmpty()) {
                     add(GlobalSearchListItem.SectionHeader(R.string.sceyt_media))
-                    addAll(page.data.map { GlobalSearchListItem.AttachmentItem(it) })
+                    addAll(page.data.map {
+                        GlobalSearchListItem.AttachmentItem(
+                            it,
+                            criteria.query
+                        )
+                    })
                 }
             }
             SearchResultPage(
@@ -344,7 +349,7 @@ internal abstract class GlobalSearchSessionTabViewModel(
         )
 
         return SearchResultPage(
-            listItems = page.data.map { GlobalSearchListItem.AttachmentItem(it) },
+            listItems = page.data.map { GlobalSearchListItem.AttachmentItem(it, criteria.query) },
             hasMore = criteria.query.isBlank() && page.hasMore,
             loadedCount = page.data.size,
             emptyState = page.toEmptyState(

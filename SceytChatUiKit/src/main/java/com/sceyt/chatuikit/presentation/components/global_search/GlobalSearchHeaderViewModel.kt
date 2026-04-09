@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chatuikit.data.models.messages.SceytUser
+import com.sceyt.chatuikit.presentation.helpers.DebounceHelper
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -32,6 +33,7 @@ open class GlobalSearchHeaderViewModel internal constructor(
     val sessionId: String = GlobalSearchSessionRegistry.newSessionId().also { sessionId ->
         GlobalSearchSessionRegistry.register(sessionId, sessionStore)
     }
+    protected val debounceHelper = DebounceHelper(200, viewModelScope)
 
     private val _headerState = MutableStateFlow(GlobalSearchHeaderState(activeTab = initialTab))
     val headerState = _headerState.asStateFlow()
@@ -53,8 +55,11 @@ open class GlobalSearchHeaderViewModel internal constructor(
                 isSelectedMemberRemovalPending = false,
             )
         }
-        sessionStore.update { it.copy(query = normalized) }
-        refreshSuggestions(normalized)
+
+        debounceHelper.submit {
+            sessionStore.update { it.copy(query = normalized) }
+            refreshSuggestions(normalized)
+        }
     }
 
     fun onTabSelected(tab: GlobalSearchTab) {
@@ -73,7 +78,12 @@ open class GlobalSearchHeaderViewModel internal constructor(
                 query = "",
             )
         }
-        sessionStore.update { it.copy(selectedMember = user) }
+        sessionStore.update {
+            it.copy(
+                selectedMember = user,
+                query = "",
+            )
+        }
     }
 
     fun onSelectedMemberRemoved() {

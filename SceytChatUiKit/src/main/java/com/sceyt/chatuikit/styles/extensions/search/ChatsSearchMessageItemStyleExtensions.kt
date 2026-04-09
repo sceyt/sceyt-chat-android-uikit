@@ -18,7 +18,7 @@ internal fun ChatsSearchMessageItemStyle.Builder.buildSenderNameTextStyle(): Tex
 internal fun ChatsSearchMessageItemStyle.Builder.buildMessageBodyTextStyle(): TextStyle {
     val colors = SceytChatUIKit.theme.colors
     return TextStyle(
-        color = context.getCompatColor(colors.textPrimaryColor),
+        color = context.getCompatColor(colors.textSecondaryColor),
         font = R.font.roboto_regular
     )
 }

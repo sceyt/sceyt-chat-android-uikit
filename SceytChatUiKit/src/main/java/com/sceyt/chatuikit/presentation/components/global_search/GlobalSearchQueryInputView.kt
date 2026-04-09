@@ -52,15 +52,7 @@ open class GlobalSearchQueryInputView @JvmOverloads constructor(
         backgroundTintList =
             ColorStateList.valueOf(getCompatColor(SceytChatUIKit.theme.colors.surface1Color))
         elevation = 0f
-        ViewCompat.setTransitionName(binding.root, SHARED_TRANSITION_NAME)
-
-        layoutTransition =
-            LayoutTransition().let {
-                it.enableTransitionType(LayoutTransition.CHANGING)
-                it.setAnimateParentHierarchy(false)
-                it.setDuration(150L)
-                it
-            }
+        ViewCompat.setTransitionName(this, SHARED_TRANSITION_NAME)
 
         binding.input.apply {
             emptyDeleteListener = {
@@ -155,7 +147,7 @@ open class GlobalSearchQueryInputView @JvmOverloads constructor(
             .setDefaultAvatar(R.drawable.sceyt_ic_default_avatars_selected_user)
             .build()
             .applyToAvatar()
-        binding.selectedUserContainer.isVisible = shouldBeVisible
+        setSelectedUserContainerVisibility(shouldBeVisible)
         if (shouldBeVisible) {
             if (shouldAnimateChipState) {
                 animateChipStyle(previousPendingRemoval, isPendingRemoval)
@@ -169,6 +161,16 @@ open class GlobalSearchQueryInputView @JvmOverloads constructor(
         isSelectedMemberRemovalPending = shouldBeVisible && isPendingRemoval
         restoreQuery(currentQuery)
         updateClearVisibility()
+    }
+
+    fun setSelectedUserContainerVisibility(visible: Boolean) {
+        if (binding.selectedUserContainer.isVisible == visible) return
+        layoutTransition = LayoutTransition().apply {
+            enableTransitionType(LayoutTransition.CHANGING)
+            setAnimateParentHierarchy(false)
+            setDuration(150L)
+        }
+        binding.selectedUserContainer.isVisible = visible
     }
 
     fun focusInput() {
@@ -237,8 +239,10 @@ open class GlobalSearchQueryInputView @JvmOverloads constructor(
 
     private fun applyChipStyle(isPendingRemoval: Boolean) {
         val style = requireStyle()
-        val bgStyle = if (isPendingRemoval) style.selectedUserChipPendingBackgroundStyle else style.selectedUserChipBackgroundStyle
-        val textStyle = if (isPendingRemoval) style.selectedUserChipPendingTextStyle else style.selectedUserChipTextStyle
+        val bgStyle = if (isPendingRemoval)
+            style.selectedUserChipPendingBackgroundStyle else style.selectedUserChipBackgroundStyle
+        val textStyle = if (isPendingRemoval)
+            style.selectedUserChipPendingTextStyle else style.selectedUserChipTextStyle
         bgStyle.apply(binding.selectedUserContainer)
         textStyle.apply(binding.name)
     }

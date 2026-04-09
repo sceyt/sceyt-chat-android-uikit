@@ -31,9 +31,11 @@ class ChatsSearchListItemDiffCallback : DiffUtil.ItemCallback<GlobalSearchListIt
 
         is GlobalSearchListItem.ChannelItem if newItem is GlobalSearchListItem.ChannelItem ->
             !oldItem.channel.diff(newItem.channel).hasDifference()
+                    && oldItem.query == newItem.query
 
         is GlobalSearchListItem.MessageItem if newItem is GlobalSearchListItem.MessageItem ->
-            oldItem == newItem
+            !oldItem.result.message.diff(newItem.result.message).hasDifference()
+                    && oldItem.query == newItem.query
 
         else -> false
     }
@@ -42,8 +44,14 @@ class ChatsSearchListItemDiffCallback : DiffUtil.ItemCallback<GlobalSearchListIt
         oldItem: GlobalSearchListItem,
         newItem: GlobalSearchListItem,
     ): Any? {
-        if (oldItem is GlobalSearchListItem.ChannelItem && newItem is GlobalSearchListItem.ChannelItem)
-            return oldItem.channel.diff(newItem.channel)
-        return null
+        return when (oldItem) {
+            is GlobalSearchListItem.ChannelItem if newItem is GlobalSearchListItem.ChannelItem ->
+                oldItem.channel.diff(newItem.channel)
+
+            is GlobalSearchListItem.MessageItem if newItem is GlobalSearchListItem.MessageItem ->
+                oldItem.result.message.diff(newItem.result.message)
+
+            else -> null
+        }
     }
 }

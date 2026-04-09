@@ -8,6 +8,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.formatters.attributes.MessageBodyFormatterAttributes
+import com.sceyt.chatuikit.renderers.ChannelAvatarRenderer
 import com.sceyt.chatuikit.renderers.UserAvatarRenderer
 import com.sceyt.chatuikit.styles.SceytComponentStyle
 import com.sceyt.chatuikit.styles.StyleCustomizer
@@ -20,16 +21,17 @@ import com.sceyt.chatuikit.styles.extensions.search.buildSenderNameTextStyle
 import java.util.Date
 
 data class ChatsSearchMessageItemStyle(
-    val senderNameTextStyle: TextStyle,
-    val messageBodyTextStyle: TextStyle,
-    val metaTextStyle: TextStyle,
     @param:ColorInt val highlightTextColor: Int,
+    val titleTextStyle: TextStyle,
+    val messageBodyTextStyle: TextStyle,
+    val dateTextStyle: TextStyle,
     val avatarStyle: AvatarStyle,
     val senderNameFormatter: Formatter<SceytUser>,
     val messageDateFormatter: Formatter<Date>,
     val messageBodyFormatter: Formatter<MessageBodyFormatterAttributes>,
     val channelNameFormatter: Formatter<SceytChannel>,
     val userAvatarRenderer: UserAvatarRenderer,
+    val channelAvatarRenderer: ChannelAvatarRenderer,
 ) : SceytComponentStyle() {
 
     companion object {
@@ -40,16 +42,17 @@ data class ChatsSearchMessageItemStyle(
         fun build(): ChatsSearchMessageItemStyle {
             val colors = SceytChatUIKit.theme.colors
             return ChatsSearchMessageItemStyle(
-                senderNameTextStyle = buildSenderNameTextStyle(),
+                highlightTextColor = context.getCompatColor(colors.textPrimaryColor),
+                titleTextStyle = buildSenderNameTextStyle(),
                 messageBodyTextStyle = buildMessageBodyTextStyle(),
-                metaTextStyle = buildMetaTextStyle(),
-                highlightTextColor = context.getCompatColor(colors.accentColor),
+                dateTextStyle = buildMetaTextStyle(),
                 avatarStyle = buildAvatarStyle(),
                 senderNameFormatter = SceytChatUIKit.formatters.userNameFormatter,
                 messageDateFormatter = SceytChatUIKit.formatters.messageDateFormatter,
                 messageBodyFormatter = SceytChatUIKit.formatters.messageBodyFormatter,
                 channelNameFormatter = SceytChatUIKit.formatters.channelNameFormatter,
                 userAvatarRenderer = SceytChatUIKit.renderers.userAvatarRenderer,
+                channelAvatarRenderer = SceytChatUIKit.renderers.channelAvatarRenderer,
             ).let { styleCustomizer.apply(context, it) }
         }
     }
