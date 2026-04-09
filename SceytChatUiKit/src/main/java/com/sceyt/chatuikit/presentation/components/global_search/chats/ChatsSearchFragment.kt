@@ -36,7 +36,6 @@ open class ChatsSearchFragment : Fragment(R.layout.sceyt_fragment_chats_search) 
         get() = checkNotNull(_binding)
 
     private val listAdapter by lazy { createListAdapter() }
-    private var lastResultsRequestKey: ChatsSearchRequestKey? = null
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -97,8 +96,8 @@ open class ChatsSearchFragment : Fragment(R.layout.sceyt_fragment_chats_search) 
     }
 
     protected open fun render(state: ChatsSearchState) {
-        val scrollToTop = state.isLoaded && state.requestKey != lastResultsRequestKey
-        if (state.isLoaded) lastResultsRequestKey = state.requestKey
+        val scrollToTop = state.isLoaded && state.requestKey != viewModel.lastResultsRequestKey
+        if (state.isLoaded) viewModel.lastResultsRequestKey = state.requestKey
 
         listAdapter.submitList(
             items = state.listItems,
