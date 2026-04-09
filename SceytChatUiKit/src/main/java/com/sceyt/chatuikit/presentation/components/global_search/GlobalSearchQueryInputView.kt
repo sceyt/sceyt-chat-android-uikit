@@ -23,7 +23,7 @@ import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.hideSoftInput
 import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.extensions.showSoftInput
-import com.sceyt.chatuikit.styles.search.GlobalSearchStyle
+import com.sceyt.chatuikit.styles.search.GlobalSearchInputStyle
 
 open class GlobalSearchQueryInputView @JvmOverloads constructor(
     context: Context,
@@ -37,7 +37,7 @@ open class GlobalSearchQueryInputView @JvmOverloads constructor(
     private val binding = SceytGlobalSearchQueryInputViewBinding.inflate(
         LayoutInflater.from(context), this
     )
-    private var style: GlobalSearchStyle? = null
+    private var style: GlobalSearchInputStyle? = null
 
     private var queryChangedListener: ((String) -> Unit)? = null
     private var clearClickListener: (() -> Unit)? = null
@@ -91,15 +91,14 @@ open class GlobalSearchQueryInputView @JvmOverloads constructor(
         updateClearVisibility()
     }
 
-    open fun applyStyle(style: GlobalSearchStyle) {
+    open fun applyStyle(style: GlobalSearchInputStyle) {
         this.style = style
-        backgroundTintList = ColorStateList.valueOf(style.searchInputBackgroundColor)
-        binding.icSearch.setColorFilter(style.searchIconColor)
-        binding.icClear.setColorFilter(style.clearIconColor)
-        binding.input.apply {
-            setHintTextColor(style.searchHintColor)
-            style.subtitleTextStyle.apply(this)
-        }
+        style.searchInputStyle.apply(
+            editText = binding.input,
+            inputRoot = this,
+            searchIconImage = binding.icSearch,
+            clearIconImage = binding.icClear
+        )
         applyChipStyle(isSelectedMemberRemovalPending)
     }
 
@@ -181,7 +180,7 @@ open class GlobalSearchQueryInputView @JvmOverloads constructor(
             binding.input.text?.isNotEmpty() == true || binding.selectedUserContainer.isVisible
     }
 
-    private fun requireStyle(): GlobalSearchStyle {
+    private fun requireStyle(): GlobalSearchInputStyle {
         return checkNotNull(style) {
             "GlobalSearchQueryInputView style must be applied before use."
         }
@@ -195,24 +194,24 @@ open class GlobalSearchQueryInputView @JvmOverloads constructor(
         chipStyleAnimator?.cancel()
 
         val fromBackground = if (wasPendingRemoval) {
-            style.selectedMemberChipPendingBackgroundColor
+            style.selectedUserChipPendingBackgroundStyle.backgroundColor
         } else {
-            style.selectedMemberChipBackgroundColor
+            style.selectedUserChipBackgroundStyle.backgroundColor
         }
         val toBackground = if (isPendingRemoval) {
-            style.selectedMemberChipPendingBackgroundColor
+            style.selectedUserChipPendingBackgroundStyle.backgroundColor
         } else {
-            style.selectedMemberChipBackgroundColor
+            style.selectedUserChipBackgroundStyle.backgroundColor
         }
         val fromText = if (wasPendingRemoval) {
-            style.selectedMemberChipPendingTextColor
+            style.selectedUserChipPendingTextStyle.color
         } else {
-            style.selectedMemberChipTextColor
+            style.selectedUserChipTextStyle.color
         }
         val toText = if (isPendingRemoval) {
-            style.selectedMemberChipPendingTextColor
+            style.selectedUserChipPendingTextStyle.color
         } else {
-            style.selectedMemberChipTextColor
+            style.selectedUserChipTextStyle.color
         }
 
         chipStyleAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
@@ -238,18 +237,10 @@ open class GlobalSearchQueryInputView @JvmOverloads constructor(
 
     private fun applyChipStyle(isPendingRemoval: Boolean) {
         val style = requireStyle()
-        applyChipColors(
-            backgroundColor = if (isPendingRemoval) {
-                style.selectedMemberChipPendingBackgroundColor
-            } else {
-                style.selectedMemberChipBackgroundColor
-            },
-            textColor = if (isPendingRemoval) {
-                style.selectedMemberChipPendingTextColor
-            } else {
-                style.selectedMemberChipTextColor
-            }
-        )
+        val bgStyle = if (isPendingRemoval) style.selectedUserChipPendingBackgroundStyle else style.selectedUserChipBackgroundStyle
+        val textStyle = if (isPendingRemoval) style.selectedUserChipPendingTextStyle else style.selectedUserChipTextStyle
+        bgStyle.apply(binding.selectedUserContainer)
+        textStyle.apply(binding.name)
     }
 
     private fun applyChipColors(

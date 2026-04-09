@@ -1,16 +1,14 @@
 package com.sceyt.chatuikit.presentation.components.global_search.adapters
 
-import android.graphics.drawable.GradientDrawable
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.databinding.SceytItemGlobalSearchChipBinding
-import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchTab
-import com.sceyt.chatuikit.styles.search.GlobalSearchStyle
+import com.sceyt.chatuikit.styles.search.GlobalSearchTabBarStyle
 
 open class GlobalSearchTabsAdapter(
-    private val style: GlobalSearchStyle,
+    private val style: GlobalSearchTabBarStyle,
     private val tabs: List<GlobalSearchTab>,
     private val onClick: (GlobalSearchTab) -> Unit,
 ) : RecyclerView.Adapter<GlobalSearchTabsAdapter.TabViewHolder>() {
@@ -63,7 +61,7 @@ open class GlobalSearchTabsAdapter(
 
     open class TabViewHolder(
         private val binding: SceytItemGlobalSearchChipBinding,
-        private val style: GlobalSearchStyle,
+        private val style: GlobalSearchTabBarStyle,
     ) : RecyclerView.ViewHolder(binding.root) {
         private var boundTab: GlobalSearchTab? = null
         private var lastIsSelected: Boolean? = null
@@ -81,29 +79,10 @@ open class GlobalSearchTabsAdapter(
         }
 
         protected open fun applySelectedState(isSelected: Boolean) {
-            val bgColor = if (isSelected) {
-                style.tabSelectedBackgroundColor
-            } else {
-                style.tabUnselectedBackgroundColor
-            }
-
-            val textColor = if (isSelected) {
-                style.tabSelectedTextColor
-            } else {
-                style.tabUnselectedTextColor
-            }
-
-            val strokeWidth = if (isSelected) 0 else dpToPx(1f)
-
-            val drawable = GradientDrawable().apply {
-                shape = GradientDrawable.RECTANGLE
-                cornerRadius = dpToPx(30f).toFloat()
-                setColor(bgColor)
-                setStroke(strokeWidth, style.tabStrokeColor)
-            }
-
-            binding.root.background = drawable
-            binding.root.setTextColor(textColor)
+            val bgStyle = if (isSelected) style.selectedTabBackgroundStyle else style.unselectedTabBackgroundStyle
+            val textStyle = if (isSelected) style.selectedTabTextStyle else style.unselectedTabTextStyle
+            bgStyle.apply(binding.root)
+            textStyle.apply(binding.root)
         }
     }
 }
