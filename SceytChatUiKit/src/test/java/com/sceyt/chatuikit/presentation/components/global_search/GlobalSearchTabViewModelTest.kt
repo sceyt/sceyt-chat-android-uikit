@@ -3,6 +3,7 @@ package com.sceyt.chatuikit.presentation.components.global_search
 import com.google.common.truth.Truth.assertThat
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.messages.SceytUser
+import com.sceyt.chatuikit.presentation.components.global_search.chats.ChatsSearchRequestKey
 import com.sceyt.chatuikit.presentation.components.global_search.chats.ChatsSearchViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -42,7 +43,7 @@ class GlobalSearchTabViewModelTest {
         assertThat(dataSource.recentChatsCalls).isEqualTo(1)
 
         session.update { it.copy(query = "design") }
-        advanceTimeBy(299)
+        advanceTimeBy(199)
         assertThat(dataSource.searchChatsCalls).isEqualTo(0)
 
         advanceTimeBy(1)
@@ -129,7 +130,7 @@ class GlobalSearchTabViewModelTest {
         assertThat(dataSource.attachmentCalls.count { it.tab == GlobalSearchTab.Media && it.query.isBlank() && it.senderId == null }).isEqualTo(1)
 
         session.update { it.copy(query = "voice") }
-        advanceTimeBy(299)
+        advanceTimeBy(199)
         assertThat(dataSource.attachmentCalls.count { it.tab == GlobalSearchTab.Media && it.query == "voice" }).isEqualTo(0)
 
         advanceTimeBy(1)
@@ -191,17 +192,17 @@ class GlobalSearchTabViewModelTest {
         val session = GlobalSearchSessionStore(GlobalSearchSessionState(activeTab = GlobalSearchTab.Chats))
         val viewModel = object : ChatsSearchViewModel(session, dispatcher) {
             override suspend fun performLoad(
-                criteria: SearchCriteria,
+                requestKey: ChatsSearchRequestKey,
                 offset: Int,
                 pageSize: Int,
             ): SearchResultPage {
                 return SearchResultPage(
-                    listItems = if (criteria.query == "override") {
+                    listItems = if (requestKey.query == "override") {
                         listOf(GlobalSearchListItem.SectionHeader(R.string.sceyt_chats))
                     } else {
                         emptyList()
                     },
-                    loadedCount = if (criteria.query == "override") 1 else 0,
+                    loadedCount = if (requestKey.query == "override") 1 else 0,
                 )
             }
         }
@@ -222,13 +223,18 @@ private class TestChatsSearchViewModel(
     ioDispatcher: CoroutineDispatcher,
 ) : ChatsSearchViewModel(session, ioDispatcher) {
     override suspend fun performLoad(
-        criteria: SearchCriteria,
+        requestKey: ChatsSearchRequestKey,
         offset: Int,
         pageSize: Int,
     ): SearchResultPage {
         return when {
-            criteria.selectedMemberId != null -> {
-                val page = dataSource.searchMessages(criteria.query, criteria.selectedMemberId, offset, pageSize)
+            requestKey.selectedMemberId != null -> {
+                val page = dataSource.searchMessages(
+                    requestKey.query,
+                    requestKey.selectedMemberId,
+                    offset,
+                    pageSize
+                )
                 SearchResultPage(
                     listItems = page.data.map { GlobalSearchListItem.MessageItem(it) },
                     hasMore = page.hasMore,
@@ -236,7 +242,7 @@ private class TestChatsSearchViewModel(
                 )
             }
 
-            criteria.query.isBlank() -> {
+            requestKey.query.isBlank() -> {
                 val page = dataSource.getRecentChats(offset, pageSize)
                 SearchResultPage(
                     listItems = page.data.map { GlobalSearchListItem.ChannelItem(it) },
@@ -246,8 +252,8 @@ private class TestChatsSearchViewModel(
             }
 
             else -> {
-                val chatsPage = dataSource.searchChats(criteria.query, pageSize)
-                val messagesPage = dataSource.searchMessages(criteria.query, null, 0, pageSize)
+                val chatsPage = dataSource.searchChats(requestKey.query, pageSize)
+                val messagesPage = dataSource.searchMessages(requestKey.query, null, 0, pageSize)
                 SearchResultPage(
                     listItems = buildList {
                         if (chatsPage.data.isNotEmpty()) {

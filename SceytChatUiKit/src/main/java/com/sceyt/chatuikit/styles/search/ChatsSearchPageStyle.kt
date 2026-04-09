@@ -8,7 +8,9 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.styles.SceytComponentStyle
 import com.sceyt.chatuikit.styles.StyleCustomizer
+import com.sceyt.chatuikit.styles.channel.ChannelItemStyle
 import com.sceyt.chatuikit.styles.common.EmptyStateStyle
+import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.styles.common.buildEmptyStateStyle
 
 data class ChatsSearchPageStyle(
@@ -17,6 +19,8 @@ data class ChatsSearchPageStyle(
     @param:LayoutRes val emptySearchState: Int,
     @param:LayoutRes val loadingState: Int,
     val emptyStateStyle: EmptyStateStyle,
+    val separatorTextStyle: TextStyle,
+    val channelItemStyle: ChannelItemStyle,
 ) : SceytComponentStyle() {
 
     companion object {
@@ -35,6 +39,11 @@ data class ChatsSearchPageStyle(
                 titleText = context.getString(R.string.sceyt_ui_channel_list_empty),
                 subtitleText = context.getString(R.string.sceyt_ui_channel_list_empty_desc)
             ),
+            separatorTextStyle = TextStyle(
+                color = context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor),
+                font = R.font.roboto_medium
+            ),
+            channelItemStyle = ChannelItemStyle.Builder(context, null).build(),
         ).let { styleCustomizer.apply(context, it) }
     }
 }

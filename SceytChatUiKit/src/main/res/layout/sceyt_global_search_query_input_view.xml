@@ -2,82 +2,91 @@
 <merge xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:parentTag="android.widget.FrameLayout">
+    android:background="@drawable/sceyt_bg_corners_10"
+    android:backgroundTint="@color/sceyt_color_surface_1"
+    tools:layout_height="wrap_content"
+    tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/layoutDetails"
-        android:layout_width="match_parent"
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/icSearch"
+        android:layout_width="16dp"
+        android:layout_height="16dp"
+        android:layout_marginStart="14dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/sceyt_ic_search" />
+
+    <LinearLayout
+        android:id="@+id/selectedUserContainer"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:animateLayoutChanges="true">
+        android:layout_marginStart="8dp"
+        android:background="@drawable/sceyt_bg_corners_30"
+        android:backgroundTint="@color/sceyt_color_surface_3"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:padding="2dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@id/icSearch"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintWidth_max="100dp"
+        tools:visibility="visible">
 
-        <androidx.appcompat.widget.AppCompatImageView
-            android:id="@+id/icSearch"
-            android:layout_width="16dp"
-            android:layout_height="16dp"
-            android:layout_marginStart="14dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/sceyt_ic_search" />
+        <com.sceyt.chatuikit.presentation.custom_views.AvatarView
+            android:id="@+id/avatar"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            app:sceytUiAvatarDefaultIcon="@drawable/sceyt_ic_default_avatars_selected_user" />
 
         <androidx.appcompat.widget.AppCompatTextView
-            android:id="@+id/chipSelectedMember"
+            android:id="@+id/name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:background="@drawable/sceyt_bg_corners_30"
-            android:backgroundTint="@color/sceyt_color_surface_3"
-            android:drawableStart="@drawable/sceyt_ic_profile_outlined"
-            android:drawablePadding="4dp"
             android:ellipsize="end"
             android:fontFamily="@font/roboto_medium"
-            android:singleLine="true"
             android:includeFontPadding="false"
-            android:maxWidth="100dp"
-            android:paddingHorizontal="8dp"
-            android:paddingVertical="5dp"
+            android:paddingStart="4dp"
+            android:paddingEnd="6dp"
+            android:singleLine="true"
             android:textColor="#ffffff"
             android:textSize="13sp"
-            android:visibility="gone"
             app:ensureMinTouchTargetSize="false"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toEndOf="@id/icSearch"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="Jamie"
-            tools:visibility="visible" />
+            tools:text="James" />
 
-        <com.sceyt.chatuikit.shared.helpers.SceytClearFocusEditText
-            android:id="@+id/input"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:background="@null"
-            android:hint="@string/sceyt_global_search_hint"
-            android:imeOptions="actionSearch"
-            android:includeFontPadding="false"
-            android:inputType="text"
-            android:maxLength="200"
-            android:maxLines="1"
-            android:paddingHorizontal="10dp"
-            android:paddingVertical="12dp"
-            android:textSize="16sp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/icClear"
-            app:layout_constraintStart_toEndOf="@id/chipSelectedMember"
-            app:layout_constraintTop_toTopOf="parent" />
+    </LinearLayout>
 
-        <androidx.appcompat.widget.AppCompatImageView
-            android:id="@+id/icClear"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:padding="6dp"
-            android:layout_marginEnd="6dp"
-            android:scaleType="centerInside"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/sceyt_ic_cancel" />
+    <com.sceyt.chatuikit.shared.helpers.SceytClearFocusEditText
+        android:id="@+id/input"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="@null"
+        android:hint="@string/sceyt_global_search_hint"
+        android:imeOptions="actionSearch"
+        android:includeFontPadding="false"
+        android:inputType="text"
+        android:maxLength="200"
+        android:maxLines="1"
+        android:paddingHorizontal="10dp"
+        android:paddingVertical="12dp"
+        android:textSize="16sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/icClear"
+        app:layout_constraintStart_toEndOf="@id/selectedUserContainer"
+        app:layout_constraintTop_toTopOf="parent" />
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/icClear"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginEnd="6dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:padding="6dp"
+        android:scaleType="centerInside"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/sceyt_ic_cancel" />
 
 </merge>
