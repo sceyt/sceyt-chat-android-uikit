@@ -98,7 +98,7 @@ open class GlobalSearchListAdapter(
             VIEW_TYPE_CHANNEL -> ChannelItemViewHolder(
                 ChannelViewHolder(
                     binding = SceytItemChannelBinding.inflate(inflater, parent, false),
-                    itemStyle = style.channelItemStyle,
+                    itemStyle = style.chatsPageStyle.channelItemStyle,
                     listeners = channelClickListeners
                 )
             )
@@ -183,7 +183,7 @@ open class GlobalSearchListAdapter(
         private val style: GlobalSearchStyle,
     ) : RecyclerView.ViewHolder(binding.root) {
         fun bind(titleRes: Int) {
-            style.sectionTextStyle.apply(binding.root)
+            style.chatsPageStyle.separatorTextStyle.apply(binding.root)
             binding.root.setText(titleRes)
         }
     }

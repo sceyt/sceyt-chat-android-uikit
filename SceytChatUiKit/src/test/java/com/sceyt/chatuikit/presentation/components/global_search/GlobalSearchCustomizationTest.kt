@@ -5,23 +5,30 @@ import android.view.View
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.lifecycle.ViewModelProvider
 import com.google.common.truth.Truth.assertThat
+import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.ChannelListFragment
-import com.sceyt.chatuikit.presentation.components.global_search.adapters.GlobalSearchListAdapter
 import com.sceyt.chatuikit.presentation.components.global_search.adapters.GlobalSearchSuggestionsAdapter
 import com.sceyt.chatuikit.presentation.components.global_search.adapters.GlobalSearchTabsAdapter
 import com.sceyt.chatuikit.presentation.components.global_search.chats.ChatsSearchFragment
 import com.sceyt.chatuikit.presentation.components.global_search.chats.ChatsSearchViewModelFactory
+import com.sceyt.chatuikit.presentation.components.global_search.chats.adapter.ChatsSearchListAdapter
+import com.sceyt.chatuikit.presentation.components.global_search.chats.adapter.ChatsSearchViewHolderFactory
 import com.sceyt.chatuikit.styles.channel.ChannelItemStyle
 import com.sceyt.chatuikit.styles.common.AvatarStyle
 import com.sceyt.chatuikit.styles.common.BackgroundStyle
+import com.sceyt.chatuikit.styles.common.EmptyStateStyle
 import com.sceyt.chatuikit.styles.common.MessageDeliveryStatusIcons
 import com.sceyt.chatuikit.styles.common.TextStyle
+import com.sceyt.chatuikit.styles.search.ChatsSearchPageStyle
 import com.sceyt.chatuikit.styles.search.GlobalSearchStyle
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
 class GlobalSearchCustomizationTest {
@@ -56,10 +63,26 @@ class GlobalSearchCustomizationTest {
                 titleTextStyle = TextStyle(color = Color.BLACK),
                 subtitleTextStyle = TextStyle(color = Color.DKGRAY),
                 metaTextStyle = TextStyle(color = Color.GRAY),
-                sectionTextStyle = TextStyle(color = Color.GRAY),
                 emptyTitleTextStyle = TextStyle(color = Color.BLACK),
                 emptySubtitleTextStyle = TextStyle(color = Color.DKGRAY),
                 avatarStyle = AvatarStyle(),
+                chatsPageStyle = createTestChatsSearchPageStyle()
+            )
+        }
+
+        private fun createTestChatsSearchPageStyle(): ChatsSearchPageStyle {
+            return ChatsSearchPageStyle(
+                backgroundColor = Color.WHITE,
+                emptyState = R.layout.sceyt_channel_list_empty_state,
+                emptySearchState = R.layout.sceyt_channel_list_empty_state,
+                loadingState = R.layout.sceyt_page_loading_state,
+                emptyStateStyle = EmptyStateStyle.Builder(RuntimeEnvironment.getApplication())
+                    .setTitleText("Empty")
+                    .setTitleStyle(TextStyle(color = Color.BLACK))
+                    .setSubtitleText("Empty subtitle")
+                    .setSubtitleStyle(TextStyle(color = Color.GRAY))
+                    .build(),
+                separatorTextStyle = TextStyle(color = Color.GRAY),
                 channelItemStyle = createTestChannelItemStyle()
             )
         }
@@ -213,7 +236,11 @@ class GlobalSearchCustomizationTest {
 
         override fun createSuggestionsAdapter(): GlobalSearchSuggestionsAdapter {
             suggestionsAdapterCreated = true
-            return GlobalSearchSuggestionsAdapter(createTestGlobalSearchStyle()) {}
+            return GlobalSearchSuggestionsAdapter(
+                scope = CoroutineScope(Dispatchers.Unconfined),
+                style = createTestGlobalSearchStyle(),
+                onClick = {}
+            )
         }
 
         fun exposeCreateFragment(tab: GlobalSearchTab) = createFragment(tab)
@@ -228,14 +255,17 @@ class GlobalSearchCustomizationTest {
         var viewModelFactoryCreated = false
             private set
 
-        override fun createListAdapter(): GlobalSearchListAdapter {
+        override fun createListAdapter(): ChatsSearchListAdapter {
             listAdapterCreated = true
-            return object : GlobalSearchListAdapter(
-                style = createTestGlobalSearchStyle(),
-                onChannelClick = {},
-                onMessageClick = { _, _ -> },
-                onAttachmentClick = {}
-            ) {}
+            return ChatsSearchListAdapter(
+                scope = CoroutineScope(Dispatchers.Unconfined),
+                viewHolderFactory = ChatsSearchViewHolderFactory(
+                    context = RuntimeEnvironment.getApplication(),
+                    style = createTestGlobalSearchStyle(),
+                    onChannelClick = {},
+                    onMessageClick = { _, _ -> }
+                )
+            )
         }
 
         override fun createViewModelFactory(session: GlobalSearchSession): ViewModelProvider.Factory {

@@ -9,15 +9,17 @@ import android.text.Editable
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.inputmethod.EditorInfo
-import android.widget.FrameLayout
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.animation.doOnEnd
 import androidx.core.view.ViewCompat
 import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.databinding.SceytGlobalSearchQueryInputViewBinding
+import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.hideSoftInput
 import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.extensions.showSoftInput
@@ -27,7 +29,7 @@ open class GlobalSearchQueryInputView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0,
-) : FrameLayout(context, attrs, defStyleAttr) {
+) : ConstraintLayout(context, attrs, defStyleAttr) {
     companion object {
         const val SHARED_TRANSITION_NAME = GlobalSearchActivity.SHARED_TRANSITION_NAME
     }
@@ -47,10 +49,12 @@ open class GlobalSearchQueryInputView @JvmOverloads constructor(
 
     init {
         setBackgroundResource(R.drawable.sceyt_bg_corners_10)
+        backgroundTintList =
+            ColorStateList.valueOf(getCompatColor(SceytChatUIKit.theme.colors.surface1Color))
         elevation = 0f
         ViewCompat.setTransitionName(binding.root, SHARED_TRANSITION_NAME)
 
-        binding.layoutDetails.layoutTransition =
+        layoutTransition =
             LayoutTransition().let {
                 it.enableTransitionType(LayoutTransition.CHANGING)
                 it.setAnimateParentHierarchy(false)
@@ -130,14 +134,14 @@ open class GlobalSearchQueryInputView @JvmOverloads constructor(
         val shouldBeVisible = member != null
         val previousPendingRemoval = isSelectedMemberRemovalPending
         val shouldAnimateChipState =
-            binding.chipSelectedMember.isVisible &&
+            binding.selectedUserContainer.isVisible &&
                     shouldBeVisible &&
                     nextMemberId == selectedMemberId &&
                     isPendingRemoval != previousPendingRemoval
 
         if (nextMemberId == selectedMemberId &&
-            binding.chipSelectedMember.isVisible == shouldBeVisible &&
-            binding.chipSelectedMember.text?.toString() == nextName &&
+            binding.selectedUserContainer.isVisible == shouldBeVisible &&
+            binding.name.text?.toString() == nextName &&
             isPendingRemoval == previousPendingRemoval
         ) {
             restoreQuery(currentQuery)
@@ -146,8 +150,13 @@ open class GlobalSearchQueryInputView @JvmOverloads constructor(
         }
 
         selectedMemberId = nextMemberId
-        binding.chipSelectedMember.text = nextName
-        binding.chipSelectedMember.isVisible = shouldBeVisible
+        binding.name.text = nextName
+        binding.avatar.appearanceBuilder()
+            .setImageUrl(member?.avatarURL)
+            .setDefaultAvatar(R.drawable.sceyt_ic_default_avatars_selected_user)
+            .build()
+            .applyToAvatar()
+        binding.selectedUserContainer.isVisible = shouldBeVisible
         if (shouldBeVisible) {
             if (shouldAnimateChipState) {
                 animateChipStyle(previousPendingRemoval, isPendingRemoval)
@@ -169,7 +178,7 @@ open class GlobalSearchQueryInputView @JvmOverloads constructor(
 
     private fun updateClearVisibility() {
         binding.icClear.isVisible =
-            binding.input.text?.isNotEmpty() == true || binding.chipSelectedMember.isVisible
+            binding.input.text?.isNotEmpty() == true || binding.selectedUserContainer.isVisible
     }
 
     private fun requireStyle(): GlobalSearchStyle {
@@ -247,10 +256,8 @@ open class GlobalSearchQueryInputView @JvmOverloads constructor(
         backgroundColor: Int,
         textColor: Int,
     ) {
-        binding.chipSelectedMember.apply {
-            setBackgroundTint(backgroundColor)
-            setTextColor(textColor)
-        }
+        binding.selectedUserContainer.setBackgroundTint(backgroundColor)
+        binding.name.setTextColor(textColor)
     }
 
     private fun restoreQuery(query: String) {

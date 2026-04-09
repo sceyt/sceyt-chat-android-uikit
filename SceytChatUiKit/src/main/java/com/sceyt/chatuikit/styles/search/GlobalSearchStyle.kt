@@ -7,7 +7,6 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.styles.SceytComponentStyle
-import com.sceyt.chatuikit.styles.channel.ChannelItemStyle
 import com.sceyt.chatuikit.styles.common.AvatarStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
 
@@ -40,11 +39,9 @@ data class GlobalSearchStyle(
     val titleTextStyle: TextStyle,
     val subtitleTextStyle: TextStyle,
     val metaTextStyle: TextStyle,
-    val sectionTextStyle: TextStyle,
     val emptyTitleTextStyle: TextStyle,
     val emptySubtitleTextStyle: TextStyle,
     val avatarStyle: AvatarStyle,
-    val channelItemStyle: ChannelItemStyle,
     val chatsPageStyle: ChatsSearchPageStyle,
 ) : SceytComponentStyle() {
 
@@ -91,10 +88,6 @@ data class GlobalSearchStyle(
                     color = context.getCompatColor(colors.textSecondaryColor),
                     font = R.font.roboto_regular
                 ),
-                sectionTextStyle = TextStyle(
-                    color = context.getCompatColor(colors.textSecondaryColor),
-                    font = R.font.roboto_medium
-                ),
                 emptyTitleTextStyle = TextStyle(
                     color = context.getCompatColor(colors.textPrimaryColor),
                     font = R.font.roboto_medium
@@ -104,7 +97,6 @@ data class GlobalSearchStyle(
                     font = R.font.roboto_regular
                 ),
                 avatarStyle = AvatarStyle(),
-                channelItemStyle = ChannelItemStyle.Builder(context, null).build(),
                 chatsPageStyle = ChatsSearchPageStyle.Builder(context).build()
             )
         }
