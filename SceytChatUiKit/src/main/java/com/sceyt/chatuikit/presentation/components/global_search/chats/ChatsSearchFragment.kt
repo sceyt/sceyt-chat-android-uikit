@@ -26,12 +26,11 @@ import com.sceyt.chatuikit.styles.extensions.search.setPageStatesView
 import com.sceyt.chatuikit.styles.search.GlobalSearchStyle
 
 open class ChatsSearchFragment : Fragment(R.layout.sceyt_fragment_chats_search) {
+    protected lateinit var session: GlobalSearchSession
+    protected lateinit var style: GlobalSearchStyle
     protected open val viewModel: ChatsSearchViewModel by viewModels {
         createViewModelFactory(session)
     }
-    protected lateinit var session: GlobalSearchSession
-    protected lateinit var style: GlobalSearchStyle
-
     private var _binding: SceytFragmentChatsSearchBinding? = null
     protected val binding: SceytFragmentChatsSearchBinding
         get() = checkNotNull(_binding)
@@ -128,7 +127,6 @@ open class ChatsSearchFragment : Fragment(R.layout.sceyt_fragment_chats_search) 
     protected open fun onMessageClicked(messageId: Long, channel: SceytChannel) {
         hostActivity.onMessageClicked(messageId, channel)
     }
-
 
     protected open fun requestMoreIfViewportNotFilled(state: ChatsSearchState) {
         if (state.requestKey?.query?.isNotBlank() == true || state.isLoading || state.isLoadingMore || !state.hasMore) return

@@ -1,11 +1,13 @@
 package com.sceyt.chatuikit.presentation.components.global_search.adapters
 
+import android.os.Build
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.databinding.SceytItemSearchSuggestionUserBinding
+import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.presentation.common.recyclerview.AsyncListDiffer
 import com.sceyt.chatuikit.presentation.common.recyclerview.UserDiffUtilItemCallBack
 import com.sceyt.chatuikit.presentation.components.global_search.displayName
@@ -56,6 +58,7 @@ open class GlobalSearchSuggestionsAdapter(
         private val binding: SceytItemSearchSuggestionUserBinding,
         private val style: GlobalSearchStyle,
     ) : RecyclerView.ViewHolder(binding.root) {
+        private val context = binding.root.context
 
         init {
             binding.applyStyle()
@@ -74,6 +77,9 @@ open class GlobalSearchSuggestionsAdapter(
 
         private fun SceytItemSearchSuggestionUserBinding.applyStyle() {
             name.setTextColor(style.suggestionChipTextColor)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                root.outlineSpotShadowColor = context.getCompatColor(R.color.sceyt_color_shadow)
+            }
         }
     }
 }

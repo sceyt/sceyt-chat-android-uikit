@@ -6,10 +6,11 @@
     android:layout_height="wrap_content"
     android:layout_margin="4dp"
     app:cardCornerRadius="30dp"
-    android:outlineSpotShadowColor="@color/shadow"
+    app:cardBackgroundColor="#00000000"
     app:cardElevation="20dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layoutDetails"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:background="@drawable/sceyt_bg_corners_30_with_stroke"
@@ -40,7 +41,7 @@
             app:layout_constraintStart_toEndOf="@id/avatar"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintWidth_max="150dp"
-            toosl:text="Jamidfdsfsdfsd sdfsdf dsfsdf sd sdf sdfsdf sdf sdfsdfsdfdsfsdfsdfsdfsdfdsfsdfsdfsdfsdfe" />
+            toosl:text="Jams" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.cardview.widget.CardView>

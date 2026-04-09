@@ -19,7 +19,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityOptionsCompat
 import androidx.core.graphics.ColorUtils
 import androidx.core.view.doOnPreDraw
-import androidx.core.view.isInvisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -34,6 +33,7 @@ import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
 import com.sceyt.chatuikit.extensions.launchActivity
 import com.sceyt.chatuikit.extensions.overrideTransitions
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
+import com.sceyt.chatuikit.extensions.visibleInvisibleWithBottomSlideAnim
 import com.sceyt.chatuikit.persistence.extensions.collectWithLifecycle
 import com.sceyt.chatuikit.presentation.components.channel.messages.ChannelActivity
 import com.sceyt.chatuikit.presentation.components.global_search.adapters.GlobalSearchSuggestionsAdapter
@@ -58,6 +58,7 @@ open class GlobalSearchActivity : AppCompatActivity() {
     private val pagerAdapter by lazy(LazyThreadSafetyMode.NONE, ::createPagerAdapter)
     private val tabsAdapter by lazy(LazyThreadSafetyMode.NONE, ::createTabsAdapter)
     private val suggestionsAdapter by lazy(LazyThreadSafetyMode.NONE, ::createSuggestionsAdapter)
+    private var suggestionsVisible = false
 
     private val pagerCallback = object : ViewPager2.OnPageChangeCallback() {
         override fun onPageSelected(position: Int) {
@@ -196,7 +197,7 @@ open class GlobalSearchActivity : AppCompatActivity() {
                 addDuration = 120L
                 removeDuration = 120L
                 moveDuration = 120L
-                changeDuration = 120L
+                changeDuration = 0L
             }
             adapter = suggestionsAdapter
         }
@@ -221,13 +222,20 @@ open class GlobalSearchActivity : AppCompatActivity() {
         val selectedIndex = pagerAdapter.positionOf(state.activeTab)
         val shouldShowSuggestions = state.showSuggestions
         tabsAdapter.setSelectedTab(state.activeTab)
-        suggestionsAdapter.submit(state.memberSuggestions)
+
+        updateSuggestionsVisibility(shouldShowSuggestions) {
+            if (!shouldShowSuggestions) {
+                suggestionsAdapter.submit(emptyList())
+            }
+        }
+        if (shouldShowSuggestions)
+            suggestionsAdapter.submit(state.memberSuggestions)
+
         binding.searchInputView.setQuery(state.query)
         binding.searchInputView.setSelectedMember(
             member = state.selectedMember,
             isPendingRemoval = state.isSelectedMemberRemovalPending
         )
-        updateSuggestionsVisibility(shouldShowSuggestions)
 
         if (selectedIndex >= 0 && binding.viewPager.currentItem != selectedIndex) {
             binding.viewPager.setCurrentItem(selectedIndex, true)
@@ -241,7 +249,7 @@ open class GlobalSearchActivity : AppCompatActivity() {
         binding.root.setBackgroundColor(style.backgroundColor)
         binding.divider.setBackgroundColor(style.dividerColor)
         binding.btnBack.setColorFilter(style.navigationIconColor)
-        binding.suggestionsRecyclerView.background = GradientDrawable(
+        binding.suggestionsContainer.background = GradientDrawable(
             GradientDrawable.Orientation.TOP_BOTTOM,
             intArrayOf(
                 ColorUtils.setAlphaComponent(style.backgroundColor, 0),
@@ -333,8 +341,14 @@ open class GlobalSearchActivity : AppCompatActivity() {
         }
     }
 
-    private fun updateSuggestionsVisibility(visible: Boolean) {
-        binding.suggestionsRecyclerView.isInvisible = !visible
+    private fun updateSuggestionsVisibility(visible: Boolean, doOnFinish: () -> Unit = { }) {
+        if (suggestionsVisible == visible) return
+
+        suggestionsVisible = visible
+        binding.suggestionsRecyclerView.visibleInvisibleWithBottomSlideAnim(
+            visible = visible,
+            doOnFinish = doOnFinish
+        )
     }
 
     companion object {
