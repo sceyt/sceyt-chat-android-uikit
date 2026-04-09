@@ -10,6 +10,8 @@ import com.sceyt.chatuikit.presentation.components.channel_list.channels.Channel
 import com.sceyt.chatuikit.presentation.components.global_search.adapters.GlobalSearchListAdapter
 import com.sceyt.chatuikit.presentation.components.global_search.adapters.GlobalSearchSuggestionsAdapter
 import com.sceyt.chatuikit.presentation.components.global_search.adapters.GlobalSearchTabsAdapter
+import com.sceyt.chatuikit.presentation.components.global_search.chats.ChatsSearchFragment
+import com.sceyt.chatuikit.presentation.components.global_search.chats.ChatsSearchViewModelFactory
 import com.sceyt.chatuikit.styles.channel.ChannelItemStyle
 import com.sceyt.chatuikit.styles.common.AvatarStyle
 import com.sceyt.chatuikit.styles.common.BackgroundStyle

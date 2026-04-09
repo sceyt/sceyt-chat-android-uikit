@@ -28,6 +28,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager.HORIZONTAL
 import androidx.viewpager2.widget.ViewPager2
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytActivityGlobalSearchBinding
 import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
 import com.sceyt.chatuikit.extensions.launchActivity
@@ -37,6 +38,7 @@ import com.sceyt.chatuikit.persistence.extensions.collectWithLifecycle
 import com.sceyt.chatuikit.presentation.components.channel.messages.ChannelActivity
 import com.sceyt.chatuikit.presentation.components.global_search.adapters.GlobalSearchSuggestionsAdapter
 import com.sceyt.chatuikit.presentation.components.global_search.adapters.GlobalSearchTabsAdapter
+import com.sceyt.chatuikit.presentation.components.global_search.chats.ChatsSearchFragment
 import com.sceyt.chatuikit.styles.StyleRegistry
 import com.sceyt.chatuikit.styles.search.GlobalSearchStyle
 
@@ -56,7 +58,6 @@ open class GlobalSearchActivity : AppCompatActivity() {
     private val pagerAdapter by lazy(LazyThreadSafetyMode.NONE, ::createPagerAdapter)
     private val tabsAdapter by lazy(LazyThreadSafetyMode.NONE, ::createTabsAdapter)
     private val suggestionsAdapter by lazy(LazyThreadSafetyMode.NONE, ::createSuggestionsAdapter)
-    private var lastSuggestionsVisible: Boolean? = null
 
     private val pagerCallback = object : ViewPager2.OnPageChangeCallback() {
         override fun onPageSelected(position: Int) {
@@ -184,6 +185,9 @@ open class GlobalSearchActivity : AppCompatActivity() {
     protected open fun initViews() {
         binding.tabsRecyclerView.apply {
             layoutManager = LinearLayoutManager(this@GlobalSearchActivity, HORIZONTAL, false)
+            itemAnimator = DefaultItemAnimator().apply {
+                changeDuration = 150L
+            }
             adapter = tabsAdapter
         }
         binding.suggestionsRecyclerView.apply {
@@ -284,14 +288,14 @@ open class GlobalSearchActivity : AppCompatActivity() {
         }
     }
 
-    open fun onChannelClicked(channel: com.sceyt.chatuikit.data.models.channels.SceytChannel) {
+    open fun onChannelClicked(channel: SceytChannel) {
         ChannelActivity.launch(this, channel)
         finish()
     }
 
     open fun onMessageClicked(
         messageId: Long,
-        channel: com.sceyt.chatuikit.data.models.channels.SceytChannel,
+        channel: SceytChannel,
     ) {
         ChannelActivity.launch(this, channel, messageId)
         finish()

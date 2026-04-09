@@ -1,15 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.google.android.material.chip.Chip xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.appcompat.widget.AppCompatTextView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:layout_marginEnd="8dp"
-    android:ellipsize="end"
-    android:maxWidth="220dp"
-    android:text="Chats"
-    android:textAllCaps="false"
+    android:fontFamily="@font/roboto_medium"
+    android:paddingHorizontal="12dp"
+    android:paddingVertical="6dp"
+    tools:background="@drawable/sceyt_bg_corners_30_with_stroke"
     android:textSize="14sp"
-    app:chipMinHeight="30dp"
-    app:chipStartPadding="12dp"
-    app:chipEndPadding="12dp"
-    app:ensureMinTouchTargetSize="false"
-    xmlns:app="http://schemas.android.com/apk/res-auto" />
+    tools:text="Chats" />
