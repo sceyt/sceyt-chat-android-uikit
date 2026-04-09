@@ -154,13 +154,13 @@ open class GlobalSearchActivity : AppCompatActivity() {
     }
 
     protected open fun createTabsAdapter(): GlobalSearchTabsAdapter {
-        return GlobalSearchTabsAdapter(style, providedTabs, headerViewModel::onTabSelected)
+        return GlobalSearchTabsAdapter(style.tabBarStyle, providedTabs, headerViewModel::onTabSelected)
     }
 
     protected open fun createSuggestionsAdapter(): GlobalSearchSuggestionsAdapter {
         return GlobalSearchSuggestionsAdapter(
             scope = lifecycleScope,
-            style = style,
+            style = style.suggestionsStyle,
             onClick = headerViewModel::onMemberSelected
         )
     }
@@ -256,7 +256,7 @@ open class GlobalSearchActivity : AppCompatActivity() {
                 style.backgroundColor
             )
         )
-        binding.searchInputView.applyStyle(style)
+        binding.searchInputView.applyStyle(style.inputStyle)
     }
 
     protected open fun requestInputFocus() {

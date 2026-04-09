@@ -21,6 +21,7 @@ data class ChatsSearchPageStyle(
     val emptyStateStyle: EmptyStateStyle,
     val separatorTextStyle: TextStyle,
     val channelItemStyle: ChannelItemStyle,
+    val messageItemStyle: ChatsSearchMessageItemStyle,
 ) : SceytComponentStyle() {
 
     companion object {
@@ -44,6 +45,7 @@ data class ChatsSearchPageStyle(
                 font = R.font.roboto_medium
             ),
             channelItemStyle = ChannelItemStyle.Builder(context, null).build(),
+            messageItemStyle = ChatsSearchMessageItemStyle.Builder(context).build(),
         ).let { styleCustomizer.apply(context, it) }
     }
 }

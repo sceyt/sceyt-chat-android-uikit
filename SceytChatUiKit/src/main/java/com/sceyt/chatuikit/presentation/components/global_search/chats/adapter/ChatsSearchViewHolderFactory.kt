@@ -89,7 +89,7 @@ open class ChatsSearchViewHolderFactory(
     open fun createSectionViewHolder(
         parent: ViewGroup
     ): RecyclerView.ViewHolder = SearchSectionViewHolder(
-        style = style,
+        style = style.chatsPageStyle,
         binding = SceytItemGlobalSearchSectionBinding.inflate(layoutInflater, parent, false)
     )
 
@@ -105,7 +105,7 @@ open class ChatsSearchViewHolderFactory(
     open fun createMessageViewHolder(
         parent: ViewGroup
     ): RecyclerView.ViewHolder = SearchMessageItemViewHolder(
-        style = style,
+        style = style.chatsPageStyle.messageItemStyle,
         binding = SceytItemGlobalSearchMessageBinding.inflate(layoutInflater, parent, false),
         onMessageClickListener = onMessageClickListener,
     )

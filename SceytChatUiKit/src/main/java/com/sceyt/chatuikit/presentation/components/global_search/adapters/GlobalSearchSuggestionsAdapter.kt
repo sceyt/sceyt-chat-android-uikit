@@ -11,12 +11,12 @@ import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.presentation.common.recyclerview.AsyncListDiffer
 import com.sceyt.chatuikit.presentation.common.recyclerview.UserDiffUtilItemCallBack
 import com.sceyt.chatuikit.presentation.components.global_search.displayName
-import com.sceyt.chatuikit.styles.search.GlobalSearchStyle
+import com.sceyt.chatuikit.styles.search.GlobalSearchSuggestionsStyle
 import kotlinx.coroutines.CoroutineScope
 
 open class GlobalSearchSuggestionsAdapter(
     private val scope: CoroutineScope,
-    private val style: GlobalSearchStyle,
+    private val style: GlobalSearchSuggestionsStyle,
     private val onClick: (SceytUser) -> Unit,
 ) : RecyclerView.Adapter<GlobalSearchSuggestionsAdapter.SuggestionViewHolder>() {
 
@@ -56,7 +56,7 @@ open class GlobalSearchSuggestionsAdapter(
 
     open class SuggestionViewHolder(
         private val binding: SceytItemSearchSuggestionUserBinding,
-        private val style: GlobalSearchStyle,
+        private val style: GlobalSearchSuggestionsStyle,
     ) : RecyclerView.ViewHolder(binding.root) {
         private val context = binding.root.context
 
@@ -76,7 +76,7 @@ open class GlobalSearchSuggestionsAdapter(
         }
 
         private fun SceytItemSearchSuggestionUserBinding.applyStyle() {
-            name.setTextColor(style.suggestionChipTextColor)
+            style.suggestionTextStyle.apply(name)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 root.outlineSpotShadowColor = context.getCompatColor(R.color.sceyt_color_shadow)
             }
