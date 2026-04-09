@@ -19,9 +19,10 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityOptionsCompat
 import androidx.core.graphics.ColorUtils
 import androidx.core.view.doOnPreDraw
-import androidx.core.view.isVisible
+import androidx.core.view.isInvisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager.HORIZONTAL
@@ -155,7 +156,11 @@ open class GlobalSearchActivity : AppCompatActivity() {
     }
 
     protected open fun createSuggestionsAdapter(): GlobalSearchSuggestionsAdapter {
-        return GlobalSearchSuggestionsAdapter(style, headerViewModel::onMemberSelected)
+        return GlobalSearchSuggestionsAdapter(
+            scope = lifecycleScope,
+            style = style,
+            onClick = headerViewModel::onMemberSelected
+        )
     }
 
     protected open fun createHeaderViewModelFactory(): ViewModelProvider.Factory {
@@ -325,7 +330,7 @@ open class GlobalSearchActivity : AppCompatActivity() {
     }
 
     private fun updateSuggestionsVisibility(visible: Boolean) {
-        binding.suggestionsRecyclerView.isVisible = visible
+        binding.suggestionsRecyclerView.isInvisible = !visible
     }
 
     companion object {

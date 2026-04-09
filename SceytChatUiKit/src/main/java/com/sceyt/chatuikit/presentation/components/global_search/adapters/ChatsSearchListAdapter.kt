@@ -1,0 +1,74 @@
+package com.sceyt.chatuikit.presentation.components.global_search.adapters
+
+import android.view.ViewGroup
+import androidx.recyclerview.widget.RecyclerView
+import com.sceyt.chatuikit.persistence.differs.ChannelDiff
+import com.sceyt.chatuikit.presentation.common.recyclerview.AsyncListDiffer
+import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchListItem
+import kotlinx.coroutines.CoroutineScope
+
+open class ChatsSearchListAdapter(
+    scope: CoroutineScope,
+    private val viewHolderFactory: ChatsSearchViewHolderFactory,
+) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+
+    private val differ = AsyncListDiffer(
+        adapter = this,
+        diffCallback = ChatsSearchListItemDiffCallback(),
+        scope = scope
+    )
+
+    private var highlightQuery: String = ""
+    private var showMessageChannel: Boolean = true
+
+    val currentList get() = differ.currentList
+
+    open fun submitList(
+        items: List<GlobalSearchListItem>,
+        query: String,
+        showMessageChannel: Boolean,
+        commitCallback: (() -> Unit)? = null,
+    ) {
+        highlightQuery = query
+        this.showMessageChannel = showMessageChannel
+        differ.submitList(items, commitCallback)
+    }
+
+    override fun getItemCount(): Int = differ.currentList.size
+
+    override fun getItemViewType(position: Int): Int {
+        return viewHolderFactory.getItemViewType(differ.currentList[position], position)
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        return viewHolderFactory.createViewHolder(parent, viewType)
+    }
+
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        viewHolderFactory.onBindViewHolder(
+            holder = holder,
+            item = differ.currentList[position],
+            query = highlightQuery,
+            showMessageChannel = showMessageChannel
+        )
+    }
+
+    override fun onBindViewHolder(
+        holder: RecyclerView.ViewHolder,
+        position: Int,
+        payloads: MutableList<Any>,
+    ) {
+        val diff = payloads.find { it is ChannelDiff } as? ChannelDiff
+        if (diff != null) {
+            viewHolderFactory.onBindViewHolder(
+                holder = holder,
+                item = differ.currentList[position],
+                query = highlightQuery,
+                showMessageChannel = showMessageChannel,
+                diff = diff
+            )
+        } else {
+            onBindViewHolder(holder, position)
+        }
+    }
+}

@@ -49,7 +49,6 @@ data class GlobalSearchTabState(
     val isLoadingMore: Boolean = false,
     val hasMore: Boolean = false,
     val emptyState: GlobalSearchEmptyState? = null,
-    val scrollState: Parcelable? = null,
     val isLoaded: Boolean = false,
     val showMessageChannel: Boolean = true,
 ) {

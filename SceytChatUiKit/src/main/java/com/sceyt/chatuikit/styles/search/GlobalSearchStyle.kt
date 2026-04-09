@@ -45,6 +45,7 @@ data class GlobalSearchStyle(
     val emptySubtitleTextStyle: TextStyle,
     val avatarStyle: AvatarStyle,
     val channelItemStyle: ChannelItemStyle,
+    val chatsPageStyle: ChatsSearchPageStyle,
 ) : SceytComponentStyle() {
 
     internal class Builder(
@@ -103,7 +104,8 @@ data class GlobalSearchStyle(
                     font = R.font.roboto_regular
                 ),
                 avatarStyle = AvatarStyle(),
-                channelItemStyle = ChannelItemStyle.Builder(context, null).build()
+                channelItemStyle = ChannelItemStyle.Builder(context, null).build(),
+                chatsPageStyle = ChatsSearchPageStyle.Builder(context).build()
             )
         }
     }
