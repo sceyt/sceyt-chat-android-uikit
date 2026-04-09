@@ -4,17 +4,22 @@ import android.animation.Animator
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
+import android.transition.Transition
 import android.view.View
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
 import android.view.animation.AnimationSet
 import android.view.animation.ScaleAnimation
 import androidx.core.animation.doOnEnd
+import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
-import androidx.transition.Transition
+import androidx.interpolator.view.animation.FastOutLinearInInterpolator
+import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 
-fun View.changeAlphaWithAnimation(fromAlpha: Float, toAlpha: Float, animDuration: Long,
-                                  endListener: (() -> Unit)? = null): AlphaAnimation {
+fun View.changeAlphaWithAnimation(
+    fromAlpha: Float, toAlpha: Float, animDuration: Long,
+    endListener: (() -> Unit)? = null
+): AlphaAnimation {
     animation?.cancel()
     val anim = AlphaAnimation(fromAlpha, toAlpha).apply {
         duration = animDuration
@@ -39,8 +44,10 @@ fun View.changeAlphaWithAnim(toAlpha: Float, animDuration: Long, endListener: ()
         .start()
 }
 
-fun View.changeAlphaWithValueAnim(fromAlpha: Float, toAlpha: Float, animDuration: Long,
-                                  endListener: (() -> Unit)? = null): ValueAnimator {
+fun View.changeAlphaWithValueAnim(
+    fromAlpha: Float, toAlpha: Float, animDuration: Long,
+    endListener: (() -> Unit)? = null
+): ValueAnimator {
     return ValueAnimator.ofFloat(fromAlpha, toAlpha).apply {
         duration = animDuration
         addUpdateListener {
@@ -51,7 +58,12 @@ fun View.changeAlphaWithValueAnim(fromAlpha: Float, toAlpha: Float, animDuration
     }
 }
 
-fun View.startScaleAnimOut(duration: Long, fromScaleX: Float = 0f, fromScaleY: Float = 0f, finishedListener: (() -> Unit)? = null) {
+fun View.startScaleAnimOut(
+    duration: Long,
+    fromScaleX: Float = 0f,
+    fromScaleY: Float = 0f,
+    finishedListener: (() -> Unit)? = null
+) {
     val scaleDownX = ObjectAnimator.ofFloat(this, "scaleX", fromScaleX, 1f)
     val scaleDownY = ObjectAnimator.ofFloat(this, "scaleY", fromScaleY, 1f)
     scaleDownX.duration = duration
@@ -66,10 +78,12 @@ fun View.startScaleAnimOut(duration: Long, fromScaleX: Float = 0f, fromScaleY: F
     }
 }
 
-fun View.startScaleAnim(duration: Long, isOut: Boolean = true,
-                        fromScaleX: Float = if (isOut) 0f else 1f,
-                        fromScaleY: Float = if (isOut) 0f else 1f,
-                        finishedListener: (() -> Unit)? = null): AnimatorSet {
+fun View.startScaleAnim(
+    duration: Long, isOut: Boolean = true,
+    fromScaleX: Float = if (isOut) 0f else 1f,
+    fromScaleY: Float = if (isOut) 0f else 1f,
+    finishedListener: (() -> Unit)? = null
+): AnimatorSet {
     val scaleDownX = ObjectAnimator.ofFloat(this, "scaleX", fromScaleX, if (isOut) 1f else 0f)
     val scaleDownY = ObjectAnimator.ofFloat(this, "scaleY", fromScaleY, if (isOut) 1f else 0f)
     scaleDownX.duration = duration
@@ -99,14 +113,17 @@ fun View.hasNotAnimation(): Boolean {
     return animation == null || !animation.hasStarted() || animation.hasEnded()
 }
 
-fun View.scaleViewOut(startScale: Float, endScale: Float, duration: Long = 200,
-                      pivotX: Float = 0.5f, pivotY: Float = 0.5f,
-                      finishedListener: ((Animation?) -> Unit) = { }): Animation {
+fun View.scaleViewOut(
+    startScale: Float, endScale: Float, duration: Long = 200,
+    pivotX: Float = 0.5f, pivotY: Float = 0.5f,
+    finishedListener: ((Animation?) -> Unit) = { }
+): Animation {
     val anim: Animation = ScaleAnimation(
         startScale, endScale,  // Start and end values for the X axis scaling
         startScale, endScale,  // Start and end values for the Y axis scaling
         Animation.RELATIVE_TO_SELF, pivotX,  // Pivot point of X scaling
-        Animation.RELATIVE_TO_SELF, pivotY) // Pivot point of Y scaling
+        Animation.RELATIVE_TO_SELF, pivotY
+    ) // Pivot point of Y scaling
     anim.fillAfter = true // Needed to keep the result of the animation
     anim.duration = duration
     anim.setAnimationListener(animationListener(onAnimationEnd = finishedListener))
@@ -114,14 +131,17 @@ fun View.scaleViewOut(startScale: Float, endScale: Float, duration: Long = 200,
     return anim
 }
 
-fun View.scaleViewWithAnim(startScale: Float, endScale: Float, duration: Long = 200,
-                           pivotX: Float = 0.5f, pivotY: Float = 0.5f,
-                           finishedListener: ((Animation?) -> Unit) = { }): Animation {
+fun View.scaleViewWithAnim(
+    startScale: Float, endScale: Float, duration: Long = 200,
+    pivotX: Float = 0.5f, pivotY: Float = 0.5f,
+    finishedListener: ((Animation?) -> Unit) = { }
+): Animation {
     val anim: Animation = ScaleAnimation(
         startScale, endScale,  // Start and end values for the X axis scaling
         startScale, endScale,  // Start and end values for the Y axis scaling
         Animation.RELATIVE_TO_SELF, pivotX,  // Pivot point of X scaling
-        Animation.RELATIVE_TO_SELF, pivotY) // Pivot point of Y scaling
+        Animation.RELATIVE_TO_SELF, pivotY
+    ) // Pivot point of Y scaling
     anim.fillAfter = true // Needed to keep the result of the animation
     anim.duration = duration
     anim.setAnimationListener(animationListener(onAnimationEnd = finishedListener))
@@ -129,13 +149,20 @@ fun View.scaleViewWithAnim(startScale: Float, endScale: Float, duration: Long = 
     return anim
 }
 
-fun View.scaleAndAlphaAnim(startScale: Float, endScale: Float, duration: Long = 200, finishedListener: ((Animation?) -> Unit) = { }): AnimationSet {
+fun View.scaleAndAlphaAnim(
+    startScale: Float,
+    endScale: Float,
+    duration: Long = 200,
+    finishedListener: ((Animation?) -> Unit) = { }
+): AnimationSet {
     val startAlpha = if (endScale < 1) 1.0f else 0f
     val endAlpha = if (endScale < 1) 0f else 1f
 
     val animationSet = AnimationSet(true)
-    val scaleAnimation = ScaleAnimation(startScale, endScale, startScale, endScale,
-        Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f)
+    val scaleAnimation = ScaleAnimation(
+        startScale, endScale, startScale, endScale,
+        Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f
+    )
     scaleAnimation.duration = duration
     animationSet.addAnimation(scaleAnimation)
 
@@ -181,10 +208,51 @@ fun View.visibleWithScaleAnim() {
     }
 }
 
+fun View.visibleInvisibleWithBottomSlideAnim(
+    visible: Boolean,
+    offsetY: Float = dpToPxAsFloat(12f),
+    enterDuration: Long = 180L,
+    exitDuration: Long = 180L,
+    doOnFinish: () -> Unit = { }
+) {
+    if (visible) {
+        if (isVisible && alpha == 1f && translationY == 0f) return
+
+        animate().cancel()
+        isVisible = true
+        alpha = 0f
+        translationY = offsetY
+        animate()
+            .alpha(1f)
+            .translationY(0f)
+            .setDuration(enterDuration)
+            .setInterpolator(FastOutSlowInInterpolator())
+            .withEndAction { doOnFinish() }
+            .start()
+    } else {
+        if (isInvisible) return
+
+        animate().cancel()
+        animate()
+            .alpha(0f)
+            .translationY(offsetY)
+            .setDuration(exitDuration)
+            .setInterpolator(FastOutLinearInInterpolator())
+            .withEndAction {
+                isInvisible = true
+                alpha = 1f
+                translationY = 0f
+                doOnFinish()
+            }
+            .start()
+    }
+}
+
 inline fun animationListener(
-        crossinline onAnimationRepeat: (animation: Animation?) -> Unit = { _ -> },
-        crossinline onAnimationStart: (animation: Animation?) -> Unit = { _ -> },
-        crossinline onAnimationEnd: (animation: Animation?) -> Unit = { _ -> }): Animation.AnimationListener {
+    crossinline onAnimationRepeat: (animation: Animation?) -> Unit = { _ -> },
+    crossinline onAnimationStart: (animation: Animation?) -> Unit = { _ -> },
+    crossinline onAnimationEnd: (animation: Animation?) -> Unit = { _ -> }
+): Animation.AnimationListener {
     return object : Animation.AnimationListener {
         override fun onAnimationRepeat(animation: Animation?) {
             onAnimationRepeat.invoke(animation)
@@ -201,10 +269,11 @@ inline fun animationListener(
 }
 
 inline fun animatorListener(
-        crossinline onAnimationRepeat: (animation: Animator?) -> Unit = { _ -> },
-        crossinline onAnimationEnd: (animation: Animator?) -> Unit = { _ -> },
-        crossinline onAnimationCancel: (animation: Animator?) -> Unit = { _ -> },
-        crossinline onAnimationStart: (animation: Animator?) -> Unit = { _ -> }): Animator.AnimatorListener {
+    crossinline onAnimationRepeat: (animation: Animator?) -> Unit = { _ -> },
+    crossinline onAnimationEnd: (animation: Animator?) -> Unit = { _ -> },
+    crossinline onAnimationCancel: (animation: Animator?) -> Unit = { _ -> },
+    crossinline onAnimationStart: (animation: Animator?) -> Unit = { _ -> }
+): Animator.AnimatorListener {
     return object : Animator.AnimatorListener {
         override fun onAnimationRepeat(animation: Animator) {
             onAnimationRepeat.invoke(animation)
@@ -226,11 +295,12 @@ inline fun animatorListener(
 }
 
 inline fun transitionListener(
-        crossinline onTransitionStart: (transition: Transition) -> Unit = { _ -> },
-        crossinline onTransitionResume: (transition: Transition) -> Unit = { _ -> },
-        crossinline onTransitionPause: (transition: Transition) -> Unit = { _ -> },
-        crossinline onTransitionCancel: (transition: Transition) -> Unit = { _ -> },
-        crossinline onTransitionEnd: (transition: Transition) -> Unit = { _ -> }): Transition.TransitionListener {
+    crossinline onTransitionStart: (transition: Transition) -> Unit = { _ -> },
+    crossinline onTransitionResume: (transition: Transition) -> Unit = { _ -> },
+    crossinline onTransitionPause: (transition: Transition) -> Unit = { _ -> },
+    crossinline onTransitionCancel: (transition: Transition) -> Unit = { _ -> },
+    crossinline onTransitionEnd: (transition: Transition) -> Unit = { _ -> }
+): Transition.TransitionListener {
     return object : Transition.TransitionListener {
 
         override fun onTransitionStart(transition: Transition) {
