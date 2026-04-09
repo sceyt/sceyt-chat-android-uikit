@@ -69,7 +69,8 @@ open class GlobalSearchHeaderViewModel internal constructor(
             it.copy(
                 selectedMember = user,
                 memberSuggestions = emptyList(),
-                isSelectedMemberRemovalPending = false
+                isSelectedMemberRemovalPending = false,
+                query = "",
             )
         }
         sessionStore.update { it.copy(selectedMember = user) }

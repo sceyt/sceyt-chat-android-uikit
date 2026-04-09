@@ -28,7 +28,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 private const val CHATS_SEARCH_DEBOUNCE_MS = 200L
-private const val CHATS_DEFAULT_PAGE_SIZE = 20
+private const val CHATS_DEFAULT_PAGE_SIZE = 15
 private const val CHATS_MIN_QUERY_LENGTH_FOR_MESSAGES = 2
 
 data class ChatsSearchRequestKey(
@@ -61,6 +61,7 @@ open class ChatsSearchViewModel(
     val state: StateFlow<ChatsSearchState> = _state.asStateFlow()
 
     private var loadJob: Job? = null
+    var lastResultsRequestKey: ChatsSearchRequestKey? = null
 
     init {
         viewModelScope.launch {
