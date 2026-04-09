@@ -8,12 +8,8 @@ import android.view.ViewGroup
 import androidx.core.animation.doOnEnd
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.databinding.SceytItemGlobalSearchChipBinding
-import com.sceyt.chatuikit.databinding.SceytItemSearchSuggestionUserBinding
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchTab
-import com.sceyt.chatuikit.presentation.components.global_search.displayName
 import com.sceyt.chatuikit.styles.search.GlobalSearchStyle
 
 open class GlobalSearchTabsAdapter(
@@ -157,58 +153,6 @@ open class GlobalSearchTabsAdapter(
             binding.root.setTextColor(
                 if (isSelected) style.tabSelectedTextColor else style.tabUnselectedTextColor
             )
-        }
-    }
-}
-
-open class GlobalSearchSuggestionsAdapter(
-    private val style: GlobalSearchStyle,
-    private val onClick: (SceytUser) -> Unit,
-) : RecyclerView.Adapter<GlobalSearchSuggestionsAdapter.SuggestionViewHolder>() {
-    private var items: List<SceytUser> = emptyList()
-
-    open fun submit(items: List<SceytUser>) {
-        this.items = items
-        notifyDataSetChanged()
-    }
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SuggestionViewHolder {
-        val binding = SceytItemSearchSuggestionUserBinding.inflate(
-            LayoutInflater.from(parent.context),
-            parent,
-            false
-        )
-        return SuggestionViewHolder(binding, style)
-    }
-
-    override fun onBindViewHolder(holder: SuggestionViewHolder, position: Int) {
-        holder.bind(items[position], onClick)
-    }
-
-    override fun getItemCount(): Int = items.size
-
-    open class SuggestionViewHolder(
-        private val binding: SceytItemSearchSuggestionUserBinding,
-        private val style: GlobalSearchStyle,
-    ) : RecyclerView.ViewHolder(binding.root) {
-
-        init {
-            binding.applyStyle()
-        }
-
-        open fun bind(user: SceytUser, onClick: (SceytUser) -> Unit) = with(binding) {
-            name.text = user.displayName()
-            avatar.appearanceBuilder()
-                .setImageUrl(user.avatarURL)
-                .setDefaultAvatar(R.drawable.sceyt_ic_default_avatar)
-                .build()
-                .applyToAvatar()
-
-            binding.root.setOnClickListener { onClick(user) }
-        }
-
-        private fun SceytItemSearchSuggestionUserBinding.applyStyle() {
-            name.setTextColor(style.suggestionChipTextColor)
         }
     }
 }

@@ -72,11 +72,6 @@ abstract class GlobalSearchListTabFragment :
         observeState()
     }
 
-    override fun onPause() {
-        saveScrollState()
-        super.onPause()
-    }
-
     override fun onDestroyView() {
         binding.recyclerView.removeOnScrollListener(loadMoreScrollListener)
         _binding = null
@@ -140,22 +135,7 @@ abstract class GlobalSearchListTabFragment :
             binding.tvEmptySubtitle.setText(emptyState.subtitleRes)
         }
 
-        restoreScrollIfNeeded(state)
         requestMoreIfViewportNotFilled(state)
-    }
-
-    protected open fun restoreScrollIfNeeded(state: GlobalSearchTabState) {
-        if (pendingRestoreKey != state.requestKey || state.isLoading) return
-
-        binding.recyclerView.post {
-            if (_binding == null || pendingRestoreKey != state.requestKey) return@post
-            val layoutManager = binding.recyclerView.layoutManager ?: return@post
-            if (state.listItems.isNotEmpty()) {
-                state.scrollState?.let(layoutManager::onRestoreInstanceState)
-                    ?: binding.recyclerView.scrollToPosition(0)
-            }
-            pendingRestoreKey = null
-        }
     }
 
     protected open fun requestMoreIfViewportNotFilled(state: GlobalSearchTabState) {
@@ -173,9 +153,5 @@ abstract class GlobalSearchListTabFragment :
         val totalCount = layoutManager.itemCount
         if (totalCount == 0) return false
         return layoutManager.findLastVisibleItemPosition() >= totalCount - LOAD_MORE_THRESHOLD
-    }
-
-    protected open fun saveScrollState() {
-        viewModel.saveScrollState(binding.recyclerView.layoutManager?.onSaveInstanceState())
     }
 }

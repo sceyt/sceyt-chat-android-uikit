@@ -1,0 +1,79 @@
+package com.sceyt.chatuikit.presentation.components.global_search.adapters
+
+import android.view.LayoutInflater
+import android.view.ViewGroup
+import androidx.recyclerview.widget.RecyclerView
+import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.data.models.messages.SceytUser
+import com.sceyt.chatuikit.databinding.SceytItemSearchSuggestionUserBinding
+import com.sceyt.chatuikit.presentation.common.recyclerview.AsyncListDiffer
+import com.sceyt.chatuikit.presentation.common.recyclerview.UserDiffUtilItemCallBack
+import com.sceyt.chatuikit.presentation.components.global_search.displayName
+import com.sceyt.chatuikit.styles.search.GlobalSearchStyle
+import kotlinx.coroutines.CoroutineScope
+
+open class GlobalSearchSuggestionsAdapter(
+    private val scope: CoroutineScope,
+    private val style: GlobalSearchStyle,
+    private val onClick: (SceytUser) -> Unit,
+) : RecyclerView.Adapter<GlobalSearchSuggestionsAdapter.SuggestionViewHolder>() {
+
+    init {
+        setHasStableIds(true)
+    }
+
+    private val duffUtil = AsyncListDiffer(
+        adapter = this, diffCallback = UserDiffUtilItemCallBack(), scope = scope
+    )
+
+    open fun submit(items: List<SceytUser>) {
+        duffUtil.submitList(items)
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SuggestionViewHolder {
+        val binding = SceytItemSearchSuggestionUserBinding.inflate(
+            LayoutInflater.from(parent.context),
+            parent,
+            false
+        )
+        return SuggestionViewHolder(binding, style)
+    }
+
+    override fun onBindViewHolder(holder: SuggestionViewHolder, position: Int) {
+        holder.bind(currentList[position], onClick)
+    }
+
+    override fun getItemCount(): Int = currentList.size
+
+    override fun getItemId(position: Int): Long {
+        return currentList[position].id.hashCode().toLong()
+    }
+
+    private val currentList: List<SceytUser>
+        get() = duffUtil.currentList
+
+    open class SuggestionViewHolder(
+        private val binding: SceytItemSearchSuggestionUserBinding,
+        private val style: GlobalSearchStyle,
+    ) : RecyclerView.ViewHolder(binding.root) {
+
+        init {
+            binding.applyStyle()
+        }
+
+        open fun bind(user: SceytUser, onClick: (SceytUser) -> Unit) = with(binding) {
+            name.text = user.displayName()
+            avatar.appearanceBuilder()
+                .setImageUrl(user.avatarURL)
+                .setDefaultAvatar(R.drawable.sceyt_ic_default_avatar)
+                .build()
+                .applyToAvatar()
+
+            binding.root.setOnClickListener { onClick(user) }
+        }
+
+        private fun SceytItemSearchSuggestionUserBinding.applyStyle() {
+            name.setTextColor(style.suggestionChipTextColor)
+        }
+    }
+}

@@ -82,11 +82,6 @@ open class MediaSearchFragment : Fragment(R.layout.sceyt_fragment_global_search_
         observeState()
     }
 
-    override fun onPause() {
-        saveScrollState()
-        super.onPause()
-    }
-
     override fun onDestroyView() {
         binding.listRecyclerView.removeOnScrollListener(loadMoreScrollListener)
         binding.mediaRecyclerView.removeOnScrollListener(loadMoreScrollListener)
@@ -171,23 +166,7 @@ open class MediaSearchFragment : Fragment(R.layout.sceyt_fragment_global_search_
             binding.tvEmptySubtitle.setText(emptyState.subtitleRes)
         }
 
-        restoreScrollIfNeeded(state)
         requestMoreIfViewportNotFilled(state)
-    }
-
-    protected open fun restoreScrollIfNeeded(state: GlobalSearchTabState) {
-        if (pendingRestoreKey != state.requestKey || state.isLoading) return
-
-        currentRecyclerView(state).post {
-            if (_binding == null || pendingRestoreKey != state.requestKey) return@post
-            val recyclerView = currentRecyclerView(state)
-            val layoutManager = recyclerView.layoutManager ?: return@post
-            if (state.hasResults) {
-                state.scrollState?.let(layoutManager::onRestoreInstanceState)
-                    ?: recyclerView.scrollToPosition(0)
-            }
-            pendingRestoreKey = null
-        }
     }
 
     protected open fun requestMoreIfViewportNotFilled(state: GlobalSearchTabState) {
@@ -214,11 +193,5 @@ open class MediaSearchFragment : Fragment(R.layout.sceyt_fragment_global_search_
             else -> return !recyclerView.canScrollVertically(1)
         }
         return lastVisible >= totalCount - LOAD_MORE_THRESHOLD
-    }
-
-    protected open fun saveScrollState() {
-        val currentState = viewModel.state.value
-        val recyclerView = currentRecyclerView(currentState)
-        viewModel.saveScrollState(recyclerView.layoutManager?.onSaveInstanceState())
     }
 }

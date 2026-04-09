@@ -1,6 +1,5 @@
 package com.sceyt.chatuikit.presentation.components.global_search
 
-import android.os.Parcelable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -25,8 +24,6 @@ abstract class GlobalSearchTabViewModel : ViewModel() {
     abstract val state: StateFlow<GlobalSearchTabState>
 
     abstract fun loadMore()
-
-    abstract fun saveScrollState(scrollState: Parcelable?)
 
     open fun retry() = Unit
 }
@@ -60,22 +57,6 @@ internal abstract class GlobalSearchSessionTabViewModel(
             return
         }
         loadPage(key, reset = false)
-    }
-
-    override fun saveScrollState(scrollState: Parcelable?) {
-        val key = currentKey()
-        val currentEntry = cacheEntries[key]
-        if (currentEntry != null) {
-            cacheEntries[key] = currentEntry.copy(
-                state = currentEntry.state.copy(scrollState = scrollState)
-            )
-        } else {
-            cacheEntries[key] = TabCacheEntry(
-                state = defaultTabState(key).copy(scrollState = scrollState),
-                loadedCount = 0
-            )
-        }
-        publishVisibleState(key)
     }
 
     override fun retry() {

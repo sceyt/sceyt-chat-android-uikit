@@ -48,7 +48,19 @@ open class ChatsSearchViewModel(
         val key = currentRequestKey(sessionState)
 
         if (_state.value.requestKey != key) {
-            _state.value = createDefaultState(key)
+            _state.update { current ->
+                current.copy(
+                    requestKey = key,
+                    query = key.query,
+                    mediaGridItems = emptyList(),
+                    isLoading = false,
+                    isLoadingMore = false,
+                    hasMore = false,
+                    emptyState = null,
+                    isLoaded = false,
+                    showMessageChannel = sessionState.shouldShowMessageChannel(),
+                )
+            }
         } else {
             _state.update { it.copy(showMessageChannel = sessionState.shouldShowMessageChannel()) }
         }
@@ -77,7 +89,7 @@ open class ChatsSearchViewModel(
 
     private fun loadFirstPage(key: GlobalSearchRequestKey) {
         loadJob?.cancel()
-        _state.value = createDefaultState(key).copy(isLoading = true)
+        _state.update { it.copy(isLoading = true, emptyState = null) }
 
         val job = viewModelScope.launch(ioDispatcher) {
             val result = performLoad(
@@ -315,7 +327,7 @@ open class ChatsSearchViewModel(
 
     protected open fun genericEmptyState(): GlobalSearchEmptyState {
         return GlobalSearchEmptyState(
-            iconRes = R.drawable.sceyt_ic_search_messages_with_layers,
+            iconRes = R.drawable.sceyt_ic_search_messages,
             titleRes = R.string.sceyt_ui_channel_list_empty,
             subtitleRes = R.string.sceyt_ui_channel_list_empty_desc
         )
