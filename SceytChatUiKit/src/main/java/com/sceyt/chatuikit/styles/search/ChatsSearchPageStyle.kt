@@ -16,8 +16,6 @@ import com.sceyt.chatuikit.styles.common.buildEmptyStateStyle
 data class ChatsSearchPageStyle(
     @param:ColorInt val backgroundColor: Int,
     @param:LayoutRes val emptyState: Int,
-    @param:LayoutRes val emptySearchState: Int,
-    @param:LayoutRes val loadingState: Int,
     val emptyStateStyle: EmptyStateStyle,
     val separatorTextStyle: TextStyle,
     val channelItemStyle: ChannelItemStyle,
@@ -32,8 +30,6 @@ data class ChatsSearchPageStyle(
         fun build() = ChatsSearchPageStyle(
             backgroundColor = context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColor),
             emptyState = R.layout.sceyt_channel_list_empty_state,
-            emptySearchState = R.layout.sceyt_channel_list_empty_state,
-            loadingState = R.layout.sceyt_page_loading_state,
             emptyStateStyle = buildEmptyStateStyle(
                 context = context,
                 iconRes = R.drawable.sceyt_ic_search,

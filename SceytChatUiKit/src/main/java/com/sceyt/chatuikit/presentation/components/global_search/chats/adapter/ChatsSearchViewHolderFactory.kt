@@ -58,8 +58,6 @@ open class ChatsSearchViewHolderFactory(
 
             is SearchMessageItemViewHolder -> holder.bind(
                 item = item as GlobalSearchListItem.MessageItem,
-                query = query,
-                showMessageChannel = showMessageChannel
             )
         }
     }

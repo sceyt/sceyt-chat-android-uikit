@@ -18,7 +18,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -27,27 +26,22 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-private const val CHATS_SEARCH_DEBOUNCE_MS = 200L
 private const val CHATS_DEFAULT_PAGE_SIZE = 15
 private const val CHATS_MIN_QUERY_LENGTH_FOR_MESSAGES = 2
 
-data class ChatsSearchRequestKey(
-    val query: String = "",
-    val selectedMemberId: String? = null,
-)
-
 data class ChatsSearchState(
-    val requestKey: ChatsSearchRequestKey? = null,
-    val query: String = "",
+    val sessionState: GlobalSearchSessionState? = null,
     val listItems: List<GlobalSearchListItem> = emptyList(),
     val isLoading: Boolean = false,
     val isLoadingMore: Boolean = false,
     val hasMore: Boolean = false,
-    val isLoaded: Boolean = false,
     val showMessageChannel: Boolean = true,
 ) {
     val showEmptyState: Boolean
-        get() = !isLoading && isLoaded && listItems.isEmpty()
+        get() = !isLoading && !isLoadingMore && listItems.isEmpty()
+
+    val query: String
+        get() = sessionState?.query.orEmpty()
 }
 
 open class ChatsSearchViewModel(
@@ -55,13 +49,13 @@ open class ChatsSearchViewModel(
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModel() {
     private val defaultDataSource by lazy(LazyThreadSafetyMode.NONE) { GlobalSearchLocalInteractor() }
+    private var latestSessionState: GlobalSearchSessionState? = null
 
-    private var latestSessionState: GlobalSearchSessionState = session.state.value
-    private val _state = MutableStateFlow(createDefaultState(defaultRequestKey(latestSessionState)))
+    private val _state = MutableStateFlow(ChatsSearchState(isLoading = true))
     val state: StateFlow<ChatsSearchState> = _state.asStateFlow()
 
     private var loadJob: Job? = null
-    var lastResultsRequestKey: ChatsSearchRequestKey? = null
+    var lastResultsRequestKeyForUI: GlobalSearchSessionState? = null
 
     init {
         viewModelScope.launch {
@@ -70,153 +64,103 @@ open class ChatsSearchViewModel(
     }
 
     private suspend fun onSessionStateChanged(sessionState: GlobalSearchSessionState) {
-        val previous = latestSessionState
         latestSessionState = sessionState
-        val key = currentRequestKey(sessionState)
-
-        if (_state.value.requestKey != key) {
-            // Keep the existing results if the query and selected member are the same,
-            // otherwise reset the state for new search.
-            _state.update { current ->
-                current.copy(
-                    requestKey = key,
-                    query = key.query,
-                    isLoading = false,
-                    isLoadingMore = false,
-                    hasMore = false,
-                    isLoaded = false,
-                    showMessageChannel = sessionState.shouldShowMessageChannel(),
-                )
-            }
-        } else {
-            _state.update { it.copy(showMessageChannel = sessionState.shouldShowMessageChannel()) }
-        }
-
         if (!sessionState.isCurrent(GlobalSearchTab.Chats)) return
 
         val current = _state.value
-        if (current.isLoaded || current.isLoading) return
+        if (current.sessionState == sessionState) return
 
-        if (shouldDebounce(previous, sessionState))
-            delay(CHATS_SEARCH_DEBOUNCE_MS)
-
-        val s = _state.value
-        if (!s.isLoaded && !s.isLoading)
-            loadFirstPage(key)
+        loadFirstPage(sessionState)
     }
 
-    open fun loadMore() {
-        val key = currentRequestKey()
-        val current = _state.value
-        if (current.requestKey != key || key.query.isNotBlank() ||
-            current.isLoading || current.isLoadingMore || !current.hasMore
-        ) return
-        loadNextPage(key)
-    }
-
-    private fun loadFirstPage(key: ChatsSearchRequestKey) {
+    protected open fun loadFirstPage(sessionState: GlobalSearchSessionState) {
         loadJob?.cancel()
-        _state.update { it.copy(isLoading = true) }
-
-        val job = viewModelScope.launch(ioDispatcher) {
+        loadJob = viewModelScope.launch(ioDispatcher) {
             val result = performLoad(
-                requestKey = key,
+                state = sessionState,
                 offset = 0,
                 pageSize = CHATS_DEFAULT_PAGE_SIZE
             )
             withContext(Dispatchers.Main) {
-                if (currentRequestKey() != key || _state.value.requestKey != key) return@withContext
                 _state.update {
                     it.copy(
+                        sessionState = sessionState,
                         listItems = result.listItems,
                         isLoading = false,
                         isLoadingMore = false,
-                        hasMore = hasMore(key, result),
-                        isLoaded = true,
-                        query = key.query,
-                        showMessageChannel = latestSessionState.shouldShowMessageChannel()
+                        hasMore = hasMore(sessionState.query, result),
+                        showMessageChannel = sessionState.shouldShowMessageChannel()
                     )
                 }
             }
         }
-        loadJob = job
-        job.invokeOnCompletion { if (loadJob === job) loadJob = null }
     }
 
-    private fun loadNextPage(key: ChatsSearchRequestKey) {
+    open fun loadMore() {
+        val current = _state.value
+        val key = current.sessionState ?: return
+        if (key.query.isNotBlank() || current.isLoading || current.isLoadingMore || !current.hasMore)
+            return
+        loadNextPage(key)
+    }
+
+    protected open fun loadNextPage(sessionState: GlobalSearchSessionState) {
         loadJob?.cancel()
         _state.update { it.copy(isLoadingMore = true) }
 
-        val job = viewModelScope.launch(ioDispatcher) {
+        loadJob = viewModelScope.launch(ioDispatcher) {
             val result = performLoad(
-                requestKey = key,
+                state = sessionState,
                 offset = _state.value.listItems.size,
                 pageSize = CHATS_DEFAULT_PAGE_SIZE
             )
             withContext(Dispatchers.Main) {
-                if (currentRequestKey() != key || _state.value.requestKey != key) return@withContext
                 _state.update {
                     it.copy(
                         listItems = it.listItems + result.listItems,
-                        isLoading = false,
                         isLoadingMore = false,
-                        hasMore = hasMore(key, result),
-                        isLoaded = true,
-                        query = key.query,
-                        showMessageChannel = latestSessionState.shouldShowMessageChannel()
+                        hasMore = hasMore(sessionState.query, result),
+                        showMessageChannel = sessionState.shouldShowMessageChannel()
                     )
                 }
             }
         }
-        loadJob = job
-        job.invokeOnCompletion { if (loadJob === job) loadJob = null }
     }
-
-    private fun currentRequestKey(
-        sessionState: GlobalSearchSessionState = latestSessionState,
-    ) = defaultRequestKey(sessionState)
-
-    private fun shouldDebounce(
-        previous: GlobalSearchSessionState,
-        current: GlobalSearchSessionState,
-    ): Boolean {
-        return previous.activeTab == GlobalSearchTab.Chats &&
-                previous.query != current.query &&
-                current.query.isNotBlank()
-    }
-
-    private fun createDefaultState(key: ChatsSearchRequestKey) = ChatsSearchState(
-        requestKey = key,
-        query = key.query,
-        showMessageChannel = latestSessionState.shouldShowMessageChannel(),
-    )
 
     private fun GlobalSearchSessionState.shouldShowMessageChannel(): Boolean {
         return selectedMember == null
     }
 
     protected open suspend fun performLoad(
-        requestKey: ChatsSearchRequestKey,
+        state: GlobalSearchSessionState,
         offset: Int,
         pageSize: Int,
     ): SearchResultPage = when {
-        requestKey.selectedMemberId != null -> {
+        state.selectedMember != null -> {
             val page = loadSelectedMemberMessagesPage(
-                requestKey = requestKey,
+                state = state,
                 offset = offset,
                 pageSize = pageSize
             )
             SearchResultPage(
-                listItems = page.data.map { GlobalSearchListItem.MessageItem(it) },
+                listItems = buildListItems(
+                    chatsPage = GlobalSearchPage.empty(),
+                    messagesPage = page,
+                    query = state.query
+                ),
                 hasMore = page.hasMore,
                 loadedCount = page.data.size,
             )
         }
 
-        requestKey.query.isBlank() -> {
+        state.query.isBlank() -> {
             val page = loadRecentChatsPage(offset, pageSize)
             SearchResultPage(
-                listItems = buildListItems(page, GlobalSearchPage.Companion.empty()),
+                listItems = buildListItems(
+                    chatsPage = page,
+                    messagesPage = GlobalSearchPage.empty(),
+                    query = state.query
+                ),
                 hasMore = page.hasMore,
                 loadedCount = page.data.size,
             )
@@ -224,16 +168,20 @@ open class ChatsSearchViewModel(
 
         else -> {
             coroutineScope {
-                val chatsPage = async { loadTypedQueryChatsPage(requestKey, pageSize) }
+                val chatsPage = async { loadTypedQueryChatsPage(state, pageSize) }
                 val messagesPage =
-                    if (requestKey.query.length >= CHATS_MIN_QUERY_LENGTH_FOR_MESSAGES) {
-                        async { loadTypedQueryMessagesPage(requestKey, pageSize) }
+                    if (state.query.length >= CHATS_MIN_QUERY_LENGTH_FOR_MESSAGES) {
+                        async { loadTypedQueryMessagesPage(state, pageSize) }
                     } else {
                         CompletableDeferred(GlobalSearchPage(emptyList(), false))
                     }
                 val chatsResult = chatsPage.await()
                 val messagesResult = messagesPage.await()
-                val items = buildListItems(chatsResult, messagesResult)
+                val items = buildListItems(
+                    chatsPage = chatsResult,
+                    messagesPage = messagesResult,
+                    query = state.query
+                )
                 SearchResultPage(
                     listItems = items,
                     hasMore = false,
@@ -251,13 +199,13 @@ open class ChatsSearchViewModel(
     }
 
     private suspend fun loadSelectedMemberMessagesPage(
-        requestKey: ChatsSearchRequestKey,
+        state: GlobalSearchSessionState,
         offset: Int,
         pageSize: Int,
     ): GlobalSearchPage<GlobalSearchMessageResult> {
-        val selectedMemberId = requireNotNull(requestKey.selectedMemberId)
+        val selectedMemberId = requireNotNull(state.selectedMember?.id)
         return defaultDataSource.searchMessages(
-            query = requestKey.query,
+            query = state.query,
             senderId = selectedMemberId,
             offset = offset,
             limit = pageSize
@@ -265,18 +213,18 @@ open class ChatsSearchViewModel(
     }
 
     private suspend fun loadTypedQueryChatsPage(
-        requestKey: ChatsSearchRequestKey,
+        state: GlobalSearchSessionState,
         pageSize: Int,
     ): GlobalSearchPage<SceytChannel> {
-        return defaultDataSource.searchChats(requestKey.query, pageSize)
+        return defaultDataSource.searchChats(state.query, pageSize)
     }
 
     private suspend fun loadTypedQueryMessagesPage(
-        criteria: ChatsSearchRequestKey,
+        state: GlobalSearchSessionState,
         pageSize: Int,
     ): GlobalSearchPage<GlobalSearchMessageResult> {
         return defaultDataSource.searchMessages(
-            query = criteria.query,
+            query = state.query,
             senderId = null,
             offset = 0,
             limit = pageSize
@@ -286,37 +234,31 @@ open class ChatsSearchViewModel(
     private fun buildListItems(
         chatsPage: GlobalSearchPage<SceytChannel>,
         messagesPage: GlobalSearchPage<GlobalSearchMessageResult>,
+        query: String,
     ): List<GlobalSearchListItem> {
         return buildList {
             if (chatsPage.data.isNotEmpty()) {
                 add(GlobalSearchListItem.SectionHeader(R.string.sceyt_chats))
-                addAll(chatsPage.data.map { GlobalSearchListItem.ChannelItem(it) })
+                addAll(chatsPage.data.map { GlobalSearchListItem.ChannelItem(it, query) })
             }
             if (messagesPage.data.isNotEmpty()) {
                 add(GlobalSearchListItem.SectionHeader(R.string.sceyt_messages))
-                addAll(messagesPage.data.map { GlobalSearchListItem.MessageItem(it) })
+                addAll(messagesPage.data.map { GlobalSearchListItem.MessageItem(it, query) })
             }
         }
     }
 
     private fun hasMore(
-        key: ChatsSearchRequestKey,
+        query: String?,
         result: SearchResultPage,
     ): Boolean {
-        return key.query.isBlank() && result.hasMore
+        return query.isNullOrBlank() && result.hasMore
     }
 
     protected data class SearchResultPage(
         val listItems: List<GlobalSearchListItem> = emptyList(),
         val hasMore: Boolean = false,
         val loadedCount: Int = 0,
-    )
-
-    private fun defaultRequestKey(
-        sessionState: GlobalSearchSessionState
-    ) = ChatsSearchRequestKey(
-        query = sessionState.query,
-        selectedMemberId = sessionState.selectedMember?.id
     )
 }
 

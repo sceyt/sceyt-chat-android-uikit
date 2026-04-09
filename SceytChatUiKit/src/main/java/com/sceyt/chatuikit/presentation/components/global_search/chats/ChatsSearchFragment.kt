@@ -96,8 +96,11 @@ open class ChatsSearchFragment : Fragment(R.layout.sceyt_fragment_chats_search) 
     }
 
     protected open fun render(state: ChatsSearchState) {
-        val scrollToTop = state.isLoaded && state.requestKey != viewModel.lastResultsRequestKey
-        if (state.isLoaded) viewModel.lastResultsRequestKey = state.requestKey
+        val settled = !state.isLoading && !state.isLoadingMore
+        val lastResultsRequestKey = viewModel.lastResultsRequestKeyForUI
+        val scrollToTop =
+            settled && state.sessionState != lastResultsRequestKey && lastResultsRequestKey != null
+        if (settled) viewModel.lastResultsRequestKeyForUI = state.sessionState
 
         listAdapter.submitList(
             items = state.listItems,
@@ -128,7 +131,7 @@ open class ChatsSearchFragment : Fragment(R.layout.sceyt_fragment_chats_search) 
     }
 
     protected open fun requestMoreIfViewportNotFilled(state: ChatsSearchState) {
-        if (state.requestKey?.query?.isNotBlank() == true || state.isLoading || state.isLoadingMore || !state.hasMore) return
+        if (state.sessionState?.query?.isNotBlank() == true || state.isLoading || state.isLoadingMore || !state.hasMore) return
 
         binding.recyclerView.post {
             if (_binding == null || binding.recyclerView.canScrollVertically(1)) return@post

@@ -212,7 +212,8 @@ open class GlobalSearchListAdapter(
         protected fun formatTime(epoch: Long): String = DateTimeUtil.getDateTimeString(epoch)
 
         protected fun channelTitle(channel: SceytChannel): String {
-            return SceytChatUIKit.formatters.channelNameFormatter.format(itemView.context, channel).toString()
+            return SceytChatUIKit.formatters.channelNameFormatter.format(itemView.context, channel)
+                .toString()
         }
 
         protected fun loadImage(
@@ -244,7 +245,10 @@ open class GlobalSearchListAdapter(
     ) : ResultViewHolder(binding.root) {
         fun bind(item: GlobalSearchListItem.MessageItem) {
             val result = item.result
-            val user = result.message.user ?: createEmptyUser(result.channel.id.toString(), channelTitle(result.channel))
+            val user = result.message.user ?: createEmptyUser(
+                result.channel.id.toString(),
+                channelTitle(result.channel)
+            )
             SceytChatUIKit.renderers.userAvatarRenderer.render(
                 binding.root.context,
                 user,
@@ -255,14 +259,11 @@ open class GlobalSearchListAdapter(
             style.titleTextStyle.apply(binding.tvTitle)
             style.subtitleTextStyle.apply(binding.tvBody)
             style.metaTextStyle.apply(binding.tvDate)
-            style.metaTextStyle.apply(binding.tvChannel)
 
             binding.tvTitle.text = user.displayName()
             binding.tvDate.text = formatTime(result.message.createdAt)
             binding.tvBody.text = highlighter(result.message.body)
             binding.tvBody.maxLines = if (showMessageChannel) 2 else 1
-            binding.tvChannel.isVisible = showMessageChannel
-            binding.tvChannel.text = channelTitle(result.channel)
             bindMessageClick(item)
         }
     }
@@ -273,7 +274,10 @@ open class GlobalSearchListAdapter(
         private val highlighter: (String) -> CharSequence,
     ) : ResultViewHolder(binding.root) {
         fun bind(item: GlobalSearchListItem.AttachmentItem) {
-            val sender = item.result.sender ?: createEmptyUser(item.result.channel.id.toString(), channelTitle(item.result.channel))
+            val sender = item.result.sender ?: createEmptyUser(
+                item.result.channel.id.toString(),
+                channelTitle(item.result.channel)
+            )
             SceytChatUIKit.renderers.userAvatarRenderer.render(
                 binding.root.context,
                 sender,
@@ -290,7 +294,11 @@ open class GlobalSearchListAdapter(
             binding.tvBody.text = highlighter(
                 item.result.message.body.ifBlank { channelTitle(item.result.channel) }
             )
-            loadImage(binding.previewImage, item.result.attachment, R.drawable.sceyt_ic_empty_medias)
+            loadImage(
+                binding.previewImage,
+                item.result.attachment,
+                R.drawable.sceyt_ic_empty_medias
+            )
             bindAttachmentClick(item)
         }
     }
