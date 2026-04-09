@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.presentation.components.global_search.adapters
+package com.sceyt.chatuikit.presentation.components.global_search.chats.adapter
 
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView

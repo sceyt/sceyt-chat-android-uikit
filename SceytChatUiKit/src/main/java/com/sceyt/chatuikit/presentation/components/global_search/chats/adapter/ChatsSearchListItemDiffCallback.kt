@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.presentation.components.global_search.adapters
+package com.sceyt.chatuikit.presentation.components.global_search.chats.adapter
 
 import androidx.recyclerview.widget.DiffUtil
 import com.sceyt.chatuikit.persistence.differs.diff

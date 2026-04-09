@@ -8,6 +8,7 @@ import android.content.res.ColorStateList
 import android.text.Editable
 import android.util.AttributeSet
 import android.view.LayoutInflater
+import android.view.inputmethod.EditorInfo
 import android.widget.FrameLayout
 import androidx.core.animation.doOnEnd
 import androidx.core.view.ViewCompat
@@ -17,6 +18,7 @@ import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.databinding.SceytGlobalSearchQueryInputViewBinding
+import com.sceyt.chatuikit.extensions.hideSoftInput
 import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.extensions.showSoftInput
 import com.sceyt.chatuikit.styles.search.GlobalSearchStyle
@@ -60,6 +62,16 @@ open class GlobalSearchQueryInputView @JvmOverloads constructor(
             emptyDeleteListener = {
                 this@GlobalSearchQueryInputView.emptyDeleteListener?.invoke()
                 true
+            }
+            setOnEditorActionListener { _, actionId, _ ->
+                when (actionId) {
+                    EditorInfo.IME_ACTION_SEARCH -> {
+                        hideSoftInput()
+                        true
+                    }
+
+                    else -> false
+                }
             }
             doAfterTextChanged { text: Editable? ->
                 if (!suppressQueryChanged) {
@@ -193,16 +205,6 @@ open class GlobalSearchQueryInputView @JvmOverloads constructor(
         } else {
             style.selectedMemberChipTextColor
         }
-        val fromIcon = if (wasPendingRemoval) {
-            style.selectedMemberChipPendingIconColor
-        } else {
-            style.selectedMemberChipIconColor
-        }
-        val toIcon = if (isPendingRemoval) {
-            style.selectedMemberChipPendingIconColor
-        } else {
-            style.selectedMemberChipIconColor
-        }
 
         chipStyleAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
             duration = 180L
@@ -216,7 +218,6 @@ open class GlobalSearchQueryInputView @JvmOverloads constructor(
                         toBackground
                     ) as Int,
                     textColor = ArgbEvaluator().evaluate(fraction, fromText, toText) as Int,
-                    iconColor = ArgbEvaluator().evaluate(fraction, fromIcon, toIcon) as Int,
                 )
             }
             doOnEnd {
@@ -238,11 +239,6 @@ open class GlobalSearchQueryInputView @JvmOverloads constructor(
                 style.selectedMemberChipPendingTextColor
             } else {
                 style.selectedMemberChipTextColor
-            },
-            iconColor = if (isPendingRemoval) {
-                style.selectedMemberChipPendingIconColor
-            } else {
-                style.selectedMemberChipIconColor
             }
         )
     }
@@ -250,7 +246,6 @@ open class GlobalSearchQueryInputView @JvmOverloads constructor(
     private fun applyChipColors(
         backgroundColor: Int,
         textColor: Int,
-        iconColor: Int,
     ) {
         binding.chipSelectedMember.apply {
             setBackgroundTint(backgroundColor)

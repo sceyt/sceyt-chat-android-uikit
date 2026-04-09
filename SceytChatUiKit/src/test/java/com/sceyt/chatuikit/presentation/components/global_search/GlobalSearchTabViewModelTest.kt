@@ -3,6 +3,7 @@ package com.sceyt.chatuikit.presentation.components.global_search
 import com.google.common.truth.Truth.assertThat
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.messages.SceytUser
+import com.sceyt.chatuikit.presentation.components.global_search.chats.ChatsSearchViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -201,7 +202,6 @@ class GlobalSearchTabViewModelTest {
                         emptyList()
                     },
                     loadedCount = if (criteria.query == "override") 1 else 0,
-                    emptyState = null
                 )
             }
         }
