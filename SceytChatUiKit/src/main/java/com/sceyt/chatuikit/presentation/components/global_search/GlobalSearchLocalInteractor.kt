@@ -8,6 +8,7 @@ import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.database.dao.AttachmentDao
 import com.sceyt.chatuikit.persistence.database.dao.ChannelDao
 import com.sceyt.chatuikit.persistence.database.dao.MessageDao
+import com.sceyt.chatuikit.persistence.database.dao.SearchMessageDao
 import com.sceyt.chatuikit.persistence.database.dao.UserDao
 import com.sceyt.chatuikit.persistence.mappers.toAttachment
 import com.sceyt.chatuikit.persistence.mappers.toChannel
@@ -43,6 +44,7 @@ internal class GlobalSearchLocalInteractor :
     GlobalSearchMemberSuggestionsProvider {
     private val channelDao: ChannelDao by inject()
     private val messageDao: MessageDao by inject()
+    private val searchMessageDao: SearchMessageDao by inject()
     private val attachmentDao: AttachmentDao by inject()
     private val userDao: UserDao by inject()
 
@@ -129,13 +131,11 @@ internal class GlobalSearchLocalInteractor :
         offset: Int,
         limit: Int,
     ): GlobalSearchPage<GlobalSearchMessageResult> {
-        val data = messageDao.searchMessagesGlobally(
+        val data = searchMessageDao.searchMessagesGlobally(
             query = query,
             senderId = senderId,
             limit = limit + 1,
             offset = offset,
-            queryEmpty = query.isBlank(),
-            senderIgnored = senderId.isNullOrBlank()
         )
 
         val hasMore = data.size > limit

@@ -55,8 +55,24 @@ open class SearchMessageItemViewHolder(
 
     protected open fun trimBodyToShowMatch(text: CharSequence, query: String): CharSequence {
         if (query.isBlank() || text.isBlank()) return text
+        val words = query.trim().split(Regex("\\s+")).filter { it.isNotEmpty() }
+        if (words.isEmpty()) return text
         val textLower = text.toString().lowercase()
-        val matchStart = textLower.indexOf(query.lowercase())
+
+        // Priority 1: full phrase match (words joined by single space)
+        val phrase = words.joinToString(" ").lowercase()
+        val phraseMatch = textLower.indexOf(phrase)
+
+        val matchStart = if (phraseMatch >= 0) {
+            phraseMatch
+        } else {
+            // Priority 2: earliest individual word match
+            words.minOfOrNull { word ->
+                val idx = textLower.indexOf(word.lowercase())
+                if (idx >= 0) idx else Int.MAX_VALUE
+            }.takeIf { it != Int.MAX_VALUE } ?: return text
+        }
+
         if (matchStart < CONTEXT_BEFORE_MATCH) return text
         val trimFrom = matchStart - CONTEXT_BEFORE_MATCH
         return SpannableStringBuilder("…").append(text.subSequence(trimFrom, text.length))
@@ -64,25 +80,29 @@ open class SearchMessageItemViewHolder(
 
     protected open fun highlight(text: CharSequence, query: String): CharSequence {
         if (query.isBlank() || text.isBlank()) return text
+        val words = query.trim().split(Regex("\\s+")).filter { it.isNotEmpty() }
+        if (words.isEmpty()) return text
         val spannable = SpannableStringBuilder(text)
-        val queryLower = query.lowercase()
         val textLower = text.toString().lowercase()
-        var start = textLower.indexOf(queryLower)
-        while (start >= 0) {
-            val end = start + queryLower.length
-            spannable.setSpan(
-                ForegroundColorSpan(style.highlightTextColor),
-                start,
-                end,
-                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-            )
-            start = textLower.indexOf(queryLower, end)
+        for (word in words) {
+            val wordLower = word.lowercase()
+            var start = textLower.indexOf(wordLower)
+            while (start >= 0) {
+                val end = start + wordLower.length
+                spannable.setSpan(
+                    ForegroundColorSpan(style.highlightTextColor),
+                    start,
+                    end,
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+                start = textLower.indexOf(wordLower, end)
+            }
         }
         return spannable
     }
 
     companion object {
-        private const val CONTEXT_BEFORE_MATCH = 15
+        private const val CONTEXT_BEFORE_MATCH = 10
     }
 
     private fun SceytItemGlobalSearchMessageBinding.applyStyle() {

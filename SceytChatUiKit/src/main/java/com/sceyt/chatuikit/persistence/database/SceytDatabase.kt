@@ -17,6 +17,7 @@ import com.sceyt.chatuikit.persistence.database.dao.LoadRangeDao
 import com.sceyt.chatuikit.persistence.database.dao.MarkerDao
 import com.sceyt.chatuikit.persistence.database.dao.MemberDao
 import com.sceyt.chatuikit.persistence.database.dao.MessageDao
+import com.sceyt.chatuikit.persistence.database.dao.SearchMessageDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingMarkerDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingMessageStateDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingPollVoteDao
@@ -115,6 +116,7 @@ import com.sceyt.chatuikit.persistence.database.entity.user.UserMetadataEntity
 internal abstract class SceytDatabase : RoomDatabase() {
     abstract fun channelDao(): ChannelDao
     abstract fun messageDao(): MessageDao
+    abstract fun searchMessageDao(): SearchMessageDao
     abstract fun attachmentsDao(): AttachmentDao
     abstract fun draftMessageDao(): DraftMessageDao
     abstract fun membersDao(): MemberDao
