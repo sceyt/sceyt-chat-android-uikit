@@ -86,7 +86,7 @@ open class GlobalSearchActivity : AppCompatActivity() {
 
         applyInsetsAndWindowColor(binding.root)
         statusBarIconsColorWithBackground()
-        applyStyle()
+        binding.applyStyle()
         initViews()
         observeState()
 
@@ -155,7 +155,11 @@ open class GlobalSearchActivity : AppCompatActivity() {
     }
 
     protected open fun createTabsAdapter(): GlobalSearchTabsAdapter {
-        return GlobalSearchTabsAdapter(style.tabBarStyle, providedTabs, headerViewModel::onTabSelected)
+        return GlobalSearchTabsAdapter(
+            style.tabBarStyle,
+            providedTabs,
+            headerViewModel::onTabSelected
+        )
     }
 
     protected open fun createSuggestionsAdapter(): GlobalSearchSuggestionsAdapter {
@@ -246,20 +250,6 @@ open class GlobalSearchActivity : AppCompatActivity() {
         }
     }
 
-    protected open fun applyStyle() {
-        binding.root.setBackgroundColor(style.backgroundColor)
-        binding.divider.setBackgroundColor(style.dividerColor)
-        binding.btnBack.setColorFilter(style.navigationIconColor)
-        binding.suggestionsContainer.background = GradientDrawable(
-            GradientDrawable.Orientation.TOP_BOTTOM,
-            intArrayOf(
-                ColorUtils.setAlphaComponent(style.backgroundColor, 0),
-                style.backgroundColor
-            )
-        )
-        binding.searchInputView.applyStyle(style.inputStyle)
-    }
-
     protected open fun requestInputFocus() {
         if (!launchedWithSharedTransition()) {
             binding.searchInputView.post { binding.searchInputView.focusInput() }
@@ -314,11 +304,11 @@ open class GlobalSearchActivity : AppCompatActivity() {
         onMessageClicked(result.message.id, result.channel)
     }
 
-    private fun launchedWithSharedTransition(): Boolean {
+    protected open fun launchedWithSharedTransition(): Boolean {
         return intent.getBooleanExtra(EXTRA_SHARED_TRANSITION, false)
     }
 
-    private fun setupSharedElementTransition() {
+    protected open fun setupSharedElementTransition() {
         window.sharedElementEnterTransition = TransitionSet().apply {
             ordering = TransitionSet.ORDERING_TOGETHER
             addTransition(ChangeBounds())
@@ -350,6 +340,20 @@ open class GlobalSearchActivity : AppCompatActivity() {
             visible = visible,
             doOnFinish = doOnFinish
         )
+    }
+
+    protected open fun SceytActivityGlobalSearchBinding.applyStyle() {
+        root.setBackgroundColor(style.backgroundColor)
+        divider.setBackgroundColor(style.dividerColor)
+        btnBack.setColorFilter(style.navigationIconColor)
+        suggestionsContainer.background = GradientDrawable(
+            GradientDrawable.Orientation.TOP_BOTTOM,
+            intArrayOf(
+                ColorUtils.setAlphaComponent(style.backgroundColor, 0),
+                style.backgroundColor
+            )
+        )
+        searchInputView.applyStyle(style.inputStyle)
     }
 
     companion object {

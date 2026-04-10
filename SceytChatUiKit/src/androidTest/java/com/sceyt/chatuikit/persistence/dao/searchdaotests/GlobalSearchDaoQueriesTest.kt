@@ -16,8 +16,8 @@ import com.sceyt.chatuikit.data.models.messages.SceytPresence
 import com.sceyt.chatuikit.persistence.database.SceytDatabase
 import com.sceyt.chatuikit.persistence.database.dao.AttachmentDao
 import com.sceyt.chatuikit.persistence.database.dao.ChannelDao
+import com.sceyt.chatuikit.persistence.database.dao.GlobalSearchDao
 import com.sceyt.chatuikit.persistence.database.dao.MessageDao
-import com.sceyt.chatuikit.persistence.database.dao.SearchMessageDao
 import com.sceyt.chatuikit.persistence.database.dao.UserDao
 import com.sceyt.chatuikit.persistence.database.entity.channel.ChannelEntity
 import com.sceyt.chatuikit.persistence.database.entity.channel.UserChatLinkEntity
@@ -40,7 +40,7 @@ class GlobalSearchDaoQueriesTest {
     private lateinit var userDao: UserDao
     private lateinit var channelDao: ChannelDao
     private lateinit var messageDao: MessageDao
-    private lateinit var searchMessageDao: SearchMessageDao
+    private lateinit var globalSearchDao: GlobalSearchDao
     private lateinit var attachmentDao: AttachmentDao
 
     @get:Rule
@@ -58,7 +58,7 @@ class GlobalSearchDaoQueriesTest {
         userDao = database.userDao()
         channelDao = database.channelDao()
         messageDao = database.messageDao()
-        searchMessageDao = database.searchMessageDao()
+        globalSearchDao = database.globalSearchDao()
         attachmentDao = database.attachmentsDao()
     }
 
@@ -201,9 +201,11 @@ class GlobalSearchDaoQueriesTest {
             ),
         )
 
-        val result = searchMessageDao.searchMessagesGlobally(
+        val result = globalSearchDao.searchMessages(
             query = "jam",
             senderId = "alice",
+            channelTypes = emptyList(),
+            onlyJoined = false,
             limit = 20,
             offset = 0,
         )
@@ -231,9 +233,11 @@ class GlobalSearchDaoQueriesTest {
             ),
         )
 
-        val result = searchMessageDao.searchMessagesGlobally(
+        val result = globalSearchDao.searchMessages(
             query = "",
             senderId = null,
+            channelTypes = emptyList(),
+            onlyJoined = false,
             limit = 20,
             offset = 0,
         )
@@ -251,7 +255,7 @@ class GlobalSearchDaoQueriesTest {
             message(tid = 1, id = 1, channelId = 1, body = "hello my name is Matat", fromId = "alice", createdAt = 100),
         )
 
-        val result = searchMessageDao.searchMessagesGlobally(query = "Hello", senderId = null, limit = 20, offset = 0)
+        val result = globalSearchDao.searchMessages(query = "Hello", senderId = null, channelTypes = emptyList(), onlyJoined = false, limit = 20, offset = 0)
 
         assertThat(result.map { it.messageEntity.id }).containsExactly(1L)
     }
@@ -266,7 +270,7 @@ class GlobalSearchDaoQueriesTest {
             message(tid = 1, id = 1, channelId = 1, body = "hello my name is Matat", fromId = "alice", createdAt = 100),
         )
 
-        val result = searchMessageDao.searchMessagesGlobally(query = "hello       ", senderId = null, limit = 20, offset = 0)
+        val result = globalSearchDao.searchMessages(query = "hello       ", senderId = null, channelTypes = emptyList(), onlyJoined = false, limit = 20, offset = 0)
 
         assertThat(result.map { it.messageEntity.id }).containsExactly(1L)
     }
@@ -281,7 +285,7 @@ class GlobalSearchDaoQueriesTest {
             message(tid = 1, id = 1, channelId = 1, body = "hello my name is Matat", fromId = "alice", createdAt = 100),
         )
 
-        val result = searchMessageDao.searchMessagesGlobally(query = "    hello", senderId = null, limit = 20, offset = 0)
+        val result = globalSearchDao.searchMessages(query = "    hello", senderId = null, channelTypes = emptyList(), onlyJoined = false, limit = 20, offset = 0)
 
         assertThat(result.map { it.messageEntity.id }).containsExactly(1L)
     }
@@ -296,7 +300,7 @@ class GlobalSearchDaoQueriesTest {
             message(tid = 1, id = 1, channelId = 1, body = "hello my name is Matat", fromId = "alice", createdAt = 100),
         )
 
-        val result = searchMessageDao.searchMessagesGlobally(query = "    hello  ", senderId = null, limit = 20, offset = 0)
+        val result = globalSearchDao.searchMessages(query = "    hello  ", senderId = null, channelTypes = emptyList(), onlyJoined = false, limit = 20, offset = 0)
 
         assertThat(result.map { it.messageEntity.id }).containsExactly(1L)
     }
@@ -312,7 +316,7 @@ class GlobalSearchDaoQueriesTest {
             message(tid = 2, id = 2, channelId = 1, body = "goodbye world", fromId = "alice", createdAt = 200),
         )
 
-        val result = searchMessageDao.searchMessagesGlobally(query = "    hello        my", senderId = null, limit = 20, offset = 0)
+        val result = globalSearchDao.searchMessages(query = "    hello        my", senderId = null, channelTypes = emptyList(), onlyJoined = false, limit = 20, offset = 0)
 
         assertThat(result.map { it.messageEntity.id }).containsExactly(1L)
     }
@@ -329,7 +333,7 @@ class GlobalSearchDaoQueriesTest {
         )
 
         // "hello" and "Matat" both appear in body 1 but only "hello" in body 2
-        val result = searchMessageDao.searchMessagesGlobally(query = "hello Matat", senderId = null, limit = 20, offset = 0)
+        val result = globalSearchDao.searchMessages(query = "hello Matat", senderId = null, channelTypes = emptyList(), onlyJoined = false, limit = 20, offset = 0)
 
         assertThat(result.map { it.messageEntity.id }).containsExactly(1L)
     }
@@ -345,7 +349,7 @@ class GlobalSearchDaoQueriesTest {
         )
 
         // "missing" is not in the body — should return nothing
-        val result = searchMessageDao.searchMessagesGlobally(query = "hello missing", senderId = null, limit = 20, offset = 0)
+        val result = globalSearchDao.searchMessages(query = "hello missing", senderId = null, channelTypes = emptyList(), onlyJoined = false, limit = 20, offset = 0)
 
         assertThat(result).isEmpty()
     }
@@ -396,7 +400,7 @@ class GlobalSearchDaoQueriesTest {
             ),
         )
 
-        val result = attachmentDao.searchAttachmentsGlobally(
+        val result = globalSearchDao.searchAttachments(
             query = "",
             senderId = "alice",
             types = listOf(AttachmentTypeEnum.Image.value, AttachmentTypeEnum.Video.value),
@@ -455,7 +459,7 @@ class GlobalSearchDaoQueriesTest {
             ),
         )
 
-        val result = attachmentDao.searchAttachmentsGlobally(
+        val result = globalSearchDao.searchAttachments(
             query = "brief",
             senderId = null,
             types = listOf(AttachmentTypeEnum.File.value),
@@ -501,7 +505,7 @@ class GlobalSearchDaoQueriesTest {
             ),
         )
 
-        val result = attachmentDao.searchAttachmentsGlobally(
+        val result = globalSearchDao.searchAttachments(
             query = "docs",
             senderId = null,
             types = listOf(AttachmentTypeEnum.Link.value),
@@ -514,6 +518,150 @@ class GlobalSearchDaoQueriesTest {
         )
 
         assertThat(result.map { it.attachmentEntity.id }).containsExactly(21L, 20L).inOrder()
+    }
+
+    @Test
+    fun searchChannelsBySubjectAndTypes_blankQueryReturnsAllNonPendingMatchingTypeChannels() = runTest {
+        insertChannelsAndLinks(
+            channels = listOf(
+                channel(id = 1, type = ChannelTypeEnum.Public.value, subject = "Engineering", lastMessageTid = 1, lastMessageAt = 100),
+                channel(id = 2, type = ChannelTypeEnum.Public.value, subject = "Design", lastMessageTid = 2, lastMessageAt = 200),
+                channel(id = 3, type = ChannelTypeEnum.Public.value, subject = "Pending", lastMessageTid = 0, pending = true, lastMessageAt = null),
+            ),
+            links = emptyList(),
+        )
+
+        val result = globalSearchDao.searchChannelsBySubjectAndTypes(
+            query = "",
+            types = listOf(ChannelTypeEnum.Public.value),
+            limit = 10,
+            offset = 0,
+        )
+
+        assertThat(result.map { it.channelEntity.id }).containsExactly(2L, 1L).inOrder()
+    }
+
+    @Test
+    fun searchChannelsBySubjectAndTypes_filtersBySubjectContains() = runTest {
+        insertChannelsAndLinks(
+            channels = listOf(
+                channel(id = 1, type = ChannelTypeEnum.Public.value, subject = "Engineering Team", lastMessageTid = 1, lastMessageAt = 100),
+                channel(id = 2, type = ChannelTypeEnum.Public.value, subject = "Design Team", lastMessageTid = 2, lastMessageAt = 200),
+                channel(id = 3, type = ChannelTypeEnum.Public.value, subject = "Marketing", lastMessageTid = 3, lastMessageAt = 300),
+            ),
+            links = emptyList(),
+        )
+
+        val result = globalSearchDao.searchChannelsBySubjectAndTypes(
+            query = "Team",
+            types = listOf(ChannelTypeEnum.Public.value),
+            limit = 10,
+            offset = 0,
+        )
+
+        assertThat(result.map { it.channelEntity.id }).containsExactly(2L, 1L).inOrder()
+    }
+
+    @Test
+    fun searchChannelsBySubjectAndTypes_filtersByType() = runTest {
+        insertChannelsAndLinks(
+            channels = listOf(
+                channel(id = 1, type = ChannelTypeEnum.Public.value, subject = "Public Alpha", lastMessageTid = 1, lastMessageAt = 100),
+                channel(id = 2, type = ChannelTypeEnum.Group.value, subject = "Group Beta", lastMessageTid = 2, lastMessageAt = 200),
+                channel(id = 3, type = ChannelTypeEnum.Direct.value, subject = "Direct Gamma", lastMessageTid = 3, lastMessageAt = 300),
+            ),
+            links = emptyList(),
+        )
+
+        val result = globalSearchDao.searchChannelsBySubjectAndTypes(
+            query = "",
+            types = listOf(ChannelTypeEnum.Public.value),
+            limit = 10,
+            offset = 0,
+        )
+
+        assertThat(result.map { it.channelEntity.id }).containsExactly(1L)
+    }
+
+    @Test
+    fun searchChannelsBySubjectAndTypes_multipleTypesMatchAll() = runTest {
+        insertChannelsAndLinks(
+            channels = listOf(
+                channel(id = 1, type = ChannelTypeEnum.Public.value, subject = "Public Alpha", lastMessageTid = 1, lastMessageAt = 100),
+                channel(id = 2, type = ChannelTypeEnum.Group.value, subject = "Group Beta", lastMessageTid = 2, lastMessageAt = 200),
+                channel(id = 3, type = ChannelTypeEnum.Direct.value, subject = "Direct Gamma", lastMessageTid = 3, lastMessageAt = 300),
+            ),
+            links = emptyList(),
+        )
+
+        val result = globalSearchDao.searchChannelsBySubjectAndTypes(
+            query = "",
+            types = listOf(ChannelTypeEnum.Public.value, ChannelTypeEnum.Group.value),
+            limit = 10,
+            offset = 0,
+        )
+
+        assertThat(result.map { it.channelEntity.id }).containsExactly(2L, 1L).inOrder()
+    }
+
+    @Test
+    fun searchChannelsBySubjectAndTypes_emptyTypesReturnsAllTypes() = runTest {
+        insertChannelsAndLinks(
+            channels = listOf(
+                channel(id = 1, type = ChannelTypeEnum.Public.value, subject = "Alpha", lastMessageTid = 1, lastMessageAt = 100),
+                channel(id = 2, type = ChannelTypeEnum.Group.value, subject = "Beta", lastMessageTid = 2, lastMessageAt = 200),
+            ),
+            links = emptyList(),
+        )
+
+        val result = globalSearchDao.searchChannelsBySubjectAndTypes(
+            query = "",
+            types = emptyList(),
+            limit = 10,
+            offset = 0,
+        )
+
+        assertThat(result.map { it.channelEntity.id }).containsExactly(2L, 1L).inOrder()
+    }
+
+    @Test
+    fun searchChannelsBySubjectAndTypes_orderedByLastMessageAtDescending() = runTest {
+        insertChannelsAndLinks(
+            channels = listOf(
+                channel(id = 1, type = ChannelTypeEnum.Public.value, subject = "First", lastMessageTid = 1, lastMessageAt = 300),
+                channel(id = 2, type = ChannelTypeEnum.Public.value, subject = "Second", lastMessageTid = 2, lastMessageAt = 100),
+                channel(id = 3, type = ChannelTypeEnum.Public.value, subject = "Third", lastMessageTid = 3, lastMessageAt = 200),
+            ),
+            links = emptyList(),
+        )
+
+        val result = globalSearchDao.searchChannelsBySubjectAndTypes(
+            query = "",
+            types = listOf(ChannelTypeEnum.Public.value),
+            limit = 10,
+            offset = 0,
+        )
+
+        assertThat(result.map { it.channelEntity.id }).containsExactly(1L, 3L, 2L).inOrder()
+    }
+
+    @Test
+    fun searchChannelsBySubjectAndTypes_caseInsensitiveSubjectMatch() = runTest {
+        insertChannelsAndLinks(
+            channels = listOf(
+                channel(id = 1, type = ChannelTypeEnum.Public.value, subject = "Engineering Updates", lastMessageTid = 1, lastMessageAt = 100),
+            ),
+            links = emptyList(),
+        )
+
+        val result = globalSearchDao.searchChannelsBySubjectAndTypes(
+            query = "engineering",
+            types = listOf(ChannelTypeEnum.Public.value),
+            limit = 10,
+            offset = 0,
+        )
+
+        assertThat(result.map { it.channelEntity.id }).containsExactly(1L)
     }
 
     private suspend fun insertUsers(vararg users: UserDb) {

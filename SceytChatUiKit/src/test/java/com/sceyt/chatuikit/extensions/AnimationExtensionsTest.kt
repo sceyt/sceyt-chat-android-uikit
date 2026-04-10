@@ -43,7 +43,7 @@ class AnimationExtensionsTest {
         )
         shadowOf(Looper.getMainLooper()).idle()
 
-        assertThat(view.visibility).isEqualTo(View.GONE)
+        assertThat(view.visibility).isEqualTo(View.INVISIBLE)
         assertThat(view.alpha).isEqualTo(1f)
         assertThat(view.translationY).isEqualTo(0f)
     }

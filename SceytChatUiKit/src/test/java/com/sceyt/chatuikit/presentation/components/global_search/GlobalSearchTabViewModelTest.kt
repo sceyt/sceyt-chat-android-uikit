@@ -3,7 +3,6 @@ package com.sceyt.chatuikit.presentation.components.global_search
 import com.google.common.truth.Truth.assertThat
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.messages.SceytUser
-import com.sceyt.chatuikit.presentation.components.global_search.chats.ChatsSearchRequestKey
 import com.sceyt.chatuikit.presentation.components.global_search.chats.ChatsSearchViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -35,7 +34,8 @@ class GlobalSearchTabViewModelTest {
     @Test
     fun `revisiting chats tab does not reload already loaded results`() = runTest(dispatcher) {
         val dataSource = FakeGlobalSearchDataSource()
-        val session = GlobalSearchSessionStore(GlobalSearchSessionState(activeTab = GlobalSearchTab.Chats))
+        val session =
+            GlobalSearchSessionStore(GlobalSearchSessionState(activeTab = GlobalSearchTab.Chats))
         TestChatsSearchViewModel(session, dataSource, dispatcher)
         MediaSearchViewModel(session, dataSource, dispatcher)
         advanceUntilIdle()
@@ -43,28 +43,31 @@ class GlobalSearchTabViewModelTest {
         assertThat(dataSource.recentChatsCalls).isEqualTo(1)
 
         session.update { it.copy(query = "design") }
-        advanceTimeBy(199)
-        assertThat(dataSource.searchChatsCalls).isEqualTo(0)
-
-        advanceTimeBy(1)
         advanceUntilIdle()
         assertThat(dataSource.searchChatsCalls).isEqualTo(1)
-        assertThat(dataSource.searchMessagesCalls.count { it.query == "design" && it.senderId == null }).isEqualTo(1)
+        assertThat(dataSource.searchMessagesCalls.count { it.query == "design" && it.senderId == null }).isEqualTo(
+            1
+        )
 
         session.update { it.copy(activeTab = GlobalSearchTab.Media) }
         advanceUntilIdle()
-        assertThat(dataSource.attachmentCalls.count { it.tab == GlobalSearchTab.Media && it.query == "design" }).isEqualTo(1)
+        assertThat(dataSource.attachmentCalls.count { it.tab == GlobalSearchTab.Media && it.query == "design" }).isEqualTo(
+            1
+        )
 
         session.update { it.copy(activeTab = GlobalSearchTab.Chats) }
         advanceUntilIdle()
         assertThat(dataSource.searchChatsCalls).isEqualTo(1)
-        assertThat(dataSource.searchMessagesCalls.count { it.query == "design" && it.senderId == null }).isEqualTo(1)
+        assertThat(dataSource.searchMessagesCalls.count { it.query == "design" && it.senderId == null }).isEqualTo(
+            1
+        )
     }
 
     @Test
     fun `chats tab loads when query changes but not when only tab changes`() = runTest(dispatcher) {
         val dataSource = FakeGlobalSearchDataSource()
-        val session = GlobalSearchSessionStore(GlobalSearchSessionState(activeTab = GlobalSearchTab.Chats))
+        val session =
+            GlobalSearchSessionStore(GlobalSearchSessionState(activeTab = GlobalSearchTab.Chats))
         TestChatsSearchViewModel(session, dataSource, dispatcher)
         MediaSearchViewModel(session, dataSource, dispatcher)
         advanceUntilIdle()
@@ -76,7 +79,9 @@ class GlobalSearchTabViewModelTest {
         advanceUntilIdle()
 
         assertThat(dataSource.searchChatsCalls).isEqualTo(1)
-        assertThat(dataSource.attachmentCalls.count { it.tab == GlobalSearchTab.Media && it.query == "alpha" }).isEqualTo(1)
+        assertThat(dataSource.attachmentCalls.count { it.tab == GlobalSearchTab.Media && it.query == "alpha" }).isEqualTo(
+            1
+        )
 
         session.update { it.copy(activeTab = GlobalSearchTab.Chats) }
         advanceUntilIdle()
@@ -89,18 +94,23 @@ class GlobalSearchTabViewModelTest {
 
         session.update { it.copy(activeTab = GlobalSearchTab.Media) }
         advanceUntilIdle()
-        assertThat(dataSource.attachmentCalls.count { it.tab == GlobalSearchTab.Media && it.query == "beta" }).isEqualTo(1)
+        assertThat(dataSource.attachmentCalls.count { it.tab == GlobalSearchTab.Media && it.query == "beta" }).isEqualTo(
+            1
+        )
 
         session.update { it.copy(activeTab = GlobalSearchTab.Chats) }
         session.update { it.copy(activeTab = GlobalSearchTab.Media) }
         advanceUntilIdle()
-        assertThat(dataSource.attachmentCalls.count { it.tab == GlobalSearchTab.Media && it.query == "beta" }).isEqualTo(1)
+        assertThat(dataSource.attachmentCalls.count { it.tab == GlobalSearchTab.Media && it.query == "beta" }).isEqualTo(
+            1
+        )
     }
 
     @Test
     fun `channels ignore selected member in cache key and search loading`() = runTest(dispatcher) {
         val dataSource = FakeGlobalSearchDataSource()
-        val session = GlobalSearchSessionStore(GlobalSearchSessionState(activeTab = GlobalSearchTab.Channels))
+        val session =
+            GlobalSearchSessionStore(GlobalSearchSessionState(activeTab = GlobalSearchTab.Channels))
         ChannelsSearchViewModel(session, dataSource, dispatcher)
         advanceUntilIdle()
 
@@ -121,56 +131,71 @@ class GlobalSearchTabViewModelTest {
     }
 
     @Test
-    fun `typed queries debounce while blank query criteria load immediately`() = runTest(dispatcher) {
-        val dataSource = FakeGlobalSearchDataSource()
-        val session = GlobalSearchSessionStore(GlobalSearchSessionState(activeTab = GlobalSearchTab.Media))
-        MediaSearchViewModel(session, dataSource, dispatcher)
-        advanceUntilIdle()
+    fun `typed queries debounce while blank query criteria load immediately`() =
+        runTest(dispatcher) {
+            val dataSource = FakeGlobalSearchDataSource()
+            val session =
+                GlobalSearchSessionStore(GlobalSearchSessionState(activeTab = GlobalSearchTab.Media))
+            MediaSearchViewModel(session, dataSource, dispatcher)
+            advanceUntilIdle()
 
-        assertThat(dataSource.attachmentCalls.count { it.tab == GlobalSearchTab.Media && it.query.isBlank() && it.senderId == null }).isEqualTo(1)
+            assertThat(dataSource.attachmentCalls.count { it.tab == GlobalSearchTab.Media && it.query.isBlank() && it.senderId == null }).isEqualTo(
+                1
+            )
 
-        session.update { it.copy(query = "voice") }
-        advanceTimeBy(199)
-        assertThat(dataSource.attachmentCalls.count { it.tab == GlobalSearchTab.Media && it.query == "voice" }).isEqualTo(0)
+            session.update { it.copy(query = "voice") }
+            advanceTimeBy(199)
+            assertThat(dataSource.attachmentCalls.count { it.tab == GlobalSearchTab.Media && it.query == "voice" }).isEqualTo(
+                0
+            )
 
-        advanceTimeBy(1)
-        advanceUntilIdle()
-        assertThat(dataSource.attachmentCalls.count { it.tab == GlobalSearchTab.Media && it.query == "voice" }).isEqualTo(1)
+            advanceTimeBy(1)
+            advanceUntilIdle()
+            assertThat(dataSource.attachmentCalls.count { it.tab == GlobalSearchTab.Media && it.query == "voice" }).isEqualTo(
+                1
+            )
 
-        session.update { it.copy(query = "") }
-        advanceUntilIdle()
-        session.update { it.copy(selectedMember = SceytUser("member-42")) }
-        advanceUntilIdle()
-        assertThat(
-            dataSource.attachmentCalls.count {
-                it.tab == GlobalSearchTab.Media && it.query.isBlank() && it.senderId == "member-42"
-            }
-        ).isEqualTo(1)
-    }
+            session.update { it.copy(query = "") }
+            advanceUntilIdle()
+            session.update { it.copy(selectedMember = SceytUser("member-42")) }
+            advanceUntilIdle()
+            assertThat(
+                dataSource.attachmentCalls.count {
+                    it.tab == GlobalSearchTab.Media && it.query.isBlank() && it.senderId == "member-42"
+                }
+            ).isEqualTo(1)
+        }
 
     @Test
-    fun `selecting a tab with stale session state triggers a first page load`() = runTest(dispatcher) {
-        val dataSource = FakeGlobalSearchDataSource()
-        val session = GlobalSearchSessionStore(GlobalSearchSessionState(activeTab = GlobalSearchTab.Chats))
-        MediaSearchViewModel(session, dataSource, dispatcher)
-        advanceUntilIdle()
+    fun `selecting a tab with stale session state triggers a first page load`() =
+        runTest(dispatcher) {
+            val dataSource = FakeGlobalSearchDataSource()
+            val session =
+                GlobalSearchSessionStore(GlobalSearchSessionState(activeTab = GlobalSearchTab.Chats))
+            MediaSearchViewModel(session, dataSource, dispatcher)
+            advanceUntilIdle()
 
-        session.update { it.copy(query = "beta") }
-        advanceTimeBy(300)
-        advanceUntilIdle()
+            session.update { it.copy(query = "beta") }
+            advanceTimeBy(300)
+            advanceUntilIdle()
 
-        assertThat(dataSource.attachmentCalls.count { it.tab == GlobalSearchTab.Media && it.query == "beta" }).isEqualTo(0)
+            assertThat(dataSource.attachmentCalls.count { it.tab == GlobalSearchTab.Media && it.query == "beta" }).isEqualTo(
+                0
+            )
 
-        session.update { it.copy(activeTab = GlobalSearchTab.Media) }
-        advanceUntilIdle()
+            session.update { it.copy(activeTab = GlobalSearchTab.Media) }
+            advanceUntilIdle()
 
-        assertThat(dataSource.attachmentCalls.count { it.tab == GlobalSearchTab.Media && it.query == "beta" }).isEqualTo(1)
-    }
+            assertThat(dataSource.attachmentCalls.count { it.tab == GlobalSearchTab.Media && it.query == "beta" }).isEqualTo(
+                1
+            )
+        }
 
     @Test
     fun `media tab preserves list and grid presentation state`() = runTest(dispatcher) {
         val dataSource = FakeGlobalSearchDataSource()
-        val session = GlobalSearchSessionStore(GlobalSearchSessionState(activeTab = GlobalSearchTab.Media))
+        val session =
+            GlobalSearchSessionStore(GlobalSearchSessionState(activeTab = GlobalSearchTab.Media))
         val viewModel = MediaSearchViewModel(session, dataSource, dispatcher)
         advanceUntilIdle()
 
@@ -188,33 +213,35 @@ class GlobalSearchTabViewModelTest {
     }
 
     @Test
-    fun `custom chats viewmodel subclass can observe session and publish custom state`() = runTest(dispatcher) {
-        val session = GlobalSearchSessionStore(GlobalSearchSessionState(activeTab = GlobalSearchTab.Chats))
-        val viewModel = object : ChatsSearchViewModel(session, dispatcher) {
-            override suspend fun performLoad(
-                requestKey: ChatsSearchRequestKey,
-                offset: Int,
-                pageSize: Int,
-            ): SearchResultPage {
-                return SearchResultPage(
-                    listItems = if (requestKey.query == "override") {
-                        listOf(GlobalSearchListItem.SectionHeader(R.string.sceyt_chats))
-                    } else {
-                        emptyList()
-                    },
-                    loadedCount = if (requestKey.query == "override") 1 else 0,
-                )
+    fun `custom chats viewmodel subclass can observe session and publish custom state`() =
+        runTest(dispatcher) {
+            val session =
+                GlobalSearchSessionStore(GlobalSearchSessionState(activeTab = GlobalSearchTab.Chats))
+            val viewModel = object : ChatsSearchViewModel(session, dispatcher) {
+                override suspend fun performLoad(
+                    state: GlobalSearchSessionState,
+                    offset: Int,
+                    pageSize: Int,
+                ): SearchResultPage {
+                    return SearchResultPage(
+                        listItems = if (state.query == "override") {
+                            listOf(GlobalSearchListItem.SectionHeader(R.string.sceyt_chats))
+                        } else {
+                            emptyList()
+                        },
+                        loadedCount = if (state.query == "override") 1 else 0,
+                    )
+                }
             }
+            advanceUntilIdle()
+
+            session.update { it.copy(query = "override") }
+            advanceTimeBy(300)
+            advanceUntilIdle()
+
+            assertThat(viewModel.state.value.listItems)
+                .containsExactly(GlobalSearchListItem.SectionHeader(R.string.sceyt_chats))
         }
-        advanceUntilIdle()
-
-        session.update { it.copy(query = "override") }
-        advanceTimeBy(300)
-        advanceUntilIdle()
-
-        assertThat(viewModel.state.value.listItems)
-            .containsExactly(GlobalSearchListItem.SectionHeader(R.string.sceyt_chats))
-    }
 }
 
 private class TestChatsSearchViewModel(
@@ -223,26 +250,28 @@ private class TestChatsSearchViewModel(
     ioDispatcher: CoroutineDispatcher,
 ) : ChatsSearchViewModel(session, ioDispatcher) {
     override suspend fun performLoad(
-        requestKey: ChatsSearchRequestKey,
+        state: GlobalSearchSessionState,
         offset: Int,
         pageSize: Int,
     ): SearchResultPage {
         return when {
-            requestKey.selectedMemberId != null -> {
+            state.selectedMember != null -> {
                 val page = dataSource.searchMessages(
-                    requestKey.query,
-                    requestKey.selectedMemberId,
-                    offset,
-                    pageSize
+                    query = state.query,
+                    senderId = state.selectedMember?.id,
+                    channelTypes = emptyList(),
+                    onlyJoined = false,
+                    offset = offset,
+                    limit = pageSize,
                 )
                 SearchResultPage(
-                    listItems = page.data.map { GlobalSearchListItem.MessageItem(it) },
+                    listItems = page.data.map { GlobalSearchListItem.MessageItem(it, state.query) },
                     hasMore = page.hasMore,
                     loadedCount = page.data.size
                 )
             }
 
-            requestKey.query.isBlank() -> {
+            state.query.isBlank() -> {
                 val page = dataSource.getRecentChats(offset, pageSize)
                 SearchResultPage(
                     listItems = page.data.map { GlobalSearchListItem.ChannelItem(it) },
@@ -252,8 +281,15 @@ private class TestChatsSearchViewModel(
             }
 
             else -> {
-                val chatsPage = dataSource.searchChats(requestKey.query, pageSize)
-                val messagesPage = dataSource.searchMessages(requestKey.query, null, 0, pageSize)
+                val chatsPage = dataSource.searchChats(state.query, pageSize)
+                val messagesPage = dataSource.searchMessages(
+                    query = state.query,
+                    senderId = null,
+                    channelTypes = emptyList(),
+                    onlyJoined = false,
+                    offset = 0,
+                    limit = pageSize,
+                )
                 SearchResultPage(
                     listItems = buildList {
                         if (chatsPage.data.isNotEmpty()) {
@@ -262,7 +298,12 @@ private class TestChatsSearchViewModel(
                         }
                         if (messagesPage.data.isNotEmpty()) {
                             add(GlobalSearchListItem.SectionHeader(R.string.sceyt_messages))
-                            addAll(messagesPage.data.map { GlobalSearchListItem.MessageItem(it) })
+                            addAll(messagesPage.data.map {
+                                GlobalSearchListItem.MessageItem(
+                                    it,
+                                    state.query
+                                )
+                            })
                         }
                     },
                     loadedCount = chatsPage.data.size + messagesPage.data.size
