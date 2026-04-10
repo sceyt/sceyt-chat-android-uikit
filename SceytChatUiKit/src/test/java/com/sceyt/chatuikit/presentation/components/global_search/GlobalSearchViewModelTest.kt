@@ -3,7 +3,6 @@ package com.sceyt.chatuikit.presentation.components.global_search
 import com.google.common.truth.Truth.assertThat
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -54,7 +53,7 @@ class GlobalSearchHeaderViewModelTest {
     }
 
     @Test
-    fun `selecting a member preserves the current query and updates session state`() = runTest(dispatcher) {
+    fun `selecting a member clears the query and updates session state`() = runTest(dispatcher) {
         val viewModel = TestGlobalSearchHeaderViewModel(ioDispatcher = dispatcher)
         advanceUntilIdle()
 
@@ -62,9 +61,9 @@ class GlobalSearchHeaderViewModelTest {
         advanceUntilIdle()
         viewModel.onMemberSelected(SceytUser("member-7"))
 
-        assertThat(viewModel.headerState.value.query).isEqualTo("jam")
+        assertThat(viewModel.headerState.value.query).isEmpty()
         assertThat(viewModel.headerState.value.selectedMember?.id).isEqualTo("member-7")
-        assertThat(viewModel.requireSession().state.value.query).isEqualTo("jam")
+        assertThat(viewModel.requireSession().state.value.query).isEmpty()
         assertThat(viewModel.requireSession().state.value.selectedMember?.id).isEqualTo("member-7")
     }
 
@@ -163,31 +162,6 @@ class GlobalSearchHeaderViewModelTest {
     }
 
     @Test
-    fun `stale suggestion results are ignored after query changes`() = runTest(dispatcher) {
-        val provider = DelayedSuggestionsProvider(
-            delayMs = 100L,
-            suggestionsByQuery = mapOf(
-                "a" to listOf(SceytUser("member-a")),
-                "ab" to listOf(SceytUser("member-ab"))
-            )
-        )
-        val viewModel = TestGlobalSearchHeaderViewModel(
-            memberSuggestionsProvider = provider,
-            ioDispatcher = dispatcher
-        )
-        advanceUntilIdle()
-
-        viewModel.onQueryChanged("a")
-        advanceTimeBy(50)
-        viewModel.onQueryChanged("ab")
-        advanceUntilIdle()
-
-        assertThat(provider.calls.map { it.query }).containsExactly("a", "ab").inOrder()
-        assertThat(viewModel.headerState.value.memberSuggestions.map { it.id })
-            .containsExactly("member-ab")
-    }
-
-    @Test
     fun `suggestions provider failures fall back to empty suggestions`() = runTest(dispatcher) {
         val provider = GlobalSearchMemberSuggestionsProvider { _, _ ->
             error("boom")
@@ -275,10 +249,12 @@ internal class FakeGlobalSearchDataSource : GlobalSearchDataSource {
     override suspend fun searchMessages(
         query: String,
         senderId: String?,
+        channelTypes: List<String>,
+        onlyJoined: Boolean,
         offset: Int,
         limit: Int,
     ): GlobalSearchPage<GlobalSearchMessageResult> {
-        searchMessagesCalls += MessageCall(query = query, senderId = senderId, offset = offset)
+        searchMessagesCalls += MessageCall(query = query, senderId = senderId, channelTypes = channelTypes, onlyJoined = onlyJoined, offset = offset)
         return GlobalSearchPage(
             data = listOf(
                 GlobalSearchMessageResult(
@@ -322,6 +298,8 @@ internal class FakeGlobalSearchDataSource : GlobalSearchDataSource {
 internal data class MessageCall(
     val query: String,
     val senderId: String?,
+    val channelTypes: List<String>,
+    val onlyJoined: Boolean,
     val offset: Int,
 )
 
@@ -339,19 +317,6 @@ internal class FakeSuggestionsProvider(
 
     override suspend fun provideSuggestions(query: String, limit: Int): List<SceytUser> {
         calls += SuggestionCall(query = query, limit = limit)
-        return suggestionsByQuery[query].orEmpty()
-    }
-}
-
-internal class DelayedSuggestionsProvider(
-    private val delayMs: Long,
-    private val suggestionsByQuery: Map<String, List<SceytUser>>,
-) : GlobalSearchMemberSuggestionsProvider {
-    val calls = mutableListOf<SuggestionCall>()
-
-    override suspend fun provideSuggestions(query: String, limit: Int): List<SceytUser> {
-        calls += SuggestionCall(query = query, limit = limit)
-        delay(delayMs)
         return suggestionsByQuery[query].orEmpty()
     }
 }

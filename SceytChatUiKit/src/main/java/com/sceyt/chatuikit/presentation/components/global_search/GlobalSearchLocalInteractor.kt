@@ -9,6 +9,7 @@ import com.sceyt.chatuikit.persistence.database.dao.ChannelDao
 import com.sceyt.chatuikit.persistence.database.dao.GlobalSearchDao
 import com.sceyt.chatuikit.persistence.database.dao.MessageDao
 import com.sceyt.chatuikit.persistence.database.dao.UserDao
+import com.sceyt.chatuikit.persistence.database.entity.channel.ChannelDb
 import com.sceyt.chatuikit.persistence.mappers.toAttachment
 import com.sceyt.chatuikit.persistence.mappers.toChannel
 import com.sceyt.chatuikit.persistence.mappers.toSceytMessage
@@ -213,7 +214,7 @@ internal class GlobalSearchLocalInteractor :
         return GlobalSearchPage(results, hasMore)
     }
 
-    private fun List<com.sceyt.chatuikit.persistence.database.entity.channel.ChannelDb>.toChannelPage(
+    private fun List<ChannelDb>.toChannelPage(
         limit: Int,
     ): GlobalSearchPage<SceytChannel> {
         val hasMore = size > limit

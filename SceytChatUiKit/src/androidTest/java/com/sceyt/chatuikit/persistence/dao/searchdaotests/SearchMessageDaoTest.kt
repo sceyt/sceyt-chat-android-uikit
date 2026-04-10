@@ -268,7 +268,7 @@ class SearchMessageDaoTest {
         )
 
         val result = globalSearchDao.searchMessages(
-            query ="msg", senderId = null, limit = 2, offset = 0)
+            query = "msg", senderId = null, channelTypes = emptyList(), onlyJoined = false, limit = 2, offset = 0)
 
         assertThat(result).hasSize(2)
         assertThat(result.map { it.messageEntity.id }).containsExactly(3L, 2L).inOrder()
@@ -284,7 +284,7 @@ class SearchMessageDaoTest {
         )
 
         val result = globalSearchDao.searchMessages(
-            query ="msg", senderId = null, limit = 10, offset = 1)
+            query = "msg", senderId = null, channelTypes = emptyList(), onlyJoined = false, limit = 10, offset = 1)
 
         // Ordered: 3, 2, 1 — skipping first 1 → [2, 1]
         assertThat(result.map { it.messageEntity.id }).containsExactly(2L, 1L).inOrder()
