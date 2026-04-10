@@ -52,6 +52,7 @@ data class ChatsSearchMessageItemStyle(
     }
 
     internal class Builder(internal val context: Context) {
+
         fun build(): ChatsSearchMessageItemStyle {
             val colors = SceytChatUIKit.theme.colors
             return ChatsSearchMessageItemStyle(
