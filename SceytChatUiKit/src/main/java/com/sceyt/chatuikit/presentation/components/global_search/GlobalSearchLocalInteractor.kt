@@ -104,10 +104,9 @@ internal class GlobalSearchLocalInteractor :
         offset: Int,
         limit: Int,
     ): GlobalSearchPage<SceytChannel> {
-        val type = SceytChatUIKit.config.channelTypesConfig.broadcast
-        val data = channelDao.searchChannelsBySubjectAndType(
+        val data = globalSearchDao.searchChannelsBySubjectAndTypes(
             query = "",
-            type = type,
+            types = SceytChatUIKit.config.channelTypesConfig.getDiscoverableTypes(),
             limit = limit + 1,
             offset = offset
         )
@@ -118,11 +117,10 @@ internal class GlobalSearchLocalInteractor :
         query: String,
         limit: Int,
     ): GlobalSearchPage<SceytChannel> {
-        val type = SceytChatUIKit.config.channelTypesConfig.broadcast
         if (query.isBlank()) return getRecentChannels(offset = 0, limit = limit)
-        val data = channelDao.searchChannelsBySubjectAndType(
+        val data = globalSearchDao.searchChannelsBySubjectAndTypes(
             query = query,
-            type = type,
+            types = SceytChatUIKit.config.channelTypesConfig.getDiscoverableTypes(),
             limit = limit + 1,
             offset = 0
         )

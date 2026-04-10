@@ -140,28 +140,6 @@ internal abstract class ChannelDao {
     ): List<ChannelDb>
 
     @Transaction
-    @Query(
-        """
-        SELECT *
-        FROM $CHANNEL_TABLE
-        WHERE type = :type
-          AND (NOT pending OR lastMessageTid != 0)
-          AND subject LIKE '%' || :query || '%'
-        ORDER BY
-          CASE WHEN pinnedAt > 0 THEN pinnedAt END DESC,
-          CASE WHEN lastMessageAt IS NOT NULL THEN lastMessageAt END DESC,
-          createdAt DESC
-        LIMIT :limit OFFSET :offset
-        """
-    )
-    abstract suspend fun searchChannelsBySubjectAndType(
-        query: String,
-        type: String,
-        limit: Int,
-        offset: Int,
-    ): List<ChannelDb>
-
-    @Transaction
     @RawQuery
     abstract suspend fun getChannelsBySQLiteQuery(query: SimpleSQLiteQuery): List<ChannelDb>
 
