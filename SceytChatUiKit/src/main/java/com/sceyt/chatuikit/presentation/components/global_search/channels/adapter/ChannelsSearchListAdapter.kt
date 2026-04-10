@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.presentation.components.global_search.chats.adapter
+package com.sceyt.chatuikit.presentation.components.global_search.channels.adapter
 
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
@@ -8,9 +8,9 @@ import com.sceyt.chatuikit.presentation.common.recyclerview.GlobalSearchListItem
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchListItem
 import kotlinx.coroutines.CoroutineScope
 
-open class ChatsSearchListAdapter(
+open class ChannelsSearchListAdapter(
     scope: CoroutineScope,
-    private val viewHolderFactory: ChatsSearchViewHolderFactory,
+    private val viewHolderFactory: ChannelsSearchViewHolderFactory,
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private val differ = AsyncListDiffer(

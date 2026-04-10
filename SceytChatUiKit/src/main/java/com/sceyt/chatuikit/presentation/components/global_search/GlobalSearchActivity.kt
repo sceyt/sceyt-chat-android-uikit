@@ -38,6 +38,7 @@ import com.sceyt.chatuikit.persistence.extensions.collectWithLifecycle
 import com.sceyt.chatuikit.presentation.components.channel.messages.ChannelActivity
 import com.sceyt.chatuikit.presentation.components.global_search.adapters.GlobalSearchSuggestionsAdapter
 import com.sceyt.chatuikit.presentation.components.global_search.adapters.GlobalSearchTabsAdapter
+import com.sceyt.chatuikit.presentation.components.global_search.channels.ChannelsSearchFragment
 import com.sceyt.chatuikit.presentation.components.global_search.chats.ChatsSearchFragment
 import com.sceyt.chatuikit.styles.StyleRegistry
 import com.sceyt.chatuikit.styles.search.GlobalSearchStyle

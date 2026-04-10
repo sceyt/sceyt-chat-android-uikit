@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.presentation.components.global_search.chats.adapter
+package com.sceyt.chatuikit.presentation.components.global_search.channels.adapter
 
 import android.content.Context
 import android.view.LayoutInflater
@@ -12,12 +12,12 @@ import com.sceyt.chatuikit.persistence.differs.ChannelDiff
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.listeners.click.ChannelClickListeners
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.listeners.click.ChannelClickListenersImpl
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchListItem
-import com.sceyt.chatuikit.presentation.components.global_search.chats.adapter.holders.SearchChannelItemViewHolder
+import com.sceyt.chatuikit.presentation.components.global_search.channels.adapter.holders.ChannelsSearchChannelItemViewHolder
+import com.sceyt.chatuikit.presentation.components.global_search.channels.adapter.holders.ChannelsSearchSectionViewHolder
 import com.sceyt.chatuikit.presentation.components.global_search.chats.adapter.holders.SearchMessageItemViewHolder
-import com.sceyt.chatuikit.presentation.components.global_search.chats.adapter.holders.SearchSectionViewHolder
 import com.sceyt.chatuikit.styles.search.GlobalSearchStyle
 
-open class ChatsSearchViewHolderFactory(
+open class ChannelsSearchViewHolderFactory(
     context: Context,
     protected val style: GlobalSearchStyle,
     onChannelClick: (SceytChannel) -> Unit,
@@ -46,11 +46,11 @@ open class ChatsSearchViewHolderFactory(
         query: String,
     ) {
         when (holder) {
-            is SearchSectionViewHolder -> holder.bind(
+            is ChannelsSearchSectionViewHolder -> holder.bind(
                 item = item as GlobalSearchListItem.SectionHeader
             )
 
-            is SearchChannelItemViewHolder -> holder.bind(
+            is ChannelsSearchChannelItemViewHolder -> holder.bind(
                 item = item as GlobalSearchListItem.ChannelItem,
                 diff = ChannelDiff.DEFAULT
             )
@@ -68,7 +68,7 @@ open class ChatsSearchViewHolderFactory(
         diff: ChannelDiff,
     ) {
         when (holder) {
-            is SearchChannelItemViewHolder -> holder.bind(
+            is ChannelsSearchChannelItemViewHolder -> holder.bind(
                 item = item as GlobalSearchListItem.ChannelItem,
                 diff = diff
             )
@@ -76,31 +76,30 @@ open class ChatsSearchViewHolderFactory(
             else -> onBindViewHolder(
                 holder = holder,
                 item = item,
-                query = query,
+                query = query
             )
         }
     }
 
     open fun createSectionViewHolder(
-        parent: ViewGroup
-    ): RecyclerView.ViewHolder = SearchSectionViewHolder(
-        style = style.chatsPageStyle,
+        parent: ViewGroup,
+    ): RecyclerView.ViewHolder = ChannelsSearchSectionViewHolder(
+        style = style.channelsPageStyle,
         binding = SceytItemGlobalSearchSectionBinding.inflate(layoutInflater, parent, false)
     )
 
     open fun createChannelViewHolder(
-        parent: ViewGroup
-    ): RecyclerView.ViewHolder = SearchChannelItemViewHolder(
+        parent: ViewGroup,
+    ): RecyclerView.ViewHolder = ChannelsSearchChannelItemViewHolder(
         binding = SceytItemChannelBinding.inflate(layoutInflater, parent, false),
-        itemStyle = style.chatsPageStyle.channelItemStyle,
+        itemStyle = style.channelsPageStyle.channelItemStyle,
         listeners = channelClickListeners
     )
 
-
     open fun createMessageViewHolder(
-        parent: ViewGroup
+        parent: ViewGroup,
     ): RecyclerView.ViewHolder = SearchMessageItemViewHolder(
-        style = style.chatsPageStyle.messageItemStyle,
+        style = style.channelsPageStyle.messageItemStyle,
         binding = SceytItemGlobalSearchMessageBinding.inflate(layoutInflater, parent, false),
         onMessageClickListener = onMessageClickListener,
     )

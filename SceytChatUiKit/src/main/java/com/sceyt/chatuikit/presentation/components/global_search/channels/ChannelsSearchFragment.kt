@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.presentation.components.global_search.chats
+package com.sceyt.chatuikit.presentation.components.global_search.channels
 
 import android.content.Context
 import android.os.Bundle
@@ -11,28 +11,28 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
-import com.sceyt.chatuikit.databinding.SceytFragmentChatsSearchBinding
+import com.sceyt.chatuikit.databinding.SceytFragmentChannelsSearchBinding
 import com.sceyt.chatuikit.extensions.addRVScrollListener
 import com.sceyt.chatuikit.extensions.setBundleArguments
 import com.sceyt.chatuikit.persistence.extensions.collectWithLifecycle
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchActivity
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchSession
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchSessionResolver
-import com.sceyt.chatuikit.presentation.components.global_search.chats.adapter.ChatsSearchListAdapter
-import com.sceyt.chatuikit.presentation.components.global_search.chats.adapter.ChatsSearchViewHolderFactory
+import com.sceyt.chatuikit.presentation.components.global_search.channels.adapter.ChannelsSearchListAdapter
+import com.sceyt.chatuikit.presentation.components.global_search.channels.adapter.ChannelsSearchViewHolderFactory
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.styles.StyleRegistry
 import com.sceyt.chatuikit.styles.extensions.search.setPageStatesView
 import com.sceyt.chatuikit.styles.search.GlobalSearchStyle
 
-open class ChatsSearchFragment : Fragment(R.layout.sceyt_fragment_chats_search) {
+open class ChannelsSearchFragment : Fragment(R.layout.sceyt_fragment_channels_search) {
     protected lateinit var session: GlobalSearchSession
     protected lateinit var style: GlobalSearchStyle
-    protected open val viewModel: ChatsSearchViewModel by viewModels {
+    protected open val viewModel: ChannelsSearchViewModel by viewModels {
         createViewModelFactory(session)
     }
-    private var _binding: SceytFragmentChatsSearchBinding? = null
-    protected val binding: SceytFragmentChatsSearchBinding
+    private var _binding: SceytFragmentChannelsSearchBinding? = null
+    protected val binding: SceytFragmentChannelsSearchBinding
         get() = checkNotNull(_binding)
 
     private val listAdapter by lazy { createListAdapter() }
@@ -48,7 +48,7 @@ open class ChatsSearchFragment : Fragment(R.layout.sceyt_fragment_chats_search) 
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        _binding = SceytFragmentChatsSearchBinding.bind(view)
+        _binding = SceytFragmentChannelsSearchBinding.bind(view)
         initViews()
         applyStyle()
         observeState()
@@ -76,11 +76,11 @@ open class ChatsSearchFragment : Fragment(R.layout.sceyt_fragment_chats_search) 
     }
 
     protected open fun createViewModelFactory(session: GlobalSearchSession): ViewModelProvider.Factory {
-        return ChatsSearchViewModelFactory(session)
+        return ChannelsSearchViewModelFactory(session)
     }
 
-    protected open fun createViewHolderFactory(): ChatsSearchViewHolderFactory {
-        return ChatsSearchViewHolderFactory(
+    protected open fun createViewHolderFactory(): ChannelsSearchViewHolderFactory {
+        return ChannelsSearchViewHolderFactory(
             context = requireContext(),
             style = style,
             onChannelClick = ::onChannelClicked,
@@ -88,14 +88,14 @@ open class ChatsSearchFragment : Fragment(R.layout.sceyt_fragment_chats_search) 
         )
     }
 
-    protected open fun createListAdapter(): ChatsSearchListAdapter {
-        return ChatsSearchListAdapter(
+    protected open fun createListAdapter(): ChannelsSearchListAdapter {
+        return ChannelsSearchListAdapter(
             scope = viewLifecycleOwner.lifecycleScope,
             viewHolderFactory = createViewHolderFactory()
         )
     }
 
-    protected open fun render(state: ChatsSearchState) {
+    protected open fun render(state: ChannelsSearchState) {
         val settled = !state.isLoading && !state.isLoadingMore
         val lastResultsRequestKey = viewModel.lastResultsRequestKeyForUI
         val scrollToTop =
@@ -116,10 +116,9 @@ open class ChatsSearchFragment : Fragment(R.layout.sceyt_fragment_chats_search) 
         requestMoreIfViewportNotFilled(state)
     }
 
-
     protected open val hostActivity: GlobalSearchActivity
         get() = requireActivity() as? GlobalSearchActivity
-            ?: error("ChatsSearchFragment must be hosted by GlobalSearchActivity.")
+            ?: error("ChannelsSearchFragment must be hosted by GlobalSearchActivity.")
 
     protected open fun onChannelClicked(channel: SceytChannel) {
         hostActivity.onChannelClicked(channel)
@@ -129,7 +128,7 @@ open class ChatsSearchFragment : Fragment(R.layout.sceyt_fragment_chats_search) 
         hostActivity.onMessageClicked(messageId, channel)
     }
 
-    protected open fun requestMoreIfViewportNotFilled(state: ChatsSearchState) {
+    protected open fun requestMoreIfViewportNotFilled(state: ChannelsSearchState) {
         if (state.sessionState?.query?.isNotBlank() == true || state.isLoading || state.isLoadingMore || !state.hasMore) return
 
         binding.recyclerView.post {
@@ -147,8 +146,8 @@ open class ChatsSearchFragment : Fragment(R.layout.sceyt_fragment_chats_search) 
     }
 
     protected open fun applyStyle() {
-        binding.root.setBackgroundColor(style.chatsPageStyle.backgroundColor)
-        binding.pageStateView.setPageStatesView(style.chatsPageStyle)
+        binding.root.setBackgroundColor(style.channelsPageStyle.backgroundColor)
+        binding.pageStateView.setPageStatesView(style.channelsPageStyle)
     }
 
     companion object {
@@ -157,14 +156,14 @@ open class ChatsSearchFragment : Fragment(R.layout.sceyt_fragment_chats_search) 
         fun newInstance(
             styleId: String,
             sessionId: String,
-        ) = ChatsSearchFragment().setBundleArguments {
+        ) = ChannelsSearchFragment().setBundleArguments {
             putString(GlobalSearchActivity.STYLE_ID_KEY, styleId)
             putString(GlobalSearchActivity.SESSION_ID_KEY, sessionId)
         }
     }
 }
 
-private fun ChatsSearchState.toPageState(): PageState = when {
+private fun ChannelsSearchState.toPageState(): PageState = when {
     isLoading -> PageState.StateLoading()
     isLoadingMore -> PageState.StateLoadingMore()
     showEmptyState -> PageState.StateEmpty(query = query)

@@ -1,11 +1,14 @@
-package com.sceyt.chatuikit.presentation.components.global_search.chats
+package com.sceyt.chatuikit.presentation.components.global_search.channels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.config.ChannelListConfig
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
+import com.sceyt.chatuikit.koin.SceytKoinComponent
+import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchListItem
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchLocalInteractor
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchMessageResult
@@ -22,15 +25,17 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.koin.core.component.inject
 
-private const val CHATS_DEFAULT_PAGE_SIZE = 15
-private const val CHATS_MIN_QUERY_LENGTH_FOR_MESSAGES = 2
+private const val CHANNELS_DEFAULT_PAGE_SIZE = 15
+private const val CHANNELS_MIN_QUERY_LENGTH_FOR_MESSAGES = 2
 
-data class ChatsSearchState(
+data class ChannelsSearchState(
     val sessionState: GlobalSearchSessionState? = null,
     val listItems: List<GlobalSearchListItem> = emptyList(),
     val isLoading: Boolean = false,
@@ -44,14 +49,16 @@ data class ChatsSearchState(
         get() = sessionState?.query.orEmpty()
 }
 
-open class ChatsSearchViewModel(
+open class ChannelsSearchViewModel(
     protected val session: GlobalSearchSession,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
-) : ViewModel() {
-    private val defaultDataSource by lazy(LazyThreadSafetyMode.NONE) { GlobalSearchLocalInteractor() }
+) : ViewModel(), SceytKoinComponent {
 
-    private val _state = MutableStateFlow(ChatsSearchState(isLoading = true))
-    val state: StateFlow<ChatsSearchState> = _state.asStateFlow()
+    private val localDataSource by lazy(LazyThreadSafetyMode.NONE) { GlobalSearchLocalInteractor() }
+    private val channelInteractor: ChannelInteractor by inject()
+
+    private val _state = MutableStateFlow(ChannelsSearchState(isLoading = true))
+    val state: StateFlow<ChannelsSearchState> = _state.asStateFlow()
 
     private var loadJob: Job? = null
     var lastResultsRequestKeyForUI: GlobalSearchSessionState? = null
@@ -63,7 +70,7 @@ open class ChatsSearchViewModel(
     }
 
     private suspend fun onSessionStateChanged(sessionState: GlobalSearchSessionState) {
-        if (!sessionState.isCurrent(GlobalSearchTab.Chats)) return
+        if (!sessionState.isCurrent(GlobalSearchTab.Channels)) return
 
         val current = _state.value
         if (current.sessionState == sessionState) return
@@ -73,11 +80,13 @@ open class ChatsSearchViewModel(
 
     protected open fun loadFirstPage(sessionState: GlobalSearchSessionState) {
         loadJob?.cancel()
+        _state.update { it.copy(isLoading = true) }
+
         loadJob = viewModelScope.launch(ioDispatcher) {
             val result = performLoad(
                 state = sessionState,
                 offset = 0,
-                pageSize = CHATS_DEFAULT_PAGE_SIZE
+                pageSize = CHANNELS_DEFAULT_PAGE_SIZE
             )
             withContext(Dispatchers.Main) {
                 _state.update {
@@ -89,6 +98,10 @@ open class ChatsSearchViewModel(
                         hasMore = hasMore(sessionState.query, result),
                     )
                 }
+            }
+
+            if (sessionState.query.isNotBlank()) {
+                triggerServerFetch(sessionState.query)
             }
         }
     }
@@ -109,7 +122,7 @@ open class ChatsSearchViewModel(
             val result = performLoad(
                 state = sessionState,
                 offset = _state.value.listItems.size,
-                pageSize = CHATS_DEFAULT_PAGE_SIZE
+                pageSize = CHANNELS_DEFAULT_PAGE_SIZE
             )
             withContext(Dispatchers.Main) {
                 _state.update {
@@ -136,7 +149,7 @@ open class ChatsSearchViewModel(
             )
             SearchResultPage(
                 listItems = buildListItems(
-                    chatsPage = GlobalSearchPage.empty(),
+                    channelsPage = GlobalSearchPage.empty(),
                     messagesPage = page,
                     query = state.query
                 ),
@@ -146,10 +159,10 @@ open class ChatsSearchViewModel(
         }
 
         state.query.isBlank() -> {
-            val page = loadRecentChatsPage(offset, pageSize)
+            val page = localDataSource.getRecentChannels(offset = offset, limit = pageSize)
             SearchResultPage(
                 listItems = buildListItems(
-                    chatsPage = page,
+                    channelsPage = page,
                     messagesPage = GlobalSearchPage.empty(),
                     query = state.query
                 ),
@@ -160,34 +173,26 @@ open class ChatsSearchViewModel(
 
         else -> {
             coroutineScope {
-                val chatsPage = async { loadTypedQueryChatsPage(state, pageSize) }
+                val channelsPage = async { loadTypedQueryChannelsPage(state, pageSize) }
                 val messagesPage =
-                    if (state.query.length >= CHATS_MIN_QUERY_LENGTH_FOR_MESSAGES) {
+                    if (state.query.length >= CHANNELS_MIN_QUERY_LENGTH_FOR_MESSAGES) {
                         async { loadTypedQueryMessagesPage(state, pageSize) }
                     } else {
                         CompletableDeferred(GlobalSearchPage(emptyList(), false))
                     }
-                val chatsResult = chatsPage.await()
+                val channelsResult = channelsPage.await()
                 val messagesResult = messagesPage.await()
-                val items = buildListItems(
-                    chatsPage = chatsResult,
-                    messagesPage = messagesResult,
-                    query = state.query
-                )
                 SearchResultPage(
-                    listItems = items,
+                    listItems = buildListItems(
+                        channelsPage = channelsResult,
+                        messagesPage = messagesResult,
+                        query = state.query
+                    ),
                     hasMore = false,
-                    loadedCount = chatsResult.data.size + messagesResult.data.size,
+                    loadedCount = channelsResult.data.size + messagesResult.data.size,
                 )
             }
         }
-    }
-
-    private suspend fun loadRecentChatsPage(
-        offset: Int,
-        pageSize: Int,
-    ): GlobalSearchPage<SceytChannel> {
-        return defaultDataSource.getRecentChats(offset = offset, limit = pageSize)
     }
 
     private suspend fun loadSelectedUserMessagesPage(
@@ -196,8 +201,8 @@ open class ChatsSearchViewModel(
         pageSize: Int,
     ): GlobalSearchPage<GlobalSearchMessageResult> {
         val selectedMemberId = requireNotNull(state.selectedMember?.id)
-        val types = SceytChatUIKit.config.channelTypesConfig.getPrivateTypes()
-        return defaultDataSource.searchMessages(
+        val types = SceytChatUIKit.config.channelTypesConfig.getDiscoverableTypes()
+        return localDataSource.searchMessages(
             query = state.query,
             senderId = selectedMemberId,
             channelTypes = types,
@@ -207,22 +212,21 @@ open class ChatsSearchViewModel(
         )
     }
 
-    private suspend fun loadTypedQueryChatsPage(
+    private suspend fun loadTypedQueryChannelsPage(
         state: GlobalSearchSessionState,
         pageSize: Int,
     ): GlobalSearchPage<SceytChannel> {
-        return defaultDataSource.searchChats(state.query, pageSize)
+        return localDataSource.searchChannels(state.query, pageSize)
     }
 
     private suspend fun loadTypedQueryMessagesPage(
         state: GlobalSearchSessionState,
         pageSize: Int,
     ): GlobalSearchPage<GlobalSearchMessageResult> {
-        val types = SceytChatUIKit.config.channelTypesConfig.getPrivateTypes()
-        return defaultDataSource.searchMessages(
+        return localDataSource.searchMessages(
             query = state.query,
             senderId = null,
-            channelTypes = types,
+            channelTypes = listOf(SceytChatUIKit.config.channelTypesConfig.broadcast),
             onlyJoined = true,
             offset = 0,
             limit = pageSize
@@ -230,19 +234,36 @@ open class ChatsSearchViewModel(
     }
 
     private fun buildListItems(
-        chatsPage: GlobalSearchPage<SceytChannel>,
+        channelsPage: GlobalSearchPage<SceytChannel>,
         messagesPage: GlobalSearchPage<GlobalSearchMessageResult>,
         query: String,
     ): List<GlobalSearchListItem> {
         return buildList {
-            if (chatsPage.data.isNotEmpty()) {
-                add(GlobalSearchListItem.SectionHeader(R.string.sceyt_chats))
-                addAll(chatsPage.data.map { GlobalSearchListItem.ChannelItem(it) })
+            if (channelsPage.data.isNotEmpty()) {
+                add(GlobalSearchListItem.SectionHeader(R.string.sceyt_channels))
+                addAll(channelsPage.data.map { GlobalSearchListItem.ChannelItem(it) })
             }
             if (messagesPage.data.isNotEmpty()) {
                 add(GlobalSearchListItem.SectionHeader(R.string.sceyt_messages))
                 addAll(messagesPage.data.map { GlobalSearchListItem.MessageItem(it, query) })
             }
+        }
+    }
+
+    private fun triggerServerFetch(query: String) {
+        val broadcastConfig = ChannelListConfig.default.copy(
+            types = listOf(SceytChatUIKit.config.channelTypesConfig.broadcast)
+        )
+        viewModelScope.launch(ioDispatcher) {
+            channelInteractor.loadChannels(
+                offset = 0,
+                searchQuery = query,
+                loadKey = null,
+                onlyMine = false,
+                ignoreDb = true,
+                awaitForConnection = false,
+                config = broadcastConfig
+            ).collect()
         }
     }
 
@@ -260,15 +281,15 @@ open class ChatsSearchViewModel(
     )
 }
 
-class ChatsSearchViewModelFactory(
+class ChannelsSearchViewModelFactory(
     private val session: GlobalSearchSession,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(ChatsSearchViewModel::class.java)) {
-            return ChatsSearchViewModel(session, ioDispatcher) as T
+        if (modelClass.isAssignableFrom(ChannelsSearchViewModel::class.java)) {
+            return ChannelsSearchViewModel(session, ioDispatcher) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
     }

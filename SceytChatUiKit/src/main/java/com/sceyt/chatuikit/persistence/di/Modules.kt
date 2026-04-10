@@ -111,7 +111,7 @@ internal fun databaseModule(enableDatabase: Boolean) = module {
     single<DatabaseCleaner> { DatabaseCleanerImpl(get()) }
     single { get<SceytDatabase>().channelDao() }
     single { get<SceytDatabase>().messageDao() }
-    single { get<SceytDatabase>().searchMessageDao() }
+    single { get<SceytDatabase>().globalSearchDao() }
     single { get<SceytDatabase>().attachmentsDao() }
     single { get<SceytDatabase>().draftMessageDao() }
     single { get<SceytDatabase>().membersDao() }
