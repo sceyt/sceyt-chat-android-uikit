@@ -10,6 +10,7 @@ import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.ATTACHMENT_TABLE
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.CHANNEL_TABLE
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.MESSAGE_TABLE
+import com.sceyt.chatuikit.persistence.database.entity.channel.ChannelDb
 import com.sceyt.chatuikit.persistence.database.entity.messages.AttachmentDb
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageDb
 
@@ -165,6 +166,30 @@ internal abstract class GlobalSearchDao {
     ): List<AttachmentDb>
 
     // endregion
+
+    @Transaction
+    @Query(
+        """
+        SELECT *
+        FROM $CHANNEL_TABLE
+        WHERE (:typesEmpty OR type IN (:types))
+          AND (NOT pending OR lastMessageTid != 0)
+          AND (:queryEmpty OR subject LIKE '%' || :query || '%')
+        ORDER BY
+          CASE WHEN pinnedAt > 0 THEN pinnedAt END DESC,
+          CASE WHEN lastMessageAt IS NOT NULL THEN lastMessageAt END DESC,
+          createdAt DESC
+        LIMIT :limit OFFSET :offset
+        """
+    )
+    abstract suspend fun searchChannelsBySubjectAndTypes(
+        query: String,
+        types: List<String>,
+        limit: Int,
+        offset: Int,
+        queryEmpty: Boolean = query.isBlank(),
+        typesEmpty: Boolean = types.isEmpty(),
+    ): List<ChannelDb>
 
     private companion object {
         private const val PENDING_STATUS = 0
