@@ -43,8 +43,10 @@ open class DefaultSearchMessageResultBodyFormatter :
             return body
         }
 
-        val senderName = if (!channel.isGroup && message.incoming) ""
-        else resultStyle.senderNameFormatter.format(context, message)
+        val shouldShowSenderName = !channel.isSelf
+        val senderName = if (shouldShowSenderName) {
+            resultStyle.senderNameFormatter.format(context, message)
+        } else ""
 
         val attachmentIcon = message.attachments?.firstOrNull()?.let {
             resultStyle.attachmentIconProvider.provide(context, it)

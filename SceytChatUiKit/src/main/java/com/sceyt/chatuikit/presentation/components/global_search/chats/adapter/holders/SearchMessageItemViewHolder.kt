@@ -4,14 +4,11 @@ import android.content.Context
 import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.style.ForegroundColorSpan
-import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
-import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.databinding.SceytItemGlobalSearchMessageBinding
 import com.sceyt.chatuikit.formatters.attributes.SearchMessageResultFormatterAttributes
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchListItem
-import com.sceyt.chatuikit.presentation.custom_views.AvatarView
 import com.sceyt.chatuikit.styles.search.ChatsSearchMessageItemStyle
 import java.util.Date
 
@@ -27,12 +24,15 @@ open class SearchMessageItemViewHolder(
         binding.applyStyle()
     }
 
-    fun bind(item: GlobalSearchListItem.MessageItem) {
+    fun bind(item: GlobalSearchListItem.MessageItem) = with(binding) {
         val result = item.result
-        if (result.channel.isGroup)
-            setChannelAvatarAndName(binding.avatarView, binding.tvTitle, result.channel)
-        else
-            setSenderAvatarAndName(binding.avatarView, binding.tvTitle, result.message.user)
+        tvTitle.text = style.channelNameFormatter.format(context, result.channel)
+        style.channelAvatarRenderer.render(
+            context = context,
+            from = result.channel,
+            style = style.avatarStyle,
+            avatarView = avatarView
+        )
 
         binding.tvDate.text = style.messageDateFormatter.format(
             context = context,
@@ -51,35 +51,6 @@ open class SearchMessageItemViewHolder(
         itemView.setOnClickListener {
             onMessageClickListener?.invoke(result.message.id, result.channel)
         }
-    }
-
-    protected open fun setSenderAvatarAndName(
-        avatarView: AvatarView,
-        tvName: TextView,
-        user: SceytUser?,
-    ) {
-        user ?: return
-        tvName.text = style.userNameFormatter.format(context, user)
-        style.userAvatarRenderer.render(
-            context = context,
-            from = user,
-            style = style.avatarStyle,
-            avatarView = avatarView
-        )
-    }
-
-    protected open fun setChannelAvatarAndName(
-        avatarView: AvatarView,
-        tvName: TextView,
-        channel: SceytChannel,
-    ) {
-        tvName.text = style.channelNameFormatter.format(context, channel)
-        style.channelAvatarRenderer.render(
-            context = context,
-            from = channel,
-            style = style.avatarStyle,
-            avatarView = avatarView
-        )
     }
 
     protected open fun trimBodyToShowMatch(text: CharSequence, query: String): CharSequence {
