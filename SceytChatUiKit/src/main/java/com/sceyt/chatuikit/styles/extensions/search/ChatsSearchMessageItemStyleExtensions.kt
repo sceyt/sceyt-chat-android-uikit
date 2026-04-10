@@ -31,4 +31,20 @@ internal fun ChatsSearchMessageItemStyle.Builder.buildMetaTextStyle(): TextStyle
     )
 }
 
+internal fun ChatsSearchMessageItemStyle.Builder.buildLastMessageSenderNameTextStyle(): TextStyle {
+    val colors = SceytChatUIKit.theme.colors
+    return TextStyle(
+        color = context.getCompatColor(colors.textPrimaryColor),
+        font = R.font.roboto_medium
+    )
+}
+
+internal fun ChatsSearchMessageItemStyle.Builder.buildMentionTextStyle(): TextStyle {
+    val colors = SceytChatUIKit.theme.colors
+    return TextStyle(
+        color = context.getCompatColor(colors.textSecondaryColor),
+        font = R.font.roboto_medium
+    )
+}
+
 internal fun ChatsSearchMessageItemStyle.Builder.buildAvatarStyle(): AvatarStyle = AvatarStyle()

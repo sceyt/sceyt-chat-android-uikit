@@ -9,7 +9,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.databinding.SceytItemGlobalSearchMessageBinding
-import com.sceyt.chatuikit.formatters.attributes.MessageBodyFormatterAttributes
+import com.sceyt.chatuikit.formatters.attributes.SearchMessageResultFormatterAttributes
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchListItem
 import com.sceyt.chatuikit.presentation.custom_views.AvatarView
 import com.sceyt.chatuikit.styles.search.ChatsSearchMessageItemStyle
@@ -38,11 +38,12 @@ open class SearchMessageItemViewHolder(
             context = context,
             from = Date(result.message.createdAt)
         )
-        val body = style.messageBodyFormatter.format(
+        val body = style.searchMessageResultBodyFormatter.format(
             context = context,
-            from = MessageBodyFormatterAttributes(
+            from = SearchMessageResultFormatterAttributes(
+                channel = result.channel,
                 message = result.message,
-                mentionTextStyle = style.messageBodyTextStyle
+                searchMessageItemStyle = style
             )
         )
         binding.tvBody.text = highlight(body, item.query)
@@ -58,7 +59,7 @@ open class SearchMessageItemViewHolder(
         user: SceytUser?,
     ) {
         user ?: return
-        tvName.text = style.senderNameFormatter.format(context, user)
+        tvName.text = style.userNameFormatter.format(context, user)
         style.userAvatarRenderer.render(
             context = context,
             from = user,
