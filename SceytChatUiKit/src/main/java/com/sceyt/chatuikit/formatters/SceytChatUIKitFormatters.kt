@@ -11,6 +11,7 @@ import com.sceyt.chatuikit.formatters.attributes.ChannelEventTitleFormatterAttri
 import com.sceyt.chatuikit.formatters.attributes.ChannelItemSubtitleFormatterAttributes
 import com.sceyt.chatuikit.formatters.attributes.DraftMessageBodyFormatterAttributes
 import com.sceyt.chatuikit.formatters.attributes.MessageBodyFormatterAttributes
+import com.sceyt.chatuikit.formatters.attributes.SearchMessageResultFormatterAttributes
 import com.sceyt.chatuikit.formatters.defaults.DefaultAttachmentDateFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultAttachmentNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultAttachmentSizeFormatter
@@ -44,6 +45,8 @@ import com.sceyt.chatuikit.formatters.defaults.DefaultPollTypeFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultPollVoteCountFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultPollVoteTimeDateFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultSelfDestructedMessageBodyFormatter
+import com.sceyt.chatuikit.formatters.defaults.DefaultSearchMessageResultBodyFormatter
+import com.sceyt.chatuikit.formatters.defaults.DefaultSearchMessageSenderNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultSystemMessageBodyFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUnreadCountFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUnsupportedMessageBodyFormatter
@@ -243,5 +246,13 @@ class SceytChatUIKitFormatters {
 
     var systemMessageBodyFormatter: Formatter<SceytMessage> by lazyVar {
         DefaultSystemMessageBodyFormatter()
+    }
+
+    var searchMessageResultBodyFormatter: Formatter<SearchMessageResultFormatterAttributes> by lazyVar {
+        DefaultSearchMessageResultBodyFormatter()
+    }
+
+    var searchMessageSenderNameFormatter: Formatter<SceytMessage> by lazyVar {
+        DefaultSearchMessageSenderNameFormatter()
     }
 }
