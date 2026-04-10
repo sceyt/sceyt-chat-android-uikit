@@ -26,6 +26,7 @@ data class GlobalSearchStyle(
     val tabBarStyle: GlobalSearchTabBarStyle,
     val suggestionsStyle: GlobalSearchSuggestionsStyle,
     val chatsPageStyle: ChatsSearchPageStyle,
+    val channelsPageStyle: ChannelsSearchPageStyle,
 ) : SceytComponentStyle() {
 
     internal class Builder(
@@ -62,7 +63,8 @@ data class GlobalSearchStyle(
                 inputStyle = GlobalSearchInputStyle.Builder(context).build(),
                 tabBarStyle = GlobalSearchTabBarStyle.Builder(context).build(),
                 suggestionsStyle = GlobalSearchSuggestionsStyle.Builder(context).build(),
-                chatsPageStyle = ChatsSearchPageStyle.Builder(context).build()
+                chatsPageStyle = ChatsSearchPageStyle.Builder(context).build(),
+                channelsPageStyle = ChannelsSearchPageStyle.Builder(context).build()
             )
         }
     }

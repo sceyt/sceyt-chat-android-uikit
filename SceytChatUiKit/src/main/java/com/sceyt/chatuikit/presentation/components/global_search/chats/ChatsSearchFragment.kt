@@ -105,7 +105,6 @@ open class ChatsSearchFragment : Fragment(R.layout.sceyt_fragment_chats_search) 
         listAdapter.submitList(
             items = state.listItems,
             query = state.query,
-            showMessageChannel = state.showMessageChannel,
             commitCallback = if (scrollToTop) {
                 { binding.recyclerView.scrollToPosition(0) }
             } else null

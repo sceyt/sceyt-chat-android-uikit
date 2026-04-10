@@ -4,6 +4,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.persistence.differs.ChannelDiff
 import com.sceyt.chatuikit.presentation.common.recyclerview.AsyncListDiffer
+import com.sceyt.chatuikit.presentation.common.recyclerview.GlobalSearchListItemDiffCallback
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchListItem
 import kotlinx.coroutines.CoroutineScope
 
@@ -14,23 +15,20 @@ open class ChatsSearchListAdapter(
 
     private val differ = AsyncListDiffer(
         adapter = this,
-        diffCallback = ChatsSearchListItemDiffCallback(),
+        diffCallback = GlobalSearchListItemDiffCallback(),
         scope = scope
     )
 
     private var highlightQuery: String = ""
-    private var showMessageChannel: Boolean = true
 
     val currentList get() = differ.currentList
 
     open fun submitList(
         items: List<GlobalSearchListItem>,
         query: String,
-        showMessageChannel: Boolean,
         commitCallback: (() -> Unit)? = null,
     ) {
         highlightQuery = query
-        this.showMessageChannel = showMessageChannel
         differ.submitList(items, commitCallback)
     }
 
@@ -49,7 +47,6 @@ open class ChatsSearchListAdapter(
             holder = holder,
             item = differ.currentList[position],
             query = highlightQuery,
-            showMessageChannel = showMessageChannel
         )
     }
 
@@ -64,7 +61,6 @@ open class ChatsSearchListAdapter(
                 holder = holder,
                 item = differ.currentList[position],
                 query = highlightQuery,
-                showMessageChannel = showMessageChannel,
                 diff = diff
             )
         } else {

@@ -6,11 +6,27 @@ import com.sceyt.chatuikit.databinding.SceytChannelListEmptyStateBinding
 import com.sceyt.chatuikit.presentation.custom_views.PageStateView
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
 import com.sceyt.chatuikit.styles.common.EmptyStateStyle
+import com.sceyt.chatuikit.styles.search.ChannelsSearchPageStyle
 import com.sceyt.chatuikit.styles.search.ChatsSearchPageStyle
 
 internal fun PageStateView.setPageStatesView(style: ChatsSearchPageStyle) {
     setEmptyState(style)
     setEmptySearchState(style)
+}
+
+internal fun PageStateView.setPageStatesView(style: ChannelsSearchPageStyle) {
+    if (style.emptyState == R.layout.sceyt_channel_list_empty_state) {
+        val view = SceytChannelListEmptyStateBinding.inflate(layoutInflater, this, false)
+            .also { it.applyStyle(style.emptyStateStyle) }.root
+        setEmptyStateView(view)
+        setEmptySearchStateView(
+            SceytChannelListEmptyStateBinding.inflate(layoutInflater, this, false)
+                .also { it.applyStyle(style.emptyStateStyle) }.root
+        )
+    } else {
+        setEmptyStateView(style.emptyState)
+        setEmptySearchStateView(style.emptyState)
+    }
 }
 
 private fun PageStateView.setEmptyState(style: ChatsSearchPageStyle) {

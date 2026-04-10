@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchListItem
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchLocalInteractor
@@ -35,7 +36,6 @@ data class ChatsSearchState(
     val isLoading: Boolean = false,
     val isLoadingMore: Boolean = false,
     val hasMore: Boolean = false,
-    val showMessageChannel: Boolean = true,
 ) {
     val showEmptyState: Boolean
         get() = !isLoading && !isLoadingMore && listItems.isEmpty()
@@ -49,7 +49,6 @@ open class ChatsSearchViewModel(
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModel() {
     private val defaultDataSource by lazy(LazyThreadSafetyMode.NONE) { GlobalSearchLocalInteractor() }
-    private var latestSessionState: GlobalSearchSessionState? = null
 
     private val _state = MutableStateFlow(ChatsSearchState(isLoading = true))
     val state: StateFlow<ChatsSearchState> = _state.asStateFlow()
@@ -64,7 +63,6 @@ open class ChatsSearchViewModel(
     }
 
     private suspend fun onSessionStateChanged(sessionState: GlobalSearchSessionState) {
-        latestSessionState = sessionState
         if (!sessionState.isCurrent(GlobalSearchTab.Chats)) return
 
         val current = _state.value
@@ -89,7 +87,6 @@ open class ChatsSearchViewModel(
                         isLoading = false,
                         isLoadingMore = false,
                         hasMore = hasMore(sessionState.query, result),
-                        showMessageChannel = sessionState.shouldShowMessageChannel()
                     )
                 }
             }
@@ -120,15 +117,10 @@ open class ChatsSearchViewModel(
                         listItems = it.listItems + result.listItems,
                         isLoadingMore = false,
                         hasMore = hasMore(sessionState.query, result),
-                        showMessageChannel = sessionState.shouldShowMessageChannel()
                     )
                 }
             }
         }
-    }
-
-    private fun GlobalSearchSessionState.shouldShowMessageChannel(): Boolean {
-        return selectedMember == null
     }
 
     protected open suspend fun performLoad(
@@ -137,7 +129,7 @@ open class ChatsSearchViewModel(
         pageSize: Int,
     ): SearchResultPage = when {
         state.selectedMember != null -> {
-            val page = loadSelectedMemberMessagesPage(
+            val page = loadSelectedUserMessagesPage(
                 state = state,
                 offset = offset,
                 pageSize = pageSize
@@ -198,15 +190,18 @@ open class ChatsSearchViewModel(
         return defaultDataSource.getRecentChats(offset = offset, limit = pageSize)
     }
 
-    private suspend fun loadSelectedMemberMessagesPage(
+    private suspend fun loadSelectedUserMessagesPage(
         state: GlobalSearchSessionState,
         offset: Int,
         pageSize: Int,
     ): GlobalSearchPage<GlobalSearchMessageResult> {
         val selectedMemberId = requireNotNull(state.selectedMember?.id)
+        val types = SceytChatUIKit.config.channelTypesConfig.getPrivateTypes()
         return defaultDataSource.searchMessages(
             query = state.query,
             senderId = selectedMemberId,
+            channelTypes = types,
+            onlyJoined = true,
             offset = offset,
             limit = pageSize
         )
@@ -223,9 +218,12 @@ open class ChatsSearchViewModel(
         state: GlobalSearchSessionState,
         pageSize: Int,
     ): GlobalSearchPage<GlobalSearchMessageResult> {
+        val types = SceytChatUIKit.config.channelTypesConfig.getPrivateTypes()
         return defaultDataSource.searchMessages(
             query = state.query,
             senderId = null,
+            channelTypes = types,
+            onlyJoined = true,
             offset = 0,
             limit = pageSize
         )
@@ -239,7 +237,7 @@ open class ChatsSearchViewModel(
         return buildList {
             if (chatsPage.data.isNotEmpty()) {
                 add(GlobalSearchListItem.SectionHeader(R.string.sceyt_chats))
-                addAll(chatsPage.data.map { GlobalSearchListItem.ChannelItem(it, query) })
+                addAll(chatsPage.data.map { GlobalSearchListItem.ChannelItem(it) })
             }
             if (messagesPage.data.isNotEmpty()) {
                 add(GlobalSearchListItem.SectionHeader(R.string.sceyt_messages))

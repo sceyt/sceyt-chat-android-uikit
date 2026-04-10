@@ -5,10 +5,9 @@ import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.koin.SceytKoinComponent
-import com.sceyt.chatuikit.persistence.database.dao.AttachmentDao
 import com.sceyt.chatuikit.persistence.database.dao.ChannelDao
+import com.sceyt.chatuikit.persistence.database.dao.GlobalSearchDao
 import com.sceyt.chatuikit.persistence.database.dao.MessageDao
-import com.sceyt.chatuikit.persistence.database.dao.SearchMessageDao
 import com.sceyt.chatuikit.persistence.database.dao.UserDao
 import com.sceyt.chatuikit.persistence.mappers.toAttachment
 import com.sceyt.chatuikit.persistence.mappers.toChannel
@@ -25,6 +24,8 @@ internal interface GlobalSearchDataSource {
     suspend fun searchMessages(
         query: String,
         senderId: String?,
+        channelTypes: List<String>,
+        onlyJoined: Boolean,
         offset: Int,
         limit: Int,
     ): GlobalSearchPage<GlobalSearchMessageResult>
@@ -44,8 +45,7 @@ internal class GlobalSearchLocalInteractor :
     GlobalSearchMemberSuggestionsProvider {
     private val channelDao: ChannelDao by inject()
     private val messageDao: MessageDao by inject()
-    private val searchMessageDao: SearchMessageDao by inject()
-    private val attachmentDao: AttachmentDao by inject()
+    private val globalSearchDao: GlobalSearchDao by inject()
     private val userDao: UserDao by inject()
 
     private val myUserId: String?
@@ -74,7 +74,7 @@ internal class GlobalSearchLocalInteractor :
         val data = channelDao.getChannels(
             limit = limit + 1,
             offset = offset,
-            types = emptyList(),
+            types = SceytChatUIKit.config.channelTypesConfig.getPrivateTypes(),
             orderByLastMessage = true,
             onlyMine = true
         )
@@ -94,7 +94,7 @@ internal class GlobalSearchLocalInteractor :
             limit = limit + 1,
             offset = 0,
             onlyMine = true,
-            types = emptyList(),
+            types = SceytChatUIKit.config.channelTypesConfig.getPrivateTypes(),
             orderByLastMessage = true
         )
         return data.toChannelPage(limit)
@@ -104,8 +104,10 @@ internal class GlobalSearchLocalInteractor :
         offset: Int,
         limit: Int,
     ): GlobalSearchPage<SceytChannel> {
-        val data = channelDao.searchNonDirectChannelsBySubject(
+        val type = SceytChatUIKit.config.channelTypesConfig.broadcast
+        val data = channelDao.searchChannelsBySubjectAndType(
             query = "",
+            type = type,
             limit = limit + 1,
             offset = offset
         )
@@ -116,9 +118,11 @@ internal class GlobalSearchLocalInteractor :
         query: String,
         limit: Int,
     ): GlobalSearchPage<SceytChannel> {
+        val type = SceytChatUIKit.config.channelTypesConfig.broadcast
         if (query.isBlank()) return getRecentChannels(offset = 0, limit = limit)
-        val data = channelDao.searchNonDirectChannelsBySubject(
+        val data = channelDao.searchChannelsBySubjectAndType(
             query = query,
+            type = type,
             limit = limit + 1,
             offset = 0
         )
@@ -128,12 +132,16 @@ internal class GlobalSearchLocalInteractor :
     override suspend fun searchMessages(
         query: String,
         senderId: String?,
+        channelTypes: List<String>,
+        onlyJoined: Boolean,
         offset: Int,
         limit: Int,
     ): GlobalSearchPage<GlobalSearchMessageResult> {
-        val data = searchMessageDao.searchMessagesGlobally(
+        val data = globalSearchDao.searchMessages(
             query = query,
             senderId = senderId,
+            channelTypes = channelTypes,
+            onlyJoined = onlyJoined,
             limit = limit + 1,
             offset = offset,
         )
@@ -142,12 +150,14 @@ internal class GlobalSearchLocalInteractor :
         val limited = data.take(limit)
         if (limited.isEmpty()) return GlobalSearchPage(emptyList(), false)
 
-        val channels = channelDao.getChannelsById(limited.map { it.messageEntity.channelId }.distinct())
-            .associateBy { it.channelEntity.id }
+        val channels =
+            channelDao.getChannelsById(limited.map { it.messageEntity.channelId }.distinct())
+                .associateBy { it.channelEntity.id }
 
         return GlobalSearchPage(
             data = limited.mapNotNull { messageDb ->
-                val channel = channels[messageDb.messageEntity.channelId]?.toChannel() ?: return@mapNotNull null
+                val channel = channels[messageDb.messageEntity.channelId]?.toChannel()
+                    ?: return@mapNotNull null
                 GlobalSearchMessageResult(
                     message = messageDb.toSceytMessage(),
                     channel = channel
@@ -165,7 +175,7 @@ internal class GlobalSearchLocalInteractor :
         limit: Int,
     ): GlobalSearchPage<GlobalSearchAttachmentResult> {
         val kind = tab.toAttachmentKind() ?: return GlobalSearchPage(emptyList(), false)
-        val data = attachmentDao.searchAttachmentsGlobally(
+        val data = globalSearchDao.searchAttachments(
             query = query,
             senderId = senderId,
             types = tab.toAttachmentTypes(),
@@ -181,14 +191,18 @@ internal class GlobalSearchLocalInteractor :
         val limited = data.take(limit)
         if (limited.isEmpty()) return GlobalSearchPage(emptyList(), false)
 
-        val messages = messageDao.getMessagesByTids(limited.map { it.attachmentEntity.messageTid }.distinct())
-            .associateBy { it.messageEntity.tid }
-        val channels = channelDao.getChannelsById(messages.values.map { it.messageEntity.channelId }.distinct())
+        val messages =
+            messageDao.getMessagesByTids(limited.map { it.attachmentEntity.messageTid }.distinct())
+                .associateBy { it.messageEntity.tid }
+        val channels = channelDao.getChannelsById(messages.values.map { it.messageEntity.channelId }
+            .distinct())
             .associateBy { it.channelEntity.id }
 
         val results = limited.mapNotNull { attachmentDb ->
-            val message = messages[attachmentDb.attachmentEntity.messageTid] ?: return@mapNotNull null
-            val channel = channels[message.messageEntity.channelId]?.toChannel() ?: return@mapNotNull null
+            val message =
+                messages[attachmentDb.attachmentEntity.messageTid] ?: return@mapNotNull null
+            val channel =
+                channels[message.messageEntity.channelId]?.toChannel() ?: return@mapNotNull null
             GlobalSearchAttachmentResult(
                 attachment = attachmentDb.toAttachment(),
                 message = message.toSceytMessage(),
@@ -220,7 +234,11 @@ internal class GlobalSearchLocalInteractor :
     }
 
     private fun GlobalSearchTab.toAttachmentTypes(): List<String> = when (this) {
-        GlobalSearchTab.Media -> listOf(AttachmentTypeEnum.Image.value, AttachmentTypeEnum.Video.value)
+        GlobalSearchTab.Media -> listOf(
+            AttachmentTypeEnum.Image.value,
+            AttachmentTypeEnum.Video.value
+        )
+
         GlobalSearchTab.Files -> listOf(AttachmentTypeEnum.File.value)
         GlobalSearchTab.Voice -> listOf(AttachmentTypeEnum.Voice.value)
         GlobalSearchTab.Links -> listOf(AttachmentTypeEnum.Link.value)

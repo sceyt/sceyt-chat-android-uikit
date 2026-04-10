@@ -44,7 +44,6 @@ open class ChatsSearchViewHolderFactory(
         holder: RecyclerView.ViewHolder,
         item: GlobalSearchListItem,
         query: String,
-        showMessageChannel: Boolean,
     ) {
         when (holder) {
             is SearchSectionViewHolder -> holder.bind(
@@ -66,7 +65,6 @@ open class ChatsSearchViewHolderFactory(
         holder: RecyclerView.ViewHolder,
         item: GlobalSearchListItem,
         query: String,
-        showMessageChannel: Boolean,
         diff: ChannelDiff,
     ) {
         when (holder) {
@@ -79,7 +77,6 @@ open class ChatsSearchViewHolderFactory(
                 holder = holder,
                 item = item,
                 query = query,
-                showMessageChannel = showMessageChannel
             )
         }
     }

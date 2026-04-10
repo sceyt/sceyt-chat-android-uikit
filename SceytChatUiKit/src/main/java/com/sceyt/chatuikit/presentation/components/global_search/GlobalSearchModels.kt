@@ -64,8 +64,7 @@ data class GlobalSearchTabState(
 sealed interface GlobalSearchListItem {
     data class SectionHeader(@param:StringRes val titleRes: Int) : GlobalSearchListItem
     data class ChannelItem(
-        val channel: SceytChannel,
-        val query: String,
+        val channel: SceytChannel
     ) : GlobalSearchListItem
 
     data class MessageItem(

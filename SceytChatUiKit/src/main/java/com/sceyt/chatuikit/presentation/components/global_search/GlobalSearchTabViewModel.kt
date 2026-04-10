@@ -275,7 +275,7 @@ internal abstract class GlobalSearchSessionTabViewModel(
         }
 
         return SearchResultPage(
-            listItems = page.data.map { GlobalSearchListItem.ChannelItem(it, criteria.query) },
+            listItems = page.data.map { GlobalSearchListItem.ChannelItem(it) },
             hasMore = criteria.query.isBlank() && page.hasMore,
             loadedCount = page.data.size,
             emptyState = page.toEmptyState(

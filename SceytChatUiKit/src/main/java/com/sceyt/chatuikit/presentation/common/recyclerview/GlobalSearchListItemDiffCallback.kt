@@ -1,10 +1,10 @@
-package com.sceyt.chatuikit.presentation.components.global_search.chats.adapter
+package com.sceyt.chatuikit.presentation.common.recyclerview
 
 import androidx.recyclerview.widget.DiffUtil
 import com.sceyt.chatuikit.persistence.differs.diff
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchListItem
 
-class ChatsSearchListItemDiffCallback : DiffUtil.ItemCallback<GlobalSearchListItem>() {
+class GlobalSearchListItemDiffCallback : DiffUtil.ItemCallback<GlobalSearchListItem>() {
 
     override fun areItemsTheSame(
         oldItem: GlobalSearchListItem,
@@ -31,7 +31,6 @@ class ChatsSearchListItemDiffCallback : DiffUtil.ItemCallback<GlobalSearchListIt
 
         is GlobalSearchListItem.ChannelItem if newItem is GlobalSearchListItem.ChannelItem ->
             !oldItem.channel.diff(newItem.channel).hasDifference()
-                    && oldItem.query == newItem.query
 
         is GlobalSearchListItem.MessageItem if newItem is GlobalSearchListItem.MessageItem ->
             !oldItem.result.message.diff(newItem.result.message).hasDifference()
