@@ -70,18 +70,20 @@ open class ChannelsSearchViewModel(
     }
 
     private suspend fun onSessionStateChanged(sessionState: GlobalSearchSessionState) {
-        if (!sessionState.isCurrent(GlobalSearchTab.Channels)) return
-
         val current = _state.value
         if (current.sessionState == sessionState) return
 
-        loadFirstPage(sessionState)
+        if (!sessionState.isCurrent(GlobalSearchTab.Channels)) {
+            _state.update {
+                ChannelsSearchState(sessionState = sessionState)
+            }
+        } else {
+            loadFirstPage(sessionState)
+        }
     }
 
     protected open fun loadFirstPage(sessionState: GlobalSearchSessionState) {
         loadJob?.cancel()
-        _state.update { it.copy(isLoading = true) }
-
         loadJob = viewModelScope.launch(ioDispatcher) {
             val result = performLoad(
                 state = sessionState,
