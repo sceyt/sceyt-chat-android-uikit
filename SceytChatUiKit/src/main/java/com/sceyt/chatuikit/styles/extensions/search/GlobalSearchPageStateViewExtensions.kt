@@ -10,6 +10,7 @@ import com.sceyt.chatuikit.styles.search.ChatsSearchPageStyle
 
 internal fun PageStateView.setPageStatesView(style: ChatsSearchPageStyle) {
     setEmptyState(style)
+    setEmptySearchState(style)
 }
 
 private fun PageStateView.setEmptyState(style: ChatsSearchPageStyle) {
@@ -20,6 +21,17 @@ private fun PageStateView.setEmptyState(style: ChatsSearchPageStyle) {
         )
     } else {
         setEmptyStateView(style.emptyState)
+    }
+}
+
+private fun PageStateView.setEmptySearchState(style: ChatsSearchPageStyle) {
+    if (style.emptyState == R.layout.sceyt_channel_list_empty_state) {
+        setEmptySearchStateView(
+            SceytChannelListEmptyStateBinding.inflate(layoutInflater, this, false)
+                .also { it.applyStyle(style.emptyStateStyle) }.root
+        )
+    } else {
+        setEmptySearchStateView(style.emptyState)
     }
 }
 
