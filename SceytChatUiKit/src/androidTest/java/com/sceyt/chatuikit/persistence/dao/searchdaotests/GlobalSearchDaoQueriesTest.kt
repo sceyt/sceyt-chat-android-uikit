@@ -17,6 +17,7 @@ import com.sceyt.chatuikit.persistence.database.SceytDatabase
 import com.sceyt.chatuikit.persistence.database.dao.AttachmentDao
 import com.sceyt.chatuikit.persistence.database.dao.ChannelDao
 import com.sceyt.chatuikit.persistence.database.dao.MessageDao
+import com.sceyt.chatuikit.persistence.database.dao.SearchMessageDao
 import com.sceyt.chatuikit.persistence.database.dao.UserDao
 import com.sceyt.chatuikit.persistence.database.entity.channel.ChannelEntity
 import com.sceyt.chatuikit.persistence.database.entity.channel.UserChatLinkEntity
@@ -39,6 +40,7 @@ class GlobalSearchDaoQueriesTest {
     private lateinit var userDao: UserDao
     private lateinit var channelDao: ChannelDao
     private lateinit var messageDao: MessageDao
+    private lateinit var searchMessageDao: SearchMessageDao
     private lateinit var attachmentDao: AttachmentDao
 
     @get:Rule
@@ -56,6 +58,7 @@ class GlobalSearchDaoQueriesTest {
         userDao = database.userDao()
         channelDao = database.channelDao()
         messageDao = database.messageDao()
+        searchMessageDao = database.searchMessageDao()
         attachmentDao = database.attachmentsDao()
     }
 
@@ -198,13 +201,11 @@ class GlobalSearchDaoQueriesTest {
             ),
         )
 
-        val result = messageDao.searchMessagesGlobally(
+        val result = searchMessageDao.searchMessagesGlobally(
             query = "jam",
             senderId = "alice",
             limit = 20,
             offset = 0,
-            queryEmpty = false,
-            senderIgnored = false,
         )
 
         assertThat(result.map { it.messageEntity.id }).containsExactly(101L)
@@ -230,16 +231,123 @@ class GlobalSearchDaoQueriesTest {
             ),
         )
 
-        val result = messageDao.searchMessagesGlobally(
+        val result = searchMessageDao.searchMessagesGlobally(
             query = "",
             senderId = null,
             limit = 20,
             offset = 0,
-            queryEmpty = true,
-            senderIgnored = true,
         )
 
         assertThat(result.map { it.messageEntity.id }).containsExactly(202L, 201L).inOrder()
+    }
+
+    @Test
+    fun searchMessagesGlobally_caseInsensitiveMatchOnSingleWord() = runTest {
+        insertChannelsAndLinks(
+            channels = listOf(channel(id = 1, subject = "C", userRole = "owner")),
+            links = emptyList(),
+        )
+        insertMessages(
+            message(tid = 1, id = 1, channelId = 1, body = "hello my name is Matat", fromId = "alice", createdAt = 100),
+        )
+
+        val result = searchMessageDao.searchMessagesGlobally(query = "Hello", senderId = null, limit = 20, offset = 0)
+
+        assertThat(result.map { it.messageEntity.id }).containsExactly(1L)
+    }
+
+    @Test
+    fun searchMessagesGlobally_trailingSpacesAreIgnored() = runTest {
+        insertChannelsAndLinks(
+            channels = listOf(channel(id = 1, subject = "C", userRole = "owner")),
+            links = emptyList(),
+        )
+        insertMessages(
+            message(tid = 1, id = 1, channelId = 1, body = "hello my name is Matat", fromId = "alice", createdAt = 100),
+        )
+
+        val result = searchMessageDao.searchMessagesGlobally(query = "hello       ", senderId = null, limit = 20, offset = 0)
+
+        assertThat(result.map { it.messageEntity.id }).containsExactly(1L)
+    }
+
+    @Test
+    fun searchMessagesGlobally_leadingSpacesAreIgnored() = runTest {
+        insertChannelsAndLinks(
+            channels = listOf(channel(id = 1, subject = "C", userRole = "owner")),
+            links = emptyList(),
+        )
+        insertMessages(
+            message(tid = 1, id = 1, channelId = 1, body = "hello my name is Matat", fromId = "alice", createdAt = 100),
+        )
+
+        val result = searchMessageDao.searchMessagesGlobally(query = "    hello", senderId = null, limit = 20, offset = 0)
+
+        assertThat(result.map { it.messageEntity.id }).containsExactly(1L)
+    }
+
+    @Test
+    fun searchMessagesGlobally_leadingAndTrailingSpacesAreIgnored() = runTest {
+        insertChannelsAndLinks(
+            channels = listOf(channel(id = 1, subject = "C", userRole = "owner")),
+            links = emptyList(),
+        )
+        insertMessages(
+            message(tid = 1, id = 1, channelId = 1, body = "hello my name is Matat", fromId = "alice", createdAt = 100),
+        )
+
+        val result = searchMessageDao.searchMessagesGlobally(query = "    hello  ", senderId = null, limit = 20, offset = 0)
+
+        assertThat(result.map { it.messageEntity.id }).containsExactly(1L)
+    }
+
+    @Test
+    fun searchMessagesGlobally_multipleInternalSpacesMatchIndividualWords() = runTest {
+        insertChannelsAndLinks(
+            channels = listOf(channel(id = 1, subject = "C", userRole = "owner")),
+            links = emptyList(),
+        )
+        insertMessages(
+            message(tid = 1, id = 1, channelId = 1, body = "hello my name is Matat", fromId = "alice", createdAt = 100),
+            message(tid = 2, id = 2, channelId = 1, body = "goodbye world", fromId = "alice", createdAt = 200),
+        )
+
+        val result = searchMessageDao.searchMessagesGlobally(query = "    hello        my", senderId = null, limit = 20, offset = 0)
+
+        assertThat(result.map { it.messageEntity.id }).containsExactly(1L)
+    }
+
+    @Test
+    fun searchMessagesGlobally_multiWordQueryMatchesAllWordsAnywhereInBody() = runTest {
+        insertChannelsAndLinks(
+            channels = listOf(channel(id = 1, subject = "C", userRole = "owner")),
+            links = emptyList(),
+        )
+        insertMessages(
+            message(tid = 1, id = 1, channelId = 1, body = "hello my name is Matat", fromId = "alice", createdAt = 100),
+            message(tid = 2, id = 2, channelId = 1, body = "hello world", fromId = "alice", createdAt = 200),
+        )
+
+        // "hello" and "Matat" both appear in body 1 but only "hello" in body 2
+        val result = searchMessageDao.searchMessagesGlobally(query = "hello Matat", senderId = null, limit = 20, offset = 0)
+
+        assertThat(result.map { it.messageEntity.id }).containsExactly(1L)
+    }
+
+    @Test
+    fun searchMessagesGlobally_multiWordQueryRequiresAllWordsPresent() = runTest {
+        insertChannelsAndLinks(
+            channels = listOf(channel(id = 1, subject = "C", userRole = "owner")),
+            links = emptyList(),
+        )
+        insertMessages(
+            message(tid = 1, id = 1, channelId = 1, body = "hello my name is Matat", fromId = "alice", createdAt = 100),
+        )
+
+        // "missing" is not in the body — should return nothing
+        val result = searchMessageDao.searchMessagesGlobally(query = "hello missing", senderId = null, limit = 20, offset = 0)
+
+        assertThat(result).isEmpty()
     }
 
     @Test
