@@ -63,12 +63,16 @@ open class ChatsSearchViewModel(
     }
 
     private suspend fun onSessionStateChanged(sessionState: GlobalSearchSessionState) {
-        if (!sessionState.isCurrent(GlobalSearchTab.Chats)) return
-
         val current = _state.value
         if (current.sessionState == sessionState) return
 
-        loadFirstPage(sessionState)
+        if (!sessionState.isCurrent(GlobalSearchTab.Chats)) {
+            _state.update {
+                ChatsSearchState(sessionState = sessionState)
+            }
+        } else {
+            loadFirstPage(sessionState)
+        }
     }
 
     protected open fun loadFirstPage(sessionState: GlobalSearchSessionState) {
