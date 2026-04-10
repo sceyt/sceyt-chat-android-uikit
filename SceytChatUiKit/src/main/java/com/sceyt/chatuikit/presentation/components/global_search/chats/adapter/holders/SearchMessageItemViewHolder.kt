@@ -46,7 +46,7 @@ open class SearchMessageItemViewHolder(
                 searchMessageItemStyle = style
             )
         )
-        binding.tvBody.text = highlight(body, item.query)
+        binding.tvBody.text = highlight(trimBodyToShowMatch(body, item.query), item.query)
 
         itemView.setOnClickListener {
             onMessageClickListener?.invoke(result.message.id, result.channel)
@@ -82,6 +82,15 @@ open class SearchMessageItemViewHolder(
         )
     }
 
+    protected open fun trimBodyToShowMatch(text: CharSequence, query: String): CharSequence {
+        if (query.isBlank() || text.isBlank()) return text
+        val textLower = text.toString().lowercase()
+        val matchStart = textLower.indexOf(query.lowercase())
+        if (matchStart < CONTEXT_BEFORE_MATCH) return text
+        val trimFrom = matchStart - CONTEXT_BEFORE_MATCH
+        return SpannableStringBuilder("…").append(text.subSequence(trimFrom, text.length))
+    }
+
     protected open fun highlight(text: CharSequence, query: String): CharSequence {
         if (query.isBlank() || text.isBlank()) return text
         val spannable = SpannableStringBuilder(text)
@@ -99,6 +108,10 @@ open class SearchMessageItemViewHolder(
             start = textLower.indexOf(queryLower, end)
         }
         return spannable
+    }
+
+    companion object {
+        private const val CONTEXT_BEFORE_MATCH = 15
     }
 
     private fun SceytItemGlobalSearchMessageBinding.applyStyle() {
