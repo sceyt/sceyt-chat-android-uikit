@@ -1,6 +1,5 @@
 package com.sceyt.chatuikit.presentation.components.global_search
 
-import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
@@ -30,35 +29,6 @@ data class GlobalSearchHeaderState(
 ) {
     val showSuggestions: Boolean
         get() = query.isNotBlank() && selectedMember == null && memberSuggestions.isNotEmpty()
-}
-
-data class GlobalSearchRequestKey(
-    val tab: GlobalSearchTab,
-    val query: String = "",
-    val selectedMemberId: String? = null,
-)
-
-data class GlobalSearchTabState(
-    val tab: GlobalSearchTab,
-    val requestKey: GlobalSearchRequestKey? = null,
-    val query: String = "",
-    val listItems: List<GlobalSearchListItem> = emptyList(),
-    val mediaGridItems: List<GlobalSearchMediaGridItem> = emptyList(),
-    val isLoading: Boolean = false,
-    val isLoadingMore: Boolean = false,
-    val hasMore: Boolean = false,
-    val emptyState: GlobalSearchEmptyState? = null,
-    val isLoaded: Boolean = false,
-    val showMessageChannel: Boolean = true,
-) {
-    val showMediaGrid: Boolean
-        get() = tab == GlobalSearchTab.Media && query.isBlank() && mediaGridItems.isNotEmpty()
-
-    val hasResults: Boolean
-        get() = listItems.isNotEmpty() || mediaGridItems.isNotEmpty()
-
-    val showEmptyState: Boolean
-        get() = !isLoading && emptyState != null && !hasResults
 }
 
 sealed interface GlobalSearchListItem {
@@ -93,12 +63,6 @@ data class GlobalSearchAttachmentResult(
 
 data class GlobalSearchMediaGridItem(
     val result: GlobalSearchAttachmentResult,
-)
-
-data class GlobalSearchEmptyState(
-    @param:DrawableRes val iconRes: Int,
-    @param:StringRes val titleRes: Int,
-    @param:StringRes val subtitleRes: Int,
 )
 
 data class GlobalSearchPage<T>(
