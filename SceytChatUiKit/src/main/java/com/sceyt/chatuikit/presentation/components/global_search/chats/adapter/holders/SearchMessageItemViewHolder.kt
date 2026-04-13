@@ -3,6 +3,7 @@ package com.sceyt.chatuikit.presentation.components.global_search.chats.adapter.
 import android.content.Context
 import android.text.SpannableStringBuilder
 import android.text.Spanned
+import android.text.StaticLayout
 import android.text.style.ForegroundColorSpan
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
@@ -73,9 +74,27 @@ open class SearchMessageItemViewHolder(
             }.takeIf { it != Int.MAX_VALUE } ?: return text
         }
 
-        if (matchStart < CONTEXT_BEFORE_MATCH) return text
-        val trimFrom = matchStart - CONTEXT_BEFORE_MATCH
-        return SpannableStringBuilder("…").append(text.subSequence(trimFrom, text.length))
+        // If the view has not been laid out yet, show full text rather than guess.
+        val width = binding.tvBody.width
+        if (width <= 0) return text
+
+        val maxLines = binding.tvBody.maxLines.takeIf { it > 0 } ?: return text
+
+        // Build a full layout to find exactly which visual line the match falls on.
+        // StaticLayout accounts for both hard line breaks (\n) and soft word-wrap,
+        // so this works correctly for plain paragraphs and multi-line text alike.
+        val layout = StaticLayout.Builder
+            .obtain(text, 0, text.length, binding.tvBody.paint, width)
+            .build()
+        val matchLine = layout.getLineForOffset(matchStart)
+
+        // Match is already visible within the allowed lines — show the full text.
+        if (matchLine < maxLines) return text
+
+        // Match is beyond the fold: trim to the start of its visual line.
+        val lineStart = layout.getLineStart(matchLine)
+        if (lineStart < MIN_TRIM_CHARS) return text
+        return SpannableStringBuilder("…").append(text.subSequence(lineStart, text.length))
     }
 
     protected open fun highlight(text: CharSequence, query: String): CharSequence {
@@ -102,7 +121,7 @@ open class SearchMessageItemViewHolder(
     }
 
     companion object {
-        private const val CONTEXT_BEFORE_MATCH = 10
+        private const val MIN_TRIM_CHARS = 5
     }
 
     private fun SceytItemGlobalSearchMessageBinding.applyStyle() {
