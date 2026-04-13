@@ -128,25 +128,13 @@ open class GlobalSearchActivity : AppCompatActivity() {
                 sessionId = headerViewModel.sessionId
             )
 
-            GlobalSearchTab.Media -> MediaSearchFragment.newInstance(
-                styleId = style.styleId,
-                sessionId = headerViewModel.sessionId
-            )
+            GlobalSearchTab.Media -> TODO()
 
-            GlobalSearchTab.Files -> FilesSearchFragment.newInstance(
-                styleId = style.styleId,
-                sessionId = headerViewModel.sessionId
-            )
+            GlobalSearchTab.Files -> TODO()
 
-            GlobalSearchTab.Voice -> VoiceSearchFragment.newInstance(
-                styleId = style.styleId,
-                sessionId = headerViewModel.sessionId
-            )
+            GlobalSearchTab.Voice -> TODO()
 
-            GlobalSearchTab.Links -> LinksSearchFragment.newInstance(
-                styleId = style.styleId,
-                sessionId = headerViewModel.sessionId
-            )
+            GlobalSearchTab.Links -> TODO()
         }
     }
 
