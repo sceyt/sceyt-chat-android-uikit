@@ -10,8 +10,10 @@ import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.presentation.components.channel_info.links.ChannelInfoLinksFragment
 import com.sceyt.chatuikit.styles.SceytComponentStyle
 import com.sceyt.chatuikit.styles.StyleCustomizer
-import com.sceyt.chatuikit.styles.channel_info.ChannelInfoDateSeparatorStyle
+import com.sceyt.chatuikit.styles.common.BackgroundStyle
+import com.sceyt.chatuikit.styles.common.DateSeparatorStyle
 import com.sceyt.chatuikit.styles.common.EmptyStateStyle
+import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.styles.common.buildEmptyStateStyle
 import com.sceyt.chatuikit.theme.Colors
 
@@ -25,12 +27,12 @@ import com.sceyt.chatuikit.theme.Colors
  * @property dateSeparatorStyle - style for date separator
  * */
 data class ChannelInfoLinkStyle(
-        @param:ColorInt val backgroundColor: Int,
-        @param:LayoutRes val emptyState: Int,
-        @param:LayoutRes val loadingState: Int,
-        val emptyStateStyle: EmptyStateStyle,
-        val itemStyle: ChannelInfoLinkItemStyle,
-        val dateSeparatorStyle: ChannelInfoDateSeparatorStyle,
+    @param:ColorInt val backgroundColor: Int,
+    @param:LayoutRes val emptyState: Int,
+    @param:LayoutRes val loadingState: Int,
+    val emptyStateStyle: EmptyStateStyle,
+    val itemStyle: ChannelInfoLinkItemStyle,
+    val dateSeparatorStyle: DateSeparatorStyle,
 ) : SceytComponentStyle() {
 
     companion object {
@@ -38,11 +40,12 @@ data class ChannelInfoLinkStyle(
     }
 
     internal class Builder(
-            private val context: Context,
-            private val attributeSet: AttributeSet?,
+        private val context: Context,
+        private val attrs: AttributeSet?,
     ) {
         fun build(): ChannelInfoLinkStyle {
-            val backgroundColor = context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColor)
+            val backgroundColor =
+                context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColor)
 
             val emptyState = R.layout.sceyt_empty_state
             val loadingState = R.layout.sceyt_page_loading_state
@@ -54,10 +57,16 @@ data class ChannelInfoLinkStyle(
                 subtitleText = context.getString(R.string.sceyt_no_links_desc)
             )
 
-            val itemStyle = ChannelInfoLinkItemStyle.Builder(context, attributeSet).build()
-            val dateSeparatorStyle = ChannelInfoDateSeparatorStyle.Builder(context, attributeSet)
-                .build()
-
+            val itemStyle = ChannelInfoLinkItemStyle.Builder(context, attrs).build()
+            val dateSeparatorStyle = DateSeparatorStyle(
+                backgroundStyle = BackgroundStyle(
+                    backgroundColor = context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColor)
+                ),
+                textStyle = TextStyle(
+                    color = context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor),
+                    font = R.font.roboto_medium
+                )
+            )
 
             return ChannelInfoLinkStyle(
                 backgroundColor = backgroundColor,

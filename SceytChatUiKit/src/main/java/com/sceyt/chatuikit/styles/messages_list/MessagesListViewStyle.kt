@@ -13,14 +13,14 @@ import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.presentation.components.channel.messages.MessagesListView
 import com.sceyt.chatuikit.styles.SceytComponentStyle
-import com.sceyt.chatuikit.styles.messages_list.MessagesListHeaderStyle.Companion.styleCustomizer
-import com.sceyt.chatuikit.styles.search.SearchChannelInputStyle.Companion.styleCustomizer
 import com.sceyt.chatuikit.styles.StyleCustomizer
+import com.sceyt.chatuikit.styles.common.DateSeparatorStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildDateSeparatorStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildReactionPickerStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildScrollDownButtonStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildScrollUnreadMentionButtonStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildUnreadMessagesSeparatorStyle
+import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle.Companion.styleCustomizer
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
 /**
@@ -41,20 +41,20 @@ import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
  * @property messageItemStyle Style for the message item view
  **/
 data class MessagesListViewStyle(
-        @param:ColorInt val backgroundColor: Int,
-        @param:LayoutRes val emptyState: Int,
-        @param:LayoutRes val emptyStateForSelfChannel: Int,
-        @param:LayoutRes val loadingState: Int,
-        @param:Dimension val sameSenderMessageDistance: Int,
-        @param:Dimension val differentSenderMessageDistance: Int,
-        val messageItemStyle: MessageItemStyle,
-        val scrollDownButtonStyle: ScrollButtonStyle,
-        val scrollUnreadMentionButtonStyle: ScrollButtonStyle,
-        val dateSeparatorStyle: DateSeparatorStyle,
-        val unreadMessagesSeparatorStyle: UnreadMessagesSeparatorStyle,
-        val reactionPickerStyle: ReactionPickerStyle,
-        val enableScrollDownButton: Boolean,
-        val enableDateSeparator: Boolean,
+    @param:ColorInt val backgroundColor: Int,
+    @param:LayoutRes val emptyState: Int,
+    @param:LayoutRes val emptyStateForSelfChannel: Int,
+    @param:LayoutRes val loadingState: Int,
+    @param:Dimension val sameSenderMessageDistance: Int,
+    @param:Dimension val differentSenderMessageDistance: Int,
+    val messageItemStyle: MessageItemStyle,
+    val scrollDownButtonStyle: ScrollButtonStyle,
+    val scrollUnreadMentionButtonStyle: ScrollButtonStyle,
+    val dateSeparatorStyle: DateSeparatorStyle,
+    val unreadMessagesSeparatorStyle: UnreadMessagesSeparatorStyle,
+    val reactionPickerStyle: ReactionPickerStyle,
+    val enableScrollDownButton: Boolean,
+    val enableDateSeparator: Boolean,
 ) : SceytComponentStyle() {
 
     companion object {

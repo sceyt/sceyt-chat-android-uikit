@@ -39,6 +39,6 @@ internal fun GlobalSearchTabBarStyle.Builder.buildUnselectedTabTextStyle(): Text
     val colors = SceytChatUIKit.theme.colors
     return TextStyle(
         color = context.getCompatColor(colors.textSecondaryColor),
-        font = R.font.roboto_regular
+        font = R.font.roboto_medium
     )
 }

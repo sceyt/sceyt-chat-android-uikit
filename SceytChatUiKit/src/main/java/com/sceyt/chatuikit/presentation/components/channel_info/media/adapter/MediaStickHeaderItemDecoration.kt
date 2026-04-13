@@ -1,13 +1,15 @@
 package com.sceyt.chatuikit.presentation.components.channel_info.media.adapter
 
 import android.graphics.Canvas
-import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.graphics.withTranslation
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chatuikit.databinding.SceytItemChannelMediaDateSeparatorBinding
+import androidx.viewbinding.ViewBinding
 
-class MediaStickHeaderItemDecoration(private val mListener: StickyHeaderInterface) : RecyclerView.ItemDecoration() {
+class MediaStickHeaderItemDecoration(
+    private val mListener: StickyHeaderInterface<*>
+) : RecyclerView.ItemDecoration() {
     private var mStickyHeaderHeight = 0
     private var oldHeader: View? = null
 
@@ -24,35 +26,41 @@ class MediaStickHeaderItemDecoration(private val mListener: StickyHeaderInterfac
         val contactPoint = currentHeader.root.bottom
         val childInContact = getChildInContact(parent, contactPoint, topChildPosition)
 
-        if (childInContact != null && mListener.isHeader(parent.getChildAdapterPosition(childInContact))) {
-            moveHeader(c, currentHeader.root, childInContact)
-            return
+        if (childInContact != null) {
+            val isHeader = mListener.isHeader(parent.getChildAdapterPosition(childInContact))
+            if (isHeader) {
+                moveHeader(c, currentHeader.root, childInContact)
+                return
+            }
         }
         oldHeader = currentHeader.root
         drawHeader(c, currentHeader.root)
     }
 
-    private fun getHeaderViewForItem(headerPosition: Int, parent: RecyclerView): SceytItemChannelMediaDateSeparatorBinding {
-        val header = SceytItemChannelMediaDateSeparatorBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        mListener.bindHeaderData(header, headerPosition)
-        return header
+    private fun getHeaderViewForItem(
+        headerPosition: Int,
+        parent: RecyclerView
+    ): ViewBinding {
+        return mListener.bindHeaderData(parent, headerPosition)
     }
 
     private fun drawHeader(c: Canvas, header: View) {
-        c.save()
-        c.translate(0f, 0f)
-        header.draw(c)
-        c.restore()
+        c.withTranslation(0f, 0f) {
+            header.draw(this)
+        }
     }
 
     private fun moveHeader(c: Canvas, currentHeader: View, nextHeader: View) {
-        c.save()
-        c.translate(0f, (nextHeader.top - currentHeader.height).toFloat())
-        currentHeader.draw(c)
-        c.restore()
+        c.withTranslation(0f, (nextHeader.top - currentHeader.height).toFloat()) {
+            currentHeader.draw(this)
+        }
     }
 
-    private fun getChildInContact(parent: RecyclerView, contactPoint: Int, currentHeaderPos: Int): View? {
+    private fun getChildInContact(
+        parent: RecyclerView,
+        contactPoint: Int,
+        currentHeaderPos: Int
+    ): View? {
         var childInContact: View? = null
         for (i in 0 until parent.childCount) {
             var heightTolerance = 0
@@ -90,22 +98,32 @@ class MediaStickHeaderItemDecoration(private val mListener: StickyHeaderInterfac
     private fun fixLayoutSize(parent: ViewGroup, view: View) {
         // Specs for parent (RecyclerView)
         val widthSpec = View.MeasureSpec.makeMeasureSpec(parent.width, View.MeasureSpec.EXACTLY)
-        val heightSpec = View.MeasureSpec.makeMeasureSpec(parent.height, View.MeasureSpec.UNSPECIFIED)
+        val heightSpec =
+            View.MeasureSpec.makeMeasureSpec(parent.height, View.MeasureSpec.UNSPECIFIED)
 
         // Specs for children (headers)
-        val childWidthSpec = ViewGroup.getChildMeasureSpec(widthSpec, parent.paddingLeft + parent.paddingRight, view.layoutParams.width)
-        val childHeightSpec = ViewGroup.getChildMeasureSpec(heightSpec, parent.paddingTop + parent.paddingBottom, view.layoutParams.height)
+        val childWidthSpec = ViewGroup.getChildMeasureSpec(
+            widthSpec,
+            parent.paddingLeft + parent.paddingRight,
+            view.layoutParams.width
+        )
+        val childHeightSpec = ViewGroup.getChildMeasureSpec(
+            heightSpec,
+            parent.paddingTop + parent.paddingBottom,
+            view.layoutParams.height
+        )
         view.measure(childWidthSpec, childHeightSpec)
         view.layout(0, 0, view.measuredWidth, view.measuredHeight.also { mStickyHeaderHeight = it })
     }
 
-    interface StickyHeaderInterface {
+    interface StickyHeaderInterface<T : ViewBinding> {
+
         /**
          * This method gets called by [MediaStickHeaderItemDecoration] to setup the header View.
-         * @param header View. Header to set the data on.
+         * @param recyclerView View. Header to set the data on.
          * @param headerPosition int. Position of the header item in the adapter.
          */
-        fun bindHeaderData(header: SceytItemChannelMediaDateSeparatorBinding, headerPosition: Int)
+        fun bindHeaderData(recyclerView: RecyclerView, headerPosition: Int): T
 
         /**
          * This method gets called by [MediaStickHeaderItemDecoration] to verify whether the item represents a header.

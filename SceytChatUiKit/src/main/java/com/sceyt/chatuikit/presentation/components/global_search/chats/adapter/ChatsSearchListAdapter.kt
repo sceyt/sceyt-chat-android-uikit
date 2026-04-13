@@ -46,7 +46,6 @@ open class ChatsSearchListAdapter(
         viewHolderFactory.onBindViewHolder(
             holder = holder,
             item = differ.currentList[position],
-            query = highlightQuery,
         )
     }
 
@@ -60,7 +59,6 @@ open class ChatsSearchListAdapter(
             viewHolderFactory.onBindViewHolder(
                 holder = holder,
                 item = differ.currentList[position],
-                query = highlightQuery,
                 diff = diff
             )
         } else {
