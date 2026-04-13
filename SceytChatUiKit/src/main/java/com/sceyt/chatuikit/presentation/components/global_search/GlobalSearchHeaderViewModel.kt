@@ -19,6 +19,17 @@ import kotlinx.coroutines.withContext
 internal const val DEFAULT_MEMBER_SUGGESTIONS_LIMIT = 8
 internal const val DEFAULT_MEMBER_SUGGESTIONS_DEBOUNCE_MS = 0L
 
+data class GlobalSearchHeaderState(
+    val activeTab: GlobalSearchTab = GlobalSearchTab.Chats,
+    val query: String = "",
+    val selectedMember: SceytUser? = null,
+    val memberSuggestions: List<SceytUser> = emptyList(),
+    val isSelectedMemberRemovalPending: Boolean = false,
+) {
+    val showSuggestions: Boolean
+        get() = query.isNotBlank() && selectedMember == null && memberSuggestions.isNotEmpty()
+}
+
 open class GlobalSearchHeaderViewModel internal constructor(
     initialTab: GlobalSearchTab = GlobalSearchTab.Chats,
     private val memberSuggestionsProvider: GlobalSearchMemberSuggestionsProvider = GlobalSearchLocalInteractor(),

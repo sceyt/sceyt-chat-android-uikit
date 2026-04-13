@@ -8,10 +8,27 @@ import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
 import com.sceyt.chatuikit.styles.common.EmptyStateStyle
 import com.sceyt.chatuikit.styles.search.ChannelsSearchPageStyle
 import com.sceyt.chatuikit.styles.search.ChatsSearchPageStyle
+import com.sceyt.chatuikit.styles.search.MediaSearchPageStyle
 
 internal fun PageStateView.setPageStatesView(style: ChatsSearchPageStyle) {
     setEmptyState(style)
     setEmptySearchState(style)
+}
+
+internal fun PageStateView.setPageStatesView(style: MediaSearchPageStyle) {
+    if (style.emptyState == R.layout.sceyt_channel_list_empty_state) {
+        setEmptyStateView(
+            SceytChannelListEmptyStateBinding.inflate(layoutInflater, this, false)
+                .also { it.applyStyle(style.emptyStateStyle) }.root
+        )
+        setEmptySearchStateView(
+            SceytChannelListEmptyStateBinding.inflate(layoutInflater, this, false)
+                .also { it.applyStyle(style.emptyStateStyle) }.root
+        )
+    } else {
+        setEmptyStateView(style.emptyState)
+        setEmptySearchStateView(style.emptyState)
+    }
 }
 
 internal fun PageStateView.setPageStatesView(style: ChannelsSearchPageStyle) {

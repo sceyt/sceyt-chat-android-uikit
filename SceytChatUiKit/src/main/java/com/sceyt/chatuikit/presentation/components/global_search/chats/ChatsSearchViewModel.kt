@@ -66,12 +66,19 @@ open class ChatsSearchViewModel(
         val current = _state.value
         if (current.sessionState == sessionState) return
 
-        if (!sessionState.isCurrent(GlobalSearchTab.Chats)) {
-            _state.update {
-                ChatsSearchState(sessionState = sessionState)
-            }
-        } else {
+        if (sessionState.isCurrent(GlobalSearchTab.Chats)) {
             loadFirstPage(sessionState)
+        } else {
+            val queryChanged = current.sessionState?.isQueryChanged(sessionState.query) == true
+            if (queryChanged) {
+                _state.update {
+                    it.copy(
+                        sessionState = sessionState,
+                        listItems = emptyList(),
+                        isLoading = true
+                    )
+                }
+            }
         }
     }
 

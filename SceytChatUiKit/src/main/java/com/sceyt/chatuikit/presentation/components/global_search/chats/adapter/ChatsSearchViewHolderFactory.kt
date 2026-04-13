@@ -43,7 +43,6 @@ open class ChatsSearchViewHolderFactory(
     open fun onBindViewHolder(
         holder: RecyclerView.ViewHolder,
         item: GlobalSearchListItem,
-        query: String,
     ) {
         when (holder) {
             is SearchSectionViewHolder -> holder.bind(
@@ -64,7 +63,6 @@ open class ChatsSearchViewHolderFactory(
     open fun onBindViewHolder(
         holder: RecyclerView.ViewHolder,
         item: GlobalSearchListItem,
-        query: String,
         diff: ChannelDiff,
     ) {
         when (holder) {
@@ -76,7 +74,6 @@ open class ChatsSearchViewHolderFactory(
             else -> onBindViewHolder(
                 holder = holder,
                 item = item,
-                query = query,
             )
         }
     }

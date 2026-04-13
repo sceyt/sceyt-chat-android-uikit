@@ -19,6 +19,12 @@ class GlobalSearchListItemDiffCallback : DiffUtil.ItemCallback<GlobalSearchListI
         is GlobalSearchListItem.MessageItem if newItem is GlobalSearchListItem.MessageItem ->
             oldItem.result.message.id == newItem.result.message.id
 
+        is GlobalSearchListItem.AttachmentItem if newItem is GlobalSearchListItem.AttachmentItem ->
+            oldItem.result.attachment.id == newItem.result.attachment.id
+
+        is GlobalSearchListItem.DateSeparator if newItem is GlobalSearchListItem.DateSeparator ->
+            oldItem.timestamp == newItem.timestamp
+
         else -> false
     }
 
@@ -27,7 +33,7 @@ class GlobalSearchListItemDiffCallback : DiffUtil.ItemCallback<GlobalSearchListI
         newItem: GlobalSearchListItem,
     ): Boolean = when (oldItem) {
         is GlobalSearchListItem.SectionHeader if newItem is GlobalSearchListItem.SectionHeader ->
-            true
+            oldItem.titleRes == newItem.titleRes
 
         is GlobalSearchListItem.ChannelItem if newItem is GlobalSearchListItem.ChannelItem ->
             !oldItem.channel.diff(newItem.channel).hasDifference()
@@ -35,6 +41,13 @@ class GlobalSearchListItemDiffCallback : DiffUtil.ItemCallback<GlobalSearchListI
         is GlobalSearchListItem.MessageItem if newItem is GlobalSearchListItem.MessageItem ->
             !oldItem.result.message.diff(newItem.result.message).hasDifference()
                     && oldItem.query == newItem.query
+
+        is GlobalSearchListItem.AttachmentItem if newItem is GlobalSearchListItem.AttachmentItem ->
+            !oldItem.result.attachment.diff(newItem.result.attachment).hasDifference()
+                    && oldItem.query == newItem.query
+
+        is GlobalSearchListItem.DateSeparator if newItem is GlobalSearchListItem.DateSeparator ->
+            oldItem.timestamp == newItem.timestamp
 
         else -> false
     }
@@ -49,6 +62,9 @@ class GlobalSearchListItemDiffCallback : DiffUtil.ItemCallback<GlobalSearchListI
 
             is GlobalSearchListItem.MessageItem if newItem is GlobalSearchListItem.MessageItem ->
                 oldItem.result.message.diff(newItem.result.message)
+
+            is GlobalSearchListItem.AttachmentItem if newItem is GlobalSearchListItem.AttachmentItem ->
+                oldItem.result.attachment.diff(newItem.result.attachment)
 
             else -> null
         }

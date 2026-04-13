@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.styles.search
 
 import android.content.Context
+import android.util.AttributeSet
 import androidx.annotation.ColorInt
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.getCompatColor
@@ -16,10 +17,12 @@ data class GlobalSearchStyle(
     val suggestionsStyle: GlobalSearchSuggestionsStyle,
     val chatsPageStyle: ChatsSearchPageStyle,
     val channelsPageStyle: ChannelsSearchPageStyle,
+    val mediaPageStyle: MediaSearchPageStyle,
 ) : SceytComponentStyle() {
 
     internal class Builder(
         private val context: Context,
+        private val attrs: AttributeSet? = null,
     ) {
         fun build(): GlobalSearchStyle {
             val colors = SceytChatUIKit.theme.colors
@@ -31,7 +34,8 @@ data class GlobalSearchStyle(
                 tabBarStyle = GlobalSearchTabBarStyle.Builder(context).build(),
                 suggestionsStyle = GlobalSearchSuggestionsStyle.Builder(context).build(),
                 chatsPageStyle = ChatsSearchPageStyle.Builder(context).build(),
-                channelsPageStyle = ChannelsSearchPageStyle.Builder(context).build()
+                channelsPageStyle = ChannelsSearchPageStyle.Builder(context).build(),
+                mediaPageStyle = MediaSearchPageStyle.Builder(context, attrs).build(),
             )
         }
     }

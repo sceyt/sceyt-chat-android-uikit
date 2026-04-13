@@ -15,6 +15,8 @@ data class GlobalSearchSessionState(
     val activeTab: GlobalSearchTab = GlobalSearchTab.Chats,
 ) {
     fun isCurrent(tab: GlobalSearchTab) = activeTab == tab
+
+    fun isQueryChanged(newQuery: String) = query != newQuery
 }
 
 interface GlobalSearchSession {

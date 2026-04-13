@@ -73,12 +73,19 @@ open class ChannelsSearchViewModel(
         val current = _state.value
         if (current.sessionState == sessionState) return
 
-        if (!sessionState.isCurrent(GlobalSearchTab.Channels)) {
-            _state.update {
-                ChannelsSearchState(sessionState = sessionState)
-            }
-        } else {
+        if (sessionState.isCurrent(GlobalSearchTab.Channels)) {
             loadFirstPage(sessionState)
+        } else {
+            val queryChanged = current.sessionState?.isQueryChanged(sessionState.query) == true
+            if (queryChanged) {
+                _state.update {
+                    it.copy(
+                        sessionState = sessionState,
+                        listItems = emptyList(),
+                        isLoading = true
+                    )
+                }
+            }
         }
     }
 
