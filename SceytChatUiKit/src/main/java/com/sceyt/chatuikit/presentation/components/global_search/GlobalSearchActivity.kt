@@ -367,7 +367,7 @@ open class GlobalSearchActivity : AppCompatActivity() {
         const val SHARED_TRANSITION_NAME = "sceyt_global_search_bar"
         const val STYLE_ID_KEY = "GLOBAL_SEARCH_STYLE_ID_KEY"
         const val SESSION_ID_KEY = "GLOBAL_SEARCH_SESSION_ID_KEY"
-        private const val EXTRA_SHARED_TRANSITION = "EXTRA_SHARED_TRANSITION"
+        const val EXTRA_SHARED_TRANSITION = "EXTRA_SHARED_TRANSITION"
 
         fun launch(activity: Activity, sourceView: View? = null) {
             if (sourceView != null) {
