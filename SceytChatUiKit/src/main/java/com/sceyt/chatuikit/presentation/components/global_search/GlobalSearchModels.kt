@@ -7,7 +7,6 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytUser
-import com.sceyt.chatuikit.data.models.search.GlobalSearchAttachmentKind
 import com.sceyt.chatuikit.data.models.search.GlobalSearchAttachmentResult
 import com.sceyt.chatuikit.data.models.search.GlobalSearchMessageResult
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
@@ -81,14 +80,6 @@ sealed interface GlobalSearchListItem {
             is AttachmentItem -> result.attachment.createdAt
         }
     }
-}
-
-internal fun GlobalSearchTab.toAttachmentKind(): GlobalSearchAttachmentKind? = when (this) {
-    GlobalSearchTab.Media -> GlobalSearchAttachmentKind.Media
-    GlobalSearchTab.Files -> GlobalSearchAttachmentKind.File
-    GlobalSearchTab.Voice -> GlobalSearchAttachmentKind.Voice
-    GlobalSearchTab.Links -> GlobalSearchAttachmentKind.Link
-    else -> null
 }
 
 fun SceytUser.displayName(): String {

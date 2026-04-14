@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.persistence.interactor.GlobalSearchUserSuggestionsProvider
+import com.sceyt.chatuikit.presentation.components.global_search.defaults.DefaultUserSuggestionsProvider
 import com.sceyt.chatuikit.presentation.helpers.DebounceHelper
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
@@ -31,7 +32,7 @@ data class GlobalSearchHeaderState(
         get() = query.isNotBlank() && selectedUser == null && userSuggestions.isNotEmpty()
 }
 
-open class GlobalSearchHeaderViewModel(
+open class GlobalSearchViewModel(
     initialTab: GlobalSearchTab = GlobalSearchTab.Chats,
     private val userSuggestionsProvider: GlobalSearchUserSuggestionsProvider,
     private val userSuggestionsLimit: Int = DEFAULT_USER_SUGGESTIONS_LIMIT,
@@ -180,8 +181,8 @@ internal class GlobalSearchHeaderViewModelFactory(
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(GlobalSearchHeaderViewModel::class.java)) {
-            return GlobalSearchHeaderViewModel(
+        if (modelClass.isAssignableFrom(GlobalSearchViewModel::class.java)) {
+            return GlobalSearchViewModel(
                 initialTab = initialTab,
                 userSuggestionsProvider = userSuggestionsProvider,
                 userSuggestionsLimit = userSuggestionsLimit,

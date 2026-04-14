@@ -4,6 +4,7 @@ import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.persistence.lazyVar
 import com.sceyt.chatuikit.renderers.defaults.DefaultChannelAvatarRenderer
+import com.sceyt.chatuikit.renderers.defaults.DefaultSuggestionUserAvatarRenderer
 import com.sceyt.chatuikit.renderers.defaults.DefaultUserAndNotesAvatarRenderer
 import com.sceyt.chatuikit.renderers.defaults.DefaultUserAvatarRenderer
 import com.sceyt.chatuikit.renderers.defaults.DefaultVoterAvatarRenderer
@@ -24,5 +25,9 @@ class SceytChatUIKitRenderers {
 
     var voterAvatarRenderer: AvatarRenderer<VoterAvatarRendererAttributes> by lazyVar {
         DefaultVoterAvatarRenderer()
+    }
+
+    var suggestionUserAvatarRenderer: AvatarRenderer<SceytUser> by lazyVar {
+        DefaultSuggestionUserAvatarRenderer()
     }
 }

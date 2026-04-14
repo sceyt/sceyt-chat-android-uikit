@@ -24,7 +24,7 @@ import org.junit.Test
 import org.mockito.kotlin.mock
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class GlobalSearchHeaderViewModelTest {
+class GlobalSearchViewModelTest {
     private val dispatcher = StandardTestDispatcher()
 
     @Before
@@ -39,7 +39,7 @@ class GlobalSearchHeaderViewModelTest {
 
     @Test
     fun `query updates shared session state`() = runTest(dispatcher) {
-        val viewModel = TestGlobalSearchHeaderViewModel(ioDispatcher = dispatcher)
+        val viewModel = TestGlobalSearchViewModel(ioDispatcher = dispatcher)
         advanceUntilIdle()
 
         viewModel.onQueryChanged("jam")
@@ -51,7 +51,7 @@ class GlobalSearchHeaderViewModelTest {
 
     @Test
     fun `tab selection updates shared session state`() = runTest(dispatcher) {
-        val viewModel = TestGlobalSearchHeaderViewModel(ioDispatcher = dispatcher)
+        val viewModel = TestGlobalSearchViewModel(ioDispatcher = dispatcher)
 
         viewModel.onTabSelected(GlobalSearchTab.Media)
 
@@ -61,7 +61,7 @@ class GlobalSearchHeaderViewModelTest {
 
     @Test
     fun `selecting a member clears the query and updates session state`() = runTest(dispatcher) {
-        val viewModel = TestGlobalSearchHeaderViewModel(ioDispatcher = dispatcher)
+        val viewModel = TestGlobalSearchViewModel(ioDispatcher = dispatcher)
         advanceUntilIdle()
 
         viewModel.onQueryChanged("jam")
@@ -77,7 +77,7 @@ class GlobalSearchHeaderViewModelTest {
     @Test
     fun `empty input delete arms selected member removal before removing it`() =
         runTest(dispatcher) {
-            val viewModel = TestGlobalSearchHeaderViewModel(ioDispatcher = dispatcher)
+            val viewModel = TestGlobalSearchViewModel(ioDispatcher = dispatcher)
             advanceUntilIdle()
 
             viewModel.onMemberSelected(SceytUser("member-42"))
@@ -99,7 +99,7 @@ class GlobalSearchHeaderViewModelTest {
 
     @Test
     fun `typing again clears the pending selected member removal state`() = runTest(dispatcher) {
-        val viewModel = TestGlobalSearchHeaderViewModel(ioDispatcher = dispatcher)
+        val viewModel = TestGlobalSearchViewModel(ioDispatcher = dispatcher)
         advanceUntilIdle()
 
         viewModel.onMemberSelected(SceytUser("member-1"))
@@ -114,7 +114,7 @@ class GlobalSearchHeaderViewModelTest {
 
     @Test
     fun `clear button keeps previous selected member behavior`() = runTest(dispatcher) {
-        val viewModel = TestGlobalSearchHeaderViewModel(ioDispatcher = dispatcher)
+        val viewModel = TestGlobalSearchViewModel(ioDispatcher = dispatcher)
         advanceUntilIdle()
 
         viewModel.onMemberSelected(SceytUser("member-9"))
@@ -130,7 +130,7 @@ class GlobalSearchHeaderViewModelTest {
             val provider = FakeSuggestionsProvider(
                 suggestionsByQuery = mapOf("mar" to listOf(SceytUser("member-1")))
             )
-            val viewModel = TestGlobalSearchHeaderViewModel(
+            val viewModel = TestGlobalSearchViewModel(
                 userSuggestionsProvider = provider,
                 userSuggestionsLimit = 3,
                 ioDispatcher = dispatcher
@@ -150,7 +150,7 @@ class GlobalSearchHeaderViewModelTest {
         val provider = FakeSuggestionsProvider(
             suggestionsByQuery = mapOf("ali" to listOf(SceytUser("member-1")))
         )
-        val viewModel = TestGlobalSearchHeaderViewModel(
+        val viewModel = TestGlobalSearchViewModel(
             userSuggestionsProvider = provider,
             userSuggestionsDebounceMs = 200L,
             ioDispatcher = dispatcher
@@ -175,7 +175,7 @@ class GlobalSearchHeaderViewModelTest {
         val provider = GlobalSearchUserSuggestionsProvider { _, _ ->
             error("boom")
         }
-        val viewModel = TestGlobalSearchHeaderViewModel(
+        val viewModel = TestGlobalSearchViewModel(
             userSuggestionsProvider = provider,
             ioDispatcher = dispatcher
         )
@@ -190,7 +190,7 @@ class GlobalSearchHeaderViewModelTest {
     @Test
     fun `session registry entry is removed when header viewmodel is cleared`() =
         runTest(dispatcher) {
-            val viewModel = TestGlobalSearchHeaderViewModel(ioDispatcher = dispatcher)
+            val viewModel = TestGlobalSearchViewModel(ioDispatcher = dispatcher)
 
             assertThat(GlobalSearchSessionRegistry.contains(viewModel.sessionId)).isTrue()
 
@@ -200,7 +200,7 @@ class GlobalSearchHeaderViewModelTest {
         }
 }
 
-private class TestGlobalSearchHeaderViewModel(
+private class TestGlobalSearchViewModel(
     initialTab: GlobalSearchTab = GlobalSearchTab.Chats,
     userSuggestionsProvider: GlobalSearchUserSuggestionsProvider = GlobalSearchUserSuggestionsProvider { _, _ ->
         emptyList()
@@ -208,7 +208,7 @@ private class TestGlobalSearchHeaderViewModel(
     userSuggestionsLimit: Int = DEFAULT_USER_SUGGESTIONS_LIMIT,
     userSuggestionsDebounceMs: Long = DEFAULT_USER_SUGGESTIONS_DEBOUNCE_MS,
     ioDispatcher: CoroutineDispatcher,
-) : GlobalSearchHeaderViewModel(
+) : GlobalSearchViewModel(
     initialTab = initialTab,
     userSuggestionsProvider = userSuggestionsProvider,
     userSuggestionsLimit = userSuggestionsLimit,

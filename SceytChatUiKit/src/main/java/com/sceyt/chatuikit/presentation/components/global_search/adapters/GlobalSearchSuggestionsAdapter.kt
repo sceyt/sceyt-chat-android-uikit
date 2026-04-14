@@ -10,7 +10,6 @@ import com.sceyt.chatuikit.databinding.SceytItemSearchSuggestionUserBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.presentation.common.recyclerview.AsyncListDiffer
 import com.sceyt.chatuikit.presentation.common.recyclerview.UserDiffUtilItemCallBack
-import com.sceyt.chatuikit.presentation.components.global_search.displayName
 import com.sceyt.chatuikit.styles.search.GlobalSearchSuggestionsStyle
 import kotlinx.coroutines.CoroutineScope
 
@@ -65,12 +64,13 @@ open class GlobalSearchSuggestionsAdapter(
         }
 
         open fun bind(user: SceytUser, onClick: (SceytUser) -> Unit) = with(binding) {
-            name.text = user.displayName()
-            avatar.appearanceBuilder()
-                .setImageUrl(user.avatarURL)
-                .setDefaultAvatar(R.drawable.sceyt_ic_default_avatar)
-                .build()
-                .applyToAvatar()
+            name.text = style.userNameFormatter.format(context, user)
+            style.avatarRenderer.render(
+                context = context,
+                from = user,
+                style = style.avatarStyle,
+                avatarView = avatar
+            )
 
             binding.root.setOnClickListener { onClick(user) }
         }

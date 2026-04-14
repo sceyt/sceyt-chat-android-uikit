@@ -38,10 +38,12 @@ import com.sceyt.chatuikit.extensions.visibleInvisibleWithBottomSlideAnim
 import com.sceyt.chatuikit.persistence.extensions.collectWithLifecycle
 import com.sceyt.chatuikit.persistence.interactor.GlobalSearchUserSuggestionsProvider
 import com.sceyt.chatuikit.presentation.components.channel.messages.ChannelActivity
+import com.sceyt.chatuikit.presentation.components.global_search.adapters.GlobalSearchPagerAdapter
 import com.sceyt.chatuikit.presentation.components.global_search.adapters.GlobalSearchSuggestionsAdapter
 import com.sceyt.chatuikit.presentation.components.global_search.adapters.GlobalSearchTabsAdapter
 import com.sceyt.chatuikit.presentation.components.global_search.channels.ChannelsSearchFragment
 import com.sceyt.chatuikit.presentation.components.global_search.chats.ChatsSearchFragment
+import com.sceyt.chatuikit.presentation.components.global_search.defaults.DefaultUserSuggestionsProvider
 import com.sceyt.chatuikit.presentation.components.global_search.files.FilesSearchFragment
 import com.sceyt.chatuikit.presentation.components.global_search.links.LinksSearchFragment
 import com.sceyt.chatuikit.presentation.components.global_search.media.MediaSearchFragment
@@ -54,7 +56,7 @@ open class GlobalSearchActivity : AppCompatActivity() {
         private set
     protected lateinit var style: GlobalSearchStyle
         private set
-    protected open val headerViewModel: GlobalSearchHeaderViewModel by viewModels {
+    protected open val headerViewModel: GlobalSearchViewModel by viewModels {
         createHeaderViewModelFactory()
     }
 
