@@ -51,7 +51,7 @@ import com.sceyt.chatuikit.presentation.components.global_search.voice.VoiceSear
 import com.sceyt.chatuikit.styles.StyleRegistry
 import com.sceyt.chatuikit.styles.search.GlobalSearchStyle
 
-open class GlobalSearchActivity : AppCompatActivity() {
+open class GlobalSearchActivity : AppCompatActivity(), GlobalSearchClickListener {
     protected lateinit var binding: SceytActivityGlobalSearchBinding
         private set
     protected lateinit var style: GlobalSearchStyle
