@@ -24,8 +24,8 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import org.koin.core.component.inject
-import java.util.Calendar
 
 private const val LINKS_DEFAULT_PAGE_SIZE = 30
 
@@ -121,6 +121,10 @@ open class LinksSearchViewModel(
 
     protected open fun loadNextPage(sessionState: GlobalSearchSessionState) {
         loadJob?.cancel()
+        val lastCreatedAt = _state.value.items
+            .lastOrNull { it is GlobalSearchListItem.AttachmentItem }
+            ?.let { (it as GlobalSearchListItem.AttachmentItem).result.attachment.createdAt }
+            ?: 0L
         _state.update { it.copy(isLoadingMore = true) }
 
         loadJob = viewModelScope.launch(ioDispatcher) {
@@ -132,7 +136,7 @@ open class LinksSearchViewModel(
                 offset = offset,
                 limit = LINKS_DEFAULT_PAGE_SIZE,
             )
-            val newItems = buildListItems(page.data)
+            val newItems = buildListItems(page.data, initialPrevTimestamp = lastCreatedAt)
             withContext(Dispatchers.Main) {
                 _state.update { state ->
                     state.copy(
@@ -145,19 +149,20 @@ open class LinksSearchViewModel(
         }
     }
 
-    private fun buildListItems(results: List<GlobalSearchAttachmentResult>): List<GlobalSearchListItem> {
+    private fun buildListItems(
+        results: List<GlobalSearchAttachmentResult>,
+        initialPrevTimestamp: Long = 0L,
+    ): List<GlobalSearchListItem> {
         if (results.isEmpty()) return emptyList()
         return buildList {
-            var prevYearMonth = -1
+            var prevTimestamp = initialPrevTimestamp
             for (result in results) {
-                val cal =
-                    Calendar.getInstance().apply { timeInMillis = result.attachment.createdAt }
-                val yearMonth = cal.get(Calendar.YEAR) * 100 + cal.get(Calendar.MONTH)
-                if (yearMonth != prevYearMonth) {
-                    add(GlobalSearchListItem.DateSeparator(result.attachment.createdAt))
-                    prevYearMonth = yearMonth
+                val createdAt = result.attachment.createdAt
+                if (prevTimestamp == 0L || !DateTimeUtil.isSameDay(prevTimestamp, createdAt)) {
+                    add(GlobalSearchListItem.DateSeparator(createdAt))
                 }
                 add(GlobalSearchListItem.AttachmentItem(result, query = ""))
+                prevTimestamp = createdAt
             }
         }
     }
