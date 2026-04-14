@@ -41,6 +41,7 @@ import com.sceyt.chatuikit.presentation.components.global_search.adapters.Global
 import com.sceyt.chatuikit.presentation.components.global_search.channels.ChannelsSearchFragment
 import com.sceyt.chatuikit.presentation.components.global_search.chats.ChatsSearchFragment
 import com.sceyt.chatuikit.presentation.components.global_search.files.FilesSearchFragment
+import com.sceyt.chatuikit.presentation.components.global_search.links.LinksSearchFragment
 import com.sceyt.chatuikit.presentation.components.global_search.media.MediaSearchFragment
 import com.sceyt.chatuikit.presentation.components.global_search.voice.VoiceSearchFragment
 import com.sceyt.chatuikit.styles.StyleRegistry
@@ -146,7 +147,10 @@ open class GlobalSearchActivity : AppCompatActivity() {
                 sessionId = headerViewModel.sessionId
             )
 
-            GlobalSearchTab.Links -> Fragment()
+            GlobalSearchTab.Links -> LinksSearchFragment.newInstance(
+                styleId = style.styleId,
+                sessionId = headerViewModel.sessionId
+            )
         }
     }
 

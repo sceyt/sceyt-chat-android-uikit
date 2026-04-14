@@ -21,23 +21,24 @@ import com.sceyt.chatuikit.theme.Colors
  * @property linkPreviewStyle - style for link preview
  * */
 data class ChannelInfoLinkItemStyle(
-        @param:ColorInt val backgroundColor: Int,
-        val linkTextStyle: TextStyle,
-        val linkPreviewStyle: LinkPreviewStyle,
+    @param:ColorInt val backgroundColor: Int,
+    val linkTextStyle: TextStyle,
+    val linkPreviewStyle: LinkPreviewStyle,
 ) {
     companion object {
         var styleCustomizer = StyleCustomizer<ChannelInfoLinkItemStyle> { _, style -> style }
     }
 
     internal class Builder(
-            private val context: Context,
-            private val attributeSet: AttributeSet?
+        private val context: Context,
+        private val attributeSet: AttributeSet?
     ) {
         fun build(): ChannelInfoLinkItemStyle {
-            val backgroundColor = context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColorSections)
+            val backgroundColor =
+                context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColorSections)
 
             val linkTitleTextStyle = TextStyle(
-                color = context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor),
+                color = context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor),
                 font = R.font.roboto_medium
             )
 
