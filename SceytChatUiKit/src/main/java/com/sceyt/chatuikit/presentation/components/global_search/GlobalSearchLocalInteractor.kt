@@ -174,17 +174,28 @@ internal class GlobalSearchLocalInteractor :
         limit: Int,
     ): GlobalSearchPage<GlobalSearchAttachmentResult> {
         val kind = tab.toAttachmentKind() ?: return GlobalSearchPage(emptyList(), false)
-        val data = globalSearchDao.searchAttachments(
-            query = query,
-            senderId = senderId,
-            types = tab.toAttachmentTypes(),
-            limit = limit + 1,
-            offset = offset,
-            queryEmpty = query.isBlank(),
-            senderIgnored = senderId.isNullOrBlank(),
-            matchAttachmentName = tab == GlobalSearchTab.Files,
-            matchUrl = tab == GlobalSearchTab.Links
-        )
+        val data = if (tab == GlobalSearchTab.Links) {
+            globalSearchDao.searchLinkAttachments(
+                query = query,
+                senderId = senderId,
+                types = tab.toAttachmentTypes(),
+                limit = limit + 1,
+                offset = offset,
+                queryEmpty = query.isBlank(),
+                senderIgnored = senderId.isNullOrBlank(),
+            )
+        } else {
+            globalSearchDao.searchAttachments(
+                query = query,
+                senderId = senderId,
+                types = tab.toAttachmentTypes(),
+                limit = limit + 1,
+                offset = offset,
+                queryEmpty = query.isBlank(),
+                senderIgnored = senderId.isNullOrBlank(),
+                matchAttachmentName = tab == GlobalSearchTab.Files,
+            )
+        }
 
         val hasMore = data.size > limit
         val limited = data.take(limit)
