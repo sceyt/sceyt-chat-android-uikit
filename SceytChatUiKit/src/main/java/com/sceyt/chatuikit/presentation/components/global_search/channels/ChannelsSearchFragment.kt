@@ -44,7 +44,7 @@ open class ChannelsSearchFragment : Fragment(R.layout.sceyt_fragment_channels_se
         style = StyleRegistry.getOrDefault(styleId) {
             GlobalSearchStyle.Builder(context).build()
         }
-        session = GlobalSearchSessionResolver.require(arguments)
+        session = GlobalSearchSessionResolver.resolve(arguments)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -158,7 +158,7 @@ open class ChannelsSearchFragment : Fragment(R.layout.sceyt_fragment_channels_se
             sessionId: String,
         ) = ChannelsSearchFragment().setBundleArguments {
             putString(GlobalSearchActivity.STYLE_ID_KEY, styleId)
-            putString(GlobalSearchActivity.SESSION_ID_KEY, sessionId)
+            putString(GlobalSearchSessionResolver.SESSION_ID_KEY, sessionId)
         }
     }
 }
