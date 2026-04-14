@@ -19,7 +19,7 @@
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/sceyt_ic_arrow_back" />
 
-    <com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchQueryInputView
+    <com.sceyt.chatuikit.presentation.components.global_search.input.GlobalSearchQueryInputView
         android:id="@+id/searchInputView"
         android:layout_width="0dp"
         android:layout_height="wrap_content"

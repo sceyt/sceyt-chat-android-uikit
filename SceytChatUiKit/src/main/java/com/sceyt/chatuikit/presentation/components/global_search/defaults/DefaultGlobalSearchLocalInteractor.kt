@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.presentation.components.global_search
+package com.sceyt.chatuikit.presentation.components.global_search.defaults
 
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.interactor.GlobalSearchDataSource

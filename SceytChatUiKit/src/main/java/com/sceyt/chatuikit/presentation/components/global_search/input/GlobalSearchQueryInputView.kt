@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.presentation.components.global_search
+package com.sceyt.chatuikit.presentation.components.global_search.input
 
 import android.animation.ArgbEvaluator
 import android.animation.LayoutTransition
@@ -23,9 +23,11 @@ import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.hideSoftInput
 import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.extensions.showSoftInput
+import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchActivity
+import com.sceyt.chatuikit.presentation.components.global_search.displayName
 import com.sceyt.chatuikit.styles.search.GlobalSearchInputStyle
 
-open class GlobalSearchQueryInputView @JvmOverloads constructor(
+class GlobalSearchQueryInputView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0,
@@ -48,9 +50,11 @@ open class GlobalSearchQueryInputView @JvmOverloads constructor(
     private var chipStyleAnimator: ValueAnimator? = null
 
     init {
-        setBackgroundResource(R.drawable.sceyt_bg_corners_10)
-        backgroundTintList =
-            ColorStateList.valueOf(getCompatColor(SceytChatUIKit.theme.colors.surface1Color))
+        if (isInEditMode) {
+            setBackgroundResource(R.drawable.sceyt_bg_corners_10)
+            backgroundTintList =
+                ColorStateList.valueOf(getCompatColor(SceytChatUIKit.theme.colors.surface1Color))
+        }
         elevation = 0f
         ViewCompat.setTransitionName(this, SHARED_TRANSITION_NAME)
 
@@ -83,7 +87,7 @@ open class GlobalSearchQueryInputView @JvmOverloads constructor(
         updateClearVisibility()
     }
 
-    open fun applyStyle(style: GlobalSearchInputStyle) {
+    fun applyStyle(style: GlobalSearchInputStyle) {
         this.style = style
         style.searchInputStyle.apply(
             editText = binding.input,
@@ -142,11 +146,17 @@ open class GlobalSearchQueryInputView @JvmOverloads constructor(
 
         selectedMemberId = nextMemberId
         binding.name.text = nextName
-        binding.avatar.appearanceBuilder()
-            .setImageUrl(member?.avatarURL)
-            .setDefaultAvatar(R.drawable.sceyt_ic_default_avatars_selected_user)
-            .build()
-            .applyToAvatar()
+
+        if (member != null) {
+            style?.let { inputStyle ->
+                inputStyle.avatarRenderer.render(
+                    context,
+                    from = member,
+                    style = inputStyle.avatarStyle,
+                    avatarView = binding.avatar
+                )
+            }
+        }
         setSelectedUserContainerVisibility(shouldBeVisible)
         if (shouldBeVisible) {
             if (shouldAnimateChipState) {

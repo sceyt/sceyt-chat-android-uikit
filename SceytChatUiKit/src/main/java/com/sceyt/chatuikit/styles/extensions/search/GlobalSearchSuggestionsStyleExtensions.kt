@@ -1,9 +1,11 @@
 package com.sceyt.chatuikit.styles.extensions.search
 
+import android.content.res.TypedArray
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.getCompatColor
+import com.sceyt.chatuikit.styles.common.AvatarStyle
 import com.sceyt.chatuikit.styles.common.BackgroundStyle
 import com.sceyt.chatuikit.styles.common.Shape
 import com.sceyt.chatuikit.styles.common.TextStyle
@@ -23,4 +25,10 @@ internal fun GlobalSearchSuggestionsStyle.Builder.buildSuggestionTextStyle(): Te
         color = context.getCompatColor(colors.textPrimaryColor),
         font = R.font.roboto_regular
     )
+}
+
+internal fun GlobalSearchSuggestionsStyle.Builder.buildSuggestionAvatarStyle(
+    typedArray: TypedArray
+): AvatarStyle {
+    return AvatarStyle.Builder(typedArray = typedArray).build()
 }
