@@ -1,7 +1,14 @@
 package com.sceyt.chatuikit.presentation.components.global_search
 
 import com.google.common.truth.Truth.assertThat
+import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytUser
+import com.sceyt.chatuikit.data.models.search.GlobalSearchAttachmentKind
+import com.sceyt.chatuikit.data.models.search.GlobalSearchAttachmentResult
+import com.sceyt.chatuikit.data.models.search.GlobalSearchMessageResult
+import com.sceyt.chatuikit.data.models.search.GlobalSearchPage
+import com.sceyt.chatuikit.persistence.interactor.GlobalSearchDataSource
+import com.sceyt.chatuikit.persistence.interactor.GlobalSearchUserSuggestionsProvider
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -62,32 +69,33 @@ class GlobalSearchHeaderViewModelTest {
         viewModel.onMemberSelected(SceytUser("member-7"))
 
         assertThat(viewModel.headerState.value.query).isEmpty()
-        assertThat(viewModel.headerState.value.selectedMember?.id).isEqualTo("member-7")
+        assertThat(viewModel.headerState.value.selectedUser?.id).isEqualTo("member-7")
         assertThat(viewModel.requireSession().state.value.query).isEmpty()
         assertThat(viewModel.requireSession().state.value.selectedMember?.id).isEqualTo("member-7")
     }
 
     @Test
-    fun `empty input delete arms selected member removal before removing it`() = runTest(dispatcher) {
-        val viewModel = TestGlobalSearchHeaderViewModel(ioDispatcher = dispatcher)
-        advanceUntilIdle()
+    fun `empty input delete arms selected member removal before removing it`() =
+        runTest(dispatcher) {
+            val viewModel = TestGlobalSearchHeaderViewModel(ioDispatcher = dispatcher)
+            advanceUntilIdle()
 
-        viewModel.onMemberSelected(SceytUser("member-42"))
-        viewModel.onQueryChanged("media")
-        advanceUntilIdle()
+            viewModel.onMemberSelected(SceytUser("member-42"))
+            viewModel.onQueryChanged("media")
+            advanceUntilIdle()
 
-        viewModel.onEmptyQueryDeleteRequested()
+            viewModel.onEmptyQueryDeleteRequested()
 
-        assertThat(viewModel.headerState.value.isSelectedMemberRemovalPending).isTrue()
-        assertThat(viewModel.headerState.value.selectedMember?.id).isEqualTo("member-42")
-        assertThat(viewModel.headerState.value.query).isEqualTo("media")
+            assertThat(viewModel.headerState.value.isSelectedMemberRemovalPending).isTrue()
+            assertThat(viewModel.headerState.value.selectedUser?.id).isEqualTo("member-42")
+            assertThat(viewModel.headerState.value.query).isEqualTo("media")
 
-        viewModel.onEmptyQueryDeleteRequested()
+            viewModel.onEmptyQueryDeleteRequested()
 
-        assertThat(viewModel.headerState.value.selectedMember).isNull()
-        assertThat(viewModel.headerState.value.isSelectedMemberRemovalPending).isFalse()
-        assertThat(viewModel.requireSession().state.value.selectedMember).isNull()
-    }
+            assertThat(viewModel.headerState.value.selectedUser).isNull()
+            assertThat(viewModel.headerState.value.isSelectedMemberRemovalPending).isFalse()
+            assertThat(viewModel.requireSession().state.value.selectedMember).isNull()
+        }
 
     @Test
     fun `typing again clears the pending selected member removal state`() = runTest(dispatcher) {
@@ -112,29 +120,30 @@ class GlobalSearchHeaderViewModelTest {
         viewModel.onMemberSelected(SceytUser("member-9"))
         viewModel.onClearRequested()
 
-        assertThat(viewModel.headerState.value.selectedMember).isNull()
+        assertThat(viewModel.headerState.value.selectedUser).isNull()
         assertThat(viewModel.headerState.value.isSelectedMemberRemovalPending).isFalse()
     }
 
     @Test
-    fun `custom suggestions provider uses configured limit and updates header suggestions`() = runTest(dispatcher) {
-        val provider = FakeSuggestionsProvider(
-            suggestionsByQuery = mapOf("mar" to listOf(SceytUser("member-1")))
-        )
-        val viewModel = TestGlobalSearchHeaderViewModel(
-            memberSuggestionsProvider = provider,
-            memberSuggestionsLimit = 3,
-            ioDispatcher = dispatcher
-        )
-        advanceUntilIdle()
+    fun `custom suggestions provider uses configured limit and updates header suggestions`() =
+        runTest(dispatcher) {
+            val provider = FakeSuggestionsProvider(
+                suggestionsByQuery = mapOf("mar" to listOf(SceytUser("member-1")))
+            )
+            val viewModel = TestGlobalSearchHeaderViewModel(
+                userSuggestionsProvider = provider,
+                userSuggestionsLimit = 3,
+                ioDispatcher = dispatcher
+            )
+            advanceUntilIdle()
 
-        viewModel.onQueryChanged("mar")
-        advanceUntilIdle()
+            viewModel.onQueryChanged("mar")
+            advanceUntilIdle()
 
-        assertThat(provider.calls).containsExactly(SuggestionCall(query = "mar", limit = 3))
-        assertThat(viewModel.headerState.value.memberSuggestions.map { it.id })
-            .containsExactly("member-1")
-    }
+            assertThat(provider.calls).containsExactly(SuggestionCall(query = "mar", limit = 3))
+            assertThat(viewModel.headerState.value.userSuggestions.map { it.id })
+                .containsExactly("member-1")
+        }
 
     @Test
     fun `suggestions debounce waits before invoking provider`() = runTest(dispatcher) {
@@ -142,8 +151,8 @@ class GlobalSearchHeaderViewModelTest {
             suggestionsByQuery = mapOf("ali" to listOf(SceytUser("member-1")))
         )
         val viewModel = TestGlobalSearchHeaderViewModel(
-            memberSuggestionsProvider = provider,
-            memberSuggestionsDebounceMs = 200L,
+            userSuggestionsProvider = provider,
+            userSuggestionsDebounceMs = 200L,
             ioDispatcher = dispatcher
         )
         advanceUntilIdle()
@@ -157,17 +166,17 @@ class GlobalSearchHeaderViewModelTest {
         advanceUntilIdle()
 
         assertThat(provider.calls).containsExactly(SuggestionCall(query = "ali", limit = 8))
-        assertThat(viewModel.headerState.value.memberSuggestions.map { it.id })
+        assertThat(viewModel.headerState.value.userSuggestions.map { it.id })
             .containsExactly("member-1")
     }
 
     @Test
     fun `suggestions provider failures fall back to empty suggestions`() = runTest(dispatcher) {
-        val provider = GlobalSearchMemberSuggestionsProvider { _, _ ->
+        val provider = GlobalSearchUserSuggestionsProvider { _, _ ->
             error("boom")
         }
         val viewModel = TestGlobalSearchHeaderViewModel(
-            memberSuggestionsProvider = provider,
+            userSuggestionsProvider = provider,
             ioDispatcher = dispatcher
         )
         advanceUntilIdle()
@@ -175,34 +184,35 @@ class GlobalSearchHeaderViewModelTest {
         viewModel.onQueryChanged("ops")
         advanceUntilIdle()
 
-        assertThat(viewModel.headerState.value.memberSuggestions).isEmpty()
+        assertThat(viewModel.headerState.value.userSuggestions).isEmpty()
     }
 
     @Test
-    fun `session registry entry is removed when header viewmodel is cleared`() = runTest(dispatcher) {
-        val viewModel = TestGlobalSearchHeaderViewModel(ioDispatcher = dispatcher)
+    fun `session registry entry is removed when header viewmodel is cleared`() =
+        runTest(dispatcher) {
+            val viewModel = TestGlobalSearchHeaderViewModel(ioDispatcher = dispatcher)
 
-        assertThat(GlobalSearchSessionRegistry.contains(viewModel.sessionId)).isTrue()
+            assertThat(GlobalSearchSessionRegistry.contains(viewModel.sessionId)).isTrue()
 
-        viewModel.clearForTest()
+            viewModel.clearForTest()
 
-        assertThat(GlobalSearchSessionRegistry.contains(viewModel.sessionId)).isFalse()
-    }
+            assertThat(GlobalSearchSessionRegistry.contains(viewModel.sessionId)).isFalse()
+        }
 }
 
 private class TestGlobalSearchHeaderViewModel(
     initialTab: GlobalSearchTab = GlobalSearchTab.Chats,
-    memberSuggestionsProvider: GlobalSearchMemberSuggestionsProvider = GlobalSearchMemberSuggestionsProvider { _, _ ->
+    userSuggestionsProvider: GlobalSearchUserSuggestionsProvider = GlobalSearchUserSuggestionsProvider { _, _ ->
         emptyList()
     },
-    memberSuggestionsLimit: Int = DEFAULT_MEMBER_SUGGESTIONS_LIMIT,
-    memberSuggestionsDebounceMs: Long = DEFAULT_MEMBER_SUGGESTIONS_DEBOUNCE_MS,
+    userSuggestionsLimit: Int = DEFAULT_USER_SUGGESTIONS_LIMIT,
+    userSuggestionsDebounceMs: Long = DEFAULT_USER_SUGGESTIONS_DEBOUNCE_MS,
     ioDispatcher: CoroutineDispatcher,
 ) : GlobalSearchHeaderViewModel(
     initialTab = initialTab,
-    memberSuggestionsProvider = memberSuggestionsProvider,
-    memberSuggestionsLimit = memberSuggestionsLimit,
-    memberSuggestionsDebounceMs = memberSuggestionsDebounceMs,
+    userSuggestionsProvider = userSuggestionsProvider,
+    userSuggestionsLimit = userSuggestionsLimit,
+    userSuggestionsDebounceMs = userSuggestionsDebounceMs,
     ioDispatcher = ioDispatcher
 ) {
     fun requireSession(): GlobalSearchSession {
@@ -222,26 +232,33 @@ internal class FakeGlobalSearchDataSource : GlobalSearchDataSource {
     val searchMessagesCalls = mutableListOf<MessageCall>()
     val attachmentCalls = mutableListOf<AttachmentCall>()
 
-    override suspend fun searchMemberSuggestions(query: String, limit: Int): List<SceytUser> {
-        return emptyList()
-    }
-
-    override suspend fun getRecentChats(offset: Int, limit: Int): GlobalSearchPage<com.sceyt.chatuikit.data.models.channels.SceytChannel> {
+    override suspend fun getRecentChats(offset: Int, limit: Int): GlobalSearchPage<SceytChannel> {
         recentChatsCalls++
         return GlobalSearchPage(data = listOf(mock()), hasMore = false)
     }
 
-    override suspend fun searchChats(query: String, limit: Int): GlobalSearchPage<com.sceyt.chatuikit.data.models.channels.SceytChannel> {
+    override suspend fun searchChats(
+        query: String,
+        offset: Int,
+        limit: Int
+    ): GlobalSearchPage<SceytChannel> {
         searchChatsCalls++
         return GlobalSearchPage(data = listOf(mock()), hasMore = false)
     }
 
-    override suspend fun getRecentChannels(offset: Int, limit: Int): GlobalSearchPage<com.sceyt.chatuikit.data.models.channels.SceytChannel> {
+    override suspend fun getRecentChannels(
+        offset: Int,
+        limit: Int
+    ): GlobalSearchPage<SceytChannel> {
         recentChannelsCalls++
         return GlobalSearchPage(data = listOf(mock()), hasMore = false)
     }
 
-    override suspend fun searchChannels(query: String, limit: Int): GlobalSearchPage<com.sceyt.chatuikit.data.models.channels.SceytChannel> {
+    override suspend fun searchChannels(
+        query: String,
+        offset: Int,
+        limit: Int
+    ): GlobalSearchPage<SceytChannel> {
         searchChannelsCalls++
         return GlobalSearchPage(data = listOf(mock()), hasMore = false)
     }
@@ -254,7 +271,13 @@ internal class FakeGlobalSearchDataSource : GlobalSearchDataSource {
         offset: Int,
         limit: Int,
     ): GlobalSearchPage<GlobalSearchMessageResult> {
-        searchMessagesCalls += MessageCall(query = query, senderId = senderId, channelTypes = channelTypes, onlyJoined = onlyJoined, offset = offset)
+        searchMessagesCalls += MessageCall(
+            query = query,
+            senderId = senderId,
+            channelTypes = channelTypes,
+            onlyJoined = onlyJoined,
+            offset = offset
+        )
         return GlobalSearchPage(
             data = listOf(
                 GlobalSearchMessageResult(
@@ -267,13 +290,18 @@ internal class FakeGlobalSearchDataSource : GlobalSearchDataSource {
     }
 
     override suspend fun searchAttachments(
-        tab: GlobalSearchTab,
+        kind: GlobalSearchAttachmentKind,
         query: String,
         senderId: String?,
         offset: Int,
         limit: Int,
     ): GlobalSearchPage<GlobalSearchAttachmentResult> {
-        attachmentCalls += AttachmentCall(tab = tab, query = query, senderId = senderId, offset = offset)
+        attachmentCalls += AttachmentCall(
+            kind = kind,
+            query = query,
+            senderId = senderId,
+            offset = offset
+        )
         return GlobalSearchPage(
             data = listOf(
                 GlobalSearchAttachmentResult(
@@ -281,17 +309,18 @@ internal class FakeGlobalSearchDataSource : GlobalSearchDataSource {
                     message = mock(),
                     channel = mock(),
                     sender = null,
-                    kind = when (tab) {
-                        GlobalSearchTab.Media -> GlobalSearchAttachmentKind.Media
-                        GlobalSearchTab.Files -> GlobalSearchAttachmentKind.File
-                        GlobalSearchTab.Voice -> GlobalSearchAttachmentKind.Voice
-                        GlobalSearchTab.Links -> GlobalSearchAttachmentKind.Link
-                        else -> GlobalSearchAttachmentKind.Media
-                    }
+                    kind = kind
                 )
             ),
             hasMore = false
         )
+    }
+
+    override suspend fun searchUsersLinkedToJoinedChannelsByDisplayName(
+        query: String,
+        limit: Int
+    ): List<SceytUser> {
+        return emptyList()
     }
 }
 
@@ -304,7 +333,7 @@ internal data class MessageCall(
 )
 
 internal data class AttachmentCall(
-    val tab: GlobalSearchTab,
+    val kind: GlobalSearchAttachmentKind,
     val query: String,
     val senderId: String?,
     val offset: Int,
@@ -312,7 +341,7 @@ internal data class AttachmentCall(
 
 internal class FakeSuggestionsProvider(
     private val suggestionsByQuery: Map<String, List<SceytUser>> = emptyMap(),
-) : GlobalSearchMemberSuggestionsProvider {
+) : GlobalSearchUserSuggestionsProvider {
     val calls = mutableListOf<SuggestionCall>()
 
     override suspend fun provideSuggestions(query: String, limit: Int): List<SceytUser> {

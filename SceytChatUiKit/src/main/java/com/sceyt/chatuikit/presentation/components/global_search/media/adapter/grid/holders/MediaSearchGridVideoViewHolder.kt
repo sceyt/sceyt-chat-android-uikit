@@ -2,6 +2,7 @@ package com.sceyt.chatuikit.presentation.components.global_search.media.adapter.
 
 import android.util.Size
 import androidx.core.view.isVisible
+import com.sceyt.chatuikit.data.models.search.GlobalSearchAttachmentResult
 import com.sceyt.chatuikit.databinding.SceytItemChannelVideoBinding
 import com.sceyt.chatuikit.extensions.setDrawableStart
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
@@ -22,7 +23,6 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploaded
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploading
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.WaitingToUpload
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.holders.BaseFileViewHolder
-import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchAttachmentResult
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchListItem
 import com.sceyt.chatuikit.styles.channel_info.media.ChannelInfoMediaItemStyle
 

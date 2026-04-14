@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chatuikit.data.models.messages.SceytUser
+import com.sceyt.chatuikit.persistence.interactor.GlobalSearchUserSuggestionsProvider
 import com.sceyt.chatuikit.presentation.helpers.DebounceHelper
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
@@ -16,25 +17,25 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-internal const val DEFAULT_MEMBER_SUGGESTIONS_LIMIT = 8
-internal const val DEFAULT_MEMBER_SUGGESTIONS_DEBOUNCE_MS = 0L
+internal const val DEFAULT_USER_SUGGESTIONS_LIMIT = 8
+internal const val DEFAULT_USER_SUGGESTIONS_DEBOUNCE_MS = 0L
 
 data class GlobalSearchHeaderState(
     val activeTab: GlobalSearchTab = GlobalSearchTab.Chats,
     val query: String = "",
-    val selectedMember: SceytUser? = null,
-    val memberSuggestions: List<SceytUser> = emptyList(),
+    val selectedUser: SceytUser? = null,
+    val userSuggestions: List<SceytUser> = emptyList(),
     val isSelectedMemberRemovalPending: Boolean = false,
 ) {
     val showSuggestions: Boolean
-        get() = query.isNotBlank() && selectedMember == null && memberSuggestions.isNotEmpty()
+        get() = query.isNotBlank() && selectedUser == null && userSuggestions.isNotEmpty()
 }
 
-open class GlobalSearchHeaderViewModel internal constructor(
+open class GlobalSearchHeaderViewModel(
     initialTab: GlobalSearchTab = GlobalSearchTab.Chats,
-    private val memberSuggestionsProvider: GlobalSearchMemberSuggestionsProvider = GlobalSearchLocalInteractor(),
-    private val memberSuggestionsLimit: Int = DEFAULT_MEMBER_SUGGESTIONS_LIMIT,
-    private val memberSuggestionsDebounceMs: Long = DEFAULT_MEMBER_SUGGESTIONS_DEBOUNCE_MS,
+    private val userSuggestionsProvider: GlobalSearchUserSuggestionsProvider,
+    private val userSuggestionsLimit: Int = DEFAULT_USER_SUGGESTIONS_LIMIT,
+    private val userSuggestionsDebounceMs: Long = DEFAULT_USER_SUGGESTIONS_DEBOUNCE_MS,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModel() {
     private val sessionStore = GlobalSearchSessionStore(
@@ -83,8 +84,8 @@ open class GlobalSearchHeaderViewModel internal constructor(
         suggestionJob?.cancel()
         _headerState.update {
             it.copy(
-                selectedMember = user,
-                memberSuggestions = emptyList(),
+                selectedUser = user,
+                userSuggestions = emptyList(),
                 isSelectedMemberRemovalPending = false,
                 query = "",
             )
@@ -101,8 +102,8 @@ open class GlobalSearchHeaderViewModel internal constructor(
         suggestionJob?.cancel()
         _headerState.update {
             it.copy(
-                selectedMember = null,
-                memberSuggestions = emptyList(),
+                selectedUser = null,
+                userSuggestions = emptyList(),
                 isSelectedMemberRemovalPending = false,
             )
         }
@@ -113,19 +114,19 @@ open class GlobalSearchHeaderViewModel internal constructor(
     fun onClearRequested() {
         when {
             _headerState.value.query.isNotEmpty() -> onQueryChanged("")
-            _headerState.value.selectedMember != null -> onSelectedMemberRemoved()
+            _headerState.value.selectedUser != null -> onSelectedMemberRemoved()
         }
     }
 
     fun onEmptyQueryDeleteRequested() {
         val state = _headerState.value
         when {
-            state.selectedMember == null -> return
+            state.selectedUser == null -> return
             !state.isSelectedMemberRemovalPending -> {
                 suggestionJob?.cancel()
                 _headerState.update {
                     it.copy(
-                        memberSuggestions = emptyList(),
+                        userSuggestions = emptyList(),
                         isSelectedMemberRemovalPending = true,
                     )
                 }
@@ -137,17 +138,17 @@ open class GlobalSearchHeaderViewModel internal constructor(
 
     protected open fun refreshSuggestions(query: String) {
         suggestionJob?.cancel()
-        if (query.isBlank() || _headerState.value.selectedMember != null) {
-            _headerState.update { it.copy(memberSuggestions = emptyList()) }
+        if (query.isBlank() || _headerState.value.selectedUser != null) {
+            _headerState.update { it.copy(userSuggestions = emptyList()) }
             return
         }
 
         suggestionJob = viewModelScope.launch(ioDispatcher) {
-            if (memberSuggestionsDebounceMs > 0) {
-                delay(memberSuggestionsDebounceMs)
+            if (userSuggestionsDebounceMs > 0) {
+                delay(userSuggestionsDebounceMs)
             }
             val suggestions = try {
-                memberSuggestionsProvider.provideSuggestions(query, memberSuggestionsLimit)
+                userSuggestionsProvider.provideSuggestions(query, userSuggestionsLimit)
             } catch (error: CancellationException) {
                 throw error
             } catch (_: Throwable) {
@@ -155,8 +156,8 @@ open class GlobalSearchHeaderViewModel internal constructor(
             }
             withContext(Dispatchers.Main) {
                 val current = _headerState.value
-                if (current.query == query && current.selectedMember == null) {
-                    _headerState.update { it.copy(memberSuggestions = suggestions) }
+                if (current.query == query && current.selectedUser == null) {
+                    _headerState.update { it.copy(userSuggestions = suggestions) }
                 }
             }
         }
@@ -171,9 +172,9 @@ open class GlobalSearchHeaderViewModel internal constructor(
 
 internal class GlobalSearchHeaderViewModelFactory(
     private val initialTab: GlobalSearchTab,
-    private val memberSuggestionsProvider: GlobalSearchMemberSuggestionsProvider = GlobalSearchLocalInteractor(),
-    private val memberSuggestionsLimit: Int = DEFAULT_MEMBER_SUGGESTIONS_LIMIT,
-    private val memberSuggestionsDebounceMs: Long = DEFAULT_MEMBER_SUGGESTIONS_DEBOUNCE_MS,
+    private val userSuggestionsProvider: GlobalSearchUserSuggestionsProvider = DefaultUserSuggestionsProvider(),
+    private val userSuggestionsLimit: Int = DEFAULT_USER_SUGGESTIONS_LIMIT,
+    private val userSuggestionsDebounceMs: Long = DEFAULT_USER_SUGGESTIONS_DEBOUNCE_MS,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModelProvider.Factory {
 
@@ -182,9 +183,9 @@ internal class GlobalSearchHeaderViewModelFactory(
         if (modelClass.isAssignableFrom(GlobalSearchHeaderViewModel::class.java)) {
             return GlobalSearchHeaderViewModel(
                 initialTab = initialTab,
-                memberSuggestionsProvider = memberSuggestionsProvider,
-                memberSuggestionsLimit = memberSuggestionsLimit,
-                memberSuggestionsDebounceMs = memberSuggestionsDebounceMs,
+                userSuggestionsProvider = userSuggestionsProvider,
+                userSuggestionsLimit = userSuggestionsLimit,
+                userSuggestionsDebounceMs = userSuggestionsDebounceMs,
                 ioDispatcher = ioDispatcher
             ) as T
         }

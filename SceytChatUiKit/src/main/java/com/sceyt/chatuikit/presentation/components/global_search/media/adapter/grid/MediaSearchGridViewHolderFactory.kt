@@ -5,11 +5,11 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
+import com.sceyt.chatuikit.data.models.search.GlobalSearchAttachmentResult
 import com.sceyt.chatuikit.databinding.SceytItemChannelImageBinding
 import com.sceyt.chatuikit.databinding.SceytItemChannelVideoBinding
 import com.sceyt.chatuikit.databinding.SceytItemGlobalSearchSectionBinding
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
-import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchAttachmentResult
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchListItem
 import com.sceyt.chatuikit.presentation.components.global_search.media.adapter.grid.holders.MediaSearchGridImageViewHolder
 import com.sceyt.chatuikit.presentation.components.global_search.media.adapter.grid.holders.MediaSearchGridVideoViewHolder

@@ -4,12 +4,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
+import com.sceyt.chatuikit.data.models.search.GlobalSearchAttachmentKind
+import com.sceyt.chatuikit.data.models.search.GlobalSearchAttachmentResult
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
-import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchAttachmentResult
+import com.sceyt.chatuikit.persistence.interactor.GlobalSearchDataSource
+import com.sceyt.chatuikit.presentation.components.global_search.DefaultGlobalSearchLocalInteractor
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchListItem
-import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchLocalInteractor
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchSession
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchSessionState
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchTab
@@ -58,11 +60,11 @@ data class MediaSearchState(
 
 open class MediaSearchViewModel(
     protected val session: GlobalSearchSession,
+    protected val dataSource: GlobalSearchDataSource,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModel(), SceytKoinComponent {
 
     private val fileTransferService: FileTransferService by inject()
-    private val defaultDataSource by lazy(LazyThreadSafetyMode.NONE) { GlobalSearchLocalInteractor() }
 
     private val _state = MutableStateFlow(MediaSearchState(isLoading = true))
     val state: StateFlow<MediaSearchState> = _state.asStateFlow()
@@ -169,8 +171,8 @@ open class MediaSearchViewModel(
         pageSize: Int,
     ): LoadResult {
         return if (state.query.isBlank()) {
-            val page = defaultDataSource.searchAttachments(
-                tab = GlobalSearchTab.Media,
+            val page = dataSource.searchAttachments(
+                kind = GlobalSearchAttachmentKind.Media,
                 query = "",
                 senderId = state.selectedMember?.id,
                 offset = offset,
@@ -181,8 +183,8 @@ open class MediaSearchViewModel(
                 hasMore = page.hasMore,
             )
         } else {
-            val page = defaultDataSource.searchAttachments(
-                tab = GlobalSearchTab.Media,
+            val page = dataSource.searchAttachments(
+                kind = GlobalSearchAttachmentKind.Media,
                 query = state.query,
                 senderId = state.selectedMember?.id,
                 offset = 0,
@@ -268,13 +270,14 @@ open class MediaSearchViewModel(
 
 class MediaSearchViewModelFactory(
     private val session: GlobalSearchSession,
+    private val dataSource: GlobalSearchDataSource = DefaultGlobalSearchLocalInteractor(),
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(MediaSearchViewModel::class.java)) {
-            return MediaSearchViewModel(session, ioDispatcher) as T
+            return MediaSearchViewModel(session, dataSource, ioDispatcher) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
     }

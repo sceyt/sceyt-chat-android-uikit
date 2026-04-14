@@ -3,12 +3,14 @@ package com.sceyt.chatuikit.presentation.components.global_search.links
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.sceyt.chatuikit.data.models.search.GlobalSearchAttachmentKind
+import com.sceyt.chatuikit.data.models.search.GlobalSearchAttachmentResult
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
-import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchAttachmentResult
+import com.sceyt.chatuikit.persistence.interactor.GlobalSearchDataSource
+import com.sceyt.chatuikit.presentation.components.global_search.DefaultGlobalSearchLocalInteractor
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchListItem
-import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchLocalInteractor
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchSession
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchSessionState
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchTab
@@ -46,11 +48,11 @@ data class LinksSearchState(
 
 open class LinksSearchViewModel(
     protected val session: GlobalSearchSession,
+    protected val dataSource: GlobalSearchDataSource,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModel(), SceytKoinComponent {
 
     private val fileTransferService: FileTransferService by inject()
-    private val defaultDataSource by lazy(LazyThreadSafetyMode.NONE) { GlobalSearchLocalInteractor() }
 
     private val _state = MutableStateFlow(LinksSearchState(isLoading = true))
     val state: StateFlow<LinksSearchState> = _state.asStateFlow()
@@ -87,8 +89,8 @@ open class LinksSearchViewModel(
     protected open fun loadFirstPage(sessionState: GlobalSearchSessionState) {
         loadJob?.cancel()
         loadJob = viewModelScope.launch(ioDispatcher) {
-            val page = defaultDataSource.searchAttachments(
-                tab = GlobalSearchTab.Links,
+            val page = dataSource.searchAttachments(
+                kind = GlobalSearchAttachmentKind.Link,
                 query = sessionState.query,
                 senderId = sessionState.selectedMember?.id,
                 offset = 0,
@@ -123,8 +125,8 @@ open class LinksSearchViewModel(
 
         loadJob = viewModelScope.launch(ioDispatcher) {
             val offset = currentLinkItemCount()
-            val page = defaultDataSource.searchAttachments(
-                tab = GlobalSearchTab.Links,
+            val page = dataSource.searchAttachments(
+                kind = GlobalSearchAttachmentKind.Link,
                 query = "",
                 senderId = sessionState.selectedMember?.id,
                 offset = offset,
@@ -148,7 +150,8 @@ open class LinksSearchViewModel(
         return buildList {
             var prevYearMonth = -1
             for (result in results) {
-                val cal = Calendar.getInstance().apply { timeInMillis = result.attachment.createdAt }
+                val cal =
+                    Calendar.getInstance().apply { timeInMillis = result.attachment.createdAt }
                 val yearMonth = cal.get(Calendar.YEAR) * 100 + cal.get(Calendar.MONTH)
                 if (yearMonth != prevYearMonth) {
                     add(GlobalSearchListItem.DateSeparator(result.attachment.createdAt))
@@ -181,13 +184,14 @@ open class LinksSearchViewModel(
 
 class LinksSearchViewModelFactory(
     private val session: GlobalSearchSession,
+    private val dataSource: GlobalSearchDataSource = DefaultGlobalSearchLocalInteractor(),
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(LinksSearchViewModel::class.java)) {
-            return LinksSearchViewModel(session, ioDispatcher) as T
+            return LinksSearchViewModel(session, dataSource, ioDispatcher) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
     }

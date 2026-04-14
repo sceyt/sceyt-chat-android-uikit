@@ -7,12 +7,13 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.config.ChannelListConfig
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
+import com.sceyt.chatuikit.data.models.search.GlobalSearchMessageResult
+import com.sceyt.chatuikit.data.models.search.GlobalSearchPage
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
+import com.sceyt.chatuikit.persistence.interactor.GlobalSearchDataSource
+import com.sceyt.chatuikit.presentation.components.global_search.DefaultGlobalSearchLocalInteractor
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchListItem
-import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchLocalInteractor
-import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchMessageResult
-import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchPage
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchSession
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchSessionState
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchTab
@@ -51,10 +52,10 @@ data class ChannelsSearchState(
 
 open class ChannelsSearchViewModel(
     protected val session: GlobalSearchSession,
+    protected val dataSource: GlobalSearchDataSource,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModel(), SceytKoinComponent {
 
-    private val localDataSource by lazy(LazyThreadSafetyMode.NONE) { GlobalSearchLocalInteractor() }
     private val channelInteractor: ChannelInteractor by inject()
 
     private val _state = MutableStateFlow(ChannelsSearchState(isLoading = true))
@@ -168,7 +169,7 @@ open class ChannelsSearchViewModel(
         }
 
         state.query.isBlank() -> {
-            val page = localDataSource.getRecentChannels(offset = offset, limit = pageSize)
+            val page = dataSource.getRecentChannels(offset = offset, limit = pageSize)
             SearchResultPage(
                 listItems = buildListItems(
                     channelsPage = page,
@@ -211,7 +212,7 @@ open class ChannelsSearchViewModel(
     ): GlobalSearchPage<GlobalSearchMessageResult> {
         val selectedMemberId = requireNotNull(state.selectedMember?.id)
         val types = SceytChatUIKit.config.channelTypesConfig.getDiscoverableTypes()
-        return localDataSource.searchMessages(
+        return dataSource.searchMessages(
             query = state.query,
             senderId = selectedMemberId,
             channelTypes = types,
@@ -225,14 +226,14 @@ open class ChannelsSearchViewModel(
         state: GlobalSearchSessionState,
         pageSize: Int,
     ): GlobalSearchPage<SceytChannel> {
-        return localDataSource.searchChannels(state.query, pageSize)
+        return dataSource.searchChannels(state.query, offset = 0, pageSize)
     }
 
     private suspend fun loadTypedQueryMessagesPage(
         state: GlobalSearchSessionState,
         pageSize: Int,
     ): GlobalSearchPage<GlobalSearchMessageResult> {
-        return localDataSource.searchMessages(
+        return dataSource.searchMessages(
             query = state.query,
             senderId = null,
             channelTypes = listOf(SceytChatUIKit.config.channelTypesConfig.broadcast),
@@ -292,13 +293,14 @@ open class ChannelsSearchViewModel(
 
 class ChannelsSearchViewModelFactory(
     private val session: GlobalSearchSession,
+    private val dataSource: GlobalSearchDataSource = DefaultGlobalSearchLocalInteractor(),
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(ChannelsSearchViewModel::class.java)) {
-            return ChannelsSearchViewModel(session, ioDispatcher) as T
+            return ChannelsSearchViewModel(session, dataSource, ioDispatcher) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
     }
