@@ -16,6 +16,7 @@ import com.sceyt.chatuikit.extensions.addRVScrollListener
 import com.sceyt.chatuikit.extensions.setBundleArguments
 import com.sceyt.chatuikit.persistence.extensions.collectWithLifecycle
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchActivity
+import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchClickListener
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchSession
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchSessionResolver
 import com.sceyt.chatuikit.presentation.components.global_search.chats.adapter.ChatsSearchListAdapter
@@ -117,16 +118,15 @@ open class ChatsSearchFragment : Fragment(R.layout.sceyt_fragment_chats_search) 
     }
 
 
-    protected open val hostActivity: GlobalSearchActivity
-        get() = requireActivity() as? GlobalSearchActivity
-            ?: error("ChatsSearchFragment must be hosted by GlobalSearchActivity.")
+    protected open val clickListener: GlobalSearchClickListener?
+        get() = requireActivity() as? GlobalSearchClickListener
 
     protected open fun onChannelClicked(channel: SceytChannel) {
-        hostActivity.onChannelClicked(channel)
+        clickListener?.onChannelClicked(channel)
     }
 
     protected open fun onMessageClicked(messageId: Long, channel: SceytChannel) {
-        hostActivity.onMessageClicked(messageId, channel)
+        clickListener?.onMessageClicked(messageId, channel)
     }
 
     protected open fun requestMoreIfViewportNotFilled(state: ChatsSearchState) {

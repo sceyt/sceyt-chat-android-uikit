@@ -18,6 +18,7 @@ import com.sceyt.chatuikit.extensions.setBundleArguments
 import com.sceyt.chatuikit.persistence.extensions.collectWithLifecycle
 import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.MediaStickHeaderItemDecoration
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchActivity
+import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchClickListener
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchSession
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchSessionResolver
 import com.sceyt.chatuikit.presentation.components.global_search.media.adapter.MediaSearchListAdapter
@@ -211,12 +212,11 @@ open class MediaSearchFragment : Fragment(R.layout.sceyt_fragment_media_search) 
         }
     }
 
-    protected open val hostActivity: GlobalSearchActivity
-        get() = requireActivity() as? GlobalSearchActivity
-            ?: error("MediaSearchFragment must be hosted by GlobalSearchActivity.")
+    protected open val clickListener: GlobalSearchClickListener?
+        get() = requireActivity() as? GlobalSearchClickListener
 
     protected open fun onAttachmentClicked(result: GlobalSearchAttachmentResult) {
-        hostActivity.onAttachmentClicked(result)
+        clickListener?.onAttachmentClicked(result)
     }
 
     protected open fun applyStyle() {

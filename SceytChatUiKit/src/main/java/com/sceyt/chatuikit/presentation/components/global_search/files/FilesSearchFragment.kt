@@ -16,6 +16,7 @@ import com.sceyt.chatuikit.extensions.addRVScrollListener
 import com.sceyt.chatuikit.extensions.setBundleArguments
 import com.sceyt.chatuikit.persistence.extensions.collectWithLifecycle
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchActivity
+import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchClickListener
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchSession
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchSessionResolver
 import com.sceyt.chatuikit.presentation.components.global_search.files.adapter.FilesSearchListAdapter
@@ -125,12 +126,11 @@ open class FilesSearchFragment : Fragment(R.layout.sceyt_fragment_files_search) 
         return lm.findLastVisibleItemPosition() >= totalCount - LOAD_MORE_THRESHOLD
     }
 
-    protected open val hostActivity: GlobalSearchActivity
-        get() = requireActivity() as? GlobalSearchActivity
-            ?: error("FilesSearchFragment must be hosted by GlobalSearchActivity.")
+    protected open val clickListener: GlobalSearchClickListener?
+        get() = requireActivity() as? GlobalSearchClickListener
 
     protected open fun onAttachmentClicked(result: GlobalSearchAttachmentResult) {
-        hostActivity.onAttachmentClicked(result)
+        clickListener?.onAttachmentClicked(result)
     }
 
     protected open fun applyStyle() {
