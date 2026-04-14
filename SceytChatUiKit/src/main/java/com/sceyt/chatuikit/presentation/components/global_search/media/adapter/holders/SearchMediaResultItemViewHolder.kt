@@ -1,9 +1,7 @@
 package com.sceyt.chatuikit.presentation.components.global_search.media.adapter.holders
 
-import android.text.SpannableStringBuilder
-import android.text.Spanned
-import android.text.style.ForegroundColorSpan
 import com.sceyt.chatuikit.databinding.SceytItemGlobalSearchMediaResultBinding
+import com.sceyt.chatuikit.presentation.components.global_search.highlightQueryWords
 import com.sceyt.chatuikit.formatters.attributes.SearchMessageResultFormatterAttributes
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.persistence.file_transfer.ThumbFor
@@ -116,28 +114,8 @@ open class SearchMediaResultItemViewHolder(
 
     override fun needThumbFor() = ThumbFor.GlobalSearch
 
-    protected open fun highlight(text: CharSequence, query: String): CharSequence {
-        if (query.isBlank() || text.isBlank()) return text
-        val words = query.trim().split(Regex("\\s+")).filter { it.isNotEmpty() }
-        if (words.isEmpty()) return text
-        val spannable = SpannableStringBuilder(text)
-        val textLower = text.toString().lowercase()
-        for (word in words) {
-            val wordLower = word.lowercase()
-            var start = textLower.indexOf(wordLower)
-            while (start >= 0) {
-                val end = start + wordLower.length
-                spannable.setSpan(
-                    ForegroundColorSpan(style.highlightTextColor),
-                    start,
-                    end,
-                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE,
-                )
-                start = textLower.indexOf(wordLower, end)
-            }
-        }
-        return spannable
-    }
+    protected open fun highlight(text: CharSequence, query: String): CharSequence =
+        highlightQueryWords(text, query, style.highlightTextColor)
 
     private fun SceytItemGlobalSearchMediaResultBinding.applyStyle() {
         style.titleTextStyle.apply(tvTitle)

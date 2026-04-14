@@ -66,108 +66,110 @@ class GlobalSearchDaoQueriesTest {
     fun tearDown() {
         database.close()
     }
-
     @Test
-    fun searchUsersLinkedToJoinedChannelsByDisplayName_returnsDistinctJoinedMembersAndExcludesCurrentUser() = runTest {
-        insertUsers(
-            user("me", firstName = "Jamie", lastName = "Stone"),
-            user("jade", firstName = "Jade", lastName = "Morgan"),
-            user("john", firstName = "John", lastName = "Carter"),
-            user("jane", firstName = "Jane", lastName = "Miles"),
-        )
-        insertChannelsAndLinks(
-            channels = listOf(
-                channel(id = 1, subject = "Joined", userRole = "owner"),
-                channel(id = 2, subject = "Not Joined", userRole = ""),
-                channel(id = 3, subject = "Also Joined", userRole = "member"),
-            ),
-            links = listOf(
-                link("me", 1),
-                link("jade", 1),
-                link("john", 1),
-                link("jade", 3),
-                link("jane", 2),
+    fun searchUsersLinkedToJoinedChannelsByDisplayName_returnsDistinctJoinedMembersAndExcludesCurrentUser() =
+        runTest {
+            insertUsers(
+                user("me", firstName = "Jamie", lastName = "Stone"),
+                user("jade", firstName = "Jade", lastName = "Morgan"),
+                user("john", firstName = "John", lastName = "Carter"),
+                user("jane", firstName = "Jane", lastName = "Miles"),
             )
-        )
+            insertChannelsAndLinks(
+                channels = listOf(
+                    channel(id = 1, subject = "Joined", userRole = "owner"),
+                    channel(id = 2, subject = "Not Joined", userRole = ""),
+                    channel(id = 3, subject = "Also Joined", userRole = "member"),
+                ),
+                links = listOf(
+                    link("me", 1),
+                    link("jade", 1),
+                    link("john", 1),
+                    link("jade", 3),
+                    link("jane", 2),
+                )
+            )
 
-        val result = userDao.searchUsersLinkedToJoinedChannelsByDisplayName(
-            searchQuery = "Ja",
-            excludedUserId = "me",
-            limit = 10,
-        )
+            val result = userDao.searchUsersLinkedToJoinedChannelsByDisplayName(
+                searchQuery = "Ja",
+                excludedUserId = "me",
+                limit = 10,
+            )
 
-        assertThat(result.map { it.id }).containsExactly("jade")
-    }
+            assertThat(result.map { it.id }).containsExactly("jade")
+        }
 
     @Test
-    fun searchUsersLinkedToJoinedChannelsByDisplayName_prioritizesFullNamePrefixBeforeUsernamePrefix() = runTest {
-        insertUsers(
-            user("jade", firstName = "Jade", lastName = "Morgan", username = "jade"),
-            user("zoe", firstName = "Zoe", lastName = "Lane", username = "ja_zoe"),
-        )
-        insertChannelsAndLinks(
-            channels = listOf(channel(id = 10, subject = "Joined", userRole = "owner")),
-            links = listOf(link("jade", 10), link("zoe", 10)),
-        )
+    fun searchUsersLinkedToJoinedChannelsByDisplayName_prioritizesFullNamePrefixBeforeUsernamePrefix() =
+        runTest {
+            insertUsers(
+                user("jade", firstName = "Jade", lastName = "Morgan", username = "jade"),
+                user("zoe", firstName = "Zoe", lastName = "Lane", username = "ja_zoe"),
+            )
+            insertChannelsAndLinks(
+                channels = listOf(channel(id = 10, subject = "Joined", userRole = "owner")),
+                links = listOf(link("jade", 10), link("zoe", 10)),
+            )
 
-        val result = userDao.searchUsersLinkedToJoinedChannelsByDisplayName(
-            searchQuery = "Ja",
-            excludedUserId = null,
-            limit = 10,
-        )
+            val result = userDao.searchUsersLinkedToJoinedChannelsByDisplayName(
+                searchQuery = "Ja",
+                excludedUserId = null,
+                limit = 10,
+            )
 
-        assertThat(result.map { it.id }).containsExactly("jade", "zoe").inOrder()
-    }
+            assertThat(result.map { it.id }).containsExactly("jade", "zoe").inOrder()
+        }
 
     @Test
-    fun searchNonDirectChannelsBySubject_returnsMatchingCachedChannelsRegardlessOfJoinState() = runTest {
-        insertChannelsAndLinks(
-            channels = listOf(
-                channel(
-                    id = 1,
-                    type = ChannelTypeEnum.Public.value,
-                    subject = "Design Library",
-                    userRole = "",
-                    lastMessageTid = 11,
-                    lastMessageAt = 300,
+    fun searchNonDirectChannelsBySubject_returnsMatchingCachedChannelsRegardlessOfJoinState() =
+        runTest {
+            insertChannelsAndLinks(
+                channels = listOf(
+                    channel(
+                        id = 1,
+                        type = ChannelTypeEnum.Public.value,
+                        subject = "Design Library",
+                        userRole = "",
+                        lastMessageTid = 11,
+                        lastMessageAt = 300,
+                    ),
+                    channel(
+                        id = 2,
+                        type = ChannelTypeEnum.Group.value,
+                        subject = "Design Ops",
+                        userRole = "owner",
+                        lastMessageTid = 12,
+                        lastMessageAt = 200,
+                    ),
+                    channel(
+                        id = 3,
+                        type = ChannelTypeEnum.Direct.value,
+                        subject = "Design DM",
+                        userRole = "owner",
+                        lastMessageTid = 13,
+                        lastMessageAt = 400,
+                    ),
+                    channel(
+                        id = 4,
+                        type = ChannelTypeEnum.Public.value,
+                        subject = "Design Pending",
+                        userRole = "owner",
+                        lastMessageTid = 0,
+                        pending = true,
+                        lastMessageAt = 500,
+                    ),
                 ),
-                channel(
-                    id = 2,
-                    type = ChannelTypeEnum.Group.value,
-                    subject = "Design Ops",
-                    userRole = "owner",
-                    lastMessageTid = 12,
-                    lastMessageAt = 200,
-                ),
-                channel(
-                    id = 3,
-                    type = ChannelTypeEnum.Direct.value,
-                    subject = "Design DM",
-                    userRole = "owner",
-                    lastMessageTid = 13,
-                    lastMessageAt = 400,
-                ),
-                channel(
-                    id = 4,
-                    type = ChannelTypeEnum.Public.value,
-                    subject = "Design Pending",
-                    userRole = "owner",
-                    lastMessageTid = 0,
-                    pending = true,
-                    lastMessageAt = 500,
-                ),
-            ),
-            links = emptyList(),
-        )
+                links = emptyList(),
+            )
 
-        val result = channelDao.searchNonDirectChannelsBySubject(
-            query = "Design",
-            limit = 10,
-            offset = 0,
-        )
+            val result = channelDao.searchNonDirectChannelsBySubject(
+                query = "Design",
+                limit = 10,
+                offset = 0,
+            )
 
-        assertThat(result.map { it.channelEntity.id }).containsExactly(1L, 2L).inOrder()
-    }
+            assertThat(result.map { it.channelEntity.id }).containsExactly(1L, 2L).inOrder()
+        }
 
     @Test
     fun searchMessagesGlobally_filtersBySenderAndExcludesPendingAndUnlisted() = runTest {
@@ -179,8 +181,22 @@ class GlobalSearchDaoQueriesTest {
             links = emptyList(),
         )
         insertMessages(
-            message(tid = 1, id = 101, channelId = 1, body = "jam session", fromId = "alice", createdAt = 100),
-            message(tid = 2, id = 102, channelId = 2, body = "jam schedule", fromId = "bob", createdAt = 200),
+            message(
+                tid = 1,
+                id = 101,
+                channelId = 1,
+                body = "jam session",
+                fromId = "alice",
+                createdAt = 100
+            ),
+            message(
+                tid = 2,
+                id = 102,
+                channelId = 2,
+                body = "jam schedule",
+                fromId = "bob",
+                createdAt = 200
+            ),
             message(
                 tid = 3,
                 id = 103,
@@ -220,8 +236,22 @@ class GlobalSearchDaoQueriesTest {
             links = emptyList(),
         )
         insertMessages(
-            message(tid = 1, id = 201, channelId = 1, body = "older", fromId = "alice", createdAt = 100),
-            message(tid = 2, id = 202, channelId = 1, body = "newer", fromId = "bob", createdAt = 300),
+            message(
+                tid = 1,
+                id = 201,
+                channelId = 1,
+                body = "older",
+                fromId = "alice",
+                createdAt = 100
+            ),
+            message(
+                tid = 2,
+                id = 202,
+                channelId = 1,
+                body = "newer",
+                fromId = "bob",
+                createdAt = 300
+            ),
             message(
                 tid = 3,
                 id = 203,
@@ -252,10 +282,24 @@ class GlobalSearchDaoQueriesTest {
             links = emptyList(),
         )
         insertMessages(
-            message(tid = 1, id = 1, channelId = 1, body = "hello my name is Matat", fromId = "alice", createdAt = 100),
+            message(
+                tid = 1,
+                id = 1,
+                channelId = 1,
+                body = "hello my name is Matat",
+                fromId = "alice",
+                createdAt = 100
+            ),
         )
 
-        val result = globalSearchDao.searchMessages(query = "Hello", senderId = null, channelTypes = emptyList(), onlyJoined = false, limit = 20, offset = 0)
+        val result = globalSearchDao.searchMessages(
+            query = "Hello",
+            senderId = null,
+            channelTypes = emptyList(),
+            onlyJoined = false,
+            limit = 20,
+            offset = 0
+        )
 
         assertThat(result.map { it.messageEntity.id }).containsExactly(1L)
     }
@@ -267,10 +311,24 @@ class GlobalSearchDaoQueriesTest {
             links = emptyList(),
         )
         insertMessages(
-            message(tid = 1, id = 1, channelId = 1, body = "hello my name is Matat", fromId = "alice", createdAt = 100),
+            message(
+                tid = 1,
+                id = 1,
+                channelId = 1,
+                body = "hello my name is Matat",
+                fromId = "alice",
+                createdAt = 100
+            ),
         )
 
-        val result = globalSearchDao.searchMessages(query = "hello       ", senderId = null, channelTypes = emptyList(), onlyJoined = false, limit = 20, offset = 0)
+        val result = globalSearchDao.searchMessages(
+            query = "hello       ",
+            senderId = null,
+            channelTypes = emptyList(),
+            onlyJoined = false,
+            limit = 20,
+            offset = 0
+        )
 
         assertThat(result.map { it.messageEntity.id }).containsExactly(1L)
     }
@@ -282,10 +340,24 @@ class GlobalSearchDaoQueriesTest {
             links = emptyList(),
         )
         insertMessages(
-            message(tid = 1, id = 1, channelId = 1, body = "hello my name is Matat", fromId = "alice", createdAt = 100),
+            message(
+                tid = 1,
+                id = 1,
+                channelId = 1,
+                body = "hello my name is Matat",
+                fromId = "alice",
+                createdAt = 100
+            ),
         )
 
-        val result = globalSearchDao.searchMessages(query = "    hello", senderId = null, channelTypes = emptyList(), onlyJoined = false, limit = 20, offset = 0)
+        val result = globalSearchDao.searchMessages(
+            query = "    hello",
+            senderId = null,
+            channelTypes = emptyList(),
+            onlyJoined = false,
+            limit = 20,
+            offset = 0
+        )
 
         assertThat(result.map { it.messageEntity.id }).containsExactly(1L)
     }
@@ -297,10 +369,24 @@ class GlobalSearchDaoQueriesTest {
             links = emptyList(),
         )
         insertMessages(
-            message(tid = 1, id = 1, channelId = 1, body = "hello my name is Matat", fromId = "alice", createdAt = 100),
+            message(
+                tid = 1,
+                id = 1,
+                channelId = 1,
+                body = "hello my name is Matat",
+                fromId = "alice",
+                createdAt = 100
+            ),
         )
 
-        val result = globalSearchDao.searchMessages(query = "    hello  ", senderId = null, channelTypes = emptyList(), onlyJoined = false, limit = 20, offset = 0)
+        val result = globalSearchDao.searchMessages(
+            query = "    hello  ",
+            senderId = null,
+            channelTypes = emptyList(),
+            onlyJoined = false,
+            limit = 20,
+            offset = 0
+        )
 
         assertThat(result.map { it.messageEntity.id }).containsExactly(1L)
     }
@@ -312,28 +398,147 @@ class GlobalSearchDaoQueriesTest {
             links = emptyList(),
         )
         insertMessages(
-            message(tid = 1, id = 1, channelId = 1, body = "hello my name is Matat", fromId = "alice", createdAt = 100),
-            message(tid = 2, id = 2, channelId = 1, body = "goodbye world", fromId = "alice", createdAt = 200),
+            message(
+                tid = 1,
+                id = 1,
+                channelId = 1,
+                body = "hello my name is Matat",
+                fromId = "alice",
+                createdAt = 100
+            ),
+            message(
+                tid = 2,
+                id = 2,
+                channelId = 1,
+                body = "goodbye world",
+                fromId = "alice",
+                createdAt = 200
+            ),
         )
 
-        val result = globalSearchDao.searchMessages(query = "    hello        my", senderId = null, channelTypes = emptyList(), onlyJoined = false, limit = 20, offset = 0)
+        val result = globalSearchDao.searchMessages(
+            query = "    hello        my",
+            senderId = null,
+            channelTypes = emptyList(),
+            onlyJoined = false,
+            limit = 20,
+            offset = 0
+        )
 
         assertThat(result.map { it.messageEntity.id }).containsExactly(1L)
     }
 
     @Test
-    fun searchMessagesGlobally_multiWordQueryMatchesAllWordsAnywhereInBody() = runTest {
+    fun searchMessagesGlobally_multiWordQueryMatchesAllWordPrefixes() = runTest {
         insertChannelsAndLinks(
             channels = listOf(channel(id = 1, subject = "C", userRole = "owner")),
             links = emptyList(),
         )
         insertMessages(
-            message(tid = 1, id = 1, channelId = 1, body = "hello my name is Matat", fromId = "alice", createdAt = 100),
-            message(tid = 2, id = 2, channelId = 1, body = "hello world", fromId = "alice", createdAt = 200),
+            message(
+                tid = 1,
+                id = 1,
+                channelId = 1,
+                body = "hello my name is Matat",
+                fromId = "alice",
+                createdAt = 100
+            ),
+            message(
+                tid = 2,
+                id = 2,
+                channelId = 1,
+                body = "hello world",
+                fromId = "alice",
+                createdAt = 200
+            ),
         )
 
-        // "hello" and "Matat" both appear in body 1 but only "hello" in body 2
-        val result = globalSearchDao.searchMessages(query = "hello Matat", senderId = null, channelTypes = emptyList(), onlyJoined = false, limit = 20, offset = 0)
+        // "hello" starts body 1; "Matat" starts a word in body 1 — both prefix-match
+        // body 2 has "hello" but no word starting with "Matat"
+        val result = globalSearchDao.searchMessages(
+            query = "hello Matat",
+            senderId = null,
+            channelTypes = emptyList(),
+            onlyJoined = false,
+            limit = 20,
+            offset = 0
+        )
+
+        assertThat(result.map { it.messageEntity.id }).containsExactly(1L)
+    }
+
+    @Test
+    fun searchMessagesGlobally_midWordQueryDoesNotMatch() = runTest {
+        insertChannelsAndLinks(
+            channels = listOf(channel(id = 1, subject = "C", userRole = "owner")),
+            links = emptyList(),
+        )
+        insertMessages(
+            message(
+                tid = 1,
+                id = 1,
+                channelId = 1,
+                body = "hello world",
+                fromId = "alice",
+                createdAt = 100
+            ),
+        )
+
+        // "ello" is a suffix of "hello", not a word prefix — should return nothing
+        val result = globalSearchDao.searchMessages(
+            query = "ello",
+            senderId = null,
+            channelTypes = emptyList(),
+            onlyJoined = false,
+            limit = 20,
+            offset = 0
+        )
+        val result2 = globalSearchDao.searchMessages(
+            query = "rld",
+            senderId = null,
+            channelTypes = emptyList(),
+            onlyJoined = false,
+            limit = 20,
+            offset = 0
+        )
+
+        assertThat(result + result2).isEmpty()
+    }
+
+    @Test
+    fun searchMessagesGlobally_prefixMatchOnNonFirstWordReturns() = runTest {
+        insertChannelsAndLinks(
+            channels = listOf(channel(id = 1, subject = "C", userRole = "owner")),
+            links = emptyList(),
+        )
+        insertMessages(
+            message(
+                tid = 1,
+                id = 1,
+                channelId = 1,
+                body = "hello world",
+                fromId = "alice",
+                createdAt = 100
+            ),
+            message(
+                tid = 2,
+                id = 2,
+                channelId = 1,
+                body = "hello earth",
+                fromId = "alice",
+                createdAt = 200
+            ),
+        )
+
+        // "wor" is a word-prefix of "world" (second word) — should match body 1 only
+        val result = globalSearchDao.searchMessages(
+            query = "wor",
+            senderId = null,
+            channelTypes = emptyList(),
+            onlyJoined = false,
+            limit = 20,
+            offset = 0
+        )
 
         assertThat(result.map { it.messageEntity.id }).containsExactly(1L)
     }
@@ -345,75 +550,291 @@ class GlobalSearchDaoQueriesTest {
             links = emptyList(),
         )
         insertMessages(
-            message(tid = 1, id = 1, channelId = 1, body = "hello my name is Matat", fromId = "alice", createdAt = 100),
+            message(
+                tid = 1,
+                id = 1,
+                channelId = 1,
+                body = "hello my name is Matat",
+                fromId = "alice",
+                createdAt = 100
+            ),
         )
 
         // "missing" is not in the body — should return nothing
-        val result = globalSearchDao.searchMessages(query = "hello missing", senderId = null, channelTypes = emptyList(), onlyJoined = false, limit = 20, offset = 0)
+        val result = globalSearchDao.searchMessages(
+            query = "hello missing",
+            senderId = null,
+            channelTypes = emptyList(),
+            onlyJoined = false,
+            limit = 20,
+            offset = 0
+        )
 
         assertThat(result).isEmpty()
     }
 
     @Test
-    fun searchAttachmentsGlobally_blankMediaSearchFiltersBySenderAndExcludesHiddenItems() = runTest {
+    fun searchMessagesGlobally_multiWordQueryExcludesPendingMessages() = runTest {
         insertChannelsAndLinks(
-            channels = listOf(channel(id = 1, subject = "Media", userRole = "owner")),
+            channels = listOf(channel(id = 1, subject = "C", userRole = "owner")),
             links = emptyList(),
         )
         insertMessages(
-            message(tid = 10, id = 301, channelId = 1, body = "photo", fromId = "alice", createdAt = 100),
-            message(tid = 11, id = 302, channelId = 1, body = "video", fromId = "alice", createdAt = 200),
-            message(tid = 12, id = 303, channelId = 1, body = "other sender", fromId = "bob", createdAt = 300),
             message(
-                tid = 13,
-                id = 304,
+                tid = 1,
+                id = 1,
                 channelId = 1,
-                body = "pending photo",
+                body = "hello world",
                 fromId = "alice",
-                createdAt = 400,
+                createdAt = 100
+            ),
+            message(
+                tid = 2,
+                id = 2,
+                channelId = 1,
+                body = "hello world",
+                fromId = "alice",
+                createdAt = 200,
                 deliveryStatus = MessageDeliveryStatus.Pending,
             ),
-            message(
-                tid = 14,
-                id = 305,
-                channelId = 1,
-                body = "unlisted photo",
-                fromId = "alice",
-                createdAt = 500,
-                unList = true,
-            ),
-        )
-        insertAttachments(
-            attachment(id = 1, messageTid = 10, messageId = 301, channelId = 1, type = AttachmentTypeEnum.Image.value, createdAt = 100),
-            attachment(id = 2, messageTid = 11, messageId = 302, channelId = 1, type = AttachmentTypeEnum.Video.value, createdAt = 200),
-            attachment(id = 3, messageTid = 12, messageId = 303, channelId = 1, type = AttachmentTypeEnum.Image.value, createdAt = 300),
-            attachment(id = 4, messageTid = 13, messageId = 304, channelId = 1, type = AttachmentTypeEnum.Image.value, createdAt = 400),
-            attachment(id = 5, messageTid = 14, messageId = 305, channelId = 1, type = AttachmentTypeEnum.Image.value, createdAt = 500),
-            attachment(
-                id = 6,
-                messageTid = 11,
-                messageId = 302,
-                channelId = 1,
-                type = AttachmentTypeEnum.Image.value,
-                createdAt = 600,
-                viewOnce = true,
-            ),
         )
 
-        val result = globalSearchDao.searchAttachments(
-            query = "",
-            senderId = "alice",
-            types = listOf(AttachmentTypeEnum.Image.value, AttachmentTypeEnum.Video.value),
+        // Multi-word path — the pending message must be excluded just like in the single-word path
+        val result = globalSearchDao.searchMessages(
+            query = "hello world",
+            senderId = null,
+            channelTypes = emptyList(),
+            onlyJoined = false,
             limit = 20,
             offset = 0,
-            queryEmpty = true,
-            senderIgnored = false,
-            matchAttachmentName = false,
-            matchUrl = false,
         )
 
-        assertThat(result.map { it.attachmentEntity.id }).containsExactly(2L, 1L).inOrder()
+        assertThat(result.map { it.messageEntity.id }).containsExactly(1L)
     }
+
+    @Test
+    fun searchMessagesGlobally_newlineBeforeWordMatches() = runTest {
+        insertChannelsAndLinks(
+            channels = listOf(channel(id = 1, subject = "C", userRole = "owner")),
+            links = emptyList(),
+        )
+        insertMessages(
+            message(
+                tid = 1,
+                id = 1,
+                channelId = 1,
+                body = "hello\nworld",
+                fromId = "alice",
+                createdAt = 100
+            ),
+            message(
+                tid = 2,
+                id = 2,
+                channelId = 1,
+                body = "hello earth",
+                fromId = "alice",
+                createdAt = 200
+            ),
+        )
+
+        // "world" follows a newline — should match body 1 only
+        val result = globalSearchDao.searchMessages(
+            query = "world",
+            senderId = null,
+            channelTypes = emptyList(),
+            onlyJoined = false,
+            limit = 20,
+            offset = 0,
+        )
+
+        assertThat(result.map { it.messageEntity.id }).containsExactly(1L)
+    }
+
+    @Test
+    fun searchMessagesGlobally_midWordSuffixAfterNewlineDoesNotMatch() = runTest {
+        insertChannelsAndLinks(
+            channels = listOf(channel(id = 1, subject = "C", userRole = "owner")),
+            links = emptyList(),
+        )
+        insertMessages(
+            message(
+                tid = 1,
+                id = 1,
+                channelId = 1,
+                body = "hello\nworld",
+                fromId = "alice",
+                createdAt = 100
+            ),
+        )
+
+        // "orld" is a suffix of "world", not a word prefix — must not match even after newline
+        val result = globalSearchDao.searchMessages(
+            query = "orld",
+            senderId = null,
+            channelTypes = emptyList(),
+            onlyJoined = false,
+            limit = 20,
+            offset = 0,
+        )
+
+        assertThat(result).isEmpty()
+    }
+
+    @Test
+    fun searchMessagesGlobally_multiWordQueryMatchesAcrossNewlineSeparatedWords() = runTest {
+        insertChannelsAndLinks(
+            channels = listOf(channel(id = 1, subject = "C", userRole = "owner")),
+            links = emptyList(),
+        )
+        insertMessages(
+            message(
+                tid = 1,
+                id = 1,
+                channelId = 1,
+                body = "hello\nworld",
+                fromId = "alice",
+                createdAt = 100
+            ),
+            message(
+                tid = 2,
+                id = 2,
+                channelId = 1,
+                body = "hello earth",
+                fromId = "alice",
+                createdAt = 200
+            ),
+        )
+
+        // "hello" at start, "world" after newline — both word-prefix match; body 2 missing "world"
+        val result = globalSearchDao.searchMessages(
+            query = "hello world",
+            senderId = null,
+            channelTypes = emptyList(),
+            onlyJoined = false,
+            limit = 20,
+            offset = 0,
+        )
+
+        assertThat(result.map { it.messageEntity.id }).containsExactly(1L)
+    }
+
+    @Test
+    fun searchAttachmentsGlobally_blankMediaSearchFiltersBySenderAndExcludesHiddenItems() =
+        runTest {
+            insertChannelsAndLinks(
+                channels = listOf(channel(id = 1, subject = "Media", userRole = "owner")),
+                links = emptyList(),
+            )
+            insertMessages(
+                message(
+                    tid = 10,
+                    id = 301,
+                    channelId = 1,
+                    body = "photo",
+                    fromId = "alice",
+                    createdAt = 100
+                ),
+                message(
+                    tid = 11,
+                    id = 302,
+                    channelId = 1,
+                    body = "video",
+                    fromId = "alice",
+                    createdAt = 200
+                ),
+                message(
+                    tid = 12,
+                    id = 303,
+                    channelId = 1,
+                    body = "other sender",
+                    fromId = "bob",
+                    createdAt = 300
+                ),
+                message(
+                    tid = 13,
+                    id = 304,
+                    channelId = 1,
+                    body = "pending photo",
+                    fromId = "alice",
+                    createdAt = 400,
+                    deliveryStatus = MessageDeliveryStatus.Pending,
+                ),
+                message(
+                    tid = 14,
+                    id = 305,
+                    channelId = 1,
+                    body = "unlisted photo",
+                    fromId = "alice",
+                    createdAt = 500,
+                    unList = true,
+                ),
+            )
+            insertAttachments(
+                attachment(
+                    id = 1,
+                    messageTid = 10,
+                    messageId = 301,
+                    channelId = 1,
+                    type = AttachmentTypeEnum.Image.value,
+                    createdAt = 100
+                ),
+                attachment(
+                    id = 2,
+                    messageTid = 11,
+                    messageId = 302,
+                    channelId = 1,
+                    type = AttachmentTypeEnum.Video.value,
+                    createdAt = 200
+                ),
+                attachment(
+                    id = 3,
+                    messageTid = 12,
+                    messageId = 303,
+                    channelId = 1,
+                    type = AttachmentTypeEnum.Image.value,
+                    createdAt = 300
+                ),
+                attachment(
+                    id = 4,
+                    messageTid = 13,
+                    messageId = 304,
+                    channelId = 1,
+                    type = AttachmentTypeEnum.Image.value,
+                    createdAt = 400
+                ),
+                attachment(
+                    id = 5,
+                    messageTid = 14,
+                    messageId = 305,
+                    channelId = 1,
+                    type = AttachmentTypeEnum.Image.value,
+                    createdAt = 500
+                ),
+                attachment(
+                    id = 6,
+                    messageTid = 11,
+                    messageId = 302,
+                    channelId = 1,
+                    type = AttachmentTypeEnum.Image.value,
+                    createdAt = 600,
+                    viewOnce = true,
+                ),
+            )
+
+            val result = globalSearchDao.searchAttachments(
+                query = "",
+                senderId = "alice",
+                types = listOf(AttachmentTypeEnum.Image.value, AttachmentTypeEnum.Video.value),
+                limit = 20,
+                offset = 0,
+                queryEmpty = true,
+                senderIgnored = false,
+                matchAttachmentName = false,
+                matchUrl = false,
+            )
+
+            assertThat(result.map { it.attachmentEntity.id }).containsExactly(2L, 1L).inOrder()
+        }
 
     @Test
     fun searchAttachmentsGlobally_fileSearchMatchesAttachmentNameAndBodyButNotUrl() = runTest {
@@ -422,9 +843,30 @@ class GlobalSearchDaoQueriesTest {
             links = emptyList(),
         )
         insertMessages(
-            message(tid = 20, id = 401, channelId = 2, body = "upload the spec today", fromId = "alice", createdAt = 100),
-            message(tid = 21, id = 402, channelId = 2, body = "brief is mentioned in body", fromId = "alice", createdAt = 200),
-            message(tid = 22, id = 403, channelId = 2, body = "url should not match", fromId = "alice", createdAt = 300),
+            message(
+                tid = 20,
+                id = 401,
+                channelId = 2,
+                body = "upload the spec today",
+                fromId = "alice",
+                createdAt = 100
+            ),
+            message(
+                tid = 21,
+                id = 402,
+                channelId = 2,
+                body = "brief is mentioned in body",
+                fromId = "alice",
+                createdAt = 200
+            ),
+            message(
+                tid = 22,
+                id = 403,
+                channelId = 2,
+                body = "url should not match",
+                fromId = "alice",
+                createdAt = 300
+            ),
         )
         insertAttachments(
             attachment(
@@ -481,8 +923,22 @@ class GlobalSearchDaoQueriesTest {
             links = emptyList(),
         )
         insertMessages(
-            message(tid = 30, id = 501, channelId = 3, body = "body without keyword", fromId = "alice", createdAt = 100),
-            message(tid = 31, id = 502, channelId = 3, body = "docs are in body", fromId = "alice", createdAt = 200),
+            message(
+                tid = 30,
+                id = 501,
+                channelId = 3,
+                body = "body without keyword",
+                fromId = "alice",
+                createdAt = 100
+            ),
+            message(
+                tid = 31,
+                id = 502,
+                channelId = 3,
+                body = "docs are in body",
+                fromId = "alice",
+                createdAt = 200
+            ),
         )
         insertAttachments(
             attachment(
@@ -521,33 +977,71 @@ class GlobalSearchDaoQueriesTest {
     }
 
     @Test
-    fun searchChannelsBySubjectAndTypes_blankQueryReturnsAllNonPendingMatchingTypeChannels() = runTest {
-        insertChannelsAndLinks(
-            channels = listOf(
-                channel(id = 1, type = ChannelTypeEnum.Public.value, subject = "Engineering", lastMessageTid = 1, lastMessageAt = 100),
-                channel(id = 2, type = ChannelTypeEnum.Public.value, subject = "Design", lastMessageTid = 2, lastMessageAt = 200),
-                channel(id = 3, type = ChannelTypeEnum.Public.value, subject = "Pending", lastMessageTid = 0, pending = true, lastMessageAt = null),
-            ),
-            links = emptyList(),
-        )
+    fun searchChannelsBySubjectAndTypes_blankQueryReturnsAllNonPendingMatchingTypeChannels() =
+        runTest {
+            insertChannelsAndLinks(
+                channels = listOf(
+                    channel(
+                        id = 1,
+                        type = ChannelTypeEnum.Public.value,
+                        subject = "Engineering",
+                        lastMessageTid = 1,
+                        lastMessageAt = 100
+                    ),
+                    channel(
+                        id = 2,
+                        type = ChannelTypeEnum.Public.value,
+                        subject = "Design",
+                        lastMessageTid = 2,
+                        lastMessageAt = 200
+                    ),
+                    channel(
+                        id = 3,
+                        type = ChannelTypeEnum.Public.value,
+                        subject = "Pending",
+                        lastMessageTid = 0,
+                        pending = true,
+                        lastMessageAt = null
+                    ),
+                ),
+                links = emptyList(),
+            )
 
-        val result = globalSearchDao.searchChannelsBySubjectAndTypes(
-            query = "",
-            types = listOf(ChannelTypeEnum.Public.value),
-            limit = 10,
-            offset = 0,
-        )
+            val result = globalSearchDao.searchChannelsBySubjectAndTypes(
+                query = "",
+                types = listOf(ChannelTypeEnum.Public.value),
+                limit = 10,
+                offset = 0,
+            )
 
-        assertThat(result.map { it.channelEntity.id }).containsExactly(2L, 1L).inOrder()
-    }
+            assertThat(result.map { it.channelEntity.id }).containsExactly(2L, 1L).inOrder()
+        }
 
     @Test
     fun searchChannelsBySubjectAndTypes_filtersBySubjectContains() = runTest {
         insertChannelsAndLinks(
             channels = listOf(
-                channel(id = 1, type = ChannelTypeEnum.Public.value, subject = "Engineering Team", lastMessageTid = 1, lastMessageAt = 100),
-                channel(id = 2, type = ChannelTypeEnum.Public.value, subject = "Design Team", lastMessageTid = 2, lastMessageAt = 200),
-                channel(id = 3, type = ChannelTypeEnum.Public.value, subject = "Marketing", lastMessageTid = 3, lastMessageAt = 300),
+                channel(
+                    id = 1,
+                    type = ChannelTypeEnum.Public.value,
+                    subject = "Engineering Team",
+                    lastMessageTid = 1,
+                    lastMessageAt = 100
+                ),
+                channel(
+                    id = 2,
+                    type = ChannelTypeEnum.Public.value,
+                    subject = "Design Team",
+                    lastMessageTid = 2,
+                    lastMessageAt = 200
+                ),
+                channel(
+                    id = 3,
+                    type = ChannelTypeEnum.Public.value,
+                    subject = "Marketing",
+                    lastMessageTid = 3,
+                    lastMessageAt = 300
+                ),
             ),
             links = emptyList(),
         )
@@ -566,9 +1060,27 @@ class GlobalSearchDaoQueriesTest {
     fun searchChannelsBySubjectAndTypes_filtersByType() = runTest {
         insertChannelsAndLinks(
             channels = listOf(
-                channel(id = 1, type = ChannelTypeEnum.Public.value, subject = "Public Alpha", lastMessageTid = 1, lastMessageAt = 100),
-                channel(id = 2, type = ChannelTypeEnum.Group.value, subject = "Group Beta", lastMessageTid = 2, lastMessageAt = 200),
-                channel(id = 3, type = ChannelTypeEnum.Direct.value, subject = "Direct Gamma", lastMessageTid = 3, lastMessageAt = 300),
+                channel(
+                    id = 1,
+                    type = ChannelTypeEnum.Public.value,
+                    subject = "Public Alpha",
+                    lastMessageTid = 1,
+                    lastMessageAt = 100
+                ),
+                channel(
+                    id = 2,
+                    type = ChannelTypeEnum.Group.value,
+                    subject = "Group Beta",
+                    lastMessageTid = 2,
+                    lastMessageAt = 200
+                ),
+                channel(
+                    id = 3,
+                    type = ChannelTypeEnum.Direct.value,
+                    subject = "Direct Gamma",
+                    lastMessageTid = 3,
+                    lastMessageAt = 300
+                ),
             ),
             links = emptyList(),
         )
@@ -587,9 +1099,27 @@ class GlobalSearchDaoQueriesTest {
     fun searchChannelsBySubjectAndTypes_multipleTypesMatchAll() = runTest {
         insertChannelsAndLinks(
             channels = listOf(
-                channel(id = 1, type = ChannelTypeEnum.Public.value, subject = "Public Alpha", lastMessageTid = 1, lastMessageAt = 100),
-                channel(id = 2, type = ChannelTypeEnum.Group.value, subject = "Group Beta", lastMessageTid = 2, lastMessageAt = 200),
-                channel(id = 3, type = ChannelTypeEnum.Direct.value, subject = "Direct Gamma", lastMessageTid = 3, lastMessageAt = 300),
+                channel(
+                    id = 1,
+                    type = ChannelTypeEnum.Public.value,
+                    subject = "Public Alpha",
+                    lastMessageTid = 1,
+                    lastMessageAt = 100
+                ),
+                channel(
+                    id = 2,
+                    type = ChannelTypeEnum.Group.value,
+                    subject = "Group Beta",
+                    lastMessageTid = 2,
+                    lastMessageAt = 200
+                ),
+                channel(
+                    id = 3,
+                    type = ChannelTypeEnum.Direct.value,
+                    subject = "Direct Gamma",
+                    lastMessageTid = 3,
+                    lastMessageAt = 300
+                ),
             ),
             links = emptyList(),
         )
@@ -608,8 +1138,20 @@ class GlobalSearchDaoQueriesTest {
     fun searchChannelsBySubjectAndTypes_emptyTypesReturnsAllTypes() = runTest {
         insertChannelsAndLinks(
             channels = listOf(
-                channel(id = 1, type = ChannelTypeEnum.Public.value, subject = "Alpha", lastMessageTid = 1, lastMessageAt = 100),
-                channel(id = 2, type = ChannelTypeEnum.Group.value, subject = "Beta", lastMessageTid = 2, lastMessageAt = 200),
+                channel(
+                    id = 1,
+                    type = ChannelTypeEnum.Public.value,
+                    subject = "Alpha",
+                    lastMessageTid = 1,
+                    lastMessageAt = 100
+                ),
+                channel(
+                    id = 2,
+                    type = ChannelTypeEnum.Group.value,
+                    subject = "Beta",
+                    lastMessageTid = 2,
+                    lastMessageAt = 200
+                ),
             ),
             links = emptyList(),
         )
@@ -628,9 +1170,27 @@ class GlobalSearchDaoQueriesTest {
     fun searchChannelsBySubjectAndTypes_orderedByLastMessageAtDescending() = runTest {
         insertChannelsAndLinks(
             channels = listOf(
-                channel(id = 1, type = ChannelTypeEnum.Public.value, subject = "First", lastMessageTid = 1, lastMessageAt = 300),
-                channel(id = 2, type = ChannelTypeEnum.Public.value, subject = "Second", lastMessageTid = 2, lastMessageAt = 100),
-                channel(id = 3, type = ChannelTypeEnum.Public.value, subject = "Third", lastMessageTid = 3, lastMessageAt = 200),
+                channel(
+                    id = 1,
+                    type = ChannelTypeEnum.Public.value,
+                    subject = "First",
+                    lastMessageTid = 1,
+                    lastMessageAt = 300
+                ),
+                channel(
+                    id = 2,
+                    type = ChannelTypeEnum.Public.value,
+                    subject = "Second",
+                    lastMessageTid = 2,
+                    lastMessageAt = 100
+                ),
+                channel(
+                    id = 3,
+                    type = ChannelTypeEnum.Public.value,
+                    subject = "Third",
+                    lastMessageTid = 3,
+                    lastMessageAt = 200
+                ),
             ),
             links = emptyList(),
         )
@@ -649,7 +1209,13 @@ class GlobalSearchDaoQueriesTest {
     fun searchChannelsBySubjectAndTypes_caseInsensitiveSubjectMatch() = runTest {
         insertChannelsAndLinks(
             channels = listOf(
-                channel(id = 1, type = ChannelTypeEnum.Public.value, subject = "Engineering Updates", lastMessageTid = 1, lastMessageAt = 100),
+                channel(
+                    id = 1,
+                    type = ChannelTypeEnum.Public.value,
+                    subject = "Engineering Updates",
+                    lastMessageTid = 1,
+                    lastMessageAt = 100
+                ),
             ),
             links = emptyList(),
         )
