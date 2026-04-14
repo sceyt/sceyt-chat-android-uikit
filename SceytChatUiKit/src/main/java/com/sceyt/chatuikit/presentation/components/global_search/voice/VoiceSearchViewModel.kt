@@ -114,7 +114,7 @@ open class VoiceSearchViewModel(
     open fun loadMore() {
         val current = _state.value
         val key = current.sessionState ?: return
-        if (key.query.isNotBlank() || current.isLoading || current.isLoadingMore || !current.hasMore)
+        if (current.isLoading || current.isLoadingMore || !current.hasMore)
             return
         loadNextPage(key)
     }
@@ -131,7 +131,7 @@ open class VoiceSearchViewModel(
             val offset = currentVoiceItemCount()
             val page = dataSource.searchAttachments(
                 kind = GlobalSearchAttachmentKind.Voice,
-                query = "",
+                query = sessionState.query,
                 senderId = sessionState.selectedMember?.id,
                 offset = offset,
                 limit = VOICE_DEFAULT_PAGE_SIZE,
