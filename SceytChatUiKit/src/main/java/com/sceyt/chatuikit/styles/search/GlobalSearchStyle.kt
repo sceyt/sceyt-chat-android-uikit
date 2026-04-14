@@ -11,13 +11,14 @@ data class GlobalSearchStyle(
     @param:ColorInt val backgroundColor: Int,
     @param:ColorInt val dividerColor: Int,
     @param:ColorInt val navigationIconColor: Int,
-    // Sub-styles
     val inputStyle: GlobalSearchInputStyle,
     val tabBarStyle: GlobalSearchTabBarStyle,
     val suggestionsStyle: GlobalSearchSuggestionsStyle,
     val chatsPageStyle: ChatsSearchPageStyle,
     val channelsPageStyle: ChannelsSearchPageStyle,
     val mediaPageStyle: MediaSearchPageStyle,
+    val filesPageStyle: FilesSearchPageStyle,
+    val voicePageStyle: VoiceSearchPageStyle,
 ) : SceytComponentStyle() {
 
     internal class Builder(
@@ -36,6 +37,8 @@ data class GlobalSearchStyle(
                 chatsPageStyle = ChatsSearchPageStyle.Builder(context).build(),
                 channelsPageStyle = ChannelsSearchPageStyle.Builder(context).build(),
                 mediaPageStyle = MediaSearchPageStyle.Builder(context, attrs).build(),
+                filesPageStyle = FilesSearchPageStyle.Builder(context).build(),
+                voicePageStyle = VoiceSearchPageStyle.Builder(context).build(),
             )
         }
     }

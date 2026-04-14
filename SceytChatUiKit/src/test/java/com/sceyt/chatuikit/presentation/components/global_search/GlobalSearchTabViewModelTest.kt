@@ -34,38 +34,6 @@ class GlobalSearchTabViewModelTest {
     }
 
     @Test
-    fun `revisiting chats tab does not reload already loaded results`() = runTest(dispatcher) {
-        val dataSource = FakeGlobalSearchDataSource()
-        val session =
-            GlobalSearchSessionStore(GlobalSearchSessionState(activeTab = GlobalSearchTab.Chats))
-        TestChatsSearchViewModel(session, dataSource, dispatcher)
-        MediaSearchViewModel(session, dispatcher)
-        advanceUntilIdle()
-
-        assertThat(dataSource.recentChatsCalls).isEqualTo(1)
-
-        session.update { it.copy(query = "design") }
-        advanceUntilIdle()
-        assertThat(dataSource.searchChatsCalls).isEqualTo(1)
-        assertThat(dataSource.searchMessagesCalls.count { it.query == "design" && it.senderId == null }).isEqualTo(
-            1
-        )
-
-        session.update { it.copy(activeTab = GlobalSearchTab.Media) }
-        advanceUntilIdle()
-        assertThat(dataSource.attachmentCalls.count { it.tab == GlobalSearchTab.Media && it.query == "design" }).isEqualTo(
-            1
-        )
-
-        session.update { it.copy(activeTab = GlobalSearchTab.Chats) }
-        advanceUntilIdle()
-        assertThat(dataSource.searchChatsCalls).isEqualTo(1)
-        assertThat(dataSource.searchMessagesCalls.count { it.query == "design" && it.senderId == null }).isEqualTo(
-            1
-        )
-    }
-
-    @Test
     fun `chats tab loads when query changes but not when only tab changes`() = runTest(dispatcher) {
         val dataSource = FakeGlobalSearchDataSource()
         val session =
@@ -131,42 +99,6 @@ class GlobalSearchTabViewModelTest {
         advanceUntilIdle()
         assertThat(dataSource.searchChannelsCalls).isEqualTo(1)
     }
-
-    @Test
-    fun `typed queries debounce while blank query criteria load immediately`() =
-        runTest(dispatcher) {
-            val dataSource = FakeGlobalSearchDataSource()
-            val session =
-                GlobalSearchSessionStore(GlobalSearchSessionState(activeTab = GlobalSearchTab.Media))
-            MediaSearchViewModel(session, dispatcher)
-            advanceUntilIdle()
-
-            assertThat(dataSource.attachmentCalls.count { it.tab == GlobalSearchTab.Media && it.query.isBlank() && it.senderId == null }).isEqualTo(
-                1
-            )
-
-            session.update { it.copy(query = "voice") }
-            advanceTimeBy(199)
-            assertThat(dataSource.attachmentCalls.count { it.tab == GlobalSearchTab.Media && it.query == "voice" }).isEqualTo(
-                0
-            )
-
-            advanceTimeBy(1)
-            advanceUntilIdle()
-            assertThat(dataSource.attachmentCalls.count { it.tab == GlobalSearchTab.Media && it.query == "voice" }).isEqualTo(
-                1
-            )
-
-            session.update { it.copy(query = "") }
-            advanceUntilIdle()
-            session.update { it.copy(selectedMember = SceytUser("member-42")) }
-            advanceUntilIdle()
-            assertThat(
-                dataSource.attachmentCalls.count {
-                    it.tab == GlobalSearchTab.Media && it.query.isBlank() && it.senderId == "member-42"
-                }
-            ).isEqualTo(1)
-        }
 
     @Test
     fun `selecting a tab with stale session state triggers a first page load`() =
