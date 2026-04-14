@@ -9,6 +9,7 @@ import androidx.sqlite.db.SupportSQLiteQuery
 import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.ATTACHMENT_TABLE
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.CHANNEL_TABLE
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.LINK_DETAILS_TABLE
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.MESSAGE_TABLE
 import com.sceyt.chatuikit.persistence.database.entity.channel.ChannelDb
 import com.sceyt.chatuikit.persistence.database.entity.messages.AttachmentDb
@@ -107,7 +108,6 @@ internal abstract class GlobalSearchDao {
               :queryEmpty
               OR message.body LIKE '%' || :query || '%'
               OR (:matchAttachmentName AND attachment.name LIKE '%' || :query || '%')
-              OR (:matchUrl AND attachment.url LIKE '%' || :query || '%')
           )
         ORDER BY attachment.createdAt DESC, attachment.id DESC
         LIMIT :limit OFFSET :offset
@@ -122,7 +122,41 @@ internal abstract class GlobalSearchDao {
         queryEmpty: Boolean,
         senderIgnored: Boolean,
         matchAttachmentName: Boolean,
-        matchUrl: Boolean,
+        pendingStatus: MessageDeliveryStatus = MessageDeliveryStatus.Pending,
+    ): List<AttachmentDb>
+
+    @Transaction
+    @Query(
+        """
+        SELECT attachment.*
+        FROM $ATTACHMENT_TABLE AS attachment
+        JOIN $MESSAGE_TABLE AS message ON message.tid = attachment.messageTid
+        JOIN $CHANNEL_TABLE AS channel ON channel.chat_id = message.channelId
+        LEFT JOIN $LINK_DETAILS_TABLE AS link_details ON link_details.link = attachment.url
+        WHERE message.message_id IS NOT NULL
+          AND message.deliveryStatus != :pendingStatus
+          AND message.unList = 0
+          AND attachment.viewOnce != 1
+          AND attachment.type IN (:types)
+          AND (:senderIgnored OR message.fromId = :senderId)
+          AND (
+              :queryEmpty
+              OR attachment.url LIKE '%' || :query || '%'
+              OR link_details.title LIKE '%' || :query || '%'
+              OR link_details.description LIKE '%' || :query || '%'
+          )
+        ORDER BY attachment.createdAt DESC, attachment.id DESC
+        LIMIT :limit OFFSET :offset
+        """
+    )
+    abstract suspend fun searchLinkAttachments(
+        query: String,
+        senderId: String?,
+        types: List<String>,
+        limit: Int,
+        offset: Int,
+        queryEmpty: Boolean,
+        senderIgnored: Boolean,
         pendingStatus: MessageDeliveryStatus = MessageDeliveryStatus.Pending,
     ): List<AttachmentDb>
 

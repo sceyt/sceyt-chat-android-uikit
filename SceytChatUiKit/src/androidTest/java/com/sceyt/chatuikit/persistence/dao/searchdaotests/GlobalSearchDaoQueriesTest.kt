@@ -17,10 +17,12 @@ import com.sceyt.chatuikit.persistence.database.SceytDatabase
 import com.sceyt.chatuikit.persistence.database.dao.AttachmentDao
 import com.sceyt.chatuikit.persistence.database.dao.ChannelDao
 import com.sceyt.chatuikit.persistence.database.dao.GlobalSearchDao
+import com.sceyt.chatuikit.persistence.database.dao.LinkDao
 import com.sceyt.chatuikit.persistence.database.dao.MessageDao
 import com.sceyt.chatuikit.persistence.database.dao.UserDao
 import com.sceyt.chatuikit.persistence.database.entity.channel.ChannelEntity
 import com.sceyt.chatuikit.persistence.database.entity.channel.UserChatLinkEntity
+import com.sceyt.chatuikit.persistence.database.entity.link.LinkDetailsEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.AttachmentEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageEntity
 import com.sceyt.chatuikit.persistence.database.entity.user.UserDb
@@ -42,6 +44,7 @@ class GlobalSearchDaoQueriesTest {
     private lateinit var messageDao: MessageDao
     private lateinit var globalSearchDao: GlobalSearchDao
     private lateinit var attachmentDao: AttachmentDao
+    private lateinit var linkDao: LinkDao
 
     @get:Rule
     var instantTaskExecutorRule = InstantTaskExecutorRule()
@@ -60,6 +63,7 @@ class GlobalSearchDaoQueriesTest {
         messageDao = database.messageDao()
         globalSearchDao = database.globalSearchDao()
         attachmentDao = database.attachmentsDao()
+        linkDao = database.linkDao()
     }
 
     @After
@@ -830,7 +834,6 @@ class GlobalSearchDaoQueriesTest {
                 queryEmpty = true,
                 senderIgnored = false,
                 matchAttachmentName = false,
-                matchUrl = false,
             )
 
             assertThat(result.map { it.attachmentEntity.id }).containsExactly(2L, 1L).inOrder()
@@ -910,58 +913,27 @@ class GlobalSearchDaoQueriesTest {
             queryEmpty = false,
             senderIgnored = true,
             matchAttachmentName = true,
-            matchUrl = false,
         )
 
         assertThat(result.map { it.attachmentEntity.id }).containsExactly(11L, 10L).inOrder()
     }
 
     @Test
-    fun searchAttachmentsGlobally_linkSearchMatchesUrlWhenEnabled() = runTest {
+    fun searchLinkAttachments_matchesUrl() = runTest {
         insertChannelsAndLinks(
             channels = listOf(channel(id = 3, subject = "Links", userRole = "owner")),
             links = emptyList(),
         )
         insertMessages(
-            message(
-                tid = 30,
-                id = 501,
-                channelId = 3,
-                body = "body without keyword",
-                fromId = "alice",
-                createdAt = 100
-            ),
-            message(
-                tid = 31,
-                id = 502,
-                channelId = 3,
-                body = "docs are in body",
-                fromId = "alice",
-                createdAt = 200
-            ),
+            message(tid = 30, id = 501, channelId = 3, body = "body without keyword", fromId = "alice", createdAt = 100),
+            message(tid = 31, id = 502, channelId = 3, body = "no match here", fromId = "alice", createdAt = 200),
         )
         insertAttachments(
-            attachment(
-                id = 20,
-                messageTid = 30,
-                messageId = 501,
-                channelId = 3,
-                type = AttachmentTypeEnum.Link.value,
-                url = "https://docs.example.com/spec",
-                createdAt = 100,
-            ),
-            attachment(
-                id = 21,
-                messageTid = 31,
-                messageId = 502,
-                channelId = 3,
-                type = AttachmentTypeEnum.Link.value,
-                url = "https://example.com/nohit",
-                createdAt = 200,
-            ),
+            attachment(id = 20, messageTid = 30, messageId = 501, channelId = 3, type = AttachmentTypeEnum.Link.value, url = "https://docs.example.com/spec", createdAt = 100),
+            attachment(id = 21, messageTid = 31, messageId = 502, channelId = 3, type = AttachmentTypeEnum.Link.value, url = "https://example.com/nohit", createdAt = 200),
         )
 
-        val result = globalSearchDao.searchAttachments(
+        val result = globalSearchDao.searchLinkAttachments(
             query = "docs",
             senderId = null,
             types = listOf(AttachmentTypeEnum.Link.value),
@@ -969,11 +941,128 @@ class GlobalSearchDaoQueriesTest {
             offset = 0,
             queryEmpty = false,
             senderIgnored = true,
-            matchAttachmentName = false,
-            matchUrl = true,
+        )
+
+        assertThat(result.map { it.attachmentEntity.id }).containsExactly(20L)
+    }
+
+    @Test
+    fun searchLinkAttachments_matchesLinkDetailsTitle() = runTest {
+        insertChannelsAndLinks(
+            channels = listOf(channel(id = 3, subject = "Links", userRole = "owner")),
+            links = emptyList(),
+        )
+        insertMessages(
+            message(tid = 30, id = 501, channelId = 3, body = "irrelevant body", fromId = "alice", createdAt = 100),
+            message(tid = 31, id = 502, channelId = 3, body = "irrelevant body", fromId = "alice", createdAt = 200),
+        )
+        insertAttachments(
+            attachment(id = 20, messageTid = 30, messageId = 501, channelId = 3, type = AttachmentTypeEnum.Link.value, url = "https://example.com/a", createdAt = 100),
+            attachment(id = 21, messageTid = 31, messageId = 502, channelId = 3, type = AttachmentTypeEnum.Link.value, url = "https://example.com/b", createdAt = 200),
+        )
+        insertLinkDetails(
+            linkDetails(link = "https://example.com/a", title = "Design System Guide", description = null),
+            linkDetails(link = "https://example.com/b", title = "No match here", description = null),
+        )
+
+        val result = globalSearchDao.searchLinkAttachments(
+            query = "Design",
+            senderId = null,
+            types = listOf(AttachmentTypeEnum.Link.value),
+            limit = 20,
+            offset = 0,
+            queryEmpty = false,
+            senderIgnored = true,
+        )
+
+        assertThat(result.map { it.attachmentEntity.id }).containsExactly(20L)
+    }
+
+    @Test
+    fun searchLinkAttachments_matchesLinkDetailsDescription() = runTest {
+        insertChannelsAndLinks(
+            channels = listOf(channel(id = 3, subject = "Links", userRole = "owner")),
+            links = emptyList(),
+        )
+        insertMessages(
+            message(tid = 30, id = 501, channelId = 3, body = "irrelevant body", fromId = "alice", createdAt = 100),
+            message(tid = 31, id = 502, channelId = 3, body = "irrelevant body", fromId = "alice", createdAt = 200),
+        )
+        insertAttachments(
+            attachment(id = 20, messageTid = 30, messageId = 501, channelId = 3, type = AttachmentTypeEnum.Link.value, url = "https://example.com/a", createdAt = 100),
+            attachment(id = 21, messageTid = 31, messageId = 502, channelId = 3, type = AttachmentTypeEnum.Link.value, url = "https://example.com/b", createdAt = 200),
+        )
+        insertLinkDetails(
+            linkDetails(link = "https://example.com/a", title = null, description = "A guide to onboarding flows"),
+            linkDetails(link = "https://example.com/b", title = null, description = "Unrelated content"),
+        )
+
+        val result = globalSearchDao.searchLinkAttachments(
+            query = "onboarding",
+            senderId = null,
+            types = listOf(AttachmentTypeEnum.Link.value),
+            limit = 20,
+            offset = 0,
+            queryEmpty = false,
+            senderIgnored = true,
+        )
+
+        assertThat(result.map { it.attachmentEntity.id }).containsExactly(20L)
+    }
+
+    @Test
+    fun searchLinkAttachments_blankQueryReturnsAllLinks() = runTest {
+        insertChannelsAndLinks(
+            channels = listOf(channel(id = 3, subject = "Links", userRole = "owner")),
+            links = emptyList(),
+        )
+        insertMessages(
+            message(tid = 30, id = 501, channelId = 3, body = "first", fromId = "alice", createdAt = 100),
+            message(tid = 31, id = 502, channelId = 3, body = "second", fromId = "alice", createdAt = 200),
+        )
+        insertAttachments(
+            attachment(id = 20, messageTid = 30, messageId = 501, channelId = 3, type = AttachmentTypeEnum.Link.value, url = "https://example.com/a", createdAt = 100),
+            attachment(id = 21, messageTid = 31, messageId = 502, channelId = 3, type = AttachmentTypeEnum.Link.value, url = "https://example.com/b", createdAt = 200),
+        )
+
+        val result = globalSearchDao.searchLinkAttachments(
+            query = "",
+            senderId = null,
+            types = listOf(AttachmentTypeEnum.Link.value),
+            limit = 20,
+            offset = 0,
+            queryEmpty = true,
+            senderIgnored = true,
         )
 
         assertThat(result.map { it.attachmentEntity.id }).containsExactly(21L, 20L).inOrder()
+    }
+
+    @Test
+    fun searchLinkAttachments_noFalsePositiveWhenLinkDetailsAbsent() = runTest {
+        insertChannelsAndLinks(
+            channels = listOf(channel(id = 3, subject = "Links", userRole = "owner")),
+            links = emptyList(),
+        )
+        insertMessages(
+            message(tid = 30, id = 501, channelId = 3, body = "irrelevant", fromId = "alice", createdAt = 100),
+        )
+        insertAttachments(
+            // No LinkDetailsEntity inserted — link_details row is NULL after LEFT JOIN
+            attachment(id = 20, messageTid = 30, messageId = 501, channelId = 3, type = AttachmentTypeEnum.Link.value, url = "https://example.com/nohit", createdAt = 100),
+        )
+
+        val result = globalSearchDao.searchLinkAttachments(
+            query = "design",
+            senderId = null,
+            types = listOf(AttachmentTypeEnum.Link.value),
+            limit = 20,
+            offset = 0,
+            queryEmpty = false,
+            senderIgnored = true,
+        )
+
+        assertThat(result).isEmpty()
     }
 
     @Test
@@ -1248,6 +1337,27 @@ class GlobalSearchDaoQueriesTest {
     private suspend fun insertAttachments(vararg attachments: AttachmentEntity) {
         attachmentDao.insertAttachments(attachments.toList())
     }
+
+    private suspend fun insertLinkDetails(vararg details: LinkDetailsEntity) {
+        details.forEach { linkDao.insert(it) }
+    }
+
+    private fun linkDetails(
+        link: String,
+        title: String? = null,
+        description: String? = null,
+    ) = LinkDetailsEntity(
+        link = link,
+        url = link,
+        title = title,
+        description = description,
+        siteName = null,
+        faviconUrl = null,
+        imageUrl = null,
+        imageWidth = null,
+        imageHeight = null,
+        thumb = null,
+    )
 
     private fun user(
         id: String,
