@@ -2,14 +2,14 @@ package com.sceyt.chatuikit.presentation.components.global_search.chats.adapter.
 
 import android.content.Context
 import android.text.SpannableStringBuilder
-import android.text.Spanned
 import android.text.StaticLayout
-import android.text.style.ForegroundColorSpan
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytItemGlobalSearchMessageBinding
 import com.sceyt.chatuikit.formatters.attributes.SearchMessageResultFormatterAttributes
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchListItem
+import com.sceyt.chatuikit.presentation.components.global_search.findWordPrefixIndex
+import com.sceyt.chatuikit.presentation.components.global_search.highlightQueryWords
 import com.sceyt.chatuikit.styles.search.ChatsSearchMessageItemStyle
 import java.util.Date
 
@@ -60,16 +60,16 @@ open class SearchMessageItemViewHolder(
         if (words.isEmpty()) return text
         val textLower = text.toString().lowercase()
 
-        // Priority 1: full phrase match (words joined by single space)
+        // Priority 1: full phrase word-prefix match
         val phrase = words.joinToString(" ").lowercase()
-        val phraseMatch = textLower.indexOf(phrase)
+        val phraseMatch = findWordPrefixIndex(textLower, phrase)
 
         val matchStart = if (phraseMatch >= 0) {
             phraseMatch
         } else {
-            // Priority 2: earliest individual word match
+            // Priority 2: earliest individual word-prefix match
             words.minOfOrNull { word ->
-                val idx = textLower.indexOf(word.lowercase())
+                val idx = findWordPrefixIndex(textLower, word.lowercase())
                 if (idx >= 0) idx else Int.MAX_VALUE
             }.takeIf { it != Int.MAX_VALUE } ?: return text
         }
@@ -97,28 +97,8 @@ open class SearchMessageItemViewHolder(
         return SpannableStringBuilder("…").append(text.subSequence(lineStart, text.length))
     }
 
-    protected open fun highlight(text: CharSequence, query: String): CharSequence {
-        if (query.isBlank() || text.isBlank()) return text
-        val words = query.trim().split(Regex("\\s+")).filter { it.isNotEmpty() }
-        if (words.isEmpty()) return text
-        val spannable = SpannableStringBuilder(text)
-        val textLower = text.toString().lowercase()
-        for (word in words) {
-            val wordLower = word.lowercase()
-            var start = textLower.indexOf(wordLower)
-            while (start >= 0) {
-                val end = start + wordLower.length
-                spannable.setSpan(
-                    ForegroundColorSpan(style.highlightTextColor),
-                    start,
-                    end,
-                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-                )
-                start = textLower.indexOf(wordLower, end)
-            }
-        }
-        return spannable
-    }
+    protected open fun highlight(text: CharSequence, query: String): CharSequence =
+        highlightQueryWords(text, query, style.highlightTextColor)
 
     companion object {
         private const val MIN_TRIM_CHARS = 5

@@ -24,8 +24,16 @@ internal abstract class GlobalSearchDao {
      * - [channelTypes] non-empty → `channel.type IN (:channelTypes)` filter
      * - [onlyJoined] true → requires `channel.userRole IS NOT NULL AND channel.userRole != ''`
      *
-     * Multi-word queries (words separated by whitespace) use AND logic:
-     * every word must appear somewhere in the body (order-independent).
+     * Word-prefix semantics: each query word must appear at the start of some word in the body.
+     * Word boundaries recognised: start of string, space (U+0020), and newline (U+000A / LF).
+     * Other delimiters (punctuation, tab, etc.) are not treated as word boundaries.
+     * Multi-word queries use AND logic — all words must be present (order-independent).
+     *
+     * Limitations:
+     * - SQLite LIKE is case-insensitive for ASCII only; Unicode queries may not fold correctly.
+     * - The after-space / after-newline conditions use a leading `%` wildcard and cannot be
+     *   accelerated by a B-tree index. For production-scale search migrate to an FTS5 virtual
+     *   table with the unicode61 tokenizer.
      */
     @Transaction
     open suspend fun searchMessages(
@@ -39,90 +47,43 @@ internal abstract class GlobalSearchDao {
     ): List<MessageDb> {
         val words = query.trim().split(Regex("\\s+")).filter { it.isNotEmpty() }
         val senderIgnored = senderId.isNullOrBlank()
-        val channelTypesEmpty = channelTypes.isEmpty()
 
-        if (words.size <= 1) {
-            return searchMessagesQuery(
-                query = words.firstOrNull() ?: "",
-                senderId = senderId,
-                channelTypes = channelTypes,
-                onlyJoined = onlyJoined,
-                limit = limit,
-                offset = offset,
-                queryEmpty = words.isEmpty(),
-                senderIgnored = senderIgnored,
-                channelTypesEmpty = channelTypesEmpty,
-                pendingStatus = pendingStatus,
-            )
-        }
+        // Empty query → no body filter (match all); otherwise every word must word-prefix-match.
+        val bodyCondition = if (words.isEmpty()) "1"
+        else words.joinToString(" AND ") { WORD_PREFIX_CONDITION }
 
-        // Multi-word: every word must appear somewhere in the body (AND, any order)
-        val wordConditions = words.joinToString(" AND ") {
-            "message.body LIKE '%' || ? || '%'"
-        }
-        val senderFilter = if (!senderIgnored) "AND message.fromId = ?" else ""
-        val typeFilter = if (!channelTypesEmpty) {
-            "AND channel.type IN (${channelTypes.joinToString(",") { "?" }})"
-        } else ""
-        val joinedFilter = if (onlyJoined) {
-            "AND channel.userRole IS NOT NULL AND channel.userRole != ''"
-        } else ""
+        val senderClause = if (!senderIgnored) "AND message.fromId = ?" else ""
+        val typeClause = if (channelTypes.isNotEmpty())
+            "AND channel.type IN (${channelTypes.joinToString(",") { "?" }})" else ""
+        val joinedClause = if (onlyJoined)
+            "AND channel.userRole IS NOT NULL AND channel.userRole != ''" else ""
 
         val sql = """
             SELECT message.*
             FROM $MESSAGE_TABLE AS message
             JOIN $CHANNEL_TABLE AS channel ON channel.chat_id = message.channelId
             WHERE message.message_id IS NOT NULL
-              AND message.deliveryStatus != $PENDING_STATUS
+              AND message.deliveryStatus != ?
               AND message.unList = 0
-              $senderFilter
-              $typeFilter
-              $joinedFilter
-              AND ($wordConditions)
+              $senderClause
+              $typeClause
+              $joinedClause
+              AND ($bodyCondition)
             ORDER BY message.createdAt DESC, message.message_id DESC
             LIMIT ? OFFSET ?
         """.trimIndent()
 
         val args = buildList<Any> {
+            add(pendingStatus.toDbValue())
             if (!senderIgnored) add(senderId)
             addAll(channelTypes)
-            addAll(words)
+            words.forEach { add(it); add(it); add(it) } // 3× per word: start-of-body, after-space, after-newline
             add(limit)
             add(offset)
         }
 
         return searchMessagesRaw(SimpleSQLiteQuery(sql, args.toTypedArray()))
     }
-
-    @Transaction
-    @Query(
-        """
-        SELECT message.*
-        FROM $MESSAGE_TABLE AS message
-        JOIN $CHANNEL_TABLE AS channel ON channel.chat_id = message.channelId
-        WHERE message.message_id IS NOT NULL
-          AND message.deliveryStatus != :pendingStatus
-          AND message.unList = 0
-          AND (:senderIgnored OR message.fromId = :senderId)
-          AND (:channelTypesEmpty OR channel.type IN (:channelTypes))
-          AND (NOT :onlyJoined OR (channel.userRole IS NOT NULL AND channel.userRole != ''))
-          AND (:queryEmpty OR message.body LIKE '%' || :query || '%')
-        ORDER BY message.createdAt DESC, message.message_id DESC
-        LIMIT :limit OFFSET :offset
-        """
-    )
-    protected abstract suspend fun searchMessagesQuery(
-        query: String,
-        senderId: String?,
-        channelTypes: List<String>,
-        onlyJoined: Boolean,
-        limit: Int,
-        offset: Int,
-        queryEmpty: Boolean,
-        senderIgnored: Boolean,
-        channelTypesEmpty: Boolean,
-        pendingStatus: MessageDeliveryStatus = MessageDeliveryStatus.Pending,
-    ): List<MessageDb>
 
     @Transaction
     @RawQuery
@@ -165,8 +126,6 @@ internal abstract class GlobalSearchDao {
         pendingStatus: MessageDeliveryStatus = MessageDeliveryStatus.Pending,
     ): List<AttachmentDb>
 
-    // endregion
-
     @Transaction
     @Query(
         """
@@ -192,6 +151,19 @@ internal abstract class GlobalSearchDao {
     ): List<ChannelDb>
 
     private companion object {
-        private const val PENDING_STATUS = 0
+        /**
+         * Word-prefix LIKE condition for a single query word.
+         * Matches when the word starts the body, follows a space, or follows a newline (LF).
+         * Binds the same word **three times** in order: start-of-body, after-space, after-newline.
+         */
+        private const val WORD_PREFIX_CONDITION =
+            "(message.body LIKE ? || '%' OR message.body LIKE '% ' || ? || '%' OR message.body LIKE '%' || char(10) || ? || '%')"
+
+        /**
+         * Converts a [MessageDeliveryStatus] to the integer stored in the database.
+         * Must stay in sync with
+         * [com.sceyt.chatuikit.persistence.database.converters.MessageConverter.deliveryStatusToInt].
+         */
+        private fun MessageDeliveryStatus.toDbValue(): Int = ordinal
     }
 }

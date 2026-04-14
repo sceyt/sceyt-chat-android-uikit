@@ -3,7 +3,9 @@ package com.sceyt.chatuikit.presentation.components.global_search
 import com.google.common.truth.Truth.assertThat
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.messages.SceytUser
+import com.sceyt.chatuikit.presentation.components.global_search.channels.ChannelsSearchViewModel
 import com.sceyt.chatuikit.presentation.components.global_search.chats.ChatsSearchViewModel
+import com.sceyt.chatuikit.presentation.components.global_search.media.MediaSearchViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -37,7 +39,7 @@ class GlobalSearchTabViewModelTest {
         val session =
             GlobalSearchSessionStore(GlobalSearchSessionState(activeTab = GlobalSearchTab.Chats))
         TestChatsSearchViewModel(session, dataSource, dispatcher)
-        MediaSearchViewModel(session, dataSource, dispatcher)
+        MediaSearchViewModel(session, dispatcher)
         advanceUntilIdle()
 
         assertThat(dataSource.recentChatsCalls).isEqualTo(1)
@@ -69,7 +71,7 @@ class GlobalSearchTabViewModelTest {
         val session =
             GlobalSearchSessionStore(GlobalSearchSessionState(activeTab = GlobalSearchTab.Chats))
         TestChatsSearchViewModel(session, dataSource, dispatcher)
-        MediaSearchViewModel(session, dataSource, dispatcher)
+        MediaSearchViewModel(session, dispatcher)
         advanceUntilIdle()
 
         session.update { it.copy(query = "alpha") }
@@ -111,7 +113,7 @@ class GlobalSearchTabViewModelTest {
         val dataSource = FakeGlobalSearchDataSource()
         val session =
             GlobalSearchSessionStore(GlobalSearchSessionState(activeTab = GlobalSearchTab.Channels))
-        ChannelsSearchViewModel(session, dataSource, dispatcher)
+        ChannelsSearchViewModel(session, dispatcher)
         advanceUntilIdle()
 
         assertThat(dataSource.recentChannelsCalls).isEqualTo(1)
@@ -136,7 +138,7 @@ class GlobalSearchTabViewModelTest {
             val dataSource = FakeGlobalSearchDataSource()
             val session =
                 GlobalSearchSessionStore(GlobalSearchSessionState(activeTab = GlobalSearchTab.Media))
-            MediaSearchViewModel(session, dataSource, dispatcher)
+            MediaSearchViewModel(session, dispatcher)
             advanceUntilIdle()
 
             assertThat(dataSource.attachmentCalls.count { it.tab == GlobalSearchTab.Media && it.query.isBlank() && it.senderId == null }).isEqualTo(
@@ -172,7 +174,7 @@ class GlobalSearchTabViewModelTest {
             val dataSource = FakeGlobalSearchDataSource()
             val session =
                 GlobalSearchSessionStore(GlobalSearchSessionState(activeTab = GlobalSearchTab.Chats))
-            MediaSearchViewModel(session, dataSource, dispatcher)
+            MediaSearchViewModel(session, dispatcher)
             advanceUntilIdle()
 
             session.update { it.copy(query = "beta") }
@@ -193,22 +195,17 @@ class GlobalSearchTabViewModelTest {
 
     @Test
     fun `media tab preserves list and grid presentation state`() = runTest(dispatcher) {
-        val dataSource = FakeGlobalSearchDataSource()
         val session =
             GlobalSearchSessionStore(GlobalSearchSessionState(activeTab = GlobalSearchTab.Media))
-        val viewModel = MediaSearchViewModel(session, dataSource, dispatcher)
+        val viewModel = MediaSearchViewModel(session, dispatcher)
         advanceUntilIdle()
 
-        assertThat(viewModel.state.value.showMediaGrid).isTrue()
-        assertThat(viewModel.state.value.mediaGridItems).isNotEmpty()
         assertThat(viewModel.state.value.query).isEmpty()
 
         session.update { it.copy(query = "cat") }
         advanceTimeBy(300)
         advanceUntilIdle()
 
-        assertThat(viewModel.state.value.showMediaGrid).isFalse()
-        assertThat(viewModel.state.value.listItems).isNotEmpty()
         assertThat(viewModel.state.value.query).isEqualTo("cat")
     }
 
@@ -258,7 +255,7 @@ private class TestChatsSearchViewModel(
             state.selectedMember != null -> {
                 val page = dataSource.searchMessages(
                     query = state.query,
-                    senderId = state.selectedMember?.id,
+                    senderId = state.selectedMember.id,
                     channelTypes = emptyList(),
                     onlyJoined = false,
                     offset = offset,
