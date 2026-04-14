@@ -58,7 +58,7 @@ open class GlobalSearchViewModel(
     }
 
     fun onQueryChanged(query: String) {
-        val normalized = query.trimStart()
+        val normalized = query.trim()
         val currentState = _headerState.value
         if (currentState.query == normalized) return
 

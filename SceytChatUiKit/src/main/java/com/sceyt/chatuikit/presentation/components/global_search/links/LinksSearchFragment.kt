@@ -45,7 +45,7 @@ open class LinksSearchFragment : Fragment(R.layout.sceyt_fragment_links_search) 
         style = StyleRegistry.getOrDefault(styleId) {
             GlobalSearchStyle.Builder(context).build()
         }
-        session = GlobalSearchSessionResolver.require(arguments)
+        session = GlobalSearchSessionResolver.resolve(arguments)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -146,7 +146,7 @@ open class LinksSearchFragment : Fragment(R.layout.sceyt_fragment_links_search) 
             sessionId: String,
         ) = LinksSearchFragment().setBundleArguments {
             putString(GlobalSearchActivity.STYLE_ID_KEY, styleId)
-            putString(GlobalSearchActivity.SESSION_ID_KEY, sessionId)
+            putString(GlobalSearchSessionResolver.SESSION_ID_KEY, sessionId)
         }
     }
 }

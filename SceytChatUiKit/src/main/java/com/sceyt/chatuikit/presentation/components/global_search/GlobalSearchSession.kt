@@ -24,11 +24,14 @@ interface GlobalSearchSession {
 }
 
 object GlobalSearchSessionResolver {
-    fun require(arguments: Bundle?): GlobalSearchSession {
-        val sessionId = arguments?.getString(GlobalSearchActivity.SESSION_ID_KEY)
-            ?: error("GlobalSearch sessionId argument is required.")
-        return GlobalSearchSessionRegistry.require(sessionId)
+    const val SESSION_ID_KEY = "GLOBAL_SEARCH_SESSION_ID_KEY"
+
+    fun resolve(arguments: Bundle?): GlobalSearchSession {
+        val sessionId = arguments?.getString(SESSION_ID_KEY) ?: DEFAULT_SESSION_ID
+        return GlobalSearchSessionRegistry.getOrDefault(sessionId)
     }
+
+    private const val DEFAULT_SESSION_ID = "global_search_default_session"
 }
 
 internal class GlobalSearchSessionStore(
@@ -55,9 +58,8 @@ internal object GlobalSearchSessionRegistry {
         sessions.remove(sessionId)
     }
 
-    fun require(sessionId: String): GlobalSearchSessionStore {
-        return sessions[sessionId]
-            ?: error("GlobalSearch session is no longer available for id: $sessionId")
+    fun getOrDefault(sessionId: String): GlobalSearchSessionStore {
+        return sessions.getOrPut(sessionId) { GlobalSearchSessionStore(GlobalSearchSessionState()) }
     }
 
     fun contains(sessionId: String): Boolean = sessions.containsKey(sessionId)
