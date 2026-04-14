@@ -19,6 +19,7 @@ data class GlobalSearchStyle(
     val mediaPageStyle: MediaSearchPageStyle,
     val filesPageStyle: FilesSearchPageStyle,
     val voicePageStyle: VoiceSearchPageStyle,
+    val linksPageStyle: LinksSearchPageStyle,
 ) : SceytComponentStyle() {
 
     internal class Builder(
@@ -39,6 +40,7 @@ data class GlobalSearchStyle(
                 mediaPageStyle = MediaSearchPageStyle.Builder(context, attrs).build(),
                 filesPageStyle = FilesSearchPageStyle.Builder(context).build(),
                 voicePageStyle = VoiceSearchPageStyle.Builder(context).build(),
+                linksPageStyle = LinksSearchPageStyle.Builder(context).build(),
             )
         }
     }
