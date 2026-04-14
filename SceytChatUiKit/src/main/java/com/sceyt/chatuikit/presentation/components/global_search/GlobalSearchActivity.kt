@@ -296,7 +296,6 @@ open class GlobalSearchActivity : AppCompatActivity() {
 
     open fun onChannelClicked(channel: SceytChannel) {
         ChannelActivity.launch(this, channel)
-        finish()
     }
 
     open fun onMessageClicked(
@@ -304,7 +303,6 @@ open class GlobalSearchActivity : AppCompatActivity() {
         channel: SceytChannel,
     ) {
         ChannelActivity.launch(this, channel, messageId)
-        finish()
     }
 
     open fun onAttachmentClicked(result: GlobalSearchAttachmentResult) {
