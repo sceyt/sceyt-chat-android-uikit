@@ -6,10 +6,11 @@ import androidx.lifecycle.viewModelScope
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
+import com.sceyt.chatuikit.data.models.search.GlobalSearchMessageResult
+import com.sceyt.chatuikit.data.models.search.GlobalSearchPage
+import com.sceyt.chatuikit.persistence.interactor.GlobalSearchDataSource
+import com.sceyt.chatuikit.presentation.components.global_search.DefaultGlobalSearchLocalInteractor
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchListItem
-import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchLocalInteractor
-import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchMessageResult
-import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchPage
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchSession
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchSessionState
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchTab
@@ -46,9 +47,9 @@ data class ChatsSearchState(
 
 open class ChatsSearchViewModel(
     protected val session: GlobalSearchSession,
+    protected val dataSource: GlobalSearchDataSource,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModel() {
-    private val defaultDataSource by lazy(LazyThreadSafetyMode.NONE) { GlobalSearchLocalInteractor() }
 
     private val _state = MutableStateFlow(ChatsSearchState(isLoading = true))
     val state: StateFlow<ChatsSearchState> = _state.asStateFlow()
@@ -198,7 +199,7 @@ open class ChatsSearchViewModel(
         offset: Int,
         pageSize: Int,
     ): GlobalSearchPage<SceytChannel> {
-        return defaultDataSource.getRecentChats(offset = offset, limit = pageSize)
+        return dataSource.getRecentChats(offset = offset, limit = pageSize)
     }
 
     private suspend fun loadSelectedUserMessagesPage(
@@ -208,7 +209,7 @@ open class ChatsSearchViewModel(
     ): GlobalSearchPage<GlobalSearchMessageResult> {
         val selectedMemberId = requireNotNull(state.selectedMember?.id)
         val types = SceytChatUIKit.config.channelTypesConfig.getPrivateTypes()
-        return defaultDataSource.searchMessages(
+        return dataSource.searchMessages(
             query = state.query,
             senderId = selectedMemberId,
             channelTypes = types,
@@ -222,7 +223,7 @@ open class ChatsSearchViewModel(
         state: GlobalSearchSessionState,
         pageSize: Int,
     ): GlobalSearchPage<SceytChannel> {
-        return defaultDataSource.searchChats(state.query, pageSize)
+        return dataSource.searchChats(state.query, offset = 0, pageSize)
     }
 
     private suspend fun loadTypedQueryMessagesPage(
@@ -230,7 +231,7 @@ open class ChatsSearchViewModel(
         pageSize: Int,
     ): GlobalSearchPage<GlobalSearchMessageResult> {
         val types = SceytChatUIKit.config.channelTypesConfig.getPrivateTypes()
-        return defaultDataSource.searchMessages(
+        return dataSource.searchMessages(
             query = state.query,
             senderId = null,
             channelTypes = types,
@@ -273,13 +274,14 @@ open class ChatsSearchViewModel(
 
 class ChatsSearchViewModelFactory(
     private val session: GlobalSearchSession,
+    private val dataSource: GlobalSearchDataSource = DefaultGlobalSearchLocalInteractor(),
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(ChatsSearchViewModel::class.java)) {
-            return ChatsSearchViewModel(session, ioDispatcher) as T
+            return ChatsSearchViewModel(session, dataSource, ioDispatcher) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
     }

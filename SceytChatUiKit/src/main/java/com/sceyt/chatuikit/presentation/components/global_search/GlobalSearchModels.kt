@@ -6,8 +6,10 @@ import androidx.annotation.StringRes
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
-import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytUser
+import com.sceyt.chatuikit.data.models.search.GlobalSearchAttachmentKind
+import com.sceyt.chatuikit.data.models.search.GlobalSearchAttachmentResult
+import com.sceyt.chatuikit.data.models.search.GlobalSearchMessageResult
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.mappers.getInfoFromMetadata
 import com.sceyt.chatuikit.persistence.mappers.toTransferData
@@ -23,10 +25,6 @@ enum class GlobalSearchTab(@param:StringRes val titleRes: Int) {
     Files(R.string.sceyt_files),
     Voice(R.string.sceyt_voice),
     Links(R.string.sceyt_links)
-}
-
-enum class GlobalSearchAttachmentKind {
-    Media, File, Voice, Link
 }
 
 sealed interface GlobalSearchListItem {
@@ -85,26 +83,12 @@ sealed interface GlobalSearchListItem {
     }
 }
 
-data class GlobalSearchMessageResult(
-    val message: SceytMessage,
-    val channel: SceytChannel,
-)
-
-data class GlobalSearchAttachmentResult(
-    val attachment: SceytAttachment,
-    val message: SceytMessage,
-    val channel: SceytChannel,
-    val sender: SceytUser?,
-    val kind: GlobalSearchAttachmentKind,
-)
-
-data class GlobalSearchPage<T>(
-    val data: List<T>,
-    val hasMore: Boolean,
-) {
-    companion object {
-        fun <T> empty() = GlobalSearchPage<T>(emptyList(), false)
-    }
+internal fun GlobalSearchTab.toAttachmentKind(): GlobalSearchAttachmentKind? = when (this) {
+    GlobalSearchTab.Media -> GlobalSearchAttachmentKind.Media
+    GlobalSearchTab.Files -> GlobalSearchAttachmentKind.File
+    GlobalSearchTab.Voice -> GlobalSearchAttachmentKind.Voice
+    GlobalSearchTab.Links -> GlobalSearchAttachmentKind.Link
+    else -> null
 }
 
 fun SceytUser.displayName(): String {

@@ -28,6 +28,7 @@ import androidx.recyclerview.widget.LinearLayoutManager.HORIZONTAL
 import androidx.viewpager2.widget.ViewPager2
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
+import com.sceyt.chatuikit.data.models.search.GlobalSearchAttachmentResult
 import com.sceyt.chatuikit.databinding.SceytActivityGlobalSearchBinding
 import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
 import com.sceyt.chatuikit.extensions.launchActivity
@@ -35,6 +36,7 @@ import com.sceyt.chatuikit.extensions.overrideTransitions
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.chatuikit.extensions.visibleInvisibleWithBottomSlideAnim
 import com.sceyt.chatuikit.persistence.extensions.collectWithLifecycle
+import com.sceyt.chatuikit.persistence.interactor.GlobalSearchUserSuggestionsProvider
 import com.sceyt.chatuikit.presentation.components.channel.messages.ChannelActivity
 import com.sceyt.chatuikit.presentation.components.global_search.adapters.GlobalSearchSuggestionsAdapter
 import com.sceyt.chatuikit.presentation.components.global_search.adapters.GlobalSearchTabsAdapter
@@ -177,20 +179,19 @@ open class GlobalSearchActivity : AppCompatActivity() {
     protected open fun createHeaderViewModelFactory(): ViewModelProvider.Factory {
         return GlobalSearchHeaderViewModelFactory(
             initialTab = providedTabs.first(),
-            memberSuggestionsProvider = provideMemberSuggestionsProvider(),
-            memberSuggestionsLimit = getMemberSuggestionsLimit(),
-            memberSuggestionsDebounceMs = getMemberSuggestionsDebounceMs()
+            userSuggestionsProvider = getUserSuggestionsProvider(),
+            userSuggestionsLimit = getUserSuggestionsLimit(),
+            userSuggestionsDebounceMs = getUserSuggestionsDebounceMs()
         )
     }
 
-    protected open fun provideMemberSuggestionsProvider(): GlobalSearchMemberSuggestionsProvider {
-        return GlobalSearchLocalInteractor()
+    protected open fun getUserSuggestionsProvider(): GlobalSearchUserSuggestionsProvider {
+        return DefaultUserSuggestionsProvider()
     }
 
-    protected open fun getMemberSuggestionsLimit(): Int = DEFAULT_MEMBER_SUGGESTIONS_LIMIT
+    protected open fun getUserSuggestionsLimit(): Int = DEFAULT_USER_SUGGESTIONS_LIMIT
 
-    protected open fun getMemberSuggestionsDebounceMs(): Long =
-        DEFAULT_MEMBER_SUGGESTIONS_DEBOUNCE_MS
+    protected open fun getUserSuggestionsDebounceMs(): Long = DEFAULT_USER_SUGGESTIONS_DEBOUNCE_MS
 
     protected open fun initViews() {
         binding.tabsRecyclerView.apply {
@@ -238,11 +239,11 @@ open class GlobalSearchActivity : AppCompatActivity() {
             }
         }
         if (shouldShowSuggestions)
-            suggestionsAdapter.submit(state.memberSuggestions)
+            suggestionsAdapter.submit(state.userSuggestions)
 
         binding.searchInputView.setQuery(state.query)
         binding.searchInputView.setSelectedMember(
-            member = state.selectedMember,
+            member = state.selectedUser,
             isPendingRemoval = state.isSelectedMemberRemovalPending
         )
 
