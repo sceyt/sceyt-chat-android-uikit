@@ -294,18 +294,18 @@ open class GlobalSearchActivity : AppCompatActivity(), GlobalSearchClickListener
         }
     }
 
-    open fun onChannelClicked(channel: SceytChannel) {
+    override fun onChannelClicked(channel: SceytChannel) {
         ChannelActivity.launch(this, channel)
     }
 
-    open fun onMessageClicked(
+    override fun onMessageClicked(
         messageId: Long,
         channel: SceytChannel,
     ) {
         ChannelActivity.launch(this, channel, messageId)
     }
 
-    open fun onAttachmentClicked(result: GlobalSearchAttachmentResult) {
+    override fun onAttachmentClicked(result: GlobalSearchAttachmentResult) {
         onMessageClicked(result.message.id, result.channel)
     }
 
