@@ -114,7 +114,7 @@ open class LinksSearchViewModel(
     open fun loadMore() {
         val current = _state.value
         val key = current.sessionState ?: return
-        if (key.query.isNotBlank() || current.isLoading || current.isLoadingMore || !current.hasMore)
+        if (current.isLoading || current.isLoadingMore || !current.hasMore)
             return
         loadNextPage(key)
     }
@@ -131,7 +131,7 @@ open class LinksSearchViewModel(
             val offset = currentLinkItemCount()
             val page = dataSource.searchAttachments(
                 kind = GlobalSearchAttachmentKind.Link,
-                query = "",
+                query = sessionState.query,
                 senderId = sessionState.selectedMember?.id,
                 offset = offset,
                 limit = LINKS_DEFAULT_PAGE_SIZE,
