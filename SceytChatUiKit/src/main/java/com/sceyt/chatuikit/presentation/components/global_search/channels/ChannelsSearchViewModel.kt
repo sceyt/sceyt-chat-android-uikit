@@ -12,11 +12,11 @@ import com.sceyt.chatuikit.data.models.search.GlobalSearchPage
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
 import com.sceyt.chatuikit.persistence.interactor.GlobalSearchDataSource
-import com.sceyt.chatuikit.presentation.components.global_search.defaults.DefaultGlobalSearchLocalInteractor
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchListItem
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchSession
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchSessionState
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchTab
+import com.sceyt.chatuikit.presentation.components.global_search.defaults.DefaultGlobalSearchLocalInteractor
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -161,7 +161,8 @@ open class ChannelsSearchViewModel(
                 listItems = buildListItems(
                     channelsPage = GlobalSearchPage.empty(),
                     messagesPage = page,
-                    query = state.query
+                    query = state.query,
+                    includeHeader = offset == 0
                 ),
                 hasMore = page.hasMore,
                 loadedCount = page.data.size,
@@ -174,7 +175,8 @@ open class ChannelsSearchViewModel(
                 listItems = buildListItems(
                     channelsPage = page,
                     messagesPage = GlobalSearchPage.empty(),
-                    query = state.query
+                    query = state.query,
+                    includeHeader = offset == 0
                 ),
                 hasMore = page.hasMore,
                 loadedCount = page.data.size,
@@ -196,7 +198,8 @@ open class ChannelsSearchViewModel(
                     listItems = buildListItems(
                         channelsPage = channelsResult,
                         messagesPage = messagesResult,
-                        query = state.query
+                        query = state.query,
+                        includeHeader = offset == 0
                     ),
                     hasMore = false,
                     loadedCount = channelsResult.data.size + messagesResult.data.size,
@@ -247,14 +250,15 @@ open class ChannelsSearchViewModel(
         channelsPage: GlobalSearchPage<SceytChannel>,
         messagesPage: GlobalSearchPage<GlobalSearchMessageResult>,
         query: String,
+        includeHeader: Boolean,
     ): List<GlobalSearchListItem> {
         return buildList {
             if (channelsPage.data.isNotEmpty()) {
-                add(GlobalSearchListItem.SectionHeader(R.string.sceyt_channels))
+                if (includeHeader) add(GlobalSearchListItem.SectionHeader(R.string.sceyt_channels))
                 addAll(channelsPage.data.map { GlobalSearchListItem.ChannelItem(it) })
             }
             if (messagesPage.data.isNotEmpty()) {
-                add(GlobalSearchListItem.SectionHeader(R.string.sceyt_messages))
+                if (includeHeader) add(GlobalSearchListItem.SectionHeader(R.string.sceyt_messages))
                 addAll(messagesPage.data.map { GlobalSearchListItem.MessageItem(it, query) })
             }
         }

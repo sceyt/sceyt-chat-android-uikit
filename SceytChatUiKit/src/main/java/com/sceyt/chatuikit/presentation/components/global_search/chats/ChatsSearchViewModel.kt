@@ -150,7 +150,8 @@ open class ChatsSearchViewModel(
                 listItems = buildListItems(
                     chatsPage = GlobalSearchPage.empty(),
                     messagesPage = page,
-                    query = state.query
+                    query = state.query,
+                    includeHeader = offset == 0,
                 ),
                 hasMore = page.hasMore,
                 loadedCount = page.data.size,
@@ -163,7 +164,8 @@ open class ChatsSearchViewModel(
                 listItems = buildListItems(
                     chatsPage = page,
                     messagesPage = GlobalSearchPage.empty(),
-                    query = state.query
+                    query = state.query,
+                    includeHeader = offset == 0,
                 ),
                 hasMore = page.hasMore,
                 loadedCount = page.data.size,
@@ -184,7 +186,8 @@ open class ChatsSearchViewModel(
                 val items = buildListItems(
                     chatsPage = chatsResult,
                     messagesPage = messagesResult,
-                    query = state.query
+                    query = state.query,
+                    includeHeader = offset == 0,
                 )
                 SearchResultPage(
                     listItems = items,
@@ -245,14 +248,15 @@ open class ChatsSearchViewModel(
         chatsPage: GlobalSearchPage<SceytChannel>,
         messagesPage: GlobalSearchPage<GlobalSearchMessageResult>,
         query: String,
+        includeHeader: Boolean,
     ): List<GlobalSearchListItem> {
         return buildList {
             if (chatsPage.data.isNotEmpty()) {
-                add(GlobalSearchListItem.SectionHeader(R.string.sceyt_chats))
+                if (includeHeader) add(GlobalSearchListItem.SectionHeader(R.string.sceyt_chats))
                 addAll(chatsPage.data.map { GlobalSearchListItem.ChannelItem(it) })
             }
             if (messagesPage.data.isNotEmpty()) {
-                add(GlobalSearchListItem.SectionHeader(R.string.sceyt_messages))
+                if (includeHeader) add(GlobalSearchListItem.SectionHeader(R.string.sceyt_messages))
                 addAll(messagesPage.data.map { GlobalSearchListItem.MessageItem(it, query) })
             }
         }
