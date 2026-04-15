@@ -101,7 +101,7 @@ open class ChannelsSearchFragment : Fragment(R.layout.sceyt_fragment_channels_se
         val lastResultsRequestKey = viewModel.lastResultsRequestKeyForUI
         val scrollToTop =
             settled && state.sessionState != lastResultsRequestKey && lastResultsRequestKey != null
-        if (settled) viewModel.lastResultsRequestKeyForUI = state.sessionState
+        if (settled) viewModel.onResultsRendered(state.sessionState)
 
         listAdapter.submitList(
             items = state.listItems,
@@ -114,7 +114,6 @@ open class ChannelsSearchFragment : Fragment(R.layout.sceyt_fragment_channels_se
             state = state.toPageState(),
             showLoadingIfNeed = listAdapter.currentList.isEmpty()
         )
-        requestMoreIfViewportNotFilled(state)
     }
 
     protected open val clickListener: GlobalSearchClickListener?
@@ -126,15 +125,6 @@ open class ChannelsSearchFragment : Fragment(R.layout.sceyt_fragment_channels_se
 
     protected open fun onMessageClicked(messageId: Long, channel: SceytChannel) {
         clickListener?.onMessageClicked(messageId, channel)
-    }
-
-    protected open fun requestMoreIfViewportNotFilled(state: ChannelsSearchState) {
-        if (state.sessionState?.query?.isNotBlank() == true || state.isLoading || state.isLoadingMore || !state.hasMore) return
-
-        binding.recyclerView.post {
-            if (_binding == null || binding.recyclerView.canScrollVertically(1)) return@post
-            viewModel.loadMore()
-        }
     }
 
     protected open fun shouldLoadMore(recyclerView: RecyclerView): Boolean {

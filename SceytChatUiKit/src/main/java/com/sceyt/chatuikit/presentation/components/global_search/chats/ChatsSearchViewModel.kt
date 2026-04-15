@@ -37,12 +37,16 @@ data class ChatsSearchState(
     val isLoading: Boolean = false,
     val isLoadingMore: Boolean = false,
     val hasMore: Boolean = false,
+    val offset: Int = 0,
 ) {
     val showEmptyState: Boolean
         get() = !isLoading && !isLoadingMore && listItems.isEmpty()
 
     val query: String
         get() = sessionState?.query.orEmpty()
+
+    val canLoadMore: Boolean
+        get() = hasMore && !isLoading && !isLoadingMore
 }
 
 open class ChatsSearchViewModel(
@@ -56,6 +60,11 @@ open class ChatsSearchViewModel(
 
     private var loadJob: Job? = null
     var lastResultsRequestKeyForUI: GlobalSearchSessionState? = null
+        private set
+
+    fun onResultsRendered(key: GlobalSearchSessionState?) {
+        lastResultsRequestKeyForUI = key
+    }
 
     init {
         viewModelScope.launch {
@@ -98,7 +107,8 @@ open class ChatsSearchViewModel(
                         listItems = result.listItems,
                         isLoading = false,
                         isLoadingMore = false,
-                        hasMore = hasMore(sessionState.query, result),
+                        hasMore = result.hasMore,
+                        offset = result.loadedCount,
                     )
                 }
             }
@@ -108,19 +118,19 @@ open class ChatsSearchViewModel(
     open fun loadMore() {
         val current = _state.value
         val key = current.sessionState ?: return
-        if (key.query.isNotBlank() || current.isLoading || current.isLoadingMore || !current.hasMore)
-            return
+        if (!current.canLoadMore) return
         loadNextPage(key)
     }
 
     protected open fun loadNextPage(sessionState: GlobalSearchSessionState) {
         loadJob?.cancel()
+        val offset = _state.value.offset
         _state.update { it.copy(isLoadingMore = true) }
 
         loadJob = viewModelScope.launch(ioDispatcher) {
             val result = performLoad(
                 state = sessionState,
-                offset = _state.value.listItems.size,
+                offset = offset,
                 pageSize = CHATS_DEFAULT_PAGE_SIZE
             )
             withContext(Dispatchers.Main) {
@@ -128,7 +138,8 @@ open class ChatsSearchViewModel(
                     it.copy(
                         listItems = it.listItems + result.listItems,
                         isLoadingMore = false,
-                        hasMore = hasMore(sessionState.query, result),
+                        hasMore = result.hasMore,
+                        offset = it.offset + result.loadedCount,
                     )
                 }
             }
@@ -140,62 +151,92 @@ open class ChatsSearchViewModel(
         offset: Int,
         pageSize: Int,
     ): SearchResultPage = when {
-        state.selectedMember != null -> {
-            val page = loadSelectedUserMessagesPage(
-                state = state,
-                offset = offset,
-                pageSize = pageSize
-            )
-            SearchResultPage(
-                listItems = buildListItems(
-                    chatsPage = GlobalSearchPage.empty(),
-                    messagesPage = page,
-                    query = state.query,
-                    includeHeader = offset == 0,
-                ),
-                hasMore = page.hasMore,
-                loadedCount = page.data.size,
-            )
-        }
+        state.selectedMember != null -> loadSelectedMemberPage(state, offset, pageSize)
+        state.query.isBlank() -> loadRecentPage(state, offset, pageSize)
+        else -> loadTypedQueryPage(state, offset, pageSize)
+    }
 
-        state.query.isBlank() -> {
-            val page = loadRecentChatsPage(offset, pageSize)
-            SearchResultPage(
-                listItems = buildListItems(
-                    chatsPage = page,
-                    messagesPage = GlobalSearchPage.empty(),
-                    query = state.query,
-                    includeHeader = offset == 0,
-                ),
-                hasMore = page.hasMore,
-                loadedCount = page.data.size,
-            )
-        }
+    private suspend fun loadSelectedMemberPage(
+        state: GlobalSearchSessionState,
+        offset: Int,
+        pageSize: Int,
+    ): SearchResultPage {
+        val page = loadSelectedUserMessagesPage(state, offset, pageSize)
+        return SearchResultPage(
+            listItems = buildListItems(
+                chatsPage = GlobalSearchPage.empty(),
+                messagesPage = page,
+                query = state.query,
+                includeHeader = offset == 0,
+            ),
+            hasMore = page.hasMore,
+            loadedCount = page.data.size,
+        )
+    }
 
-        else -> {
-            coroutineScope {
-                val chatsPage = async { loadTypedQueryChatsPage(state, pageSize) }
-                val messagesPage =
-                    if (state.query.length >= CHATS_MIN_QUERY_LENGTH_FOR_MESSAGES) {
-                        async { loadTypedQueryMessagesPage(state, pageSize) }
-                    } else {
-                        CompletableDeferred(GlobalSearchPage(emptyList(), false))
-                    }
-                val chatsResult = chatsPage.await()
-                val messagesResult = messagesPage.await()
-                val items = buildListItems(
-                    chatsPage = chatsResult,
-                    messagesPage = messagesResult,
-                    query = state.query,
-                    includeHeader = offset == 0,
-                )
-                SearchResultPage(
-                    listItems = items,
-                    hasMore = false,
-                    loadedCount = chatsResult.data.size + messagesResult.data.size,
-                )
+    private suspend fun loadRecentPage(
+        state: GlobalSearchSessionState,
+        offset: Int,
+        pageSize: Int,
+    ): SearchResultPage {
+        val page = loadRecentChatsPage(offset, pageSize)
+        return SearchResultPage(
+            listItems = buildListItems(
+                chatsPage = page,
+                messagesPage = GlobalSearchPage.empty(),
+                query = state.query,
+                includeHeader = offset == 0,
+            ),
+            hasMore = page.hasMore,
+            loadedCount = page.data.size,
+        )
+    }
+
+    private suspend fun loadTypedQueryPage(
+        state: GlobalSearchSessionState,
+        offset: Int,
+        pageSize: Int,
+    ): SearchResultPage {
+        if (offset > 0) {
+            return loadTypedQueryMoreMessagesPage(state, offset, pageSize)
+        }
+        return coroutineScope {
+            val chatsPage = async { loadTypedQueryChatsPage(state, 0, pageSize) }
+            val messagesPage = if (state.query.length >= CHATS_MIN_QUERY_LENGTH_FOR_MESSAGES) {
+                async { loadTypedQueryMessagesPage(state, 0, pageSize) }
+            } else {
+                CompletableDeferred(GlobalSearchPage(emptyList(), false))
             }
+            val chatsResult = chatsPage.await()
+            val messagesResult = messagesPage.await()
+            SearchResultPage(
+                listItems = buildListItems(
+                    chatsResult,
+                    messagesResult,
+                    state.query,
+                    includeHeader = true
+                ),
+                hasMore = messagesResult.hasMore,
+                loadedCount = messagesResult.data.size,
+            )
         }
+    }
+
+    private suspend fun loadTypedQueryMoreMessagesPage(
+        state: GlobalSearchSessionState,
+        offset: Int,
+        pageSize: Int,
+    ): SearchResultPage {
+        val page = if (state.query.length >= CHATS_MIN_QUERY_LENGTH_FOR_MESSAGES) {
+            loadTypedQueryMessagesPage(state, offset, pageSize)
+        } else {
+            GlobalSearchPage(emptyList(), false)
+        }
+        return SearchResultPage(
+            listItems = page.data.map { GlobalSearchListItem.MessageItem(it, state.query) },
+            hasMore = page.hasMore,
+            loadedCount = page.data.size,
+        )
     }
 
     private suspend fun loadRecentChatsPage(
@@ -224,13 +265,15 @@ open class ChatsSearchViewModel(
 
     private suspend fun loadTypedQueryChatsPage(
         state: GlobalSearchSessionState,
+        offset: Int,
         pageSize: Int,
     ): GlobalSearchPage<SceytChannel> {
-        return dataSource.searchChats(state.query, offset = 0, pageSize)
+        return dataSource.searchChats(state.query, offset = offset, pageSize)
     }
 
     private suspend fun loadTypedQueryMessagesPage(
         state: GlobalSearchSessionState,
+        offset: Int,
         pageSize: Int,
     ): GlobalSearchPage<GlobalSearchMessageResult> {
         val types = SceytChatUIKit.config.channelTypesConfig.getPrivateTypes()
@@ -239,7 +282,7 @@ open class ChatsSearchViewModel(
             senderId = null,
             channelTypes = types,
             onlyJoined = true,
-            offset = 0,
+            offset = offset,
             limit = pageSize
         )
     }
@@ -260,13 +303,6 @@ open class ChatsSearchViewModel(
                 addAll(messagesPage.data.map { GlobalSearchListItem.MessageItem(it, query) })
             }
         }
-    }
-
-    private fun hasMore(
-        query: String?,
-        result: SearchResultPage,
-    ): Boolean {
-        return query.isNullOrBlank() && result.hasMore
     }
 
     protected data class SearchResultPage(
