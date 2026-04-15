@@ -10,11 +10,13 @@ import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.persistence.interactor.GlobalSearchDataSource
-import com.sceyt.chatuikit.presentation.components.global_search.defaults.DefaultGlobalSearchLocalInteractor
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchListItem
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchSession
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchSessionState
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchTab
+import com.sceyt.chatuikit.presentation.components.global_search.defaults.DefaultGlobalSearchLocalInteractor
+import com.sceyt.chatuikit.presentation.components.global_search.media.MediaSearchDisplayMode.Grid
+import com.sceyt.chatuikit.presentation.components.global_search.media.MediaSearchDisplayMode.SearchList
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -30,19 +32,31 @@ import org.koin.core.component.inject
 
 private const val MEDIA_DEFAULT_PAGE_SIZE = 30
 
-sealed class MediaSearchDisplayMode {
-    data class Grid(val items: List<GlobalSearchListItem>) : MediaSearchDisplayMode()
-    data class SearchList(val items: List<GlobalSearchListItem>) : MediaSearchDisplayMode()
+sealed interface MediaSearchDisplayMode {
+    data class Grid(
+        val items: List<GlobalSearchListItem>,
+        val offset: Int
+    ) : MediaSearchDisplayMode
+
+    data class SearchList(
+        val items: List<GlobalSearchListItem>,
+        val offset: Int
+    ) : MediaSearchDisplayMode
 
     fun isEmpty(): Boolean = when (this) {
         is Grid -> items.isEmpty()
         is SearchList -> items.isEmpty()
     }
+
+    companion object {
+        val EMPTY_GRID = Grid(emptyList(), offset = 0)
+        val EMPTY_SEARCH_LIST = SearchList(emptyList(), offset = 0)
+    }
 }
 
 data class MediaSearchState(
     val sessionState: GlobalSearchSessionState? = null,
-    val mode: MediaSearchDisplayMode = MediaSearchDisplayMode.Grid(emptyList()),
+    val mode: MediaSearchDisplayMode = MediaSearchDisplayMode.EMPTY_GRID,
     val isLoading: Boolean = false,
     val isLoadingMore: Boolean = false,
     val hasMore: Boolean = false,
@@ -87,8 +101,8 @@ open class MediaSearchViewModel(
             val queryChanged = current.sessionState?.isQueryChanged(sessionState.query) == true
             if (queryChanged) {
                 val newMode = if (sessionState.query.isBlank()) {
-                    MediaSearchDisplayMode.Grid(emptyList())
-                } else MediaSearchDisplayMode.SearchList(emptyList())
+                    MediaSearchDisplayMode.EMPTY_GRID
+                } else MediaSearchDisplayMode.EMPTY_SEARCH_LIST
 
                 _state.update {
                     it.copy(
@@ -126,36 +140,49 @@ open class MediaSearchViewModel(
     open fun loadMore() {
         val current = _state.value
         val key = current.sessionState ?: return
-        if (key.query.isNotBlank() || current.isLoading || current.isLoadingMore || !current.hasMore)
+        if (current.isLoading || current.isLoadingMore || !current.hasMore)
             return
         loadNextPage(key)
     }
 
     protected open fun loadNextPage(sessionState: GlobalSearchSessionState) {
         loadJob?.cancel()
-        val lastCreatedAt = (_state.value.mode as? MediaSearchDisplayMode.Grid)
-            ?.items
-            ?.lastOrNull { it is GlobalSearchListItem.AttachmentItem }
+        val currentMode = _state.value.mode
+        val (currentItems, currentOffset) = when (currentMode) {
+            is Grid -> currentMode.items to currentMode.offset
+            is SearchList -> currentMode.items to currentMode.offset
+        }
+        val lastCreatedAt = currentItems
+            .lastOrNull { it is GlobalSearchListItem.AttachmentItem }
             ?.let { (it as GlobalSearchListItem.AttachmentItem).result.attachment.createdAt }
             ?: 0L
         _state.update { it.copy(isLoadingMore = true) }
 
         loadJob = viewModelScope.launch(ioDispatcher) {
-            val offset = currentGridMediaItemCount()
             val result = performLoad(
                 state = sessionState,
-                offset = offset,
+                offset = currentOffset,
                 pageSize = MEDIA_DEFAULT_PAGE_SIZE,
                 prevCreatedAt = lastCreatedAt,
             )
             withContext(Dispatchers.Main) {
                 _state.update { state ->
                     val newMode = when (val mode = result.mode) {
-                        is MediaSearchDisplayMode.Grid -> {
-                            val existingItems = (state.mode as? MediaSearchDisplayMode.Grid)?.items.orEmpty()
-                            MediaSearchDisplayMode.Grid(items = existingItems + mode.items)
+                        is Grid -> {
+                            val existingItems = (state.mode as? Grid)?.items.orEmpty()
+                            Grid(
+                                items = existingItems + mode.items,
+                                offset = mode.offset
+                            )
                         }
-                        else -> mode
+
+                        is SearchList -> {
+                            val existingItems = (state.mode as? SearchList)?.items.orEmpty()
+                            SearchList(
+                                items = existingItems + mode.items,
+                                offset = mode.offset
+                            )
+                        }
                     }
                     state.copy(
                         mode = newMode,
@@ -173,29 +200,32 @@ open class MediaSearchViewModel(
         pageSize: Int,
         prevCreatedAt: Long = 0L,
     ): LoadResult {
+        val page = dataSource.searchAttachments(
+            kind = GlobalSearchAttachmentKind.Media,
+            query = state.query,
+            senderId = state.selectedMember?.id,
+            offset = offset,
+            limit = pageSize,
+        )
         return if (state.query.isBlank()) {
-            val page = dataSource.searchAttachments(
-                kind = GlobalSearchAttachmentKind.Media,
-                query = "",
-                senderId = state.selectedMember?.id,
-                offset = offset,
-                limit = pageSize,
-            )
             LoadResult(
-                mode = MediaSearchDisplayMode.Grid(page.data.toGridItems(initialPrevCreatedAt = prevCreatedAt)),
+                mode = Grid(
+                    items = page.data.toGridItems(initialPrevCreatedAt = prevCreatedAt),
+                    offset = offset + page.data.size
+                ),
                 hasMore = page.hasMore,
             )
         } else {
-            val page = dataSource.searchAttachments(
-                kind = GlobalSearchAttachmentKind.Media,
-                query = state.query,
-                senderId = state.selectedMember?.id,
-                offset = 0,
-                limit = pageSize,
-            )
             LoadResult(
-                mode = MediaSearchDisplayMode.SearchList(buildListItems(page.data, state.query)),
-                hasMore = false,
+                mode = SearchList(
+                    items = buildListItems(
+                        results = page.data,
+                        query = state.query,
+                        initialPrevTimestamp = prevCreatedAt
+                    ),
+                    offset = offset + page.data.size
+                ),
+                hasMore = page.hasMore,
             )
         }
     }
@@ -226,10 +256,11 @@ open class MediaSearchViewModel(
     private fun buildListItems(
         results: List<GlobalSearchAttachmentResult>,
         query: String,
+        initialPrevTimestamp: Long = 0L,
     ): List<GlobalSearchListItem> {
         if (results.isEmpty()) return emptyList()
         return buildList {
-            var prevTimestamp = 0L
+            var prevTimestamp = initialPrevTimestamp
             for (result in results) {
                 val createdAt = result.attachment.createdAt
                 if (prevTimestamp == 0L || !DateTimeUtil.isSameDay(prevTimestamp, createdAt)) {
@@ -258,11 +289,6 @@ open class MediaSearchViewModel(
                 }
             }
         }
-    }
-
-    private fun currentGridMediaItemCount(): Int {
-        return (_state.value.mode as? MediaSearchDisplayMode.Grid)
-            ?.items?.count { it is GlobalSearchListItem.AttachmentItem } ?: 0
     }
 
     protected data class LoadResult(
