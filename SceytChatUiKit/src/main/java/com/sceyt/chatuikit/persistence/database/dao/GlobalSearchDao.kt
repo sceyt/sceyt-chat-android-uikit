@@ -103,6 +103,7 @@ internal abstract class GlobalSearchDao {
           AND message.unList = 0
           AND attachment.viewOnce != 1
           AND attachment.type IN (:types)
+          AND channel.userRole IS NOT NULL AND channel.userRole != ''
           AND (:senderIgnored OR message.fromId = :senderId)
           AND (
               :queryEmpty
@@ -138,6 +139,7 @@ internal abstract class GlobalSearchDao {
           AND message.unList = 0
           AND attachment.viewOnce != 1
           AND attachment.type IN (:types)
+          AND channel.userRole IS NOT NULL AND channel.userRole != ''
           AND (:senderIgnored OR message.fromId = :senderId)
           AND (
               :queryEmpty
