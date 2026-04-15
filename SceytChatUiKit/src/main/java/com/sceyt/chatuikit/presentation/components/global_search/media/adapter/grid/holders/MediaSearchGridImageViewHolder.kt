@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.presentation.components.global_search.media.adapter.grid.holders
 
 import android.util.Size
+import android.view.View
 import com.sceyt.chatuikit.data.models.search.GlobalSearchAttachmentResult
 import com.sceyt.chatuikit.databinding.SceytItemChannelImageBinding
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
@@ -28,14 +29,14 @@ class MediaSearchGridImageViewHolder(
     private val binding: SceytItemChannelImageBinding,
     private val style: ChannelInfoMediaItemStyle,
     private val mediaDataCallback: (NeedMediaInfoData) -> Unit,
-    private val onItemClick: (GlobalSearchAttachmentResult) -> Unit,
+    private val onItemClick: (View, GlobalSearchAttachmentResult) -> Unit,
 ) : BaseFileViewHolder<GlobalSearchListItem.AttachmentItem>(binding.root, mediaDataCallback) {
 
     init {
         binding.applyStyle()
 
         binding.root.setOnClickListener {
-            onItemClick(fileItem.result)
+            onItemClick(binding.fileImage, fileItem.result)
         }
     }
 

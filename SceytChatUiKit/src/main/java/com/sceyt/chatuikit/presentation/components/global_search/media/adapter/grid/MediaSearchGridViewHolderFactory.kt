@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.presentation.components.global_search.media.adapter.grid
 
 import android.content.Context
+import android.view.View
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
@@ -21,7 +22,7 @@ open class MediaSearchGridViewHolderFactory(
     private val context: Context,
     private val style: MediaSearchPageStyle,
     private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
-    private val onItemClick: (GlobalSearchAttachmentResult) -> Unit,
+    private val onItemClick: (View, GlobalSearchAttachmentResult) -> Unit,
 ) {
     protected val layoutInflater: LayoutInflater = LayoutInflater.from(context)
 

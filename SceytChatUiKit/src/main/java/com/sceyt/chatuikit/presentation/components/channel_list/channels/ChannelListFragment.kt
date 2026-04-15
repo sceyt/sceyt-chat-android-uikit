@@ -78,7 +78,9 @@ open class ChannelListFragment : Fragment() {
 
     protected open fun openGlobalSearch(sourceView: View?) {
         activity?.let { hostActivity ->
-            GlobalSearchActivity.launch(hostActivity, sourceView)
+            sourceView?.let {
+                GlobalSearchActivity.launch(hostActivity, it)
+            } ?: GlobalSearchActivity.launch(hostActivity)
         }
     }
 

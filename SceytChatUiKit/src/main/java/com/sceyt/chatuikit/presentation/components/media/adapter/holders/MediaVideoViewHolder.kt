@@ -41,11 +41,12 @@ import com.sceyt.chatuikit.presentation.helpers.ExoPlayerHelper
 import com.sceyt.chatuikit.styles.preview.MediaPreviewStyle
 
 class MediaVideoViewHolder(
-        private val binding: SceytMediaItemVideoBinding,
-        private val style: MediaPreviewStyle,
-        private val clickListeners: (MediaItem) -> Unit,
-        private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
-) : BaseFileViewHolder<MediaItem>(binding.root, needMediaDataCallback) {
+    private val binding: SceytMediaItemVideoBinding,
+    private val style: MediaPreviewStyle,
+    private val clickListeners: (MediaItem) -> Unit,
+    private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
+) : BaseFileViewHolder<MediaItem>(binding.root, needMediaDataCallback),
+    SharedTransitionViewProvider {
     private var playerHelper: ExoPlayerHelper? = null
     private var videoController: ConstraintLayout? = null
     private val mediaAdapter by lazy { bindingAdapter as? MediaAdapter }
@@ -65,7 +66,6 @@ class MediaVideoViewHolder(
 
     override fun bind(item: MediaItem) {
         super.bind(item)
-
         initVideoController()
     }
 
@@ -74,27 +74,32 @@ class MediaVideoViewHolder(
     private fun initVideoController() {
         doSafe { binding.videoView.controllerHideOnTouch = false }
         var isPlayingBeforePause = false
-        binding.videoView.findViewById<ConstraintLayout>(R.id.videoTimeContainer)?.let { videoTimeContainer ->
-            with(videoTimeContainer) {
-                applySystemWindowInsetsPadding(applyBottom = true, applyRight = true, applyLeft = true)
-                findViewById<DefaultTimeBar>(R.id.exo_progress)?.setOnTouchListener { _, event ->
-                    when (event.action) {
-                        MotionEvent.ACTION_DOWN -> {
-                            isPlayingBeforePause = playerHelper?.isPlaying() ?: false
-                            playerHelper?.pausePlayer()
-                        }
+        binding.videoView.findViewById<ConstraintLayout>(R.id.videoTimeContainer)
+            ?.let { videoTimeContainer ->
+                with(videoTimeContainer) {
+                    applySystemWindowInsetsPadding(
+                        applyBottom = true,
+                        applyRight = true,
+                        applyLeft = true
+                    )
+                    findViewById<DefaultTimeBar>(R.id.exo_progress)?.setOnTouchListener { _, event ->
+                        when (event.action) {
+                            MotionEvent.ACTION_DOWN -> {
+                                isPlayingBeforePause = playerHelper?.isPlaying() ?: false
+                                playerHelper?.pausePlayer()
+                            }
 
-                        MotionEvent.ACTION_UP -> if (isPlayingBeforePause) {
-                            playerHelper?.resumePlayer()
-                            initWakeLock()
+                            MotionEvent.ACTION_UP -> if (isPlayingBeforePause) {
+                                playerHelper?.resumePlayer()
+                                initWakeLock()
+                            }
                         }
+                        false
                     }
-                    false
+                    isVisible = ((context as? MediaPreviewActivity)?.isVisibleToolbar() ?: true)
+                    videoController = this
                 }
-                isVisible = ((context as? MediaPreviewActivity)?.isVisibleToolbar() ?: true)
-                videoController = this
             }
-        }
 
         videoController?.findViewById<View>(R.id.exo_play_pause)?.setOnTouchListener { _, event ->
             if (event.action == MotionEvent.ACTION_UP && playerHelper?.player?.playbackState == Player.STATE_IDLE)
@@ -106,7 +111,7 @@ class MediaVideoViewHolder(
 
     private fun setPlayingState() {
         videoController?.isVisible = ((context as? MediaPreviewActivity)?.isVisibleToolbar()
-                ?: true)
+            ?: true)
         initPlayerHelper()
     }
 
@@ -205,6 +210,8 @@ class MediaVideoViewHolder(
     }
 
     override fun needThumbFor() = ThumbFor.MediaPreview
+
+    override fun provide() = binding.icThumb
 
     @OptIn(UnstableApi::class)
     private fun SceytMediaItemVideoBinding.applyStyle() {

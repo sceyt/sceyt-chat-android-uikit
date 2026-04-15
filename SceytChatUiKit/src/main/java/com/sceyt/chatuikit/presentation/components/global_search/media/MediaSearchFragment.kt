@@ -216,13 +216,24 @@ open class MediaSearchFragment : Fragment(R.layout.sceyt_fragment_media_search) 
     protected open val clickListener: GlobalSearchClickListener?
         get() = requireActivity() as? GlobalSearchClickListener
 
-    protected open fun onGridAttachmentClicked(result: GlobalSearchAttachmentResult) {
+    protected open fun onGridAttachmentClicked(
+        sharedView: View,
+        result: GlobalSearchAttachmentResult,
+    ) {
+        launchMediaPreview(sharedView, result)
+    }
+
+    protected open fun launchMediaPreview(
+        sharedView: View,
+        result: GlobalSearchAttachmentResult,
+    ) {
         MediaPreviewActivity.launch(
-            context = requireContext(),
+            activity = requireActivity(),
             attachment = result.attachment,
             from = result.sender,
             channelId = result.channel.id,
             showInChatChannel = result.channel,
+            sourceView = sharedView,
         )
     }
 

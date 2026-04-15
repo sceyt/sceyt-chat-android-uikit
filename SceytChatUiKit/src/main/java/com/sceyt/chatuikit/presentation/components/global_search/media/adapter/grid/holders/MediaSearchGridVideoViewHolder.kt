@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.presentation.components.global_search.media.adapter.grid.holders
 
 import android.util.Size
+import android.view.View
 import androidx.core.view.isVisible
 import com.sceyt.chatuikit.data.models.search.GlobalSearchAttachmentResult
 import com.sceyt.chatuikit.databinding.SceytItemChannelVideoBinding
@@ -30,7 +31,7 @@ class MediaSearchGridVideoViewHolder(
     private val binding: SceytItemChannelVideoBinding,
     private val style: ChannelInfoMediaItemStyle,
     private val mediaDataCallback: (NeedMediaInfoData) -> Unit,
-    private val onItemClick: (GlobalSearchAttachmentResult) -> Unit,
+    private val onItemClick: (View, GlobalSearchAttachmentResult) -> Unit,
 ) : BaseFileViewHolder<GlobalSearchListItem.AttachmentItem>(binding.root, mediaDataCallback) {
 
     init {
@@ -38,7 +39,9 @@ class MediaSearchGridVideoViewHolder(
             setDrawableStart(style.videoDurationIcon)
             style.videoDurationTextStyle.apply(this)
         }
-        binding.root.setOnClickListener { onItemClick(fileItem.result) }
+        binding.root.setOnClickListener {
+            onItemClick(binding.image, fileItem.result)
+        }
     }
 
     override fun bind(item: GlobalSearchListItem.AttachmentItem) {
