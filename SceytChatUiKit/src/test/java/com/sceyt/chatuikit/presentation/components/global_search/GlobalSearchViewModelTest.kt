@@ -216,7 +216,7 @@ private class TestGlobalSearchViewModel(
     ioDispatcher = ioDispatcher
 ) {
     fun requireSession(): GlobalSearchSession {
-        return GlobalSearchSessionRegistry.require(sessionId)
+        return GlobalSearchSessionRegistry.getOrDefault(sessionId)
     }
 
     fun clearForTest() {
