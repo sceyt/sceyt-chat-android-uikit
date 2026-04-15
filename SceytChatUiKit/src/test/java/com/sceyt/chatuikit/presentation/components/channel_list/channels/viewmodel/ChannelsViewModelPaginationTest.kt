@@ -6,6 +6,7 @@ import com.sceyt.chat.models.channel.ChannelListQuery.ChannelListOrder
 import com.sceyt.chat.models.channel.ChannelQueryParam
 import com.sceyt.chatuikit.config.ChannelListConfig
 import com.sceyt.chatuikit.createChannel
+import com.sceyt.chatuikit.createMessage
 import com.sceyt.chatuikit.data.models.LoadKeyData
 import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
@@ -46,6 +47,7 @@ class ChannelsViewModelPaginationTest {
     private val requests = mutableListOf<LoadRequest>()
     private val completedRequests = mutableListOf<CompletedRequest>()
     private val interactor = mock<ChannelInteractor>()
+    private val channelsCache = ChannelsCache()
     private val config = ChannelListConfig(
         types = emptyList(),
         order = ChannelListOrder.ListQueryChannelOrderCreatedAt,
@@ -123,7 +125,7 @@ class ChannelsViewModelPaginationTest {
     @After
     fun tearDown() = runBlocking {
         Dispatchers.resetMain()
-        ChannelsCache().clearAll()
+        channelsCache.clearAll()
         SceytKoinApp.koinApp = null
         stopKoin()
     }
@@ -325,6 +327,235 @@ class ChannelsViewModelPaginationTest {
         assertThat(requests.last().loadKeyValue).isEqualTo(lastVisibleChannelId)
     }
 
+    @Test
+    fun `realtime message on unloaded channel reorders list but load more keeps db page offset`() =
+        runTest(dispatcher) {
+            val realtimeConfig = config.copy(order = ChannelListOrder.ListQueryChannelOrderLastMessage)
+            val firstRealtimePage = (1L..20L).map { id ->
+                createChannel(id, pinnedAt = 0, createdAt = id, lastMessage = createMessage(200 - id))
+            }
+            val secondRealtimePage = (21L..40L).map { id ->
+                createChannel(id, pinnedAt = 0, createdAt = id, lastMessage = createMessage(200 - id))
+            }
+            val dbChannels = (firstRealtimePage + secondRealtimePage)
+                .sortedWith(ChannelsComparatorDescBy(realtimeConfig.order))
+                .toMutableList()
+            val loadedCache = mutableListOf<SceytChannel>()
+
+            requests.clear()
+            completedRequests.clear()
+
+            whenever(
+                interactor.loadChannels(
+                    any(),
+                    any(),
+                    anyOrNull(),
+                    any(),
+                    any(),
+                    any(),
+                    any()
+                )
+            ).thenAnswer { invocation ->
+                val offset = invocation.getArgument<Int>(0)
+                val query = invocation.getArgument<String>(1)
+                val loadKey = invocation.getArgument<LoadKeyData?>(2)
+                requests += LoadRequest(offset, query, loadKey?.value)
+
+                val page = dbChannels.drop(offset).take(realtimeConfig.queryLimit)
+                val hasNext = offset + page.size < dbChannels.size
+
+                flow {
+                    emit(
+                        PaginationResponse.DBResponse(
+                            data = page,
+                            loadKey = loadKey,
+                            offset = offset,
+                            hasNext = hasNext,
+                            query = query
+                        )
+                    )
+                    loadedCache.mergeByIdSorted(page, realtimeConfig.order)
+                    emit(
+                        PaginationResponse.ServerResponse(
+                            data = SceytResponse.Success(page),
+                            cacheData = loadedCache.toList(),
+                            loadKey = loadKey,
+                            offset = offset,
+                            hasDiff = true,
+                            hasNext = hasNext,
+                            hasPrev = false,
+                            loadType = PaginationResponse.LoadType.LoadNext,
+                            ignoredDb = false,
+                            query = query
+                        )
+                    )
+                    completedRequests += CompletedRequest(offset, query)
+                }
+            }
+
+            val viewModel = ChannelsViewModel(realtimeConfig, dispatcher)
+            advanceUntilIdle()
+            assertThat(requests.map { it.offset }).containsExactly(0).inOrder()
+            assertThat(completedRequests.map { it.offset }).containsExactly(0).inOrder()
+            assertThat(viewModel.state.value.channels.map { it.id })
+                .containsExactlyElementsIn(firstRealtimePage.map { it.id })
+                .inOrder()
+
+            channelsCache.addAll(realtimeConfig, firstRealtimePage, checkDifference = false)
+
+            val bumpedChannel = secondRealtimePage.first { it.id == 30L }.copy(
+                lastMessage = createMessage(1_000, id = 30)
+            )
+            dbChannels.removeAll { it.id == bumpedChannel.id }
+            dbChannels += bumpedChannel
+            dbChannels.sortWith(ChannelsComparatorDescBy(realtimeConfig.order))
+            loadedCache.mergeByIdSorted(listOf(bumpedChannel), realtimeConfig.order)
+
+            channelsCache.upsertChannel(bumpedChannel)
+            advanceUntilIdle()
+            assertThat(viewModel.state.value.channels.size).isEqualTo(21)
+            assertThat(viewModel.state.value.channels.firstOrNull()?.id).isEqualTo(30L)
+
+            val lastVisibleChannelId = viewModel.state.value.channels.lastOrNull()?.id
+            viewModel.loadMoreChannels(lastVisibleChannelId)
+            advanceUntilIdle()
+
+            assertThat(requests.map { it.offset }).containsExactly(0, 20).inOrder()
+            assertThat(completedRequests.map { it.offset }).containsExactly(0, 20).inOrder()
+            assertThat(requests.last().offset).isEqualTo(20)
+            assertThat(requests.last().loadKeyValue).isEqualTo(lastVisibleChannelId)
+            assertThat(viewModel.state.value.channels.map { it.id })
+                .containsExactlyElementsIn(dbChannels.map { it.id })
+                .inOrder()
+        }
+
+    @Test
+    fun `all channels are eventually loaded when realtime messages reorder database between page loads`() =
+        runTest(dispatcher) {
+            val realtimeConfig = config.copy(order = ChannelListOrder.ListQueryChannelOrderLastMessage)
+            val dbChannels = (1L..60L)
+                .map { id ->
+                    createChannel(
+                        id,
+                        pinnedAt = 0,
+                        createdAt = id,
+                        lastMessage = createMessage(1_000 - id, id = id)
+                    )
+                }
+                .sortedWith(ChannelsComparatorDescBy(realtimeConfig.order))
+                .toMutableList()
+            val loadedCache = mutableListOf<SceytChannel>()
+
+            requests.clear()
+            completedRequests.clear()
+
+            whenever(
+                interactor.loadChannels(
+                    any(),
+                    any(),
+                    anyOrNull(),
+                    any(),
+                    any(),
+                    any(),
+                    any()
+                )
+            ).thenAnswer { invocation ->
+                val offset = invocation.getArgument<Int>(0)
+                val query = invocation.getArgument<String>(1)
+                val loadKey = invocation.getArgument<LoadKeyData?>(2)
+                requests += LoadRequest(offset, query, loadKey?.value)
+
+                val page = dbChannels.drop(offset).take(realtimeConfig.queryLimit)
+                val hasNext = offset + page.size < dbChannels.size
+
+                flow {
+                    emit(
+                        PaginationResponse.DBResponse(
+                            data = page,
+                            loadKey = loadKey,
+                            offset = offset,
+                            hasNext = hasNext,
+                            query = query
+                        )
+                    )
+                    loadedCache.mergeByIdSorted(page, realtimeConfig.order)
+                    emit(
+                        PaginationResponse.ServerResponse(
+                            data = SceytResponse.Success(page),
+                            cacheData = loadedCache.toList(),
+                            loadKey = loadKey,
+                            offset = offset,
+                            hasDiff = true,
+                            hasNext = hasNext,
+                            hasPrev = false,
+                            loadType = PaginationResponse.LoadType.LoadNext,
+                            ignoredDb = false,
+                            query = query
+                        )
+                    )
+                    completedRequests += CompletedRequest(offset, query)
+                }
+            }
+
+            val viewModel = ChannelsViewModel(realtimeConfig, dispatcher)
+            advanceUntilIdle()
+
+            val initialFirstPage = dbChannels.take(realtimeConfig.queryLimit)
+            assertThat(requests.map { it.offset }).containsExactly(0).inOrder()
+            assertThat(completedRequests.map { it.offset }).containsExactly(0).inOrder()
+            assertThat(viewModel.state.value.channels.map { it.id })
+                .containsExactlyElementsIn(initialFirstPage.map { it.id })
+                .inOrder()
+
+            channelsCache.addAll(realtimeConfig, initialFirstPage, checkDifference = false)
+
+            val firstBumpedChannel = dbChannels.first { it.id == 45L }.copy(
+                lastMessage = createMessage(10_000, id = 450)
+            )
+            dbChannels.removeAll { it.id == firstBumpedChannel.id }
+            dbChannels += firstBumpedChannel
+            dbChannels.sortWith(ChannelsComparatorDescBy(realtimeConfig.order))
+            loadedCache.mergeByIdSorted(listOf(firstBumpedChannel), realtimeConfig.order)
+
+            channelsCache.upsertChannel(firstBumpedChannel)
+            advanceUntilIdle()
+            assertThat(viewModel.state.value.channels.firstOrNull()?.id).isEqualTo(45L)
+
+            val lastChannelAfterFirstPage = viewModel.state.value.channels.lastOrNull()?.id
+            viewModel.loadMoreChannels(lastChannelAfterFirstPage)
+            advanceUntilIdle()
+
+            assertThat(requests.map { it.offset }).containsExactly(0, 20).inOrder()
+            assertThat(completedRequests.map { it.offset }).containsExactly(0, 20).inOrder()
+            assertThat(viewModel.state.value.channels.map { it.id }.distinct())
+                .hasSize(viewModel.state.value.channels.size)
+
+            val secondBumpedChannel = dbChannels.first { it.id == 58L }.copy(
+                lastMessage = createMessage(20_000, id = 580)
+            )
+            dbChannels.removeAll { it.id == secondBumpedChannel.id }
+            dbChannels += secondBumpedChannel
+            dbChannels.sortWith(ChannelsComparatorDescBy(realtimeConfig.order))
+            loadedCache.mergeByIdSorted(listOf(secondBumpedChannel), realtimeConfig.order)
+
+            channelsCache.upsertChannel(secondBumpedChannel)
+            advanceUntilIdle()
+            assertThat(viewModel.state.value.channels.firstOrNull()?.id).isEqualTo(58L)
+
+            val lastChannelAfterSecondPage = viewModel.state.value.channels.lastOrNull()?.id
+            viewModel.loadMoreChannels(lastChannelAfterSecondPage)
+            advanceUntilIdle()
+
+            assertThat(requests.map { it.offset }).containsExactly(0, 20, 40).inOrder()
+            assertThat(completedRequests.map { it.offset }).containsExactly(0, 20, 40).inOrder()
+            assertThat(viewModel.state.value.hasNext).isFalse()
+            assertThat(viewModel.state.value.channels.map { it.id })
+                .containsExactlyElementsIn(dbChannels.map { it.id })
+                .inOrder()
+            assertThat(viewModel.state.value.channels.map { it.id }.distinct()).hasSize(dbChannels.size)
+            assertThat(viewModel.state.value.channels).hasSize(dbChannels.size)
+        }
+
     private suspend fun TestScope.awaitCondition(
         maxSteps: Int = 200,
         condition: () -> Boolean,
@@ -393,6 +624,18 @@ class ChannelsViewModelPaginationTest {
         ignoredDb = false,
         query = query
     )
+
+    private fun MutableList<SceytChannel>.mergeByIdSorted(
+        page: List<SceytChannel>,
+        order: ChannelListOrder,
+    ) {
+        val merged = (this + page)
+            .associateBy { it.id }
+            .values
+            .sortedWith(ChannelsComparatorDescBy(order))
+        clear()
+        addAll(merged)
+    }
 
     private fun pageFor(offset: Int): List<SceytChannel> = when (offset) {
         0 -> firstPage

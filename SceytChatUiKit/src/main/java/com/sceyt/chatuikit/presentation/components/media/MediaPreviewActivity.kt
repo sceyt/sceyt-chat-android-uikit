@@ -1,14 +1,28 @@
 package com.sceyt.chatuikit.presentation.components.media
 
+import android.app.Activity
+import android.app.SharedElementCallback
 import android.content.Context
 import android.os.Bundle
+import android.transition.ChangeBounds
+import android.transition.ChangeClipBounds
+import android.transition.ChangeImageTransform
+import android.transition.ChangeTransform
+import android.transition.Fade
+import android.transition.TransitionSet
 import android.view.LayoutInflater
+import android.view.View
+import android.view.Window
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityOptionsCompat
 import androidx.core.app.ShareCompat
+import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+import androidx.core.view.doOnPreDraw
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewModelScope
@@ -39,6 +53,7 @@ import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.extensions.launchActivity
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.saveToGallery
+import com.sceyt.chatuikit.extensions.transitionListener
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.presentation.components.channel.messages.ChannelActivity
 import com.sceyt.chatuikit.presentation.components.forward.ForwardActivity
@@ -46,6 +61,7 @@ import com.sceyt.chatuikit.presentation.components.media.adapter.MediaAdapter
 import com.sceyt.chatuikit.presentation.components.media.adapter.MediaFilesViewHolderFactory
 import com.sceyt.chatuikit.presentation.components.media.adapter.MediaItem
 import com.sceyt.chatuikit.presentation.components.media.adapter.MediaItemType
+import com.sceyt.chatuikit.presentation.components.media.adapter.holders.SharedTransitionViewProvider
 import com.sceyt.chatuikit.presentation.components.media.dialogs.ActionDialog
 import com.sceyt.chatuikit.presentation.components.media.viewmodel.MediaViewModel
 import com.sceyt.chatuikit.styles.preview.MediaPreviewStyle
@@ -66,14 +82,23 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
     private var openedWithAttachment: SceytAttachment? = null
     private var reversed = false
     private var showInChatChannel: SceytChannel? = null
+    private var sharedTransitionStarted = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        if (launchedWithSharedTransition()) {
+            window.requestFeature(Window.FEATURE_ACTIVITY_TRANSITIONS)
+        }
         super.onCreate(savedInstanceState)
         style = MediaPreviewStyle.Builder(this, null).build()
 
         binding = SceytActivityMediaPreviewBinding.inflate(LayoutInflater.from(this))
         setContentView(binding.root)
         binding.applyStyle()
+        if (launchedWithSharedTransition()) {
+            postponeEnterTransition()
+            setupSharedElementTransition()
+            setupExitSharedElementCallback()
+        }
 
         getDataFromIntent()
         initPageWithData()
@@ -150,7 +175,7 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
         binding.root.post { toggleFullScreen(false) }
 
         binding.toolbar.setNavigationClickListener {
-            finish()
+            closeWithTransition()
         }
 
         binding.toolbar.setMenuClickListener { itemId ->
@@ -195,7 +220,12 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
         }
         binding.toolbar.let {
             it.setTitle(name)
-            it.setSubtitle(style.mediaDateFormatter.format(this, Date(item.data.attachment.createdAt)))
+            it.setSubtitle(
+                style.mediaDateFormatter.format(
+                    context = this,
+                    from = Date(item.data.attachment.createdAt)
+                )
+            )
         }
     }
 
@@ -207,17 +237,11 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
     }
 
     private fun toggleFullScreen(isFullScreen: Boolean) {
+        val controller = WindowInsetsControllerCompat(window, binding.root)
+        controller.systemBarsBehavior = BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         if (isFullScreen) {
-            WindowInsetsControllerCompat(window, binding.root).apply {
-                hide(WindowInsetsCompat.Type.systemBars())
-                systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-            }
-        } else {
-            WindowInsetsControllerCompat(window, binding.root).apply {
-                show(WindowInsetsCompat.Type.systemBars())
-                systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-            }
-        }
+            controller.hide(WindowInsetsCompat.Type.systemBars())
+        } else controller.show(WindowInsetsCompat.Type.systemBars())
     }
 
     fun isVisibleToolbar() = binding.toolbar.isVisible
@@ -225,8 +249,9 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
     private fun setOrUpdateMediaAdapter(data: List<MediaItem>) {
         val newData = if (reversed) data.reversed() else data
         if (mediaAdapter == null) {
-            mediaAdapter = MediaAdapter(newData.toArrayList(),
-                MediaFilesViewHolderFactory(this, style).also {
+            mediaAdapter = MediaAdapter(
+                attachments = newData.toArrayList(),
+                attachmentViewHolderFactory = MediaFilesViewHolderFactory(this, style).also {
                     it.setNeedMediaDataCallback { infoData -> viewModel.needMediaInfo(infoData) }
                     it.setClickListener { onMediaClick() }
                 })
@@ -236,6 +261,9 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
             binding.rvMedia.apply {
                 adapter = mediaAdapter
                 PagerSnapHelper().attachToRecyclerView(this)
+                if (launchedWithSharedTransition()) {
+                    doOnPreDraw { startSharedTransitionIfNeeded() }
+                }
 
                 addOnScrollListener(object : RecyclerView.OnScrollListener() {
                     override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
@@ -261,6 +289,90 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
         } else mediaAdapter?.notifyUpdate(newData, binding.rvMedia)
     }
 
+    private fun closeWithTransition() {
+        if (launchedWithSharedTransition()) {
+            finishAfterTransition()
+        } else {
+            finish()
+        }
+    }
+
+    private fun launchedWithSharedTransition(): Boolean {
+        return intent.getBooleanExtra(EXTRA_SHARED_TRANSITION, false)
+    }
+
+    private fun setupSharedElementTransition() {
+        window.sharedElementEnterTransition = TransitionSet().apply {
+            ordering = TransitionSet.ORDERING_TOGETHER
+            addTransition(ChangeBounds())
+            addTransition(ChangeTransform())
+            addTransition(ChangeClipBounds())
+            addTransition(ChangeImageTransform())
+            duration = 220L
+            addListener(
+                transitionListener(onTransitionEnd = { refreshCurrentItem() })
+            )
+        }
+        window.sharedElementReturnTransition = TransitionSet().apply {
+            ordering = TransitionSet.ORDERING_TOGETHER
+            addTransition(ChangeBounds())
+            addTransition(ChangeTransform())
+            addTransition(ChangeClipBounds())
+            addTransition(ChangeImageTransform())
+            duration = 220L
+        }
+        window.enterTransition = Fade().apply {
+            duration = 160L
+            startDelay = 40L
+        }
+        window.returnTransition = Fade().apply {
+            duration = 140L
+        }
+    }
+
+    private fun setupExitSharedElementCallback() {
+        setExitSharedElementCallback(object : SharedElementCallback() {
+            override fun onMapSharedElements(
+                names: MutableList<String>,
+                sharedElements: MutableMap<String, View>,
+            ) {
+                val sharedElement = findCurrentSharedElementView()
+                if (sharedElement == null) {
+                    names.clear()
+                    sharedElements.clear()
+                    return
+                }
+                ViewCompat.setTransitionName(sharedElement, SHARED_TRANSITION_NAME)
+                names.clear()
+                names.add(SHARED_TRANSITION_NAME)
+                sharedElements.clear()
+                sharedElements[SHARED_TRANSITION_NAME] = sharedElement
+            }
+        })
+    }
+
+    private fun findCurrentSharedElementView(): View? {
+        val position = binding.rvMedia.getFirstVisibleItemPosition()
+        if (position == RecyclerView.NO_POSITION) return null
+        val viewHolder =
+            binding.rvMedia.findViewHolderForAdapterPosition(position) as? SharedTransitionViewProvider
+        return viewHolder?.provide()
+    }
+
+    private fun refreshCurrentItem() {
+        val position = binding.rvMedia.getFirstVisibleItemPosition()
+        if (position != RecyclerView.NO_POSITION) mediaAdapter?.notifyItemChanged(position, Unit)
+    }
+
+    private fun startSharedTransitionIfNeeded() {
+        if (!launchedWithSharedTransition() || sharedTransitionStarted) return
+        findCurrentSharedElementView()?.let {
+            ViewCompat.setTransitionName(it, SHARED_TRANSITION_NAME)
+        }
+        sharedTransitionStarted = true
+        startPostponedEnterTransition()
+    }
+
     private fun onFirstItemDisplaying() {
         if (reversed) {
             checkAndLoadNext()
@@ -278,16 +390,26 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
     private fun checkAndLoadPrev() {
         if (viewModel.canLoadPrev()) {
             val attachmentId = getRequestAttachmentId(true) ?: return
-            viewModel.loadPrevAttachments(channelId, attachmentId, true,
-                mediaTypes, mediaAdapter?.itemCount ?: 1)
+            viewModel.loadPrevAttachments(
+                channelId = channelId,
+                lastAttachmentId = attachmentId,
+                isLoadingMore = true,
+                type = mediaTypes,
+                offset = mediaAdapter?.itemCount ?: 1
+            )
         }
     }
 
     private fun checkAndLoadNext() {
         if (viewModel.canLoadNext()) {
             val attachmentId = getRequestAttachmentId(false) ?: return
-            viewModel.loadNextAttachments(channelId, attachmentId, true,
-                mediaTypes, mediaAdapter?.itemCount ?: 1)
+            viewModel.loadNextAttachments(
+                channelId = channelId,
+                lastAttachmentId = attachmentId,
+                isLoadingMore = true,
+                type = mediaTypes,
+                offset = mediaAdapter?.itemCount ?: 1
+            )
         }
     }
 
@@ -332,7 +454,8 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
     }
 
     protected open fun share(item: MediaItem) {
-        val fileTypeTitle = if (item.type == MediaItemType.Image) getString(R.string.sceyt_image) else getString(R.string.sceyt_video)
+        val fileTypeTitle = if (item.type == MediaItemType.Image)
+            getString(R.string.sceyt_image) else getString(R.string.sceyt_video)
         item.attachment.filePath?.let { path ->
             File(path).let {
                 val mimeType = getMimeTypeFrom(item.attachment)
@@ -367,7 +490,9 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
         )?.let {
             Toast.makeText(this, getString(R.string.sceyt_saved), Toast.LENGTH_SHORT).show()
         } ?: run {
-            Toast.makeText(this, getString(R.string.sceyt_media_cannot_save_to_gallery), Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                this, getString(R.string.sceyt_media_cannot_save_to_gallery), Toast.LENGTH_SHORT
+            ).show()
         }
     }
 
@@ -383,7 +508,9 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
         if (isGranted) {
             fileToSaveAfterPermission?.let { save(it) }
         } else {
-            Toast.makeText(this, getString(R.string.sceyt_media_cannot_save_to_gallery), Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                this, getString(R.string.sceyt_media_cannot_save_to_gallery), Toast.LENGTH_SHORT
+            ).show()
         }
     }
 
@@ -398,6 +525,8 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
         private const val KEY_CHANNEL_ID = "KEY_CHANNEL_ID"
         private const val KEY_REVERSED = "KEY_REVERSED"
         private const val KEY_SHOW_IN_CHAT_CHANNEL = "KEY_SHOW_IN_CHAT_CHANNEL"
+        private const val EXTRA_SHARED_TRANSITION = "EXTRA_SHARED_TRANSITION"
+        const val SHARED_TRANSITION_NAME = "sceyt_media_preview"
 
         fun launch(
             context: Context,
@@ -408,13 +537,63 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
             showInChatChannel: SceytChannel? = null,
         ) {
             context.launchActivity<MediaPreviewActivity> {
-                putExtra(KEY_ATTACHMENT, attachment)
-                putExtra(KEY_USER, from)
-                putExtra(KEY_CHANNEL_ID, channelId)
-                putExtra(KEY_REVERSED, reversed)
-                showInChatChannel?.let {
-                    putExtra(KEY_SHOW_IN_CHAT_CHANNEL, it.toIntentPayload())
-                }
+                fillLaunchIntent(
+                    attachment = attachment,
+                    from = from,
+                    channelId = channelId,
+                    reversed = reversed,
+                    showInChatChannel = showInChatChannel,
+                    launchedWithSharedTransition = false,
+                )
+            }
+        }
+
+        fun launch(
+            activity: Activity,
+            attachment: SceytAttachment,
+            from: SceytUser?,
+            channelId: Long,
+            reversed: Boolean = false,
+            showInChatChannel: SceytChannel? = null,
+            sourceView: View
+        ) {
+            ViewCompat.setTransitionName(sourceView, SHARED_TRANSITION_NAME)
+            val options = ActivityOptionsCompat.makeSceneTransitionAnimation(
+                activity,
+                sourceView,
+                SHARED_TRANSITION_NAME
+            )
+            activity.launchActivity<MediaPreviewActivity>(
+                options = options.toBundle() ?: Bundle()
+            ) {
+                fillLaunchIntent(
+                    attachment = attachment,
+                    from = from,
+                    channelId = channelId,
+                    reversed = reversed,
+                    showInChatChannel = showInChatChannel,
+                    launchedWithSharedTransition = true,
+                )
+            }
+        }
+
+        private fun android.content.Intent.fillLaunchIntent(
+            attachment: SceytAttachment,
+            from: SceytUser?,
+            channelId: Long,
+            reversed: Boolean,
+            showInChatChannel: SceytChannel?,
+            launchedWithSharedTransition: Boolean,
+        ) {
+            putExtra(KEY_ATTACHMENT, attachment)
+            putExtra(KEY_USER, from)
+            putExtra(KEY_CHANNEL_ID, channelId)
+            putExtra(KEY_REVERSED, reversed)
+            showInChatChannel?.let {
+                putExtra(KEY_SHOW_IN_CHAT_CHANNEL, it.toIntentPayload())
+            }
+            if (launchedWithSharedTransition) {
+                putExtra(EXTRA_SHARED_TRANSITION, true)
             }
         }
     }

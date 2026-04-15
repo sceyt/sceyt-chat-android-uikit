@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.presentation.components.global_search
 
 import android.app.Activity
+import android.content.Context
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.transition.ChangeBounds
@@ -366,24 +367,24 @@ open class GlobalSearchActivity : AppCompatActivity(), GlobalSearchClickListener
         const val STYLE_ID_KEY = "GLOBAL_SEARCH_STYLE_ID_KEY"
         const val EXTRA_SHARED_TRANSITION = "EXTRA_SHARED_TRANSITION"
 
-        fun launch(activity: Activity, sourceView: View? = null) {
-            if (sourceView != null) {
-                val options = ActivityOptionsCompat.makeSceneTransitionAnimation(
-                    activity,
-                    sourceView,
-                    SHARED_TRANSITION_NAME
-                )
-                activity.launchActivity<GlobalSearchActivity>(
-                    options = options.toBundle() ?: Bundle()
-                ) {
-                    putExtra(EXTRA_SHARED_TRANSITION, true)
-                }
-            } else {
-                activity.launchActivity<GlobalSearchActivity>(
-                    R.anim.sceyt_anim_slide_in_right,
-                    R.anim.sceyt_anim_slide_hold
-                )
+        fun launch(activity: Activity, sourceView: View) {
+            val options = ActivityOptionsCompat.makeSceneTransitionAnimation(
+                activity,
+                sourceView,
+                SHARED_TRANSITION_NAME
+            )
+            activity.launchActivity<GlobalSearchActivity>(
+                options = options.toBundle() ?: Bundle()
+            ) {
+                putExtra(EXTRA_SHARED_TRANSITION, true)
             }
+        }
+
+        fun launch(content: Context) {
+            content.launchActivity<GlobalSearchActivity>(
+                R.anim.sceyt_anim_slide_in_right,
+                R.anim.sceyt_anim_slide_hold
+            )
         }
     }
 }

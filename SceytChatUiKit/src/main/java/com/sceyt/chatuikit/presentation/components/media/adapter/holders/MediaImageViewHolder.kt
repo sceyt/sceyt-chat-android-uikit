@@ -24,10 +24,11 @@ import com.sceyt.chatuikit.presentation.components.media.adapter.MediaItem
 import com.sceyt.chatuikit.styles.preview.MediaPreviewStyle
 
 class MediaImageViewHolder(
-        private val binding: SceytMediaItemImageBinding,
-        private val style: MediaPreviewStyle,
-        private val clickListeners: (MediaItem) -> Unit,
-        private val needMediaDataCallback: (NeedMediaInfoData) -> Unit) : BaseFileViewHolder<MediaItem>(binding.root, needMediaDataCallback) {
+    private val binding: SceytMediaItemImageBinding,
+    private val style: MediaPreviewStyle,
+    private val clickListeners: (MediaItem) -> Unit,
+    private val needMediaDataCallback: (NeedMediaInfoData) -> Unit
+) : BaseFileViewHolder<MediaItem>(binding.root, needMediaDataCallback), SharedTransitionViewProvider {
 
     init {
         binding.applyStyle()
@@ -87,6 +88,8 @@ class MediaImageViewHolder(
     }
 
     override fun needThumbFor() = ThumbFor.MediaPreview
+
+    override fun provide() = binding.imageView
 
     private fun SceytMediaItemImageBinding.applyStyle() {
         style.mediaLoaderStyle.apply(progress)
