@@ -20,6 +20,7 @@ import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.data.ChannelEvent
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import com.sceyt.chatuikit.presentation.root.PageState
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -32,6 +33,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.core.component.inject
+import kotlin.math.max
 
 /**
  * Holds both the raw channel list (for business logic) and the pre-computed adapter list.
@@ -56,10 +58,12 @@ data class ChannelListState(
 
 class ChannelsViewModel(
     internal val config: ChannelListConfig = ChannelListConfig.default,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : BaseViewModel(), SceytKoinComponent {
     private val channelInteractor: ChannelInteractor by inject()
     private var getChannelsJog: Job? = null
     private var sortJob: Job? = null
+    private var nextOffset = 0
 
     var searchQuery = ""
         private set
@@ -153,6 +157,7 @@ class ChannelsViewModel(
         onlyMine: Boolean = query.isEmpty(),
         ignoreDatabase: Boolean = false,
     ) {
+        if (offset == 0) nextOffset = 0
         searchQuery = query
         setPagingLoadingStarted(
             loadType = PaginationResponse.LoadType.LoadNext,
@@ -162,7 +167,7 @@ class ChannelsViewModel(
         notifyPageLoadingState(false)
 
         getChannelsJog?.cancel()
-        getChannelsJog = viewModelScope.launch(Dispatchers.IO) {
+        getChannelsJog = viewModelScope.launch(ioDispatcher) {
             channelInteractor.loadChannels(
                 offset = offset,
                 searchQuery = query,
@@ -173,6 +178,15 @@ class ChannelsViewModel(
                 config = config
             ).collect(::initPaginationResponse)
         }
+    }
+
+    fun loadMoreChannels(lastChannelId: Long?) {
+        if (!canLoadNext()) return
+        getChannels(
+            offset = nextOffset,
+            query = searchQuery,
+            loadKey = LoadKeyData(value = lastChannelId ?: 0)
+        )
     }
 
     @Suppress("unused")
@@ -196,7 +210,7 @@ class ChannelsViewModel(
         notifyPageLoadingState(false)
 
         getChannelsJog?.cancel()
-        getChannelsJog = viewModelScope.launch(Dispatchers.IO) {
+        getChannelsJog = viewModelScope.launch(ioDispatcher) {
             channelInteractor.searchChannelsWithUserIds(
                 offset = offset,
                 searchQuery = query,
@@ -226,7 +240,7 @@ class ChannelsViewModel(
         notifyPageLoadingState(false)
 
         getChannelsJog?.cancel()
-        getChannelsJog = viewModelScope.launch(Dispatchers.IO) {
+        getChannelsJog = viewModelScope.launch(ioDispatcher) {
             val response = channelInteractor.getChannelsBySQLiteQuery(sqLiteQuery)
             val paginationResponse = PaginationResponse.DBResponse(
                 data = response,
@@ -241,6 +255,7 @@ class ChannelsViewModel(
     private fun initPaginationResponse(response: PaginationResponse<SceytChannel>) {
         when (response) {
             is PaginationResponse.DBResponse -> {
+                nextOffset = response.offset + response.data.size
                 if (!checkIgnoreDatabasePagingResponse(response)) {
                     val channels = mapToChannels(response.data)
                     _state.update { current ->
@@ -258,6 +273,8 @@ class ChannelsViewModel(
             }
 
             is PaginationResponse.ServerResponse -> {
+                val pageSize = (response.data as? SceytResponse.Success)?.data?.size ?: 0
+                nextOffset = max(nextOffset, response.offset + pageSize)
                 if (response.data is SceytResponse.Success && response.hasDiff) {
                     _state.update { it.copy(channels = mapToChannels(response.cacheData), hasNext = response.hasNext) }
                 } else if (!hasNextDb) {

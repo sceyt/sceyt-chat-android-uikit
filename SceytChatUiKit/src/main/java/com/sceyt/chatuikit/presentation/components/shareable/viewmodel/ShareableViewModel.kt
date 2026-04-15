@@ -10,6 +10,7 @@ import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.viewmodel.ChannelListState
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,9 +21,11 @@ import org.koin.core.component.inject
 
 class ShareableViewModel(
     internal val config: ChannelListConfig = ChannelListConfig.default,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : BaseViewModel(), SceytKoinComponent {
     private val channelInteractor: ChannelInteractor by inject()
     private var getChannelsJob: Job? = null
+    private var nextOffset = 0
     val selectedChannels = mutableSetOf<Long>()
 
     var searchQuery = ""
@@ -42,6 +45,7 @@ class ShareableViewModel(
         onlyMine: Boolean = true,
         ignoreDatabase: Boolean = false,
     ) {
+        if (offset == 0) nextOffset = 0
         searchQuery = query
         setPagingLoadingStarted(
             PaginationResponse.LoadType.LoadNext,
@@ -51,7 +55,7 @@ class ShareableViewModel(
         notifyPageLoadingState(false)
 
         getChannelsJob?.cancel()
-        getChannelsJob = viewModelScope.launch(Dispatchers.IO) {
+        getChannelsJob = viewModelScope.launch(ioDispatcher) {
             channelInteractor.loadChannels(
                 offset = offset,
                 searchQuery = query,
@@ -68,7 +72,7 @@ class ShareableViewModel(
         if (!canLoadNext()) return
         val state = state.value
         getChannels(
-            offset = state.channels.size,
+            offset = nextOffset,
             query = searchQuery,
             loadKey = LoadKeyData(value = state.channels.lastOrNull()?.id ?: 0)
         )
@@ -83,6 +87,7 @@ class ShareableViewModel(
     private fun initPaginationResponse(response: PaginationResponse<SceytChannel>) {
         when (response) {
             is PaginationResponse.DBResponse -> {
+                nextOffset = response.offset + response.data.size
                 _state.update { current ->
                     if (response.offset == 0)
                         current.copy(
