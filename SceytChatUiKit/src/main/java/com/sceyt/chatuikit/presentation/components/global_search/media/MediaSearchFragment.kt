@@ -21,6 +21,7 @@ import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchAct
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchClickListener
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchSession
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchSessionResolver
+import com.sceyt.chatuikit.presentation.components.media.MediaPreviewActivity
 import com.sceyt.chatuikit.presentation.components.global_search.media.adapter.MediaSearchListAdapter
 import com.sceyt.chatuikit.presentation.components.global_search.media.adapter.MediaSearchViewHolderFactory
 import com.sceyt.chatuikit.presentation.components.global_search.media.adapter.grid.MediaSearchGridAdapter
@@ -82,7 +83,7 @@ open class MediaSearchFragment : Fragment(R.layout.sceyt_fragment_media_search) 
             context = requireContext(),
             style = style.mediaPageStyle,
             needMediaDataCallback = viewModel::onNeedMediaInfo,
-            onItemClick = ::onAttachmentClicked,
+            onItemClick = ::onGridAttachmentClicked,
         )
     }
 
@@ -214,6 +215,16 @@ open class MediaSearchFragment : Fragment(R.layout.sceyt_fragment_media_search) 
 
     protected open val clickListener: GlobalSearchClickListener?
         get() = requireActivity() as? GlobalSearchClickListener
+
+    protected open fun onGridAttachmentClicked(result: GlobalSearchAttachmentResult) {
+        MediaPreviewActivity.launch(
+            context = requireContext(),
+            attachment = result.attachment,
+            from = result.sender,
+            channelId = result.channel.id,
+            showInChatChannel = result.channel,
+        )
+    }
 
     protected open fun onAttachmentClicked(result: GlobalSearchAttachmentResult) {
         clickListener?.onAttachmentClicked(result)

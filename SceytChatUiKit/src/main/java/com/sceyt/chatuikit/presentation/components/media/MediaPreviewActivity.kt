@@ -19,6 +19,8 @@ import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNear
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadPrev
+import com.sceyt.chatuikit.data.models.channels.SceytChannel
+import com.sceyt.chatuikit.data.models.channels.toIntentPayload
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.AttachmentWithUserData
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
@@ -38,6 +40,7 @@ import com.sceyt.chatuikit.extensions.launchActivity
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.saveToGallery
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
+import com.sceyt.chatuikit.presentation.components.channel.messages.ChannelActivity
 import com.sceyt.chatuikit.presentation.components.forward.ForwardActivity
 import com.sceyt.chatuikit.presentation.components.media.adapter.MediaAdapter
 import com.sceyt.chatuikit.presentation.components.media.adapter.MediaFilesViewHolderFactory
@@ -62,6 +65,7 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
     private var currentItem: MediaItem? = null
     private var openedWithAttachment: SceytAttachment? = null
     private var reversed = false
+    private var showInChatChannel: SceytChannel? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -95,6 +99,7 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
     private fun getDataFromIntent() {
         channelId = intent.getLongExtra(KEY_CHANNEL_ID, 0L)
         reversed = intent.getBooleanExtra(KEY_REVERSED, false)
+        showInChatChannel = intent?.extras?.parcelable(KEY_SHOW_IN_CHAT_CHANNEL)
     }
 
     private fun initViewModel() {
@@ -304,8 +309,9 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
     }
 
     protected open fun showActionsDialog(file: MediaItem) {
-        ActionDialog(this) {
+        ActionDialog(this, showInChatVisible = showInChatChannel != null) {
             when (it) {
+                ActionDialog.Action.ShowInChat -> showInChat(file)
                 ActionDialog.Action.Save -> {
                     fileToSaveAfterPermission = file
                     val permissions = getPermissionsForMangeStorage()
@@ -317,6 +323,12 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
                 ActionDialog.Action.Forward -> forward(file)
             }
         }.show()
+    }
+
+    protected open fun showInChat(item: MediaItem) {
+        val channel = showInChatChannel ?: return
+        ChannelActivity.launch(this, channel, item.data.attachment.messageId)
+        finish()
     }
 
     protected open fun share(item: MediaItem) {
@@ -385,13 +397,24 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
         private const val KEY_USER = "KEY_USER"
         private const val KEY_CHANNEL_ID = "KEY_CHANNEL_ID"
         private const val KEY_REVERSED = "KEY_REVERSED"
+        private const val KEY_SHOW_IN_CHAT_CHANNEL = "KEY_SHOW_IN_CHAT_CHANNEL"
 
-        fun launch(context: Context, attachment: SceytAttachment, from: SceytUser?, channelId: Long, reversed: Boolean = false) {
+        fun launch(
+            context: Context,
+            attachment: SceytAttachment,
+            from: SceytUser?,
+            channelId: Long,
+            reversed: Boolean = false,
+            showInChatChannel: SceytChannel? = null,
+        ) {
             context.launchActivity<MediaPreviewActivity> {
                 putExtra(KEY_ATTACHMENT, attachment)
                 putExtra(KEY_USER, from)
                 putExtra(KEY_CHANNEL_ID, channelId)
                 putExtra(KEY_REVERSED, reversed)
+                showInChatChannel?.let {
+                    putExtra(KEY_SHOW_IN_CHAT_CHANNEL, it.toIntentPayload())
+                }
             }
         }
     }
