@@ -350,7 +350,7 @@ internal class PersistenceChannelsLogicImpl(
             )
 
             if (response is SceytResponse.Success) {
-                val channels = response.data ?: arrayListOf()
+                val channels = response.data.orEmpty()
 
                 val savedChannels = saveChannelsToDb(channels)
                 val hasDiff = channelsCache.addAll(
@@ -375,7 +375,7 @@ internal class PersistenceChannelsLogicImpl(
                     )
                 )
 
-                ChatReactionMessagesCache.getNeededMessages(response.data ?: arrayListOf())
+                ChatReactionMessagesCache.getNeededMessages(response.data.orEmpty())
 
                 messageLogic.onSyncedChannels(channels)
             }
@@ -437,7 +437,7 @@ internal class PersistenceChannelsLogicImpl(
             )
 
             if (response is SceytResponse.Success) {
-                val channels = response.data ?: arrayListOf()
+                val channels = response.data.orEmpty()
 
                 val savedChannels = saveChannelsToDb(channels)
                 val hasDiff = channelsCache.addAll(
@@ -730,11 +730,11 @@ internal class PersistenceChannelsLogicImpl(
         val response = channelsRepository.createChannel(
             CreateChannelData(
                 type = channel.type,
-                uri = channel.uri ?: "",
-                subject = channel.subject ?: "",
-                avatarUrl = channel.avatarUrl ?: "",
-                metadata = channel.metadata ?: "",
-                members = channel.members ?: arrayListOf()
+                uri = channel.uri.orEmpty(),
+                subject = channel.subject.orEmpty(),
+                avatarUrl = channel.avatarUrl.orEmpty(),
+                metadata = channel.metadata.orEmpty(),
+                members = channel.members.orEmpty()
             )
         )
         if (response is SceytResponse.Success) {
