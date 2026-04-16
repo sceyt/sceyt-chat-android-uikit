@@ -1,9 +1,9 @@
 package com.sceyt.chatuikit.presentation.components.media
 
 import android.app.Activity
-import android.app.SharedElementCallback
 import android.content.Context
 import android.os.Bundle
+import android.os.SystemClock
 import android.transition.ChangeBounds
 import android.transition.ChangeClipBounds
 import android.transition.ChangeImageTransform
@@ -101,7 +101,6 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
         if (launchedWithSharedTransition()) {
             postponeEnterTransition()
             setupSharedElementTransition()
-            setupExitSharedElementCallback()
         }
 
         getDataFromIntent()
@@ -353,27 +352,6 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
         }
     }
 
-    private fun setupExitSharedElementCallback() {
-        setExitSharedElementCallback(object : SharedElementCallback() {
-            override fun onMapSharedElements(
-                names: MutableList<String>,
-                sharedElements: MutableMap<String, View>,
-            ) {
-                val sharedElement = findCurrentSharedElementView()
-                if (sharedElement == null) {
-                    names.clear()
-                    sharedElements.clear()
-                    return
-                }
-                ViewCompat.setTransitionName(sharedElement, SHARED_TRANSITION_NAME)
-                names.clear()
-                names.add(SHARED_TRANSITION_NAME)
-                sharedElements.clear()
-                sharedElements[SHARED_TRANSITION_NAME] = sharedElement
-            }
-        })
-    }
-
     private fun findCurrentSharedElementView(): View? {
         return getSharedTransitionViewProvider()?.provide()
     }
@@ -546,6 +524,7 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
 
     companion object {
         private const val SHARED_TRANSITION_READY_TIMEOUT_MS = 300L
+        private const val PREVIEW_LAUNCH_THROTTLE_MS = 300L
         private const val KEY_ATTACHMENT = "KEY_ATTACHMENT"
         private const val KEY_USER = "KEY_USER"
         private const val KEY_CHANNEL_ID = "KEY_CHANNEL_ID"
@@ -562,6 +541,7 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
             reversed: Boolean = false,
             showInChatChannel: SceytChannel? = null,
         ) {
+            if (!canLaunchPreview()) return
             context.launchActivity<MediaPreviewActivity> {
                 fillLaunchIntent(
                     attachment = attachment,
@@ -583,6 +563,7 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
             showInChatChannel: SceytChannel? = null,
             sourceView: View
         ) {
+            if (!canLaunchPreview()) return
             ViewCompat.setTransitionName(sourceView, SHARED_TRANSITION_NAME)
             val options = ActivityOptionsCompat.makeSceneTransitionAnimation(
                 activity,
@@ -622,5 +603,15 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
                 putExtra(EXTRA_SHARED_TRANSITION, true)
             }
         }
+
+        @Synchronized
+        private fun canLaunchPreview(): Boolean {
+            val now = SystemClock.elapsedRealtime()
+            if (now - lastLaunchPreviewAtMs < PREVIEW_LAUNCH_THROTTLE_MS) return false
+            lastLaunchPreviewAtMs = now
+            return true
+        }
+
+        private var lastLaunchPreviewAtMs = 0L
     }
 }
