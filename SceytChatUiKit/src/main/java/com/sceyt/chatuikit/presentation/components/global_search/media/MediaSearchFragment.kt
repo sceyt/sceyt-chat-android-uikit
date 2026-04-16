@@ -21,7 +21,6 @@ import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchAct
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchClickListener
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchSession
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchSessionResolver
-import com.sceyt.chatuikit.presentation.components.media.MediaPreviewActivity
 import com.sceyt.chatuikit.presentation.components.global_search.media.adapter.MediaSearchListAdapter
 import com.sceyt.chatuikit.presentation.components.global_search.media.adapter.MediaSearchViewHolderFactory
 import com.sceyt.chatuikit.presentation.components.global_search.media.adapter.grid.MediaSearchGridAdapter
@@ -227,14 +226,7 @@ open class MediaSearchFragment : Fragment(R.layout.sceyt_fragment_media_search) 
         sharedView: View,
         result: GlobalSearchAttachmentResult,
     ) {
-        MediaPreviewActivity.launch(
-            activity = requireActivity(),
-            attachment = result.attachment,
-            from = result.sender,
-            channelId = result.channel.id,
-            showInChatChannel = result.channel,
-            sourceView = sharedView,
-        )
+        clickListener?.onMediaAttachmentClicked(sharedView, result)
     }
 
     protected open fun onAttachmentClicked(result: GlobalSearchAttachmentResult) {
