@@ -123,7 +123,6 @@ class GlobalSearchQueryInputView @JvmOverloads constructor(
         member: SceytUser?,
         isPendingRemoval: Boolean = false,
     ) {
-        val currentQuery = binding.input.text?.toString().orEmpty()
         val nextMemberId = member?.id
         val nextName = member?.displayName().orEmpty()
         val shouldBeVisible = member != null
@@ -139,7 +138,6 @@ class GlobalSearchQueryInputView @JvmOverloads constructor(
             binding.name.text?.toString() == nextName &&
             isPendingRemoval == previousPendingRemoval
         ) {
-            restoreQuery(currentQuery)
             updateClearVisibility()
             return
         }
@@ -169,7 +167,6 @@ class GlobalSearchQueryInputView @JvmOverloads constructor(
             applyChipStyle(isPendingRemoval = false)
         }
         isSelectedMemberRemovalPending = shouldBeVisible && isPendingRemoval
-        restoreQuery(currentQuery)
         updateClearVisibility()
     }
 
@@ -263,19 +260,5 @@ class GlobalSearchQueryInputView @JvmOverloads constructor(
     ) {
         binding.selectedUserContainer.setBackgroundTint(backgroundColor)
         binding.name.setTextColor(textColor)
-    }
-
-    private fun restoreQuery(query: String) {
-        if (binding.input.text?.toString() != query) {
-            suppressQueryChanged = true
-            binding.input.setText(query)
-            suppressQueryChanged = false
-        }
-        binding.input.post {
-            val text = binding.input.text?.toString().orEmpty()
-            if (text == query) {
-                binding.input.setSelection(text.length)
-            }
-        }
     }
 }
