@@ -94,7 +94,7 @@ open class SearchMessageItemViewHolder(
         // Match is beyond the fold: trim to the start of its visual line.
         val lineStart = layout.getLineStart(matchLine)
         if (lineStart < MIN_TRIM_CHARS) return text
-        return SpannableStringBuilder("…").append(text.subSequence(lineStart, text.length))
+        return SpannableStringBuilder("… ").append(text.subSequence(lineStart, text.length))
     }
 
     protected open fun highlight(text: CharSequence, query: String): CharSequence =

@@ -14,6 +14,8 @@ import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchLis
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchSession
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchSessionState
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchTab
+import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchUpdateEventSource
+import com.sceyt.chatuikit.presentation.components.global_search.applyAttachmentUpdateEvent
 import com.sceyt.chatuikit.presentation.components.global_search.defaults.DefaultGlobalSearchLocalInteractor
 import com.sceyt.chatuikit.presentation.components.global_search.media.MediaSearchDisplayMode.Grid
 import com.sceyt.chatuikit.presentation.components.global_search.media.MediaSearchDisplayMode.SearchList
@@ -25,6 +27,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -60,6 +64,7 @@ data class MediaSearchState(
     val isLoading: Boolean = false,
     val isLoadingMore: Boolean = false,
     val hasMore: Boolean = false,
+    val refreshKey: Int = 0
 ) {
     val showEmptyState: Boolean
         get() = !isLoading && !isLoadingMore && mode.isEmpty()
@@ -78,6 +83,7 @@ open class MediaSearchViewModel(
 ) : ViewModel(), SceytKoinComponent {
 
     private val fileTransferService: FileTransferService by inject()
+    private val globalSearchUpdateEventSource = GlobalSearchUpdateEventSource(viewModelScope)
 
     private val _state = MutableStateFlow(MediaSearchState(isLoading = true))
     val state: StateFlow<MediaSearchState> = _state.asStateFlow()
@@ -89,6 +95,19 @@ open class MediaSearchViewModel(
         viewModelScope.launch {
             session.state.collectLatest(::onSessionStateChanged)
         }
+
+        globalSearchUpdateEventSource.updatesFlow.onEach { event ->
+            _state.update { state ->
+                val newMode = when (val mode = state.mode) {
+                    is Grid -> mode.copy(items = mode.items.applyAttachmentUpdateEvent(event))
+                    is SearchList -> mode.copy(items = mode.items.applyAttachmentUpdateEvent(event))
+                }
+                state.copy(
+                    mode = newMode,
+                    refreshKey = if (event.shouldUpdateRefreshKey) state.refreshKey + 1 else state.refreshKey
+                )
+            }
+        }.launchIn(viewModelScope)
     }
 
     private suspend fun onSessionStateChanged(sessionState: GlobalSearchSessionState) {

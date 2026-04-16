@@ -44,6 +44,7 @@ class GlobalSearchListItemDiffCallback : DiffUtil.ItemCallback<GlobalSearchListI
 
         is GlobalSearchListItem.AttachmentItem if newItem is GlobalSearchListItem.AttachmentItem ->
             !oldItem.result.attachment.diff(newItem.result.attachment).hasDifference()
+                    && oldItem.result.message.body.equals(newItem.result.message.body, ignoreCase = true)
                     && oldItem.query == newItem.query
 
         is GlobalSearchListItem.DateSeparator if newItem is GlobalSearchListItem.DateSeparator ->
