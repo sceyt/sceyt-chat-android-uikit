@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.presentation.components.global_search.chats
 
 import com.google.common.truth.Truth.assertThat
+import com.sceyt.chat.ChatClient
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytUser
@@ -30,9 +31,12 @@ import org.junit.Test
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.dsl.module
+import org.mockito.MockedStatic
+import org.mockito.Mockito
 import org.mockito.kotlin.any
 import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.mockStatic
 import org.mockito.kotlin.whenever
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -40,10 +44,16 @@ class ChatsSearchViewModelTest {
 
     private val dispatcher = StandardTestDispatcher()
     private val channelInteractor = mock<ChannelInteractor>()
+    private lateinit var chatClientStaticMock: MockedStatic<ChatClient>
 
     @Before
     fun setUp() {
         Dispatchers.setMain(dispatcher)
+        chatClientStaticMock = mockStatic<ChatClient>()
+        val mockClient = mock<ChatClient>()
+        chatClientStaticMock.`when`<ChatClient> { ChatClient.getClient() }.thenReturn(mockClient)
+        Mockito.doNothing().`when`(mockClient).addMessageListener(Mockito.anyString(), Mockito.any())
+
         stopKoin()
         SceytKoinApp.koinApp = startKoin {
             modules(module {
@@ -60,6 +70,7 @@ class ChatsSearchViewModelTest {
     @After
     fun tearDown() {
         Dispatchers.resetMain()
+        chatClientStaticMock.close()
         SceytKoinApp.koinApp = null
         stopKoin()
     }

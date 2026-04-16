@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.presentation.components.global_search
 
 import com.google.common.truth.Truth.assertThat
+import com.sceyt.chat.ChatClient
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.data.models.search.GlobalSearchAttachmentKind
@@ -23,22 +24,32 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
-import org.koin.dsl.module
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
+import org.koin.dsl.module
+import org.mockito.MockedStatic
+import org.mockito.Mockito
 import org.mockito.kotlin.any
 import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.mockStatic
 import org.mockito.kotlin.whenever
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class GlobalSearchTabViewModelTest {
     private val dispatcher = StandardTestDispatcher()
     private val channelInteractor = mock<ChannelInteractor>()
+    private lateinit var chatClientStaticMock: MockedStatic<ChatClient>
 
     @Before
     fun setUp() {
         Dispatchers.setMain(dispatcher)
+
+        chatClientStaticMock = mockStatic<ChatClient>()
+        val mockClient = mock<ChatClient>()
+        chatClientStaticMock.`when`<ChatClient> { ChatClient.getClient() }.thenReturn(mockClient)
+        Mockito.doNothing().`when`(mockClient).addMessageListener(Mockito.anyString(), Mockito.any())
+
         stopKoin()
         SceytKoinApp.koinApp = startKoin {
             modules(
@@ -64,6 +75,7 @@ class GlobalSearchTabViewModelTest {
 
     @After
     fun tearDown() {
+        chatClientStaticMock.close()
         Dispatchers.resetMain()
         SceytKoinApp.koinApp = null
         stopKoin()
@@ -125,37 +137,38 @@ class GlobalSearchTabViewModelTest {
     }
 
     @Test
-    fun `channels tab reloads selected-member message search when member or query changes`() = runTest(dispatcher) {
-        val dataSource = FakeGlobalSearchDataSource()
-        val session =
-            GlobalSearchSessionStore(GlobalSearchSessionState(activeTab = GlobalSearchTab.Channels))
-        ChannelsSearchViewModel(session, dataSource, dispatcher)
-        advanceUntilIdle()
+    fun `channels tab reloads selected-member message search when member or query changes`() =
+        runTest(dispatcher) {
+            val dataSource = FakeGlobalSearchDataSource()
+            val session =
+                GlobalSearchSessionStore(GlobalSearchSessionState(activeTab = GlobalSearchTab.Channels))
+            ChannelsSearchViewModel(session, dataSource, dispatcher)
+            advanceUntilIdle()
 
-        assertThat(dataSource.recentChannelsCalls).isEqualTo(1)
+            assertThat(dataSource.recentChannelsCalls).isEqualTo(1)
 
-        session.update { it.copy(selectedMember = SceytUser("member-1")) }
-        advanceUntilIdle()
-        assertThat(dataSource.recentChannelsCalls).isEqualTo(1)
-        assertThat(dataSource.searchMessagesCalls).hasSize(1)
-        assertThat(dataSource.searchMessagesCalls.last().senderId).isEqualTo("member-1")
-        assertThat(dataSource.searchMessagesCalls.last().query).isEmpty()
+            session.update { it.copy(selectedMember = SceytUser("member-1")) }
+            advanceUntilIdle()
+            assertThat(dataSource.recentChannelsCalls).isEqualTo(1)
+            assertThat(dataSource.searchMessagesCalls).hasSize(1)
+            assertThat(dataSource.searchMessagesCalls.last().senderId).isEqualTo("member-1")
+            assertThat(dataSource.searchMessagesCalls.last().query).isEmpty()
 
-        session.update { it.copy(query = "engineering") }
-        advanceTimeBy(300)
-        advanceUntilIdle()
-        assertThat(dataSource.searchChannelsCalls).isEqualTo(0)
-        assertThat(dataSource.searchMessagesCalls).hasSize(2)
-        assertThat(dataSource.searchMessagesCalls.last().senderId).isEqualTo("member-1")
-        assertThat(dataSource.searchMessagesCalls.last().query).isEqualTo("engineering")
+            session.update { it.copy(query = "engineering") }
+            advanceTimeBy(300)
+            advanceUntilIdle()
+            assertThat(dataSource.searchChannelsCalls).isEqualTo(0)
+            assertThat(dataSource.searchMessagesCalls).hasSize(2)
+            assertThat(dataSource.searchMessagesCalls.last().senderId).isEqualTo("member-1")
+            assertThat(dataSource.searchMessagesCalls.last().query).isEqualTo("engineering")
 
-        session.update { it.copy(selectedMember = SceytUser("member-2")) }
-        advanceUntilIdle()
-        assertThat(dataSource.searchChannelsCalls).isEqualTo(0)
-        assertThat(dataSource.searchMessagesCalls).hasSize(3)
-        assertThat(dataSource.searchMessagesCalls.last().senderId).isEqualTo("member-2")
-        assertThat(dataSource.searchMessagesCalls.last().query).isEqualTo("engineering")
-    }
+            session.update { it.copy(selectedMember = SceytUser("member-2")) }
+            advanceUntilIdle()
+            assertThat(dataSource.searchChannelsCalls).isEqualTo(0)
+            assertThat(dataSource.searchMessagesCalls).hasSize(3)
+            assertThat(dataSource.searchMessagesCalls.last().senderId).isEqualTo("member-2")
+            assertThat(dataSource.searchMessagesCalls.last().query).isEqualTo("engineering")
+        }
 
     @Test
     fun `selecting a tab with stale session state triggers a first page load`() =
