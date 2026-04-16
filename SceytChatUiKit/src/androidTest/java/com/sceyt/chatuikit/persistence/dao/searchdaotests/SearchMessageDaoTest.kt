@@ -14,7 +14,6 @@ import com.sceyt.chatuikit.persistence.database.dao.ChannelDao
 import com.sceyt.chatuikit.persistence.database.dao.GlobalSearchDao
 import com.sceyt.chatuikit.persistence.database.dao.MessageDao
 import com.sceyt.chatuikit.persistence.database.entity.channel.ChannelEntity
-import com.sceyt.chatuikit.persistence.database.entity.channel.UserChatLinkEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageEntity
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -65,7 +64,7 @@ class SearchMessageDaoTest {
         )
 
         val result = globalSearchDao.searchMessages(
-            query ="hello", senderId = null,
+            query = "hello", senderId = null,
             channelTypes = listOf(ChannelTypeEnum.Direct.value, ChannelTypeEnum.Group.value),
             onlyJoined = false,
             limit = 20,
@@ -83,7 +82,7 @@ class SearchMessageDaoTest {
         )
 
         val result = globalSearchDao.searchMessages(
-            query ="missing", senderId = null,
+            query = "missing", senderId = null,
             channelTypes = listOf(ChannelTypeEnum.Direct.value, ChannelTypeEnum.Group.value),
             onlyJoined = false,
             limit = 20,
@@ -99,12 +98,26 @@ class SearchMessageDaoTest {
         insertMessages(
             message(tid = 1, id = 1, channelId = 1, body = "alpha", createdAt = 100),
             message(tid = 2, id = 2, channelId = 1, body = "beta", createdAt = 200),
-            message(tid = 3, id = 3, channelId = 1, body = "pending", createdAt = 300, deliveryStatus = MessageDeliveryStatus.Pending),
-            message(tid = 4, id = 4, channelId = 1, body = "unlisted", createdAt = 400, unList = true),
+            message(
+                tid = 3,
+                id = 3,
+                channelId = 1,
+                body = "pending",
+                createdAt = 300,
+                deliveryStatus = MessageDeliveryStatus.Pending
+            ),
+            message(
+                tid = 4,
+                id = 4,
+                channelId = 1,
+                body = "unlisted",
+                createdAt = 400,
+                unList = true
+            ),
         )
 
         val result = globalSearchDao.searchMessages(
-            query ="", senderId = null,
+            query = "", senderId = null,
             channelTypes = listOf(ChannelTypeEnum.Direct.value, ChannelTypeEnum.Group.value),
             onlyJoined = false,
             limit = 20,
@@ -118,8 +131,22 @@ class SearchMessageDaoTest {
     fun searchMessagesGlobally_filtersBySender() = runTest {
         insertChannels(channel(id = 1))
         insertMessages(
-            message(tid = 1, id = 1, channelId = 1, body = "hello from alice", fromId = "alice", createdAt = 100),
-            message(tid = 2, id = 2, channelId = 1, body = "hello from bob", fromId = "bob", createdAt = 200),
+            message(
+                tid = 1,
+                id = 1,
+                channelId = 1,
+                body = "hello from alice",
+                fromId = "alice",
+                createdAt = 100
+            ),
+            message(
+                tid = 2,
+                id = 2,
+                channelId = 1,
+                body = "hello from bob",
+                fromId = "bob",
+                createdAt = 200
+            ),
         )
 
         val result = globalSearchDao.searchMessages(
@@ -138,12 +165,26 @@ class SearchMessageDaoTest {
     fun searchMessagesGlobally_nullSender_returnsAllSenders() = runTest {
         insertChannels(channel(id = 1))
         insertMessages(
-            message(tid = 1, id = 1, channelId = 1, body = "hello from alice", fromId = "alice", createdAt = 100),
-            message(tid = 2, id = 2, channelId = 1, body = "hello from bob", fromId = "bob", createdAt = 200),
+            message(
+                tid = 1,
+                id = 1,
+                channelId = 1,
+                body = "hello from alice",
+                fromId = "alice",
+                createdAt = 100
+            ),
+            message(
+                tid = 2,
+                id = 2,
+                channelId = 1,
+                body = "hello from bob",
+                fromId = "bob",
+                createdAt = 200
+            ),
         )
 
         val result = globalSearchDao.searchMessages(
-            query ="hello", senderId = null,
+            query = "hello", senderId = null,
             channelTypes = listOf(ChannelTypeEnum.Direct.value, ChannelTypeEnum.Group.value),
             onlyJoined = false,
             limit = 20,
@@ -158,11 +199,18 @@ class SearchMessageDaoTest {
         insertChannels(channel(id = 1))
         insertMessages(
             message(tid = 1, id = 1, channelId = 1, body = "delivered", createdAt = 100),
-            message(tid = 2, id = 2, channelId = 1, body = "pending message", createdAt = 200, deliveryStatus = MessageDeliveryStatus.Pending),
+            message(
+                tid = 2,
+                id = 2,
+                channelId = 1,
+                body = "pending message",
+                createdAt = 200,
+                deliveryStatus = MessageDeliveryStatus.Pending
+            ),
         )
 
         val result = globalSearchDao.searchMessages(
-            query ="", senderId = null,
+            query = "", senderId = null,
             channelTypes = listOf(ChannelTypeEnum.Direct.value, ChannelTypeEnum.Group.value),
             onlyJoined = false,
             limit = 20,
@@ -177,11 +225,18 @@ class SearchMessageDaoTest {
         insertChannels(channel(id = 1))
         insertMessages(
             message(tid = 1, id = 1, channelId = 1, body = "listed", createdAt = 100),
-            message(tid = 2, id = 2, channelId = 1, body = "unlisted message", createdAt = 200, unList = true),
+            message(
+                tid = 2,
+                id = 2,
+                channelId = 1,
+                body = "unlisted message",
+                createdAt = 200,
+                unList = true
+            ),
         )
 
         val result = globalSearchDao.searchMessages(
-            query ="", senderId = null,
+            query = "", senderId = null,
             channelTypes = listOf(ChannelTypeEnum.Direct.value, ChannelTypeEnum.Group.value),
             onlyJoined = false,
             limit = 20,
@@ -195,12 +250,18 @@ class SearchMessageDaoTest {
     fun searchMessagesGlobally_excludesMessagesWithNullId() = runTest {
         insertChannels(channel(id = 1))
         insertMessages(
-            message(tid = 1, id = null, channelId = 1, body = "local only message", createdAt = 100),
+            message(
+                tid = 1,
+                id = null,
+                channelId = 1,
+                body = "local only message",
+                createdAt = 100
+            ),
             message(tid = 2, id = 2, channelId = 1, body = "synced message", createdAt = 200),
         )
 
         val result = globalSearchDao.searchMessages(
-            query ="", senderId = null,
+            query = "", senderId = null,
             channelTypes = listOf(ChannelTypeEnum.Direct.value, ChannelTypeEnum.Group.value),
             onlyJoined = false,
             limit = 20,
@@ -224,7 +285,7 @@ class SearchMessageDaoTest {
         )
 
         val result = globalSearchDao.searchMessages(
-            query ="", senderId = null,
+            query = "", senderId = null,
             channelTypes = listOf(ChannelTypeEnum.Direct.value, ChannelTypeEnum.Group.value),
             onlyJoined = false,
             limit = 20,
@@ -244,7 +305,7 @@ class SearchMessageDaoTest {
         )
 
         val result = globalSearchDao.searchMessages(
-            query ="", senderId = null,
+            query = "", senderId = null,
             channelTypes = listOf(ChannelTypeEnum.Direct.value, ChannelTypeEnum.Group.value),
             onlyJoined = false,
             limit = 20,
@@ -268,7 +329,13 @@ class SearchMessageDaoTest {
         )
 
         val result = globalSearchDao.searchMessages(
-            query = "msg", senderId = null, channelTypes = emptyList(), onlyJoined = false, limit = 2, offset = 0)
+            query = "msg",
+            senderId = null,
+            channelTypes = emptyList(),
+            onlyJoined = false,
+            limit = 2,
+            offset = 0
+        )
 
         assertThat(result).hasSize(2)
         assertThat(result.map { it.messageEntity.id }).containsExactly(3L, 2L).inOrder()
@@ -284,7 +351,13 @@ class SearchMessageDaoTest {
         )
 
         val result = globalSearchDao.searchMessages(
-            query = "msg", senderId = null, channelTypes = emptyList(), onlyJoined = false, limit = 10, offset = 1)
+            query = "msg",
+            senderId = null,
+            channelTypes = emptyList(),
+            onlyJoined = false,
+            limit = 10,
+            offset = 1
+        )
 
         // Ordered: 3, 2, 1 — skipping first 1 → [2, 1]
         assertThat(result.map { it.messageEntity.id }).containsExactly(2L, 1L).inOrder()
@@ -302,7 +375,7 @@ class SearchMessageDaoTest {
         )
 
         val result = globalSearchDao.searchMessages(
-            query ="hello", senderId = null,
+            query = "hello", senderId = null,
             channelTypes = listOf(ChannelTypeEnum.Direct.value, ChannelTypeEnum.Group.value),
             onlyJoined = false,
             limit = 20,
@@ -320,7 +393,7 @@ class SearchMessageDaoTest {
         )
 
         val result = globalSearchDao.searchMessages(
-            query ="   hello", senderId = null,
+            query = "   hello", senderId = null,
             channelTypes = listOf(ChannelTypeEnum.Direct.value, ChannelTypeEnum.Group.value),
             onlyJoined = false,
             limit = 20,
@@ -338,7 +411,7 @@ class SearchMessageDaoTest {
         )
 
         val result = globalSearchDao.searchMessages(
-            query ="hello   ", senderId = null,
+            query = "hello   ", senderId = null,
             channelTypes = listOf(ChannelTypeEnum.Direct.value, ChannelTypeEnum.Group.value),
             onlyJoined = false,
             limit = 20,
@@ -356,7 +429,7 @@ class SearchMessageDaoTest {
         )
 
         val result = globalSearchDao.searchMessages(
-            query ="  hello  ", senderId = null,
+            query = "  hello  ", senderId = null,
             channelTypes = listOf(ChannelTypeEnum.Direct.value, ChannelTypeEnum.Group.value),
             onlyJoined = false,
             limit = 20,
@@ -370,12 +443,18 @@ class SearchMessageDaoTest {
     fun searchMessagesGlobally_multiWordQuery_allWordsMustBePresent() = runTest {
         insertChannels(channel(id = 1))
         insertMessages(
-            message(tid = 1, id = 1, channelId = 1, body = "meeting at noon today", createdAt = 100),
+            message(
+                tid = 1,
+                id = 1,
+                channelId = 1,
+                body = "meeting at noon today",
+                createdAt = 100
+            ),
             message(tid = 2, id = 2, channelId = 1, body = "meeting tomorrow", createdAt = 200),
         )
 
         val result = globalSearchDao.searchMessages(
-            query ="meeting noon", senderId = null,
+            query = "meeting noon", senderId = null,
             channelTypes = listOf(ChannelTypeEnum.Direct.value, ChannelTypeEnum.Group.value),
             onlyJoined = false,
             limit = 20,
@@ -393,7 +472,7 @@ class SearchMessageDaoTest {
         )
 
         val result = globalSearchDao.searchMessages(
-            query ="meeting missing", senderId = null,
+            query = "meeting missing", senderId = null,
             channelTypes = listOf(ChannelTypeEnum.Direct.value, ChannelTypeEnum.Group.value),
             onlyJoined = false,
             limit = 20,
@@ -412,7 +491,7 @@ class SearchMessageDaoTest {
 
         // words in opposite order to body
         val result = globalSearchDao.searchMessages(
-            query ="bob alice", senderId = null,
+            query = "bob alice", senderId = null,
             channelTypes = listOf(ChannelTypeEnum.Direct.value, ChannelTypeEnum.Group.value),
             onlyJoined = false,
             limit = 20,
@@ -430,7 +509,7 @@ class SearchMessageDaoTest {
         )
 
         val result = globalSearchDao.searchMessages(
-            query ="HELLO world", senderId = null,
+            query = "HELLO world", senderId = null,
             channelTypes = listOf(ChannelTypeEnum.Direct.value, ChannelTypeEnum.Group.value),
             onlyJoined = false,
             limit = 20,
@@ -450,7 +529,7 @@ class SearchMessageDaoTest {
 
         // "alpha" and "gamma" with extra spaces between them
         val result = globalSearchDao.searchMessages(
-            query ="alpha   gamma", senderId = null,
+            query = "alpha   gamma", senderId = null,
             channelTypes = listOf(ChannelTypeEnum.Direct.value, ChannelTypeEnum.Group.value),
             onlyJoined = false,
             limit = 20,
@@ -461,15 +540,68 @@ class SearchMessageDaoTest {
     }
 
     @Test
+    fun searchMessagesGlobally_symbolSeparatedWordMatchesLaterToken() = runTest {
+        insertChannels(channel(id = 1))
+        insertMessages(
+            message(
+                tid = 1,
+                id = 1,
+                channelId = 1,
+                body = "public-channel update",
+                createdAt = 100
+            ),
+            message(tid = 2, id = 2, channelId = 1, body = "underchannel update", createdAt = 200),
+        )
+
+        val result = globalSearchDao.searchMessages(
+            query = "channel",
+            senderId = null,
+            channelTypes = listOf(ChannelTypeEnum.Direct.value, ChannelTypeEnum.Group.value),
+            onlyJoined = false,
+            limit = 20,
+            offset = 0,
+        )
+
+        assertThat(result.map { it.messageEntity.id }).containsExactly(1L)
+    }
+
+    @Test
+    fun searchMessagesGlobally_queryPunctuationSplitsIntoTokens() = runTest {
+        insertChannels(channel(id = 1))
+        insertMessages(
+            message(tid = 1, id = 1, channelId = 1, body = "public channel", createdAt = 100),
+            message(tid = 2, id = 2, channelId = 1, body = "public-channel", createdAt = 200),
+            message(tid = 3, id = 3, channelId = 1, body = "public update only", createdAt = 300),
+        )
+
+        val result = globalSearchDao.searchMessages(
+            query = "public-channel",
+            senderId = null,
+            channelTypes = listOf(ChannelTypeEnum.Direct.value, ChannelTypeEnum.Group.value),
+            onlyJoined = false,
+            limit = 20,
+            offset = 0,
+        )
+
+        assertThat(result.map { it.messageEntity.id }).containsExactly(2L, 1L).inOrder()
+    }
+
+    @Test
     fun searchMessagesGlobally_partialWordMatch() = runTest {
         insertChannels(channel(id = 1))
         insertMessages(
-            message(tid = 1, id = 1, channelId = 1, body = "retrospective meeting", createdAt = 100),
+            message(
+                tid = 1,
+                id = 1,
+                channelId = 1,
+                body = "retrospective meeting",
+                createdAt = 100
+            ),
         )
 
         // partial word should still match via LIKE '%..%'
         val result = globalSearchDao.searchMessages(
-            query ="retro", senderId = null,
+            query = "retro", senderId = null,
             channelTypes = listOf(ChannelTypeEnum.Direct.value, ChannelTypeEnum.Group.value),
             onlyJoined = false,
             limit = 20,
@@ -491,7 +623,7 @@ class SearchMessageDaoTest {
         )
 
         val result = globalSearchDao.searchMessages(
-            query ="launch", senderId = null,
+            query = "launch", senderId = null,
             channelTypes = listOf(ChannelTypeEnum.Direct.value, ChannelTypeEnum.Group.value),
             onlyJoined = false,
             limit = 20,
@@ -508,9 +640,21 @@ class SearchMessageDaoTest {
     @Test
     fun searchMessagesInBroadcastJoinedChannels_onlyReturnsBroadcastTypeChannels() = runTest {
         insertChannels(
-            channel(id = 1, type = ChannelTypeEnum.Public.value, userRole = "member"),   // broadcast — include
-            channel(id = 2, type = ChannelTypeEnum.Group.value, userRole = "member"),    // group — exclude
-            channel(id = 3, type = ChannelTypeEnum.Direct.value, userRole = "member"),  // direct — exclude
+            channel(
+                id = 1,
+                type = ChannelTypeEnum.Public.value,
+                userRole = "member"
+            ),   // broadcast — include
+            channel(
+                id = 2,
+                type = ChannelTypeEnum.Group.value,
+                userRole = "member"
+            ),    // group — exclude
+            channel(
+                id = 3,
+                type = ChannelTypeEnum.Direct.value,
+                userRole = "member"
+            ),  // direct — exclude
         )
         insertMessages(
             message(tid = 1, id = 1, channelId = 1, body = "broadcast msg", createdAt = 100),
@@ -533,8 +677,16 @@ class SearchMessageDaoTest {
     @Test
     fun searchMessagesInBroadcastJoinedChannels_excludesNullUserRole() = runTest {
         insertChannels(
-            channel(id = 1, type = ChannelTypeEnum.Public.value, userRole = "member"),   // joined — include
-            channel(id = 2, type = ChannelTypeEnum.Public.value, userRole = null),       // not joined — exclude
+            channel(
+                id = 1,
+                type = ChannelTypeEnum.Public.value,
+                userRole = "member"
+            ),   // joined — include
+            channel(
+                id = 2,
+                type = ChannelTypeEnum.Public.value,
+                userRole = null
+            ),       // not joined — exclude
         )
         insertMessages(
             message(tid = 1, id = 1, channelId = 1, body = "joined msg", createdAt = 100),
@@ -556,8 +708,16 @@ class SearchMessageDaoTest {
     @Test
     fun searchMessagesInBroadcastJoinedChannels_excludesEmptyUserRole() = runTest {
         insertChannels(
-            channel(id = 1, type = ChannelTypeEnum.Public.value, userRole = "owner"),   // joined — include
-            channel(id = 2, type = ChannelTypeEnum.Public.value, userRole = ""),        // empty role — exclude
+            channel(
+                id = 1,
+                type = ChannelTypeEnum.Public.value,
+                userRole = "owner"
+            ),   // joined — include
+            channel(
+                id = 2,
+                type = ChannelTypeEnum.Public.value,
+                userRole = ""
+            ),        // empty role — exclude
         )
         insertMessages(
             message(tid = 1, id = 1, channelId = 1, body = "joined msg", createdAt = 100),
@@ -610,7 +770,14 @@ class SearchMessageDaoTest {
         insertChannels(channel(id = 1, type = ChannelTypeEnum.Public.value, userRole = "member"))
         insertMessages(
             message(tid = 1, id = 1, channelId = 1, body = "delivered", createdAt = 100),
-            message(tid = 2, id = 2, channelId = 1, body = "pending", createdAt = 200, deliveryStatus = MessageDeliveryStatus.Pending),
+            message(
+                tid = 2,
+                id = 2,
+                channelId = 1,
+                body = "pending",
+                createdAt = 200,
+                deliveryStatus = MessageDeliveryStatus.Pending
+            ),
         )
 
         val result = globalSearchDao.searchMessages(
@@ -630,7 +797,14 @@ class SearchMessageDaoTest {
         insertChannels(channel(id = 1, type = ChannelTypeEnum.Public.value, userRole = "member"))
         insertMessages(
             message(tid = 1, id = 1, channelId = 1, body = "listed", createdAt = 100),
-            message(tid = 2, id = 2, channelId = 1, body = "unlisted", createdAt = 200, unList = true),
+            message(
+                tid = 2,
+                id = 2,
+                channelId = 1,
+                body = "unlisted",
+                createdAt = 200,
+                unList = true
+            ),
         )
 
         val result = globalSearchDao.searchMessages(
@@ -669,8 +843,22 @@ class SearchMessageDaoTest {
     fun searchMessagesInBroadcastJoinedChannels_filtersBySender() = runTest {
         insertChannels(channel(id = 1, type = ChannelTypeEnum.Public.value, userRole = "member"))
         insertMessages(
-            message(tid = 1, id = 1, channelId = 1, body = "hello from alice", fromId = "alice", createdAt = 100),
-            message(tid = 2, id = 2, channelId = 1, body = "hello from bob", fromId = "bob", createdAt = 200),
+            message(
+                tid = 1,
+                id = 1,
+                channelId = 1,
+                body = "hello from alice",
+                fromId = "alice",
+                createdAt = 100
+            ),
+            message(
+                tid = 2,
+                id = 2,
+                channelId = 1,
+                body = "hello from bob",
+                fromId = "bob",
+                createdAt = 200
+            ),
         )
 
         val result = globalSearchDao.searchMessages(
@@ -689,8 +877,22 @@ class SearchMessageDaoTest {
     fun searchMessagesInBroadcastJoinedChannels_nullSender_returnsAllSenders() = runTest {
         insertChannels(channel(id = 1, type = ChannelTypeEnum.Public.value, userRole = "member"))
         insertMessages(
-            message(tid = 1, id = 1, channelId = 1, body = "hello from alice", fromId = "alice", createdAt = 100),
-            message(tid = 2, id = 2, channelId = 1, body = "hello from bob", fromId = "bob", createdAt = 200),
+            message(
+                tid = 1,
+                id = 1,
+                channelId = 1,
+                body = "hello from alice",
+                fromId = "alice",
+                createdAt = 100
+            ),
+            message(
+                tid = 2,
+                id = 2,
+                channelId = 1,
+                body = "hello from bob",
+                fromId = "bob",
+                createdAt = 200
+            ),
         )
 
         val result = globalSearchDao.searchMessages(
@@ -709,9 +911,30 @@ class SearchMessageDaoTest {
     fun searchMessagesInBroadcastJoinedChannels_senderFilterCombinedWithQuery() = runTest {
         insertChannels(channel(id = 1, type = ChannelTypeEnum.Public.value, userRole = "member"))
         insertMessages(
-            message(tid = 1, id = 1, channelId = 1, body = "release notes", fromId = "alice", createdAt = 100),
-            message(tid = 2, id = 2, channelId = 1, body = "release notes", fromId = "bob", createdAt = 200),
-            message(tid = 3, id = 3, channelId = 1, body = "other content", fromId = "alice", createdAt = 300),
+            message(
+                tid = 1,
+                id = 1,
+                channelId = 1,
+                body = "release notes",
+                fromId = "alice",
+                createdAt = 100
+            ),
+            message(
+                tid = 2,
+                id = 2,
+                channelId = 1,
+                body = "release notes",
+                fromId = "bob",
+                createdAt = 200
+            ),
+            message(
+                tid = 3,
+                id = 3,
+                channelId = 1,
+                body = "other content",
+                fromId = "alice",
+                createdAt = 300
+            ),
         )
 
         val result = globalSearchDao.searchMessages(
@@ -752,25 +975,32 @@ class SearchMessageDaoTest {
     }
 
     @Test
-    fun searchMessagesInBroadcastJoinedChannels_sameCreatedAt_orderedByMessageIdDescending() = runTest {
-        insertChannels(channel(id = 1, type = ChannelTypeEnum.Public.value, userRole = "member"))
-        insertMessages(
-            message(tid = 1, id = 10, channelId = 1, body = "a", createdAt = 500),
-            message(tid = 2, id = 30, channelId = 1, body = "b", createdAt = 500),
-            message(tid = 3, id = 20, channelId = 1, body = "c", createdAt = 500),
-        )
+    fun searchMessagesInBroadcastJoinedChannels_sameCreatedAt_orderedByMessageIdDescending() =
+        runTest {
+            insertChannels(
+                channel(
+                    id = 1,
+                    type = ChannelTypeEnum.Public.value,
+                    userRole = "member"
+                )
+            )
+            insertMessages(
+                message(tid = 1, id = 10, channelId = 1, body = "a", createdAt = 500),
+                message(tid = 2, id = 30, channelId = 1, body = "b", createdAt = 500),
+                message(tid = 3, id = 20, channelId = 1, body = "c", createdAt = 500),
+            )
 
-        val result = globalSearchDao.searchMessages(
-            query = "",
-            senderId = null,
-            channelTypes = listOf(ChannelTypeEnum.Public.value),
-            onlyJoined = true,
-            limit = 20,
-            offset = 0,
-        )
+            val result = globalSearchDao.searchMessages(
+                query = "",
+                senderId = null,
+                channelTypes = listOf(ChannelTypeEnum.Public.value),
+                onlyJoined = true,
+                limit = 20,
+                offset = 0,
+            )
 
-        assertThat(result.map { it.messageEntity.id }).containsExactly(30L, 20L, 10L).inOrder()
-    }
+            assertThat(result.map { it.messageEntity.id }).containsExactly(30L, 20L, 10L).inOrder()
+        }
 
     // endregion
 
@@ -845,24 +1075,37 @@ class SearchMessageDaoTest {
     }
 
     @Test
-    fun searchMessagesInBroadcastJoinedChannels_singleWordQuery_matchesContainingMessages() = runTest {
-        insertChannels(channel(id = 1, type = ChannelTypeEnum.Public.value, userRole = "member"))
-        insertMessages(
-            message(tid = 1, id = 1, channelId = 1, body = "release notes are here", createdAt = 100),
-            message(tid = 2, id = 2, channelId = 1, body = "no match body", createdAt = 200),
-        )
+    fun searchMessagesInBroadcastJoinedChannels_singleWordQuery_matchesContainingMessages() =
+        runTest {
+            insertChannels(
+                channel(
+                    id = 1,
+                    type = ChannelTypeEnum.Public.value,
+                    userRole = "member"
+                )
+            )
+            insertMessages(
+                message(
+                    tid = 1,
+                    id = 1,
+                    channelId = 1,
+                    body = "release notes are here",
+                    createdAt = 100
+                ),
+                message(tid = 2, id = 2, channelId = 1, body = "no match body", createdAt = 200),
+            )
 
-        val result = globalSearchDao.searchMessages(
-            query = "release",
-            senderId = null,
-            channelTypes = listOf(ChannelTypeEnum.Public.value),
-            onlyJoined = true,
-            limit = 20,
-            offset = 0,
-        )
+            val result = globalSearchDao.searchMessages(
+                query = "release",
+                senderId = null,
+                channelTypes = listOf(ChannelTypeEnum.Public.value),
+                onlyJoined = true,
+                limit = 20,
+                offset = 0,
+            )
 
-        assertThat(result.map { it.messageEntity.id }).containsExactly(1L)
-    }
+            assertThat(result.map { it.messageEntity.id }).containsExactly(1L)
+        }
 
     @Test
     fun searchMessagesInBroadcastJoinedChannels_caseInsensitiveMatch() = runTest {
@@ -887,7 +1130,13 @@ class SearchMessageDaoTest {
     fun searchMessagesInBroadcastJoinedChannels_multiWordQuery_allWordsMustBePresent() = runTest {
         insertChannels(channel(id = 1, type = ChannelTypeEnum.Public.value, userRole = "member"))
         insertMessages(
-            message(tid = 1, id = 1, channelId = 1, body = "new release notes available", createdAt = 100),
+            message(
+                tid = 1,
+                id = 1,
+                channelId = 1,
+                body = "new release notes available",
+                createdAt = 100
+            ),
             message(tid = 2, id = 2, channelId = 1, body = "new notes only", createdAt = 200),
         )
 
@@ -904,23 +1153,30 @@ class SearchMessageDaoTest {
     }
 
     @Test
-    fun searchMessagesInBroadcastJoinedChannels_multiWordQuery_noResultWhenAnyWordMissing() = runTest {
-        insertChannels(channel(id = 1, type = ChannelTypeEnum.Public.value, userRole = "member"))
-        insertMessages(
-            message(tid = 1, id = 1, channelId = 1, body = "release notes", createdAt = 100),
-        )
+    fun searchMessagesInBroadcastJoinedChannels_multiWordQuery_noResultWhenAnyWordMissing() =
+        runTest {
+            insertChannels(
+                channel(
+                    id = 1,
+                    type = ChannelTypeEnum.Public.value,
+                    userRole = "member"
+                )
+            )
+            insertMessages(
+                message(tid = 1, id = 1, channelId = 1, body = "release notes", createdAt = 100),
+            )
 
-        val result = globalSearchDao.searchMessages(
-            query = "release missing",
-            senderId = null,
-            channelTypes = listOf(ChannelTypeEnum.Public.value),
-            onlyJoined = true,
-            limit = 20,
-            offset = 0,
-        )
+            val result = globalSearchDao.searchMessages(
+                query = "release missing",
+                senderId = null,
+                channelTypes = listOf(ChannelTypeEnum.Public.value),
+                onlyJoined = true,
+                limit = 20,
+                offset = 0,
+            )
 
-        assertThat(result).isEmpty()
-    }
+            assertThat(result).isEmpty()
+        }
 
     @Test
     fun searchMessagesInBroadcastJoinedChannels_multiWordQuery_wordsOrderIndependent() = runTest {
@@ -951,6 +1207,38 @@ class SearchMessageDaoTest {
 
         val result = globalSearchDao.searchMessages(
             query = "alpha   gamma",
+            senderId = null,
+            channelTypes = listOf(ChannelTypeEnum.Public.value),
+            onlyJoined = true,
+            limit = 20,
+            offset = 0,
+        )
+
+        assertThat(result.map { it.messageEntity.id }).containsExactly(1L)
+    }
+
+    @Test
+    fun searchMessagesInBroadcastJoinedChannels_symbolSeparatedWordMatchesLaterToken() = runTest {
+        insertChannels(channel(id = 1, type = ChannelTypeEnum.Public.value, userRole = "member"))
+        insertMessages(
+            message(
+                tid = 1,
+                id = 1,
+                channelId = 1,
+                body = "release_notes published",
+                createdAt = 100
+            ),
+            message(
+                tid = 2,
+                id = 2,
+                channelId = 1,
+                body = "releasenotes published",
+                createdAt = 200
+            ),
+        )
+
+        val result = globalSearchDao.searchMessages(
+            query = "notes",
             senderId = null,
             channelTypes = listOf(ChannelTypeEnum.Public.value),
             onlyJoined = true,
@@ -997,6 +1285,505 @@ class SearchMessageDaoTest {
         )
 
         assertThat(result).isEmpty()
+    }
+
+    @Test
+    fun searchMessagesGlobally_filtersBySenderAndExcludesPendingAndUnlisted() = runTest {
+        insertChannels(channel(id = 1), channel(id = 2))
+        insertMessages(
+            message(
+                tid = 1,
+                id = 101,
+                channelId = 1,
+                body = "jam session",
+                fromId = "alice",
+                createdAt = 100
+            ),
+            message(
+                tid = 2,
+                id = 102,
+                channelId = 2,
+                body = "jam schedule",
+                fromId = "bob",
+                createdAt = 200
+            ),
+            message(
+                tid = 3,
+                id = 103,
+                channelId = 1,
+                body = "jam pending",
+                fromId = "alice",
+                createdAt = 300,
+                deliveryStatus = MessageDeliveryStatus.Pending,
+            ),
+            message(
+                tid = 4,
+                id = 104,
+                channelId = 1,
+                body = "jam hidden",
+                fromId = "alice",
+                createdAt = 400,
+                unList = true,
+            ),
+        )
+
+        val result = globalSearchDao.searchMessages(
+            query = "jam",
+            senderId = "alice",
+            channelTypes = emptyList(),
+            onlyJoined = false,
+            limit = 20,
+            offset = 0,
+        )
+
+        assertThat(result.map { it.messageEntity.id }).containsExactly(101L)
+    }
+
+    @Test
+    fun searchMessagesGlobally_blankQueryReturnsLatestNonPendingMessages() = runTest {
+        insertChannels(channel(id = 1))
+        insertMessages(
+            message(
+                tid = 1,
+                id = 201,
+                channelId = 1,
+                body = "older",
+                fromId = "alice",
+                createdAt = 100
+            ),
+            message(
+                tid = 2,
+                id = 202,
+                channelId = 1,
+                body = "newer",
+                fromId = "bob",
+                createdAt = 300
+            ),
+            message(
+                tid = 3,
+                id = 203,
+                channelId = 1,
+                body = "pending",
+                fromId = "alice",
+                createdAt = 500,
+                deliveryStatus = MessageDeliveryStatus.Pending,
+            ),
+        )
+
+        val result = globalSearchDao.searchMessages(
+            query = "",
+            senderId = null,
+            channelTypes = emptyList(),
+            onlyJoined = false,
+            limit = 20,
+            offset = 0,
+        )
+
+        assertThat(result.map { it.messageEntity.id }).containsExactly(202L, 201L).inOrder()
+    }
+
+    @Test
+    fun searchMessagesGlobally_caseInsensitiveMatchOnSingleWord() = runTest {
+        insertChannels(channel(id = 1))
+        insertMessages(
+            message(
+                tid = 1,
+                id = 1,
+                channelId = 1,
+                body = "hello my name is Matat",
+                fromId = "alice",
+                createdAt = 100
+            ),
+        )
+
+        val result = globalSearchDao.searchMessages(
+            query = "Hello",
+            senderId = null,
+            channelTypes = emptyList(),
+            onlyJoined = false,
+            limit = 20,
+            offset = 0
+        )
+
+        assertThat(result.map { it.messageEntity.id }).containsExactly(1L)
+    }
+
+    @Test
+    fun searchMessagesGlobally_trailingSpacesAreIgnored() = runTest {
+        insertChannels(channel(id = 1))
+        insertMessages(
+            message(
+                tid = 1,
+                id = 1,
+                channelId = 1,
+                body = "hello my name is Matat",
+                fromId = "alice",
+                createdAt = 100
+            ),
+        )
+
+        val result = globalSearchDao.searchMessages(
+            query = "hello       ",
+            senderId = null,
+            channelTypes = emptyList(),
+            onlyJoined = false,
+            limit = 20,
+            offset = 0
+        )
+
+        assertThat(result.map { it.messageEntity.id }).containsExactly(1L)
+    }
+
+    @Test
+    fun searchMessagesGlobally_leadingSpacesAreIgnored() = runTest {
+        insertChannels(channel(id = 1))
+        insertMessages(
+            message(
+                tid = 1,
+                id = 1,
+                channelId = 1,
+                body = "hello my name is Matat",
+                fromId = "alice",
+                createdAt = 100
+            ),
+        )
+
+        val result = globalSearchDao.searchMessages(
+            query = "    hello",
+            senderId = null,
+            channelTypes = emptyList(),
+            onlyJoined = false,
+            limit = 20,
+            offset = 0
+        )
+
+        assertThat(result.map { it.messageEntity.id }).containsExactly(1L)
+    }
+
+    @Test
+    fun searchMessagesGlobally_leadingAndTrailingSpacesAreIgnored() = runTest {
+        insertChannels(channel(id = 1))
+        insertMessages(
+            message(
+                tid = 1,
+                id = 1,
+                channelId = 1,
+                body = "hello my name is Matat",
+                fromId = "alice",
+                createdAt = 100
+            ),
+        )
+
+        val result = globalSearchDao.searchMessages(
+            query = "    hello  ",
+            senderId = null,
+            channelTypes = emptyList(),
+            onlyJoined = false,
+            limit = 20,
+            offset = 0
+        )
+
+        assertThat(result.map { it.messageEntity.id }).containsExactly(1L)
+    }
+
+    @Test
+    fun searchMessagesGlobally_multipleInternalSpacesMatchIndividualWords() = runTest {
+        insertChannels(channel(id = 1))
+        insertMessages(
+            message(
+                tid = 1,
+                id = 1,
+                channelId = 1,
+                body = "hello my name is Matat",
+                fromId = "alice",
+                createdAt = 100
+            ),
+            message(
+                tid = 2,
+                id = 2,
+                channelId = 1,
+                body = "goodbye world",
+                fromId = "alice",
+                createdAt = 200
+            ),
+        )
+
+        val result = globalSearchDao.searchMessages(
+            query = "    hello        my",
+            senderId = null,
+            channelTypes = emptyList(),
+            onlyJoined = false,
+            limit = 20,
+            offset = 0
+        )
+
+        assertThat(result.map { it.messageEntity.id }).containsExactly(1L)
+    }
+
+    @Test
+    fun searchMessagesGlobally_multiWordQueryMatchesAllWordPrefixes() = runTest {
+        insertChannels(channel(id = 1))
+        insertMessages(
+            message(
+                tid = 1,
+                id = 1,
+                channelId = 1,
+                body = "hello my name is Matat",
+                fromId = "alice",
+                createdAt = 100
+            ),
+            message(
+                tid = 2,
+                id = 2,
+                channelId = 1,
+                body = "hello world",
+                fromId = "alice",
+                createdAt = 200
+            ),
+        )
+
+        // "hello" starts body 1; "Matat" starts a word in body 1 — both prefix-match
+        // body 2 has "hello" but no word starting with "Matat"
+        val result = globalSearchDao.searchMessages(
+            query = "hello Matat",
+            senderId = null,
+            channelTypes = emptyList(),
+            onlyJoined = false,
+            limit = 20,
+            offset = 0
+        )
+
+        assertThat(result.map { it.messageEntity.id }).containsExactly(1L)
+    }
+
+    @Test
+    fun searchMessagesGlobally_midWordQueryDoesNotMatch() = runTest {
+        insertChannels(channel(id = 1))
+        insertMessages(
+            message(
+                tid = 1,
+                id = 1,
+                channelId = 1,
+                body = "hello world",
+                fromId = "alice",
+                createdAt = 100
+            ),
+        )
+
+        // "ello" is a suffix of "hello", not a word prefix — should return nothing
+        val result = globalSearchDao.searchMessages(
+            query = "ello",
+            senderId = null,
+            channelTypes = emptyList(),
+            onlyJoined = false,
+            limit = 20,
+            offset = 0
+        )
+        val result2 = globalSearchDao.searchMessages(
+            query = "rld",
+            senderId = null,
+            channelTypes = emptyList(),
+            onlyJoined = false,
+            limit = 20,
+            offset = 0
+        )
+
+        assertThat(result + result2).isEmpty()
+    }
+
+    @Test
+    fun searchMessagesGlobally_prefixMatchOnNonFirstWordReturns() = runTest {
+        insertChannels(channel(id = 1))
+        insertMessages(
+            message(
+                tid = 1,
+                id = 1,
+                channelId = 1,
+                body = "hello world",
+                fromId = "alice",
+                createdAt = 100
+            ),
+            message(
+                tid = 2,
+                id = 2,
+                channelId = 1,
+                body = "hello earth",
+                fromId = "alice",
+                createdAt = 200
+            ),
+        )
+
+        // "wor" is a word-prefix of "world" (second word) — should match body 1 only
+        val result = globalSearchDao.searchMessages(
+            query = "wor",
+            senderId = null,
+            channelTypes = emptyList(),
+            onlyJoined = false,
+            limit = 20,
+            offset = 0
+        )
+
+        assertThat(result.map { it.messageEntity.id }).containsExactly(1L)
+    }
+
+    @Test
+    fun searchMessagesGlobally_multiWordQueryRequiresAllWordsPresent() = runTest {
+        insertChannels(channel(id = 1))
+        insertMessages(
+            message(
+                tid = 1,
+                id = 1,
+                channelId = 1,
+                body = "hello my name is Matat",
+                fromId = "alice",
+                createdAt = 100
+            ),
+        )
+
+        // "missing" is not in the body — should return nothing
+        val result = globalSearchDao.searchMessages(
+            query = "hello missing",
+            senderId = null,
+            channelTypes = emptyList(),
+            onlyJoined = false,
+            limit = 20,
+            offset = 0
+        )
+
+        assertThat(result).isEmpty()
+    }
+
+    @Test
+    fun searchMessagesGlobally_multiWordQueryExcludesPendingMessages() = runTest {
+        insertChannels(channel(id = 1))
+        insertMessages(
+            message(
+                tid = 1,
+                id = 1,
+                channelId = 1,
+                body = "hello world",
+                fromId = "alice",
+                createdAt = 100
+            ),
+            message(
+                tid = 2,
+                id = 2,
+                channelId = 1,
+                body = "hello world",
+                fromId = "alice",
+                createdAt = 200,
+                deliveryStatus = MessageDeliveryStatus.Pending,
+            ),
+        )
+
+        // Multi-word path — the pending message must be excluded just like in the single-word path
+        val result = globalSearchDao.searchMessages(
+            query = "hello world",
+            senderId = null,
+            channelTypes = emptyList(),
+            onlyJoined = false,
+            limit = 20,
+            offset = 0,
+        )
+
+        assertThat(result.map { it.messageEntity.id }).containsExactly(1L)
+    }
+
+    @Test
+    fun searchMessagesGlobally_newlineBeforeWordMatches() = runTest {
+        insertChannels(channel(id = 1))
+        insertMessages(
+            message(
+                tid = 1,
+                id = 1,
+                channelId = 1,
+                body = "hello\nworld",
+                fromId = "alice",
+                createdAt = 100
+            ),
+            message(
+                tid = 2,
+                id = 2,
+                channelId = 1,
+                body = "hello earth",
+                fromId = "alice",
+                createdAt = 200
+            ),
+        )
+
+        // "world" follows a newline — should match body 1 only
+        val result = globalSearchDao.searchMessages(
+            query = "world",
+            senderId = null,
+            channelTypes = emptyList(),
+            onlyJoined = false,
+            limit = 20,
+            offset = 0,
+        )
+
+        assertThat(result.map { it.messageEntity.id }).containsExactly(1L)
+    }
+
+    @Test
+    fun searchMessagesGlobally_midWordSuffixAfterNewlineDoesNotMatch() = runTest {
+        insertChannels(channel(id = 1))
+        insertMessages(
+            message(
+                tid = 1,
+                id = 1,
+                channelId = 1,
+                body = "hello\nworld",
+                fromId = "alice",
+                createdAt = 100
+            ),
+        )
+
+        // "orld" is a suffix of "world", not a word prefix — must not match even after newline
+        val result = globalSearchDao.searchMessages(
+            query = "orld",
+            senderId = null,
+            channelTypes = emptyList(),
+            onlyJoined = false,
+            limit = 20,
+            offset = 0,
+        )
+
+        assertThat(result).isEmpty()
+    }
+
+    @Test
+    fun searchMessagesGlobally_multiWordQueryMatchesAcrossNewlineSeparatedWords() = runTest {
+        insertChannels(channel(id = 1))
+        insertMessages(
+            message(
+                tid = 1,
+                id = 1,
+                channelId = 1,
+                body = "hello\nworld",
+                fromId = "alice",
+                createdAt = 100
+            ),
+            message(
+                tid = 2,
+                id = 2,
+                channelId = 1,
+                body = "hello earth",
+                fromId = "alice",
+                createdAt = 200
+            ),
+        )
+
+        // "hello" at start, "world" after newline — both word-prefix match; body 2 missing "world"
+        val result = globalSearchDao.searchMessages(
+            query = "hello world",
+            senderId = null,
+            channelTypes = emptyList(),
+            onlyJoined = false,
+            limit = 20,
+            offset = 0,
+        )
+
+        assertThat(result.map { it.messageEntity.id }).containsExactly(1L)
     }
 
     // endregion

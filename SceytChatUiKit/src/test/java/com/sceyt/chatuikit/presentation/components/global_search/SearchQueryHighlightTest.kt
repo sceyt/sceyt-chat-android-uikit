@@ -3,6 +3,7 @@ package com.sceyt.chatuikit.presentation.components.global_search
 import android.text.Spanned
 import android.text.style.ForegroundColorSpan
 import com.google.common.truth.Truth.assertThat
+import com.sceyt.chatuikit.shared.utils.tokenizeGlobalSearchQuery
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -27,6 +28,21 @@ class SearchQueryHighlightTest {
     @Test
     fun findWordPrefixIndex_wordAfterNewline() {
         assertThat(findWordPrefixIndex("hello\nworld", "world")).isEqualTo(6)
+    }
+
+    @Test
+    fun findWordPrefixIndex_wordAfterHyphen() {
+        assertThat(findWordPrefixIndex("public-channel", "channel")).isEqualTo(7)
+    }
+
+    @Test
+    fun findWordPrefixIndex_wordAfterUnderscore() {
+        assertThat(findWordPrefixIndex("release_notes", "notes")).isEqualTo(8)
+    }
+
+    @Test
+    fun findWordPrefixIndex_wordAfterParenthesis() {
+        assertThat(findWordPrefixIndex("name(value)", "value")).isEqualTo(5)
     }
 
     @Test
@@ -68,6 +84,24 @@ class SearchQueryHighlightTest {
 
     // endregion
 
+    // region tokenizeGlobalSearchQuery
+
+    @Test
+    fun tokenizeGlobalSearchQuery_splitsOnAsciiPunctuationAndWhitespace() {
+        assertThat(tokenizeGlobalSearchQuery("public-channel/name(value)"))
+            .containsExactly("public", "channel", "name", "value")
+            .inOrder()
+    }
+
+    @Test
+    fun tokenizeGlobalSearchQuery_ignoresRepeatedSeparators() {
+        assertThat(tokenizeGlobalSearchQuery("  public---channel__notes  "))
+            .containsExactly("public", "channel", "notes")
+            .inOrder()
+    }
+
+    // endregion
+
     // region highlightQueryWords — span positions
 
     @Test
@@ -95,6 +129,24 @@ class SearchQueryHighlightTest {
         assertThat(spans.size).isEqualTo(1)
         assertThat(result.getSpanStart(spans[0])).isEqualTo(6)
         assertThat(result.getSpanEnd(spans[0])).isEqualTo(11)
+    }
+
+    @Test
+    fun highlightQueryWords_wordAfterHyphen_setsSpanAtCorrectPosition() {
+        val result = highlightQueryWords("public-channel", "channel", RED) as Spanned
+        val spans = result.getSpans(0, result.length, ForegroundColorSpan::class.java)
+        assertThat(spans.size).isEqualTo(1)
+        assertThat(result.getSpanStart(spans[0])).isEqualTo(7)
+        assertThat(result.getSpanEnd(spans[0])).isEqualTo(14)
+    }
+
+    @Test
+    fun highlightQueryWords_queryPunctuationSplitsIntoTokens() {
+        val result = highlightQueryWords("public channel", "public-channel", RED) as Spanned
+        val spans = result.getSpans(0, result.length, ForegroundColorSpan::class.java)
+        assertThat(spans.size).isEqualTo(2)
+        val starts = spans.map { result.getSpanStart(it) }.sorted()
+        assertThat(starts).containsExactly(0, 7).inOrder()
     }
 
     @Test

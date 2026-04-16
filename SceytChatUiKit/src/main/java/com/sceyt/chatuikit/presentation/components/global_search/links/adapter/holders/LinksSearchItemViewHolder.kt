@@ -13,6 +13,8 @@ import com.sceyt.chatuikit.extensions.glideRequestListener
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.holders.BaseFileViewHolder
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchListItem
+import com.sceyt.chatuikit.presentation.components.global_search.highlightQueryWords
+import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
 import com.sceyt.chatuikit.styles.channel_info.link.ChannelInfoLinkItemStyle
 
 open class LinksSearchItemViewHolder(
@@ -32,17 +34,23 @@ open class LinksSearchItemViewHolder(
     override fun bind(item: GlobalSearchListItem.AttachmentItem) {
         super.bind(item)
         val attachment = item.attachment
+        val query = item.query
 
         with(binding) {
             root.layoutTransition?.setAnimateParentHierarchy(false)
-            tvLinkUrl.text = attachment.url
-            setLinkInfo(attachment.linkPreviewDetails, attachment)
+            tvLinkUrl.text = highlight(attachment.url.orEmpty(), query)
+            setLinkInfo(
+                data = attachment.linkPreviewDetails,
+                attachment = attachment,
+                query = query,
+            )
         }
     }
 
     private fun SceytItemChannelLinkBinding.setLinkInfo(
         data: LinkPreviewDetails?,
         attachment: SceytAttachment,
+        query: String,
     ) {
         if (data == null || !viewHolderHelper.isFileItemInitialized || data.link != attachment.url || data.hideDetails) {
             tvLinkName.text = null
@@ -52,11 +60,13 @@ open class LinksSearchItemViewHolder(
         } else {
             fileItem.updateAttachment(attachment.copy(linkPreviewDetails = data))
             tvLinkName.apply {
-                text = data.title?.trim()
+                val title = data.title?.trim().orEmpty()
+                setTextColor(resolveTitleTextColor(query))
+                text = highlight(title, query)
                 isVisible = !data.title.isNullOrBlank()
             }
             tvLinkDescription.apply {
-                text = data.description?.trim()
+                text = highlight(data.description?.trim().orEmpty(), query)
                 isVisible = !data.description.isNullOrBlank()
             }
 
@@ -77,6 +87,17 @@ open class LinksSearchItemViewHolder(
                     .into(icLinkImage)
             }
         }
+    }
+
+    private fun highlight(text: String, query: String): CharSequence {
+        if (query.isBlank() || text.isBlank()) return text
+        return highlightQueryWords(text, query, style.highlightTextColor)
+    }
+
+    private fun resolveTitleTextColor(query: String): Int {
+        return if (query.isBlank()) {
+            style.linkPreviewStyle.titleStyle.color.takeIf { it != UNSET_COLOR } ?: Color.BLACK
+        } else style.searchedTitleTextColor
     }
 
     private fun setDefaultLinkImage() {

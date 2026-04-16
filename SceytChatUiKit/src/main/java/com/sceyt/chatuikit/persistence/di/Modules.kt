@@ -146,7 +146,7 @@ internal val interactorModule = module {
 }
 
 internal val logicModule = module {
-    single<PersistenceChannelsLogic> { PersistenceChannelsLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    single<PersistenceChannelsLogic> { PersistenceChannelsLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     single<PersistenceMessagesLogic> { PersistenceMessagesLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(),get(), get()) }
     single<PersistenceAttachmentLogic> { PersistenceAttachmentLogicImpl(get(), get(), get(), get(), get(), get(), get(), get()) }
     single<PersistenceReactionsLogic> { PersistenceReactionsLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
@@ -210,4 +210,3 @@ fun providesComputationContext(exceptionHandler: CoroutineExceptionHandler): Cor
 
 fun providesSingleThreadedContext(exceptionHandler: CoroutineExceptionHandler): CoroutineContext =
     Executors.newSingleThreadExecutor().asCoroutineDispatcher().plus(exceptionHandler)
-
