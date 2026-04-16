@@ -51,6 +51,7 @@ import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.database.dao.ChannelDao
 import com.sceyt.chatuikit.persistence.database.dao.ChatUserReactionDao
 import com.sceyt.chatuikit.persistence.database.dao.DraftMessageDao
+import com.sceyt.chatuikit.persistence.database.dao.GlobalSearchDao
 import com.sceyt.chatuikit.persistence.database.dao.LoadRangeDao
 import com.sceyt.chatuikit.persistence.database.dao.MessageDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingReactionDao
@@ -100,6 +101,7 @@ internal class PersistenceChannelsLogicImpl(
     private val context: Context,
     private val channelsRepository: ChannelsRepository,
     private val channelDao: ChannelDao,
+    private val globalSearchDao: GlobalSearchDao,
     private val usersDao: UserDao,
     private val messageDao: MessageDao,
     private val rangeDao: LoadRangeDao,
@@ -408,7 +410,7 @@ internal class PersistenceChannelsLogicImpl(
                 ChannelListOrder.ListQueryChannelOrderLastMessage -> true
                 ChannelListOrder.ListQueryChannelOrderCreatedAt -> false
             }
-            val dbChannels = channelDao.searchChannelsByUserIds(
+            val dbChannels = globalSearchDao.searchChannelsByUserIds(
                 query = searchQuery,
                 userIds = searchUserIds.toList(),
                 offset = offset,
@@ -552,7 +554,7 @@ internal class PersistenceChannelsLogicImpl(
             ).map { it.toChannel() }
         } else {
             val ids = usersDao.getUserIdsByDisplayName(searchQuery)
-            channelDao.searchChannelsByUserIds(
+            globalSearchDao.searchChannelsByUserIds(
                 query = searchQuery,
                 userIds = ids,
                 offset = offset,

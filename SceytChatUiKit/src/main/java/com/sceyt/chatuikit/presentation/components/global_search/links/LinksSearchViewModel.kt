@@ -111,7 +111,7 @@ open class LinksSearchViewModel(
                 offset = 0,
                 limit = LINKS_DEFAULT_PAGE_SIZE,
             )
-            val items = buildListItems(page.data)
+            val items = buildListItems(page.data, sessionState.query)
             withContext(Dispatchers.Main) {
                 _state.update {
                     it.copy(
@@ -151,7 +151,11 @@ open class LinksSearchViewModel(
                 offset = offset,
                 limit = LINKS_DEFAULT_PAGE_SIZE,
             )
-            val newItems = buildListItems(page.data, initialPrevTimestamp = lastCreatedAt)
+            val newItems = buildListItems(
+                results = page.data,
+                query = sessionState.query,
+                initialPrevTimestamp = lastCreatedAt,
+            )
             withContext(Dispatchers.Main) {
                 _state.update { state ->
                     state.copy(
@@ -166,6 +170,7 @@ open class LinksSearchViewModel(
 
     private fun buildListItems(
         results: List<GlobalSearchAttachmentResult>,
+        query: String,
         initialPrevTimestamp: Long = 0L,
     ): List<GlobalSearchListItem> {
         if (results.isEmpty()) return emptyList()
@@ -176,7 +181,7 @@ open class LinksSearchViewModel(
                 if (prevTimestamp == 0L || !DateTimeUtil.isSameDay(prevTimestamp, createdAt)) {
                     add(GlobalSearchListItem.DateSeparator(createdAt))
                 }
-                add(GlobalSearchListItem.AttachmentItem(result, query = ""))
+                add(GlobalSearchListItem.AttachmentItem(result, query = query))
                 prevTimestamp = createdAt
             }
         }

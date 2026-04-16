@@ -63,7 +63,7 @@ internal class GlobalSearchLocalInteractor(
         if (query.isBlank()) return GlobalSearchPage(emptyList(), false)
         val userIds = userDao.getUserIdsByDisplayName(query)
 
-        val data = channelDao.searchChannelsByUserIds(
+        val data = globalSearchDao.searchChannelsByUserIds(
             query = query,
             userIds = userIds,
             limit = limit + 1,

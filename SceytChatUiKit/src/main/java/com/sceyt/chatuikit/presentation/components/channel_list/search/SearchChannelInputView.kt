@@ -34,6 +34,7 @@ class SearchChannelInputView @JvmOverloads constructor(
         internal const val SHARED_TRANSITION_NAME = "sceyt_global_search_bar"
     }
 
+    @Suppress("JoinDeclarationAndAssignment")
     private val binding: SceytSearchViewBinding
     private val style: SearchChannelInputStyle
     private val debounceInitDelegate = lazy { DebounceHelper(TYPING_DEBOUNCE_MS, this) }

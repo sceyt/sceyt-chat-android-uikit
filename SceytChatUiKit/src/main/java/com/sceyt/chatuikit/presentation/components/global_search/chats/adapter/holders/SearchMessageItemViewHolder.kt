@@ -10,6 +10,7 @@ import com.sceyt.chatuikit.formatters.attributes.SearchMessageResultFormatterAtt
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchListItem
 import com.sceyt.chatuikit.presentation.components.global_search.findWordPrefixIndex
 import com.sceyt.chatuikit.presentation.components.global_search.highlightQueryWords
+import com.sceyt.chatuikit.shared.utils.tokenizeGlobalSearchQuery
 import com.sceyt.chatuikit.styles.search.ChatsSearchMessageItemStyle
 import java.util.Date
 
@@ -56,7 +57,7 @@ open class SearchMessageItemViewHolder(
 
     protected open fun trimBodyToShowMatch(text: CharSequence, query: String): CharSequence {
         if (query.isBlank() || text.isBlank()) return text
-        val words = query.trim().split(Regex("\\s+")).filter { it.isNotEmpty() }
+        val words = tokenizeGlobalSearchQuery(query)
         if (words.isEmpty()) return text
         val textLower = text.toString().lowercase()
 

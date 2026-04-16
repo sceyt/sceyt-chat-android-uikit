@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.styles.channel_info.link
 
 import android.content.Context
+import android.graphics.Color
 import android.util.AttributeSet
 import androidx.annotation.ColorInt
 import com.sceyt.chatuikit.R
@@ -19,11 +20,15 @@ import com.sceyt.chatuikit.theme.Colors
  * @property backgroundColor - background color, default is [Colors.backgroundColorSections]
  * @property linkTextStyle - style for link text
  * @property linkPreviewStyle - style for link preview
+ * @property searchedTitleTextColor - base title color while showing search highlights
+ * @property highlightTextColor - color used for highlighted query tokens
  * */
 data class ChannelInfoLinkItemStyle(
     @param:ColorInt val backgroundColor: Int,
     val linkTextStyle: TextStyle,
     val linkPreviewStyle: LinkPreviewStyle,
+    @param:ColorInt val searchedTitleTextColor: Int,
+    @param:ColorInt val highlightTextColor: Int,
 ) {
     companion object {
         var styleCustomizer = StyleCustomizer<ChannelInfoLinkItemStyle> { _, style -> style }
@@ -63,7 +68,9 @@ data class ChannelInfoLinkItemStyle(
             return ChannelInfoLinkItemStyle(
                 backgroundColor = backgroundColor,
                 linkTextStyle = linkTextStyle,
-                linkPreviewStyle = linkStyle
+                linkPreviewStyle = linkStyle,
+                searchedTitleTextColor = context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor),
+                highlightTextColor = Color.BLACK,
             ).let { styleCustomizer.apply(context, it) }
         }
     }
