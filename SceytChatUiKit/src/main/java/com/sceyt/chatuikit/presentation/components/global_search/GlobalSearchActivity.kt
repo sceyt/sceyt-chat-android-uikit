@@ -29,16 +29,20 @@ import androidx.recyclerview.widget.LinearLayoutManager.HORIZONTAL
 import androidx.viewpager2.widget.ViewPager2
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
+import com.sceyt.chatuikit.data.models.search.GlobalSearchAttachmentKind
 import com.sceyt.chatuikit.data.models.search.GlobalSearchAttachmentResult
 import com.sceyt.chatuikit.databinding.SceytActivityGlobalSearchBinding
 import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
+import com.sceyt.chatuikit.extensions.hideSoftInput
 import com.sceyt.chatuikit.extensions.launchActivity
+import com.sceyt.chatuikit.extensions.openLink
 import com.sceyt.chatuikit.extensions.overrideTransitions
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.chatuikit.extensions.visibleInvisibleWithBottomSlideAnim
 import com.sceyt.chatuikit.persistence.extensions.collectWithLifecycle
 import com.sceyt.chatuikit.persistence.interactor.GlobalSearchUserSuggestionsProvider
 import com.sceyt.chatuikit.presentation.components.channel.messages.ChannelActivity
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.openFile
 import com.sceyt.chatuikit.presentation.components.global_search.adapters.GlobalSearchPagerAdapter
 import com.sceyt.chatuikit.presentation.components.global_search.adapters.GlobalSearchSuggestionsAdapter
 import com.sceyt.chatuikit.presentation.components.global_search.adapters.GlobalSearchTabsAdapter
@@ -49,6 +53,7 @@ import com.sceyt.chatuikit.presentation.components.global_search.files.FilesSear
 import com.sceyt.chatuikit.presentation.components.global_search.links.LinksSearchFragment
 import com.sceyt.chatuikit.presentation.components.global_search.media.MediaSearchFragment
 import com.sceyt.chatuikit.presentation.components.global_search.voice.VoiceSearchFragment
+import com.sceyt.chatuikit.presentation.components.media.MediaPreviewActivity
 import com.sceyt.chatuikit.styles.StyleRegistry
 import com.sceyt.chatuikit.styles.search.GlobalSearchStyle
 
@@ -299,15 +304,33 @@ open class GlobalSearchActivity : AppCompatActivity(), GlobalSearchClickListener
         ChannelActivity.launch(this, channel)
     }
 
-    override fun onMessageClicked(
-        messageId: Long,
-        channel: SceytChannel,
-    ) {
+    override fun onMessageClicked(messageId: Long, channel: SceytChannel) {
         ChannelActivity.launch(this, channel, messageId)
     }
 
     override fun onAttachmentClicked(result: GlobalSearchAttachmentResult) {
-        onMessageClicked(result.message.id, result.channel)
+        hideSoftInput()
+        when (result.kind) {
+            GlobalSearchAttachmentKind.Media,
+            GlobalSearchAttachmentKind.Voice -> {
+                onMessageClicked(result.message.id, result.channel)
+            }
+
+            GlobalSearchAttachmentKind.File -> result.attachment.openFile(this)
+            GlobalSearchAttachmentKind.Link -> openLink(result.attachment.url)
+        }
+    }
+
+    override fun onMediaAttachmentClicked(sharedView: View, result: GlobalSearchAttachmentResult) {
+        hideSoftInput()
+        MediaPreviewActivity.launch(
+            activity = this,
+            attachment = result.attachment,
+            from = result.sender,
+            channelId = result.channel.id,
+            showInChatChannel = result.channel,
+            sourceView = sharedView,
+        )
     }
 
     protected open fun launchedWithSharedTransition(): Boolean {
