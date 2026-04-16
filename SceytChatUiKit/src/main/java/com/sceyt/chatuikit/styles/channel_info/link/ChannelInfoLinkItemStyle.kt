@@ -1,7 +1,6 @@
 package com.sceyt.chatuikit.styles.channel_info.link
 
 import android.content.Context
-import android.graphics.Color
 import android.util.AttributeSet
 import androidx.annotation.ColorInt
 import com.sceyt.chatuikit.R
@@ -70,7 +69,7 @@ data class ChannelInfoLinkItemStyle(
                 linkTextStyle = linkTextStyle,
                 linkPreviewStyle = linkStyle,
                 searchedTitleTextColor = context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor),
-                highlightTextColor = Color.BLACK,
+                highlightTextColor = context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor),
             ).let { styleCustomizer.apply(context, it) }
         }
     }
