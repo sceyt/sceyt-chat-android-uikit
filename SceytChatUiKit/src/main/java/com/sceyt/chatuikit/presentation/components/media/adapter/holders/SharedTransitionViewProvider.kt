@@ -4,4 +4,6 @@ import android.view.View
 
 interface SharedTransitionViewProvider {
     fun provide(): View
+
+    fun awaitReadyForSharedTransition(onReady: () -> Unit)
 }
