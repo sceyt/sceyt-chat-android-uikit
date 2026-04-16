@@ -17,6 +17,8 @@ import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchLis
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchSession
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchSessionState
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchTab
+import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchUpdateEventSource
+import com.sceyt.chatuikit.presentation.components.global_search.applyChannelMessageUpdateEvent
 import com.sceyt.chatuikit.presentation.components.global_search.defaults.DefaultGlobalSearchLocalInteractor
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
@@ -29,6 +31,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -44,6 +48,7 @@ data class ChannelsSearchState(
     val isLoadingMore: Boolean = false,
     val hasMore: Boolean = false,
     val offset: Int = 0,
+    val refreshKey: Int = 0,
 ) {
     val showEmptyState: Boolean
         get() = !isLoading && !isLoadingMore && listItems.isEmpty()
@@ -62,6 +67,7 @@ open class ChannelsSearchViewModel(
 ) : ViewModel(), SceytKoinComponent {
 
     private val channelInteractor: ChannelInteractor by inject()
+    private val globalSearchUpdateEventSource = GlobalSearchUpdateEventSource(viewModelScope)
 
     private val _state = MutableStateFlow(ChannelsSearchState(isLoading = true))
     val state: StateFlow<ChannelsSearchState> = _state.asStateFlow()
@@ -78,6 +84,15 @@ open class ChannelsSearchViewModel(
         viewModelScope.launch {
             session.state.collectLatest(::onSessionStateChanged)
         }
+
+        globalSearchUpdateEventSource.updatesFlow.onEach { event ->
+            _state.update {
+                it.copy(
+                    listItems = it.listItems.applyChannelMessageUpdateEvent(event),
+                    refreshKey = if (event.shouldUpdateRefreshKey) it.refreshKey + 1 else it.refreshKey
+                )
+            }
+        }.launchIn(viewModelScope)
     }
 
     private suspend fun onSessionStateChanged(sessionState: GlobalSearchSessionState) {
