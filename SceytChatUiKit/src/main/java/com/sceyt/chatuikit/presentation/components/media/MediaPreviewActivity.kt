@@ -54,6 +54,7 @@ import com.sceyt.chatuikit.extensions.launchActivity
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.saveToGallery
 import com.sceyt.chatuikit.extensions.transitionListener
+import com.sceyt.chatuikit.persistence.extensions.safeResume
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.presentation.components.channel.messages.ChannelActivity
 import com.sceyt.chatuikit.presentation.components.forward.ForwardActivity
@@ -67,6 +68,9 @@ import com.sceyt.chatuikit.presentation.components.media.viewmodel.MediaViewMode
 import com.sceyt.chatuikit.styles.preview.MediaPreviewStyle
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeoutOrNull
 import java.io.File
 import java.util.Date
 
@@ -203,6 +207,7 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
             }
 
             setOrUpdateMediaAdapter(mediaFiles)
+            startSharedTransitionWhenReady()
 
             binding.root.post {
                 if (attachment.id == null || attachment.id == 0L)
@@ -261,9 +266,6 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
             binding.rvMedia.apply {
                 adapter = mediaAdapter
                 PagerSnapHelper().attachToRecyclerView(this)
-                if (launchedWithSharedTransition()) {
-                    doOnPreDraw { startSharedTransitionIfNeeded() }
-                }
 
                 addOnScrollListener(object : RecyclerView.OnScrollListener() {
                     override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
@@ -299,6 +301,27 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
 
     private fun launchedWithSharedTransition(): Boolean {
         return intent.getBooleanExtra(EXTRA_SHARED_TRANSITION, false)
+    }
+
+    private fun startSharedTransitionWhenReady() {
+        if (!launchedWithSharedTransition()) return
+        binding.rvMedia.doOnPreDraw {
+            lifecycleScope.launch {
+                awaitSharedTransitionReady()
+                startSharedTransitionIfNeeded()
+            }
+        }
+    }
+
+    private suspend fun awaitSharedTransitionReady() {
+        val provider = getSharedTransitionViewProvider() ?: return
+        withTimeoutOrNull(SHARED_TRANSITION_READY_TIMEOUT_MS) {
+            suspendCancellableCoroutine { continuation ->
+                provider.awaitReadyForSharedTransition {
+                    continuation.safeResume(Unit)
+                }
+            }
+        }
     }
 
     private fun setupSharedElementTransition() {
@@ -352,11 +375,13 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
     }
 
     private fun findCurrentSharedElementView(): View? {
+        return getSharedTransitionViewProvider()?.provide()
+    }
+
+    private fun getSharedTransitionViewProvider(): SharedTransitionViewProvider? {
         val position = binding.rvMedia.getFirstVisibleItemPosition()
         if (position == RecyclerView.NO_POSITION) return null
-        val viewHolder =
-            binding.rvMedia.findViewHolderForAdapterPosition(position) as? SharedTransitionViewProvider
-        return viewHolder?.provide()
+        return binding.rvMedia.findViewHolderForAdapterPosition(position) as? SharedTransitionViewProvider
     }
 
     private fun refreshCurrentItem() {
@@ -520,6 +545,7 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
     }
 
     companion object {
+        private const val SHARED_TRANSITION_READY_TIMEOUT_MS = 300L
         private const val KEY_ATTACHMENT = "KEY_ATTACHMENT"
         private const val KEY_USER = "KEY_USER"
         private const val KEY_CHANNEL_ID = "KEY_CHANNEL_ID"

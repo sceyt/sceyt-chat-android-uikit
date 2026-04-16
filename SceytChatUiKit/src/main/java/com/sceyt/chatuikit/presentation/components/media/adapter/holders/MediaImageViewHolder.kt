@@ -28,7 +28,10 @@ class MediaImageViewHolder(
     private val style: MediaPreviewStyle,
     private val clickListeners: (MediaItem) -> Unit,
     private val needMediaDataCallback: (NeedMediaInfoData) -> Unit
-) : BaseFileViewHolder<MediaItem>(binding.root, needMediaDataCallback), SharedTransitionViewProvider {
+) : BaseFileViewHolder<MediaItem>(binding.root, needMediaDataCallback),
+    SharedTransitionViewProvider {
+    private var pendingReadyCallback: (() -> Unit)? = null
+    private var isOriginalImageReady = false
 
     init {
         binding.applyStyle()
@@ -38,21 +41,27 @@ class MediaImageViewHolder(
         }
     }
 
+    override fun bind(item: MediaItem) {
+        super.bind(item)
+        pendingReadyCallback = null
+        isOriginalImageReady = false
+    }
+
     override fun updateState(data: TransferData, isOnBind: Boolean) {
         binding.progress.isVisible = data.state == Downloading || data.state == PendingDownload
 
         when (data.state) {
             PendingUpload, ErrorUpload, PauseUpload -> {
-                viewHolderHelper.drawOriginalFile(binding.imageView)
+                drawOriginalFile()
             }
 
             Uploading -> {
                 if (isOnBind)
-                    viewHolderHelper.drawOriginalFile(binding.imageView)
+                    drawOriginalFile()
             }
 
             Uploaded -> {
-                viewHolderHelper.drawOriginalFile(binding.imageView)
+                drawOriginalFile()
             }
 
             PendingDownload -> {
@@ -68,7 +77,7 @@ class MediaImageViewHolder(
             }
 
             Downloaded -> {
-                viewHolderHelper.drawOriginalFile(binding.imageView)
+                drawOriginalFile()
             }
 
             PauseDownload -> {
@@ -80,7 +89,7 @@ class MediaImageViewHolder(
             }
 
             FilePathChanged -> {
-                viewHolderHelper.drawOriginalFile(binding.imageView)
+                drawOriginalFile()
             }
 
             ThumbLoaded, Preparing, WaitingToUpload -> Unit
@@ -90,6 +99,27 @@ class MediaImageViewHolder(
     override fun needThumbFor() = ThumbFor.MediaPreview
 
     override fun provide() = binding.imageView
+
+    override fun awaitReadyForSharedTransition(onReady: () -> Unit) {
+        if (isOriginalImageReady) {
+            onReady()
+        } else {
+            pendingReadyCallback = onReady
+        }
+    }
+
+    private fun drawOriginalFile() {
+        val filePath = fileItem.attachment.filePath
+        isOriginalImageReady = false
+        viewHolderHelper.drawOriginalFile(binding.imageView) ready@{
+            if (filePath.isNullOrBlank() || filePath != fileItem.attachment.filePath) {
+                return@ready
+            }
+            isOriginalImageReady = true
+            pendingReadyCallback?.invoke()
+            pendingReadyCallback = null
+        }
+    }
 
     private fun SceytMediaItemImageBinding.applyStyle() {
         style.mediaLoaderStyle.apply(progress)

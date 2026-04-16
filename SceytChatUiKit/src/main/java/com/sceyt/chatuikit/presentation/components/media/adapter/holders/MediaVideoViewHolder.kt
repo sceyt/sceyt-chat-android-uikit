@@ -50,6 +50,8 @@ class MediaVideoViewHolder(
     private var playerHelper: ExoPlayerHelper? = null
     private var videoController: ConstraintLayout? = null
     private val mediaAdapter by lazy { bindingAdapter as? MediaAdapter }
+    private var pendingReadyCallback: (() -> Unit)? = null
+    private var isOriginalImageReady = false
 
     init {
         binding.applyStyle()
@@ -67,6 +69,8 @@ class MediaVideoViewHolder(
     override fun bind(item: MediaItem) {
         super.bind(item)
         initVideoController()
+        pendingReadyCallback = null
+        isOriginalImageReady = false
     }
 
     @OptIn(UnstableApi::class)
@@ -155,7 +159,7 @@ class MediaVideoViewHolder(
 
         when (data.state) {
             PendingUpload, ErrorUpload, PauseUpload -> {
-                viewHolderHelper.drawOriginalFile(binding.icThumb)
+                drawOriginalFile()
             }
 
             PendingDownload -> {
@@ -172,11 +176,11 @@ class MediaVideoViewHolder(
 
             Uploading -> {
                 if (isOnBind)
-                    viewHolderHelper.drawOriginalFile(binding.icThumb)
+                    drawOriginalFile()
             }
 
             Downloaded, Uploaded -> {
-                viewHolderHelper.drawOriginalFile(binding.icThumb)
+                drawOriginalFile()
                 if (isAttachedToWindow)
                     initPlayerHelper()
             }
@@ -190,7 +194,7 @@ class MediaVideoViewHolder(
             }
 
             FilePathChanged -> {
-                viewHolderHelper.drawOriginalFile(binding.icThumb)
+                drawOriginalFile()
             }
 
             ThumbLoaded, Preparing, WaitingToUpload -> Unit
@@ -212,6 +216,27 @@ class MediaVideoViewHolder(
     override fun needThumbFor() = ThumbFor.MediaPreview
 
     override fun provide() = binding.icThumb
+
+    override fun awaitReadyForSharedTransition(onReady: () -> Unit) {
+        if (isOriginalImageReady) {
+            onReady()
+        } else {
+            pendingReadyCallback = onReady
+        }
+    }
+
+    private fun drawOriginalFile() {
+        val filePath = fileItem.attachment.filePath
+        isOriginalImageReady = false
+        viewHolderHelper.drawOriginalFile(binding.icThumb) ready@{
+            if (filePath.isNullOrBlank() || filePath != fileItem.attachment.filePath) {
+                return@ready
+            }
+            isOriginalImageReady = true
+            pendingReadyCallback?.invoke()
+            pendingReadyCallback = null
+        }
+    }
 
     @OptIn(UnstableApi::class)
     private fun SceytMediaItemVideoBinding.applyStyle() {
