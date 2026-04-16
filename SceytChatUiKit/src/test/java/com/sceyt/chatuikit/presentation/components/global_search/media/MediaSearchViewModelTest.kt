@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.presentation.components.global_search.media
 
 import com.google.common.truth.Truth.assertThat
+import com.sceyt.chat.ChatClient
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
@@ -29,7 +30,10 @@ import org.junit.Test
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.dsl.module
+import org.mockito.MockedStatic
+import org.mockito.Mockito
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.mockStatic
 import org.mockito.kotlin.whenever
 
 private const val DAY_1 = 1_700_000_000_000L
@@ -40,10 +44,16 @@ class MediaSearchViewModelTest {
 
     private val dispatcher = StandardTestDispatcher()
     private val fileTransferService = mock<FileTransferService>()
+    private lateinit var chatClientStaticMock: MockedStatic<ChatClient>
+
 
     @Before
     fun setUp() {
         Dispatchers.setMain(dispatcher)
+        chatClientStaticMock = mockStatic<ChatClient>()
+        val mockClient = mock<ChatClient>()
+        chatClientStaticMock.`when`<ChatClient> { ChatClient.getClient() }.thenReturn(mockClient)
+        Mockito.doNothing().`when`(mockClient).addMessageListener(Mockito.anyString(), Mockito.any())
         stopKoin()
         SceytKoinApp.koinApp = startKoin {
             modules(module {
@@ -55,6 +65,7 @@ class MediaSearchViewModelTest {
     @After
     fun tearDown() {
         Dispatchers.resetMain()
+        chatClientStaticMock.close()
         SceytKoinApp.koinApp = null
         stopKoin()
     }
