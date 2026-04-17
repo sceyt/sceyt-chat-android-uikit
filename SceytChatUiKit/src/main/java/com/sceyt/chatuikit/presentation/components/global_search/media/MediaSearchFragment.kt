@@ -152,7 +152,7 @@ open class MediaSearchFragment : Fragment(R.layout.sceyt_fragment_media_search) 
         val settled = state.settled
         val lastKey = viewModel.lastResultsRequestKeyForUI
         val scrollToTop = settled && state.sessionState != lastKey && lastKey != null
-        if (settled) viewModel.lastResultsRequestKeyForUI = state.sessionState
+        if (settled) viewModel.onResultsRendered(state.sessionState)
 
         gridAdapter.submitList(
             items = mode.items,
@@ -178,7 +178,7 @@ open class MediaSearchFragment : Fragment(R.layout.sceyt_fragment_media_search) 
         val settled = !state.isLoading && !state.isLoadingMore
         val lastKey = viewModel.lastResultsRequestKeyForUI
         val scrollToTop = settled && state.sessionState != lastKey && lastKey != null
-        if (settled) viewModel.lastResultsRequestKeyForUI = state.sessionState
+        if (settled) viewModel.onResultsRendered(state.sessionState)
 
         listAdapter.submitList(
             items = mode.items,

@@ -65,6 +65,11 @@ open class VoiceSearchViewModel(
 
     private var loadJob: Job? = null
     var lastResultsRequestKeyForUI: GlobalSearchSessionState? = null
+        private set
+
+    fun onResultsRendered(key: GlobalSearchSessionState?) {
+        lastResultsRequestKeyForUI = key
+    }
 
     init {
         viewModelScope.launch {
