@@ -103,7 +103,7 @@ open class LinksSearchFragment : Fragment(R.layout.sceyt_fragment_links_search) 
         val settled = state.settled
         val lastKey = viewModel.lastResultsRequestKeyForUI
         val scrollToTop = settled && state.sessionState != lastKey && lastKey != null
-        if (settled) viewModel.lastResultsRequestKeyForUI = state.sessionState
+        if (settled) viewModel.onResultsRendered(state.sessionState)
 
         listAdapter.submitList(
             items = state.items,
