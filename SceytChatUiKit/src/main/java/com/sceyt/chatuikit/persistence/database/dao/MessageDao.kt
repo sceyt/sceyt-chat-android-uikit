@@ -177,7 +177,8 @@ internal abstract class MessageDao {
         val entitiesToUpdate = rowIds.mapIndexedNotNull { index, rowId ->
             if (rowId == -1L) messageEntities[index] else null
         }
-        updateMessagesIgnored(entitiesToUpdate)
+        if (entitiesToUpdate.isNotEmpty())
+            updateMessagesIgnored(entitiesToUpdate)
     }
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
