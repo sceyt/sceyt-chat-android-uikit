@@ -184,6 +184,8 @@ class GlobalSearchQueryInputView @JvmOverloads constructor(
         context.showSoftInput(binding.input)
     }
 
+    fun input() = binding.input
+
     private fun updateClearVisibility() {
         binding.icClear.isVisible =
             binding.input.text?.isNotEmpty() == true || binding.selectedUserContainer.isVisible

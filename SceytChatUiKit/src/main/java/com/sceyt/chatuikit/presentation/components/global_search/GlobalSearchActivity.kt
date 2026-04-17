@@ -33,7 +33,7 @@ import com.sceyt.chatuikit.data.models.search.GlobalSearchAttachmentKind
 import com.sceyt.chatuikit.data.models.search.GlobalSearchAttachmentResult
 import com.sceyt.chatuikit.databinding.SceytActivityGlobalSearchBinding
 import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
-import com.sceyt.chatuikit.extensions.hideSoftInput
+import com.sceyt.chatuikit.extensions.hideKeyboard
 import com.sceyt.chatuikit.extensions.launchActivity
 import com.sceyt.chatuikit.extensions.openLink
 import com.sceyt.chatuikit.extensions.overrideTransitions
@@ -301,15 +301,17 @@ open class GlobalSearchActivity : AppCompatActivity(), GlobalSearchClickListener
     }
 
     override fun onChannelClicked(channel: SceytChannel) {
+        hideKeyboard(binding.searchInputView.input())
         ChannelActivity.launch(this, channel)
     }
 
     override fun onMessageClicked(messageId: Long, channel: SceytChannel) {
+        hideKeyboard(binding.searchInputView.input())
         ChannelActivity.launch(this, channel, messageId)
     }
 
     override fun onAttachmentClicked(result: GlobalSearchAttachmentResult) {
-        hideSoftInput()
+        hideKeyboard(binding.searchInputView.input())
         when (result.kind) {
             GlobalSearchAttachmentKind.Media,
             GlobalSearchAttachmentKind.Voice -> {
@@ -322,7 +324,7 @@ open class GlobalSearchActivity : AppCompatActivity(), GlobalSearchClickListener
     }
 
     override fun onMediaAttachmentClicked(sharedView: View, result: GlobalSearchAttachmentResult) {
-        hideSoftInput()
+        hideKeyboard(binding.searchInputView.input())
         MediaPreviewActivity.launch(
             activity = this,
             attachment = result.attachment,
