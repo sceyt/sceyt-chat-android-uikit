@@ -205,7 +205,6 @@ fun Context.hideKeyboard(view: EditText?) {
     view?.clearFocus()
     val inputMethodManager = getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
     inputMethodManager.hideSoftInputFromWindow(view?.windowToken, 0)
-
 }
 
 fun Context.setClipboard(text: CharSequence) {

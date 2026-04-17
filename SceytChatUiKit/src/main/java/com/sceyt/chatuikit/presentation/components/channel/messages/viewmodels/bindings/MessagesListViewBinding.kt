@@ -347,7 +347,8 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 } else
                     checkToHildeLoadingMoreItemByLoadType(response.loadType)
 
-                checkToScrollAfterResponse(response)
+                if (response.dbResultWasEmpty)
+                    checkToScrollAfterResponse(response)
 
                 loadPrevOffsetId = response.data.data?.firstOrNull()?.id ?: 0
                 loadNextOffsetId = response.data.data?.lastOrNull()?.id ?: 0
