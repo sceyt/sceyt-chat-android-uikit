@@ -160,8 +160,6 @@ open class MediaSearchFragment : Fragment(R.layout.sceyt_fragment_media_search) 
                 { binding.recyclerView.scrollToPosition(0) }
             } else null,
         )
-
-        requestMoreGridIfViewportNotFilled(state)
     }
 
     private fun renderList(state: MediaSearchState, mode: MediaSearchDisplayMode.SearchList) {
@@ -202,14 +200,6 @@ open class MediaSearchFragment : Fragment(R.layout.sceyt_fragment_media_search) 
         val totalCount = lm.itemCount
         if (totalCount == 0) return false
         return lm.findLastVisibleItemPosition() >= totalCount - LOAD_MORE_THRESHOLD
-    }
-
-    protected open fun requestMoreGridIfViewportNotFilled(state: MediaSearchState) {
-        if (state.isLoading || state.isLoadingMore || !state.hasMore) return
-        binding.recyclerView.post {
-            if (_binding == null || binding.recyclerView.canScrollVertically(1)) return@post
-            viewModel.loadMore()
-        }
     }
 
     protected open val clickListener: GlobalSearchClickListener?
