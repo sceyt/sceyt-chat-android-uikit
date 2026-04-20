@@ -127,10 +127,10 @@ class GlobalSearchUpdateEventSourceTest {
         assertThat(result).containsExactlyElementsIn(list).inOrder()
     }
 
-    // ─── applyChannelMessageUpdateEvent: MessageUpdated (edit) ───────────────────
+    // ─── applyChannelMessageUpdateEvent: MessagesUpdated (edit) ──────────────────
 
     @Test
-    fun `MessageUpdated with non-deleted state replaces matching MessageItem`() {
+    fun `MessagesUpdated with non-deleted state replaces matching MessageItem`() {
         val newMessage = fakeMessage(id = 5L, state = MessageState.Edited)
         val list = listOf(
             fakeMessageItem(id = 5L),
@@ -138,7 +138,7 @@ class GlobalSearchUpdateEventSourceTest {
         )
 
         val result = list.applyChannelMessageUpdateEvent(
-            GlobalSearchUpdateEvent.MessageUpdated(newMessage)
+            GlobalSearchUpdateEvent.MessagesUpdated(listOf(newMessage))
         )
 
         val updated = result.filterIsInstance<GlobalSearchListItem.MessageItem>()
@@ -147,22 +147,22 @@ class GlobalSearchUpdateEventSourceTest {
     }
 
     @Test
-    fun `MessageUpdated with non-deleted state does not affect other items`() {
+    fun `MessagesUpdated with non-deleted state does not affect other items`() {
         val newMessage = fakeMessage(id = 5L, state = MessageState.Edited)
         val other = fakeMessageItem(id = 6L)
         val list = listOf(fakeMessageItem(id = 5L), other)
 
         val result = list.applyChannelMessageUpdateEvent(
-            GlobalSearchUpdateEvent.MessageUpdated(newMessage)
+            GlobalSearchUpdateEvent.MessagesUpdated(listOf(newMessage))
         )
 
         assertThat(result[1]).isSameInstanceAs(other)
     }
 
-    // ─── applyChannelMessageUpdateEvent: MessageUpdated (delete) ─────────────────
+    // ─── applyChannelMessageUpdateEvent: MessagesUpdated (delete) ────────────────
 
     @Test
-    fun `MessageUpdated Deleted removes matching MessageItem`() {
+    fun `MessagesUpdated Deleted removes matching MessageItem`() {
         val list = listOf(
             GlobalSearchListItem.SectionHeader(R.string.sceyt_messages),
             fakeMessageItem(id = 5L),
@@ -170,7 +170,7 @@ class GlobalSearchUpdateEventSourceTest {
         )
 
         val result = list.applyChannelMessageUpdateEvent(
-            GlobalSearchUpdateEvent.MessageUpdated(fakeMessage(id = 5L, state = MessageState.Deleted))
+            GlobalSearchUpdateEvent.MessagesUpdated(listOf(fakeMessage(id = 5L, state = MessageState.Deleted)))
         )
 
         val messageItems = result.filterIsInstance<GlobalSearchListItem.MessageItem>()
@@ -179,11 +179,11 @@ class GlobalSearchUpdateEventSourceTest {
     }
 
     @Test
-    fun `MessageUpdated DeletedHard removes matching MessageItem`() {
+    fun `MessagesUpdated DeletedHard removes matching MessageItem`() {
         val list = listOf(fakeMessageItem(id = 7L), fakeMessageItem(id = 8L))
 
         val result = list.applyChannelMessageUpdateEvent(
-            GlobalSearchUpdateEvent.MessageUpdated(fakeMessage(id = 7L, state = MessageState.DeletedHard))
+            GlobalSearchUpdateEvent.MessagesUpdated(listOf(fakeMessage(id = 7L, state = MessageState.DeletedHard)))
         )
 
         val messageItems = result.filterIsInstance<GlobalSearchListItem.MessageItem>()
@@ -192,7 +192,7 @@ class GlobalSearchUpdateEventSourceTest {
     }
 
     @Test
-    fun `MessageUpdated Deleted removes section header when no messages remain`() {
+    fun `MessagesUpdated Deleted removes section header when no messages remain`() {
         val list = listOf(
             GlobalSearchListItem.SectionHeader(R.string.sceyt_chats),
             GlobalSearchListItem.ChannelItem(fakeChannel(1L)),
@@ -201,7 +201,7 @@ class GlobalSearchUpdateEventSourceTest {
         )
 
         val result = list.applyChannelMessageUpdateEvent(
-            GlobalSearchUpdateEvent.MessageUpdated(fakeMessage(id = 5L, state = MessageState.Deleted))
+            GlobalSearchUpdateEvent.MessagesUpdated(listOf(fakeMessage(id = 5L, state = MessageState.Deleted)))
         )
 
         val headers = result.filterIsInstance<GlobalSearchListItem.SectionHeader>()
@@ -210,7 +210,7 @@ class GlobalSearchUpdateEventSourceTest {
     }
 
     @Test
-    fun `MessageUpdated Deleted keeps section header when other messages remain`() {
+    fun `MessagesUpdated Deleted keeps section header when other messages remain`() {
         val list = listOf(
             GlobalSearchListItem.SectionHeader(R.string.sceyt_messages),
             fakeMessageItem(id = 5L),
@@ -218,11 +218,53 @@ class GlobalSearchUpdateEventSourceTest {
         )
 
         val result = list.applyChannelMessageUpdateEvent(
-            GlobalSearchUpdateEvent.MessageUpdated(fakeMessage(id = 5L, state = MessageState.Deleted))
+            GlobalSearchUpdateEvent.MessagesUpdated(listOf(fakeMessage(id = 5L, state = MessageState.Deleted)))
         )
 
         assertThat(result.filterIsInstance<GlobalSearchListItem.SectionHeader>()).hasSize(1)
         assertThat(result.filterIsInstance<GlobalSearchListItem.MessageItem>()).hasSize(1)
+    }
+
+    @Test
+    fun `MessagesUpdated batch on message list - some deleted some edited - handled in single event`() {
+        val editedMessage = fakeMessage(id = 10L, state = MessageState.Edited)
+        val list = listOf(
+            GlobalSearchListItem.SectionHeader(R.string.sceyt_messages),
+            fakeMessageItem(id = 10L),
+            fakeMessageItem(id = 11L),
+            fakeMessageItem(id = 12L),
+        )
+
+        val result = list.applyChannelMessageUpdateEvent(
+            GlobalSearchUpdateEvent.MessagesUpdated(
+                listOf(
+                    editedMessage,
+                    fakeMessage(id = 11L, state = MessageState.Deleted),
+                )
+            )
+        )
+
+        val messageItems = result.filterIsInstance<GlobalSearchListItem.MessageItem>()
+        assertThat(messageItems).hasSize(2)
+        assertThat(messageItems.first { it.result.message.id == 10L }.result.message)
+            .isSameInstanceAs(editedMessage)
+        assertThat(messageItems.any { it.result.message.id == 11L }).isFalse()
+        assertThat(messageItems.any { it.result.message.id == 12L }).isTrue()
+    }
+
+    @Test
+    fun `MessagesUpdated empty list leaves list unchanged`() {
+        val list = listOf(
+            fakeMessageItem(id = 1L),
+            fakeMessageItem(id = 2L),
+        )
+
+        val result = list.applyChannelMessageUpdateEvent(
+            GlobalSearchUpdateEvent.MessagesUpdated(emptyList())
+        )
+
+        assertThat(result.filterIsInstance<GlobalSearchListItem.MessageItem>())
+            .hasSize(2)
     }
 
     // ─── applyAttachmentUpdateEvent: ChannelUpdated ───────────────────────────────
@@ -294,24 +336,26 @@ class GlobalSearchUpdateEventSourceTest {
         assertThat(result.filterIsInstance<GlobalSearchListItem.AttachmentItem>()).hasSize(1)
     }
 
-    // ─── applyAttachmentUpdateEvent: MessageUpdated ───────────────────────────────
+    // ─── applyAttachmentUpdateEvent: MessagesUpdated ─────────────────────────────
 
     @Test
-    fun `MessageUpdated Edited should for attachment lists`() {
+    fun `MessagesUpdated Edited updates message body in matching AttachmentItem`() {
+        val newMessage = fakeMessage(id = 1L, state = MessageState.Edited)
         val list = listOf(
             GlobalSearchListItem.DateSeparator(1000L),
             fakeAttachmentItem(msgId = 1L, channelId = 10L),
         )
 
         val result = list.applyAttachmentUpdateEvent(
-            GlobalSearchUpdateEvent.MessageUpdated(fakeMessage(id = 1L, state = MessageState.Edited))
+            GlobalSearchUpdateEvent.MessagesUpdated(listOf(newMessage))
         )
 
-        assertThat(result).isNotSameInstanceAs(list)
+        val updated = result.filterIsInstance<GlobalSearchListItem.AttachmentItem>().first()
+        assertThat(updated.result.message).isSameInstanceAs(newMessage)
     }
 
     @Test
-    fun `MessageUpdated Deleted removes matching AttachmentItems`() {
+    fun `MessagesUpdated Deleted removes matching AttachmentItems`() {
         val list = listOf(
             GlobalSearchListItem.DateSeparator(1000L),
             fakeAttachmentItem(msgId = 1L, channelId = 10L),
@@ -319,7 +363,7 @@ class GlobalSearchUpdateEventSourceTest {
         )
 
         val result = list.applyAttachmentUpdateEvent(
-            GlobalSearchUpdateEvent.MessageUpdated(fakeMessage(id = 1L, state = MessageState.Deleted))
+            GlobalSearchUpdateEvent.MessagesUpdated(listOf(fakeMessage(id = 1L, state = MessageState.Deleted)))
         )
 
         val attachments = result.filterIsInstance<GlobalSearchListItem.AttachmentItem>()
@@ -328,7 +372,24 @@ class GlobalSearchUpdateEventSourceTest {
     }
 
     @Test
-    fun `MessageUpdated Deleted removes DateSeparator when all its attachments are gone`() {
+    fun `MessagesUpdated DeletedHard removes matching AttachmentItems`() {
+        val list = listOf(
+            GlobalSearchListItem.DateSeparator(1000L),
+            fakeAttachmentItem(msgId = 3L, channelId = 10L),
+            fakeAttachmentItem(msgId = 4L, channelId = 10L),
+        )
+
+        val result = list.applyAttachmentUpdateEvent(
+            GlobalSearchUpdateEvent.MessagesUpdated(listOf(fakeMessage(id = 3L, state = MessageState.DeletedHard)))
+        )
+
+        val attachments = result.filterIsInstance<GlobalSearchListItem.AttachmentItem>()
+        assertThat(attachments).hasSize(1)
+        assertThat(attachments[0].result.message.id).isEqualTo(4L)
+    }
+
+    @Test
+    fun `MessagesUpdated Deleted removes DateSeparator when all its attachments are gone`() {
         val list = listOf(
             GlobalSearchListItem.DateSeparator(1000L),
             fakeAttachmentItem(msgId = 1L, channelId = 10L),
@@ -337,7 +398,7 @@ class GlobalSearchUpdateEventSourceTest {
         )
 
         val result = list.applyAttachmentUpdateEvent(
-            GlobalSearchUpdateEvent.MessageUpdated(fakeMessage(id = 1L, state = MessageState.Deleted))
+            GlobalSearchUpdateEvent.MessagesUpdated(listOf(fakeMessage(id = 1L, state = MessageState.Deleted)))
         )
 
         val separators = result.filterIsInstance<GlobalSearchListItem.DateSeparator>()
@@ -346,7 +407,7 @@ class GlobalSearchUpdateEventSourceTest {
     }
 
     @Test
-    fun `MessageUpdated Deleted keeps DateSeparator when other attachments remain for that date`() {
+    fun `MessagesUpdated Deleted keeps DateSeparator when other attachments remain for that date`() {
         val list = listOf(
             GlobalSearchListItem.DateSeparator(1000L),
             fakeAttachmentItem(msgId = 1L, channelId = 10L),
@@ -354,10 +415,51 @@ class GlobalSearchUpdateEventSourceTest {
         )
 
         val result = list.applyAttachmentUpdateEvent(
-            GlobalSearchUpdateEvent.MessageUpdated(fakeMessage(id = 1L, state = MessageState.Deleted))
+            GlobalSearchUpdateEvent.MessagesUpdated(listOf(fakeMessage(id = 1L, state = MessageState.Deleted)))
         )
 
         assertThat(result.filterIsInstance<GlobalSearchListItem.DateSeparator>()).hasSize(1)
+        assertThat(result.filterIsInstance<GlobalSearchListItem.AttachmentItem>()).hasSize(1)
+    }
+
+    @Test
+    fun `MessagesUpdated batch on attachment list - some deleted some edited - handled in single event`() {
+        val editedMessage = fakeMessage(id = 10L, state = MessageState.Edited)
+        val list = listOf(
+            GlobalSearchListItem.DateSeparator(1000L),
+            fakeAttachmentItem(msgId = 10L, channelId = 5L),
+            fakeAttachmentItem(msgId = 11L, channelId = 5L),
+            fakeAttachmentItem(msgId = 12L, channelId = 5L),
+        )
+
+        val result = list.applyAttachmentUpdateEvent(
+            GlobalSearchUpdateEvent.MessagesUpdated(
+                listOf(
+                    editedMessage,
+                    fakeMessage(id = 11L, state = MessageState.Deleted),
+                )
+            )
+        )
+
+        val attachments = result.filterIsInstance<GlobalSearchListItem.AttachmentItem>()
+        assertThat(attachments).hasSize(2)
+        assertThat(attachments.first { it.result.message.id == 10L }.result.message)
+            .isSameInstanceAs(editedMessage)
+        assertThat(attachments.any { it.result.message.id == 11L }).isFalse()
+        assertThat(attachments.any { it.result.message.id == 12L }).isTrue()
+    }
+
+    @Test
+    fun `MessagesUpdated empty list leaves attachment list unchanged`() {
+        val list = listOf(
+            GlobalSearchListItem.DateSeparator(1000L),
+            fakeAttachmentItem(msgId = 1L, channelId = 10L),
+        )
+
+        val result = list.applyAttachmentUpdateEvent(
+            GlobalSearchUpdateEvent.MessagesUpdated(emptyList())
+        )
+
         assertThat(result.filterIsInstance<GlobalSearchListItem.AttachmentItem>()).hasSize(1)
     }
 

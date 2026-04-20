@@ -19,13 +19,14 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState
             deferred = true
         )
     ],
-    indices = [Index("messageTid", unique = true)])
+    indices = [Index("messageTid", unique = true)]
+)
 internal data class AttachmentPayLoadEntity(
-        @PrimaryKey(autoGenerate = true)
-        val id: Int = 0,
-        val messageTid: Long,
-        val transferState: TransferState,
-        val progressPercent: Float?,
-        val url: String?,
-        val filePath: String?
+    @PrimaryKey(autoGenerate = true)
+    val id: Int = 0,
+    val messageTid: Long,
+    val transferState: TransferState,
+    val progressPercent: Float?,
+    val url: String?,
+    val filePath: String?
 )
