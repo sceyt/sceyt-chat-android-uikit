@@ -27,8 +27,7 @@ class CallStatusTextTest {
         val state = CallUiState(
             phase = CallUiState.CallPhase.Connected,
             call = mockCall(MediaFlow.SFU),
-            participants = listOf(
-                CallParticipantUiState(userId = "me", isSelf = true, connectionState = ParticipantConnectionState.Connected),
+            remoteParticipants = listOf(
                 CallParticipantUiState(userId = "alice", connectionState = ParticipantConnectionState.Connecting),
             ),
         )
@@ -41,8 +40,7 @@ class CallStatusTextTest {
         val state = CallUiState(
             phase = CallUiState.CallPhase.Connected,
             call = mockCall(MediaFlow.SFU),
-            participants = listOf(
-                CallParticipantUiState(userId = "me", isSelf = true, connectionState = ParticipantConnectionState.Connected),
+            remoteParticipants = listOf(
                 CallParticipantUiState(userId = "alice", connectionState = ParticipantConnectionState.Connected),
             ),
         )

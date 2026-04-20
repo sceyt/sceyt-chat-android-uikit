@@ -1,13 +1,19 @@
 package com.sceyt.chatuikit.presentation.components.global_search
 
+import androidx.lifecycle.asFlow
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
+import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.persistence.file_transfer.FileTransferHelper
+import com.sceyt.chatuikit.persistence.file_transfer.TransferData
+import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.shareIn
@@ -16,6 +22,7 @@ sealed class GlobalSearchUpdateEvent {
     data class ChannelUpdated(val channel: SceytChannel) : GlobalSearchUpdateEvent()
     data class ChannelsDeleted(val ids: List<Long>) : GlobalSearchUpdateEvent()
     data class MessagesUpdated(val messages: List<SceytMessage>) : GlobalSearchUpdateEvent()
+    data class TransferUpdated(val transferData: TransferData) : GlobalSearchUpdateEvent()
 
     /**
      * Returns true if this event should trigger a refresh key update.
@@ -29,6 +36,8 @@ sealed class GlobalSearchUpdateEvent {
             is MessagesUpdated -> messages.none {
                 it.state == MessageState.Deleted || it.state == MessageState.DeletedHard
             }
+
+            is TransferUpdated -> false
         }
 }
 
@@ -38,12 +47,20 @@ class GlobalSearchUpdateEventSource(scope: CoroutineScope) {
         ChannelsCache.channelUpdatedFlow.map {
             GlobalSearchUpdateEvent.ChannelUpdated(it.channel)
         },
+
         ChannelsCache.channelsDeletedFlow.map {
             GlobalSearchUpdateEvent.ChannelsDeleted(it)
         },
+
         MessagesCache.messageUpdatedFlow.map { (channelId, messages) ->
             GlobalSearchUpdateEvent.MessagesUpdated(messages)
-        }
+        },
+
+        FileTransferHelper.onTransferUpdatedLiveData.asFlow()
+            .filter { it.state == TransferState.Downloaded }
+            .map {
+                GlobalSearchUpdateEvent.TransferUpdated(it)
+            }
     ).shareIn(
         scope = scope,
         started = SharingStarted.Eagerly,
@@ -83,6 +100,8 @@ fun List<GlobalSearchListItem>.applyChannelMessageUpdateEvent(
             } else item
         }.removeEmptySectionHeaders()
     }
+
+    is GlobalSearchUpdateEvent.TransferUpdated -> this
 }
 
 /**
@@ -115,6 +134,19 @@ fun List<GlobalSearchListItem>.applyAttachmentUpdateEvent(
             } else item
         }.removeEmptyDateSeparators()
     }
+
+    is GlobalSearchUpdateEvent.TransferUpdated -> {
+        map { item ->
+            if (item is GlobalSearchListItem.AttachmentItem
+                && item.result.attachment.messageTid == event.transferData.messageTid
+            ) {
+                val updatedAttachment = item.result.attachment.mergeTransferUpdate(
+                    transferData = event.transferData
+                )
+                item.copy(result = item.result.copy(attachment = updatedAttachment))
+            } else item
+        }
+    }
 }
 
 private fun List<GlobalSearchListItem>.removeEmptySectionHeaders(): List<GlobalSearchListItem> =
@@ -128,3 +160,12 @@ private fun List<GlobalSearchListItem>.removeEmptyDateSeparators(): List<GlobalS
     filterIndexed { i, item ->
         item !is GlobalSearchListItem.DateSeparator || getOrNull(i + 1) is GlobalSearchListItem.AttachmentItem
     }
+
+private fun SceytAttachment.mergeTransferUpdate(
+    transferData: TransferData
+): SceytAttachment = copy(
+    transferState = transferData.state,
+    progressPercent = transferData.progressPercent,
+    filePath = transferData.filePath,
+    url = transferData.url ?: url
+)

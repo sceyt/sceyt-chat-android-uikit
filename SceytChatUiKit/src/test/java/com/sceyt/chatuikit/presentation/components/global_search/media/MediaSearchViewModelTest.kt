@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.presentation.components.global_search.media
 
+import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import com.google.common.truth.Truth.assertThat
 import com.sceyt.chat.ChatClient
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
@@ -11,8 +12,14 @@ import com.sceyt.chatuikit.data.models.search.GlobalSearchAttachmentResult
 import com.sceyt.chatuikit.data.models.search.GlobalSearchMessageResult
 import com.sceyt.chatuikit.data.models.search.GlobalSearchPage
 import com.sceyt.chatuikit.koin.SceytKoinApp
+import com.sceyt.chatuikit.persistence.database.dao.FileChecksumDao
+import com.sceyt.chatuikit.persistence.di.CoroutineContextType
+import com.sceyt.chatuikit.persistence.file_transfer.FileTransferHelper
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
+import com.sceyt.chatuikit.persistence.file_transfer.TransferData
+import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 import com.sceyt.chatuikit.persistence.interactor.GlobalSearchDataSource
+import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchListItem
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchSessionState
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchSessionStore
@@ -26,24 +33,31 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
+import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import org.mockito.MockedStatic
 import org.mockito.Mockito
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.mockStatic
 import org.mockito.kotlin.whenever
+import kotlin.coroutines.CoroutineContext
 
 private const val DAY_1 = 1_700_000_000_000L
 private const val DAY_2 = DAY_1 + 86_400_000L  // +1 day
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class MediaSearchViewModelTest {
+    @get:Rule
+    val instantTaskExecutorRule = InstantTaskExecutorRule()
 
     private val dispatcher = StandardTestDispatcher()
     private val fileTransferService = mock<FileTransferService>()
+    private val attachmentLogic = mock<PersistenceAttachmentLogic>()
+    private val fileChecksumDao = mock<FileChecksumDao>()
     private lateinit var chatClientStaticMock: MockedStatic<ChatClient>
 
 
@@ -58,6 +72,9 @@ class MediaSearchViewModelTest {
         SceytKoinApp.koinApp = startKoin {
             modules(module {
                 single<FileTransferService> { fileTransferService }
+                single<PersistenceAttachmentLogic> { attachmentLogic }
+                single<FileChecksumDao> { fileChecksumDao }
+                single<CoroutineContext>(named(CoroutineContextType.SingleThreaded)) { dispatcher }
             })
         }
     }
@@ -218,6 +235,50 @@ class MediaSearchViewModelTest {
         advanceUntilIdle()
 
         assertThat(vm.state.value.hasMore).isTrue()
+    }
+
+    @Test
+    fun `transfer update refreshes attachment file path and state in view model`() = runTest(dispatcher) {
+        val dataSource = MediaFakeDataSource()
+        dataSource.enqueue(
+            GlobalSearchPage(
+                data = listOf(
+                    fakeConcreteMediaResult(
+                        messageTid = 501L,
+                        createdAt = DAY_1,
+                        filePath = null,
+                        transferState = TransferState.PendingDownload,
+                        progressPercent = 0f
+                    )
+                ),
+                hasMore = false
+            )
+        )
+
+        val vm = MediaSearchViewModel(sessionForTab(GlobalSearchTab.Media), dataSource, dispatcher)
+        advanceUntilIdle()
+
+        FileTransferHelper.emitAttachmentTransferUpdate(
+            TransferData(
+                messageTid = 501L,
+                progressPercent = 100f,
+                state = TransferState.Downloaded,
+                filePath = "/tmp/media-501.jpg",
+                url = "https://cdn.example/media-501.jpg"
+            )
+        )
+        advanceUntilIdle()
+
+        val updated = (vm.state.value.mode as MediaSearchDisplayMode.Grid).items
+            .filterIsInstance<GlobalSearchListItem.AttachmentItem>()
+            .first()
+            .result
+            .attachment
+
+        assertThat(updated.transferState).isEqualTo(TransferState.Downloaded)
+        assertThat(updated.progressPercent).isEqualTo(100f)
+        assertThat(updated.filePath).isEqualTo("/tmp/media-501.jpg")
+        assertThat(updated.url).isEqualTo("https://cdn.example/media-501.jpg")
     }
 
     // ─── Mode transitions ─────────────────────────────────────────────────────────
@@ -488,6 +549,39 @@ private fun fakeMediaResult(createdAt: Long = DAY_1): GlobalSearchAttachmentResu
     whenever(attachment.type).thenReturn(AttachmentTypeEnum.Image.value)
     return GlobalSearchAttachmentResult(
         attachment = attachment,
+        message = mock(),
+        channel = mock(),
+        sender = null,
+        kind = GlobalSearchAttachmentKind.Media
+    )
+}
+
+private fun fakeConcreteMediaResult(
+    messageTid: Long,
+    createdAt: Long = DAY_1,
+    filePath: String? = null,
+    transferState: TransferState = TransferState.PendingDownload,
+    progressPercent: Float = 0f,
+    url: String? = "https://cdn.example/$messageTid",
+): GlobalSearchAttachmentResult {
+    return GlobalSearchAttachmentResult(
+        attachment = SceytAttachment(
+            id = messageTid,
+            messageId = messageTid,
+            messageTid = messageTid,
+            userId = null,
+            name = "media-$messageTid",
+            type = AttachmentTypeEnum.Image.value,
+            metadata = null,
+            fileSize = 256L,
+            createdAt = createdAt,
+            url = url,
+            filePath = filePath,
+            transferState = transferState,
+            progressPercent = progressPercent,
+            originalFilePath = null,
+            linkPreviewDetails = null
+        ),
         message = mock(),
         channel = mock(),
         sender = null,
