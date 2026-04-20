@@ -9,9 +9,24 @@ import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.search.GlobalSearchAttachmentKind
 import com.sceyt.chatuikit.data.models.search.GlobalSearchAttachmentResult
 import com.sceyt.chatuikit.data.models.search.GlobalSearchMessageResult
+import com.sceyt.chatuikit.koin.SceytKoinApp
+import com.sceyt.chatuikit.persistence.database.dao.FileChecksumDao
+import com.sceyt.chatuikit.persistence.di.CoroutineContextType
+import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
+import com.sceyt.chatuikit.persistence.file_transfer.TransferData
+import com.sceyt.chatuikit.persistence.file_transfer.TransferState
+import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
+import kotlinx.coroutines.test.StandardTestDispatcher
+import org.junit.After
+import org.junit.Before
 import org.junit.Test
+import org.koin.core.context.startKoin
+import org.koin.core.context.stopKoin
+import org.koin.core.qualifier.named
+import org.koin.dsl.module
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
+import kotlin.coroutines.CoroutineContext
 
 /**
  * Tests for the pure list-transformation extension functions in GlobalSearchUpdateSource.kt:
@@ -21,6 +36,29 @@ import org.mockito.kotlin.whenever
  * integration tests that construct it with a real viewModelScope.
  */
 class GlobalSearchUpdateEventSourceTest {
+    private val dispatcher = StandardTestDispatcher()
+    private val fileTransferService = mock<FileTransferService>()
+    private val attachmentLogic = mock<PersistenceAttachmentLogic>()
+    private val fileChecksumDao = mock<FileChecksumDao>()
+
+    @Before
+    fun setUp() {
+        stopKoin()
+        SceytKoinApp.koinApp = startKoin {
+            modules(module {
+                single<FileTransferService> { fileTransferService }
+                single<PersistenceAttachmentLogic> { attachmentLogic }
+                single<FileChecksumDao> { fileChecksumDao }
+                single<CoroutineContext>(named(CoroutineContextType.SingleThreaded)) { dispatcher }
+            })
+        }
+    }
+
+    @After
+    fun tearDown() {
+        SceytKoinApp.koinApp = null
+        stopKoin()
+    }
 
     // ─── applyChannelMessageUpdateEvent: ChannelUpdated ──────────────────────────
 
@@ -463,6 +501,139 @@ class GlobalSearchUpdateEventSourceTest {
         assertThat(result.filterIsInstance<GlobalSearchListItem.AttachmentItem>()).hasSize(1)
     }
 
+    @Test
+    fun `TransferUpdated Downloaded updates matching attachment state and file path`() {
+        val list = listOf(
+            GlobalSearchListItem.DateSeparator(1000L),
+            fakeAttachmentItem(
+                msgId = 1L,
+                channelId = 10L,
+                attachment = fakeAttachment(
+                    messageTid = 101L,
+                    filePath = null,
+                    transferState = TransferState.PendingDownload,
+                    progressPercent = 0f,
+                    url = "remote-url"
+                )
+            ),
+        )
+
+        val result = list.applyAttachmentUpdateEvent(
+            GlobalSearchUpdateEvent.TransferUpdated(
+                TransferData(
+                    messageTid = 101L,
+                    progressPercent = 100f,
+                    state = TransferState.Downloaded,
+                    filePath = "/tmp/downloaded.pdf",
+                    url = "remote-url"
+                )
+            )
+        )
+
+        val updated = result.filterIsInstance<GlobalSearchListItem.AttachmentItem>().first()
+        assertThat(updated.result.attachment.transferState).isEqualTo(TransferState.Downloaded)
+        assertThat(updated.result.attachment.progressPercent).isEqualTo(100f)
+        assertThat(updated.result.attachment.filePath).isEqualTo("/tmp/downloaded.pdf")
+    }
+
+    @Test
+    fun `TransferUpdated keeps existing url when incoming url is missing`() {
+        val list = listOf(
+            GlobalSearchListItem.DateSeparator(1000L),
+            fakeAttachmentItem(
+                msgId = 1L,
+                channelId = 10L,
+                attachment = fakeAttachment(
+                    messageTid = 101L,
+                    filePath = "/tmp/downloaded.pdf",
+                    transferState = TransferState.Downloaded,
+                    progressPercent = 100f,
+                    url = "remote-url"
+                )
+            ),
+        )
+
+        val result = list.applyAttachmentUpdateEvent(
+            GlobalSearchUpdateEvent.TransferUpdated(
+                TransferData(
+                    messageTid = 101L,
+                    progressPercent = 42f,
+                    state = TransferState.ErrorDownload,
+                    filePath = null,
+                    url = null
+                )
+            )
+        )
+
+        val updated = result.filterIsInstance<GlobalSearchListItem.AttachmentItem>().first()
+        assertThat(updated.result.attachment.transferState).isEqualTo(TransferState.ErrorDownload)
+        assertThat(updated.result.attachment.progressPercent).isEqualTo(42f)
+        assertThat(updated.result.attachment.filePath).isNull()
+        assertThat(updated.result.attachment.url).isEqualTo("remote-url")
+    }
+
+    @Test
+    fun `TransferUpdated ThumbLoaded applies transfer data to attachment`() {
+        val attachmentItem = fakeAttachmentItem(
+            msgId = 1L,
+            channelId = 10L,
+            attachment = fakeAttachment(
+                messageTid = 101L,
+                filePath = "/tmp/downloaded.pdf",
+                transferState = TransferState.Downloaded,
+                progressPercent = 100f
+            )
+        )
+        val list = listOf(
+            GlobalSearchListItem.DateSeparator(1000L),
+            attachmentItem,
+        )
+
+        val result = list.applyAttachmentUpdateEvent(
+            GlobalSearchUpdateEvent.TransferUpdated(
+                TransferData(
+                    messageTid = 101L,
+                    progressPercent = 100f,
+                    state = TransferState.ThumbLoaded,
+                    filePath = "/tmp/thumb.jpg",
+                    url = null
+                )
+            )
+        )
+
+        val updated = result.filterIsInstance<GlobalSearchListItem.AttachmentItem>().first()
+        assertThat(updated.result.attachment.filePath).isEqualTo("/tmp/thumb.jpg")
+        assertThat(updated.result.attachment.transferState).isEqualTo(TransferState.ThumbLoaded)
+        assertThat(updated).isNotSameInstanceAs(attachmentItem)
+    }
+
+    @Test
+    fun `TransferUpdated for non matching messageTid keeps attachment list content unchanged`() {
+        val attachmentItem = fakeAttachmentItem(
+            msgId = 1L,
+            channelId = 10L,
+            attachment = fakeAttachment(messageTid = 101L)
+        )
+        val list = listOf(
+            GlobalSearchListItem.DateSeparator(1000L),
+            attachmentItem,
+        )
+
+        val result = list.applyAttachmentUpdateEvent(
+            GlobalSearchUpdateEvent.TransferUpdated(
+                TransferData(
+                    messageTid = 202L,
+                    progressPercent = 100f,
+                    state = TransferState.Downloaded,
+                    filePath = "/tmp/downloaded.pdf",
+                    url = null
+                )
+            )
+        )
+
+        assertThat(result).containsExactlyElementsIn(list).inOrder()
+    }
+
     // ─── Helpers ──────────────────────────────────────────────────────────────────
 
     private fun fakeChannel(id: Long): SceytChannel {
@@ -486,8 +657,36 @@ class GlobalSearchUpdateEventSourceTest {
         return GlobalSearchListItem.MessageItem(result, query = "")
     }
 
-    private fun fakeAttachmentItem(msgId: Long, channelId: Long): GlobalSearchListItem.AttachmentItem {
-        val attachment = mock<SceytAttachment>()
+    private fun fakeAttachment(
+        messageTid: Long,
+        filePath: String? = null,
+        transferState: TransferState? = TransferState.PendingDownload,
+        progressPercent: Float? = 0f,
+        url: String? = null,
+        createdAt: Long = 1000L,
+    ) = SceytAttachment(
+        id = messageTid,
+        messageId = messageTid,
+        messageTid = messageTid,
+        userId = null,
+        name = "file-$messageTid",
+        type = "file",
+        metadata = null,
+        fileSize = 128L,
+        createdAt = createdAt,
+        url = url,
+        filePath = filePath,
+        transferState = transferState,
+        progressPercent = progressPercent,
+        originalFilePath = null,
+        linkPreviewDetails = null
+    )
+
+    private fun fakeAttachmentItem(
+        msgId: Long,
+        channelId: Long,
+        attachment: SceytAttachment = fakeAttachment(messageTid = msgId, createdAt = 1000L),
+    ): GlobalSearchListItem.AttachmentItem {
         val result = GlobalSearchAttachmentResult(
             attachment = attachment,
             message = fakeMessage(id = msgId, state = null),

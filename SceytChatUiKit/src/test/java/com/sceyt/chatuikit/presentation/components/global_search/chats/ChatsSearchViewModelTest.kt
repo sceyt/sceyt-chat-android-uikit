@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.presentation.components.global_search.chats
 
+import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import com.google.common.truth.Truth.assertThat
 import com.sceyt.chat.ChatClient
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
@@ -10,8 +11,12 @@ import com.sceyt.chatuikit.data.models.search.GlobalSearchAttachmentResult
 import com.sceyt.chatuikit.data.models.search.GlobalSearchMessageResult
 import com.sceyt.chatuikit.data.models.search.GlobalSearchPage
 import com.sceyt.chatuikit.koin.SceytKoinApp
+import com.sceyt.chatuikit.persistence.database.dao.FileChecksumDao
+import com.sceyt.chatuikit.persistence.di.CoroutineContextType
 import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
 import com.sceyt.chatuikit.persistence.interactor.GlobalSearchDataSource
+import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
+import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchListItem
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchSessionState
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchSessionStore
@@ -27,9 +32,11 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
+import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import org.mockito.MockedStatic
 import org.mockito.Mockito
@@ -38,12 +45,18 @@ import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.mockStatic
 import org.mockito.kotlin.whenever
+import kotlin.coroutines.CoroutineContext
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ChatsSearchViewModelTest {
+    @get:Rule
+    val instantTaskExecutorRule = InstantTaskExecutorRule()
 
     private val dispatcher = StandardTestDispatcher()
     private val channelInteractor = mock<ChannelInteractor>()
+    private val fileTransferService = mock<FileTransferService>()
+    private val attachmentLogic = mock<PersistenceAttachmentLogic>()
+    private val fileChecksumDao = mock<FileChecksumDao>()
     private lateinit var chatClientStaticMock: MockedStatic<ChatClient>
 
     @Before
@@ -58,6 +71,10 @@ class ChatsSearchViewModelTest {
         SceytKoinApp.koinApp = startKoin {
             modules(module {
                 single<ChannelInteractor> { channelInteractor }
+                single<FileTransferService> { fileTransferService }
+                single<PersistenceAttachmentLogic> { attachmentLogic }
+                single<FileChecksumDao> { fileChecksumDao }
+                single<CoroutineContext>(named(CoroutineContextType.SingleThreaded)) { dispatcher }
             })
         }
         runBlocking {
