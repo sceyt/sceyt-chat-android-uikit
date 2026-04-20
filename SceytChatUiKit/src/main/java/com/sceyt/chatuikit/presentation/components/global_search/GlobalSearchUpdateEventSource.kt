@@ -1,10 +1,10 @@
 package com.sceyt.chatuikit.presentation.components.global_search
 
 import com.sceyt.chat.models.message.MessageState
-import com.sceyt.chatuikit.data.managers.message.MessageEventManager
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
+import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.shareIn
 sealed class GlobalSearchUpdateEvent {
     data class ChannelUpdated(val channel: SceytChannel) : GlobalSearchUpdateEvent()
     data class ChannelsDeleted(val ids: List<Long>) : GlobalSearchUpdateEvent()
-    data class MessageUpdated(val message: SceytMessage) : GlobalSearchUpdateEvent()
+    data class MessagesUpdated(val messages: List<SceytMessage>) : GlobalSearchUpdateEvent()
 
     /**
      * Returns true if this event should trigger a refresh key update.
@@ -26,7 +26,9 @@ sealed class GlobalSearchUpdateEvent {
         get() = when (this) {
             is ChannelUpdated -> true
             is ChannelsDeleted -> false
-            is MessageUpdated -> message.state == MessageState.Edited
+            is MessagesUpdated -> messages.none {
+                it.state == MessageState.Deleted || it.state == MessageState.DeletedHard
+            }
         }
 }
 
@@ -39,8 +41,8 @@ class GlobalSearchUpdateEventSource(scope: CoroutineScope) {
         ChannelsCache.channelsDeletedFlow.map {
             GlobalSearchUpdateEvent.ChannelsDeleted(it)
         },
-        MessageEventManager.onMessageEditedOrDeletedFlow.map {
-            GlobalSearchUpdateEvent.MessageUpdated(it)
+        MessagesCache.messageUpdatedFlow.map { (channelId, messages) ->
+            GlobalSearchUpdateEvent.MessagesUpdated(messages)
         }
     ).shareIn(
         scope = scope,
@@ -66,27 +68,28 @@ fun List<GlobalSearchListItem>.applyChannelMessageUpdateEvent(
         item !is GlobalSearchListItem.ChannelItem || item.channel.id !in event.ids
     }.removeEmptySectionHeaders()
 
-    is GlobalSearchUpdateEvent.MessageUpdated -> {
-        val isDeleted = event.message.state == MessageState.Deleted
-                || event.message.state == MessageState.DeletedHard
-        if (isDeleted) {
-            filter {
-                it !is GlobalSearchListItem.MessageItem || it.result.message.id != event.message.id
-            }.removeEmptySectionHeaders()
-        } else {
-            map { item ->
-                if (item is GlobalSearchListItem.MessageItem && item.result.message.id == event.message.id)
-                    item.copy(result = item.result.copy(message = event.message))
-                else item
-            }
+    is GlobalSearchUpdateEvent.MessagesUpdated -> {
+        val (deleted, updated) = event.messages.partition {
+            it.state == MessageState.Deleted || it.state == MessageState.DeletedHard
         }
+        val deletedIds = deleted.mapTo(mutableSetOf()) { it.id }
+        val updatedMap = updated.associateBy { it.id }
+        mapNotNull { item ->
+            if (item is GlobalSearchListItem.MessageItem) {
+                if (item.result.message.id in deletedIds) null
+                else updatedMap[item.result.message.id]
+                    ?.let { item.copy(result = item.result.copy(message = it)) }
+                    ?: item
+            } else item
+        }.removeEmptySectionHeaders()
     }
 }
 
 /**
  * Applies a [GlobalSearchUpdateEvent] to a list of items for the attachment tabs
- * (Media, Files, Voice, Links). Only handles deletions — channel renames and message
- * edits do not affect attachment items visually.
+ * (Media, Files, Voice, Links). Handles deletions and, for the Media tab's list
+ * (non-grid) mode where message body is displayed, message edits.
+ * Channel renames do not affect attachment items visually.
  */
 fun List<GlobalSearchListItem>.applyAttachmentUpdateEvent(
     event: GlobalSearchUpdateEvent,
@@ -97,21 +100,20 @@ fun List<GlobalSearchListItem>.applyAttachmentUpdateEvent(
         item !is GlobalSearchListItem.AttachmentItem || item.result.channel.id !in event.ids
     }.removeEmptyDateSeparators()
 
-    is GlobalSearchUpdateEvent.MessageUpdated -> {
-        val isDeleted =
-            event.message.state == MessageState.Deleted || event.message.state == MessageState.DeletedHard
-
-        if (isDeleted)
-            filter {
-                it !is GlobalSearchListItem.AttachmentItem || it.result.message.id != event.message.id
-            }.removeEmptyDateSeparators()
-        else {
-            map { item ->
-                if (item is GlobalSearchListItem.AttachmentItem && item.result.message.id == event.message.id)
-                    item.copy(result = item.result.copy(message = event.message))
-                else item
-            }
+    is GlobalSearchUpdateEvent.MessagesUpdated -> {
+        val (deleted, updated) = event.messages.partition {
+            it.state == MessageState.Deleted || it.state == MessageState.DeletedHard
         }
+        val deletedIds = deleted.mapTo(mutableSetOf()) { it.id }
+        val updatedMap = updated.associateBy { it.id }
+        mapNotNull { item ->
+            if (item is GlobalSearchListItem.AttachmentItem) {
+                if (item.result.message.id in deletedIds) null
+                else updatedMap[item.result.message.id]
+                    ?.let { item.copy(result = item.result.copy(message = it)) }
+                    ?: item
+            } else item
+        }.removeEmptyDateSeparators()
     }
 }
 
