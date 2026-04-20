@@ -52,6 +52,11 @@ sealed interface MediaSearchDisplayMode {
         is SearchList -> items.isEmpty()
     }
 
+    fun getListItems(): List<GlobalSearchListItem> = when (this) {
+        is Grid -> items
+        is SearchList -> items
+    }
+
     companion object {
         val EMPTY_GRID = Grid(emptyList(), offset = 0)
         val EMPTY_SEARCH_LIST = SearchList(emptyList(), offset = 0)

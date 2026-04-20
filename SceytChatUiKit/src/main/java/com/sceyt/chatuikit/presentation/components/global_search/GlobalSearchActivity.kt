@@ -29,6 +29,7 @@ import androidx.recyclerview.widget.LinearLayoutManager.HORIZONTAL
 import androidx.viewpager2.widget.ViewPager2
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
+import com.sceyt.chatuikit.data.models.messages.AttachmentWithUserData
 import com.sceyt.chatuikit.data.models.search.GlobalSearchAttachmentKind
 import com.sceyt.chatuikit.data.models.search.GlobalSearchAttachmentResult
 import com.sceyt.chatuikit.databinding.SceytActivityGlobalSearchBinding
@@ -323,13 +324,19 @@ open class GlobalSearchActivity : AppCompatActivity(), GlobalSearchClickListener
         }
     }
 
-    override fun onMediaAttachmentClicked(sharedView: View, result: GlobalSearchAttachmentResult) {
+    override fun onMediaAttachmentClicked(
+        sharedView: View,
+        result: GlobalSearchAttachmentResult,
+        allResults: List<GlobalSearchAttachmentResult>,
+    ) {
         hideKeyboard(binding.searchInputView.input())
-        MediaPreviewActivity.launch(
+        val items = allResults.map { AttachmentWithUserData(it.attachment, it.sender) }
+        val initialIndex = items.indexOfFirst { it.attachment.id == result.attachment.id }
+            .coerceAtLeast(0)
+        MediaPreviewActivity.launchFromSearchList(
             activity = this,
-            attachment = result.attachment,
-            from = result.sender,
-            channelId = result.channel.id,
+            items = items,
+            initialIndex = initialIndex,
             showInChatChannel = result.channel,
             sourceView = sharedView,
         )

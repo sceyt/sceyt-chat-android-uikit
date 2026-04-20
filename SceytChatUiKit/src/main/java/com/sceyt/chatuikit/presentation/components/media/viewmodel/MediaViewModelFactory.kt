@@ -10,6 +10,7 @@ import com.sceyt.chatuikit.data.models.messages.AttachmentWithUserData
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.parcelable
+import com.sceyt.chatuikit.presentation.components.media.MediaPreviewTransferHolder
 
 class MediaViewModelFactory(
     private val intent: Intent,
@@ -25,9 +26,10 @@ class MediaViewModelFactory(
             AttachmentWithUserData(it, user)
         }
         val types = mediaTypes.map { it.value }
+        val preloadedData = MediaPreviewTransferHolder.consume()
 
         @Suppress("UNCHECKED_CAST")
-        return MediaViewModel(reversed, channelId, types, openedAttachmentData) as T
+        return MediaViewModel(reversed, channelId, types, openedAttachmentData, preloadedData) as T
     }
 
     companion object {
