@@ -278,7 +278,7 @@ class ChannelsViewModel(
                 if (response.data is SceytResponse.Success && response.hasDiff) {
                     _state.update { it.copy(channels = mapToChannels(response.cacheData), hasNext = response.hasNext) }
                 } else if (!hasNextDb) {
-                    _state.update { it.copy(hasNext = hasNext || hasNextDb) }
+                    _state.update { it.copy(hasNext = response.hasNext) }
                 }
                 notifyPageStateWithResponse(
                     response = response.data,
