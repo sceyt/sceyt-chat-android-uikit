@@ -28,6 +28,7 @@ data class GlobalSearchStyle(
     ) {
         fun build(): GlobalSearchStyle {
             val colors = SceytChatUIKit.theme.colors
+            val linksPageStyle = LinksSearchPageStyle.Builder(context).build()
             return GlobalSearchStyle(
                 backgroundColor = context.getCompatColor(colors.backgroundColor),
                 dividerColor = context.getCompatColor(colors.borderColor),
@@ -40,7 +41,11 @@ data class GlobalSearchStyle(
                 mediaPageStyle = MediaSearchPageStyle.Builder(context, attrs).build(),
                 filesPageStyle = FilesSearchPageStyle.Builder(context).build(),
                 voicePageStyle = VoiceSearchPageStyle.Builder(context).build(),
-                linksPageStyle = LinksSearchPageStyle.Builder(context).build(),
+                linksPageStyle = linksPageStyle.copy(
+                    linkItemStyle = linksPageStyle.linkItemStyle.copy(
+                        backgroundColor = context.getCompatColor(colors.backgroundColor)
+                    )
+                ),
             )
         }
     }
