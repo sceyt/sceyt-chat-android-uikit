@@ -17,6 +17,7 @@ import com.sceyt.chatuikit.persistence.interactor.AttachmentInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
 import com.sceyt.chatuikit.persistence.mappers.getInfoFromMetadata
 import com.sceyt.chatuikit.persistence.mappers.toTransferData
+import com.sceyt.chatuikit.presentation.components.media.MediaPreviewTransferHolder
 import com.sceyt.chatuikit.presentation.components.media.adapter.MediaItem
 import com.sceyt.chatuikit.presentation.components.media.adapter.MediaItemType
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
@@ -35,6 +36,7 @@ class MediaViewModel(
     private val channelId: Long,
     private val mediaTypes: List<String>,
     openedAttachmentData: AttachmentWithUserData? = null,
+    preloadedData: MediaPreviewTransferHolder.PreloadedData? = null,
 ) : BaseViewModel(), SceytKoinComponent {
 
     private val messageInteractor: MessageInteractor by inject()
@@ -42,17 +44,19 @@ class MediaViewModel(
     private val fileTransferService: FileTransferService by inject()
 
     val openedWithAttachment = openedAttachmentData?.attachment
+    val initialScrollIndex: Int = preloadedData?.initialIndex ?: 0
 
-    private val initialItems: List<MediaItem> = openedAttachmentData
-        ?.toMediaItem()
-        ?.let(::listOf)
-        .orEmpty()
+    private val isPreloaded = preloadedData != null
+
+    private val initialItems: List<MediaItem> =
+        preloadedData?.items?.mapNotNull { it.toMediaItem() }
+            ?: openedAttachmentData?.toMediaItem()?.let(::listOf).orEmpty()
 
     private val _mediaItems = MutableStateFlow(initialItems)
     val mediaItems: StateFlow<List<MediaItem>> = _mediaItems.asStateFlow()
 
     init {
-        loadInitial()
+        if (!isPreloaded) loadInitial()
     }
 
     private fun loadInitial() {
@@ -69,6 +73,7 @@ class MediaViewModel(
     }
 
     fun checkAndLoadPrev() {
+        if (isPreloaded) return
         if (!canLoadPrev()) return
         val items = _mediaItems.value
         val anchor = if (reversed) items.lastOrNull() else items.firstOrNull()
@@ -81,6 +86,7 @@ class MediaViewModel(
     }
 
     fun checkAndLoadNext() {
+        if (isPreloaded) return
         if (!canLoadNext()) return
         val items = _mediaItems.value
         val anchor = if (reversed) items.firstOrNull() else items.lastOrNull()

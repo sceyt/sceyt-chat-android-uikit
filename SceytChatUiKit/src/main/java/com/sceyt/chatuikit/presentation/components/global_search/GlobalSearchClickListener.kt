@@ -8,5 +8,9 @@ interface GlobalSearchClickListener {
     fun onChannelClicked(channel: SceytChannel)
     fun onMessageClicked(messageId: Long, channel: SceytChannel)
     fun onAttachmentClicked(result: GlobalSearchAttachmentResult)
-    fun onMediaAttachmentClicked(sharedView: View, result: GlobalSearchAttachmentResult)
+    fun onMediaAttachmentClicked(
+        sharedView: View,
+        result: GlobalSearchAttachmentResult,
+        allResults: List<GlobalSearchAttachmentResult>,
+    )
 }

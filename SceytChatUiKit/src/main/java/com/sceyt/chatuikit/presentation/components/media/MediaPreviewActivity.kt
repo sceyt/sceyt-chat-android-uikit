@@ -31,6 +31,7 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.toIntentPayload
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
+import com.sceyt.chatuikit.data.models.messages.AttachmentWithUserData
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.databinding.SceytActivityMediaPreviewBinding
@@ -151,7 +152,9 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
     }
 
     private fun initPageWithData() {
-        viewModel.mediaItems.value.firstOrNull()?.let { loadMediaDetail(it) }
+        val items = viewModel.mediaItems.value
+        val initialItem = items.getOrNull(viewModel.initialScrollIndex) ?: items.firstOrNull()
+        initialItem?.let { loadMediaDetail(it) }
         startSharedTransitionWhenReady()
     }
 
@@ -201,6 +204,9 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
                 adapter.shouldPlayVideoPath = attachment.filePath
             adapter.submitList(data)
         }
+
+        val scrollIndex = viewModel.initialScrollIndex
+        if (scrollIndex > 0) binding.rvMedia.scrollToPosition(scrollIndex)
 
         binding.rvMedia.apply {
             adapter = mediaAdapter
@@ -448,6 +454,33 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
                     showInChatChannel = showInChatChannel,
                     launchedWithSharedTransition = false,
                 )
+            }
+        }
+
+        fun launchFromSearchList(
+            activity: Activity,
+            items: List<AttachmentWithUserData>,
+            initialIndex: Int,
+            showInChatChannel: SceytChannel? = null,
+            sourceView: View,
+        ) {
+            if (!canLaunchPreview()) return
+            MediaPreviewTransferHolder.set(
+                MediaPreviewTransferHolder.PreloadedData(items, initialIndex)
+            )
+            ViewCompat.setTransitionName(sourceView, SHARED_TRANSITION_NAME)
+            val options = ActivityOptionsCompat.makeSceneTransitionAnimation(
+                activity,
+                sourceView,
+                SHARED_TRANSITION_NAME
+            )
+            activity.launchActivity<MediaPreviewActivity>(
+                options = options.toBundle() ?: Bundle()
+            ) {
+                putExtra(EXTRA_SHARED_TRANSITION, true)
+                showInChatChannel?.let {
+                    putExtra(KEY_SHOW_IN_CHAT_CHANNEL, it.toIntentPayload())
+                }
             }
         }
 

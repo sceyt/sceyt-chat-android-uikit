@@ -19,6 +19,7 @@ import com.sceyt.chatuikit.persistence.extensions.collectWithLifecycle
 import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.MediaStickHeaderItemDecoration
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchActivity
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchClickListener
+import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchListItem
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchSession
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchSessionResolver
 import com.sceyt.chatuikit.presentation.components.global_search.media.adapter.MediaSearchListAdapter
@@ -216,7 +217,10 @@ open class MediaSearchFragment : Fragment(R.layout.sceyt_fragment_media_search) 
         sharedView: View,
         result: GlobalSearchAttachmentResult,
     ) {
-        clickListener?.onMediaAttachmentClicked(sharedView, result)
+        val allResults = viewModel.state.value.mode.getListItems()
+            .filterIsInstance<GlobalSearchListItem.AttachmentItem>()
+            .map { it.result }
+        clickListener?.onMediaAttachmentClicked(sharedView, result, allResults)
     }
 
     protected open fun onAttachmentClicked(result: GlobalSearchAttachmentResult) {
