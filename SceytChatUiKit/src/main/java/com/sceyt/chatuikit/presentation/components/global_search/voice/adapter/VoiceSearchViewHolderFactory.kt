@@ -18,6 +18,7 @@ open class VoiceSearchViewHolderFactory(
     protected val style: VoiceSearchPageStyle,
     private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
     private val onAttachmentClick: (GlobalSearchListItem.AttachmentItem) -> Unit,
+    private val onAttachmentLoaderClick: ((GlobalSearchListItem.AttachmentItem) -> Unit)? = null,
 ) {
     protected val layoutInflater: LayoutInflater = LayoutInflater.from(context)
 
@@ -63,6 +64,7 @@ open class VoiceSearchViewHolderFactory(
             binding = SceytItemChannelVoiceBinding.inflate(layoutInflater, parent, false),
             needMediaDataCallback = needMediaDataCallback,
             onAttachmentClickListener = onAttachmentClick,
+            onAttachmentLoaderClickListener = onAttachmentLoaderClick,
         )
     }
 

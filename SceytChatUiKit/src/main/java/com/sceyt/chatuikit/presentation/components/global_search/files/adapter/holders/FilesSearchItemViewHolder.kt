@@ -17,6 +17,7 @@ open class FilesSearchItemViewHolder(
     private val binding: SceytItemChannelFileBinding,
     private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
     private val onAttachmentClickListener: ((GlobalSearchListItem.AttachmentItem) -> Unit)?,
+    private val onAttachmentLoaderClickListener: ((GlobalSearchListItem.AttachmentItem) -> Unit)? = null,
 ) : BaseFileViewHolder<GlobalSearchListItem.AttachmentItem>(binding.root, needMediaDataCallback) {
 
     init {
@@ -25,8 +26,7 @@ open class FilesSearchItemViewHolder(
             onAttachmentClickListener?.invoke(fileItem)
         }
         binding.loadProgress.setOnClickListener {
-            // Toggle download/cancel on progress tap
-            onAttachmentClickListener?.invoke(fileItem)
+            onAttachmentLoaderClickListener?.invoke(fileItem)
         }
     }
 

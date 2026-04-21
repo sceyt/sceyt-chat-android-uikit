@@ -70,6 +70,7 @@ open class VoiceSearchFragment : Fragment(R.layout.sceyt_fragment_voice_search) 
             context = requireContext(),
             style = style.voicePageStyle,
             needMediaDataCallback = viewModel::onNeedMediaInfo,
+            onAttachmentLoaderClick = viewModel::pauseOrResumeTransfer,
             onAttachmentClick = { item -> onAttachmentClicked(item.result) },
         )
     }

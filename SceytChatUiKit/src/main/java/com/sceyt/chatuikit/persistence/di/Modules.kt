@@ -63,6 +63,7 @@ import com.sceyt.chatuikit.persistence.logicimpl.usecases.RemovePollVoteUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.RetractPollVoteUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.SendPollPendingVotesUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.SetUserPresenceUseCase
+import com.sceyt.chatuikit.domain.usecases.PauseOrResumeTransferUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.ShouldShowNotificationUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.TogglePollVoteUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.UpdatePollUseCase
@@ -162,6 +163,7 @@ internal val logicModule = module {
 }
 
 internal val useCaseModule = module {
+    factoryOf(::PauseOrResumeTransferUseCase)
     factoryOf(::ShouldShowNotificationUseCase)
     factoryOf(::AddPollVoteUseCase)
     factoryOf(::RemovePollVoteUseCase)

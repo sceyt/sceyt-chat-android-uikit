@@ -1,17 +1,15 @@
 package com.sceyt.chatuikit.presentation.components.channel_info.media.viewmodel
 
-import android.app.Application
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.asFlow
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewModelScope
-import androidx.work.ExistingWorkPolicy
 import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.AttachmentWithUserData
-import com.sceyt.chatuikit.data.models.messages.SceytAttachment
+import com.sceyt.chatuikit.domain.usecases.PauseOrResumeTransferUseCase
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferHelper
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
@@ -20,7 +18,6 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import com.sceyt.chatuikit.persistence.mappers.getInfoFromMetadata
 import com.sceyt.chatuikit.persistence.mappers.toTransferData
-import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelFileItem
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelFileItemType
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
@@ -36,7 +33,7 @@ import kotlinx.coroutines.launch
 class ChannelAttachmentsViewModel(
     private val attachmentLogic: PersistenceAttachmentLogic,
     private val fileTransferService: FileTransferService,
-    private val application: Application,
+    private val pauseOrResumeTransferUseCase: PauseOrResumeTransferUseCase,
 ) : BaseViewModel() {
     private val needToUpdateTransferAfterOnResume = hashMapOf<Long, TransferData>()
 
@@ -182,69 +179,6 @@ class ChannelAttachmentsViewModel(
         return fileItems
     }
 
-    private fun prepareToPauseOrResumeUpload(item: SceytAttachment, channelId: Long) {
-        when (val state = item.transferState ?: return) {
-            TransferState.PendingUpload, TransferState.ErrorUpload -> {
-                UploadAndSendAttachmentWorkManager.schedule(application, item.messageTid, channelId)
-            }
-
-            TransferState.PendingDownload, TransferState.ErrorDownload -> {
-                fileTransferService.download(item, FileTransferHelper.createTransferTask(item))
-            }
-
-            TransferState.PauseDownload -> {
-                val task = fileTransferService.findTransferTask(item)
-                if (task != null)
-                    fileTransferService.resume(item.messageTid, item, state)
-                else fileTransferService.download(item, FileTransferHelper.createTransferTask(item))
-            }
-
-            TransferState.PauseUpload -> {
-                val task = fileTransferService.findTransferTask(item)
-                if (task != null)
-                    fileTransferService.resume(item.messageTid, item, state)
-                else {
-                    // Update transfer state to Uploading, otherwise SendAttachmentWorkManager will
-                    // not start uploading.
-                    viewModelScope.launch(Dispatchers.IO) {
-                        attachmentLogic.updateTransferDataByMsgTid(
-                            TransferData(
-                                messageTid = item.messageTid,
-                                progressPercent = item.progressPercent ?: 0f,
-                                state = TransferState.Uploading,
-                                filePath = item.filePath,
-                                url = item.url
-                            )
-                        )
-                    }
-
-                    UploadAndSendAttachmentWorkManager.schedule(
-                        context = application,
-                        messageTid = item.messageTid,
-                        channelId = channelId,
-                        workPolicy = ExistingWorkPolicy.REPLACE
-                    )
-                }
-            }
-
-            TransferState.Uploading, TransferState.Downloading, TransferState.Preparing, TransferState.FilePathChanged, TransferState.WaitingToUpload -> {
-                fileTransferService.pause(item.messageTid, item, state)
-            }
-
-            TransferState.Uploaded, TransferState.Downloaded, TransferState.ThumbLoaded -> {
-                val transferData = TransferData(
-                    messageTid = item.messageTid,
-                    progressPercent = item.progressPercent ?: 0f,
-                    state = item.transferState,
-                    filePath = item.filePath,
-                    url = item.url
-                )
-
-                FileTransferHelper.emitAttachmentTransferUpdate(transferData)
-            }
-        }
-    }
-
     fun needMediaInfo(data: NeedMediaInfoData) {
         val attachment = data.item
         when (data) {
@@ -266,8 +200,8 @@ class ChannelAttachmentsViewModel(
     }
 
     fun pauseOrResumeUpload(item: ChannelFileItem, channelId: Long) {
-        viewModelScope.launch(Dispatchers.IO) {
-            prepareToPauseOrResumeUpload(item.attachment, channelId)
+        viewModelScope.launch {
+            pauseOrResumeTransferUseCase(item.attachment, channelId)
         }
     }
 

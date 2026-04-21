@@ -70,6 +70,7 @@ open class FilesSearchFragment : Fragment(R.layout.sceyt_fragment_files_search) 
             context = requireContext(),
             style = style.filesPageStyle,
             needMediaDataCallback = viewModel::onNeedMediaInfo,
+            onAttachmentLoaderClick = viewModel::pauseOrResumeTransfer,
             onAttachmentClick = { item -> onAttachmentClicked(item.result) },
         )
     }

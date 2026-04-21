@@ -18,6 +18,7 @@ open class FilesSearchViewHolderFactory(
     protected val style: FilesSearchPageStyle,
     private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
     private val onAttachmentClick: (GlobalSearchListItem.AttachmentItem) -> Unit,
+    private val onAttachmentLoaderClick: ((GlobalSearchListItem.AttachmentItem) -> Unit)? = null,
 ) {
     protected val layoutInflater: LayoutInflater = LayoutInflater.from(context)
 
@@ -63,6 +64,7 @@ open class FilesSearchViewHolderFactory(
             binding = SceytItemChannelFileBinding.inflate(layoutInflater, parent, false),
             needMediaDataCallback = needMediaDataCallback,
             onAttachmentClickListener = onAttachmentClick,
+            onAttachmentLoaderClickListener = onAttachmentLoaderClick,
         )
     }
 

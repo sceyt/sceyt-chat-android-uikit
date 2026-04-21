@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chatuikit.data.models.search.GlobalSearchAttachmentKind
 import com.sceyt.chatuikit.data.models.search.GlobalSearchAttachmentResult
+import com.sceyt.chatuikit.domain.usecases.PauseOrResumeTransferUseCase
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
@@ -58,6 +59,7 @@ open class VoiceSearchViewModel(
 ) : ViewModel(), SceytKoinComponent {
 
     private val fileTransferService: FileTransferService by inject()
+    private val pauseOrResumeTransferUseCase: PauseOrResumeTransferUseCase by inject()
     private val globalSearchUpdateEventSource = GlobalSearchUpdateEventSource(viewModelScope)
 
     private val _state = MutableStateFlow(VoiceSearchState(isLoading = true))
@@ -184,6 +186,12 @@ open class VoiceSearchViewModel(
                 add(GlobalSearchListItem.AttachmentItem(result, query = ""))
                 prevTimestamp = createdAt
             }
+        }
+    }
+
+    fun pauseOrResumeTransfer(item: GlobalSearchListItem.AttachmentItem) {
+        viewModelScope.launch {
+            pauseOrResumeTransferUseCase(item.attachment)
         }
     }
 
