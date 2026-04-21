@@ -333,7 +333,7 @@ open class GlobalSearchActivity : AppCompatActivity(), GlobalSearchClickListener
         val items = allResults.map { AttachmentWithUserData(it.attachment, it.sender) }
         val initialIndex = items.indexOfFirst { it.attachment.id == result.attachment.id }
             .coerceAtLeast(0)
-        MediaPreviewActivity.launchFromSearchList(
+        MediaPreviewActivity.launchWithPreloadedData(
             activity = this,
             items = items,
             initialIndex = initialIndex,

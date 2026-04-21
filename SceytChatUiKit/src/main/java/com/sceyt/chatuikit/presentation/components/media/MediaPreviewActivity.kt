@@ -457,7 +457,7 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
             }
         }
 
-        fun launchFromSearchList(
+        fun launchWithPreloadedData(
             activity: Activity,
             items: List<AttachmentWithUserData>,
             initialIndex: Int,
