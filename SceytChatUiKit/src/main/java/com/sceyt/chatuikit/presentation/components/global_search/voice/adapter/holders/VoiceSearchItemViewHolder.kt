@@ -28,19 +28,26 @@ open class VoiceSearchItemViewHolder(
     private val binding: SceytItemChannelVoiceBinding,
     private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
     private val onAttachmentClickListener: ((GlobalSearchListItem.AttachmentItem) -> Unit)?,
+    private val onAttachmentLoaderClickListener: ((GlobalSearchListItem.AttachmentItem) -> Unit)? = null,
 ) : BaseFileViewHolder<GlobalSearchListItem.AttachmentItem>(binding.root, needMediaDataCallback) {
 
     private var lastFilePath: String? = ""
 
     init {
         binding.applyStyle()
+
         binding.root.setOnClickListener {
             onAttachmentClickListener?.invoke(fileItem)
         }
+
         binding.icFile.setOnClickListener {
             if (AudioPlayerHelper.alreadyInitialized(fileItem)) {
                 AudioPlayerHelper.toggle(fileItem.attachment)
             } else initAudioPlayer()
+        }
+
+        binding.loadProgress.setOnClickListener {
+            onAttachmentLoaderClickListener?.invoke(fileItem)
         }
     }
 
@@ -98,7 +105,11 @@ open class VoiceSearchItemViewHolder(
                     binding.root.post { setPlayingState(false) }
                 }
 
-                override fun onSpeedChanged(speed: Float, filePath: String, messageTid: MessageTid) = Unit
+                override fun onSpeedChanged(
+                    speed: Float,
+                    filePath: String,
+                    messageTid: MessageTid
+                ) = Unit
 
                 override fun onError(filePath: String, messageTid: MessageTid) {
                     if (!checkIsValid(filePath, messageTid)) return
