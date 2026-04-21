@@ -32,6 +32,7 @@
         android:theme="@style/SceytAppTheme">
         <activity
             android:name=".presentation.CustomChannelActivity"
+            android:theme="@style/SceytAppTheme.Default"
             android:exported="false" />
         <activity
             android:name=".presentation.splash.SplashActivity"

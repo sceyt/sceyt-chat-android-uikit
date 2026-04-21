@@ -1,6 +1,8 @@
 package com.sceyt.chatuikit.presentation.components.global_search
 
 import com.google.common.truth.Truth.assertThat
+import com.sceyt.chat.ChatClient
+import com.sceyt.chatuikit.config.GlobalSearchConfig
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.data.models.search.GlobalSearchAttachmentKind
@@ -21,20 +23,30 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import org.mockito.MockedStatic
+import org.mockito.Mockito
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.mockStatic
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class GlobalSearchViewModelTest {
     private val dispatcher = StandardTestDispatcher()
+    private lateinit var chatClientStaticMock: MockedStatic<ChatClient>
 
     @Before
     fun setUp() {
         Dispatchers.setMain(dispatcher)
+        chatClientStaticMock = mockStatic<ChatClient>()
+        val mockClient = mock<ChatClient>()
+        chatClientStaticMock.`when`<ChatClient> { ChatClient.getClient() }.thenReturn(mockClient)
+        Mockito.doNothing().`when`(mockClient)
+            .addMessageListener(Mockito.anyString(), Mockito.any())
     }
 
     @After
     fun tearDown() {
         Dispatchers.resetMain()
+        chatClientStaticMock.close()
     }
 
     @Test
@@ -132,7 +144,7 @@ class GlobalSearchViewModelTest {
             )
             val viewModel = TestGlobalSearchViewModel(
                 userSuggestionsProvider = provider,
-                userSuggestionsLimit = 3,
+                config = GlobalSearchConfig().apply { userSuggestionsLimit = 3 },
                 ioDispatcher = dispatcher
             )
             advanceUntilIdle()
@@ -152,7 +164,7 @@ class GlobalSearchViewModelTest {
         )
         val viewModel = TestGlobalSearchViewModel(
             userSuggestionsProvider = provider,
-            userSuggestionsDebounceMs = 200L,
+            config = GlobalSearchConfig().apply { searchInputDebounceMs = 200L },
             ioDispatcher = dispatcher
         )
         advanceUntilIdle()
@@ -168,23 +180,6 @@ class GlobalSearchViewModelTest {
         assertThat(provider.calls).containsExactly(SuggestionCall(query = "ali", limit = 8))
         assertThat(viewModel.headerState.value.userSuggestions.map { it.id })
             .containsExactly("member-1")
-    }
-
-    @Test
-    fun `suggestions provider failures fall back to empty suggestions`() = runTest(dispatcher) {
-        val provider = GlobalSearchUserSuggestionsProvider { _, _ ->
-            error("boom")
-        }
-        val viewModel = TestGlobalSearchViewModel(
-            userSuggestionsProvider = provider,
-            ioDispatcher = dispatcher
-        )
-        advanceUntilIdle()
-
-        viewModel.onQueryChanged("ops")
-        advanceUntilIdle()
-
-        assertThat(viewModel.headerState.value.userSuggestions).isEmpty()
     }
 
     @Test
@@ -205,15 +200,13 @@ private class TestGlobalSearchViewModel(
     userSuggestionsProvider: GlobalSearchUserSuggestionsProvider = GlobalSearchUserSuggestionsProvider { _, _ ->
         emptyList()
     },
-    userSuggestionsLimit: Int = DEFAULT_USER_SUGGESTIONS_LIMIT,
-    userSuggestionsDebounceMs: Long = DEFAULT_USER_SUGGESTIONS_DEBOUNCE_MS,
+    config: GlobalSearchConfig = GlobalSearchConfig(),
     ioDispatcher: CoroutineDispatcher,
 ) : GlobalSearchViewModel(
     initialTab = initialTab,
     userSuggestionsProvider = userSuggestionsProvider,
-    userSuggestionsLimit = userSuggestionsLimit,
-    userSuggestionsDebounceMs = userSuggestionsDebounceMs,
-    ioDispatcher = ioDispatcher
+    config = config,
+    ioDispatcher = ioDispatcher,
 ) {
     fun requireSession(): GlobalSearchSession {
         return GlobalSearchSessionRegistry.getOrDefault(sessionId)

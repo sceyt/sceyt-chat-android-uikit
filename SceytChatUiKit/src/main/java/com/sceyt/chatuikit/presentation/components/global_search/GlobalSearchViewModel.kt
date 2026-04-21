@@ -3,23 +3,19 @@ package com.sceyt.chatuikit.presentation.components.global_search
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.sceyt.chatuikit.config.GlobalSearchConfig
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.persistence.interactor.GlobalSearchUserSuggestionsProvider
 import com.sceyt.chatuikit.presentation.components.global_search.defaults.DefaultUserSuggestionsProvider
 import com.sceyt.chatuikit.presentation.helpers.DebounceHelper
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-
-internal const val DEFAULT_USER_SUGGESTIONS_LIMIT = 8
-internal const val DEFAULT_USER_SUGGESTIONS_DEBOUNCE_MS = 0L
 
 data class GlobalSearchHeaderState(
     val activeTab: GlobalSearchTab = GlobalSearchTab.Chats,
@@ -35,9 +31,8 @@ data class GlobalSearchHeaderState(
 open class GlobalSearchViewModel(
     initialTab: GlobalSearchTab = GlobalSearchTab.Chats,
     private val userSuggestionsProvider: GlobalSearchUserSuggestionsProvider,
-    private val userSuggestionsLimit: Int = DEFAULT_USER_SUGGESTIONS_LIMIT,
-    private val userSuggestionsDebounceMs: Long = DEFAULT_USER_SUGGESTIONS_DEBOUNCE_MS,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    val config: GlobalSearchConfig = GlobalSearchConfig(),
 ) : ViewModel() {
     private val sessionStore = GlobalSearchSessionStore(
         GlobalSearchSessionState(activeTab = initialTab)
@@ -46,7 +41,7 @@ open class GlobalSearchViewModel(
     val sessionId: String = GlobalSearchSessionRegistry.newSessionId().also { sessionId ->
         GlobalSearchSessionRegistry.register(sessionId, sessionStore)
     }
-    protected val debounceHelper = DebounceHelper(200, viewModelScope)
+    protected val debounceHelper = DebounceHelper(config.searchInputDebounceMs, viewModelScope)
 
     private val _headerState = MutableStateFlow(GlobalSearchHeaderState(activeTab = initialTab))
     val headerState = _headerState.asStateFlow()
@@ -83,6 +78,7 @@ open class GlobalSearchViewModel(
 
     fun onMemberSelected(user: SceytUser) {
         suggestionJob?.cancel()
+        debounceHelper.cancelLastDebounce()
         _headerState.update {
             it.copy(
                 selectedUser = user,
@@ -101,6 +97,7 @@ open class GlobalSearchViewModel(
 
     fun onSelectedMemberRemoved() {
         suggestionJob?.cancel()
+        debounceHelper.cancelLastDebounce()
         _headerState.update {
             it.copy(
                 selectedUser = null,
@@ -145,16 +142,10 @@ open class GlobalSearchViewModel(
         }
 
         suggestionJob = viewModelScope.launch(ioDispatcher) {
-            if (userSuggestionsDebounceMs > 0) {
-                delay(userSuggestionsDebounceMs)
-            }
-            val suggestions = try {
-                userSuggestionsProvider.provideSuggestions(query, userSuggestionsLimit)
-            } catch (error: CancellationException) {
-                throw error
-            } catch (_: Throwable) {
-                emptyList()
-            }
+            val suggestions = userSuggestionsProvider.provideSuggestions(
+                query = query,
+                limit = config.userSuggestionsLimit
+            )
             withContext(Dispatchers.Main) {
                 val current = _headerState.value
                 if (current.query == query && current.selectedUser == null) {
@@ -173,9 +164,8 @@ open class GlobalSearchViewModel(
 
 internal class GlobalSearchHeaderViewModelFactory(
     private val initialTab: GlobalSearchTab,
+    private val config: GlobalSearchConfig,
     private val userSuggestionsProvider: GlobalSearchUserSuggestionsProvider = DefaultUserSuggestionsProvider(),
-    private val userSuggestionsLimit: Int = DEFAULT_USER_SUGGESTIONS_LIMIT,
-    private val userSuggestionsDebounceMs: Long = DEFAULT_USER_SUGGESTIONS_DEBOUNCE_MS,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModelProvider.Factory {
 
@@ -185,9 +175,8 @@ internal class GlobalSearchHeaderViewModelFactory(
             return GlobalSearchViewModel(
                 initialTab = initialTab,
                 userSuggestionsProvider = userSuggestionsProvider,
-                userSuggestionsLimit = userSuggestionsLimit,
-                userSuggestionsDebounceMs = userSuggestionsDebounceMs,
-                ioDispatcher = ioDispatcher
+                config = config,
+                ioDispatcher = ioDispatcher,
             ) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
