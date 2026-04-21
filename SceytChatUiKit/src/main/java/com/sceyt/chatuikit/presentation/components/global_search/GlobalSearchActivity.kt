@@ -28,6 +28,9 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager.HORIZONTAL
 import androidx.viewpager2.widget.ViewPager2
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.config.GlobalSearchCloseBehavior
+import com.sceyt.chatuikit.config.GlobalSearchConfig
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.AttachmentWithUserData
 import com.sceyt.chatuikit.data.models.search.GlobalSearchAttachmentKind
@@ -189,8 +192,7 @@ open class GlobalSearchActivity : AppCompatActivity(), GlobalSearchClickListener
         return GlobalSearchHeaderViewModelFactory(
             initialTab = providedTabs.first(),
             userSuggestionsProvider = getUserSuggestionsProvider(),
-            userSuggestionsLimit = getUserSuggestionsLimit(),
-            userSuggestionsDebounceMs = getUserSuggestionsDebounceMs()
+            config = getSearchConfig(),
         )
     }
 
@@ -198,9 +200,9 @@ open class GlobalSearchActivity : AppCompatActivity(), GlobalSearchClickListener
         return DefaultUserSuggestionsProvider()
     }
 
-    protected open fun getUserSuggestionsLimit(): Int = DEFAULT_USER_SUGGESTIONS_LIMIT
-
-    protected open fun getUserSuggestionsDebounceMs(): Long = DEFAULT_USER_SUGGESTIONS_DEBOUNCE_MS
+    protected open fun getSearchConfig(): GlobalSearchConfig {
+        return SceytChatUIKit.config.globalSearchConfig
+    }
 
     protected open fun initViews() {
         binding.tabsRecyclerView.apply {
@@ -301,9 +303,21 @@ open class GlobalSearchActivity : AppCompatActivity(), GlobalSearchClickListener
         }
     }
 
+    protected open fun closeWithoutAnimation() {
+        if (launchedWithSharedTransition()) {
+            window.sharedElementReturnTransition = null
+            window.returnTransition = null
+        }
+        finish()
+        overrideTransitions(0, 0, false)
+    }
+
     override fun onChannelClicked(channel: SceytChannel) {
         hideKeyboard(binding.searchInputView.input())
         ChannelActivity.launch(this, channel)
+        if (headerViewModel.config.closeBehavior == GlobalSearchCloseBehavior.OnChannelClick) {
+            closeWithoutAnimation()
+        }
     }
 
     override fun onMessageClicked(messageId: Long, channel: SceytChannel) {
