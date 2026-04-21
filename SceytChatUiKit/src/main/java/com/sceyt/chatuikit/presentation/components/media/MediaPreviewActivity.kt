@@ -70,15 +70,16 @@ import java.io.File
 import java.util.Date
 
 open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
-    lateinit var binding: SceytActivityMediaPreviewBinding
+    protected lateinit var binding: SceytActivityMediaPreviewBinding
+    protected val viewModel by viewModels<MediaViewModel> {
+        MediaViewModelFactory(intent)
+    }
     protected lateinit var style: MediaPreviewStyle
-    private var fileToSaveAfterPermission: MediaItem? = null
-    private var mediaAdapter: MediaAdapter? = null
-    private var currentItem: MediaItem? = null
-    private var showInChatChannel: SceytChannel? = null
-    private var sharedTransitionStarted = false
-
-    private val viewModel by viewModels<MediaViewModel> { MediaViewModelFactory(intent) }
+    protected var fileToSaveAfterPermission: MediaItem? = null
+    protected var mediaAdapter: MediaAdapter? = null
+    protected var currentItem: MediaItem? = null
+    protected var showInChatChannel: SceytChannel? = null
+    protected var sharedTransitionStarted = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         if (launchedWithSharedTransition()) {
@@ -462,22 +463,24 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
             items: List<AttachmentWithUserData>,
             initialIndex: Int,
             showInChatChannel: SceytChannel? = null,
-            sourceView: View,
+            sourceView: View?,
         ) {
             if (!canLaunchPreview()) return
             MediaPreviewTransferHolder.set(
                 MediaPreviewTransferHolder.PreloadedData(items, initialIndex)
             )
-            ViewCompat.setTransitionName(sourceView, SHARED_TRANSITION_NAME)
-            val options = ActivityOptionsCompat.makeSceneTransitionAnimation(
-                activity,
-                sourceView,
-                SHARED_TRANSITION_NAME
-            )
+            val options = if (sourceView != null) {
+                ViewCompat.setTransitionName(sourceView, SHARED_TRANSITION_NAME)
+                ActivityOptionsCompat.makeSceneTransitionAnimation(
+                    activity,
+                    sourceView,
+                    SHARED_TRANSITION_NAME
+                )
+            } else null
             activity.launchActivity<MediaPreviewActivity>(
-                options = options.toBundle() ?: Bundle()
+                options = options?.toBundle() ?: Bundle()
             ) {
-                putExtra(EXTRA_SHARED_TRANSITION, true)
+                putExtra(EXTRA_SHARED_TRANSITION, sourceView != null)
                 showInChatChannel?.let {
                     putExtra(KEY_SHOW_IN_CHAT_CHANNEL, it.toIntentPayload())
                 }

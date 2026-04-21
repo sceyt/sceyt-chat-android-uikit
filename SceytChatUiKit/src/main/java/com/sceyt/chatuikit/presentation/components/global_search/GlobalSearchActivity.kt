@@ -32,6 +32,7 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.config.GlobalSearchCloseBehavior
 import com.sceyt.chatuikit.config.GlobalSearchConfig
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
+import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.AttachmentWithUserData
 import com.sceyt.chatuikit.data.models.search.GlobalSearchAttachmentKind
 import com.sceyt.chatuikit.data.models.search.GlobalSearchAttachmentResult
@@ -347,12 +348,15 @@ open class GlobalSearchActivity : AppCompatActivity(), GlobalSearchClickListener
         val items = allResults.map { AttachmentWithUserData(it.attachment, it.sender) }
         val initialIndex = items.indexOfFirst { it.attachment.id == result.attachment.id }
             .coerceAtLeast(0)
+        val sourceView = if (result.attachment.type == AttachmentTypeEnum.Image.value)
+            sharedView else null
+
         MediaPreviewActivity.launchWithPreloadedData(
             activity = this,
             items = items,
             initialIndex = initialIndex,
             showInChatChannel = result.channel,
-            sourceView = sharedView,
+            sourceView = sourceView,
         )
     }
 
