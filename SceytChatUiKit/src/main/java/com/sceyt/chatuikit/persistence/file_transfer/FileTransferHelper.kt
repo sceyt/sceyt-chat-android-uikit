@@ -168,6 +168,7 @@ object FileTransferHelper : SceytKoinComponent {
                 ) ?: return@fold
 
                 emitAttachmentTransferUpdate(transferData, updatedAttachment.fileSize)
+                fileTransferService.removeTransferTask(messageTid)
                 enqueueDbUpdate(messageTid) {
                     attachmentLogic.updateAttachmentWithTransferData(transferData)
                     removeMutexForAttachment(messageTid)
@@ -186,6 +187,7 @@ object FileTransferHelper : SceytKoinComponent {
                 ) ?: return@fold
 
                 emitAttachmentTransferUpdate(transferData, updatedAttachment.fileSize)
+                fileTransferService.removeTransferTask(messageTid)
                 enqueueDbUpdate(messageTid) {
                     attachmentLogic.updateAttachmentWithTransferData(transferData)
                 }
@@ -250,6 +252,7 @@ object FileTransferHelper : SceytKoinComponent {
         fileTransferService.findTransferTask(attachment)?.onCompletionListeners?.forEach {
             it.value.invoke(result)
         }
+        fileTransferService.removeTransferTask(messageTid)
     }
 
     @Suppress("MemberVisibilityCanBePrivate")
