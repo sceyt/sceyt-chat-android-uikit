@@ -58,10 +58,6 @@ class MediaAdapter(
     override fun getItemViewType(position: Int): Int =
         attachmentViewHolderFactory.getItemViewType(differ.currentList[position])
 
-    fun getLastMediaItem() = differ.currentList.last()
-
-    fun getFirstMediaItem() = differ.currentList.first()
-
     fun getData() = differ.currentList
 
     fun submitList(data: List<MediaItem>) {
