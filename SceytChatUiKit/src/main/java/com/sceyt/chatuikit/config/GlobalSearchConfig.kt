@@ -11,5 +11,5 @@ enum class GlobalSearchCloseBehavior {
 class GlobalSearchConfig {
     var userSuggestionsLimit: Int = 8
     var searchInputDebounceMs: Long = 300
-    var closeBehavior: GlobalSearchCloseBehavior = GlobalSearchCloseBehavior.Never
+    var closeBehavior: GlobalSearchCloseBehavior = GlobalSearchCloseBehavior.OnChannelClick
 }
