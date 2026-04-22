@@ -25,9 +25,9 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.fil
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.openFile
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageInfoViewProvider
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
-import com.sceyt.chatuikit.presentation.components.channel.messages.preview.SelfDestructingMediaPreviewActivity
+import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.navigation.MediaPreviewParams
 import com.sceyt.chatuikit.presentation.components.channel.messages.preview.SelfDestructingVoiceMessageActivity
-import com.sceyt.chatuikit.presentation.components.media.MediaPreviewActivity
 import com.sceyt.chatuikit.presentation.components.message_info.adapter.UserMarkerAdapter
 import com.sceyt.chatuikit.presentation.components.message_info.viewmodel.MessageInfoViewModel
 import com.sceyt.chatuikit.presentation.components.message_info.viewmodel.MessageInfoViewModelFactory
@@ -198,7 +198,7 @@ open class MessageInfoFragment : Fragment() {
                     styleId = styleId
                 )
             } else {
-                SelfDestructingMediaPreviewActivity.launchActivity(
+                SceytChatUIKit.navigator.openSelfDestructingMediaPreview(
                     context = requireContext(),
                     message = message,
                     attachment = item.attachment
@@ -208,11 +208,25 @@ open class MessageInfoFragment : Fragment() {
         }
         when (item.type) {
             AttachmentTypeEnum.Image -> {
-                MediaPreviewActivity.launch(requireContext(), item.attachment, message.user, message.channelId)
+                SceytChatUIKit.navigator.openMediaPreview(
+                    context = requireContext(),
+                    params = MediaPreviewParams.SingleAttachment(
+                        attachment = item.attachment,
+                        from = message.user,
+                        channelId = message.channelId,
+                    )
+                )
             }
 
             AttachmentTypeEnum.Video -> {
-                MediaPreviewActivity.launch(requireContext(), item.attachment, message.user, message.channelId)
+                SceytChatUIKit.navigator.openMediaPreview(
+                    context = requireContext(),
+                    params = MediaPreviewParams.SingleAttachment(
+                        attachment = item.attachment,
+                        from = message.user,
+                        channelId = message.channelId,
+                    )
+                )
             }
 
             else -> item.attachment.openFile(requireContext())

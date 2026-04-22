@@ -13,7 +13,7 @@ import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytChannelListViewBinding
 import com.sceyt.chatuikit.persistence.extensions.checkIsMemberInChannel
 import com.sceyt.chatuikit.presentation.components.channel.header.helpers.ChannelEventData
-import com.sceyt.chatuikit.presentation.components.channel.messages.ChannelActivity
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.holders.ChannelViewHolderFactory
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.components.ChannelsRV
@@ -242,7 +242,7 @@ class ChannelListView @JvmOverloads constructor(
 
     // Channel Click callbacks
     override fun onChannelClick(view: View, item: ChannelListItem.ChannelItem) {
-        ChannelActivity.launch(context, item.channel)
+        SceytChatUIKit.navigator.openChannel(context, item.channel)
     }
 
     override fun onAvatarClick(view: View, item: ChannelListItem.ChannelItem) {

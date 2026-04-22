@@ -17,11 +17,9 @@ import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
 import com.sceyt.chatuikit.extensions.setMargins
 import com.sceyt.chatuikit.extensions.setTextColorRes
 import com.sceyt.chatuikit.extensions.setTintColorRes
-import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchActivity
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.viewmodel.ChannelsViewModel
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.viewmodel.ChannelsViewModelFactory
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.viewmodel.bind
-import com.sceyt.chatuikit.presentation.components.startchat.StartChatActivity
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
@@ -73,15 +71,11 @@ open class ChannelListFragment : Fragment() {
     }
 
     protected open fun openStartChatActivity() {
-        StartChatActivity.launch(requireContext())
+        SceytChatUIKit.navigator.openStartChat(requireContext())
     }
 
     protected open fun openGlobalSearch(sourceView: View?) {
-        activity?.let { hostActivity ->
-            sourceView?.let {
-                GlobalSearchActivity.launch(hostActivity, it)
-            } ?: GlobalSearchActivity.launch(hostActivity)
-        }
+        SceytChatUIKit.navigator.openGlobalSearch(requireContext(), sourceView)
     }
 
     protected open fun setupConnectionStatus(state: ConnectionState) {

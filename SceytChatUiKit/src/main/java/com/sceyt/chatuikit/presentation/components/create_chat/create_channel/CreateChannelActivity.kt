@@ -24,7 +24,6 @@ import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.presentation.common.dialogs.SceytLoader.hideLoading
 import com.sceyt.chatuikit.presentation.common.dialogs.SceytLoader.showLoading
-import com.sceyt.chatuikit.presentation.components.channel.messages.ChannelActivity
 import com.sceyt.chatuikit.presentation.components.channel_info.members.MemberTypeEnum
 import com.sceyt.chatuikit.presentation.components.create_chat.viewmodel.CreateChatViewModel
 import com.sceyt.chatuikit.presentation.components.select_users.SelectUsersActivity
@@ -122,7 +121,7 @@ class CreateChannelActivity : AppCompatActivity() {
     }
 
     private fun startConversationPageAndFinish(channel: SceytChannel) {
-        ChannelActivity.launch(this@CreateChannelActivity, channel)
+        SceytChatUIKit.navigator.openChannel(this@CreateChannelActivity, channel)
 
         val intent = Intent()
         setResult(RESULT_OK, intent)

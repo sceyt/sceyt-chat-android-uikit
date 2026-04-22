@@ -17,7 +17,6 @@ import com.sceyt.chatuikit.databinding.SceytFragmentPollResultsBinding
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.setBundleArguments
 import com.sceyt.chatuikit.koin.SceytKoinComponent
-import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoActivity
 import com.sceyt.chatuikit.presentation.components.poll_results.adapter.PollResultItem
 import com.sceyt.chatuikit.presentation.components.poll_results.adapter.PollResultsAdapter
 import com.sceyt.chatuikit.presentation.components.poll_results.adapter.VoterItem
@@ -142,7 +141,7 @@ open class PollResultsFragment : Fragment(), SceytKoinComponent {
     }
 
     protected open fun onFindOrCreateChat(sceytChannel: SceytChannel) {
-        ChannelInfoActivity.launch(requireContext(), sceytChannel)
+        SceytChatUIKit.navigator.openChannelInfo(requireContext(), sceytChannel)
     }
 
 

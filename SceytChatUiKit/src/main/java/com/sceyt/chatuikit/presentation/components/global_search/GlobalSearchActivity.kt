@@ -44,9 +44,9 @@ import com.sceyt.chatuikit.extensions.openLink
 import com.sceyt.chatuikit.extensions.overrideTransitions
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.chatuikit.extensions.visibleInvisibleWithBottomSlideAnim
+import com.sceyt.chatuikit.navigation.MediaPreviewParams
 import com.sceyt.chatuikit.persistence.extensions.collectWithLifecycle
 import com.sceyt.chatuikit.persistence.interactor.GlobalSearchUserSuggestionsProvider
-import com.sceyt.chatuikit.presentation.components.channel.messages.ChannelActivity
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.openFile
 import com.sceyt.chatuikit.presentation.components.global_search.adapters.GlobalSearchPagerAdapter
 import com.sceyt.chatuikit.presentation.components.global_search.adapters.GlobalSearchSuggestionsAdapter
@@ -58,7 +58,6 @@ import com.sceyt.chatuikit.presentation.components.global_search.files.FilesSear
 import com.sceyt.chatuikit.presentation.components.global_search.links.LinksSearchFragment
 import com.sceyt.chatuikit.presentation.components.global_search.media.MediaSearchFragment
 import com.sceyt.chatuikit.presentation.components.global_search.voice.VoiceSearchFragment
-import com.sceyt.chatuikit.presentation.components.media.MediaPreviewActivity
 import com.sceyt.chatuikit.styles.StyleRegistry
 import com.sceyt.chatuikit.styles.search.GlobalSearchStyle
 
@@ -315,7 +314,7 @@ open class GlobalSearchActivity : AppCompatActivity(), GlobalSearchClickListener
 
     override fun onChannelClicked(channel: SceytChannel) {
         hideKeyboard(binding.searchInputView.input())
-        ChannelActivity.launch(this, channel)
+        SceytChatUIKit.navigator.openChannel(this, channel)
         if (headerViewModel.config.closeBehavior == GlobalSearchCloseBehavior.OnChannelClick) {
             closeWithoutAnimation()
         }
@@ -323,7 +322,7 @@ open class GlobalSearchActivity : AppCompatActivity(), GlobalSearchClickListener
 
     override fun onMessageClicked(messageId: Long, channel: SceytChannel) {
         hideKeyboard(binding.searchInputView.input())
-        ChannelActivity.launch(this, channel, messageId)
+        SceytChatUIKit.navigator.openChannel(this, channel, messageId)
     }
 
     override fun onAttachmentClicked(result: GlobalSearchAttachmentResult) {
@@ -351,12 +350,14 @@ open class GlobalSearchActivity : AppCompatActivity(), GlobalSearchClickListener
         val sourceView = if (result.attachment.type == AttachmentTypeEnum.Image.value)
             sharedView else null
 
-        MediaPreviewActivity.launchWithPreloadedData(
-            activity = this,
-            items = items,
-            initialIndex = initialIndex,
-            showInChatChannel = result.channel,
-            sourceView = sourceView,
+        SceytChatUIKit.navigator.openMediaPreview(
+            context = this,
+            params = MediaPreviewParams.PreloadedList(
+                items = items,
+                initialIndex = initialIndex,
+                showInChatChannel = result.channel,
+                sourceView = sourceView,
+            )
         )
     }
 

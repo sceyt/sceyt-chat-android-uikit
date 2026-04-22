@@ -11,7 +11,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityOptionsCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.role.Role
-import com.sceyt.chatuikit.R.anim.sceyt_anim_slide_hold
+import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
@@ -24,7 +24,6 @@ import com.sceyt.chatuikit.extensions.overrideTransitions
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.setDrawableStart
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
-import com.sceyt.chatuikit.presentation.components.channel.messages.ChannelActivity
 import com.sceyt.chatuikit.presentation.components.channel_info.members.MemberTypeEnum
 import com.sceyt.chatuikit.presentation.components.create_chat.create_channel.CreateChannelActivity
 import com.sceyt.chatuikit.presentation.components.create_chat.create_group.CreateGroupActivity
@@ -112,7 +111,7 @@ open class StartChatActivity : AppCompatActivity() {
     }
 
     protected open fun openChannelActivity(channel: SceytChannel) {
-        ChannelActivity.launch(this, channel)
+        SceytChatUIKit.navigator.openChannel(this, channel)
     }
 
     protected open fun onNewGroupClick() {
@@ -133,8 +132,8 @@ open class StartChatActivity : AppCompatActivity() {
     protected open fun onBackClick() {
         onBackPressedDispatcher.onBackPressed()
         overrideTransitions(
-            sceyt_anim_slide_hold,
-            com.sceyt.chatuikit.R.anim.sceyt_anim_slide_out_right,
+            R.anim.sceyt_anim_slide_hold,
+            R.anim.sceyt_anim_slide_out_right,
             false
         )
     }
@@ -148,7 +147,7 @@ open class StartChatActivity : AppCompatActivity() {
     protected open val animOptions
         get() = ActivityOptionsCompat.makeCustomAnimation(
             this,
-            com.sceyt.chatuikit.R.anim.sceyt_anim_slide_in_right, sceyt_anim_slide_hold
+            R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold
         )
 
     protected open fun setupUsersList(list: List<UserItem>) {
@@ -231,8 +230,8 @@ open class StartChatActivity : AppCompatActivity() {
     override fun finish() {
         super.finish()
         overrideTransitions(
-            sceyt_anim_slide_hold,
-            com.sceyt.chatuikit.R.anim.sceyt_anim_slide_out_right,
+            R.anim.sceyt_anim_slide_hold,
+            R.anim.sceyt_anim_slide_out_right,
             false
         )
     }
@@ -241,8 +240,8 @@ open class StartChatActivity : AppCompatActivity() {
 
         fun launch(context: Context) {
             context.launchActivity<StartChatActivity>(
-                com.sceyt.chatuikit.R.anim.sceyt_anim_slide_in_right,
-                sceyt_anim_slide_hold
+                R.anim.sceyt_anim_slide_in_right,
+                R.anim.sceyt_anim_slide_hold
             )
         }
     }
