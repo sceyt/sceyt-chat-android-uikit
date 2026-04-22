@@ -32,8 +32,8 @@
         android:theme="@style/SceytAppTheme">
         <activity
             android:name=".presentation.CustomChannelActivity"
-            android:theme="@style/SceytAppTheme.Default"
-            android:exported="false" />
+            android:exported="false"
+            android:theme="@style/SceytAppTheme.Default" />
         <activity
             android:name=".presentation.splash.SplashActivity"
             android:exported="true">
@@ -63,9 +63,9 @@
         </activity>
         <activity
             android:name=".presentation.main.MainActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden"
             android:exported="true"
             android:launchMode="singleTask"
-            android:configChanges="orientation|screenSize|keyboardHidden"
             android:theme="@style/SceytAppTheme.Default"
             android:windowSoftInputMode="adjustResize">
             <intent-filter android:autoVerify="true">
@@ -83,11 +83,6 @@
         <activity
             android:name=".presentation.welcome.WelcomeActivity"
             android:exported="true"
-            android:theme="@style/SceytAppTheme.Default"
-            android:windowSoftInputMode="adjustResize" />
-
-        <activity
-            android:name=".presentation.CustomStartChatActivity"
             android:theme="@style/SceytAppTheme.Default"
             android:windowSoftInputMode="adjustResize" />
 

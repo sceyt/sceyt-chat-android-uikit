@@ -88,11 +88,8 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.cl
 import com.sceyt.chatuikit.presentation.components.channel.messages.popups.MessageActionsPopupMenu
 import com.sceyt.chatuikit.presentation.components.channel.messages.popups.PopupReactionsAdapter
 import com.sceyt.chatuikit.presentation.components.channel.messages.popups.ReactionsPopup
-import com.sceyt.chatuikit.presentation.components.channel.messages.preview.SelfDestructingMediaPreviewActivity
 import com.sceyt.chatuikit.presentation.components.channel.messages.preview.SelfDestructingVoiceMessageActivity
-import com.sceyt.chatuikit.presentation.components.forward.ForwardActivity
-import com.sceyt.chatuikit.presentation.components.media.MediaPreviewActivity
-import com.sceyt.chatuikit.presentation.components.message_info.MessageInfoActivity
+import com.sceyt.chatuikit.navigation.MediaPreviewParams
 import com.sceyt.chatuikit.presentation.extensions.getUpdateMessage
 import com.sceyt.chatuikit.presentation.extensions.isPending
 import com.sceyt.chatuikit.presentation.helpers.KeyboardEventListener
@@ -1110,7 +1107,7 @@ class MessagesListView @JvmOverloads constructor(
                     styleId = style.messageItemStyle.styleId
                 )
             } else {
-                SelfDestructingMediaPreviewActivity.launchActivity(
+                SceytChatUIKit.navigator.openSelfDestructingMediaPreview(
                     context = context,
                     message = message,
                     attachment = item.attachment
@@ -1121,20 +1118,24 @@ class MessagesListView @JvmOverloads constructor(
 
         when (item.type) {
             AttachmentTypeEnum.Image -> {
-                MediaPreviewActivity.launch(
+                SceytChatUIKit.navigator.openMediaPreview(
                     context = context,
-                    attachment = item.attachment,
-                    from = message.user,
-                    channelId = message.channelId
+                    params = MediaPreviewParams.SingleAttachment(
+                        attachment = item.attachment,
+                        from = message.user,
+                        channelId = message.channelId,
+                    )
                 )
             }
 
             AttachmentTypeEnum.Video -> {
-                MediaPreviewActivity.launch(
+                SceytChatUIKit.navigator.openMediaPreview(
                     context = context,
-                    attachment = item.attachment,
-                    from = message.user,
-                    channelId = message.channelId
+                    params = MediaPreviewParams.SingleAttachment(
+                        attachment = item.attachment,
+                        from = message.user,
+                        channelId = message.channelId,
+                    )
                 )
             }
 
@@ -1227,11 +1228,11 @@ class MessagesListView @JvmOverloads constructor(
 
     override fun onMessageInfoClick(message: SceytMessage) {
         hideSoftInput()
-        MessageInfoActivity.launch(context, message, style.messageItemStyle)
+        SceytChatUIKit.navigator.openMessageInfo(context, message, style.messageItemStyle)
     }
 
     override fun onForwardMessageClick(vararg messages: SceytMessage) {
-        ForwardActivity.launch(context, *messages)
+        SceytChatUIKit.navigator.openForward(context, *messages)
     }
 
     override fun onReactMessageClick(message: SceytMessage) {

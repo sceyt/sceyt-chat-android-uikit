@@ -42,7 +42,6 @@ import com.sceyt.chatuikit.persistence.extensions.getChannelType
 import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.presentation.common.dialogs.SceytDialog
-import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoActivity
 import com.sceyt.chatuikit.presentation.components.channel_info.members.adapter.ChannelMembersAdapter
 import com.sceyt.chatuikit.presentation.components.channel_info.members.adapter.MemberItem
 import com.sceyt.chatuikit.presentation.components.channel_info.members.adapter.diff.MemberItemPayloadDiff
@@ -521,7 +520,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
     }
 
     protected open fun onFindOrCreateChat(sceytChannel: SceytChannel) {
-        ChannelInfoActivity.launch(requireContext(), sceytChannel)
+        SceytChatUIKit.navigator.openChannelInfo(requireContext(), sceytChannel)
     }
 
     protected open fun onPageStateChange(pageState: PageState) {

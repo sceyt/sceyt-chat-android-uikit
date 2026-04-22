@@ -16,7 +16,9 @@ import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.screenHeightPx
 import com.sceyt.chatuikit.extensions.setBundleArguments
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.koin.SceytKoinComponent
+import com.sceyt.chatuikit.navigation.MediaPreviewParams
 import com.sceyt.chatuikit.presentation.common.collections.SyncArrayList
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelFileItem
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoActivity
@@ -26,7 +28,6 @@ import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.Ch
 import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.MediaStickHeaderItemDecoration
 import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.listeners.AttachmentClickListeners
 import com.sceyt.chatuikit.presentation.components.channel_info.media.viewmodel.ChannelAttachmentsViewModel
-import com.sceyt.chatuikit.presentation.components.media.MediaPreviewActivity
 import com.sceyt.chatuikit.presentation.custom_views.PageStateView
 import com.sceyt.chatuikit.presentation.di.ChannelInfoMediaViewModelQualifier
 import com.sceyt.chatuikit.presentation.root.PageState
@@ -155,7 +156,15 @@ open class ChannelInfoMediaFragment : Fragment(), SceytKoinComponent, HistoryCle
 
     protected open fun onMediaClick(item: ChannelFileItem) {
         item.getItemData()?.let { data ->
-            MediaPreviewActivity.launch(requireContext(), data.attachment, data.user, channel.id, true)
+            SceytChatUIKit.navigator.openMediaPreview(
+                context = requireContext(),
+                params = MediaPreviewParams.SingleAttachment(
+                    attachment = data.attachment,
+                    from = data.user,
+                    channelId = channel.id,
+                    reversed = true,
+                )
+            )
         }
     }
 

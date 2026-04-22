@@ -33,7 +33,6 @@ import com.sceyt.chatuikit.persistence.extensions.resizeImage
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.presentation.common.dialogs.SceytLoader.hideLoading
 import com.sceyt.chatuikit.presentation.common.dialogs.SceytLoader.showLoading
-import com.sceyt.chatuikit.presentation.components.channel.messages.ChannelActivity
 import com.sceyt.chatuikit.presentation.components.channel_info.dialogs.EditAvatarTypeDialog
 import com.sceyt.chatuikit.presentation.components.create_chat.viewmodel.CreateChatViewModel
 import com.sceyt.chatuikit.presentation.components.select_users.adapters.UserItem
@@ -91,7 +90,7 @@ class CreateGroupActivity : AppCompatActivity() {
                     )
                 )
 
-                ChannelActivity.launch(this@CreateGroupActivity, it)
+                SceytChatUIKit.navigator.openChannel(this@CreateGroupActivity, it)
                 val intent = Intent()
                 setResult(RESULT_OK, intent)
                 finish()

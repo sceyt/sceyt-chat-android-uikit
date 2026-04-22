@@ -24,7 +24,6 @@ import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyl
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.MessageInputActionCallback
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageListViewModel
-import com.sceyt.chatuikit.presentation.components.create_poll.CreatePollActivity
 import com.sceyt.chatuikit.presentation.root.PageState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.launchIn
@@ -203,7 +202,7 @@ fun MessageListViewModel.bind(
         }
 
         override fun createPoll() {
-            CreatePollActivity.launch(messageInputView.context, channel.id)
+            SceytChatUIKit.navigator.openCreatePoll(messageInputView.context, channel.id)
         }
 
         override fun toggleViewOnce(selected: Boolean) {

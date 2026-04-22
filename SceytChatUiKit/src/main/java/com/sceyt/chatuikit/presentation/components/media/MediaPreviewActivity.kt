@@ -28,6 +28,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.toIntentPayload
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
@@ -50,8 +51,6 @@ import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.saveToGallery
 import com.sceyt.chatuikit.extensions.transitionListener
 import com.sceyt.chatuikit.persistence.extensions.safeResume
-import com.sceyt.chatuikit.presentation.components.channel.messages.ChannelActivity
-import com.sceyt.chatuikit.presentation.components.forward.ForwardActivity
 import com.sceyt.chatuikit.presentation.components.media.adapter.MediaAdapter
 import com.sceyt.chatuikit.presentation.components.media.adapter.MediaFilesViewHolderFactory
 import com.sceyt.chatuikit.presentation.components.media.adapter.MediaItem
@@ -359,7 +358,7 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
 
     protected open fun showInChat(item: MediaItem) {
         val channel = showInChatChannel ?: return
-        ChannelActivity.launch(this, channel, item.data.attachment.messageId)
+        SceytChatUIKit.navigator.openChannel(this, channel, item.data.attachment.messageId)
         finish()
     }
 
@@ -381,7 +380,7 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
     protected open fun forward(item: MediaItem) {
         lifecycleScope.launch {
             viewModel.getMessageById(item.data.attachment.messageId)?.let { message ->
-                ForwardActivity.launch(this@MediaPreviewActivity, message)
+                SceytChatUIKit.navigator.openForward(this@MediaPreviewActivity, message)
             } ?: run {
                 customToastSnackBar("Couldn't forward this message")
             }
