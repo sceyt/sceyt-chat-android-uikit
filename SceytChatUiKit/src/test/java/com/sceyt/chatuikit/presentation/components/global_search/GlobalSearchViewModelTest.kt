@@ -2,7 +2,9 @@ package com.sceyt.chatuikit.presentation.components.global_search
 
 import com.google.common.truth.Truth.assertThat
 import com.sceyt.chat.ChatClient
+import com.sceyt.chatuikit.config.GlobalSearchCloseBehavior
 import com.sceyt.chatuikit.config.GlobalSearchConfig
+import com.sceyt.chatuikit.data.managers.message.MessageEventManager
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.data.models.search.GlobalSearchAttachmentKind
@@ -14,6 +16,7 @@ import com.sceyt.chatuikit.persistence.interactor.GlobalSearchUserSuggestionsPro
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -181,6 +184,82 @@ class GlobalSearchViewModelTest {
         assertThat(viewModel.headerState.value.userSuggestions.map { it.id })
             .containsExactly("member-1")
     }
+
+    @Test
+    fun `onChannelOpened emits closeEvent when behavior is OnChannelOpen`() = runTest(dispatcher) {
+        val viewModel = TestGlobalSearchViewModel(
+            config = GlobalSearchConfig().apply {
+                closeBehavior = GlobalSearchCloseBehavior.OnChannelOpen
+            },
+            ioDispatcher = dispatcher,
+        )
+        var count = 0
+        val job = launch { viewModel.closeEvent.collect { count++ } }
+        advanceUntilIdle()
+
+        viewModel.onChannelOpened()
+        advanceUntilIdle()
+
+        assertThat(count).isEqualTo(1)
+        job.cancel()
+    }
+
+    @Test
+    fun `onChannelOpened does not emit closeEvent when behavior is Never`() = runTest(dispatcher) {
+        val viewModel = TestGlobalSearchViewModel(
+            config = GlobalSearchConfig().apply { closeBehavior = GlobalSearchCloseBehavior.Never },
+            ioDispatcher = dispatcher,
+        )
+        var count = 0
+        val job = launch { viewModel.closeEvent.collect { count++ } }
+        advanceUntilIdle()
+
+        viewModel.onChannelOpened()
+        advanceUntilIdle()
+
+        assertThat(count).isEqualTo(0)
+        job.cancel()
+    }
+
+    @Test
+    fun `closeEvent emits when outgoing message fires and behavior is OnMessageSent`() =
+        runTest(dispatcher) {
+            val viewModel = TestGlobalSearchViewModel(
+                config = GlobalSearchConfig().apply {
+                    closeBehavior = GlobalSearchCloseBehavior.OnMessageSent
+                },
+                ioDispatcher = dispatcher,
+            )
+            var count = 0
+            val job = launch { viewModel.closeEvent.collect { count++ } }
+            advanceUntilIdle()
+
+            MessageEventManager.emitOutgoingMessage(mock())
+            advanceUntilIdle()
+
+            assertThat(count).isEqualTo(1)
+            job.cancel()
+        }
+
+    @Test
+    fun `closeEvent does not emit on outgoing message when behavior is Never`() =
+        runTest(dispatcher) {
+            val viewModel = TestGlobalSearchViewModel(
+                config = GlobalSearchConfig().apply {
+                    closeBehavior = GlobalSearchCloseBehavior.Never
+                },
+                ioDispatcher = dispatcher,
+            )
+            var count = 0
+            val job = launch { viewModel.closeEvent.collect { count++ } }
+            advanceUntilIdle()
+
+            MessageEventManager.emitOutgoingMessage(mock())
+            advanceUntilIdle()
+
+            assertThat(count).isEqualTo(0)
+            job.cancel()
+        }
 
     @Test
     fun `session registry entry is removed when header viewmodel is cleared`() =
