@@ -5,36 +5,36 @@ enum class SDKErrorTypeEnum(
     val isResendable: Boolean,
 ) {
     BadRequest(
-        "BadRequest",
-        false
+        value = "BadRequest",
+        isResendable = false
     ),
     BadParam(
-        "BadParam",
-        false
+        value = "BadParam",
+        isResendable = false
     ),
     NotFound(
-        "NotFound",
-        false
+        value = "NotFound",
+        isResendable = false
     ),
     NotAllowed(
-        "NotAllowed",
-        false
+        value = "NotAllowed",
+        isResendable = false
     ),
     TooLargeRequest(
-        "TooLargeRequest",
-        false
+        value = "TooLargeRequest",
+        isResendable = false
     ),
     InternalError(
-        "InternalError",
-        true
+        value = "InternalError",
+        isResendable = true
     ),
     TooManyRequests(
-        "TooManyRequests",
-        true
+        value = "TooManyRequests",
+        isResendable = true
     ),
     Authentication(
-        "Authentication",
-        true
+        value = "Authentication",
+        isResendable = true
     );
 
     companion object {

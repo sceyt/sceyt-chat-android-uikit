@@ -89,7 +89,10 @@ class ChannelsViewModel(
             .onEach { data ->
                 _state.update { current ->
                     val updated = if (current.channels.any { it.id == data.channel.id })
-                        current.channels.map { if (it.id == data.channel.id) data.channel else it }
+                        current.channels.map { channel ->
+                            if (channel.id == data.channel.id)
+                                data.channel else channel
+                        }
                     else current.channels + data.channel
                     current.copy(channels = updated)
                 }
@@ -121,7 +124,8 @@ class ChannelsViewModel(
             .onEach { (pendingId, newChannel) ->
                 _state.update { current ->
                     val without = current.channels.filter { it.id != pendingId }
-                    val merged = if (without.none { it.id == newChannel.id }) without + newChannel else without
+                    val merged = if (without.none { it.id == newChannel.id })
+                        without + newChannel else without
                     current.copy(channels = merged)
                 }
             }.launchIn(viewModelScope)
@@ -262,7 +266,10 @@ class ChannelsViewModel(
                         if (response.offset == 0)
                             current.copy(channels = channels, hasNext = response.hasNext)
                         else
-                            current.copy(channels = current.channels + channels, hasNext = response.hasNext)
+                            current.copy(
+                                channels = (current.channels + channels).distinct(),
+                                hasNext = response.hasNext
+                            )
                     }
                     notifyPageStateWithResponse(
                         response = SceytResponse.Success(null),
@@ -276,9 +283,16 @@ class ChannelsViewModel(
                 val pageSize = (response.data as? SceytResponse.Success)?.data?.size ?: 0
                 nextOffset = max(nextOffset, response.offset + pageSize)
                 if (response.data is SceytResponse.Success && response.hasDiff) {
-                    _state.update { it.copy(channels = mapToChannels(response.cacheData), hasNext = response.hasNext) }
+                    _state.update { state ->
+                        state.copy(
+                            channels = mapToChannels(response.cacheData),
+                            hasNext = response.hasNext
+                        )
+                    }
                 } else if (!hasNextDb) {
-                    _state.update { it.copy(hasNext = response.hasNext) }
+                    _state.update { state ->
+                        state.copy(hasNext = response.hasNext)
+                    }
                 }
                 notifyPageStateWithResponse(
                     response = response.data,
