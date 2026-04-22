@@ -9,10 +9,12 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityOptionsCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.role.Role
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.data.managers.message.MessageEventManager
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.databinding.SceytActivityStartChatBinding
@@ -36,6 +38,8 @@ import com.sceyt.chatuikit.presentation.components.startchat.adapters.UsersAdapt
 import com.sceyt.chatuikit.presentation.components.startchat.adapters.holders.UserViewHolderFactory
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.styles.create_channel.StartChatStyle
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 
 open class StartChatActivity : AppCompatActivity() {
     private lateinit var binding: SceytActivityStartChatBinding
@@ -68,6 +72,10 @@ open class StartChatActivity : AppCompatActivity() {
                 viewModel.loadUsers(isLoadMore = false)
             } else finish()
         }
+
+        MessageEventManager.onOutgoingMessageFlow.onEach {
+            finish()
+        }.launchIn(lifecycleScope)
     }
 
     protected open fun initViewModel() {

@@ -152,12 +152,13 @@ class CustomChannelActivity : ChannelActivity() {
     companion object {
         const val CHANNEL = "CHANNEL"
 
-        fun launch(context: Context, channel: SceytChannel) {
+        fun launch(context: Context, channel: SceytChannel, targetMessageId: Long? = null) {
             context.launchActivity<CustomChannelActivity>(
                 com.sceyt.chatuikit.R.anim.sceyt_anim_slide_in_right,
                 com.sceyt.chatuikit.R.anim.sceyt_anim_slide_hold
             ) {
                 putExtra(CHANNEL, channel)
+                targetMessageId?.let { putExtra(TARGET_MESSAGE_ID, it) }
             }
         }
     }

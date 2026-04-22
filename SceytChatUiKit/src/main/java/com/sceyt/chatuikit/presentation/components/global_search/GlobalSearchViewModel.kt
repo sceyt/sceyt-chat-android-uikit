@@ -3,7 +3,9 @@ package com.sceyt.chatuikit.presentation.components.global_search
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.sceyt.chatuikit.config.GlobalSearchCloseBehavior
 import com.sceyt.chatuikit.config.GlobalSearchConfig
+import com.sceyt.chatuikit.data.managers.message.MessageEventManager
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.persistence.interactor.GlobalSearchUserSuggestionsProvider
 import com.sceyt.chatuikit.presentation.components.global_search.defaults.DefaultUserSuggestionsProvider
@@ -11,8 +13,12 @@ import com.sceyt.chatuikit.presentation.helpers.DebounceHelper
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -46,10 +52,24 @@ open class GlobalSearchViewModel(
     private val _headerState = MutableStateFlow(GlobalSearchHeaderState(activeTab = initialTab))
     val headerState = _headerState.asStateFlow()
 
+    private val _closeEvent = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    val closeEvent = _closeEvent.asSharedFlow()
+
     private var suggestionJob: Job? = null
 
     init {
         refreshSuggestions("")
+        if (config.closeBehavior == GlobalSearchCloseBehavior.OnMessageSent) {
+            MessageEventManager.onOutgoingMessageFlow
+                .onEach { _closeEvent.tryEmit(Unit) }
+                .launchIn(viewModelScope)
+        }
+    }
+
+    fun onChannelOpened() {
+        if (config.closeBehavior == GlobalSearchCloseBehavior.OnChannelOpen) {
+            _closeEvent.tryEmit(Unit)
+        }
     }
 
     fun onQueryChanged(query: String) {

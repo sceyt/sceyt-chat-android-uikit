@@ -29,7 +29,6 @@ import androidx.recyclerview.widget.LinearLayoutManager.HORIZONTAL
 import androidx.viewpager2.widget.ViewPager2
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.config.GlobalSearchCloseBehavior
 import com.sceyt.chatuikit.config.GlobalSearchConfig
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
@@ -60,6 +59,8 @@ import com.sceyt.chatuikit.presentation.components.global_search.media.MediaSear
 import com.sceyt.chatuikit.presentation.components.global_search.voice.VoiceSearchFragment
 import com.sceyt.chatuikit.styles.StyleRegistry
 import com.sceyt.chatuikit.styles.search.GlobalSearchStyle
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 
 open class GlobalSearchActivity : AppCompatActivity(), GlobalSearchClickListener {
     protected lateinit var binding: SceytActivityGlobalSearchBinding
@@ -237,6 +238,9 @@ open class GlobalSearchActivity : AppCompatActivity(), GlobalSearchClickListener
 
     protected open fun observeState() {
         headerViewModel.headerState.collectWithLifecycle(owner = this, collector = ::renderHeader)
+        headerViewModel.closeEvent
+            .onEach { closeWithoutAnimation() }
+            .launchIn(lifecycleScope)
     }
 
     protected open fun renderHeader(state: GlobalSearchHeaderState) {
@@ -315,9 +319,7 @@ open class GlobalSearchActivity : AppCompatActivity(), GlobalSearchClickListener
     override fun onChannelClicked(channel: SceytChannel) {
         hideKeyboard(binding.searchInputView.input())
         SceytChatUIKit.navigator.openChannel(this, channel)
-        if (headerViewModel.config.closeBehavior == GlobalSearchCloseBehavior.OnChannelClick) {
-            closeWithoutAnimation()
-        }
+        headerViewModel.onChannelOpened()
     }
 
     override fun onMessageClicked(messageId: Long, channel: SceytChannel) {
