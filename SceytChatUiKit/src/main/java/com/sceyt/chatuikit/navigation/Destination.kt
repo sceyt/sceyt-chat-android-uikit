@@ -279,14 +279,15 @@ sealed class Destination {
         private val flags: Int = 0,
     ) : Destination() {
         override fun createIntent(context: Context): Intent {
-            return context.packageManager
-                .getLaunchIntentForPackage(context.packageName)
-                ?.apply {
-                    if (this@AppRoot.flags != 0)
-                        addFlags(this@AppRoot.flags)
-                } ?: Intent(Intent.ACTION_MAIN)
-                .addCategory(Intent.CATEGORY_LAUNCHER)
-                .setPackage(context.packageName)
+            val intent = context.packageManager.getLaunchIntentForPackage(context.packageName)
+                ?: Intent(Intent.ACTION_MAIN)
+                    .addCategory(Intent.CATEGORY_LAUNCHER)
+                    .setPackage(context.packageName)
+
+            if (flags != 0)
+                intent.addFlags(flags)
+
+            return intent
         }
 
         override fun createOptions(context: Context): ActivityOptionsCompat {
