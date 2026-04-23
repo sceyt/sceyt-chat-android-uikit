@@ -9,6 +9,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytFragmentChannelInfoMediaBinding
 import com.sceyt.chatuikit.extensions.isLandscape
@@ -16,9 +17,10 @@ import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.screenHeightPx
 import com.sceyt.chatuikit.extensions.setBundleArguments
-import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.koin.SceytKoinComponent
+import com.sceyt.chatuikit.navigation.Destination
 import com.sceyt.chatuikit.navigation.MediaPreviewParams
+import com.sceyt.chatuikit.navigation.navigate
 import com.sceyt.chatuikit.presentation.common.collections.SyncArrayList
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelFileItem
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoActivity
@@ -43,7 +45,9 @@ open class ChannelInfoMediaFragment : Fragment(), SceytKoinComponent, HistoryCle
     protected open var mediaAdapter: ChannelMediaAdapter? = null
     protected open val mediaType = listOf("image", "video")
     protected open var pageStateView: PageStateView? = null
-    protected val viewModel: ChannelAttachmentsViewModel by viewModel(ChannelInfoMediaViewModelQualifier)
+    protected val viewModel: ChannelAttachmentsViewModel by viewModel(
+        ChannelInfoMediaViewModelQualifier
+    )
     protected lateinit var mediaStyle: ChannelInfoMediaStyle
 
     override fun onAttach(context: Context) {
@@ -55,7 +59,11 @@ open class ChannelInfoMediaFragment : Fragment(), SceytKoinComponent, HistoryCle
         }
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
         return SceytFragmentChannelInfoMediaBinding.inflate(inflater, container, false).also {
             binding = it
         }.root
@@ -105,19 +113,22 @@ open class ChannelInfoMediaFragment : Fragment(), SceytKoinComponent, HistoryCle
 
     protected open fun onInitialMediaList(list: List<ChannelFileItem>) {
         if (mediaAdapter == null) {
-            val adapter = ChannelMediaAdapter(SyncArrayList(list), ChannelAttachmentViewHolderFactory(
-                context = requireContext(),
-                mediaStyleProvider = { mediaStyle },
-                dateSeparatorStyle = mediaStyle.dateSeparatorStyle).also {
+            val adapter = ChannelMediaAdapter(
+                attachments = SyncArrayList(list),
+                factory = ChannelAttachmentViewHolderFactory(
+                    context = requireContext(),
+                    mediaStyleProvider = { mediaStyle },
+                    dateSeparatorStyle = mediaStyle.dateSeparatorStyle
+                ).also {
 
-                it.setNeedMediaDataCallback { data ->
-                    viewModel.needMediaInfo(data)
-                }
+                    it.setNeedMediaDataCallback { data ->
+                        viewModel.needMediaInfo(data)
+                    }
 
-                it.setClickListener(AttachmentClickListeners.AttachmentClickListener { _, item ->
-                    onMediaClick(item)
-                })
-            }).also { mediaAdapter = it }
+                    it.setClickListener(AttachmentClickListeners.AttachmentClickListener { _, item ->
+                        onMediaClick(item)
+                    })
+                }).also { mediaAdapter = it }
 
             with((binding ?: return).rvFiles) {
                 setHasFixedSize(true)
@@ -140,8 +151,10 @@ open class ChannelInfoMediaFragment : Fragment(), SceytKoinComponent, HistoryCle
                     override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                         super.onScrolled(recyclerView, dx, dy)
                         if (isLastItemDisplaying() && viewModel.canLoadPrev())
-                            loadMoreMediaList(adapter.getLastMediaItem()?.attachment?.id
-                                    ?: 0, adapter.getFileItems().size)
+                            loadMoreMediaList(
+                                lastAttachmentId = adapter.getLastMediaItem()?.attachment?.id ?: 0,
+                                offset = adapter.getFileItems().size
+                            )
                     }
                 })
             }
@@ -156,13 +169,15 @@ open class ChannelInfoMediaFragment : Fragment(), SceytKoinComponent, HistoryCle
 
     protected open fun onMediaClick(item: ChannelFileItem) {
         item.getItemData()?.let { data ->
-            SceytChatUIKit.navigator.openMediaPreview(
+            SceytChatUIKit.navigator.navigate(
                 context = requireContext(),
-                params = MediaPreviewParams.SingleAttachment(
-                    attachment = data.attachment,
-                    from = data.user,
-                    channelId = channel.id,
-                    reversed = true,
+                destination = Destination.MediaPreview(
+                    MediaPreviewParams.SingleAttachment(
+                        attachment = data.attachment,
+                        from = data.user,
+                        channelId = channel.id,
+                        reversed = true,
+                    )
                 )
             )
         }
@@ -211,8 +226,8 @@ open class ChannelInfoMediaFragment : Fragment(), SceytKoinComponent, HistoryCle
         private const val STYLE_ID_KEY = "STYLE_ID_KEY"
 
         fun newInstance(
-                channel: SceytChannel,
-                styleId: String,
+            channel: SceytChannel,
+            styleId: String,
         ) = ChannelInfoMediaFragment().setBundleArguments {
             putParcelable(CHANNEL, channel)
             putString(STYLE_ID_KEY, styleId)

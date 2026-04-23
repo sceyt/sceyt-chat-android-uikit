@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.presentation.components.message_info
 
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -10,7 +11,7 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.ActivityMessageInfoBinding
 import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
-import com.sceyt.chatuikit.extensions.launchActivity
+import com.sceyt.chatuikit.extensions.createIntent
 import com.sceyt.chatuikit.extensions.overrideTransitions
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.chatuikit.styles.StyleRegistry
@@ -59,25 +60,22 @@ open class MessageInfoActivity : AppCompatActivity() {
         private const val KEY_CHANNEL_ID = "key_channel_id"
         private const val KEY_ITEM_STYLE_ID = "key_item_style_id"
 
-        fun launch(
+        fun createIntent(
                 context: Context,
                 message: SceytMessage,
                 itemStyle: MessageItemStyle,
-        ) = launch(context, message.id, message.channelId, itemStyle)
+        ): Intent = createIntent(context, message.id, message.channelId, itemStyle)
 
-        fun launch(
+        fun createIntent(
                 context: Context,
                 messageId: Long,
                 channelId: Long,
                 itemStyle: MessageItemStyle,
-        ) {
+        ): Intent {
             // Register style
             StyleRegistry.register(itemStyle)
 
-            context.launchActivity<MessageInfoActivity>(
-                enterAnimResId = R.anim.sceyt_anim_slide_in_right,
-                exitAnimResId = R.anim.sceyt_anim_slide_hold
-            ) {
+            return context.createIntent<MessageInfoActivity> {
                 putExtra(KEY_MESSAGE_ID, messageId)
                 putExtra(KEY_CHANNEL_ID, channelId)
                 putExtra(KEY_ITEM_STYLE_ID, itemStyle.styleId)

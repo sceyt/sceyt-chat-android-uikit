@@ -178,12 +178,13 @@ inline fun <reified T : Any> Context.launchActivity(
             ActivityOptionsCompat.makeCustomAnimation(this, enterAnimResId, exitAnimResId)
         options.putAll(animOptions.toBundle())
     }
-    val intent = createIntent<T>()
-    intent.init()
+    val intent = createIntent<T>(init)
     startActivity(intent, options)
 }
 
-inline fun <reified T : Any> Context.createIntent(): Intent = Intent(this, T::class.java)
+inline fun <reified T : Any> Context.createIntent(
+    noinline init: Intent.() -> Unit = {},
+): Intent = Intent(this, T::class.java).apply(init)
 
 fun Context.showSoftInput(editText: EditText) {
     editText.isFocusable = true
@@ -199,6 +200,20 @@ fun Context.showSoftInput(editText: EditText) {
     run.run()
     if (!showed)
         Handler(Looper.getMainLooper()).postDelayed(run, 200)
+}
+
+fun Context.launchActivity(
+    intent: Intent,
+    enterAnimResId: Int?,
+    exitAnimResId: Int? = null,
+    options: Bundle = Bundle(),
+) {
+    if (enterAnimResId != null && exitAnimResId != null) {
+        val animOptions =
+            ActivityOptionsCompat.makeCustomAnimation(this, enterAnimResId, exitAnimResId)
+        options.putAll(animOptions.toBundle())
+    }
+    startActivity(intent, options)
 }
 
 fun Context.hideKeyboard(view: EditText?) {

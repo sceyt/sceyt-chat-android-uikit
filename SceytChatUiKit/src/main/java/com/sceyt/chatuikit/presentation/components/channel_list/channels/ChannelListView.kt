@@ -9,11 +9,13 @@ import android.widget.FrameLayout
 import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytChannelListViewBinding
+import com.sceyt.chatuikit.navigation.Destination
+import com.sceyt.chatuikit.navigation.navigate
 import com.sceyt.chatuikit.persistence.extensions.checkIsMemberInChannel
 import com.sceyt.chatuikit.presentation.components.channel.header.helpers.ChannelEventData
-import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.holders.ChannelViewHolderFactory
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.components.ChannelsRV
@@ -242,7 +244,7 @@ class ChannelListView @JvmOverloads constructor(
 
     // Channel Click callbacks
     override fun onChannelClick(view: View, item: ChannelListItem.ChannelItem) {
-        SceytChatUIKit.navigator.openChannel(context, item.channel)
+        SceytChatUIKit.navigator.navigate(context, Destination.Channel(item.channel))
     }
 
     override fun onAvatarClick(view: View, item: ChannelListItem.ChannelItem) {

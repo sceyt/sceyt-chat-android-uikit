@@ -44,6 +44,8 @@ import com.sceyt.chatuikit.extensions.getString
 import com.sceyt.chatuikit.extensions.isResumed
 import com.sceyt.chatuikit.extensions.isThePositionVisible
 import com.sceyt.chatuikit.logger.SceytLog
+import com.sceyt.chatuikit.navigation.Destination
+import com.sceyt.chatuikit.navigation.navigate
 import com.sceyt.chatuikit.persistence.extensions.checkIsMemberInChannel
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isPublic
@@ -913,7 +915,10 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                     )
                     if (response is SceytResponse.Success)
                         response.data?.let {
-                            navigator.openChannelInfo(messagesListView.context, response.data)
+                            navigator.navigate(
+                                context = messagesListView.context,
+                                destination = Destination.ChannelInfo(response.data)
+                            )
                         }
                 }
             }
@@ -927,7 +932,10 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 if (poll.anonymous || poll.maxVotedCountWithPendingVotes == 0)
                     return@setMessageCommandEventListener
 
-                navigator.openPollResults(messagesListView.context, event.message)
+                navigator.navigate(
+                    context = messagesListView.context,
+                    destination = Destination.PollResults(event.message)
+                )
             }
         }
     }

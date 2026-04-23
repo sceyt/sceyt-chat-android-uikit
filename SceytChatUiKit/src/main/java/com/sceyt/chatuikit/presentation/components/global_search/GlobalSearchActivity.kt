@@ -1,6 +1,5 @@
 package com.sceyt.chatuikit.presentation.components.global_search
 
-import android.app.Activity
 import android.content.Context
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
@@ -17,7 +16,6 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.annotation.CallSuper
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityOptionsCompat
 import androidx.core.graphics.ColorUtils
 import androidx.core.view.doOnPreDraw
 import androidx.fragment.app.Fragment
@@ -37,13 +35,15 @@ import com.sceyt.chatuikit.data.models.search.GlobalSearchAttachmentKind
 import com.sceyt.chatuikit.data.models.search.GlobalSearchAttachmentResult
 import com.sceyt.chatuikit.databinding.SceytActivityGlobalSearchBinding
 import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
+import com.sceyt.chatuikit.extensions.createIntent
 import com.sceyt.chatuikit.extensions.hideKeyboard
-import com.sceyt.chatuikit.extensions.launchActivity
 import com.sceyt.chatuikit.extensions.openLink
 import com.sceyt.chatuikit.extensions.overrideTransitions
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.chatuikit.extensions.visibleInvisibleWithBottomSlideAnim
+import com.sceyt.chatuikit.navigation.Destination
 import com.sceyt.chatuikit.navigation.MediaPreviewParams
+import com.sceyt.chatuikit.navigation.navigate
 import com.sceyt.chatuikit.persistence.extensions.collectWithLifecycle
 import com.sceyt.chatuikit.persistence.interactor.GlobalSearchUserSuggestionsProvider
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.openFile
@@ -57,6 +57,7 @@ import com.sceyt.chatuikit.presentation.components.global_search.files.FilesSear
 import com.sceyt.chatuikit.presentation.components.global_search.links.LinksSearchFragment
 import com.sceyt.chatuikit.presentation.components.global_search.media.MediaSearchFragment
 import com.sceyt.chatuikit.presentation.components.global_search.voice.VoiceSearchFragment
+import com.sceyt.chatuikit.presentation.components.media.MediaPreviewActivity
 import com.sceyt.chatuikit.styles.StyleRegistry
 import com.sceyt.chatuikit.styles.search.GlobalSearchStyle
 import kotlinx.coroutines.flow.launchIn
@@ -318,13 +319,13 @@ open class GlobalSearchActivity : AppCompatActivity(), GlobalSearchClickListener
 
     override fun onChannelClicked(channel: SceytChannel) {
         hideKeyboard(binding.searchInputView.input())
-        SceytChatUIKit.navigator.openChannel(this, channel)
+        SceytChatUIKit.navigator.navigate(this, Destination.Channel(channel))
         headerViewModel.onChannelOpened()
     }
 
     override fun onMessageClicked(messageId: Long, channel: SceytChannel) {
         hideKeyboard(binding.searchInputView.input())
-        SceytChatUIKit.navigator.openChannel(this, channel, messageId)
+        SceytChatUIKit.navigator.navigate(this, Destination.Channel(channel, messageId))
     }
 
     override fun onAttachmentClicked(result: GlobalSearchAttachmentResult) {
@@ -345,6 +346,7 @@ open class GlobalSearchActivity : AppCompatActivity(), GlobalSearchClickListener
         result: GlobalSearchAttachmentResult,
         allResults: List<GlobalSearchAttachmentResult>,
     ) {
+        if (!MediaPreviewActivity.canLaunchPreview()) return
         hideKeyboard(binding.searchInputView.input())
         val items = allResults.map { AttachmentWithUserData(it.attachment, it.sender) }
         val initialIndex = items.indexOfFirst { it.attachment.id == result.attachment.id }
@@ -352,13 +354,15 @@ open class GlobalSearchActivity : AppCompatActivity(), GlobalSearchClickListener
         val sourceView = if (result.attachment.type == AttachmentTypeEnum.Image.value)
             sharedView else null
 
-        SceytChatUIKit.navigator.openMediaPreview(
+        SceytChatUIKit.navigator.navigate(
             context = this,
-            params = MediaPreviewParams.PreloadedList(
-                items = items,
-                initialIndex = initialIndex,
-                showInChatChannel = result.channel,
-                sourceView = sourceView,
+            destination = Destination.MediaPreview(
+                MediaPreviewParams.PreloadedList(
+                    items = items,
+                    initialIndex = initialIndex,
+                    showInChatChannel = result.channel,
+                    sourceView = sourceView,
+                )
             )
         )
     }
@@ -420,24 +424,11 @@ open class GlobalSearchActivity : AppCompatActivity(), GlobalSearchClickListener
         const val STYLE_ID_KEY = "GLOBAL_SEARCH_STYLE_ID_KEY"
         const val EXTRA_SHARED_TRANSITION = "EXTRA_SHARED_TRANSITION"
 
-        fun launch(activity: Activity, sourceView: View) {
-            val options = ActivityOptionsCompat.makeSceneTransitionAnimation(
-                activity,
-                sourceView,
-                SHARED_TRANSITION_NAME
-            )
-            activity.launchActivity<GlobalSearchActivity>(
-                options = options.toBundle() ?: Bundle()
-            ) {
-                putExtra(EXTRA_SHARED_TRANSITION, true)
-            }
-        }
-
-        fun launch(content: Context) {
-            content.launchActivity<GlobalSearchActivity>(
-                R.anim.sceyt_anim_slide_in_right,
-                R.anim.sceyt_anim_slide_hold
-            )
+        fun createIntent(
+            context: Context,
+            sharedTransition: Boolean = false,
+        ) = context.createIntent<GlobalSearchActivity> {
+            putExtra(EXTRA_SHARED_TRANSITION, sharedTransition)
         }
     }
 }

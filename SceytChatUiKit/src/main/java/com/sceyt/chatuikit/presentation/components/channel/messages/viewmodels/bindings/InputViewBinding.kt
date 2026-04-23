@@ -14,6 +14,8 @@ import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.media.audio.AudioRecordData
+import com.sceyt.chatuikit.navigation.Destination
+import com.sceyt.chatuikit.navigation.navigate
 import com.sceyt.chatuikit.persistence.extensions.getChannelType
 import com.sceyt.chatuikit.persistence.extensions.isPublic
 import com.sceyt.chatuikit.persistence.mappers.isDeleted
@@ -202,7 +204,10 @@ fun MessageListViewModel.bind(
         }
 
         override fun createPoll() {
-            SceytChatUIKit.navigator.openCreatePoll(messageInputView.context, channel.id)
+            SceytChatUIKit.navigator.navigate(
+                messageInputView.context,
+                Destination.CreatePoll(channel.id)
+            )
         }
 
         override fun toggleViewOnce(selected: Boolean) {

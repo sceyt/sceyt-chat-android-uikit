@@ -7,15 +7,18 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.data.models.LoadKeyData
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.toIntentPayload
 import com.sceyt.chatuikit.databinding.SceytActivityChannelBinding
 import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
-import com.sceyt.chatuikit.extensions.launchActivity
+import com.sceyt.chatuikit.extensions.createIntent
 import com.sceyt.chatuikit.extensions.overrideTransitions
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
-import com.sceyt.chatuikit.data.models.LoadKeyData
+import com.sceyt.chatuikit.navigation.Destination
+import com.sceyt.chatuikit.navigation.navigate
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageListViewModel
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageListViewModelFactory
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.bindings.LoadKeyType
@@ -66,10 +69,10 @@ open class ChannelActivity : AppCompatActivity() {
             }
             return
         }
-        launchActivity<ChannelActivity> {
-            putExtra(CHANNEL, channel.toIntentPayload())
-            targetMessageId?.let { putExtra(TARGET_MESSAGE_ID, it) }
-        }
+        SceytChatUIKit.navigator.navigate(
+            this,
+            Destination.Channel(channel, targetMessageId)
+        )
         super.finish()
     }
 
@@ -77,8 +80,8 @@ open class ChannelActivity : AppCompatActivity() {
         const val CHANNEL = "CHANNEL"
         const val TARGET_MESSAGE_ID = "TARGET_MESSAGE_ID"
 
-        fun launch(context: Context, channel: SceytChannel, targetMessageId: Long? = null) {
-            context.launchActivity<ChannelActivity>(R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold) {
+        fun createIntent(context: Context, channel: SceytChannel, targetMessageId: Long? = null): Intent {
+            return context.createIntent<ChannelActivity> {
                 putExtra(CHANNEL, channel.toIntentPayload())
                 targetMessageId?.let { putExtra(TARGET_MESSAGE_ID, it) }
             }
@@ -87,9 +90,10 @@ open class ChannelActivity : AppCompatActivity() {
 
     override fun finish() {
         if (isTaskRoot) {
-            val launcher = packageManager.getLaunchIntentForPackage(packageName)
-            launcher?.addFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT)
-            startActivity(launcher)
+            SceytChatUIKit.navigator.navigate(
+                context = this,
+                destination = Destination.AppRoot(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT)
+            )
             super.finish()
             return
         }

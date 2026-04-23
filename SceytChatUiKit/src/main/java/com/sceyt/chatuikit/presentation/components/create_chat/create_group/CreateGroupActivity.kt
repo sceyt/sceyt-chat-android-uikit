@@ -23,12 +23,14 @@ import com.sceyt.chatuikit.data.models.messages.SceytMessageType
 import com.sceyt.chatuikit.data.models.messages.SystemMsgBodyEnum
 import com.sceyt.chatuikit.databinding.SceytActivityCreateGroupBinding
 import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
+import com.sceyt.chatuikit.extensions.createIntent
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.hideSoftInput
-import com.sceyt.chatuikit.extensions.launchActivity
 import com.sceyt.chatuikit.extensions.overrideTransitions
 import com.sceyt.chatuikit.extensions.parcelableArrayList
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
+import com.sceyt.chatuikit.navigation.Destination
+import com.sceyt.chatuikit.navigation.navigate
 import com.sceyt.chatuikit.persistence.extensions.resizeImage
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.presentation.common.dialogs.SceytLoader.hideLoading
@@ -59,9 +61,10 @@ class CreateGroupActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         style = CreateGroupStyle.Builder(this, null).build()
-        setContentView(SceytActivityCreateGroupBinding.inflate(layoutInflater)
-            .also { binding = it }
-            .root)
+        setContentView(
+            SceytActivityCreateGroupBinding.inflate(layoutInflater)
+                .also { binding = it }
+                .root)
 
         binding.applyStyle()
         applyInsetsAndWindowColor(binding.root)
@@ -90,7 +93,7 @@ class CreateGroupActivity : AppCompatActivity() {
                     )
                 )
 
-                SceytChatUIKit.navigator.openChannel(this@CreateGroupActivity, it)
+                SceytChatUIKit.navigator.navigate(this@CreateGroupActivity, Destination.Channel(it))
                 val intent = Intent()
                 setResult(RESULT_OK, intent)
                 finish()
@@ -111,7 +114,9 @@ class CreateGroupActivity : AppCompatActivity() {
     }
 
     private fun SceytActivityCreateGroupBinding.initViews() {
-        root.layoutTransition = LayoutTransition().apply { enableTransitionType(LayoutTransition.CHANGING) }
+        root.layoutTransition = LayoutTransition().apply {
+            enableTransitionType(LayoutTransition.CHANGING)
+        }
         btnCreate.setEnabledOrNot(false)
 
         inputSubject.doAfterTextChanged {
@@ -123,10 +128,16 @@ class CreateGroupActivity : AppCompatActivity() {
         }
 
         avatar.setOnClickListener {
-            EditAvatarTypeDialog(this@CreateGroupActivity, createChannelData.avatarUrl.isNotBlank()) {
+            EditAvatarTypeDialog(
+                context = this@CreateGroupActivity,
+                enableDelete = createChannelData.avatarUrl.isNotBlank()
+            ) {
                 when (it) {
                     EditAvatarTypeDialog.EditAvatarType.ChooseFromGallery -> {
-                        filePickerHelper.chooseFromGallery(allowMultiple = false, onlyImages = true) { uris ->
+                        filePickerHelper.chooseFromGallery(
+                            allowMultiple = false,
+                            onlyImages = true
+                        ) { uris ->
                             if (uris.isNotEmpty())
                                 cropImage(uris[0])
                         }
@@ -149,7 +160,8 @@ class CreateGroupActivity : AppCompatActivity() {
             with(createChannelData) {
                 subject = inputSubject.text.toString().trim()
                 type = ChannelTypeEnum.Group.value
-                metadata = Gson().toJson(ChannelDescriptionData(inputDescription.text.toString().trim()))
+                metadata =
+                    Gson().toJson(ChannelDescriptionData(inputDescription.text.toString().trim()))
                 members = this@CreateGroupActivity.members
             }
 
@@ -160,8 +172,9 @@ class CreateGroupActivity : AppCompatActivity() {
 
     private fun setMembersAdapter() {
         val data = members.map { UserItem.User(it.user) }
-        binding.rvMembers.adapter = UsersAdapter(data,
-            UserViewHolderFactory(this, style.userItemStyle, listeners = {})
+        binding.rvMembers.adapter = UsersAdapter(
+            list = data,
+            factory = UserViewHolderFactory(this, style.userItemStyle, listeners = {})
         )
     }
 
@@ -193,15 +206,16 @@ class CreateGroupActivity : AppCompatActivity() {
         }
     }
 
-    private val cropperActivityResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == RESULT_OK) {
-            val data = result.data ?: return@registerForActivityResult
-            val path = UCrop.getOutput(data)?.path
-            if (path != null) {
-                setAvatarImage(path)
-            } else customToastSnackBar(getString(R.string.sceyt_wrong_image))
+    private val cropperActivityResultLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == RESULT_OK) {
+                val data = result.data ?: return@registerForActivityResult
+                val path = UCrop.getOutput(data)?.path
+                if (path != null) {
+                    setAvatarImage(path)
+                } else customToastSnackBar(getString(R.string.sceyt_wrong_image))
+            }
         }
-    }
 
     override fun finish() {
         super.finish()
@@ -225,19 +239,11 @@ class CreateGroupActivity : AppCompatActivity() {
     companion object {
         private const val MEMBERS = "MEMBERS"
 
-        fun launch(context: Context, members: List<SceytMember>) {
-            context.launchActivity<CreateGroupActivity>(
-                enterAnimResId = R.anim.sceyt_anim_slide_in_right,
-                exitAnimResId = R.anim.sceyt_anim_slide_hold
-            ) {
+        fun createIntent(context: Context, members: List<SceytMember>): Intent {
+            return context.createIntent<CreateGroupActivity> {
                 putParcelableArrayListExtra(MEMBERS, members.toArrayList())
             }
         }
 
-        fun newIntent(context: Context, members: List<SceytMember>): Intent {
-            val intent = Intent(context, CreateGroupActivity::class.java)
-            intent.putParcelableArrayListExtra(MEMBERS, members.toArrayList())
-            return intent
-        }
     }
 }

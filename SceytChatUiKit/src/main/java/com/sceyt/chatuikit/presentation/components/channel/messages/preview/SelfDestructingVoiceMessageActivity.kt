@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages.preview
 
 import android.content.Context
+import android.content.Intent
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -19,11 +20,11 @@ import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytActivitySelfDestructingVoiceMessageBinding
 import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
+import com.sceyt.chatuikit.extensions.createIntent
 import com.sceyt.chatuikit.extensions.darkModeContext
 import com.sceyt.chatuikit.extensions.durationToMinSecShort
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
-import com.sceyt.chatuikit.extensions.launchActivity
 import com.sceyt.chatuikit.extensions.mediaPlayerPositionToSeekBarProgress
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.progressToMediaPlayerPosition
@@ -395,17 +396,15 @@ class SelfDestructingVoiceMessageActivity : AppCompatActivity(), SceytKoinCompon
         private const val ATTACHMENT_KEY = "attachment"
         private const val STYLE_ID_KEY = "style_id"
 
-        fun launch(
+        fun createIntent(
             context: Context,
             message: SceytMessage,
             attachment: SceytAttachment,
             styleId: String
-        ) {
-            context.launchActivity<SelfDestructingVoiceMessageActivity> {
-                putExtra(MESSAGE_KEY, message)
-                putExtra(ATTACHMENT_KEY, attachment)
-                putExtra(STYLE_ID_KEY, styleId)
-            }
+        ): Intent = context.createIntent<SelfDestructingVoiceMessageActivity> {
+            putExtra(MESSAGE_KEY, message)
+            putExtra(ATTACHMENT_KEY, attachment)
+            putExtra(STYLE_ID_KEY, styleId)
         }
     }
 }

@@ -15,6 +15,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chatuikit.databinding.SceytActivityCustomCameraBinding
 import com.sceyt.chatuikit.extensions.applySystemWindowInsetsPadding
+import com.sceyt.chatuikit.extensions.createIntent
 import com.sceyt.chatuikit.extensions.setSafeOnClickListener
 import com.sceyt.chatuikit.presentation.components.camera.CameraState.AllowedMode
 import com.sceyt.chatuikit.presentation.components.camera.CameraState.CameraMode
@@ -29,7 +30,8 @@ class CustomCameraActivity : AppCompatActivity() {
     private lateinit var style: CustomCameraStyle
     private val viewModel: CustomCameraViewModel by viewModels {
         CustomCameraViewModelFactory {
-            intent.getStringExtra(EXTRA_ALLOWED_MODE)?.let { AllowedMode.valueOf(it) } ?: AllowedMode.BOTH
+            intent.getStringExtra(EXTRA_ALLOWED_MODE)?.let { AllowedMode.valueOf(it) }
+                ?: AllowedMode.BOTH
         }
     }
 
@@ -56,7 +58,12 @@ class CustomCameraActivity : AppCompatActivity() {
             isAppearanceLightNavigationBars = false
         }
 
-        binding.root.applySystemWindowInsetsPadding(applyTop = true, applyRight = true, applyLeft = true, applyBottom = true)
+        binding.root.applySystemWindowInsetsPadding(
+            applyTop = true,
+            applyRight = true,
+            applyLeft = true,
+            applyBottom = true
+        )
 
         fileFactory = MediaFileFactory(this)
         navigator = CameraNavigator(this, previewLauncher)
@@ -84,7 +91,9 @@ class CustomCameraActivity : AppCompatActivity() {
     ) { result ->
         if (result.resultCode == RESULT_OK) {
             val filePath = result.data?.getStringExtra(CameraMediaPreviewActivity.EXTRA_RESULT_URI)
-            val isVideo = result.data?.getBooleanExtra(CameraMediaPreviewActivity.EXTRA_RESULT_IS_VIDEO, false) ?: false
+            val isVideo = result.data?.getBooleanExtra(
+                CameraMediaPreviewActivity.EXTRA_RESULT_IS_VIDEO, false
+            ) ?: false
             if (filePath != null) navigator.returnResult(filePath, isVideo)
         }
     }
@@ -92,8 +101,10 @@ class CustomCameraActivity : AppCompatActivity() {
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { perms ->
-        val cameraGranted = perms[Manifest.permission.CAMERA] ?: permissionCoordinator.hasCameraPermission()
-        val audioGranted = perms[Manifest.permission.RECORD_AUDIO] ?: permissionCoordinator.hasAudioPermission()
+        val cameraGranted =
+            perms[Manifest.permission.CAMERA] ?: permissionCoordinator.hasCameraPermission()
+        val audioGranted =
+            perms[Manifest.permission.RECORD_AUDIO] ?: permissionCoordinator.hasAudioPermission()
         if (cameraGranted) {
             initializeCamera()
             if (pendingAudioStart) {
@@ -159,7 +170,8 @@ class CustomCameraActivity : AppCompatActivity() {
         touchController = PreviewTouchController(
             previewView = binding.previewView,
             onPinchZoom = { scale ->
-                val current = cameraController.getCamera()?.cameraInfo?.zoomState?.value?.zoomRatio ?: 1f
+                val current =
+                    cameraController.getCamera()?.cameraInfo?.zoomState?.value?.zoomRatio ?: 1f
                 cameraController.setZoomRatio(current * scale)
             },
             onTapFocus = { x, y, action ->
@@ -375,9 +387,15 @@ class CustomCameraActivity : AppCompatActivity() {
         style.recordingTimeStyle.textStyle.apply(tvRecordingTime)
         style.zoomStyle.textStyle.apply(tvZoomLevel)
 
-        modeSelector.setModeTexts(style.modeSelectorStyle.photoText, style.modeSelectorStyle.videoText)
+        modeSelector.setModeTexts(
+            photoText = style.modeSelectorStyle.photoText,
+            videoText = style.modeSelectorStyle.videoText
+        )
         modeSelector.setModeTextStyle(style.modeSelectorStyle.textStyle)
-        modeSelector.setModeTextColors(style.modeSelectorStyle.selectedTextColor, style.modeSelectorStyle.unselectedTextColor)
+        modeSelector.setModeTextColors(
+            selectedColor = style.modeSelectorStyle.selectedTextColor,
+            unselectedColor = style.modeSelectorStyle.unselectedTextColor
+        )
         modeSelector.setHighlightBackground(style.modeSelectorStyle.highlightBackground)
     }
 
@@ -387,28 +405,12 @@ class CustomCameraActivity : AppCompatActivity() {
         const val EXTRA_IS_VIDEO = "is_video"
         private const val EXTRA_ALLOWED_MODE = "allowed_mode"
 
-        fun newIntent(context: Context, allowedMode: AllowedMode? = null): Intent {
-            return Intent(context, CustomCameraActivity::class.java).apply {
+        fun createIntent(context: Context, allowedMode: AllowedMode? = null): Intent {
+            return context.createIntent<CustomCameraActivity> {
                 if (allowedMode != null) {
                     putExtra(EXTRA_ALLOWED_MODE, allowedMode.name)
                 }
             }
-        }
-
-        fun launch(context: Context) {
-            context.startActivity(Intent(context, CustomCameraActivity::class.java))
-        }
-
-        fun launchForPhoto(context: Context) {
-            context.startActivity(Intent(context, CustomCameraActivity::class.java).apply {
-                putExtra(EXTRA_ALLOWED_MODE, AllowedMode.PHOTO_ONLY.name)
-            })
-        }
-
-        fun launchForVideo(context: Context) {
-            context.startActivity(Intent(context, CustomCameraActivity::class.java).apply {
-                putExtra(EXTRA_ALLOWED_MODE, AllowedMode.VIDEO_ONLY.name)
-            })
         }
     }
 }
