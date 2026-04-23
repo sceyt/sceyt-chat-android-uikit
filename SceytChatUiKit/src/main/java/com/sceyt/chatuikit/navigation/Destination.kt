@@ -34,14 +34,31 @@ import com.sceyt.chatuikit.presentation.components.select_users.SelectUsersPageA
 import com.sceyt.chatuikit.presentation.components.startchat.StartChatActivity
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
+/**
+ * Describes a screen or flow that UIKit can open.
+ *
+ * Each destination owns the intent and launch options for one UIKit route. Apps that need
+ * custom navigation should replace a destination from [SceytChatUIKitNavigator.resolve],
+ * usually by subclassing the matching destination and overriding [createIntent] or
+ * [createOptions].
+ */
 sealed class Destination {
 
-    open fun navigate(context: Context) {
+    /**
+     * Opens this destination as regular one-way navigation.
+     */
+    fun navigate(context: Context) {
         val intent = createIntent(context)
         context.startActivity(intent, createOptions(context).toBundle())
     }
 
-    open fun navigateForResult(
+    /**
+     * Opens this destination through the caller's [ActivityResultLauncher].
+     *
+     * The destination only creates the intent and options. The caller remains responsible
+     * for interpreting the result in its launcher callback.
+     */
+    fun navigateForResult(
         context: Context,
         launcher: ActivityResultLauncher<Intent>,
     ) {
@@ -49,8 +66,17 @@ sealed class Destination {
         launcher.launch(intent, createOptions(context))
     }
 
+    /**
+     * Creates the intent for this destination.
+     */
     abstract fun createIntent(context: Context): Intent
 
+    /**
+     * Creates launch options for this destination.
+     *
+     * The base implementation applies UIKit's default slide-in-right animation. Override
+     * this when a destination needs a shared element transition or no custom animation.
+     */
     protected open fun createOptions(context: Context): ActivityOptionsCompat {
         return ActivityOptionsCompat.makeCustomAnimation(
             context,
@@ -62,6 +88,10 @@ sealed class Destination {
 
     // Destinations
 
+    /**
+     * Opens a chat channel. Apps commonly replace this destination to show a custom
+     * channel activity while preserving UIKit's routing call sites.
+     */
     open class Channel(
         val channel: SceytChannel,
         val targetMessageId: Long? = null,
@@ -71,6 +101,9 @@ sealed class Destination {
         }
     }
 
+    /**
+     * Opens channel details and optionally starts in message search mode.
+     */
     open class ChannelInfo(
         val channel: SceytChannel,
         val enableSearchMessages: Boolean = false,
@@ -80,12 +113,22 @@ sealed class Destination {
         }
     }
 
+    /**
+     * Opens the UIKit start-chat entry screen.
+     */
     open class StartChat : Destination() {
         override fun createIntent(context: Context): Intent {
             return StartChatActivity.createIntent(context)
         }
     }
 
+    /**
+     * Opens global message search.
+     *
+     * When an Activity context and [sourceView] are available, this destination uses the
+     * search shared element transition. Otherwise it falls back to the default UIKit
+     * slide-in-right transition.
+     */
     open class GlobalSearch(
         val sourceView: View? = null,
     ) : Destination() {
@@ -112,6 +155,9 @@ sealed class Destination {
         }
     }
 
+    /**
+     * Opens the user selection flow with the supplied page arguments.
+     */
     open class SelectUsers(
         val args: SelectUsersPageArgs,
     ) : Destination() {
@@ -120,12 +166,18 @@ sealed class Destination {
         }
     }
 
+    /**
+     * Opens the one-to-one channel creation flow.
+     */
     open class CreateChannel : Destination() {
         override fun createIntent(context: Context): Intent {
             return CreateChannelActivity.createIntent(context)
         }
     }
 
+    /**
+     * Opens the group creation flow using the selected members.
+     */
     open class CreateGroup(
         val members: List<SceytMember>,
     ) : Destination() {
@@ -134,6 +186,9 @@ sealed class Destination {
         }
     }
 
+    /**
+     * Opens delivery/read info for a message.
+     */
     open class MessageInfo(
         val message: SceytMessage,
         val itemStyle: MessageItemStyle,
@@ -143,6 +198,9 @@ sealed class Destination {
         }
     }
 
+    /**
+     * Opens the message forwarding flow.
+     */
     open class Forward(
         val messages: List<SceytMessage>,
     ) : Destination() {
@@ -153,6 +211,9 @@ sealed class Destination {
         }
     }
 
+    /**
+     * Opens poll result details for a message.
+     */
     open class PollResults(
         val message: SceytMessage,
     ) : Destination() {
@@ -161,6 +222,9 @@ sealed class Destination {
         }
     }
 
+    /**
+     * Opens poll creation for the target channel.
+     */
     open class CreatePoll(
         val channelId: ChannelId,
     ) : Destination() {
@@ -169,6 +233,9 @@ sealed class Destination {
         }
     }
 
+    /**
+     * Opens invite link management for a channel.
+     */
     open class InviteLink(
         val channel: SceytChannel,
     ) : Destination() {
@@ -177,6 +244,9 @@ sealed class Destination {
         }
     }
 
+    /**
+     * Opens a simple image preview screen.
+     */
     open class ImagePreview(
         val imageUrl: String,
         val toolbarTitle: CharSequence,
@@ -186,6 +256,9 @@ sealed class Destination {
         }
     }
 
+    /**
+     * Opens a self-destructing media attachment preview.
+     */
     open class SelfDestructingMediaPreview(
         val message: SceytMessage,
         val attachment: SceytAttachment,
@@ -195,6 +268,9 @@ sealed class Destination {
         }
     }
 
+    /**
+     * Opens a self-destructing voice attachment preview.
+     */
     open class SelfDestructingVoicePreview(
         val message: SceytMessage,
         val attachment: SceytAttachment,
@@ -210,6 +286,12 @@ sealed class Destination {
         }
     }
 
+    /**
+     * Opens media preview for either one attachment or a preloaded media list.
+     *
+     * Passing a source view enables the current shared element transition path when the
+     * context is an Activity; otherwise the default transition is used.
+     */
     open class MediaPreview(
         val params: MediaPreviewParams,
     ) : Destination() {
@@ -258,6 +340,9 @@ sealed class Destination {
         }
     }
 
+    /**
+     * Opens the preview screen shown after capturing camera media.
+     */
     open class CameraMediaPreview(
         val filePath: String,
         val isVideo: Boolean,
@@ -267,6 +352,9 @@ sealed class Destination {
         }
     }
 
+    /**
+     * Opens UIKit's custom camera screen.
+     */
     open class CustomCamera(
         val allowedMode: CameraState.AllowedMode? = null,
     ) : Destination() {
@@ -275,6 +363,13 @@ sealed class Destination {
         }
     }
 
+    /**
+     * Opens the host app launcher/root activity.
+     *
+     * UIKit uses this as a safe fallback for task-root exits and notification entry
+     * points. Apps can replace it from [SceytChatUIKitNavigator.resolve] when their
+     * launcher routing needs custom flags, deep links, or a different activity.
+     */
     open class AppRoot(
         private val flags: Int = 0,
     ) : Destination() {
