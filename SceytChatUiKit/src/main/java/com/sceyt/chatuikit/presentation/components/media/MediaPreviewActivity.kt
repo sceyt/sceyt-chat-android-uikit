@@ -2,6 +2,7 @@ package com.sceyt.chatuikit.presentation.components.media
 
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.os.SystemClock
 import android.transition.ChangeBounds
@@ -16,7 +17,6 @@ import android.view.Window
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityOptionsCompat
 import androidx.core.app.ShareCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -38,6 +38,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.databinding.SceytActivityMediaPreviewBinding
 import com.sceyt.chatuikit.extensions.applySystemWindowInsetsPadding
 import com.sceyt.chatuikit.extensions.checkAndAskPermissions
+import com.sceyt.chatuikit.extensions.createIntent
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.getFileUriWithProvider
 import com.sceyt.chatuikit.extensions.getFirstVisibleItemPosition
@@ -46,10 +47,11 @@ import com.sceyt.chatuikit.extensions.getPermissionsForMangeStorage
 import com.sceyt.chatuikit.extensions.initPermissionLauncher
 import com.sceyt.chatuikit.extensions.isFirstItemDisplaying
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
-import com.sceyt.chatuikit.extensions.launchActivity
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.saveToGallery
 import com.sceyt.chatuikit.extensions.transitionListener
+import com.sceyt.chatuikit.navigation.Destination
+import com.sceyt.chatuikit.navigation.navigate
 import com.sceyt.chatuikit.persistence.extensions.safeResume
 import com.sceyt.chatuikit.presentation.components.media.adapter.MediaAdapter
 import com.sceyt.chatuikit.presentation.components.media.adapter.MediaFilesViewHolderFactory
@@ -358,7 +360,10 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
 
     protected open fun showInChat(item: MediaItem) {
         val channel = showInChatChannel ?: return
-        SceytChatUIKit.navigator.openChannel(this, channel, item.data.attachment.messageId)
+        SceytChatUIKit.navigator.navigate(
+            context = this,
+            destination = Destination.Channel(channel, item.data.attachment.messageId)
+        )
         finish()
     }
 
@@ -380,7 +385,10 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
     protected open fun forward(item: MediaItem) {
         lifecycleScope.launch {
             viewModel.getMessageById(item.data.attachment.messageId)?.let { message ->
-                SceytChatUIKit.navigator.openForward(this@MediaPreviewActivity, message)
+                SceytChatUIKit.navigator.navigate(
+                    context = this@MediaPreviewActivity,
+                    destination = Destination.Forward(message)
+                )
             } ?: run {
                 customToastSnackBar("Couldn't forward this message")
             }
@@ -436,87 +444,44 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
         private const val EXTRA_SHARED_TRANSITION = "EXTRA_SHARED_TRANSITION"
         const val SHARED_TRANSITION_NAME = "sceyt_media_preview"
 
-        fun launch(
+        fun createIntent(
             context: Context,
             attachment: SceytAttachment,
             from: SceytUser?,
             channelId: Long,
             reversed: Boolean = false,
             showInChatChannel: SceytChannel? = null,
-        ) {
-            if (!canLaunchPreview()) return
-            context.launchActivity<MediaPreviewActivity> {
-                fillLaunchIntent(
-                    attachment = attachment,
-                    from = from,
-                    channelId = channelId,
-                    reversed = reversed,
-                    showInChatChannel = showInChatChannel,
-                    launchedWithSharedTransition = false,
-                )
-            }
+            launchedWithSharedTransition: Boolean = false,
+        ): Intent = context.createIntent<MediaPreviewActivity> {
+            fillLaunchIntent(
+                attachment = attachment,
+                from = from,
+                channelId = channelId,
+                reversed = reversed,
+                showInChatChannel = showInChatChannel,
+                launchedWithSharedTransition = launchedWithSharedTransition,
+            )
         }
 
-        fun launchWithPreloadedData(
+        fun createPreloadedIntent(
             activity: Activity,
             items: List<AttachmentWithUserData>,
             initialIndex: Int,
             showInChatChannel: SceytChannel? = null,
-            sourceView: View?,
-        ) {
-            if (!canLaunchPreview()) return
+            launchedWithSharedTransition: Boolean = false,
+        ): Intent {
             MediaPreviewTransferHolder.set(
                 MediaPreviewTransferHolder.PreloadedData(items, initialIndex)
             )
-            val options = if (sourceView != null) {
-                ViewCompat.setTransitionName(sourceView, SHARED_TRANSITION_NAME)
-                ActivityOptionsCompat.makeSceneTransitionAnimation(
-                    activity,
-                    sourceView,
-                    SHARED_TRANSITION_NAME
-                )
-            } else null
-            activity.launchActivity<MediaPreviewActivity>(
-                options = options?.toBundle() ?: Bundle()
-            ) {
-                putExtra(EXTRA_SHARED_TRANSITION, sourceView != null)
+            return activity.createIntent<MediaPreviewActivity> {
+                putExtra(EXTRA_SHARED_TRANSITION, launchedWithSharedTransition)
                 showInChatChannel?.let {
                     putExtra(KEY_SHOW_IN_CHAT_CHANNEL, it.toIntentPayload())
                 }
             }
         }
 
-        fun launch(
-            activity: Activity,
-            attachment: SceytAttachment,
-            from: SceytUser?,
-            channelId: Long,
-            reversed: Boolean = false,
-            showInChatChannel: SceytChannel? = null,
-            sourceView: View
-        ) {
-            if (!canLaunchPreview()) return
-            ViewCompat.setTransitionName(sourceView, SHARED_TRANSITION_NAME)
-            val options = ActivityOptionsCompat.makeSceneTransitionAnimation(
-                activity,
-                sourceView,
-                SHARED_TRANSITION_NAME
-            )
-            activity.launchActivity<MediaPreviewActivity>(
-                options = options.toBundle() ?: Bundle()
-            ) {
-                fillLaunchIntent(
-                    attachment = attachment,
-                    from = from,
-                    channelId = channelId,
-                    reversed = reversed,
-                    showInChatChannel = showInChatChannel,
-                    launchedWithSharedTransition = true,
-                )
-            }
-        }
-
-        private fun android.content.Intent.fillLaunchIntent(
+        private fun Intent.fillLaunchIntent(
             attachment: SceytAttachment,
             from: SceytUser?,
             channelId: Long,
@@ -537,7 +502,7 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
         }
 
         @Synchronized
-        private fun canLaunchPreview(): Boolean {
+        fun canLaunchPreview(): Boolean {
             val now = SystemClock.elapsedRealtime()
             if (now - lastLaunchPreviewAtMs < PREVIEW_LAUNCH_THROTTLE_MS) return false
             lastLaunchPreviewAtMs = now

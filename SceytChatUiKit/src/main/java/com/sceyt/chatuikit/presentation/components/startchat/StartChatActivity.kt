@@ -8,7 +8,6 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityOptionsCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.role.Role
@@ -19,16 +18,17 @@ import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.databinding.SceytActivityStartChatBinding
 import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
+import com.sceyt.chatuikit.extensions.createIntent
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
-import com.sceyt.chatuikit.extensions.launchActivity
 import com.sceyt.chatuikit.extensions.overrideTransitions
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.setDrawableStart
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
+import com.sceyt.chatuikit.navigation.Destination
+import com.sceyt.chatuikit.navigation.navigate
+import com.sceyt.chatuikit.navigation.navigateForResult
 import com.sceyt.chatuikit.presentation.components.channel_info.members.MemberTypeEnum
-import com.sceyt.chatuikit.presentation.components.create_chat.create_channel.CreateChannelActivity
-import com.sceyt.chatuikit.presentation.components.create_chat.create_group.CreateGroupActivity
 import com.sceyt.chatuikit.presentation.components.select_users.SelectUsersActivity
 import com.sceyt.chatuikit.presentation.components.select_users.SelectUsersPageArgs
 import com.sceyt.chatuikit.presentation.components.select_users.SelectUsersResult
@@ -119,21 +119,23 @@ open class StartChatActivity : AppCompatActivity() {
     }
 
     protected open fun openChannelActivity(channel: SceytChannel) {
-        SceytChatUIKit.navigator.openChannel(this, channel)
+        SceytChatUIKit.navigator.navigate(this, Destination.Channel(channel))
     }
 
     protected open fun onNewGroupClick() {
         val args = SelectUsersPageArgs(toolbarTitle = MemberTypeEnum.Member.getPageTitle(this))
-        selectUsersActivityLauncher.launch(
-            SelectUsersActivity.newIntent(this, args),
-            animOptions
+        SceytChatUIKit.navigator.navigateForResult(
+            context = this,
+            launcher = selectUsersActivityLauncher,
+            destination = Destination.SelectUsers(args)
         )
     }
 
     protected open fun onNewChannelClick() {
-        createConversationLauncher.launch(
-            Intent(this, CreateChannelActivity::class.java),
-            animOptions
+        SceytChatUIKit.navigator.navigateForResult(
+            context = this,
+            launcher = createConversationLauncher,
+            destination = Destination.CreateChannel()
         )
     }
 
@@ -151,12 +153,6 @@ open class StartChatActivity : AppCompatActivity() {
         creatingChannel = true
         viewModel.findOrCreatePendingDirectChannel(user.user)
     }
-
-    protected open val animOptions
-        get() = ActivityOptionsCompat.makeCustomAnimation(
-            this,
-            R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold
-        )
 
     protected open fun setupUsersList(list: List<UserItem>) {
         val listWithSelf = list.toMutableList()
@@ -194,9 +190,10 @@ open class StartChatActivity : AppCompatActivity() {
                                 it
                             )
                         }
-                        createGroupLauncher.launch(
-                            CreateGroupActivity.newIntent(this, members),
-                            animOptions
+                        SceytChatUIKit.navigator.navigateForResult(
+                            context = this,
+                            launcher = createGroupLauncher,
+                            destination = Destination.CreateGroup(members)
                         )
                     }
             }
@@ -246,11 +243,7 @@ open class StartChatActivity : AppCompatActivity() {
 
     companion object {
 
-        fun launch(context: Context) {
-            context.launchActivity<StartChatActivity>(
-                R.anim.sceyt_anim_slide_in_right,
-                R.anim.sceyt_anim_slide_hold
-            )
-        }
+        fun createIntent(context: Context): Intent = context.createIntent<StartChatActivity>()
+
     }
 }

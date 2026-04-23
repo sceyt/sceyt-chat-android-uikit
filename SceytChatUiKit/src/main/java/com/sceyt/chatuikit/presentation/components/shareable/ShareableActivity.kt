@@ -10,11 +10,14 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.koin.SceytKoinComponent
+import com.sceyt.chatuikit.navigation.Destination
+import com.sceyt.chatuikit.navigation.navigate
 import com.sceyt.chatuikit.persistence.extensions.isPeerBlocked
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
 import com.sceyt.chatuikit.persistence.extensions.isPublic
@@ -147,7 +150,7 @@ abstract class ShareableActivity<Style : ShareablePageStyle> : AppCompatActivity
 
     protected open fun finishSharingAction() {
         if (isTaskRoot) {
-            packageManager.getLaunchIntentForPackage(packageName)?.let(::startActivity)
+            SceytChatUIKit.navigator.navigate(this, Destination.AppRoot())
         }
 
         super.finish()

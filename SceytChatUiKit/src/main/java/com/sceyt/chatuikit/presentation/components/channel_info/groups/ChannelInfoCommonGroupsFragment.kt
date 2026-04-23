@@ -15,6 +15,8 @@ import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.screenHeightPx
 import com.sceyt.chatuikit.koin.SceytKoinComponent
+import com.sceyt.chatuikit.navigation.Destination
+import com.sceyt.chatuikit.navigation.navigate
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoActivity
 import com.sceyt.chatuikit.presentation.components.channel_info.groups.adapter.CommonGroupListItem
 import com.sceyt.chatuikit.presentation.components.channel_info.groups.adapter.CommonGroupViewHolderFactory
@@ -157,7 +159,7 @@ open class ChannelInfoCommonGroupsFragment : Fragment(), SceytKoinComponent {
     }
 
     protected open fun onChannelClick(channel: SceytChannel) {
-        SceytChatUIKit.navigator.openChannel(requireContext(), channel)
+        SceytChatUIKit.navigator.navigate(requireContext(), Destination.Channel(channel))
     }
 
     private fun SceytFragmentChannelInfoCommonGroupsBinding.applyStyle() {

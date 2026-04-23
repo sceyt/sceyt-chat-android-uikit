@@ -43,6 +43,9 @@ import com.sceyt.chatuikit.extensions.updateWithScrollCompensation
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.media.audio.AudioFocusHelper
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
+import com.sceyt.chatuikit.navigation.Destination
+import com.sceyt.chatuikit.navigation.MediaPreviewParams
+import com.sceyt.chatuikit.navigation.navigate
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.persistence.differs.diff
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
@@ -88,8 +91,6 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.cl
 import com.sceyt.chatuikit.presentation.components.channel.messages.popups.MessageActionsPopupMenu
 import com.sceyt.chatuikit.presentation.components.channel.messages.popups.PopupReactionsAdapter
 import com.sceyt.chatuikit.presentation.components.channel.messages.popups.ReactionsPopup
-import com.sceyt.chatuikit.presentation.components.channel.messages.preview.SelfDestructingVoiceMessageActivity
-import com.sceyt.chatuikit.navigation.MediaPreviewParams
 import com.sceyt.chatuikit.presentation.extensions.getUpdateMessage
 import com.sceyt.chatuikit.presentation.extensions.isPending
 import com.sceyt.chatuikit.presentation.helpers.KeyboardEventListener
@@ -526,7 +527,8 @@ class MessagesListView @JvmOverloads constructor(
                 val diff = item.message.diff(updatedItem.message)
                 updateAdapterItem(index, updatedItem, diff)
                 SceytLog.d(
-                    TAG, "Found to update message: id ${item.message.id}, tid ${item.message.tid}," +
+                    TAG,
+                    "Found to update message: id ${item.message.id}, tid ${item.message.tid}," +
                             " diff ${diff.statusChanged}, newStatus ${message.deliveryStatus}, index $index, size ${data.size}"
                 )
                 foundToUpdate = true
@@ -1100,17 +1102,21 @@ class MessagesListView @JvmOverloads constructor(
             if (item.attachment.transferState !in allowedStates) return
 
             if (item.type == AttachmentTypeEnum.Voice) {
-                SelfDestructingVoiceMessageActivity.launch(
+                SceytChatUIKit.navigator.navigate(
                     context = context,
-                    message = message,
-                    attachment = item.attachment,
-                    styleId = style.messageItemStyle.styleId
+                    destination = Destination.SelfDestructingVoicePreview(
+                        message = message,
+                        attachment = item.attachment,
+                        styleId = style.messageItemStyle.styleId
+                    )
                 )
             } else {
-                SceytChatUIKit.navigator.openSelfDestructingMediaPreview(
+                SceytChatUIKit.navigator.navigate(
                     context = context,
-                    message = message,
-                    attachment = item.attachment
+                    destination = Destination.SelfDestructingMediaPreview(
+                        message = message,
+                        attachment = item.attachment
+                    )
                 )
             }
             return
@@ -1118,23 +1124,27 @@ class MessagesListView @JvmOverloads constructor(
 
         when (item.type) {
             AttachmentTypeEnum.Image -> {
-                SceytChatUIKit.navigator.openMediaPreview(
+                SceytChatUIKit.navigator.navigate(
                     context = context,
-                    params = MediaPreviewParams.SingleAttachment(
-                        attachment = item.attachment,
-                        from = message.user,
-                        channelId = message.channelId,
+                    destination = Destination.MediaPreview(
+                        MediaPreviewParams.SingleAttachment(
+                            attachment = item.attachment,
+                            from = message.user,
+                            channelId = message.channelId,
+                        )
                     )
                 )
             }
 
             AttachmentTypeEnum.Video -> {
-                SceytChatUIKit.navigator.openMediaPreview(
+                SceytChatUIKit.navigator.navigate(
                     context = context,
-                    params = MediaPreviewParams.SingleAttachment(
-                        attachment = item.attachment,
-                        from = message.user,
-                        channelId = message.channelId,
+                    destination = Destination.MediaPreview(
+                        MediaPreviewParams.SingleAttachment(
+                            attachment = item.attachment,
+                            from = message.user,
+                            channelId = message.channelId,
+                        )
                     )
                 )
             }
@@ -1228,11 +1238,14 @@ class MessagesListView @JvmOverloads constructor(
 
     override fun onMessageInfoClick(message: SceytMessage) {
         hideSoftInput()
-        SceytChatUIKit.navigator.openMessageInfo(context, message, style.messageItemStyle)
+        SceytChatUIKit.navigator.navigate(
+            context = context,
+            destination = Destination.MessageInfo(message, style.messageItemStyle)
+        )
     }
 
     override fun onForwardMessageClick(vararg messages: SceytMessage) {
-        SceytChatUIKit.navigator.openForward(context, *messages)
+        SceytChatUIKit.navigator.navigate(context, Destination.Forward(*messages))
     }
 
     override fun onReactMessageClick(message: SceytMessage) {

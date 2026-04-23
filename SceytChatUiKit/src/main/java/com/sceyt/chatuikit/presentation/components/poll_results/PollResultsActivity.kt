@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.presentation.components.poll_results
 
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -8,7 +9,7 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.ActivityPollResultsBinding
 import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
-import com.sceyt.chatuikit.extensions.launchActivity
+import com.sceyt.chatuikit.extensions.createIntent
 import com.sceyt.chatuikit.extensions.overrideTransitions
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.styles.StyleRegistry
@@ -57,7 +58,8 @@ open class PollResultsActivity : AppCompatActivity() {
         overrideTransitions(
             R.anim.sceyt_anim_slide_hold,
             R.anim.sceyt_anim_slide_out_right,
-            false)
+            false
+        )
     }
 
     override fun onDestroy() {
@@ -68,16 +70,11 @@ open class PollResultsActivity : AppCompatActivity() {
     companion object {
         private const val MESSAGE = "POLL_MESSAGE"
 
-        fun launch(
-                context: Context,
-                message: SceytMessage
-        ) {
-            context.launchActivity<PollResultsActivity>(
-                enterAnimResId = R.anim.sceyt_anim_slide_in_right,
-                exitAnimResId = R.anim.sceyt_anim_slide_hold,
-            ) {
-                putExtra(MESSAGE, message)
-            }
+        fun createIntent(
+            context: Context,
+            message: SceytMessage
+        ): Intent = context.createIntent<PollResultsActivity> {
+            putExtra(MESSAGE, message)
         }
     }
 }

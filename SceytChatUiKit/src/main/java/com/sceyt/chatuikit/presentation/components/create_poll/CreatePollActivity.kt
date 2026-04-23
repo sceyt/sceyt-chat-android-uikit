@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.presentation.components.create_poll
 
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -8,7 +9,7 @@ import androidx.fragment.app.commit
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.databinding.SceytActivityCreatePollBinding
 import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
-import com.sceyt.chatuikit.extensions.launchActivity
+import com.sceyt.chatuikit.extensions.createIntent
 import com.sceyt.chatuikit.extensions.overrideTransitions
 import com.sceyt.chatuikit.persistence.logicimpl.message.ChannelId
 import com.sceyt.chatuikit.styles.StyleRegistry
@@ -60,17 +61,11 @@ open class CreatePollActivity : AppCompatActivity() {
     companion object {
         private const val CHANNEL_ID_KEY = "channel_id_key"
 
-        fun launch(
-                context: Context,
-                channelId: ChannelId,
-        ) {
-            context.launchActivity<CreatePollActivity>(
-                enterAnimResId = R.anim.sceyt_anim_slide_in_right,
-                exitAnimResId = R.anim.sceyt_anim_slide_hold,
-            ) {
-                putExtra(CHANNEL_ID_KEY, channelId)
-            }
+        fun createIntent(
+            context: Context,
+            channelId: ChannelId,
+        ): Intent = context.createIntent<CreatePollActivity> {
+            putExtra(CHANNEL_ID_KEY, channelId)
         }
     }
 }
-

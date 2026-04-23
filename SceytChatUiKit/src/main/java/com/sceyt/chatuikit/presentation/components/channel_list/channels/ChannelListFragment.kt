@@ -17,6 +17,8 @@ import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
 import com.sceyt.chatuikit.extensions.setMargins
 import com.sceyt.chatuikit.extensions.setTextColorRes
 import com.sceyt.chatuikit.extensions.setTintColorRes
+import com.sceyt.chatuikit.navigation.Destination
+import com.sceyt.chatuikit.navigation.navigate
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.viewmodel.ChannelsViewModel
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.viewmodel.ChannelsViewModelFactory
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.viewmodel.bind
@@ -71,11 +73,11 @@ open class ChannelListFragment : Fragment() {
     }
 
     protected open fun openStartChatActivity() {
-        SceytChatUIKit.navigator.openStartChat(requireContext())
+        SceytChatUIKit.navigator.navigate(requireContext(), Destination.StartChat())
     }
 
     protected open fun openGlobalSearch(sourceView: View?) {
-        SceytChatUIKit.navigator.openGlobalSearch(requireContext(), sourceView)
+        SceytChatUIKit.navigator.navigate(requireContext(), Destination.GlobalSearch(sourceView))
     }
 
     protected open fun setupConnectionStatus(state: ConnectionState) {

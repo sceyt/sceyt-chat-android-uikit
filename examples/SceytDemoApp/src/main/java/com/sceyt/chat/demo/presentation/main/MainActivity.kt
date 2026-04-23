@@ -21,7 +21,8 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
-import com.sceyt.chatuikit.presentation.components.channel.messages.ChannelActivity
+import com.sceyt.chatuikit.navigation.Destination
+import com.sceyt.chatuikit.navigation.navigate
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.ChannelListFragment
 import com.sceyt.chatuikit.presentation.components.invite_link.ChannelInviteLinkHandler
 import com.sceyt.chatuikit.presentation.components.invite_link.JoinByInviteLinkResult
@@ -132,16 +133,16 @@ class MainActivity : AppCompatActivity() {
                 listener = { result ->
                     when (result) {
                         is JoinByInviteLinkResult.AlreadyJoined -> {
-                            ChannelActivity.launch(
+                            SceytChatUIKit.navigator.navigate(
                                 context = this@MainActivity,
-                                channel = result.channel
+                                destination = Destination.Channel(result.channel)
                             )
                         }
 
                         is JoinByInviteLinkResult.JoinedByInviteLink -> {
-                            ChannelActivity.launch(
+                            SceytChatUIKit.navigator.navigate(
                                 context = this@MainActivity,
-                                channel = result.channel
+                                destination = Destination.Channel(result.channel)
                             )
                         }
 

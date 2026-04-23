@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages.preview
 
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -23,8 +24,8 @@ import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytActivitySelfDestructingMediaPreviewBinding
 import com.sceyt.chatuikit.extensions.applySystemWindowInsetsPadding
+import com.sceyt.chatuikit.extensions.createIntent
 import com.sceyt.chatuikit.extensions.darkModeContext
-import com.sceyt.chatuikit.extensions.launchActivity
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.presentation.common.dialogs.ViewOnceInfoDialog
@@ -75,7 +76,11 @@ class SelfDestructingMediaPreviewActivity : AppCompatActivity(), SceytKoinCompon
     }
 
     private fun initViews() {
-        binding.toolbar.applySystemWindowInsetsPadding(applyTop = true, applyRight = true, applyLeft = true)
+        binding.toolbar.applySystemWindowInsetsPadding(
+            applyTop = true,
+            applyRight = true,
+            applyLeft = true
+        )
 
         binding.messageBodyScrollView.apply {
             isVerticalScrollBarEnabled = false
@@ -102,11 +107,16 @@ class SelfDestructingMediaPreviewActivity : AppCompatActivity(), SceytKoinCompon
     private fun initVideoController() {
         binding.videoView.controllerHideOnTouch = false
 
-        binding.videoView.findViewById<ConstraintLayout>(R.id.videoTimeContainer)?.let { controller ->
-            videoController = controller
-            controller.applySystemWindowInsetsPadding(applyBottom = true, applyRight = true, applyLeft = true)
-            controller.isVisible = binding.toolbar.isVisible
-        }
+        binding.videoView.findViewById<ConstraintLayout>(R.id.videoTimeContainer)
+            ?.let { controller ->
+                videoController = controller
+                controller.applySystemWindowInsetsPadding(
+                    applyBottom = true,
+                    applyRight = true,
+                    applyLeft = true
+                )
+                controller.isVisible = binding.toolbar.isVisible
+            }
 
         binding.videoView.setOnClickListener {
             onMediaClick()
@@ -166,7 +176,9 @@ class SelfDestructingMediaPreviewActivity : AppCompatActivity(), SceytKoinCompon
         playerHelper = ExoPlayerHelper(
             context = this,
             playerView = binding.videoView,
-            errorListener = { Toast.makeText(this, "Video playback error", Toast.LENGTH_SHORT).show() }
+            errorListener = {
+                Toast.makeText(this, "Video playback error", Toast.LENGTH_SHORT).show()
+            }
         )
         playerHelper?.setMediaPath(filePath, playVideo = true)
     }
@@ -204,8 +216,11 @@ class SelfDestructingMediaPreviewActivity : AppCompatActivity(), SceytKoinCompon
         if (controllerVisible) {
             controller.post {
                 val controllerHeight = controller.height
-                val containerMargin = (binding.messageBodyContainer.layoutParams as? ConstraintLayout.LayoutParams)?.bottomMargin ?: 0
-                binding.messageBodyContainer.translationY = -(controllerHeight - containerMargin).toFloat()
+                val containerMargin =
+                    (binding.messageBodyContainer.layoutParams as? ConstraintLayout.LayoutParams)?.bottomMargin
+                        ?: 0
+                binding.messageBodyContainer.translationY =
+                    -(controllerHeight - containerMargin).toFloat()
             }
         } else {
             binding.messageBodyContainer.translationY = 0f
@@ -281,11 +296,13 @@ class SelfDestructingMediaPreviewActivity : AppCompatActivity(), SceytKoinCompon
         private const val MESSAGE_KEY = "message"
         private const val ATTACHMENT_KEY = "attachment"
 
-        fun launchActivity(context: Context, message: SceytMessage, attachment: SceytAttachment) {
-            context.launchActivity<SelfDestructingMediaPreviewActivity> {
-                putExtra(MESSAGE_KEY, message)
-                putExtra(ATTACHMENT_KEY, attachment)
-            }
+        fun createIntent(
+            context: Context,
+            message: SceytMessage,
+            attachment: SceytAttachment,
+        ): Intent = context.createIntent<SelfDestructingMediaPreviewActivity> {
+            putExtra(MESSAGE_KEY, message)
+            putExtra(ATTACHMENT_KEY, attachment)
         }
     }
 }
