@@ -1,11 +1,12 @@
 package com.sceyt.chatuikit.styles.extensions.search
 
-import androidx.core.graphics.toColorInt
+import androidx.core.graphics.ColorUtils
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.applyTint
 import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.getCompatColor
+import com.sceyt.chatuikit.extensions.getCompatColorNight
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.styles.common.BackgroundStyle
 import com.sceyt.chatuikit.styles.common.HintStyle
@@ -83,8 +84,11 @@ internal fun GlobalSearchInputStyle.Builder.buildSelectedUserChipBackgroundStyle
 }
 
 internal fun GlobalSearchInputStyle.Builder.buildSelectedUserChipPendingBackgroundStyle(): BackgroundStyle {
+    val accentColor = context.getCompatColorNight(SceytChatUIKit.theme.colors.accentColor)
+    val bgColor = context.getCompatColorNight(SceytChatUIKit.theme.colors.backgroundColor)
+    val blendedColor = ColorUtils.blendARGB(accentColor, bgColor, 0.4f)
     return BackgroundStyle(
-        backgroundColor = "#474F8C".toColorInt(),
+        backgroundColor = blendedColor,
         shape = Shape.RoundedCornerShape(30f.dpToPx())
     )
 }
