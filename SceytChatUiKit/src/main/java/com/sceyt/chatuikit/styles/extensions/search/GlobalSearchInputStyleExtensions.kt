@@ -86,7 +86,7 @@ internal fun GlobalSearchInputStyle.Builder.buildSelectedUserChipBackgroundStyle
 internal fun GlobalSearchInputStyle.Builder.buildSelectedUserChipPendingBackgroundStyle(): BackgroundStyle {
     val accentColor = context.getCompatColorNight(SceytChatUIKit.theme.colors.accentColor)
     val bgColor = context.getCompatColorNight(SceytChatUIKit.theme.colors.backgroundColor)
-    val blendedColor = ColorUtils.blendARGB(accentColor, bgColor, 0.4f)
+    val blendedColor = ColorUtils.blendARGB(accentColor, bgColor, 0.5f)
     return BackgroundStyle(
         backgroundColor = blendedColor,
         shape = Shape.RoundedCornerShape(30f.dpToPx())
