@@ -228,10 +228,8 @@ sealed class Destination {
                 }
 
                 is MediaPreviewParams.PreloadedList -> {
-                    val activity = context as? Activity
-                        ?: error("MediaPreview with PreloadedList requires an Activity context")
                     MediaPreviewActivity.createPreloadedIntent(
-                        activity = activity,
+                        context = context,
                         items = params.items,
                         initialIndex = params.initialIndex,
                         showInChatChannel = params.showInChatChannel,
