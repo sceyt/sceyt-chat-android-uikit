@@ -1,6 +1,5 @@
 package com.sceyt.chatuikit.presentation.components.media
 
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -464,7 +463,7 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
         }
 
         fun createPreloadedIntent(
-            activity: Activity,
+            context: Context,
             items: List<AttachmentWithUserData>,
             initialIndex: Int,
             showInChatChannel: SceytChannel? = null,
@@ -473,7 +472,7 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
             MediaPreviewTransferHolder.set(
                 MediaPreviewTransferHolder.PreloadedData(items, initialIndex)
             )
-            return activity.createIntent<MediaPreviewActivity> {
+            return context.createIntent<MediaPreviewActivity> {
                 putExtra(EXTRA_SHARED_TRANSITION, launchedWithSharedTransition)
                 showInChatChannel?.let {
                     putExtra(KEY_SHOW_IN_CHAT_CHANNEL, it.toIntentPayload())
