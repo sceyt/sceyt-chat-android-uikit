@@ -25,6 +25,8 @@ class GlobalSearchListItemDiffCallback : DiffUtil.ItemCallback<GlobalSearchListI
         is GlobalSearchListItem.DateSeparator if newItem is GlobalSearchListItem.DateSeparator ->
             oldItem.timestamp == newItem.timestamp
 
+        is GlobalSearchListItem.Loading if newItem is GlobalSearchListItem.Loading -> true
+
         else -> false
     }
 
@@ -49,6 +51,8 @@ class GlobalSearchListItemDiffCallback : DiffUtil.ItemCallback<GlobalSearchListI
 
         is GlobalSearchListItem.DateSeparator if newItem is GlobalSearchListItem.DateSeparator ->
             oldItem.timestamp == newItem.timestamp
+
+        is GlobalSearchListItem.Loading if newItem is GlobalSearchListItem.Loading -> true
 
         else -> false
     }

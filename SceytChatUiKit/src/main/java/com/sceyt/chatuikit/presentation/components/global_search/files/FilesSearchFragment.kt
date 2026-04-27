@@ -17,6 +17,7 @@ import com.sceyt.chatuikit.extensions.setBundleArguments
 import com.sceyt.chatuikit.persistence.extensions.collectWithLifecycle
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchActivity
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchClickListener
+import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchListItem
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchSession
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchSessionResolver
 import com.sceyt.chatuikit.presentation.components.global_search.files.adapter.FilesSearchListAdapter
@@ -106,8 +107,11 @@ open class FilesSearchFragment : Fragment(R.layout.sceyt_fragment_files_search) 
         val scrollToTop = settled && state.sessionState != lastKey && lastKey != null
         if (settled) viewModel.onResultsRendered(state.sessionState)
 
+        val items = if (state.isLoadingMore)
+            state.items + GlobalSearchListItem.Loading else state.items
+
         listAdapter.submitList(
-            items = state.items,
+            items = items,
             commitCallback = if (scrollToTop) {
                 { binding.recyclerView.scrollToPosition(0) }
             } else null,

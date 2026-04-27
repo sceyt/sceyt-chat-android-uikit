@@ -9,6 +9,7 @@ import com.sceyt.chatuikit.databinding.SceytItemGlobalSearchSectionBinding
 import com.sceyt.chatuikit.persistence.differs.AttachmentDiff
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchListItem
+import com.sceyt.chatuikit.presentation.components.global_search.SearchLoadingMoreViewHolder
 import com.sceyt.chatuikit.presentation.components.global_search.media.adapter.holders.MediaSearchSectionViewHolder
 import com.sceyt.chatuikit.presentation.components.global_search.voice.adapter.holders.VoiceSearchItemViewHolder
 import com.sceyt.chatuikit.styles.search.VoiceSearchPageStyle
@@ -26,6 +27,7 @@ open class VoiceSearchViewHolderFactory(
         return when (viewType) {
             ItemType.Section.ordinal -> createSectionViewHolder(parent)
             ItemType.Voice.ordinal -> createVoiceViewHolder(parent)
+            ItemType.Loading.ordinal -> createLoadingViewHolder(parent)
             else -> throw RuntimeException("Not supported view type: $viewType")
         }
     }
@@ -68,15 +70,20 @@ open class VoiceSearchViewHolderFactory(
         )
     }
 
+    open fun createLoadingViewHolder(parent: ViewGroup): RecyclerView.ViewHolder {
+        return SearchLoadingMoreViewHolder(parent)
+    }
+
     open fun getItemViewType(item: GlobalSearchListItem, position: Int): Int {
         return when (item) {
             is GlobalSearchListItem.DateSeparator -> ItemType.Section.ordinal
             is GlobalSearchListItem.AttachmentItem -> ItemType.Voice.ordinal
+            is GlobalSearchListItem.Loading -> ItemType.Loading.ordinal
             else -> throw RuntimeException("Not supported item type: $item")
         }
     }
 
     enum class ItemType {
-        Section, Voice
+        Section, Voice, Loading
     }
 }

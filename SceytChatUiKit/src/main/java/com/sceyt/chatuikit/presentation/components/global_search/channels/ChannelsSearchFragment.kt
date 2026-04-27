@@ -17,6 +17,7 @@ import com.sceyt.chatuikit.extensions.setBundleArguments
 import com.sceyt.chatuikit.persistence.extensions.collectWithLifecycle
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchActivity
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchClickListener
+import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchListItem
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchSession
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchSessionResolver
 import com.sceyt.chatuikit.presentation.components.global_search.channels.adapter.ChannelsSearchListAdapter
@@ -103,8 +104,11 @@ open class ChannelsSearchFragment : Fragment(R.layout.sceyt_fragment_channels_se
             settled && state.sessionState != lastResultsRequestKey && lastResultsRequestKey != null
         if (settled) viewModel.onResultsRendered(state.sessionState)
 
+        val items = if (state.isLoadingMore)
+            state.listItems + GlobalSearchListItem.Loading else state.listItems
+
         listAdapter.submitList(
-            items = state.listItems,
+            items = items,
             query = state.query,
             commitCallback = if (scrollToTop) {
                 { binding.recyclerView.scrollToPosition(0) }
