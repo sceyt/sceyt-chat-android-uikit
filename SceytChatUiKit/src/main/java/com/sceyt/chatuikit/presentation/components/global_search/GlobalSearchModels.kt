@@ -27,6 +27,8 @@ enum class GlobalSearchTab(@param:StringRes val titleRes: Int) {
 }
 
 sealed interface GlobalSearchListItem {
+    data object Loading : GlobalSearchListItem
+
     data class SectionHeader(@param:StringRes val titleRes: Int) : GlobalSearchListItem
 
     data class ChannelItem(
@@ -73,6 +75,7 @@ sealed interface GlobalSearchListItem {
 
     fun getCreatedAt(): Long {
         return when (this) {
+            is Loading -> 0L
             is SectionHeader -> 0L
             is ChannelItem -> channel.createdAt
             is MessageItem -> result.message.createdAt
