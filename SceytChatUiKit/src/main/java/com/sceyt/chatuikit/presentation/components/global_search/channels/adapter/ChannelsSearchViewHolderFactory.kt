@@ -12,6 +12,7 @@ import com.sceyt.chatuikit.persistence.differs.ChannelDiff
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.listeners.click.ChannelClickListeners
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.listeners.click.ChannelClickListenersImpl
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchListItem
+import com.sceyt.chatuikit.presentation.components.global_search.SearchLoadingMoreViewHolder
 import com.sceyt.chatuikit.presentation.components.global_search.channels.adapter.holders.ChannelsSearchChannelItemViewHolder
 import com.sceyt.chatuikit.presentation.components.global_search.channels.adapter.holders.ChannelsSearchSectionViewHolder
 import com.sceyt.chatuikit.presentation.components.global_search.chats.adapter.holders.SearchMessageItemViewHolder
@@ -36,6 +37,7 @@ open class ChannelsSearchViewHolderFactory(
             ItemType.Section.ordinal -> createSectionViewHolder(parent)
             ItemType.Channel.ordinal -> createChannelViewHolder(parent)
             ItemType.Message.ordinal -> createMessageViewHolder(parent)
+            ItemType.Loading.ordinal -> createLoadingViewHolder(parent)
             else -> throw RuntimeException("Not supported view type: $viewType")
         }
     }
@@ -104,16 +106,21 @@ open class ChannelsSearchViewHolderFactory(
         onMessageClickListener = onMessageClickListener,
     )
 
+    open fun createLoadingViewHolder(parent: ViewGroup): RecyclerView.ViewHolder {
+        return SearchLoadingMoreViewHolder(parent)
+    }
+
     open fun getItemViewType(item: GlobalSearchListItem, position: Int): Int {
         return when (item) {
             is GlobalSearchListItem.SectionHeader -> ItemType.Section.ordinal
             is GlobalSearchListItem.ChannelItem -> ItemType.Channel.ordinal
             is GlobalSearchListItem.MessageItem -> ItemType.Message.ordinal
+            is GlobalSearchListItem.Loading -> ItemType.Loading.ordinal
             else -> throw RuntimeException("Not supported item type: $item")
         }
     }
 
     enum class ItemType {
-        Section, Channel, Message
+        Section, Channel, Message, Loading
     }
 }

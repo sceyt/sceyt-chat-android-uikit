@@ -135,7 +135,9 @@ open class MediaSearchFragment : Fragment(R.layout.sceyt_fragment_media_search) 
                     lm.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
                         override fun getSpanSize(position: Int): Int {
                             return when (gridAdapter.getItemViewType(position)) {
-                                ItemType.DateSeparator.ordinal -> GRID_SPAN_COUNT
+                                ItemType.DateSeparator.ordinal,
+                                ItemType.Loading.ordinal -> GRID_SPAN_COUNT
+
                                 else -> 1
                             }
                         }
@@ -155,8 +157,11 @@ open class MediaSearchFragment : Fragment(R.layout.sceyt_fragment_media_search) 
         val scrollToTop = settled && state.sessionState != lastKey && lastKey != null
         if (settled) viewModel.onResultsRendered(state.sessionState)
 
+        val gridItems = if (state.isLoadingMore)
+            mode.items + GlobalSearchListItem.Loading else mode.items
+
         gridAdapter.submitList(
-            items = mode.items,
+            items = gridItems,
             commitCallback = if (scrollToTop) {
                 { binding.recyclerView.scrollToPosition(0) }
             } else null,
@@ -179,8 +184,11 @@ open class MediaSearchFragment : Fragment(R.layout.sceyt_fragment_media_search) 
         val scrollToTop = settled && state.sessionState != lastKey && lastKey != null
         if (settled) viewModel.onResultsRendered(state.sessionState)
 
+        val listItems = if (state.isLoadingMore)
+            mode.items + GlobalSearchListItem.Loading else mode.items
+
         listAdapter.submitList(
-            items = mode.items,
+            items = listItems,
             query = state.query,
             commitCallback = if (scrollToTop) {
                 { binding.recyclerView.scrollToPosition(0) }

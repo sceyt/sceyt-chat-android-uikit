@@ -9,6 +9,7 @@ import com.sceyt.chatuikit.databinding.SceytItemGlobalSearchSectionBinding
 import com.sceyt.chatuikit.persistence.differs.AttachmentDiff
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchListItem
+import com.sceyt.chatuikit.presentation.components.global_search.SearchLoadingMoreViewHolder
 import com.sceyt.chatuikit.presentation.components.global_search.links.adapter.holders.LinksSearchItemViewHolder
 import com.sceyt.chatuikit.presentation.components.global_search.media.adapter.holders.MediaSearchSectionViewHolder
 import com.sceyt.chatuikit.styles.search.LinksSearchPageStyle
@@ -25,6 +26,7 @@ open class LinksSearchViewHolderFactory(
         return when (viewType) {
             ItemType.Section.ordinal -> createSectionViewHolder(parent)
             ItemType.Link.ordinal -> createLinkViewHolder(parent)
+            ItemType.Loading.ordinal -> createLoadingViewHolder(parent)
             else -> throw RuntimeException("Not supported view type: $viewType")
         }
     }
@@ -66,15 +68,20 @@ open class LinksSearchViewHolderFactory(
         )
     }
 
+    open fun createLoadingViewHolder(parent: ViewGroup): RecyclerView.ViewHolder {
+        return SearchLoadingMoreViewHolder(parent)
+    }
+
     open fun getItemViewType(item: GlobalSearchListItem, position: Int): Int {
         return when (item) {
             is GlobalSearchListItem.DateSeparator -> ItemType.Section.ordinal
             is GlobalSearchListItem.AttachmentItem -> ItemType.Link.ordinal
+            is GlobalSearchListItem.Loading -> ItemType.Loading.ordinal
             else -> throw RuntimeException("Not supported item type: $item")
         }
     }
 
     enum class ItemType {
-        Section, Link
+        Section, Link, Loading
     }
 }
