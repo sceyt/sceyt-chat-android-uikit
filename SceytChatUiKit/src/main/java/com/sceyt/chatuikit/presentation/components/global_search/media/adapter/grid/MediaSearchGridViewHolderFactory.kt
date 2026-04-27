@@ -12,6 +12,7 @@ import com.sceyt.chatuikit.databinding.SceytItemChannelVideoBinding
 import com.sceyt.chatuikit.databinding.SceytItemGlobalSearchSectionBinding
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchListItem
+import com.sceyt.chatuikit.presentation.components.global_search.SearchLoadingMoreViewHolder
 import com.sceyt.chatuikit.presentation.components.global_search.media.adapter.grid.holders.MediaSearchGridImageViewHolder
 import com.sceyt.chatuikit.presentation.components.global_search.media.adapter.grid.holders.MediaSearchGridVideoViewHolder
 import com.sceyt.chatuikit.presentation.components.global_search.media.adapter.holders.MediaSearchSectionViewHolder
@@ -31,6 +32,7 @@ open class MediaSearchGridViewHolderFactory(
             ItemType.Image.ordinal -> createImageViewHolder(parent)
             ItemType.Video.ordinal -> createVideoViewHolder(parent)
             ItemType.DateSeparator.ordinal -> createDateSeparatorViewHolder(parent)
+            ItemType.Loading.ordinal -> createLoadingViewHolder(parent)
             else -> throw RuntimeException("Not supported view type: $viewType")
         }
     }
@@ -43,6 +45,10 @@ open class MediaSearchGridViewHolderFactory(
         }
     }
 
+    open fun createLoadingViewHolder(parent: ViewGroup): RecyclerView.ViewHolder {
+        return SearchLoadingMoreViewHolder(parent)
+    }
+
     open fun getItemViewType(item: GlobalSearchListItem): Int {
         return when (item) {
             is GlobalSearchListItem.AttachmentItem -> {
@@ -53,6 +59,7 @@ open class MediaSearchGridViewHolderFactory(
             }
 
             is GlobalSearchListItem.DateSeparator -> ItemType.DateSeparator.ordinal
+            is GlobalSearchListItem.Loading -> ItemType.Loading.ordinal
             else -> throw RuntimeException("Not supported item type: $item")
         }
     }
@@ -94,6 +101,6 @@ open class MediaSearchGridViewHolderFactory(
     }
 
     enum class ItemType {
-        Image, Video, DateSeparator
+        Image, Video, DateSeparator, Loading
     }
 }
