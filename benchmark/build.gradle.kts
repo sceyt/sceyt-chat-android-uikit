@@ -15,6 +15,7 @@ android {
     defaultConfig {
         minSdk = Config.minSdk
         testInstrumentationRunner = "androidx.benchmark.junit4.AndroidBenchmarkRunner"
+        testInstrumentationRunnerArguments["androidx.benchmark.suppressErrors"] = "EMULATOR,LOW-BATTERY"
     }
 
     buildFeatures {

@@ -10,6 +10,7 @@ import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.ATTACHMENT_TABLE
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.CHANNEL_TABLE
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.LINK_DETAILS_TABLE
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.MESSAGE_FTS_TABLE
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.MESSAGE_TABLE
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.USER_CHAT_LINK_TABLE
 import com.sceyt.chatuikit.persistence.database.entity.channel.ChannelDb
@@ -24,19 +25,17 @@ internal abstract class GlobalSearchDao {
     /**
      * Unified message search for both Chats and Channels tabs.
      *
+     * Uses an FTS4 virtual table (`message_fts`) with the `unicode61` tokenizer for fast
+     * word-prefix search across all message bodies when [query] is non-blank.
+     * Blank or separator-only queries skip the FTS join and return messages by recency.
+     *
      * - [channelTypes] empty → no channel type filter (all channels)
      * - [channelTypes] non-empty → `channel.type IN (:channelTypes)` filter
      * - [onlyJoined] true → requires `channel.userRole IS NOT NULL AND channel.userRole != ''`
      *
-     * Word-prefix semantics: each query token must appear at the start of some token in the body.
-     * Token boundaries recognised: beginning of string or any ASCII whitespace / punctuation
-     * separator. Multi-token queries use AND logic and are order-independent.
-     *
-     * Limitations:
-     * - SQLite LIKE is case-insensitive for ASCII only; Unicode queries may not fold correctly.
-     * - The after-space conditions use a leading `%` wildcard and cannot be accelerated by a
-     *   B-tree index. For production-scale search migrate to an FTS5 virtual table with the
-     *   unicode61 tokenizer.
+     * Word-prefix semantics: each query token must appear at the start of some word in the body.
+     * Multi-token queries use AND logic and are order-independent.
+     * Unicode case-folding is handled by the `unicode61` tokenizer.
      */
     @Transaction
     open suspend fun searchMessages(
@@ -46,40 +45,53 @@ internal abstract class GlobalSearchDao {
         onlyJoined: Boolean,
         limit: Int,
         offset: Int,
-        pendingStatus: MessageDeliveryStatus = MessageDeliveryStatus.Pending,
     ): List<MessageDb> {
-        val words = tokenizeGlobalSearchQuery(query)
-        val senderIgnored = senderId.isNullOrBlank()
-        val searchableBody = searchableColumnExpression("message.body")
+        return searchMessagesImpl(
+            words = tokenizeGlobalSearchQuery(query),
+            senderId = senderId,
+            channelTypes = channelTypes,
+            onlyJoined = onlyJoined,
+            limit = limit,
+            offset = offset,
+        )
+    }
 
+    private suspend fun searchMessagesImpl(
+        words: List<String>,
+        senderId: String?,
+        channelTypes: List<String>,
+        onlyJoined: Boolean,
+        limit: Int,
+        offset: Int,
+    ): List<MessageDb> {
+        val hasFts = words.isNotEmpty()
+        val senderIgnored = senderId.isNullOrBlank()
+        val ftsJoin      = if (hasFts) "JOIN $MESSAGE_FTS_TABLE ON $MESSAGE_FTS_TABLE.rowid = message.tid" else ""
+        val ftsClause    = if (hasFts) "AND $MESSAGE_FTS_TABLE MATCH ?" else ""
         val senderClause = if (!senderIgnored) "AND message.fromId = ?" else ""
-        val typeClause = if (channelTypes.isNotEmpty()) {
-            "AND channel.type IN (${channelTypes.joinToString(",") { "?" }})"
-        } else ""
-        val joinedClause = if (onlyJoined) {
-            "AND channel.userRole IS NOT NULL AND channel.userRole != ''"
-        } else ""
+        val typeClause   = if (channelTypes.isNotEmpty()) "AND channel.type IN (${channelTypes.joinToString(",") { "?" }})" else ""
+        val joinedClause = if (onlyJoined) "AND channel.userRole IS NOT NULL AND channel.userRole != ''" else ""
 
         val sql = """
             SELECT message.*
             FROM $MESSAGE_TABLE AS message
             JOIN $CHANNEL_TABLE AS channel ON channel.chat_id = message.channelId
+            $ftsJoin
             WHERE message.message_id IS NOT NULL
-              AND message.deliveryStatus != ?
+              AND message.deliveryStatus != ${MessageDeliveryStatus.Pending.toDbValue()}
               AND message.unList = 0
+              $ftsClause
               $senderClause
               $typeClause
               $joinedClause
-              AND (${buildWordPrefixCondition(words, listOf(searchableBody))})
             ORDER BY message.createdAt DESC, message.message_id DESC
             LIMIT ? OFFSET ?
         """.trimIndent()
 
-        val args = buildList {
-            add(pendingStatus.toDbValue())
+        val args = buildList<Any> {
+            if (hasFts) add(buildFtsMatchExpression(words))
             if (!senderIgnored) add(senderId)
             addAll(channelTypes)
-            addWordPrefixArgs(words, fieldCount = 1)
             add(limit)
             add(offset)
         }
@@ -387,5 +399,19 @@ internal abstract class GlobalSearchDao {
          * [com.sceyt.chatuikit.persistence.database.converters.MessageConverter.deliveryStatusToInt].
          */
         private fun MessageDeliveryStatus.toDbValue(): Int = ordinal
+
+        /**
+         * Builds an FTS4 MATCH expression for word-prefix AND search.
+         * Each token becomes `"token*"` so FTS treats it as a literal term-prefix query.
+         * Multiple tokens are space-separated, which FTS4 interprets as AND.
+         *
+         * Examples:
+         *   ["brief"]           → `"brief*"`
+         *   ["release", "notes"] → `"release*" "notes*"`
+         */
+        private fun buildFtsMatchExpression(words: List<String>): String =
+            words.joinToString(" ") { word ->
+                '"' + word.replace("\"", "\"\"") + '*' + '"'
+            }
     }
 }
