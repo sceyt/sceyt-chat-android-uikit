@@ -19,12 +19,14 @@ import com.sceyt.chatuikit.persistence.interactor.AttachmentInteractor
 import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
 import com.sceyt.chatuikit.persistence.interactor.ChannelInviteKeyInteractor
 import com.sceyt.chatuikit.persistence.interactor.ChannelMemberInteractor
+import com.sceyt.chatuikit.persistence.interactor.GlobalSearchDataSource
 import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageMarkerInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessagePollInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageReactionInteractor
 import com.sceyt.chatuikit.persistence.interactor.UserInteractor
 import com.sceyt.chatuikit.persistence.logic.FileTransferLogic
+import com.sceyt.chatuikit.persistence.logic.GlobalSearchLocalInteractor
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelInviteKeyLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
@@ -54,13 +56,14 @@ import com.sceyt.chatuikit.persistence.logicimpl.usecases.AddPollVoteUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.CheckDeletedMessagesUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.CheckDeletedNearMessagesUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.EndPollUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.HandleChangeVoteErrorUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.HandleDeleteMessagesByLoadTypeUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.HandleMessagesInRangeUseCase
-import com.sceyt.chatuikit.persistence.logicimpl.usecases.HandleChangeVoteErrorUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.RemovePollVoteUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.RetractPollVoteUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.SendPollPendingVotesUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.SetUserPresenceUseCase
+import com.sceyt.chatuikit.domain.usecases.PauseOrResumeTransferUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.ShouldShowNotificationUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.TogglePollVoteUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.UpdatePollUseCase
@@ -111,6 +114,7 @@ internal fun databaseModule(enableDatabase: Boolean) = module {
     single<DatabaseCleaner> { DatabaseCleanerImpl(get()) }
     single { get<SceytDatabase>().channelDao() }
     single { get<SceytDatabase>().messageDao() }
+    single { get<SceytDatabase>().globalSearchDao() }
     single { get<SceytDatabase>().attachmentsDao() }
     single { get<SceytDatabase>().draftMessageDao() }
     single { get<SceytDatabase>().membersDao() }
@@ -143,7 +147,7 @@ internal val interactorModule = module {
 }
 
 internal val logicModule = module {
-    single<PersistenceChannelsLogic> { PersistenceChannelsLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    single<PersistenceChannelsLogic> { PersistenceChannelsLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     single<PersistenceMessagesLogic> { PersistenceMessagesLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(),get(), get()) }
     single<PersistenceAttachmentLogic> { PersistenceAttachmentLogicImpl(get(), get(), get(), get(), get(), get(), get(), get()) }
     single<PersistenceReactionsLogic> { PersistenceReactionsLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
@@ -155,9 +159,11 @@ internal val logicModule = module {
     single<PersistenceConnectionLogic> { PersistenceConnectionLogicImpl(get(), get(), get(), get(), get()) }
     single<PersistenceChannelInviteKeyLogic> { PersistenceChannelInviteKeyLogicImpl(get(), get()) }
     single<FileTransferLogic> { FileTransferLogicImpl(get(), get()) }
+    single<GlobalSearchDataSource> { GlobalSearchLocalInteractor(get(), get(), get(), get()) }
 }
 
 internal val useCaseModule = module {
+    factoryOf(::PauseOrResumeTransferUseCase)
     factoryOf(::ShouldShowNotificationUseCase)
     factoryOf(::AddPollVoteUseCase)
     factoryOf(::RemovePollVoteUseCase)
@@ -206,4 +212,3 @@ fun providesComputationContext(exceptionHandler: CoroutineExceptionHandler): Cor
 
 fun providesSingleThreadedContext(exceptionHandler: CoroutineExceptionHandler): CoroutineContext =
     Executors.newSingleThreadExecutor().asCoroutineDispatcher().plus(exceptionHandler)
-

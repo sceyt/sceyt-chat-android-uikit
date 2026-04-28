@@ -981,7 +981,7 @@ internal class PersistenceMessagesLogicImpl(
         )
 
         // Update message state in db and cache
-        val deletedMessage = storedMessage.copy(state = state)
+        val deletedMessage = storedMessage.copy(state = state, body = "", attachments = emptyList())
         onMessageEditedOrDeleted(deletedMessage)
         persistenceChannelsLogic.onMessageEditedOrDeleted(deletedMessage)
 

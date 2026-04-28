@@ -51,6 +51,7 @@ import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.database.dao.ChannelDao
 import com.sceyt.chatuikit.persistence.database.dao.ChatUserReactionDao
 import com.sceyt.chatuikit.persistence.database.dao.DraftMessageDao
+import com.sceyt.chatuikit.persistence.database.dao.GlobalSearchDao
 import com.sceyt.chatuikit.persistence.database.dao.LoadRangeDao
 import com.sceyt.chatuikit.persistence.database.dao.MessageDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingReactionDao
@@ -100,6 +101,7 @@ internal class PersistenceChannelsLogicImpl(
     private val context: Context,
     private val channelsRepository: ChannelsRepository,
     private val channelDao: ChannelDao,
+    private val globalSearchDao: GlobalSearchDao,
     private val usersDao: UserDao,
     private val messageDao: MessageDao,
     private val rangeDao: LoadRangeDao,
@@ -350,7 +352,7 @@ internal class PersistenceChannelsLogicImpl(
             )
 
             if (response is SceytResponse.Success) {
-                val channels = response.data ?: arrayListOf()
+                val channels = response.data.orEmpty()
 
                 val savedChannels = saveChannelsToDb(channels)
                 val hasDiff = channelsCache.addAll(
@@ -375,7 +377,7 @@ internal class PersistenceChannelsLogicImpl(
                     )
                 )
 
-                ChatReactionMessagesCache.getNeededMessages(response.data ?: arrayListOf())
+                ChatReactionMessagesCache.getNeededMessages(response.data.orEmpty())
 
                 messageLogic.onSyncedChannels(channels)
             }
@@ -408,7 +410,7 @@ internal class PersistenceChannelsLogicImpl(
                 ChannelListOrder.ListQueryChannelOrderLastMessage -> true
                 ChannelListOrder.ListQueryChannelOrderCreatedAt -> false
             }
-            val dbChannels = channelDao.searchChannelsByUserIds(
+            val dbChannels = globalSearchDao.searchChannelsByUserIds(
                 query = searchQuery,
                 userIds = searchUserIds.toList(),
                 offset = offset,
@@ -437,7 +439,7 @@ internal class PersistenceChannelsLogicImpl(
             )
 
             if (response is SceytResponse.Success) {
-                val channels = response.data ?: arrayListOf()
+                val channels = response.data.orEmpty()
 
                 val savedChannels = saveChannelsToDb(channels)
                 val hasDiff = channelsCache.addAll(
@@ -552,7 +554,7 @@ internal class PersistenceChannelsLogicImpl(
             ).map { it.toChannel() }
         } else {
             val ids = usersDao.getUserIdsByDisplayName(searchQuery)
-            channelDao.searchChannelsByUserIds(
+            globalSearchDao.searchChannelsByUserIds(
                 query = searchQuery,
                 userIds = ids,
                 offset = offset,
@@ -730,11 +732,11 @@ internal class PersistenceChannelsLogicImpl(
         val response = channelsRepository.createChannel(
             CreateChannelData(
                 type = channel.type,
-                uri = channel.uri ?: "",
-                subject = channel.subject ?: "",
-                avatarUrl = channel.avatarUrl ?: "",
-                metadata = channel.metadata ?: "",
-                members = channel.members ?: arrayListOf()
+                uri = channel.uri.orEmpty(),
+                subject = channel.subject.orEmpty(),
+                avatarUrl = channel.avatarUrl.orEmpty(),
+                metadata = channel.metadata.orEmpty(),
+                members = channel.members.orEmpty()
             )
         )
         if (response is SceytResponse.Success) {
@@ -1047,26 +1049,28 @@ internal class PersistenceChannelsLogicImpl(
     }
 
     override suspend fun updateLastMessageWithLastRead(channelId: Long, message: SceytMessage) {
+        val cachedChannel = channelsCache.getOneOf(channelId)
+        val channel = cachedChannel ?: getChannelFromDb(channelId) ?: return
         // Check if message delivery status is pending, that means message is started to send
         if (message.isPending()) {
             channelDao.updateLastMessage(channelId, message.tid, message.createdAt)
-            channelsCache.updateLastMessage(channelId, message)
+            if (cachedChannel == null) {
+                channelsCache.upsertChannel(channel)
+            } else channelsCache.updateLastMessage(channelId, message)
         } else {
             // Check if sent message is last message of channel
-            channelsCache.getOneOf(channelId)?.let {
-                if (it.lastMessage?.tid != message.tid) return
-            } ?: run {
-                channelDao.getChannelById(channelId)?.let {
-                    if (it.channelEntity.lastMessageTid != message.tid) return
-                }
-            }
+            if (channel.lastMessage?.tid != message.tid) return
+
             channelDao.updateLastMessageWithLastRead(
                 channelId = channelId,
                 lastMessageTid = message.tid,
                 lastMessageId = message.id,
                 lastMessageAt = message.createdAt
             )
-            channelsCache.updateLastMessageWithLastRead(channelId, message)
+
+            if (cachedChannel != null)
+                channelsCache.updateLastMessageWithLastRead(channelId, message)
+            else channelsCache.upsertChannel(channel)
         }
     }
 

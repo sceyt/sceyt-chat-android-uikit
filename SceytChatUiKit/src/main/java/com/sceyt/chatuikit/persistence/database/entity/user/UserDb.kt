@@ -4,11 +4,11 @@ import androidx.room.Embedded
 import androidx.room.Relation
 
 internal data class UserDb(
-        @Embedded
-        val user: UserEntity,
+    @Embedded
+    val user: UserEntity,
 
-        @Relation(parentColumn = "user_id", entityColumn = "user_id")
-        val metadata: List<UserMetadataEntity>
+    @Relation(parentColumn = "user_id", entityColumn = "user_id")
+    val metadata: List<UserMetadataEntity>
 ) {
     val id get() = user.id
 }

@@ -7,22 +7,22 @@ import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isDirect
 
 data class ChannelDiff(
-        val subjectChanged: Boolean,
-        val avatarViewChanged: Boolean,
-        val lastMessageChanged: Boolean,
-        val lastMessageStatusChanged: Boolean,
-        val unreadCountChanged: Boolean,
-        val muteStateChanged: Boolean,
-        val presenceStateChanged: Boolean,
-        val markedUsUnreadChanged: Boolean,
-        val lastReadMsdChanged: Boolean,
-        val peerBlockedChanged: Boolean,
-        val activityStateChanged: Boolean,
-        val membersChanged: Boolean,
-        val metadataUpdated: Boolean,
-        val urlUpdated: Boolean,
-        val pinStateChanged: Boolean,
-        val autoDeleteStateChanged: Boolean,
+    val subjectChanged: Boolean,
+    val avatarViewChanged: Boolean,
+    val lastMessageChanged: Boolean,
+    val lastMessageStatusChanged: Boolean,
+    val unreadCountChanged: Boolean,
+    val muteStateChanged: Boolean,
+    val presenceStateChanged: Boolean,
+    val markedUsUnreadChanged: Boolean,
+    val lastReadMsdChanged: Boolean,
+    val peerBlockedChanged: Boolean,
+    val activityStateChanged: Boolean,
+    val membersChanged: Boolean,
+    val metadataUpdated: Boolean,
+    val urlUpdated: Boolean,
+    val pinStateChanged: Boolean,
+    val autoDeleteStateChanged: Boolean,
 ) {
     fun hasDifference(): Boolean {
         return subjectChanged || avatarViewChanged || lastMessageChanged || lastMessageStatusChanged ||
@@ -73,15 +73,19 @@ data class ChannelDiff(
 }
 
 fun SceytChannel.diff(other: SceytChannel): ChannelDiff {
-    val firstMember = getPeer()
-    val otherFirstMember = other.getPeer()
-    val lastMessageChanged = lastMessage != other.lastMessage || lastMessage?.body.equalsIgnoreNull(other.lastMessage?.body).not()
-            || lastMessage?.state != other.lastMessage?.state || lastMessage?.bodyAttributes.equalsIgnoreNull(lastMessage?.bodyAttributes).not()
+    val peer = getPeer()
+    val otherPeer = other.getPeer()
+    val isDirect = isDirect()
+    val lastMessageChanged = lastMessage != other.lastMessage
+            || lastMessage?.body.equalsIgnoreNull(other.lastMessage?.body).not()
+            || lastMessage?.state != other.lastMessage?.state
+            || lastMessage?.bodyAttributes.equalsIgnoreNull(lastMessage?.bodyAttributes).not()
     val pendingReactionChanged = pendingReactions != other.pendingReactions
-    val userReactionsChanged = pendingReactionChanged || newReactions?.maxOfOrNull { it.id } != other.newReactions?.maxOfOrNull { it.id }
+    val userReactionsChanged =
+        pendingReactionChanged || newReactions?.maxOfOrNull { it.id } != other.newReactions?.maxOfOrNull { it.id }
     val lastDraftMessageChanged = draftMessage != other.draftMessage
     val membersCountChanged = memberCount != other.memberCount && userRole != other.userRole
-    val peerBlockedChanged = isDirect() && firstMember?.user?.blocked != otherFirstMember?.user?.blocked
+    val peerBlockedChanged = isDirect && peer?.user?.blocked != otherPeer?.user?.blocked
     val subjectChanged = isGroup && other.isGroup && subject.orEmpty() != other.subject.orEmpty()
     return ChannelDiff(
         subjectChanged = subjectChanged,
@@ -90,15 +94,16 @@ fun SceytChannel.diff(other: SceytChannel): ChannelDiff {
         lastMessageStatusChanged = lastMessage?.deliveryStatus != other.lastMessage?.deliveryStatus,
         unreadCountChanged = newMessageCount != other.newMessageCount,
         muteStateChanged = muted != other.muted,
-        presenceStateChanged = isDirect() && firstMember?.user?.presence?.hasDiff(otherFirstMember?.user?.presence) == true,
+        presenceStateChanged = isDirect && peer?.user?.presence?.hasDiff(otherPeer?.user?.presence) == true,
         markedUsUnreadChanged = unread != other.unread,
         lastReadMsdChanged = lastDisplayedMessageId != other.lastDisplayedMessageId,
         peerBlockedChanged = peerBlockedChanged,
         activityStateChanged = !events.equalsIgnoreNull(other.events),
-        membersChanged = membersCountChanged || members != other.members,
+        membersChanged = membersCountChanged,
         metadataUpdated = metadata != other.metadata,
         urlUpdated = uri != other.uri,
         pinStateChanged = pinnedAt != other.pinnedAt,
-        autoDeleteStateChanged = autoDeleteEnabled != other.autoDeleteEnabled)
+        autoDeleteStateChanged = autoDeleteEnabled != other.autoDeleteEnabled
+    )
 }
 

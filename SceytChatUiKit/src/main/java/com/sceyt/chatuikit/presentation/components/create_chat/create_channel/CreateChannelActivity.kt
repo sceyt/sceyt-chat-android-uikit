@@ -1,12 +1,12 @@
 package com.sceyt.chatuikit.presentation.components.create_chat.create_channel
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityOptionsCompat
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.role.Role
@@ -18,13 +18,16 @@ import com.sceyt.chatuikit.data.models.messages.SceytMessageType
 import com.sceyt.chatuikit.data.models.messages.SystemMsgBodyEnum
 import com.sceyt.chatuikit.databinding.SceytActivityCreateChannelBinding
 import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
+import com.sceyt.chatuikit.extensions.createIntent
 import com.sceyt.chatuikit.extensions.overrideTransitions
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
+import com.sceyt.chatuikit.navigation.Destination
+import com.sceyt.chatuikit.navigation.navigate
+import com.sceyt.chatuikit.navigation.navigateForResult
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.presentation.common.dialogs.SceytLoader.hideLoading
 import com.sceyt.chatuikit.presentation.common.dialogs.SceytLoader.showLoading
-import com.sceyt.chatuikit.presentation.components.channel.messages.ChannelActivity
 import com.sceyt.chatuikit.presentation.components.channel_info.members.MemberTypeEnum
 import com.sceyt.chatuikit.presentation.components.create_chat.viewmodel.CreateChatViewModel
 import com.sceyt.chatuikit.presentation.components.select_users.SelectUsersActivity
@@ -70,16 +73,15 @@ class CreateChannelActivity : AppCompatActivity() {
                 )
 
                 createdChannel = it
-                val animOptions = ActivityOptionsCompat.makeCustomAnimation(this@CreateChannelActivity,
-                    com.sceyt.chatuikit.R.anim.sceyt_anim_slide_in_right, com.sceyt.chatuikit.R.anim.sceyt_anim_slide_hold)
                 val args = SelectUsersPageArgs(
                     toolbarTitle = MemberTypeEnum.Subscriber.getPageTitle(this@CreateChannelActivity),
                     actionButtonAlwaysEnable = true,
                 )
-                selectUsersActivityLauncher.launch(
-                    SelectUsersActivity.newIntent(
-                        context = this@CreateChannelActivity,
-                        args = args), animOptions)
+                SceytChatUIKit.navigator.navigateForResult(
+                    context = this@CreateChannelActivity,
+                    launcher = selectUsersActivityLauncher,
+                    destination = Destination.SelectUsers(args)
+                )
             }
         }
 
@@ -122,7 +124,7 @@ class CreateChannelActivity : AppCompatActivity() {
     }
 
     private fun startConversationPageAndFinish(channel: SceytChannel) {
-        ChannelActivity.launch(this@CreateChannelActivity, channel)
+        SceytChatUIKit.navigator.navigate(this@CreateChannelActivity, Destination.Channel(channel))
 
         val intent = Intent()
         setResult(RESULT_OK, intent)
@@ -137,5 +139,11 @@ class CreateChannelActivity : AppCompatActivity() {
     private fun SceytActivityCreateChannelBinding.applyStyle() {
         root.setBackgroundColor(style.backgroundColor)
         style.toolbarStyle.apply(toolbar)
+    }
+
+    companion object {
+        fun createIntent(context: Context): Intent {
+            return context.createIntent<CreateChannelActivity>()
+        }
     }
 }

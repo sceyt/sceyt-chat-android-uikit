@@ -8,6 +8,7 @@ import androidx.test.filters.SmallTest
 import com.google.common.truth.Truth.assertThat
 import com.sceyt.chatuikit.persistence.database.SceytDatabase
 import com.sceyt.chatuikit.persistence.database.dao.ChannelDao
+import com.sceyt.chatuikit.persistence.database.dao.GlobalSearchDao
 import com.sceyt.chatuikit.persistence.database.entity.channel.ChannelEntity
 import com.sceyt.chatuikit.persistence.database.entity.channel.UserChatLinkEntity
 import kotlinx.coroutines.flow.first
@@ -296,106 +297,6 @@ class ChannelDaoTest {
         assertThat(firstPage.map { it.channelEntity.id }).isEqualTo(listOf(4L, 3L))
         assertThat(secondPage.map { it.channelEntity.id }).isEqualTo(listOf(2L, 1L))
     }
-
-    // endregion
-
-    // region searchChannelsByUserIds
-
-    @Test
-    fun searchChannelsByUserIds_matchesGroupChannelBySubject() = runTest {
-        // Given
-        insert(
-            channel(1, type = "public", subject = "Hello World"),
-            channel(2, type = "public", subject = "Other Channel"),
-        )
-
-        // When
-        val result = channelDao.searchChannelsByUserIds(
-            query = "Hello", userIds = emptyList(), limit = 10, offset = 0,
-            onlyMine = false, types = emptyList(), orderByLastMessage = false,
-            directType = "direct"
-        )
-
-        // Then
-        assertThat(result.map { it.channelEntity.id }).containsExactly(1L)
-    }
-
-    @Test
-    fun searchChannelsByUserIds_matchesDirectChannelByUserId() = runTest {
-        // Given
-        insert(
-            channel(1, type = "direct"),
-            channel(2, type = "direct"),
-        )
-        channelDao.insertUserChatLinks(listOf(link("alice", 1), link("bob", 2)))
-
-        // When — search for channels where alice is a member
-        val result = channelDao.searchChannelsByUserIds(
-            query = "", userIds = listOf("alice"), limit = 10, offset = 0,
-            onlyMine = false, types = listOf("direct"), orderByLastMessage = false,
-            directType = "direct"
-        )
-
-        // Then
-        assertThat(result.map { it.channelEntity.id }).containsExactly(1L)
-    }
-
-    @Test
-    fun searchChannelsByUserIds_onlyMine_excludesNonMemberChannels() = runTest {
-        // Given
-        insert(
-            channel(1, type = "public", subject = "Alpha", userRole = "owner"),
-            channel(2, type = "public", subject = "Alpha", userRole = ""),
-        )
-
-        // When
-        val result = channelDao.searchChannelsByUserIds(
-            query = "Alpha", userIds = emptyList(), limit = 10, offset = 0,
-            onlyMine = true, types = emptyList(), orderByLastMessage = false,
-            directType = "direct"
-        )
-
-        // Then — channel 2 excluded because empty role
-        assertThat(result.map { it.channelEntity.id }).containsExactly(1L)
-    }
-
-    @Test
-    fun searchChannelsByUserIds_filtersByType() = runTest {
-        // Given
-        insert(
-            channel(1, type = "public", subject = "Alpha"),
-            channel(2, type = "group", subject = "Alpha"),
-        )
-
-        // When
-        val result = channelDao.searchChannelsByUserIds(
-            query = "Alpha", userIds = emptyList(), limit = 10, offset = 0,
-            onlyMine = false, types = listOf("public"), orderByLastMessage = false,
-            directType = "direct"
-        )
-
-        // Then
-        assertThat(result.map { it.channelEntity.id }).containsExactly(1L)
-    }
-
-    @Test
-    fun searchChannelsByUserIds_returnsChannelOnceWhenMultipleUsersMatch() = runTest {
-        // Given — one channel with two members, both matching the search
-        insert(channel(1, type = "direct"))
-        channelDao.insertUserChatLinks(listOf(link("alice", 1), link("bob", 1)))
-
-        // When — both alice and bob are in userIds
-        val result = channelDao.searchChannelsByUserIds(
-            query = "", userIds = listOf("alice", "bob"), limit = 10, offset = 0,
-            onlyMine = false, types = listOf("direct"), orderByLastMessage = false,
-            directType = "direct"
-        )
-
-        // Then — channel appears only once even though multiple links matched
-        assertThat(result).hasSize(1)
-    }
-
-    // endregion
 
     // region getChannelById / getChannelsById
 

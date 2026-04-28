@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.presentation.components.channel_info.media.adapter
 
 import android.annotation.SuppressLint
+import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
@@ -8,17 +9,22 @@ import com.sceyt.chatuikit.databinding.SceytItemChannelMediaDateSeparatorBinding
 import com.sceyt.chatuikit.extensions.dispatchUpdatesToSafety
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.presentation.common.collections.SyncArrayList
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.AttachmentsDiffUtil
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.holders.BaseFileViewHolder
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelFileItem
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import java.util.Date
 
 class ChannelMediaAdapter(
-        private var attachments: SyncArrayList<ChannelFileItem>,
-        private val factory: ChannelAttachmentViewHolderFactory,
-) : RecyclerView.Adapter<BaseFileViewHolder<ChannelFileItem>>(), MediaStickHeaderItemDecoration.StickyHeaderInterface {
+    private var attachments: SyncArrayList<ChannelFileItem>,
+    private val factory: ChannelAttachmentViewHolderFactory,
+) : RecyclerView.Adapter<BaseFileViewHolder<ChannelFileItem>>(),
+    MediaStickHeaderItemDecoration.StickyHeaderInterface<SceytItemChannelMediaDateSeparatorBinding> {
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseFileViewHolder<ChannelFileItem> {
+    override fun onCreateViewHolder(
+        parent: ViewGroup,
+        viewType: Int
+    ): BaseFileViewHolder<ChannelFileItem> {
         return factory.createViewHolder(parent, viewType)
     }
 
@@ -99,21 +105,38 @@ class ChannelMediaAdapter(
     }
 
     fun notifyUpdate(data: List<ChannelFileItem>, recyclerView: RecyclerView) {
-        val myDiffUtil = com.sceyt.chatuikit.presentation.components.channel.messages.adapters.AttachmentsDiffUtil(attachments, data)
+        val myDiffUtil = AttachmentsDiffUtil(attachments, data)
         val productDiffResult = DiffUtil.calculateDiff(myDiffUtil, true)
         attachments = SyncArrayList(data)
         productDiffResult.dispatchUpdatesToSafety(recyclerView)
     }
 
-    override fun bindHeaderData(header: SceytItemChannelMediaDateSeparatorBinding, headerPosition: Int) {
+    override fun bindHeaderData(
+        recyclerView: RecyclerView,
+        headerPosition: Int
+    ): SceytItemChannelMediaDateSeparatorBinding {
+        val binding = SceytItemChannelMediaDateSeparatorBinding.inflate(
+            LayoutInflater.from(recyclerView.context),
+            recyclerView,
+            false
+        )
+        bindHeaderDataImpl(binding, headerPosition)
+        return binding
+    }
+
+    private fun bindHeaderDataImpl(
+        header: SceytItemChannelMediaDateSeparatorBinding,
+        headerPosition: Int
+    ) {
         val style = factory.dateSeparatorStyle
         val date = style.dateFormatter.format(
             context = header.root.context,
-            from = Date((attachments[headerPosition]).getCreatedAt()))
+            from = Date((attachments[headerPosition]).getCreatedAt())
+        )
 
         style.textStyle.apply(header.tvDate)
         header.tvDate.text = date
-        header.root.setBackgroundColor(style.backgroundColor)
+        style.backgroundStyle.apply(header.root)
     }
 
     override fun isHeader(itemPosition: Int): Boolean {

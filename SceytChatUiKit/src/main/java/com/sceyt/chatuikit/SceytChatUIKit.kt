@@ -28,6 +28,8 @@ import com.sceyt.chatuikit.persistence.di.useCaseModule
 import com.sceyt.chatuikit.persistence.lazyVar
 import com.sceyt.chatuikit.persistence.mappers.toSceytUser
 import com.sceyt.chatuikit.presentation.di.viewModelModule
+import com.sceyt.chatuikit.navigation.DefaultSceytChatUIKitNavigator
+import com.sceyt.chatuikit.navigation.SceytChatUIKitNavigator
 import com.sceyt.chatuikit.providers.ChatTokenProvider
 import com.sceyt.chatuikit.providers.SceytChatUIKitProviders
 import com.sceyt.chatuikit.renderers.SceytChatUIKitRenderers
@@ -52,6 +54,7 @@ object SceytChatUIKit : SceytKoinComponent {
     var providers: SceytChatUIKitProviders by lazyVar { SceytChatUIKitProviders() }
     var renderers: SceytChatUIKitRenderers by lazyVar { SceytChatUIKitRenderers() }
     var notifications: SceytNotifications by lazyVar { SceytNotifications(appContext) }
+    var navigator: SceytChatUIKitNavigator by lazyVar { DefaultSceytChatUIKitNavigator() }
     var chatTokenProvider: ChatTokenProvider? = null
 
     @JvmField

@@ -10,6 +10,7 @@ import androidx.core.graphics.drawable.IconCompat
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.getBitmapFromUrl
+import com.sceyt.chatuikit.navigation.Destination
 import com.sceyt.chatuikit.notifications.NotificationType
 import com.sceyt.chatuikit.notifications.builder.NotificationBuilderHelper.createMessagingStyle
 import com.sceyt.chatuikit.notifications.builder.NotificationBuilderHelper.getPerson
@@ -70,7 +71,7 @@ open class DefaultPushNotificationBuilder(
             context: Context,
             data: PushData
     ): PendingIntent {
-        val intent = context.packageManager.getLaunchIntentForPackage(context.packageName)
+        val intent = SceytChatUIKit.navigator.resolve(Destination.AppRoot()).createIntent(context)
         val requestCode = data.channel.id.toInt()
         return PendingIntent.getActivity(context, requestCode, intent, immutablePendingIntentFlags)
     }

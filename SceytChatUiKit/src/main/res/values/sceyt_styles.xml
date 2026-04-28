@@ -58,6 +58,10 @@
         <item name="cornerSize">8dp</item>
     </style>
 
+    <style name="SceytShapeAppearanceOverlay.CornerSize2" parent="@style/SceytShapeAppearanceOverlayRounded">
+        <item name="cornerSize">2dp</item>
+    </style>
+
     <style name="SceytShapeAppearanceOverlay.CornerTop8" parent="@style/SceytShapeAppearanceOverlayRounded">
         <item name="cornerSizeTopLeft">8dp</item>
         <item name="cornerSizeTopRight">8dp</item>

@@ -6,6 +6,8 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.CHANNEL_TABLE
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.USER_CHAT_LINK_TABLE
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.USER_METADATA_TABLE
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.USER_TABLE
 import com.sceyt.chatuikit.persistence.database.entity.user.UserDb
@@ -79,6 +81,36 @@ internal abstract class UserDao {
         """
     )
     abstract suspend fun getUserIdsByDisplayName(searchQuery: String): List<String>
+
+    @Transaction
+    @Query(
+        """
+        SELECT DISTINCT user.*
+        FROM $USER_TABLE AS user
+        JOIN $USER_CHAT_LINK_TABLE AS link ON link.user_id = user.user_id
+        JOIN $CHANNEL_TABLE AS channel ON channel.chat_id = link.chat_id
+        WHERE channel.userRole <> ''
+          AND (:excludedUserId IS NULL OR user.user_id != :excludedUserId)
+          AND (
+              user.firstName LIKE '%' || :searchQuery || '%'
+              OR user.lastName LIKE '%' || :searchQuery || '%'
+              OR (user.firstName || ' ' || user.lastName) LIKE '%' || :searchQuery || '%'
+              OR user.username LIKE '%' || :searchQuery || '%'
+          )
+        ORDER BY
+          CASE WHEN (user.firstName || ' ' || user.lastName) LIKE :searchQuery || '%' THEN 0 ELSE 1 END,
+          CASE WHEN user.username LIKE :searchQuery || '%' THEN 0 ELSE 1 END,
+          user.firstName COLLATE NOCASE,
+          user.lastName COLLATE NOCASE,
+          user.username COLLATE NOCASE
+        LIMIT :limit
+        """
+    )
+    abstract suspend fun searchUsersLinkedToJoinedChannelsByDisplayName(
+        searchQuery: String,
+        excludedUserId: String?,
+        limit: Int,
+    ): List<UserDb>
 
     @Transaction
     @Query(

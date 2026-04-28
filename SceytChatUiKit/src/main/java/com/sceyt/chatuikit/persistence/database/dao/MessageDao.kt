@@ -177,7 +177,8 @@ internal abstract class MessageDao {
         val entitiesToUpdate = rowIds.mapIndexedNotNull { index, rowId ->
             if (rowId == -1L) messageEntities[index] else null
         }
-        updateMessagesIgnored(entitiesToUpdate)
+        if (entitiesToUpdate.isNotEmpty())
+            updateMessagesIgnored(entitiesToUpdate)
     }
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -336,7 +337,7 @@ internal abstract class MessageDao {
 
     @Transaction
     open suspend fun insertUserMarkersIfExistMessage(entities: List<MarkerEntity>): List<Long> {
-        val existMessageIds = getExistMessageByIds(entities.map { it.messageId })
+        val existMessageIds = getExistMessageByIds(entities.map { it.messageId }.toSet().toList())
         // Filter markers which message exist in db
         val filtered = entities
             .filter { it.messageId in existMessageIds }
@@ -796,6 +797,10 @@ internal abstract class MessageDao {
     protected open suspend fun deleteAllReactionsAndTotals(messageIds: List<Long>) {
         deleteAllReactionTotalsByMessageId(messageIds)
     }
+
+    @Transaction
+    @Query("SELECT * FROM $MESSAGE_TABLE WHERE tid IN (:tids)")
+    abstract suspend fun getMessagesByTids(tids: List<Long>): List<MessageDb>
 
     @Query("DELETE FROM $REACTION_TOTAL_TABLE WHERE messageId IN (:messageId)")
     protected abstract fun deleteAllReactionTotalsByMessageId(messageId: List<Long>)

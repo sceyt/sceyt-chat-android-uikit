@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.databinding.SceytActivityChooseRoleBinding
 import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
+import com.sceyt.chatuikit.extensions.createIntent
 import com.sceyt.chatuikit.extensions.findIndexed
 import com.sceyt.chatuikit.extensions.overrideTransitions
 import com.sceyt.chatuikit.extensions.parcelable
@@ -109,7 +110,7 @@ class ChangeRoleActivity : AppCompatActivity() {
         const val MEMBER = "member"
 
         fun newInstance(context: Context, member: SceytMember): Intent {
-            return Intent(context, ChangeRoleActivity::class.java).apply {
+            return context.createIntent<ChangeRoleActivity> {
                 putExtra(MEMBER, member)
             }
         }

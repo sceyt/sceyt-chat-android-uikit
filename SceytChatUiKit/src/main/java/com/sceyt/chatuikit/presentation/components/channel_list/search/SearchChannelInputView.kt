@@ -7,13 +7,13 @@ import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.view.ViewCompat
 import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import com.sceyt.chatuikit.databinding.SceytSearchViewBinding
 import com.sceyt.chatuikit.extensions.hideSoftInput
 import com.sceyt.chatuikit.koin.SceytKoinComponent
-import com.sceyt.chatuikit.persistence.database.SceytDatabase
-import com.sceyt.chatuikit.presentation.helpers.DebounceHelper
+import com.sceyt.chatuikit.persistence.database.cleaner.DatabaseCleaner
 import com.sceyt.chatuikit.presentation.components.channel_list.search.listeners.click.SearchInputClickListeners
 import com.sceyt.chatuikit.presentation.components.channel_list.search.listeners.click.SearchInputClickListeners.ClickListeners
 import com.sceyt.chatuikit.presentation.components.channel_list.search.listeners.click.SearchInputClickListenersImpl
@@ -24,6 +24,7 @@ import com.sceyt.chatuikit.presentation.components.channel_list.search.listeners
 import com.sceyt.chatuikit.presentation.components.channel_list.search.listeners.event.SearchInputEventListeners.EventListeners
 import com.sceyt.chatuikit.presentation.components.channel_list.search.listeners.event.SearchInputEventListenersImpl
 import com.sceyt.chatuikit.presentation.components.channel_list.search.listeners.event.setListener
+import com.sceyt.chatuikit.presentation.helpers.DebounceHelper
 import com.sceyt.chatuikit.styles.search.SearchChannelInputStyle
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -31,14 +32,16 @@ import kotlinx.coroutines.launch
 import org.koin.core.component.inject
 
 class SearchChannelInputView @JvmOverloads constructor(
-        context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0,
+    context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0,
 ) : ConstraintLayout(context, attrs, defStyleAttr), ClickListeners,
-        EventListeners, SceytKoinComponent {
+    EventListeners, SceytKoinComponent {
 
-    private companion object {
+    companion object {
         private const val TYPING_DEBOUNCE_MS = 300L
+        internal const val SHARED_TRANSITION_NAME = "sceyt_global_search_bar"
     }
 
+    @Suppress("JoinDeclarationAndAssignment")
     private val binding: SceytSearchViewBinding
     private val style: SearchChannelInputStyle
     private val debounceInitDelegate = lazy { DebounceHelper(TYPING_DEBOUNCE_MS, this) }
@@ -49,6 +52,8 @@ class SearchChannelInputView @JvmOverloads constructor(
     private var debouncedInputChangedListener: InputChangedListener? = null
     private var inputChangedListener: InputChangedListener? = null
     private var querySubmitListener: InputTextSubmitListener? = null
+    private var launcherClickListener: ((View) -> Unit)? = null
+    private var launcherModeEnabled: Boolean = false
 
     private val query: String
         get() = binding.input.text.toString().trim()
@@ -62,9 +67,10 @@ class SearchChannelInputView @JvmOverloads constructor(
 
     private fun init() {
         binding.applyStyle()
+        ViewCompat.setTransitionName(this, SHARED_TRANSITION_NAME)
 
         binding.input.doAfterTextChanged { query ->
-            binding.icClear.isVisible = (query?.length ?: 0) > 0
+            binding.icClear.isVisible = !launcherModeEnabled && (query?.length ?: 0) > 0
             onQueryChanged(query.toString())
         }
 
@@ -82,8 +88,8 @@ class SearchChannelInputView @JvmOverloads constructor(
 
         binding.root.setOnLongClickListener {
             CoroutineScope(Dispatchers.IO).launch {
-                val appDatabase: SceytDatabase by inject()
-                appDatabase.clearAllTables()
+                val appDatabase: DatabaseCleaner by inject()
+                appDatabase.cleanDatabase()
             }
             Toast.makeText(context, "Database was cleared", Toast.LENGTH_SHORT).show()
             return@setOnLongClickListener false
@@ -91,6 +97,18 @@ class SearchChannelInputView @JvmOverloads constructor(
 
         binding.icClear.setOnClickListener {
             clickListeners.onClearClick(it)
+        }
+
+        setOnClickListener {
+            if (launcherModeEnabled) {
+                launcherClickListener?.invoke(this)
+            }
+        }
+
+        binding.input.setOnClickListener {
+            if (launcherModeEnabled) {
+                launcherClickListener?.invoke(this)
+            }
         }
     }
 
@@ -132,19 +150,34 @@ class SearchChannelInputView @JvmOverloads constructor(
     @Suppress("unused")
     fun setCustomClickListener(listener: ClickListeners) {
         clickListeners = (listener as? SearchInputClickListenersImpl)?.withDefaultListeners(this)
-                ?: listener
+            ?: listener
     }
 
     @Suppress("unused")
     fun setCustomEventListener(listener: EventListeners) {
         eventListeners = (listener as? SearchInputEventListenersImpl)?.withDefaultListeners(this)
-                ?: listener
+            ?: listener
     }
 
     @Suppress("unused")
     fun clearSearchAndFocus() {
         binding.input.text = null
         binding.input.clearFocus()
+    }
+
+    fun setLauncherMode(enabled: Boolean, onClick: ((View) -> Unit)? = null) {
+        launcherModeEnabled = enabled
+        launcherClickListener = onClick
+        binding.input.apply {
+            isFocusable = !enabled
+            isFocusableInTouchMode = !enabled
+            isCursorVisible = !enabled
+            isLongClickable = !enabled
+            isClickable = true
+        }
+        isClickable = enabled
+        isFocusable = enabled
+        binding.icClear.isVisible = !enabled && query.isNotEmpty()
     }
 
     override fun onClearClick(view: View) {

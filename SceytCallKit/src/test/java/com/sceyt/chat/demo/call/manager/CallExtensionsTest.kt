@@ -47,8 +47,7 @@ class CallExtensionsTest {
         )
 
         val title = call.displayTitle(
-            participants = listOf(
-                CallParticipantUiState(userId = "me", isSelf = true, name = "You"),
+            remoteParticipants = listOf(
                 CallParticipantUiState(userId = "alice", name = "Alice"),
             )
         )
@@ -61,8 +60,7 @@ class CallExtensionsTest {
         val call = mockCall(mediaFlow = MediaFlow.P2P, remoteIds = listOf("alice"))
 
         val title = call.displayTitle(
-            participants = listOf(
-                CallParticipantUiState(userId = "me", isSelf = true, name = "You"),
+            remoteParticipants = listOf(
                 CallParticipantUiState(userId = "alice", name = "Alice"),
             )
         )

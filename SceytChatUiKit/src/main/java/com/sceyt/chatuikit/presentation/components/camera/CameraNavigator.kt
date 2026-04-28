@@ -3,25 +3,28 @@ package com.sceyt.chatuikit.presentation.components.camera
 import android.app.Activity
 import android.content.Intent
 import androidx.activity.result.ActivityResultLauncher
+import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.navigation.Destination
+import com.sceyt.chatuikit.navigation.navigateForResult
 
 class CameraNavigator(
     private val activity: Activity,
     private val previewLauncher: ActivityResultLauncher<Intent>
 ) {
     fun openPhotoPreview(filePath: String) {
-        val intent = Intent(activity, CameraMediaPreviewActivity::class.java).apply {
-            putExtra(CameraMediaPreviewActivity.EXTRA_FILE_PATH, filePath)
-            putExtra(CameraMediaPreviewActivity.EXTRA_IS_VIDEO, false)
-        }
-        previewLauncher.launch(intent)
+        SceytChatUIKit.navigator.navigateForResult(
+            context = activity,
+            launcher = previewLauncher,
+            destination = Destination.CameraMediaPreview(filePath, false)
+        )
     }
 
     fun openVideoPreview(filePath: String) {
-        val intent = Intent(activity, CameraMediaPreviewActivity::class.java).apply {
-            putExtra(CameraMediaPreviewActivity.EXTRA_FILE_PATH, filePath)
-            putExtra(CameraMediaPreviewActivity.EXTRA_IS_VIDEO, true)
-        }
-        previewLauncher.launch(intent)
+        SceytChatUIKit.navigator.navigateForResult(
+            context = activity,
+            launcher = previewLauncher,
+            destination = Destination.CameraMediaPreview(filePath, true)
+        )
     }
 
     fun returnResult(filePath: String, isVideo: Boolean) {

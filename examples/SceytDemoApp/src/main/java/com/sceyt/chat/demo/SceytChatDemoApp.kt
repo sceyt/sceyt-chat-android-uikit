@@ -63,6 +63,7 @@ class SceytChatDemoApp : Application() {
             enableDatabase = true
         )
 
+        SceytChatUIKit.navigator = DemoAppNavigator()
         setupNotifications()
 
         ChatClient.setSceytLogLevel(SCTLogLevel.Info) { i: Int, s: String, s1: String ->

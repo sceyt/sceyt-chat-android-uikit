@@ -2,6 +2,7 @@ package com.sceyt.chat.demo.presentation
 
 import android.Manifest
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -17,7 +18,7 @@ import com.sceyt.chat.demo.call.manager.channelIdOrNull
 import com.sceyt.chat.demo.call.ui.CallActivity
 import com.sceyt.chat.demo.call.ui.attachActiveCallBanner
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
-import com.sceyt.chatuikit.extensions.launchActivity
+import com.sceyt.chatuikit.extensions.createIntent
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.presentation.components.channel.header.MessagesListHeaderView
 import com.sceyt.chatuikit.presentation.components.channel.messages.ChannelActivity
@@ -152,13 +153,13 @@ class CustomChannelActivity : ChannelActivity() {
     companion object {
         const val CHANNEL = "CHANNEL"
 
-        fun launch(context: Context, channel: SceytChannel) {
-            context.launchActivity<CustomChannelActivity>(
-                com.sceyt.chatuikit.R.anim.sceyt_anim_slide_in_right,
-                com.sceyt.chatuikit.R.anim.sceyt_anim_slide_hold
-            ) {
-                putExtra(CHANNEL, channel)
-            }
+        fun createIntent(
+            context: Context,
+            channel: SceytChannel,
+            targetMessageId: Long? = null,
+        ): Intent = context.createIntent<CustomChannelActivity> {
+            putExtra(CHANNEL, channel)
+            targetMessageId?.let { putExtra(TARGET_MESSAGE_ID, it) }
         }
     }
 }

@@ -6,25 +6,41 @@ import android.view.ViewGroup
 import androidx.media3.common.Player
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chatuikit.extensions.dispatchUpdatesToSafety
 import com.sceyt.chatuikit.extensions.keepScreenOn
-import com.sceyt.chatuikit.persistence.extensions.toArrayList
+import com.sceyt.chatuikit.persistence.differs.diff
+import com.sceyt.chatuikit.presentation.common.recyclerview.AsyncListDiffer
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.holders.BaseFileViewHolder
+import kotlinx.coroutines.CoroutineScope
 
 class MediaAdapter(
-        private var attachments: ArrayList<MediaItem>,
         private val attachmentViewHolderFactory: MediaFilesViewHolderFactory,
+        scope: CoroutineScope,
 ) : RecyclerView.Adapter<BaseFileViewHolder<MediaItem>>() {
     private var mediaPlayers = mutableListOf<Player>()
     private var wakeLock: PowerManager.WakeLock? = null
     var shouldPlayVideoPath: String? = null
+
+    private val differ = AsyncListDiffer(
+        adapter = this,
+        diffCallback = object : DiffUtil.ItemCallback<MediaItem>() {
+            override fun areItemsTheSame(oldItem: MediaItem, newItem: MediaItem) =
+                oldItem.attachment.id == newItem.attachment.id
+
+            override fun areContentsTheSame(oldItem: MediaItem, newItem: MediaItem) =
+                oldItem.attachment.diff(newItem.attachment).hasDifference().not()
+
+            override fun getChangePayload(oldItem: MediaItem, newItem: MediaItem) =
+                oldItem.attachment.diff(newItem.attachment)
+        },
+        scope = scope,
+    )
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseFileViewHolder<MediaItem> {
         return attachmentViewHolderFactory.createViewHolder(parent, viewType)
     }
 
     override fun onBindViewHolder(holder: BaseFileViewHolder<MediaItem>, position: Int) {
-        holder.bind(attachments[position])
+        holder.bind(differ.currentList[position])
     }
 
     override fun onViewAttachedToWindow(holder: BaseFileViewHolder<MediaItem>) {
@@ -37,44 +53,15 @@ class MediaAdapter(
         holder.onViewDetachedFromWindow()
     }
 
-    override fun getItemCount(): Int {
-        return attachments.size
-    }
+    override fun getItemCount(): Int = differ.currentList.size
 
-    override fun getItemViewType(position: Int): Int {
-        return attachmentViewHolderFactory.getItemViewType(attachments[position])
-    }
+    override fun getItemViewType(position: Int): Int =
+        attachmentViewHolderFactory.getItemViewType(differ.currentList[position])
 
-    fun getLastMediaItem() = attachments.last()
+    fun getData() = differ.currentList
 
-    fun getFirstMediaItem() = attachments.first()
-
-    fun getData() = attachments
-
-    fun notifyUpdate(data: List<MediaItem>, recyclerView: RecyclerView) {
-        val myDiffUtil = MediaDiffUtil(attachments, data)
-        val productDiffResult = DiffUtil.calculateDiff(myDiffUtil, true)
-        attachments = data.toArrayList()
-        productDiffResult.dispatchUpdatesToSafety(recyclerView)
-    }
-
-    fun addPrevItems(data: List<MediaItem>) {
-        if (data.isEmpty()) return
-        val items = data.toArrayList()
-        if (attachments.size == 1 && attachments[0].attachment.id == 0L) {
-            items.find { it.attachment.url == attachments[0].attachment.url }?.let {
-                items.remove(it)
-            }
-        }
-        if (items.isEmpty()) return
-        attachments.addAll(0, items)
-        notifyItemRangeInserted(0, items.size)
-    }
-
-    fun addNextItems(data: List<MediaItem>) {
-        if (data.isEmpty()) return
-        attachments.addAll(data)
-        notifyItemRangeInserted(attachments.size - data.size, data.size)
+    fun submitList(data: List<MediaItem>) {
+        differ.submitList(data)
     }
 
     fun pauseAllVideos() {

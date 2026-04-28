@@ -145,7 +145,8 @@ class ChannelsCache {
         }
     }
 
-    suspend fun upsertChannel(channel: SceytChannel) {
+    suspend fun upsertChannel(channel: SceytChannel?) {
+        channel ?: return
         upsertChannels(listOf(channel))
     }
 

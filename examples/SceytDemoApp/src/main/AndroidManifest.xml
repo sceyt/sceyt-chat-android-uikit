@@ -35,7 +35,8 @@
             android:exported="false" />
         <activity
             android:name=".presentation.splash.SplashActivity"
-            android:exported="true">
+            android:exported="true"
+            android:theme="@style/SceytAppTheme.SplashTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -62,10 +63,9 @@
         </activity>
         <activity
             android:name=".presentation.main.MainActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden"
             android:exported="true"
             android:launchMode="singleTask"
-            android:configChanges="orientation|screenSize|keyboardHidden"
-            android:theme="@style/SceytAppTheme.Default"
             android:windowSoftInputMode="adjustResize">
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
@@ -82,12 +82,6 @@
         <activity
             android:name=".presentation.welcome.WelcomeActivity"
             android:exported="true"
-            android:theme="@style/SceytAppTheme.Default"
-            android:windowSoftInputMode="adjustResize" />
-
-        <activity
-            android:name=".presentation.CustomStartChatActivity"
-            android:theme="@style/SceytAppTheme.Default"
             android:windowSoftInputMode="adjustResize" />
 
         <!-- WorkManager foreground service for calls -->
