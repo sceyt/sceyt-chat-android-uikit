@@ -41,6 +41,7 @@ import com.sceyt.chatuikit.persistence.database.entity.messages.LoadRangeEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.MarkerEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.MentionUserMessageLinkEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageEntity
+import com.sceyt.chatuikit.persistence.database.entity.messages.MessageFtsEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.PollEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.PollOptionEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.PollVoteEntity
@@ -82,8 +83,9 @@ import com.sceyt.chatuikit.persistence.database.entity.user.UserMetadataEntity
         PollOptionEntity::class,
         PollVoteEntity::class,
         PendingPollVoteEntity::class,
+        MessageFtsEntity::class,
     ],
-    version = 28,
+    version = 29,
     autoMigrations = [
         AutoMigration(from = 1, to = 2),
         AutoMigration(from = 2, to = 3),

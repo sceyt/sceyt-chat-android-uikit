@@ -3,7 +3,7 @@ activityCompose = "1.13.0"
 appcompat = "1.7.1"
 benchmark = "1.4.1"
 coilCompose = "2.7.0"
-composeBom = "2026.03.01"
+composeBom = "2026.04.01"
 constraintlayout = "2.2.1"
 converterMoshi = "3.0.0"
 converterGson = "3.0.0"
@@ -17,7 +17,7 @@ firebaseBom = "34.12.0"
 firebaseMessagingKtx = "24.1.2"
 flexbox = "3.0.0"
 fragmentKtx = "1.8.9"
-glide = "5.0.5"
+glide = "5.0.7"
 glideTransformations = "4.3.0"
 gson = "2.13.2"
 junit = "4.13.2"
@@ -115,6 +115,7 @@ robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectr
 room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
 room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
+room-testing = { module = "androidx.room:room-testing", version.ref = "room" }
 sceyt-call-android-sdk = { module = "com.sceyt:sceyt-call-android-sdk", version.ref = "sceytCallAndroidSdk" }
 sceyt-chat-android-sdk = { module = "com.sceyt:sceyt-chat-android-sdk", version.ref = "sceytChatAndroidSdk" }
 sceyt-tonemanager-android-sdk = { module = "com.sceyt:sceyt-tonemanager-android-sdk", version.ref = "sceytTonemanagerAndroidSdk" }

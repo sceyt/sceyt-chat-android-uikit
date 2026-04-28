@@ -12,11 +12,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
-private const val ALICE_ID = "alice"
-private const val SELECTED_MEMBER_ID = "selected-member"
-private const val SINGLE_WORD_QUERY = "release"
-private const val MULTI_WORD_QUERY = "release notes"
-
 @RunWith(AndroidJUnit4::class)
 class SearchMessagesBenchmark {
 
@@ -24,23 +19,26 @@ class SearchMessagesBenchmark {
     val benchmarkRule = BenchmarkRule()
 
     @Test
-    fun searchMessages_singleWordQuery_inJoinedPrivateChannels() {
-        benchmarkSearch(query = SINGLE_WORD_QUERY, senderId = null)
+    fun searchMessages_singleWordQuery_inJoinedChannels() {
+        benchmarkSearch(query = SearchMessagesBenchmarkFixture.SINGLE_WORD_QUERY, senderId = null)
     }
 
     @Test
-    fun searchMessages_multiWordQuery_inJoinedPrivateChannels() {
-        benchmarkSearch(query = MULTI_WORD_QUERY, senderId = null)
+    fun searchMessages_multiWordQuery_inJoinedChannels() {
+        benchmarkSearch(query = SearchMessagesBenchmarkFixture.MULTI_WORD_QUERY, senderId = null)
     }
 
     @Test
-    fun searchMessages_senderFilteredQuery_inJoinedPrivateChannels() {
-        benchmarkSearch(query = SINGLE_WORD_QUERY, senderId = ALICE_ID)
+    fun searchMessages_senderFilteredQuery_inJoinedChannels() {
+        benchmarkSearch(
+            query = SearchMessagesBenchmarkFixture.SINGLE_WORD_QUERY,
+            senderId = SearchMessagesBenchmarkFixture.ALICE_ID,
+        )
     }
 
     @Test
-    fun searchMessages_blankQuery_senderFilteredInJoinedPrivateChannels() {
-        benchmarkSearch(query = "", senderId = SELECTED_MEMBER_ID)
+    fun searchMessages_blankQuery_senderFilteredInJoinedChannels() {
+        benchmarkSearch(query = "", senderId = SearchMessagesBenchmarkFixture.SELECTED_MEMBER_ID)
     }
 
     private fun benchmarkSearch(
@@ -60,7 +58,7 @@ class SearchMessagesBenchmark {
             firstMessageId = summary.firstMessageId
         }
 
-        assertEquals(SearchMessagesBenchmarkBridge.QUERY_LIMIT, resultSize)
+        assertEquals(SearchMessagesBenchmarkFixture.QUERY_LIMIT, resultSize)
         assertTrue(firstMessageId > 0L)
     }
 
