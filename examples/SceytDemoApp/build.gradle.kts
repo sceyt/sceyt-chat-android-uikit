@@ -49,6 +49,11 @@ android {
             applicationIdSuffix = ".debug"
             manifestPlaceholders["crashlyticsCollectionEnabled"] = "false"
         }
+        create("benchmark") {
+            initWith(buildTypes.getByName("release"))
+            matchingFallbacks += listOf("release")
+            isDebuggable = false
+        }
     }
 
     productFlavors {

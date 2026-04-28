@@ -599,9 +599,41 @@ class SearchMessageDaoTest {
             ),
         )
 
-        // partial word should still match via LIKE '%..%'
+        // "retro" is a word-prefix of "retrospective" — should match via FTS prefix search
         val result = globalSearchDao.searchMessages(
             query = "retro", senderId = null,
+            channelTypes = listOf(ChannelTypeEnum.Direct.value, ChannelTypeEnum.Group.value),
+            onlyJoined = false,
+            limit = 20,
+            offset = 0,
+        )
+
+        assertThat(result.map { it.messageEntity.id }).containsExactly(1L)
+    }
+
+    @Test
+    fun searchMessagesGlobally_operatorLikeTokenMatchesLiterally() = runTest {
+        insertChannels(channel(id = 1))
+        insertMessages(
+            message(
+                tid = 1,
+                id = 1,
+                channelId = 1,
+                body = "AND world",
+                createdAt = 100
+            ),
+            message(
+                tid = 2,
+                id = 2,
+                channelId = 1,
+                body = "ordinary world",
+                createdAt = 200
+            ),
+        )
+
+        val result = globalSearchDao.searchMessages(
+            query = "AND",
+            senderId = null,
             channelTypes = listOf(ChannelTypeEnum.Direct.value, ChannelTypeEnum.Group.value),
             onlyJoined = false,
             limit = 20,
@@ -1381,6 +1413,88 @@ class SearchMessageDaoTest {
 
         assertThat(result.map { it.messageEntity.id }).containsExactly(202L, 201L).inOrder()
     }
+
+    @Test
+    fun searchMessagesGlobally_blankQueryWithSenderAndJoinedFilter_returnsLatestEligibleMessages() =
+        runTest {
+            insertChannels(
+                channel(id = 1, type = ChannelTypeEnum.Direct.value, userRole = "member"),
+                channel(id = 2, type = ChannelTypeEnum.Group.value, userRole = "owner"),
+                channel(id = 3, type = ChannelTypeEnum.Direct.value, userRole = ""),
+                channel(id = 4, type = ChannelTypeEnum.Public.value, userRole = "member"),
+            )
+            insertMessages(
+                message(
+                    tid = 1,
+                    id = 401,
+                    channelId = 1,
+                    body = "older alice",
+                    fromId = "alice",
+                    createdAt = 100,
+                ),
+                message(
+                    tid = 2,
+                    id = 402,
+                    channelId = 2,
+                    body = "newer alice",
+                    fromId = "alice",
+                    createdAt = 300,
+                ),
+                message(
+                    tid = 3,
+                    id = 403,
+                    channelId = 1,
+                    body = "bob message",
+                    fromId = "bob",
+                    createdAt = 400,
+                ),
+                message(
+                    tid = 4,
+                    id = 404,
+                    channelId = 3,
+                    body = "unjoined alice",
+                    fromId = "alice",
+                    createdAt = 500,
+                ),
+                message(
+                    tid = 5,
+                    id = 405,
+                    channelId = 4,
+                    body = "public alice",
+                    fromId = "alice",
+                    createdAt = 600,
+                ),
+                message(
+                    tid = 6,
+                    id = 406,
+                    channelId = 1,
+                    body = "pending alice",
+                    fromId = "alice",
+                    createdAt = 700,
+                    deliveryStatus = MessageDeliveryStatus.Pending,
+                ),
+                message(
+                    tid = 7,
+                    id = 407,
+                    channelId = 1,
+                    body = "hidden alice",
+                    fromId = "alice",
+                    createdAt = 800,
+                    unList = true,
+                ),
+            )
+
+            val result = globalSearchDao.searchMessages(
+                query = "",
+                senderId = "alice",
+                channelTypes = listOf(ChannelTypeEnum.Direct.value, ChannelTypeEnum.Group.value),
+                onlyJoined = true,
+                limit = 20,
+                offset = 0,
+            )
+
+            assertThat(result.map { it.messageEntity.id }).containsExactly(402L, 401L).inOrder()
+        }
 
     @Test
     fun searchMessagesGlobally_caseInsensitiveMatchOnSingleWord() = runTest {

@@ -2,8 +2,8 @@ package com.sceyt.chatuikit.persistence.di
 
 import android.content.Context
 import androidx.room.Room
-import com.sceyt.chatuikit.BuildConfig
 import com.sceyt.chatuikit.SceytChatUIFacade
+import com.sceyt.chatuikit.domain.usecases.PauseOrResumeTransferUseCase
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.notifications.managers.RealtimeNotificationManager
 import com.sceyt.chatuikit.notifications.managers.RealtimeNotificationManagerImpl
@@ -63,7 +63,6 @@ import com.sceyt.chatuikit.persistence.logicimpl.usecases.RemovePollVoteUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.RetractPollVoteUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.SendPollPendingVotesUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.SetUserPresenceUseCase
-import com.sceyt.chatuikit.domain.usecases.PauseOrResumeTransferUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.ShouldShowNotificationUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.TogglePollVoteUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.UpdatePollUseCase
@@ -79,16 +78,17 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.qualifier.named
+import org.koin.dsl.bind
 import org.koin.dsl.module
 import java.util.concurrent.Executors
 import kotlin.coroutines.CoroutineContext
 
 internal val appModules = module {
-    single { SceytSyncManager(get(), get()) }
-    single<FileTransferService> { FileTransferServiceImpl(get(), get()) }
-    single<MessageLoadRangeUpdater> { MessageLoadRangeUpdater(get()) }
-    single<PushService> { PushServiceImpl(get(), get(), get()) }
-    single<RealtimeNotificationManager> { RealtimeNotificationManagerImpl(get(), get()) }
+    singleOf(::SceytSyncManager)
+    singleOf(::FileTransferServiceImpl) bind FileTransferService::class
+    singleOf(::MessageLoadRangeUpdater)
+    singleOf(::PushServiceImpl) bind PushService::class
+    singleOf(::RealtimeNotificationManagerImpl) bind RealtimeNotificationManager::class
 }
 
 internal fun databaseModule(enableDatabase: Boolean) = module {
@@ -105,13 +105,17 @@ internal fun databaseModule(enableDatabase: Boolean) = module {
 
         return builder
             .fallbackToDestructiveMigration(dropAllTables = true)
-            .addMigrations(DatabaseMigrations.Migration_15_16, DatabaseMigrations.Migration_16_17)
+            .addMigrations(
+                DatabaseMigrations.Migration_15_16,
+                DatabaseMigrations.Migration_16_17,
+                DatabaseMigrations.Migration_28_29,
+            )
             .allowMainThreadQueries()
             .build()
     }
 
-    single { provideDatabase(get()) }
-    single<DatabaseCleaner> { DatabaseCleanerImpl(get()) }
+    singleOf(::provideDatabase)
+    singleOf(::DatabaseCleanerImpl) bind DatabaseCleaner::class
     single { get<SceytDatabase>().channelDao() }
     single { get<SceytDatabase>().messageDao() }
     single { get<SceytDatabase>().globalSearchDao() }
@@ -147,19 +151,18 @@ internal val interactorModule = module {
 }
 
 internal val logicModule = module {
-    single<PersistenceChannelsLogic> { PersistenceChannelsLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
-    single<PersistenceMessagesLogic> { PersistenceMessagesLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(),get(), get()) }
-    single<PersistenceAttachmentLogic> { PersistenceAttachmentLogicImpl(get(), get(), get(), get(), get(), get(), get(), get()) }
-    single<PersistenceReactionsLogic> { PersistenceReactionsLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
-    single<PersistencePollLogic> { PersistencePollLogicImpl(get(),
-        get(), get(), get(), get(), get(),get()) }
-    single<PersistenceMembersLogic> { PersistenceMembersLogicImpl(get(), get(), get(), get(), get(), get(), get()) }
-    single<PersistenceUsersLogic> { PersistenceUsersLogicImpl(get(), get(), get(), get()) }
-    single<PersistenceMessageMarkerLogic> { PersistenceMessageMarkerLogicImpl(get(), get(), get(), get()) }
-    single<PersistenceConnectionLogic> { PersistenceConnectionLogicImpl(get(), get(), get(), get(), get()) }
-    single<PersistenceChannelInviteKeyLogic> { PersistenceChannelInviteKeyLogicImpl(get(), get()) }
-    single<FileTransferLogic> { FileTransferLogicImpl(get(), get()) }
-    single<GlobalSearchDataSource> { GlobalSearchLocalInteractor(get(), get(), get(), get()) }
+    singleOf(::PersistenceChannelsLogicImpl) bind PersistenceChannelsLogic::class
+    singleOf(::PersistenceMessagesLogicImpl) bind PersistenceMessagesLogic::class
+    singleOf(::PersistenceAttachmentLogicImpl) bind PersistenceAttachmentLogic::class
+    singleOf(::PersistenceReactionsLogicImpl) bind PersistenceReactionsLogic::class
+    singleOf(::PersistencePollLogicImpl) bind PersistencePollLogic::class
+    singleOf(::PersistenceMembersLogicImpl) bind PersistenceMembersLogic::class
+    singleOf(::PersistenceUsersLogicImpl) bind PersistenceUsersLogic::class
+    singleOf(::PersistenceMessageMarkerLogicImpl) bind PersistenceMessageMarkerLogic::class
+    singleOf(::PersistenceConnectionLogicImpl) bind PersistenceConnectionLogic::class
+    singleOf(::PersistenceChannelInviteKeyLogicImpl) bind PersistenceChannelInviteKeyLogic::class
+    singleOf(::FileTransferLogicImpl) bind FileTransferLogic::class
+    singleOf(::GlobalSearchLocalInteractor) bind GlobalSearchDataSource::class
 }
 
 internal val useCaseModule = module {
@@ -190,15 +193,20 @@ internal val cacheModule = module {
 internal val coroutineModule = module {
     single {
         CoroutineExceptionHandler { _, throwable ->
-            if (BuildConfig.DEBUG)
-                SceytLog.e("CoroutineExceptionHandler", "An exception accrued in base CoroutineExceptionHandler", throwable)
+            SceytLog.e(
+                tag = "CoroutineExceptionHandler",
+                message = "An exception accrued in base CoroutineExceptionHandler",
+                throwable = throwable
+            )
         }
     }
     single<CoroutineScope> { CoroutineScope(SupervisorJob()) }
     single(qualifier = named(CoroutineContextType.Ui)) { providesUiContext(get()) }
     single(qualifier = named(CoroutineContextType.IO)) { providesIOContext(get()) }
     single(qualifier = named(CoroutineContextType.Computation)) { providesComputationContext(get()) }
-    single(qualifier = named(CoroutineContextType.SingleThreaded)) { providesSingleThreadedContext(get()) }
+    single(qualifier = named(CoroutineContextType.SingleThreaded)) {
+        providesSingleThreadedContext(get())
+    }
 }
 
 fun providesUiContext(exceptionHandler: CoroutineExceptionHandler) =
