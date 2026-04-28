@@ -41,14 +41,17 @@ import com.sceyt.chatuikit.presentation.helpers.ExoPlayerHelper
 import com.sceyt.chatuikit.styles.preview.MediaPreviewStyle
 
 class MediaVideoViewHolder(
-        private val binding: SceytMediaItemVideoBinding,
-        private val style: MediaPreviewStyle,
-        private val clickListeners: (MediaItem) -> Unit,
-        private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
-) : BaseFileViewHolder<MediaItem>(binding.root, needMediaDataCallback) {
+    private val binding: SceytMediaItemVideoBinding,
+    private val style: MediaPreviewStyle,
+    private val clickListeners: (MediaItem) -> Unit,
+    private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
+) : BaseFileViewHolder<MediaItem>(binding.root, needMediaDataCallback),
+    SharedTransitionViewProvider {
     private var playerHelper: ExoPlayerHelper? = null
     private var videoController: ConstraintLayout? = null
     private val mediaAdapter by lazy { bindingAdapter as? MediaAdapter }
+    private var pendingReadyCallback: (() -> Unit)? = null
+    private var isOriginalImageReady = false
 
     init {
         binding.applyStyle()
@@ -65,8 +68,9 @@ class MediaVideoViewHolder(
 
     override fun bind(item: MediaItem) {
         super.bind(item)
-
         initVideoController()
+        pendingReadyCallback = null
+        isOriginalImageReady = false
     }
 
     @OptIn(UnstableApi::class)
@@ -74,27 +78,32 @@ class MediaVideoViewHolder(
     private fun initVideoController() {
         doSafe { binding.videoView.controllerHideOnTouch = false }
         var isPlayingBeforePause = false
-        binding.videoView.findViewById<ConstraintLayout>(R.id.videoTimeContainer)?.let { videoTimeContainer ->
-            with(videoTimeContainer) {
-                applySystemWindowInsetsPadding(applyBottom = true, applyRight = true, applyLeft = true)
-                findViewById<DefaultTimeBar>(R.id.exo_progress)?.setOnTouchListener { _, event ->
-                    when (event.action) {
-                        MotionEvent.ACTION_DOWN -> {
-                            isPlayingBeforePause = playerHelper?.isPlaying() ?: false
-                            playerHelper?.pausePlayer()
-                        }
+        binding.videoView.findViewById<ConstraintLayout>(R.id.videoTimeContainer)
+            ?.let { videoTimeContainer ->
+                with(videoTimeContainer) {
+                    applySystemWindowInsetsPadding(
+                        applyBottom = true,
+                        applyRight = true,
+                        applyLeft = true
+                    )
+                    findViewById<DefaultTimeBar>(R.id.exo_progress)?.setOnTouchListener { _, event ->
+                        when (event.action) {
+                            MotionEvent.ACTION_DOWN -> {
+                                isPlayingBeforePause = playerHelper?.isPlaying() ?: false
+                                playerHelper?.pausePlayer()
+                            }
 
-                        MotionEvent.ACTION_UP -> if (isPlayingBeforePause) {
-                            playerHelper?.resumePlayer()
-                            initWakeLock()
+                            MotionEvent.ACTION_UP -> if (isPlayingBeforePause) {
+                                playerHelper?.resumePlayer()
+                                initWakeLock()
+                            }
                         }
+                        false
                     }
-                    false
+                    isVisible = ((context as? MediaPreviewActivity)?.isVisibleToolbar() ?: true)
+                    videoController = this
                 }
-                isVisible = ((context as? MediaPreviewActivity)?.isVisibleToolbar() ?: true)
-                videoController = this
             }
-        }
 
         videoController?.findViewById<View>(R.id.exo_play_pause)?.setOnTouchListener { _, event ->
             if (event.action == MotionEvent.ACTION_UP && playerHelper?.player?.playbackState == Player.STATE_IDLE)
@@ -106,7 +115,7 @@ class MediaVideoViewHolder(
 
     private fun setPlayingState() {
         videoController?.isVisible = ((context as? MediaPreviewActivity)?.isVisibleToolbar()
-                ?: true)
+            ?: true)
         initPlayerHelper()
     }
 
@@ -150,7 +159,7 @@ class MediaVideoViewHolder(
 
         when (data.state) {
             PendingUpload, ErrorUpload, PauseUpload -> {
-                viewHolderHelper.drawOriginalFile(binding.icThumb)
+                drawOriginalFile()
             }
 
             PendingDownload -> {
@@ -167,11 +176,11 @@ class MediaVideoViewHolder(
 
             Uploading -> {
                 if (isOnBind)
-                    viewHolderHelper.drawOriginalFile(binding.icThumb)
+                    drawOriginalFile()
             }
 
             Downloaded, Uploaded -> {
-                viewHolderHelper.drawOriginalFile(binding.icThumb)
+                drawOriginalFile()
                 if (isAttachedToWindow)
                     initPlayerHelper()
             }
@@ -185,7 +194,7 @@ class MediaVideoViewHolder(
             }
 
             FilePathChanged -> {
-                viewHolderHelper.drawOriginalFile(binding.icThumb)
+                drawOriginalFile()
             }
 
             ThumbLoaded, Preparing, WaitingToUpload -> Unit
@@ -205,6 +214,29 @@ class MediaVideoViewHolder(
     }
 
     override fun needThumbFor() = ThumbFor.MediaPreview
+
+    override fun provide() = binding.icThumb
+
+    override fun awaitReadyForSharedTransition(onReady: () -> Unit) {
+        if (isOriginalImageReady) {
+            onReady()
+        } else {
+            pendingReadyCallback = onReady
+        }
+    }
+
+    private fun drawOriginalFile() {
+        val filePath = fileItem.attachment.filePath
+        isOriginalImageReady = false
+        viewHolderHelper.drawOriginalFile(binding.icThumb) ready@{
+            if (filePath.isNullOrBlank() || filePath != fileItem.attachment.filePath) {
+                return@ready
+            }
+            isOriginalImageReady = true
+            pendingReadyCallback?.invoke()
+            pendingReadyCallback = null
+        }
+    }
 
     @OptIn(UnstableApi::class)
     private fun SceytMediaItemVideoBinding.applyStyle() {

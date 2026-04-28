@@ -10,6 +10,7 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.SceytMarker
@@ -18,6 +19,9 @@ import com.sceyt.chatuikit.data.models.messages.SceytMessageType
 import com.sceyt.chatuikit.databinding.SceytFragmentMessageInfoBinding
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.setBundleArguments
+import com.sceyt.chatuikit.navigation.Destination
+import com.sceyt.chatuikit.navigation.MediaPreviewParams
+import com.sceyt.chatuikit.navigation.navigate
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Downloaded
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.ThumbLoaded
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploaded
@@ -25,9 +29,6 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.fil
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.openFile
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageInfoViewProvider
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
-import com.sceyt.chatuikit.presentation.components.channel.messages.preview.SelfDestructingMediaPreviewActivity
-import com.sceyt.chatuikit.presentation.components.channel.messages.preview.SelfDestructingVoiceMessageActivity
-import com.sceyt.chatuikit.presentation.components.media.MediaPreviewActivity
 import com.sceyt.chatuikit.presentation.components.message_info.adapter.UserMarkerAdapter
 import com.sceyt.chatuikit.presentation.components.message_info.viewmodel.MessageInfoViewModel
 import com.sceyt.chatuikit.presentation.components.message_info.viewmodel.MessageInfoViewModelFactory
@@ -61,7 +62,11 @@ open class MessageInfoFragment : Fragment() {
         style = MessageInfoStyle.Builder(context, messageItemStyle).build()
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
         return SceytFragmentMessageInfoBinding.inflate(inflater, container, false).also {
             binding = it
         }.root
@@ -133,10 +138,12 @@ open class MessageInfoFragment : Fragment() {
 
     protected open fun setMessageDetails(message: SceytMessage) {
         with(binding ?: return) {
-            tvSentDate.text = style.messageDateFormatter.format(requireContext(), Date(message.createdAt))
-            groupSizeViews.isVisible = viewModel.getMessageAttachmentToShowSizeIfExist(message)?.let {
-                tvSize.text = style.attachmentSizeFormatter.format(requireContext(), it)
-            } != null
+            tvSentDate.text =
+                style.messageDateFormatter.format(requireContext(), Date(message.createdAt))
+            groupSizeViews.isVisible =
+                viewModel.getMessageAttachmentToShowSizeIfExist(message)?.let {
+                    tvSize.text = style.attachmentSizeFormatter.format(requireContext(), it)
+                } != null
         }
     }
 
@@ -191,28 +198,50 @@ open class MessageInfoFragment : Fragment() {
 
             if (item.type == AttachmentTypeEnum.Voice) {
                 val styleId = arguments?.getString(STYLE_ID_KEY) ?: return
-                SelfDestructingVoiceMessageActivity.launch(
+                SceytChatUIKit.navigator.navigate(
                     context = requireContext(),
-                    message = message,
-                    attachment = item.attachment,
-                    styleId = styleId
+                    destination = Destination.SelfDestructingVoicePreview(
+                        message = message,
+                        attachment = item.attachment,
+                        styleId = styleId
+                    )
                 )
             } else {
-                SelfDestructingMediaPreviewActivity.launchActivity(
+                SceytChatUIKit.navigator.navigate(
                     context = requireContext(),
-                    message = message,
-                    attachment = item.attachment
+                    destination = Destination.SelfDestructingMediaPreview(
+                        message = message,
+                        attachment = item.attachment
+                    )
                 )
             }
             return
         }
         when (item.type) {
             AttachmentTypeEnum.Image -> {
-                MediaPreviewActivity.launch(requireContext(), item.attachment, message.user, message.channelId)
+                SceytChatUIKit.navigator.navigate(
+                    context = requireContext(),
+                    destination = Destination.MediaPreview(
+                        MediaPreviewParams.SingleAttachment(
+                            attachment = item.attachment,
+                            from = message.user,
+                            channelId = message.channelId,
+                        )
+                    )
+                )
             }
 
             AttachmentTypeEnum.Video -> {
-                MediaPreviewActivity.launch(requireContext(), item.attachment, message.user, message.channelId)
+                SceytChatUIKit.navigator.navigate(
+                    context = requireContext(),
+                    destination = Destination.MediaPreview(
+                        MediaPreviewParams.SingleAttachment(
+                            attachment = item.attachment,
+                            from = message.user,
+                            channelId = message.channelId,
+                        )
+                    )
+                )
             }
 
             else -> item.attachment.openFile(requireContext())
@@ -269,14 +298,14 @@ open class MessageInfoFragment : Fragment() {
         private const val STYLE_ID_KEY = "STYLE_ID_KEY"
 
         fun newInstance(
-                message: SceytMessage,
-                messageItemStyleId: String,
+            message: SceytMessage,
+            messageItemStyleId: String,
         ) = newInstance(message.id, message.channelId, messageItemStyleId)
 
         fun newInstance(
-                messageId: Long,
-                channelId: Long,
-                messageItemStyleId: String?,
+            messageId: Long,
+            channelId: Long,
+            messageItemStyleId: String?,
         ) = MessageInfoFragment().setBundleArguments {
             putLong(KEY_MESSAGE_ID, messageId)
             putLong(KEY_CHANNEL_ID, channelId)

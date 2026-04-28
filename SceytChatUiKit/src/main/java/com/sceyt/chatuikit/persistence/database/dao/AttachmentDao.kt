@@ -180,4 +180,5 @@ internal abstract class AttachmentDao {
     @VisibleForTesting
     @Insert
     abstract suspend fun insertAttachments(attachments: List<AttachmentEntity>)
+
 }

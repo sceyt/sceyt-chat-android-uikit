@@ -9,7 +9,6 @@ import androidx.room.RoomWarnings
 import androidx.room.Transaction
 import androidx.room.Update
 import androidx.sqlite.db.SimpleSQLiteQuery
-import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.CHANNEL_TABLE
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.USER_CHAT_LINK_TABLE
 import com.sceyt.chatuikit.persistence.database.entity.channel.ChannelDb
@@ -71,50 +70,6 @@ internal abstract class ChannelDao {
         orderByLastMessage: Boolean,
         onlyMine: Boolean,
         typesEmpty: Boolean = types.isEmpty()
-    ): List<ChannelDb>
-
-    @Transaction
-    @Query(
-        """
-        SELECT * FROM $CHANNEL_TABLE AS channel
-        WHERE (
-            (
-                type <> :directType
-                AND (NOT pending OR lastMessageTid != 0)
-                AND (NOT :onlyMine OR channel.userRole <> '')
-                AND subject LIKE '%' || :query || '%'
-            )
-            OR (
-                type = :directType
-                AND EXISTS (
-                    SELECT 1
-                    FROM $USER_CHAT_LINK_TABLE AS link
-                    WHERE link.chat_id = channel.chat_id
-                      AND (
-                          link.user_id IN (:userIds)
-                          OR (channel.isSelf AND link.user_id LIKE '%' || :query || '%')
-                      )
-                )
-            )
-        )
-        AND (:typesEmpty OR type IN (:types))
-        ORDER BY
-          CASE WHEN pinnedAt > 0 THEN pinnedAt END DESC,
-          CASE WHEN :orderByLastMessage AND lastMessageAt IS NOT NULL THEN lastMessageAt END DESC,
-          createdAt DESC
-        LIMIT :limit OFFSET :offset
-        """
-    )
-    abstract suspend fun searchChannelsByUserIds(
-        query: String,
-        userIds: List<String>,
-        limit: Int,
-        offset: Int,
-        onlyMine: Boolean,
-        types: List<String>,
-        orderByLastMessage: Boolean,
-        typesEmpty: Boolean = types.isEmpty(),
-        directType: String = ChannelTypeEnum.Direct.value,
     ): List<ChannelDb>
 
     @Transaction

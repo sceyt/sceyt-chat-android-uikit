@@ -4,4 +4,5 @@ enum class ThumbFor(val value: Int) {
     MessagesLisView(1),
     ChannelInfo(2),
     MediaPreview(3),
+    GlobalSearch(4),
 }

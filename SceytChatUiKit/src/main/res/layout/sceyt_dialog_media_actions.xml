@@ -8,6 +8,23 @@
     android:paddingVertical="10dp">
 
     <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/showInChat"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?selectableItemBackground"
+        android:drawableStart="@drawable/sceyt_ic_show_in_chat"
+        android:drawablePadding="19dp"
+        android:gravity="center_vertical"
+        android:includeFontPadding="false"
+        android:paddingHorizontal="20dp"
+        android:paddingVertical="10dp"
+        android:textColor="@color/sceyt_color_text_primary"
+        android:textSize="16sp"
+        android:visibility="gone"
+        tools:text="Show in chat"
+        tools:visibility="visible" />
+
+    <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/save"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

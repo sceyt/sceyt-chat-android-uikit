@@ -59,5 +59,6 @@
     <color name="sceyt_progress_track_color">#D0D8E3</color>
     <color name="sceyt_color_disabled">#818C99</color>
     <color name="sceyt_color_avatar_placeholder">#D9D9DE</color>
+    <color name="sceyt_color_shadow">#80000000</color>
 
 </resources>

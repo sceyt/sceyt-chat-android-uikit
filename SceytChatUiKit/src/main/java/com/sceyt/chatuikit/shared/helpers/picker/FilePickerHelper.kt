@@ -16,6 +16,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.asFragmentActivity
@@ -31,6 +32,8 @@ import com.sceyt.chatuikit.extensions.initVideoCameraLauncher
 import com.sceyt.chatuikit.extensions.oneOfPermissionsIgnored
 import com.sceyt.chatuikit.extensions.permissionIgnored
 import com.sceyt.chatuikit.logger.SceytLog
+import com.sceyt.chatuikit.navigation.Destination
+import com.sceyt.chatuikit.navigation.navigateForResult
 import com.sceyt.chatuikit.presentation.common.dialogs.SceytDialog
 import com.sceyt.chatuikit.presentation.common.dialogs.SceytLoader
 import com.sceyt.chatuikit.presentation.components.camera.CameraState
@@ -171,10 +174,10 @@ class FilePickerHelper {
     }
 
     fun chooseFromGallery(
-            allowMultiple: Boolean,
-            onlyImages: Boolean,
-            parentDirToCopyProvider: () -> File = { context.cacheDir },
-            result: (uri: List<String>) -> Unit
+        allowMultiple: Boolean,
+        onlyImages: Boolean,
+        parentDirToCopyProvider: () -> File = { context.cacheDir },
+        result: (uri: List<String>) -> Unit
     ) {
         chooseFilesCb = result
         this.parentDirToCopyProvider = parentDirToCopyProvider
@@ -184,10 +187,10 @@ class FilePickerHelper {
     }
 
     fun chooseMultipleFiles(
-            allowMultiple: Boolean,
-            mimetypes: Array<String>? = null,
-            parentDirToCopyProvider: () -> File = { context.cacheDir },
-            result: (uri: List<String>) -> Unit
+        allowMultiple: Boolean,
+        mimetypes: Array<String>? = null,
+        parentDirToCopyProvider: () -> File = { context.cacheDir },
+        result: (uri: List<String>) -> Unit
     ) {
         chooseFilesCb = result
         this.parentDirToCopyProvider = parentDirToCopyProvider
@@ -196,16 +199,21 @@ class FilePickerHelper {
     }
 
     fun openMediaPicker(
-            pickerListener: BottomSheetMediaPicker.PickerListener,
-            filter: BottomSheetMediaPicker.PickerFilterType = sceytGalleryFilter,
-            maxSelectCount: Int = sceytGalleryMaxSelectCount,
-            vararg selections: String,
+        pickerListener: BottomSheetMediaPicker.PickerListener,
+        filter: BottomSheetMediaPicker.PickerFilterType = sceytGalleryFilter,
+        maxSelectCount: Int = sceytGalleryMaxSelectCount,
+        vararg selections: String,
     ) {
         val permissions = getPermissionsForMangeStorage()
         sceytGalleryFilter = filter
         sceytGalleryMaxSelectCount = maxSelectCount
         if (context.checkAndAskPermissions(requestSceytGalleryPermissionLauncher, *permissions)) {
-            openSceytGalleryPicker(pickerListener, filter = filter, maxSelectCount = maxSelectCount, *selections)
+            openSceytGalleryPicker(
+                pickerListener = pickerListener,
+                filter = filter,
+                maxSelectCount = maxSelectCount,
+                selections = selections
+            )
         } else BottomSheetMediaPicker.pickerListener = pickerListener
     }
 
@@ -214,21 +222,28 @@ class FilePickerHelper {
     }
 
     fun openCustomCamera(
-            allowedMode: CameraState.AllowedMode,
-            result: (filePath: String, isVideo: Boolean) -> Unit
+        allowedMode: CameraState.AllowedMode,
+        result: (filePath: String, isVideo: Boolean) -> Unit
     ) {
         customCameraCb = result
         pendingCustomCameraMode = allowedMode
-        if (context.checkAndAskPermissions(requestCustomCameraPermissionLauncher,
-                    Manifest.permission.CAMERA)) {
+        if (context.checkAndAskPermissions(
+                requestCustomCameraPermissionLauncher, Manifest.permission.CAMERA
+            )
+        ) {
             launchCustomCamera(allowedMode)
             pendingCustomCameraMode = null
         }
     }
 
     private fun launchCustomCamera(allowedMode: CameraState.AllowedMode) {
-        val intent = CustomCameraActivity.newIntent(context, allowedMode)
-        customCameraLauncher?.launch(intent)
+        customCameraLauncher?.let {
+            SceytChatUIKit.navigator.navigateForResult(
+                context = context,
+                launcher = it,
+                destination = Destination.CustomCamera(allowedMode)
+            )
+        }
     }
 
     private fun onTakePhotoResult(success: Boolean) {
@@ -266,7 +281,11 @@ class FilePickerHelper {
                             chooseFilesCb?.invoke(paths)
                         }
                     } else withContext(Dispatchers.Main) {
-                        Toast.makeText(context, context.getString(R.string.sceyt_could_not_open_file), Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            context,
+                            context.getString(R.string.sceyt_could_not_open_file),
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 }
             } else {
@@ -278,7 +297,11 @@ class FilePickerHelper {
                             chooseFilesCb?.invoke(paths)
                         }
                     } else withContext(Dispatchers.Main) {
-                        Toast.makeText(context, context.getString(R.string.sceyt_could_not_open_file), Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            context,
+                            context.getString(R.string.sceyt_could_not_open_file),
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 }
             }
@@ -286,8 +309,9 @@ class FilePickerHelper {
     }
 
     private suspend fun getPathFromFile(
-            parentDir: File,
-            vararg uris: Uri?): List<String> {
+        parentDir: File,
+        vararg uris: Uri?
+    ): List<String> {
         val paths = mutableListOf<String>()
         val filteredUris = uris.filterNotNull()
         if (filteredUris.isEmpty()) return emptyList()
@@ -335,27 +359,37 @@ class FilePickerHelper {
         if (isGranted) {
             takePhotoLauncher?.launch(getPhotoFileUri())
         } else if (context.permissionIgnored(Manifest.permission.CAMERA))
-            showPermissionDeniedDialog(R.string.sceyt_camera_permission_disabled_title, R.string.sceyt_camera_permission_disabled_desc)
+            showPermissionDeniedDialog(
+                titleId = R.string.sceyt_camera_permission_disabled_title,
+                descId = R.string.sceyt_camera_permission_disabled_desc
+            )
     }
 
     private fun onVideoCameraPermissionResult(isGranted: Boolean) {
         if (isGranted) {
             takeVideoLauncher?.launch(getVideoFileUri())
         } else if (context.permissionIgnored(Manifest.permission.CAMERA))
-            showPermissionDeniedDialog(R.string.sceyt_camera_permission_disabled_title, R.string.sceyt_camera_permission_disabled_desc)
+            showPermissionDeniedDialog(
+                titleId = R.string.sceyt_camera_permission_disabled_title,
+                descId = R.string.sceyt_camera_permission_disabled_desc
+            )
     }
 
     private fun onSceytGalleryPermissionResult(isGranted: Boolean) {
         if (isGranted) {
             openSceytGalleryPicker()
         } else if (context.oneOfPermissionsIgnored(*getPermissionsForMangeStorage()))
-            showPermissionDeniedDialog(R.string.sceyt_media_permission_disabled_title, R.string.sceyt_media_permission_disabled_desc)
+            showPermissionDeniedDialog(
+                titleId = R.string.sceyt_media_permission_disabled_title,
+                descId = R.string.sceyt_media_permission_disabled_desc
+            )
     }
 
     private fun onCustomCameraResult(result: ActivityResult) {
         if (result.resultCode == AppCompatActivity.RESULT_OK) {
             val filePath = result.data?.getStringExtra(CustomCameraActivity.EXTRA_RESULT_URI)
-            val isVideo = result.data?.getBooleanExtra(CustomCameraActivity.EXTRA_IS_VIDEO, false) ?: false
+            val isVideo =
+                result.data?.getBooleanExtra(CustomCameraActivity.EXTRA_IS_VIDEO, false) ?: false
 
             filePath?.let { path ->
                 placeToSavePathsList.add(
@@ -371,8 +405,10 @@ class FilePickerHelper {
             launchCustomCamera(pendingCustomCameraMode ?: CameraState.AllowedMode.BOTH)
             pendingCustomCameraMode = null
         } else if (context.permissionIgnored(Manifest.permission.CAMERA))
-            showPermissionDeniedDialog(R.string.sceyt_camera_permission_disabled_title,
-                R.string.sceyt_camera_permission_disabled_desc)
+            showPermissionDeniedDialog(
+                R.string.sceyt_camera_permission_disabled_title,
+                R.string.sceyt_camera_permission_disabled_desc
+            )
     }
 
     private fun openGallery() {
@@ -384,15 +420,16 @@ class FilePickerHelper {
     }
 
     private fun openSceytGalleryPicker(
-            pickerListener: BottomSheetMediaPicker.PickerListener? = BottomSheetMediaPicker.pickerListener,
-            filter: BottomSheetMediaPicker.PickerFilterType = sceytGalleryFilter,
-            maxSelectCount: Int = sceytGalleryMaxSelectCount,
-            vararg selections: String,
+        pickerListener: BottomSheetMediaPicker.PickerListener? = BottomSheetMediaPicker.pickerListener,
+        filter: BottomSheetMediaPicker.PickerFilterType = sceytGalleryFilter,
+        maxSelectCount: Int = sceytGalleryMaxSelectCount,
+        vararg selections: String,
     ) {
         BottomSheetMediaPicker.instance(
             selections = selections,
             fileFilter = filter,
-            maxSelectCount = maxSelectCount).apply {
+            maxSelectCount = maxSelectCount
+        ).apply {
             BottomSheetMediaPicker.pickerListener = pickerListener
         }.show(context.asFragmentActivity().supportFragmentManager, BottomSheetMediaPicker.TAG)
     }
@@ -414,7 +451,8 @@ class FilePickerHelper {
     }
 
     private fun showPermissionDeniedDialog(titleId: Int, descId: Int) {
-        SceytDialog.showDialog(context,
+        SceytDialog.showDialog(
+            context = context,
             titleId = titleId,
             descId = descId,
             positiveBtnTitleId = R.string.sceyt_settings,

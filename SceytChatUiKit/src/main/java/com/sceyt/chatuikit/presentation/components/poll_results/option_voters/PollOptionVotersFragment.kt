@@ -20,7 +20,8 @@ import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.setBundleArguments
 import com.sceyt.chatuikit.extensions.setProgressColor
 import com.sceyt.chatuikit.koin.SceytKoinComponent
-import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoActivity
+import com.sceyt.chatuikit.navigation.Destination
+import com.sceyt.chatuikit.navigation.navigate
 import com.sceyt.chatuikit.presentation.components.poll_results.adapter.VoterItem
 import com.sceyt.chatuikit.presentation.components.poll_results.adapter.VotersAdapter
 import com.sceyt.chatuikit.presentation.components.poll_results.adapter.holders.VotersViewHolderFactory
@@ -172,7 +173,7 @@ open class PollOptionVotersFragment : Fragment(), SceytKoinComponent {
     }
 
     protected open fun onFindOrCreateChat(sceytChannel: SceytChannel) {
-        ChannelInfoActivity.Companion.launch(requireContext(), sceytChannel)
+        SceytChatUIKit.navigator.navigate(requireContext(), Destination.ChannelInfo(sceytChannel))
     }
 
     protected open fun applyStyle() = with(binding) {

@@ -10,9 +10,9 @@ coreKtx = "1.18.0"
 coreTesting = "2.2.0"
 coreZxing = "3.5.4"
 emoji2Bundled = "1.6.0"
-emojiGoogle = "0.23.0"
+vanniktechEmoji = "0.23.0"
 espressoCore = "3.7.0"
-firebaseBom = "34.11.0"
+firebaseBom = "34.12.0"
 firebaseMessagingKtx = "24.1.2"
 flexbox = "3.0.0"
 fragmentKtx = "1.8.9"
@@ -21,16 +21,16 @@ glideTransformations = "4.3.0"
 gson = "2.13.2"
 junit = "4.13.2"
 junitKtx = "1.3.0"
-koinAndroid = "4.2.0"
+koinAndroid = "4.2.1"
 kotlinxCollectionsImmutable = "0.4.0"
 kotlinxCoroutinesTest = "1.10.2"
-libphonenumber = "9.0.26"
+libphonenumber = "9.0.28"
 lifecycleRuntimeCompose = "2.10.0"
 lifecycleRuntimeKtx = "2.10.0"
 lifecycleViewmodelCompose = "2.10.0"
 lottie = "6.7.1"
 material = "1.13.0"
-media3Exoplayer = "1.9.3"
+media3Exoplayer = "1.10.0"
 mockitoCore = "5.23.0"
 mockitoInline = "5.2.0"
 mockitoKotlin = "6.3.0"
@@ -41,8 +41,8 @@ photoview = "2.3.0"
 recyclerview = "1.4.0"
 robolectric = "4.16.1"
 room = "2.8.4"
-sceytCallAndroidSdk = "1.5.510-SNAPSHOT"
-sceytChatAndroidSdk = "1.9.506-SNAPSHOT"
+sceytCallAndroidSdk = "1.5.511-SNAPSHOT"
+sceytChatAndroidSdk = "1.9.506001-SNAPSHOT"
 sceytTonemanagerAndroidSdk = "1.0.1"
 sdpAndroid = "1.1.1"
 sspAndroid = "1.1.1"
@@ -52,10 +52,11 @@ waveformseekbar = "5.0.2"
 workRuntimeKtx = "2.11.2"
 lifecycleProcess = "2.10.0"
 google-services = "4.4.4"
-firebase-crashlytics = "3.0.6"
+firebase-crashlytics = "3.0.7"
 ksp = "2.3.6"
 documentfile = "1.1.0"
 cameraX = "1.6.0"
+compose = "2.3.20"
 
 [libraries]
 activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
@@ -68,7 +69,7 @@ converter-moshi = { module = "com.squareup.retrofit2:converter-moshi", version.r
 core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }
 core-testing = { module = "androidx.arch.core:core-testing", version.ref = "coreTesting" }
 core-zxing = { module = "com.google.zxing:core", version.ref = "coreZxing" }
-emoji-google = { module = "com.vanniktech:emoji-google", version.ref = "emojiGoogle" }
+emoji-google = { module = "com.vanniktech:emoji-google", version.ref = "vanniktechEmoji" }
 emoji2-bundled = { module = "androidx.emoji2:emoji2-bundled", version.ref = "emoji2Bundled" }
 espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "espressoCore" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
@@ -138,3 +139,4 @@ google-services = { id = "com.google.gms.google-services", version.ref = "google
 firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "firebase-crashlytics" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 room = { id = "androidx.room", version.ref = "room" }
+compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "compose" }

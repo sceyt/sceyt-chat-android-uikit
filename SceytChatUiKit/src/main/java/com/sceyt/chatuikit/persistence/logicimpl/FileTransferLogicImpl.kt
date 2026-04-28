@@ -71,7 +71,7 @@ internal class FileTransferLogicImpl(
     }
 
     override fun uploadSharedFile(attachment: SceytAttachment, task: TransferTask) {
-        fileTransferService.getTasks()[task.messageTid.toString()] = task
+        fileTransferService.addTransferTask(task)
         val data = ShareFilesData(attachment.originalFilePath.toString(), attachment.messageTid)
         if (sharingFilesPath.none { it.originalPath == attachment.originalFilePath }) {
             val checksum = getAttachmentChecksum(attachment.originalFilePath)
@@ -164,7 +164,7 @@ internal class FileTransferLogicImpl(
                 if (attachment.type == AttachmentTypeEnum.Video.value)
                     VideoTranscodeHelper.cancel(attachment.filePath)
 
-                fileTransferService.getTasks()[attachment.messageTid.toString()]?.let {
+                fileTransferService.findTransferTask(attachment)?.let {
                     it.state = PauseUpload
                     it.resumePauseCallback?.onResumePause(attachment.toTransferData(PauseUpload))
                 }
@@ -175,7 +175,7 @@ internal class FileTransferLogicImpl(
 
             PendingDownload, Downloading -> {
                 pausedTasksMap[attachment.messageTid] = attachment.messageTid
-                fileTransferService.getTasks()[attachment.messageTid.toString()]?.let {
+                fileTransferService.findTransferTask(attachment)?.let {
                     it.state = PauseUpload
                     it.resumePauseCallback?.onResumePause(attachment.toTransferData(PauseDownload))
                 }
@@ -371,7 +371,7 @@ internal class FileTransferLogicImpl(
             onProgress = { progressPercent ->
                 if (pausedTasksMap[attachment.messageTid] != null) return@uploadFile
                 getAppropriateTasks(transferTask).forEach { task ->
-                    fileTransferService.getTasks()[task.messageTid.toString()]?.state = Uploading
+                    task.state = Uploading
                     task.progressCallback?.onProgress(
                         TransferData(
                             task.messageTid,

@@ -1,10 +1,16 @@
 package com.sceyt.chatuikit.persistence.extensions
 
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.launch
 import kotlin.coroutines.resume
 
 inline fun <reified T : Enum<T>> Int.toEnum(): T = enumValues<T>()[this]
@@ -39,9 +45,9 @@ fun <T> MutableLiveData<T>.asLiveData(): LiveData<T> {
 }
 
 fun <T> broadcastSharedFlow(
-        replay: Int = 0,
-        extraBufferCapacity: Int = 1,
-        onBufferOverflow: BufferOverflow = BufferOverflow.DROP_OLDEST,
+    replay: Int = 0,
+    extraBufferCapacity: Int = 1,
+    onBufferOverflow: BufferOverflow = BufferOverflow.DROP_OLDEST,
 ) = MutableSharedFlow<T>(
     replay = replay,
     extraBufferCapacity = extraBufferCapacity,
@@ -59,4 +65,18 @@ fun <T> MutableCollection<T>.removeFirstIf(filter: (T) -> Boolean): Int {
         index++
     }
     return -1
+}
+
+inline fun <T> Flow<T>.collectWithLifecycle(
+    owner: LifecycleOwner,
+    minActiveState: Lifecycle.State = Lifecycle.State.STARTED,
+    crossinline collector: suspend (T) -> Unit
+) {
+    owner.lifecycleScope.launch {
+        owner.repeatOnLifecycle(minActiveState) {
+            this@collectWithLifecycle.collect {
+                collector(it)
+            }
+        }
+    }
 }

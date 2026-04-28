@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.presentation.components.channel_info.preview
 
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import androidx.activity.enableEdgeToEdge
@@ -9,7 +10,7 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.sceyt.chatuikit.databinding.SceytFragmentPhotoPreviewBinding
 import com.sceyt.chatuikit.extensions.applySystemWindowInsetsPadding
-import com.sceyt.chatuikit.extensions.launchActivity
+import com.sceyt.chatuikit.extensions.createIntent
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.chatuikit.presentation.helpers.AvatarImageLoader
 import com.sceyt.chatuikit.styles.preview.ImagePreviewStyle
@@ -66,15 +67,13 @@ class ImagePreviewActivity : AppCompatActivity() {
         private const val IMAGE_URL = "image_url"
         private const val TOOLBAR_TITLE = "toolbar_title"
 
-        fun launchActivity(
-                context: Context,
-                imageUrl: String,
-                toolbarTitle: CharSequence
-        ) {
-            context.launchActivity<ImagePreviewActivity> {
-                putExtra(IMAGE_URL, imageUrl)
-                putExtra(TOOLBAR_TITLE, toolbarTitle)
-            }
+        fun createIntent(
+            context: Context,
+            imageUrl: String,
+            toolbarTitle: CharSequence,
+        ): Intent = context.createIntent<ImagePreviewActivity> {
+            putExtra(IMAGE_URL, imageUrl)
+            putExtra(TOOLBAR_TITLE, toolbarTitle)
         }
     }
 }

@@ -10,8 +10,10 @@ import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.presentation.components.channel_info.files.ChannelInfoFilesFragment
 import com.sceyt.chatuikit.styles.SceytComponentStyle
 import com.sceyt.chatuikit.styles.StyleCustomizer
-import com.sceyt.chatuikit.styles.channel_info.ChannelInfoDateSeparatorStyle
+import com.sceyt.chatuikit.styles.common.BackgroundStyle
+import com.sceyt.chatuikit.styles.common.DateSeparatorStyle
 import com.sceyt.chatuikit.styles.common.EmptyStateStyle
+import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.styles.common.buildEmptyStateStyle
 import com.sceyt.chatuikit.theme.Colors
 
@@ -25,12 +27,12 @@ import com.sceyt.chatuikit.theme.Colors
  * @property itemStyle - style for file item
  * */
 data class ChannelInfoFilesStyle(
-        @param:ColorInt val backgroundColor: Int,
-        @param:LayoutRes val emptyState: Int,
-        @param:LayoutRes val loadingState: Int,
-        val emptyStateStyle: EmptyStateStyle,
-        val dateSeparatorStyle: ChannelInfoDateSeparatorStyle,
-        val itemStyle: ChannelInfoFileItemStyle,
+    @param:ColorInt val backgroundColor: Int,
+    @param:LayoutRes val emptyState: Int,
+    @param:LayoutRes val loadingState: Int,
+    val emptyStateStyle: EmptyStateStyle,
+    val dateSeparatorStyle: DateSeparatorStyle,
+    val itemStyle: ChannelInfoFileItemStyle,
 ) : SceytComponentStyle() {
 
     companion object {
@@ -38,13 +40,14 @@ data class ChannelInfoFilesStyle(
     }
 
     internal class Builder(
-            private val context: Context,
-            private val attributeSet: AttributeSet?,
+        private val context: Context,
+        private val attrs: AttributeSet?,
     ) {
         fun build(): ChannelInfoFilesStyle {
-            val backgroundColor = context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColor)
+            val backgroundColor =
+                context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColor)
 
-            val itemStyle = ChannelInfoFileItemStyle.Builder(context, attributeSet).build()
+            val itemStyle = ChannelInfoFileItemStyle.Builder(context, attrs).build()
 
             val emptyState = R.layout.sceyt_empty_state
             val loadingState = R.layout.sceyt_page_loading_state
@@ -56,8 +59,15 @@ data class ChannelInfoFilesStyle(
                 subtitleText = context.getString(R.string.sceyt_no_files_desc)
             )
 
-            val dateSeparatorStyle = ChannelInfoDateSeparatorStyle.Builder(context, attributeSet)
-                .build()
+            val dateSeparatorStyle = DateSeparatorStyle(
+                backgroundStyle = BackgroundStyle(
+                    backgroundColor = context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColor)
+                ),
+                textStyle = TextStyle(
+                    color = context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor),
+                    font = R.font.roboto_medium
+                )
+            )
 
             return ChannelInfoFilesStyle(
                 backgroundColor = backgroundColor,

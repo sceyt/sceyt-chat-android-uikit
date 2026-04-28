@@ -5,11 +5,9 @@ import android.content.Intent
 import android.content.res.ColorStateList
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.viewModels
 import androidx.annotation.CallSuper
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityOptionsCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentContainerView
@@ -41,11 +39,12 @@ import com.sceyt.chatuikit.extensions.createIntent
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.findIndexed
 import com.sceyt.chatuikit.extensions.getCompatColor
-import com.sceyt.chatuikit.extensions.launchActivity
 import com.sceyt.chatuikit.extensions.overrideTransitions
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.chatuikit.koin.SceytKoinComponent
+import com.sceyt.chatuikit.navigation.Destination
+import com.sceyt.chatuikit.navigation.navigate
 import com.sceyt.chatuikit.persistence.extensions.getChannelType
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isDirect
@@ -69,7 +68,6 @@ import com.sceyt.chatuikit.presentation.components.channel_info.media.ChannelInf
 import com.sceyt.chatuikit.presentation.components.channel_info.members.ChannelMembersFragment
 import com.sceyt.chatuikit.presentation.components.channel_info.members.MemberTypeEnum
 import com.sceyt.chatuikit.presentation.components.channel_info.options.ChannelInfoOptionsFragment
-import com.sceyt.chatuikit.presentation.components.channel_info.preview.ImagePreviewActivity
 import com.sceyt.chatuikit.presentation.components.channel_info.settings.ChannelInfoSettingsFragment
 import com.sceyt.chatuikit.presentation.components.channel_info.toolbar.ChannelInfoToolbarFragment
 import com.sceyt.chatuikit.presentation.components.channel_info.toolbar.ChannelInfoToolbarFragment.ClickActionsEnum.Back
@@ -206,8 +204,8 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
     }
 
     private fun <T : Fragment?> initOrUpdateFragment(
-            container: FragmentContainerView,
-            fragmentProvider: () -> T,
+        container: FragmentContainerView,
+        fragmentProvider: () -> T,
     ): T? {
         val (wasAdded, fragment) = getOrAddFragment(container, fragmentProvider)
         if (wasAdded && fragment?.isAdded == true)
@@ -220,8 +218,8 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
     /** Generic function to either retrieve an existing fragment from a container or add a new one if not present.
      * The function returns a Pair<Boolean, T?> indicating whether the fragment was already present and the fragment instance.*/
     private fun <T : Fragment?> getOrAddFragment(
-            container: FragmentContainerView,
-            fragmentProvider: () -> T,
+        container: FragmentContainerView,
+        fragmentProvider: () -> T,
     ): Pair<Boolean, T?> {
         val containerFragment = container.getFragment<T>()
         if (containerFragment != null) {
@@ -265,7 +263,8 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
             getChannelFilesFragment(channel),
             getChannelVoiceFragment(channel),
             getChannelLinksFragment(channel),
-            if (channel.isDirect() && style.showGroupsInCommon) getChannelCommonGroupsFragment(channel) else null
+            if (channel.isDirect() && style.showGroupsInCommon)
+                getChannelCommonGroupsFragment(channel) else null
         ).filterNotNull()
 
         pagerAdapter = ViewPagerAdapter(this, fragments)
@@ -330,10 +329,9 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
                         .setType(SceytMessageType.System.value)
                         .setMetadata(
                             Gson().toJson(
-                            DisappearingMessageMetadata(
-                                duration.toString()
+                                DisappearingMessageMetadata(duration.toString())
                             )
-                        ))
+                        )
                         .withDisplayCount(0)
                         .setSilent(true)
                         .setBody(DisappearingMessage.value)
@@ -362,15 +360,18 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
     }
 
     protected open fun setActivityContentView() {
-        setContentView(SceytActivityChannelInfoBinding.inflate(layoutInflater)
-            .also { binding = it }
-            .root)
+        setContentView(
+            SceytActivityChannelInfoBinding.inflate(layoutInflater)
+                .also { binding = it }
+                .root)
     }
 
     protected open fun onMembersClick(channel: SceytChannel) {
         val fragment = getChannelMembersFragment(channel, getMembersType()) ?: return
         supportFragmentManager.commit {
-            setCustomAnimations(R.anim.sceyt_anim_slide_in_right, 0, 0, R.anim.sceyt_anim_slide_out_right)
+            setCustomAnimations(
+                R.anim.sceyt_anim_slide_in_right, 0, 0, R.anim.sceyt_anim_slide_out_right
+            )
             addToBackStack(fragment.TAG_NAME)
             replace(getRootFragmentId(), fragment, fragment.TAG_NAME)
         }
@@ -380,7 +381,9 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
         binding ?: return
         val fragment = getChannelMembersFragment(channel, MemberTypeEnum.Admin) ?: return
         supportFragmentManager.commit {
-            setCustomAnimations(R.anim.sceyt_anim_slide_in_right, 0, 0, R.anim.sceyt_anim_slide_out_right)
+            setCustomAnimations(
+                R.anim.sceyt_anim_slide_in_right, 0, 0, R.anim.sceyt_anim_slide_out_right
+            )
             addToBackStack(fragment.TAG_NAME)
             replace(getRootFragmentId(), fragment, fragment.TAG_NAME)
         }
@@ -397,7 +400,9 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
         binding ?: return
         val fragment = getEditChannelFragment(channel) ?: return
         supportFragmentManager.commit {
-            setCustomAnimations(R.anim.sceyt_anim_slide_in_right, 0, 0, R.anim.sceyt_anim_slide_out_right)
+            setCustomAnimations(
+                R.anim.sceyt_anim_slide_in_right, 0, 0, R.anim.sceyt_anim_slide_out_right
+            )
             addToBackStack(fragment.TAG_NAME)
             replace(getRootFragmentId(), fragment, fragment.TAG_NAME)
         }
@@ -405,10 +410,15 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
     protected open fun onAvatarClick(channel: SceytChannel) {
         if (!channel.iconUrl.isNullOrBlank())
-            ImagePreviewActivity.launchActivity(
+            SceytChatUIKit.navigator.navigate(
                 context = this,
-                imageUrl = channel.iconUrl.orEmpty(),
-                toolbarTitle = SceytChatUIKit.formatters.channelNameFormatter.format(this, channel)
+                destination = Destination.ImagePreview(
+                    imageUrl = channel.iconUrl.orEmpty(),
+                    toolbarTitle = SceytChatUIKit.formatters.channelNameFormatter.format(
+                        context = this,
+                        from = channel
+                    )
+                )
             )
     }
 
@@ -427,8 +437,12 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
     protected open fun onBlockUnBlockUserClick(channel: SceytChannel, block: Boolean) {
         val peer = channel.getPeer() ?: return
         if (block) {
-            showDialog(this, R.string.sceyt_block_user_title,
-                R.string.sceyt_block_user_desc, R.string.sceyt_block, positiveCb = {
+            showDialog(
+                context = this,
+                titleId = R.string.sceyt_block_user_title,
+                descId = R.string.sceyt_block_user_desc,
+                positiveBtnTitleId = R.string.sceyt_block,
+                positiveCb = {
                     blockUser(peer.id)
                 })
         } else unblockUser(peer.id)
@@ -489,8 +503,12 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
     protected open fun onUserPresenceUpdated(channel: SceytChannel, presenceUser: PresenceUser) {
         with(binding ?: return) {
-            (frameLayoutInfo.getFragment() as? ChannelInfoDetailsFragment)?.onUserPresenceUpdated(presenceUser)
-            (frameLayoutToolbar.getFragment() as? ChannelInfoToolbarFragment)?.onUserPresenceUpdated(presenceUser)
+            (frameLayoutInfo.getFragment() as? ChannelInfoDetailsFragment)?.onUserPresenceUpdated(
+                presenceUser = presenceUser
+            )
+            (frameLayoutToolbar.getFragment() as? ChannelInfoToolbarFragment)?.onUserPresenceUpdated(
+                presenceUser = presenceUser
+            )
         }
     }
 
@@ -569,11 +587,13 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
     protected open fun setPagerAdapter(pagerAdapter: ViewPagerAdapter) {
         binding?.viewPager?.adapter = pagerAdapter
-        binding?.viewPager?.offscreenPageLimit= 5
+        binding?.viewPager?.offscreenPageLimit = 5
     }
 
     protected open fun toggleToolbarViews(showDetails: Boolean) {
-        binding?.frameLayoutToolbar?.getFragment<ChannelInfoToolbarFragment>()?.toggleToolbarViews(showDetails)
+        binding?.frameLayoutToolbar
+            ?.getFragment<ChannelInfoToolbarFragment>()
+            ?.toggleToolbarViews(showDetails)
         binding?.viewTopTabLayout?.isVisible = showDetails
     }
 
@@ -597,10 +617,25 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
         }.also {
             (it as? ChannelInfoSettingsFragment)?.setClickActionsListener { actionsEnum ->
                 when (actionsEnum) {
-                    ChannelInfoSettingsFragment.ClickActionsEnum.Mute -> onMuteUnMuteClick(this.channel, true)
-                    ChannelInfoSettingsFragment.ClickActionsEnum.UnMute -> onMuteUnMuteClick(this.channel, false)
-                    ChannelInfoSettingsFragment.ClickActionsEnum.AutoDeleteOn -> onAutoDeleteOnOffClick(this.channel, true)
-                    ChannelInfoSettingsFragment.ClickActionsEnum.AutoDeleteOff -> onAutoDeleteOnOffClick(this.channel, false)
+                    ChannelInfoSettingsFragment.ClickActionsEnum.Mute -> onMuteUnMuteClick(
+                        sceytChannel = this.channel,
+                        mute = true
+                    )
+
+                    ChannelInfoSettingsFragment.ClickActionsEnum.UnMute -> onMuteUnMuteClick(
+                        sceytChannel = this.channel,
+                        mute = false
+                    )
+
+                    ChannelInfoSettingsFragment.ClickActionsEnum.AutoDeleteOn -> onAutoDeleteOnOffClick(
+                        sceytChannel = this.channel,
+                        autoDelete = true
+                    )
+
+                    ChannelInfoSettingsFragment.ClickActionsEnum.AutoDeleteOff -> onAutoDeleteOnOffClick(
+                        sceytChannel = this.channel,
+                        autoDelete = false
+                    )
                 }
             }
         }
@@ -614,7 +649,8 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
                 when (actionsEnum) {
                     ChannelInfoOptionsFragment.ClickActionsEnum.Admins -> onAdminsClick(this.channel)
                     ChannelInfoOptionsFragment.ClickActionsEnum.Members -> onMembersClick(this.channel)
-                    ChannelInfoOptionsFragment.ClickActionsEnum.SearchMessages -> onSearchMessagesClick(this.channel)
+                    ChannelInfoOptionsFragment.ClickActionsEnum.SearchMessages ->
+                        onSearchMessagesClick(this.channel)
                 }
             }
         }
@@ -655,10 +691,13 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
     }
 
     //Toolbar
-    protected open fun getChannelToolbarDetailsFragment(channel: SceytChannel): Fragment? = ChannelInfoToolbarFragment.newInstance(channel)
+    protected open fun getChannelToolbarDetailsFragment(channel: SceytChannel): Fragment? =
+        ChannelInfoToolbarFragment.newInstance(channel)
 
-    protected open fun getChannelMembersFragment(channel: SceytChannel, memberType: MemberTypeEnum): Fragment? =
-            ChannelMembersFragment.newInstance(channel, memberType)
+    protected open fun getChannelMembersFragment(
+        channel: SceytChannel,
+        memberType: MemberTypeEnum
+    ): Fragment? = ChannelMembersFragment.newInstance(channel, memberType)
 
     protected open fun getChannelMediaFragment(channel: SceytChannel): Fragment? {
         return ChannelInfoMediaFragment.newInstance(channel, style.mediaStyle.styleId)
@@ -676,22 +715,26 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
         return ChannelInfoVoiceFragment.newInstance(channel, style.voiceStyle.styleId)
     }
 
-    protected open fun getChannelCommonGroupsFragment(channel: SceytChannel): Fragment?{
-            return ChannelInfoCommonGroupsFragment.newInstance(channel, style.commonGroupsStyle.styleId)
+    protected open fun getChannelCommonGroupsFragment(channel: SceytChannel): Fragment? {
+        return ChannelInfoCommonGroupsFragment.newInstance(channel, style.commonGroupsStyle.styleId)
     }
 
-    protected open fun getEditChannelFragment(channel: SceytChannel): Fragment? = EditChannelFragment.newInstance(channel)
+    protected open fun getEditChannelFragment(channel: SceytChannel): Fragment? =
+        EditChannelFragment.newInstance(channel)
 
     //Description
-    protected open fun getChannelDescriptionFragment(channel: SceytChannel): Fragment? = ChannelInfoDescriptionFragment.newInstance(channel)
+    protected open fun getChannelDescriptionFragment(channel: SceytChannel): Fragment? =
+        ChannelInfoDescriptionFragment.newInstance(channel)
 
-    protected open fun getChannelDetailsFragment(channel: SceytChannel): Fragment? = ChannelInfoDetailsFragment.newInstance(channel)
+    protected open fun getChannelDetailsFragment(channel: SceytChannel): Fragment? =
+        ChannelInfoDetailsFragment.newInstance(channel)
 
-    protected open fun getChannelSettingsFragment(channel: SceytChannel): Fragment? = ChannelInfoSettingsFragment.newInstance(channel)
+    protected open fun getChannelSettingsFragment(channel: SceytChannel): Fragment? =
+        ChannelInfoSettingsFragment.newInstance(channel)
 
     //Options
     protected open fun getChannelOptionFragment(
-            channel: SceytChannel,
+        channel: SceytChannel,
     ): Fragment? = ChannelInfoOptionsFragment.newInstance(
         channel = channel,
         enableSearchMessages = intent.getBooleanExtra(ENABLE_SEARCH_MESSAGES, false)
@@ -702,7 +745,7 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
     //URI
     protected open fun getChannelURIFragment(
-            channel: SceytChannel,
+        channel: SceytChannel,
     ): Fragment? = ChannelInfoURIFragment.newInstance(channel)
 
     protected open fun onPageStateChanged(pageState: PageState) {
@@ -753,20 +796,13 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
         const val ACTION_SEARCH_MESSAGES = "ACTION_SEARCH_MESSAGES"
         private const val ENABLE_SEARCH_MESSAGES = "ACTION_SEARCH_MESSAGES"
 
-        fun launch(context: Context, channel: SceytChannel) {
-            context.launchActivity<ChannelInfoActivity>(R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold) {
-                putExtra(CHANNEL, channel.toIntentPayload())
-                putExtra(ENABLE_SEARCH_MESSAGES, false)
-            }
-        }
-
-        fun startHandleSearchClick(context: Context, channel: SceytChannel, launcher: ActivityResultLauncher<Intent>) {
-            val intent = context.createIntent<ChannelInfoActivity>().apply {
-                putExtra(CHANNEL, channel.toIntentPayload())
-                putExtra(ENABLE_SEARCH_MESSAGES, true)
-            }
-            val animOptions = ActivityOptionsCompat.makeCustomAnimation(context, R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold)
-            launcher.launch(intent, animOptions)
+        fun createIntent(
+            context: Context,
+            channel: SceytChannel,
+            enableSearchMessages: Boolean = false,
+        ) = context.createIntent<ChannelInfoActivity> {
+            putExtra(CHANNEL, channel.toIntentPayload())
+            putExtra(ENABLE_SEARCH_MESSAGES, enableSearchMessages)
         }
     }
 }

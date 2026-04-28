@@ -14,6 +14,8 @@ import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.media.audio.AudioRecordData
+import com.sceyt.chatuikit.navigation.Destination
+import com.sceyt.chatuikit.navigation.navigate
 import com.sceyt.chatuikit.persistence.extensions.getChannelType
 import com.sceyt.chatuikit.persistence.extensions.isPublic
 import com.sceyt.chatuikit.persistence.mappers.isDeleted
@@ -24,7 +26,6 @@ import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyl
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.MessageInputActionCallback
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageListViewModel
-import com.sceyt.chatuikit.presentation.components.create_poll.CreatePollActivity
 import com.sceyt.chatuikit.presentation.root.PageState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.launchIn
@@ -203,7 +204,10 @@ fun MessageListViewModel.bind(
         }
 
         override fun createPoll() {
-            CreatePollActivity.launch(messageInputView.context, channel.id)
+            SceytChatUIKit.navigator.navigate(
+                messageInputView.context,
+                Destination.CreatePoll(channel.id)
+            )
         }
 
         override fun toggleViewOnce(selected: Boolean) {

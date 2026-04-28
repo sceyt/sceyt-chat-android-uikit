@@ -3,12 +3,12 @@ package com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.h
 import com.sceyt.chatuikit.databinding.SceytItemChannelMediaDateSeparatorBinding
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.holders.BaseFileViewHolder
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelFileItem
-import com.sceyt.chatuikit.styles.channel_info.ChannelInfoDateSeparatorStyle
+import com.sceyt.chatuikit.styles.common.DateSeparatorStyle
 import java.util.Date
 
 class ChannelMediaDateSeparatorViewHolder(
-        private val binding: SceytItemChannelMediaDateSeparatorBinding,
-        private val style: ChannelInfoDateSeparatorStyle
+    private val binding: SceytItemChannelMediaDateSeparatorBinding,
+    private val style: DateSeparatorStyle
 ) : BaseFileViewHolder<ChannelFileItem>(binding.root, {}) {
 
     init {
@@ -22,7 +22,7 @@ class ChannelMediaDateSeparatorViewHolder(
     }
 
     private fun SceytItemChannelMediaDateSeparatorBinding.applyStyle() {
-        root.setBackgroundColor(style.backgroundColor)
+        style.backgroundStyle.apply(root)
         style.textStyle.apply(tvDate)
     }
 }

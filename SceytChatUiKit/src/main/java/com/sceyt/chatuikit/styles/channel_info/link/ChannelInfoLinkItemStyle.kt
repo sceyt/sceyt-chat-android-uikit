@@ -19,25 +19,30 @@ import com.sceyt.chatuikit.theme.Colors
  * @property backgroundColor - background color, default is [Colors.backgroundColorSections]
  * @property linkTextStyle - style for link text
  * @property linkPreviewStyle - style for link preview
+ * @property searchedTitleTextColor - base title color while showing search highlights
+ * @property highlightTextColor - color used for highlighted query tokens
  * */
 data class ChannelInfoLinkItemStyle(
-        @param:ColorInt val backgroundColor: Int,
-        val linkTextStyle: TextStyle,
-        val linkPreviewStyle: LinkPreviewStyle,
+    @param:ColorInt val backgroundColor: Int,
+    val linkTextStyle: TextStyle,
+    val linkPreviewStyle: LinkPreviewStyle,
+    @param:ColorInt val searchedTitleTextColor: Int,
+    @param:ColorInt val highlightTextColor: Int,
 ) {
     companion object {
         var styleCustomizer = StyleCustomizer<ChannelInfoLinkItemStyle> { _, style -> style }
     }
 
     internal class Builder(
-            private val context: Context,
-            private val attributeSet: AttributeSet?
+        private val context: Context,
+        private val attributeSet: AttributeSet?
     ) {
         fun build(): ChannelInfoLinkItemStyle {
-            val backgroundColor = context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColorSections)
+            val backgroundColor =
+                context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColorSections)
 
             val linkTitleTextStyle = TextStyle(
-                color = context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor),
+                color = context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor),
                 font = R.font.roboto_medium
             )
 
@@ -62,7 +67,9 @@ data class ChannelInfoLinkItemStyle(
             return ChannelInfoLinkItemStyle(
                 backgroundColor = backgroundColor,
                 linkTextStyle = linkTextStyle,
-                linkPreviewStyle = linkStyle
+                linkPreviewStyle = linkStyle,
+                searchedTitleTextColor = context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor),
+                highlightTextColor = context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor),
             ).let { styleCustomizer.apply(context, it) }
         }
     }

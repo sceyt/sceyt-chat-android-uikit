@@ -17,7 +17,8 @@ import com.sceyt.chatuikit.databinding.SceytFragmentPollResultsBinding
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.setBundleArguments
 import com.sceyt.chatuikit.koin.SceytKoinComponent
-import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoActivity
+import com.sceyt.chatuikit.navigation.Destination
+import com.sceyt.chatuikit.navigation.navigate
 import com.sceyt.chatuikit.presentation.components.poll_results.adapter.PollResultItem
 import com.sceyt.chatuikit.presentation.components.poll_results.adapter.PollResultsAdapter
 import com.sceyt.chatuikit.presentation.components.poll_results.adapter.VoterItem
@@ -47,7 +48,11 @@ open class PollResultsFragment : Fragment(), SceytKoinComponent {
         initStyle(context)
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
         binding = SceytFragmentPollResultsBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -114,9 +119,10 @@ open class PollResultsFragment : Fragment(), SceytKoinComponent {
     protected open fun onUiStateChange(state: PollResultsUIState) {
         pollResultsAdapter?.submitList(state.items)
     }
+
     protected open fun onShowAllClick(item: PollResultItem.PollOptionItem) {
         val pollOptionId = item.pollOption.id
-        
+
         val fragment = PollOptionVotersFragment.newInstance(
             message = message,
             pollOptionId = pollOptionId,
@@ -142,7 +148,7 @@ open class PollResultsFragment : Fragment(), SceytKoinComponent {
     }
 
     protected open fun onFindOrCreateChat(sceytChannel: SceytChannel) {
-        ChannelInfoActivity.launch(requireContext(), sceytChannel)
+        SceytChatUIKit.navigator.navigate(requireContext(), Destination.ChannelInfo(sceytChannel))
     }
 
 
@@ -159,8 +165,8 @@ open class PollResultsFragment : Fragment(), SceytKoinComponent {
         private const val STYLE_ID_KEY = "STYLE_ID_KEY"
 
         fun newInstance(
-                message: SceytMessage,
-                styleId: String?
+            message: SceytMessage,
+            styleId: String?
         ): PollResultsFragment {
             val fragment = PollResultsFragment()
             fragment.setBundleArguments {

@@ -12,6 +12,7 @@ import com.sceyt.chat.models.message.DeleteMessageType
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.SceytChatUIKit.navigator
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelActionEvent.ClearedHistory
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelActionEvent.Deleted
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelActionEvent.Left
@@ -43,6 +44,8 @@ import com.sceyt.chatuikit.extensions.getString
 import com.sceyt.chatuikit.extensions.isResumed
 import com.sceyt.chatuikit.extensions.isThePositionVisible
 import com.sceyt.chatuikit.logger.SceytLog
+import com.sceyt.chatuikit.navigation.Destination
+import com.sceyt.chatuikit.navigation.navigate
 import com.sceyt.chatuikit.persistence.extensions.checkIsMemberInChannel
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isPublic
@@ -55,8 +58,6 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.MessagesList
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem.MessageItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageCommandEvent
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageListViewModel
-import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoActivity
-import com.sceyt.chatuikit.presentation.components.poll_results.PollResultsActivity
 import com.sceyt.chatuikit.presentation.extensions.isNotPending
 import com.sceyt.chatuikit.presentation.extensions.isPending
 import com.sceyt.chatuikit.presentation.extensions.isSelfDestructed
@@ -127,6 +128,17 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     val lastDisplayedMessageId = channel.lastDisplayedMessageId
     val lastMessageId = lastMessage?.id ?: 0
     when {
+        initialTargetMessageId != null -> {
+            loadNearMessages(
+                messageId = initialTargetMessageId,
+                loadKey = LoadKeyData(
+                    key = LoadKeyType.ScrollToMessageBy.longValue,
+                    value = initialTargetMessageId
+                ),
+                ignoreServer = false
+            )
+        }
+
         lastDisplayedMessageId == 0L || lastMessage?.isPending() == true
                 || lastDisplayedMessageId == lastMessageId -> {
             loadPrevMessages(lastMessageId, 0)
@@ -336,7 +348,8 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 } else
                     checkToHildeLoadingMoreItemByLoadType(response.loadType)
 
-                checkToScrollAfterResponse(response)
+                if (response.dbResultWasEmpty)
+                    checkToScrollAfterResponse(response)
 
                 loadPrevOffsetId = response.data.data?.firstOrNull()?.id ?: 0
                 loadNextOffsetId = response.data.data?.lastOrNull()?.id ?: 0
@@ -902,7 +915,10 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                     )
                     if (response is SceytResponse.Success)
                         response.data?.let {
-                            ChannelInfoActivity.launch(messagesListView.context, response.data)
+                            navigator.navigate(
+                                context = messagesListView.context,
+                                destination = Destination.ChannelInfo(response.data)
+                            )
                         }
                 }
             }
@@ -916,7 +932,10 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 if (poll.anonymous || poll.maxVotedCountWithPendingVotes == 0)
                     return@setMessageCommandEventListener
 
-                PollResultsActivity.launch(messagesListView.context, event.message)
+                navigator.navigate(
+                    context = messagesListView.context,
+                    destination = Destination.PollResults(event.message)
+                )
             }
         }
     }

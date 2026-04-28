@@ -42,6 +42,8 @@ import com.sceyt.chatuikit.extensions.maybeComponentActivity
 import com.sceyt.chatuikit.extensions.setPaddings
 import com.sceyt.chatuikit.extensions.showSoftInput
 import com.sceyt.chatuikit.formatters.attributes.ChannelEventTitleFormatterAttributes
+import com.sceyt.chatuikit.navigation.Destination
+import com.sceyt.chatuikit.navigation.navigateForResult
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
 import com.sceyt.chatuikit.presentation.components.channel.header.helpers.ChannelEventChangeHelper
@@ -618,7 +620,14 @@ class MessagesListHeaderView @JvmOverloads constructor(
     override fun onToolbarClick(view: View) {
         if (::channel.isInitialized)
             channelInfoLauncher?.let {
-                ChannelInfoActivity.startHandleSearchClick(context, channel, it)
+                SceytChatUIKit.navigator.navigateForResult(
+                    context = context,
+                    launcher = it,
+                    destination = Destination.ChannelInfo(
+                        channel = channel,
+                        enableSearchMessages = true
+                    )
+                )
             }
     }
 

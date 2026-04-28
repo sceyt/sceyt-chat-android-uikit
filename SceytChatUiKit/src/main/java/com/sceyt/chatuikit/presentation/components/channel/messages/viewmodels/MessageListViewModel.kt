@@ -1,10 +1,8 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels
 
-import android.app.Application
 import android.text.Editable
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import androidx.work.ExistingWorkPolicy
 import com.sceyt.chat.models.Types
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.DeleteMessageType
@@ -44,31 +42,19 @@ import com.sceyt.chatuikit.data.models.onSuccess
 import com.sceyt.chatuikit.data.models.onSuccessNotNull
 import com.sceyt.chatuikit.data.repositories.Keys.KEY_VIEW_ONCE_INFO_SHOWN
 import com.sceyt.chatuikit.data.toFileListItem
+import com.sceyt.chatuikit.domain.usecases.PauseOrResumeTransferUseCase
 import com.sceyt.chatuikit.extensions.findIndexed
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.media.audio.AudioRecordData
 import com.sceyt.chatuikit.persistence.extensions.asLiveData
 import com.sceyt.chatuikit.persistence.extensions.broadcastSharedFlow
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
-import com.sceyt.chatuikit.persistence.file_transfer.FileTransferHelper
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.persistence.file_transfer.ThumbFor
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Downloaded
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Downloading
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState.ErrorDownload
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState.ErrorUpload
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.FilePathChanged
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState.PauseDownload
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState.PauseUpload
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState.PendingDownload
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState.PendingUpload
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Preparing
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.ThumbLoaded
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploaded
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploading
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState.WaitingToUpload
 import com.sceyt.chatuikit.persistence.file_transfer.isCompleted
 import com.sceyt.chatuikit.persistence.interactor.AttachmentInteractor
 import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
@@ -84,7 +70,6 @@ import com.sceyt.chatuikit.persistence.mappers.createEmptyUser
 import com.sceyt.chatuikit.persistence.mappers.toBodyAttribute
 import com.sceyt.chatuikit.persistence.mappers.toVoiceAttachmentData
 import com.sceyt.chatuikit.persistence.repositories.SceytSharedPreference
-import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager
 import com.sceyt.chatuikit.presentation.components.channel.input.data.InputUserAction
 import com.sceyt.chatuikit.presentation.components.channel.input.data.SearchResult
 import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
@@ -126,6 +111,7 @@ class MessageListViewModel(
     private var _conversationId: Long,
     private var _channel: SceytChannel,
     val replyInThread: Boolean = false,
+    val initialTargetMessageId: Long? = null,
 ) : BaseViewModel(), SceytKoinComponent {
     private val messageInteractor: MessageInteractor by inject()
     internal val channelInteractor: ChannelInteractor by inject()
@@ -135,9 +121,9 @@ class MessageListViewModel(
     internal val channelMemberInteractor: ChannelMemberInteractor by inject()
     internal val connectionLogic: PersistenceConnectionLogic by inject()
     internal val userInteractor: UserInteractor by inject()
-    private val application: Application by inject()
     internal val syncManager: SceytSyncManager by inject()
     private val fileTransferService: FileTransferService by inject()
+    private val pauseOrResumeTransferUseCase: PauseOrResumeTransferUseCase by inject()
     private val preferences: SceytSharedPreference by inject()
     internal var pinnedLastReadMessageId: Long = 0
     internal val sendDisplayedHelper by lazy { DebounceHelper(200L, viewModelScope) }
@@ -596,74 +582,8 @@ class MessageListViewModel(
     }
 
     fun prepareToPauseOrResumeUpload(item: FileListItem) {
-        val attachment = item.attachment
-        val messageTid = attachment.messageTid
-        when (val state = attachment.transferState ?: return) {
-            PendingUpload, ErrorUpload -> {
-                UploadAndSendAttachmentWorkManager.schedule(application, messageTid, channel.id)
-            }
-
-            PendingDownload, ErrorDownload -> {
-                fileTransferService.download(
-                    attachment = attachment,
-                    transferTask = FileTransferHelper.createTransferTask(attachment)
-                )
-            }
-
-            PauseDownload -> {
-                val task = fileTransferService.findTransferTask(attachment)
-                if (task != null) {
-                    fileTransferService.resume(attachment.messageTid, attachment, state)
-                } else {
-                    fileTransferService.download(
-                        attachment = attachment,
-                        transferTask = FileTransferHelper.createTransferTask(attachment)
-                    )
-                }
-            }
-
-            PauseUpload -> {
-                val task = fileTransferService.findTransferTask(attachment)
-                if (task != null)
-                    fileTransferService.resume(messageTid, attachment, state)
-                else {
-                    // Update transfer state to Uploading, otherwise SendAttachmentWorkManager will
-                    // not start uploading.
-                    viewModelScope.launch(Dispatchers.IO) {
-                        attachmentInteractor.updateTransferDataByMsgTid(
-                            data = TransferData(
-                                messageTid = messageTid,
-                                progressPercent = attachment.progressPercent ?: 0f,
-                                state = Uploading,
-                                filePath = attachment.filePath,
-                                url = attachment.url
-                            )
-                        )
-                    }
-
-                    UploadAndSendAttachmentWorkManager.schedule(
-                        context = application,
-                        messageTid = messageTid,
-                        channelId = channel.id,
-                        workPolicy = ExistingWorkPolicy.REPLACE
-                    )
-                }
-            }
-
-            Uploading, Downloading, Preparing, FilePathChanged, WaitingToUpload -> {
-                fileTransferService.pause(messageTid, attachment, state)
-            }
-
-            Uploaded, Downloaded, ThumbLoaded -> {
-                val transferData = TransferData(
-                    messageTid = messageTid,
-                    progressPercent = attachment.progressPercent ?: 0f,
-                    state = attachment.transferState,
-                    filePath = attachment.filePath,
-                    url = attachment.url
-                )
-                FileTransferHelper.emitAttachmentTransferUpdate(transferData)
-            }
+        viewModelScope.launch {
+            pauseOrResumeTransferUseCase(item.attachment, channel.id)
         }
     }
 

@@ -4,7 +4,6 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.managers.channel.ChannelEventManager
-import com.sceyt.chatuikit.data.models.LoadKeyData
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.presentation.components.channel.header.helpers.ChannelEventChangeHelper
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.ChannelListView
@@ -39,9 +38,8 @@ fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: Lif
             }.onActivityEvent(event)
         }.launchIn(lifecycleScope)
 
-    channelListView.setReachToEndListener { offset, lastChannel ->
-        if (canLoadNext())
-            getChannels(offset, searchQuery, LoadKeyData(value = lastChannel?.id ?: 0))
+    channelListView.setReachToEndListener { _, lastChannel ->
+        loadMoreChannels(lastChannel?.id)
     }
 
     channelListView.setChannelCommandEvenListener(::onChannelCommandEvent)
