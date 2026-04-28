@@ -90,6 +90,7 @@ dependencies {
     androidTestImplementation(libs.espresso.core)
     androidTestImplementation(libs.mockito.core)
     androidTestImplementation(libs.kotlinx.coroutines.test)
+    androidTestImplementation(libs.room.testing)
     androidTestImplementation(libs.truth)
     testImplementation(libs.junit)
     testImplementation(libs.truth)
