@@ -11,8 +11,14 @@ internal interface MarkerDao {
 
     @Transaction
     @Query(
-        "select * from $MARKER_TABLE where messageId =:messageId and name in (:names) " +
-                "order by createdAt desc limit :limit offset :offset"
+        """
+        SELECT *
+        FROM $MARKER_TABLE
+        WHERE messageId = :messageId
+          AND name IN (:names)
+        ORDER BY createdAt DESC
+        LIMIT :limit OFFSET :offset
+        """
     )
     suspend fun getMessageMarkers(
         messageId: Long,

@@ -23,9 +23,13 @@
     <application android:requestLegacyExternalStorage="true">
 
         <activity
+            android:name=".presentation.components.global_search.GlobalSearchActivity"
+            android:exported="false"
+            android:theme="@style/DefaultFontTheme"
+            android:windowSoftInputMode="adjustNothing" />
+        <activity
             android:name=".presentation.components.channel.messages.ChannelActivity"
             android:exported="false"
-            android:launchMode="singleTask"
             android:theme="@style/DefaultFontTheme"
             android:windowSoftInputMode="adjustResize" />
         <activity
@@ -57,7 +61,7 @@
             android:theme="@style/SceytPreviewThemeDark" />
         <activity
             android:name=".presentation.components.channel.messages.preview.SelfDestructingVoiceMessageActivity"
-            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"/>
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden" />
         <activity
             android:name=".presentation.components.role.ChangeRoleActivity"
             android:exported="false"
@@ -78,31 +82,25 @@
             android:name=".presentation.components.create_chat.create_channel.CreateChannelActivity"
             android:exported="false"
             android:theme="@style/DefaultFontTheme" />
-
         <activity
             android:name=".presentation.components.invite_link.ChannelInviteLinkActivity"
             android:exported="false"
             android:theme="@style/DefaultFontTheme" />
-
         <activity
             android:name=".presentation.components.create_chat.create_group.CreateGroupActivity"
             android:exported="false"
             android:theme="@style/DefaultFontTheme" />
-
         <activity
             android:name=".presentation.components.camera.CustomCameraActivity"
             android:exported="false"
             android:screenOrientation="portrait"
             android:theme="@style/SceytCameraTheme" />
-
         <activity
             android:name=".presentation.components.camera.CameraMediaPreviewActivity"
             android:exported="false"
             android:screenOrientation="portrait"
             android:theme="@style/SceytCameraTheme" />
-
         <activity android:name="com.yalantis.ucrop.UCropActivity" />
-
         <activity
             android:name=".presentation.components.poll_results.PollResultsActivity"
             android:exported="false"
@@ -125,7 +123,6 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
-
         <service
             android:name="androidx.work.impl.foreground.SystemForegroundService"
             android:foregroundServiceType="dataSync"
@@ -140,7 +137,6 @@
                 <action android:name="sceyt_action_reply" />
             </intent-filter>
         </receiver>
-
     </application>
 
 </manifest>

@@ -98,6 +98,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.dialogs.Choo
 import com.sceyt.chatuikit.presentation.components.picker.BottomSheetMediaPicker
 import com.sceyt.chatuikit.presentation.custom_views.voice_recorder.AudioMetadata
 import com.sceyt.chatuikit.presentation.custom_views.voice_recorder.RecordingListener
+import com.sceyt.chatuikit.presentation.custom_views.voice_recorder.RecordingState
 import com.sceyt.chatuikit.presentation.custom_views.voice_recorder.VoiceRecordPlaybackView.VoiceRecordPlaybackListeners
 import com.sceyt.chatuikit.presentation.custom_views.voice_recorder.VoiceRecorderView
 import com.sceyt.chatuikit.presentation.helpers.DebounceHelper
@@ -238,7 +239,7 @@ class MessageInputView @JvmOverloads constructor(
     }
 
     private fun onInputChanged(text: Editable?) {
-        if (isRecording())
+        if (getRecordingState().isActive)
             return
 
         determineInputState()
@@ -315,12 +316,17 @@ class MessageInputView @JvmOverloads constructor(
         linkPreviewView.setClickListener(clickListeners)
 
         icSendMessage.setOnClickListener {
-            when (inputState) {
+            when (val state = inputState) {
                 is InputState.Text, is InputState.TextWithAttachments, is InputState.Attachments ->
                     clickListeners.onSendMsgClick(it)
 
+                is InputState.Recording -> {
+                    if (state.isPreviewState) {
+                        clickListeners.onSendMsgClick(it)
+                    }
+                }
+
                 is InputState.Voice -> clickListeners.onVoiceClick(it)
-                is InputState.Recording -> {} // No action during recording
             }
         }
 
@@ -416,13 +422,12 @@ class MessageInputView @JvmOverloads constructor(
         showVoiceRecorder()
         binding.voiceRecordPlaybackView.isVisible = false
         binding.messageInput.setText(empty)
-        determineInputState()
         binding.messageInput.requestFocus()
         onRecordingCompletedOrCanceled()
     }
 
     private fun canShowRecorderView() = !disabledInputByGesture &&
-            !isInputHidden && inputState is InputState.Voice && isVisible
+            !isInputHidden && inputState is InputState.Voice && isVisible && !isInMultiSelectMode
 
     private fun VoiceRecorderView.setRecordingListener() {
         setListener(object : RecordingListener {
@@ -535,6 +540,8 @@ class MessageInputView @JvmOverloads constructor(
             })
         voiceRecorderView?.isVisible = false
         binding.voiceRecordPlaybackView.isVisible = true
+        binding.layoutInput.isInvisible = true
+        determineInputState()
     }
 
     private fun handleAttachmentClick() {
@@ -558,10 +565,10 @@ class MessageInputView @JvmOverloads constructor(
         val isEditing = isEditingMessage()
 
         val newState = when {
-            isRecording() -> InputState.Recording
-            hasText && hasAttachments -> InputState.TextWithAttachments(allAttachments.size)
+            getRecordingState().isActive -> InputState.Recording(isPreviewState = !getRecordingState().isRecording)
+            hasText && hasAttachments -> InputState.TextWithAttachments(attachmentsCount = allAttachments.size)
             hasText -> InputState.Text
-            hasAttachments -> InputState.Attachments(allAttachments.size)
+            hasAttachments -> InputState.Attachments(count = allAttachments.size)
             else -> InputState.Voice
         }
 
@@ -571,7 +578,8 @@ class MessageInputView @JvmOverloads constructor(
             onStateChanged(newState)
         }
 
-        val showVoiceIcon = newState == InputState.Voice || newState == InputState.Recording
+        val showVoiceIcon = newState == InputState.Voice ||
+                (newState is InputState.Recording && !newState.isPreviewState)
         binding.icSendMessage.isInvisible = showVoiceIcon
         binding.icAddAttachments.isVisible = enableSendAttachment && !isEditing
         binding.viewAttachments.isVisible = hasAttachments
@@ -671,7 +679,7 @@ class MessageInputView @JvmOverloads constructor(
     }
 
     private fun showInput() {
-        if (isRecording())
+        if (getRecordingState().isActive)
             binding.layoutInput.isInvisible = true
         else
             binding.layoutInput.isVisible = true
@@ -890,7 +898,7 @@ class MessageInputView @JvmOverloads constructor(
 
     @SuppressWarnings("WeakerAccess")
     fun checkIfRecordingAndConfirm(onConfirm: () -> Unit) {
-        if (isRecording()) {
+        if (getRecordingState().isRecording) {
             SceytDialog.showDialog(
                 context = context,
                 titleId = R.string.sceyt_stop_recording,
@@ -898,6 +906,7 @@ class MessageInputView @JvmOverloads constructor(
                 positiveBtnTitleId = R.string.sceyt_discard,
                 positiveCb = {
                     stopRecording()
+                    finishRecording()
                     onConfirm()
                 })
         } else onConfirm()
@@ -990,7 +999,13 @@ class MessageInputView @JvmOverloads constructor(
     fun isEmpty() = binding.messageInput.text.isNullOrBlank() && allAttachments.isEmpty()
 
     @SuppressWarnings("WeakerAccess")
-    fun isRecording() = voiceRecorderView?.isRecording == true
+    fun getRecordingState(): RecordingState {
+        return when {
+            audioRecorderHelper.isRecording() -> RecordingState.Recording
+            binding.voiceRecordPlaybackView.isShowing -> RecordingState.Preview
+            else -> RecordingState.Idle
+        }
+    }
 
     fun getComposedMessage() = binding.messageInput.text
 
@@ -1160,8 +1175,8 @@ class MessageInputView @JvmOverloads constructor(
             BottomSheetMediaPicker.pickerListener = getPickerListener()
         }
         VoiceStateCoordinator.registerRecordingController(
-            isRecordingProvider = { isRecording() },
-            stopRecordingCallback = { stopRecording() }
+            isRecordingProvider = { getRecordingState().isRecording },
+            stopRecordingCallback = { stopRecordAndShowPreviewIfNeeded() }
         )
     }
 
@@ -1230,7 +1245,8 @@ class MessageInputView @JvmOverloads constructor(
     override fun onInputStateChanged(sendImage: ImageView, state: InputState) {
         val iconResId = when (state) {
             is InputState.Voice -> style.voiceRecordIcon
-            is InputState.Text, is InputState.TextWithAttachments, is InputState.Attachments, is InputState.Recording -> style.sendMessageIcon
+            is InputState.Text, is InputState.TextWithAttachments,
+            is InputState.Attachments, is InputState.Recording -> style.sendMessageIcon
         }
         binding.icSendMessage.setImageDrawable(iconResId)
     }
@@ -1342,7 +1358,7 @@ class MessageInputView @JvmOverloads constructor(
 
     private fun showHideInputOnModeChange(isInSelectMode: Boolean) {
         with(binding) {
-            layoutInput.isInvisible = isInSelectMode
+            layoutInput.isInvisible = isInSelectMode || getRecordingState().isActive
             viewAttachments.isVisible = !isInSelectMode && allAttachments.isNotEmpty()
             if (isInSelectMode) {
                 hideAndStopVoiceRecorder()

@@ -54,6 +54,7 @@ class CreateAccountViewModel(
 
     private var isUsernameValid: Boolean = false
     private var isFirstNameValid: Boolean = false
+    private var validateJob: Job? = null
 
     init {
         _usernameInput
@@ -146,7 +147,8 @@ class CreateAccountViewModel(
     }
 
     private fun validateUsername(username: String) {
-        viewModelScope.launch {
+        validateJob?.cancel()
+        validateJob = viewModelScope.launch {
             val result = userRepository.checkUsername(username)
             if (result.isSuccess) {
                 _correctUsernameValidatorLiveData.postValue(UsernameValidationEnum.Valid)

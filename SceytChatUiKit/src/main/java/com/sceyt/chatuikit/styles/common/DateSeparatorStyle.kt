@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.styles.messages_list
+package com.sceyt.chatuikit.styles.common
 
 import android.content.Context
 import android.content.res.TypedArray
@@ -7,43 +7,45 @@ import androidx.annotation.Px
 import androidx.annotation.StyleableRes
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.formatters.Formatter
-import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
-import com.sceyt.chatuikit.styles.StyleConstants.UNSET_CORNER_RADIUS
-import com.sceyt.chatuikit.styles.StyleConstants.UNSET_SIZE
+import com.sceyt.chatuikit.styles.StyleConstants
 import com.sceyt.chatuikit.styles.StyleCustomizer
-import com.sceyt.chatuikit.styles.common.BackgroundStyle
-import com.sceyt.chatuikit.styles.common.Shape
-import com.sceyt.chatuikit.styles.common.TextStyle
 import java.util.Date
 
+/** Style for date separator in channel info.
+ * @property backgroundStyle - background style for date separator
+ * @property textStyle - style for date separator text
+ * @property dateFormatter - formatter for date separator text
+ * */
 data class DateSeparatorStyle(
-        val backgroundStyle: BackgroundStyle,
-        val textStyle: TextStyle,
-        val dateFormatter: Formatter<Date>
+    val backgroundStyle: BackgroundStyle,
+    val textStyle: TextStyle,
+    val dateFormatter: Formatter<Date> = SceytChatUIKit.formatters.messageDateSeparatorFormatter
 ) {
     companion object {
         var styleCustomizer = StyleCustomizer<DateSeparatorStyle> { _, style -> style }
     }
 
     internal class Builder(
-            private val context: Context,
-            private val typedArray: TypedArray
+        private val context: Context,
+        private val typedArray: TypedArray
     ) {
         @ColorInt
-        private var backgroundColor: Int = UNSET_COLOR
+        private var backgroundColor: Int = StyleConstants.UNSET_COLOR
 
         @ColorInt
-        private var borderColor: Int = UNSET_COLOR
+        private var borderColor: Int = StyleConstants.UNSET_COLOR
 
         @Px
-        private var borderWidth: Int = UNSET_SIZE
+        private var borderWidth: Int = StyleConstants.UNSET_SIZE
 
         @Px
-        private var cornerRadius: Float = UNSET_CORNER_RADIUS
+        private var cornerRadius: Float = StyleConstants.UNSET_CORNER_RADIUS
 
         private var textStyle: TextStyle = TextStyle()
 
-        fun backgroundColor(@StyleableRes index: Int, @ColorInt defValue: Int = backgroundColor) = apply {
+        fun backgroundColor(
+            @StyleableRes index: Int, @ColorInt defValue: Int = backgroundColor
+        ) = apply {
             this.backgroundColor = typedArray.getColor(index, defValue)
         }
 
@@ -73,7 +75,8 @@ data class DateSeparatorStyle(
             backgroundColor = backgroundColor,
             borderColor = borderColor,
             borderWidth = borderWidth,
-            shape = Shape.RoundedCornerShape(cornerRadius)
+            shape = if (cornerRadius != StyleConstants.UNSET_CORNER_RADIUS)
+                Shape.RoundedCornerShape(cornerRadius) else Shape.UnsetShape
         )
     }
 }

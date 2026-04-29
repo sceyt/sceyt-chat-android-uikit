@@ -40,7 +40,7 @@ internal fun SearchChannelInputStyle.Builder.buildHintStyle(
     )
     .hint(
         index = R.styleable.SearchChannelInputView_sceytUiSearchChannelInputHintText,
-        defValue = context.getString(R.string.sceyt_search_for_channels)
+        defValue = context.getString(R.string.sceyt_search)
     )
     .build()
 

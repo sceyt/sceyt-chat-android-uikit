@@ -1,40 +1,46 @@
 package com.sceyt.chatuikit.presentation.components.shareable.adapter
 
-import android.annotation.SuppressLint
 import android.view.ViewGroup
-import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chatuikit.extensions.dispatchUpdatesToSafety
 import com.sceyt.chatuikit.persistence.differs.ChannelDiff
+import com.sceyt.chatuikit.presentation.common.recyclerview.AsyncListDiffer
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem
-import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelsDiffUtil
+import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem.ChannelItem
+import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItemDiffCallback
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.holders.BaseChannelViewHolder
 import com.sceyt.chatuikit.presentation.components.shareable.adapter.holders.ShareableChannelViewHolderFactory
+import kotlinx.coroutines.CoroutineScope
 
 class ShareableChannelsAdapter(
-        private var channels: MutableList<ChannelListItem>,
-        private var viewHolderFactory: ShareableChannelViewHolderFactory
+    scope: CoroutineScope,
+    private var viewHolderFactory: ShareableChannelViewHolderFactory,
 ) : RecyclerView.Adapter<BaseChannelViewHolder>() {
-    private val mLoadingItem by lazy { ChannelListItem.LoadingMoreItem }
+
+    private val differ = AsyncListDiffer(this, ChannelListItemDiffCallback(), scope)
+
+    val currentList get() = differ.currentList
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseChannelViewHolder {
         return viewHolderFactory.createViewHolder(parent, viewType)
     }
 
     override fun onBindViewHolder(holder: BaseChannelViewHolder, position: Int) {
-        holder.bind(item = channels[position], diff = ChannelDiff.DEFAULT)
+        holder.bind(item = currentList[position], diff = ChannelDiff.DEFAULT)
     }
 
-    override fun onBindViewHolder(holder: BaseChannelViewHolder, position: Int, payloads: MutableList<Any>) {
+    override fun onBindViewHolder(
+        holder: BaseChannelViewHolder,
+        position: Int,
+        payloads: MutableList<Any>
+    ) {
         val diff = payloads.find { it is ChannelDiff } as? ChannelDiff
-                ?: ChannelDiff.DEFAULT
-        holder.bind(item = channels[position], diff)
+        holder.bind(item = currentList[position], diff ?: ChannelDiff.DEFAULT)
     }
 
-    override fun getItemCount(): Int = channels.size
+    override fun getItemCount(): Int = currentList.size
 
     override fun getItemViewType(position: Int): Int {
-        return viewHolderFactory.getItemViewType(channels[position], position)
+        return viewHolderFactory.getItemViewType(currentList[position], position)
     }
 
     override fun onViewAttachedToWindow(holder: BaseChannelViewHolder) {
@@ -47,57 +53,25 @@ class ShareableChannelsAdapter(
         holder.onViewDetachedFromWindow()
     }
 
-    private fun removeLoading() {
-        if (channels.remove(mLoadingItem))
-            notifyItemRemoved(channels.lastIndex + 1)
+    fun notifyUpdate(channels: List<ChannelListItem>) {
+        differ.submitList(channels)
     }
 
-    fun notifyUpdate(channels: List<ChannelListItem>, recyclerView: RecyclerView) {
-        val myDiffUtil = ChannelsDiffUtil(this.channels, channels)
-        val productDiffResult = DiffUtil.calculateDiff(myDiffUtil, true)
-        this.channels = channels.toMutableList()
-        productDiffResult.dispatchUpdatesToSafety(recyclerView)
+    fun getSkip() = currentList.filterIsInstance<ChannelItem>().size
+
+    fun getData() = currentList
+
+    fun getChannels() = currentList.filterIsInstance<ChannelItem>()
+
+    fun updateChannelSelectedState(selected: Boolean, channelItem: ChannelItem) {
+        differ.updateItem(
+            predicate = { it is ChannelItem && it.channel.id == channelItem.channel.id },
+            newItem = ChannelItem(channelItem.channel).apply { this.selected = selected },
+            payloads = Unit,
+        )
     }
 
-    @SuppressLint("NotifyDataSetChanged")
-    fun addList(items: MutableList<ChannelListItem>) {
-        removeLoading()
-
-        val filteredItems = items.minus(channels.toSet())
-
-        if (filteredItems.find { it is ChannelListItem.ChannelItem } == null)
-            return
-
-        channels.addAll(filteredItems)
-        notifyItemRangeInserted(channels.size - filteredItems.size, filteredItems.size)
-    }
-
-    fun getSkip() = channels.filter { it !is ChannelListItem.LoadingMoreItem }.size
-
-    fun getData() = channels
-
-    fun getChannels() = channels
-        .filter { it !is ChannelListItem.LoadingMoreItem }
-        .map { it as ChannelListItem.ChannelItem }
-
-    fun deleteChannel(id: Long) {
-        getChannels().forEachIndexed { index, channelItem ->
-            if (channelItem.channel.id == id) {
-                channels.removeAt(index)
-                notifyItemRemoved(index)
-                return@forEachIndexed
-            }
-        }
-    }
-
-    fun updateChannelSelectedState(selected: Boolean, channelItem: ChannelListItem.ChannelItem) {
-        val index = channels.indexOf(channelItem)
-        if (index >= 0) {
-            channelItem.selected = selected
-            notifyItemChanged(index, Unit)
-        }
-    }
-
+    @Suppress("unused")
     fun setViewHolderFactory(viewHolderFactory: ShareableChannelViewHolderFactory) {
         this.viewHolderFactory = viewHolderFactory
     }

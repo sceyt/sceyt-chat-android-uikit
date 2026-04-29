@@ -8,6 +8,7 @@ import android.widget.ImageView
 import androidx.core.graphics.drawable.toDrawable
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
+import com.sceyt.chatuikit.extensions.glideRequestListener
 import com.sceyt.chatuikit.persistence.file_transfer.ThumbData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
@@ -26,7 +27,8 @@ class AttachmentViewHolderHelper(itemView: View) {
 
     fun bind(item: AttachmentDataProvider, resizedImageSize: Size? = null) {
         if (isFileItemInitialized && item.thumbPath == null && !fileItem.thumbPath.isNullOrBlank()
-                && fileItem.attachment.messageTid == item.attachment.messageTid)
+            && fileItem.attachment.messageTid == item.attachment.messageTid
+        )
             item.updateThumbPath(fileItem.thumbPath)
 
         this.resizedImageSize = resizedImageSize
@@ -35,7 +37,11 @@ class AttachmentViewHolderHelper(itemView: View) {
         size = item.size
     }
 
-    fun drawImageWithBlurredThumb(path: String?, imageView: ImageView) {
+    fun drawImageWithBlurredThumb(
+        path: String?,
+        imageView: ImageView,
+        onResourceReady: (() -> Unit)? = null
+    ) {
         val width = resizedImageSize?.width ?: imageView.width
         val height = resizedImageSize?.height ?: imageView.height
         Glide.with(context.applicationContext)
@@ -43,6 +49,9 @@ class AttachmentViewHolderHelper(itemView: View) {
             .transition(DrawableTransitionOptions.withCrossFade())
             .placeholder(blurredThumb)
             .override(width, height)
+            .listener(glideRequestListener<Drawable>(onResourceReady = { _, _, _, _, _ ->
+                onResourceReady?.invoke()
+            }))
             .into(imageView)
     }
 
@@ -60,18 +69,18 @@ class AttachmentViewHolderHelper(itemView: View) {
         imageView.setImageDrawable(thumb)
     }
 
-    fun drawOriginalFile(imageView: ImageView) {
+    fun drawOriginalFile(imageView: ImageView, onResourceReady: (() -> Unit)? = null) {
         if (isFileItemInitialized.not()) return
         if (!fileItem.attachment.filePath.isNullOrBlank())
-            drawImageWithBlurredThumb(fileItem.attachment.filePath, imageView)
+            drawImageWithBlurredThumb(fileItem.attachment.filePath, imageView, onResourceReady)
         else
             loadBlurThumb(blurredThumb, imageView)
     }
 
     fun updateTransferData(
-            data: TransferData,
-            item: AttachmentDataProvider,
-            isValidThumb: (thumbData: ThumbData?) -> Boolean,
+        data: TransferData,
+        item: AttachmentDataProvider,
+        isValidThumb: (thumbData: ThumbData?) -> Boolean,
     ): Boolean {
         if (data.messageTid != item.attachment.messageTid) return false
         if (data.state == TransferState.ThumbLoaded) {

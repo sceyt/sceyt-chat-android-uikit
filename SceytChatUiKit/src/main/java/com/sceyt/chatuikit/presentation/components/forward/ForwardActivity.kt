@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.presentation.components.forward
 
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -10,7 +11,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytActivityForwardBinding
 import com.sceyt.chatuikit.databinding.SceytEmptyStateBinding
 import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
-import com.sceyt.chatuikit.extensions.launchActivity
+import com.sceyt.chatuikit.extensions.createIntent
 import com.sceyt.chatuikit.extensions.parcelableArrayList
 import com.sceyt.chatuikit.extensions.setSafeOnClickListener
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
@@ -142,9 +143,9 @@ open class ForwardActivity : ShareableActivity<ForwardStyle>() {
     companion object {
         const val FORWARD_MESSAGES_KEY = "FORWARD_MESSAGE_KEY"
 
-        fun launch(context: Context, vararg message: SceytMessage) {
-            context.launchActivity<ForwardActivity> {
-                putParcelableArrayListExtra(FORWARD_MESSAGES_KEY, ArrayList(message.toList()))
+        fun createIntent(context: Context, messages: List<SceytMessage>): Intent {
+            return context.createIntent<ForwardActivity> {
+                putParcelableArrayListExtra(FORWARD_MESSAGES_KEY, ArrayList(messages))
             }
         }
     }

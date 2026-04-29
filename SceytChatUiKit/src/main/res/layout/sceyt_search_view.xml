@@ -13,12 +13,10 @@
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/icSearch"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginStart="15dp"
+        android:layout_width="16dp"
+        android:layout_height="16dp"
+        android:layout_marginStart="14dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintDimensionRatio="1:1"
-        app:layout_constraintHeight_percent=".4"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/sceyt_ic_search" />
@@ -28,7 +26,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:background="@null"
-        android:hint="@string/sceyt_search_for_channels"
+        android:hint="@string/sceyt_search"
         android:imeOptions="actionSearch"
         android:includeFontPadding="false"
         android:inputType="text"

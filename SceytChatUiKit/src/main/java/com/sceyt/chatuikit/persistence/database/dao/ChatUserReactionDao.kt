@@ -21,16 +21,23 @@ internal interface ChatUserReactionDao {
     suspend fun insertChannelUserReaction(reaction: ChatUserReactionEntity)
 
     @Transaction
-    @Query("select * from $CHAT_USER_REACTION_TABLE where channelId =:channelId")
+    @Query("SELECT * FROM $CHAT_USER_REACTION_TABLE WHERE channelId = :channelId")
     suspend fun getChannelUserReactions(channelId: Long): List<ChatUserReactionDb>
 
-    @Query("delete from $CHAT_USER_REACTION_TABLE where channelId in (:channelIds)")
+    @Query("DELETE FROM $CHAT_USER_REACTION_TABLE WHERE channelId IN (:channelIds)")
     suspend fun deleteChannelsUserReactions(channelIds: List<Long>)
 
-    @Query("delete from $CHAT_USER_REACTION_TABLE where messageId =:messageId and reaction_key =:key " +
-            "and fromId =:fromId and channelId =:channelId")
+    @Query(
+        """
+        DELETE FROM $CHAT_USER_REACTION_TABLE
+        WHERE messageId = :messageId
+          AND reaction_key = :key
+          AND fromId = :fromId
+          AND channelId = :channelId
+        """
+    )
     suspend fun deleteChannelUserReaction(channelId: Long, messageId: Long, key: String?, fromId: String?)
 
-    @Query("delete from $CHAT_USER_REACTION_TABLE where messageId =:messageId and channelId =:channelId")
+    @Query("DELETE FROM $CHAT_USER_REACTION_TABLE WHERE messageId = :messageId AND channelId = :channelId")
     suspend fun deleteChannelMessageUserReaction(channelId: Long, messageId: Long)
 }

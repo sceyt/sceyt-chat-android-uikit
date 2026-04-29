@@ -16,6 +16,7 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.databinding.SceytActivitySelectUsersBinding
 import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
+import com.sceyt.chatuikit.extensions.createIntent
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.extensions.overrideTransitions
 import com.sceyt.chatuikit.extensions.parcelable
@@ -42,7 +43,8 @@ open class SelectUsersActivity : AppCompatActivity() {
         enableEdgeToEdge()
         style = SelectUsersStyle.Builder(this, null).build()
 
-        setContentView(SceytActivitySelectUsersBinding.inflate(layoutInflater)
+        setContentView(
+            SceytActivitySelectUsersBinding.inflate(layoutInflater)
             .also { binding = it }
             .root)
 
@@ -76,7 +78,8 @@ open class SelectUsersActivity : AppCompatActivity() {
 
     protected open fun initViews() {
         with(binding) {
-            root.layoutTransition = LayoutTransition().apply { enableTransitionType(LayoutTransition.CHANGING) }
+            root.layoutTransition =
+                LayoutTransition().apply { enableTransitionType(LayoutTransition.CHANGING) }
             toolbar.setTitle(pageArgs?.toolbarTitle ?: "")
             pageArgs?.actionButtonIcon?.let { fabNext.setImageResource(it) }
             fabNext.setEnabledOrNot(pageArgs?.actionButtonAlwaysEnable == true)
@@ -106,7 +109,8 @@ open class SelectUsersActivity : AppCompatActivity() {
     protected open fun setupUsersList(list: List<UserItem>) {
         initSelectedItems(list)
         if (::usersAdapter.isInitialized.not()) {
-            binding.rvUsers.adapter = SelectableUsersAdapter(list,
+            binding.rvUsers.adapter = SelectableUsersAdapter(
+                list,
                 SelectableUserViewHolderFactory(this, style.itemStyle) {
                     if (it.chosen) {
                         addOrRemoveFromSelectedUsers(it, true)
@@ -189,10 +193,10 @@ open class SelectUsersActivity : AppCompatActivity() {
         private const val PAGE_ARGS = "pageArgs"
         const val SELECTED_USERS_RESULT = "selectedUsersResult"
 
-        fun newIntent(
-                context: Context,
-                args: SelectUsersPageArgs,
-        ) = Intent(context, SelectUsersActivity::class.java).apply {
+        fun createIntent(
+            context: Context,
+            args: SelectUsersPageArgs,
+        ) = context.createIntent<SelectUsersActivity> {
             putExtra(PAGE_ARGS, args)
         }
     }
@@ -200,13 +204,13 @@ open class SelectUsersActivity : AppCompatActivity() {
 
 @Parcelize
 data class SelectUsersPageArgs(
-        val toolbarTitle: String? = null,
-        val actionButtonAlwaysEnable: Boolean = false,
-        @param:DrawableRes val actionButtonIcon: Int = R.drawable.sceyt_ic_arrow_next,
+    val toolbarTitle: String? = null,
+    val actionButtonAlwaysEnable: Boolean = false,
+    @param:DrawableRes val actionButtonIcon: Int = R.drawable.sceyt_ic_arrow_next,
 ) : Parcelable
 
 
 @Parcelize
 data class SelectUsersResult(
-        val selectedUsers: List<SceytUser>,
+    val selectedUsers: List<SceytUser>,
 ) : Parcelable

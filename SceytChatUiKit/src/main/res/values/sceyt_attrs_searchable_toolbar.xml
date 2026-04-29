@@ -4,11 +4,29 @@
         <attr name="sceytUiSearchableToolbarTitle" format="string" localization="suggested" />
         <attr name="sceytUiSearchableToolbarTitleColor" format="reference|color" />
         <attr name="sceytUiSearchableToolbarTitleTextSize" format="dimension" />
+        <attr name="sceytUiSearchableToolbarTitleTextStyle" format="enum">
+            <enum name="normal" value="0" />
+            <enum name="bold" value="1" />
+            <enum name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiSearchableToolbarTitleTextFontFamily" format="reference" />
         <attr name="sceytUiSearchableToolbarEnableSearch" format="boolean" />
+        <attr name="sceytUiSearchableToolbarBackgroundColor" format="reference|color" />
+        <attr name="sceytUiSearchableToolbarUnderlineColor" format="reference|color" />
         <attr name="sceytUiSearchableToolbarIconsTint" format="reference|color" />
         <attr name="sceytUiSearchableToolbarNavigationIcon" format="reference" />
         <attr name="sceytUiSearchableToolbarClearIcon" format="reference" />
         <attr name="sceytUiSearchableToolbarSearchIcon" format="reference" />
+        <attr name="sceytUiSearchableToolbarSearchHintText" format="string" localization="suggested" />
+        <attr name="sceytUiSearchableToolbarSearchHintColor" format="reference|color" />
+        <attr name="sceytUiSearchableToolbarInputTextColor" format="reference|color" />
+        <attr name="sceytUiSearchableToolbarInputTextSize" format="dimension" />
+        <attr name="sceytUiSearchableToolbarInputTextStyle" format="enum">
+            <enum name="normal" value="0" />
+            <enum name="bold" value="1" />
+            <enum name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiSearchableToolbarInputTextFontFamily" format="reference" />
 
     </declare-styleable>
 </resources>

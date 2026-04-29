@@ -43,7 +43,6 @@ import com.sceyt.chatuikit.data.models.messages.SceytMarker
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
 import com.sceyt.chatuikit.data.models.messages.SceytUser
-import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.notifications.managers.RealtimeNotificationManager
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.interactor.AttachmentInteractor
@@ -90,8 +89,7 @@ internal class PersistenceMiddleWareImpl(
     private val realtimeNotificationManager: RealtimeNotificationManager,
 ) : ChannelMemberInteractor, MessageInteractor, ChannelInteractor,
     UserInteractor, AttachmentInteractor, MessageMarkerInteractor,
-    MessageReactionInteractor, MessagePollInteractor, ChannelInviteKeyInteractor,
-    SceytKoinComponent {
+    MessageReactionInteractor, MessagePollInteractor, ChannelInviteKeyInteractor {
 
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
@@ -483,8 +481,11 @@ internal class PersistenceMiddleWareImpl(
     }
 
     override suspend fun loadNewestMessages(
-        conversationId: Long, replyInThread: Boolean, limit: Int,
-        loadKey: LoadKeyData, ignoreDb: Boolean,
+        conversationId: Long,
+        replyInThread: Boolean,
+        limit: Int,
+        loadKey: LoadKeyData,
+        ignoreDb: Boolean,
     ): Flow<PaginationResponse<SceytMessage>> {
         return messagesLogic.loadNewestMessages(
             conversationId = conversationId,

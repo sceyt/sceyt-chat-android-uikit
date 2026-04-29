@@ -9,7 +9,6 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState.PauseUpload
 import com.sceyt.chatuikit.persistence.logic.FileTransferLogic
 import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager
 import java.util.concurrent.ConcurrentHashMap
-import kotlin.collections.set
 
 internal class FileTransferServiceImpl(
         private var context: Context,
@@ -44,17 +43,17 @@ internal class FileTransferServiceImpl(
     }
 
     override fun upload(attachment: SceytAttachment, transferTask: TransferTask) {
-        tasksMap[attachment.messageTid.toString()] = transferTask
+        addTransferTask(transferTask)
         listeners.upload(attachment, transferTask)
     }
 
     override fun uploadSharedFile(attachment: SceytAttachment, transferTask: TransferTask) {
-        tasksMap[attachment.messageTid.toString()] = transferTask
+        addTransferTask(transferTask)
         listeners.uploadSharedFile(attachment, transferTask)
     }
 
     override fun download(attachment: SceytAttachment, transferTask: TransferTask) {
-        tasksMap[attachment.messageTid.toString()] = transferTask
+        addTransferTask(transferTask)
         listeners.download(attachment, transferTask)
     }
 
@@ -88,7 +87,15 @@ internal class FileTransferServiceImpl(
         return tasksMap[attachment.messageTid.toString()]
     }
 
-    override fun getTasks() = tasksMap
+    override fun addTransferTask(task: TransferTask) {
+        tasksMap[task.messageTid.toString()] = task
+    }
+
+    override fun removeTransferTask(messageTid: Long) {
+        tasksMap.remove(messageTid.toString())
+    }
+
+    override fun getTasks(): Map<String, TransferTask> = tasksMap
 
     override fun clearPreparingThumbPaths() {
         fileTransferLogic.clearPreparingThumbPaths()

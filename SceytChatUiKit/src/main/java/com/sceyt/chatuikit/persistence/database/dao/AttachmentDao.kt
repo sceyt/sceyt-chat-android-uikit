@@ -19,32 +19,76 @@ import kotlin.math.max
 
 @Dao
 internal abstract class AttachmentDao {
+
     @Transaction
-    @Query("select * from $ATTACHMENT_TABLE where channelId =:channelId and id != 0 and id <:attachmentId and type in (:types) and viewOnce != 1 " +
-            "order by createdAt desc, id desc limit :limit")
+    @Query(
+        """
+        SELECT *
+        FROM $ATTACHMENT_TABLE
+        WHERE channelId = :channelId
+          AND id != 0
+          AND id < :attachmentId
+          AND type IN (:types)
+          AND viewOnce != 1
+        ORDER BY createdAt DESC, id DESC
+        LIMIT :limit
+        """
+    )
     abstract suspend fun getOldestThenAttachment(channelId: Long, attachmentId: Long, limit: Int, types: List<String>): List<AttachmentDb>
 
     @Transaction
-    @Query("select * from $ATTACHMENT_TABLE where channelId =:channelId and id != 0 and id <= :attachmentId and type in (:types) and viewOnce != 1 " +
-            "order by createdAt desc, id desc limit :limit")
+    @Query(
+        """
+        SELECT *
+        FROM $ATTACHMENT_TABLE
+        WHERE channelId = :channelId
+          AND id != 0
+          AND id <= :attachmentId
+          AND type IN (:types)
+          AND viewOnce != 1
+        ORDER BY createdAt DESC, id DESC
+        LIMIT :limit
+        """
+    )
     abstract suspend fun getOldestThenAttachmentInclude(channelId: Long, attachmentId: Long, limit: Int, types: List<String>): List<AttachmentDb>
 
     @Transaction
-    @Query("select * from $ATTACHMENT_TABLE where channelId =:channelId and id != 0 and id >:attachmentId and type in (:types) and viewOnce != 1 " +
-            "order by createdAt, id limit :limit")
+    @Query(
+        """
+        SELECT *
+        FROM $ATTACHMENT_TABLE
+        WHERE channelId = :channelId
+          AND id != 0
+          AND id > :attachmentId
+          AND type IN (:types)
+          AND viewOnce != 1
+        ORDER BY createdAt, id
+        LIMIT :limit
+        """
+    )
     abstract suspend fun getNewestThenAttachment(channelId: Long, attachmentId: Long, limit: Int, types: List<String>): List<AttachmentDb>
 
     @Transaction
-    @Query("select * from $ATTACHMENT_TABLE where channelId =:channelId and id >=:attachmentId and type in (:types) and viewOnce != 1 " +
-            "order by createdAt, id limit :limit")
+    @Query(
+        """
+        SELECT *
+        FROM $ATTACHMENT_TABLE
+        WHERE channelId = :channelId
+          AND id >= :attachmentId
+          AND type IN (:types)
+          AND viewOnce != 1
+        ORDER BY createdAt, id
+        LIMIT :limit
+        """
+    )
     abstract suspend fun getNewestThenAttachmentInclude(channelId: Long, attachmentId: Long, limit: Int, types: List<String>): List<AttachmentDb>
 
     @Transaction
     open suspend fun getNearAttachments(
-            channelId: Long,
-            attachmentId: Long,
-            limit: Int,
-            types: List<String>
+        channelId: Long,
+        attachmentId: Long,
+        limit: Int,
+        types: List<String>
     ): LoadNearData<AttachmentDb> {
         val oldest = getOldestThenAttachmentInclude(channelId, attachmentId, limit, types).reversed()
         val includesInOldest = oldest.lastOrNull()?.attachmentEntity?.id == attachmentId
@@ -73,13 +117,20 @@ internal abstract class AttachmentDao {
     }
 
     @Transaction
-    @Query("select * from $ATTACHMENT_PAYLOAD_TABLE where messageTid in (:tid)")
+    @Query("SELECT * FROM $ATTACHMENT_PAYLOAD_TABLE WHERE messageTid IN (:tid)")
     abstract suspend fun getAllAttachmentPayLoadsByMsgTid(vararg tid: Long): List<AttachmentPayLoadDb>
 
-    @Query("update $ATTACHMENT_TABLE set id =:attachmentId, messageId =:messageId where messageTid =:messageTid and url =:attachmentUrl")
+    @Query(
+        """
+        UPDATE $ATTACHMENT_TABLE
+        SET id = :attachmentId, messageId = :messageId
+        WHERE messageTid = :messageTid
+          AND url = :attachmentUrl
+        """
+    )
     abstract suspend fun updateAttachmentIdAndMessageId(attachmentId: Long?, messageId: Long, messageTid: Long, attachmentUrl: String?)
 
-    @Query("update $ATTACHMENT_PAYLOAD_TABLE set progressPercent =:progress, transferState =:state where messageTid =:tid")
+    @Query("UPDATE $ATTACHMENT_PAYLOAD_TABLE SET progressPercent = :progress, transferState = :state WHERE messageTid = :tid")
     abstract suspend fun updateAttachmentTransferDataByMsgTid(tid: Long, progress: Float, state: TransferState)
 
     @Transaction
@@ -95,27 +146,39 @@ internal abstract class AttachmentDao {
         updateAttachmentPayLoadFilePathByMsgTid(tid, filePath)
     }
 
-    @Query("update $ATTACHMENT_TABLE set filePath =:filePath, url =:url where messageTid =:msgTid and type !=:ignoreType")
+    @Query("UPDATE $ATTACHMENT_TABLE SET filePath = :filePath, url = :url WHERE messageTid = :msgTid AND type != :ignoreType")
     abstract suspend fun updateAttachmentByMsgTid(msgTid: Long, filePath: String?, url: String?, ignoreType: String = AttachmentTypeEnum.Link.value)
 
-    @Query("update $ATTACHMENT_PAYLOAD_TABLE set filePath =:filePath, url =:url," +
-            "progressPercent= :progress, transferState =:state  where messageTid =:tid")
+    @Query(
+        """
+        UPDATE $ATTACHMENT_PAYLOAD_TABLE
+        SET filePath = :filePath, url = :url, progressPercent = :progress, transferState = :state
+        WHERE messageTid = :tid
+        """
+    )
     abstract suspend fun updateAttachmentPayLoadByMsgTid(tid: Long, filePath: String?, url: String?, progress: Float, state: TransferState)
 
-    @Query("update $ATTACHMENT_TABLE set filePath =:filePath, fileSize =:fileSize, metadata =:metadata " +
-            "where messageTid =:msgTid and type !=:ignoreType")
+    @Query(
+        """
+        UPDATE $ATTACHMENT_TABLE
+        SET filePath = :filePath, fileSize = :fileSize, metadata = :metadata
+        WHERE messageTid = :msgTid
+          AND type != :ignoreType
+        """
+    )
     abstract suspend fun updateAttachmentFilePathByMsgTid(
-            msgTid: Long,
-            filePath: String?,
-            fileSize: Long,
-            metadata: String?,
-            ignoreType: String = AttachmentTypeEnum.Link.value
+        msgTid: Long,
+        filePath: String?,
+        fileSize: Long,
+        metadata: String?,
+        ignoreType: String = AttachmentTypeEnum.Link.value
     )
 
-    @Query("update $ATTACHMENT_PAYLOAD_TABLE set filePath =:filePath where messageTid =:msgTid")
+    @Query("UPDATE $ATTACHMENT_PAYLOAD_TABLE SET filePath = :filePath WHERE messageTid = :msgTid")
     abstract suspend fun updateAttachmentPayLoadFilePathByMsgTid(msgTid: Long, filePath: String?)
 
     @VisibleForTesting
     @Insert
     abstract suspend fun insertAttachments(attachments: List<AttachmentEntity>)
+
 }

@@ -90,7 +90,7 @@ class ReactionsInfoBottomSheetFragment : BottomSheetDialogFragment() {
                     }
 
                     ReactionUpdateEventEnum.Remove -> {
-                        if (reactionTotal.score == 0L) {
+                        if (reactionTotal.count == 0L) {
                             headerAdapter?.removeItem(eventData.reaction)
                             pagerAdapter?.removeFragment(eventData.reaction.key)
                         } else {

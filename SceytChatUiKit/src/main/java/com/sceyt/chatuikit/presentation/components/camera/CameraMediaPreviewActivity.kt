@@ -9,7 +9,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.isVisible
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.databinding.SceytActivityCameraMediaPreviewBinding
-import com.sceyt.chatuikit.extensions.applySystemWindowInsetsPadding
+import com.sceyt.chatuikit.extensions.applySystemWindowInsetsPadding import com.sceyt.chatuikit.extensions.createIntent
 import com.sceyt.chatuikit.styles.camera.CameraMediaPreviewStyle
 import java.io.File
 
@@ -153,11 +153,11 @@ class CameraMediaPreviewActivity : AppCompatActivity() {
         const val EXTRA_RESULT_URI = "result_uri"
         const val EXTRA_RESULT_IS_VIDEO = "result_is_video"
 
-        fun launch(context: Context, filePath: String, isVideo: Boolean) {
-            context.startActivity(Intent(context, CameraMediaPreviewActivity::class.java).apply {
+        fun createIntent(context: Context, filePath: String, isVideo: Boolean): Intent {
+            return context.createIntent<CameraMediaPreviewActivity> {
                 putExtra(EXTRA_FILE_PATH, filePath)
                 putExtra(EXTRA_IS_VIDEO, isVideo)
-            })
+            }
         }
     }
 }

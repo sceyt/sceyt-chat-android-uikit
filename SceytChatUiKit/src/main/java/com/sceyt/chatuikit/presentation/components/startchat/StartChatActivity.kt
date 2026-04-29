@@ -1,6 +1,5 @@
 package com.sceyt.chatuikit.presentation.components.startchat
 
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -9,25 +8,27 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityOptionsCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.role.Role
-import com.sceyt.chatuikit.R.anim.sceyt_anim_slide_hold
+import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.data.managers.message.MessageEventManager
+import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.databinding.SceytActivityStartChatBinding
 import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
+import com.sceyt.chatuikit.extensions.createIntent
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
-import com.sceyt.chatuikit.extensions.launchActivity
 import com.sceyt.chatuikit.extensions.overrideTransitions
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.setDrawableStart
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
-import com.sceyt.chatuikit.presentation.components.channel.messages.ChannelActivity
+import com.sceyt.chatuikit.navigation.Destination
+import com.sceyt.chatuikit.navigation.navigate
+import com.sceyt.chatuikit.navigation.navigateForResult
 import com.sceyt.chatuikit.presentation.components.channel_info.members.MemberTypeEnum
-import com.sceyt.chatuikit.presentation.components.create_chat.create_channel.CreateChannelActivity
-import com.sceyt.chatuikit.presentation.components.create_chat.create_group.CreateGroupActivity
 import com.sceyt.chatuikit.presentation.components.select_users.SelectUsersActivity
 import com.sceyt.chatuikit.presentation.components.select_users.SelectUsersPageArgs
 import com.sceyt.chatuikit.presentation.components.select_users.SelectUsersResult
@@ -37,8 +38,10 @@ import com.sceyt.chatuikit.presentation.components.startchat.adapters.UsersAdapt
 import com.sceyt.chatuikit.presentation.components.startchat.adapters.holders.UserViewHolderFactory
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.styles.create_channel.StartChatStyle
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 
-class StartChatActivity : AppCompatActivity() {
+open class StartChatActivity : AppCompatActivity() {
     private lateinit var binding: SceytActivityStartChatBinding
     private lateinit var style: StartChatStyle
     private val viewModel: UsersViewModel by viewModels()
@@ -49,9 +52,10 @@ class StartChatActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         style = StartChatStyle.Builder(this, null).build()
-        setContentView(SceytActivityStartChatBinding.inflate(layoutInflater)
-            .also { binding = it }
-            .root)
+        setContentView(
+            SceytActivityStartChatBinding.inflate(layoutInflater)
+                .also { binding = it }
+                .root)
 
         binding.applyStyle()
         applyInsetsAndWindowColor(binding.root)
@@ -68,9 +72,13 @@ class StartChatActivity : AppCompatActivity() {
                 viewModel.loadUsers(isLoadMore = false)
             } else finish()
         }
+
+        MessageEventManager.onOutgoingMessageFlow.onEach {
+            finish()
+        }.launchIn(lifecycleScope)
     }
 
-    private fun initViewModel() {
+    protected open fun initViewModel() {
         viewModel.pageStateLiveData.observe(this) {
             if (it is PageState.StateError) {
                 creatingChannel = false
@@ -87,46 +95,79 @@ class StartChatActivity : AppCompatActivity() {
         }
 
         viewModel.createChannelLiveData.observe(this) {
-            ChannelActivity.launch(this, it)
             creatingChannel = false
+            openChannelActivity(it)
         }
     }
 
-    private fun initViews() {
+    protected open fun initViews() {
         binding.toolbar.setQueryChangeListener { query ->
             viewModel.loadUsers(query, false)
         }
 
         binding.toolbar.setNavigationClickListener {
-            onBackPressedDispatcher.onBackPressed()
-            overrideTransitions(sceyt_anim_slide_hold, com.sceyt.chatuikit.R.anim.sceyt_anim_slide_out_right, false)
+            onBackClick()
         }
 
         binding.layoutNewGroup.setOnClickListener {
-            val args = SelectUsersPageArgs(toolbarTitle = MemberTypeEnum.Member.getPageTitle(this))
-            selectUsersActivityLauncher.launch(SelectUsersActivity.newIntent(this, args), animOptions)
+            onNewGroupClick()
         }
 
         binding.layoutNewChannel.setOnClickListener {
-            createConversationLauncher.launch(Intent(this, CreateChannelActivity::class.java), animOptions)
+            onNewChannelClick()
         }
     }
 
-    private val animOptions
-        get() = ActivityOptionsCompat.makeCustomAnimation(this,
-            com.sceyt.chatuikit.R.anim.sceyt_anim_slide_in_right, sceyt_anim_slide_hold)
+    protected open fun openChannelActivity(channel: SceytChannel) {
+        SceytChatUIKit.navigator.navigate(this, Destination.Channel(channel))
+    }
 
-    private fun setupUsersList(list: List<UserItem>) {
+    protected open fun onNewGroupClick() {
+        val args = SelectUsersPageArgs(toolbarTitle = MemberTypeEnum.Member.getPageTitle(this))
+        SceytChatUIKit.navigator.navigateForResult(
+            context = this,
+            launcher = selectUsersActivityLauncher,
+            destination = Destination.SelectUsers(args)
+        )
+    }
+
+    protected open fun onNewChannelClick() {
+        SceytChatUIKit.navigator.navigateForResult(
+            context = this,
+            launcher = createConversationLauncher,
+            destination = Destination.CreateChannel()
+        )
+    }
+
+    protected open fun onBackClick() {
+        onBackPressedDispatcher.onBackPressed()
+        overrideTransitions(
+            R.anim.sceyt_anim_slide_hold,
+            R.anim.sceyt_anim_slide_out_right,
+            false
+        )
+    }
+
+    protected open fun onUserClick(user: UserItem.User) {
+        if (creatingChannel) return
+        creatingChannel = true
+        viewModel.findOrCreatePendingDirectChannel(user.user)
+    }
+
+    protected open fun setupUsersList(list: List<UserItem>) {
         val listWithSelf = list.toMutableList()
         SceytChatUIKit.currentUser?.let {
             listWithSelf.add(0, UserItem.User(it))
         }
         if (::usersAdapter.isInitialized.not()) {
-            binding.rvUsers.adapter = UsersAdapter(listWithSelf, UserViewHolderFactory(this, style.itemStyle) {
-                if (creatingChannel) return@UserViewHolderFactory
-                creatingChannel = true
-                viewModel.findOrCreatePendingDirectChannel(it.user)
-            }).also { usersAdapter = it }
+            binding.rvUsers.adapter =
+                UsersAdapter(
+                    list = listWithSelf, factory = UserViewHolderFactory(
+                        context = this,
+                        style = style.itemStyle,
+                        listeners = ::onUserClick
+                    )
+                ).also { usersAdapter = it }
 
             binding.rvUsers.addOnScrollListener(object : RecyclerView.OnScrollListener() {
                 override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
@@ -138,28 +179,41 @@ class StartChatActivity : AppCompatActivity() {
         } else usersAdapter.notifyUpdate(listWithSelf)
     }
 
-    private val selectUsersActivityLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            result.data?.parcelable<SelectUsersResult>(SelectUsersActivity.SELECTED_USERS_RESULT)?.let { data ->
-                val members = data.selectedUsers.map { SceytMember(Role(MemberTypeEnum.Member.toRole()), it) }
-                createGroupLauncher.launch(CreateGroupActivity.newIntent(this, members), animOptions)
+    protected open val selectUsersActivityLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == RESULT_OK) {
+                result.data?.parcelable<SelectUsersResult>(SelectUsersActivity.SELECTED_USERS_RESULT)
+                    ?.let { data ->
+                        val members = data.selectedUsers.map {
+                            SceytMember(
+                                Role(MemberTypeEnum.Member.toRole()),
+                                it
+                            )
+                        }
+                        SceytChatUIKit.navigator.navigateForResult(
+                            context = this,
+                            launcher = createGroupLauncher,
+                            destination = Destination.CreateGroup(members)
+                        )
+                    }
             }
         }
-    }
 
-    private val createConversationLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            finish()
+    protected open val createConversationLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == RESULT_OK) {
+                finish()
+            }
         }
-    }
 
-    private val createGroupLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            finish()
+    protected open val createGroupLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == RESULT_OK) {
+                finish()
+            }
         }
-    }
 
-    private fun SceytActivityStartChatBinding.applyStyle() {
+    protected open fun SceytActivityStartChatBinding.applyStyle() {
         root.setBackgroundColor(style.backgroundColor)
         style.separatorTextStyle.apply(tvUsers)
         with(toolbar) {
@@ -180,13 +234,16 @@ class StartChatActivity : AppCompatActivity() {
 
     override fun finish() {
         super.finish()
-        overrideTransitions(sceyt_anim_slide_hold, com.sceyt.chatuikit.R.anim.sceyt_anim_slide_out_right, false)
+        overrideTransitions(
+            R.anim.sceyt_anim_slide_hold,
+            R.anim.sceyt_anim_slide_out_right,
+            false
+        )
     }
 
     companion object {
 
-        fun launch(context: Context) {
-            context.launchActivity<StartChatActivity>(com.sceyt.chatuikit.R.anim.sceyt_anim_slide_in_right, sceyt_anim_slide_hold)
-        }
+        fun createIntent(context: Context): Intent = context.createIntent<StartChatActivity>()
+
     }
 }

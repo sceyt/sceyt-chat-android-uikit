@@ -129,7 +129,7 @@ class FindOrCreateDirectChannelLogicTests : SceytKoinComponent {
 
         // Verify same channel is returned from database (no duplicate created)
         verifyChannelInDatabase(result.data!!, data, shouldBePending = true)
-        Truth.assertThat(result.data!!.id).isEqualTo(createdChannel.id)
+        Truth.assertThat(result.data.id).isEqualTo(createdChannel.id)
     }
 
     @Test

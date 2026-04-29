@@ -49,6 +49,11 @@ android {
             applicationIdSuffix = ".debug"
             manifestPlaceholders["crashlyticsCollectionEnabled"] = "false"
         }
+        create("benchmark") {
+            initWith(buildTypes.getByName("release"))
+            matchingFallbacks += listOf("release")
+            isDebuggable = false
+        }
     }
 
     productFlavors {
@@ -95,6 +100,7 @@ android {
 
 dependencies {
     implementation(project(":SceytChatUiKit"))
+    implementation(project(":SceytCallKit"))
 
     implementation(libs.appcompat)
     implementation(libs.material)

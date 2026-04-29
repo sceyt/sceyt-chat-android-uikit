@@ -2,11 +2,18 @@ package com.sceyt.chatuikit.presentation.components.invite_link.join
 
 import android.net.Uri
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewModelScope
+import com.sceyt.chat.models.message.Message
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.fold
+import com.sceyt.chatuikit.data.models.messages.SceytMessageType
+import com.sceyt.chatuikit.data.models.messages.SystemMsgBodyEnum
 import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -15,8 +22,8 @@ import kotlin.time.Duration.Companion.minutes
 sealed class UiState {
     data object Loading : UiState()
     data class Success(
-            val inviteKey: String,
-            val channel: SceytChannel,
+        val inviteKey: String,
+        val channel: SceytChannel,
     ) : UiState()
 
     data class Error(val error: Throwable?) : UiState()
@@ -30,8 +37,8 @@ sealed class JoinActionState {
 }
 
 class JoinByInviteLinkViewModel(
-        private val inviteLink: Uri,
-        private val channelInteractor: ChannelInteractor,
+    private val inviteLink: Uri,
+    private val channelInteractor: ChannelInteractor,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<UiState>(UiState.Loading)
     val uiState = _uiState.asStateFlow()
@@ -92,6 +99,21 @@ class JoinByInviteLinkViewModel(
                     }
                 )
             }
+        }
+    }
+
+    fun sendJoinedByInviteLinkSystemMessage(channelId: Long) {
+        viewModelScope.launch(NonCancellable) {
+            SceytChatUIKit.chatUIFacade.messageInteractor.sendMessage(
+                channelId = channelId,
+                message = Message(
+                    Message.MessageBuilder()
+                        .setType(SceytMessageType.System.value)
+                        .withDisplayCount(0)
+                        .setSilent(true)
+                        .setBody(SystemMsgBodyEnum.JoinByInviteLink.value)
+                )
+            )
         }
     }
 }

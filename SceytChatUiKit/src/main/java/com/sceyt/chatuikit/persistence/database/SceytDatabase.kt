@@ -12,6 +12,7 @@ import com.sceyt.chatuikit.persistence.database.dao.ChannelDao
 import com.sceyt.chatuikit.persistence.database.dao.ChatUserReactionDao
 import com.sceyt.chatuikit.persistence.database.dao.DraftMessageDao
 import com.sceyt.chatuikit.persistence.database.dao.FileChecksumDao
+import com.sceyt.chatuikit.persistence.database.dao.GlobalSearchDao
 import com.sceyt.chatuikit.persistence.database.dao.LinkDao
 import com.sceyt.chatuikit.persistence.database.dao.LoadRangeDao
 import com.sceyt.chatuikit.persistence.database.dao.MarkerDao
@@ -40,6 +41,7 @@ import com.sceyt.chatuikit.persistence.database.entity.messages.LoadRangeEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.MarkerEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.MentionUserMessageLinkEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageEntity
+import com.sceyt.chatuikit.persistence.database.entity.messages.MessageFtsEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.PollEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.PollOptionEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.PollVoteEntity
@@ -81,8 +83,9 @@ import com.sceyt.chatuikit.persistence.database.entity.user.UserMetadataEntity
         PollOptionEntity::class,
         PollVoteEntity::class,
         PendingPollVoteEntity::class,
+        MessageFtsEntity::class,
     ],
-    version = 27,
+    version = 29,
     autoMigrations = [
         AutoMigration(from = 1, to = 2),
         AutoMigration(from = 2, to = 3),
@@ -108,12 +111,15 @@ import com.sceyt.chatuikit.persistence.database.entity.user.UserMetadataEntity
         AutoMigration(from = 24, to = 25),
         AutoMigration(from = 25, to = 26),
         AutoMigration(from = 26, to = 27),
-    ])
+        AutoMigration(from = 27, to = 28),
+    ]
+)
 
 @TypeConverters(ChannelConverter::class, MessageConverter::class, ListStringConverter::class)
 internal abstract class SceytDatabase : RoomDatabase() {
     abstract fun channelDao(): ChannelDao
     abstract fun messageDao(): MessageDao
+    abstract fun globalSearchDao(): GlobalSearchDao
     abstract fun attachmentsDao(): AttachmentDao
     abstract fun draftMessageDao(): DraftMessageDao
     abstract fun membersDao(): MemberDao

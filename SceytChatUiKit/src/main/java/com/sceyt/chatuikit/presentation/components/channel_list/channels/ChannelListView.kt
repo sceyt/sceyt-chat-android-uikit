@@ -8,15 +8,14 @@ import android.view.View
 import android.widget.FrameLayout
 import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chat.models.channel.ChannelListQuery.ChannelListOrder
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytChannelListViewBinding
-import com.sceyt.chatuikit.persistence.differs.ChannelDiff
+import com.sceyt.chatuikit.navigation.Destination
+import com.sceyt.chatuikit.navigation.navigate
 import com.sceyt.chatuikit.persistence.extensions.checkIsMemberInChannel
-import com.sceyt.chatuikit.presentation.helpers.DebounceHelper
 import com.sceyt.chatuikit.presentation.components.channel.header.helpers.ChannelEventData
-import com.sceyt.chatuikit.presentation.components.channel.messages.ChannelActivity
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.holders.ChannelViewHolderFactory
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.components.ChannelsRV
@@ -36,19 +35,19 @@ import com.sceyt.chatuikit.styles.extensions.channel_list.setPageStateViews
 
 @Suppress("JoinDeclarationAndAssignment")
 class ChannelListView @JvmOverloads constructor(
-        context: Context,
-        attrs: AttributeSet? = null,
-        defStyleAttr: Int = 0,
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0,
 ) : FrameLayout(context, attrs, defStyleAttr), ChannelClickListeners.ClickListeners,
-        ChannelPopupClickListeners.PopupClickListeners {
-
+    ChannelPopupClickListeners.PopupClickListeners {
     private val binding: SceytChannelListViewBinding
     private var channelsRV: ChannelsRV
     private var defaultClickListeners: ChannelClickListenersImpl
-    private var clickListeners: ChannelClickListeners.ClickListeners = ChannelClickListenersImpl(this)
-    private var popupClickListeners: ChannelPopupClickListeners.PopupClickListeners = ChannelPopupClickListenersImpl(this)
+    private var clickListeners: ChannelClickListeners.ClickListeners =
+        ChannelClickListenersImpl(this)
+    private var popupClickListeners: ChannelPopupClickListeners.PopupClickListeners =
+        ChannelPopupClickListenersImpl(this)
     private var channelCommandEventListener: ((ChannelEvent) -> Unit)? = null
-    private var debounceHelper: DebounceHelper? = null
     val style: ChannelListViewStyle
 
     init {
@@ -86,50 +85,6 @@ class ChannelListView @JvmOverloads constructor(
             updateStateView(state = PageState.Nothing)
     }
 
-    internal fun addNewChannels(scope: LifecycleCoroutineScope, channels: List<ChannelListItem>) {
-        channelsRV.addNewChannels(scope, channels)
-    }
-
-    internal fun addNewChannelAndSort(
-            scope: LifecycleCoroutineScope,
-            order: ChannelListOrder,
-            channelItem: ChannelListItem.ChannelItem,
-    ) {
-        channelsRV.getData()?.let {
-            if (it.contains(channelItem)) return
-            val newData = it.plus(channelItem)
-            channelsRV.sortByAndSetNewData(scope, order, newData)
-        } ?: channelsRV.setData(scope, listOf(channelItem))
-
-        binding.pageStateView.updateState(PageState.Nothing)
-    }
-
-    internal fun channelUpdated(
-            channel: SceytChannel,
-            commitCallback: (() -> Unit)? = null,
-    ) {
-        channelsRV.updateChannel(
-            predicate = { (it as? ChannelListItem.ChannelItem)?.channel?.id == channel.id },
-            newItem = ChannelListItem.ChannelItem(channel),
-            commitCallback = commitCallback
-        )
-    }
-
-    internal fun channelUpdatedWithDiff(channel: SceytChannel, diff: ChannelDiff) {
-        channelsRV.updateChannel(
-            predicate = { (it as? ChannelListItem.ChannelItem)?.channel?.id == channel.id },
-            newItem = ChannelListItem.ChannelItem(channel),
-            payloads = diff
-        )
-    }
-
-    fun replaceChannel(pendingChannelId: Long, channel: SceytChannel) {
-        channelsRV.updateChannel(
-            predicate = { (it as? ChannelListItem.ChannelItem)?.channel?.id == pendingChannelId },
-            newItem = ChannelListItem.ChannelItem(channel)
-        )
-    }
-
     internal fun onChannelEvents(channelId: Long, events: List<ChannelEventData>) {
         val channel = channelsRV.getChannelItem(channelId)?.channel ?: return
         channelsRV.updateChannel(
@@ -138,20 +93,17 @@ class ChannelListView @JvmOverloads constructor(
         )
     }
 
-    internal fun deleteChannel(channelId: Long?, searchQuery: String) {
-        channelsRV.deleteChannel(channelId ?: return, commitCallback = {
-            if (channelsRV.getData().isNullOrEmpty())
-                binding.pageStateView.updateState(PageState.StateEmpty(searchQuery))
-        })
-    }
-
     internal fun updateStateView(state: PageState) {
         binding.pageStateView.updateState(state, channelsRV.isEmpty(), enableErrorSnackBar = false)
     }
 
     private fun showChannelActionsPopup(view: View, item: ChannelListItem.ChannelItem) {
         if (style.showChannelActionAsPopup) {
-            val popup = ChannelActionsPopup(ContextThemeWrapper(context, style.popupStyle), view, channel = item.channel)
+            val popup = ChannelActionsPopup(
+                context = ContextThemeWrapper(context, style.popupStyle),
+                anchor = view,
+                channel = item.channel
+            )
             popup.setOnMenuItemClickListener { menuItem ->
                 when (menuItem.itemId) {
                     R.id.sceyt_pin_channel -> popupClickListeners.onPinClick(item.channel)
@@ -171,13 +123,33 @@ class ChannelListView @JvmOverloads constructor(
                 it.setChooseTypeCb { action ->
                     when (action) {
                         ChannelActionsDialog.ActionsEnum.Pin -> popupClickListeners.onPinClick(item.channel)
-                        ChannelActionsDialog.ActionsEnum.UnPin -> popupClickListeners.onUnPinClick(item.channel)
-                        ChannelActionsDialog.ActionsEnum.MarkAsRead -> popupClickListeners.onMarkAsReadClick(item.channel)
-                        ChannelActionsDialog.ActionsEnum.MarkAsUnRead -> popupClickListeners.onMarkAsUnReadClick(item.channel)
-                        ChannelActionsDialog.ActionsEnum.Mute -> popupClickListeners.onMuteClick(item.channel)
-                        ChannelActionsDialog.ActionsEnum.UnMute -> popupClickListeners.onUnMuteClick(item.channel)
-                        ChannelActionsDialog.ActionsEnum.Leave -> popupClickListeners.onLeaveChannelClick(item.channel)
-                        ChannelActionsDialog.ActionsEnum.Delete -> popupClickListeners.onDeleteChannelClick(item.channel)
+                        ChannelActionsDialog.ActionsEnum.UnPin -> {
+                            popupClickListeners.onUnPinClick(item.channel)
+                        }
+
+                        ChannelActionsDialog.ActionsEnum.MarkAsRead -> {
+                            popupClickListeners.onMarkAsReadClick(item.channel)
+                        }
+
+                        ChannelActionsDialog.ActionsEnum.MarkAsUnRead -> {
+                            popupClickListeners.onMarkAsUnReadClick(item.channel)
+                        }
+
+                        ChannelActionsDialog.ActionsEnum.Mute -> {
+                            popupClickListeners.onMuteClick(item.channel)
+                        }
+
+                        ChannelActionsDialog.ActionsEnum.UnMute -> {
+                            popupClickListeners.onUnMuteClick(item.channel)
+                        }
+
+                        ChannelActionsDialog.ActionsEnum.Leave -> {
+                            popupClickListeners.onLeaveChannelClick(item.channel)
+                        }
+
+                        ChannelActionsDialog.ActionsEnum.Delete -> {
+                            popupClickListeners.onDeleteChannelClick(item.channel)
+                        }
                     }
                 }
             }.show()
@@ -207,24 +179,6 @@ class ChannelListView @JvmOverloads constructor(
 
     internal fun getData() = channelsRV.getData()
 
-    internal fun hideLoadingMore() {
-        channelsRV.hideLoadingMore()
-    }
-
-    fun sortChannelsBy(scope: LifecycleCoroutineScope, sortBy: ChannelListOrder) {
-        if (debounceHelper == null)
-            debounceHelper = DebounceHelper(300, scope)
-
-        debounceHelper?.submitForceIfNotRunning { channelsRV.sortBy(scope, sortBy) }
-    }
-
-    /**
-     * Cancel last sort channels job.
-     * */
-    fun cancelLastSort(): Boolean {
-        return debounceHelper?.cancelLastDebounce() ?: false
-    }
-
     /**
      * @param listener Channel click listeners, to listen click events.
      */
@@ -239,7 +193,7 @@ class ChannelListView @JvmOverloads constructor(
     @Suppress("unused")
     fun setCustomChannelClickListeners(listener: ChannelClickListeners.ClickListeners) {
         clickListeners = (listener as? ChannelClickListenersImpl)?.withDefaultListeners(this)
-                ?: listener
+            ?: listener
     }
 
     /**
@@ -248,8 +202,8 @@ class ChannelListView @JvmOverloads constructor(
      */
     @Suppress("unused")
     fun setCustomChannelPopupClickListener(listener: ChannelPopupClickListeners.PopupClickListeners) {
-        popupClickListeners = (listener as? ChannelPopupClickListenersImpl)?.withDefaultListeners(this)
-                ?: listener
+        popupClickListeners =
+            (listener as? ChannelPopupClickListenersImpl)?.withDefaultListeners(this) ?: listener
     }
 
     /**
@@ -290,7 +244,7 @@ class ChannelListView @JvmOverloads constructor(
 
     // Channel Click callbacks
     override fun onChannelClick(view: View, item: ChannelListItem.ChannelItem) {
-        ChannelActivity.launch(context, item.channel)
+        SceytChatUIKit.navigator.navigate(context, Destination.Channel(item.channel))
     }
 
     override fun onAvatarClick(view: View, item: ChannelListItem.ChannelItem) {

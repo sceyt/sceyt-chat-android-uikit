@@ -2,6 +2,8 @@ package com.sceyt.chatuikit.presentation.custom_views
 
 import android.content.Context
 import android.graphics.drawable.Drawable
+import android.os.Parcel
+import android.os.Parcelable
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import androidx.annotation.ColorInt
@@ -17,22 +19,25 @@ import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.extensions.hideKeyboard
 import com.sceyt.chatuikit.extensions.showSoftInput
 import com.sceyt.chatuikit.presentation.helpers.DebounceHelper
+import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
+import com.sceyt.chatuikit.styles.StyleConstants.UNSET_STYLE
 import com.sceyt.chatuikit.styles.common.HintStyle
 import com.sceyt.chatuikit.styles.common.SearchInputStyle
+import com.sceyt.chatuikit.styles.common.SearchToolbarStyle
 import com.sceyt.chatuikit.styles.common.TextInputStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
+import com.sceyt.chatuikit.styles.common.ToolbarStyle
 
+@Suppress("JoinDeclarationAndAssignment")
 class SearchableToolbar @JvmOverloads constructor(
-        context: Context,
-        attrs: AttributeSet? = null,
-        defStyleAttr: Int = 0
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0
 ) : ConstraintLayout(context, attrs, defStyleAttr) {
     private val binding: SceytLayoutSearchableToolbarBinding
     private var isSearchMode: Boolean = false
     private val debounceHelper by lazy { DebounceHelper(300, this) }
     private var toolbarTitle: String? = null
-    private var titleTextStyle: TextStyle = TextStyle()
-    private var searchInputStyle: SearchInputStyle = SearchInputStyle()
     private var enableSearch = true
 
     init {
@@ -43,49 +48,102 @@ class SearchableToolbar @JvmOverloads constructor(
         var titleTextSize = context.resources.getDimensionPixelSize(R.dimen.bigTextSize)
 
         context.obtainStyledAttributes(attrs, R.styleable.SearchableToolbar).use { array ->
-            toolbarTitle = array.getString(R.styleable.SearchableToolbar_sceytUiSearchableToolbarTitle)
-            titleColor = array.getColor(R.styleable.SearchableToolbar_sceytUiSearchableToolbarTitleColor, titleColor)
-            titleTextSize = array.getDimensionPixelSize(R.styleable.SearchableToolbar_sceytUiSearchableToolbarTitleTextSize,
-                titleTextSize)
-            enableSearch = array.getBoolean(R.styleable.SearchableToolbar_sceytUiSearchableToolbarEnableSearch, enableSearch)
+            toolbarTitle =
+                array.getString(R.styleable.SearchableToolbar_sceytUiSearchableToolbarTitle)
+            titleColor = array.getColor(
+                R.styleable.SearchableToolbar_sceytUiSearchableToolbarTitleColor,
+                titleColor
+            )
+            titleTextSize = array.getDimensionPixelSize(
+                R.styleable.SearchableToolbar_sceytUiSearchableToolbarTitleTextSize,
+                titleTextSize
+            )
+            enableSearch = array.getBoolean(
+                R.styleable.SearchableToolbar_sceytUiSearchableToolbarEnableSearch,
+                enableSearch
+            )
 
-            val navigationIcon = array.getDrawable(R.styleable.SearchableToolbar_sceytUiSearchableToolbarNavigationIcon)
+            val backgroundColor = array.getColor(
+                R.styleable.SearchableToolbar_sceytUiSearchableToolbarBackgroundColor,
+                UNSET_COLOR
+            )
+            val underlineColor = array.getColor(
+                R.styleable.SearchableToolbar_sceytUiSearchableToolbarUnderlineColor,
+                UNSET_COLOR
+            )
+            val navigationIcon =
+                array.getDrawable(R.styleable.SearchableToolbar_sceytUiSearchableToolbarNavigationIcon)
                     ?: context.getCompatDrawable(R.drawable.sceyt_ic_arrow_back)
-            val iconsTint = array.getColor(R.styleable.SearchableToolbar_sceytUiSearchableToolbarIconsTint, 0)
+            val iconsTint =
+                array.getColor(R.styleable.SearchableToolbar_sceytUiSearchableToolbarIconsTint, 0)
 
-            titleTextStyle = TextStyle(
+            val titleFont = array.getResourceId(
+                R.styleable.SearchableToolbar_sceytUiSearchableToolbarTitleTextFontFamily,
+                R.font.roboto_medium
+            )
+            val titleStyle = array.getInt(
+                R.styleable.SearchableToolbar_sceytUiSearchableToolbarTitleTextStyle,
+                UNSET_STYLE
+            )
+
+            val titleTextStyle = TextStyle(
                 color = titleColor,
                 size = titleTextSize,
-                font = R.font.roboto_medium
+                font = titleFont,
+                style = titleStyle
             )
 
-            val textInputStyle = TextInputStyle(
-                textStyle = titleTextStyle,
-                hintStyle = HintStyle(
-                    hint = context.getString(R.string.sceyt_search),
-                    color = context.getCompatColor(R.color.sceyt_color_text_footnote)
+            val inputTextStyle = TextStyle.Builder(array)
+                .setColor(
+                    R.styleable.SearchableToolbar_sceytUiSearchableToolbarInputTextColor,
+                    context.getCompatColor(R.color.sceyt_color_text_primary)
                 )
+                .setSize(R.styleable.SearchableToolbar_sceytUiSearchableToolbarInputTextSize)
+                .setFont(R.styleable.SearchableToolbar_sceytUiSearchableToolbarInputTextFontFamily)
+                .setStyle(R.styleable.SearchableToolbar_sceytUiSearchableToolbarInputTextStyle)
+                .build()
+
+            val hintStyle = HintStyle.Builder(array)
+                .hint(
+                    index = R.styleable.SearchableToolbar_sceytUiSearchableToolbarSearchHintText,
+                    defValue = context.getString(R.string.sceyt_search)
+                )
+                .color(
+                    index = R.styleable.SearchableToolbar_sceytUiSearchableToolbarSearchHintColor,
+                    defValue = context.getCompatColor(R.color.sceyt_color_text_footnote)
+                )
+                .build()
+
+            val textInputStyle = TextInputStyle(
+                textStyle = inputTextStyle,
+                hintStyle = hintStyle
             )
-            searchInputStyle = SearchInputStyle.Builder(array)
+            val searchInputStyle = SearchInputStyle.Builder(array)
                 .searchIcon(
                     index = R.styleable.SearchableToolbar_sceytUiSearchableToolbarSearchIcon,
-                    defValue = context.getCompatDrawable(R.drawable.sceyt_ic_search))
+                    defValue = context.getCompatDrawable(R.drawable.sceyt_ic_search)
+                )
                 .clearIcon(
                     index = R.styleable.SearchableToolbar_sceytUiSearchableToolbarClearIcon,
-                    defValue = context.getCompatDrawable(R.drawable.sceyt_ic_cancel))
+                    defValue = context.getCompatDrawable(R.drawable.sceyt_ic_cancel)
+                )
                 .textInputStyle(textInputStyle)
                 .build()
 
-            setIconsAndColors(navigationIcon, iconsTint)
+            val searchToolbarStyle = SearchToolbarStyle(
+                toolbarStyle = ToolbarStyle(
+                    backgroundColor = backgroundColor,
+                    underlineColor = underlineColor,
+                    navigationIcon = navigationIcon,
+                    titleTextStyle = titleTextStyle
+                ),
+                searchInputStyle = searchInputStyle
+            )
+
+            searchToolbarStyle.apply(this@SearchableToolbar)
+            applyIconsTint(iconsTint)
             binding.initViews()
         }
-    }
-
-    private fun setIconsAndColors(navigationIcon: Drawable?, @ColorInt iconsTint: Int) {
-        binding.icBack.setImageDrawable(navigationIcon)
-        titleTextStyle.apply(binding.tvTitle)
-        searchInputStyle.apply(binding.input, null, binding.icSearch, binding.icClear)
-        applyIconsTint(iconsTint)
     }
 
     private fun applyIconsTint(@ColorInt tint: Int) {
@@ -135,8 +193,7 @@ class SearchableToolbar @JvmOverloads constructor(
     }
 
     fun setTitleTextStyle(style: TextStyle) {
-        titleTextStyle = style
-        titleTextStyle.apply(binding.tvTitle)
+        style.apply(binding.tvTitle)
     }
 
     fun setSearchInputStyle(style: SearchInputStyle) {
@@ -171,5 +228,39 @@ class SearchableToolbar @JvmOverloads constructor(
 
     fun cancelSearchMode() {
         binding.serSearchMode(false)
+    }
+
+    override fun onSaveInstanceState(): Parcelable {
+        val superState = super.onSaveInstanceState()
+        return SavedState(superState).also { it.isSearchMode = isSearchMode }
+    }
+
+    override fun onRestoreInstanceState(state: Parcelable?) {
+        if (state !is SavedState) {
+            super.onRestoreInstanceState(state)
+            return
+        }
+        super.onRestoreInstanceState(state.superState)
+        if (state.isSearchMode) binding.serSearchMode(true)
+    }
+
+    private class SavedState : BaseSavedState {
+        var isSearchMode: Boolean = false
+
+        constructor(superState: Parcelable?) : super(superState)
+
+        constructor(parcel: Parcel) : super(parcel) {
+            isSearchMode = parcel.readInt() != 0
+        }
+
+        override fun writeToParcel(out: Parcel, flags: Int) {
+            super.writeToParcel(out, flags)
+            out.writeInt(if (isSearchMode) 1 else 0)
+        }
+
+        companion object CREATOR : Parcelable.Creator<SavedState> {
+            override fun createFromParcel(parcel: Parcel) = SavedState(parcel)
+            override fun newArray(size: Int) = arrayOfNulls<SavedState>(size)
+        }
     }
 }

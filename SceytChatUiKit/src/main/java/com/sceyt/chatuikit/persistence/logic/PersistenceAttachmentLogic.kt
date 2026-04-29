@@ -55,7 +55,6 @@ interface PersistenceAttachmentLogic {
     suspend fun getFileChecksumData(filePath: String?): FileChecksumData?
     suspend fun getLinkPreviewData(link: String?): SceytResponse<LinkPreviewDetails>
     suspend fun upsertLinkPreviewData(linkDetails: LinkPreviewDetails)
-    suspend fun updateLinkDetailsSize(link: String, size: Size)
-    suspend fun updateLinkDetailsThumb(link: String, thumb: String)
+    suspend fun updateLinkDetails(link: String, size: Size, thumb: String?)
     suspend fun onTransferProgressPercentUpdated(transferData: TransferData)
 }

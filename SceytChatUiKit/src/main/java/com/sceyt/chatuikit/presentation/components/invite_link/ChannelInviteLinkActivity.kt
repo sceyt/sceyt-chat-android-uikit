@@ -1,14 +1,16 @@
 package com.sceyt.chatuikit.presentation.components.invite_link
 
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
+import com.sceyt.chatuikit.data.models.channels.toIntentPayload
 import com.sceyt.chatuikit.databinding.SceytActivityChannelInviteLinkBinding
 import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
-import com.sceyt.chatuikit.extensions.launchActivity
+import com.sceyt.chatuikit.extensions.createIntent
 import com.sceyt.chatuikit.extensions.overrideTransitions
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.presentation.components.channel.messages.ChannelActivity.Companion.CHANNEL
@@ -38,11 +40,11 @@ open class ChannelInviteLinkActivity : AppCompatActivity() {
     }
 
     protected open fun getDataFromIntent() {
-        channel = requireNotNull(intent?.parcelable(ChannelInfoLinksFragment.Companion.CHANNEL))
+        channel = requireNotNull(intent?.parcelable(ChannelInfoLinksFragment.CHANNEL))
     }
 
     protected open fun initViews() = with(binding) {
-        binding.toolbar.setNavigationClickListener {
+        toolbar.setNavigationClickListener {
             onBackPressedDispatcher.onBackPressed()
         }
     }
@@ -74,17 +76,11 @@ open class ChannelInviteLinkActivity : AppCompatActivity() {
     }
 
     companion object {
-
-        fun launch(
-                context: Context,
-                channel: SceytChannel,
-        ) {
-            context.launchActivity<ChannelInviteLinkActivity>(
-                enterAnimResId = R.anim.sceyt_anim_slide_in_right,
-                exitAnimResId = R.anim.sceyt_anim_slide_hold,
-            ) {
-                putExtra(CHANNEL, channel)
-            }
+        fun createIntent(
+            context: Context,
+            channel: SceytChannel,
+        ): Intent = context.createIntent<ChannelInviteLinkActivity> {
+            putExtra(CHANNEL, channel.toIntentPayload())
         }
     }
 }

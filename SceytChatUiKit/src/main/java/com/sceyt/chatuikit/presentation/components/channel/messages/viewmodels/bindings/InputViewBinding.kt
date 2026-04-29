@@ -9,16 +9,15 @@ import com.sceyt.chat.models.message.Message
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelActionEvent
-import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.extensions.customToastSnackBar
-import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.media.audio.AudioRecordData
+import com.sceyt.chatuikit.navigation.Destination
+import com.sceyt.chatuikit.navigation.navigate
 import com.sceyt.chatuikit.persistence.extensions.getChannelType
 import com.sceyt.chatuikit.persistence.extensions.isPublic
-import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.persistence.mappers.isDeleted
 import com.sceyt.chatuikit.presentation.common.dialogs.SceytDialog
 import com.sceyt.chatuikit.presentation.components.channel.input.MessageInputView
@@ -27,10 +26,8 @@ import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyl
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.MessageInputActionCallback
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageListViewModel
-import com.sceyt.chatuikit.presentation.components.create_poll.CreatePollActivity
 import com.sceyt.chatuikit.presentation.root.PageState
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -68,8 +65,8 @@ fun MessageListViewModel.bind(
 
     loadChannelMembersIfNeeded()
 
-    onChannelUpdatedEventFlow.onEach {
-        messageInputView.checkIsParticipant(it)
+    onChannelUpdatedEventFlow.onEach { channel ->
+        messageInputView.checkIsParticipant(channel)
     }.launchIn(lifecycleOwner.lifecycleScope)
 
     searchResult.observe(lifecycleOwner) {
@@ -79,13 +76,6 @@ fun MessageListViewModel.bind(
     pageStateLiveData.observe(lifecycleOwner) {
         if (it is PageState.StateError && it.showMessage)
             customToastSnackBar(messageInputView, it.errorMessage.toString())
-    }
-
-    joinLiveData.observe(lifecycleOwner) {
-        when (it) {
-            is SceytResponse.Success -> messageInputView.joinSuccess()
-            is SceytResponse.Error -> customToastSnackBar(messageInputView, it.message.toString())
-        }
     }
 
     onEditMessageCommandLiveData.observe(lifecycleOwner) {
@@ -119,19 +109,6 @@ fun MessageListViewModel.bind(
             else -> return@onEach
         }
     }.launchIn(lifecycleOwner.lifecycleScope)
-
-    ChannelsCache.channelUpdatedFlow
-        .filter { it.channel.id == channel.id }
-        .onEach {
-            val channel = it.channel
-            val wasJoined = channel.userRole.isNotNullOrBlank()
-            if (channel.userRole.isNotNullOrBlank()) {
-                if (!wasJoined)
-                    messageInputView.joinSuccess()
-            } else messageInputView.onChannelLeft()
-        }
-        .launchIn(lifecycleOwner.lifecycleScope)
-
 
     fun upsertLinkPreviewData(linkDetails: LinkPreviewDetails?) {
         if (linkDetails != null) {
@@ -227,7 +204,10 @@ fun MessageListViewModel.bind(
         }
 
         override fun createPoll() {
-            CreatePollActivity.launch(messageInputView.context, channel.id)
+            SceytChatUIKit.navigator.navigate(
+                messageInputView.context,
+                Destination.CreatePoll(channel.id)
+            )
         }
 
         override fun toggleViewOnce(selected: Boolean) {

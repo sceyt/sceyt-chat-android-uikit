@@ -19,32 +19,46 @@ import kotlinx.coroutines.flow.SharedFlow
 
 interface MessageInteractor {
     suspend fun loadPrevMessages(
-        conversationId: Long, lastMessageId: Long,
-        replyInThread: Boolean, offset: Int,
+        conversationId: Long,
+        lastMessageId: Long,
+        replyInThread: Boolean,
+        offset: Int,
         limit: Int = SceytChatUIKit.config.queryLimits.messageListQueryLimit,
-        loadKey: LoadKeyData, ignoreDb: Boolean = false,
+        loadKey: LoadKeyData,
+        ignoreDb: Boolean = false,
     ): Flow<PaginationResponse<SceytMessage>>
 
     suspend fun loadNextMessages(
-        conversationId: Long, lastMessageId: Long, replyInThread: Boolean,
-        offset: Int, limit: Int = SceytChatUIKit.config.queryLimits.messageListQueryLimit,
+        conversationId: Long,
+        lastMessageId: Long,
+        replyInThread: Boolean,
+        offset: Int,
+        limit: Int = SceytChatUIKit.config.queryLimits.messageListQueryLimit,
         ignoreDb: Boolean = false,
     ): Flow<PaginationResponse<SceytMessage>>
 
     suspend fun loadNearMessages(
-        conversationId: Long, messageId: Long, replyInThread: Boolean,
-        limit: Int, loadKey: LoadKeyData, ignoreDb: Boolean = false,
+        conversationId: Long,
+        messageId: Long,
+        replyInThread: Boolean,
+        limit: Int,
+        loadKey: LoadKeyData,
+        ignoreDb: Boolean = false,
         ignoreServer: Boolean = false,
     ): Flow<PaginationResponse<SceytMessage>>
 
     suspend fun loadNewestMessages(
-        conversationId: Long, replyInThread: Boolean,
+        conversationId: Long,
+        replyInThread: Boolean,
         limit: Int = SceytChatUIKit.config.queryLimits.messageListQueryLimit,
-        loadKey: LoadKeyData, ignoreDb: Boolean,
+        loadKey: LoadKeyData,
+        ignoreDb: Boolean,
     ): Flow<PaginationResponse<SceytMessage>>
 
     suspend fun searchMessages(
-        conversationId: Long, replyInThread: Boolean, query: String,
+        conversationId: Long,
+        replyInThread: Boolean,
+        query: String,
     ): SceytPagingResponse<List<SceytMessage>>
 
     suspend fun getUnreadMentions(
@@ -61,12 +75,14 @@ interface MessageInteractor {
     ): SceytResponse<List<SceytMessage>>
 
     suspend fun syncMessagesAfterMessageId(
-        conversationId: Long, replyInThread: Boolean,
+        conversationId: Long,
+        replyInThread: Boolean,
         messageId: Long,
     ): Flow<SceytResponse<List<SceytMessage>>>
 
     suspend fun syncNearMessages(
-        conversationId: Long, messageId: Long,
+        conversationId: Long,
+        messageId: Long,
         replyInThread: Boolean,
     ): SyncNearMessagesResult
 
@@ -90,7 +106,8 @@ interface MessageInteractor {
     suspend fun sendAllPendingMessageStateUpdates()
     suspend fun sendAllPendingReactions()
     suspend fun markMessagesAs(
-        channelId: Long, marker: MarkerType,
+        channelId: Long,
+        marker: MarkerType,
         vararg ids: Long,
     ): List<SceytResponse<MessageListMarker>>
 

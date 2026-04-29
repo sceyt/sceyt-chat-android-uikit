@@ -234,6 +234,7 @@ object PushDataParser {
             Attachment.Builder("", data, type)
                 .setFileSize(size)
                 .setName(name)
+                .setCreatedAt(System.currentTimeMillis())
                 .setMetadata(metadata).build()
         } catch (e: Exception) {
             e.printStackTrace()

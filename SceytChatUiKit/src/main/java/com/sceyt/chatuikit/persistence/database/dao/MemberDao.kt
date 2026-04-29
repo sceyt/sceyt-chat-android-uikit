@@ -2,7 +2,6 @@ package com.sceyt.chatuikit.persistence.database.dao
 
 import androidx.room.Dao
 import androidx.room.Query
-import androidx.room.RoomWarnings
 import androidx.room.Transaction
 import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.USER_CHAT_LINK_TABLE
@@ -12,46 +11,68 @@ import com.sceyt.chatuikit.persistence.database.entity.channel.ChanelMemberDb
 @Dao
 internal interface MemberDao {
 
-    @Query("select user_id from $USER_CHAT_LINK_TABLE where chat_id =:channelId and role =:role")
+    @Query("SELECT user_id FROM $USER_CHAT_LINK_TABLE WHERE chat_id = :channelId AND role = :role")
     suspend fun getChannelOwner(channelId: Long, role: String = RoleTypeEnum.Owner.value): String?
 
-    @SuppressWarnings(RoomWarnings.QUERY_MISMATCH)
     @Transaction
-    @Query("select * from $USER_CHAT_LINK_TABLE as userChatLink join $USER_TABLE as user " +
-            "on userChatLink.user_id = user.user_id " +
-            "where chat_id =:channelId " +
-            "order by userChatLink.id limit :limit offset :offset")
+    @Query(
+        """
+        SELECT userChatLink.*
+        FROM $USER_CHAT_LINK_TABLE AS userChatLink
+        JOIN $USER_TABLE AS user ON userChatLink.user_id = user.user_id
+        WHERE chat_id = :channelId
+        ORDER BY userChatLink.id
+        LIMIT :limit OFFSET :offset
+        """
+    )
     suspend fun getChannelMembers(channelId: Long, limit: Int, offset: Int): List<ChanelMemberDb>
 
-    @SuppressWarnings(RoomWarnings.QUERY_MISMATCH)
     @Transaction
-    @Query("select * from $USER_CHAT_LINK_TABLE as userChatLink " +
-            "join $USER_TABLE as user on userChatLink.user_id = user.user_id " +
-            "where chat_id =:channelId and role=:role " +
-            "order by userChatLink.id limit :limit offset :offset")
+    @Query(
+        """
+        SELECT userChatLink.*
+        FROM $USER_CHAT_LINK_TABLE AS userChatLink
+        JOIN $USER_TABLE AS user ON userChatLink.user_id = user.user_id
+        WHERE chat_id = :channelId
+          AND role = :role
+        ORDER BY userChatLink.id
+        LIMIT :limit OFFSET :offset
+        """
+    )
     suspend fun getChannelMembersWithRole(channelId: Long, limit: Int, offset: Int, role: String): List<ChanelMemberDb>
 
-    @SuppressWarnings(RoomWarnings.QUERY_MISMATCH)
     @Transaction
-    @Query("select * from $USER_CHAT_LINK_TABLE as userChatLink join $USER_TABLE as user " +
-            "on userChatLink.user_id = user.user_id " +
-            "and (firstName like :name || '%' or lastName like :name || '%' or (firstName || ' ' || lastName) " +
-            "like :name || '%') " +
-            "where chat_id =:channelId")
+    @Query(
+        """
+        SELECT userChatLink.*
+        FROM $USER_CHAT_LINK_TABLE AS userChatLink
+        JOIN $USER_TABLE AS user
+          ON userChatLink.user_id = user.user_id
+         AND (firstName LIKE :name || '%'
+           OR lastName LIKE :name || '%'
+           OR (firstName || ' ' || lastName) LIKE :name || '%')
+        WHERE chat_id = :channelId
+        """
+    )
     suspend fun getChannelMembersByDisplayName(channelId: Long, name: String): List<ChanelMemberDb>
 
-    @SuppressWarnings(RoomWarnings.QUERY_MISMATCH)
     @Transaction
-    @Query("select * from $USER_CHAT_LINK_TABLE as links " +
-            "join $USER_TABLE as user on links.user_id = user.user_id " +
-            "where chat_id =:channelId and links.user_id in (:ids) " +
-            "order by user_id")
+    @Query(
+        """
+        SELECT links.*
+        FROM $USER_CHAT_LINK_TABLE AS links
+        JOIN $USER_TABLE AS user ON links.user_id = user.user_id
+        WHERE chat_id = :channelId
+          AND links.user_id IN (:ids)
+        ORDER BY user_id
+        """
+    )
     suspend fun getChannelMembersByIds(channelId: Long, vararg ids: String): List<ChanelMemberDb>
 
-    @Query("select count(*) from $USER_CHAT_LINK_TABLE where chat_id =:channelId")
+    @Query("SELECT COUNT(*) FROM $USER_CHAT_LINK_TABLE WHERE chat_id = :channelId")
     suspend fun getMembersCount(channelId: Long): Int
 
-    @Query("update $USER_CHAT_LINK_TABLE set role =:role where chat_id =:channelId and user_id =:userId")
+    @Query("UPDATE $USER_CHAT_LINK_TABLE SET role = :role WHERE chat_id = :channelId AND user_id = :userId")
     suspend fun updateMemberRole(channelId: Long, userId: String, role: String)
 
     @Transaction
@@ -68,6 +89,6 @@ internal interface MemberDao {
         updateMemberRole(channelId, newOwnerId, RoleTypeEnum.Owner.value)
     }
 
-    @Query("select user_id from $USER_CHAT_LINK_TABLE where user_id in (:ids) and chat_id =:channelId")
+    @Query("SELECT user_id FROM $USER_CHAT_LINK_TABLE WHERE user_id IN (:ids) AND chat_id = :channelId")
     fun filterOnlyMembersByIds(channelId: Long, ids: List<String>): List<String>
 }

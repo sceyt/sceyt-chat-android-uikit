@@ -41,7 +41,7 @@ typealias MessageTid = Long
 typealias MessageDeletionDate = Long
 
 class MessagesCache {
-    private var cachedMessages = hashMapOf<Long, HashMap<Long, SceytMessage>>()
+    private var cachedMessages = hashMapOf<ChannelId, HashMap<MessageTid, SceytMessage>>()
     private val mutex = Mutex()
 
     companion object {
@@ -143,7 +143,7 @@ class MessagesCache {
         val updatedMessages = mutableListOf<SceytMessage>()
         getMessagesMap(channelId)?.let { map ->
             tIds.forEach { tid ->
-                val message = map.get(tid) ?: return@forEach
+                val message = map[tid] ?: return@forEach
                 if (message.deliveryStatus < status) {
                     val updatedMessage = message.copy(deliveryStatus = status)
                     map[tid] = updatedMessage
@@ -162,7 +162,7 @@ class MessagesCache {
         val updatedMessages = mutableListOf<SceytMessage>()
         getMessagesMap(channelId)?.let { map ->
             tIds.forEach { tid ->
-                val message = map.get(tid) ?: return@forEach
+                val message = map[tid] ?: return@forEach
                 // Merge user markers
                 val newUserMarkers = (message.userMarkers.orEmpty() + markers).toSet()
 
@@ -204,15 +204,17 @@ class MessagesCache {
     }
 
     internal suspend fun deleteAllMessagesWhere(
+        channelId: ChannelId,
         predicate: (SceytMessage) -> Boolean
     ) = mutex.withLock {
-        cachedMessages.forEach { (_, map) ->
-            map.removeAllIf(predicate)
-        }
+        cachedMessages[channelId]?.removeAllIf(predicate)
     }
 
-    suspend fun forceDeleteAllMessagesWhere(predicate: (SceytMessage) -> Boolean) = mutex.withLock {
-        cachedMessages.forEach { (channelId, map) ->
+    suspend fun forceDeleteAllMessagesWhere(
+        channelId: ChannelId,
+        predicate: (SceytMessage) -> Boolean
+    ) = mutex.withLock {
+        cachedMessages[channelId]?.let { map ->
             val removedMessages = map.removeAllIfCollect(predicate)
             if (removedMessages.isNotEmpty()) {
                 val tIds = removedMessages.map { it.tid }
@@ -429,14 +431,16 @@ class MessagesCache {
                 currentProgress = attachment.progressPercent ?: 0f,
                 newProgress = updateDate.progressPercent
             )
-            
+
             if (!isValid) {
-                println("MessagesCache: Skipping invalid update for attachment ${attachment.messageTid} - " +
-                        "current: ${attachment.transferState}/${attachment.progressPercent}%, " +
-                        "new: ${updateDate.state}/${updateDate.progressPercent}%")
+                println(
+                    "MessagesCache: Skipping invalid update for attachment ${attachment.messageTid} - " +
+                            "current: ${attachment.transferState}/${attachment.progressPercent}%, " +
+                            "new: ${updateDate.state}/${updateDate.progressPercent}%"
+                )
                 return null
             }
-            
+
             return attachment.copy(
                 transferState = updateDate.state,
                 progressPercent = updateDate.progressPercent,
@@ -507,22 +511,18 @@ class MessagesCache {
         })
     }
 
-    suspend fun updateLinkDetailsSize(link: String, width: Int, height: Int) = mutex.withLock {
-        updateAllAttachments(predicate = { it.url == link }, updater = {
-            copy(
-                linkPreviewDetails = linkPreviewDetails?.copy(
-                    imageWidth = width,
-                    imageHeight = height
+    suspend fun updateLinkDetails(link: String, width: Int, height: Int, thumb: String?) =
+        mutex.withLock {
+            updateAllAttachments(predicate = { it.url == link }, updater = {
+                copy(
+                    linkPreviewDetails = linkPreviewDetails?.copy(
+                        imageWidth = width,
+                        imageHeight = height,
+                        thumb = thumb ?: linkPreviewDetails.thumb
+                    )
                 )
-            )
-        })
-    }
-
-    suspend fun updateThumb(link: String, thumb: String) = mutex.withLock {
-        updateAllAttachments(predicate = { it.url == link }, updater = {
-            copy(linkPreviewDetails = linkPreviewDetails?.copy(thumb = thumb))
-        })
-    }
+            })
+        }
 
     suspend fun moveMessagesToNewChannel(
         pendingChannelId: Long,

@@ -14,6 +14,7 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.databinding.SceytActivityShareBinding
 import com.sceyt.chatuikit.databinding.SceytEmptyStateBinding
 import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
+import com.sceyt.chatuikit.extensions.createIntent
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.parcelable
@@ -41,7 +42,8 @@ open class ShareActivity : ShareableActivity<ShareStyle>() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContentView(SceytActivityShareBinding.inflate(layoutInflater)
+        setContentView(
+            SceytActivityShareBinding.inflate(layoutInflater)
             .also { binding = it }
             .root)
 
@@ -117,7 +119,10 @@ open class ShareActivity : ShareableActivity<ShareStyle>() {
     }
 
     protected open fun sendTextMessage() {
-        viewModel.sendTextMessage(channelIds = selectedChannels.toLongArray(), body = body.toString())
+        viewModel.sendTextMessage(
+            channelIds = selectedChannels.toLongArray(),
+            body = body.toString()
+        )
             .onEach {
                 when (it) {
                     Loading -> SceytLoader.showLoading(this@ShareActivity)
@@ -198,10 +203,8 @@ open class ShareActivity : ShareableActivity<ShareStyle>() {
     }
 
     companion object {
-
-        @Suppress("unused")
-        fun newIntent(context: Context, intent: Intent): Intent {
-            return Intent(context, ShareActivity::class.java).apply {
+        fun createIntent(context: Context, intent: Intent): Intent {
+            return context.createIntent<ShareActivity> {
                 action = intent.action
                 intent.extras?.let { putExtras(it) }
             }

@@ -7,7 +7,9 @@ import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.graphics.drawable.IconCompat
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.SceytChatUIKit.notifications
+import com.sceyt.chatuikit.navigation.Destination
 import com.sceyt.chatuikit.notifications.builder.FileTransferNotificationBuilder
 import com.sceyt.chatuikit.notifications.builder.NotificationBuilder
 import com.sceyt.chatuikit.notifications.builder.NotificationBuilderHelper.immutablePendingIntentFlags
@@ -17,7 +19,7 @@ import com.sceyt.chatuikit.notifications.service.FileTransferNotificationData
  * Implementation of [NotificationBuilder] for creating and customizing notifications for file transfers.
  */
 open class DefaultFileTransferNotificationBuilder(
-        private val context: Context
+    private val context: Context
 ) : FileTransferNotificationBuilder {
     private val serviceNotifications by lazy { notifications.fileTransferServiceNotification }
 
@@ -31,9 +33,9 @@ open class DefaultFileTransferNotificationBuilder(
     }
 
     override suspend fun provideNotificationStyle(
-            context: Context,
-            data: FileTransferNotificationData,
-            notificationId: Int
+        context: Context,
+        data: FileTransferNotificationData,
+        notificationId: Int
     ): NotificationCompat.Style? = null
 
     /**
@@ -43,8 +45,8 @@ open class DefaultFileTransferNotificationBuilder(
      * @return A list of [NotificationCompat.Action] objects (default: empty list).
      */
     override fun provideActions(
-            context: Context,
-            data: FileTransferNotificationData
+        context: Context,
+        data: FileTransferNotificationData
     ): List<NotificationCompat.Action> {
         return emptyList()
     }
@@ -57,10 +59,10 @@ open class DefaultFileTransferNotificationBuilder(
      * @return A [PendingIntent] to open the app's launcher activity.
      */
     override fun providePendingIntent(
-            context: Context,
-            data: FileTransferNotificationData
+        context: Context,
+        data: FileTransferNotificationData
     ): PendingIntent {
-        val intent = context.packageManager.getLaunchIntentForPackage(context.packageName)
+        val intent = SceytChatUIKit.navigator.resolve(Destination.AppRoot()).createIntent(context)
         return PendingIntent.getActivity(
             context,
             "${data.channel.id}${data.message.tid}".hashCode(),
@@ -77,37 +79,37 @@ open class DefaultFileTransferNotificationBuilder(
      * @return An [IconCompat] representing the avatar, or `null` if not available.
      */
     override suspend fun provideAvatarIcon(
-            context: Context,
-            data: FileTransferNotificationData
+        context: Context,
+        data: FileTransferNotificationData
     ): IconCompat? {
         return null
     }
 
     override suspend fun buildNotification(
-            context: Context,
-            data: FileTransferNotificationData,
-            notificationId: Int,
-            builderCustomizer: NotificationCompat.Builder.() -> Unit
+        context: Context,
+        data: FileTransferNotificationData,
+        notificationId: Int,
+        builderCustomizer: NotificationCompat.Builder.() -> Unit
     ): Notification {
         val style = provideNotificationStyle(context, data, notificationId)
         return buildNotificationImpl(context, data, notificationId, style)
     }
 
     override suspend fun buildNotification(
-            context: Context,
-            data: FileTransferNotificationData,
-            notificationId: Int,
-            style: NotificationCompat.Style?,
-            builderCustomizer: NotificationCompat.Builder.() -> Unit
+        context: Context,
+        data: FileTransferNotificationData,
+        notificationId: Int,
+        style: NotificationCompat.Style?,
+        builderCustomizer: NotificationCompat.Builder.() -> Unit
     ): Notification {
         return buildNotificationImpl(context, data, notificationId, style)
     }
 
     protected open fun buildNotificationImpl(
-            context: Context,
-            data: FileTransferNotificationData,
-            notificationId: Int,
-            style: NotificationCompat.Style?
+        context: Context,
+        data: FileTransferNotificationData,
+        notificationId: Int,
+        style: NotificationCompat.Style?
     ): Notification {
         return NotificationCompat.Builder(context, provideNotificationChannelId())
             .setContentTitle(context.getString(R.string.sceyt_sending_attachment))

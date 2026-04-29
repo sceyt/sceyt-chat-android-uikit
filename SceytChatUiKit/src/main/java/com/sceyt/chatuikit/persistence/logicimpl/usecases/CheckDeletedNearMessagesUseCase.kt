@@ -51,9 +51,8 @@ internal class CheckDeletedNearMessagesUseCase(
                 channelId = channelId,
                 deleteUntil = syncStartTime
             )
-            messagesCache.forceDeleteAllMessagesWhere { message ->
-                message.channelId == channelId && message.isNotPending() &&
-                        (syncStartTime == 0L || message.createdAt < syncStartTime)
+            messagesCache.forceDeleteAllMessagesWhere(channelId) { message ->
+                message.isNotPending() && (syncStartTime == 0L || message.createdAt < syncStartTime)
             }
             return
         }
@@ -73,9 +72,8 @@ internal class CheckDeletedNearMessagesUseCase(
                 messageIds = serverIds,
                 deleteUntil = syncStartTime
             )
-            messagesCache.forceDeleteAllMessagesWhere { message ->
-                message.channelId == channelId && !serverIds.contains(message.id) &&
-                        message.isNotPending() &&
+            messagesCache.forceDeleteAllMessagesWhere(channelId) { message ->
+                !serverIds.contains(message.id) && message.isNotPending() &&
                         (syncStartTime == 0L || message.createdAt < syncStartTime)
             }
             if (count > 0) {
