@@ -22,8 +22,8 @@ import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.resume
 
 class SceytSyncManager(
-        private val channelInteractor: ChannelInteractor,
-        private val messageInteractor: MessageInteractor,
+    private val channelInteractor: ChannelInteractor,
+    private val messageInteractor: MessageInteractor,
 ) : SceytKoinComponent {
 
     private var syncResultData: SyncResultData = SyncResultData()
@@ -36,13 +36,14 @@ class SceytSyncManager(
     companion object {
         private val syncChannelsFinished_ = broadcastSharedFlow<SyncChannelData>()
         val syncChannelsFinished = syncChannelsFinished_.asSharedFlow()
-        private val syncChannelMessagesFinished_ = broadcastSharedFlow<Pair<SceytChannel, List<SceytMessage>>>()
+        private val syncChannelMessagesFinished_ =
+            broadcastSharedFlow<Pair<SceytChannel, List<SceytMessage>>>()
         val syncChannelMessagesFinished = syncChannelMessagesFinished_.asSharedFlow()
     }
 
     suspend fun startSync(
-            config: ChannelListConfig,
-            resultCallback: ((Result<SyncResultData>) -> Unit)? = null
+        config: ChannelListConfig,
+        resultCallback: ((Result<SyncResultData>) -> Unit)? = null
     ) {
         resultCallback?.let { syncResultCallbacks.add(it) }
         if (syncIsInProcess)
@@ -127,7 +128,11 @@ class SceytSyncManager(
         syncMessagesAfter(channel, channel.lastDisplayedMessageId, false)
     }
 
-    private suspend fun syncMessagesAfter(channel: SceytChannel, fromMessageId: Long, syncConversation: Boolean) {
+    private suspend fun syncMessagesAfter(
+        channel: SceytChannel,
+        fromMessageId: Long,
+        syncConversation: Boolean
+    ) {
         messageInteractor.syncMessagesAfterMessageId(channel.id, false, fromMessageId).collect {
             if (it is SceytResponse.Success)
                 it.data?.let { messages ->
@@ -138,20 +143,13 @@ class SceytSyncManager(
         }
     }
 
-    private fun finishSyncWithError(exception: java.lang.Exception) {
-        syncResultCallbacks.forEach {
-            it(Result.failure(exception))
-        }
-        syncResultCallbacks.clear()
-    }
-
     private fun getCoroutineContext(): CoroutineContext {
         return Dispatchers.IO + Job()
     }
 
     data class SyncChannelData(
-            val channels: MutableSet<SceytChannel>,
-            var withError: Boolean
+        val channels: MutableSet<SceytChannel>,
+        var withError: Boolean
     )
 
     /**@param totalUnreadChannelsCount is total unread channels count, include muted channels.
@@ -161,12 +159,12 @@ class SceytSyncManager(
      * @param syncedChannelsCount is total synced channels count, include muted channels.
      * @param syncedMessagesCount is total synced messages count, include messages in muted channels.*/
     data class SyncResultData(
-            var totalUnreadChannelsCount: Int = 0,
-            var totalUnreadMessagesCount: Int = 0,
-            var unreadMutedChannelsCount: Int = 0,
-            var unreadMessagesImMutedChannelCount: Int = 0,
-            var syncedChannelsCount: Int = 0,
-            var syncedMessagesCount: Int = 0,
+        var totalUnreadChannelsCount: Int = 0,
+        var totalUnreadMessagesCount: Int = 0,
+        var unreadMutedChannelsCount: Int = 0,
+        var unreadMessagesImMutedChannelCount: Int = 0,
+        var syncedChannelsCount: Int = 0,
+        var syncedMessagesCount: Int = 0,
     ) {
         override fun toString(): String {
             return "unreadChannelsCount-> $totalUnreadChannelsCount, unreadMutedChannelsCount-> $unreadMutedChannelsCount " +
