@@ -7,7 +7,7 @@ import com.sceyt.chatuikit.data.models.SceytPagingResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
 import com.sceyt.chatuikit.data.models.channels.EditChannelData
-import com.sceyt.chatuikit.data.models.channels.GetAllChannelsResponse
+import com.sceyt.chatuikit.data.models.SyncResult
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import kotlinx.coroutines.flow.Flow
@@ -28,7 +28,7 @@ interface ChannelsRepository {
         params: SearchChannelParams
     ): SceytResponse<List<SceytChannel>>
 
-    suspend fun getAllChannels(limit: Int): Flow<GetAllChannelsResponse>
+    suspend fun getAllChannels(limit: Int): Flow<SyncResult<SceytChannel>>
     suspend fun createChannel(channelData: CreateChannelData): SceytResponse<SceytChannel>
     suspend fun leaveChannel(channelId: Long): SceytResponse<Long>
     suspend fun clearHistory(channelId: Long, forEveryone: Boolean): SceytResponse<Long>
