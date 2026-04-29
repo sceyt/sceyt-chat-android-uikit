@@ -15,6 +15,8 @@ import com.sceyt.chatuikit.databinding.SceytFragmentChannelsSearchBinding
 import com.sceyt.chatuikit.extensions.addRVScrollListener
 import com.sceyt.chatuikit.extensions.setBundleArguments
 import com.sceyt.chatuikit.persistence.extensions.collectWithLifecycle
+import com.sceyt.chatuikit.presentation.components.channel_list.channels.listeners.click.ChannelClickListeners
+import com.sceyt.chatuikit.presentation.components.channel_list.channels.listeners.click.ChannelClickListenersImpl
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchActivity
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchClickListener
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchListItem
@@ -85,9 +87,21 @@ open class ChannelsSearchFragment : Fragment(R.layout.sceyt_fragment_channels_se
         return ChannelsSearchViewHolderFactory(
             context = requireContext(),
             style = style,
-            onChannelClick = ::onChannelClicked,
+            channelClickListeners = createChannelClickListeners(),
             onMessageClick = ::onMessageClicked
         )
+    }
+
+    protected open fun createChannelClickListeners(): ChannelClickListeners.ClickListeners {
+        return ChannelClickListenersImpl().apply {
+            setListener(ChannelClickListeners.AvatarClickListener { _, item ->
+                onChannelAvatarClicked(item.channel)
+            })
+
+            setListener(ChannelClickListeners.ChannelClickListener { _, item ->
+                onChannelClicked(item.channel)
+            })
+        }
     }
 
     protected open fun createListAdapter(): ChannelsSearchListAdapter {
@@ -125,6 +139,10 @@ open class ChannelsSearchFragment : Fragment(R.layout.sceyt_fragment_channels_se
 
     protected open fun onChannelClicked(channel: SceytChannel) {
         clickListener?.onChannelClicked(channel)
+    }
+
+    protected open fun onChannelAvatarClicked(channel: SceytChannel) {
+        onChannelClicked(channel)
     }
 
     protected open fun onMessageClicked(messageId: Long, channel: SceytChannel) {

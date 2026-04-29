@@ -21,15 +21,10 @@ import com.sceyt.chatuikit.styles.search.GlobalSearchStyle
 open class ChannelsSearchViewHolderFactory(
     context: Context,
     protected val style: GlobalSearchStyle,
-    onChannelClick: (SceytChannel) -> Unit,
-    onMessageClick: (messageId: Long, channel: SceytChannel) -> Unit,
+    protected val channelClickListeners: ChannelClickListeners.ClickListeners = ChannelClickListenersImpl(),
+    protected val onMessageClick: (messageId: Long, channel: SceytChannel) -> Unit,
 ) {
     protected val layoutInflater: LayoutInflater = LayoutInflater.from(context)
-    protected open val channelClickListeners = ChannelClickListenersImpl().apply {
-        setListener(ChannelClickListeners.ChannelClickListener { _, item ->
-            onChannelClick(item.channel)
-        })
-    }
     protected open val onMessageClickListener: ((Long, SceytChannel) -> Unit)? = onMessageClick
 
     open fun createViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {

@@ -11,8 +11,8 @@ import com.sceyt.chatuikit.presentation.components.channel_list.channels.listene
 import com.sceyt.chatuikit.styles.channel.ChannelItemStyle
 
 open class ChannelViewHolderFactory(
-        context: Context,
-        private val itemStyle: ChannelItemStyle,
+    context: Context,
+    private val itemStyle: ChannelItemStyle,
 ) {
     protected val layoutInflater: LayoutInflater = LayoutInflater.from(context)
     protected open val clickListeners = ChannelClickListenersImpl()
