@@ -26,7 +26,7 @@ import com.sceyt.chatuikit.persistence.repositories.SceytSharedPreference
 import com.sceyt.chatuikit.persistence.repositories.UsersRepository
 import com.sceyt.chatuikit.push.service.PushService
 import com.sceyt.chatuikit.services.SceytPresenceChecker
-import com.sceyt.chatuikit.services.SceytSyncManager
+import com.sceyt.chatuikit.services.sync.SceytSyncManager
 import com.sceyt.chatuikit.services.ServerTimeSync
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
