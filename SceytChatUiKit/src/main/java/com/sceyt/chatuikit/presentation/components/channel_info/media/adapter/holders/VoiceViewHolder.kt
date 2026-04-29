@@ -7,7 +7,7 @@ import com.sceyt.chatuikit.extensions.TAG_REF
 import com.sceyt.chatuikit.extensions.durationToMinSecShort
 import com.sceyt.chatuikit.extensions.runOnMainThread
 import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
-import com.sceyt.chatuikit.media.audio.AudioPlayer
+import com.sceyt.chatuikit.media.audio.AudioPlaybackState
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper.OnAudioPlayer
 import com.sceyt.chatuikit.media.audio.alreadyInitialized
@@ -78,18 +78,6 @@ class VoiceViewHolder(
             filePath = path,
             messageTid = fileItem.attachment.messageTid,
             events = object : OnAudioPlayer {
-                override fun onInitialized(
-                    alreadyInitialized: Boolean,
-                    player: AudioPlayer,
-                    filePath: String,
-                    messageTid: MessageTid
-                ) {
-                    if (!checkIsValid(filePath, messageTid)) return
-
-                    if (!alreadyInitialized)
-                        AudioPlayerHelper.toggle(fileItem.attachment)
-                }
-
                 override fun onProgress(
                     position: Long, duration: Long, filePath: String,
                     messageTid: MessageTid
@@ -116,7 +104,8 @@ class VoiceViewHolder(
 
                 override fun onStop(
                     filePath: String,
-                    messageTid: MessageTid
+                    messageTid: MessageTid,
+                    savedState: AudioPlaybackState?
                 ) {
                     if (!checkIsValid(filePath, messageTid)) return
                     binding.root.post {

@@ -17,21 +17,21 @@ import com.sceyt.chatuikit.extensions.calculateScaleWidthHeight
 import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.glideRequestListener
 import com.sceyt.chatuikit.extensions.setTextAndVisibility
-import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
+private const val SMALL_IMAGE_THRESHOLD_PX = 200
+
 abstract class BaseLinkMessageViewHolder(
-        view: View,
-        private val style: MessageItemStyle,
-        private val messageListeners: MessageClickListeners.ClickListeners? = null,
-        displayedListener: ((MessageListItem) -> Unit)? = null,
-        private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
+    view: View,
+    private val style: MessageItemStyle,
+    private val messageListeners: MessageClickListeners.ClickListeners? = null,
+    displayedListener: ((MessageListItem) -> Unit)? = null,
 ) : BaseMessageViewHolder(view, style, messageListeners, displayedListener) {
     protected var linkPreviewContainerBinding: SceytMessageLinkPreviewContainerBinding? = null
     protected open val maxSize by lazy {
-        bubbleMaxWidth - dpToPx(28f) //(2*8 preview container + 2*6 root paddings ) is margins
+        bubbleMaxWidth - dpToPx(16f) //(2*8 preview container) is margins
     }
     protected open val minSize get() = maxSize / 3
 
@@ -39,22 +39,14 @@ abstract class BaseLinkMessageViewHolder(
     fun loadLinkPreview(message: SceytMessage, attachment: SceytAttachment?, viewStub: ViewStub) {
         attachment ?: return
         val previewDetails = attachment.linkPreviewDetails
-
-        if (previewDetails == null) {
-            setLinkInfo(null, message, attachment, viewStub)
-            needMediaDataCallback(NeedMediaInfoData.NeedLinkPreview(attachment, false))
-        } else {
-            setLinkInfo(previewDetails, message, attachment, viewStub)
-            if (previewDetails.imageUrl != null && previewDetails.imageWidth == null)
-                needMediaDataCallback(NeedMediaInfoData.NeedLinkPreview(attachment, true))
-        }
+        setLinkInfo(previewDetails, message, attachment, viewStub)
     }
 
     protected open fun setLinkInfo(
-            data: LinkPreviewDetails?,
-            message: SceytMessage,
-            attachment: SceytAttachment,
-            viewStub: ViewStub,
+        data: LinkPreviewDetails?,
+        message: SceytMessage,
+        attachment: SceytAttachment,
+        viewStub: ViewStub,
     ) {
         if (data == null || data.link != attachment.url) {
             viewStub.isVisible = false
@@ -75,63 +67,92 @@ abstract class BaseLinkMessageViewHolder(
             }
 
         with(linkPreviewContainerBinding ?: return) {
-            if (!data.imageUrl.isNullOrBlank()) {
-                setImageSize(previewImage, data)
+            val imageWidth = data.imageWidth ?: 0
+            val imageHeight = data.imageHeight ?: 0
+            if (!data.imageUrl.isNullOrBlank() && imageWidth > 0 && imageHeight > 0) {
+                val isSmallImage = imageWidth in 1 until SMALL_IMAGE_THRESHOLD_PX
+                val targetImage = if (isSmallImage) smallPreviewImage else previewImage
+                previewImage.isVisible = !isSmallImage
+                smallPreviewImage.isVisible = isSmallImage
+                setImageSize(targetImage, data, isSmallImage)
+
                 val thumb = message.files?.firstOrNull {
                     it.attachment.type == AttachmentTypeEnum.Link.value
                 }?.blurredThumb?.toDrawable(context.resources) ?: style.linkPreviewStyle.placeHolder
 
-                val size = calculateScaleWidthHeight(maxSize, minSize, data.imageWidth
-                        ?: 0, data.imageHeight ?: 0)
-                Glide.with(context.applicationContext)
+                val overrideSize = if (!isSmallImage) {
+                    calculateScaleWidthHeight(
+                        defaultSize = maxSize,
+                        minSize = minSize,
+                        imageWidth = imageWidth,
+                        imageHeight = imageHeight
+                    )
+                } else null
+                var builder = Glide.with(context.applicationContext)
                     .load(data.imageUrl)
-                    .override(size.width, size.height)
                     .placeholder(thumb)
                     .listener(glideRequestListener { success ->
-                        previewImage.isVisible = success || thumb != null
+                        targetImage.isVisible = success || thumb != null
                     })
                     .transition(DrawableTransitionOptions.withCrossFade(100))
-                    .into(previewImage)
-            } else previewImage.isVisible = false
+
+                if (overrideSize != null) {
+                    builder = builder.override(overrideSize.width, overrideSize.height)
+                }
+                builder.into(targetImage)
+            } else {
+                previewImage.isVisible = false
+                smallPreviewImage.isVisible = false
+            }
 
             tvLinkTitle.setTextAndVisibility(data.title)
             tvLinkDesc.setTextAndVisibility(data.description)
             root.isVisible = true
 
             root.setOnClickListener {
-                messageListeners?.onLinkDetailsClick(it, messageListItem as MessageListItem.MessageItem)
+                messageListeners?.onLinkDetailsClick(it, requireMessageItem)
             }
 
             root.setOnLongClickListener {
-                messageListeners?.onMessageLongClick(it, messageListItem as MessageListItem.MessageItem)
+                messageListeners?.onMessageLongClick(it, requireMessageItem)
                 return@setOnLongClickListener true
             }
         }
     }
 
-    protected open fun setImageSize(image: View, details: LinkPreviewDetails?) {
-        if (details?.imageWidth == null || details.imageHeight == null
-                || details.imageWidth == 0 || details.imageHeight == 0) {
+    protected open fun setImageSize(
+        image: View,
+        details: LinkPreviewDetails?,
+        isSmallImage: Boolean = false
+    ) {
+        val imageWidth = details?.imageWidth ?: 0
+        val imageHeight = details?.imageHeight ?: 0
+        if (imageWidth == 0 || imageHeight == 0) {
             image.isVisible = false
             return
         }
-        val size = calculateScaleWidthHeight(maxSize, minSize,
-            imageWidth = details.imageWidth,
-            imageHeight = details.imageHeight)
-
-        image.updateLayoutParams<ViewGroup.LayoutParams> {
-            width = maxSize
-            height = size.height
+        if (!isSmallImage) {
+            val size = calculateScaleWidthHeight(
+                maxSize, minSize,
+                imageWidth = imageWidth,
+                imageHeight = imageHeight
+            )
+            image.updateLayoutParams<ViewGroup.LayoutParams> {
+                width = maxSize
+                height = size.height
+            }
         }
         image.isVisible = true
     }
 
     protected open fun SceytMessageLinkPreviewContainerBinding.applyStyle() {
         val linkStyle = style.linkPreviewStyle
-        val backgroundStyle = if ((messageListItem as MessageListItem.MessageItem).message.incoming)
+        val backgroundStyle = if (requireMessage.incoming)
             style.incomingLinkPreviewBackgroundStyle
         else style.outgoingLinkPreviewBackgroundStyle
         backgroundStyle.apply(root)
+        backgroundStyle.apply(previewImage)
+        backgroundStyle.apply(smallPreviewImage)
         linkStyle.titleStyle.apply(tvLinkTitle)
         linkStyle.descriptionStyle.apply(tvLinkDesc)
     }

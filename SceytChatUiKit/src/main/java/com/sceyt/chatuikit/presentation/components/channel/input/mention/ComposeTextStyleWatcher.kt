@@ -77,7 +77,7 @@ class ComposeTextStyleWatcher(private val context: Context) : TextWatcher {
                 }
             }
 
-            s.getSpans(editStart, editEnd, Object::class.java)
+            s.getSpans(editStart, editEnd, Any::class.java)
                 .filter { it.isSupportedStyle() }
                 .forEach { style ->
                     val styleStart = s.getSpanStart(style)
@@ -90,7 +90,7 @@ class ComposeTextStyleWatcher(private val context: Context) : TextWatcher {
                     }
                 }
         } finally {
-            s.getSpans(editStart, editEnd, Object::class.java)
+            s.getSpans(editStart, editEnd, Any::class.java)
                 .filter { it.isSupportedStyle() }
                 .forEach { style ->
                     val styleStart = s.getSpanStart(style)

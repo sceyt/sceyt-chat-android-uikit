@@ -145,7 +145,8 @@ class ChannelsCache {
         }
     }
 
-    suspend fun upsertChannel(channel: SceytChannel) {
+    suspend fun upsertChannel(channel: SceytChannel?) {
+        channel ?: return
         upsertChannels(listOf(channel))
     }
 
@@ -160,6 +161,15 @@ class ChannelsCache {
     }
 
     fun newChannelsOnSync(config: ChannelListConfig, channels: List<SceytChannel>) {
+        channels.forEach { channel ->
+            val map = getOrCreateMap(config)
+            val cachedChannel = map[channel.id] ?: pendingChannelsData[channel.id]
+            if (cachedChannel == null) {
+                if (!channel.pending) {
+                    map[channel.id] = channel
+                }
+            }
+        }
         newChannelsOnSync_.tryEmit(Pair(config, channels))
     }
 
@@ -355,12 +365,16 @@ class ChannelsCache {
 
     suspend fun deleteChannel(vararg ids: Long) {
         mutex.withLock {
+            var found = false
             ids.forEach { id ->
                 cachedData.forEach { (_, map) ->
-                    map.remove(id)
+                    val removed = map.remove(id)
+                    if (removed != null)
+                        found = true
                 }
             }
-            channelsDeletedFlow_.tryEmit(ids.toList())
+            if (found)
+                channelsDeletedFlow_.tryEmit(ids.toList())
         }
     }
 

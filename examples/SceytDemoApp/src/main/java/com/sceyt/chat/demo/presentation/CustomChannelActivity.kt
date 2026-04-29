@@ -1,0 +1,165 @@
+package com.sceyt.chat.demo.presentation
+
+import android.Manifest
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
+import android.os.Bundle
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.widget.Toolbar
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
+import com.callclient.CallClient
+import com.sceyt.chat.demo.R
+import com.sceyt.chat.demo.call.manager.CallManager
+import com.sceyt.chat.demo.call.manager.channelIdOrNull
+import com.sceyt.chat.demo.call.ui.CallActivity
+import com.sceyt.chat.demo.call.ui.attachActiveCallBanner
+import com.sceyt.chatuikit.data.models.channels.SceytChannel
+import com.sceyt.chatuikit.extensions.createIntent
+import com.sceyt.chatuikit.persistence.extensions.getPeer
+import com.sceyt.chatuikit.presentation.components.channel.header.MessagesListHeaderView
+import com.sceyt.chatuikit.presentation.components.channel.messages.ChannelActivity
+import kotlinx.coroutines.launch
+import org.koin.android.ext.android.inject
+
+class CustomChannelActivity : ChannelActivity() {
+
+    private val callManager: CallManager by inject()
+
+    private var pendingCallIsVideo: Boolean = false
+
+    private val permissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val allGranted = permissions.all { it.value }
+        if (allGranted) {
+            initiateCall(pendingCallIsVideo)
+        } else {
+            Toast.makeText(
+                this,
+                "Permissions required for ${if (pendingCallIsVideo) "video" else "audio"} call",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        binding.headerView.setToolbarMenu()
+        attachActiveCallBanner(callManager, binding.root, binding.headerView.id)
+    }
+
+    private fun MessagesListHeaderView.setToolbarMenu() {
+        if (viewModel.channel.isSelf) {
+            return
+        }
+        setToolbarMenu(R.menu.menu_conversation, Toolbar.OnMenuItemClickListener {
+            when (it.itemId) {
+                R.id.action_audio_call -> makeCall(false)
+                R.id.action_video_call -> makeCall(true)
+            }
+            return@OnMenuItemClickListener true
+        })
+    }
+
+    private fun makeCall(isVideo: Boolean) {
+        pendingCallIsVideo = isVideo
+
+        val missingPermissions = getMissingPermissions(isVideo)
+
+        if (missingPermissions.isEmpty()) {
+            if (!tryToFindChannelCallAndJoin()) {
+                initiateCall(isVideo)
+            }
+        } else {
+            permissionLauncher.launch(missingPermissions.toTypedArray())
+        }
+    }
+
+    private fun tryToFindChannelCallAndJoin(): Boolean {
+        val channel = viewModel.channel
+        val currentCall = CallClient.requireInstance().getOngoingCalls().firstOrNull { call ->
+            val callChannelId = call.channelIdOrNull ?: return@firstOrNull false
+            callChannelId == channel.id
+        } ?: return false
+        lifecycleScope.launch {
+            callManager.joinCall(currentCall, callPrepared = {
+                CallActivity.launchOngoing(context = this@CustomChannelActivity)
+            })
+        }
+        return true
+    }
+
+    private fun initiateCall(isVideo: Boolean) {
+        val channel = viewModel.channel
+
+        lifecycleScope.launch {
+            val result = if (channel.isGroup) {
+                callManager.startOutgoingGroupCall(
+                    channel = channel,
+                    isVideo = isVideo,
+                    isCallAgain = false
+                ) {
+                    CallActivity.launchOngoing(context = this@CustomChannelActivity)
+                }
+            } else {
+                val peerUserId = channel.getPeer()?.id
+                if (peerUserId == null) {
+                    Toast.makeText(
+                        this@CustomChannelActivity,
+                        "Cannot determine peer user",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    return@launch
+                }
+                callManager.startOutgoingCall(
+                    userId = peerUserId,
+                    isVideo = isVideo,
+                    isCallAgain = false
+                ) {
+                    CallActivity.launchOngoing(context = this@CustomChannelActivity)
+                }
+            }
+
+            result.onFailure { error ->
+                Toast.makeText(
+                    this@CustomChannelActivity,
+                    "Failed to start call: ${error.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+    }
+
+    private fun getMissingPermissions(isVideo: Boolean): List<String> {
+        val required = mutableListOf(Manifest.permission.RECORD_AUDIO)
+
+        if (isVideo) {
+            required.add(Manifest.permission.CAMERA)
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            required.add(Manifest.permission.BLUETOOTH_CONNECT)
+        }
+
+        return required.filter {
+            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
+        }
+    }
+
+    companion object {
+        const val CHANNEL = "CHANNEL"
+
+        fun createIntent(
+            context: Context,
+            channel: SceytChannel,
+            targetMessageId: Long? = null,
+        ): Intent = context.createIntent<CustomChannelActivity> {
+            putExtra(CHANNEL, channel)
+            targetMessageId?.let { putExtra(TARGET_MESSAGE_ID, it) }
+        }
+    }
+}

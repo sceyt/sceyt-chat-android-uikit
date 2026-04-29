@@ -7,45 +7,55 @@ import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.koin.SceytKoinComponent
-import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
 import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
-import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem
-import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem.ChannelItem
+import com.sceyt.chatuikit.presentation.components.channel_list.channels.viewmodel.ChannelListState
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.koin.core.component.inject
 
 class ShareableViewModel(
-        internal val config: ChannelListConfig = ChannelListConfig.default,
+    internal val config: ChannelListConfig = ChannelListConfig.default,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : BaseViewModel(), SceytKoinComponent {
     private val channelInteractor: ChannelInteractor by inject()
-    private var getChannelsJog: Job? = null
+    private var getChannelsJob: Job? = null
+    private var nextOffset = 0
     val selectedChannels = mutableSetOf<Long>()
 
     var searchQuery = ""
         private set
 
-    private val _loadChannelsFlow = MutableStateFlow<PaginationResponse<SceytChannel>>(PaginationResponse.Nothing())
-    val loadChannelsFlow: StateFlow<PaginationResponse<SceytChannel>> = _loadChannelsFlow
+    private val _state = MutableStateFlow(ChannelListState())
+    val state: StateFlow<ChannelListState> = _state
 
-    fun getChannels(
-            offset: Int,
-            query: String = searchQuery,
-            loadKey: LoadKeyData? = null,
-            onlyMine: Boolean = true,
-            ignoreDatabase: Boolean = false,
+    init {
+        getChannels(0)
+    }
+
+    private fun getChannels(
+        offset: Int,
+        query: String = searchQuery,
+        loadKey: LoadKeyData? = null,
+        onlyMine: Boolean = true,
+        ignoreDatabase: Boolean = false,
     ) {
+        if (offset == 0) nextOffset = 0
         searchQuery = query
-        setPagingLoadingStarted(PaginationResponse.LoadType.LoadNext, ignoreDatabase = ignoreDatabase)
+        setPagingLoadingStarted(
+            PaginationResponse.LoadType.LoadNext,
+            ignoreDatabase = ignoreDatabase
+        )
 
         notifyPageLoadingState(false)
 
-        getChannelsJog?.cancel()
-        getChannelsJog = viewModelScope.launch(Dispatchers.IO) {
+        getChannelsJob?.cancel()
+        getChannelsJob = viewModelScope.launch(ioDispatcher) {
             channelInteractor.loadChannels(
                 offset = offset,
                 searchQuery = query,
@@ -58,37 +68,49 @@ class ShareableViewModel(
         }
     }
 
+    fun loadMoreChannels() {
+        if (!canLoadNext()) return
+        val state = state.value
+        getChannels(
+            offset = nextOffset,
+            query = searchQuery,
+            loadKey = LoadKeyData(value = state.channels.lastOrNull()?.id ?: 0)
+        )
+    }
+
+    fun onSearchQueryChanged(query: String) {
+        if (searchQuery == query) return
+        searchQuery = query
+        getChannels(0, query)
+    }
+
     private fun initPaginationResponse(response: PaginationResponse<SceytChannel>) {
         when (response) {
             is PaginationResponse.DBResponse -> {
-                _loadChannelsFlow.value = response
-                notifyPageStateWithResponse(SceytResponse.Success(null),
+                nextOffset = response.offset + response.data.size
+                _state.update { current ->
+                    if (response.offset == 0)
+                        current.copy(
+                            channels = response.data,
+                            hasNext = response.hasNext
+                        )
+                    else {
+                        current.copy(
+                            channels = current.channels + response.data,
+                            hasNext = response.hasNext
+                        )
+                    }
+                }
+                notifyPageStateWithResponse(
+                    SceytResponse.Success(null),
                     wasLoadingMore = response.offset > 0,
-                    isEmpty = response.data.isEmpty(), searchQuery = response.query)
+                    isEmpty = response.data.isEmpty(),
+                    searchQuery = response.query
+                )
             }
 
-            else -> return
+            else -> Unit
         }
         pagingResponseReceived(response)
-    }
-
-    internal fun mapToChannelItem(
-            data: List<SceytChannel>?, hasNext: Boolean,
-            includeDirectChannelsWithDeletedPeers: Boolean = true,
-    ): List<ChannelListItem> {
-
-        val filteredChannels = if (includeDirectChannelsWithDeletedPeers) data ?: emptyList()
-        else data?.filter { channel -> !channel.isPeerDeleted() }
-                ?: emptyList()
-
-        if (filteredChannels.isEmpty())
-            return emptyList()
-
-        val channelItems = filteredChannels.map { ChannelItem(it) }
-
-        return if (hasNext)
-            channelItems + ChannelListItem.LoadingMoreItem
-        else
-            channelItems
     }
 }

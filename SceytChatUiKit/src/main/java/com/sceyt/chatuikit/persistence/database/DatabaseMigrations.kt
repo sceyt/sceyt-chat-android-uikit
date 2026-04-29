@@ -2,6 +2,7 @@ package com.sceyt.chatuikit.persistence.database
 
 import androidx.room.DeleteColumn
 import androidx.room.DeleteTable
+import androidx.room.FtsOptions
 import androidx.room.RenameColumn
 import androidx.room.RenameTable
 import androidx.room.migration.AutoMigrationSpec
@@ -19,6 +20,7 @@ import com.sceyt.chatuikit.persistence.database.DatabaseConstants.LINK_DETAILS_T
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.LOAD_RANGE_TABLE
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.MARKER_TABLE
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.MENTION_USER_MESSAGE_LINK_TABLE
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.MESSAGE_FTS_TABLE
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.MESSAGE_TABLE
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.PENDING_MARKER_TABLE
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.PENDING_MESSAGE_STATE_TABLE
@@ -31,7 +33,11 @@ import com.sceyt.chatuikit.persistence.database.DatabaseConstants.USER_TABLE
 
 internal object DatabaseMigrations {
 
-    @RenameColumn(tableName = "messages", fromColumnName = "isParentMessage", toColumnName = "unList")
+    @RenameColumn(
+        tableName = "messages",
+        fromColumnName = "isParentMessage",
+        toColumnName = "unList"
+    )
     class AutoMigrationSpec3to4 : AutoMigrationSpec
 
     @DeleteColumn(tableName = "DraftMessageEntity", columnName = "metadata")
@@ -82,9 +88,15 @@ internal object DatabaseMigrations {
     @RenameTable(fromTableName = "users", toTableName = USER_TABLE)
     @RenameTable(fromTableName = "UserChatLink", toTableName = USER_CHAT_LINK_TABLE)
     @RenameTable(fromTableName = "messages", toTableName = MESSAGE_TABLE)
-    @RenameTable(fromTableName = "MentionUserMessageLink", toTableName = MENTION_USER_MESSAGE_LINK_TABLE)
+    @RenameTable(
+        fromTableName = "MentionUserMessageLink",
+        toTableName = MENTION_USER_MESSAGE_LINK_TABLE
+    )
     @RenameTable(fromTableName = "DraftMessageEntity", toTableName = DRAFT_MESSAGE_TABLE)
-    @RenameTable(fromTableName = "DraftMessageUserLink", toTableName = DRAFT_MESSAGE_USER_LINK_TABLE)
+    @RenameTable(
+        fromTableName = "DraftMessageUserLink",
+        toTableName = DRAFT_MESSAGE_USER_LINK_TABLE
+    )
     @RenameTable(fromTableName = "AttachmentEntity", toTableName = ATTACHMENT_TABLE)
     @RenameTable(fromTableName = "MarkerEntity", toTableName = MARKER_TABLE)
     @RenameTable(fromTableName = "ReactionEntity", toTableName = REACTION_TABLE)
@@ -100,4 +112,39 @@ internal object DatabaseMigrations {
     @RenameTable(fromTableName = "AutoDeleteMessages", toTableName = AUTO_DELETE_MESSAGES_TABLE)
     @RenameTable(fromTableName = "UserMetadata", toTableName = USER_METADATA_TABLE)
     class AutoMigrationSpec18To19 : AutoMigrationSpec
+
+    val Migration_28_29: Migration = object : Migration(28, 29) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                "CREATE VIRTUAL TABLE IF NOT EXISTS `$MESSAGE_FTS_TABLE` " +
+                        "USING fts4(`body` TEXT NOT NULL, tokenize=${FtsOptions.TOKENIZER_UNICODE61}, content=`$MESSAGE_TABLE`)"
+            )
+            db.execSQL(
+                "CREATE TRIGGER IF NOT EXISTS `room_fts_content_sync_${MESSAGE_FTS_TABLE}_BEFORE_UPDATE` " +
+                        "BEFORE UPDATE ON `$MESSAGE_TABLE` BEGIN " +
+                        "DELETE FROM `$MESSAGE_FTS_TABLE` WHERE `docid`=OLD.`rowid`; END"
+            )
+            db.execSQL(
+                "CREATE TRIGGER IF NOT EXISTS `room_fts_content_sync_${MESSAGE_FTS_TABLE}_BEFORE_DELETE` " +
+                        "BEFORE DELETE ON `$MESSAGE_TABLE` BEGIN " +
+                        "DELETE FROM `$MESSAGE_FTS_TABLE` WHERE `docid`=OLD.`rowid`; END"
+            )
+            db.execSQL(
+                "CREATE TRIGGER IF NOT EXISTS `room_fts_content_sync_${MESSAGE_FTS_TABLE}_AFTER_UPDATE` " +
+                        "AFTER UPDATE ON `$MESSAGE_TABLE` BEGIN " +
+                        "INSERT INTO `$MESSAGE_FTS_TABLE`(`docid`, `body`) " +
+                        "VALUES (NEW.`rowid`, NEW.`body`); END"
+            )
+            db.execSQL(
+                "CREATE TRIGGER IF NOT EXISTS `room_fts_content_sync_${MESSAGE_FTS_TABLE}_AFTER_INSERT` " +
+                        "AFTER INSERT ON `$MESSAGE_TABLE` BEGIN " +
+                        "INSERT INTO `$MESSAGE_FTS_TABLE`(`docid`, `body`) " +
+                        "VALUES (NEW.`rowid`, NEW.`body`); END"
+            )
+            db.execSQL(
+                "INSERT INTO `$MESSAGE_FTS_TABLE`(`docid`, `body`) " +
+                        "SELECT `rowid`, `body` FROM `$MESSAGE_TABLE`"
+            )
+        }
+    }
 }

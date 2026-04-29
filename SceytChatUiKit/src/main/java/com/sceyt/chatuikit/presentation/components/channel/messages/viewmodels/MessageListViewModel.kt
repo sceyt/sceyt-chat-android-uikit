@@ -1,10 +1,8 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels
 
-import android.app.Application
 import android.text.Editable
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import androidx.work.ExistingWorkPolicy
 import com.sceyt.chat.models.Types
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.DeleteMessageType
@@ -24,6 +22,7 @@ import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNear
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNewest
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadPrev
+import com.sceyt.chatuikit.data.models.PaginationResponse.Nothing
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.SyncNearMessagesResult
 import com.sceyt.chatuikit.data.models.channels.DraftAttachment
@@ -32,42 +31,30 @@ import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.fold
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
-import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.MessageId
 import com.sceyt.chatuikit.data.models.messages.PollOption
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytMessageType
 import com.sceyt.chatuikit.data.models.messages.SceytReactionTotal
+import com.sceyt.chatuikit.data.models.onErrorNonNull
 import com.sceyt.chatuikit.data.models.onSuccess
 import com.sceyt.chatuikit.data.models.onSuccessNotNull
 import com.sceyt.chatuikit.data.repositories.Keys.KEY_VIEW_ONCE_INFO_SHOWN
 import com.sceyt.chatuikit.data.toFileListItem
+import com.sceyt.chatuikit.domain.usecases.PauseOrResumeTransferUseCase
 import com.sceyt.chatuikit.extensions.findIndexed
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.media.audio.AudioRecordData
 import com.sceyt.chatuikit.persistence.extensions.asLiveData
 import com.sceyt.chatuikit.persistence.extensions.broadcastSharedFlow
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
-import com.sceyt.chatuikit.persistence.file_transfer.FileTransferHelper
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.persistence.file_transfer.ThumbFor
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Downloaded
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Downloading
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState.ErrorDownload
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState.ErrorUpload
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.FilePathChanged
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState.PauseDownload
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState.PauseUpload
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState.PendingDownload
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState.PendingUpload
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Preparing
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.ThumbLoaded
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploaded
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploading
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState.WaitingToUpload
 import com.sceyt.chatuikit.persistence.file_transfer.isCompleted
 import com.sceyt.chatuikit.persistence.interactor.AttachmentInteractor
 import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
@@ -83,7 +70,6 @@ import com.sceyt.chatuikit.persistence.mappers.createEmptyUser
 import com.sceyt.chatuikit.persistence.mappers.toBodyAttribute
 import com.sceyt.chatuikit.persistence.mappers.toVoiceAttachmentData
 import com.sceyt.chatuikit.persistence.repositories.SceytSharedPreference
-import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager
 import com.sceyt.chatuikit.presentation.components.channel.input.data.InputUserAction
 import com.sceyt.chatuikit.presentation.components.channel.input.data.SearchResult
 import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
@@ -97,16 +83,16 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.events.React
 import com.sceyt.chatuikit.presentation.extensions.isNotPending
 import com.sceyt.chatuikit.presentation.helpers.DebounceHelper
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
+import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.services.SceytSyncManager
-import com.sceyt.chatuikit.shared.helpers.LinkPreviewHelper
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.firstOrNull
@@ -125,6 +111,7 @@ class MessageListViewModel(
     private var _conversationId: Long,
     private var _channel: SceytChannel,
     val replyInThread: Boolean = false,
+    val initialTargetMessageId: Long? = null,
 ) : BaseViewModel(), SceytKoinComponent {
     private val messageInteractor: MessageInteractor by inject()
     internal val channelInteractor: ChannelInteractor by inject()
@@ -134,11 +121,10 @@ class MessageListViewModel(
     internal val channelMemberInteractor: ChannelMemberInteractor by inject()
     internal val connectionLogic: PersistenceConnectionLogic by inject()
     internal val userInteractor: UserInteractor by inject()
-    private val application: Application by inject()
     internal val syncManager: SceytSyncManager by inject()
     private val fileTransferService: FileTransferService by inject()
+    private val pauseOrResumeTransferUseCase: PauseOrResumeTransferUseCase by inject()
     private val preferences: SceytSharedPreference by inject()
-    private val linkPreviewHelper by lazy { LinkPreviewHelper(application, viewModelScope) }
     internal var pinnedLastReadMessageId: Long = 0
     internal val sendDisplayedHelper by lazy { DebounceHelper(200L, viewModelScope) }
     internal val messageActionBridge by lazy { MessageActionBridge() }
@@ -168,23 +154,14 @@ class MessageListViewModel(
     val channel: SceytChannel get() = _channel
     val conversationId: Long get() = _conversationId
 
-    private val _loadMessagesFlow = MutableStateFlow<PaginationResponse<SceytMessage>>(
-        PaginationResponse.Nothing()
-    )
-    val loadMessagesFlow: StateFlow<PaginationResponse<SceytMessage>> = _loadMessagesFlow
-
-    private val _joinLiveData = MutableLiveData<SceytResponse<SceytChannel>>()
-    val joinLiveData = _joinLiveData.asLiveData()
+    private val _loadMessagesFlow = MutableStateFlow<PaginationResponse<SceytMessage>>(Nothing())
+    val loadMessagesFlow = _loadMessagesFlow.asStateFlow()
 
     private val _messageMarkerLiveData = MutableLiveData<List<SceytResponse<MessageListMarker>>>()
     val messageMarkerLiveData = _messageMarkerLiveData.asLiveData()
 
     private val _syncCenteredMessageLiveData = MutableLiveData<SyncNearMessagesResult>()
     val syncCenteredMessageLiveData = _syncCenteredMessageLiveData.asLiveData()
-
-    private val _linkPreviewLiveData = MutableLiveData<LinkPreviewDetails>()
-    val linkPreviewLiveData = _linkPreviewLiveData.asLiveData()
-
 
     // Message events
     val onNewMessageFlow: Flow<SceytMessage>
@@ -197,7 +174,7 @@ class MessageListViewModel(
     // Chanel events
     val onChannelEventFlow: Flow<ChannelActionEvent>
     val onChannelMemberActivityEventFlow: Flow<ChannelMemberActivityEvent>
-    private val _onChannelUpdatedEventFlow = broadcastSharedFlow<SceytChannel>()
+    private val _onChannelUpdatedEventFlow = broadcastSharedFlow<SceytChannel>(replay = 1)
     val onChannelUpdatedEventFlow = _onChannelUpdatedEventFlow.asSharedFlow()
 
     //Command events
@@ -333,6 +310,8 @@ class MessageListViewModel(
 
     fun loadNearMessages(messageId: Long, loadKey: LoadKeyData, ignoreServer: Boolean) {
         setPagingLoadingStarted(LoadNear, ignoreServer = ignoreServer)
+        notifyPageLoadingState(false)
+
         loadPrevJob?.cancel()
         loadNextJob?.cancel()
         loadNearJob?.cancel()
@@ -603,74 +582,8 @@ class MessageListViewModel(
     }
 
     fun prepareToPauseOrResumeUpload(item: FileListItem) {
-        val attachment = item.attachment
-        val messageTid = attachment.messageTid
-        when (val state = attachment.transferState ?: return) {
-            PendingUpload, ErrorUpload -> {
-                UploadAndSendAttachmentWorkManager.schedule(application, messageTid, channel.id)
-            }
-
-            PendingDownload, ErrorDownload -> {
-                fileTransferService.download(
-                    attachment = attachment,
-                    transferTask = FileTransferHelper.createTransferTask(attachment)
-                )
-            }
-
-            PauseDownload -> {
-                val task = fileTransferService.findTransferTask(attachment)
-                if (task != null) {
-                    fileTransferService.resume(attachment.messageTid, attachment, state)
-                } else {
-                    fileTransferService.download(
-                        attachment = attachment,
-                        transferTask = FileTransferHelper.createTransferTask(attachment)
-                    )
-                }
-            }
-
-            PauseUpload -> {
-                val task = fileTransferService.findTransferTask(attachment)
-                if (task != null)
-                    fileTransferService.resume(messageTid, attachment, state)
-                else {
-                    // Update transfer state to Uploading, otherwise SendAttachmentWorkManager will
-                    // not start uploading.
-                    viewModelScope.launch(Dispatchers.IO) {
-                        attachmentInteractor.updateTransferDataByMsgTid(
-                            data = TransferData(
-                                messageTid = messageTid,
-                                progressPercent = attachment.progressPercent ?: 0f,
-                                state = Uploading,
-                                filePath = attachment.filePath,
-                                url = attachment.url
-                            )
-                        )
-                    }
-
-                    UploadAndSendAttachmentWorkManager.schedule(
-                        context = application,
-                        messageTid = messageTid,
-                        channelId = channel.id,
-                        workPolicy = ExistingWorkPolicy.REPLACE
-                    )
-                }
-            }
-
-            Uploading, Downloading, Preparing, FilePathChanged, WaitingToUpload -> {
-                fileTransferService.pause(messageTid, attachment, state)
-            }
-
-            Uploaded, Downloaded, ThumbLoaded -> {
-                val transferData = TransferData(
-                    messageTid = messageTid,
-                    progressPercent = attachment.progressPercent ?: 0f,
-                    state = attachment.transferState,
-                    filePath = attachment.filePath,
-                    url = attachment.url
-                )
-                FileTransferHelper.emitAttachmentTransferUpdate(transferData)
-            }
+        viewModelScope.launch {
+            pauseOrResumeTransferUseCase(item.attachment, channel.id)
         }
     }
 
@@ -684,8 +597,12 @@ class MessageListViewModel(
     ) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = messageReactionInteractor.addReaction(
-                channelId = channel.id, messageId = message.id, key = scoreKey,
-                score = score, reason = reason, enforceUnique = enforceUnique
+                channelId = channel.id,
+                messageId = message.id,
+                key = scoreKey,
+                score = score,
+                reason = reason,
+                enforceUnique = enforceUnique
             )
             notifyPageStateWithResponse(response, showError = false)
         }
@@ -704,14 +621,18 @@ class MessageListViewModel(
     }
 
     fun sendMessage(message: Message) {
-        viewModelScope.launch(NonCancellable) {
-            messageInteractor.sendMessageAsFlow(channel.id, message).collect()
+        viewModelScope.launch {
+            withContext(NonCancellable) {
+                messageInteractor.sendMessageAsFlow(channel.id, message).collect()
+            }
         }
     }
 
     fun sendMessages(messages: List<Message>) {
-        viewModelScope.launch(NonCancellable) {
-            messageInteractor.sendMessages(channel.id, messages)
+        viewModelScope.launch {
+            withContext(NonCancellable) {
+                messageInteractor.sendMessages(channel.id, messages)
+            }
         }
     }
 
@@ -791,47 +712,51 @@ class MessageListViewModel(
         replyOrEditMessage: SceytMessage?,
         isReply: Boolean,
     ) {
-        viewModelScope.launch(NonCancellable) {
-            val bodyAttributes = mentionUsers.map { it.toBodyAttribute() }.toMutableSet()
-            styling?.let {
-                bodyAttributes.addAll(it.map { styleRange -> styleRange.toBodyAttribute() })
-            }
+        viewModelScope.launch {
+            withContext(NonCancellable) {
+                val bodyAttributes = mentionUsers.map { it.toBodyAttribute() }.toMutableSet()
+                styling?.let {
+                    bodyAttributes.addAll(it.map { styleRange -> styleRange.toBodyAttribute() })
+                }
 
-            val draftAttachments = attachments.mapNotNull { attachment ->
-                DraftAttachment(
+                val draftAttachments = attachments.mapNotNull { attachment ->
+                    DraftAttachment(
+                        channelId = conversationId,
+                        filePath = attachment.filePath ?: return@mapNotNull null,
+                        type = AttachmentTypeEnum.entries.find {
+                            it.value == attachment.type
+                        } ?: return@mapNotNull null
+                    )
+                }
+                if (viewOnceSelected && attachments.size != 1) {
+                    viewOnceSelected = false
+                }
+
+                val dratMessage = DraftMessage(
                     channelId = conversationId,
-                    filePath = attachment.filePath ?: return@mapNotNull null,
-                    type = AttachmentTypeEnum.entries.find {
-                        it.value == attachment.type
-                    } ?: return@mapNotNull null
+                    body = text?.toString(),
+                    createdAt = System.currentTimeMillis(),
+                    mentionUsers = mentionUsers.map {
+                        createEmptyUser(it.recipientId, it.name)
+                    },
+                    replyOrEditMessage = replyOrEditMessage,
+                    isReply = isReply,
+                    bodyAttributes = bodyAttributes.toList(),
+                    attachments = draftAttachments,
+                    voiceAttachment = audioRecordData?.toVoiceAttachmentData(conversationId),
+                    viewOnce = viewOnceSelected
                 )
-            }
-            if (viewOnceSelected && attachments.size != 1) {
-                viewOnceSelected = false
-            }
 
-            val dratMessage = DraftMessage(
-                channelId = conversationId,
-                body = text?.toString(),
-                createdAt = System.currentTimeMillis(),
-                mentionUsers = mentionUsers.map {
-                    createEmptyUser(it.recipientId, it.name)
-                },
-                replyOrEditMessage = replyOrEditMessage,
-                isReply = isReply,
-                bodyAttributes = bodyAttributes.toList(),
-                attachments = draftAttachments,
-                voiceAttachment = audioRecordData?.toVoiceAttachmentData(conversationId),
-                viewOnce = viewOnceSelected
-            )
-
-            channelInteractor.updateDraftMessage(dratMessage)
+                channelInteractor.updateDraftMessage(dratMessage)
+            }
         }
     }
 
     fun join() {
         viewModelScope.launch(Dispatchers.IO) {
-            channelInteractor.join(channel.id)
+            channelInteractor.join(channel.id).onErrorNonNull {
+                pageStateLiveDataInternal.postValue(PageState.StateError(it))
+            }
         }
     }
 
@@ -843,7 +768,9 @@ class MessageListViewModel(
 
     fun markChannelAsRead(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            channelInteractor.markChannelAsRead(channelId)
+            channelInteractor.markChannelAsRead(channelId).onErrorNonNull {
+                pageStateLiveDataInternal.postValue(PageState.StateError(it))
+            }
         }
     }
 
@@ -902,7 +829,9 @@ class MessageListViewModel(
 
     fun clearHistory(forEveryOne: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
-            channelInteractor.clearHistory(channel.id, forEveryOne)
+            channelInteractor.clearHistory(channel.id, forEveryOne).onErrorNonNull {
+                pageStateLiveDataInternal.postValue(PageState.StateError(it))
+            }
         }
     }
 
@@ -1181,18 +1110,6 @@ class MessageListViewModel(
             is NeedMediaInfoData.NeedThumb -> {
                 viewModelScope.launch(Dispatchers.IO) {
                     fileTransferService.getThumb(attachment.messageTid, attachment, data.thumbData)
-                }
-            }
-
-            is NeedMediaInfoData.NeedLinkPreview -> {
-                if (data.onlyCheckMissingData && attachment.linkPreviewDetails != null) {
-                    linkPreviewHelper.checkMissedData(attachment.linkPreviewDetails) {
-                        _linkPreviewLiveData.postValue(it)
-                    }
-                } else {
-                    linkPreviewHelper.getPreview(attachment, true, successListener = {
-                        _linkPreviewLiveData.postValue(it)
-                    })
                 }
             }
         }

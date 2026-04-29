@@ -49,7 +49,7 @@ object BodyStyler {
 
         val toggleRange = start..end
         val spanAndRanges = text
-            .getSpans(start, end, Object::class.java)
+            .getSpans(start, end, Any::class.java)
             .asSequence()
             .filter { it.isStyle(style) }
             .map { SpanAndRange(it, text.getSpanStart(it)..text.getSpanEnd(it)) }
@@ -119,7 +119,7 @@ object BodyStyler {
     @JvmStatic
     fun clearStyling(text: Spannable, start: Int, end: Int) {
         val clearRange = start..end
-        text.getSpans(start, end, Object::class.java)
+        text.getSpans(start, end, Any::class.java)
             .asSequence()
             .filter { it.isSupportedStyle() }
             .map { SpanAndRange(it, text.getSpanStart(it)..text.getSpanEnd(it)) }
@@ -144,7 +144,7 @@ object BodyStyler {
     @JvmOverloads
     fun hasStyling(text: Spanned, start: Int = 0, end: Int = text.length): Boolean {
         return text
-            .getSpans(start, end, Object::class.java)
+            .getSpans(start, end, Any::class.java)
             .any { s -> s.isSupportedStyle() && text.getSpanEnd(s) - text.getSpanStart(s) > 0 }
     }
 

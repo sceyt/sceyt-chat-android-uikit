@@ -18,13 +18,13 @@ internal abstract class PendingPollVoteDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     abstract suspend fun insertMany(entities: List<PendingPollVoteEntity>)
 
-    @Query("DELETE FROM $PENDING_POLL_VOTE_TABLE WHERE messageTid =:messageTid and pollId = :pollId AND optionId = :optionId")
+    @Query("DELETE FROM $PENDING_POLL_VOTE_TABLE WHERE messageTid = :messageTid AND pollId = :pollId AND optionId = :optionId")
     abstract suspend fun deleteByOption(messageTid: Long, pollId: String, optionId: String): Int
 
-    @Query("DELETE FROM $PENDING_POLL_VOTE_TABLE WHERE messageTid =:messageTid and pollId = :pollId AND optionId in(:optionIds)")
+    @Query("DELETE FROM $PENDING_POLL_VOTE_TABLE WHERE messageTid = :messageTid AND pollId = :pollId AND optionId IN (:optionIds)")
     abstract suspend fun deleteVotesByOptionIds(messageTid: Long, pollId: String, optionIds: List<String>): Int
 
-    @Query("DELETE FROM $PENDING_POLL_VOTE_TABLE WHERE messageTid =:messageTid and pollId = :pollId")
+    @Query("DELETE FROM $PENDING_POLL_VOTE_TABLE WHERE messageTid = :messageTid AND pollId = :pollId")
     abstract suspend fun deletePendingVotesByPollId(messageTid: Long, pollId: String): Int
 
     @Transaction

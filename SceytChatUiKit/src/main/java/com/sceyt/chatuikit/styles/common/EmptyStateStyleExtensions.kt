@@ -19,7 +19,7 @@ fun buildEmptyStateStyle(
         setTitleStyle(
             TextStyle(
                 color = context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor),
-                size = context.resources.getDimensionPixelSize(R.dimen.largeTextSize)
+                font = R.font.roboto_medium_font
             )
         )
         subtitleText?.let {
@@ -27,7 +27,6 @@ fun buildEmptyStateStyle(
             setSubtitleStyle(
                 TextStyle(
                     color = context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor),
-                    size = context.resources.getDimensionPixelSize(R.dimen.smallTextSize)
                 )
             )
         }

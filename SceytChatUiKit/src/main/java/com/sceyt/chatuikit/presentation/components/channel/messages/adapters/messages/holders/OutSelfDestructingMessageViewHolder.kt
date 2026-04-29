@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders
 
+import android.view.View
 import android.widget.ImageView
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
@@ -66,8 +67,6 @@ class OutSelfDestructingMessageViewHolder(
 
             if (!diff.hasDifference()) return
 
-            setImageSize(fileContainer, ignoreBody = true)
-
             if (diff.edited || diff.statusChanged)
                 setMessageStatusAndDateText(message, messageDate)
 
@@ -112,6 +111,10 @@ class OutSelfDestructingMessageViewHolder(
 
     private fun hideSelfDestructIcon() {
         binding.ivSelfDestructIcon.isVisible = false
+    }
+
+    override fun setImageSize(fileImage: View, ignoreBody: Boolean) {
+        super.setImageSize(fileImage, true)
     }
 
     override val fileContainer: ImageView

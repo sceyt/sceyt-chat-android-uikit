@@ -19,8 +19,8 @@
 
     <com.sceyt.chatuikit.presentation.custom_views.AvatarView
         android:id="@+id/avatar"
-        android:layout_width="@dimen/_45sdp"
-        android:layout_height="@dimen/_45sdp"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
         android:layout_marginVertical="8dp"
         android:layout_marginStart="10dp"
         app:layout_constraintBottom_toBottomOf="parent"

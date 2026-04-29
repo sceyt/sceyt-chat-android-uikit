@@ -135,12 +135,10 @@ abstract class BaseMediaMessageViewHolder(
             dpToPx(5f)
         } else dpToPx(17f)).toFloat()
 
-        fileImage.setShapeAppearanceModel(
-            fileImage.shapeAppearanceModel.toBuilder()
-                .setTopLeftCornerSize(corner)
-                .setTopRightCornerSize(corner)
-                .build()
-        )
+        fileImage.shapeAppearanceModel = fileImage.shapeAppearanceModel.toBuilder()
+            .setTopLeftCornerSize(corner)
+            .setTopRightCornerSize(corner)
+            .build()
     }
 
     open fun getThumbSize(): Size {

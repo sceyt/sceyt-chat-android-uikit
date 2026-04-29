@@ -86,9 +86,8 @@ internal class HandleDeleteMessagesByLoadTypeUseCase(
 
         if (count > 0) {
             SceytLog.d(tag, "Deleted $count messages from DB, updating cache")
-            messagesCache.forceDeleteAllMessagesWhere { message ->
-                message.channelId == channelId && message.isNotPending() &&
-                        message.id <= compareMessageId
+            messagesCache.forceDeleteAllMessagesWhere(channelId) { message ->
+                message.isNotPending() && message.id <= compareMessageId
             }
         } else {
             Log.d(tag, "No messages to delete")
@@ -117,9 +116,8 @@ internal class HandleDeleteMessagesByLoadTypeUseCase(
 
         if (count > 0) {
             SceytLog.d(tag, "Deleted $count messages from DB, updating cache")
-            messagesCache.forceDeleteAllMessagesWhere { message ->
-                message.channelId == channelId && message.isNotPending() &&
-                        message.id >= compareMessageId &&
+            messagesCache.forceDeleteAllMessagesWhere(channelId) { message ->
+                message.isNotPending() && message.id >= compareMessageId &&
                         (syncStartTime == 0L || message.createdAt < syncStartTime)
             }
         } else {

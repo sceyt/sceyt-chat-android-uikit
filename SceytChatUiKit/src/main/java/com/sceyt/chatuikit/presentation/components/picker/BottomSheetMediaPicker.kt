@@ -6,12 +6,13 @@ import android.content.res.Configuration
 import android.database.Cursor
 import android.net.Uri
 import android.os.Bundle
-import android.provider.MediaStore
+import android.provider.MediaStore.Files
+import android.provider.MediaStore.Images
+import android.provider.MediaStore.Video
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import androidx.loader.app.LoaderManager
@@ -31,6 +32,7 @@ import com.sceyt.chatuikit.extensions.getPermissionsForMangeStorage
 import com.sceyt.chatuikit.extensions.initPermissionLauncher
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.screenHeightPx
+import com.sceyt.chatuikit.extensions.setBundleArguments
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.differs.GalleryMediaItemDiff
 import com.sceyt.chatuikit.presentation.components.picker.adapter.MediaAdapter
@@ -68,7 +70,8 @@ class BottomSheetMediaPicker : BottomSheetDialogFragment(), LoaderManager.Loader
             selectedMediaPaths = it.filter { path -> path.isNotNullOrBlank() }.toMutableSet()
         } ?: run {
             arguments?.getStringArray(STATE_SELECTION)?.let {
-                requestedSelectionMediaPaths = it.filter { path -> path.isNotNullOrBlank() }.toMutableSet()
+                requestedSelectionMediaPaths =
+                    it.filter { path -> path.isNotNullOrBlank() }.toMutableSet()
             }
         }
 
@@ -100,7 +103,11 @@ class BottomSheetMediaPicker : BottomSheetDialogFragment(), LoaderManager.Loader
             callBack.invoke(true)
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
         return SceytBottomSheetMediaPickerBinding.inflate(inflater, container, false)
             .also {
                 binding = it
@@ -113,8 +120,9 @@ class BottomSheetMediaPicker : BottomSheetDialogFragment(), LoaderManager.Loader
         super.onViewCreated(view, savedInstanceState)
 
         with(binding.rvMedia) {
-            val spanCount = if (requireContext().getOrientation() == Configuration.ORIENTATION_LANDSCAPE)
-                5 else 3
+            val spanCount =
+                if (requireContext().getOrientation() == Configuration.ORIENTATION_LANDSCAPE)
+                    5 else 3
 
             setHasFixedSize(true)
             layoutManager = GridLayoutManager(requireContext(), spanCount)
@@ -126,16 +134,17 @@ class BottomSheetMediaPicker : BottomSheetDialogFragment(), LoaderManager.Loader
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?) =
-            super.onCreateDialog(savedInstanceState).apply {
-                setOnShowListener {
-                    val bottomSheet = findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)
-                    bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet)
-                    bottomSheetBehavior.peekHeight = peekHeight.toInt()
-                    bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
-                    binding.layoutCounter.translationY = -((bottomSheet.height - peekHeight).toFloat())
-                    bottomSheetBehavior.addBottomSheetCallback(bottomSheetCallback)
-                }
+        super.onCreateDialog(savedInstanceState).apply {
+            setOnShowListener {
+                val bottomSheet =
+                    findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)
+                bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet)
+                bottomSheetBehavior.peekHeight = peekHeight.toInt()
+                bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+                binding.layoutCounter.translationY = -((bottomSheet.height - peekHeight).toFloat())
+                bottomSheetBehavior.addBottomSheetCallback(bottomSheetCallback)
             }
+        }
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -155,12 +164,17 @@ class BottomSheetMediaPicker : BottomSheetDialogFragment(), LoaderManager.Loader
     private fun onMediaClick(mediaItem: MediaItem, position: Int) {
         val item = mediaItem.media
         if (selectedMedia.size == maxSelectCount && item.selected.not()) {
-            Toast.makeText(requireContext(), "${context?.getString(R.string.sceyt_you_can_select_max)} " +
-                    "$maxSelectCount", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                requireContext(), "${context?.getString(R.string.sceyt_you_can_select_max)} " +
+                        "$maxSelectCount", Toast.LENGTH_SHORT
+            ).show()
             return
         }
         item.selected = !item.selected
-        imagesAdapter.notifyItemChanged(position, GalleryMediaItemDiff.DEFAULT.copy(filePathChanged = false))
+        imagesAdapter.notifyItemChanged(
+            position,
+            GalleryMediaItemDiff.DEFAULT.copy(filePathChanged = false)
+        )
 
         if (item.selected) {
             selectedMedia.add(item)
@@ -174,7 +188,7 @@ class BottomSheetMediaPicker : BottomSheetDialogFragment(), LoaderManager.Loader
     }
 
     private fun setCounter() {
-        binding.counter.isVisible = selectedMediaPaths.size > 0
+        binding.counter.isVisible = selectedMediaPaths.isNotEmpty()
         binding.counter.text = selectedMediaPaths.size.toString()
     }
 
@@ -183,7 +197,8 @@ class BottomSheetMediaPicker : BottomSheetDialogFragment(), LoaderManager.Loader
             override fun onSlide(bottomSheet: View, slideOffset: Float) {
                 val bottomSheetVisibleHeight = bottomSheet.height - bottomSheet.top
                 if (bottomSheetVisibleHeight >= peekHeight)
-                    binding.layoutCounter.translationY = -((bottomSheet.height - bottomSheetVisibleHeight).toFloat())
+                    binding.layoutCounter.translationY =
+                        -((bottomSheet.height - bottomSheetVisibleHeight).toFloat())
             }
 
             override fun onStateChanged(bottomSheet: View, newState: Int) {
@@ -196,22 +211,22 @@ class BottomSheetMediaPicker : BottomSheetDialogFragment(), LoaderManager.Loader
     override fun onCreateLoader(id: Int, args: Bundle?): Loader<Cursor> {
         if (id != LOADER_ID) throw IllegalStateException("illegal loader id: $id")
         val projection = arrayOf(
-            MediaStore.Files.FileColumns._ID,
-            MediaStore.Files.FileColumns.DATA,
-            MediaStore.Files.FileColumns.DATE_ADDED,
-            MediaStore.Files.FileColumns.MEDIA_TYPE,
-            MediaStore.Video.Media.DURATION
+            Files.FileColumns._ID,
+            Files.FileColumns.DATA,
+            Files.FileColumns.DATE_ADDED,
+            Files.FileColumns.MEDIA_TYPE,
+            Video.Media.DURATION
         )
-        val sortOrder = MediaStore.Video.Media.DATE_ADDED + " DESC"
+        val sortOrder = Video.Media.DATE_ADDED + " DESC"
         val selection = getSelection(filterType)
-        val queryUri = MediaStore.Files.getContentUri("external")
+        val queryUri = Files.getContentUri("external")
 
         return CursorLoader(requireContext(), queryUri, projection, selection, null, sortOrder)
     }
 
     private fun getSelection(filter: PickerFilterType): String {
-        val selectionImage = MediaStore.Files.FileColumns.MEDIA_TYPE + "=" + MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE
-        val selectionVideo = MediaStore.Files.FileColumns.MEDIA_TYPE + "=" + MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO
+        val selectionImage = Files.FileColumns.MEDIA_TYPE + "=" + Files.FileColumns.MEDIA_TYPE_IMAGE
+        val selectionVideo = Files.FileColumns.MEDIA_TYPE + "=" + Files.FileColumns.MEDIA_TYPE_VIDEO
         val selectionAll = "$selectionImage OR $selectionVideo"
 
         return when (filter) {
@@ -253,30 +268,30 @@ class BottomSheetMediaPicker : BottomSheetDialogFragment(), LoaderManager.Loader
         return contains
     }
 
-    private fun loadWithFlow(cursor: Cursor) = callbackFlow<List<MediaItem>> {
+    private fun loadWithFlow(cursor: Cursor) = callbackFlow {
         withContext(Dispatchers.IO) {
             try {
                 val items = ArrayList<MediaItem>()
                 val wrongImages = ArrayList<MediaItem>()
-                val columnIndex = cursor.getColumnIndex(MediaStore.Files.FileColumns._ID)
-                val columnMediaTypeIndex = cursor.getColumnIndex(MediaStore.Files.FileColumns.MEDIA_TYPE)
-                val columnDataIndex = cursor.getColumnIndex(MediaStore.Files.FileColumns.DATA)
+                val columnIndex = cursor.getColumnIndex(Files.FileColumns._ID)
+                val columnMediaTypeIndex = cursor.getColumnIndex(Files.FileColumns.MEDIA_TYPE)
+                val columnDataIndex = cursor.getColumnIndex(Files.FileColumns.DATA)
                 while (cursor.moveToNext()) {
                     val id = cursor.getLong(columnIndex)
                     val type = cursor.getInt(columnMediaTypeIndex)
                     var isImage: Boolean
                     var videoDuration = 0.0
 
-                    val contentUri: Uri = if (type == MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO) {
+                    val contentUri = if (type == Files.FileColumns.MEDIA_TYPE_VIDEO) {
                         isImage = false
 
-                        val durationIndex = cursor.getColumnIndex(MediaStore.Video.Media.DURATION)
+                        val durationIndex = cursor.getColumnIndex(Video.Media.DURATION)
                         videoDuration = cursor.getDouble(durationIndex)
-                        ContentUris.withAppendedId(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, id)
+                        ContentUris.withAppendedId(Video.Media.EXTERNAL_CONTENT_URI, id)
 
                     } else {
                         isImage = true
-                        ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
+                        ContentUris.withAppendedId(Images.Media.EXTERNAL_CONTENT_URI, id)
                     }
 
                     val realPath = cursor.getString(columnDataIndex)
@@ -284,7 +299,8 @@ class BottomSheetMediaPicker : BottomSheetDialogFragment(), LoaderManager.Loader
 
                     val mediaType = if (isImage) MediaType.Image else MediaType.Video
                     val model = MediaData(contentUri, realPath, isWrong, mediaType = mediaType)
-                    val mediaItem = if (isImage) MediaItem.Image(model) else MediaItem.Video(model, videoDuration)
+                    val mediaItem = if (isImage)
+                        MediaItem.Image(model) else MediaItem.Video(model, videoDuration)
                     mediaItem.media.selected = checkSelectedItems(mediaItem)
 
                     if (isWrong)
@@ -314,9 +330,9 @@ class BottomSheetMediaPicker : BottomSheetDialogFragment(), LoaderManager.Loader
     }
 
     data class SelectedMediaData(
-            val contentUri: Uri,
-            val realPath: String,
-            val mediaType: MediaType,
+        val contentUri: Uri,
+        val realPath: String,
+        val mediaType: MediaType,
     )
 
     enum class MediaType(val value: AttachmentTypeEnum) {
@@ -351,15 +367,14 @@ class BottomSheetMediaPicker : BottomSheetDialogFragment(), LoaderManager.Loader
         var pickerListener: PickerListener? = null
 
         fun instance(
-                maxSelectCount: Int = MAX_SELECT_MEDIA_COUNT,
-                fileFilter: PickerFilterType = PickerFilterType.All,
-                vararg selections: String,
+            maxSelectCount: Int = MAX_SELECT_MEDIA_COUNT,
+            fileFilter: PickerFilterType = PickerFilterType.All,
+            vararg selections: String,
         ): BottomSheetMediaPicker {
-            return BottomSheetMediaPicker().apply {
-                arguments = bundleOf(
-                    STATE_SELECTION to selections,
-                    FILTER_TYPE to fileFilter.ordinal,
-                    MAX_SELECTION_COUNT to maxSelectCount)
+            return BottomSheetMediaPicker().setBundleArguments {
+                putStringArray(STATE_SELECTION, selections)
+                putInt(FILTER_TYPE, fileFilter.ordinal)
+                putInt(MAX_SELECTION_COUNT, maxSelectCount)
             }
         }
     }

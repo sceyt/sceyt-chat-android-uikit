@@ -11,14 +11,13 @@
         <item name="windowActionModeOverlay">false</item>
         <item name="windowActionBar">false</item>
         <item name="android:windowBackground">@color/sceyt_color_background</item>
-        <item name="android:windowIsTranslucent">true</item>
         <item name="android:statusBarColor">@color/sceyt_color_status_bar</item>
         <item name="windowNoTitle">true</item>
         <item name="android:fontFamily">@font/roboto_regular</item>
     </style>
 
-    <style name="SceytAppTheme.Default" parent="SceytAppTheme">
-        <item name="android:windowIsTranslucent">false</item>
+    <style name="SceytAppTheme.SplashTheme" parent="SceytAppTheme">
+        <item name="android:windowIsTranslucent">true</item>
     </style>
 
     <style name="My.TextInputLayout.FilledBox.Padding" parent="Widget.MaterialComponents.TextInputLayout.FilledBox">

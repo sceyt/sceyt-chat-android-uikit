@@ -33,6 +33,7 @@ import com.sceyt.chatuikit.data.models.SyncNearMessagesResult
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.createErrorResponse
 import com.sceyt.chatuikit.data.models.isSuccess
+import com.sceyt.chatuikit.data.models.map
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.MarkerType.Received
@@ -393,7 +394,7 @@ internal class PersistenceMessagesLogicImpl(
                 messageId = messageId,
                 limit = 30,
                 serverMessages = updatedMessages,
-                syncStartTime = ServerTimeSync.getLastAuthTime()
+                syncStartTime = ServerTimeSync.getLastAuthTimeOrNow()
             )
 
             updateMessageLoadRange(
@@ -422,15 +423,16 @@ internal class PersistenceMessagesLogicImpl(
                 channel.lastMessage?.let { lastMessage ->
                     val currentChannel = channelCache.getOneOf(channel.id)
                     // Check current channel last message is the same as lastMessage from synced channel,
-                    // to avoid deleting messages incorrectly
-                    if (channel.lastDisplayedMessageId > lastMessage.id && currentChannel?.lastMessage == lastMessage) {
+                    // to avoid deleting messages incorrectly.
+                    // Also guard against id=0 (pending/unassigned messages) to avoid deleting all messages.
+                    if (lastMessage.id > 0 && channel.lastDisplayedMessageId > lastMessage.id && currentChannel?.lastMessage == lastMessage) {
                         checkDeletedMessagesUseCase(
                             channelId = channel.id,
                             loadType = LoadNext,
                             messageId = lastMessage.id,
                             limit = messagesLoadSize,
                             serverMessages = listOf(lastMessage),
-                            syncStartTime = ServerTimeSync.getLastAuthTime()
+                            syncStartTime = ServerTimeSync.getLastAuthTimeOrNow()
                         )
                     }
                 }
@@ -979,7 +981,7 @@ internal class PersistenceMessagesLogicImpl(
         )
 
         // Update message state in db and cache
-        val deletedMessage = storedMessage.copy(state = state)
+        val deletedMessage = storedMessage.copy(state = state, body = "", attachments = emptyList())
         onMessageEditedOrDeleted(deletedMessage)
         persistenceChannelsLogic.onMessageEditedOrDeleted(deletedMessage)
 
@@ -1249,8 +1251,7 @@ internal class PersistenceMessagesLogicImpl(
         var messages: List<SceytMessage> = emptyList()
         val response: SceytResponse<List<SceytMessage>>
 
-        if (loadType != LoadNear)
-            ConnectionEventManager.awaitToConnectSceytWithTimeout(10.seconds.inWholeMilliseconds)
+        ConnectionEventManager.awaitToConnectSceytWithTimeout(10.seconds.inWholeMilliseconds)
 
         val syncStartTime = ServerTimeSync.getCurrentServerTime()
 
@@ -1353,7 +1354,7 @@ internal class PersistenceMessagesLogicImpl(
         if (forceHasDiff) hasDiff = true
 
         return PaginationResponse.ServerResponse(
-            data = response,
+            data = response.map { updatedMessages },
             cacheData = messagesCache.getSorted(channelId),
             loadKey = loadKey,
             offset = offset,
@@ -1527,9 +1528,11 @@ internal class PersistenceMessagesLogicImpl(
         val forceUpdatedList = messageDao.upsertMessages(messagesDb)
         // Delete messages from cache which were force updated.
         if (forceUpdatedList.isNotEmpty()) {
-            messagesCache.deleteAllMessagesWhere {
-                return@deleteAllMessagesWhere forceUpdatedList.any { entity ->
-                    it.channelId == entity.channelId && (it.tid == entity.tid || it.id == entity.id)
+            forceUpdatedList.groupBy { it.channelId }.forEach { (key, value) ->
+                messagesCache.deleteAllMessagesWhere(key) {
+                    return@deleteAllMessagesWhere value.any { entity ->
+                        it.tid == entity.tid || it.id == entity.id
+                    }
                 }
             }
         }

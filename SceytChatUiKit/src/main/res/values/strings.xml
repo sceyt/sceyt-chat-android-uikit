@@ -6,10 +6,12 @@
     <string name="sceyt_file_transfer_notifications_channel_name">Upload Attachments</string>
     <string name="sceyt_search_for_channels">Search for channels</string>
     <string name="sceyt_search">Search</string>
+    <string name="sceyt_global_search_hint">Search</string>
     <string name="sceyt_your_last_message">You</string>
     <string name="sceyt_copy">Copy</string>
     <string name="sceyt_no_channels">No Chats yet</string>
     <string name="sceyt_message">Message</string>
+    <string name="sceyt_messages">Messages</string>
     <string name="sceyt_online">online</string>
     <string name="sceyt_members_count">%1$s members</string>
     <string name="sceyt_member_count">%1$s member</string>
@@ -102,7 +104,6 @@
     <string name="sceyt_no_links_desc">Shared links will appear here.</string>
     <string name="sceyt_no_common_groups_title">No groups is common</string>
     <string name="sceyt_no_common_groups_desc">Groups in common will appear here.</string>
-
     <string name="sceyt_history_was_successfully_cleared">History was successfully cleared!</string>
     <string name="sceyt_auto_delete">Auto-Delete Messages</string>
     <string name="sceyt_1_day">1 day</string>
@@ -154,6 +155,7 @@
     <string name="sceyt_forward">Forward</string>
     <string name="sceyt_saved">Saved</string>
     <string name="sceyt_share">Share</string>
+    <string name="sceyt_show_in_chat">Show in chat</string>
     <string name="sceyt_media_cannot_save_to_gallery">Cannot save file to gallery. Check permission and allow app to access storage</string>
     <string name="sceyt_deleted_user">Deleted User</string>
     <string name="sceyt_share_with">Share with</string>
@@ -237,6 +239,7 @@
     <string name="sceyt_connecting_title">Connecting…</string>
     <string name="sceyt_disconnected_title">Disconnected</string>
     <string name="sceyt_chats">Chats</string>
+    <string name="sceyt_channels">Channels</string>
     <string name="sceyt_recording">recording</string>
     <string name="sceyt_recording_">recording…</string>
     <string name="sceyt_invite_link">Invite link</string>

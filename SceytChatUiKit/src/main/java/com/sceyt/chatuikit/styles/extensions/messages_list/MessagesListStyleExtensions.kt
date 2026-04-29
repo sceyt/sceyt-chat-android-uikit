@@ -16,7 +16,7 @@ import com.sceyt.chatuikit.styles.common.MediaLoaderStyle
 import com.sceyt.chatuikit.styles.common.MessageDeliveryStatusIcons
 import com.sceyt.chatuikit.styles.common.Shape
 import com.sceyt.chatuikit.styles.common.TextStyle
-import com.sceyt.chatuikit.styles.messages_list.DateSeparatorStyle
+import com.sceyt.chatuikit.styles.common.DateSeparatorStyle
 import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle
 import com.sceyt.chatuikit.styles.messages_list.ReactionPickerStyle
 import com.sceyt.chatuikit.styles.messages_list.ScrollButtonStyle
@@ -595,7 +595,8 @@ internal fun MessageItemStyle.Builder.buildLinkPreviewTitleTextStyle(
         index = R.styleable.MessagesListView_sceytUiMessagesListLinkPreviewTitleTextStyle
     )
     .setFont(
-        index = R.styleable.MessagesListView_sceytUiMessagesListLinkPreviewTitleTextFont
+        index = R.styleable.MessagesListView_sceytUiMessagesListLinkPreviewTitleTextFont,
+        defValue = R.font.roboto_medium
     )
     .build()
 

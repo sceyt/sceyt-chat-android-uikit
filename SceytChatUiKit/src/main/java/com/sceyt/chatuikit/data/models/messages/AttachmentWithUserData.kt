@@ -5,6 +5,6 @@ import kotlinx.parcelize.Parcelize
 
 @Parcelize
 data class AttachmentWithUserData(
-        val attachment: SceytAttachment,
-        val user: SceytUser?
+    val attachment: SceytAttachment,
+    val user: SceytUser?
 ) : Parcelable

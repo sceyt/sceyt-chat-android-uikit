@@ -19,21 +19,21 @@ internal abstract class PendingReactionDao {
             insert(entity)
     }
 
-    @Query("select message_id from $MESSAGE_TABLE where message_id = :messageId")
+    @Query("SELECT message_id FROM $MESSAGE_TABLE WHERE message_id = :messageId")
     protected abstract suspend fun checkExistMessage(messageId: Long): Long?
 
-    @Query("select * from $PENDING_REACTION_TABLE")
+    @Query("SELECT * FROM $PENDING_REACTION_TABLE")
     abstract suspend fun getAll(): List<PendingReactionEntity>
 
-    @Query("select * from $PENDING_REACTION_TABLE where channelId =:channelId")
+    @Query("SELECT * FROM $PENDING_REACTION_TABLE WHERE channelId = :channelId")
     abstract suspend fun getAllByChannelId(channelId: Long): List<PendingReactionEntity>
 
-    @Query("select * from $PENDING_REACTION_TABLE where messageId =:messageId")
+    @Query("SELECT * FROM $PENDING_REACTION_TABLE WHERE messageId = :messageId")
     abstract suspend fun getAllByMsgId(messageId: Long): List<PendingReactionEntity>
 
-    @Query("select * from $PENDING_REACTION_TABLE where messageId =:messageId and reaction_key =:key")
+    @Query("SELECT * FROM $PENDING_REACTION_TABLE WHERE messageId = :messageId AND reaction_key = :key")
     abstract suspend fun getAllByMsgIdAndKey(messageId: Long, key: String): List<PendingReactionEntity>
 
-    @Query("delete from $PENDING_REACTION_TABLE where messageId =:messageId and reaction_key =:key")
+    @Query("DELETE FROM $PENDING_REACTION_TABLE WHERE messageId = :messageId AND reaction_key = :key")
     abstract suspend fun deletePendingReaction(messageId: Long, key: String)
 }

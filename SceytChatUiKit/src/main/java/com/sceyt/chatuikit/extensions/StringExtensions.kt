@@ -12,8 +12,8 @@ import android.widget.TextView
 import androidx.emoji2.text.EmojiCompat
 import androidx.emoji2.text.EmojiSpan
 import com.google.gson.Gson
-import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import com.sceyt.chatuikit.data.models.messages.MarkerType
+import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import java.lang.Character.DIRECTIONALITY_RIGHT_TO_LEFT
 import java.lang.Character.DIRECTIONALITY_RIGHT_TO_LEFT_ARABIC
 import java.lang.Character.DIRECTIONALITY_RIGHT_TO_LEFT_EMBEDDING
@@ -235,10 +235,10 @@ fun CharSequence?.processEmojiCompat(): CharSequence? {
 }
 
 fun CharSequence?.processEmojiCompat(
-        start: Int,
-        end: Int,
-        maxCount: Int,
-        @EmojiCompat.ReplaceStrategy strategy: Int,
+    start: Int,
+    end: Int,
+    maxCount: Int,
+    @EmojiCompat.ReplaceStrategy strategy: Int,
 ): CharSequence? {
     return try {
         EmojiCompat.get().process(this, start, end, maxCount, strategy)
@@ -269,11 +269,13 @@ fun String.toSha256(): Long {
 }
 
 fun Char.isVisuallyEmpty(): Boolean {
-    return Character.isWhitespace(this) || hashSetOf('\u200E',  // left-to-right mark
+    return Character.isWhitespace(this) || hashSetOf(
+        '\u200E',  // left-to-right mark
         '\u200F',  // right-to-left mark
         '\u2007',  // figure space
         '\u200B',  // zero-width space
-        '\u2800').contains(this) // braille blank
+        '\u2800'
+    ).contains(this) // braille blank
 }
 
 fun <T> String?.jsonToObject(clazz: Class<T>): T? {
@@ -293,5 +295,9 @@ internal fun String.toDeliveryStatus(): MessageDeliveryStatus? {
 }
 
 fun String.whitSpace() = plus(" ")
+
+fun String?.ifNotEmpty(): String? {
+    return if (isNullOrEmpty()) null else this
+}
 
 const val empty = ""

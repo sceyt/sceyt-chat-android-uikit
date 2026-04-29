@@ -185,31 +185,32 @@ internal class PersistenceAttachmentLogicImpl(
 
     override suspend fun getLinkPreviewData(
         link: String?
-    ): SceytResponse<LinkPreviewDetails> =
-        withContext(Dispatchers.IO) {
-            if (link.isNullOrBlank()) return@withContext SceytResponse.Error(
-                exception = SceytException(0, "Link is null or blank: link -> $link")
-            )
+    ): SceytResponse<LinkPreviewDetails> = withContext(Dispatchers.IO) {
+        if (link.isNullOrBlank()) return@withContext SceytResponse.Error(
+            exception = SceytException(0, "Link is null or blank: link -> $link")
+        )
 
-            linkDao.getLinkDetailsEntity(link)?.let {
+        linkDao.getLinkDetailsEntity(link)?.let {
+            // If the data is already loaded, return it. Otherwise, load it from the server.
+            if (!it.title.isNullOrBlank() && !it.description.isNullOrBlank())
                 return@withContext SceytResponse.Success(it.toLinkPreviewDetails(false))
-            }
-
-            return@withContext attachmentsRepository.getLinkPreviewData(link).fold(
-                onSuccess = { data ->
-                    if (data != null) {
-                        val details = data.toLinkPreviewDetails(link)
-                        messagesCache.updateAttachmentLinkDetails(details)
-                        attachmentsCache.updateAttachmentLinkDetails(details)
-                        linkDao.insert(details.toLinkDetailsEntity(link, null))
-                        SceytResponse.Success(details)
-                    } else
-                        createErrorResponse("Link is null or blank: link -> $link")
-                },
-                onError = {
-                    SceytResponse.Error(it)
-                })
         }
+
+        return@withContext attachmentsRepository.getLinkPreviewData(link).fold(
+            onSuccess = { data ->
+                if (data != null) {
+                    val details = data.toLinkPreviewDetails(link)
+                    messagesCache.updateAttachmentLinkDetails(details)
+                    attachmentsCache.updateAttachmentLinkDetails(details)
+                    linkDao.insert(details.toLinkDetailsEntity(link, null))
+                    SceytResponse.Success(details)
+                } else
+                    createErrorResponse("Link is null or blank: link -> $link")
+            },
+            onError = {
+                SceytResponse.Error(it)
+            })
+    }
 
     override suspend fun upsertLinkPreviewData(linkDetails: LinkPreviewDetails) =
         withContext(Dispatchers.IO) {
@@ -218,18 +219,12 @@ internal class PersistenceAttachmentLogicImpl(
             attachmentsCache.updateAttachmentLinkDetails(linkDetails)
         }
 
-    override suspend fun updateLinkDetailsSize(link: String, size: Size) =
+    override suspend fun updateLinkDetails(link: String, size: Size, thumb: String?) =
         withContext(Dispatchers.IO) {
             linkDao.updateSizes(link, size.width, size.height)
-            messagesCache.updateLinkDetailsSize(link, size.width, size.height)
-            attachmentsCache.updateLinkDetailsSize(link, size.width, size.height)
-        }
-
-    override suspend fun updateLinkDetailsThumb(link: String, thumb: String) =
-        withContext(Dispatchers.IO) {
-            linkDao.updateThumb(link, thumb)
-            messagesCache.updateThumb(link, thumb)
-            attachmentsCache.updateThumb(link, thumb)
+            if (thumb != null) linkDao.updateThumb(link, thumb)
+            messagesCache.updateLinkDetails(link, size.width, size.height, thumb)
+            attachmentsCache.updateLinkDetails(link, size.width, size.height, thumb)
         }
 
     override suspend fun onTransferProgressPercentUpdated(transferData: TransferData) {
@@ -315,7 +310,7 @@ internal class PersistenceAttachmentLogicImpl(
 
         val data = arrayListOf<AttachmentWithUserData>()
 
-        attachments.map {
+        attachments.forEach {
             data.add(
                 AttachmentWithUserData(
                     attachment = it,

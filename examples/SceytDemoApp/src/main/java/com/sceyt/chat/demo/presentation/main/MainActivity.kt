@@ -11,6 +11,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.graphics.toColorInt
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.demo.R
+import com.sceyt.chat.demo.call.manager.CallManager
+import com.sceyt.chat.demo.call.ui.attachActiveCallBanner
 import com.sceyt.chat.demo.databinding.ActivityMainBinding
 import com.sceyt.chat.demo.presentation.main.adapters.MainViewPagerAdapter
 import com.sceyt.chat.demo.presentation.main.profile.ProfileFragment
@@ -19,7 +21,8 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
-import com.sceyt.chatuikit.presentation.components.channel.messages.ChannelActivity
+import com.sceyt.chatuikit.navigation.Destination
+import com.sceyt.chatuikit.navigation.navigate
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.ChannelListFragment
 import com.sceyt.chatuikit.presentation.components.invite_link.ChannelInviteLinkHandler
 import com.sceyt.chatuikit.presentation.components.invite_link.JoinByInviteLinkResult
@@ -32,6 +35,7 @@ import org.koin.android.ext.android.inject
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private val createProfileViewModel by inject<CreateAccountViewModel>()
+    private val callManager: CallManager by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,6 +50,7 @@ class MainActivity : AppCompatActivity() {
         setPagerAdapter()
         setBottomNavClickListeners()
         initViewModel()
+        attachActiveCallBanner(callManager, binding.root, R.id.viewPager)
 
         SceytChatUIKit.chatUIFacade.channelInteractor.getTotalUnreadCount().onEach {
             binding.bottomNavigationView.getOrCreateBadge(R.id.channelsFragment).apply {
@@ -100,7 +105,7 @@ class MainActivity : AppCompatActivity() {
     private fun setPagerAdapter() {
         val adapter = MainViewPagerAdapter(
             activity = this,
-            mFragments = arrayListOf(ChannelListFragment(), ProfileFragment())
+            fragments = listOf(ChannelListFragment(), ProfileFragment())
         )
         binding.viewPager.adapter = adapter
         binding.viewPager.isUserInputEnabled = false
@@ -128,16 +133,16 @@ class MainActivity : AppCompatActivity() {
                 listener = { result ->
                     when (result) {
                         is JoinByInviteLinkResult.AlreadyJoined -> {
-                            ChannelActivity.launch(
+                            SceytChatUIKit.navigator.navigate(
                                 context = this@MainActivity,
-                                channel = result.channel
+                                destination = Destination.Channel(result.channel)
                             )
                         }
 
                         is JoinByInviteLinkResult.JoinedByInviteLink -> {
-                            ChannelActivity.launch(
+                            SceytChatUIKit.navigator.navigate(
                                 context = this@MainActivity,
-                                channel = result.channel
+                                destination = Destination.Channel(result.channel)
                             )
                         }
 

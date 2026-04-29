@@ -17,10 +17,11 @@ import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
 import com.sceyt.chatuikit.extensions.setMargins
 import com.sceyt.chatuikit.extensions.setTextColorRes
 import com.sceyt.chatuikit.extensions.setTintColorRes
+import com.sceyt.chatuikit.navigation.Destination
+import com.sceyt.chatuikit.navigation.navigate
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.viewmodel.ChannelsViewModel
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.viewmodel.ChannelsViewModelFactory
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.viewmodel.bind
-import com.sceyt.chatuikit.presentation.components.startchat.StartChatActivity
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
@@ -30,7 +31,11 @@ open class ChannelListFragment : Fragment() {
         ChannelsViewModelFactory()
     })
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
         return SceytFragmentChannelsBinding.inflate(inflater, container, false)
             .also { binding = it }
             .root
@@ -43,10 +48,13 @@ open class ChannelListFragment : Fragment() {
         binding.applyStyle()
 
         viewModel.bind(binding.channelListView, viewLifecycleOwner)
-        viewModel.bind(binding.searchView)
+        binding.searchView.setLauncherMode(true) {
+            openGlobalSearch(binding.searchView)
+        }
 
         binding.searchView.post {
-            binding.channelListView.getPageStateView().setMargins(bottom = binding.searchView.height)
+            binding.channelListView.getPageStateView()
+                .setMargins(bottom = binding.searchView.height)
         }
     }
 
@@ -60,8 +68,16 @@ open class ChannelListFragment : Fragment() {
         }
 
         binding.fabNewChannel.setOnClickListener {
-            StartChatActivity.launch(requireContext())
+            openStartChatActivity()
         }
+    }
+
+    protected open fun openStartChatActivity() {
+        SceytChatUIKit.navigator.navigate(requireContext(), Destination.StartChat())
+    }
+
+    protected open fun openGlobalSearch(sourceView: View?) {
+        SceytChatUIKit.navigator.navigate(requireContext(), Destination.GlobalSearch(sourceView))
     }
 
     protected open fun setupConnectionStatus(state: ConnectionState) {

@@ -47,9 +47,21 @@ inline fun <T> SceytResponse<T>.onError(action: (value: SceytException?) -> Unit
 
 @OptIn(ExperimentalContracts::class)
 @SinceKotlin("1.3")
+inline fun <T> SceytResponse<T>.onErrorNonNull(action: (value: SceytException) -> Unit): SceytResponse<T> {
+    contract {
+        callsInPlace(action, InvocationKind.AT_MOST_ONCE)
+    }
+    if (this is SceytResponse.Error && exception != null)
+        action(exception)
+
+    return this
+}
+
+@OptIn(ExperimentalContracts::class)
+@SinceKotlin("1.3")
 inline fun <R, T> SceytResponse<T>.fold(
-        onSuccess: (value: T?) -> R,
-        onError: (exception: SceytException?) -> R,
+    onSuccess: (value: T?) -> R,
+    onError: (exception: SceytException?) -> R,
 ): R {
     contract {
         callsInPlace(onSuccess, InvocationKind.AT_MOST_ONCE)
@@ -87,6 +99,7 @@ inline fun <R, T> SceytResponse<T>.mapNotNull(transform: (value: T) -> R): Sceyt
                 SceytResponse.Success(null)
             }
         }
+
         is SceytResponse.Error -> SceytResponse.Error(exception)
     }
 }

@@ -38,6 +38,7 @@ internal data class ChannelEntity(
         val archived: Boolean,
         val muted: Boolean,
         val mutedTill: Long?,
+        @ColumnInfo(index = true)
         val pinnedAt: Long?,
         val lastReceivedMessageId: Long,
         val lastDisplayedMessageId: Long,
