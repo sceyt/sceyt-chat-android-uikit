@@ -12,7 +12,7 @@ import com.sceyt.chatuikit.persistence.database.entity.channel.ChannelSyncStateE
 internal abstract class ChannelSyncStateDao {
 
     @Query("SELECT lastSyncedMessageId FROM $CHANNEL_SYNC_STATE_TABLE WHERE channelId = :channelId")
-    abstract suspend fun getLastSyncedMessageId(channelId: Long): Long
+    abstract suspend fun getLastSyncedMessageId(channelId: Long): Long?
 
     suspend fun upsertChannelSyncState(entity: ChannelSyncStateEntity) {
         if (channelExists(entity.channelId)) {
