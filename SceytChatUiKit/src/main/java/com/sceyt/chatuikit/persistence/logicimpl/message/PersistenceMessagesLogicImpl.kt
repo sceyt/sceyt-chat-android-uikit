@@ -50,7 +50,6 @@ import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.notifications.NotificationType
 import com.sceyt.chatuikit.persistence.database.dao.AttachmentDao
-import com.sceyt.chatuikit.persistence.database.dao.ChannelSyncStateDao
 import com.sceyt.chatuikit.persistence.database.dao.LoadRangeDao
 import com.sceyt.chatuikit.persistence.database.dao.MessageDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingMarkerDao
@@ -59,7 +58,6 @@ import com.sceyt.chatuikit.persistence.database.dao.PendingPollVoteDao
 import com.sceyt.chatuikit.persistence.database.dao.PollDao
 import com.sceyt.chatuikit.persistence.database.dao.ReactionDao
 import com.sceyt.chatuikit.persistence.database.dao.UserDao
-import com.sceyt.chatuikit.persistence.database.entity.channel.ChannelSyncStateEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.AttachmentPayLoadDb
 import com.sceyt.chatuikit.persistence.database.entity.messages.MarkerEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageDb
@@ -76,6 +74,7 @@ import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceReactionsLogic
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
+import com.sceyt.chatuikit.persistence.logicimpl.sync.ChannelSyncStateStore
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.CheckDeletedMessagesUseCase
 import com.sceyt.chatuikit.persistence.mappers.addAttachmentMetadata
 import com.sceyt.chatuikit.persistence.mappers.existThumb
@@ -134,7 +133,7 @@ internal class PersistenceMessagesLogicImpl(
     private val channelCache: ChannelsCache,
     private val messageLoadRangeUpdater: MessageLoadRangeUpdater,
     private val checkDeletedMessagesUseCase: CheckDeletedMessagesUseCase,
-    private val syncStateDao: ChannelSyncStateDao
+    private val channelSyncStateStore: ChannelSyncStateStore
 ) : PersistenceMessagesLogic, SceytKoinComponent {
 
     private val persistenceChannelsLogic: PersistenceChannelsLogic by inject()
@@ -161,7 +160,7 @@ internal class PersistenceMessagesLogicImpl(
         messagesCache.add(channel.id, message)
         onMessageFlow.tryEmit(data)
         updateMessageLoadRangeOnMessageEvent(message, null)
-        syncStateDao.upsertChannelSyncState(ChannelSyncStateEntity(channel.id, message.id))
+        channelSyncStateStore.updateSyncStateForMessage(channel.id, message.id)
 
         launch {
             if (message.incoming && sendDeliveryMarker)
