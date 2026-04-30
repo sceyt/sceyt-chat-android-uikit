@@ -2,7 +2,6 @@ package com.sceyt.chatuikit.presentation.components.channel_list.channels.adapte
 
 import android.annotation.SuppressLint
 import android.text.SpannableStringBuilder
-import android.text.util.Linkify
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.annotation.CallSuper
@@ -11,7 +10,6 @@ import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytItemChannelBinding
-import com.sceyt.chatuikit.extensions.extractLinksWithPositions
 import com.sceyt.chatuikit.extensions.setOnClickListenerAvailable
 import com.sceyt.chatuikit.extensions.setOnLongClickListenerAvailable
 import com.sceyt.chatuikit.formatters.attributes.ChannelEventTitleFormatterAttributes
@@ -118,14 +116,7 @@ open class ChannelViewHolder(
                 channelItemStyle = itemStyle
             )
         )
-        setTextAutoLinkMasks(textView, text)
         textView.setText(text, TextView.BufferType.SPANNABLE)
-    }
-
-    protected open fun setTextAutoLinkMasks(messageText: TextView, body: CharSequence) {
-        val hasLinks = body.extractLinksWithPositions().isNotEmpty()
-        messageText.autoLinkMask = if (hasLinks)
-            Linkify.WEB_URLS else 0
     }
 
     protected open fun setSubject(channel: SceytChannel, textView: TextView) {
