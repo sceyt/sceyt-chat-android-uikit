@@ -10,6 +10,7 @@ internal object DatabaseConstants {
 
     // Channel
     const val CHANNEL_TABLE = "sceyt_channel_table"
+    const val CHANNEL_SYNC_STATE_TABLE = "sceyt_channel_sync_state_table"
     const val CHAT_USER_REACTION_TABLE = "sceyt_chat_user_reaction_table"
     const val USER_CHAT_LINK_TABLE = "sceyt_user_chat_link_table"
 

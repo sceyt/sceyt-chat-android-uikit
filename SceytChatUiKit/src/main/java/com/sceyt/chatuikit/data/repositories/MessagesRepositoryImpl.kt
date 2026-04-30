@@ -20,6 +20,7 @@ import com.sceyt.chat.sceyt_callbacks.MessagesCallback
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.SceytPagingResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.data.models.SyncResult
 import com.sceyt.chatuikit.data.models.createErrorResponse
 import com.sceyt.chatuikit.data.retryOnResendableError
 import com.sceyt.chatuikit.data.models.messages.MarkerType
@@ -200,27 +201,28 @@ class MessagesRepositoryImpl : MessagesRepository {
         }
     }
 
-    override suspend fun loadAllMessagesAfter(
+    override suspend fun syncMessagesAfterMessageId(
         conversationId: Long,
         replyInThread: Boolean,
         messageId: Long,
         limit: Int,
-    ): Flow<Pair<Long, SceytResponse<List<SceytMessage>>>> = callbackFlow {
+    ): Flow<SyncResult<SceytMessage>> = callbackFlow {
         val query = getQuery(conversationId, replyInThread, limit, false)
 
-        var nextMessageId = messageId
         query.loadNext(messageId - 1, object : MessagesCallback {
             override fun onResult(messages: MutableList<Message>?) {
                 val result = messages.orEmpty()
-                trySend(nextMessageId to SceytResponse.Success(result.map { it.toSceytUiMessage() }))
+                trySend(SyncResult.Proportion(result.map { it.toSceytUiMessage() }))
                 if (result.size == limit) {
-                    nextMessageId = result.last().id
-                    query.loadNext(nextMessageId, this)
-                } else channel.close()
+                    query.loadNext(result.last().id, this)
+                } else {
+                    trySend(SyncResult.SuccessfullyFinished)
+                    channel.close()
+                }
             }
 
             override fun onError(e: SceytException?) {
-                trySend(nextMessageId to SceytResponse.Error(e))
+                trySend(SyncResult.Error(e))
                 SceytLog.e(TAG, "loadAllMessagesAfter error: ${e?.message}")
                 channel.close()
             }
