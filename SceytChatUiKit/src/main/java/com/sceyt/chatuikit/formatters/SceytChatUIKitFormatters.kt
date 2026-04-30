@@ -44,9 +44,10 @@ import com.sceyt.chatuikit.formatters.defaults.DefaultPollResultVoteCountFormatt
 import com.sceyt.chatuikit.formatters.defaults.DefaultPollTypeFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultPollVoteCountFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultPollVoteTimeDateFormatter
-import com.sceyt.chatuikit.formatters.defaults.DefaultSelfDestructedMessageBodyFormatter
+import com.sceyt.chatuikit.formatters.defaults.DefaultSearchMessageDateFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultSearchMessageResultBodyFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultSearchMessageSenderNameFormatter
+import com.sceyt.chatuikit.formatters.defaults.DefaultSelfDestructedMessageBodyFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultSystemMessageBodyFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUnreadCountFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUnsupportedMessageBodyFormatter
@@ -254,5 +255,9 @@ class SceytChatUIKitFormatters {
 
     var searchMessageSenderNameFormatter: Formatter<SceytMessage> by lazyVar {
         DefaultSearchMessageSenderNameFormatter()
+    }
+
+    var searchMessageDateFormatter: Formatter<Date> by lazyVar {
+        DefaultSearchMessageDateFormatter()
     }
 }

@@ -65,7 +65,8 @@ data class ChannelInfoLinkStyle(
                 textStyle = TextStyle(
                     color = context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor),
                     font = R.font.roboto_medium
-                )
+                ),
+                dateFormatter = SceytChatUIKit.formatters.channelInfoDateSeparatorFormatter
             )
 
             return ChannelInfoLinkStyle(
