@@ -65,7 +65,7 @@ data class ChatsSearchMessageItemStyle(
                 avatarStyle = buildAvatarStyle(),
                 userNameFormatter = SceytChatUIKit.formatters.userNameFormatter,
                 senderNameFormatter = SceytChatUIKit.formatters.searchMessageSenderNameFormatter,
-                messageDateFormatter = SceytChatUIKit.formatters.messageDateFormatter,
+                messageDateFormatter = SceytChatUIKit.formatters.searchMessageDateFormatter,
                 messageBodyFormatter = SceytChatUIKit.formatters.channelLastMessageBodyFormatter,
                 mentionUserNameFormatter = SceytChatUIKit.formatters.mentionUserNameFormatter,
                 channelNameFormatter = SceytChatUIKit.formatters.channelNameFormatter,
