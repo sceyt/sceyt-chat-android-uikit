@@ -18,10 +18,13 @@ import com.sceyt.chatuikit.extensions.applyTintBackgroundLayer
 import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
+import com.sceyt.chatuikit.formatters.ChannelLastMessageStatusAndDate
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.formatters.SceytChatUIKitFormatters
+import com.sceyt.chatuikit.formatters.TypedFormatter
 import com.sceyt.chatuikit.formatters.attributes.ChannelEventTitleFormatterAttributes
 import com.sceyt.chatuikit.formatters.attributes.ChannelItemSubtitleFormatterAttributes
+import com.sceyt.chatuikit.formatters.attributes.ChannelLastMessageStatusAndDateFormatterAttributes
 import com.sceyt.chatuikit.formatters.attributes.DraftMessageBodyFormatterAttributes
 import com.sceyt.chatuikit.formatters.attributes.MessageBodyFormatterAttributes
 import com.sceyt.chatuikit.providers.SceytChatUIKitProviders
@@ -78,6 +81,7 @@ import java.util.Date
  * @property avatarStyle - Style for avatar, default is [buildAvatarStyle].
  * @property channelTitleFormatter - Formatter for channel name, default is [SceytChatUIKitFormatters.channelNameFormatter].
  * @property channelDateFormatter - Date format for channel, default is [SceytChatUIKitFormatters.channelDateFormatter].
+ * @property channelLastMessageStatusAndDateFormatter - Formatter for channel last message date and delivery status visibility, default is [SceytChatUIKitFormatters.channelLastMessageStatusAndDateFormatter].
  * @property lastMessageSenderNameFormatter - Formatter for user name, default is [SceytChatUIKitFormatters.channelLastMessageSenderNameFormatter].
  * @property mentionUserNameFormatter - Formatter for user name, default is [SceytChatUIKitFormatters.mentionUserNameFormatter].
  * @property reactedUserNameFormatter - Formatter for user name, default is [SceytChatUIKitFormatters.reactedUserNameFormatter].
@@ -119,6 +123,7 @@ data class ChannelItemStyle(
     val channelTitleFormatter: Formatter<SceytChannel>,
     val channelSubtitleFormatter: Formatter<ChannelItemSubtitleFormatterAttributes>,
     val channelDateFormatter: Formatter<Date>,
+    val channelLastMessageStatusAndDateFormatter: TypedFormatter<ChannelLastMessageStatusAndDateFormatterAttributes, ChannelLastMessageStatusAndDate>,
     val lastMessageSenderNameFormatter: Formatter<SceytChannel>,
     val mentionUserNameFormatter: Formatter<SceytUser>,
     val reactedUserNameFormatter: Formatter<SceytUser>,
@@ -138,37 +143,52 @@ data class ChannelItemStyle(
     }
 
     internal class Builder(
-            internal val context: Context,
-            private val attrs: AttributeSet?,
+        internal val context: Context,
+        private val attrs: AttributeSet?,
     ) {
         fun build(): ChannelItemStyle {
             context.obtainStyledAttributes(attrs, R.styleable.ChannelListView).use { array ->
-                val backgroundColor = array.getColor(R.styleable.ChannelListView_sceytUiChannelListItemBackgroundColor,
-                    Color.TRANSPARENT)
-                val pinnedChannelBackgroundColor = array.getColor(R.styleable.ChannelListView_sceytUiChannelListPinnedBackgroundColor,
-                    context.getCompatColor(SceytChatUIKit.theme.colors.surface1Color))
+                val backgroundColor = array.getColor(
+                    R.styleable.ChannelListView_sceytUiChannelListItemBackgroundColor,
+                    Color.TRANSPARENT
+                )
+                val pinnedChannelBackgroundColor = array.getColor(
+                    R.styleable.ChannelListView_sceytUiChannelListPinnedBackgroundColor,
+                    context.getCompatColor(SceytChatUIKit.theme.colors.surface1Color)
+                )
 
-                val dividerColor = array.getColor(R.styleable.ChannelListView_sceytUiChannelListDividerColor, Color.TRANSPARENT)
+                val dividerColor = array.getColor(
+                    R.styleable.ChannelListView_sceytUiChannelListDividerColor,
+                    Color.TRANSPARENT
+                )
 
-                val linkTextColor = array.getColor(R.styleable.ChannelListView_sceytUiChannelListLinkTextColor,
-                    context.getCompatColor(R.color.sceyt_auto_link_color))
+                val linkTextColor = array.getColor(
+                    R.styleable.ChannelListView_sceytUiChannelListLinkTextColor,
+                    context.getCompatColor(R.color.sceyt_auto_link_color)
+                )
 
-                val mutedIcon = array.getDrawable(R.styleable.ChannelListView_sceytUiChannelListMutedIcon)
+                val mutedIcon =
+                    array.getDrawable(R.styleable.ChannelListView_sceytUiChannelListMutedIcon)
                         ?: context.getCompatDrawable(R.drawable.sceyt_ic_muted)?.apply {
                             mutate().setTint(context.getCompatColor(SceytChatUIKit.theme.colors.iconSecondaryColor))
                         }
 
-                val pinIcon = array.getDrawable(R.styleable.ChannelListView_sceytUiChannelListPinnedIcon)
+                val pinIcon =
+                    array.getDrawable(R.styleable.ChannelListView_sceytUiChannelListPinnedIcon)
                         ?: context.getCompatDrawable(R.drawable.sceyt_ic_pin_filled)?.apply {
                             mutate().setTint(context.getCompatColor(SceytChatUIKit.theme.colors.iconSecondaryColor))
                         }
 
-                val autoDeletedChannelIcon = array.getDrawable(R.styleable.ChannelListView_sceytUiChannelListAutoDeletedChannelIcon)
-                        ?: context.getCompatDrawable(R.drawable.sceyt_ic_auto_deleted_channel).applyTintBackgroundLayer(
-                            context.getCompatColor(SceytChatUIKit.theme.colors.accentColor), R.id.backgroundLayer
-                        )
+                val autoDeletedChannelIcon =
+                    array.getDrawable(R.styleable.ChannelListView_sceytUiChannelListAutoDeletedChannelIcon)
+                        ?: context.getCompatDrawable(R.drawable.sceyt_ic_auto_deleted_channel)
+                            .applyTintBackgroundLayer(
+                                tintColor = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor),
+                                bgLayerId = R.id.backgroundLayer
+                            )
 
-                val unreadMentionIcon = array.getDrawable(R.styleable.ChannelListView_sceytUiChannelListUnreadMentionIcon)
+                val unreadMentionIcon =
+                    array.getDrawable(R.styleable.ChannelListView_sceytUiChannelListUnreadMentionIcon)
                         ?: context.getCompatDrawable(R.drawable.sceyt_ic_mention)
                             .applyTint(context, SceytChatUIKitTheme.colors.onPrimaryColor)
 
@@ -180,10 +200,13 @@ data class ChannelItemStyle(
                     .setFailedIconFromStyle(R.styleable.ChannelListView_sceytUiChannelListStatusFailedIndicator)
                     .build()
 
-                val statusIconSize = array.getDimensionPixelSize(R.styleable.ChannelListView_sceytUiChannelListStatusIndicatorSize,
-                    dpToPx(16f))
+                val statusIconSize = array.getDimensionPixelSize(
+                    R.styleable.ChannelListView_sceytUiChannelListStatusIndicatorSize,
+                    dpToPx(16f)
+                )
 
-                val deletedStateText = array.getString(R.styleable.ChannelListView_sceytUiChannelListMessageDeletedStateText)
+                val deletedStateText =
+                    array.getString(R.styleable.ChannelListView_sceytUiChannelListMessageDeletedStateText)
                         ?: context.getString(R.string.sceyt_message_was_deleted)
 
                 return ChannelItemStyle(
@@ -209,10 +232,13 @@ data class ChannelItemStyle(
                     unreadCountMutedStateTextStyle = buildUnreadCountMutedTextStyle(array),
                     mentionTextStyle = buildMentionTextStyle(array),
                     unreadMentionBackgroundStyle = buildUnreadMentionBackgroundStyle(array),
-                    unreadMentionMutedStateBackgroundStyle = buildUnreadMentionMutedBackgroundStyle(array),
+                    unreadMentionMutedStateBackgroundStyle = buildUnreadMentionMutedBackgroundStyle(
+                        array
+                    ),
                     avatarStyle = buildAvatarStyle(array),
                     channelTitleFormatter = SceytChatUIKit.formatters.channelNameFormatter,
                     channelDateFormatter = SceytChatUIKit.formatters.channelDateFormatter,
+                    channelLastMessageStatusAndDateFormatter = SceytChatUIKit.formatters.channelLastMessageStatusAndDateFormatter,
                     lastMessageSenderNameFormatter = SceytChatUIKit.formatters.channelLastMessageSenderNameFormatter,
                     mentionUserNameFormatter = SceytChatUIKit.formatters.mentionUserNameFormatter,
                     reactedUserNameFormatter = SceytChatUIKit.formatters.reactedUserNameFormatter,

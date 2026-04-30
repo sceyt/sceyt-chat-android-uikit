@@ -16,6 +16,7 @@ import com.sceyt.chatuikit.extensions.setOnClickListenerAvailable
 import com.sceyt.chatuikit.extensions.setOnLongClickListenerAvailable
 import com.sceyt.chatuikit.formatters.attributes.ChannelEventTitleFormatterAttributes
 import com.sceyt.chatuikit.formatters.attributes.ChannelItemSubtitleFormatterAttributes
+import com.sceyt.chatuikit.formatters.attributes.ChannelLastMessageStatusAndDateFormatterAttributes
 import com.sceyt.chatuikit.persistence.differs.ChannelDiff
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isDirect
@@ -26,10 +27,8 @@ import com.sceyt.chatuikit.presentation.components.channel_list.channels.listene
 import com.sceyt.chatuikit.presentation.custom_views.AvatarView
 import com.sceyt.chatuikit.presentation.custom_views.DecoratedTextView
 import com.sceyt.chatuikit.presentation.custom_views.PresenceStateIndicatorView
-import com.sceyt.chatuikit.presentation.extensions.isSystemMessage
 import com.sceyt.chatuikit.presentation.extensions.setChannelMessageDateAndStatusIcon
 import com.sceyt.chatuikit.styles.channel.ChannelItemStyle
-import java.util.Date
 
 open class ChannelViewHolder(
     private val binding: SceytItemChannelBinding,
@@ -168,14 +167,16 @@ open class ChannelViewHolder(
         channel: SceytChannel,
         decoratedTextView: DecoratedTextView,
     ) {
-        val data = getDateData(channel)
-        val shouldShowStatus = data.second
+        val data = itemStyle.channelLastMessageStatusAndDateFormatter.format(
+            context = context,
+            from = ChannelLastMessageStatusAndDateFormatterAttributes(channel, itemStyle)
+        )
         channel.lastMessage.setChannelMessageDateAndStatusIcon(
             decoratedTextView = decoratedTextView,
             itemStyle = itemStyle,
-            dateText = data.first,
+            dateText = data.dateText,
             edited = false,
-            shouldShowStatus = shouldShowStatus
+            shouldShowStatus = data.shouldShowStatus
         )
     }
 
@@ -253,32 +254,6 @@ open class ChannelViewHolder(
                 users = channelEventData
             )
         )
-    }
-
-    protected open fun getDateData(channel: SceytChannel?): Pair<CharSequence, Boolean> {
-        if (channel == null) return Pair("", false)
-        var shouldShowStatus = true
-        val lastMsgCreatedAt = when {
-            channel.draftMessage != null -> {
-                shouldShowStatus = false
-                channel.draftMessage.createdAt
-            }
-
-            channel.lastMessage != null -> {
-                shouldShowStatus = !channel.lastMessage.isSystemMessage()
-                val lastMessageCreatedAt = channel.lastMessage.createdAt
-                val lastReactionCreatedAt = channel.newReactions?.maxByOrNull { it.id }?.createdAt
-                    ?: 0
-                if (lastReactionCreatedAt > lastMessageCreatedAt)
-                    lastReactionCreatedAt
-                else lastMessageCreatedAt
-            }
-
-            else -> channel.createdAt
-        }
-
-        val date = itemStyle.channelDateFormatter.format(context, Date(lastMsgCreatedAt))
-        return date to shouldShowStatus
     }
 
     protected open fun SceytItemChannelBinding.setChannelItemStyle() {
