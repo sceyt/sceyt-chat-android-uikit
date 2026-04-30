@@ -49,7 +49,6 @@ import com.sceyt.chatuikit.extensions.toSha256
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.database.dao.ChannelDao
-import com.sceyt.chatuikit.persistence.database.dao.ChannelSyncStateDao
 import com.sceyt.chatuikit.persistence.database.dao.ChatUserReactionDao
 import com.sceyt.chatuikit.persistence.database.dao.DraftMessageDao
 import com.sceyt.chatuikit.persistence.database.dao.GlobalSearchDao
@@ -66,6 +65,7 @@ import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
+import com.sceyt.chatuikit.persistence.logicimpl.sync.ChannelSyncStateStore
 import com.sceyt.chatuikit.persistence.mappers.createPendingChannel
 import com.sceyt.chatuikit.persistence.mappers.toChannel
 import com.sceyt.chatuikit.persistence.mappers.toChannelEntity
@@ -110,7 +110,7 @@ internal class PersistenceChannelsLogicImpl(
     private val chatUserReactionDao: ChatUserReactionDao,
     private val pendingReactionDao: PendingReactionDao,
     private val channelsCache: ChannelsCache,
-    private val channelSyncStateDao: ChannelSyncStateDao
+    private val channelSyncStateStore: ChannelSyncStateStore
 ) : PersistenceChannelsLogic, SceytKoinComponent {
 
     companion object {
@@ -1239,7 +1239,7 @@ internal class PersistenceChannelsLogicImpl(
         messageDao.deleteAllMessagesByChannel(channelId)
         rangeDao.deleteChannelLoadRanges(channelId)
         channelsCache.deleteChannel(channelId)
-        channelSyncStateDao.deleteChannelSyncState(channelId)
+        channelSyncStateStore.deleteSyncState(channelId)
     }
 
     private suspend fun deleteChannelsFromDbAndCache(channelIds: List<Long>) {
@@ -1248,7 +1248,7 @@ internal class PersistenceChannelsLogicImpl(
         messageDao.deleteAllChannelsMessages(channelIds)
         rangeDao.deleteChannelsLoadRanges(channelIds)
         channelsCache.deleteChannel(*channelIds.toLongArray())
-        channelSyncStateDao.deleteChannelSyncStates(channelIds)
+        channelSyncStateStore.deleteSyncStates(channelIds)
     }
 
     private suspend fun clearHistory(channelId: Long) {

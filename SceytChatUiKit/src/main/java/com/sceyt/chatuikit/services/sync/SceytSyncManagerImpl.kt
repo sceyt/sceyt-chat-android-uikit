@@ -5,11 +5,10 @@ import com.sceyt.chatuikit.config.ChannelListConfig
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.SyncResult
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
-import com.sceyt.chatuikit.persistence.database.dao.ChannelSyncStateDao
-import com.sceyt.chatuikit.persistence.database.entity.channel.ChannelSyncStateEntity
 import com.sceyt.chatuikit.persistence.extensions.safeResume
 import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
+import com.sceyt.chatuikit.persistence.logicimpl.sync.ChannelSyncStateStore
 import com.sceyt.chatuikit.presentation.common.collections.ConcurrentHashSet
 import com.sceyt.chatuikit.services.sync.SceytSyncManager.SyncResultData
 import kotlinx.coroutines.Dispatchers
@@ -25,7 +24,7 @@ import kotlin.coroutines.CoroutineContext
 internal class SceytSyncManagerImpl(
     private val channelInteractor: ChannelInteractor,
     private val messageInteractor: MessageInteractor,
-    private val channelSyncStateDao: ChannelSyncStateDao,
+    private val channelSyncStateStore: ChannelSyncStateStore,
 ) : SceytSyncManager {
 
     private var syncResultData: SyncResultData = SyncResultData()
@@ -122,8 +121,7 @@ internal class SceytSyncManagerImpl(
             return
 
         val lastMessageId = channel.lastMessage.id
-        val lastSyncMessageId = channelSyncStateDao.getLastSyncedMessageId(channel.id)
-        if (lastSyncMessageId == lastMessageId) {
+        if (channelSyncStateStore.isMessagesSynced(channel.id, lastMessageId)) {
             Log.d(TAG, "Messages are up to date, skipping sync for channel ${channel.id}")
             return
         }
@@ -151,12 +149,7 @@ internal class SceytSyncManagerImpl(
 
                 SyncResult.SuccessfullyFinished -> {
                     channel.lastMessage?.let { message ->
-                        channelSyncStateDao.upsertChannelSyncState(
-                            ChannelSyncStateEntity(
-                                channelId = channel.id,
-                                lastSyncedMessageId = message.id
-                            )
-                        )
+                        channelSyncStateStore.updateSyncState(channel.id, message.id)
                     }
                 }
 
