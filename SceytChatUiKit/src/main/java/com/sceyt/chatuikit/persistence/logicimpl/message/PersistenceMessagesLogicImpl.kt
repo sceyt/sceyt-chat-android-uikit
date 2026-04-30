@@ -30,6 +30,7 @@ import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.SendMessageResult
 import com.sceyt.chatuikit.data.models.SendMessageResult.Companion.toSendMessageResult
 import com.sceyt.chatuikit.data.models.SyncNearMessagesResult
+import com.sceyt.chatuikit.data.models.SyncResult
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.createErrorResponse
 import com.sceyt.chatuikit.data.models.isSuccess
@@ -73,6 +74,7 @@ import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceReactionsLogic
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
+import com.sceyt.chatuikit.persistence.logicimpl.sync.ChannelSyncStateStore
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.CheckDeletedMessagesUseCase
 import com.sceyt.chatuikit.persistence.mappers.addAttachmentMetadata
 import com.sceyt.chatuikit.persistence.mappers.existThumb
@@ -104,7 +106,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -131,6 +133,7 @@ internal class PersistenceMessagesLogicImpl(
     private val channelCache: ChannelsCache,
     private val messageLoadRangeUpdater: MessageLoadRangeUpdater,
     private val checkDeletedMessagesUseCase: CheckDeletedMessagesUseCase,
+    private val channelSyncStateStore: ChannelSyncStateStore
 ) : PersistenceMessagesLogic, SceytKoinComponent {
 
     private val persistenceChannelsLogic: PersistenceChannelsLogic by inject()
@@ -157,6 +160,7 @@ internal class PersistenceMessagesLogicImpl(
         messagesCache.add(channel.id, message)
         onMessageFlow.tryEmit(data)
         updateMessageLoadRangeOnMessageEvent(message, null)
+        channelSyncStateStore.updateSyncStateForMessage(channel.id, message.id)
 
         launch {
             if (message.incoming && sendDeliveryMarker)
@@ -343,29 +347,42 @@ internal class PersistenceMessagesLogicImpl(
         conversationId: Long,
         replyInThread: Boolean,
         messageId: Long,
-    ): Flow<SceytResponse<List<SceytMessage>>> = callbackFlow {
+    ): Flow<SyncResult<SceytMessage>> = flow {
         ConnectionEventManager.awaitToConnectSceyt()
-        messagesRepository.loadAllMessagesAfter(conversationId, replyInThread, messageId, 50)
-            .onCompletion { channel.close() }
-            .collect { (nextMessageId, response) ->
-                if (response is SceytResponse.Success) {
-                    response.data?.let { messages ->
-                        val updatedMessages = saveMessagesToDb(messages)
-                        messagesCache.upsertMessages(
-                            channelId = conversationId,
-                            message = updatedMessages.toTypedArray()
-                        )
-                        checkAndMarkChannelMessagesAsDelivered(conversationId, messages)
-                        updateMessageLoadRange(
-                            messageId = nextMessageId,
-                            channelId = conversationId,
-                            response = response
-                        )
-                    }
+        var cursorId = messageId
+
+        messagesRepository.syncMessagesAfterMessageId(
+            conversationId = conversationId,
+            replyInThread = replyInThread,
+            messageId = messageId,
+            limit = 50
+        ).collect { result ->
+            when (result) {
+                is SyncResult.Proportion -> {
+                    val updatedMessages = saveMessagesToDb(result.items)
+                    messagesCache.upsertMessages(
+                        channelId = conversationId,
+                        message = updatedMessages.toTypedArray()
+                    )
+                    checkAndMarkChannelMessagesAsDelivered(conversationId, result.items)
+                    updateMessageLoadRange(
+                        messageId = cursorId,
+                        channelId = conversationId,
+                        messages = updatedMessages
+                    )
+                    cursorId = updatedMessages.lastOrNull()?.id ?: cursorId
+                    emit(SyncResult.Proportion(updatedMessages))
                 }
-                trySend(response)
+
+                is SyncResult.SuccessfullyFinished -> {
+                    emit(SyncResult.SuccessfullyFinished)
+                }
+
+                is SyncResult.Error -> {
+                    emit(SyncResult.Error(result.error))
+                }
             }
-        awaitClose()
+        }
     }
 
     override suspend fun syncNearMessages(
@@ -400,7 +417,7 @@ internal class PersistenceMessagesLogicImpl(
             updateMessageLoadRange(
                 messageId = messageId,
                 channelId = conversationId,
-                response = response
+                messages = response.data
             )
         }
         return@withContext SyncNearMessagesResult(messageId, response, missingMessages)
@@ -1127,10 +1144,17 @@ internal class PersistenceMessagesLogicImpl(
                 )
 
                 trySend(response)
-                updateMessageLoadRange(messageId, conversationId, response.data)
 
-                // Mark messages as received
-                markMessagesAsDelivered(conversationId, response.data.data ?: emptyList())
+                response.data.onSuccessNotNull { messages ->
+                    updateMessageLoadRange(
+                        messageId = messageId,
+                        channelId = conversationId,
+                        messages = messages
+                    )
+
+                    // Mark messages as received
+                    markMessagesAsDelivered(conversationId, messages)
+                }
             }
 
             channel.close()
@@ -1141,14 +1165,13 @@ internal class PersistenceMessagesLogicImpl(
     private suspend fun updateMessageLoadRange(
         messageId: Long,
         channelId: Long,
-        response: SceytResponse<List<SceytMessage>>,
+        messages: List<SceytMessage>?,
     ) {
-        val data = (response as? SceytResponse.Success)?.data ?: return
-        if (data.isEmpty()) return
+        if (messages.isNullOrEmpty()) return
         messageLoadRangeUpdater.updateLoadRange(
             messageId = messageId,
-            start = data.first().id,
-            end = data.last().id,
+            start = messages.first().id,
+            end = messages.last().id,
             channelId = channelId
         )
     }

@@ -28,11 +28,11 @@ import com.sceyt.chatuikit.data.models.SceytPagingResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.SendMessageResult
 import com.sceyt.chatuikit.data.models.SyncNearMessagesResult
+import com.sceyt.chatuikit.data.models.SyncResult
 import com.sceyt.chatuikit.data.models.channels.ChannelInviteKeyData
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
 import com.sceyt.chatuikit.data.models.channels.DraftMessage
 import com.sceyt.chatuikit.data.models.channels.EditChannelData
-import com.sceyt.chatuikit.data.models.channels.GetAllChannelsResponse
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.messages.AttachmentWithUserData
@@ -229,7 +229,7 @@ internal class PersistenceMiddleWareImpl(
         return channelLogic.getChannelsBySQLiteQuery(query)
     }
 
-    override suspend fun syncChannels(config: ChannelListConfig): Flow<GetAllChannelsResponse> {
+    override suspend fun syncChannels(config: ChannelListConfig): Flow<SyncResult<SceytChannel>> {
         return channelLogic.syncChannels(config)
     }
 
@@ -526,7 +526,7 @@ internal class PersistenceMiddleWareImpl(
     override suspend fun syncMessagesAfterMessageId(
         conversationId: Long, replyInThread: Boolean,
         messageId: Long,
-    ): Flow<SceytResponse<List<SceytMessage>>> {
+    ): Flow<SyncResult<SceytMessage>> {
         return messagesLogic.syncMessagesAfterMessageId(conversationId, replyInThread, messageId)
     }
 
