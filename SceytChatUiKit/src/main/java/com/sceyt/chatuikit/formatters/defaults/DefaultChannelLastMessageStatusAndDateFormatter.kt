@@ -15,25 +15,33 @@ open class DefaultChannelLastMessageStatusAndDateFormatter :
         from: ChannelLastMessageStatusAndDateFormatterAttributes,
     ): ChannelLastMessageStatusAndDate {
         val channel = from.channel
-        var shouldShowStatus = true
-        val timestamp = when {
+
+        val (timestamp, shouldShowStatus) = when {
             channel.draftMessage != null -> {
-                shouldShowStatus = false
-                channel.draftMessage.createdAt
+                channel.draftMessage.createdAt to false
             }
 
             channel.lastMessage != null -> {
-                shouldShowStatus = !channel.lastMessage.isSystemMessage()
-                val lastMessageCreatedAt = channel.lastMessage.createdAt
-                val lastReactionCreatedAt =
-                    channel.newReactions?.maxByOrNull { it.id }?.createdAt ?: 0
-                if (lastReactionCreatedAt > lastMessageCreatedAt) lastReactionCreatedAt
-                else lastMessageCreatedAt
+                val lastMessage = channel.lastMessage
+                val lastMessageCreatedAt = lastMessage.createdAt
+                val lastReactionCreatedAt = channel.newReactions
+                    ?.maxByOrNull { it.id }
+                    ?.createdAt ?: 0L
+
+                maxOf(lastMessageCreatedAt, lastReactionCreatedAt) to !lastMessage.isSystemMessage()
             }
 
-            else -> channel.createdAt
+            else -> channel.createdAt to true
         }
-        val dateText = from.channelItemStyle.channelDateFormatter.format(context, Date(timestamp))
-        return ChannelLastMessageStatusAndDate(dateText, shouldShowStatus)
+
+        val dateText = from.channelItemStyle.channelDateFormatter.format(
+            context,
+            Date(timestamp)
+        )
+
+        return ChannelLastMessageStatusAndDate(
+            dateText = dateText,
+            shouldShowStatus = shouldShowStatus
+        )
     }
 }
