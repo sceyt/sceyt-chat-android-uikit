@@ -64,7 +64,8 @@ data class ChannelInfoVoiceStyle(
                 textStyle = TextStyle(
                     color = context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor),
                     font = R.font.roboto_medium
-                )
+                ),
+                dateFormatter = SceytChatUIKit.formatters.channelInfoDateSeparatorFormatter
             )
             val itemStyle = ChannelInfoVoiceItemStyle.Builder(context, attributeSet)
                 .build()

@@ -11,6 +11,7 @@ import com.sceyt.chatuikit.data.models.SceytPagingResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.SendMessageResult
 import com.sceyt.chatuikit.data.models.SyncNearMessagesResult
+import com.sceyt.chatuikit.data.models.SyncResult
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
@@ -78,7 +79,7 @@ interface MessageInteractor {
         conversationId: Long,
         replyInThread: Boolean,
         messageId: Long,
-    ): Flow<SceytResponse<List<SceytMessage>>>
+    ): Flow<SyncResult<SceytMessage>>
 
     suspend fun syncNearMessages(
         conversationId: Long,

@@ -52,6 +52,7 @@ import com.sceyt.chatuikit.persistence.logicimpl.channel.PersistenceChannelsLogi
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessageLoadRangeUpdater
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
 import com.sceyt.chatuikit.persistence.logicimpl.message.PersistenceMessagesLogicImpl
+import com.sceyt.chatuikit.persistence.logicimpl.sync.ChannelSyncStateStore
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.AddPollVoteUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.CheckDeletedMessagesUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.CheckDeletedNearMessagesUseCase
@@ -69,7 +70,8 @@ import com.sceyt.chatuikit.persistence.logicimpl.usecases.UpdatePollUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.UpdatePollVotesUseCase
 import com.sceyt.chatuikit.push.service.PushService
 import com.sceyt.chatuikit.push.service.PushServiceImpl
-import com.sceyt.chatuikit.services.SceytSyncManager
+import com.sceyt.chatuikit.services.sync.SceytSyncManager
+import com.sceyt.chatuikit.services.sync.SceytSyncManagerImpl
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -84,9 +86,10 @@ import java.util.concurrent.Executors
 import kotlin.coroutines.CoroutineContext
 
 internal val appModules = module {
-    singleOf(::SceytSyncManager)
+    singleOf(::SceytSyncManagerImpl) bind SceytSyncManager::class
     singleOf(::FileTransferServiceImpl) bind FileTransferService::class
     singleOf(::MessageLoadRangeUpdater)
+    singleOf(::ChannelSyncStateStore)
     singleOf(::PushServiceImpl) bind PushService::class
     singleOf(::RealtimeNotificationManagerImpl) bind RealtimeNotificationManager::class
 }
@@ -117,6 +120,7 @@ internal fun databaseModule(enableDatabase: Boolean) = module {
     singleOf(::provideDatabase)
     singleOf(::DatabaseCleanerImpl) bind DatabaseCleaner::class
     single { get<SceytDatabase>().channelDao() }
+    single { get<SceytDatabase>().channelSyncStateDao() }
     single { get<SceytDatabase>().messageDao() }
     single { get<SceytDatabase>().globalSearchDao() }
     single { get<SceytDatabase>().attachmentsDao() }

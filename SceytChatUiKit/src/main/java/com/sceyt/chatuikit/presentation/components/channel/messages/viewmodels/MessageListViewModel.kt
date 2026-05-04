@@ -84,7 +84,7 @@ import com.sceyt.chatuikit.presentation.extensions.isNotPending
 import com.sceyt.chatuikit.presentation.helpers.DebounceHelper
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import com.sceyt.chatuikit.presentation.root.PageState
-import com.sceyt.chatuikit.services.SceytSyncManager
+import com.sceyt.chatuikit.services.sync.SceytSyncManager
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job

@@ -27,11 +27,11 @@ import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.chatuikit.data.models.SDKErrorTypeEnum
 import com.sceyt.chatuikit.data.models.SceytPagingResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.data.models.SyncResult
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
 import com.sceyt.chatuikit.data.models.channels.DraftMessage
 import com.sceyt.chatuikit.data.models.channels.EditChannelData
-import com.sceyt.chatuikit.data.models.channels.GetAllChannelsResponse
 import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
@@ -65,6 +65,7 @@ import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
+import com.sceyt.chatuikit.persistence.logicimpl.sync.ChannelSyncStateStore
 import com.sceyt.chatuikit.persistence.mappers.createPendingChannel
 import com.sceyt.chatuikit.persistence.mappers.toChannel
 import com.sceyt.chatuikit.persistence.mappers.toChannelEntity
@@ -109,6 +110,7 @@ internal class PersistenceChannelsLogicImpl(
     private val chatUserReactionDao: ChatUserReactionDao,
     private val pendingReactionDao: PendingReactionDao,
     private val channelsCache: ChannelsCache,
+    private val channelSyncStateStore: ChannelSyncStateStore
 ) : PersistenceChannelsLogic, SceytKoinComponent {
 
     companion object {
@@ -480,15 +482,15 @@ internal class PersistenceChannelsLogicImpl(
         channelsRepository.getAllChannels(config.queryLimit)
             .collect { response ->
                 when (response) {
-                    is GetAllChannelsResponse.Proportion -> {
-                        val filledChannels = saveChannelsToDb(response.channels)
+                    is SyncResult.Proportion -> {
+                        val filledChannels = saveChannelsToDb(response.items)
                         syncedChannels.addAll(filledChannels)
                         messageLogic.onSyncedChannels(filledChannels)
                         channelsCache.updateChannel(config, *filledChannels.toTypedArray())
                         trySend(response)
                     }
 
-                    is GetAllChannelsResponse.SuccessfullyFinished -> {
+                    is SyncResult.SuccessfullyFinished -> {
                         if (syncedChannels.isNotEmpty()) {
                             val syncedIds = syncedChannels.map { it.id }
                             val deletedChannelIds =
@@ -523,7 +525,7 @@ internal class PersistenceChannelsLogicImpl(
                         channel.close()
                     }
 
-                    is GetAllChannelsResponse.Error -> {
+                    is SyncResult.Error -> {
                         trySend(response)
                         channel.close()
                         SceytLog.e(TAG, "syncChannelsResult: syncChannels error: ${response.error}")
@@ -1237,6 +1239,7 @@ internal class PersistenceChannelsLogicImpl(
         messageDao.deleteAllMessagesByChannel(channelId)
         rangeDao.deleteChannelLoadRanges(channelId)
         channelsCache.deleteChannel(channelId)
+        channelSyncStateStore.deleteSyncState(channelId)
     }
 
     private suspend fun deleteChannelsFromDbAndCache(channelIds: List<Long>) {
@@ -1245,6 +1248,7 @@ internal class PersistenceChannelsLogicImpl(
         messageDao.deleteAllChannelsMessages(channelIds)
         rangeDao.deleteChannelsLoadRanges(channelIds)
         channelsCache.deleteChannel(*channelIds.toLongArray())
+        channelSyncStateStore.deleteSyncStates(channelIds)
     }
 
     private suspend fun clearHistory(channelId: Long) {

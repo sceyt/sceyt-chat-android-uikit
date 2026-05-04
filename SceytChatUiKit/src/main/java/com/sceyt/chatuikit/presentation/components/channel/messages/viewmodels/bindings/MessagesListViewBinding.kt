@@ -62,7 +62,7 @@ import com.sceyt.chatuikit.presentation.extensions.isNotPending
 import com.sceyt.chatuikit.presentation.extensions.isPending
 import com.sceyt.chatuikit.presentation.extensions.isSelfDestructed
 import com.sceyt.chatuikit.presentation.root.PageState
-import com.sceyt.chatuikit.services.SceytSyncManager
+import com.sceyt.chatuikit.services.sync.SceytSyncManager
 import com.sceyt.chatuikit.styles.extensions.messages_list.setEmptyStateForSelfChannel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
