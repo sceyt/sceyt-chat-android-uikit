@@ -51,7 +51,8 @@ data class MediaSearchPageStyle(
                     textStyle = TextStyle(
                         color = context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor),
                         font = R.font.roboto_medium
-                    )
+                    ),
+                    dateFormatter = SceytChatUIKit.formatters.messageDateSeparatorFormatter
                 ),
                 mediaItemStyle = MediaSearchMessageItemStyle.Builder(context).build(),
                 messageItemStyle = ChatsSearchMessageItemStyle.Builder(context).build(),
