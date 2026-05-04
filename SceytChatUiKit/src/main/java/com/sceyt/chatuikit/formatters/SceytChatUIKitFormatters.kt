@@ -9,6 +9,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytPollDetails
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.formatters.attributes.ChannelEventTitleFormatterAttributes
 import com.sceyt.chatuikit.formatters.attributes.ChannelItemSubtitleFormatterAttributes
+import com.sceyt.chatuikit.formatters.attributes.ChannelLastMessageStatusAndDateFormatterAttributes
 import com.sceyt.chatuikit.formatters.attributes.DraftMessageBodyFormatterAttributes
 import com.sceyt.chatuikit.formatters.attributes.MessageBodyFormatterAttributes
 import com.sceyt.chatuikit.formatters.attributes.SearchMessageResultFormatterAttributes
@@ -22,6 +23,7 @@ import com.sceyt.chatuikit.formatters.defaults.DefaultChannelInfoDateSeparatorFo
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelInfoFileSubtitleFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelInfoVoiceSubtitleFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelLastMessageSenderNameFormatter
+import com.sceyt.chatuikit.formatters.defaults.DefaultChannelLastMessageStatusAndDateFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelListChannelEventTitleFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelListSubtitleFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelNameFormatter
@@ -44,9 +46,10 @@ import com.sceyt.chatuikit.formatters.defaults.DefaultPollResultVoteCountFormatt
 import com.sceyt.chatuikit.formatters.defaults.DefaultPollTypeFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultPollVoteCountFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultPollVoteTimeDateFormatter
-import com.sceyt.chatuikit.formatters.defaults.DefaultSelfDestructedMessageBodyFormatter
+import com.sceyt.chatuikit.formatters.defaults.DefaultSearchMessageDateFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultSearchMessageResultBodyFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultSearchMessageSenderNameFormatter
+import com.sceyt.chatuikit.formatters.defaults.DefaultSelfDestructedMessageBodyFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultSystemMessageBodyFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUnreadCountFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUnsupportedMessageBodyFormatter
@@ -111,6 +114,10 @@ class SceytChatUIKitFormatters {
 
     var channelDateFormatter: Formatter<Date> by lazyVar {
         DefaultChannelDateFormatter()
+    }
+
+    var channelLastMessageStatusAndDateFormatter: TypedFormatter<ChannelLastMessageStatusAndDateFormatterAttributes, ChannelLastMessageStatusAndDate> by lazyVar {
+        DefaultChannelLastMessageStatusAndDateFormatter()
     }
 
     var channelLastMessageSenderNameFormatter: Formatter<SceytChannel> by lazyVar {
@@ -254,5 +261,9 @@ class SceytChatUIKitFormatters {
 
     var searchMessageSenderNameFormatter: Formatter<SceytMessage> by lazyVar {
         DefaultSearchMessageSenderNameFormatter()
+    }
+
+    var searchMessageDateFormatter: Formatter<Date> by lazyVar {
+        DefaultSearchMessageDateFormatter()
     }
 }

@@ -45,7 +45,8 @@ data class LinksSearchPageStyle(
                     textStyle = TextStyle(
                         color = context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor),
                         font = R.font.roboto_medium
-                    )
+                    ),
+                    dateFormatter = SceytChatUIKit.formatters.messageDateSeparatorFormatter
                 ),
                 linkItemStyle = ChannelInfoLinkItemStyle.Builder(context, null).build(),
             ).let { styleCustomizer.apply(context, it) }
