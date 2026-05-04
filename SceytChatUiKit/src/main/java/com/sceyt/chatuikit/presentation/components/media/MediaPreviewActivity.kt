@@ -28,6 +28,7 @@ import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.toIntentPayload
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
@@ -124,9 +125,14 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
     private fun initViewModel() {
         viewModel.mediaItems.onEach { items ->
             if (mediaAdapter == null) {
+                SceytLog.w("MediaPreviewBug", "initViewModel first emission: itemsCount=${items.size}, initialScrollIndex=${viewModel.initialScrollIndex}, firstItemId=${items.firstOrNull()?.attachment?.id}, openedAttachmentId=${viewModel.openedWithAttachment?.id}")
                 initMediaAdapter(items)
             } else {
-                mediaAdapter?.submitList(items)
+                SceytLog.w("MediaPreviewBug", "initViewModel subsequent emission: itemsCount=${items.size}, pendingScrollIndex=${viewModel.initialScrollIndex}")
+                mediaAdapter?.submitList(items) {
+                    val idx = viewModel.consumePendingScrollIndex()
+                    if (idx > 0) binding.rvMedia.scrollToPosition(idx)
+                }
             }
         }.launchIn(lifecycleScope)
     }
@@ -155,6 +161,7 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
     private fun initPageWithData() {
         val items = viewModel.mediaItems.value
         val initialItem = items.getOrNull(viewModel.initialScrollIndex) ?: items.firstOrNull()
+        SceytLog.w("MediaPreviewBug", "initPageWithData: itemsCount=${items.size}, initialScrollIndex=${viewModel.initialScrollIndex}, openedAttachmentId=${viewModel.openedWithAttachment?.id}, selectedItemId=${initialItem?.attachment?.id}")
         initialItem?.let { loadMediaDetail(it) }
         startSharedTransitionWhenReady()
     }
@@ -206,7 +213,9 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
             adapter.submitList(data)
         }
 
-        val scrollIndex = viewModel.initialScrollIndex
+        val scrollIndex = viewModel.consumePendingScrollIndex()
+            .takeIf { it >= 0 } ?: viewModel.initialScrollIndex
+        SceytLog.w("MediaPreviewBug", "initMediaAdapter: itemsCount=${data.size}, scrollIndex=$scrollIndex, openedAttachmentId=${viewModel.openedWithAttachment?.id}, itemAtScrollIndex=${data.getOrNull(scrollIndex)?.attachment?.id}")
         if (scrollIndex > 0) binding.rvMedia.scrollToPosition(scrollIndex)
 
         binding.rvMedia.apply {

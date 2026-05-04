@@ -3,6 +3,7 @@ package com.sceyt.chatuikit.presentation.components.media.viewmodel
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType
+import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNear
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadPrev
@@ -21,6 +22,7 @@ import com.sceyt.chatuikit.presentation.components.media.MediaPreviewTransferHol
 import com.sceyt.chatuikit.presentation.components.media.adapter.MediaItem
 import com.sceyt.chatuikit.presentation.components.media.adapter.MediaItemType
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,6 +39,7 @@ class MediaViewModel(
     private val mediaTypes: List<String>,
     openedAttachmentData: AttachmentWithUserData? = null,
     preloadedData: MediaPreviewTransferHolder.PreloadedData? = null,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : BaseViewModel(), SceytKoinComponent {
 
     private val messageInteractor: MessageInteractor by inject()
@@ -44,7 +47,19 @@ class MediaViewModel(
     private val fileTransferService: FileTransferService by inject()
 
     val openedWithAttachment = openedAttachmentData?.attachment
-    val initialScrollIndex: Int = preloadedData?.initialIndex ?: 0
+    var initialScrollIndex: Int = preloadedData?.initialIndex ?: 0
+        private set
+
+    // One-time scroll correction for LoadNear. -1 = nothing pending.
+    // initialScrollSet prevents a late server response from re-scrolling after the user has navigated.
+    private var pendingInitialScrollIndex: Int = -1
+    private var initialScrollSet = false
+
+    fun consumePendingScrollIndex(): Int {
+        val idx = pendingInitialScrollIndex
+        pendingInitialScrollIndex = -1
+        return idx
+    }
 
     private val isPreloaded = preloadedData != null
 
@@ -56,18 +71,21 @@ class MediaViewModel(
     val mediaItems: StateFlow<List<MediaItem>> = _mediaItems.asStateFlow()
 
     init {
+        SceytLog.w("MediaPreviewBug", "ViewModel init: isPreloaded=$isPreloaded, initialScrollIndex=$initialScrollIndex, openedAttachmentId=${openedWithAttachment?.id}, initialItemsCount=${initialItems.size}")
         if (!isPreloaded) loadInitial()
     }
 
     private fun loadInitial() {
         val attachment = openedWithAttachment
         if (attachment == null || attachment.id == null || attachment.id == 0L) {
+            SceytLog.i("MediaPreviewBug", "Attachment ID is invalid, loading initial attachments without anchor.")
             loadPrevAttachments(
                 lastAttachmentId = 0,
                 isLoadingMore = false,
                 offset = 0,
             )
         } else {
+            SceytLog.i("MediaPreviewBug", "Loading initial attachments near attachment ID: ${attachment.id}")
             loadNearAttachments(lastAttachmentId = attachment.id)
         }
     }
@@ -156,7 +174,7 @@ class MediaViewModel(
         setPagingLoadingStarted(loadType)
         notifyPageLoadingState(isLoadingMore)
 
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             request().collect(::handlePaginationResponse)
         }
     }
@@ -207,7 +225,16 @@ class MediaViewModel(
 
         withContext(Dispatchers.Main) {
             if (response.hasDiff) {
-                _mediaItems.update { newItems.applyDisplayOrder() }
+                val ordered = newItems.applyDisplayOrder()
+                if (response.loadType == LoadNear && !initialScrollSet) {
+                    val pos = ordered.indexOfFirst { it.attachment.id == openedWithAttachment?.id }
+                    if (pos >= 0) {
+                        initialScrollIndex = pos
+                        pendingInitialScrollIndex = pos
+                        initialScrollSet = true
+                    }
+                }
+                _mediaItems.update { ordered }
             }
 
             notifyPageStateWithResponse(
@@ -224,7 +251,16 @@ class MediaViewModel(
     ) {
         when (loadType) {
             LoadNear -> {
-                _mediaItems.update { newItems.applyDisplayOrder() }
+                val ordered = newItems.applyDisplayOrder()
+                val openedId = openedWithAttachment?.id
+                val posInNewList = ordered.indexOfFirst { it.attachment.id == openedId }
+                SceytLog.w("MediaPreviewBug", "LoadNear DB: totalItems=${ordered.size}, openedAttachmentId=$openedId, positionInList=$posInNewList, initialScrollIndex=$initialScrollIndex")
+                if (posInNewList >= 0 && !initialScrollSet) {
+                    initialScrollIndex = posInNewList
+                    pendingInitialScrollIndex = posInNewList
+                    initialScrollSet = true
+                }
+                _mediaItems.update { ordered }
             }
 
             LoadPrev -> {
