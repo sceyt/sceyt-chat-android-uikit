@@ -71,21 +71,30 @@ class MediaViewModel(
     val mediaItems: StateFlow<List<MediaItem>> = _mediaItems.asStateFlow()
 
     init {
-        SceytLog.w("MediaPreviewBug", "ViewModel init: isPreloaded=$isPreloaded, initialScrollIndex=$initialScrollIndex, openedAttachmentId=${openedWithAttachment?.id}, initialItemsCount=${initialItems.size}")
+        SceytLog.w(
+            "MediaPreviewBug",
+            "ViewModel init: isPreloaded=$isPreloaded, initialScrollIndex=$initialScrollIndex, openedAttachmentId=${openedWithAttachment?.id}, initialItemsCount=${initialItems.size}"
+        )
         if (!isPreloaded) loadInitial()
     }
 
     private fun loadInitial() {
         val attachment = openedWithAttachment
         if (attachment == null || attachment.id == null || attachment.id == 0L) {
-            SceytLog.i("MediaPreviewBug", "Attachment ID is invalid, loading initial attachments without anchor.")
+            SceytLog.i(
+                "MediaPreviewBug",
+                "Attachment ID is invalid, loading initial attachments without anchor."
+            )
             loadPrevAttachments(
                 lastAttachmentId = 0,
                 isLoadingMore = false,
                 offset = 0,
             )
         } else {
-            SceytLog.i("MediaPreviewBug", "Loading initial attachments near attachment ID: ${attachment.id}")
+            SceytLog.i(
+                "MediaPreviewBug",
+                "Loading initial attachments near attachment ID: ${attachment.id}"
+            )
             loadNearAttachments(lastAttachmentId = attachment.id)
         }
     }
@@ -254,7 +263,10 @@ class MediaViewModel(
                 val ordered = newItems.applyDisplayOrder()
                 val openedId = openedWithAttachment?.id
                 val posInNewList = ordered.indexOfFirst { it.attachment.id == openedId }
-                SceytLog.w("MediaPreviewBug", "LoadNear DB: totalItems=${ordered.size}, openedAttachmentId=$openedId, positionInList=$posInNewList, initialScrollIndex=$initialScrollIndex")
+                SceytLog.w(
+                    "MediaPreviewBug",
+                    "LoadNear DB: totalItems=${ordered.size}, openedAttachmentId=$openedId, positionInList=$posInNewList, initialScrollIndex=$initialScrollIndex"
+                )
                 if (posInNewList >= 0 && !initialScrollSet) {
                     initialScrollIndex = posInNewList
                     pendingInitialScrollIndex = posInNewList
