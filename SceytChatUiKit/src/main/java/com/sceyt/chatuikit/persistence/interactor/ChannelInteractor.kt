@@ -9,7 +9,7 @@ import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
 import com.sceyt.chatuikit.data.models.channels.DraftMessage
 import com.sceyt.chatuikit.data.models.channels.EditChannelData
-import com.sceyt.chatuikit.data.models.channels.GetAllChannelsResponse
+import com.sceyt.chatuikit.data.models.SyncResult
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import kotlinx.coroutines.flow.Flow
 
@@ -37,7 +37,7 @@ interface ChannelInteractor {
     ): Flow<PaginationResponse<SceytChannel>>
 
     suspend fun getChannelsBySQLiteQuery(query: SimpleSQLiteQuery): List<SceytChannel>
-    suspend fun syncChannels(config: ChannelListConfig): Flow<GetAllChannelsResponse>
+    suspend fun syncChannels(config: ChannelListConfig): Flow<SyncResult<SceytChannel>>
     suspend fun markChannelAsRead(channelId: Long): SceytResponse<SceytChannel>
     suspend fun markChannelAsUnRead(channelId: Long): SceytResponse<SceytChannel>
     suspend fun clearHistory(channelId: Long, forEveryone: Boolean): SceytResponse<Long>

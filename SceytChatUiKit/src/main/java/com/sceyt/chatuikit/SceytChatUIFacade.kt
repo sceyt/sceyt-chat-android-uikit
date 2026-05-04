@@ -25,7 +25,7 @@ import com.sceyt.chatuikit.persistence.interactor.UserInteractor
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.persistence.repositories.SceytSharedPreference
 import com.sceyt.chatuikit.push.delegates.FirebaseMessagingDelegate
-import com.sceyt.chatuikit.services.SceytSyncManager
+import com.sceyt.chatuikit.services.sync.SceytSyncManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

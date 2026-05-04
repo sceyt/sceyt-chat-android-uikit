@@ -19,7 +19,7 @@ import java.util.Date
 data class DateSeparatorStyle(
     val backgroundStyle: BackgroundStyle,
     val textStyle: TextStyle,
-    val dateFormatter: Formatter<Date> = SceytChatUIKit.formatters.messageDateSeparatorFormatter
+    val dateFormatter: Formatter<Date>
 ) {
     companion object {
         var styleCustomizer = StyleCustomizer<DateSeparatorStyle> { _, style -> style }

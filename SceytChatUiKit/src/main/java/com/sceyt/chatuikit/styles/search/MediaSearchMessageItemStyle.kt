@@ -45,7 +45,7 @@ data class MediaSearchMessageItemStyle(
                 dateTextStyle = buildMetaTextStyle(),
                 avatarStyle = buildAvatarStyle(),
                 channelNameFormatter = SceytChatUIKit.formatters.channelNameFormatter,
-                messageDateFormatter = SceytChatUIKit.formatters.messageDateFormatter,
+                messageDateFormatter = SceytChatUIKit.formatters.searchMessageDateFormatter,
                 searchMessageResultBodyFormatter = SceytChatUIKit.formatters.searchMessageResultBodyFormatter,
                 channelAvatarRenderer = SceytChatUIKit.renderers.channelAvatarRenderer,
             ).let { styleCustomizer.apply(context, it) }

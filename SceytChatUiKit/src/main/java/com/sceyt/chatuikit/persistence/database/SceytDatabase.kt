@@ -9,6 +9,7 @@ import com.sceyt.chatuikit.persistence.database.converters.ListStringConverter
 import com.sceyt.chatuikit.persistence.database.converters.MessageConverter
 import com.sceyt.chatuikit.persistence.database.dao.AttachmentDao
 import com.sceyt.chatuikit.persistence.database.dao.ChannelDao
+import com.sceyt.chatuikit.persistence.database.dao.ChannelSyncStateDao
 import com.sceyt.chatuikit.persistence.database.dao.ChatUserReactionDao
 import com.sceyt.chatuikit.persistence.database.dao.DraftMessageDao
 import com.sceyt.chatuikit.persistence.database.dao.FileChecksumDao
@@ -27,6 +28,7 @@ import com.sceyt.chatuikit.persistence.database.dao.ReactionDao
 import com.sceyt.chatuikit.persistence.database.dao.UserDao
 import com.sceyt.chatuikit.persistence.database.entity.FileChecksumEntity
 import com.sceyt.chatuikit.persistence.database.entity.channel.ChannelEntity
+import com.sceyt.chatuikit.persistence.database.entity.channel.ChannelSyncStateEntity
 import com.sceyt.chatuikit.persistence.database.entity.channel.ChatUserReactionEntity
 import com.sceyt.chatuikit.persistence.database.entity.channel.UserChatLinkEntity
 import com.sceyt.chatuikit.persistence.database.entity.link.LinkDetailsEntity
@@ -57,6 +59,7 @@ import com.sceyt.chatuikit.persistence.database.entity.user.UserMetadataEntity
 @Database(
     entities = [
         ChannelEntity::class,
+        ChannelSyncStateEntity::class,
         UserEntity::class,
         UserChatLinkEntity::class,
         MessageEntity::class,
@@ -85,7 +88,7 @@ import com.sceyt.chatuikit.persistence.database.entity.user.UserMetadataEntity
         PendingPollVoteEntity::class,
         MessageFtsEntity::class,
     ],
-    version = 29,
+    version = 30,
     autoMigrations = [
         AutoMigration(from = 1, to = 2),
         AutoMigration(from = 2, to = 3),
@@ -112,12 +115,14 @@ import com.sceyt.chatuikit.persistence.database.entity.user.UserMetadataEntity
         AutoMigration(from = 25, to = 26),
         AutoMigration(from = 26, to = 27),
         AutoMigration(from = 27, to = 28),
+        AutoMigration(from = 29, to = 30),
     ]
 )
 
 @TypeConverters(ChannelConverter::class, MessageConverter::class, ListStringConverter::class)
 internal abstract class SceytDatabase : RoomDatabase() {
     abstract fun channelDao(): ChannelDao
+    abstract fun channelSyncStateDao(): ChannelSyncStateDao
     abstract fun messageDao(): MessageDao
     abstract fun globalSearchDao(): GlobalSearchDao
     abstract fun attachmentsDao(): AttachmentDao
