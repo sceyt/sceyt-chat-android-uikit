@@ -9,8 +9,10 @@ import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadPrev
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.AttachmentWithUserData
+import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.koin.SceytKoinComponent
+import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.persistence.interactor.AttachmentInteractor
@@ -21,6 +23,7 @@ import com.sceyt.chatuikit.presentation.components.media.MediaPreviewTransferHol
 import com.sceyt.chatuikit.presentation.components.media.adapter.MediaItem
 import com.sceyt.chatuikit.presentation.components.media.adapter.MediaItemType
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,6 +40,7 @@ class MediaViewModel(
     private val mediaTypes: List<String>,
     openedAttachmentData: AttachmentWithUserData? = null,
     preloadedData: MediaPreviewTransferHolder.PreloadedData? = null,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : BaseViewModel(), SceytKoinComponent {
 
     private val messageInteractor: MessageInteractor by inject()
@@ -44,7 +48,19 @@ class MediaViewModel(
     private val fileTransferService: FileTransferService by inject()
 
     val openedWithAttachment = openedAttachmentData?.attachment
-    val initialScrollIndex: Int = preloadedData?.initialIndex ?: 0
+    var initialScrollIndex: Int = preloadedData?.initialIndex ?: 0
+        private set
+
+    // One-time scroll correction for LoadNear. -1 = nothing pending.
+    // initialScrollSet prevents repeated correction scheduling across DB/server responses.
+    private var pendingInitialScrollIndex: Int = -1
+    private var initialScrollSet = false
+
+    fun consumePendingScrollIndex(): Int {
+        val idx = pendingInitialScrollIndex
+        pendingInitialScrollIndex = -1
+        return idx
+    }
 
     private val isPreloaded = preloadedData != null
 
@@ -156,7 +172,7 @@ class MediaViewModel(
         setPagingLoadingStarted(loadType)
         notifyPageLoadingState(isLoadingMore)
 
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             request().collect(::handlePaginationResponse)
         }
     }
@@ -207,7 +223,14 @@ class MediaViewModel(
 
         withContext(Dispatchers.Main) {
             if (response.hasDiff) {
-                _mediaItems.update { newItems.applyDisplayOrder() }
+                val ordered = newItems.applyDisplayOrder()
+                if (response.loadType == LoadNear && !initialScrollSet) {
+                    val pos = ordered.indexOfFirst { it.attachment.id == openedWithAttachment?.id }
+                    if (pos >= 0) {
+                        setPendingInitialScroll(pos, source = "server")
+                    }
+                }
+                _mediaItems.update { ordered }
             }
 
             notifyPageStateWithResponse(
@@ -224,7 +247,13 @@ class MediaViewModel(
     ) {
         when (loadType) {
             LoadNear -> {
-                _mediaItems.update { newItems.applyDisplayOrder() }
+                val ordered = newItems.applyDisplayOrder()
+                val openedId = openedWithAttachment?.id
+                val posInNewList = ordered.indexOfFirst { it.attachment.id == openedId }
+                if (posInNewList >= 0 && !initialScrollSet) {
+                    setPendingInitialScroll(posInNewList, source = "db")
+                }
+                _mediaItems.update { ordered }
             }
 
             LoadPrev -> {
@@ -327,5 +356,27 @@ class MediaViewModel(
 
     suspend fun getMessageById(messageId: Long): SceytMessage? {
         return messageInteractor.getMessageFromDbById(messageId)
+    }
+
+    private fun setPendingInitialScroll(
+        position: Int,
+        source: String,
+    ) {
+        initialScrollIndex = position
+        pendingInitialScrollIndex = position
+        initialScrollSet = true
+        SceytLog.i(
+            LOG_TAG,
+            "Set pending initial scroll source=$source index=$position openedAttachment=${openedWithAttachment.toLogString()}"
+        )
+    }
+
+    private fun SceytAttachment?.toLogString(): String {
+        this ?: return "null"
+        return "id=$id, messageId=$messageId, messageTid=$messageTid, type=$type"
+    }
+
+    companion object {
+        private const val LOG_TAG = "MediaPreviewTag"
     }
 }
