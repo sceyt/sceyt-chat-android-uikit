@@ -49,7 +49,6 @@ import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.saveToGallery
 import com.sceyt.chatuikit.extensions.transitionListener
-import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.navigation.Destination
 import com.sceyt.chatuikit.navigation.navigate
 import com.sceyt.chatuikit.persistence.extensions.safeResume
@@ -81,6 +80,7 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
     protected var currentItem: MediaItem? = null
     protected var showInChatChannel: SceytChannel? = null
     protected var sharedTransitionStarted = false
+    protected var hasUserInteractedWithPager = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         if (launchedWithSharedTransition()) {
@@ -118,26 +118,23 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
         mediaAdapter?.releaseAllPlayers()
     }
 
-    private fun getDataFromIntent() {
+    protected open fun getDataFromIntent() {
         showInChatChannel = intent?.extras?.parcelable(KEY_SHOW_IN_CHAT_CHANNEL)
     }
 
-    private fun initViewModel() {
+    protected open fun initViewModel() {
         viewModel.mediaItems.onEach { items ->
             if (mediaAdapter == null) {
-                SceytLog.w("MediaPreviewBug", "initViewModel first emission: itemsCount=${items.size}, initialScrollIndex=${viewModel.initialScrollIndex}, firstItemId=${items.firstOrNull()?.attachment?.id}, openedAttachmentId=${viewModel.openedWithAttachment?.id}")
                 initMediaAdapter(items)
             } else {
-                SceytLog.w("MediaPreviewBug", "initViewModel subsequent emission: itemsCount=${items.size}, pendingScrollIndex=${viewModel.initialScrollIndex}")
                 mediaAdapter?.submitList(items) {
-                    val idx = viewModel.consumePendingScrollIndex()
-                    if (idx > 0) binding.rvMedia.scrollToPosition(idx)
+                    applyPendingInitialScrollIfNeeded()
                 }
             }
         }.launchIn(lifecycleScope)
     }
 
-    private fun initViews() {
+    protected open fun initViews() {
         binding.toolbar.applySystemWindowInsetsPadding(
             applyTop = true,
             applyRight = true,
@@ -158,15 +155,14 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
         }
     }
 
-    private fun initPageWithData() {
+    protected open fun initPageWithData() {
         val items = viewModel.mediaItems.value
         val initialItem = items.getOrNull(viewModel.initialScrollIndex) ?: items.firstOrNull()
-        SceytLog.w("MediaPreviewBug", "initPageWithData: itemsCount=${items.size}, initialScrollIndex=${viewModel.initialScrollIndex}, openedAttachmentId=${viewModel.openedWithAttachment?.id}, selectedItemId=${initialItem?.attachment?.id}")
         initialItem?.let { loadMediaDetail(it) }
         startSharedTransitionWhenReady()
     }
 
-    private fun loadMediaDetail(item: MediaItem) {
+    protected open fun loadMediaDetail(item: MediaItem) {
         currentItem = item
         val name = item.data.user?.let {
             style.userNameFormatter.format(this, it)
@@ -189,7 +185,7 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
         }
     }
 
-    private fun toggleFullScreen(isFullScreen: Boolean) {
+    protected open fun toggleFullScreen(isFullScreen: Boolean) {
         val controller = WindowInsetsControllerCompat(window, binding.root)
         controller.systemBarsBehavior = BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         if (isFullScreen) {
@@ -199,7 +195,7 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
 
     fun isVisibleToolbar() = binding.toolbar.isVisible
 
-    private fun initMediaAdapter(data: List<MediaItem>) {
+    protected open fun initMediaAdapter(data: List<MediaItem>) {
         mediaAdapter = MediaAdapter(
             attachmentViewHolderFactory = MediaFilesViewHolderFactory(this, style).also {
                 it.setNeedMediaDataCallback { infoData -> viewModel.needMediaInfo(infoData) }
@@ -215,7 +211,6 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
 
         val scrollIndex = viewModel.consumePendingScrollIndex()
             .takeIf { it >= 0 } ?: viewModel.initialScrollIndex
-        SceytLog.w("MediaPreviewBug", "initMediaAdapter: itemsCount=${data.size}, scrollIndex=$scrollIndex, openedAttachmentId=${viewModel.openedWithAttachment?.id}, itemAtScrollIndex=${data.getOrNull(scrollIndex)?.attachment?.id}")
         if (scrollIndex > 0) binding.rvMedia.scrollToPosition(scrollIndex)
 
         binding.rvMedia.apply {
@@ -233,6 +228,9 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
 
                 override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
                     super.onScrollStateChanged(recyclerView, newState)
+                    if (newState == RecyclerView.SCROLL_STATE_DRAGGING) {
+                        hasUserInteractedWithPager = true
+                    }
                     if (newState == RecyclerView.SCROLL_STATE_IDLE) {
                         val position = getFirstVisibleItemPosition()
                         mediaAdapter?.getData()?.getOrNull(position)?.let {
@@ -245,7 +243,15 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
         }
     }
 
-    private fun closeWithTransition() {
+    protected open fun applyPendingInitialScrollIfNeeded() {
+        val idx = viewModel.consumePendingScrollIndex()
+        if (idx <= 0) return
+        if (!hasUserInteractedWithPager) {
+            binding.rvMedia.scrollToPosition(idx)
+        }
+    }
+
+    protected open fun closeWithTransition() {
         if (launchedWithSharedTransition()) {
             finishAfterTransition()
         } else {
@@ -253,11 +259,11 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
         }
     }
 
-    private fun launchedWithSharedTransition(): Boolean {
+    protected open fun launchedWithSharedTransition(): Boolean {
         return intent.getBooleanExtra(EXTRA_SHARED_TRANSITION, false)
     }
 
-    private fun startSharedTransitionWhenReady() {
+    protected open fun startSharedTransitionWhenReady() {
         if (!launchedWithSharedTransition()) return
         binding.rvMedia.doOnPreDraw {
             lifecycleScope.launch {
@@ -267,7 +273,7 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
         }
     }
 
-    private suspend fun awaitSharedTransitionReady() {
+    protected open suspend fun awaitSharedTransitionReady() {
         val provider = getSharedTransitionViewProvider() ?: return
         withTimeoutOrNull(SHARED_TRANSITION_READY_TIMEOUT_MS) {
             suspendCancellableCoroutine { continuation ->
@@ -278,7 +284,7 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
         }
     }
 
-    private fun setupSharedElementTransition() {
+    protected open fun setupSharedElementTransition() {
         window.sharedElementEnterTransition = TransitionSet().apply {
             ordering = TransitionSet.ORDERING_TOGETHER
             addTransition(ChangeBounds())
@@ -307,22 +313,22 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
         }
     }
 
-    private fun findCurrentSharedElementView(): View? {
+    protected open fun findCurrentSharedElementView(): View? {
         return getSharedTransitionViewProvider()?.provide()
     }
 
-    private fun getSharedTransitionViewProvider(): SharedTransitionViewProvider? {
+    protected open fun getSharedTransitionViewProvider(): SharedTransitionViewProvider? {
         val position = binding.rvMedia.getFirstVisibleItemPosition()
         if (position == RecyclerView.NO_POSITION) return null
         return binding.rvMedia.findViewHolderForAdapterPosition(position) as? SharedTransitionViewProvider
     }
 
-    private fun refreshCurrentItem() {
+    protected open fun refreshCurrentItem() {
         val position = binding.rvMedia.getFirstVisibleItemPosition()
         if (position != RecyclerView.NO_POSITION) mediaAdapter?.notifyItemChanged(position, Unit)
     }
 
-    private fun startSharedTransitionIfNeeded() {
+    protected open fun startSharedTransitionIfNeeded() {
         if (!launchedWithSharedTransition() || sharedTransitionStarted) return
         findCurrentSharedElementView()?.let {
             ViewCompat.setTransitionName(it, SHARED_TRANSITION_NAME)
@@ -331,23 +337,23 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
         startPostponedEnterTransition()
     }
 
-    private fun onFirstItemDisplaying() {
+    protected open fun onFirstItemDisplaying() {
         if (viewModel.reversed) {
             checkAndLoadNext()
         } else
             checkAndLoadPrev()
     }
 
-    private fun onLastItemDisplaying() {
+    protected open fun onLastItemDisplaying() {
         if (viewModel.reversed) {
             checkAndLoadPrev()
         } else
             checkAndLoadNext()
     }
 
-    private fun checkAndLoadPrev() = viewModel.checkAndLoadPrev()
+    protected open fun checkAndLoadPrev() = viewModel.checkAndLoadPrev()
 
-    private fun checkAndLoadNext() = viewModel.checkAndLoadNext()
+    protected open fun checkAndLoadNext() = viewModel.checkAndLoadNext()
 
     protected open fun showActionsDialog(file: MediaItem) {
         ActionDialog(this, showInChatVisible = showInChatChannel != null) {
@@ -421,7 +427,7 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
         }
     }
 
-    private fun getMimeTypeFrom(file: SceytAttachment): String {
+    protected open fun getMimeTypeFrom(file: SceytAttachment): String {
         var mimeType = getMimeType(file.filePath)
         if (mimeType.isNullOrBlank())
             mimeType = if (file.type == AttachmentTypeEnum.Image.value)
@@ -429,7 +435,7 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
         return mimeType
     }
 
-    private val requestPermissionLauncher = initPermissionLauncher { isGranted ->
+    protected open val requestPermissionLauncher = initPermissionLauncher { isGranted ->
         if (isGranted) {
             fileToSaveAfterPermission?.let { save(it) }
         } else {
@@ -439,7 +445,7 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
         }
     }
 
-    private fun SceytActivityMediaPreviewBinding.applyStyle() {
+    protected open fun SceytActivityMediaPreviewBinding.applyStyle() {
         root.setBackgroundColor(style.backgroundColor)
         style.toolbarStyle.apply(toolbar)
     }
