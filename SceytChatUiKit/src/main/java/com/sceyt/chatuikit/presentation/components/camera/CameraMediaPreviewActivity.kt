@@ -9,7 +9,8 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.isVisible
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.databinding.SceytActivityCameraMediaPreviewBinding
-import com.sceyt.chatuikit.extensions.applySystemWindowInsetsPadding import com.sceyt.chatuikit.extensions.createIntent
+import com.sceyt.chatuikit.extensions.applySystemWindowInsetsPadding
+import com.sceyt.chatuikit.extensions.createIntent
 import com.sceyt.chatuikit.styles.camera.CameraMediaPreviewStyle
 import java.io.File
 
