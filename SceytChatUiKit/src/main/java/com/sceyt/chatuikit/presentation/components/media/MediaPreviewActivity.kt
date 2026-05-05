@@ -18,6 +18,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ShareCompat
 import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
@@ -91,6 +92,7 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
 
         binding = SceytActivityMediaPreviewBinding.inflate(LayoutInflater.from(this))
         setContentView(binding.root)
+        setupEdgeToEdge()
         binding.applyStyle()
         if (launchedWithSharedTransition()) {
             postponeEnterTransition()
@@ -101,6 +103,14 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
         initPageWithData()
         initViews()
         initViewModel()
+    }
+
+    protected open fun setupEdgeToEdge() {
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        WindowInsetsControllerCompat(window, binding.root).apply {
+            isAppearanceLightStatusBars = false
+            isAppearanceLightNavigationBars = false
+        }
     }
 
     override fun onPause() {

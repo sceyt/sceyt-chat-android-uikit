@@ -11,6 +11,7 @@ import androidx.activity.viewModels
 import androidx.annotation.OptIn
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.isVisible
@@ -61,11 +62,7 @@ class SelfDestructingMediaPreviewActivity : AppCompatActivity(), SceytKoinCompon
         style = SelfDestructingMediaPreviewStyle.Builder(this, null).build()
         binding = SceytActivitySelfDestructingMediaPreviewBinding.inflate(LayoutInflater.from(this))
         setContentView(binding.root)
-
-        WindowInsetsControllerCompat(window, binding.root).apply {
-            isAppearanceLightStatusBars = false
-            isAppearanceLightNavigationBars = false
-        }
+        setupEdgeToEdge()
 
         binding.applyStyle()
         initViews()
@@ -73,6 +70,14 @@ class SelfDestructingMediaPreviewActivity : AppCompatActivity(), SceytKoinCompon
 
         displayMedia()
         viewModel.sendOpenedMarker(message!!)
+    }
+
+    private fun setupEdgeToEdge() {
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        WindowInsetsControllerCompat(window, binding.root).apply {
+            isAppearanceLightStatusBars = false
+            isAppearanceLightNavigationBars = false
+        }
     }
 
     private fun initViews() {
