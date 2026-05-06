@@ -40,10 +40,10 @@ fun ComponentActivity.applySystemBarsStyle(
         navigationBarStyle = navigationBarStyle(isDarkMode, navigationBarColorInt)
     )
 
-   /* WindowCompat.getInsetsController(window, window.decorView).run {
+    WindowCompat.getInsetsController(window, window.decorView).run {
         isAppearanceLightStatusBars = !isDarkMode
         isAppearanceLightNavigationBars = !isDarkMode
-    }*/
+    }
 }
 
 private fun systemBarStyle(isDark: Boolean, @ColorInt color: Int): SystemBarStyle {
