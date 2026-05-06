@@ -3,17 +3,15 @@ package com.sceyt.chatuikit.presentation.components.message_info
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.commit
 import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.ActivityMessageInfoBinding
 import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
+import com.sceyt.chatuikit.extensions.applySystemBarsStyle
 import com.sceyt.chatuikit.extensions.createIntent
 import com.sceyt.chatuikit.extensions.overrideTransitions
-import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.chatuikit.styles.StyleRegistry
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
@@ -22,26 +20,25 @@ open class MessageInfoActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        applySystemBarsStyle()
         binding = ActivityMessageInfoBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         applyInsetsAndWindowColor(binding.root)
-        statusBarIconsColorWithBackground(
-            statusBarColor = SceytChatUIKit.theme.colors.statusBarColor,
-            navigationBarColor = SceytChatUIKit.theme.colors.primaryColor
-        )
 
         loadMessageInfoFragment()
     }
 
     protected open fun loadMessageInfoFragment() {
         supportFragmentManager.commit {
-            replace(binding.frameLayout.id, MessageInfoFragment.newInstance(
-                messageId = intent.getLongExtra(KEY_MESSAGE_ID, 0),
-                channelId = intent.getLongExtra(KEY_CHANNEL_ID, 0),
-                messageItemStyleId = intent.getStringExtra(KEY_ITEM_STYLE_ID)
-            ))
+            replace(
+                binding.frameLayout.id,
+                MessageInfoFragment.newInstance(
+                    messageId = intent.getLongExtra(KEY_MESSAGE_ID, 0),
+                    channelId = intent.getLongExtra(KEY_CHANNEL_ID, 0),
+                    messageItemStyleId = intent.getStringExtra(KEY_ITEM_STYLE_ID)
+                )
+            )
         }
     }
 
@@ -61,16 +58,16 @@ open class MessageInfoActivity : AppCompatActivity() {
         private const val KEY_ITEM_STYLE_ID = "key_item_style_id"
 
         fun createIntent(
-                context: Context,
-                message: SceytMessage,
-                itemStyle: MessageItemStyle,
+            context: Context,
+            message: SceytMessage,
+            itemStyle: MessageItemStyle,
         ): Intent = createIntent(context, message.id, message.channelId, itemStyle)
 
         fun createIntent(
-                context: Context,
-                messageId: Long,
-                channelId: Long,
-                itemStyle: MessageItemStyle,
+            context: Context,
+            messageId: Long,
+            channelId: Long,
+            itemStyle: MessageItemStyle,
         ): Intent {
             // Register style
             StyleRegistry.register(itemStyle)
