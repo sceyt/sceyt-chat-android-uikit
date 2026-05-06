@@ -32,8 +32,8 @@ fun ComponentActivity.applySystemBarsStyle(
     @ColorRes statusBarColor: Int = SceytChatUIKit.theme.colors.statusBarColor,
     @ColorRes navigationBarColor: Int = SceytChatUIKit.theme.colors.primaryColor
 ) {
-    val statusBarColorInt = getCompatColor(statusBarColor)
-    val navigationBarColorInt = getCompatColor(navigationBarColor)
+    val statusBarColorInt = getCompatColorForNightMode(statusBarColor, isDarkMode)
+    val navigationBarColorInt = getCompatColorForNightMode(navigationBarColor, isDarkMode)
 
     enableEdgeToEdge(
         statusBarStyle = systemBarStyle(isDarkMode, statusBarColorInt),
