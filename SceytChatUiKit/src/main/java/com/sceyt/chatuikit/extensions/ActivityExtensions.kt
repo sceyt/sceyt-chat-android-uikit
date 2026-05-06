@@ -4,16 +4,18 @@ import android.app.Activity
 import android.app.Activity.OVERRIDE_TRANSITION_OPEN
 import android.content.Context
 import android.content.res.Configuration
-import android.os.Build
+import android.graphics.Color
 import android.os.Build.VERSION.SDK_INT
-import android.os.Build.VERSION_CODES.M
 import android.view.ContextThemeWrapper
 import android.view.View
-import android.view.WindowInsetsController
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
+import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
+import androidx.activity.enableEdgeToEdge
+import androidx.annotation.ColorInt
 import androidx.annotation.ColorRes
-import androidx.core.view.WindowInsetsControllerCompat
+import androidx.core.view.WindowCompat
 import com.sceyt.chatuikit.SceytChatUIKit
 
 @Suppress("DEPRECATION")
@@ -25,29 +27,42 @@ fun Activity.overrideTransitions(enterAnim: Int, exitAnim: Int, isOpen: Boolean)
         overridePendingTransition(enterAnim, exitAnim)
 }
 
-@Suppress("DEPRECATION")
-fun Activity.statusBarIconsColorWithBackground(
-    isDark: Boolean = isNightMode(),
+fun ComponentActivity.applySystemBarsStyle(
+    isDarkMode: Boolean = isNightMode(),
     @ColorRes statusBarColor: Int = SceytChatUIKit.theme.colors.statusBarColor,
     @ColorRes navigationBarColor: Int = SceytChatUIKit.theme.colors.primaryColor
 ) {
+    val statusBarColorInt = getCompatColor(statusBarColor)
+    val navigationBarColorInt = getCompatColor(navigationBarColor)
 
-    window.statusBarColor = getCompatColor(statusBarColor)
-    if (isDark)
-        window.navigationBarColor = getCompatColor(navigationBarColor)
+    enableEdgeToEdge(
+        statusBarStyle = systemBarStyle(isDarkMode, statusBarColorInt),
+        navigationBarStyle = navigationBarStyle(isDarkMode, navigationBarColorInt)
+    )
 
-    if (SDK_INT >= M) {
-        if (SDK_INT >= Build.VERSION_CODES.R) {
-            window.insetsController?.setSystemBarsAppearance(
-                if (isDark) 0 else WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS,
-                WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
-            )
-        } else {
-            val wic = WindowInsetsControllerCompat(window, window.decorView)
-            wic.isAppearanceLightStatusBars = !isDark
-        }
-    }
+   /* WindowCompat.getInsetsController(window, window.decorView).run {
+        isAppearanceLightStatusBars = !isDarkMode
+        isAppearanceLightNavigationBars = !isDarkMode
+    }*/
 }
+
+private fun systemBarStyle(isDark: Boolean, @ColorInt color: Int): SystemBarStyle {
+    return if (isDark) SystemBarStyle.dark(color)
+    else SystemBarStyle.light(color, color)
+}
+
+private fun navigationBarStyle(isDark: Boolean, @ColorInt color: Int): SystemBarStyle {
+    return if (isDark) SystemBarStyle.dark(color)
+    else SystemBarStyle.auto(
+        lightScrim = defaultLightNavigationBarScrim,
+        darkScrim = defaultDarkNavigationBarScrim,
+        detectDarkMode = { _ -> false }
+    )
+}
+
+// Matches AndroidX enableEdgeToEdge default navigation scrims for contrast fallback.
+private val defaultLightNavigationBarScrim = Color.argb(0xE6, 0xFF, 0xFF, 0xFF)
+private val defaultDarkNavigationBarScrim = Color.argb(0x80, 0x1B, 0x1B, 0x1B)
 
 fun Activity.isKeyboardOpen(): Boolean {
     val rootView = findViewById<View>(android.R.id.content)

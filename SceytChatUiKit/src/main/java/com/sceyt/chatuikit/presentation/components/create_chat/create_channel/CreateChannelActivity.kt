@@ -3,7 +3,6 @@ package com.sceyt.chatuikit.presentation.components.create_chat.create_channel
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -21,7 +20,7 @@ import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
 import com.sceyt.chatuikit.extensions.createIntent
 import com.sceyt.chatuikit.extensions.overrideTransitions
 import com.sceyt.chatuikit.extensions.parcelable
-import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
+import com.sceyt.chatuikit.extensions.applySystemBarsStyle
 import com.sceyt.chatuikit.navigation.Destination
 import com.sceyt.chatuikit.navigation.navigate
 import com.sceyt.chatuikit.navigation.navigateForResult
@@ -45,7 +44,7 @@ class CreateChannelActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        applySystemBarsStyle()
         style = CreateChannelStyle.Builder(this, null).build()
         setContentView(SceytActivityCreateChannelBinding.inflate(layoutInflater)
             .also { binding = it }
@@ -53,7 +52,6 @@ class CreateChannelActivity : AppCompatActivity() {
 
         binding.applyStyle()
         applyInsetsAndWindowColor(binding.root)
-        statusBarIconsColorWithBackground()
 
         initViewModel()
         binding.initViews()

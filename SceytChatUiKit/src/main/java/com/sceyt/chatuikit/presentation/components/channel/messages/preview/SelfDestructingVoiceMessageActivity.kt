@@ -29,7 +29,7 @@ import com.sceyt.chatuikit.extensions.mediaPlayerPositionToSeekBarProgress
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.progressToMediaPlayerPosition
 import com.sceyt.chatuikit.extensions.setBackgroundTint
-import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
+import com.sceyt.chatuikit.extensions.applySystemBarsStyle
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.media.audio.AudioPlaybackState
 import com.sceyt.chatuikit.media.audio.AudioPlayer
@@ -78,7 +78,7 @@ class SelfDestructingVoiceMessageActivity : AppCompatActivity(), SceytKoinCompon
         setContentView(binding.root)
 
         applyInsetsAndWindowColor(binding.root)
-        statusBarIconsColorWithBackground(isDark = true)
+        applySystemBarsStyle(isDarkMode = true)
 
         getMessageItemStyle()
         style = SelfDestructingVoiceMessageStyle.Builder(this, messageItemStyle).build()

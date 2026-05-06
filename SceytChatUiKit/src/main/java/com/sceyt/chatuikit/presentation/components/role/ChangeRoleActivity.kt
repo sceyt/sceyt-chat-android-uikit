@@ -3,7 +3,6 @@ package com.sceyt.chatuikit.presentation.components.role
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.sceyt.chatuikit.data.models.channels.SceytMember
@@ -13,7 +12,7 @@ import com.sceyt.chatuikit.extensions.createIntent
 import com.sceyt.chatuikit.extensions.findIndexed
 import com.sceyt.chatuikit.extensions.overrideTransitions
 import com.sceyt.chatuikit.extensions.parcelable
-import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
+import com.sceyt.chatuikit.extensions.applySystemBarsStyle
 import com.sceyt.chatuikit.presentation.components.role.adapter.ChooseRoleAdapter
 import com.sceyt.chatuikit.presentation.components.role.adapter.RoleItem
 import com.sceyt.chatuikit.presentation.components.role.viewmodel.RoleViewModel
@@ -26,14 +25,13 @@ class ChangeRoleActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        applySystemBarsStyle()
         setContentView(
             SceytActivityChooseRoleBinding.inflate(layoutInflater)
             .also { binding = it }
             .root)
 
         applyInsetsAndWindowColor(binding.root)
-        statusBarIconsColorWithBackground()
 
         getBundleArguments()
         initViewModel()

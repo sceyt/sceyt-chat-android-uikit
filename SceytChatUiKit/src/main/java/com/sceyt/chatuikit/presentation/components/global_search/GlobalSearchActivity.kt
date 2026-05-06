@@ -12,7 +12,6 @@ import android.transition.TransitionSet
 import android.view.View
 import android.view.Window
 import androidx.activity.OnBackPressedCallback
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.annotation.CallSuper
 import androidx.appcompat.app.AppCompatActivity
@@ -39,7 +38,7 @@ import com.sceyt.chatuikit.extensions.createIntent
 import com.sceyt.chatuikit.extensions.hideKeyboard
 import com.sceyt.chatuikit.extensions.openLink
 import com.sceyt.chatuikit.extensions.overrideTransitions
-import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
+import com.sceyt.chatuikit.extensions.applySystemBarsStyle
 import com.sceyt.chatuikit.extensions.visibleInvisibleWithBottomSlideAnim
 import com.sceyt.chatuikit.navigation.Destination
 import com.sceyt.chatuikit.navigation.MediaPreviewParams
@@ -94,7 +93,7 @@ open class GlobalSearchActivity : AppCompatActivity(), GlobalSearchClickListener
             window.requestFeature(Window.FEATURE_ACTIVITY_TRANSITIONS)
         }
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        applySystemBarsStyle()
         style = buildStyle()
         StyleRegistry.register(style)
         setActivityContentView()
@@ -105,7 +104,6 @@ open class GlobalSearchActivity : AppCompatActivity(), GlobalSearchClickListener
         }
 
         applyInsetsAndWindowColor(binding.root)
-        statusBarIconsColorWithBackground()
         binding.applyStyle()
         initViews()
         observeState()
