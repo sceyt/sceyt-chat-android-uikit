@@ -20,16 +20,15 @@ import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytActivitySelfDestructingVoiceMessageBinding
 import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
+import com.sceyt.chatuikit.extensions.applySystemBarsStyle
 import com.sceyt.chatuikit.extensions.createIntent
 import com.sceyt.chatuikit.extensions.darkModeContext
 import com.sceyt.chatuikit.extensions.durationToMinSecShort
-import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.extensions.mediaPlayerPositionToSeekBarProgress
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.progressToMediaPlayerPosition
-import com.sceyt.chatuikit.extensions.setBackgroundTint
-import com.sceyt.chatuikit.extensions.applySystemBarsStyle
+import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.media.audio.AudioPlaybackState
 import com.sceyt.chatuikit.media.audio.AudioPlayer
@@ -159,8 +158,6 @@ class SelfDestructingVoiceMessageActivity : AppCompatActivity(), SceytKoinCompon
     }
 
     private fun applyVoicePlayerStyle() {
-        val accentColor = getCompatColor(SceytChatUIKit.theme.colors.accentColor)
-
         val bubbleBackgroundStyle = if (isIncomingMessage) {
             messageItemStyle.incomingBubbleBackgroundStyle
         } else {
@@ -168,7 +165,7 @@ class SelfDestructingVoiceMessageActivity : AppCompatActivity(), SceytKoinCompon
         }
         bubbleBackgroundStyle.apply(binding.voicePlayerContainer)
 
-        binding.voicePlayPauseButton.setBackgroundTint(accentColor)
+        binding.voicePlayPauseButton.setBackgroundTintColorRes(SceytChatUIKit.theme.colors.accentColor)
 
         binding.voiceWaveformSeekBar.apply {
             waveProgressColor = messageItemStyle.voiceWaveformStyle.progressColor
