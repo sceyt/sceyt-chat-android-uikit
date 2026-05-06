@@ -5,7 +5,6 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.os.Parcelable
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
@@ -20,7 +19,7 @@ import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.parcelableArrayList
 import com.sceyt.chatuikit.extensions.setSafeOnClickListener
-import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
+import com.sceyt.chatuikit.extensions.applySystemBarsStyle
 import com.sceyt.chatuikit.presentation.common.dialogs.SceytLoader
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem
 import com.sceyt.chatuikit.presentation.components.share.viewmodel.ShareViewModel
@@ -41,14 +40,13 @@ open class ShareActivity : ShareableActivity<ShareStyle>() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        applySystemBarsStyle()
         setContentView(
             SceytActivityShareBinding.inflate(layoutInflater)
             .also { binding = it }
             .root)
 
         applyInsetsAndWindowColor(binding.root)
-        statusBarIconsColorWithBackground()
 
         getDataFromIntent()
         binding.initViews()

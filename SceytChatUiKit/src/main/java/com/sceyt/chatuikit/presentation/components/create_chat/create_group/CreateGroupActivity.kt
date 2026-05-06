@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -28,7 +27,7 @@ import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.hideSoftInput
 import com.sceyt.chatuikit.extensions.overrideTransitions
 import com.sceyt.chatuikit.extensions.parcelableArrayList
-import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
+import com.sceyt.chatuikit.extensions.applySystemBarsStyle
 import com.sceyt.chatuikit.navigation.Destination
 import com.sceyt.chatuikit.navigation.navigate
 import com.sceyt.chatuikit.persistence.extensions.resizeImage
@@ -59,7 +58,7 @@ class CreateGroupActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        applySystemBarsStyle()
         style = CreateGroupStyle.Builder(this, null).build()
         setContentView(
             SceytActivityCreateGroupBinding.inflate(layoutInflater)
@@ -68,7 +67,6 @@ class CreateGroupActivity : AppCompatActivity() {
 
         binding.applyStyle()
         applyInsetsAndWindowColor(binding.root)
-        statusBarIconsColorWithBackground()
 
         getDataFromIntent()
         initViewModel()

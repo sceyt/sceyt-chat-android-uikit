@@ -3,7 +3,6 @@ package com.sceyt.chatuikit.presentation.components.forward
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
@@ -14,7 +13,7 @@ import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
 import com.sceyt.chatuikit.extensions.createIntent
 import com.sceyt.chatuikit.extensions.parcelableArrayList
 import com.sceyt.chatuikit.extensions.setSafeOnClickListener
-import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
+import com.sceyt.chatuikit.extensions.applySystemBarsStyle
 import com.sceyt.chatuikit.presentation.common.dialogs.SceytLoader
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem
 import com.sceyt.chatuikit.presentation.components.forward.viewmodel.ForwardViewModel
@@ -32,13 +31,12 @@ open class ForwardActivity : ShareableActivity<ForwardStyle>() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        applySystemBarsStyle()
         setContentView(SceytActivityForwardBinding.inflate(layoutInflater)
             .also { binding = it }
             .root)
 
         applyInsetsAndWindowColor(binding.root)
-        statusBarIconsColorWithBackground()
 
         getDataFromIntent()
         binding.initViews()

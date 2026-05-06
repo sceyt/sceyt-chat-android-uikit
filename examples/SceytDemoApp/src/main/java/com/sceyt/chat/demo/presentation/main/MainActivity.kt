@@ -5,7 +5,6 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.addCallback
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.graphics.toColorInt
@@ -20,7 +19,7 @@ import com.sceyt.chat.demo.presentation.welcome.create.CreateAccountViewModel
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
 import com.sceyt.chatuikit.extensions.customToastSnackBar
-import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
+import com.sceyt.chatuikit.extensions.applySystemBarsStyle
 import com.sceyt.chatuikit.navigation.Destination
 import com.sceyt.chatuikit.navigation.navigate
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.ChannelListFragment
@@ -39,13 +38,12 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        applySystemBarsStyle()
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         applyInsetsAndWindowColor(binding.root)
         binding.bottomNavigationView.setOnApplyWindowInsetsListener(null)
-        statusBarIconsColorWithBackground()
 
         setPagerAdapter()
         setBottomNavClickListeners()

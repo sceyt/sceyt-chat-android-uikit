@@ -40,13 +40,21 @@ import java.util.Locale
 
 fun Context.getCompatColor(@ColorRes colorId: Int) = ContextCompat.getColor(this, colorId)
 
+fun Context.getCompatColorForNightMode(@ColorRes colorId: Int, isNightMode: Boolean): Int {
+    if (isNightMode == isNightMode()) return getCompatColor(colorId)
+
+    val configuration = Configuration(resources.configuration).apply {
+        val nightMode = if (isNightMode) Configuration.UI_MODE_NIGHT_YES
+        else Configuration.UI_MODE_NIGHT_NO
+        uiMode = (uiMode and Configuration.UI_MODE_NIGHT_MASK.inv()) or nightMode
+    }
+    return createConfigurationContext(configuration).getCompatColor(colorId)
+}
+
 fun View.getCompatColor(@ColorRes colorId: Int) = ContextCompat.getColor(context, colorId)
 
 fun Context.getCompatColorNight(@ColorRes colorId: Int): Int {
-    val res = resources
-    val configuration = Configuration(res.configuration)
-    configuration.uiMode = Configuration.UI_MODE_NIGHT_YES
-    return createConfigurationContext(configuration).getCompatColor(colorId)
+    return getCompatColorForNightMode(colorId, isNightMode = true)
 }
 
 fun Context.getStringByLocale(@StringRes colorId: Int, locale: Locale): String {
@@ -76,7 +84,7 @@ fun Fragment.getCompatDrawable(@DrawableRes drawableId: Int): Drawable? {
 
 fun Context.asComponentActivity(): ComponentActivity {
     return when (this) {
-        is ComponentActivity -> return this
+        is ComponentActivity -> this
         is ContextWrapper -> {
             baseContext.asComponentActivity()
         }
@@ -87,7 +95,7 @@ fun Context.asComponentActivity(): ComponentActivity {
 
 fun Context.maybeComponentActivity(): ComponentActivity? {
     return when (this) {
-        is ComponentActivity -> return this
+        is ComponentActivity -> this
         is ContextWrapper -> {
             baseContext.maybeComponentActivity()
         }
@@ -98,7 +106,7 @@ fun Context.maybeComponentActivity(): ComponentActivity? {
 
 fun Context.maybeFragmentActivity(): FragmentActivity? {
     return when (this) {
-        is FragmentActivity -> return this
+        is FragmentActivity -> this
         is ContextWrapper -> {
             baseContext.maybeFragmentActivity()
         }
@@ -109,7 +117,7 @@ fun Context.maybeFragmentActivity(): FragmentActivity? {
 
 fun Context.asActivity(): Activity {
     return when (this) {
-        is Activity -> return this
+        is Activity -> this
         is ContextWrapper -> {
             baseContext.asActivity()
         }
@@ -120,7 +128,7 @@ fun Context.asActivity(): Activity {
 
 fun Context.asFragmentActivity(): FragmentActivity {
     return when (this) {
-        is FragmentActivity -> return this
+        is FragmentActivity -> this
         is ContextWrapper -> {
             baseContext.asFragmentActivity()
         }

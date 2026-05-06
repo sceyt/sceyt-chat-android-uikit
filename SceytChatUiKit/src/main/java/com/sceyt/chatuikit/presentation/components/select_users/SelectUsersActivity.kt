@@ -6,7 +6,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Parcelable
 import androidx.activity.addCallback
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.annotation.DrawableRes
 import androidx.appcompat.app.AppCompatActivity
@@ -20,7 +19,7 @@ import com.sceyt.chatuikit.extensions.createIntent
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.extensions.overrideTransitions
 import com.sceyt.chatuikit.extensions.parcelable
-import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
+import com.sceyt.chatuikit.extensions.applySystemBarsStyle
 import com.sceyt.chatuikit.presentation.components.select_users.adapters.SelectableUsersAdapter
 import com.sceyt.chatuikit.presentation.components.select_users.adapters.SelectedUsersAdapter
 import com.sceyt.chatuikit.presentation.components.select_users.adapters.UserItem
@@ -40,7 +39,7 @@ open class SelectUsersActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        applySystemBarsStyle()
         style = SelectUsersStyle.Builder(this, null).build()
 
         setContentView(
@@ -50,7 +49,6 @@ open class SelectUsersActivity : AppCompatActivity() {
 
         binding.applyStyle()
         applyInsetsAndWindowColor(binding.root)
-        statusBarIconsColorWithBackground()
 
         initViewModel()
         initViews()
