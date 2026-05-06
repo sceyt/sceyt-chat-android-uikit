@@ -60,8 +60,8 @@ class MediaAdapter(
 
     fun getData() = differ.currentList
 
-    fun submitList(data: List<MediaItem>) {
-        differ.submitList(data)
+    fun submitList(data: List<MediaItem>, commitCallback: (() -> Unit)? = null) {
+        differ.submitList(data, commitCallback)
     }
 
     fun pauseAllVideos() {
