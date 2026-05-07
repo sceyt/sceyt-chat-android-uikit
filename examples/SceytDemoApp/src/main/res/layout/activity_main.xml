@@ -29,6 +29,27 @@
         app:menu="@menu/menu_bottom_navigation" />
 
     <FrameLayout
+        android:id="@+id/btnDialPadContainer"
+        android:layout_width="wrap_content"
+        android:layout_height="?actionBarSize"
+        android:layout_marginEnd="10dp"
+        android:background="@color/sceyt_color_primary"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/btnDialPad"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="center"
+            android:background="?android:selectableItemBackgroundBorderless"
+            android:padding="12dp"
+            android:scaleType="center"
+            android:src="@drawable/sceyt_ic_dial_pad" />
+
+    </FrameLayout>
+
+    <FrameLayout
         android:id="@+id/mainContainer"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
