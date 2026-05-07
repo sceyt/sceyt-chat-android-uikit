@@ -117,13 +117,14 @@ class CallManagerImpl(
     override suspend fun startOutgoingCall(
         userId: String,
         isVideo: Boolean,
+        mediaFlow: MediaFlow,
         isCallAgain: Boolean,
         callPrepared: (Call) -> Unit,
     ): Result<Call> {
         return startOutgoingCallInternal(
             participantIds = listOf(userId),
             isVideo = isVideo,
-            mediaFlow = MediaFlow.P2P,
+            mediaFlow = mediaFlow,
             metadata = emptyMap(),
             includeRemotePlaceholders = true,
             shouldPlayRingback = true,

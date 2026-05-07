@@ -2,6 +2,7 @@ package com.sceyt.chat.demo.call.manager
 
 import com.callclient.call.Call
 import com.sceyt.audiorouting.AudioDevice
+import com.sceyt.chat.models.signal.MediaFlow
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import kotlinx.coroutines.flow.StateFlow
 
@@ -55,11 +56,15 @@ interface CallManager {
      *
      * @param userId The remote user ID to call
      * @param isVideo Whether to start with video enabled
+     * @param mediaFlow The media flow type for the call (default is P2P)
+     * @param isCallAgain Whether this call is initiated from a "call again" action (used to apply specific logic if needed)
+     * @param callPrepared Optional callback that is invoked
      * @return Result containing the Call object on success
      */
     suspend fun startOutgoingCall(
         userId: String,
         isVideo: Boolean,
+        mediaFlow: MediaFlow = MediaFlow.P2P,
         isCallAgain: Boolean,
         callPrepared: (Call) -> Unit = {}
     ): Result<Call>
