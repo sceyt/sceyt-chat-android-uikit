@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -206,7 +207,8 @@ private fun DialPadScreen(
 
         Spacer(
             modifier = Modifier
-                .height(32.dp)
+                .heightIn(min = 32.dp)
+                .padding(bottom = 12.dp)
                 .windowInsetsPadding(WindowInsets.navigationBars)
         )
     }
@@ -278,7 +280,10 @@ private fun DialPad(
     )
 
     Column(
-        verticalArrangement = Arrangement.spacedBy(4.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         rows.forEach { row ->
             Row(
