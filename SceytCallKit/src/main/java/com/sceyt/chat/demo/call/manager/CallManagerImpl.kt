@@ -16,6 +16,7 @@ import com.callclient.call.data.Participant
 import com.callclient.call.data.ParticipantConnectionState
 import com.callclient.call.data.ParticipantEvent
 import com.callclient.call.data.VideoSettings
+import com.callclient.call.providers.CallDefaults
 import com.sceyt.audiorouting.AudioDevice
 import com.sceyt.audiorouting.AudioRouter
 import com.sceyt.audiorouting.AudioRouterConfig
@@ -531,6 +532,7 @@ class CallManagerImpl(
             val joinCallOptions = JoinCallOptions.default().copy(
                 audioSettings = AudioSettings(disableManageAudioRoute = true),
                 videoSettings = if (isVideo) VideoSettings(publishVideo = true) else null,
+                localVideoTracks = if (call.mediaFlow == MediaFlow.S2W) null else CallDefaults.createDefaultVideoTracks()
             )
             call.join(joinCallOptions)
             if (shouldPlayRingback) {
