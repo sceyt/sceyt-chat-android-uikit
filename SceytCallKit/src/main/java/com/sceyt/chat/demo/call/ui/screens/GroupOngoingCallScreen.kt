@@ -64,6 +64,8 @@ import androidx.compose.ui.layout.LookaheadScope
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
@@ -99,7 +101,6 @@ internal fun GroupOngoingCallScreen(
     onSwitchCamera: () -> Unit,
     onSelectDevice: (AudioDevice) -> Unit,
     onEndCall: () -> Unit,
-    onAddParticipant: () -> Unit,
 ) {
     val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     val title = callState.call?.displayTitle(callState.remoteParticipants)
@@ -213,6 +214,34 @@ internal fun GroupOngoingCallScreen(
             )
         }
     }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF19191B)
+@Composable
+private fun GroupOngoingCallScreenPreview(
+    @PreviewParameter(GroupOngoingCallPreviewProvider::class) data: OngoingCallPreviewData
+) {
+    GroupOngoingCallScreen(
+        callState = data.callState,
+        duration = data.duration,
+        audioDeviceData = AudioDeviceData(emptyList(), null),
+        onToggleMute = {},
+        onToggleCamera = {},
+        onSwitchCamera = {},
+        onSelectDevice = {},
+        onEndCall = {}
+    )
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF19191B)
+@Composable
+private fun ParticipantTilePreview(
+    @PreviewParameter(ParticipantTilePreviewProvider::class) participant: CallParticipantUiState
+) {
+    ParticipantTile(
+        participant = participant,
+        modifier = Modifier.size(width = 180.dp, height = 240.dp)
+    )
 }
 
 @Composable

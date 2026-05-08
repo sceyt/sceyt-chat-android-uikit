@@ -116,7 +116,6 @@ fun OngoingCallScreen(
             onSwitchCamera = onSwitchCamera,
             onSelectDevice = onSelectDevice,
             onEndCall = onEndCall,
-            onAddParticipant = onAddParticipant,
         )
         return
     }
