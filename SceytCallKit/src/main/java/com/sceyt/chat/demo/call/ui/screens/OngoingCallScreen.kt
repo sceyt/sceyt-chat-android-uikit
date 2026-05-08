@@ -104,7 +104,6 @@ fun OngoingCallScreen(
     onSwitchCamera: () -> Unit,
     onSelectDevice: (AudioDevice) -> Unit,
     onEndCall: () -> Unit,
-    onAddParticipant: () -> Unit = {},
 ) {
     if (callState.call?.isGroupCall == true) {
         GroupOngoingCallScreen(
