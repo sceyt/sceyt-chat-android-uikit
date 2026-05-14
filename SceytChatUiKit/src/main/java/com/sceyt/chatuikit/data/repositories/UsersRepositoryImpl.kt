@@ -78,7 +78,7 @@ class UsersRepositoryImpl : UsersRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "getSceytUsersByIds error: ${e?.message}")
+                    SceytLog.e(TAG, "getSceytUsersByIds error: ${e?.message}, ids: $ids")
                 }
             })
         }
@@ -94,12 +94,16 @@ class UsersRepositoryImpl : UsersRepository {
                 override fun onResult(users: MutableList<User>) {
                     if (users.isNotEmpty())
                         continuation.safeResume(SceytResponse.Success(users[0].toSceytUser()))
-                    else continuation.safeResume(SceytResponse.Error(SceytException(0, "User not found")))
+                    else continuation.safeResume(
+                        SceytResponse.Error(
+                            SceytException(0, "User not found, id: $id")
+                        )
+                    )
                 }
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "getSceytUserById error: ${e?.message}")
+                    SceytLog.e(TAG, "getSceytUserById error: ${e?.message}, id: $id")
                 }
             })
         }
@@ -116,7 +120,10 @@ class UsersRepositoryImpl : UsersRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "blockUser error: ${e?.message}, code: ${e?.code}")
+                    SceytLog.e(
+                        TAG,
+                        "blockUser error: ${e?.message}, code: ${e?.code}, userId: $userId"
+                    )
                 }
             })
         }
@@ -133,7 +140,10 @@ class UsersRepositoryImpl : UsersRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "unblockUser error: ${e?.message}, code: ${e?.code}")
+                    SceytLog.e(
+                        TAG,
+                        "unblockUser error: ${e?.message}, code: ${e?.code}, userId: $userId"
+                    )
                 }
             })
         }

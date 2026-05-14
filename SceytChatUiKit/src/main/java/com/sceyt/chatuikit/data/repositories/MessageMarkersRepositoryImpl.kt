@@ -16,10 +16,10 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 class MessageMarkersRepositoryImpl : MessageMarkersRepository {
 
     override suspend fun getMessageMarkers(
-            messageId: Long,
-            name: String,
-            offset: Int,
-            limit: Int,
+        messageId: Long,
+        name: String,
+        offset: Int,
+        limit: Int,
     ): SceytResponse<List<SceytMarker>> = suspendCancellableCoroutine { continuation ->
         getQuery(messageId, name, limit, offset).loadNext(object : MessageMarkersCallback {
             override fun onResult(markers: MutableList<Marker>?) {
@@ -29,16 +29,19 @@ class MessageMarkersRepositoryImpl : MessageMarkersRepository {
 
             override fun onError(e: SceytException?) {
                 continuation.safeResume(SceytResponse.Error(e))
-                SceytLog.e(TAG, "getMessageMarkers error: ${e?.message}")
+                SceytLog.e(
+                    TAG,
+                    "getMessageMarkers error: ${e?.message}, messageId: $messageId, name: $name, offset: $offset, limit: $limit"
+                )
             }
         })
     }
 
     private fun getQuery(
-            messageId: Long,
-            name: String,
-            limit: Int,
-            offset: Int,
+        messageId: Long,
+        name: String,
+        limit: Int,
+        offset: Int,
     ) = MessageMarkerListQuery.Builder(messageId).apply {
         setName(name)
         limit(limit)

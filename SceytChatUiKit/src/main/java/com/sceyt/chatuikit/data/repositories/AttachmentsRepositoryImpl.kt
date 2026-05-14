@@ -20,67 +20,99 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 
 class AttachmentsRepositoryImpl : AttachmentsRepository {
 
-    private fun getQuery(conversationId: Long, types: List<String>) = AttachmentListQuery.Builder(conversationId)
-        .setLimit(SceytChatUIKit.config.queryLimits.attachmentListQueryLimit)
-        .withTypes(types)
-        .build()
+    private fun getQuery(conversationId: Long, types: List<String>) =
+        AttachmentListQuery.Builder(conversationId)
+            .setLimit(SceytChatUIKit.config.queryLimits.attachmentListQueryLimit)
+            .withTypes(types)
+            .build()
 
 
     override suspend fun getPrevAttachments(
-            conversationId: Long,
-            lastAttachmentId: Long,
-            types: List<String>
+        conversationId: Long,
+        lastAttachmentId: Long,
+        types: List<String>
     ): SceytResponse<Pair<List<Attachment>, Map<String, SceytUser>>> {
         return suspendCancellableCoroutine { continuation ->
-            getQuery(conversationId, types).loadPrev(lastAttachmentId, object : AttachmentsCallback {
-                override fun onResult(attachments: MutableList<Attachment>?, userMutableMap: MutableMap<String, User>?) {
-                    continuation.safeResume(SceytResponse.Success(Pair(attachments ?: listOf(),
-                        userMutableMap?.mapValues { it.value.toSceytUser() } ?: mapOf())))
-                }
+            getQuery(conversationId, types).loadPrev(
+                lastAttachmentId,
+                object : AttachmentsCallback {
+                    override fun onResult(
+                        attachments: MutableList<Attachment>?,
+                        userMutableMap: MutableMap<String, User>?
+                    ) {
+                        continuation.safeResume(
+                            SceytResponse.Success(
+                            Pair(
+                            attachments ?: listOf(),
+                            userMutableMap?.mapValues { it.value.toSceytUser() } ?: mapOf())))
+                    }
 
-                override fun onError(e: SceytException?) {
-                    continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "getPrevAttachments error: ${e?.message}")
-                }
-            })
+                    override fun onError(e: SceytException?) {
+                        continuation.safeResume(SceytResponse.Error(e))
+                        SceytLog.e(
+                            TAG,
+                            "getPrevAttachments error: ${e?.message}, channelId: $conversationId, lastAttachmentId: $lastAttachmentId, types: $types"
+                        )
+                    }
+                })
         }
     }
 
     override suspend fun getNextAttachments(
-            conversationId: Long,
-            lastAttachmentId: Long,
-            types: List<String>
+        conversationId: Long,
+        lastAttachmentId: Long,
+        types: List<String>
     ): SceytResponse<Pair<List<Attachment>, Map<String, SceytUser>>> {
         return suspendCancellableCoroutine { continuation ->
-            getQuery(conversationId, types).loadNext(lastAttachmentId, object : AttachmentsCallback {
-                override fun onResult(attachments: MutableList<Attachment>?, userMutableMap: MutableMap<String, User>?) {
-                    continuation.safeResume(SceytResponse.Success(Pair(attachments ?: listOf(),
-                        userMutableMap?.mapValues { it.value.toSceytUser() } ?: mapOf())))
-                }
+            getQuery(conversationId, types).loadNext(
+                lastAttachmentId,
+                object : AttachmentsCallback {
+                    override fun onResult(
+                        attachments: MutableList<Attachment>?,
+                        userMutableMap: MutableMap<String, User>?
+                    ) {
+                        continuation.safeResume(
+                            SceytResponse.Success(
+                            Pair(
+                                attachments ?: listOf(),
+                            userMutableMap?.mapValues { it.value.toSceytUser() } ?: mapOf())))
+                    }
 
-                override fun onError(e: SceytException?) {
-                    continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "getNextAttachments error: ${e?.message}")
-                }
-            })
+                    override fun onError(e: SceytException?) {
+                        continuation.safeResume(SceytResponse.Error(e))
+                        SceytLog.e(
+                            TAG,
+                            "getNextAttachments error: ${e?.message}, channelId: $conversationId, lastAttachmentId: $lastAttachmentId, types: $types"
+                        )
+                    }
+                })
         }
     }
 
     override suspend fun getNearAttachments(
-            conversationId: Long,
-            attachmentId: Long,
-            types: List<String>
+        conversationId: Long,
+        attachmentId: Long,
+        types: List<String>
     ): SceytResponse<Pair<List<Attachment>, Map<String, SceytUser>>> {
         return suspendCancellableCoroutine { continuation ->
             getQuery(conversationId, types).loadNear(attachmentId, object : AttachmentsCallback {
-                override fun onResult(attachments: MutableList<Attachment>?, userMutableMap: MutableMap<String, User>?) {
-                    continuation.safeResume(SceytResponse.Success(Pair(attachments ?: listOf(),
+                override fun onResult(
+                    attachments: MutableList<Attachment>?,
+                    userMutableMap: MutableMap<String, User>?
+                ) {
+                    continuation.safeResume(
+                        SceytResponse.Success(
+                        Pair(
+                        attachments ?: listOf(),
                         userMutableMap?.mapValues { it.value.toSceytUser() } ?: mapOf())))
                 }
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "getNearAttachments error: ${e?.message}")
+                    SceytLog.e(
+                        TAG,
+                        "getNearAttachments error: ${e?.message}, channelId: $conversationId, attachmentId: $attachmentId, types: $types"
+                    )
                 }
             })
         }
