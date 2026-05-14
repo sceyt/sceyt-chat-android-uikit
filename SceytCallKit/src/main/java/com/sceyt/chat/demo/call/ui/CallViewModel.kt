@@ -2,11 +2,17 @@ package com.sceyt.chat.demo.call.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.callclient.call.data.CallPermissions
+import com.callclient.call.data.SceytCallResult
+import com.callclient.call.data.onFailure
 import com.sceyt.audiorouting.AudioDevice
 import com.sceyt.chat.demo.call.manager.CallManager
 import com.sceyt.chat.demo.call.manager.CallUiState
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -20,6 +26,14 @@ class CallViewModel(
 ) : ViewModel() {
 
     val callUiState: StateFlow<CallUiState> = callManager.callUiState
+
+    private val _errors = MutableSharedFlow<String>(
+        replay = 0,
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
+
+    val errors = _errors.asSharedFlow()
 
     val formattedDuration: StateFlow<String> = callManager.callDuration
         .map { formatDuration(it) }
@@ -91,6 +105,27 @@ class CallViewModel(
         callManager.refreshAudioDevices()
     }
 
+    fun onUpdateCallPermissions(permissions: CallPermissions) {
+        viewModelScope.launch {
+            callManager.updateCallPermissions(permissions)
+                .emitFailure("Failed to update permissions")
+        }
+    }
+
+    fun onMuteAllParticipants() {
+        viewModelScope.launch {
+            callManager.muteAllRemoteParticipants()
+                .emitFailure("Failed to mute participants")
+        }
+    }
+
+    fun onDisableAllVideo() {
+        viewModelScope.launch {
+            callManager.disableAllRemoteParticipantsVideo()
+                .emitFailure("Failed to disable video")
+        }
+    }
+
     // ========== Helpers ==========
 
     private fun formatDuration(seconds: Long): String {
@@ -101,6 +136,15 @@ class CallViewModel(
             String.format("%02d:%02d:%02d", hours, minutes, secs)
         } else {
             String.format("%02d:%02d", minutes, secs)
+        }
+    }
+
+    private suspend fun <T> SceytCallResult<T>.emitFailure(
+        fallbackMessage: String
+    ) {
+        onFailure { error ->
+            val details = error.message?.takeIf { it.isNotBlank() }
+            _errors.emit(details?.let { "$fallbackMessage: $it" } ?: fallbackMessage)
         }
     }
 }

@@ -207,7 +207,11 @@ private fun DirectOngoingCallScreen(
                 isMuted = local?.isMuted == true,
                 selectedAudioDevice = selectedDevice,
                 isVideoEnabled = local?.isVideoEnabled == true,
-                videoDisabled = !isConnected,
+                videoDisabled = !isConnected
+                    || (!callState.isOwner && (!callState.callPermissions.allowPublishVideo
+                        || local?.canPublishVideo == false)),
+                muteDisabled = !callState.isOwner && (!callState.callPermissions.allowPublishAudio
+                    || local?.canPublishAudio == false),
                 onToggleMute = onToggleMute,
                 onToggleSpeaker = { showAudioDeviceSelector = true },
                 onToggleVideo = onToggleCamera,
@@ -428,6 +432,7 @@ fun CallControlBar(
     selectedAudioDevice: AudioDevice? = null,
     isVideoEnabled: Boolean = false,
     videoDisabled: Boolean = false,
+    muteDisabled: Boolean = false,
     onToggleMute: () -> Unit = {},
     onToggleSpeaker: () -> Unit = {},
     onToggleVideo: () -> Unit = {},
@@ -476,7 +481,8 @@ fun CallControlBar(
                 contentDescription = if (isMuted) "Unmute" else "Mute",
                 onClick = onToggleMute,
                 size = 48.dp,
-                iconSize = 28.dp
+                iconSize = 28.dp,
+                enabled = !muteDisabled,
             )
 
             when (selectedAudioDevice) {
