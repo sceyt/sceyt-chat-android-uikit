@@ -21,6 +21,8 @@ data class CallParticipantUiState(
     val isFrontCamera: Boolean = true,
     val isOnHold: Boolean = false,
     val isScreenSharing: Boolean = false,
+    val canPublishAudio: Boolean = true,
+    val canPublishVideo: Boolean = true,
 ) {
     val displayName: String
         get() = name ?: userId
@@ -38,14 +40,6 @@ data class CallParticipantUiState(
         get() = if (isSelf) {
             true
         } else {
-            participantState !in setOf(
-                ParticipantState.Ringing,
-                ParticipantState.Left,
-                ParticipantState.Declined,
-                ParticipantState.NoAnswer,
-            ) && (
-                connectionState != ParticipantConnectionState.Idle ||
-                    videoTrack != null
-                )
+            participantState == ParticipantState.Joined
         }
 }

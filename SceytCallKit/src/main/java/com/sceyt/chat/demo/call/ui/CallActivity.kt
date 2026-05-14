@@ -14,7 +14,6 @@ import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.fillMaxSize
@@ -31,6 +30,7 @@ import com.sceyt.chat.demo.call.manager.isGroupCall
 import com.sceyt.chat.demo.call.manager.isVideoCall
 import com.sceyt.chat.demo.call.ui.screens.CallScreen
 import com.sceyt.chat.demo.call.ui.theme.CallTheme
+import com.sceyt.chatuikit.extensions.applySystemBarsStyle
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
@@ -60,7 +60,7 @@ class CallActivity : ComponentActivity() {
         // Setup window for full-screen calls
         setupWindowFlags()
 
-        enableEdgeToEdge()
+        applySystemBarsStyle(true)
 
         // Enter PiP instead of finishing when Back is pressed during an active call
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
@@ -134,7 +134,8 @@ class CallActivity : ComponentActivity() {
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus) {
-            WindowCompat.getInsetsController(window, window.decorView).isAppearanceLightStatusBars = false
+            WindowCompat.getInsetsController(window, window.decorView).isAppearanceLightStatusBars =
+                false
         }
     }
 
