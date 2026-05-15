@@ -1,13 +1,16 @@
 package com.sceyt.chat.demo.call.ui.screens
 
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -28,13 +31,17 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -59,7 +66,7 @@ private val MembersCallButtonBg = Color(0xFF303032)
 private val MembersCallButtonText = Color(0xFF6B72FF)
 private val MicOffColor = Color(0xFF969A9F)
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 internal fun CallMembersBottomSheet(
     onDismiss: () -> Unit,
@@ -70,6 +77,14 @@ internal fun CallMembersBottomSheet(
     val inCall = uiState.inCall
     val notJoined = uiState.notJoined
     val totalCount = uiState.totalCount
+    var participantForControl by remember { mutableStateOf<CallMemberUiState?>(null) }
+    val context = LocalContext.current
+
+    LaunchedEffect(viewModel, context) {
+        viewModel.errors.collect { message ->
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+        }
+    }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -108,7 +123,16 @@ internal fun CallMembersBottomSheet(
                     items = inCall,
                     key = { it.participant.userId }
                 ) { member ->
-                    InCallRow(member = member, modifier = Modifier.animateItem())
+                    InCallRow(
+                        member = member,
+                        isOwner = uiState.isOwner,
+                        onLongClick = {
+                            if (!member.participant.isSelf) {
+                                participantForControl = member
+                            }
+                        },
+                        modifier = Modifier.animateItem(),
+                    )
                 }
             }
 
@@ -143,6 +167,14 @@ internal fun CallMembersBottomSheet(
             item(key = "spacer_bottom") { Spacer(modifier = Modifier.height(8.dp)) }
         }
     }
+
+    participantForControl?.let { member ->
+        ParticipantControlBottomSheet(
+            member = member,
+            onDismiss = { participantForControl = null },
+            viewModel = viewModel,
+        )
+    }
 }
 
 @Composable
@@ -156,15 +188,23 @@ private fun MembersSectionHeader(text: String, modifier: Modifier = Modifier) {
     )
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun InCallRow(
     member: CallMemberUiState,
+    isOwner: Boolean,
+    onLongClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
             .height(52.dp)
+            .then(
+                if (isOwner && !member.participant.isSelf) {
+                    Modifier.combinedClickable(onLongClick = onLongClick, onClick = {})
+                } else Modifier
+            )
             .padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

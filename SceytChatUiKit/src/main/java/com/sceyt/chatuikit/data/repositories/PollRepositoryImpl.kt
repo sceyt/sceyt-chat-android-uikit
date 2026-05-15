@@ -52,7 +52,11 @@ class PollRepositoryImpl : PollRepository {
 
             override fun onError(e: SceytException?) {
                 continuation.safeResume(SceytResponse.Error(e))
-                SceytLog.e(TAG, "changeVotes error: ${e?.message}")
+                SceytLog.e(
+                    TAG,
+                    "changeVotes error: ${e?.message}, channelId: $channelId, messageId: $messageId," +
+                            " pollId: $pollId, addOptionIds: $addOptionIds, removeOptionIds: $removeOptionIds"
+                )
             }
         })
     }
@@ -62,7 +66,8 @@ class PollRepositoryImpl : PollRepository {
         messageId: Long,
         pollId: String
     ): SceytResponse<ChangeVoteResponseData> = suspendCancellableCoroutine { continuation ->
-        RetractPollVoteRequest(channelId, messageId, pollId).execute(object : ChangePollVoteCallback {
+        RetractPollVoteRequest(channelId, messageId, pollId).execute(object :
+            ChangePollVoteCallback {
             override fun onResult(message: Message, changedVotes: ChangedVotes) {
                 val responseData = ChangeVoteResponseData(
                     message = message.toSceytUiMessage(),
@@ -74,7 +79,10 @@ class PollRepositoryImpl : PollRepository {
 
             override fun onError(e: SceytException?) {
                 continuation.safeResume(SceytResponse.Error(e))
-                SceytLog.e(TAG, "retractVote error: ${e?.message}")
+                SceytLog.e(
+                    TAG,
+                    "retractVote error: ${e?.message}, channelId: $channelId, messageId: $messageId, pollId: $pollId"
+                )
             }
         })
     }
@@ -91,7 +99,10 @@ class PollRepositoryImpl : PollRepository {
 
             override fun onError(e: SceytException?) {
                 continuation.safeResume(SceytResponse.Error(e))
-                SceytLog.e(TAG, "endPoll error: ${e?.message}")
+                SceytLog.e(
+                    TAG,
+                    "endPoll error: ${e?.message}, channelId: $channelId, messageId: $messageId, pollId: $pollId"
+                )
             }
         })
     }
@@ -125,7 +136,10 @@ class PollRepositoryImpl : PollRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytPagingResponse.Error(e))
-                    SceytLog.e(TAG, "getPollVotesPaginated error: ${e?.message}")
+                    SceytLog.e(
+                        TAG,
+                        "getPollVotesPaginated error: ${e?.message}, messageId: $messageId, pollId: $pollId, optionId: $optionId"
+                    )
                 }
             })
         }

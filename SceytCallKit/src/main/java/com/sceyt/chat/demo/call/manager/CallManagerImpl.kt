@@ -9,12 +9,16 @@ import com.callclient.call.Call
 import com.callclient.call.calllisteners.CallEventsListener
 import com.callclient.call.data.ActiveSpeakerInfo
 import com.callclient.call.data.AudioSettings
+import com.callclient.call.data.CallPermissions
 import com.callclient.call.data.CallState
 import com.callclient.call.data.CreateCallOptions
 import com.callclient.call.data.JoinCallOptions
 import com.callclient.call.data.Participant
 import com.callclient.call.data.ParticipantConnectionState
 import com.callclient.call.data.ParticipantEvent
+import com.callclient.call.data.ParticipantPermissions
+import com.callclient.call.data.SceytCallException
+import com.callclient.call.data.SceytCallResult
 import com.callclient.call.data.VideoSettings
 import com.callclient.call.providers.CallDefaults
 import com.sceyt.audiorouting.AudioDevice
@@ -382,6 +386,7 @@ class CallManagerImpl(
                 remoteParticipants = if (!call.isGroupCall) {
                     remoteIds.distinct().map { buildPlaceholderRemoteParticipant(it) }
                 } else emptyList(),
+                isOwner = call.isOwnedByCurrentUser(),
             )
         }
 
@@ -441,6 +446,86 @@ class CallManagerImpl(
             call.invite(participantId)
             Log.d(TAG, "Re-invited participant: $participantId")
         }
+    }
+
+    override suspend fun muteRemoteParticipant(participantId: String): SceytCallResult<Unit> =
+        withCurrentCall { it.muteRemoteParticipant(participantId) }
+
+    override suspend fun muteAllRemoteParticipants(): SceytCallResult<Unit> =
+        withCurrentCall { it.muteAllRemoteParticipants() }
+
+    override suspend fun disableRemoteParticipantVideo(participantId: String): SceytCallResult<Unit> =
+        withCurrentCall { it.disableRemoteParticipantVideo(participantId) }
+
+    override suspend fun disableAllRemoteParticipantsVideo(): SceytCallResult<Unit> =
+        withCurrentCall { it.disableAllRemoteParticipantsVideo() }
+
+    override suspend fun unmuteRemoteParticipant(participantId: String): SceytCallResult<Unit> {
+        val existing =
+            _callUiState.value.call?.getRemoteParticipants()?.find { it.id == participantId }
+        return withCurrentCall {
+            it.updateParticipantPermissions(
+                participantId,
+                ParticipantPermissions(
+                    canPublishAudio = true,
+                    canPublishVideo = existing?.permissions?.canPublishVideo ?: true,
+                )
+            )
+        }
+    }
+
+    override suspend fun enableRemoteParticipantVideo(participantId: String): SceytCallResult<Unit> {
+        val existing =
+            _callUiState.value.call?.getRemoteParticipants()?.find { it.id == participantId }
+        return withCurrentCall {
+            it.updateParticipantPermissions(
+                participantId,
+                ParticipantPermissions(
+                    canPublishAudio = existing?.permissions?.canPublishAudio ?: true,
+                    canPublishVideo = true,
+                )
+            )
+        }
+    }
+
+    override suspend fun lockParticipantAudio(participantId: String): SceytCallResult<Unit> {
+        val existing =
+            _callUiState.value.call?.getRemoteParticipants()?.find { it.id == participantId }
+        return withCurrentCall {
+            it.updateParticipantPermissions(
+                participantId,
+                ParticipantPermissions(
+                    canPublishAudio = false,
+                    canPublishVideo = existing?.permissions?.canPublishVideo ?: true,
+                )
+            )
+        }
+    }
+
+    override suspend fun lockParticipantVideo(participantId: String): SceytCallResult<Unit> {
+        val existing =
+            _callUiState.value.call?.getRemoteParticipants()?.find { it.id == participantId }
+        return withCurrentCall {
+            it.updateParticipantPermissions(
+                participantId,
+                ParticipantPermissions(
+                    canPublishAudio = existing?.permissions?.canPublishAudio ?: true,
+                    canPublishVideo = false,
+                )
+            )
+        }
+    }
+
+    override suspend fun updateCallPermissions(permissions: CallPermissions): SceytCallResult<Unit> =
+        withCurrentCall { it.updateCallPermissions(permissions) }
+
+    private suspend fun withCurrentCall(
+        block: suspend (Call) -> SceytCallResult<Unit>
+    ): SceytCallResult<Unit> {
+        val call = _currentCall ?: return SceytCallResult.Failure(
+            SceytCallException.IllegalState("No active call")
+        )
+        return block(call)
     }
 
     override fun release() {
@@ -558,10 +643,13 @@ class CallManagerImpl(
                 remoteParticipants = if (includeRemotePlaceholders) {
                     remoteIds.distinct().map { buildPlaceholderRemoteParticipant(it) }
                 } else emptyList(),
+                isOwner = call.isOwnedByCurrentUser(),
             )
         }
         remoteIds.forEach(::loadParticipantInfoAsync)
     }
+
+    private fun Call.isOwnedByCurrentUser(): Boolean = createdBy == SceytChatUIKit.currentUserId
 
     private fun buildLocalParticipant(): CallParticipantUiState {
         val currentUser = SceytChatUIKit.currentUser
@@ -802,6 +890,35 @@ class CallManagerImpl(
             }
 
             override fun onSessionRenewed(call: Call) = Unit
+
+            override fun onCallPermissionsUpdated(
+                call: Call,
+                permissions: CallPermissions,
+            ) {
+                _callUiState.update { it.copy(callPermissions = permissions) }
+            }
+
+            override fun onParticipantPermissionsUpdated(
+                call: Call,
+                participant: Participant,
+                permissions: ParticipantPermissions,
+            ) {
+                if (participant.id == SceytChatUIKit.currentUserId) {
+                    updateLocalParticipant {
+                        it.copy(
+                            canPublishAudio = permissions.canPublishAudio,
+                            canPublishVideo = permissions.canPublishVideo,
+                        )
+                    }
+                } else {
+                    updateParticipant(participant.id) { existing ->
+                        (existing ?: participant.toUiState(null)).copy(
+                            canPublishAudio = permissions.canPublishAudio,
+                            canPublishVideo = permissions.canPublishVideo,
+                        )
+                    }
+                }
+            }
         })
     }
 
@@ -961,6 +1078,7 @@ class CallManagerImpl(
     private fun syncParticipantsFromCall(call: Call) {
         upsertLocalFromSdk(call.localParticipant)
         call.getRemoteParticipants().forEach { upsertRemoteFromSdk(it) }
+        _callUiState.update { it.copy(callPermissions = call.settings.permissions) }
     }
 
     private fun upsertLocalFromSdk(participant: Participant) {
@@ -973,6 +1091,8 @@ class CallManagerImpl(
                 isVideoEnabled = participant.videoEnabled,
                 videoTrack = participant.getVideoTracks().firstOrNull()?.videoTrack
                     ?: existing.videoTrack,
+                canPublishAudio = participant.permissions.canPublishAudio,
+                canPublishVideo = participant.permissions.canPublishVideo,
             )
         }
     }
@@ -1035,6 +1155,8 @@ class CallManagerImpl(
             isVideoEnabled = videoEnabled,
             videoTrack = getVideoTracks().firstOrNull()?.videoTrack ?: existing?.videoTrack,
             isActiveSpeaker = existing?.isActiveSpeaker == true,
+            canPublishAudio = permissions.canPublishAudio,
+            canPublishVideo = permissions.canPublishVideo,
         )
     }
 
