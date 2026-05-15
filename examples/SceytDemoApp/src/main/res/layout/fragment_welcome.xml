@@ -60,6 +60,20 @@
         android:textAllCaps="false"
         android:textColor="@color/sceyt_color_on_primary"
         android:textSize="@dimen/smallTextSize"
+        app:layout_constraintBottom_toTopOf="@+id/btn_connect_user_id" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btn_connect_user_id"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginBottom="12dp"
+        android:background="@drawable/sceyt_bg_gray_corners_8"
+        android:fontFamily="@font/roboto_medium"
+        android:text="@string/use_user_id"
+        android:textAllCaps="false"
+        android:textColor="@color/sceyt_color_accent"
+        android:textSize="@dimen/smallTextSize"
         app:layout_constraintBottom_toTopOf="@+id/btn_choose_account" />
 
     <androidx.appcompat.widget.AppCompatButton
