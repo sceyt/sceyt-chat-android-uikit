@@ -2,6 +2,7 @@ package com.sceyt.chat.demo.call.manager
 
 import androidx.compose.runtime.Immutable
 import com.callclient.call.Call
+import com.callclient.call.data.CallPermissions
 
 /**
  * Application-level call state shared by all call screens.
@@ -15,6 +16,8 @@ data class CallUiState(
     val isRemoteRinging: Boolean = false,
     val connectedAt: Long = 0,
     val endedReason: EndedReason? = null,
+    val isOwner: Boolean = false,
+    val callPermissions: CallPermissions = CallPermissions.DEFAULT,
 ) {
 
     enum class CallPhase {

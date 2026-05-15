@@ -96,7 +96,7 @@ internal class ProfileRepositoryImpl : ProfileRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "uploadAvatar error: ${e?.message}")
+                    SceytLog.e(TAG, "uploadAvatar error: ${e?.message}, avatarUri: $avatarUri")
                 }
             })
         }

@@ -2,13 +2,18 @@ package com.sceyt.chat.demo.call.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.callclient.call.data.SceytCallResult
+import com.callclient.call.data.onFailure
 import com.sceyt.chat.demo.call.manager.CallManager
 import com.sceyt.chat.demo.call.manager.CallParticipantUiState
 import com.sceyt.chat.models.signal.ParticipantState
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
@@ -24,6 +29,7 @@ data class CallMemberUiState(
 data class CallMembersUiState(
     val inCall: List<CallMemberUiState> = emptyList(),
     val notJoined: List<CallMemberUiState> = emptyList(),
+    val isOwner: Boolean = false,
 ) {
     val totalCount: Int get() = inCall.size + notJoined.size
 }
@@ -34,6 +40,13 @@ class CallMembersViewModel(
 
     private val _uiState = MutableStateFlow(CallMembersUiState())
     val uiState: StateFlow<CallMembersUiState> = _uiState
+
+    private val _errors = MutableSharedFlow<String>(
+        replay = 0,
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
+    val errors = _errors.asSharedFlow()
 
     private val ringingTimeoutJobs = mutableMapOf<String, Job>()
 
@@ -69,9 +82,58 @@ class CallMembersViewModel(
                 CallMembersUiState(
                     inCall = listOfNotNull(localParticipantUiState) + inCall.sortedBy { it.participant.displayName },
                     notJoined = notJoined.sortedBy { it.participant.displayName },
+                    isOwner = callState.isOwner,
                 )
             }
         }.launchIn(viewModelScope)
+    }
+
+    fun onMuteParticipant(userId: String) {
+        runOwnerAction("Failed to mute participant") {
+            callManager.muteRemoteParticipant(userId)
+        }
+    }
+
+    fun onUnmuteParticipant(userId: String) {
+        runOwnerAction("Failed to unmute participant") {
+            callManager.unmuteRemoteParticipant(userId)
+        }
+    }
+
+    fun onLockParticipantAudio(userId: String) {
+        runOwnerAction("Failed to lock audio") {
+            callManager.lockParticipantAudio(userId)
+        }
+    }
+
+    fun onUnlockParticipantAudio(userId: String) {
+        runOwnerAction("Failed to unlock audio") {
+            callManager.unmuteRemoteParticipant(userId)
+        }
+    }
+
+    fun onDisableParticipantVideo(userId: String) {
+        runOwnerAction("Failed to disable video") {
+            callManager.disableRemoteParticipantVideo(userId)
+        }
+    }
+
+    fun onEnableParticipantVideo(userId: String) {
+        runOwnerAction("Failed to enable video") {
+            callManager.enableRemoteParticipantVideo(userId)
+        }
+    }
+
+    fun onLockParticipantVideo(userId: String) {
+        runOwnerAction("Failed to lock video") {
+            callManager.lockParticipantVideo(userId)
+        }
+    }
+
+    fun onUnlockParticipantVideo(userId: String) {
+        runOwnerAction("Failed to unlock video") {
+            callManager.enableRemoteParticipantVideo(userId)
+        }
     }
 
     fun onCallMember(userId: String) {
@@ -109,6 +171,18 @@ class CallMembersViewModel(
                     current.copy(notJoined = updatedNotJoined) else current
             }
             ringingTimeoutJobs.remove(userId)
+        }
+    }
+
+    private fun runOwnerAction(
+        fallbackMessage: String,
+        action: suspend () -> SceytCallResult<Unit>
+    ) {
+        viewModelScope.launch {
+            action().onFailure { error ->
+                val details = error.message?.takeIf { it.isNotBlank() }
+                _errors.emit(details?.let { "$fallbackMessage: $it" } ?: fallbackMessage)
+            }
         }
     }
 }
