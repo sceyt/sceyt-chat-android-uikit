@@ -2,6 +2,7 @@ package com.sceyt.chat.demo.call.ui.screens
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
@@ -40,6 +41,12 @@ fun CallScreen(
     val selectedDevice by viewModel.selectedAudioDevice.collectAsState()
 
     val context = LocalContext.current
+
+    LaunchedEffect(viewModel, context) {
+        viewModel.errors.collect { message ->
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+        }
+    }
 
     fun hasMicPermission() = ContextCompat.checkSelfPermission(
         context, Manifest.permission.RECORD_AUDIO
