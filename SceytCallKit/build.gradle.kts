@@ -65,5 +65,4 @@ dependencies {
     testImplementation(libs.truth)
     testImplementation(libs.mockito.kotlin)
     testImplementation(libs.mockito.inline)
-
 }
