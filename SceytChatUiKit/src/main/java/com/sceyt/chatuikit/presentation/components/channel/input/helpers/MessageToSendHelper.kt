@@ -15,6 +15,7 @@ import com.sceyt.chatuikit.extensions.extractLinks
 import com.sceyt.chatuikit.extensions.getFileSize
 import com.sceyt.chatuikit.extensions.isValidUrl
 import com.sceyt.chatuikit.extensions.notAutoCorrectable
+import com.sceyt.chatuikit.persistence.differs.diff
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 import com.sceyt.chatuikit.persistence.mappers.createEmptyUser
@@ -49,48 +50,48 @@ class MessageToSendHelper(
     ) {
         val replacedBody = replaceBodyMentions(body)
 
-        if (!checkIsEditingMessage(replacedBody, editMessage, linkDetails)) {
-            val link = getLinkAttachmentFromBody(body, linkDetails)
-            if (allAttachments.isNotEmpty()) {
-                val messages = arrayListOf<Message>()
-                allAttachments.forEachIndexed { index, attachment ->
-                    var attachments = arrayOf(attachment)
-                    val message = if (index == 0) {
-                        if (link != null)
-                            attachments = attachments.plus(link)
-                        buildMessage(
-                            body = replacedBody,
-                            attachments = attachments,
-                            withMentionedUsers = true,
-                            replyMessage = replyMessage,
-                            replyThreadMessageId = replyThreadMessageId,
-                            viewOnce = viewOnce
-                        )
-                    } else buildMessage(
-                        body = "",
-                        attachments = attachments,
-                        withMentionedUsers = false,
-                        replyMessage = replyMessage,
-                        replyThreadMessageId = replyThreadMessageId,
-                        viewOnce = viewOnce
-                    )
+        if (checkIsEditingMessage(replacedBody, editMessage, linkDetails)) return
 
-                    messages.add(message)
-                }
-                listeners?.sendMessages(messages, linkDetails)
-            } else {
-                val attachment = if (link != null) arrayOf(link) else arrayOf()
-                listeners?.sendMessage(
+        val link = getLinkAttachmentFromBody(body, linkDetails)
+        if (allAttachments.isNotEmpty()) {
+            val messages = arrayListOf<Message>()
+            allAttachments.forEachIndexed { index, attachment ->
+                var attachments = arrayOf(attachment)
+                val message = if (index == 0) {
+                    if (link != null)
+                        attachments = attachments.plus(link)
                     buildMessage(
                         body = replacedBody,
-                        attachments = attachment,
+                        attachments = attachments,
                         withMentionedUsers = true,
                         replyMessage = replyMessage,
                         replyThreadMessageId = replyThreadMessageId,
                         viewOnce = viewOnce
-                    ), linkDetails
+                    )
+                } else buildMessage(
+                    body = "",
+                    attachments = attachments,
+                    withMentionedUsers = false,
+                    replyMessage = replyMessage,
+                    replyThreadMessageId = replyThreadMessageId,
+                    viewOnce = viewOnce
                 )
+
+                messages.add(message)
             }
+            listeners?.sendMessages(messages, linkDetails)
+        } else {
+            val attachment = if (link != null) arrayOf(link) else arrayOf()
+            listeners?.sendMessage(
+                buildMessage(
+                    body = replacedBody,
+                    attachments = attachment,
+                    withMentionedUsers = true,
+                    replyMessage = replyMessage,
+                    replyThreadMessageId = replyThreadMessageId,
+                    viewOnce = viewOnce
+                ), linkDetails
+            )
         }
     }
 
@@ -190,7 +191,9 @@ class MessageToSendHelper(
             mentionedUsers = mentionedUsers
         )
 
-        listeners?.sendEditMessage(editedMessage, linkDetails)
+        if (editedMessage.diff(message).hasDifference()) {
+            listeners?.sendEditMessage(editedMessage, linkDetails)
+        }
         return true
     }
 
