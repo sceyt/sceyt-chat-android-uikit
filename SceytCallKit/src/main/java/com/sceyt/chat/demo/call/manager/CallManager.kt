@@ -1,7 +1,10 @@
 package com.sceyt.chat.demo.call.manager
 
 import com.callclient.call.Call
+import com.callclient.call.data.CallPermissions
+import com.callclient.call.data.SceytCallResult
 import com.sceyt.audiorouting.AudioDevice
+import com.sceyt.chat.models.signal.MediaFlow
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import kotlinx.coroutines.flow.StateFlow
 
@@ -55,11 +58,15 @@ interface CallManager {
      *
      * @param userId The remote user ID to call
      * @param isVideo Whether to start with video enabled
+     * @param mediaFlow The media flow type for the call (default is P2P)
+     * @param isCallAgain Whether this call is initiated from a "call again" action (used to apply specific logic if needed)
+     * @param callPrepared Optional callback that is invoked
      * @return Result containing the Call object on success
      */
     suspend fun startOutgoingCall(
         userId: String,
         isVideo: Boolean,
+        mediaFlow: MediaFlow = MediaFlow.P2P,
         isCallAgain: Boolean,
         callPrepared: (Call) -> Unit = {}
     ): Result<Call>
@@ -188,6 +195,35 @@ interface CallManager {
      * Re-invite a participant to the current call. Only valid for group calls and when the participant is not currently in the call.
      * */
     fun reinvite(participantId: String)
+
+    // ========== Owner-Only Controls ==========
+
+    /** Forcibly mute a remote participant. Only the call owner can do this. */
+    suspend fun muteRemoteParticipant(participantId: String): SceytCallResult<Unit>
+
+    /** Forcibly mute all remote participants. Only the call owner can do this. */
+    suspend fun muteAllRemoteParticipants(): SceytCallResult<Unit>
+
+    /** Forcibly disable video for a remote participant. Only the call owner can do this. */
+    suspend fun disableRemoteParticipantVideo(participantId: String): SceytCallResult<Unit>
+
+    /** Forcibly disable video for all remote participants. Only the call owner can do this. */
+    suspend fun disableAllRemoteParticipantsVideo(): SceytCallResult<Unit>
+
+    /** Allow a remotely-muted participant to publish audio again. Only owner. */
+    suspend fun unmuteRemoteParticipant(participantId: String): SceytCallResult<Unit>
+
+    /** Allow a remotely-disabled participant to publish video again. Only owner. */
+    suspend fun enableRemoteParticipantVideo(participantId: String): SceytCallResult<Unit>
+
+    /** Mute a remote participant and prevent them from unmuting. Only owner. */
+    suspend fun lockParticipantAudio(participantId: String): SceytCallResult<Unit>
+
+    /** Disable video for a remote participant and prevent them from re-enabling. Only owner. */
+    suspend fun lockParticipantVideo(participantId: String): SceytCallResult<Unit>
+
+    /** Update call-wide audio/video publish permissions. Only owner. */
+    suspend fun updateCallPermissions(permissions: CallPermissions): SceytCallResult<Unit>
 
     /**
      * Release all resources.
