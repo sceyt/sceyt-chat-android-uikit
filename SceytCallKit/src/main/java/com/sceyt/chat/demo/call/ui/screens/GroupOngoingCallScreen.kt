@@ -42,6 +42,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.MicOff
 import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -64,6 +65,8 @@ import androidx.compose.ui.layout.LookaheadScope
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
@@ -99,7 +102,6 @@ internal fun GroupOngoingCallScreen(
     onSwitchCamera: () -> Unit,
     onSelectDevice: (AudioDevice) -> Unit,
     onEndCall: () -> Unit,
-    onAddParticipant: () -> Unit,
 ) {
     val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     val title = callState.call?.displayTitle(callState.remoteParticipants)
@@ -115,6 +117,7 @@ internal fun GroupOngoingCallScreen(
     val (availableDevices, selectedDevice) = audioDeviceData
     var showAudioDeviceSelector by remember { mutableStateOf(false) }
     var showMembersSheet by remember { mutableStateOf(false) }
+    var showSettingsSheet by remember { mutableStateOf(false) }
     var showChrome by remember { mutableStateOf(true) }
     val isConnected = callState.phase == CallUiState.CallPhase.Connected ||
             callState.phase == CallUiState.CallPhase.Reconnecting
@@ -158,7 +161,9 @@ internal fun GroupOngoingCallScreen(
             GroupTopBar(
                 title = title,
                 status = callState.resolveStatusText(duration),
+                isOwner = callState.isOwner,
                 onBack = { backDispatcher?.onBackPressed() },
+                onSettings = { showSettingsSheet = true },
                 onAddParticipant = { showMembersSheet = true },
             )
         }
@@ -188,7 +193,10 @@ internal fun GroupOngoingCallScreen(
                     isMuted = callState.localParticipant?.isMuted == true,
                     selectedAudioDevice = selectedDevice,
                     isVideoEnabled = callState.localParticipant?.isVideoEnabled == true,
-                    videoDisabled = false,
+                    videoDisabled = !callState.isOwner && (!callState.callPermissions.allowPublishVideo
+                        || callState.localParticipant?.canPublishVideo == false),
+                    muteDisabled = !callState.isOwner && (!callState.callPermissions.allowPublishAudio
+                        || callState.localParticipant?.canPublishAudio == false),
                     onToggleMute = onToggleMute,
                     onToggleSpeaker = { showAudioDeviceSelector = true },
                     onToggleVideo = onToggleCamera,
@@ -212,14 +220,50 @@ internal fun GroupOngoingCallScreen(
                 onDismiss = { showMembersSheet = false },
             )
         }
+
+        if (showSettingsSheet) {
+            CallSettingsBottomSheet(
+                onDismiss = { showSettingsSheet = false },
+            )
+        }
     }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF19191B)
+@Composable
+private fun GroupOngoingCallScreenPreview(
+    @PreviewParameter(GroupOngoingCallPreviewProvider::class) data: OngoingCallPreviewData
+) {
+    GroupOngoingCallScreen(
+        callState = data.callState,
+        duration = data.duration,
+        audioDeviceData = AudioDeviceData(emptyList(), null),
+        onToggleMute = {},
+        onToggleCamera = {},
+        onSwitchCamera = {},
+        onSelectDevice = {},
+        onEndCall = {}
+    )
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF19191B)
+@Composable
+private fun ParticipantTilePreview(
+    @PreviewParameter(ParticipantTilePreviewProvider::class) participant: CallParticipantUiState
+) {
+    ParticipantTile(
+        participant = participant,
+        modifier = Modifier.size(width = 180.dp, height = 240.dp)
+    )
 }
 
 @Composable
 private fun GroupTopBar(
     title: String,
     status: String,
+    isOwner: Boolean,
     onBack: () -> Unit,
+    onSettings: () -> Unit,
     onAddParticipant: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -268,6 +312,16 @@ private fun GroupTopBar(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
+        }
+
+        if (isOwner) {
+            IconButton(onClick = onSettings) {
+                Icon(
+                    imageVector = Icons.Default.Settings,
+                    contentDescription = "Call settings",
+                    tint = Color.White,
+                )
+            }
         }
 
         IconButton(onClick = onAddParticipant) {

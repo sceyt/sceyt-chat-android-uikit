@@ -22,7 +22,10 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 class ReactionsRepositoryImpl : ReactionsRepository {
     private lateinit var reactionsQuery: ReactionsListQuery
 
-    override suspend fun getReactions(messageId: Long, key: String): SceytResponse<List<SceytReaction>> {
+    override suspend fun getReactions(
+        messageId: Long,
+        key: String
+    ): SceytResponse<List<SceytReaction>> {
         return suspendCancellableCoroutine { continuation ->
             val channelListQuery = createReactionsQuery(messageId, key).also { reactionsQuery = it }
 
@@ -37,13 +40,19 @@ class ReactionsRepositoryImpl : ReactionsRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "getReactions error: ${e?.message}")
+                    SceytLog.e(
+                        TAG,
+                        "getReactions error: ${e?.message}, messageId: $messageId, key: $key"
+                    )
                 }
             })
         }
     }
 
-    override suspend fun loadMoreReactions(messageId: Long, key: String): SceytResponse<List<SceytReaction>> {
+    override suspend fun loadMoreReactions(
+        messageId: Long,
+        key: String
+    ): SceytResponse<List<SceytReaction>> {
         return suspendCancellableCoroutine { continuation ->
             val query = if (::reactionsQuery.isInitialized)
                 reactionsQuery
@@ -60,7 +69,10 @@ class ReactionsRepositoryImpl : ReactionsRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "loadMoreReactions error: ${e?.message}")
+                    SceytLog.e(
+                        TAG,
+                        "loadMoreReactions error: ${e?.message}, messageId: $messageId, key: $key"
+                    )
                 }
             })
         }
@@ -73,10 +85,13 @@ class ReactionsRepositoryImpl : ReactionsRepository {
             .build()
     }
 
-    override suspend fun addReaction(channelId: Long, messageId: Long, key: String, score: Int,
-                                     reason: String, enforceUnique: Boolean): SceytResponse<SceytMessage> {
+    override suspend fun addReaction(
+        channelId: Long, messageId: Long, key: String, score: Int,
+        reason: String, enforceUnique: Boolean
+    ): SceytResponse<SceytMessage> {
         return suspendCancellableCoroutine { continuation ->
-            ChannelOperator.build(channelId).addReactionWithMessageId(messageId, key,
+            ChannelOperator.build(channelId).addReactionWithMessageId(
+                messageId, key,
                 score.toShort(), reason, enforceUnique, object : MessageCallback {
                     override fun onResult(message: Message?) {
                         continuation.safeResume(SceytResponse.Success(message?.toSceytUiMessage()))
@@ -84,24 +99,33 @@ class ReactionsRepositoryImpl : ReactionsRepository {
 
                     override fun onError(error: SceytException?) {
                         continuation.safeResume(SceytResponse.Error(error))
-                        SceytLog.e(TAG, "addReaction error: ${error?.message}")
+                        SceytLog.e(
+                            TAG,
+                            "addReaction error: ${error?.message}, channelId: $channelId, messageId: $messageId," +
+                                    " key: $key, score: $score, reason: $reason, enforceUnique: $enforceUnique"
+                        )
                     }
                 })
         }
     }
 
-    override suspend fun deleteReaction(channelId: Long, messageId: Long, scoreKey: String): SceytResponse<SceytMessage> {
+    override suspend fun deleteReaction(
+        channelId: Long,
+        messageId: Long,
+        scoreKey: String
+    ): SceytResponse<SceytMessage> {
         return suspendCancellableCoroutine { continuation ->
-            ChannelOperator.build(channelId).deleteReactionWithMessageId(messageId, scoreKey, object : MessageCallback {
-                override fun onResult(message: Message?) {
-                    continuation.safeResume(SceytResponse.Success(message?.toSceytUiMessage()))
-                }
+            ChannelOperator.build(channelId)
+                .deleteReactionWithMessageId(messageId, scoreKey, object : MessageCallback {
+                    override fun onResult(message: Message?) {
+                        continuation.safeResume(SceytResponse.Success(message?.toSceytUiMessage()))
+                    }
 
-                override fun onError(error: SceytException?) {
-                    continuation.safeResume(SceytResponse.Error(error))
-                    SceytLog.e(TAG, "deleteReaction error: ${error?.message}")
-                }
-            })
+                    override fun onError(error: SceytException?) {
+                        continuation.safeResume(SceytResponse.Error(error))
+                        SceytLog.e(TAG, "deleteReaction error: ${error?.message}, channelId: $channelId, messageId: $messageId, scoreKey: $scoreKey")
+                    }
+                })
         }
     }
 }
