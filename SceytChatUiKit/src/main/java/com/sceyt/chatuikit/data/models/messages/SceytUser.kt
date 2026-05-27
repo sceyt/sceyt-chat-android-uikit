@@ -6,15 +6,15 @@ import kotlinx.parcelize.Parcelize
 
 @Parcelize
 data class SceytUser(
-        val id: String,
-        val username: String,
-        val firstName: String,
-        val lastName: String,
-        val avatarURL: String?,
-        val metadataMap: Map<String, String>?,
-        val presence: SceytPresence?,
-        val state: UserState,
-        val blocked: Boolean
+    val id: String,
+    val username: String,
+    val firstName: String,
+    val lastName: String,
+    val avatarURL: String?,
+    val metadataMap: Map<String, String>?,
+    val presence: SceytPresence?,
+    val state: UserState,
+    val blocked: Boolean
 ) : Parcelable {
 
     val fullName: String
@@ -29,7 +29,8 @@ data class SceytUser(
         metadataMap = null,
         presence = null,
         state = UserState.Active,
-        blocked = false)
+        blocked = false
+    )
 
     override fun equals(other: Any?): Boolean {
         return other is SceytUser && id == other.id
