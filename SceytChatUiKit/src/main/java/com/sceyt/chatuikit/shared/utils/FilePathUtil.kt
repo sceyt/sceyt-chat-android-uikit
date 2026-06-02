@@ -39,7 +39,6 @@ object FilePathUtil {
                         ?.trimEnd('.')
                         ?.takeUnless { it.isBlank() } ?: "file_${System.currentTimeMillis()}"
 
-
                     val currentExtension = fileName.substringAfterLast('.', "")
 
                     if (currentExtension.isBlank()) {
@@ -51,8 +50,6 @@ object FilePathUtil {
                             fileName += ".$extension"
                         }
                     }
-
-                    Log.d(TAG, "File info - name: $fileName")
 
                     val directory = File(parentDirToCopy, SceytConstants.CopyFileDirName)
                     val file = getOrCreateUniqueFileDirectory(directory, fileName)
