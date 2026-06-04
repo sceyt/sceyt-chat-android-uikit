@@ -1154,9 +1154,7 @@ internal class PersistenceChannelsLogicImpl(
     }
 
     override fun getTotalUnreadCount(channelTypes: List<String>): Flow<Long> {
-        return channelDao.getTotalUnreadCountAsFlow(channelTypes).map {
-            it ?: 0
-        }.distinctUntilChanged()
+        return channelDao.getTotalUnreadCountAsFlow(channelTypes).distinctUntilChanged()
     }
 
     override suspend fun checkChannelUrlUpdate(
