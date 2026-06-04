@@ -52,7 +52,7 @@ internal fun SceytChannel.isSelf(): Boolean {
 internal fun getSelfChannelMetadata(metadata: String?): SelfChannelMetadata? {
     return try {
         Gson().fromJson(metadata, SelfChannelMetadata::class.java)
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         null
     }
 }

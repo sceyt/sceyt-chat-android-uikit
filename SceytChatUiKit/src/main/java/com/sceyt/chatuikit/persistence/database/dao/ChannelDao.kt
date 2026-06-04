@@ -15,6 +15,7 @@ import com.sceyt.chatuikit.persistence.database.entity.channel.ChannelDb
 import com.sceyt.chatuikit.persistence.database.entity.channel.ChannelEntity
 import com.sceyt.chatuikit.persistence.database.entity.channel.UserChatLinkEntity
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 @Dao
 internal abstract class ChannelDao {
@@ -179,18 +180,25 @@ internal abstract class ChannelDao {
     @Query("""SELECT lastMessageTid FROM $CHANNEL_TABLE WHERE chat_id = :id""")
     abstract suspend fun getChannelLastMessageTid(id: Long): Long?
 
-    @Transaction
+    fun getTotalUnreadCountAsFlow(channelTypes: List<String>): Flow<Long> {
+        return if (channelTypes.isEmpty()) {
+            getTotalUnreadCountAsFlow()
+        } else {
+            getTotalUnreadCountByTypesAsFlow(channelTypes)
+        }.map { it ?: 0L }
+    }
+
+    @Query("SELECT SUM(newMessageCount) FROM $CHANNEL_TABLE")
+    protected abstract fun getTotalUnreadCountAsFlow(): Flow<Long?>
+
     @Query(
         """
         SELECT SUM(newMessageCount)
         FROM $CHANNEL_TABLE
-        WHERE :typesEmpty OR type IN (:channelTypes)
+        WHERE type IN (:channelTypes)
         """
     )
-    abstract fun getTotalUnreadCountAsFlow(
-        channelTypes: List<String>,
-        typesEmpty: Boolean = channelTypes.isEmpty(),
-    ): Flow<Long?>
+    protected abstract fun getTotalUnreadCountByTypesAsFlow(channelTypes: List<String>): Flow<Long?>
 
     @Query("""SELECT COUNT(chat_id) FROM $CHANNEL_TABLE""")
     abstract suspend fun getAllChannelsCount(): Int
