@@ -43,6 +43,7 @@ import com.sceyt.chatuikit.extensions.hideSoftInput
 import com.sceyt.chatuikit.extensions.isEqualsVideoOrImage
 import com.sceyt.chatuikit.extensions.notAutoCorrectable
 import com.sceyt.chatuikit.extensions.setBackgroundTint
+import com.sceyt.chatuikit.extensions.setSafeOnClickListener
 import com.sceyt.chatuikit.extensions.setTextAndMoveSelectionEnd
 import com.sceyt.chatuikit.extensions.showSoftInput
 import com.sceyt.chatuikit.formatters.attributes.DraftMessageBodyFormatterAttributes
@@ -315,7 +316,7 @@ class MessageInputView @JvmOverloads constructor(
         messageActionsView.setClickListener(clickListeners)
         linkPreviewView.setClickListener(clickListeners)
 
-        icSendMessage.setOnClickListener {
+        icSendMessage.setSafeOnClickListener(disableDuration = 300L) {
             when (val state = inputState) {
                 is InputState.Text, is InputState.TextWithAttachments, is InputState.Attachments ->
                     clickListeners.onSendMsgClick(it)
