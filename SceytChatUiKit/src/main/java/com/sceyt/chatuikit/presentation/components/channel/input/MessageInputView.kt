@@ -316,7 +316,7 @@ class MessageInputView @JvmOverloads constructor(
         messageActionsView.setClickListener(clickListeners)
         linkPreviewView.setClickListener(clickListeners)
 
-        icSendMessage.setSafeOnClickListener(disableDuration = 300L) {
+        icSendMessage.setSafeOnClickListener(disableDuration = 200L) {
             when (val state = inputState) {
                 is InputState.Text, is InputState.TextWithAttachments, is InputState.Attachments ->
                     clickListeners.onSendMsgClick(it)
