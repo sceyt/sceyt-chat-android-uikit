@@ -106,6 +106,8 @@ class ChannelsCache {
     suspend fun clearAll() {
         mutex.withLock {
             cachedData.clear()
+            pendingChannelsData.clear()
+            fromPendingToRealChannelsData.clear()
         }
     }
 
@@ -173,13 +175,7 @@ class ChannelsCache {
         newChannelsOnSync_.tryEmit(Pair(config, channels))
     }
 
-    suspend fun updateChannel(config: ChannelListConfig, vararg channels: SceytChannel) {
-        mutex.withLock {
-            updateChannelsImpl(config, *channels)
-        }
-    }
-
-    private suspend fun upsertChannelImpl(
+    private fun upsertChannelImpl(
         config: ChannelListConfig,
         vararg channels: SceytChannel
     ) {
@@ -200,40 +196,18 @@ class ChannelsCache {
                         oldMsg = oldMsg,
                         newMsg = channel.lastMessage
                     ) || diff.pinStateChanged
-                    channelUpdated(config, channel, diff, needSort, ChannelUpdatedType.Updated)
+                    channelUpdated(config, channel, diff, needSort, getChannelUpdatedType(diff))
                 }
             }
         }
     }
 
-    private suspend fun updateChannelsImpl(
-        config: ChannelListConfig,
-        vararg channels: SceytChannel
-    ) {
-        val map = getOrCreateMap(config)
-        channels.forEach { channel ->
-            val cachedChannel = map[channel.id]
-                ?: pendingChannelsData[channel.id] ?: return@forEach
-
-            checkMaybePendingChannelCreated(cachedChannel, channel)
-            val oldMsg = cachedChannel.lastMessage
-            val diff = putAndCheckHasDiff(config, channel)
-            if (diff.hasDifference()) {
-                val needSort = checkNeedSortByLastMessage(
-                    oldMsg = oldMsg,
-                    newMsg = channel.lastMessage
-                ) || diff.pinStateChanged
-                channelUpdated(config, channel, diff, needSort, ChannelUpdatedType.Updated)
-            }
-        }
-    }
-
-    private suspend fun checkMaybePendingChannelCreated(
+    private fun checkMaybePendingChannelCreated(
         cachedChannel: SceytChannel,
         newChannel: SceytChannel
     ) {
         if (!cachedChannel.pending || newChannel.pending) return
-        pendingChannelCreated(cachedChannel.id, newChannel)
+        pendingChannelCreatedImpl(cachedChannel.id, newChannel)
     }
 
     suspend fun updateLastMessage(channelId: Long, message: SceytMessage?) {
@@ -386,19 +360,23 @@ class ChannelsCache {
 
     suspend fun pendingChannelCreated(pendingChannelId: Long, newChannel: SceytChannel) {
         mutex.withLock {
-            // Removing pending channel
-            pendingChannelsData.remove(pendingChannelId)
-            // Adding already created channel to cache
-            cachedData.forEachKeyValue { key, value ->
-                if (key.isValidForConfig(newChannel)) {
-                    value[newChannel.id] = newChannel
-                }
-            }
-            // Adding pending channel id with real channel id for future getting real channel id by pending channel id
-            fromPendingToRealChannelsData[pendingChannelId] = newChannel.id
-            // Emitting to flow
-            pendingChannelCreatedFlow_.tryEmit(Pair(pendingChannelId, newChannel))
+            pendingChannelCreatedImpl(pendingChannelId, newChannel)
         }
+    }
+
+    private fun pendingChannelCreatedImpl(pendingChannelId: Long, newChannel: SceytChannel) {
+        // Removing pending channel
+        pendingChannelsData.remove(pendingChannelId)
+        // Adding already created channel to cache
+        cachedData.forEachKeyValue { key, value ->
+            if (key.isValidForConfig(newChannel)) {
+                value[newChannel.id] = newChannel
+            }
+        }
+        // Adding pending channel id with real channel id for future getting real channel id by pending channel id
+        fromPendingToRealChannelsData[pendingChannelId] = newChannel.id
+        // Emitting to flow
+        pendingChannelCreatedFlow_.tryEmit(Pair(pendingChannelId, newChannel))
     }
 
     suspend fun updateChannelDraftMessage(channelId: Long, draftMessage: DraftMessage?) {
@@ -487,6 +465,24 @@ class ChannelsCache {
 
     private fun channelAdded(channel: SceytChannel) {
         channelAddedFlow_.tryEmit(channel)
+    }
+
+    private fun getChannelUpdatedType(diff: ChannelDiff): ChannelUpdatedType {
+        return when {
+            diff.messagesClearedAtChanged -> ChannelUpdatedType.ClearedHistory
+            diff.lastMessageChanged -> ChannelUpdatedType.LastMessage
+            diff.pinStateChanged -> ChannelUpdatedType.PinnedAt
+            diff.autoDeleteStateChanged -> ChannelUpdatedType.AutoDeleteState
+            diff.muteStateChanged -> ChannelUpdatedType.MuteState
+            diff.membersChanged -> ChannelUpdatedType.Members
+            diff.unreadCountChanged || diff.markedUsUnreadChanged -> ChannelUpdatedType.UnreadCount
+            diff.isOnlyPresenceChanged() -> ChannelUpdatedType.Presence
+            else -> ChannelUpdatedType.Updated
+        }
+    }
+
+    private fun ChannelDiff.isOnlyPresenceChanged(): Boolean {
+        return presenceStateChanged && copy(presenceStateChanged = false).hasDifference().not()
     }
 
     private fun putAndCheckHasDiff(config: ChannelListConfig, list: List<SceytChannel>): Boolean {
