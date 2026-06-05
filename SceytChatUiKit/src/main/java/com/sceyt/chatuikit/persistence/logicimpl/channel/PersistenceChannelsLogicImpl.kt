@@ -486,7 +486,7 @@ internal class PersistenceChannelsLogicImpl(
                         val filledChannels = saveChannelsToDb(response.items)
                         syncedChannels.addAll(filledChannels)
                         messageLogic.onSyncedChannels(filledChannels)
-                        channelsCache.updateChannel(config, *filledChannels.toTypedArray())
+                        channelsCache.upsertChannels(filledChannels)
                         trySend(response)
                     }
 
