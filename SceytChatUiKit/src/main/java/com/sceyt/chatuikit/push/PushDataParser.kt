@@ -185,7 +185,7 @@ object PushDataParser {
                 /* createdBy = */ null,
                 /* userRole = */ RoleTypeEnum.Member.value, // Todo we should receive the role from the server.
                 /* unread = */ false,
-                /* newMessageCount = */ 0,
+                /* newMessageCount = */ 1,
                 /* newMentionCount = */ 0,
                 /* newReactedMessageCount = */ 0,
                 /* hidden = */ false,

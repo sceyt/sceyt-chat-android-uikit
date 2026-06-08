@@ -865,4 +865,38 @@ class ChannelDaoTest {
     }
 
     // endregion
+
+    // region getNotExistingChannelIdsByIdsAndTypes — documents the SQL semantics syncChannels relies on
+
+    /**
+     * Documentation only — NOT the regression for the "missing channels" bug.
+     *
+     * The actual regression lives in `PersistenceChannelsLogicSyncDeleteTest`, at the logic layer
+     * where the (wrong) deletion decision is made. This test just pins the SQL contract that logic
+     * depends on: `chat_id NOT IN (:ids)` returns rows whose id is absent from `ids` — including
+     * still-existing, owned channels when `ids` (one sync run's `syncedIds`) is incomplete.
+     */
+    @Test
+    fun getNotExisting_returnsOwnedChannelsAbsentFromTheIdsList() = runTest {
+        // Given — 5 real, owned channels saved locally.
+        insert(
+            channel(1, type = "direct", userRole = "owner"),
+            channel(2, type = "direct", userRole = "owner"),
+            channel(3, type = "direct", userRole = "owner"),
+            channel(4, type = "direct", userRole = "owner"),
+            channel(5, type = "direct", userRole = "owner"),
+        )
+
+        // When — a sync run only returned a subset (4 and 5 fell outside the fluctuating page).
+        val syncedIds = listOf(1L, 2L, 3L)
+        val toDelete = channelDao.getNotExistingChannelIdsByIdsAndTypes(
+            ids = syncedIds, types = listOf("direct"), onlyMine = true
+        )
+
+        // Then — channels 4 and 5 still exist and are owned, yet they are returned for deletion.
+        // syncChannels passes exactly this list to deleteChannelsFromDbAndCache.
+        assertThat(toDelete).containsExactly(4L, 5L)
+    }
+
+    // endregion
 }
