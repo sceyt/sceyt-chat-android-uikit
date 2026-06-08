@@ -8,6 +8,7 @@ import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
+import com.sceyt.chatuikit.data.models.onSuccess
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
@@ -33,7 +34,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.core.component.inject
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.max
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Holds both the raw channel list (for business logic) and the pre-computed adapter list.
@@ -61,7 +64,8 @@ class ChannelsViewModel(
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : BaseViewModel(), SceytKoinComponent {
     private val channelInteractor: ChannelInteractor by inject()
-    private var getChannelsJog: Job? = null
+    private val getChannelsJobs: MutableSet<Job> = ConcurrentHashMap.newKeySet()
+    private var searchChannelJob: Job? = null
     private var sortJob: Job? = null
     private var nextOffset = 0
 
@@ -73,7 +77,7 @@ class ChannelsViewModel(
 
     init {
         // Initial load — triggers server sync and populates from DB
-        getChannels(0, query = searchQuery)
+        getChannels(query = searchQuery)
 
         ChannelsCache.channelsDeletedFlow.onEach { ids ->
             _state.update { current ->
@@ -147,7 +151,7 @@ class ChannelsViewModel(
     private fun sortItemsDebounced() {
         sortJob?.cancel()
         sortJob = viewModelScope.launch(Dispatchers.Default) {
-            delay(200)
+            delay(200.milliseconds)
             _state.update { current ->
                 current.copy(channels = current.channels.sortedWith(ChannelsComparatorDescBy(config.order)))
             }
@@ -155,42 +159,58 @@ class ChannelsViewModel(
     }
 
     fun getChannels(
-        offset: Int,
         query: String = searchQuery,
         loadKey: LoadKeyData? = null,
         onlyMine: Boolean = query.isEmpty(),
-        ignoreDatabase: Boolean = false,
     ) {
-        if (offset == 0) nextOffset = 0
+        nextOffset = 0
         searchQuery = query
-        setPagingLoadingStarted(
-            loadType = PaginationResponse.LoadType.LoadNext,
-            ignoreDatabase = ignoreDatabase
-        )
+        setPagingLoadingStarted(loadType = PaginationResponse.LoadType.LoadNext)
 
         notifyPageLoadingState(false)
 
-        getChannelsJog?.cancel()
-        getChannelsJog = viewModelScope.launch(ioDispatcher) {
+        searchChannelJob?.cancel()
+        cancelGetChannelJobs()
+
+        val job = viewModelScope.launch(ioDispatcher) {
             channelInteractor.loadChannels(
-                offset = offset,
+                offset = 0,
                 searchQuery = query,
                 loadKey = loadKey,
                 onlyMine = onlyMine,
-                ignoreDb = ignoreDatabase,
+                ignoreDb = false,
                 awaitForConnection = true,
                 config = config
             ).collect(::initPaginationResponse)
+        }.also { job ->
+            job.invokeOnCompletion {
+                getChannelsJobs.remove(job)
+            }
         }
+        getChannelsJobs.add(job)
     }
 
     fun loadMoreChannels(lastChannelId: Long?) {
         if (!canLoadNext()) return
-        getChannels(
-            offset = nextOffset,
-            query = searchQuery,
-            loadKey = LoadKeyData(value = lastChannelId ?: 0)
-        )
+        setPagingLoadingStarted(loadType = PaginationResponse.LoadType.LoadNext)
+        notifyPageLoadingState(true)
+
+        val job = viewModelScope.launch(ioDispatcher) {
+            channelInteractor.loadChannels(
+                offset = nextOffset,
+                searchQuery = searchQuery,
+                loadKey = LoadKeyData(value = lastChannelId ?: 0),
+                onlyMine = searchQuery.isEmpty(),
+                ignoreDb = false,
+                awaitForConnection = true,
+                config = config
+            ).collect(::initPaginationResponse)
+        }.also { job ->
+            job.invokeOnCompletion {
+                getChannelsJobs.remove(job)
+            }
+        }
+        getChannelsJobs.add(job)
     }
 
     @Suppress("unused")
@@ -213,8 +233,9 @@ class ChannelsViewModel(
 
         notifyPageLoadingState(false)
 
-        getChannelsJog?.cancel()
-        getChannelsJog = viewModelScope.launch(ioDispatcher) {
+        cancelGetChannelJobs()
+        searchChannelJob?.cancel()
+        searchChannelJob = viewModelScope.launch(ioDispatcher) {
             channelInteractor.searchChannelsWithUserIds(
                 offset = offset,
                 searchQuery = query,
@@ -242,9 +263,10 @@ class ChannelsViewModel(
         )
 
         notifyPageLoadingState(false)
+        cancelGetChannelJobs()
+        searchChannelJob?.cancel()
 
-        getChannelsJog?.cancel()
-        getChannelsJog = viewModelScope.launch(ioDispatcher) {
+        searchChannelJob = viewModelScope.launch(ioDispatcher) {
             val response = channelInteractor.getChannelsBySQLiteQuery(sqLiteQuery)
             val paginationResponse = PaginationResponse.DBResponse(
                 data = response,
@@ -280,20 +302,23 @@ class ChannelsViewModel(
             }
 
             is PaginationResponse.ServerResponse -> {
-                val pageSize = (response.data as? SceytResponse.Success)?.data?.size ?: 0
-                nextOffset = max(nextOffset, response.offset + pageSize)
-                if (response.data is SceytResponse.Success && response.hasDiff) {
-                    _state.update { state ->
-                        state.copy(
-                            channels = mapToChannels(response.cacheData),
-                            hasNext = response.hasNext
-                        )
-                    }
-                } else if (!hasNextDb) {
-                    _state.update { state ->
-                        state.copy(hasNext = response.hasNext)
+                response.data.onSuccess { channels ->
+                    val pageSize = channels?.size ?: 0
+                    nextOffset = max(nextOffset, response.offset + pageSize)
+                    if (response.hasDiff) {
+                        _state.update { state ->
+                            state.copy(
+                                channels = mapToChannels(response.cacheData),
+                                hasNext = response.hasNext
+                            )
+                        }
+                    } else if (!hasNextDb) {
+                        _state.update { state ->
+                            state.copy(hasNext = response.hasNext)
+                        }
                     }
                 }
+
                 notifyPageStateWithResponse(
                     response = response.data,
                     wasLoadingMore = response.offset > 0,
@@ -344,7 +369,8 @@ class ChannelsViewModel(
             val newData = existing.sortedWith(ChannelsComparatorDescBy(config.order))
 
             SceytLog.i(
-                "syncResultUpdate", "should be applied synced channels : ${newData.map { it.id }}"
+                "syncResultUpdate",
+                "should be applied synced channels : ${newData.map { it.id }}, existing channels : ${existingChannels.map { it.id }}"
             )
             return@withContext newData
         }
@@ -460,5 +486,11 @@ class ChannelsViewModel(
             is ChannelEvent.Pin -> pinChannel(event.channel.id)
             is ChannelEvent.UnPin -> unpinChannel(event.channel.id)
         }
+    }
+
+    private fun cancelGetChannelJobs() {
+        val jobs = getChannelsJobs.toList()
+        getChannelsJobs.clear()
+        jobs.forEach { it.cancel() }
     }
 }

@@ -303,7 +303,7 @@ class ChannelsViewModelPaginationTest {
                     viewModel.state.value.channels.size == 40
         }
 
-        viewModel.getChannels(offset = 0, query = "alpha")
+        viewModel.getChannels(query = "alpha")
         awaitCondition {
             requests.size == 3 &&
                     completedRequests.size == 3 &&

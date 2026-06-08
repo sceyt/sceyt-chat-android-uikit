@@ -18,13 +18,14 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.koin.core.component.inject
+import java.util.concurrent.ConcurrentHashMap
 
 class ShareableViewModel(
     internal val config: ChannelListConfig = ChannelListConfig.default,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : BaseViewModel(), SceytKoinComponent {
     private val channelInteractor: ChannelInteractor by inject()
-    private var getChannelsJob: Job? = null
+    private val getChannelsJobs: MutableSet<Job> = ConcurrentHashMap.newKeySet()
     private var nextOffset = 0
     val selectedChannels = mutableSetOf<Long>()
 
@@ -54,8 +55,33 @@ class ShareableViewModel(
 
         notifyPageLoadingState(false)
 
-        getChannelsJob?.cancel()
-        getChannelsJob = viewModelScope.launch(ioDispatcher) {
+        cancelGetChannelJobs()
+        launchChannelsLoad(offset, query, loadKey, onlyMine, ignoreDatabase)
+    }
+
+    fun loadMoreChannels() {
+        if (!canLoadNext()) return
+        setPagingLoadingStarted(PaginationResponse.LoadType.LoadNext)
+        notifyPageLoadingState(false)
+        val state = state.value
+        // Does not cancel the in-flight load — that would drop its page.
+        launchChannelsLoad(
+            offset = nextOffset,
+            query = searchQuery,
+            loadKey = LoadKeyData(value = state.channels.lastOrNull()?.id ?: 0),
+            onlyMine = true,
+            ignoreDatabase = false
+        )
+    }
+
+    private fun launchChannelsLoad(
+        offset: Int,
+        query: String,
+        loadKey: LoadKeyData?,
+        onlyMine: Boolean,
+        ignoreDatabase: Boolean,
+    ) {
+        val job = viewModelScope.launch(ioDispatcher) {
             channelInteractor.loadChannels(
                 offset = offset,
                 searchQuery = query,
@@ -65,17 +91,16 @@ class ShareableViewModel(
                 awaitForConnection = true,
                 config = config
             ).collect(::initPaginationResponse)
+        }.also { job ->
+            job.invokeOnCompletion { getChannelsJobs.remove(job) }
         }
+        getChannelsJobs.add(job)
     }
 
-    fun loadMoreChannels() {
-        if (!canLoadNext()) return
-        val state = state.value
-        getChannels(
-            offset = nextOffset,
-            query = searchQuery,
-            loadKey = LoadKeyData(value = state.channels.lastOrNull()?.id ?: 0)
-        )
+    private fun cancelGetChannelJobs() {
+        val jobs = getChannelsJobs.toList()
+        getChannelsJobs.clear()
+        jobs.forEach { it.cancel() }
     }
 
     fun onSearchQueryChanged(query: String) {
@@ -102,7 +127,7 @@ class ShareableViewModel(
                     }
                 }
                 notifyPageStateWithResponse(
-                    SceytResponse.Success(null),
+                    response = SceytResponse.Success(null),
                     wasLoadingMore = response.offset > 0,
                     isEmpty = response.data.isEmpty(),
                     searchQuery = response.query
