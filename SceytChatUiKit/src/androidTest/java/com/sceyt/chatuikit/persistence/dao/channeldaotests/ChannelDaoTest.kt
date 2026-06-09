@@ -8,7 +8,6 @@ import androidx.test.filters.SmallTest
 import com.google.common.truth.Truth.assertThat
 import com.sceyt.chatuikit.persistence.database.SceytDatabase
 import com.sceyt.chatuikit.persistence.database.dao.ChannelDao
-import com.sceyt.chatuikit.persistence.database.dao.GlobalSearchDao
 import com.sceyt.chatuikit.persistence.database.entity.channel.ChannelEntity
 import com.sceyt.chatuikit.persistence.database.entity.channel.UserChatLinkEntity
 import kotlinx.coroutines.flow.first
@@ -591,12 +590,12 @@ class ChannelDaoTest {
     }
 
     @Test
-    fun getTotalUnreadCount_returnsNullWhenNoChannels() = runTest {
+    fun getTotalUnreadCount_returnsZeroWhenNoChannels() = runTest {
         // When — empty database
         val result = channelDao.getTotalUnreadCountAsFlow(channelTypes = emptyList()).first()
 
         // Then — SUM of empty set is NULL in SQLite
-        assertThat(result).isNull()
+        assertThat(result).isEqualTo(0)
     }
 
     @Test
@@ -604,7 +603,7 @@ class ChannelDaoTest {
         val flow = channelDao.getTotalUnreadCountAsFlow(channelTypes = emptyList())
 
         // Initial state — empty DB
-        assertThat(flow.first()).isNull()
+        assertThat(flow.first()).isEqualTo(0)
 
         // After insert the flow reflects new state
         insert(channel(1, newMessageCount = 5))
