@@ -197,20 +197,22 @@ class ChannelsCacheTest {
     }
 
     @Test
-    fun `newChannelsOnSync inserts non pending missing channels and emits sync event`() = runTest {
+    fun `resetWindowAfterSync replaces window with db rows and preserves pending channels`() = runTest {
         val cache = ChannelsCache()
-        val existingChannel = channel(id = 19)
-        val newChannel = channel(id = 20)
-        val pendingChannel = channel(id = 21).copy(pending = true)
-        cache.addAll(allTypesConfig, listOf(existingChannel), checkDifference = false)
-        val syncEvent = expectFirst(ChannelsCache.newChannelsOnSync) { it.first == allTypesConfig }
-        yield()
+        val stale = channel(id = 19) // currently cached, absent from the DB window after sync
+        val pending = channel(id = 21, lastMessage = createMessage(createdAt = 5, id = 5, tid = 5))
+            .copy(pending = true)
+        cache.addAll(allTypesConfig, listOf(stale), checkDifference = false)
+        cache.addPendingChannel(pending)
 
-        cache.newChannelsOnSync(allTypesConfig, listOf(existingChannel, newChannel, pendingChannel))
+        val dbRow = channel(id = 20, lastMessage = createMessage(createdAt = 10, id = 10, tid = 10))
+        val result = cache.resetWindowAfterSync(allTypesConfig, listOf(dbRow))
 
-        assertThat(syncEvent.await().second.map { it.id }).containsExactly(19L, 20L, 21L).inOrder()
-        assertThat(cache.getOneOf(newChannel.id, allTypesConfig)).isEqualTo(newChannel)
-        assertThat(cache.getOneOf(pendingChannel.id, allTypesConfig)).isNull()
+        // Stale channel dropped, DB row present, pending channel preserved; sorted by last message desc.
+        assertThat(result.map { it.id }).containsExactly(20L, 21L).inOrder()
+        assertThat(cache.getOneOf(stale.id, allTypesConfig)).isNull()
+        assertThat(cache.getOneOf(dbRow.id, allTypesConfig)).isEqualTo(dbRow)
+        assertThat(cache.isPending(pending.id)).isTrue()
     }
 
     @Test

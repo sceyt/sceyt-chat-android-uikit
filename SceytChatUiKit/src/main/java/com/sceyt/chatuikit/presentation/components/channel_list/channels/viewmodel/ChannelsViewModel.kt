@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.presentation.components.channel_list.channels.viewmodel
 
+import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.viewModelScope
 import androidx.sqlite.db.SimpleSQLiteQuery
 import com.sceyt.chatuikit.config.ChannelListConfig
@@ -21,6 +22,7 @@ import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.data.ChannelEvent
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import com.sceyt.chatuikit.presentation.root.PageState
+import com.sceyt.chatuikit.services.sync.SceytSyncManager
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -32,7 +34,6 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.koin.core.component.inject
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.max
@@ -67,6 +68,11 @@ class ChannelsViewModel(
     private val getChannelsJobs: MutableSet<Job> = ConcurrentHashMap.newKeySet()
     private var searchChannelJob: Job? = null
     private var sortJob: Job? = null
+    private var reloadJob: Job? = null
+
+    // Set when sync finishes during paging; consumed when paging settles or before the next load-more.
+    @Volatile
+    private var pendingSyncReload = false
     private var nextOffset = 0
 
     var searchQuery = ""
@@ -74,6 +80,10 @@ class ChannelsViewModel(
 
     private val _state = MutableStateFlow(ChannelListState())
     val state: StateFlow<ChannelListState> = _state
+
+    private companion object {
+        const val TAG = "ChannelsViewModel"
+    }
 
     init {
         // Initial load — triggers server sync and populates from DB
@@ -140,10 +150,9 @@ class ChannelsViewModel(
             }
         }.launchIn(viewModelScope)
 
-        ChannelsCache.newChannelsOnSync.onEach { (_, channels) ->
-            val current = _state.value.channels
-            val newChannels = initDataOnNewChannelsOnSync(current, channels) ?: return@onEach
-            _state.update { it.copy(channels = newChannels, hasNext = hasNext || hasNextDb) }
+        // Sync can reorder the loaded window, so rebuild from DB instead of merging deltas.
+        SceytSyncManager.syncChannelsFinished.onEach {
+            reloadAfterSync()
         }.launchIn(viewModelScope)
     }
 
@@ -171,6 +180,8 @@ class ChannelsViewModel(
 
         searchChannelJob?.cancel()
         cancelGetChannelJobs()
+        // A full refresh owns the window, so drop any pending sync reload.
+        cancelReload()
 
         val job = viewModelScope.launch(ioDispatcher) {
             channelInteractor.loadChannels(
@@ -196,6 +207,7 @@ class ChannelsViewModel(
         notifyPageLoadingState(true)
 
         val job = viewModelScope.launch(ioDispatcher) {
+            if (!prepareLoadMoreAfterSync()) return@launch
             channelInteractor.loadChannels(
                 offset = nextOffset,
                 searchQuery = searchQuery,
@@ -330,50 +342,84 @@ class ChannelsViewModel(
             else -> return
         }
         pagingResponseReceived(response)
+        if (pendingSyncReload && !loadingFromServer && !loadingFromDb)
+            reloadAfterSync()
     }
 
-    internal suspend fun initDataOnNewChannelsOnSync(
-        existingChannels: List<SceytChannel>,
-        syncChannels: List<SceytChannel>,
-    ): List<SceytChannel>? = withContext(Dispatchers.Default) {
-        // Filter channels by config
-        val filtered = syncChannels.filter { config.isValidForConfig(it) }
-        if (filtered.isEmpty()) return@withContext null
-
-        val existing = existingChannels.toMutableSet()
-        // If loadedChannels are empty and not loading data from server, it means we can setData,
-        // otherwise we filter only channels which are between loaded channels and
-        // insert them to the list.
-        if (existing.isEmpty()) {
-            if (loadingFromServer || loadingFromDb) return@withContext null
-            val sorted = filtered.sortedWith(ChannelsComparatorDescBy(config.order))
+    /**
+     * Rebuilds the visible DB-backed window after sync. If paging is active, the reload is deferred
+     * until paging settles or before the next load-more.
+     */
+    @VisibleForTesting
+    internal fun reloadAfterSync() {
+        // Search results come from globalSearchDao, not the channel table; never overwrite them.
+        if (searchQuery.isNotEmpty()) return
+        if (loadingFromServer || loadingFromDb) {
+            pendingSyncReload = true
             SceytLog.i(
-                "syncResultUpdate",
-                "loaded channels are empty, set data : ${sorted.map { it.id }}"
+                TAG,
+                "sync finished while paging — reload deferred (loadingFromServer=$loadingFromServer, loadingFromDb=$loadingFromDb)"
             )
-            return@withContext sorted
-        } else {
-            // Get last channel to understand where to insert new channels
-            val lastChannel = existing.last()
-            val sorted = filtered.toSet().plus(lastChannel)
-                .sortedWith(ChannelsComparatorDescBy(config.order))
-            val index = sorted.indexOf(lastChannel)
-
-            // If index is last, and we have more channels, we don't need to insert them,
-            // because they will be inserted by next page loading
-            if (index == existing.size - 1 && (hasNext || hasNextDb)) {
-                return@withContext null
-            }
-            // Get channels which need to be inserted
-            sorted.subList(0, index).forEach { existing.add(it) }
-            val newData = existing.sortedWith(ChannelsComparatorDescBy(config.order))
-
-            SceytLog.i(
-                "syncResultUpdate",
-                "should be applied synced channels : ${newData.map { it.id }}, existing channels : ${existingChannels.map { it.id }}"
-            )
-            return@withContext newData
+            return
         }
+        pendingSyncReload = false
+        reloadJob?.cancel()
+        reloadJob = viewModelScope.launch(ioDispatcher) {
+            performSyncReload()
+        }
+    }
+
+    private suspend fun prepareLoadMoreAfterSync(): Boolean {
+        reloadJob?.join()
+        if (pendingSyncReload) {
+            pendingSyncReload = false
+            performSyncReload()
+        }
+
+        if (hasNextDb || hasNext) return true
+
+        finishLoadingMoreWithoutLoad()
+        return false
+    }
+
+    private suspend fun performSyncReload() {
+        if (searchQuery.isNotEmpty()) return
+        val current = _state.value.channels
+        val limit = max(nextOffset, current.count { !it.pending })
+        val window = channelInteractor.reloadChannelsAfterSync(config, limit)
+        if (current.isEmpty() && window.channels.isEmpty()) return
+        nextOffset = max(nextOffset, window.loadedCount)
+        hasNextDb = window.hasNext
+        hasNext = window.hasNext
+        _state.update {
+            it.copy(
+                channels = mapToChannels(window.channels),
+                hasNext = window.hasNext
+            )
+        }
+        if (window.channels.isEmpty())
+            pageStateLiveDataInternal.postValue(PageState.StateEmpty(searchQuery))
+        SceytLog.i(
+            TAG,
+            "applied sync reload: shown=${window.channels.size}, loadedCount=${window.loadedCount}, " +
+                    "hasNext=${window.hasNext}, hasNextDb=$hasNextDb, nextOffset=$nextOffset"
+        )
+    }
+
+    // Clears the load-more flags + footer without issuing a page (the reload already exhausted the window).
+    private fun finishLoadingMoreWithoutLoad() {
+        loadingNextItemsDb.set(false)
+        loadingNextItems.set(false)
+        notifyPageStateWithResponse(
+            response = SceytResponse.Success(null),
+            wasLoadingMore = true,
+            searchQuery = searchQuery
+        )
+    }
+
+    private fun cancelReload() {
+        pendingSyncReload = false
+        reloadJob?.cancel()
     }
 
     internal fun mapToChannels(
