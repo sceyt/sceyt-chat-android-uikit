@@ -7,6 +7,7 @@ import com.sceyt.chatuikit.config.ChannelListConfig
 import com.sceyt.chatuikit.data.models.LoadKeyData
 import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.data.models.SyncResult
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.onSuccess
@@ -41,7 +42,7 @@ import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Holds both the raw channel list (for business logic) and the pre-computed adapter list.
- * [channelItems] is derived from [channels] and [hasNext] — copy() recomputes it automatically.
+ * [channelItems] is derived from [channels] and [hasNext]; copy() recomputes it automatically.
  * equals() compares [channelItems] via [ChannelListItem.equals] so StateFlow emits on content changes.
  */
 data class ChannelListState(
@@ -73,6 +74,9 @@ class ChannelsViewModel(
     // Set when sync finishes during paging; consumed when paging settles or before the next load-more.
     @Volatile
     private var pendingSyncReload = false
+    // Channels synced so far in the current sync; used to rebuild only while the synced prefix still
+    // overlaps the loaded window. Reset on sync finish/error.
+    private var syncedChannelsCount = 0
     private var nextOffset = 0
 
     var searchQuery = ""
@@ -86,7 +90,6 @@ class ChannelsViewModel(
     }
 
     init {
-        // Initial load — triggers server sync and populates from DB
         getChannels(query = searchQuery)
 
         ChannelsCache.channelsDeletedFlow.onEach { ids ->
@@ -150,13 +153,29 @@ class ChannelsViewModel(
             }
         }.launchIn(viewModelScope)
 
-        // Sync can reorder the loaded window, so rebuild from DB instead of merging deltas.
-        SceytSyncManager.syncChannelsFinished.onEach {
-            reloadAfterSync()
+        // Sync can reorder the loaded window. Reload while proportions overlap the visible DB window;
+        // final sync always reloads to realign paging after deletions.
+        SceytSyncManager.syncChannelsResult.onEach { result ->
+            when (result) {
+                is SyncResult.Proportion -> {
+                    val syncedBefore = syncedChannelsCount
+                    syncedChannelsCount += result.items.size
+                    if (syncedBefore < loadedWindowSize()) reloadAfterSync()
+                }
+
+                SyncResult.SuccessfullyFinished -> {
+                    syncedChannelsCount = 0
+                    reloadAfterSync()
+                }
+
+                is SyncResult.Error -> syncedChannelsCount = 0
+            }
         }.launchIn(viewModelScope)
     }
 
-    // Debounced sort — cancels the previous sort if a newer update arrives within 300 ms
+    // Number of DB-backed channels currently loaded (the window the rebuild must keep aligned).
+    private fun loadedWindowSize() = max(nextOffset, _state.value.channels.count { !it.pending })
+
     private fun sortItemsDebounced() {
         sortJob?.cancel()
         sortJob = viewModelScope.launch(Dispatchers.Default) {
@@ -358,7 +377,7 @@ class ChannelsViewModel(
             pendingSyncReload = true
             SceytLog.i(
                 TAG,
-                "sync finished while paging — reload deferred (loadingFromServer=$loadingFromServer, loadingFromDb=$loadingFromDb)"
+                "sync result while paging; reload deferred (loadingFromServer=$loadingFromServer, loadingFromDb=$loadingFromDb)"
             )
             return
         }
@@ -385,8 +404,7 @@ class ChannelsViewModel(
     private suspend fun performSyncReload() {
         if (searchQuery.isNotEmpty()) return
         val current = _state.value.channels
-        val limit = max(nextOffset, current.count { !it.pending })
-        val window = channelInteractor.reloadChannelsAfterSync(config, limit)
+        val window = channelInteractor.reloadChannelsAfterSync(config, loadedWindowSize())
         if (current.isEmpty() && window.channels.isEmpty()) return
         nextOffset = max(nextOffset, window.loadedCount)
         hasNextDb = window.hasNext
