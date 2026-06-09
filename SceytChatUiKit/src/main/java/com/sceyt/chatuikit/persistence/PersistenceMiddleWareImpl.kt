@@ -35,6 +35,7 @@ import com.sceyt.chatuikit.data.models.channels.DraftMessage
 import com.sceyt.chatuikit.data.models.channels.EditChannelData
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
+import com.sceyt.chatuikit.data.models.channels.SyncedChannelsWindow
 import com.sceyt.chatuikit.data.models.messages.AttachmentWithUserData
 import com.sceyt.chatuikit.data.models.messages.FileChecksumData
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
@@ -231,6 +232,10 @@ internal class PersistenceMiddleWareImpl(
 
     override suspend fun syncChannels(config: ChannelListConfig): Flow<SyncResult<SceytChannel>> {
         return channelLogic.syncChannels(config)
+    }
+
+    override suspend fun reloadChannelsAfterSync(config: ChannelListConfig, limit: Int): SyncedChannelsWindow {
+        return channelLogic.reloadChannelsAfterSync(config, limit)
     }
 
     override suspend fun markChannelAsRead(channelId: Long): SceytResponse<SceytChannel> {

@@ -526,7 +526,7 @@ internal class PersistenceChannelsLogicImpl(
                         val filledChannels = saveChannelsToDb(response.items)
                         syncedChannels.addAll(filledChannels)
                         messageLogic.onSyncedChannels(filledChannels)
-                        channelsCache.upsertChannels(filledChannels)
+                        channelsCache.updateChannel(config, *filledChannels.toTypedArray())
                         emit(response)
                     }
 
@@ -540,17 +540,9 @@ internal class PersistenceChannelsLogicImpl(
                                     onlyMine = true
                                 )
                             deleteChannelsFromDbAndCache(channelIds = deletedChannelIds)
-                            val newChannelsIds = syncedIds.minus(oldChannelsIds)
-                            val newChannels = syncedChannels.filter {
-                                newChannelsIds.contains(it.id)
-                            }
-                            if (newChannels.isNotEmpty()) {
-                                channelsCache.newChannelsOnSync(config, newChannels)
-                            }
-                            SceytLog.i(
+                             SceytLog.i(
                                 TAG, "syncChannelsResult:" +
-                                        " deletedChannelsIds: ${deletedChannelIds.map { it }}," +
-                                        " newChannelsCount: ${newChannelsIds.size} " +
+                                        " deletedChannelsIds: $deletedChannelIds," +
                                         " syncedChannelsCount: ${syncedChannels.size} "
                             )
                         } else {
@@ -571,6 +563,31 @@ internal class PersistenceChannelsLogicImpl(
                     }
                 }
             }
+    }
+
+    override suspend fun reloadChannelsAfterSync(
+        config: ChannelListConfig,
+        limit: Int,
+    ): SyncedChannelsWindow = withContext(Dispatchers.IO) {
+        val safeLimit = limit.coerceAtLeast(channelsLoadSize)
+        val orderByLastMessage = config.order == ChannelListOrder.ListQueryChannelOrderLastMessage
+        // Query one extra row to learn whether more channels exist beyond the window, without a COUNT.
+        val rows = channelDao.getChannels(
+            limit = safeLimit + 1,
+            offset = 0,
+            types = config.types,
+            orderByLastMessage = orderByLastMessage,
+            onlyMine = true
+        ).map { it.toChannel() }
+        val hasNext = rows.size > safeLimit
+        val dbWindow = rows.take(safeLimit)
+        val sorted = channelsCache.resetWindowAfterSync(config, dbWindow)
+        SyncedChannelsWindow(
+            channels = sorted,
+            hasNext = hasNext,
+            // DB rows consumed → the offset the next loadMore continues from (pending channels aren't DB pages).
+            loadedCount = dbWindow.size
+        )
     }
 
     private suspend fun getChannelsDb(

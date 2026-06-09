@@ -61,13 +61,6 @@ class ChannelsCache {
         )
         val channelDraftMessageChangesFlow = channelDraftMessageChangesFlow_.asSharedFlow()
 
-        private val newChannelsOnSync_ =
-            MutableSharedFlow<Pair<ChannelListConfig, List<SceytChannel>>>(
-                extraBufferCapacity = 50,
-                onBufferOverflow = BufferOverflow.DROP_OLDEST
-            )
-        val newChannelsOnSync = newChannelsOnSync_.asSharedFlow()
-
         var currentChannelId: Long? = null
     }
 
@@ -162,17 +155,55 @@ class ChannelsCache {
         }
     }
 
-    fun newChannelsOnSync(config: ChannelListConfig, channels: List<SceytChannel>) {
-        channels.forEach { channel ->
+    /**
+     * Atomically replaces the loaded window for [config] with [dbWindow] (an already DB-ordered prefix),
+     * preserving visible pending channels, and returns the final sorted list the UI should display.
+     *
+     * Used after a channel sync finishes: the DB is the authoritative source, so the displayed window is
+     * rebuilt rather than delta-merged. Clearing + refilling + sorting happen under a single [mutex] lock so
+     * the operation can't interleave with [getSorted]/[addAll]/[updateChannel].
+     */
+    suspend fun resetWindowAfterSync(
+        config: ChannelListConfig,
+        dbWindow: List<SceytChannel>,
+    ): List<SceytChannel> {
+        mutex.withLock {
             val map = getOrCreateMap(config)
-            val cachedChannel = map[channel.id] ?: pendingChannelsData[channel.id]
-            if (cachedChannel == null) {
-                if (!channel.pending) {
-                    map[channel.id] = channel
-                }
+            map.clear()
+            dbWindow.forEach { channel ->
+                if (!channel.pending) map[channel.id] = channel
+            }
+            // channelsByConfig folds visible pending channels back in.
+            return channelsByConfig(config).sortedWith(ChannelsComparatorDescBy(config.order))
+        }
+    }
+
+    suspend fun updateChannel(config: ChannelListConfig, vararg channels: SceytChannel) {
+        mutex.withLock {
+            updateChannelsImpl(config, *channels)
+        }
+    }
+
+    private fun updateChannelsImpl(
+        config: ChannelListConfig,
+        vararg channels: SceytChannel
+    ) {
+        val map = getOrCreateMap(config)
+        channels.forEach { channel ->
+            val cachedChannel = map[channel.id]
+                ?: pendingChannelsData[channel.id] ?: return@forEach
+
+            checkMaybePendingChannelCreated(cachedChannel, channel)
+            val oldMsg = cachedChannel.lastMessage
+            val diff = putAndCheckHasDiff(config, channel)
+            if (diff.hasDifference()) {
+                val needSort = checkNeedSortByLastMessage(
+                    oldMsg = oldMsg,
+                    newMsg = channel.lastMessage
+                ) || diff.pinStateChanged
+                channelUpdated(config, channel, diff, needSort, ChannelUpdatedType.Updated)
             }
         }
-        newChannelsOnSync_.tryEmit(Pair(config, channels))
     }
 
     private fun upsertChannelImpl(
