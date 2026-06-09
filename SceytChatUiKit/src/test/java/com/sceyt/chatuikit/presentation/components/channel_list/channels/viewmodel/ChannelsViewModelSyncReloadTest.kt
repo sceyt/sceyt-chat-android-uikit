@@ -9,6 +9,7 @@ import com.sceyt.chatuikit.createChannel
 import com.sceyt.chatuikit.data.models.LoadKeyData
 import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.data.models.SyncResult
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SyncedChannelsWindow
 import com.sceyt.chatuikit.koin.SceytKoinApp
@@ -21,7 +22,6 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -104,9 +104,11 @@ class ChannelsViewModelSyncReloadTest {
     }
 
     private fun emitSyncFinished() {
-        SceytSyncManager.syncChannelsFinished_.tryEmit(
-            SceytSyncManager.SyncChannelData(mutableSetOf(), false)
-        )
+        SceytSyncManager.syncChannelsResult_.tryEmit(SyncResult.SuccessfullyFinished)
+    }
+
+    private fun emitProportion(items: List<SceytChannel>) {
+        SceytSyncManager.syncChannelsResult_.tryEmit(SyncResult.Proportion(items))
     }
 
     private fun nextOffset(viewModel: ChannelsViewModel): Int {
@@ -225,4 +227,51 @@ class ChannelsViewModelSyncReloadTest {
             releaseServer.complete(Unit) // cleanup the parked first-page server coroutine
             advanceUntilIdle()
         }
+
+    @Test
+    fun `proportion covering the loaded window rebuilds and surfaces a bumped channel`() =
+        runTest(dispatcher) {
+            val firstPage = (1L..20L).map { createChannel(it, pinnedAt = 0, createdAt = it) }
+            stubInitialPage(firstPage)
+            val viewModel = ChannelsViewModel(config, dispatcher)
+            advanceUntilIdle()
+
+            val bumped = createChannel(999, pinnedAt = 0, createdAt = 999)
+            val rebuilt = (listOf(bumped) + firstPage.drop(1))
+                .sortedWith(ChannelsComparatorDescBy(config.order))
+            whenever(interactor.reloadChannelsAfterSync(any(), any()))
+                .thenReturn(SyncedChannelsWindow(channels = rebuilt, hasNext = true, loadedCount = 20))
+
+            // First proportion (server's top page) carries the bumped channel — surfaces before finish.
+            emitProportion(listOf(bumped) + (2L..20L).map { createChannel(it, pinnedAt = 0, createdAt = it) })
+            advanceUntilIdle()
+
+            verify(interactor, times(1)).reloadChannelsAfterSync(any(), any())
+            assertThat(viewModel.state.value.channels.map { it.id }.first()).isEqualTo(999L)
+        }
+
+    @Test
+    fun `proportions past the loaded window do not rebuild`() = runTest(dispatcher) {
+        val firstPage = (1L..20L).map { createChannel(it, pinnedAt = 0, createdAt = it) }
+        stubInitialPage(firstPage)
+        val viewModel = ChannelsViewModel(config, dispatcher)
+        advanceUntilIdle()
+
+        whenever(interactor.reloadChannelsAfterSync(any(), any())).thenReturn(
+            SyncedChannelsWindow(
+                channels = firstPage.sortedWith(ChannelsComparatorDescBy(config.order)),
+                hasNext = true, loadedCount = 20
+            )
+        )
+
+        // Proportion 1 covers the 20-channel window → one rebuild; proportion 2 is past it → skipped.
+        emitProportion((1L..20L).map { createChannel(it, pinnedAt = 0, createdAt = it) })
+        advanceUntilIdle()
+        emitProportion((21L..40L).map { createChannel(it, pinnedAt = 0, createdAt = it) })
+        advanceUntilIdle()
+
+        verify(interactor, times(1)).reloadChannelsAfterSync(any(), any())
+        // The below-window proportion didn't grow the list; it stays the rebuilt 20-channel window.
+        assertThat(viewModel.state.value.channels.size).isEqualTo(20)
+    }
 }

@@ -26,8 +26,8 @@ import com.sceyt.chatuikit.persistence.repositories.SceytSharedPreference
 import com.sceyt.chatuikit.persistence.repositories.UsersRepository
 import com.sceyt.chatuikit.push.service.PushService
 import com.sceyt.chatuikit.services.SceytPresenceChecker
-import com.sceyt.chatuikit.services.sync.SceytSyncManager
 import com.sceyt.chatuikit.services.ServerTimeSync
+import com.sceyt.chatuikit.services.sync.SceytSyncManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -84,7 +84,7 @@ internal class PersistenceConnectionLogicImpl(
                 pollLogic.sendAllPendingVotes()
                 _allPendingEventsSentFlow.tryEmit(Unit)
                 if (SceytChatUIKit.config.syncChannelsAfterConnect) {
-                    sceytSyncManager.startSync(ChannelListConfig.default)
+                    sceytSyncManager.startSync(ChannelListConfig.default.copy(queryLimit = 50))
                 }
             }
         } else SceytPresenceChecker.stopPresenceCheck()

@@ -540,7 +540,7 @@ internal class PersistenceChannelsLogicImpl(
                                     onlyMine = true
                                 )
                             deleteChannelsFromDbAndCache(channelIds = deletedChannelIds)
-                             SceytLog.i(
+                            SceytLog.i(
                                 TAG, "syncChannelsResult:" +
                                         " deletedChannelsIds: $deletedChannelIds," +
                                         " syncedChannelsCount: ${syncedChannels.size} "
@@ -585,7 +585,7 @@ internal class PersistenceChannelsLogicImpl(
         SyncedChannelsWindow(
             channels = sorted,
             hasNext = hasNext,
-            // DB rows consumed → the offset the next loadMore continues from (pending channels aren't DB pages).
+            // DB rows consumed; pending channels are not part of DB paging.
             loadedCount = dbWindow.size
         )
     }

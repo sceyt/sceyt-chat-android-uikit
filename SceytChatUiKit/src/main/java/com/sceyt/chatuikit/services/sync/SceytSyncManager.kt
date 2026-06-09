@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.services.sync
 
 import com.sceyt.chatuikit.config.ChannelListConfig
+import com.sceyt.chatuikit.data.models.SyncResult
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.persistence.extensions.broadcastSharedFlow
@@ -19,8 +20,14 @@ interface SceytSyncManager {
     fun cancelSync()
 
     companion object {
-        internal val syncChannelsFinished_ = broadcastSharedFlow<SyncChannelData>()
-        val syncChannelsFinished: SharedFlow<SyncChannelData> = syncChannelsFinished_.asSharedFlow()
+        /**
+         * Emits the channel-sync lifecycle (proportions, finished, error), so the UI can refresh the
+         * loaded window incrementally instead of waiting for the whole sync to complete.
+         */
+        internal val syncChannelsResult_ = broadcastSharedFlow<SyncResult<SceytChannel>>(
+            extraBufferCapacity = 8
+        )
+        val syncChannelsResult = syncChannelsResult_.asSharedFlow()
 
         internal val syncChannelMessagesFinished_ =
             broadcastSharedFlow<Pair<SceytChannel, List<SceytMessage>>>()
@@ -28,11 +35,6 @@ interface SceytSyncManager {
         val syncChannelMessagesFinished: SharedFlow<Pair<SceytChannel, List<SceytMessage>>> =
             syncChannelMessagesFinished_.asSharedFlow()
     }
-
-    data class SyncChannelData(
-        val channels: MutableSet<SceytChannel>,
-        var withError: Boolean
-    )
 
     /**@param totalUnreadChannelsCount is total unread channels count, include muted channels.
      * @param totalUnreadMessagesCount is total unread messages count, include messages in muted channels.
