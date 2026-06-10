@@ -58,6 +58,7 @@ ksp = "2.3.6"
 documentfile = "1.1.0"
 cameraX = "1.6.1"
 compose = "2.4.0"
+leakcanary = "2.14"
 
 [libraries]
 activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
@@ -136,6 +137,7 @@ camera-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "cam
 camera-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "cameraX" }
 camera-video = { module = "androidx.camera:camera-video", version.ref = "cameraX" }
 camera-view = { module = "androidx.camera:camera-view", version.ref = "cameraX" }
+leakcanary-android = { module = "com.squareup.leakcanary:leakcanary-android", version.ref = "leakcanary" }
 
 [plugins]
 benchmark = { id = "androidx.benchmark", version.ref = "benchmark" }

@@ -141,4 +141,5 @@ dependencies {
     testImplementation(libs.core.testing)
     testImplementation(libs.robolectric)
     configureMockitoAgent()(libs.mockito.inline)
+    debugImplementation(libs.leakcanary.android)
 }

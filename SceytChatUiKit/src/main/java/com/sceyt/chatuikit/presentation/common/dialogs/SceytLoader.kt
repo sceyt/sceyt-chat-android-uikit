@@ -3,7 +3,6 @@ package com.sceyt.chatuikit.presentation.common.dialogs
 import android.content.Context
 import com.sceyt.chatuikit.extensions.checkAndDismissSafety
 import com.sceyt.chatuikit.extensions.showSafety
-import com.sceyt.chatuikit.presentation.common.dialogs.SceytLoadingDialog
 
 object SceytLoader {
     private var progressDialog: SceytLoadingDialog? = null
@@ -18,5 +17,6 @@ object SceytLoader {
     @JvmStatic
     fun hideLoading() {
         progressDialog?.checkAndDismissSafety()
+        progressDialog = null
     }
 }
