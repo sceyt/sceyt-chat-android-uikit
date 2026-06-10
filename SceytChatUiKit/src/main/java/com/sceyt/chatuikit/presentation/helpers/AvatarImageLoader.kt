@@ -83,6 +83,11 @@ object AvatarImageLoader {
             .into(imageView)
     }
 
+    /** Cancels any in-flight Glide request targeting the given ImageView. */
+    fun cancelLoad(context: Context, imageView: ImageView) {
+        Glide.with(context.applicationContext).clear(imageView)
+    }
+
     /**
      * Checks if an avatar image exists in our custom cache
      *
