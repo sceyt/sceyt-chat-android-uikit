@@ -231,10 +231,11 @@ internal class PersistenceChannelsLogicImpl(
         val channel = channelDao.getChannelById(dataChannel.id)
         if (channel != null) {
             if ((channel.lastMessage?.id ?: 0) < dataMessage.id) {
-                channelDao.updateLastMessage(
+                channelDao.updateLastMessageAndNewMessageCount(
                     channelId = channel.channelEntity.id,
                     lastMessageTid = dataMessage.id,
                     lastMessageAt = dataMessage.createdAt,
+                    newMessageCount = channel.channelEntity.newMessageCount + 1
                 )
             }
         } else {
