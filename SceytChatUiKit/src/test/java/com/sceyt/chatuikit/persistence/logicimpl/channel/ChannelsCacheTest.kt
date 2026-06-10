@@ -33,6 +33,7 @@ import org.koin.core.context.stopKoin
 import org.koin.dsl.module
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
+import kotlin.time.Duration.Companion.milliseconds
 
 class ChannelsCacheTest {
     private val facade = mock<SceytChatUIFacade>()
@@ -446,6 +447,66 @@ class ChannelsCacheTest {
         assertThat(event.await()).isEqualTo(cachedChannel)
     }
 
+    @Test
+    fun `updateChannel updates an existing cached channel and emits an update event`() = runTest {
+        val cache = ChannelsCache()
+        val original = channel(id = 40)
+        cache.addAll(allTypesConfig, listOf(original), checkDifference = false)
+        val event = expectChannelUpdate(original.id, ChannelUpdatedType.Updated)
+        yield()
+
+        cache.updateChannel(allTypesConfig, original.copy(muted = true))
+
+        assertThat(event.await().channel.muted).isTrue()
+        assertThat(cache.getOneOf(original.id, allTypesConfig)?.muted).isTrue()
+    }
+
+    @Test
+    fun `updateChannel updates only the cached channels and ignores unknown ones`() = runTest {
+        val cache = ChannelsCache()
+        cache.addAll(allTypesConfig, listOf(channel(id = 41), channel(id = 42)), checkDifference = false)
+
+        cache.updateChannel(
+            allTypesConfig,
+            channel(id = 41).copy(subject = "A"),
+            channel(id = 42).copy(subject = "B"),
+            channel(id = 43).copy(subject = "C") // not cached
+        )
+
+        assertThat(cache.getOneOf(41, allTypesConfig)?.subject).isEqualTo("A")
+        assertThat(cache.getOneOf(42, allTypesConfig)?.subject).isEqualTo("B")
+        assertThat(cache.getOneOf(43, allTypesConfig)).isNull() // unknown channel not inserted
+    }
+
+    @Test
+    fun `updateChannel requests sorting when the last message changes`() = runTest {
+        val cache = ChannelsCache()
+        val original = channel(id = 44, lastMessage = createMessage(createdAt = 1, id = 1, tid = 1))
+        cache.addAll(allTypesConfig, listOf(original), checkDifference = false)
+        val event = expectChannelUpdate(original.id, ChannelUpdatedType.Updated)
+        yield()
+
+        cache.updateChannel(allTypesConfig, original.copy(lastMessage = createMessage(createdAt = 5, id = 2, tid = 2)))
+
+        val data = event.await()
+        assertThat(data.diff.lastMessageChanged).isTrue()
+        assertThat(data.needSorting).isTrue()
+    }
+
+    @Test
+    fun `updateChannel does not request sorting for a non-ordering change`() = runTest {
+        val cache = ChannelsCache()
+        val original = channel(id = 45, lastMessage = createMessage(createdAt = 1, id = 1, tid = 1))
+        cache.addAll(allTypesConfig, listOf(original), checkDifference = false)
+        val event = expectChannelUpdate(original.id, ChannelUpdatedType.Updated)
+        yield()
+
+        // Mute toggles, last message unchanged → list position is unaffected.
+        cache.updateChannel(allTypesConfig, original.copy(muted = true))
+
+        assertThat(event.await().needSorting).isFalse()
+    }
+
     private suspend fun CoroutineScope.assertUpsertType(
         updatedChannel: SceytChannel,
         expectedType: ChannelUpdatedType
@@ -472,7 +533,7 @@ class ChannelsCacheTest {
         predicate: (T) -> Boolean
     ): Deferred<T> {
         return async {
-            withTimeout(1_000) {
+            withTimeout(1_000.milliseconds) {
                 flow.first(predicate)
             }
         }
