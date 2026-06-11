@@ -778,14 +778,12 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
   */
 
     FileTransferHelper.onTransferUpdatedLiveData.asFlow().onEach { transfer ->
-        viewModelScope.launch(Dispatchers.Default) {
-            if (lifecycleOwner.isResumed()) {
-                messagesListView.updateProgress(transfer, false)
-            } else if (shouldDeferTransferUpdate(transfer)) {
-                needToUpdateTransferAfterOnResume[transfer.messageTid] = transfer
-            }
+        if (lifecycleOwner.isResumed()) {
+            messagesListView.updateProgress(transfer, false)
+        } else if (shouldDeferTransferUpdate(transfer)) {
+            needToUpdateTransferAfterOnResume[transfer.messageTid] = transfer
         }
-    }.launchIn(viewModelScope)
+    }.launchIn(lifecycleScope)
 
     onChannelEventFlow.onEach { event ->
         when (event) {
