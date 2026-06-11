@@ -248,6 +248,13 @@ fun View.visibleInvisibleWithBottomSlideAnim(
     }
 }
 
+fun ValueAnimator?.cancelAndRelease() {
+    this ?: return
+    removeAllUpdateListeners()
+    removeAllListeners()
+    cancel()
+}
+
 inline fun animationListener(
     crossinline onAnimationRepeat: (animation: Animation?) -> Unit = { _ -> },
     crossinline onAnimationStart: (animation: Animation?) -> Unit = { _ -> },
