@@ -9,19 +9,17 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytItemOutVoiceMessageBinding
-import com.sceyt.chatuikit.extensions.TAG_REF
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.mediaPlayerPositionToSeekBarProgress
 import com.sceyt.chatuikit.extensions.progressToMediaPlayerPosition
-import com.sceyt.chatuikit.extensions.runOnMainThread
 import com.sceyt.chatuikit.extensions.setBackgroundTint
-import com.sceyt.chatuikit.media.audio.AudioPlaybackState
-import com.sceyt.chatuikit.media.audio.AudioPlayer
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
-import com.sceyt.chatuikit.media.audio.AudioPlayerHelper.OnAudioPlayer
+import com.sceyt.chatuikit.media.audio.AudioPlayerState
+import com.sceyt.chatuikit.media.audio.AudioPlayerStateCollector
+import com.sceyt.chatuikit.media.audio.AudioPlayerStatus
 import com.sceyt.chatuikit.media.audio.VoiceStateCoordinator
 import com.sceyt.chatuikit.media.audio.alreadyInitialized
-import com.sceyt.chatuikit.media.audio.isCurrentPlayer
+import com.sceyt.chatuikit.media.audio.isAudioPlaybackAvailable
 import com.sceyt.chatuikit.media.audio.isPlaying
 import com.sceyt.chatuikit.media.audio.seek
 import com.sceyt.chatuikit.media.audio.toggle
@@ -42,7 +40,6 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState.ThumbLoaded
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploaded
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploading
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.WaitingToUpload
-import com.sceyt.chatuikit.persistence.logicimpl.message.MessageTid
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem.MessageItem
@@ -65,7 +62,11 @@ class OutVoiceMessageViewHolder(
     binding.root, style, messageListeners,
     needMediaDataCallback = needMediaDataCallback
 ) {
+    private val playbackStateCollector = AudioPlayerStateCollector(
+        onStateChanged = ::onPlaybackStateChanged
+    )
     private var lastFilePath: String? = ""
+    private var lastReportedPlaying = false
     private var currentPlaybackSpeed: PlaybackSpeed = PlaybackSpeed.X1
         set(value) {
             field = value
@@ -171,48 +172,8 @@ class OutVoiceMessageViewHolder(
             }
         }
 
-        val isPlaying = checkIsPlayingAndSetState()
-        seekBar.isEnabled = isPlaying
-        playBackSpeed.isEnabled = isPlaying
-
-        AudioPlayerHelper.addEventListener(playerListener, TAG_REF)
-    }
-
-    private fun checkIsPlayingAndSetState(): Boolean {
-        return if (AudioPlayerHelper.isCurrentPlayer(fileItem)) {
-            val playBackPos = AudioPlayerHelper.getCurrentPlayer()?.getPlaybackPosition() ?: 0
-            binding.voiceDuration.text = style.voiceDurationFormatter.format(context, playBackPos)
-            binding.seekBar.progress = mediaPlayerPositionToSeekBarProgress(
-                playBackPos, fileItem.duration?.times(1000L) ?: 0
-            )
-            currentPlaybackSpeed =
-                fromValue(AudioPlayerHelper.getCurrentPlayer()?.getPlaybackSpeed())
-            true
-        } else {
-            // Check if there's a saved state for this voice message
-            val savedState = AudioPlayerHelper.getPlaybackState(
-                fileItem.attachment.filePath ?: "",
-                fileItem.attachment.messageTid
-            )
-            if (savedState != null) {
-                // Restore the saved position and speed in UI
-                binding.voiceDuration.text =
-                    style.voiceDurationFormatter.format(context, savedState.position)
-                binding.seekBar.progress = mediaPlayerPositionToSeekBarProgress(
-                    savedState.position, fileItem.duration?.times(1000L) ?: 0
-                )
-                currentPlaybackSpeed = fromValue(savedState.speed)
-            } else {
-                // No saved state, show default values
-                binding.voiceDuration.text = style.voiceDurationFormatter.format(
-                    context = context,
-                    from = fileItem.duration?.times(1000L) ?: 0
-                )
-                binding.seekBar.progress = 0f
-                currentPlaybackSpeed = PlaybackSpeed.X1
-            }
-            false
-        }
+        lastReportedPlaying = false
+        onPlaybackStateChanged(AudioPlayerHelper.state.value)
     }
 
     private fun onPlayPauseClick(attachment: SceytAttachment) {
@@ -223,10 +184,6 @@ class OutVoiceMessageViewHolder(
         VoiceStateCoordinator.stopRecordingIfActive()
 
         if (AudioPlayerHelper.alreadyInitialized(attachment)) {
-            AudioPlayerHelper.getCurrentPlayer()?.addEventListener(
-                event = playerListener,
-                tag = TAG_REF,
-            )
             AudioPlayerHelper.toggle(attachment)
         } else
             initAudioPlayer()
@@ -235,101 +192,66 @@ class OutVoiceMessageViewHolder(
     private fun initAudioPlayer() {
         AudioPlayerHelper.init(
             filePath = lastFilePath ?: return,
-            messageTid = fileItem.attachment.messageTid,
-            events = playerListener,
-            tag = TAG_REF
+            messageTid = fileItem.attachment.messageTid
         )
     }
 
-    private val playerListener: OnAudioPlayer by lazy {
-        object : OnAudioPlayer {
-            override fun onInitialized(
-                alreadyInitialized: Boolean,
-                player: AudioPlayer,
-                filePath: String,
-                messageTid: MessageTid
-            ) {
-                if (!checkIsValid(filePath, messageTid)) return
+    private fun onPlaybackStateChanged(state: AudioPlayerState) {
+        if (!viewHolderHelper.isFileItemInitialized) return
+        val playbackAvailable = fileItem.isAudioPlaybackAvailable()
+        val isCurrent = state.matches(lastFilePath, fileItem.attachment.messageTid)
+        val playing = playbackAvailable && isCurrent && state.isPlaying
+        setPlayButtonIcon(playing)
+        if (lastReportedPlaying != playing) {
+            lastReportedPlaying = playing
+            voicePlayPauseListener?.invoke(fileItem, requireMessage, playing)
+        }
 
-                runOnMainThread {
-                    binding.seekBar.isEnabled = true
-                    binding.playBackSpeed.isEnabled = true
-                }
+        when {
+            !playbackAvailable -> {
+                showSavedPlaybackState()
             }
 
-            override fun onProgress(
-                position: Long, duration: Long, filePath: String,
-                messageTid: MessageTid
-            ) {
-                if (!checkIsValid(filePath, messageTid)) return
-                val seekBarProgress = mediaPlayerPositionToSeekBarProgress(position, duration)
-                runOnMainThread {
-                    binding.seekBar.progress = seekBarProgress
-                    binding.seekBar.isEnabled = true
-                    binding.playBackSpeed.isEnabled = true
-                    binding.voiceDuration.text =
-                        style.voiceDurationFormatter.format(context, position)
-                }
+            isCurrent && state.status != AudioPlayerStatus.Stopped -> {
+                val duration = state.duration.takeIf { it > 0 }
+                    ?: fileItem.duration?.times(1000L)
+                    ?: 0
+                binding.seekBar.progress = mediaPlayerPositionToSeekBarProgress(
+                    state.position,
+                    duration
+                )
+                binding.voiceDuration.text = style.voiceDurationFormatter.format(
+                    context,
+                    if (state.status == AudioPlayerStatus.Completed) duration else state.position
+                )
+                currentPlaybackSpeed = fromValue(state.speed)
+                val controlsEnabled = state.status == AudioPlayerStatus.Playing ||
+                        state.status == AudioPlayerStatus.Paused ||
+                        state.status == AudioPlayerStatus.Initializing
+                binding.seekBar.isEnabled = controlsEnabled
+                binding.playBackSpeed.isEnabled = controlsEnabled
             }
 
-            override fun onToggle(
-                playing: Boolean, filePath: String,
-                messageTid: MessageTid
-            ) {
-                if (!checkIsValid(filePath, messageTid)) return
-                runOnMainThread {
-                    setPlayButtonIcon(playing)
-                    voicePlayPauseListener?.invoke(fileItem, requireMessage, playing)
-                }
-            }
-
-            override fun onStop(
-                filePath: String,
-                messageTid: MessageTid,
-                savedState: AudioPlaybackState?
-            ) {
-                if (!checkIsValid(filePath, messageTid)) return
-                runOnMainThread {
-                    setPlayButtonIcon(false)
-                    if (savedState != null) {
-                        // Switched to another voice message - show saved position and speed
-                        binding.voiceDuration.text =
-                            style.voiceDurationFormatter.format(context, savedState.position)
-                        binding.seekBar.progress = mediaPlayerPositionToSeekBarProgress(
-                            savedState.position, fileItem.duration?.times(1000L) ?: 0
-                        )
-                        currentPlaybackSpeed = fromValue(savedState.speed)
-                    } else {
-                        // Natural completion - reset position to beginning but keep speed
-                        binding.seekBar.progress = 0f
-                        binding.voiceDuration.text = style.voiceDurationFormatter.format(
-                            context,
-                            fileItem.duration?.times(1000L) ?: 0
-                        )
-                    }
-                    binding.seekBar.isEnabled = false
-                    binding.playBackSpeed.isEnabled = false
-                }
-            }
-
-            override fun onPaused(
-                filePath: String,
-                messageTid: MessageTid
-            ) {
-                if (!checkIsValid(filePath, messageTid)) return
-                runOnMainThread { setPlayButtonIcon(false) }
-            }
-
-            override fun onSpeedChanged(
-                speed: Float, filePath: String,
-                messageTid: MessageTid
-            ) {
-                if (!checkIsValid(filePath, messageTid)) return
-                runOnMainThread {
-                    currentPlaybackSpeed = PlaybackSpeed.fromValue(speed)
-                }
+            else -> {
+                showSavedPlaybackState()
             }
         }
+    }
+
+    private fun showSavedPlaybackState() {
+        val duration = fileItem.duration?.times(1000L) ?: 0
+        val savedState = lastFilePath?.let {
+            AudioPlayerHelper.getPlaybackState(it, fileItem.attachment.messageTid)
+        }
+        val position = savedState?.position ?: 0
+        binding.voiceDuration.text = style.voiceDurationFormatter.format(
+            context = context,
+            from = if (position > 0) position else duration
+        )
+        binding.seekBar.progress = mediaPlayerPositionToSeekBarProgress(position, duration)
+        currentPlaybackSpeed = fromValue(savedState?.speed)
+        binding.seekBar.isEnabled = false
+        binding.playBackSpeed.isEnabled = false
     }
 
     override fun updateState(data: TransferData, isOnBind: Boolean) {
@@ -337,7 +259,7 @@ class OutVoiceMessageViewHolder(
         when (data.state) {
             Uploaded, Downloaded -> {
                 lastFilePath = data.filePath
-                binding.playPauseButton.setImageDrawable(getPlayPauseItem())
+                setPlayButtonIcon(AudioPlayerHelper.isPlaying(fileItem))
             }
 
             PendingUpload, PauseUpload -> {
@@ -368,13 +290,11 @@ class OutVoiceMessageViewHolder(
     }
 
     private fun setPlayButtonIcon(playing: Boolean) {
-        binding.playPauseButton.setImageDrawable(getPlayPauseItem(playing))
-    }
-
-    private fun checkIsValid(filePath: String?, messageTid: MessageTid): Boolean {
-        filePath ?: return false
-        if (!viewHolderHelper.isFileItemInitialized) return false
-        return fileItem.attachment.filePath == filePath && fileItem.attachment.messageTid == messageTid
+        if (fileItem.isAudioPlaybackAvailable()) {
+            binding.playPauseButton.setImageDrawable(getPlayPauseItem(playing))
+        } else {
+            binding.playPauseButton.setImageResource(0)
+        }
     }
 
     override val loadingProgressView: CircularProgressView
@@ -408,8 +328,13 @@ class OutVoiceMessageViewHolder(
         )
     }
 
+    override fun onViewAttachedToWindow() {
+        super.onViewAttachedToWindow()
+        playbackStateCollector.start(itemView)
+    }
+
     override fun onViewDetachedFromWindow() {
+        playbackStateCollector.stop()
         super.onViewDetachedFromWindow()
-        AudioPlayerHelper.removeEventListener(TAG_REF)
     }
 }

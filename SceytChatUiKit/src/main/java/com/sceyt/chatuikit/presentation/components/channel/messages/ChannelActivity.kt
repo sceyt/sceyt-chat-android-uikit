@@ -12,10 +12,10 @@ import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.toIntentPayload
 import com.sceyt.chatuikit.databinding.SceytActivityChannelBinding
 import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
+import com.sceyt.chatuikit.extensions.applySystemBarsStyle
 import com.sceyt.chatuikit.extensions.createIntent
 import com.sceyt.chatuikit.extensions.overrideTransitions
 import com.sceyt.chatuikit.extensions.parcelable
-import com.sceyt.chatuikit.extensions.applySystemBarsStyle
 import com.sceyt.chatuikit.navigation.Destination
 import com.sceyt.chatuikit.navigation.navigate
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageListViewModel
@@ -32,8 +32,8 @@ open class ChannelActivity : AppCompatActivity() {
         applySystemBarsStyle()
         setContentView(
             SceytActivityChannelBinding.inflate(layoutInflater)
-            .also { binding = it }
-            .root)
+                .also { binding = it }
+                .root)
 
         applyInsetsAndWindowColor(binding.root)
 
@@ -78,7 +78,11 @@ open class ChannelActivity : AppCompatActivity() {
         const val CHANNEL = "CHANNEL"
         const val TARGET_MESSAGE_ID = "TARGET_MESSAGE_ID"
 
-        fun createIntent(context: Context, channel: SceytChannel, targetMessageId: Long? = null): Intent {
+        fun createIntent(
+            context: Context,
+            channel: SceytChannel,
+            targetMessageId: Long? = null
+        ): Intent {
             return context.createIntent<ChannelActivity> {
                 putExtra(CHANNEL, channel.toIntentPayload())
                 targetMessageId?.let { putExtra(TARGET_MESSAGE_ID, it) }
