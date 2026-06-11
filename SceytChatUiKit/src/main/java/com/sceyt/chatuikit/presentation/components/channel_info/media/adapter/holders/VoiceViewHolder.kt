@@ -3,20 +3,17 @@ package com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.h
 import androidx.core.view.isVisible
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytItemChannelVoiceBinding
-import com.sceyt.chatuikit.extensions.TAG_REF
 import com.sceyt.chatuikit.extensions.durationToMinSecShort
-import com.sceyt.chatuikit.extensions.runOnMainThread
 import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
-import com.sceyt.chatuikit.media.audio.AudioPlaybackState
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
-import com.sceyt.chatuikit.media.audio.AudioPlayerHelper.OnAudioPlayer
+import com.sceyt.chatuikit.media.audio.AudioPlayerState
+import com.sceyt.chatuikit.media.audio.AudioPlayerStateCollector
 import com.sceyt.chatuikit.media.audio.alreadyInitialized
-import com.sceyt.chatuikit.media.audio.isPlaying
+import com.sceyt.chatuikit.media.audio.isAudioPlaybackAvailable
 import com.sceyt.chatuikit.media.audio.toggle
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
-import com.sceyt.chatuikit.persistence.logicimpl.message.MessageTid
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.holders.BaseFileViewHolder
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelFileItem
 import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.listeners.AttachmentClickListeners
@@ -32,6 +29,9 @@ class VoiceViewHolder(
     private val needMediaDataCallback: (NeedMediaInfoData) -> Unit
 ) : BaseFileViewHolder<ChannelFileItem>(binding.root, needMediaDataCallback) {
 
+    private val playbackStateCollector = AudioPlayerStateCollector(
+        onStateChanged = ::onPlaybackStateChanged
+    )
     private var lastFilePath: String? = ""
 
     init {
@@ -45,6 +45,7 @@ class VoiceViewHolder(
         }
 
         binding.icFile.setOnClickListener {
+            if (!fileItem.isAudioPlaybackAvailable()) return@setOnClickListener
             if (AudioPlayerHelper.alreadyInitialized(fileItem)) {
                 AudioPlayerHelper.toggle(fileItem.attachment)
             } else initAudioPlayer()
@@ -57,9 +58,6 @@ class VoiceViewHolder(
 
         lastFilePath = attachment.filePath
 
-        if (AudioPlayerHelper.alreadyInitialized(fileItem))
-            initAudioPlayer()
-
         with(binding) {
             val user = item.getItemData()?.user
             tvUserName.text = user?.let {
@@ -68,7 +66,7 @@ class VoiceViewHolder(
             tvDate.text = style.subtitleFormatter.format(context, attachment)
 
             setVoiceDuration()
-            setPlayingState(AudioPlayerHelper.isPlaying(fileItem))
+            onPlaybackStateChanged(AudioPlayerHelper.state.value)
         }
     }
 
@@ -76,71 +74,21 @@ class VoiceViewHolder(
         val path = fileItem.attachment.filePath ?: return
         AudioPlayerHelper.init(
             filePath = path,
-            messageTid = fileItem.attachment.messageTid,
-            events = object : OnAudioPlayer {
-                override fun onProgress(
-                    position: Long, duration: Long, filePath: String,
-                    messageTid: MessageTid
-                ) {
-                    if (!checkIsValid(filePath, messageTid)) return
-                    runOnMainThread {
-                        binding.tvDuration.text = position.durationToMinSecShort()
-                    }
-                }
-
-                override fun onSeek(
-                    position: Long, filePath: String,
-                    messageTid: MessageTid
-                ) {
-                }
-
-                override fun onToggle(
-                    playing: Boolean, filePath: String,
-                    messageTid: MessageTid
-                ) {
-                    if (!checkIsValid(filePath, messageTid)) return
-                    binding.root.post { setPlayingState(playing) }
-                }
-
-                override fun onStop(
-                    filePath: String,
-                    messageTid: MessageTid,
-                    savedState: AudioPlaybackState?
-                ) {
-                    if (!checkIsValid(filePath, messageTid)) return
-                    binding.root.post {
-                        setPlayingState(false)
-                    }
-                }
-
-                override fun onPaused(
-                    filePath: String,
-                    messageTid: MessageTid
-                ) {
-                    if (!checkIsValid(filePath, messageTid)) return
-                    binding.root.post {
-                        setPlayingState(false)
-                    }
-                }
-
-                override fun onSpeedChanged(
-                    speed: Float, filePath: String,
-                    messageTid: MessageTid
-                ) {
-                }
-
-                override fun onError(
-                    filePath: String,
-                    messageTid: MessageTid
-                ) {
-                    if (!checkIsValid(filePath, messageTid)) return
-                    binding.root.post {
-                        setPlayingState(false)
-                    }
-                }
-            },
-            tag = TAG_REF
+            messageTid = fileItem.attachment.messageTid
         )
+    }
+
+    private fun onPlaybackStateChanged(state: AudioPlayerState) {
+        if (!viewHolderHelper.isFileItemInitialized) return
+        if (!fileItem.isAudioPlaybackAvailable()) {
+            binding.icFile.setImageResource(0)
+            return
+        }
+        val isCurrent = state.matches(lastFilePath, fileItem.attachment.messageTid)
+        setPlayingState(isCurrent && state.isPlaying)
+        if (isCurrent && state.position > 0) {
+            binding.tvDuration.text = state.position.durationToMinSecShort()
+        }
     }
 
     override fun updateState(data: TransferData, isOnBind: Boolean) {
@@ -162,18 +110,15 @@ class VoiceViewHolder(
     }
 
     private fun setPlayingState(playing: Boolean) {
-        if (lastFilePath.isNullOrBlank()) return
+        if (!fileItem.isAudioPlaybackAvailable()) {
+            binding.icFile.setImageResource(0)
+            return
+        }
         val iconRes = if (playing) style.pauseIcon else style.playIcon
         binding.icFile.setImageDrawable(iconRes)
 
         if (!playing)
             setVoiceDuration()
-    }
-
-    private fun checkIsValid(filePath: String?, messageTid: MessageTid): Boolean {
-        filePath ?: return false
-        if (!viewHolderHelper.isFileItemInitialized) return false
-        return fileItem.attachment.filePath == filePath && fileItem.attachment.messageTid == messageTid
     }
 
     private fun setVoiceDuration() {
@@ -187,6 +132,16 @@ class VoiceViewHolder(
 
     override val loadingProgressViewWithStyle: Pair<CircularProgressView, MediaLoaderStyle>
         get() = binding.loadProgress to style.mediaLoaderStyle
+
+    override fun onViewAttachedToWindow() {
+        super.onViewAttachedToWindow()
+        playbackStateCollector.start(itemView)
+    }
+
+    override fun onViewDetachedFromWindow() {
+        playbackStateCollector.stop()
+        super.onViewDetachedFromWindow()
+    }
 
     private fun SceytItemChannelVoiceBinding.applyStyle() {
         root.setBackgroundColor(style.backgroundColor)
