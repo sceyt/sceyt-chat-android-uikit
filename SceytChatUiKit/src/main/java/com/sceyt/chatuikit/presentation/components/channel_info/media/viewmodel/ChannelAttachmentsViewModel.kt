@@ -3,6 +3,7 @@ package com.sceyt.chatuikit.presentation.components.channel_info.media.viewmodel
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.asFlow
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chatuikit.data.models.PaginationResponse
@@ -207,13 +208,11 @@ class ChannelAttachmentsViewModel(
 
     fun observeToUpdateAfterOnResume(fragment: Fragment) {
         FileTransferHelper.onTransferUpdatedLiveData.asFlow().onEach {
-            viewModelScope.launch(Dispatchers.Default) {
-                if (!fragment.isResumed && it.state != TransferState.Downloading && it.state != TransferState.Uploading)
-                    needToUpdateTransferAfterOnResume[it.messageTid] = it
-            }
-        }.launchIn(viewModelScope)
+            if (!fragment.isResumed && it.state != TransferState.Downloading && it.state != TransferState.Uploading)
+                needToUpdateTransferAfterOnResume[it.messageTid] = it
+        }.launchIn(fragment.lifecycleScope)
 
-        viewModelScope.launch {
+        fragment.lifecycleScope.launch {
             fragment.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
                 needToUpdateTransferAfterOnResume.forEach { (_, transferData) ->
                     FileTransferHelper.emitAttachmentTransferUpdate(transferData)
