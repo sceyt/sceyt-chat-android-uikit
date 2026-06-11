@@ -116,6 +116,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.io.File
+import kotlin.time.Duration.Companion.milliseconds
 
 @Suppress("MemberVisibilityCanBePrivate", "JoinDeclarationAndAssignment")
 class MessageInputView @JvmOverloads constructor(
@@ -128,10 +129,7 @@ class MessageInputView @JvmOverloads constructor(
 
     private lateinit var attachmentsAdapter: AttachmentsAdapter
     private var attachmentsViewHolderFactory by lazyVar {
-        AttachmentsViewHolderFactory(
-            context,
-            style
-        )
+        AttachmentsViewHolderFactory(context, style)
     }
     private var allAttachments = mutableListOf<Attachment>()
     private val binding: SceytMessageInputViewBinding
@@ -254,7 +252,7 @@ class MessageInputView @JvmOverloads constructor(
             typingTimeoutJob?.cancel()
             if (state.typing) {
                 typingTimeoutJob = getScope().launch {
-                    delay(2000)
+                    delay(2000.milliseconds)
                     actionListeners.sendChannelEvent(
                         InputUserAction.Typing(typing = false, text = null)
                     )
@@ -488,7 +486,7 @@ class MessageInputView @JvmOverloads constructor(
             return
         recordingUpdateJob = getScope().launch {
             while (isActive) {
-                delay(1000)
+                delay(1000.milliseconds)
                 onUserActionStateChange(InputUserAction.Recording(recording = true))
             }
         }
