@@ -199,7 +199,6 @@ class FilePickerHelper {
     }
 
     fun openMediaPicker(
-        pickerListener: BottomSheetMediaPicker.PickerListener,
         filter: BottomSheetMediaPicker.PickerFilterType = sceytGalleryFilter,
         maxSelectCount: Int = sceytGalleryMaxSelectCount,
         vararg selections: String,
@@ -209,12 +208,11 @@ class FilePickerHelper {
         sceytGalleryMaxSelectCount = maxSelectCount
         if (context.checkAndAskPermissions(requestSceytGalleryPermissionLauncher, *permissions)) {
             openSceytGalleryPicker(
-                pickerListener = pickerListener,
                 filter = filter,
                 maxSelectCount = maxSelectCount,
                 selections = selections
             )
-        } else BottomSheetMediaPicker.pickerListener = pickerListener
+        }
     }
 
     fun openCustomCamera(result: (filePath: String, isVideo: Boolean) -> Unit) {
@@ -420,7 +418,6 @@ class FilePickerHelper {
     }
 
     private fun openSceytGalleryPicker(
-        pickerListener: BottomSheetMediaPicker.PickerListener? = BottomSheetMediaPicker.pickerListener,
         filter: BottomSheetMediaPicker.PickerFilterType = sceytGalleryFilter,
         maxSelectCount: Int = sceytGalleryMaxSelectCount,
         vararg selections: String,
@@ -429,9 +426,7 @@ class FilePickerHelper {
             selections = selections,
             fileFilter = filter,
             maxSelectCount = maxSelectCount
-        ).apply {
-            BottomSheetMediaPicker.pickerListener = pickerListener
-        }.show(context.asFragmentActivity().supportFragmentManager, BottomSheetMediaPicker.TAG)
+        ).show(context.asFragmentActivity().supportFragmentManager, BottomSheetMediaPicker.TAG)
     }
 
     private fun pickFile(mimetypes: Array<String>?) {
