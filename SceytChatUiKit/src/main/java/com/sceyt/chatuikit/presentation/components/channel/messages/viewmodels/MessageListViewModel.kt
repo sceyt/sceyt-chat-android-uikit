@@ -74,6 +74,7 @@ import com.sceyt.chatuikit.presentation.components.channel.input.data.InputUserA
 import com.sceyt.chatuikit.presentation.components.channel.input.data.SearchResult
 import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
+import com.sceyt.chatuikit.presentation.components.channel.messages.PendingMessageStatusReconciler
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.reactions.ReactionItem
@@ -131,7 +132,7 @@ class MessageListViewModel(
     internal val placeToSavePathsList = mutableSetOf<Pair<AttachmentTypeEnum, String>>()
     internal val selectedMessagesMap by lazy { mutableMapOf<MessageTid, SceytMessage>() }
     internal val expandedMessagesMap by lazy { mutableMapOf<Long, Boolean>() }
-    internal val notFoundMessagesToUpdate by lazy { mutableMapOf<Long, SceytMessage>() }
+    internal val pendingStatusReconciler by lazy { PendingMessageStatusReconciler() }
     internal val outgoingMessageMutex by lazy { Mutex() }
     internal val pendingDisplayMsgIds by lazy { Collections.synchronizedSet(mutableSetOf<Long>()) }
     internal val needToUpdateTransferAfterOnResume = hashMapOf<Long, TransferData>()
