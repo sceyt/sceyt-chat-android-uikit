@@ -74,6 +74,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlin.time.Duration.Companion.milliseconds
 
 private const val TAG = "MessagesListViewBinding"
 
@@ -551,7 +552,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 withContext(Dispatchers.Main) {
                     messagesListView.scrollToLastMessage()
                     lifecycleOwner.lifecycleScope.launch {
-                        delay(200)
+                        delay(200.milliseconds)
                         syncNearCenterVisibleMessageIfNeeded()
                     }
                 }
@@ -684,9 +685,9 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     suspend fun onOutgoingMessage(message: SceytMessage) {
         if (hasNext || hasNextDb) return
 
-        // Use the message from notFoundMessagesToUpdate if available.
-        // It was already updated, but for some reason was not found in the UI to apply the update.
-        val messageToRender = notFoundMessagesToUpdate.remove(message.tid)?.let {
+        // Use the parked update if available. It was already updated, but for some reason was not
+        // found in the UI to apply the update.
+        val messageToRender = pendingStatusReconciler.take(message.tid)?.let {
             SceytLog.d(TAG, "Rendering previously not found updated message with tid: ${it.tid}")
             it
         } ?: message
@@ -711,6 +712,17 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     }
 
+    // Retries status updates parked while their target was missing during a list rebuild
+    // (e.g. a forwarded message stuck on "Pending"). Run on every list commit.
+    fun flushNotFoundStatusUpdates() {
+        if (pendingStatusReconciler.parkedCount == 0) return
+        viewModelScope.launch(Dispatchers.Main) {
+            outgoingMessageMutex.withLock {
+                pendingStatusReconciler.reconcile { messagesListView.updateMessage(it) }
+            }
+        }
+    }
+
     fun onMessageUpdated(data: Pair<Long, List<SceytMessage>>) {
         val (_, messages) = data
 
@@ -727,9 +739,8 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                     }
 
                     else -> {
-                        val foundToUpdate = messagesListView.updateMessage(message)
-                        if (!foundToUpdate) {
-                            notFoundMessagesToUpdate[message.tid] = message
+                        pendingStatusReconciler.onStatusUpdate(message) {
+                            messagesListView.updateMessage(it)
                         }
                     }
                 }
@@ -936,6 +947,10 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 )
             }
         }
+    }
+
+    messagesListView.setOnListCommittedListener {
+        flushNotFoundStatusUpdates()
     }
 
     messagesListView.setOnWindowFocusChangeListener { hasFocus ->

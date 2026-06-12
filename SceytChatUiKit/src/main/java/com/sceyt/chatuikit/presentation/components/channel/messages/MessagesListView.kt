@@ -785,6 +785,10 @@ class MessagesListView @JvmOverloads constructor(
         messagesRV.setNeedLoadPrevMessagesListener(listener)
     }
 
+    internal fun setOnListCommittedListener(listener: () -> Unit) {
+        messagesRV.setOnListCommittedListener(listener)
+    }
+
     internal fun setScrollStateChangeListener(listener: (Int) -> Unit) {
         messagesRV.setScrollStateChangeListener(listener)
     }

@@ -22,6 +22,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.mes
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.sticky_date.StickyHeaderInterface
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -33,13 +34,19 @@ class MessagesAdapter(
     private val viewHolderFactory: MessageViewHolderFactory,
     private val style: MessagesListViewStyle,
     private val scope: LifecycleCoroutineScope,
-    private val recyclerView: RecyclerView
+    private val recyclerView: RecyclerView,
+    private val backgroundDispatcher: CoroutineDispatcher = Dispatchers.Default,
+    private val mainDispatcher: CoroutineDispatcher = Dispatchers.Main
 ) : RecyclerView.Adapter<BaseMessageViewHolder>(), StickyHeaderInterface {
     private val loadingPrevItem by lazy { MessageListItem.LoadingPrevItem }
     private val loadingNextItem by lazy { MessageListItem.LoadingNextItem }
     private val debounceHelper by lazy { DebounceHelper(300) }
     private var isMultiSelectableMode = false
     private var lastHeaderPosition = -1
+
+    // Called after the backing list is committed/rebuilt.
+    // Useful for retrying operations that require the latest list state.
+    var onListCommittedListener: (() -> Unit)? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseMessageViewHolder {
         return viewHolderFactory.createViewHolder(parent, viewType)
@@ -145,6 +152,7 @@ class MessagesAdapter(
         messages.addAll(0, items)
         notifyItemRangeInserted(0, items.size)
         updateDateAndState(items.last(), firstItem, dateItem)
+        onListCommittedListener?.invoke()
     }
 
     fun addNextPageMessagesList(items: List<MessageListItem>) {
@@ -153,6 +161,7 @@ class MessagesAdapter(
 
         messages.addAll(items)
         notifyItemRangeInserted(messages.lastIndex, items.size)
+        onListCommittedListener?.invoke()
     }
 
     fun addNewMessages(items: List<MessageListItem>) {
@@ -163,6 +172,7 @@ class MessagesAdapter(
 
         messages.addAll(filteredItems)
         notifyItemRangeInserted(messages.lastIndex, filteredItems.size)
+        onListCommittedListener?.invoke()
     }
 
     fun updateItemAt(index: Int, updatedItem: MessageItem) {
@@ -177,14 +187,15 @@ class MessagesAdapter(
         updateJob?.cancel()
         updateJob = scope.launch {
             var productDiffResult: DiffUtil.DiffResult
-            withContext(Dispatchers.Default) {
+            withContext(backgroundDispatcher) {
                 val myDiffUtil =
                     MessagesDiffUtil(ArrayList(this@MessagesAdapter.messages), messages)
                 productDiffResult = DiffUtil.calculateDiff(myDiffUtil, true)
             }
-            withContext(Dispatchers.Main) {
-                 this@MessagesAdapter.messages = SyncArrayList(messages)
+            withContext(mainDispatcher) {
+                this@MessagesAdapter.messages = SyncArrayList(messages)
                 productDiffResult.dispatchUpdatesToSafetySuspend(recyclerView)
+                onListCommittedListener?.invoke()
             }
         }
     }
@@ -194,6 +205,7 @@ class MessagesAdapter(
         updateJob?.cancel()
         messages = SyncArrayList(data)
         notifyDataSetChanged()
+        onListCommittedListener?.invoke()
     }
 
     fun getData() = messages.toList()
