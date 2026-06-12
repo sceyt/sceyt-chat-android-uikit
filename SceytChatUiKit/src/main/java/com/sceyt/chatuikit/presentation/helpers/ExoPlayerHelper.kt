@@ -33,9 +33,10 @@ class ExoPlayerHelper(
     private fun initializePlayer() {
         lastPlayer?.stop()
         lastPlayer?.release()
+        val appContext = context.applicationContext
         exoPlayer = ExoPlayer.Builder(
-            context,
-            DefaultRenderersFactory(context).setEnableDecoderFallback(true)
+            appContext,
+            DefaultRenderersFactory(appContext).setEnableDecoderFallback(true)
         ).build().also {
             lastPlayer = it
         }
@@ -44,11 +45,12 @@ class ExoPlayerHelper(
         exoPlayer.addListener(this)
     }
 
-    fun setMediaPath(url: String?, playVideo: Boolean) {
+    fun setMediaPath(url: String?, playVideo: Boolean, startPositionMs: Long = 0) {
         if (isSetMediaPath) return
         url?.let {
             exoPlayer.setMediaItem(MediaItem.fromUri(it))
             exoPlayer.prepare()
+            if (startPositionMs > 0) exoPlayer.seekTo(startPositionMs)
             exoPlayer.playWhenReady = playVideo
             isSetMediaPath = true
         }
@@ -67,7 +69,9 @@ class ExoPlayerHelper(
     }
 
     fun releasePlayer() {
+        playerView.player = null
         exoPlayer.release()
+        if (lastPlayer === exoPlayer) lastPlayer = null
     }
 
     fun restartVideo() {
