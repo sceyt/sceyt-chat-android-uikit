@@ -6,7 +6,6 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.databinding.SceytItemChannelMediaDateSeparatorBinding
-import com.sceyt.chatuikit.extensions.dispatchUpdatesToSafety
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.presentation.common.collections.SyncArrayList
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.AttachmentsDiffUtil
@@ -105,10 +104,12 @@ class ChannelMediaAdapter(
     }
 
     fun notifyUpdate(data: List<ChannelFileItem>, recyclerView: RecyclerView) {
-        val myDiffUtil = AttachmentsDiffUtil(attachments, data)
-        val productDiffResult = DiffUtil.calculateDiff(myDiffUtil, true)
-        attachments = SyncArrayList(data)
-        productDiffResult.dispatchUpdatesToSafety(recyclerView)
+        recyclerView.post {
+            val myDiffUtil = AttachmentsDiffUtil(attachments, data)
+            val productDiffResult = DiffUtil.calculateDiff(myDiffUtil, true)
+            attachments = SyncArrayList(data)
+            productDiffResult.dispatchUpdatesTo(this)
+        }
     }
 
     override fun bindHeaderData(
