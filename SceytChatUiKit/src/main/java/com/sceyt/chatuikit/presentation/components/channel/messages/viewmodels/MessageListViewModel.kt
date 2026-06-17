@@ -81,7 +81,9 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.rea
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageCommandEvent
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.PollEvent
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.ReactionEvent
+import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.bindings.LoadKeyType
 import com.sceyt.chatuikit.presentation.extensions.isNotPending
+import com.sceyt.chatuikit.presentation.extensions.isPending
 import com.sceyt.chatuikit.presentation.helpers.DebounceHelper
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import com.sceyt.chatuikit.presentation.root.PageState
@@ -242,7 +244,7 @@ class MessageListViewModel(
         ChannelsCache.pendingChannelCreatedFlow
             .filter { (pendingChannelId, _) -> pendingChannelId == channel.id }
             .onEach { (_, newChannel) ->
-                updateChannel { newChannel }
+                onPendingChannelCreated(newChannel)
             }
             .launchIn(viewModelScope)
 
@@ -285,6 +287,42 @@ class MessageListViewModel(
                 withContext(Dispatchers.Main) {
                     initPaginationResponse(it)
                 }
+            }
+        }
+    }
+
+    fun loadInitialMessagesForCurrentChannel() {
+        val lastMessage = channel.lastMessage
+        val lastDisplayedMessageId = channel.lastDisplayedMessageId
+        val lastMessageId = lastMessage?.id ?: 0
+        when {
+            initialTargetMessageId != null -> {
+                loadNearMessages(
+                    messageId = initialTargetMessageId,
+                    loadKey = LoadKeyData(
+                        key = LoadKeyType.ScrollToMessageBy.longValue,
+                        value = initialTargetMessageId
+                    ),
+                    ignoreServer = false
+                )
+            }
+
+            lastDisplayedMessageId == 0L || lastMessage?.isPending() == true
+                    || lastDisplayedMessageId == lastMessageId -> {
+                loadPrevMessages(lastMessageId, 0)
+            }
+
+            lastDisplayedMessageId >= lastMessageId -> {
+                loadPrevMessages(lastDisplayedMessageId, 0)
+            }
+
+            else -> {
+                pinnedLastReadMessageId = lastDisplayedMessageId
+                loadNearMessages(
+                    messageId = pinnedLastReadMessageId,
+                    loadKey = LoadKeyData(key = LoadKeyType.ScrollToUnreadMessage.longValue),
+                    ignoreServer = false
+                )
             }
         }
     }
@@ -431,6 +469,30 @@ class MessageListViewModel(
         _channel = _channel.updateAction()
         _conversationId = _channel.id
         _onChannelUpdatedEventFlow.tryEmit(_channel)
+    }
+
+    private fun onPendingChannelCreated(newChannel: SceytChannel) {
+        val pendingChannelId = channel.id
+        cancelMessageLoading()
+        resetMessageLoadingState()
+        updateChannel { newChannel }
+        if (ChannelsCache.currentChannelId == pendingChannelId)
+            ChannelsCache.currentChannelId = newChannel.id
+        loadInitialMessagesForCurrentChannel()
+    }
+
+    private fun cancelMessageLoading() {
+        loadPrevJob?.cancel()
+        loadNextJob?.cancel()
+        loadNearJob?.cancel()
+    }
+
+    private fun resetMessageLoadingState() {
+        loadPrevOffsetId = 0
+        loadNextOffsetId = 0
+        lastSyncCenterOffsetId = 0
+        needSyncMessagesWhenScrollStateIdle = false
+        isPreparingToScrollToMessage.set(false)
     }
 
     private fun getNextUnreadMention(): MessageId? = with(unreadMentionState) {

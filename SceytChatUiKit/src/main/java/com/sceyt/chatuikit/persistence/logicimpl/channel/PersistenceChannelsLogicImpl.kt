@@ -2,11 +2,9 @@ package com.sceyt.chatuikit.persistence.logicimpl.channel
 
 import android.content.Context
 import androidx.sqlite.db.SimpleSQLiteQuery
-import com.google.gson.Gson
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.models.channel.ChannelListQuery.ChannelListOrder
 import com.sceyt.chat.models.message.MessageState
-import com.sceyt.chat.models.role.Role
 import com.sceyt.chat.models.user.UserState
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.config.ChannelListConfig
@@ -32,21 +30,18 @@ import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
 import com.sceyt.chatuikit.data.models.channels.DraftMessage
 import com.sceyt.chatuikit.data.models.channels.EditChannelData
-import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
-import com.sceyt.chatuikit.data.models.channels.SelfChannelMetadata
 import com.sceyt.chatuikit.data.models.channels.SyncedChannelsWindow
 import com.sceyt.chatuikit.data.models.createErrorResponse
+import com.sceyt.chatuikit.data.models.fold
 import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
-import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.data.models.onError
 import com.sceyt.chatuikit.data.models.onSuccessNotNull
 import com.sceyt.chatuikit.extensions.findIndexed
 import com.sceyt.chatuikit.extensions.getPrintableStackTrace
-import com.sceyt.chatuikit.extensions.toSha256
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.database.dao.ChannelDao
@@ -67,7 +62,11 @@ import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
 import com.sceyt.chatuikit.persistence.logicimpl.sync.ChannelSyncStateStore
-import com.sceyt.chatuikit.persistence.mappers.createPendingChannel
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.CreatePendingChannelUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.FindExistingChannelByMembersUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.FindRealChannelForPendingUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.MergePendingDirectChannelsUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.MigratePendingChannelToRealChannelUseCase
 import com.sceyt.chatuikit.persistence.mappers.toChannel
 import com.sceyt.chatuikit.persistence.mappers.toChannelEntity
 import com.sceyt.chatuikit.persistence.mappers.toDraftAttachmentEntity
@@ -78,7 +77,6 @@ import com.sceyt.chatuikit.persistence.mappers.toReactionData
 import com.sceyt.chatuikit.persistence.mappers.toSceytMessage
 import com.sceyt.chatuikit.persistence.mappers.toSceytReaction
 import com.sceyt.chatuikit.persistence.mappers.toSceytUiChannel
-import com.sceyt.chatuikit.persistence.mappers.toSceytUser
 import com.sceyt.chatuikit.persistence.mappers.toUserDb
 import com.sceyt.chatuikit.persistence.mappers.toUserReactionsEntity
 import com.sceyt.chatuikit.persistence.repositories.ChannelsRepository
@@ -110,7 +108,13 @@ internal class PersistenceChannelsLogicImpl(
     private val chatUserReactionDao: ChatUserReactionDao,
     private val pendingReactionDao: PendingReactionDao,
     private val channelsCache: ChannelsCache,
-    private val channelSyncStateStore: ChannelSyncStateStore
+    private val channelSyncStateStore: ChannelSyncStateStore,
+    private val pendingChannelMigrationLock: PendingChannelMigrationLock,
+    private val findExistingChannelByMembersUseCase: FindExistingChannelByMembersUseCase,
+    private val createPendingChannelUseCase: CreatePendingChannelUseCase,
+    private val findRealChannelForPendingUseCase: FindRealChannelForPendingUseCase,
+    private val migratePendingChannelToRealChannelUseCase: MigratePendingChannelToRealChannelUseCase,
+    private val mergePendingDirectChannelsUseCase: MergePendingDirectChannelsUseCase
 ) : PersistenceChannelsLogic, SceytKoinComponent {
 
     companion object {
@@ -689,88 +693,60 @@ internal class PersistenceChannelsLogicImpl(
 
         updatedList = updateChannelPendingLastMessages(updatedList)
         channelDao.insertChannelsAndLinks(updatedList.map { it.toChannelEntity() }, links)
-        return updatedList
+        return mergePendingDirectChannels(updatedList)
     }
 
     override suspend fun findOrCreatePendingChannelByMembers(
         data: CreateChannelData,
-    ): SceytResponse<SceytChannel> {
-        var metadata = data.metadata
-        val members = data.members.toSet().toList()
-        val membersCount = members.size
-        val isSelf =
-            membersCount == 1 && members[0].id == myId && data.type == ChannelTypeEnum.Direct.value
-        val channelDb = if (isSelf) {
-            metadata = Gson().toJson(SelfChannelMetadata(1))
-            channelDao.getSelfChannel()
-        } else {
-            if (membersCount == 1) {
-                channelDao.getChannelByUserAndType(members[0].id, data.type)
-            } else {
-                val ids = members.map { it.id }.toSet().toList()
-                channelDao.getChannelByUsersAndType(ids, data.type)
-            }
-        }
-        if (channelDb != null) {
-            if (channelDb.channelEntity.pending)
-                channelsCache.addPendingChannel(channelDb.toChannel())
-            return SceytResponse.Success(channelDb.toChannel())
-        }
-        return createPendingChannelAndSave(data.copy(metadata = metadata))
+    ): SceytResponse<SceytChannel> = pendingChannelMigrationLock.withLock {
+        return@withLock findExistingChannelByMembersUseCase(data, myId)?.let { channel ->
+            if (channel.pending)
+                channelsCache.addPendingChannel(channel)
+            SceytResponse.Success(channel)
+        } ?: createPendingChannelUseCase(data, myId)
     }
 
     override suspend fun findOrCreatePendingChannelByUri(
         data: CreateChannelData,
     ): SceytResponse<SceytChannel> {
         if (data.uri.isBlank()) return SceytResponse.Error(SceytException(0, "Uri is empty"))
-        val channelDb = channelDao.getChannelByUri(data.uri)
-        if (channelDb != null) {
-            if (channelDb.channelEntity.pending)
-                channelsCache.addPendingChannel(channelDb.toChannel())
-            return SceytResponse.Success(channelDb.toChannel())
+
+        pendingChannelMigrationLock.withLock {
+            channelDao.getChannelByUri(data.uri)?.toChannel()?.let { channel ->
+                if (channel.pending)
+                    channelsCache.addPendingChannel(channel)
+                SceytResponse.Success(channel)
+            }
+        }?.let { return it }
+
+        val response = channelsRepository.getChannelByUri(data.uri)
+        return pendingChannelMigrationLock.withLock {
+            val existingChannel = channelDao.getChannelByUri(data.uri)?.toChannel()
+            if (response is SceytResponse.Success && response.data != null) {
+                SceytResponse.Success(saveFetchedChannelByUriUnlocked(data.uri, response.data))
+            } else {
+                existingChannel?.let { channel ->
+                    if (channel.pending)
+                        channelsCache.addPendingChannel(channel)
+                    SceytResponse.Success(channel)
+                } ?: createPendingChannelUseCase(data, myId)
+            }
         }
-        // Try to fetch channel from server
-        val response = getChannelFromServerByUri(data.uri)
-        if (response is SceytResponse.Success && response.data != null) {
-            return SceytResponse.Success(response.data)
-        }
-        return createPendingChannelAndSave(data)
     }
 
-    private suspend fun createPendingChannelAndSave(
-        data: CreateChannelData,
-    ): SceytResponse<SceytChannel> {
-        val fail = createErrorResponse<SceytChannel>("Failed to create direct channel myId is null")
-        val myId = myId ?: return fail
-        val currentUser = SceytChatUIKit.currentUser
-            ?: usersDao.getUserById(myId)?.toSceytUser()
-            ?: SceytUser(myId)
-
-        var members = data.members.toSet().toList()
-        if (members.none { it.id == myId }) {
-            members = members.plus(
-                SceytMember(
-                    role = Role(RoleTypeEnum.Owner.value),
-                    user = currentUser
-                )
-            )
+    private suspend fun mergePendingDirectChannels(realChannels: List<SceytChannel>): List<SceytChannel> {
+        if (realChannels.none { !it.pending }) return realChannels
+        return pendingChannelMigrationLock.withLock {
+            mergePendingDirectChannelsUnlocked(realChannels)
         }
+    }
 
-        val channelId = if (data.uri.isNotBlank()) {
-            data.uri.toSha256()
-        } else {
-            members.map { it.id }.toSet().sorted().joinToString(separator = "$").toSha256()
-        }
+    private suspend fun mergePendingDirectChannelUnlocked(channel: SceytChannel): SceytChannel {
+        return mergePendingDirectChannelsUseCase(channel, myId)
+    }
 
-        val channel = createPendingChannel(
-            channelId = channelId,
-            createdBy = currentUser,
-            data = data.copy(members = members)
-        )
-
-        insertChannelWithMembers(channel, members)
-        channelsCache.addPendingChannel(channel)
-        return SceytResponse.Success(channel)
+    private suspend fun mergePendingDirectChannelsUnlocked(realChannels: List<SceytChannel>): List<SceytChannel> {
+        return mergePendingDirectChannelsUseCase(realChannels, myId)
     }
 
     override suspend fun createChannel(createChannelData: CreateChannelData): SceytResponse<SceytChannel> {
@@ -784,8 +760,13 @@ internal class PersistenceChannelsLogicImpl(
         }
     }
 
-    override suspend fun createNewChannelInsteadOfPendingChannel(channel: SceytChannel): SceytResponse<SceytChannel> {
-        val pendingChannelId = channel.id
+    override suspend fun createNewChannelInsteadOfPendingChannel(
+        channel: SceytChannel
+    ): SceytResponse<SceytChannel> {
+        pendingChannelMigrationLock.withLock {
+            findRealAndMigratePendingChannel(channel)
+        }?.let { return SceytResponse.Success(it) }
+
         val response = channelsRepository.createChannel(
             CreateChannelData(
                 type = channel.type,
@@ -796,26 +777,36 @@ internal class PersistenceChannelsLogicImpl(
                 members = channel.members.orEmpty()
             )
         )
-        if (response is SceytResponse.Success) {
-            var newChannel = response.data
-                ?: return createErrorResponse("create channel response is success, but channel is null")
 
-            val newChannelId = newChannel.id
-            // Set new channel last message to pending channel last message with new channel id
-            newChannel = newChannel.copy(
-                lastMessage = channel.lastMessage?.copy(channelId = newChannelId)
+        return pendingChannelMigrationLock.withLock {
+            findRealAndMigratePendingChannel(channel)?.let { realChannel ->
+                SceytResponse.Success(realChannel)
+            } ?: response.fold(
+                onSuccess = { newChannel ->
+                    if (newChannel == null)
+                        return@fold createErrorResponse("create channel response is success, but channel is null")
+
+                    insertChannelWithMembers(newChannel)
+                    val pendingChannel = channelDao.getChannelById(channel.id)?.toChannel()
+                    val mergedChannel = if (pendingChannel?.pending == true)
+                        migratePendingChannelToRealChannelUseCase(pendingChannel, newChannel)
+                    else newChannel
+
+                    SceytResponse.Success(mergedChannel)
+                },
+                onError = { exception ->
+                    SceytResponse.Error(exception)
+                }
             )
-
-            channelDao.deleteChannelAndLinks(pendingChannelId)
-            channelDao.insertChannelAndLinks(newChannel.toChannelEntity(), newChannel.members?.map {
-                UserChatLinkEntity(userId = it.id, chatId = newChannelId, role = it.role.name)
-            } ?: emptyList())
-            messageDao.updateMessagesChannelId(pendingChannelId, newChannelId)
-
-            channelsCache.pendingChannelCreated(pendingChannelId, newChannel)
-            SceytResponse.Success(newChannel)
         }
-        return response
+    }
+
+    private suspend fun findRealAndMigratePendingChannel(channel: SceytChannel): SceytChannel? {
+        val realChannel = findRealChannelForPendingUseCase(channel, myId) ?: return null
+        val pendingChannel = channelDao.getChannelById(channel.id)?.toChannel()
+        return if (pendingChannel?.pending == true)
+            migratePendingChannelToRealChannelUseCase(pendingChannel, realChannel)
+        else realChannel
     }
 
     override suspend fun markChannelAsRead(channelId: Long): SceytResponse<SceytChannel> {
@@ -1017,11 +1008,10 @@ internal class PersistenceChannelsLogicImpl(
         return@withContext channelsRepository.getChannel(channelId)
             .onSuccessNotNull { channel ->
                 val lastMessage = getChannelCurrentLastMessage(channel)
-                channel.copy(lastMessage = lastMessage).toChannelEntity().let {
-                    insertChannelWithMembers(channel)
-                    getAndUpdateCashedChannel(channelId)?.let { updatedChannel ->
-                        messageLogic.onSyncedChannels(arrayListOf(updatedChannel))
-                    }
+                val updatedChannel = channel.copy(lastMessage = lastMessage)
+                insertChannelWithMembers(updatedChannel)
+                getAndUpdateCashedChannel(channelId)?.let { savedChannel ->
+                    messageLogic.onSyncedChannels(arrayListOf(savedChannel))
                 }
             }
             .onError {
@@ -1038,19 +1028,43 @@ internal class PersistenceChannelsLogicImpl(
 
     override suspend fun getChannelFromServerByUri(uri: String): SceytResponse<SceytChannel?> {
         val response = channelsRepository.getChannelByUri(uri)
-        if (response is SceytResponse.Success) {
-            response.data?.let { channel ->
-                insertChannelWithMembers(channel)
-                channelsCache.getCachedData().entries.forEach { (_, map) ->
-                    map.entries.find { it.value.uri == uri }?.let { (id, cachedChannel) ->
-                        if (cachedChannel.pending) {
-                            channelsCache.pendingChannelCreated(id, channel)
-                        }
-                    }
+        if (response !is SceytResponse.Success || response.data == null) return response
+
+        return pendingChannelMigrationLock.withLock {
+            SceytResponse.Success(saveFetchedChannelByUriUnlocked(uri, response.data))
+        }
+    }
+
+    private suspend fun saveFetchedChannelByUriUnlocked(
+        uri: String,
+        channel: SceytChannel
+    ): SceytChannel {
+        val pendingChannel = channelDao.getChannelByUri(uri)?.toChannel()
+            ?.takeIf { it.pending && it.id != channel.id }
+        if (pendingChannel != null)
+            channelDao.updateUri(pendingChannel.id, null)
+
+        insertChannelWithMembers(channel)
+        val mergedChannel = if (pendingChannel != null) {
+            migratePendingChannelToRealChannelUseCase(pendingChannel, channel)
+        } else {
+            mergePendingDirectChannelUnlocked(channel)
+        }
+        notifyPendingUriChannelCreated(uri, mergedChannel)
+        return mergedChannel
+    }
+
+    private suspend fun notifyPendingUriChannelCreated(
+        uri: String,
+        channel: SceytChannel
+    ) {
+        channelsCache.getCachedData().entries.forEach { (_, map) ->
+            map.entries.find { it.value.uri == uri }?.let { (id, cachedChannel) ->
+                if (cachedChannel.pending) {
+                    channelsCache.pendingChannelCreated(id, channel)
                 }
             }
         }
-        return response
     }
 
     override suspend fun getChannelByInviteKey(
