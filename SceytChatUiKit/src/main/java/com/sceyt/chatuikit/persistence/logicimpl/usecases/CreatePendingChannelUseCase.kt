@@ -72,7 +72,7 @@ internal class CreatePendingChannelUseCase(
         channelDao.insertChannelAndLinks(channel.toChannelEntity(), members.map {
             UserChatLinkEntity(userId = it.id, chatId = channel.id, role = it.role.name)
         })
-        channelsCache.addPendingChannel(channel)
+        channelsCache.upsertPendingChannel(channel)
         return SceytResponse.Success(channel)
     }
 }

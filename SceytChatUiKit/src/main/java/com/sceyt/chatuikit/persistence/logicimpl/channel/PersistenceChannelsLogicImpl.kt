@@ -701,7 +701,7 @@ internal class PersistenceChannelsLogicImpl(
     ): SceytResponse<SceytChannel> = pendingChannelMigrationLock.withLock {
         return@withLock findExistingChannelByMembersUseCase(data, myId)?.let { channel ->
             if (channel.pending)
-                channelsCache.addPendingChannel(channel)
+                channelsCache.upsertPendingChannel(channel)
             SceytResponse.Success(channel)
         } ?: createPendingChannelUseCase(data, myId)
     }
@@ -714,7 +714,7 @@ internal class PersistenceChannelsLogicImpl(
         pendingChannelMigrationLock.withLock {
             channelDao.getChannelByUri(data.uri)?.toChannel()?.let { channel ->
                 if (channel.pending)
-                    channelsCache.addPendingChannel(channel)
+                    channelsCache.upsertPendingChannel(channel)
                 SceytResponse.Success(channel)
             }
         }?.let { return it }
@@ -727,7 +727,7 @@ internal class PersistenceChannelsLogicImpl(
             } else {
                 existingChannel?.let { channel ->
                     if (channel.pending)
-                        channelsCache.addPendingChannel(channel)
+                        channelsCache.upsertPendingChannel(channel)
                     SceytResponse.Success(channel)
                 } ?: createPendingChannelUseCase(data, myId)
             }
