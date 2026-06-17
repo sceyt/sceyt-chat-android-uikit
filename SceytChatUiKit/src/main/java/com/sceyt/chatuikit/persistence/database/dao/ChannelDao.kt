@@ -131,7 +131,6 @@ internal abstract class ChannelDao {
     @Query("""SELECT * FROM $CHANNEL_TABLE WHERE uri = :uri""")
     abstract suspend fun getChannelByUri(uri: String): ChannelDb?
 
-    @SuppressWarnings(RoomWarnings.QUERY_MISMATCH)
     @Transaction
     @Query("""SELECT * FROM $CHANNEL_TABLE WHERE isSelf = 1""")
     abstract suspend fun getSelfChannel(): ChannelDb?
