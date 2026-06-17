@@ -82,11 +82,9 @@ class ChannelsCache {
         }
     }
 
-    suspend fun addPendingChannel(channel: SceytChannel) {
+    suspend fun upsertPendingChannel(channel: SceytChannel) {
         mutex.withLock {
-            pendingChannelsData[channel.id] = channel
-            if (channel.lastMessage != null)
-                channelAdded(channel)
+            upsertPendingChannelImpl(channel)
         }
     }
 
@@ -243,6 +241,11 @@ class ChannelsCache {
 
     suspend fun updateLastMessage(channelId: Long, message: SceytMessage?) {
         mutex.withLock {
+            pendingChannelsData[channelId]?.let { channel ->
+                upsertPendingChannelImpl(channel.copy(lastMessage = message))
+                return@withLock
+            }
+
             cachedData.forEachKeyValue { config, map ->
                 map[channelId]?.let { channel ->
                     if (message != null && channel.lastMessage != null)
@@ -262,6 +265,35 @@ class ChannelsCache {
                 }
             }
         }
+    }
+
+    private fun upsertPendingChannelImpl(channel: SceytChannel) {
+        val cachedChannel = pendingChannelsData[channel.id]
+        pendingChannelsData[channel.id] = channel
+
+        if (cachedChannel == null) {
+            if (channel.lastMessage != null)
+                channelAdded(channel)
+            return
+        }
+
+        val diff = cachedChannel.diff(channel)
+        if (!diff.hasDifference()) return
+
+        if (cachedChannel.lastMessage == null && channel.lastMessage != null)
+            channelAdded(channel)
+
+        channelUpdatedFlow_.tryEmit(
+            ChannelUpdateData(
+                channel = channel,
+                needSorting = checkNeedSortByLastMessage(
+                    cachedChannel.lastMessage,
+                    channel.lastMessage
+                ),
+                diff = diff,
+                eventType = getChannelUpdatedType(diff)
+            )
+        )
     }
 
     suspend fun updateLastMessageWithLastRead(channelId: Long, message: SceytMessage?) {

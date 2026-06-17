@@ -555,7 +555,7 @@ internal class PersistenceMessagesLogicImpl(
             }
 
             is SceytResponse.Error -> {
-                channelCache.addPendingChannel(updated)
+                channelCache.upsertPendingChannel(updated)
                 return callbackFlow {
                     trySend(SendMessageResult.Error(SceytResponse.Error(response.exception)))
                     this.channel.close()
