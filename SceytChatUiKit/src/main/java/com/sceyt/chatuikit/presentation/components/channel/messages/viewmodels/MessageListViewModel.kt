@@ -139,7 +139,7 @@ class MessageListViewModel(
     private var showSenderAvatarAndNameIfNeeded = true
     internal var viewOnceSelected = false
     private var loadPrevJob: Job? = null
-    private val loadNextJob: Job? = null
+    private var loadNextJob: Job? = null
     private var loadNearJob: Job? = null
     private var toggleVoteJob: Job? = null
     private var searchJob: Job? = null
@@ -295,7 +295,7 @@ class MessageListViewModel(
 
         notifyPageLoadingState(isLoadingMore)
 
-        loadPrevJob = viewModelScope.launch(Dispatchers.IO) {
+        loadNextJob = viewModelScope.launch(Dispatchers.IO) {
             messageInteractor.loadNextMessages(
                 conversationId = conversationId,
                 lastMessageId = lastMessageId,

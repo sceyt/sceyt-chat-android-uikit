@@ -5,7 +5,6 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.RawQuery
-import androidx.room.RoomWarnings
 import androidx.room.Transaction
 import androidx.room.Update
 import androidx.sqlite.db.SimpleSQLiteQuery
@@ -94,11 +93,10 @@ internal abstract class ChannelDao {
         return getChannelsById(links.map { it.chatId })
     }
 
-    @SuppressWarnings(RoomWarnings.QUERY_MISMATCH)
     @Transaction
     @Query(
         """
-        SELECT * FROM $CHANNEL_TABLE AS channel
+        SELECT channel.* FROM $CHANNEL_TABLE AS channel
         JOIN $USER_CHAT_LINK_TABLE AS link ON link.chat_id = channel.chat_id
         WHERE link.user_id = :peerId
           AND type = :channelType
@@ -109,7 +107,6 @@ internal abstract class ChannelDao {
         channelType: String,
     ): ChannelDb?
 
-    @SuppressWarnings(RoomWarnings.QUERY_MISMATCH)
     @Transaction
     @Query(
         """
