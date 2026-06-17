@@ -7,22 +7,33 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
 import com.google.common.truth.Truth
 import com.google.gson.Gson
+import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.di.repositoryModule
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelActionEvent
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
+import com.sceyt.chatuikit.data.models.channels.DraftMessage
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.channels.SelfChannelMetadata
+import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
+import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.database.SceytDatabase
+import com.sceyt.chatuikit.persistence.database.dao.AttachmentDao
 import com.sceyt.chatuikit.persistence.database.dao.ChannelDao
+import com.sceyt.chatuikit.persistence.database.dao.MessageDao
+import com.sceyt.chatuikit.persistence.database.entity.messages.AttachmentEntity
 import com.sceyt.chatuikit.persistence.di.logicModule
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
+import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.MergePendingDirectChannelsUseCase
+import com.sceyt.chatuikit.persistence.mappers.toMessageDb
 import com.sceyt.chatuikit.persistence.mappers.toSceytUser
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.runTest
@@ -42,6 +53,10 @@ class FindOrCreateDirectChannelLogicTests : SceytKoinComponent {
     private lateinit var database: SceytDatabase
     private lateinit var channelDao: ChannelDao
     private val channelLogic: PersistenceChannelsLogic by inject()
+    private val messageDao: MessageDao by inject()
+    private val attachmentDao: AttachmentDao by inject()
+    private val messagesCache: MessagesCache by inject()
+    private val mergePendingDirectChannelsUseCase: MergePendingDirectChannelsUseCase by inject()
     private val currentUser = User("marat")
 
     @get:Rule
@@ -515,6 +530,300 @@ class FindOrCreateDirectChannelLogicTests : SceytKoinComponent {
         Truth.assertThat(directChannelFromDb!!.id).isEqualTo(firstChannel.id)
         Truth.assertThat(directChannelFromDb.id).isEqualTo(secondChannel.id)
     }
+
+    @Test
+    fun server_direct_channel_reconciliation_should_merge_pending_direct_channel_and_move_local_state() = runTest {
+        val peerUserId = "merge-peer"
+        val pendingChannel = channelLogic.findOrCreatePendingChannelByMembers(
+            CreateChannelData(
+                type = ChannelTypeEnum.Direct.value,
+                members = listOf(SceytMember(SceytUser(peerUserId), "participant"))
+            )
+        ).data!!
+        val pendingMessage = pendingMessage(
+            channelId = pendingChannel.id,
+            tid = 9001
+        )
+
+        messageDao.upsertMessage(pendingMessage.toMessageDb(false))
+        val pendingAttachment = attachmentEntity(
+            channelId = pendingChannel.id,
+            messageTid = pendingMessage.tid
+        )
+        attachmentDao.insertAttachments(listOf(pendingAttachment))
+        messagesCache.add(pendingChannel.id, pendingMessage)
+        channelLogic.updateDraftMessage(
+            draftMessage(
+                channelId = pendingChannel.id,
+                body = "pending draft",
+                createdAt = 10
+            )
+        )
+
+        val realChannel = directChannel(
+            id = 1001,
+            peerUserId = peerUserId
+        )
+        channelLogic.onChannelEvent(ChannelActionEvent.Created(realChannel))
+        Truth.assertThat(channelLogic.getChannelFromDb(pendingChannel.id)).isNotNull()
+
+        mergePendingDirectChannelsUseCase(listOf(realChannel), currentUser.id)
+
+        Truth.assertThat(channelLogic.getChannelFromDb(pendingChannel.id)).isNull()
+        val mergedChannel = channelLogic.getChannelFromDb(realChannel.id)
+        Truth.assertThat(mergedChannel).isNotNull()
+        Truth.assertThat(mergedChannel!!.pending).isFalse()
+        Truth.assertThat(mergedChannel.draftMessage?.body).isEqualTo("pending draft")
+
+        val movedMessages = messageDao.getPendingMessages(realChannel.id)
+        Truth.assertThat(movedMessages.map { it.messageEntity.tid }).contains(pendingMessage.tid)
+        Truth.assertThat(
+            movedMessages.first { it.messageEntity.tid == pendingMessage.tid }.messageEntity.channelId
+        ).isEqualTo(realChannel.id)
+        Truth.assertThat(messageDao.getPendingMessages(pendingChannel.id)).isEmpty()
+
+        val cachedMovedMessage = messagesCache.get(realChannel.id, pendingMessage.tid)
+        Truth.assertThat(cachedMovedMessage).isNotNull()
+        Truth.assertThat(cachedMovedMessage!!.channelId).isEqualTo(realChannel.id)
+        Truth.assertThat(messagesCache.get(pendingChannel.id, pendingMessage.tid)).isNull()
+
+        val movedAttachments = attachmentDao.getNewestThenAttachmentInclude(
+            channelId = realChannel.id,
+            attachmentId = pendingAttachment.id ?: 0,
+            limit = 10,
+            types = listOf(pendingAttachment.type)
+        )
+        Truth.assertThat(movedAttachments.map { it.attachmentEntity.messageTid }).contains(pendingMessage.tid)
+        Truth.assertThat(
+            movedAttachments.first { it.attachmentEntity.messageTid == pendingMessage.tid }
+                .attachmentEntity.channelId
+        ).isEqualTo(realChannel.id)
+
+        val repeatedFindResult = channelLogic.findOrCreatePendingChannelByMembers(
+            CreateChannelData(
+                type = ChannelTypeEnum.Direct.value,
+                members = listOf(
+                    SceytMember(currentUser.toSceytUser(), "owner"),
+                    SceytMember(SceytUser(peerUserId), "participant")
+                )
+            )
+        )
+        Truth.assertThat(repeatedFindResult.data?.id).isEqualTo(realChannel.id)
+    }
+
+    @Test
+    fun server_self_channel_reconciliation_should_merge_pending_self_channel() = runTest {
+        val pendingSelfChannel = channelLogic.findOrCreatePendingChannelByMembers(
+            CreateChannelData(
+                type = ChannelTypeEnum.Direct.value,
+                members = listOf(SceytMember(currentUser.toSceytUser(), "owner"))
+            )
+        ).data!!
+        val realSelfChannel = selfChannel(id = 1002)
+
+        channelLogic.onChannelEvent(ChannelActionEvent.Created(realSelfChannel))
+        Truth.assertThat(channelLogic.getChannelFromDb(pendingSelfChannel.id)).isNotNull()
+
+        mergePendingDirectChannelsUseCase(listOf(realSelfChannel), currentUser.id)
+
+        Truth.assertThat(channelLogic.getChannelFromDb(pendingSelfChannel.id)).isNull()
+        Truth.assertThat(channelLogic.getChannelFromDb(realSelfChannel.id)).isNotNull()
+
+        val repeatedFindResult = channelLogic.findOrCreatePendingChannelByMembers(
+            CreateChannelData(
+                type = ChannelTypeEnum.Direct.value,
+                members = listOf(SceytMember(currentUser.toSceytUser(), "owner"))
+            )
+        )
+        Truth.assertThat(repeatedFindResult.data?.id).isEqualTo(realSelfChannel.id)
+    }
+
+    @Test
+    fun non_matching_direct_and_group_channels_should_not_merge_pending_channels() = runTest {
+        val pendingDirectChannel = channelLogic.findOrCreatePendingChannelByMembers(
+            CreateChannelData(
+                type = ChannelTypeEnum.Direct.value,
+                members = listOf(SceytMember(SceytUser("peer-a"), "participant"))
+            )
+        ).data!!
+        val realDirectChannel = directChannel(
+            id = 1003,
+            peerUserId = "peer-b"
+        )
+
+        channelLogic.onChannelEvent(ChannelActionEvent.Created(realDirectChannel))
+        mergePendingDirectChannelsUseCase(listOf(realDirectChannel), currentUser.id)
+
+        Truth.assertThat(channelLogic.getChannelFromDb(pendingDirectChannel.id)).isNotNull()
+        Truth.assertThat(channelLogic.getChannelFromDb(realDirectChannel.id)).isNotNull()
+
+        val groupMembers = listOf(
+            SceytMember(currentUser.toSceytUser(), "owner"),
+            SceytMember(SceytUser("group-peer"), "participant")
+        )
+        val pendingGroupChannel = channelLogic.findOrCreatePendingChannelByMembers(
+            CreateChannelData(
+                type = ChannelTypeEnum.Group.value,
+                subject = "Pending group",
+                members = groupMembers
+            )
+        ).data!!
+        val realGroupChannel = channel(
+            id = 1004,
+            type = ChannelTypeEnum.Group.value,
+            subject = "Real group",
+            members = groupMembers
+        )
+
+        channelLogic.onChannelEvent(ChannelActionEvent.Created(realGroupChannel))
+        mergePendingDirectChannelsUseCase(listOf(realGroupChannel), currentUser.id)
+
+        Truth.assertThat(channelLogic.getChannelFromDb(pendingGroupChannel.id)).isNotNull()
+        Truth.assertThat(channelLogic.getChannelFromDb(realGroupChannel.id)).isNotNull()
+        Truth.assertThat(channelLogic.getChannelFromDb(pendingGroupChannel.id)?.pending).isTrue()
+    }
+
+    private fun directChannel(
+        id: Long,
+        peerUserId: String,
+    ): SceytChannel {
+        return channel(
+            id = id,
+            type = ChannelTypeEnum.Direct.value,
+            members = listOf(SceytMember(SceytUser(peerUserId), "participant"))
+        )
+    }
+
+    private fun selfChannel(id: Long): SceytChannel {
+        return channel(
+            id = id,
+            type = ChannelTypeEnum.Direct.value,
+            metadata = Gson().toJson(SelfChannelMetadata(1)),
+            members = listOf(SceytMember(currentUser.toSceytUser(), "owner"))
+        )
+    }
+
+    private fun channel(
+        id: Long,
+        type: String,
+        members: List<SceytMember>,
+        subject: String = "",
+        metadata: String = "",
+    ): SceytChannel {
+        return SceytChannel(
+            id = id,
+            parentChannelId = null,
+            uri = null,
+            type = type,
+            subject = subject,
+            avatarUrl = null,
+            metadata = metadata,
+            createdAt = id,
+            updatedAt = 0,
+            messagesClearedAt = 0,
+            memberCount = members.size.toLong(),
+            createdBy = currentUser.toSceytUser(),
+            userRole = "owner",
+            unread = false,
+            newMessageCount = 0,
+            newMentionCount = 0,
+            newReactedMessageCount = 0,
+            hidden = false,
+            archived = false,
+            muted = false,
+            mutedTill = null,
+            pinnedAt = null,
+            lastReceivedMessageId = 0,
+            lastDisplayedMessageId = 0,
+            messageRetentionPeriod = 0,
+            lastMessage = null,
+            messages = null,
+            members = members,
+            newReactions = null,
+            pendingReactions = null,
+            pending = false,
+            draftMessage = null,
+            events = null
+        )
+    }
+
+    private fun pendingMessage(
+        channelId: Long,
+        tid: Long,
+    ): SceytMessage {
+        return SceytMessage(
+            id = 0,
+            tid = tid,
+            channelId = channelId,
+            body = "Pending message",
+            type = "text",
+            metadata = null,
+            createdAt = tid,
+            updatedAt = 0,
+            incoming = false,
+            isTransient = false,
+            silent = false,
+            viewOnce = false,
+            deliveryStatus = MessageDeliveryStatus.Pending,
+            state = MessageState.Unmodified,
+            user = currentUser.toSceytUser(),
+            attachments = null,
+            userReactions = null,
+            reactionTotals = null,
+            markerTotals = null,
+            userMarkers = null,
+            mentionedUsers = null,
+            parentMessage = null,
+            replyCount = 0,
+            displayCount = 0,
+            autoDeleteAt = null,
+            forwardingDetails = null,
+            pendingReactions = null,
+            bodyAttributes = null,
+            disableMentionsCount = false,
+            poll = null
+        )
+    }
+
+    private fun draftMessage(
+        channelId: Long,
+        body: String,
+        createdAt: Long,
+    ): DraftMessage {
+        return DraftMessage(
+            channelId = channelId,
+            body = body,
+            createdAt = createdAt,
+            mentionUsers = null,
+            replyOrEditMessage = null,
+            isReply = false,
+            bodyAttributes = null,
+            attachments = null,
+            voiceAttachment = null,
+            viewOnce = false
+        )
+    }
+
+    private fun attachmentEntity(
+        channelId: Long,
+        messageTid: Long,
+        id: Long = 7001,
+    ) = AttachmentEntity(
+        id = id,
+        messageId = 0,
+        messageTid = messageTid,
+        channelId = channelId,
+        userId = currentUser.id,
+        name = "image.png",
+        type = "image",
+        metadata = null,
+        fileSize = 100,
+        createdAt = 20,
+        url = "https://example.com/image.png",
+        filePath = null,
+        originalFilePath = null,
+        viewOnce = false
+    )
 
     /**
      * Helper method to verify that a channel is correctly stored in the database

@@ -574,12 +574,9 @@ internal class PersistenceMessagesLogicImpl(
     private suspend fun createNewChannelInsteadOfPendingChannel(
         pendingChannel: SceytChannel,
     ): SceytResponse<SceytChannel> {
-        val response = persistenceChannelsLogic.createNewChannelInsteadOfPendingChannel(
+        return persistenceChannelsLogic.createNewChannelInsteadOfPendingChannel(
             channel = pendingChannel
-        ).onSuccessNotNull {
-            messagesCache.moveMessagesToNewChannel(pendingChannel.id, it.id)
-        }
-        return response
+        )
     }
 
     override suspend fun sendSharedFileMessage(channelId: Long, message: Message) =

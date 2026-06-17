@@ -59,7 +59,6 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.mes
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageCommandEvent
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageListViewModel
 import com.sceyt.chatuikit.presentation.extensions.isNotPending
-import com.sceyt.chatuikit.presentation.extensions.isPending
 import com.sceyt.chatuikit.presentation.extensions.isSelfDestructed
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.services.sync.SceytSyncManager
@@ -125,41 +124,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     if (channel.userRole.isNullOrEmpty())
         getChannel(channel.id)
 
-    val lastMessage = channel.lastMessage
-    val lastDisplayedMessageId = channel.lastDisplayedMessageId
-    val lastMessageId = lastMessage?.id ?: 0
-    when {
-        initialTargetMessageId != null -> {
-            loadNearMessages(
-                messageId = initialTargetMessageId,
-                loadKey = LoadKeyData(
-                    key = LoadKeyType.ScrollToMessageBy.longValue,
-                    value = initialTargetMessageId
-                ),
-                ignoreServer = false
-            )
-        }
-
-        lastDisplayedMessageId == 0L || lastMessage?.isPending() == true
-                || lastDisplayedMessageId == lastMessageId -> {
-            loadPrevMessages(lastMessageId, 0)
-        }
-
-        // If last displayed message is less than last message id, this means some messages were deleted.
-        // Load previous messages from last displayed message id to detect deleted messages and remove them.
-        lastDisplayedMessageId >= lastMessageId -> {
-            loadPrevMessages(lastDisplayedMessageId, 0)
-        }
-
-        else -> {
-            pinnedLastReadMessageId = lastDisplayedMessageId
-            loadNearMessages(
-                messageId = pinnedLastReadMessageId,
-                loadKey = LoadKeyData(key = LoadKeyType.ScrollToUnreadMessage.longValue),
-                ignoreServer = false
-            )
-        }
-    }
+    loadInitialMessagesForCurrentChannel()
 
     fun setUnreadCounts(channel: SceytChannel) {
         messagesListView.setUnreadMessagesCount(channel.newMessageCount)
@@ -194,15 +159,16 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     }
 
     fun checkToHildeLoadingMoreItemByLoadType(loadType: PaginationResponse.LoadType) {
-        when {
-            loadType == LoadPrev && !hasPrevDb -> messagesListView.hideLoadingPrev()
-            loadType == LoadNext && !hasNextDb -> messagesListView.hideLoadingNext()
-            loadType == LoadNear -> {
+        when (loadType) {
+            LoadPrev if !hasPrevDb -> messagesListView.hideLoadingPrev()
+            LoadNext if !hasNextDb -> messagesListView.hideLoadingNext()
+            LoadNear -> {
                 if (!hasPrevDb)
                     messagesListView.hideLoadingPrev()
                 if (!hasNextDb)
                     messagesListView.hideLoadingNext()
             }
+            else -> Unit
         }
     }
 
