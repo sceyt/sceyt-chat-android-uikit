@@ -1719,7 +1719,12 @@ internal class PersistenceMessagesLogicImpl(
             pendingMarkerDao.deleteMessagesMarkersByStatus(responseIds, marker)
             myId?.let { userId ->
                 messageDao.insertUserMarkersIfExistMessage(responseIds.map {
-                    MarkerEntity(messageId = it, userId = userId, name = data.name)
+                    MarkerEntity(
+                        messageId = it,
+                        userId = userId,
+                        name = data.name,
+                        createdAt = data.createdAt
+                    )
                 })
 
                 messagesCache.addMessageMarker(
