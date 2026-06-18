@@ -100,8 +100,8 @@ class ChannelsCacheTest {
         val addedEvent = expectFirst(ChannelsCache.channelAddedFlow) { it.id == visiblePending.id }
         yield()
 
-        cache.addPendingChannel(hiddenPending)
-        cache.addPendingChannel(visiblePending)
+        cache.upsertPendingChannel(hiddenPending)
+        cache.upsertPendingChannel(visiblePending)
 
         assertThat(addedEvent.await()).isEqualTo(visiblePending)
         assertThat(cache.isPending(hiddenPending.id)).isTrue()
@@ -131,7 +131,7 @@ class ChannelsCacheTest {
 
         cache.addAll(directConfig, listOf(directChannel), checkDifference = false)
         cache.addAll(groupConfig, listOf(groupChannel), checkDifference = false)
-        cache.addPendingChannel(pendingChannel)
+        cache.upsertPendingChannel(pendingChannel)
 
         cache.clear(directConfig)
 
@@ -204,7 +204,7 @@ class ChannelsCacheTest {
         val pending = channel(id = 21, lastMessage = createMessage(createdAt = 5, id = 5, tid = 5))
             .copy(pending = true)
         cache.addAll(allTypesConfig, listOf(stale), checkDifference = false)
-        cache.addPendingChannel(pending)
+        cache.upsertPendingChannel(pending)
 
         val dbRow = channel(id = 20, lastMessage = createMessage(createdAt = 10, id = 10, tid = 10))
         val result = cache.resetWindowAfterSync(allTypesConfig, listOf(dbRow))
@@ -271,6 +271,24 @@ class ChannelsCacheTest {
         assertThat(update.channel.lastMessage).isEqualTo(newMessage)
         assertThat(update.needSorting).isTrue()
         assertThat(cache.getOneOf(cachedChannel.id)?.lastMessage).isEqualTo(newMessage)
+    }
+
+    @Test
+    fun `updateLastMessage updates pending channel and emits LastMessage`() = runTest {
+        val cache = ChannelsCache()
+        val pendingChannel = channel(id = 46).copy(pending = true, lastMessage = null)
+        val message = createMessage(createdAt = 2, id = 2, tid = 2)
+        cache.upsertPendingChannel(pendingChannel)
+        val event = expectChannelUpdate(pendingChannel.id, ChannelUpdatedType.LastMessage)
+        yield()
+
+        cache.updateLastMessage(pendingChannel.id, message)
+
+        val update = event.await()
+        assertThat(update.channel.lastMessage).isEqualTo(message)
+        assertThat(update.needSorting).isTrue()
+        assertThat(cache.getOneOf(pendingChannel.id)?.lastMessage).isEqualTo(message)
+        assertThat(cache.getData(allTypesConfig).map { it.id }).containsExactly(pendingChannel.id)
     }
 
     @Test
