@@ -21,6 +21,8 @@ import com.callclient.call.data.SceytCallException
 import com.callclient.call.data.SceytCallResult
 import com.callclient.call.data.VideoSettings
 import com.callclient.call.providers.CallDefaults
+import com.callclient.call.tracks.SCTAudioTrack
+import com.callclient.call.tracks.SCTVideoTrack
 import com.sceyt.audiorouting.AudioDevice
 import com.sceyt.audiorouting.AudioRouter
 import com.sceyt.audiorouting.AudioRouterConfig
@@ -55,9 +57,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
-import org.webrtc.VideoTrack
 import java.util.UUID
 import kotlin.reflect.KClass
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import com.callclient.call.data.fold as callFold
 import com.sceyt.chatuikit.data.models.fold as sceytFold
@@ -819,7 +821,7 @@ class CallManagerImpl(
 
                     is ParticipantEvent.Video -> {
                         val track = if (event.enabled) {
-                            participant.getVideoTracks().firstOrNull()?.videoTrack
+                            participant.getVideoTracks().firstOrNull()
                         } else null
                         updateLocalParticipant {
                             it.copy(
@@ -836,11 +838,11 @@ class CallManagerImpl(
             override fun onRemoteVideoTrackAdded(
                 call: Call,
                 participant: Participant,
-                videoTrack: VideoTrack,
+                track: SCTVideoTrack,
             ) {
                 updateParticipant(participant.id) { existing ->
                     participant.toUiState(existing = existing).copy(
-                        videoTrack = videoTrack,
+                        videoTrack = track,
                         isVideoEnabled = participant.videoEnabled,
                     )
                 }
@@ -849,7 +851,7 @@ class CallManagerImpl(
             override fun onRemoteVideoTrackRemoved(
                 call: Call,
                 participant: Participant,
-                videoTrack: VideoTrack,
+                track: SCTVideoTrack,
             ) {
                 updateParticipant(participant.id) { existing ->
                     participant.toUiState(existing = existing).copy(
@@ -862,13 +864,13 @@ class CallManagerImpl(
             override fun onRemoteAudioTrackAdded(
                 call: Call,
                 participant: Participant,
-                audioTrack: org.webrtc.AudioTrack,
+                track: SCTAudioTrack,
             ) = Unit
 
             override fun onRemoteAudioTrackRemoved(
                 call: Call,
                 participant: Participant,
-                audioTrack: org.webrtc.AudioTrack,
+                track: SCTAudioTrack,
             ) = Unit
 
             override fun onCallMediaFlowChanged(call: Call) {
@@ -999,7 +1001,7 @@ class CallManagerImpl(
 
         scope.launch {
             playTone(ToneConfig.hangup())
-            delay(1000)
+            delay(1000.milliseconds)
             stopTone()
         }
 
@@ -1007,7 +1009,7 @@ class CallManagerImpl(
         endedDismissJob?.cancel()
         endedDismissJob = scope.launch {
             cleanupCall()
-            delay(reason.dismissTimeoutMs)
+            delay(reason.dismissTimeoutMs.milliseconds)
             _callUiState.update { CallUiState.IDLE }
         }
     }
@@ -1089,7 +1091,7 @@ class CallManagerImpl(
                 connectionState = participant.connectionState,
                 isMuted = participant.muted,
                 isVideoEnabled = participant.videoEnabled,
-                videoTrack = participant.getVideoTracks().firstOrNull()?.videoTrack
+                videoTrack = participant.getVideoTracks().firstOrNull()
                     ?: existing.videoTrack,
                 canPublishAudio = participant.permissions.canPublishAudio,
                 canPublishVideo = participant.permissions.canPublishVideo,
@@ -1153,7 +1155,7 @@ class CallManagerImpl(
             connectionState = connectionState,
             isMuted = muted,
             isVideoEnabled = videoEnabled,
-            videoTrack = getVideoTracks().firstOrNull()?.videoTrack ?: existing?.videoTrack,
+            videoTrack = getVideoTracks().firstOrNull() ?: existing?.videoTrack,
             isActiveSpeaker = existing?.isActiveSpeaker == true,
             canPublishAudio = permissions.canPublishAudio,
             canPublishVideo = permissions.canPublishVideo,
@@ -1266,7 +1268,7 @@ class CallManagerImpl(
         if (durationJob?.isActive == true) return
         durationJob = scope.launch {
             while (isActive) {
-                delay(1000)
+                delay(1000.milliseconds)
                 _callDuration.update { it + 1 }
             }
         }
@@ -1280,7 +1282,7 @@ class CallManagerImpl(
     private fun startNoAnswerTimeout() {
         noAnswerJob?.cancel()
         noAnswerJob = scope.launch {
-            delay(CallUiState.NO_ANSWER_TIMEOUT_MS)
+            delay(CallUiState.NO_ANSWER_TIMEOUT_MS.milliseconds)
             if (_callUiState.value.phase == CallPhase.Outgoing) {
                 _callUiState.value.call?.leave()
                 handleCallEnded(EndedReason.NoAnswer)
@@ -1296,7 +1298,7 @@ class CallManagerImpl(
     private fun startReconnectTimeout() {
         reconnectTimeoutJob?.cancel()
         reconnectTimeoutJob = scope.launch {
-            delay(CallUiState.RECONNECT_TIMEOUT_MS)
+            delay(CallUiState.RECONNECT_TIMEOUT_MS.milliseconds)
             if (_callUiState.value.phase == CallPhase.Reconnecting) {
                 _callUiState.value.call?.leave()
                 handleCallEnded(EndedReason.Failed("Reconnection timed out"))
@@ -1317,7 +1319,7 @@ class CallManagerImpl(
         toneManager.playRingtoneAndVibrate()
     }
 
-    private suspend fun awaitWorkStart() = withTimeoutOrNull(5.seconds.inWholeMilliseconds) {
+    private suspend fun awaitWorkStart() = withTimeoutOrNull(5.seconds.inWholeMilliseconds.milliseconds) {
         WorkManager.getInstance(context)
             .getWorkInfosByTagFlow(IncomingCallWorker.INCOMING_CALL_WORK_NAME)
             .first { infos ->
