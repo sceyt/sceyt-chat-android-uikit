@@ -87,6 +87,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.delay
 import org.webrtc.RendererCommon
+import kotlin.time.Duration.Companion.milliseconds
 
 private val SurfaceDark = Color(0xFF232324)
 private val GroupTileShape = RoundedCornerShape(8.dp)
@@ -125,7 +126,7 @@ internal fun GroupOngoingCallScreen(
 
     LaunchedEffect(showChrome, isConnected, pagerState.currentPage) {
         if (showChrome && isConnected) {
-            delay(4000)
+            delay(4000.milliseconds)
             showChrome = false
         }
     }
@@ -405,7 +406,7 @@ private fun ParticipantTile(
         label = "active_speaker_border"
     )
     val hasVideo = participant.videoTrack != null && participant.isVideoEnabled
-    val stableVideoTrack = remember(participant.videoTrack) { StableVideoTrack(participant.videoTrack) }
+    val stableVideoTrack = remember(participant.videoTrack) { StableVideoTrack(participant.videoTrack?.videoTrack) }
 
     Box(
         modifier = modifier

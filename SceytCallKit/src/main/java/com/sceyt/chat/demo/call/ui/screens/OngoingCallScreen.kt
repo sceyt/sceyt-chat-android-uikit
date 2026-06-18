@@ -83,6 +83,7 @@ import com.sceyt.chat.demo.call.ui.theme.CallColors
 import com.sceyt.chat.demo.call.ui.theme.callBackground
 import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
+import kotlin.time.Duration.Companion.milliseconds
 
 private val SurfaceDark = Color(0xFF232324)
 
@@ -165,7 +166,7 @@ private fun DirectOngoingCallScreen(
 
     LaunchedEffect(showControls, isConnected, showVideoLayout) {
         if (showControls && isConnected && showVideoLayout) {
-            delay(4000)
+            delay(4000.milliseconds)
             showControls = false
         }
     }
@@ -324,8 +325,8 @@ private fun DirectVideoOngoingLayout(
 ) {
     val hasRemoteVideo = remoteParticipant?.videoTrack != null && remoteParticipant.isVideoEnabled
     val hasLocalVideo = localParticipant?.shouldShowLocalPreview == true
-    val stableRemoteTrack = remember(remoteParticipant?.videoTrack) { StableVideoTrack(remoteParticipant?.videoTrack) }
-    val stableLocalTrack = remember(localParticipant?.videoTrack) { StableVideoTrack(localParticipant?.videoTrack) }
+    val stableRemoteTrack = remember(remoteParticipant?.videoTrack) { StableVideoTrack(remoteParticipant?.videoTrack?.videoTrack) }
+    val stableLocalTrack = remember(localParticipant?.videoTrack) { StableVideoTrack(localParticipant?.videoTrack?.videoTrack) }
 
     Box(
         modifier = Modifier

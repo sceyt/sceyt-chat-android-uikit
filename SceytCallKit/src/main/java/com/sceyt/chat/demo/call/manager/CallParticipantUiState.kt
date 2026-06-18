@@ -2,8 +2,8 @@ package com.sceyt.chat.demo.call.manager
 
 import androidx.compose.runtime.Immutable
 import com.callclient.call.data.ParticipantConnectionState
+import com.callclient.call.tracks.SCTVideoTrack
 import com.sceyt.chat.models.signal.ParticipantState
-import org.webrtc.VideoTrack
 
 @Immutable
 data class CallParticipantUiState(
@@ -16,7 +16,7 @@ data class CallParticipantUiState(
     val connectionState: ParticipantConnectionState = ParticipantConnectionState.Idle,
     val isMuted: Boolean = false,
     val isVideoEnabled: Boolean = false,
-    val videoTrack: VideoTrack? = null,
+    val videoTrack: SCTVideoTrack? = null,
     val isActiveSpeaker: Boolean = false,
     val isFrontCamera: Boolean = true,
     val isOnHold: Boolean = false,
