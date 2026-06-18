@@ -8,6 +8,7 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.sceyt.chatuikit.data.constants.SceytConstants.AvatarCacheFilesDirName
 import com.sceyt.chatuikit.extensions.glideRequestListener
+import com.sceyt.chatuikit.extensions.isActivityFinishingOrDestroying
 import com.sceyt.chatuikit.presentation.custom_views.AvatarView
 import com.sceyt.chatuikit.presentation.extensions.applyError
 import com.sceyt.chatuikit.presentation.extensions.applyPlaceHolder
@@ -59,33 +60,45 @@ object AvatarImageLoader {
 
         // Check if the image exists in our custom cache
         val cachedFile = getCachedImageFile(context, imageUrl)
-        val imageToLoad = if (cachedFile?.exists() == true) cachedFile else imageUrl
+        val imageToLoad = cachedFile ?: imageUrl
 
-        Glide.with(context.applicationContext)
-            .load(imageToLoad)
-            .override(imageView.width.takeIf { it > 0 } ?: 200)
-            .diskCacheStrategy(DiskCacheStrategy.ALL)
-            .applyPlaceHolder(placeholder)
-            .applyError(errorPlaceholder)
-            .transition(DrawableTransitionOptions.withCrossFade(100))
-            .listener(
-                glideRequestListener(
-                onResourceReady = { resource, model, _, _, _ ->
-                    // If we loaded from URL (not our cached file) and caching is not done yet, save to our custom cache
-                    if (preloadForOffline && model == imageUrl && (cachedFile == null || !cachedFile.exists())) {
-                        saveImageToCache(context, imageUrl)
-                    }
-                },
-                onFinish = {
-                    loadCallback?.invoke(false)
-                }
-            ))
-            .into(imageView)
+        val glideContext = imageView.context
+        if (glideContext.isActivityFinishingOrDestroying()) {
+            loadCallback?.invoke(false)
+            return
+        }
+
+        runCatching {
+            Glide.with(glideContext)
+                .load(imageToLoad)
+                .override(imageView.width.takeIf { it > 0 } ?: 200)
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                .applyPlaceHolder(placeholder)
+                .applyError(errorPlaceholder)
+                .transition(DrawableTransitionOptions.withCrossFade(100))
+                .listener(
+                    glideRequestListener(
+                        onResourceReady = { resource, model, _, _, _ ->
+                            // If we loaded from URL (not our cached file) and caching is not done yet, save to our custom cache
+                            if (preloadForOffline && model == imageUrl) {
+                                saveImageToCache(context, imageUrl)
+                            }
+                        },
+                        onFinish = {
+                            loadCallback?.invoke(false)
+                        }
+                    ))
+                .into(imageView)
+        }.onFailure {
+            loadCallback?.invoke(false)
+        }
     }
 
     /** Cancels any in-flight Glide request targeting the given ImageView. */
     fun cancelLoad(context: Context, imageView: ImageView) {
-        Glide.with(context.applicationContext).clear(imageView)
+        runCatching {
+            Glide.with(context.applicationContext).clear(imageView)
+        }
     }
 
     /**
