@@ -280,11 +280,11 @@ class AvatarView @JvmOverloads constructor(
 
     private fun loadAvatarImage(oldImageUrl: String?, preloadForOffline: Boolean = true) {
         if (imageUrl.isNullOrBlank()) {
-            AvatarImageLoader.cancelLoad(context.applicationContext, this)
+            AvatarImageLoader.cancelLoad(context, this)
             avatarLoadCb?.invoke(false)
         } else if (imageUrl != oldImageUrl) {
             AvatarImageLoader.loadAvatar(
-                context = context.applicationContext,
+                context = context,
                 imageUrl = imageUrl,
                 imageView = this,
                 placeholder = placeholder ?: AvatarPlaceholder.FromDrawable(defaultPlaceholder),
