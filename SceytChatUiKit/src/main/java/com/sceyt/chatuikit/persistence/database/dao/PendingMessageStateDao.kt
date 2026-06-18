@@ -24,4 +24,7 @@ internal interface PendingMessageStateDao {
 
     @Query("DELETE FROM $PENDING_MESSAGE_STATE_TABLE WHERE messageId = :messageId")
     suspend fun deleteByMessageId(messageId: Long)
+
+    @Query("UPDATE $PENDING_MESSAGE_STATE_TABLE SET channelId = :newChannelId WHERE channelId = :oldChannelId")
+    suspend fun updateChannelId(oldChannelId: Long, newChannelId: Long): Int
 }

@@ -131,9 +131,16 @@ internal abstract class ChannelDao {
     @Query("""SELECT * FROM $CHANNEL_TABLE WHERE uri = :uri""")
     abstract suspend fun getChannelByUri(uri: String): ChannelDb?
 
+    @Query("""UPDATE $CHANNEL_TABLE SET uri = :uri WHERE chat_id = :channelId""")
+    abstract suspend fun updateUri(channelId: Long, uri: String?)
+
     @Transaction
     @Query("""SELECT * FROM $CHANNEL_TABLE WHERE isSelf = 1""")
     abstract suspend fun getSelfChannel(): ChannelDb?
+
+    @Transaction
+    @Query("""SELECT * FROM $CHANNEL_TABLE WHERE pending = 1 AND type = :type""")
+    abstract suspend fun getPendingChannelsByType(type: String): List<ChannelDb>
 
     @Query(
         """

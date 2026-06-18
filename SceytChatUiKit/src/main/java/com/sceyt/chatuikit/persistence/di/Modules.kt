@@ -48,6 +48,7 @@ import com.sceyt.chatuikit.persistence.logicimpl.PersistenceUsersLogicImpl
 import com.sceyt.chatuikit.persistence.logicimpl.attachment.AttachmentsCache
 import com.sceyt.chatuikit.persistence.logicimpl.attachment.PersistenceAttachmentLogicImpl
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
+import com.sceyt.chatuikit.persistence.logicimpl.channel.PendingChannelMigrationLock
 import com.sceyt.chatuikit.persistence.logicimpl.channel.PersistenceChannelsLogicImpl
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessageLoadRangeUpdater
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
@@ -56,10 +57,15 @@ import com.sceyt.chatuikit.persistence.logicimpl.sync.ChannelSyncStateStore
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.AddPollVoteUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.CheckDeletedMessagesUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.CheckDeletedNearMessagesUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.CreatePendingChannelUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.EndPollUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.FindExistingChannelByMembersUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.FindRealChannelForPendingUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.HandleChangeVoteErrorUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.HandleDeleteMessagesByLoadTypeUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.HandleMessagesInRangeUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.MigratePendingChannelToRealChannelUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.MergePendingDirectChannelsUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.RemovePollVoteUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.RetractPollVoteUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.SendPollPendingVotesUseCase
@@ -90,6 +96,7 @@ internal val appModules = module {
     singleOf(::FileTransferServiceImpl) bind FileTransferService::class
     singleOf(::MessageLoadRangeUpdater)
     singleOf(::ChannelSyncStateStore)
+    singleOf(::PendingChannelMigrationLock)
     singleOf(::PushServiceImpl) bind PushService::class
     singleOf(::RealtimeNotificationManagerImpl) bind RealtimeNotificationManager::class
 }
@@ -186,6 +193,11 @@ internal val useCaseModule = module {
     factoryOf(::HandleMessagesInRangeUseCase)
     factoryOf(::CheckDeletedNearMessagesUseCase)
     factoryOf(::CheckDeletedMessagesUseCase)
+    factoryOf(::FindExistingChannelByMembersUseCase)
+    factoryOf(::CreatePendingChannelUseCase)
+    factoryOf(::FindRealChannelForPendingUseCase)
+    factoryOf(::MigratePendingChannelToRealChannelUseCase)
+    factoryOf(::MergePendingDirectChannelsUseCase)
 }
 
 internal val cacheModule = module {

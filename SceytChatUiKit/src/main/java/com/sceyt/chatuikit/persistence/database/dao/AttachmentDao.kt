@@ -177,8 +177,10 @@ internal abstract class AttachmentDao {
     @Query("UPDATE $ATTACHMENT_PAYLOAD_TABLE SET filePath = :filePath WHERE messageTid = :msgTid")
     abstract suspend fun updateAttachmentPayLoadFilePathByMsgTid(msgTid: Long, filePath: String?)
 
+    @Query("UPDATE $ATTACHMENT_TABLE SET channelId = :newChannelId WHERE channelId = :oldChannelId")
+    abstract suspend fun updateAttachmentsChannelId(oldChannelId: Long, newChannelId: Long): Int
+
     @VisibleForTesting
     @Insert
     abstract suspend fun insertAttachments(attachments: List<AttachmentEntity>)
-
 }
