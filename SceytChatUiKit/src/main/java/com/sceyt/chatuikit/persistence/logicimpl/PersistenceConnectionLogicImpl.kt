@@ -84,7 +84,7 @@ internal class PersistenceConnectionLogicImpl(
                 pollLogic.sendAllPendingVotes()
                 _allPendingEventsSentFlow.tryEmit(Unit)
                 if (SceytChatUIKit.config.syncChannelsAfterConnect) {
-                    sceytSyncManager.startSync(ChannelListConfig.default.copy(queryLimit = 50))
+                    sceytSyncManager.startSync(ChannelListConfig.default.copy(queryLimit = 30))
                 }
             }
         } else SceytPresenceChecker.stopPresenceCheck()
