@@ -58,11 +58,11 @@ fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: Lif
 fun ChannelsViewModel.bind(searchView: SearchChannelInputView) {
     searchView.setDebouncedTextChangeListener {
         if (searchQuery == it) return@setDebouncedTextChangeListener
-        getChannels(0, query = it)
+        getChannels(query = it)
     }
 
     searchView.setOnQuerySubmitListener {
         if (searchQuery == it) return@setOnQuerySubmitListener
-        getChannels(0, query = it)
+        getChannels(query = it)
     }
 }

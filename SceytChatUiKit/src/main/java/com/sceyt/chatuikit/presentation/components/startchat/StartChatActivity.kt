@@ -15,6 +15,7 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.managers.message.MessageEventManager
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
+import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.databinding.SceytActivityStartChatBinding
 import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
 import com.sceyt.chatuikit.extensions.createIntent
@@ -154,8 +155,8 @@ open class StartChatActivity : AppCompatActivity() {
 
     protected open fun setupUsersList(list: List<UserItem>) {
         val listWithSelf = list.toMutableList()
-        SceytChatUIKit.currentUser?.let {
-            listWithSelf.add(0, UserItem.User(it))
+        SceytChatUIKit.currentUserId?.let {
+            listWithSelf.add(0, UserItem.User(SceytUser(it)))
         }
         if (::usersAdapter.isInitialized.not()) {
             binding.rvUsers.adapter =

@@ -6,6 +6,7 @@ import android.content.res.Configuration
 import android.database.Cursor
 import android.net.Uri
 import android.os.Bundle
+import android.os.Parcelable
 import android.provider.MediaStore.Files
 import android.provider.MediaStore.Images
 import android.provider.MediaStore.Video
@@ -14,6 +15,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.view.isVisible
+import androidx.fragment.app.setFragmentResult
 import androidx.lifecycle.lifecycleScope
 import androidx.loader.app.LoaderManager
 import androidx.loader.content.CursorLoader
@@ -31,6 +33,7 @@ import com.sceyt.chatuikit.extensions.getOrientation
 import com.sceyt.chatuikit.extensions.getPermissionsForMangeStorage
 import com.sceyt.chatuikit.extensions.initPermissionLauncher
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
+import com.sceyt.chatuikit.extensions.parcelableArrayList
 import com.sceyt.chatuikit.extensions.screenHeightPx
 import com.sceyt.chatuikit.extensions.setBundleArguments
 import com.sceyt.chatuikit.logger.SceytLog
@@ -45,6 +48,7 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.parcelize.Parcelize
 import java.io.File
 
 
@@ -153,10 +157,12 @@ class BottomSheetMediaPicker : BottomSheetDialogFragment(), LoaderManager.Loader
 
     private fun SceytBottomSheetMediaPickerBinding.initViews() {
         btnNext.setOnClickListener {
-            pickerListener?.onSelect(selectedMedia.map {
+            val result = ArrayList(selectedMedia.map {
                 SelectedMediaData(it.contentUri, it.realPath, it.mediaType)
             })
-            pickerListener = null
+            setFragmentResult(REQUEST_KEY, Bundle().apply {
+                putParcelableArrayList(RESULT_SELECTED_MEDIA, result)
+            })
             dismissSafety()
         }
     }
@@ -329,19 +335,16 @@ class BottomSheetMediaPicker : BottomSheetDialogFragment(), LoaderManager.Loader
         awaitClose()
     }
 
+    @Parcelize
     data class SelectedMediaData(
         val contentUri: Uri,
         val realPath: String,
         val mediaType: MediaType,
-    )
+    ) : Parcelable
 
     enum class MediaType(val value: AttachmentTypeEnum) {
         Image(AttachmentTypeEnum.Image),
         Video(AttachmentTypeEnum.Video)
-    }
-
-    fun interface PickerListener {
-        fun onSelect(items: List<SelectedMediaData>)
     }
 
     override fun getTheme(): Int {
@@ -364,7 +367,11 @@ class BottomSheetMediaPicker : BottomSheetDialogFragment(), LoaderManager.Loader
         private const val FILTER_TYPE = "filterType"
         const val MAX_SELECT_MEDIA_COUNT = 20
 
-        var pickerListener: PickerListener? = null
+        const val REQUEST_KEY = "BottomSheetMediaPicker.REQUEST_KEY"
+        private const val RESULT_SELECTED_MEDIA = "RESULT_SELECTED_MEDIA"
+
+        fun getSelectedMedia(result: Bundle): List<SelectedMediaData> =
+            result.parcelableArrayList(RESULT_SELECTED_MEDIA) ?: emptyList()
 
         fun instance(
             maxSelectCount: Int = MAX_SELECT_MEDIA_COUNT,

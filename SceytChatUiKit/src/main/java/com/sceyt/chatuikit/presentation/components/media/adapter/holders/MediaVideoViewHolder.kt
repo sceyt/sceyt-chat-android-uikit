@@ -151,7 +151,13 @@ class MediaVideoViewHolder(
 
     override fun onViewDetachedFromWindow() {
         super.onViewDetachedFromWindow()
-        playerHelper?.pausePlayer()
+        releaseWakeLock()
+        playerHelper?.let { helper ->
+            mediaAdapter?.savePlaybackPosition(fileItem.attachment.filePath, helper.player.currentPosition)
+            mediaAdapter?.removeMediaPlayer(helper.player)
+            helper.releasePlayer()
+        }
+        playerHelper = null
     }
 
     override fun updateState(data: TransferData, isOnBind: Boolean) {
@@ -204,7 +210,11 @@ class MediaVideoViewHolder(
     private fun initPlayerHelper(playVideo: Boolean = shouldPlayVideo()) {
         if (!fileItem.attachment.filePath.isNullOrBlank()) {
             playerHelper = initPlayer()
-            playerHelper?.setMediaPath(fileItem.attachment.filePath, playVideo)
+            playerHelper?.setMediaPath(
+                url = fileItem.attachment.filePath,
+                playVideo = playVideo,
+                startPositionMs = mediaAdapter?.getPlaybackPosition(fileItem.attachment.filePath) ?: 0L
+            )
             if (playVideo) initWakeLock()
         }
     }

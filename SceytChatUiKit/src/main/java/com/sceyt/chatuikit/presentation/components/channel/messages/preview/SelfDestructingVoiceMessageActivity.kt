@@ -9,7 +9,9 @@ import android.view.WindowManager
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.google.gson.Gson
 import com.masoudss.lib.SeekBarOnProgressChanged
 import com.masoudss.lib.WaveformSeekBar
@@ -30,11 +32,10 @@ import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.progressToMediaPlayerPosition
 import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
 import com.sceyt.chatuikit.koin.SceytKoinComponent
-import com.sceyt.chatuikit.media.audio.AudioPlaybackState
-import com.sceyt.chatuikit.media.audio.AudioPlayer
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
+import com.sceyt.chatuikit.media.audio.AudioPlayerState
+import com.sceyt.chatuikit.media.audio.AudioPlayerStatus
 import com.sceyt.chatuikit.media.audio.VoiceStateCoordinator
-import com.sceyt.chatuikit.persistence.logicimpl.message.MessageTid
 import com.sceyt.chatuikit.presentation.common.dialogs.ViewOnceInfoDialog
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.PlaybackSpeed
 import com.sceyt.chatuikit.presentation.custom_views.voice_recorder.AudioMetadata
@@ -86,6 +87,7 @@ class SelfDestructingVoiceMessageActivity : AppCompatActivity(), SceytKoinCompon
         getBundleArguments()
 
         displayVoiceMessage()
+        observePlaybackState()
         observeMessageUpdates()
         viewModel.sendOpenedMarker(message)
     }
@@ -173,6 +175,7 @@ class SelfDestructingVoiceMessageActivity : AppCompatActivity(), SceytKoinCompon
         }
 
         messageItemStyle.voiceSpeedTextStyle.apply(binding.voicePlaybackSpeed)
+        binding.voicePlaybackSpeed.text = currentPlaybackSpeed.displayValue
         messageItemStyle.voiceDurationTextStyle.apply(binding.voiceDuration)
         messageItemStyle.viewOnceBadgeStyle.apply(binding.ivVoiceViewOnceIcon)
     }
@@ -226,13 +229,6 @@ class SelfDestructingVoiceMessageActivity : AppCompatActivity(), SceytKoinCompon
             val isPlaying = AudioPlayerHelper.isPlaying(filePath, voiceMessageTid)
             binding.voiceWaveformSeekBar.isEnabled = isPlaying
             binding.voicePlaybackSpeed.isEnabled = isPlaying
-
-            if (AudioPlayerHelper.alreadyInitialized(filePath, voiceMessageTid)) {
-                AudioPlayerHelper.getCurrentPlayer()?.addEventListener(
-                    event = voicePlayerListener,
-                    tag = "SelfDestructingVoice"
-                )
-            }
         }
     }
 
@@ -242,10 +238,6 @@ class SelfDestructingVoiceMessageActivity : AppCompatActivity(), SceytKoinCompon
         VoiceStateCoordinator.stopRecordingIfActive()
 
         if (AudioPlayerHelper.alreadyInitialized(filePath, voiceMessageTid)) {
-            AudioPlayerHelper.getCurrentPlayer()?.addEventListener(
-                event = voicePlayerListener,
-                tag = "SelfDestructingVoice"
-            )
             AudioPlayerHelper.toggle(filePath, voiceMessageTid)
         } else {
             initVoiceAudioPlayer()
@@ -256,98 +248,45 @@ class SelfDestructingVoiceMessageActivity : AppCompatActivity(), SceytKoinCompon
         val filePath = voiceFilePath ?: return
         AudioPlayerHelper.init(
             filePath = filePath,
-            messageTid = voiceMessageTid,
-            events = voicePlayerListener,
-            tag = "SelfDestructingVoice"
+            messageTid = voiceMessageTid
         )
     }
 
-    private val voicePlayerListener: AudioPlayerHelper.OnAudioPlayer by lazy {
-        object : AudioPlayerHelper.OnAudioPlayer {
-            override fun onInitialized(
-                alreadyInitialized: Boolean,
-                player: AudioPlayer,
-                filePath: String,
-                messageTid: MessageTid
-            ) {
-                if (filePath != voiceFilePath || messageTid != voiceMessageTid) return
-
-                runOnUiThread {
-                    binding.voiceWaveformSeekBar.isEnabled = true
-                    binding.voicePlaybackSpeed.isEnabled = true
-                }
+    private fun observePlaybackState() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                AudioPlayerHelper.state.collect(::onPlaybackStateChanged)
             }
+        }
+    }
 
-            override fun onProgress(
-                position: Long,
-                duration: Long,
-                filePath: String,
-                messageTid: MessageTid
-            ) {
-                if (filePath != voiceFilePath || messageTid != voiceMessageTid) return
+    private fun onPlaybackStateChanged(state: AudioPlayerState) {
+        if (!state.matches(voiceFilePath, voiceMessageTid)) {
+            setVoicePlayButtonIcon(false)
+            return
+        }
 
-                val seekBarProgress = mediaPlayerPositionToSeekBarProgress(position, duration)
-                runOnUiThread {
-                    binding.voiceWaveformSeekBar.progress = seekBarProgress
-                    binding.voiceWaveformSeekBar.isEnabled = true
-                    binding.voicePlaybackSpeed.isEnabled = true
-                    binding.voiceDuration.text = position.durationToMinSecShort()
-                }
-            }
+        setVoicePlayButtonIcon(state.isPlaying)
+        currentPlaybackSpeed = PlaybackSpeed.fromValue(state.speed)
+        binding.voicePlaybackSpeed.text = currentPlaybackSpeed.displayValue
 
-            override fun onToggle(
-                playing: Boolean,
-                filePath: String,
-                messageTid: MessageTid
-            ) {
-                if (filePath != voiceFilePath || messageTid != voiceMessageTid) return
-
-                runOnUiThread {
-                    setVoicePlayButtonIcon(playing)
-                }
-            }
-
-            override fun onStop(
-                filePath: String,
-                messageTid: MessageTid,
-                savedState: AudioPlaybackState?
-            ) {
-                if (filePath != voiceFilePath || messageTid != voiceMessageTid) return
-
-                runOnUiThread {
-                    setVoicePlayButtonIcon(false)
-                    currentPlaybackSpeed = PlaybackSpeed.X1
-                    binding.voiceWaveformSeekBar.progress = 0f
-                    binding.voiceDuration.text = voiceDuration.durationToMinSecShort()
-                    binding.voiceWaveformSeekBar.isEnabled = false
-                    binding.voicePlaybackSpeed.isEnabled = false
-                    binding.voicePlaybackSpeed.text = currentPlaybackSpeed.displayValue
-                }
-            }
-
-            override fun onPaused(
-                filePath: String,
-                messageTid: MessageTid
-            ) {
-                if (filePath != voiceFilePath || messageTid != voiceMessageTid) return
-
-                runOnUiThread {
-                    setVoicePlayButtonIcon(false)
-                }
-            }
-
-            override fun onSpeedChanged(
-                speed: Float,
-                filePath: String,
-                messageTid: MessageTid
-            ) {
-                if (filePath != voiceFilePath || messageTid != voiceMessageTid) return
-
-                runOnUiThread {
-                    currentPlaybackSpeed = PlaybackSpeed.fromValue(speed)
-                    binding.voicePlaybackSpeed.text = currentPlaybackSpeed.displayValue
-                }
-            }
+        val duration = state.duration.takeIf { it > 0 } ?: voiceDuration
+        binding.voiceWaveformSeekBar.progress = mediaPlayerPositionToSeekBarProgress(
+            state.position,
+            duration
+        )
+        binding.voiceDuration.text = if (state.status == AudioPlayerStatus.Completed) {
+            voiceDuration.durationToMinSecShort()
+        } else {
+            state.position.durationToMinSecShort()
+        }
+        val controlsEnabled = state.status == AudioPlayerStatus.Playing ||
+                state.status == AudioPlayerStatus.Paused ||
+                state.status == AudioPlayerStatus.Initializing
+        binding.voiceWaveformSeekBar.isEnabled = controlsEnabled
+        binding.voicePlaybackSpeed.isEnabled = controlsEnabled
+        if (state.status == AudioPlayerStatus.Completed) {
+            binding.voiceWaveformSeekBar.progress = 0f
         }
     }
 

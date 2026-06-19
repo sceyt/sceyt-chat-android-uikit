@@ -36,4 +36,7 @@ internal abstract class PendingReactionDao {
 
     @Query("DELETE FROM $PENDING_REACTION_TABLE WHERE messageId = :messageId AND reaction_key = :key")
     abstract suspend fun deletePendingReaction(messageId: Long, key: String)
+
+    @Query("UPDATE $PENDING_REACTION_TABLE SET channelId = :newChannelId WHERE channelId = :oldChannelId")
+    abstract suspend fun updateChannelId(oldChannelId: Long, newChannelId: Long): Int
 }

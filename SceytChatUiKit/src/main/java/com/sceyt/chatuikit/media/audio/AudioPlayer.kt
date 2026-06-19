@@ -1,6 +1,5 @@
 package com.sceyt.chatuikit.media.audio
 
-import com.sceyt.chatuikit.media.audio.AudioPlayerHelper.OnAudioPlayer
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessageTid
 
 interface AudioPlayer {
@@ -11,8 +10,6 @@ interface AudioPlayer {
     fun stop(savedState: AudioPlaybackState? = null)
     fun seekToPosition(position: Long)
     fun togglePlayPause()
-    fun addEventListener(event: OnAudioPlayer, tag: String)
-    fun removeEventListener(tag: String)
     fun setPlaybackSpeed(speed: Float)
     fun getPlaybackSpeed(): Float
     fun getPlaybackPosition(): Long

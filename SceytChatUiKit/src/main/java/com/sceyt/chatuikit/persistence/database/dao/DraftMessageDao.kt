@@ -61,4 +61,7 @@ internal abstract class DraftMessageDao {
 
     @Query("DELETE FROM $DRAFT_MESSAGE_TABLE WHERE chatId = :chatId")
     abstract suspend fun deleteDraftByChannelId(chatId: Long)
+
+    @Query("UPDATE $DRAFT_MESSAGE_TABLE SET chatId = :newChatId WHERE chatId = :oldChatId")
+    abstract suspend fun updateDraftChannelId(oldChatId: Long, newChatId: Long)
 }

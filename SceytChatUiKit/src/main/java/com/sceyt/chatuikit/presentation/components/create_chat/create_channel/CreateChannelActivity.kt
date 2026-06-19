@@ -75,6 +75,7 @@ class CreateChannelActivity : AppCompatActivity() {
                     toolbarTitle = MemberTypeEnum.Subscriber.getPageTitle(this@CreateChannelActivity),
                     actionButtonAlwaysEnable = true,
                 )
+                hideLoading()
                 SceytChatUIKit.navigator.navigateForResult(
                     context = this@CreateChannelActivity,
                     launcher = selectUsersActivityLauncher,

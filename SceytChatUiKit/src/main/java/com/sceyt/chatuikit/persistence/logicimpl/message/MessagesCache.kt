@@ -528,7 +528,12 @@ class MessagesCache {
         pendingChannelId: Long,
         newChannelId: Long
     ) = mutex.withLock {
-        cachedMessages[newChannelId] = cachedMessages[pendingChannelId] ?: return@withLock
+        val pendingMessages = cachedMessages[pendingChannelId] ?: return@withLock
+        cachedMessages[newChannelId] = HashMap(
+            pendingMessages.mapValues { (_, message) ->
+                message.copy(channelId = newChannelId)
+            }
+        )
         cachedMessages.remove(pendingChannelId)
     }
 

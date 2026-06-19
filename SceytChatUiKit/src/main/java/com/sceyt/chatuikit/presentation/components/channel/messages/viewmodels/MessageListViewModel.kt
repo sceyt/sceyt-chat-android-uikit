@@ -74,13 +74,16 @@ import com.sceyt.chatuikit.presentation.components.channel.input.data.InputUserA
 import com.sceyt.chatuikit.presentation.components.channel.input.data.SearchResult
 import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
+import com.sceyt.chatuikit.presentation.components.channel.messages.PendingMessageStatusReconciler
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.reactions.ReactionItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageCommandEvent
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.PollEvent
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.ReactionEvent
+import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.bindings.LoadKeyType
 import com.sceyt.chatuikit.presentation.extensions.isNotPending
+import com.sceyt.chatuikit.presentation.extensions.isPending
 import com.sceyt.chatuikit.presentation.helpers.DebounceHelper
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import com.sceyt.chatuikit.presentation.root.PageState
@@ -131,14 +134,14 @@ class MessageListViewModel(
     internal val placeToSavePathsList = mutableSetOf<Pair<AttachmentTypeEnum, String>>()
     internal val selectedMessagesMap by lazy { mutableMapOf<MessageTid, SceytMessage>() }
     internal val expandedMessagesMap by lazy { mutableMapOf<Long, Boolean>() }
-    internal val notFoundMessagesToUpdate by lazy { mutableMapOf<Long, SceytMessage>() }
+    internal val pendingStatusReconciler by lazy { PendingMessageStatusReconciler() }
     internal val outgoingMessageMutex by lazy { Mutex() }
     internal val pendingDisplayMsgIds by lazy { Collections.synchronizedSet(mutableSetOf<Long>()) }
     internal val needToUpdateTransferAfterOnResume = hashMapOf<Long, TransferData>()
     private var showSenderAvatarAndNameIfNeeded = true
     internal var viewOnceSelected = false
     private var loadPrevJob: Job? = null
-    private val loadNextJob: Job? = null
+    private var loadNextJob: Job? = null
     private var loadNearJob: Job? = null
     private var toggleVoteJob: Job? = null
     private var searchJob: Job? = null
@@ -241,7 +244,7 @@ class MessageListViewModel(
         ChannelsCache.pendingChannelCreatedFlow
             .filter { (pendingChannelId, _) -> pendingChannelId == channel.id }
             .onEach { (_, newChannel) ->
-                updateChannel { newChannel }
+                onPendingChannelCreated(newChannel)
             }
             .launchIn(viewModelScope)
 
@@ -288,13 +291,49 @@ class MessageListViewModel(
         }
     }
 
+    fun loadInitialMessagesForCurrentChannel() {
+        val lastMessage = channel.lastMessage
+        val lastDisplayedMessageId = channel.lastDisplayedMessageId
+        val lastMessageId = lastMessage?.id ?: 0
+        when {
+            initialTargetMessageId != null -> {
+                loadNearMessages(
+                    messageId = initialTargetMessageId,
+                    loadKey = LoadKeyData(
+                        key = LoadKeyType.ScrollToMessageBy.longValue,
+                        value = initialTargetMessageId
+                    ),
+                    ignoreServer = false
+                )
+            }
+
+            lastDisplayedMessageId == 0L || lastMessage?.isPending() == true
+                    || lastDisplayedMessageId == lastMessageId -> {
+                loadPrevMessages(lastMessageId, 0)
+            }
+
+            lastDisplayedMessageId >= lastMessageId -> {
+                loadPrevMessages(lastDisplayedMessageId, 0)
+            }
+
+            else -> {
+                pinnedLastReadMessageId = lastDisplayedMessageId
+                loadNearMessages(
+                    messageId = pinnedLastReadMessageId,
+                    loadKey = LoadKeyData(key = LoadKeyType.ScrollToUnreadMessage.longValue),
+                    ignoreServer = false
+                )
+            }
+        }
+    }
+
     fun loadNextMessages(lastMessageId: Long, offset: Int) {
         setPagingLoadingStarted(LoadNext)
         val isLoadingMore = offset > 0
 
         notifyPageLoadingState(isLoadingMore)
 
-        loadPrevJob = viewModelScope.launch(Dispatchers.IO) {
+        loadNextJob = viewModelScope.launch(Dispatchers.IO) {
             messageInteractor.loadNextMessages(
                 conversationId = conversationId,
                 lastMessageId = lastMessageId,
@@ -430,6 +469,30 @@ class MessageListViewModel(
         _channel = _channel.updateAction()
         _conversationId = _channel.id
         _onChannelUpdatedEventFlow.tryEmit(_channel)
+    }
+
+    private fun onPendingChannelCreated(newChannel: SceytChannel) {
+        val pendingChannelId = channel.id
+        cancelMessageLoading()
+        resetMessageLoadingState()
+        updateChannel { newChannel }
+        if (ChannelsCache.currentChannelId == pendingChannelId)
+            ChannelsCache.currentChannelId = newChannel.id
+        loadInitialMessagesForCurrentChannel()
+    }
+
+    private fun cancelMessageLoading() {
+        loadPrevJob?.cancel()
+        loadNextJob?.cancel()
+        loadNearJob?.cancel()
+    }
+
+    private fun resetMessageLoadingState() {
+        loadPrevOffsetId = 0
+        loadNextOffsetId = 0
+        lastSyncCenterOffsetId = 0
+        needSyncMessagesWhenScrollStateIdle = false
+        isPreparingToScrollToMessage.set(false)
     }
 
     private fun getNextUnreadMention(): MessageId? = with(unreadMentionState) {

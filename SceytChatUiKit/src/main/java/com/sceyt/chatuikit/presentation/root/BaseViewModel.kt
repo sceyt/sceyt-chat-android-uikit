@@ -181,9 +181,9 @@ open class BaseViewModel : ViewModel() {
             searchQuery: String? = null,
             showError: Boolean = true,
     ) {
+        notifyPageStateWithResponse(response, wasLoadingMore, isEmpty, searchQuery, showError)
         if (response is SceytResponse.Success) {
             liveData?.postValue(response.data)
         }
-        notifyPageStateWithResponse(response, wasLoadingMore, isEmpty, searchQuery, showError)
     }
 }

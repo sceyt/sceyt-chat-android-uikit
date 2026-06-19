@@ -33,6 +33,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytDisableMessageInputBinding
 import com.sceyt.chatuikit.databinding.SceytMessageInputViewBinding
 import com.sceyt.chatuikit.extensions.asComponentActivity
+import com.sceyt.chatuikit.extensions.maybeFragmentActivity
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.doAfterRealTextChanged
 import com.sceyt.chatuikit.extensions.doSafe
@@ -43,6 +44,7 @@ import com.sceyt.chatuikit.extensions.hideSoftInput
 import com.sceyt.chatuikit.extensions.isEqualsVideoOrImage
 import com.sceyt.chatuikit.extensions.notAutoCorrectable
 import com.sceyt.chatuikit.extensions.setBackgroundTint
+import com.sceyt.chatuikit.extensions.setSafeOnClickListener
 import com.sceyt.chatuikit.extensions.setTextAndMoveSelectionEnd
 import com.sceyt.chatuikit.extensions.showSoftInput
 import com.sceyt.chatuikit.formatters.attributes.DraftMessageBodyFormatterAttributes
@@ -115,6 +117,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.io.File
+import kotlin.time.Duration.Companion.milliseconds
 
 @Suppress("MemberVisibilityCanBePrivate", "JoinDeclarationAndAssignment")
 class MessageInputView @JvmOverloads constructor(
@@ -127,10 +130,7 @@ class MessageInputView @JvmOverloads constructor(
 
     private lateinit var attachmentsAdapter: AttachmentsAdapter
     private var attachmentsViewHolderFactory by lazyVar {
-        AttachmentsViewHolderFactory(
-            context,
-            style
-        )
+        AttachmentsViewHolderFactory(context, style)
     }
     private var allAttachments = mutableListOf<Attachment>()
     private val binding: SceytMessageInputViewBinding
@@ -253,7 +253,7 @@ class MessageInputView @JvmOverloads constructor(
             typingTimeoutJob?.cancel()
             if (state.typing) {
                 typingTimeoutJob = getScope().launch {
-                    delay(2000)
+                    delay(2000.milliseconds)
                     actionListeners.sendChannelEvent(
                         InputUserAction.Typing(typing = false, text = null)
                     )
@@ -315,7 +315,7 @@ class MessageInputView @JvmOverloads constructor(
         messageActionsView.setClickListener(clickListeners)
         linkPreviewView.setClickListener(clickListeners)
 
-        icSendMessage.setOnClickListener {
+        icSendMessage.setSafeOnClickListener(disableDuration = 200L) {
             when (val state = inputState) {
                 is InputState.Text, is InputState.TextWithAttachments, is InputState.Attachments ->
                     clickListeners.onSendMsgClick(it)
@@ -487,7 +487,7 @@ class MessageInputView @JvmOverloads constructor(
             return
         recordingUpdateJob = getScope().launch {
             while (isActive) {
-                delay(1000)
+                delay(1000.milliseconds)
                 onUserActionStateChange(InputUserAction.Recording(recording = true))
             }
         }
@@ -1153,26 +1153,26 @@ class MessageInputView @JvmOverloads constructor(
         messageInputActionCallback?.join()
     }
 
-    private fun getPickerListener(): BottomSheetMediaPicker.PickerListener {
-        return BottomSheetMediaPicker.PickerListener {
-            addAttachment(*it.map { mediaData ->
-                mediaData.mediaType.value to mediaData.realPath
-            }.toTypedArray())
-            // Remove attachments that are not in the picker result
-            allAttachments.filter { item ->
-                item.type.isEqualsVideoOrImage() && it.none { mediaData -> mediaData.realPath == item.filePath }
-            }.forEach { attachment ->
-                val item = AttachmentItem(attachment)
-                attachmentsAdapter.removeItem(item)
-                allAttachments.remove(attachment)
-            }
+    private fun onMediaPicked(items: List<BottomSheetMediaPicker.SelectedMediaData>) {
+        addAttachment(*items.map { mediaData ->
+            mediaData.mediaType.value to mediaData.realPath
+        }.toTypedArray())
+        // Remove attachments that are not in the picker result
+        allAttachments.filter { item ->
+            item.type.isEqualsVideoOrImage() && items.none { mediaData -> mediaData.realPath == item.filePath }
+        }.forEach { attachment ->
+            val item = AttachmentItem(attachment)
+            attachmentsAdapter.removeItem(item)
+            allAttachments.remove(attachment)
         }
     }
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
-        BottomSheetMediaPicker.pickerListener?.let {
-            BottomSheetMediaPicker.pickerListener = getPickerListener()
+        context.maybeFragmentActivity()?.let { activity ->
+            activity.supportFragmentManager.setFragmentResultListener(
+                BottomSheetMediaPicker.REQUEST_KEY, activity
+            ) { _, bundle -> onMediaPicked(BottomSheetMediaPicker.getSelectedMedia(bundle)) }
         }
         VoiceStateCoordinator.registerRecordingController(
             isRecordingProvider = { getRecordingState().isRecording },
@@ -1210,7 +1210,6 @@ class MessageInputView @JvmOverloads constructor(
     override fun onGalleryClick() {
         binding.messageInput.clearFocus()
         filePickerHelper?.openMediaPicker(
-            pickerListener = getPickerListener(),
             selections = allAttachments.map { it.filePath }.toTypedArray(),
             maxSelectCount = SceytChatUIKit.config.attachmentSelectionLimit
         )

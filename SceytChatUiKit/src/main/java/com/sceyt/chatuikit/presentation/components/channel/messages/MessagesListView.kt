@@ -461,20 +461,10 @@ class MessagesListView @JvmOverloads constructor(
     }
 
     private fun updateItem(index: Int, item: MessageListItem, diff: MessageDiff) {
-        val message = (item as? MessageItem)?.message ?: return
-        (messagesRV.findViewHolderForItemId(item.getItemId()) as? BaseMessageViewHolder)?.let {
-            SceytLog.i(
-                "StatusIssueTag", "updateItem: found by itemId: ${item.getItemId()}, " +
-                        "msgId-> ${message.id}, diff ${diff.statusChanged}, status ${message.deliveryStatus}"
-            )
-            it.bind(item, diff)
-        } ?: run {
-            SceytLog.i(
-                "StatusIssueTag", "updateItem: notifyItemChanged by index $index, " +
-                        "diff ${diff.statusChanged}, msgId-> ${message.id}, status ${message.deliveryStatus}"
-            )
-            messagesRV.adapter?.notifyItemChanged(index, diff)
-        }
+        val holder = messagesRV.findViewHolderForItemId(item.getItemId()) as? BaseMessageViewHolder
+        if (holder != null) {
+            holder.bind(item, diff)
+        } else messagesRV.adapter?.notifyItemChanged(index, diff)
     }
 
     private fun notifyItemUpdatedToVisibleItems(item: MessageListItem) {
@@ -793,6 +783,10 @@ class MessagesListView @JvmOverloads constructor(
 
     internal fun setNeedLoadPrevMessagesListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
         messagesRV.setNeedLoadPrevMessagesListener(listener)
+    }
+
+    internal fun setOnListCommittedListener(listener: () -> Unit) {
+        messagesRV.setOnListCommittedListener(listener)
     }
 
     internal fun setScrollStateChangeListener(listener: (Int) -> Unit) {

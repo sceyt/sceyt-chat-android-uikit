@@ -102,3 +102,8 @@ fun Activity.darkModeContext(): Context {
         applyOverrideConfiguration(nightConfig)
     }
 }
+
+fun Context.isActivityFinishingOrDestroying(): Boolean {
+    val activity = maybeComponentActivity() ?: return false
+    return activity.isFinishing || activity.isDestroyed
+}
