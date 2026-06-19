@@ -1,5 +1,6 @@
 package com.sceyt.chat.demo.call.service
 
+import android.annotation.SuppressLint
 import android.util.Log
 import com.callclient.CallClient
 import com.callclient.call.data.CallNotificationType
@@ -15,6 +16,7 @@ import org.koin.core.component.inject
  *  - Call notifications  → [CallClient.handleNotification], then [CallManager.handleIncomingCall]
  *  - Chat notifications  → [FirebaseMessagingDelegate] (standard SDK path)
  */
+@SuppressLint("MissingFirebaseInstanceTokenRefresh")
 class CallFirebaseMessageReceiver : FirebaseMessagingService(), KoinComponent {
     private val callManager by inject<CallManager>()
 
@@ -37,10 +39,6 @@ class CallFirebaseMessageReceiver : FirebaseMessagingService(), KoinComponent {
                 }
             }
         }
-    }
-
-    override fun onNewToken(token: String) {
-        FirebaseMessagingDelegate.registerFirebaseToken(token)
     }
 
     private fun handleCallNotification(data: Map<String, String>): CallNotificationType {

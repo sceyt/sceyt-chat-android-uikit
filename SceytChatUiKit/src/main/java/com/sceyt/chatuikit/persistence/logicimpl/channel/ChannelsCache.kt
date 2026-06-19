@@ -61,13 +61,6 @@ class ChannelsCache {
         )
         val channelDraftMessageChangesFlow = channelDraftMessageChangesFlow_.asSharedFlow()
 
-        private val newChannelsOnSync_ =
-            MutableSharedFlow<Pair<ChannelListConfig, List<SceytChannel>>>(
-                extraBufferCapacity = 50,
-                onBufferOverflow = BufferOverflow.DROP_OLDEST
-            )
-        val newChannelsOnSync = newChannelsOnSync_.asSharedFlow()
-
         var currentChannelId: Long? = null
     }
 
@@ -89,11 +82,9 @@ class ChannelsCache {
         }
     }
 
-    suspend fun addPendingChannel(channel: SceytChannel) {
+    suspend fun upsertPendingChannel(channel: SceytChannel) {
         mutex.withLock {
-            pendingChannelsData[channel.id] = channel
-            if (channel.lastMessage != null)
-                channelAdded(channel)
+            upsertPendingChannelImpl(channel)
         }
     }
 
@@ -106,6 +97,8 @@ class ChannelsCache {
     suspend fun clearAll() {
         mutex.withLock {
             cachedData.clear()
+            pendingChannelsData.clear()
+            fromPendingToRealChannelsData.clear()
         }
     }
 
@@ -160,17 +153,27 @@ class ChannelsCache {
         }
     }
 
-    fun newChannelsOnSync(config: ChannelListConfig, channels: List<SceytChannel>) {
-        channels.forEach { channel ->
+    /**
+     * Atomically replaces the loaded window for [config] with [dbWindow] (an already DB-ordered prefix),
+     * preserving visible pending channels, and returns the final sorted list the UI should display.
+     *
+     * Used after a channel sync finishes: the DB is the authoritative source, so the displayed window is
+     * rebuilt rather than delta-merged. Clearing + refilling + sorting happen under a single [mutex] lock so
+     * the operation can't interleave with [getSorted]/[addAll]/[updateChannel].
+     */
+    suspend fun resetWindowAfterSync(
+        config: ChannelListConfig,
+        dbWindow: List<SceytChannel>,
+    ): List<SceytChannel> {
+        mutex.withLock {
             val map = getOrCreateMap(config)
-            val cachedChannel = map[channel.id] ?: pendingChannelsData[channel.id]
-            if (cachedChannel == null) {
-                if (!channel.pending) {
-                    map[channel.id] = channel
-                }
+            map.clear()
+            dbWindow.forEach { channel ->
+                if (!channel.pending) map[channel.id] = channel
             }
+            // channelsByConfig folds visible pending channels back in.
+            return channelsByConfig(config).sortedWith(ChannelsComparatorDescBy(config.order))
         }
-        newChannelsOnSync_.tryEmit(Pair(config, channels))
     }
 
     suspend fun updateChannel(config: ChannelListConfig, vararg channels: SceytChannel) {
@@ -179,34 +182,7 @@ class ChannelsCache {
         }
     }
 
-    private suspend fun upsertChannelImpl(
-        config: ChannelListConfig,
-        vararg channels: SceytChannel
-    ) {
-        val map = getOrCreateMap(config)
-        channels.forEach { channel ->
-            val cachedChannel = map[channel.id] ?: pendingChannelsData[channel.id]
-            if (cachedChannel == null) {
-                if (!channel.pending) {
-                    map[channel.id] = channel
-                    channelAdded(channel)
-                }
-            } else {
-                checkMaybePendingChannelCreated(cachedChannel, channel)
-                val oldMsg = cachedChannel.lastMessage
-                val diff = putAndCheckHasDiff(config, channel)
-                if (diff.hasDifference()) {
-                    val needSort = checkNeedSortByLastMessage(
-                        oldMsg = oldMsg,
-                        newMsg = channel.lastMessage
-                    ) || diff.pinStateChanged
-                    channelUpdated(config, channel, diff, needSort, ChannelUpdatedType.Updated)
-                }
-            }
-        }
-    }
-
-    private suspend fun updateChannelsImpl(
+    private fun updateChannelsImpl(
         config: ChannelListConfig,
         vararg channels: SceytChannel
     ) {
@@ -228,16 +204,48 @@ class ChannelsCache {
         }
     }
 
-    private suspend fun checkMaybePendingChannelCreated(
+    private fun upsertChannelImpl(
+        config: ChannelListConfig,
+        vararg channels: SceytChannel
+    ) {
+        val map = getOrCreateMap(config)
+        channels.forEach { channel ->
+            val cachedChannel = map[channel.id] ?: pendingChannelsData[channel.id]
+            if (cachedChannel == null) {
+                if (!channel.pending) {
+                    map[channel.id] = channel
+                    channelAdded(channel)
+                }
+            } else {
+                checkMaybePendingChannelCreated(cachedChannel, channel)
+                val oldMsg = cachedChannel.lastMessage
+                val diff = putAndCheckHasDiff(config, channel)
+                if (diff.hasDifference()) {
+                    val needSort = checkNeedSortByLastMessage(
+                        oldMsg = oldMsg,
+                        newMsg = channel.lastMessage
+                    ) || diff.pinStateChanged
+                    channelUpdated(config, channel, diff, needSort, getChannelUpdatedType(diff))
+                }
+            }
+        }
+    }
+
+    private fun checkMaybePendingChannelCreated(
         cachedChannel: SceytChannel,
         newChannel: SceytChannel
     ) {
         if (!cachedChannel.pending || newChannel.pending) return
-        pendingChannelCreated(cachedChannel.id, newChannel)
+        pendingChannelCreatedImpl(cachedChannel.id, newChannel)
     }
 
     suspend fun updateLastMessage(channelId: Long, message: SceytMessage?) {
         mutex.withLock {
+            pendingChannelsData[channelId]?.let { channel ->
+                upsertPendingChannelImpl(channel.copy(lastMessage = message))
+                return@withLock
+            }
+
             cachedData.forEachKeyValue { config, map ->
                 map[channelId]?.let { channel ->
                     if (message != null && channel.lastMessage != null)
@@ -257,6 +265,35 @@ class ChannelsCache {
                 }
             }
         }
+    }
+
+    private fun upsertPendingChannelImpl(channel: SceytChannel) {
+        val cachedChannel = pendingChannelsData[channel.id]
+        pendingChannelsData[channel.id] = channel
+
+        if (cachedChannel == null) {
+            if (channel.lastMessage != null)
+                channelAdded(channel)
+            return
+        }
+
+        val diff = cachedChannel.diff(channel)
+        if (!diff.hasDifference()) return
+
+        if (cachedChannel.lastMessage == null && channel.lastMessage != null)
+            channelAdded(channel)
+
+        channelUpdatedFlow_.tryEmit(
+            ChannelUpdateData(
+                channel = channel,
+                needSorting = checkNeedSortByLastMessage(
+                    cachedChannel.lastMessage,
+                    channel.lastMessage
+                ),
+                diff = diff,
+                eventType = getChannelUpdatedType(diff)
+            )
+        )
     }
 
     suspend fun updateLastMessageWithLastRead(channelId: Long, message: SceytMessage?) {
@@ -386,19 +423,23 @@ class ChannelsCache {
 
     suspend fun pendingChannelCreated(pendingChannelId: Long, newChannel: SceytChannel) {
         mutex.withLock {
-            // Removing pending channel
-            pendingChannelsData.remove(pendingChannelId)
-            // Adding already created channel to cache
-            cachedData.forEachKeyValue { key, value ->
-                if (key.isValidForConfig(newChannel)) {
-                    value[newChannel.id] = newChannel
-                }
-            }
-            // Adding pending channel id with real channel id for future getting real channel id by pending channel id
-            fromPendingToRealChannelsData[pendingChannelId] = newChannel.id
-            // Emitting to flow
-            pendingChannelCreatedFlow_.tryEmit(Pair(pendingChannelId, newChannel))
+            pendingChannelCreatedImpl(pendingChannelId, newChannel)
         }
+    }
+
+    private fun pendingChannelCreatedImpl(pendingChannelId: Long, newChannel: SceytChannel) {
+        // Removing pending channel
+        pendingChannelsData.remove(pendingChannelId)
+        // Adding already created channel to cache
+        cachedData.forEachKeyValue { key, value ->
+            if (key.isValidForConfig(newChannel)) {
+                value[newChannel.id] = newChannel
+            }
+        }
+        // Adding pending channel id with real channel id for future getting real channel id by pending channel id
+        fromPendingToRealChannelsData[pendingChannelId] = newChannel.id
+        // Emitting to flow
+        pendingChannelCreatedFlow_.tryEmit(Pair(pendingChannelId, newChannel))
     }
 
     suspend fun updateChannelDraftMessage(channelId: Long, draftMessage: DraftMessage?) {
@@ -487,6 +528,24 @@ class ChannelsCache {
 
     private fun channelAdded(channel: SceytChannel) {
         channelAddedFlow_.tryEmit(channel)
+    }
+
+    private fun getChannelUpdatedType(diff: ChannelDiff): ChannelUpdatedType {
+        return when {
+            diff.messagesClearedAtChanged -> ChannelUpdatedType.ClearedHistory
+            diff.lastMessageChanged -> ChannelUpdatedType.LastMessage
+            diff.pinStateChanged -> ChannelUpdatedType.PinnedAt
+            diff.autoDeleteStateChanged -> ChannelUpdatedType.AutoDeleteState
+            diff.muteStateChanged -> ChannelUpdatedType.MuteState
+            diff.membersChanged -> ChannelUpdatedType.Members
+            diff.unreadCountChanged || diff.markedUsUnreadChanged -> ChannelUpdatedType.UnreadCount
+            diff.isOnlyPresenceChanged() -> ChannelUpdatedType.Presence
+            else -> ChannelUpdatedType.Updated
+        }
+    }
+
+    private fun ChannelDiff.isOnlyPresenceChanged(): Boolean {
+        return presenceStateChanged && copy(presenceStateChanged = false).hasDifference().not()
     }
 
     private fun putAndCheckHasDiff(config: ChannelListConfig, list: List<SceytChannel>): Boolean {

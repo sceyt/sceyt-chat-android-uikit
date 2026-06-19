@@ -55,7 +55,7 @@ internal fun PipCallContent(
     // Group call PIP: show only self video
     if (callState.call?.isGroupCall == true) {
         val stableLocalTrack = remember(callState.localParticipant?.videoTrack) {
-            StableVideoTrack(callState.localParticipant?.videoTrack)
+            StableVideoTrack(callState.localParticipant?.videoTrack?.videoTrack)
         }
         Box(
             modifier = Modifier
@@ -77,10 +77,10 @@ internal fun PipCallContent(
     val hasRemoteVideo = focusParticipant?.videoTrack != null && focusParticipant.isVideoEnabled
     val hasLocalVideo = callState.localParticipant?.shouldShowLocalPreview == true
     val stableRemoteTrack = remember(focusParticipant?.videoTrack) {
-        StableVideoTrack(focusParticipant?.videoTrack)
+        StableVideoTrack(focusParticipant?.videoTrack?.videoTrack)
     }
     val stableLocalTrack = remember(callState.localParticipant?.videoTrack) {
-        StableVideoTrack(callState.localParticipant?.videoTrack)
+        StableVideoTrack(callState.localParticipant?.videoTrack?.videoTrack)
     }
 
     if (hasRemoteVideo || hasLocalVideo) {

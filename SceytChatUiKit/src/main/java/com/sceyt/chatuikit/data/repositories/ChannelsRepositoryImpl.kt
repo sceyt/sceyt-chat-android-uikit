@@ -40,11 +40,14 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 class ChannelsRepositoryImpl : ChannelsRepository {
 
     private lateinit var channelsQuery: ChannelListQuery
     private lateinit var mutualChannelsQuery: ChannelListQuery
+    private val channelsQueryMutex = Mutex()
 
     private fun createMemberListQuery(
         channelId: Long,
@@ -143,8 +146,8 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         query: String,
         config: ChannelListConfig,
         params: SearchChannelParams,
-    ): SceytResponse<List<SceytChannel>> {
-        return suspendCancellableCoroutine { continuation ->
+    ): SceytResponse<List<SceytChannel>> = channelsQueryMutex.withLock {
+        suspendCancellableCoroutine { continuation ->
             val channelListQuery = createChannelListQuery(config, query, params).also {
                 channelsQuery = it
             }
@@ -182,24 +185,25 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         }
     }
 
-    private suspend fun loadMoreChannelsImpl(): SceytResponse<List<SceytChannel>> {
-        return suspendCancellableCoroutine { continuation ->
-            channelsQuery.loadNext(object : ChannelsCallback {
-                override fun onResult(channels: MutableList<Channel>?) {
-                    if (channels.isNullOrEmpty())
-                        continuation.safeResume(SceytResponse.Success(emptyList()))
-                    else {
-                        continuation.safeResume(SceytResponse.Success(channels.map { it.toSceytUiChannel() }))
+    private suspend fun loadMoreChannelsImpl(): SceytResponse<List<SceytChannel>> =
+        channelsQueryMutex.withLock {
+            suspendCancellableCoroutine { continuation ->
+                channelsQuery.loadNext(object : ChannelsCallback {
+                    override fun onResult(channels: MutableList<Channel>?) {
+                        if (channels.isNullOrEmpty())
+                            continuation.safeResume(SceytResponse.Success(emptyList()))
+                        else {
+                            continuation.safeResume(SceytResponse.Success(channels.map { it.toSceytUiChannel() }))
+                        }
                     }
-                }
 
-                override fun onError(e: SceytException?) {
-                    continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "loadMoreChannels error: ${e?.message}, code: ${e?.code}")
-                }
-            })
+                    override fun onError(e: SceytException?) {
+                        continuation.safeResume(SceytResponse.Error(e))
+                        SceytLog.e(TAG, "loadMoreChannels error: ${e?.message}, code: ${e?.code}")
+                    }
+                })
+            }
         }
-    }
 
     override suspend fun getCommonGroups(
         userId: String,

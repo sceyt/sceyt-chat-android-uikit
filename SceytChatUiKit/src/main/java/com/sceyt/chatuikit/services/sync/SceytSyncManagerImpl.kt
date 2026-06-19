@@ -74,22 +74,20 @@ internal class SceytSyncManagerImpl(
         return coroutineScope {
             suspendCancellableCoroutine { cont ->
                 launch(Dispatchers.IO) {
-                    val syncChannelData = SceytSyncManager.SyncChannelData(mutableSetOf(), false)
-                    channelInteractor.syncChannels(config).collect {
-                        when (it) {
+                    channelInteractor.syncChannels(config).collect { result ->
+                        when (result) {
                             is SyncResult.Error -> {
-                                syncChannelData.withError = true
+                                SceytSyncManager.syncChannelsResult_.tryEmit(result)
                                 cont.safeResume(syncResultData)
                             }
 
                             is SyncResult.Proportion -> {
-                                val channels = it.items
-                                syncChannelsMessages(channels)
-                                syncChannelData.channels.addAll(channels)
+                                SceytSyncManager.syncChannelsResult_.tryEmit(result)
+                                syncChannelsMessages(result.items)
                             }
 
                             SyncResult.SuccessfullyFinished -> {
-                                SceytSyncManager.syncChannelsFinished_.tryEmit(syncChannelData)
+                                SceytSyncManager.syncChannelsResult_.tryEmit(result)
                                 cont.safeResume(syncResultData)
                             }
                         }

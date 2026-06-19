@@ -5,7 +5,6 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.RawQuery
-import androidx.room.RoomWarnings
 import androidx.room.Transaction
 import androidx.room.Update
 import androidx.sqlite.db.SimpleSQLiteQuery
@@ -15,6 +14,7 @@ import com.sceyt.chatuikit.persistence.database.entity.channel.ChannelDb
 import com.sceyt.chatuikit.persistence.database.entity.channel.ChannelEntity
 import com.sceyt.chatuikit.persistence.database.entity.channel.UserChatLinkEntity
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 @Dao
 internal abstract class ChannelDao {
@@ -93,11 +93,10 @@ internal abstract class ChannelDao {
         return getChannelsById(links.map { it.chatId })
     }
 
-    @SuppressWarnings(RoomWarnings.QUERY_MISMATCH)
     @Transaction
     @Query(
         """
-        SELECT * FROM $CHANNEL_TABLE AS channel
+        SELECT channel.* FROM $CHANNEL_TABLE AS channel
         JOIN $USER_CHAT_LINK_TABLE AS link ON link.chat_id = channel.chat_id
         WHERE link.user_id = :peerId
           AND type = :channelType
@@ -108,7 +107,6 @@ internal abstract class ChannelDao {
         channelType: String,
     ): ChannelDb?
 
-    @SuppressWarnings(RoomWarnings.QUERY_MISMATCH)
     @Transaction
     @Query(
         """
@@ -133,10 +131,16 @@ internal abstract class ChannelDao {
     @Query("""SELECT * FROM $CHANNEL_TABLE WHERE uri = :uri""")
     abstract suspend fun getChannelByUri(uri: String): ChannelDb?
 
-    @SuppressWarnings(RoomWarnings.QUERY_MISMATCH)
+    @Query("""UPDATE $CHANNEL_TABLE SET uri = :uri WHERE chat_id = :channelId""")
+    abstract suspend fun updateUri(channelId: Long, uri: String?)
+
     @Transaction
     @Query("""SELECT * FROM $CHANNEL_TABLE WHERE isSelf = 1""")
     abstract suspend fun getSelfChannel(): ChannelDb?
+
+    @Transaction
+    @Query("""SELECT * FROM $CHANNEL_TABLE WHERE pending = 1 AND type = :type""")
+    abstract suspend fun getPendingChannelsByType(type: String): List<ChannelDb>
 
     @Query(
         """
@@ -179,18 +183,25 @@ internal abstract class ChannelDao {
     @Query("""SELECT lastMessageTid FROM $CHANNEL_TABLE WHERE chat_id = :id""")
     abstract suspend fun getChannelLastMessageTid(id: Long): Long?
 
-    @Transaction
+    fun getTotalUnreadCountAsFlow(channelTypes: List<String>): Flow<Long> {
+        return if (channelTypes.isEmpty()) {
+            getTotalUnreadCountAsFlow()
+        } else {
+            getTotalUnreadCountByTypesAsFlow(channelTypes)
+        }.map { it ?: 0L }
+    }
+
+    @Query("SELECT SUM(newMessageCount) FROM $CHANNEL_TABLE")
+    protected abstract fun getTotalUnreadCountAsFlow(): Flow<Long?>
+
     @Query(
         """
         SELECT SUM(newMessageCount)
         FROM $CHANNEL_TABLE
-        WHERE :typesEmpty OR type IN (:channelTypes)
+        WHERE type IN (:channelTypes)
         """
     )
-    abstract fun getTotalUnreadCountAsFlow(
-        channelTypes: List<String>,
-        typesEmpty: Boolean = channelTypes.isEmpty(),
-    ): Flow<Long?>
+    protected abstract fun getTotalUnreadCountByTypesAsFlow(channelTypes: List<String>): Flow<Long?>
 
     @Query("""SELECT COUNT(chat_id) FROM $CHANNEL_TABLE""")
     abstract suspend fun getAllChannelsCount(): Int
@@ -208,6 +219,20 @@ internal abstract class ChannelDao {
         channelId: Long,
         lastMessageTid: Long?,
         lastMessageAt: Long?
+    )
+
+    @Query(
+        """UPDATE $CHANNEL_TABLE SET 
+            lastMessageTid = :lastMessageTid,
+            lastMessageAt = :lastMessageAt,
+            newMessageCount = :newMessageCount
+           WHERE chat_id = :channelId"""
+    )
+    abstract suspend fun updateLastMessageAndNewMessageCount(
+        channelId: Long,
+        lastMessageTid: Long?,
+        lastMessageAt: Long?,
+        newMessageCount: Long
     )
 
     @Query(

@@ -555,7 +555,7 @@ internal class PersistenceMessagesLogicImpl(
             }
 
             is SceytResponse.Error -> {
-                channelCache.addPendingChannel(updated)
+                channelCache.upsertPendingChannel(updated)
                 return callbackFlow {
                     trySend(SendMessageResult.Error(SceytResponse.Error(response.exception)))
                     this.channel.close()
@@ -574,12 +574,9 @@ internal class PersistenceMessagesLogicImpl(
     private suspend fun createNewChannelInsteadOfPendingChannel(
         pendingChannel: SceytChannel,
     ): SceytResponse<SceytChannel> {
-        val response = persistenceChannelsLogic.createNewChannelInsteadOfPendingChannel(
+        return persistenceChannelsLogic.createNewChannelInsteadOfPendingChannel(
             channel = pendingChannel
-        ).onSuccessNotNull {
-            messagesCache.moveMessagesToNewChannel(pendingChannel.id, it.id)
-        }
-        return response
+        )
     }
 
     override suspend fun sendSharedFileMessage(channelId: Long, message: Message) =
@@ -1722,7 +1719,12 @@ internal class PersistenceMessagesLogicImpl(
             pendingMarkerDao.deleteMessagesMarkersByStatus(responseIds, marker)
             myId?.let { userId ->
                 messageDao.insertUserMarkersIfExistMessage(responseIds.map {
-                    MarkerEntity(messageId = it, userId = userId, name = data.name)
+                    MarkerEntity(
+                        messageId = it,
+                        userId = userId,
+                        name = data.name,
+                        createdAt = data.createdAt
+                    )
                 })
 
                 messagesCache.addMessageMarker(

@@ -10,6 +10,7 @@ import com.sceyt.chatuikit.extensions.keepScreenOn
 import com.sceyt.chatuikit.persistence.differs.diff
 import com.sceyt.chatuikit.presentation.common.recyclerview.AsyncListDiffer
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.holders.BaseFileViewHolder
+import com.sceyt.chatuikit.presentation.helpers.ExoPlayerHelper
 import kotlinx.coroutines.CoroutineScope
 
 class MediaAdapter(
@@ -74,11 +75,27 @@ class MediaAdapter(
 
     fun releaseAllPlayers() {
         mediaPlayers.forEach { it.release() }
+        mediaPlayers.clear()
+        ExoPlayerHelper.lastPlayer?.release()
+        ExoPlayerHelper.lastPlayer = null
     }
 
     fun addMediaPlayer(mediaPlayer: Player?) {
         mediaPlayer?.let { mediaPlayers.add(it) }
     }
+
+    fun removeMediaPlayer(mediaPlayer: Player?) {
+        mediaPlayer?.let { mediaPlayers.remove(it) }
+    }
+
+    private val playbackPositions = HashMap<String, Long>()
+
+    fun savePlaybackPosition(path: String?, positionMs: Long) {
+        path ?: return
+        if (positionMs > 0) playbackPositions[path] = positionMs else playbackPositions.remove(path)
+    }
+
+    fun getPlaybackPosition(path: String?): Long = path?.let { playbackPositions[it] } ?: 0L
 
     fun initWakeLock(context: Context) {
         if (wakeLock == null)

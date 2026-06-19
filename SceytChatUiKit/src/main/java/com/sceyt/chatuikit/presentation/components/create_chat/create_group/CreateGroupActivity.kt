@@ -91,6 +91,7 @@ class CreateGroupActivity : AppCompatActivity() {
                     )
                 )
 
+                hideLoading()
                 SceytChatUIKit.navigator.navigate(this@CreateGroupActivity, Destination.Channel(it))
                 val intent = Intent()
                 setResult(RESULT_OK, intent)

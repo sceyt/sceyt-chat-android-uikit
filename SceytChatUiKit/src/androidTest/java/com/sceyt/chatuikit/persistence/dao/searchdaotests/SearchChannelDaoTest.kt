@@ -291,6 +291,22 @@ class SearchChannelDaoTest {
     }
 
     @Test
+    fun searchChannelsByUserIds_orderByLastMessageTrue_ordersByLastMessageAt() = runTest {
+        insert(
+            channel(1, type = "public", subject = "Alpha", lastMessageAt = 100),
+            channel(2, type = "public", subject = "Alpha", lastMessageAt = 300),
+        )
+
+        val result = globalSearchDao.searchChannelsByUserIds(
+            query = "Alpha", userIds = emptyList(), limit = 10, offset = 0,
+            onlyMine = false, types = emptyList(), orderByLastMessage = true,
+            directType = "direct"
+        )
+
+        assertThat(result.map { it.channelEntity.id }).containsExactly(2L, 1L).inOrder()
+    }
+
+    @Test
     fun searchChannelsByUserIds_symbolSeparatedSubjectMatchesLaterToken() = runTest {
         insert(
             channel(1, type = "public", subject = "public-channel"),

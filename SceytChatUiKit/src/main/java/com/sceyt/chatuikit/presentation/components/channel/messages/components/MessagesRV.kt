@@ -60,6 +60,7 @@ class MessagesRV @JvmOverloads constructor(
 
     private var showHideDownScroller: ((show: Boolean) -> Unit)? = null
     private var swipeToReplyListener: ((MessageListItem) -> Unit)? = null
+    private var listCommittedListener: (() -> Unit)? = null
     private var enableSwipe: Boolean = true
     private lateinit var style: MessagesListViewStyle
     private var scrollY = 0
@@ -201,8 +202,10 @@ class MessagesRV @JvmOverloads constructor(
                 recyclerView = this
             ).also {
                 it.setHasStableIds(true)
+                it.onListCommittedListener = listCommittedListener
                 mAdapter = it
             }
+            listCommittedListener?.invoke()
             scheduleLayoutAnimation()
 
             if (style.enableDateSeparator)
@@ -293,6 +296,14 @@ class MessagesRV @JvmOverloads constructor(
                 outGoing = (it as MessageListItem.MessageItem).message.incoming.not()
             }
             checkScrollToEnd(items.size, outGoing)
+        }
+    }
+
+    fun setOnListCommittedListener(listener: () -> Unit) {
+        listCommittedListener = listener
+        if (::mAdapter.isInitialized) {
+            mAdapter.onListCommittedListener = listener
+            listener.invoke()
         }
     }
 
