@@ -184,7 +184,7 @@ open class GlobalSearchActivity : AppCompatActivity(), GlobalSearchClickListener
         return GlobalSearchSuggestionsAdapter(
             scope = lifecycleScope,
             style = style.suggestionsStyle,
-            onClick = headerViewModel::onMemberSelected
+            onClick = headerViewModel::onUserSelected
         )
     }
 
