@@ -96,7 +96,7 @@ open class GlobalSearchViewModel(
         sessionStore.update { it.copy(activeTab = tab) }
     }
 
-    fun onMemberSelected(user: SceytUser) {
+    fun onUserSelected(user: SceytUser) {
         suggestionJob?.cancel()
         debounceHelper.cancelLastDebounce()
         _headerState.update {
@@ -165,7 +165,7 @@ open class GlobalSearchViewModel(
             val suggestions = userSuggestionsProvider.provideSuggestions(
                 query = query,
                 limit = config.userSuggestionsLimit
-            )
+            ).take(config.userSuggestionsLimit)
             withContext(Dispatchers.Main) {
                 val current = _headerState.value
                 if (current.query == query && current.selectedUser == null) {

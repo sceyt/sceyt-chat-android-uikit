@@ -422,7 +422,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             // Sync messages near center visible message
             syncNearCenterVisibleMessageIfNeeded()
         }
-        .launchIn(viewModelScope)
+        .launchIn(lifecycleOwner.lifecycleScope)
 
     ConnectionEventManager.onChangedConnectStatusFlow
         .distinctUntilChanged()
