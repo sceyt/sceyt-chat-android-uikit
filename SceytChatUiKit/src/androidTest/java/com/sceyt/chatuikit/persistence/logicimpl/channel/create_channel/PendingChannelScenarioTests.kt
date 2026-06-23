@@ -36,6 +36,7 @@ import com.sceyt.chatuikit.persistence.database.dao.UserDao
 import com.sceyt.chatuikit.persistence.database.entity.messages.AttachmentEntity
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
+import com.sceyt.chatuikit.persistence.logicimpl.channel.LocalUnreadCountsManager
 import com.sceyt.chatuikit.persistence.logicimpl.channel.PendingChannelMigrationLock
 import com.sceyt.chatuikit.persistence.logicimpl.channel.PersistenceChannelsLogicImpl
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
@@ -267,6 +268,7 @@ class PendingChannelScenarioTests : SceytKoinComponent {
             channelsCache = channelsCache,
             channelSyncStateStore = getKoin().get<ChannelSyncStateStore>(),
             pendingChannelMigrationLock = getKoin().get<PendingChannelMigrationLock>(),
+            localUnreadCountsManager = getKoin().get<LocalUnreadCountsManager>(),
             findExistingChannelByMembersUseCase = getKoin().get<FindExistingChannelByMembersUseCase>(),
             createPendingChannelUseCase = getKoin().get<CreatePendingChannelUseCase>(),
             findRealChannelForPendingUseCase = getKoin().get<FindRealChannelForPendingUseCase>(),

@@ -46,6 +46,7 @@ internal class NotificationActionReceiver : BroadcastReceiver() {
                 ACTION_READ -> {
                     pushNotification.notificationHandler.onMarkAsReadAction()
                     cancelNotification(data)
+                    SceytChatUIKit.chatUIFacade.channelInteractor.markChannelAsRead(data.channel.id)
                     markAsRead(data.channel.id, data.message.id)
                 }
 

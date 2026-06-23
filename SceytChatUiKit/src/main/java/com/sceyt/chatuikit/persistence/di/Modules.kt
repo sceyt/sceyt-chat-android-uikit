@@ -48,6 +48,7 @@ import com.sceyt.chatuikit.persistence.logicimpl.PersistenceUsersLogicImpl
 import com.sceyt.chatuikit.persistence.logicimpl.attachment.AttachmentsCache
 import com.sceyt.chatuikit.persistence.logicimpl.attachment.PersistenceAttachmentLogicImpl
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
+import com.sceyt.chatuikit.persistence.logicimpl.channel.LocalUnreadCountsManager
 import com.sceyt.chatuikit.persistence.logicimpl.channel.PendingChannelMigrationLock
 import com.sceyt.chatuikit.persistence.logicimpl.channel.PersistenceChannelsLogicImpl
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessageLoadRangeUpdater
@@ -96,6 +97,7 @@ internal val appModules = module {
     singleOf(::FileTransferServiceImpl) bind FileTransferService::class
     singleOf(::MessageLoadRangeUpdater)
     singleOf(::ChannelSyncStateStore)
+    singleOf(::LocalUnreadCountsManager)
     singleOf(::PendingChannelMigrationLock)
     singleOf(::PushServiceImpl) bind PushService::class
     singleOf(::RealtimeNotificationManagerImpl) bind RealtimeNotificationManager::class
@@ -145,6 +147,7 @@ internal fun databaseModule(enableDatabase: Boolean) = module {
     single { get<SceytDatabase>().markerDao() }
     single { get<SceytDatabase>().pollDao() }
     single { get<SceytDatabase>().pendingPollVoteDao() }
+    single { get<SceytDatabase>().localUnreadDao() }
 }
 
 internal val interactorModule = module {
