@@ -515,6 +515,30 @@ class ChannelsCache {
         }
     }
 
+    suspend fun updateLocalUnreadState(
+        channelId: Long,
+        unread: Boolean,
+        newMessageCount: Long,
+        newMentionCount: Long,
+        lastDisplayedMessageId: Long,
+    ) {
+        mutex.withLock {
+            cachedData.forEachKeyValue { key, value ->
+                value[channelId]?.let {
+                    val updatedChannel = it.copy(
+                        unread = unread,
+                        newMessageCount = newMessageCount,
+                        newMentionCount = newMentionCount,
+                        lastDisplayedMessageId = lastDisplayedMessageId
+                    )
+                    val diff = it.diff(updatedChannel)
+                    if (diff.hasDifference())
+                        channelUpdated(key, updatedChannel, diff, false, ChannelUpdatedType.UnreadCount)
+                }
+            }
+        }
+    }
+
     private fun channelUpdated(
         config: ChannelListConfig,
         channel: SceytChannel,

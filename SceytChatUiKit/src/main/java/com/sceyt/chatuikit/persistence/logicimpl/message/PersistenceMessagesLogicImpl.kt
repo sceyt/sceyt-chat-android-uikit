@@ -36,6 +36,7 @@ import com.sceyt.chatuikit.data.models.createErrorResponse
 import com.sceyt.chatuikit.data.models.isSuccess
 import com.sceyt.chatuikit.data.models.map
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
+import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.MarkerType.Received
 import com.sceyt.chatuikit.data.models.messages.SceytMarker
@@ -74,6 +75,7 @@ import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceReactionsLogic
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
+import com.sceyt.chatuikit.persistence.logicimpl.channel.LocalUnreadCountsManager
 import com.sceyt.chatuikit.persistence.logicimpl.sync.ChannelSyncStateStore
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.CheckDeletedMessagesUseCase
 import com.sceyt.chatuikit.persistence.mappers.addAttachmentMetadata
@@ -131,6 +133,7 @@ internal class PersistenceMessagesLogicImpl(
     private val preference: SceytSharedPreference,
     private val messagesCache: MessagesCache,
     private val channelCache: ChannelsCache,
+    private val localUnreadCountsManager: LocalUnreadCountsManager,
     private val messageLoadRangeUpdater: MessageLoadRangeUpdater,
     private val checkDeletedMessagesUseCase: CheckDeletedMessagesUseCase,
     private val channelSyncStateStore: ChannelSyncStateStore
@@ -156,6 +159,7 @@ internal class PersistenceMessagesLogicImpl(
         val channel = data.first
         val message = data.second
         saveMessagesToDb(arrayListOf(message))
+        localUnreadCountsManager.recordObservedMessages(listOf(message))
 
         messagesCache.add(channel.id, message)
         onMessageFlow.tryEmit(data)
@@ -185,6 +189,7 @@ internal class PersistenceMessagesLogicImpl(
                 includeParents = false,
                 replaceUserOnConflict = false
             )
+            localUnreadCountsManager.recordObservedMessages(listOf(message))
             messagesCache.add(data.channel.id, message)
             onMessageFlow.tryEmit(Pair(data.channel, message))
 
@@ -360,6 +365,7 @@ internal class PersistenceMessagesLogicImpl(
             when (result) {
                 is SyncResult.Proportion -> {
                     val updatedMessages = saveMessagesToDb(result.items)
+                    localUnreadCountsManager.recordObservedMessages(updatedMessages)
                     messagesCache.upsertMessages(
                         channelId = conversationId,
                         message = updatedMessages.toTypedArray()
@@ -1714,6 +1720,8 @@ internal class PersistenceMessagesLogicImpl(
                     status = deliveryStatus,
                     tIds = tIds.toLongArray()
                 )
+                if (deliveryStatus == MessageDeliveryStatus.Displayed)
+                    localUnreadCountsManager.markMessagesRead(channelId, responseIds)
             }
 
             pendingMarkerDao.deleteMessagesMarkersByStatus(responseIds, marker)

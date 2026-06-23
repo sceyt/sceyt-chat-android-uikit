@@ -16,6 +16,7 @@ import com.sceyt.chatuikit.persistence.database.dao.FileChecksumDao
 import com.sceyt.chatuikit.persistence.database.dao.GlobalSearchDao
 import com.sceyt.chatuikit.persistence.database.dao.LinkDao
 import com.sceyt.chatuikit.persistence.database.dao.LoadRangeDao
+import com.sceyt.chatuikit.persistence.database.dao.LocalUnreadDao
 import com.sceyt.chatuikit.persistence.database.dao.MarkerDao
 import com.sceyt.chatuikit.persistence.database.dao.MemberDao
 import com.sceyt.chatuikit.persistence.database.dao.MessageDao
@@ -30,6 +31,8 @@ import com.sceyt.chatuikit.persistence.database.entity.FileChecksumEntity
 import com.sceyt.chatuikit.persistence.database.entity.channel.ChannelEntity
 import com.sceyt.chatuikit.persistence.database.entity.channel.ChannelSyncStateEntity
 import com.sceyt.chatuikit.persistence.database.entity.channel.ChatUserReactionEntity
+import com.sceyt.chatuikit.persistence.database.entity.channel.LocalChannelUnreadStateEntity
+import com.sceyt.chatuikit.persistence.database.entity.channel.LocalUnreadMessageEntity
 import com.sceyt.chatuikit.persistence.database.entity.channel.UserChatLinkEntity
 import com.sceyt.chatuikit.persistence.database.entity.link.LinkDetailsEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.AttachmentEntity
@@ -87,8 +90,10 @@ import com.sceyt.chatuikit.persistence.database.entity.user.UserMetadataEntity
         PollVoteEntity::class,
         PendingPollVoteEntity::class,
         MessageFtsEntity::class,
+        LocalChannelUnreadStateEntity::class,
+        LocalUnreadMessageEntity::class,
     ],
-    version = 30,
+    version = 31,
     autoMigrations = [
         AutoMigration(from = 1, to = 2),
         AutoMigration(from = 2, to = 3),
@@ -140,4 +145,5 @@ internal abstract class SceytDatabase : RoomDatabase() {
     abstract fun markerDao(): MarkerDao
     abstract fun pollDao(): PollDao
     abstract fun pendingPollVoteDao(): PendingPollVoteDao
+    abstract fun localUnreadDao(): LocalUnreadDao
 }

@@ -254,6 +254,24 @@ internal abstract class ChannelDao {
     @Query("""UPDATE $CHANNEL_TABLE SET newMessageCount = :count, unread = 0 WHERE chat_id = :channelId""")
     abstract suspend fun updateUnreadCount(channelId: Long, count: Int)
 
+    @Query(
+        """
+        UPDATE $CHANNEL_TABLE
+        SET unread = :unread,
+            newMessageCount = :newMessageCount,
+            newMentionCount = :newMentionCount,
+            lastDisplayedMessageId = :lastDisplayedMessageId
+        WHERE chat_id = :channelId
+        """
+    )
+    abstract suspend fun updateUnreadState(
+        channelId: Long,
+        unread: Boolean,
+        newMessageCount: Long,
+        newMentionCount: Long,
+        lastDisplayedMessageId: Long,
+    )
+
     @Query("""UPDATE $CHANNEL_TABLE SET memberCount = :count WHERE chat_id = :channelId""")
     abstract suspend fun updateMemberCount(channelId: Long, count: Int)
 
