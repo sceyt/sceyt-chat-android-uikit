@@ -684,17 +684,21 @@ class MessageListViewModel(
     }
 
     fun sendMessage(message: Message) {
+        val channelId = channel.id
+        val interactor = messageInteractor
         viewModelScope.launch {
             withContext(NonCancellable) {
-                messageInteractor.sendMessageAsFlow(channel.id, message).collect()
+                interactor.sendMessageAsFlow(channelId, message).collect()
             }
         }
     }
 
     fun sendMessages(messages: List<Message>) {
+        val channelId = channel.id
+        val interactor = messageInteractor
         viewModelScope.launch {
             withContext(NonCancellable) {
-                messageInteractor.sendMessages(channel.id, messages)
+                interactor.sendMessages(channelId, messages)
             }
         }
     }
