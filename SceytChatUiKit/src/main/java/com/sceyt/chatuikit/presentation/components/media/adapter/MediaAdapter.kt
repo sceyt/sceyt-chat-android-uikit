@@ -74,6 +74,7 @@ class MediaAdapter(
     }
 
     fun releaseAllPlayers() {
+        releaseWakeLock()
         mediaPlayers.forEach { it.release() }
         mediaPlayers.clear()
         ExoPlayerHelper.lastPlayer?.release()
@@ -106,7 +107,10 @@ class MediaAdapter(
     }
 
     fun releaseWakeLock() {
-        if (wakeLock?.isHeld == true)
-            wakeLock?.release()
+        wakeLock?.let { lock ->
+            if (lock.isHeld)
+                lock.release()
+        }
+        wakeLock = null
     }
 }
