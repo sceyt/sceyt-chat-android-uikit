@@ -115,6 +115,10 @@ class MessagesCache {
         cachedMessages[channelId]?.clear()
     }
 
+    suspend fun clearAll() = mutex.withLock {
+        cachedMessages.clear()
+    }
+
     suspend fun clearAllExceptPending(channelId: Long) = mutex.withLock {
         getMessagesMap(channelId)?.values
             ?.filter { it.isNotPending() }

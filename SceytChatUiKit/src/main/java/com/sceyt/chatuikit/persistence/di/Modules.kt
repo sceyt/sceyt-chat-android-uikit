@@ -47,6 +47,8 @@ import com.sceyt.chatuikit.persistence.logicimpl.PersistenceReactionsLogicImpl
 import com.sceyt.chatuikit.persistence.logicimpl.PersistenceUsersLogicImpl
 import com.sceyt.chatuikit.persistence.logicimpl.attachment.AttachmentsCache
 import com.sceyt.chatuikit.persistence.logicimpl.attachment.PersistenceAttachmentLogicImpl
+import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelLocalOverlayResolver
+import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelLocalStore
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.persistence.logicimpl.channel.LocalUnreadCountsManager
 import com.sceyt.chatuikit.persistence.logicimpl.channel.PendingChannelMigrationLock
@@ -98,6 +100,8 @@ internal val appModules = module {
     singleOf(::MessageLoadRangeUpdater)
     singleOf(::ChannelSyncStateStore)
     singleOf(::LocalUnreadCountsManager)
+    singleOf(::ChannelLocalOverlayResolver)
+    singleOf(::ChannelLocalStore)
     singleOf(::PendingChannelMigrationLock)
     singleOf(::PushServiceImpl) bind PushService::class
     singleOf(::RealtimeNotificationManagerImpl) bind RealtimeNotificationManager::class
