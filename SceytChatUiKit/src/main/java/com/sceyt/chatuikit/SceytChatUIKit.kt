@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit
 
 import android.content.Context
+import androidx.annotation.VisibleForTesting
 import androidx.emoji2.text.EmojiCompat
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.lifecycleScope
@@ -27,9 +28,9 @@ import com.sceyt.chatuikit.persistence.di.logicModule
 import com.sceyt.chatuikit.persistence.di.useCaseModule
 import com.sceyt.chatuikit.persistence.lazyVar
 import com.sceyt.chatuikit.persistence.mappers.toSceytUser
-import com.sceyt.chatuikit.presentation.di.viewModelModule
 import com.sceyt.chatuikit.navigation.DefaultSceytChatUIKitNavigator
 import com.sceyt.chatuikit.navigation.SceytChatUIKitNavigator
+import com.sceyt.chatuikit.presentation.di.viewModelModule
 import com.sceyt.chatuikit.providers.ChatTokenProvider
 import com.sceyt.chatuikit.providers.SceytChatUIKitProviders
 import com.sceyt.chatuikit.renderers.SceytChatUIKitRenderers
@@ -40,14 +41,17 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.KoinApplication
-import org.koin.core.component.inject
 import org.koin.core.context.GlobalContext
 import org.koin.core.context.startKoin
 import org.koin.dsl.koinApplication
 
 object SceytChatUIKit : SceytKoinComponent {
     private lateinit var appContext: Context
-    val chatUIFacade: SceytChatUIFacade by inject()
+    private var chatUIFacadeInstance: SceytChatUIFacade? = null
+    val chatUIFacade: SceytChatUIFacade
+        get() = chatUIFacadeInstance ?: getKoin().get<SceytChatUIFacade>().also {
+            chatUIFacadeInstance = it
+        }
     var theme: SceytChatUIKitTheme by lazyVar { SceytChatUIKitTheme() }
     var config: SceytChatUIKitConfig by lazyVar { SceytChatUIKitConfig() }
     var formatters: SceytChatUIKitFormatters by lazyVar { SceytChatUIKitFormatters() }
@@ -117,6 +121,13 @@ object SceytChatUIKit : SceytKoinComponent {
         SceytLog.setLogger(logLevel, logger)
     }
 
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun releaseForTesting() {
+        chatUIFacadeInstance = null
+        SceytKoinApp.koinApp?.close()
+        SceytKoinApp.koinApp = null
+    }
+
     private fun initKoin(enableDatabase: Boolean) {
         val koin = GlobalContext.getOrNull()
         SceytKoinApp.koinApp = if (koin == null) {
@@ -154,4 +165,3 @@ object SceytChatUIKit : SceytKoinComponent {
         )
     }
 }
-

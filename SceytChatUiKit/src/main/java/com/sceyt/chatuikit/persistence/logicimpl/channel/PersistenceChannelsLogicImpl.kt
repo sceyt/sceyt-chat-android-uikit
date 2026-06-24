@@ -26,7 +26,6 @@ import com.sceyt.chatuikit.data.models.SDKErrorTypeEnum
 import com.sceyt.chatuikit.data.models.SceytPagingResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.SyncResult
-import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
 import com.sceyt.chatuikit.data.models.channels.DraftMessage
 import com.sceyt.chatuikit.data.models.channels.EditChannelData
@@ -36,16 +35,13 @@ import com.sceyt.chatuikit.data.models.channels.SyncedChannelsWindow
 import com.sceyt.chatuikit.data.models.createErrorResponse
 import com.sceyt.chatuikit.data.models.fold
 import com.sceyt.chatuikit.data.models.map
-import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
-import com.sceyt.chatuikit.data.models.onError
 import com.sceyt.chatuikit.data.models.onSuccessNotNull
 import com.sceyt.chatuikit.extensions.findIndexed
 import com.sceyt.chatuikit.extensions.getPrintableStackTrace
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.logger.SceytLog
-import com.sceyt.chatuikit.persistence.database.dao.ChannelDao
 import com.sceyt.chatuikit.persistence.database.dao.ChatUserReactionDao
 import com.sceyt.chatuikit.persistence.database.dao.DraftMessageDao
 import com.sceyt.chatuikit.persistence.database.dao.GlobalSearchDao
@@ -69,7 +65,6 @@ import com.sceyt.chatuikit.persistence.logicimpl.usecases.FindRealChannelForPend
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.MergePendingDirectChannelsUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.MigratePendingChannelToRealChannelUseCase
 import com.sceyt.chatuikit.persistence.mappers.toChannel
-import com.sceyt.chatuikit.persistence.mappers.toChannelEntity
 import com.sceyt.chatuikit.persistence.mappers.toDraftAttachmentEntity
 import com.sceyt.chatuikit.persistence.mappers.toDraftMessage
 import com.sceyt.chatuikit.persistence.mappers.toDraftMessageEntity
@@ -77,7 +72,6 @@ import com.sceyt.chatuikit.persistence.mappers.toDraftVoiceAttachmentEntity
 import com.sceyt.chatuikit.persistence.mappers.toReactionData
 import com.sceyt.chatuikit.persistence.mappers.toSceytMessage
 import com.sceyt.chatuikit.persistence.mappers.toSceytReaction
-import com.sceyt.chatuikit.persistence.mappers.toSceytUiChannel
 import com.sceyt.chatuikit.persistence.mappers.toUserDb
 import com.sceyt.chatuikit.persistence.mappers.toUserReactionsEntity
 import com.sceyt.chatuikit.persistence.repositories.ChannelsRepository
@@ -100,7 +94,6 @@ import org.koin.core.component.inject
 internal class PersistenceChannelsLogicImpl(
     private val context: Context,
     private val channelsRepository: ChannelsRepository,
-    private val channelDao: ChannelDao,
     private val globalSearchDao: GlobalSearchDao,
     private val usersDao: UserDao,
     private val messageDao: MessageDao,
@@ -111,7 +104,7 @@ internal class PersistenceChannelsLogicImpl(
     private val channelsCache: ChannelsCache,
     private val channelSyncStateStore: ChannelSyncStateStore,
     private val pendingChannelMigrationLock: PendingChannelMigrationLock,
-    private val localUnreadCountsManager: LocalUnreadCountsManager,
+    private val channelLocalStore: ChannelLocalStore,
     private val findExistingChannelByMembersUseCase: FindExistingChannelByMembersUseCase,
     private val createPendingChannelUseCase: CreatePendingChannelUseCase,
     private val findRealChannelForPendingUseCase: FindRealChannelForPendingUseCase,
@@ -139,7 +132,7 @@ internal class PersistenceChannelsLogicImpl(
                         deleteChannelFromDbAndCache(event.channelId)
                         return
                     } else {
-                        channelDao.deleteUserChatLinks(event.channelId, leftUser.id)
+                        channelLocalStore.deleteUserChatLinks(event.channelId, leftUser.id)
                         updateMembersCount(event.channelId, event.channel.memberCount.toInt())
                     }
                 }
@@ -159,11 +152,9 @@ internal class PersistenceChannelsLogicImpl(
                 val channelId = event.channelId
                 if (event.muted) {
                     val time = event.channel.mutedTill ?: 0
-                    channelDao.updateMuteState(channelId, true, time)
-                    channelsCache.updateMuteState(channelId, true, time)
+                    channelLocalStore.updateMuteState(channelId, true, time)
                 } else {
-                    channelDao.updateMuteState(channelId, false)
-                    channelsCache.updateMuteState(channelId, false)
+                    channelLocalStore.updateMuteState(channelId, false)
                 }
             }
 
@@ -192,15 +183,14 @@ internal class PersistenceChannelsLogicImpl(
     }
 
     private suspend fun updateMembersCount(channelId: Long, count: Int) {
-        channelDao.updateMemberCount(channelId, count)
-        getAndUpdateCashedChannel(channelId)
+        channelLocalStore.updateMemberCount(channelId, count)
     }
 
     private suspend fun onChanelAdded(channel: SceytChannel?) {
         channel ?: return
         val members = channel.members?.takeIf { it.isNotEmpty() } ?: return
         insertChannelWithMembers(channel, members)
-        channelsCache.upsertChannel(localUnreadCountsManager.applyLocalState(channel))
+        channelLocalStore.upsertCacheWithStoredState(channel)
     }
 
     override suspend fun onChannelUnreadCountUpdatedEvent(data: ChannelUnreadCountUpdatedEventData) {
@@ -215,7 +205,7 @@ internal class PersistenceChannelsLogicImpl(
                         return
 
                     data.channel.lastMessage?.let {
-                        channelsCache.updateLastMessage(channel.id, it)
+                        channelLocalStore.updateCachedLastMessage(channel.id, it)
                     }
                 }
             }
@@ -227,17 +217,13 @@ internal class PersistenceChannelsLogicImpl(
     }
 
     override suspend fun handlePush(data: PushData) {
-        val dataChannel = localUnreadCountsManager.seedChannel(data.channel)
+        val dataChannel = channelLocalStore.applyServerState(data.channel)
         val dataMessage = data.message
 
-        val channel = channelDao.getChannelById(dataChannel.id)
+        val channel = channelLocalStore.getRawChannel(dataChannel.id)
         if (channel != null) {
             if ((channel.lastMessage?.id ?: 0) < dataMessage.id) {
-                channelDao.updateLastMessage(
-                    channelId = channel.channelEntity.id,
-                    lastMessageTid = dataMessage.id,
-                    lastMessageAt = dataMessage.createdAt
-                )
+                channelLocalStore.updateLastMessage(channel.id, dataMessage)
             }
         } else {
             // Insert channel from push data
@@ -253,29 +239,27 @@ internal class PersistenceChannelsLogicImpl(
             channelsCache.removeChannelMessageReactions(message.channelId, message.id)
         }
 
-        channelDao.getChannelById(message.channelId)?.toChannel()?.let { channel ->
+        channelLocalStore.getRawChannel(message.channelId)?.let { channel ->
             channel.lastMessage?.let { lastMessage ->
                 if (lastMessage.tid == message.tid) {
                     if (message.isPending() && message.state == MessageState.Deleted) {
-                        channelsCache.updateLastMessage(message.channelId, null)
+                        channelLocalStore.updateCachedLastMessage(message.channelId, null)
                     } else
-                        channelsCache.updateLastMessage(message.channelId, message)
+                        channelLocalStore.updateCachedLastMessage(message.channelId, message)
                 }
             } ?: run {
                 if (state.isHardDeleted() || message.isPending() && state.isDeleted())
                     deleteMessage(message.channelId, message)
                 else
-                    channelsCache.upsertChannel(
-                        localUnreadCountsManager.applyLocalState(channel.copy(lastMessage = message))
-                    )
+                    channelLocalStore.upsertCacheWithStoredState(channel.copy(lastMessage = message))
             }
         }
     }
 
     private suspend fun upsertChannelDbAndCache(channel: SceytChannel?) {
         channel ?: return
-        val localChannel = localUnreadCountsManager.seedChannel(channel)
-        val updated = channelDao.updateChannel(localChannel.toChannelEntity()) == 1
+        val localChannel = channelLocalStore.applyServerState(channel)
+        val updated = channelLocalStore.updateChannel(localChannel)
         if (!updated) {
             insertChannelWithMembers(localChannel)
         }
@@ -283,15 +267,12 @@ internal class PersistenceChannelsLogicImpl(
     }
 
     private suspend fun getAndUpdateCashedChannel(channelId: Long): SceytChannel? {
-        return channelDao.getChannelById(channelId)?.toChannel()
-            ?.let { localUnreadCountsManager.applyLocalState(it) }?.also {
-            channelsCache.upsertChannel(it)
-        }
+        return channelLocalStore.getAndUpsertCache(channelId)
     }
 
     private suspend fun onChannelMarkedAsReadOrUnread(channel: SceytChannel?) {
         channel ?: return
-        channelDao.updateChannel(channel.toChannelEntity())
+        channelLocalStore.updateChannel(channel)
         channelsCache.onChannelMarkedAsReadOrUnread(channel)
     }
 
@@ -299,7 +280,7 @@ internal class PersistenceChannelsLogicImpl(
         channel: SceytChannel,
         members: List<SceytMember> = channel.members.orEmpty(),
     ) {
-        val localChannel = localUnreadCountsManager.seedChannel(channel)
+        val localChannel = channelLocalStore.applyServerState(channel)
         if (members.isEmpty()) {
             SceytLog.w(
                 tag = TAG,
@@ -314,7 +295,7 @@ internal class PersistenceChannelsLogicImpl(
             messageLogic.saveChannelLastMessagesToDb(listOf(message))
         }
         usersDao.insertUsersWithMetadata(users)
-        channelDao.insertChannelAndLinks(localChannel.toChannelEntity(), members.map {
+        channelLocalStore.insertChannelAndLinks(localChannel, members.map {
             UserChatLinkEntity(userId = it.id, chatId = localChannel.id, role = it.role.name)
         })
     }
@@ -424,7 +405,7 @@ internal class PersistenceChannelsLogicImpl(
         val orderByLastMessage = config.order == ChannelListOrder.ListQueryChannelOrderLastMessage
 
         if (!ignoreDb) {
-            val dbChannels = localUnreadCountsManager.applyLocalState(globalSearchDao.searchChannelsByUserIds(
+            val searchRows = globalSearchDao.searchChannelsByUserIds(
                 query = searchQuery,
                 userIds = searchUserIds.toList(),
                 offset = offset,
@@ -433,7 +414,8 @@ internal class PersistenceChannelsLogicImpl(
                 types = config.types,
                 orderByLastMessage = orderByLastMessage,
                 directType = directChatType
-            ).map { it.toChannel() })
+            ).map { it.toChannel() }
+            val dbChannels = channelLocalStore.applyStoredState(searchRows)
 
             channelsCache.addAll(config, dbChannels, false)
 
@@ -521,9 +503,7 @@ internal class PersistenceChannelsLogicImpl(
     )
 
     override suspend fun getChannelsBySQLiteQuery(query: SimpleSQLiteQuery): List<SceytChannel> {
-        return localUnreadCountsManager.applyLocalState(
-            channelDao.getChannelsBySQLiteQuery(query).map { it.toChannel() }
-        )
+        return channelLocalStore.getChannelsBySQLiteQuery(query)
     }
 
     override suspend fun syncChannels(config: ChannelListConfig) = flow {
@@ -543,7 +523,7 @@ internal class PersistenceChannelsLogicImpl(
                         if (syncedChannels.isNotEmpty()) {
                             val syncedIds = syncedChannels.map { it.id }
                             val deletedChannelIds =
-                                channelDao.getNotExistingChannelIdsByIdsAndTypes(
+                                channelLocalStore.getNotExistingChannelIdsByIdsAndTypes(
                                     ids = syncedIds,
                                     types = config.types,
                                     onlyMine = true
@@ -555,7 +535,7 @@ internal class PersistenceChannelsLogicImpl(
                                         " syncedChannelsCount: ${syncedChannels.size} "
                             )
                         } else {
-                            val ids = channelDao.getAllChannelIdsByTypes(config.types, true)
+                            val ids = channelLocalStore.getAllChannelIdsByTypes(config.types, true)
                             deleteChannelsFromDbAndCache(ids)
                             SceytLog.i(
                                 TAG, "syncChannelsResult: syncedChannels is empty, " +
@@ -581,15 +561,15 @@ internal class PersistenceChannelsLogicImpl(
         val safeLimit = limit.coerceAtLeast(channelsLoadSize)
         val orderByLastMessage = config.order == ChannelListOrder.ListQueryChannelOrderLastMessage
         // Query one extra row to learn whether more channels exist beyond the window, without a COUNT.
-        val rows = channelDao.getChannels(
+        val rows = channelLocalStore.getChannels(
             limit = safeLimit + 1,
             offset = 0,
             types = config.types,
             orderByLastMessage = orderByLastMessage,
             onlyMine = true
-        ).map { it.toChannel() }
+        )
         val hasNext = rows.size > safeLimit
-        val dbWindow = localUnreadCountsManager.applyLocalState(rows.take(safeLimit))
+        val dbWindow = rows.take(safeLimit)
         val sorted = channelsCache.resetWindowAfterSync(config, dbWindow)
         SyncedChannelsWindow(
             channels = sorted,
@@ -609,17 +589,17 @@ internal class PersistenceChannelsLogicImpl(
             ChannelListOrder.ListQueryChannelOrderLastMessage -> true
             ChannelListOrder.ListQueryChannelOrderCreatedAt -> false
         }
-        val channels = if (searchQuery.isBlank()) {
-            channelDao.getChannels(
+        return if (searchQuery.isBlank()) {
+            channelLocalStore.getChannels(
                 limit = config.queryLimit,
                 offset = offset,
                 types = config.types,
                 orderByLastMessage = orderByLastMessage,
                 onlyMine = onlyMine
-            ).map { it.toChannel() }
+            )
         } else {
             val ids = usersDao.getUserIdsByDisplayName(searchQuery)
-            globalSearchDao.searchChannelsByUserIds(
+            val channels = globalSearchDao.searchChannelsByUserIds(
                 query = searchQuery,
                 userIds = ids,
                 offset = offset,
@@ -628,8 +608,8 @@ internal class PersistenceChannelsLogicImpl(
                 types = config.types,
                 orderByLastMessage = orderByLastMessage
             ).map { channel -> channel.toChannel() }
+            channelLocalStore.applyStoredState(channels)
         }
-        return localUnreadCountsManager.applyLocalState(channels)
     }
 
     private suspend fun saveChannelsToDb(list: List<SceytChannel>): List<SceytChannel> {
@@ -693,12 +673,12 @@ internal class PersistenceChannelsLogicImpl(
 
         // Delete old links where channel peer is deleted.
         directChatsWithDeletedPeers.forEach {
-            myId?.let { id -> channelDao.deleteChatLinksExceptUser(it, id) }
+            myId?.let { id -> channelLocalStore.deleteChatLinksExceptUser(it, id) }
         }
 
         updatedList = updateChannelPendingLastMessages(updatedList)
-        updatedList = localUnreadCountsManager.seedChannels(updatedList)
-        channelDao.insertChannelsAndLinks(updatedList.map { it.toChannelEntity() }, links)
+        updatedList = channelLocalStore.applyServerState(updatedList)
+        channelLocalStore.insertChannelsAndLinks(updatedList, links)
         return mergePendingDirectChannels(updatedList)
     }
 
@@ -718,7 +698,7 @@ internal class PersistenceChannelsLogicImpl(
         if (data.uri.isBlank()) return SceytResponse.Error(SceytException(0, "Uri is empty"))
 
         pendingChannelMigrationLock.withLock {
-            channelDao.getChannelByUri(data.uri)?.toChannel()?.let { channel ->
+            channelLocalStore.getRawChannelByUri(data.uri)?.let { channel ->
                 if (channel.pending)
                     channelsCache.upsertPendingChannel(channel)
                 SceytResponse.Success(channel)
@@ -727,7 +707,7 @@ internal class PersistenceChannelsLogicImpl(
 
         val response = channelsRepository.getChannelByUri(data.uri)
         return pendingChannelMigrationLock.withLock {
-            val existingChannel = channelDao.getChannelByUri(data.uri)?.toChannel()
+            val existingChannel = channelLocalStore.getRawChannelByUri(data.uri)
             if (response is SceytResponse.Success && response.data != null) {
                 SceytResponse.Success(saveFetchedChannelByUriUnlocked(data.uri, response.data))
             } else {
@@ -761,7 +741,7 @@ internal class PersistenceChannelsLogicImpl(
                 val lastMessage = getChannelCurrentLastMessage(channel)
                 val updated = channel.copy(lastMessage = lastMessage)
                 insertChannelWithMembers(updated, members)
-                channelsCache.upsertChannel(localUnreadCountsManager.applyLocalState(updated))
+                channelLocalStore.upsertCacheWithStoredState(updated)
             }
         }
     }
@@ -793,7 +773,7 @@ internal class PersistenceChannelsLogicImpl(
                         return@fold createErrorResponse("create channel response is success, but channel is null")
 
                     insertChannelWithMembers(newChannel)
-                    val pendingChannel = channelDao.getChannelById(channel.id)?.toChannel()
+                    val pendingChannel = channelLocalStore.getRawChannel(channel.id)
                     val mergedChannel = if (pendingChannel?.pending == true)
                         migratePendingChannelToRealChannelUseCase(pendingChannel, newChannel)
                     else newChannel
@@ -809,7 +789,7 @@ internal class PersistenceChannelsLogicImpl(
 
     private suspend fun findRealAndMigratePendingChannel(channel: SceytChannel): SceytChannel? {
         val realChannel = findRealChannelForPendingUseCase(channel, myId) ?: return null
-        val pendingChannel = channelDao.getChannelById(channel.id)?.toChannel()
+        val pendingChannel = channelLocalStore.getRawChannel(channel.id)
         return if (pendingChannel?.pending == true)
             migratePendingChannelToRealChannelUseCase(pendingChannel, realChannel)
         else realChannel
@@ -820,7 +800,7 @@ internal class PersistenceChannelsLogicImpl(
         ?: return createErrorResponse("Channel not found")
         return channelsRepository.markChannelAsRead(channelId).map {
             messageDao.updateAllIncomingMessagesStatusAsRead(channelId)
-            localUnreadCountsManager.markRead(channel)
+            channelLocalStore.markRead(channel)
         }
     }
 
@@ -828,7 +808,7 @@ internal class PersistenceChannelsLogicImpl(
         val channel = channelsCache.getOneOf(channelId) ?: getChannelFromDb(channelId)
         ?: return createErrorResponse("Channel not found")
         return channelsRepository.markChannelAsUnRead(channelId).map {
-            localUnreadCountsManager.markUnread(channel)
+            channelLocalStore.markUnread(channel)
         }
     }
 
@@ -901,8 +881,7 @@ internal class PersistenceChannelsLogicImpl(
         val response = channelsRepository.muteChannel(channelId, muteUntil)
 
         if (response is SceytResponse.Success) {
-            channelDao.updateMuteState(channelId = channelId, muted = true, muteUntil = muteUntil)
-            channelsCache.updateMuteState(channelId, true, muteUntil)
+            channelLocalStore.updateMuteState(channelId, true, muteUntil)
         }
 
         return response
@@ -912,8 +891,7 @@ internal class PersistenceChannelsLogicImpl(
         val response = channelsRepository.unMuteChannel(channelId)
 
         if (response is SceytResponse.Success) {
-            channelDao.updateMuteState(channelId = channelId, muted = false)
-            channelsCache.updateMuteState(channelId, false)
+            channelLocalStore.updateMuteState(channelId, false)
         }
 
         return response
@@ -926,8 +904,7 @@ internal class PersistenceChannelsLogicImpl(
         val response = channelsRepository.enableAutoDelete(channelId, period)
 
         if (response is SceytResponse.Success) {
-            channelDao.updateAutoDeleteState(channelId, period)
-            channelsCache.updateAutoDeleteState(channelId, period)
+            channelLocalStore.updateAutoDeleteState(channelId, period)
         }
 
         return response
@@ -937,8 +914,7 @@ internal class PersistenceChannelsLogicImpl(
         val response = channelsRepository.disableAutoDelete(channelId)
 
         if (response is SceytResponse.Success) {
-            channelDao.updateAutoDeleteState(channelId, 0L)
-            channelsCache.updateAutoDeleteState(channelId, 0L)
+            channelLocalStore.updateAutoDeleteState(channelId, 0L)
         }
 
         return response
@@ -966,8 +942,7 @@ internal class PersistenceChannelsLogicImpl(
         val response = channelsRepository.hideChannel(channelId)
 
         if (response is SceytResponse.Success) {
-            channelDao.deleteChannel(channelId = channelId)
-            channelsCache.deleteChannel(channelId)
+            channelLocalStore.deleteChannelRecordAndCache(channelId)
         }
 
         return response
@@ -980,7 +955,7 @@ internal class PersistenceChannelsLogicImpl(
             response.data?.let { channel ->
                 channel.members?.let { members ->
                     insertChannelWithMembers(channel, members)
-                    channelsCache.upsertChannel(localUnreadCountsManager.applyLocalState(channel))
+                    channelLocalStore.upsertCacheWithStoredState(channel)
                 }
             }
 
@@ -988,23 +963,19 @@ internal class PersistenceChannelsLogicImpl(
     }
 
     override suspend fun getChannelFromDb(channelId: Long): SceytChannel? {
-        return channelDao.getChannelById(channelId)?.toChannel()
-            ?.let { localUnreadCountsManager.applyLocalState(it) }
+        return channelLocalStore.getChannel(channelId)
     }
 
     override suspend fun getChannelsFromDb(channelIds: List<Long>): List<SceytChannel> {
-        return localUnreadCountsManager.applyLocalState(
-            channelDao.getChannelsById(channelIds).map { it.toChannel() }
-        )
+        return channelLocalStore.getChannels(channelIds)
     }
 
     override suspend fun getRetentionPeriodByChannelId(channelId: Long): Long {
-        return channelDao.getRetentionPeriodByChannelId(channelId) ?: 0
+        return channelLocalStore.getRetentionPeriod(channelId) ?: 0
     }
 
     override suspend fun getDirectChannelFromDb(peerId: String): SceytChannel? {
-        return channelDao.getChannelByUserAndType(peerId, ChannelTypeEnum.Direct.value)?.toChannel()
-            ?.let { localUnreadCountsManager.applyLocalState(it) }
+        return channelLocalStore.getDirectChannel(peerId)
     }
 
     override suspend fun getChannelFromServer(
@@ -1021,7 +992,7 @@ internal class PersistenceChannelsLogicImpl(
                     messageLogic.onSyncedChannels(arrayListOf(savedChannel))
                 }
                 return@withContext SceytResponse.Success(
-                    savedChannel ?: localUnreadCountsManager.seedChannel(updatedChannel)
+                    savedChannel ?: channelLocalStore.applyServerState(updatedChannel)
                 )
             }
             is SceytResponse.Error -> {
@@ -1052,10 +1023,10 @@ internal class PersistenceChannelsLogicImpl(
         uri: String,
         channel: SceytChannel
     ): SceytChannel {
-        val pendingChannel = channelDao.getChannelByUri(uri)?.toChannel()
+        val pendingChannel = channelLocalStore.getRawChannelByUri(uri)
             ?.takeIf { it.pending && it.id != channel.id }
         if (pendingChannel != null)
-            channelDao.updateUri(pendingChannel.id, null)
+            channelLocalStore.updateUri(pendingChannel.id, null)
 
         insertChannelWithMembers(channel)
         val mergedChannel = if (pendingChannel != null) {
@@ -1063,7 +1034,7 @@ internal class PersistenceChannelsLogicImpl(
         } else {
             mergePendingDirectChannelUnlocked(channel)
         }
-        val localMergedChannel = localUnreadCountsManager.applyLocalState(mergedChannel)
+        val localMergedChannel = channelLocalStore.applyStoredState(mergedChannel)
         notifyPendingUriChannelCreated(uri, localMergedChannel)
         return localMergedChannel
     }
@@ -1103,7 +1074,7 @@ internal class PersistenceChannelsLogicImpl(
         val response = channelsRepository.editChannel(channelId, data)
         if (response is SceytResponse.Success) {
             response.data?.let {
-                channelDao.updateChannel(it.toChannelEntity())
+                channelLocalStore.updateChannel(it)
                 getAndUpdateCashedChannel(it.id)
             }
         }
@@ -1116,7 +1087,7 @@ internal class PersistenceChannelsLogicImpl(
     ): SceytResponse<SceytChannel> = withContext(Dispatchers.IO) {
         val response = channelsRepository.join(channelId).onSuccessNotNull { channel ->
             insertChannelWithMembers(channel)
-            channelsCache.upsertChannel(localUnreadCountsManager.applyLocalState(channel))
+            channelLocalStore.upsertCacheWithStoredState(channel)
         }
 
         return@withContext response
@@ -1127,56 +1098,26 @@ internal class PersistenceChannelsLogicImpl(
     ): SceytResponse<SceytChannel> = withContext(Dispatchers.IO) {
         val response = channelsRepository.joinWithInviteKey(inviteKey).onSuccessNotNull { channel ->
             insertChannelWithMembers(channel)
-            channelsCache.upsertChannel(localUnreadCountsManager.applyLocalState(channel))
+            channelLocalStore.upsertCacheWithStoredState(channel)
         }
 
         return@withContext response
     }
 
     override suspend fun updateLastMessageWithLastRead(channelId: Long, message: SceytMessage) {
-        val cachedChannel = channelsCache.getOneOf(channelId)
-        val channel = cachedChannel ?: getChannelFromDb(channelId) ?: return
-        // Check if message delivery status is pending, that means message is started to send
-        if (message.isPending()) {
-            channelDao.updateLastMessage(channelId, message.tid, message.createdAt)
-            if (cachedChannel == null) {
-                channelsCache.upsertChannel(channel)
-            } else channelsCache.updateLastMessage(channelId, message)
-        } else {
-            // Check if sent message is last message of channel
-            if (channel.lastMessage?.tid != message.tid) return
-
-            channelDao.updateLastMessageWithLastRead(
-                channelId = channelId,
-                lastMessageTid = message.tid,
-                lastMessageId = message.id,
-                lastMessageAt = message.createdAt
-            )
-
-            if (cachedChannel != null)
-                channelsCache.updateLastMessageWithLastRead(channelId, message)
-            else channelsCache.upsertChannel(channel)
-        }
+        channelLocalStore.updateLastMessageWithLastReadIfNeeded(channelId, message)
     }
 
     override suspend fun updateLastMessageOnMessagesResponseIfNeeded(
         channelId: Long,
         message: SceytMessage?
     ) {
-        val cashedChannel = channelsCache.getOneOf(channelId)
-        // Check if both last messages are not pending
-        val needToUpdateLastMessage = message?.deliveryStatus != MessageDeliveryStatus.Pending
-                && cashedChannel?.lastMessage?.deliveryStatus != MessageDeliveryStatus.Pending
-
-        if (needToUpdateLastMessage) {
-            channelDao.updateLastMessage(channelId, message?.tid, message?.createdAt)
-            channelsCache.updateLastMessage(channelId, message)
-        }
+        channelLocalStore.updateLastMessageOnMessagesResponseIfNeeded(channelId, message)
     }
 
     override suspend fun blockUnBlockUser(userId: String, block: Boolean) {
-        val channels = channelDao.getChannelByPeerId(userId)
-        channelsCache.upsertChannels(localUnreadCountsManager.applyLocalState(channels.map { it.toChannel() }))
+        val channels = channelLocalStore.getRawChannelsByPeerId(userId)
+        channelLocalStore.upsertCacheWithStoredState(channels)
     }
 
     override suspend fun sendChannelEvent(channelId: Long, event: String) {
@@ -1215,7 +1156,7 @@ internal class PersistenceChannelsLogicImpl(
     }
 
     override suspend fun getChannelsCountFromDb(): Int {
-        return channelDao.getAllChannelsCount()
+        return channelLocalStore.getAllChannelsCount()
     }
 
     override suspend fun onUserPresenceChanged(users: List<SceytPresenceChecker.PresenceUser>) {
@@ -1237,7 +1178,7 @@ internal class PersistenceChannelsLogicImpl(
     }
 
     override fun getTotalUnreadCount(channelTypes: List<String>): Flow<Long> {
-        return channelDao.getTotalUnreadCountAsFlow(channelTypes).distinctUntilChanged()
+        return channelLocalStore.getTotalUnreadCountAsFlow(channelTypes).distinctUntilChanged()
     }
 
     override suspend fun checkChannelUrlUpdate(
@@ -1247,9 +1188,7 @@ internal class PersistenceChannelsLogicImpl(
     ) {
         val channel = getChannelFromDb(channelId) ?: return
         if (channel.uri == oldKey) {
-            val updatedChannel = channel.copy(uri = newKey)
-            channelDao.updateChannel(updatedChannel.toChannelEntity())
-            channelsCache.updateChannelUri(channelId, newKey)
+            channelLocalStore.updateChannelUri(channelId, newKey)
         }
     }
 
@@ -1259,7 +1198,7 @@ internal class PersistenceChannelsLogicImpl(
     ) {
         // Check if sent message is last message of channel
         val channel = channelsCache.getOneOf(channelId)
-            ?: channelDao.getChannelById(channelId)?.toChannel() ?: return
+            ?: channelLocalStore.getRawChannel(channelId) ?: return
 
         if (!outdatedMessageTIds.contains(channel.lastMessage?.tid ?: return))
             return
@@ -1269,13 +1208,7 @@ internal class PersistenceChannelsLogicImpl(
         if (newLastMessage == null) {
             getChannelFromServer(channelId)
         } else {
-            channelDao.updateLastMessageWithLastRead(
-                channelId = channelId,
-                lastMessageTid = newLastMessage.tid,
-                lastMessageId = newLastMessage.id,
-                lastMessageAt = newLastMessage.createdAt
-            )
-            channelsCache.updateLastMessageWithLastRead(channelId, newLastMessage)
+            channelLocalStore.updateLastMessageWithLastRead(channelId, newLastMessage)
         }
     }
 
@@ -1289,7 +1222,7 @@ internal class PersistenceChannelsLogicImpl(
     private suspend fun updateChannelPendingLastMessages(channels: List<SceytChannel>): List<SceytChannel> {
         if (channels.isEmpty()) return channels
         val mutableList = channels.toList().toArrayList()
-        val messageTIds = channelDao.getChannelsLastMessageTIds(mutableList.map { it.id })
+        val messageTIds = channelLocalStore.getChannelsLastMessageTIds(mutableList.map { it.id })
         if (messageTIds.isEmpty()) return channels
 
         val pendingLastMessages = messageDao.getPendingMessagesByTIds(messageTIds)
@@ -1305,7 +1238,7 @@ internal class PersistenceChannelsLogicImpl(
     }
 
     private suspend fun getChannelCurrentLastMessage(channel: SceytChannel): SceytMessage? {
-        val messageTid = channelDao.getChannelLastMessageTid(channel.id)
+        val messageTid = channelLocalStore.getChannelLastMessageTid(channel.id)
             ?: return channel.lastMessage
 
         return messageDao.getPendingMessageByTid(messageTid)?.let { message ->
@@ -1316,8 +1249,8 @@ internal class PersistenceChannelsLogicImpl(
     }
 
     private suspend fun deleteChannelFromDbAndCache(channelId: Long) {
-        localUnreadCountsManager.clearChannel(channelId)
-        channelDao.deleteChannelAndLinks(channelId)
+        channelLocalStore.clearUnread(channelId)
+        channelLocalStore.deleteChannelAndLinks(channelId)
         messageDao.deleteAllMessagesByChannel(channelId)
         rangeDao.deleteChannelLoadRanges(channelId)
         channelsCache.deleteChannel(channelId)
@@ -1326,8 +1259,8 @@ internal class PersistenceChannelsLogicImpl(
 
     private suspend fun deleteChannelsFromDbAndCache(channelIds: List<Long>) {
         if (channelIds.isEmpty()) return
-        localUnreadCountsManager.clearChannels(channelIds)
-        channelDao.deleteAllChannelsAndLinksById(channelIds)
+        channelLocalStore.clearUnread(channelIds)
+        channelLocalStore.deleteAllChannelsAndLinks(channelIds)
         messageDao.deleteAllChannelsMessages(channelIds)
         rangeDao.deleteChannelsLoadRanges(channelIds)
         channelsCache.deleteChannel(*channelIds.toLongArray())
@@ -1335,8 +1268,8 @@ internal class PersistenceChannelsLogicImpl(
     }
 
     private suspend fun clearHistory(channelId: Long) {
-        localUnreadCountsManager.clearChannel(channelId)
-        channelDao.updateLastMessage(channelId, null, null)
+        channelLocalStore.clearUnread(channelId)
+        channelLocalStore.updateLastMessage(channelId, null, null)
         messageDao.deleteAllMessagesByChannel(channelId)
         rangeDao.deleteChannelLoadRanges(channelId)
         channelsCache.clearedHistory(channelId)
@@ -1346,10 +1279,7 @@ internal class PersistenceChannelsLogicImpl(
         channelsCache.getOneOf(channelId)?.let {
             if (it.lastMessage?.id == message.id) {
                 val lastMessage = messageDao.getLastMessage(channelId)
-                with(lastMessage?.messageEntity) {
-                    channelDao.updateLastMessage(channelId, this?.tid, this?.createdAt)
-                }
-                channelsCache.updateLastMessage(channelId, lastMessage?.toSceytMessage())
+                channelLocalStore.updateLastMessage(channelId, lastMessage?.toSceytMessage())
             }
         }
         chatUserReactionDao.deleteChannelMessageUserReaction(channelId, message.id)
@@ -1368,8 +1298,6 @@ internal class PersistenceChannelsLogicImpl(
     }
 
     private suspend fun onChannelPinStateChange(channel: SceytChannel?) {
-        channel ?: return
-        channelDao.updatePinState(channel.id, channel.pinnedAt)
-        channelsCache.updatePinState(channel.id, channel.pinnedAt)
+        channelLocalStore.updatePinState(channel)
     }
 }

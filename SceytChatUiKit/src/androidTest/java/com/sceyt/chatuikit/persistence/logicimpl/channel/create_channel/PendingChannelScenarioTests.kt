@@ -33,10 +33,11 @@ import com.sceyt.chatuikit.persistence.database.dao.LoadRangeDao
 import com.sceyt.chatuikit.persistence.database.dao.MessageDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingReactionDao
 import com.sceyt.chatuikit.persistence.database.dao.UserDao
+import com.sceyt.chatuikit.persistence.database.cleaner.DatabaseCleaner
 import com.sceyt.chatuikit.persistence.database.entity.messages.AttachmentEntity
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
-import com.sceyt.chatuikit.persistence.logicimpl.channel.LocalUnreadCountsManager
+import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelLocalStore
 import com.sceyt.chatuikit.persistence.logicimpl.channel.PendingChannelMigrationLock
 import com.sceyt.chatuikit.persistence.logicimpl.channel.PersistenceChannelsLogicImpl
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
@@ -56,6 +57,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
@@ -85,6 +87,7 @@ class PendingChannelScenarioTests : SceytKoinComponent {
 
     @Before
     fun setUp() {
+        SceytChatUIKit.releaseForTesting()
         SceytChatUIKit.initialize(
             appContext = ApplicationProvider.getApplicationContext(),
             clientId = UUID.randomUUID().toString(),
@@ -100,12 +103,23 @@ class PendingChannelScenarioTests : SceytKoinComponent {
         attachmentDao = getKoin().get()
         messagesCache = getKoin().get()
         channelsCache = getKoin().get()
+        runBlocking {
+            getKoin().get<DatabaseCleaner>().cleanDatabase()
+            channelsCache.clearAll()
+            messagesCache.clearAll()
+        }
         channelLogic = createChannelLogic(channelsRepository)
     }
 
     @After
     fun tearDown() {
+        runBlocking {
+            getKoin().get<DatabaseCleaner>().cleanDatabase()
+            channelsCache.clearAll()
+            messagesCache.clearAll()
+        }
         ClientWrapper.currentUser = null
+        SceytChatUIKit.releaseForTesting()
     }
 
     @Test
@@ -257,7 +271,6 @@ class PendingChannelScenarioTests : SceytKoinComponent {
         return PersistenceChannelsLogicImpl(
             context = ApplicationProvider.getApplicationContext(),
             channelsRepository = repository,
-            channelDao = channelDao,
             globalSearchDao = getKoin().get<GlobalSearchDao>(),
             usersDao = getKoin().get<UserDao>(),
             messageDao = messageDao,
@@ -268,7 +281,7 @@ class PendingChannelScenarioTests : SceytKoinComponent {
             channelsCache = channelsCache,
             channelSyncStateStore = getKoin().get<ChannelSyncStateStore>(),
             pendingChannelMigrationLock = getKoin().get<PendingChannelMigrationLock>(),
-            localUnreadCountsManager = getKoin().get<LocalUnreadCountsManager>(),
+            channelLocalStore = getKoin().get<ChannelLocalStore>(),
             findExistingChannelByMembersUseCase = getKoin().get<FindExistingChannelByMembersUseCase>(),
             createPendingChannelUseCase = getKoin().get<CreatePendingChannelUseCase>(),
             findRealChannelForPendingUseCase = getKoin().get<FindRealChannelForPendingUseCase>(),
