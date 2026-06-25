@@ -559,10 +559,6 @@ class MessagesListView @JvmOverloads constructor(
         return messagesRV.getData().findIndexed { it is MessageItem && it.message.id == messageId }
     }
 
-    internal fun sortMessages() {
-        messagesRV.sortMessages()
-    }
-
     internal fun messageEditedOrDeleted(updateMessage: SceytMessage) {
         val data = messagesRV.getData()
         if (updateMessage.isPending() && updateMessage.state == MessageState.Deleted) {
@@ -938,7 +934,7 @@ class MessagesListView @JvmOverloads constructor(
         messagesRV.scrollToPosition(messagesRV.getData().size - 1)
     }
 
-    private fun safeScrollTo(block: () -> Unit) = MessagesAdapter.awaitUpdating {
+    private fun safeScrollTo(block: () -> Unit) = messagesRV.awaitUpdating {
         try {
             block()
         } catch (e: Exception) {

@@ -8,15 +8,11 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytMessageType
-import com.sceyt.chatuikit.extensions.dispatchUpdatesToSafety
 import com.sceyt.chatuikit.extensions.dispatchUpdatesToSafetySuspend
 import com.sceyt.chatuikit.extensions.findIndexed
-import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
-import com.sceyt.chatuikit.presentation.helpers.DebounceHelper
 import com.sceyt.chatuikit.presentation.common.collections.SyncArrayList
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem.MessageItem
-import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.comporators.MessageItemComparator
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.sticky_date.StickyDateHeaderView
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.sticky_date.StickyHeaderInterface
@@ -40,7 +36,7 @@ class MessagesAdapter(
 ) : RecyclerView.Adapter<BaseMessageViewHolder>(), StickyHeaderInterface {
     private val loadingPrevItem by lazy { MessageListItem.LoadingPrevItem }
     private val loadingNextItem by lazy { MessageListItem.LoadingNextItem }
-    private val debounceHelper by lazy { DebounceHelper(300) }
+    private var updateJob: Job? = null
     private var isMultiSelectableMode = false
     private var lastHeaderPosition = -1
 
@@ -203,12 +199,11 @@ class MessagesAdapter(
     }
 
     fun deleteAllMessagesBefore(predicate: Predicate<MessageListItem>) {
-        ArrayList(messages).forEach { item ->
-            if (predicate.test(item)) {
-                messages.findIndexed { it == item }?.let {
-                    messages.removeAt(it.first)
-                    notifyItemRemoved(it.first)
-                }
+        // Walk descending so removeAt never shifts a not-yet-visited index.
+        for (i in messages.indices.reversed()) {
+            if (predicate.test(messages[i])) {
+                messages.removeAt(i)
+                notifyItemRemoved(i)
             }
         }
     }
@@ -241,39 +236,18 @@ class MessagesAdapter(
         return !DateTimeUtil.isSameDay(sceytMessage.createdAt, prevMessage.createdAt)
     }
 
-    fun sort(recyclerView: RecyclerView) {
-        debounceHelper.submit {
-            val sortedList = messages.sortedWith(MessageItemComparator())
-            val myDiffUtil = MessagesDiffUtil(
-                oldList = ArrayList(this@MessagesAdapter.messages),
-                newList = sortedList
-            )
-            val productDiffResult = DiffUtil.calculateDiff(myDiffUtil, true)
-
-            val isLastItemVisible = recyclerView.isLastItemDisplaying()
-            this@MessagesAdapter.messages = SyncArrayList(sortedList)
-            productDiffResult.dispatchUpdatesToSafety(recyclerView)
-            if (isLastItemVisible)
-                recyclerView.scrollToPosition(itemCount - 1)
-        }
-    }
-
     fun setMultiSelectableMode(enable: Boolean) {
         isMultiSelectableMode = enable
     }
 
     fun isMultiSelectableMode() = isMultiSelectableMode
 
-    companion object {
-        private var updateJob: Job? = null
-
-        fun awaitUpdating(cb: () -> Unit) {
-            if (updateJob == null || updateJob?.isCompleted == true || updateJob?.isCompleted == true)
-                cb.invoke()
-            else {
-                updateJob?.invokeOnCompletion { cb.invoke() }
-            }
-        }
+    fun awaitUpdating(cb: () -> Unit) {
+        val job = updateJob
+        if (job == null || job.isCompleted)
+            cb()
+        else
+            job.invokeOnCompletion { cb() }
     }
 
     override fun bindHeaderData(header: StickyDateHeaderView, headerPosition: Int) {

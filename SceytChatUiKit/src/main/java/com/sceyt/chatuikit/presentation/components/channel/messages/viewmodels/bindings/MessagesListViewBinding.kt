@@ -161,7 +161,9 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 messagesListView.scrollToLastMessage()
             }
 
-            MessageListRenderEffect.Sort -> messagesListView.sortMessages()
+            is MessageListRenderEffect.Sort -> {
+                messagesListView.setMessagesList(effect.resultItems, lifecycleScope)
+            }
         }
     }
 

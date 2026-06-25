@@ -1129,9 +1129,9 @@ class MessageListViewModel internal constructor(
                 enableDateSeparator = enableDateSeparator
             )
         )
+        sortMessageItems()
         if (scrollToLastAfterAppend)
             emitRenderEffect(MessageListRenderEffect.ScrollToLastMessage)
-        sortMessageItems()
     }
 
     internal suspend fun mergeMissingMessagesAroundCenter(
@@ -1351,7 +1351,7 @@ class MessageListViewModel internal constructor(
         )
         if (sorted == currentMessageListItems()) return
         commitItems(sorted)
-        emitRenderEffect(MessageListRenderEffect.Sort)
+        emitRenderEffect(MessageListRenderEffect.Sort(sorted))
     }
 
     private fun checkMaybeHaveUnreadMentionOnNewMessage(message: SceytMessage) {
