@@ -54,7 +54,10 @@ internal sealed interface MessageListRenderEffect {
 
     data object ScrollToUnreadMessage : MessageListRenderEffect
     data object ScrollToLastMessage : MessageListRenderEffect
-    data object Sort : MessageListRenderEffect
+
+    data class Sort(
+        val resultItems: List<MessageListItem>,
+    ) : MessageListRenderEffect
 }
 
 internal data class ScrollLoadOnMissing(

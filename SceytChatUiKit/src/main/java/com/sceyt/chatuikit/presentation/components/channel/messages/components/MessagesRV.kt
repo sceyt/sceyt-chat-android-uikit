@@ -345,9 +345,8 @@ class MessagesRV @JvmOverloads constructor(
 
     fun getViewHolderFactory() = viewHolderFactory
 
-    fun sortMessages() {
-        if (::mAdapter.isInitialized.not()) return
-        mAdapter.sort(this)
+    fun awaitUpdating(cb: () -> Unit) {
+        if (::mAdapter.isInitialized) mAdapter.awaitUpdating(cb) else cb()
     }
 
     fun deleteMessageByTid(vararg tid: Long) {
