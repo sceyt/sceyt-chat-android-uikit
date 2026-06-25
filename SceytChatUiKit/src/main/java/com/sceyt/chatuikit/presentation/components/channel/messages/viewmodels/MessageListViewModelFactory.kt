@@ -13,8 +13,8 @@ class MessageListViewModelFactory(
 
         @Suppress("UNCHECKED_CAST")
         return MessageListViewModel(
-            _conversationId = conversationId,
-            _channel = channel,
+            conversationId = conversationId,
+            channel = channel,
             replyInThread = false,
             initialTargetMessageId = targetMessageId,
         ) as T

@@ -1,0 +1,68 @@
+package com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels
+
+import com.sceyt.chatuikit.persistence.differs.MessageDiff
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
+
+internal data class MessageListState(
+    val items: List<MessageListItem> = emptyList(),
+    val revision: Long = 0,
+    val hasLoadedInitialMessages: Boolean = false,
+)
+
+internal sealed interface MessageListRenderEffect {
+    data class Replace(
+        val items: List<MessageListItem>,
+        val force: Boolean,
+    ) : MessageListRenderEffect
+
+    data class PrependPage(
+        val resultItems: List<MessageListItem>,
+    ) : MessageListRenderEffect
+
+    data class AppendPage(
+        val resultItems: List<MessageListItem>,
+    ) : MessageListRenderEffect
+
+    data class AppendRealtime(
+        val items: List<MessageListItem>,
+        val scroll: AppendRealtimeScroll,
+    ) : MessageListRenderEffect
+
+    data class UpdateItem(
+        val index: Int,
+        val item: MessageListItem.MessageItem,
+        val diff: MessageDiff?,
+        val notifyVisibleOnly: Boolean = false,
+        val notify: Boolean = true,
+    ) : MessageListRenderEffect
+
+    data class DeleteTids(
+        val tids: List<Long>,
+    ) : MessageListRenderEffect
+
+    data object Clear : MessageListRenderEffect
+    data object HideLoadingPrev : MessageListRenderEffect
+    data object HideLoadingNext : MessageListRenderEffect
+    data object RemoveUnreadMessagesSeparator : MessageListRenderEffect
+
+    data class ScrollToMessage(
+        val messageId: Long,
+        val highlight: Boolean,
+        val offset: Int = 0,
+        val loadOnMissing: ScrollLoadOnMissing? = null,
+    ) : MessageListRenderEffect
+
+    data object ScrollToUnreadMessage : MessageListRenderEffect
+    data object ScrollToLastMessage : MessageListRenderEffect
+    data object Sort : MessageListRenderEffect
+}
+
+internal data class ScrollLoadOnMissing(
+    val loadKey: Long,
+    val ignoreServer: Boolean,
+)
+
+internal enum class AppendRealtimeScroll {
+    Always,
+    IfAtEnd,
+}

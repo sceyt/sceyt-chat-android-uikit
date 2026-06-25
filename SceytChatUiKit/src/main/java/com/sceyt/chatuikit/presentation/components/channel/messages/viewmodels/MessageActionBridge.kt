@@ -19,6 +19,11 @@ internal class MessageActionBridge {
         this.messagesListView = messagesListView
     }
 
+    fun clearMessagesListView(messagesListView: MessagesListView) {
+        if (this.messagesListView === messagesListView)
+            this.messagesListView = null
+    }
+
     fun setHeaderView(headerView: MessagesListHeaderView) {
         this.headerView = headerView
         headerView.setToolbarActionHiddenCallback {

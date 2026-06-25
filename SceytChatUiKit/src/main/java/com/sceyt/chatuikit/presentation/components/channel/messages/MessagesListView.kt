@@ -489,23 +489,20 @@ class MessagesListView @JvmOverloads constructor(
         messagesRV.addNextPageMessages(data, lifecycleScope)
     }
 
-    internal fun addPrevPageMessages(
-        data: List<MessageListItem>,
-        lifecycleScope: LifecycleCoroutineScope
-    ) {
-        messagesRV.addPrevPageMessages(messages = data, lifecycleScope = lifecycleScope)
-    }
-
-    internal fun addNewMessages(
+    internal fun addPreparedNewMessages(
         vararg data: MessageListItem,
         lifecycleScope: LifecycleCoroutineScope,
         addedCallback: () -> Unit = {},
     ) {
         if (data.isEmpty()) return
         messagesRV.awaitAnimationEnd {
-            messagesRV.addNewMessages(items = data, lifecycleScope = lifecycleScope)
+            messagesRV.addPreparedNewMessages(items = data, lifecycleScope = lifecycleScope)
             addedCallback.invoke()
         }
+    }
+
+    internal fun scrollToEndAfterRealtimeAppend(addedItemsCount: Int, alwaysScroll: Boolean) {
+        messagesRV.scrollToEndAfterRealtimeAppend(addedItemsCount, alwaysScroll)
     }
 
     internal fun updateMessage(message: SceytMessage): Boolean {
@@ -845,15 +842,31 @@ class MessagesListView @JvmOverloads constructor(
         updateAdapterItemNotifyVisible(index, item)
     }
 
+    internal fun renderItemUpdate(
+        index: Int,
+        item: MessageItem,
+        diff: MessageDiff?,
+        notifyVisibleOnly: Boolean,
+        notify: Boolean,
+    ) {
+        if (notifyVisibleOnly)
+            updateAdapterItemNotifyVisible(index, item)
+        else
+            updateAdapterItem(index, item, diff, notify)
+    }
+
     private fun updateAdapterItem(
         index: Int,
         item: MessageItem,
-        diff: MessageDiff,
+        diff: MessageDiff?,
         notify: Boolean = true
     ) {
         messagesRV.updateItemAt(index, item)
-        if (notify)
-            updateItem(index, item, diff)
+        if (notify) {
+            if (diff == null)
+                messagesRV.adapter?.notifyItemChanged(index)
+            else updateItem(index, item, diff)
+        }
     }
 
     private fun updateAdapterItemNotifyVisible(index: Int, item: MessageItem) {

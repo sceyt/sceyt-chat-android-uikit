@@ -273,30 +273,19 @@ class MessagesRV @JvmOverloads constructor(
             mAdapter.addNextPageMessagesList(messages)
     }
 
-    fun addPrevPageMessages(
-        messages: List<MessageListItem>,
-        lifecycleScope: LifecycleCoroutineScope
-    ) {
-        if (::mAdapter.isInitialized.not())
-            setData(messages, lifecycleScope)
-        else
-            mAdapter.addPrevPageMessagesList(messages)
-    }
-
-    fun addNewMessages(
+    fun addPreparedNewMessages(
         vararg items: MessageListItem,
         lifecycleScope: LifecycleCoroutineScope
     ) {
         if (::mAdapter.isInitialized.not())
             setData(items.toList(), lifecycleScope)
         else {
-            mAdapter.addNewMessages(items.toList())
-            var outGoing = true
-            items.find { it is MessageListItem.MessageItem }?.let {
-                outGoing = (it as MessageListItem.MessageItem).message.incoming.not()
-            }
-            checkScrollToEnd(items.size, outGoing)
+            mAdapter.addPreparedNewMessages(items.toList())
         }
+    }
+
+    fun scrollToEndAfterRealtimeAppend(addedItemsCount: Int, alwaysScroll: Boolean) {
+        checkScrollToEnd(addedItemsCount, alwaysScroll)
     }
 
     fun setOnListCommittedListener(listener: () -> Unit) {
