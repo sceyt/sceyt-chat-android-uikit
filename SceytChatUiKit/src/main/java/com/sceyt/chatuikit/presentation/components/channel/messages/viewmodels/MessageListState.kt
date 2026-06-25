@@ -43,7 +43,6 @@ internal sealed interface MessageListRenderEffect {
     data object Clear : MessageListRenderEffect
     data object HideLoadingPrev : MessageListRenderEffect
     data object HideLoadingNext : MessageListRenderEffect
-    data object RemoveUnreadMessagesSeparator : MessageListRenderEffect
 
     data class ScrollToMessage(
         val messageId: Long,

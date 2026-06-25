@@ -374,11 +374,6 @@ class MessagesRV @JvmOverloads constructor(
             mAdapter.clearData()
     }
 
-    fun deleteAllMessagesBefore(predicate: Predicate<MessageListItem>) {
-        if (::mAdapter.isInitialized)
-            mAdapter.deleteAllMessagesBefore(predicate)
-    }
-
     fun setSwipeToReplyEnabled(enabled: Boolean) {
         if (::mAdapter.isInitialized)
             messageSwipeController?.setSwipeEnabled(enabled)

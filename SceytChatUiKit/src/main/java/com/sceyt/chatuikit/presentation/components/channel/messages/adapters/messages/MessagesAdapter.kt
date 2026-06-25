@@ -198,16 +198,6 @@ class MessagesAdapter(
         }
     }
 
-    fun deleteAllMessagesBefore(predicate: Predicate<MessageListItem>) {
-        // Walk descending so removeAt never shifts a not-yet-visited index.
-        for (i in messages.indices.reversed()) {
-            if (predicate.test(messages[i])) {
-                messages.removeAt(i)
-                notifyItemRemoved(i)
-            }
-        }
-    }
-
     fun removeUnreadMessagesSeparator() {
         messages.findIndexed { item ->
             item is MessageListItem.UnreadMessagesSeparatorItem
