@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.bindings
 
+import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.asFlow
@@ -9,7 +10,6 @@ import androidx.lifecycle.viewModelScope
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.ConnectionState
 import com.sceyt.chat.models.message.DeleteMessageType
-import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.SceytChatUIKit.navigator
@@ -18,18 +18,12 @@ import com.sceyt.chatuikit.data.managers.channel.event.ChannelActionEvent.Delete
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelActionEvent.Left
 import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.models.LoadKeyData
-import com.sceyt.chatuikit.data.models.PaginationResponse
-import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNear
-import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNewest
-import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNext
-import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadPrev
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
 import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
-import com.sceyt.chatuikit.data.models.getLoadKey
 import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import com.sceyt.chatuikit.data.models.messages.SceytMarker
@@ -42,14 +36,11 @@ import com.sceyt.chatuikit.extensions.findIndexed
 import com.sceyt.chatuikit.extensions.getChildTopByPosition
 import com.sceyt.chatuikit.extensions.getString
 import com.sceyt.chatuikit.extensions.isResumed
-import com.sceyt.chatuikit.extensions.isThePositionVisible
-import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.navigation.Destination
 import com.sceyt.chatuikit.navigation.navigate
 import com.sceyt.chatuikit.persistence.extensions.checkIsMemberInChannel
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isPublic
-import com.sceyt.chatuikit.persistence.extensions.safeResume
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferHelper
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelUpdatedType
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
@@ -57,9 +48,10 @@ import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
 import com.sceyt.chatuikit.presentation.components.channel.messages.MessagesListView
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem.MessageItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageCommandEvent
+import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.AppendRealtimeScroll
+import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageListRenderEffect
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageListViewModel
 import com.sceyt.chatuikit.presentation.extensions.isNotPending
-import com.sceyt.chatuikit.presentation.extensions.isSelfDestructed
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.services.sync.SceytSyncManager
 import com.sceyt.chatuikit.styles.extensions.messages_list.setEmptyStateForSelfChannel
@@ -70,12 +62,9 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlin.time.Duration.Companion.milliseconds
-
-private const val TAG = "MessagesListViewBinding"
 
 @JvmName("bind")
 fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner: LifecycleOwner) {
@@ -85,6 +74,109 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     if (channel.isSelf) {
         messagesListView.setEmptyStateForSelfChannel()
     }
+
+    configureMessageList(messagesListView.style.enableDateSeparator)
+
+    fun applyRenderEffect(effect: MessageListRenderEffect) {
+        when (effect) {
+            is MessageListRenderEffect.Replace -> {
+                messagesListView.setMessagesList(
+                    data = effect.items,
+                    lifecycleScope = lifecycleScope,
+                    force = effect.force
+                )
+            }
+
+            is MessageListRenderEffect.PrependPage -> {
+                messagesListView.setMessagesList(effect.resultItems, lifecycleScope)
+            }
+
+            is MessageListRenderEffect.AppendPage -> {
+                messagesListView.addNextPageMessages(effect.resultItems, lifecycleScope)
+            }
+
+            is MessageListRenderEffect.AppendRealtime -> {
+                messagesListView.addPreparedNewMessages(
+                    data = effect.items.toTypedArray(),
+                    lifecycleScope = lifecycleScope,
+                    addedCallback = {
+                        messagesListView.scrollToEndAfterRealtimeAppend(
+                            addedItemsCount = effect.items.size,
+                            alwaysScroll = effect.scroll == AppendRealtimeScroll.Always
+                        )
+                    }
+                )
+            }
+
+            is MessageListRenderEffect.UpdateItem -> {
+                messagesListView.renderItemUpdate(
+                    index = effect.index,
+                    item = effect.item,
+                    diff = effect.diff,
+                    notifyVisibleOnly = effect.notifyVisibleOnly,
+                    notify = effect.notify
+                )
+            }
+
+            is MessageListRenderEffect.DeleteTids -> {
+                messagesListView.forceDeleteMessageByTid(*effect.tids.toLongArray())
+            }
+
+            MessageListRenderEffect.Clear -> messagesListView.clearData()
+            MessageListRenderEffect.HideLoadingPrev -> messagesListView.hideLoadingPrev()
+            MessageListRenderEffect.HideLoadingNext -> messagesListView.hideLoadingNext()
+            MessageListRenderEffect.RemoveUnreadMessagesSeparator -> {
+                messagesListView.removeUnreadMessagesSeparator()
+            }
+
+            is MessageListRenderEffect.ScrollToMessage -> {
+                messagesListView.scrollToMessage(
+                    messageId = effect.messageId,
+                    offset = effect.offset,
+                    highlight = effect.highlight,
+                    onCompleted = { found ->
+                        if (found) {
+                            isPreparingToScrollToMessage.set(false)
+                            return@scrollToMessage
+                        }
+                        effect.loadOnMissing?.let {
+                            loadNearMessages(
+                                messageId = effect.messageId,
+                                loadKey = LoadKeyData(
+                                    key = it.loadKey,
+                                    value = effect.messageId
+                                ),
+                                ignoreServer = it.ignoreServer
+                            )
+                        }
+                    }
+                )
+            }
+
+            MessageListRenderEffect.ScrollToUnreadMessage -> {
+                messagesListView.scrollToUnReadMessage()
+            }
+
+            MessageListRenderEffect.ScrollToLastMessage -> {
+                messagesListView.scrollToLastMessage()
+            }
+
+            MessageListRenderEffect.Sort -> messagesListView.sortMessages()
+        }
+    }
+
+    val retainedState = state.value
+    if (retainedState.hasLoadedInitialMessages && retainedState.items.isNotEmpty()) {
+        messagesListView.setMessagesList(retainedState.items, lifecycleScope, force = true)
+    }
+
+    renderEffects.onEach(::applyRenderEffect).launchIn(lifecycleScope)
+
+    lifecycleOwner.lifecycle.addObserver(object : DefaultLifecycleObserver {
+        override fun onDestroy(owner: LifecycleOwner) {
+            messageActionBridge.clearMessagesListView(messagesListView)
+        }
+    })
 
     clearPreparingThumbs()
 
@@ -103,7 +195,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 if (needToUpdateTransferAfterOnResume.isNotEmpty()) {
                     needToUpdateTransferAfterOnResume.values.forEach { data ->
                         lifecycleOwner.lifecycleScope.launch {
-                            messagesListView.updateProgress(data, true)
+                            updateProgress(data, true)
                         }
                     }
                     needToUpdateTransferAfterOnResume.clear()
@@ -124,8 +216,6 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     if (channel.userRole.isNullOrEmpty())
         getChannel(channel.id)
 
-    loadInitialMessagesForCurrentChannel()
-
     fun setUnreadCounts(channel: SceytChannel) {
         messagesListView.setUnreadMessagesCount(channel.newMessageCount)
         messagesListView.setUnreadMentionsCount(channel.newMentionCount)
@@ -141,210 +231,11 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     checkEnableDisableActions(channel)
     setUnreadCounts(channel)
 
-    suspend fun getCompareMessage(
-        loadType: PaginationResponse.LoadType,
-        proportion: List<SceytMessage>,
-    ): SceytMessage? = withContext(Dispatchers.Default) {
-        if (proportion.isEmpty()) return@withContext null
-        val proportionFirstId = proportion.first().id
-        return@withContext when (loadType) {
-            LoadNext, LoadNewest, LoadNear -> {
-                (messagesListView.getData().lastOrNull {
-                    it is MessageItem && it.message.id < proportionFirstId
-                } as? MessageItem)?.message
-            }
-
-            LoadPrev -> null
-        }
-    }
-
-    fun checkToHildeLoadingMoreItemByLoadType(loadType: PaginationResponse.LoadType) {
-        when (loadType) {
-            LoadPrev if !hasPrevDb -> messagesListView.hideLoadingPrev()
-            LoadNext if !hasNextDb -> messagesListView.hideLoadingNext()
-            LoadNear -> {
-                if (!hasPrevDb)
-                    messagesListView.hideLoadingPrev()
-                if (!hasNextDb)
-                    messagesListView.hideLoadingNext()
-            }
-            else -> Unit
-        }
-    }
-
-    fun checkToScrollAfterResponse(response: PaginationResponse<SceytMessage>) {
-        val loadKey = response.getLoadKey() ?: return
-        when (loadKey.key) {
-            LoadKeyType.ScrollToUnreadMessage.longValue -> {
-                messagesListView.scrollToUnReadMessage()
-            }
-
-            LoadKeyType.ScrollToLastMessage.longValue -> {
-                messagesListView.scrollToLastMessage()
-            }
-
-            LoadKeyType.ScrollToReplyMessage.longValue -> {
-                messagesListView.scrollToMessage(loadKey.value, true, 200)
-            }
-
-            LoadKeyType.ScrollToMessageBy.longValue -> {
-                messagesListView.scrollToMessage(
-                    messageId = loadKey.value,
-                    highlight = true,
-                    offset = 200,
-                    onCompleted = { found ->
-                        if (response !is PaginationResponse.ServerResponse) {
-                            return@scrollToMessage
-                        }
-                        isPreparingToScrollToMessage.set(false)
-                        if (!found) {
-                            SceytLog.w(
-                                TAG,
-                                "Called load near messages in channelId: ${channel.id} for scroll to message id: ${loadKey.value}, but message not found in server response." +
-                                        " Resetting isPreparingToScrollToMessage to false to avoid infinite waiting."
-                            )
-                        }
-                    })
-            }
-        }
-    }
-
-    suspend fun initPaginationDbResponse(response: PaginationResponse.DBResponse<SceytMessage>) {
-        val enableDateSeparator = messagesListView.style.enableDateSeparator
-        if (response.offset == 0) {
-            messagesListView.setMessagesList(
-                data = mapToMessageListItem(
-                    data = response.data,
-                    hasNext = response.hasNext,
-                    hasPrev = response.hasPrev,
-                    enableDateSeparator = enableDateSeparator
-                ),
-                lifecycleScope = lifecycleScope,
-                force = true
-            )
-        } else {
-            when (response.loadType) {
-                LoadPrev -> {
-                    messagesListView.addPrevPageMessages(
-                        mapToMessageListItem(
-                            data = response.data,
-                            hasNext = response.hasNext,
-                            hasPrev = response.hasPrev,
-                            enableDateSeparator = enableDateSeparator
-                        ),
-                        lifecycleScope = lifecycleScope,
-                    )
-                }
-
-                LoadNext -> {
-                    val hasNext = checkMaybeHesNext(response)
-                    val compareMessage = getCompareMessage(response.loadType, response.data)
-                    messagesListView.addNextPageMessages(
-                        mapToMessageListItem(
-                            data = response.data,
-                            hasNext = hasNext,
-                            hasPrev = response.hasPrev,
-                            compareMessage = compareMessage,
-                            enableDateSeparator = enableDateSeparator
-                        ),
-                        lifecycleScope = lifecycleScope,
-                    )
-                }
-
-                LoadNear -> {
-                    val hasNext = checkMaybeHesNext(response)
-                    messagesListView.setMessagesList(
-                        data = mapToMessageListItem(
-                            data = response.data,
-                            hasNext = hasNext,
-                            hasPrev = response.hasPrev,
-                            enableDateSeparator = enableDateSeparator
-                        ),
-                        lifecycleScope = lifecycleScope,
-                        force = true
-                    )
-                }
-
-                LoadNewest -> {
-                    messagesListView.setMessagesList(
-                        data = mapToMessageListItem(
-                            data = response.data,
-                            hasNext = response.hasNext,
-                            hasPrev = response.hasPrev,
-                            enableDateSeparator = enableDateSeparator
-                        ),
-                        lifecycleScope = lifecycleScope,
-                        force = true
-                    )
-                }
-            }
-        }
-        checkToScrollAfterResponse(response)
-    }
-
-    suspend fun initPaginationServerResponse(response: PaginationResponse.ServerResponse<SceytMessage>) {
-        when (response.data) {
-            is SceytResponse.Success -> {
-                if (response.hasDiff) {
-                    val dataToMap = if (response.dbResultWasEmpty) {
-                        response.data.data ?: return
-                    } else response.cacheData
-
-                    val newMessages = mapToMessageListItem(
-                        data = dataToMap,
-                        hasNext = response.hasNext,
-                        hasPrev = response.hasPrev,
-                        compareMessage = getCompareMessage(response.loadType, dataToMap),
-                        enableDateSeparator = messagesListView.style.enableDateSeparator
-                    )
-
-                    if (response.dbResultWasEmpty) {
-                        if (response.loadType == LoadNear)
-                            messagesListView.setMessagesList(newMessages, lifecycleScope, true)
-                        else {
-                            if (response.loadType == LoadNext || response.loadType == LoadNewest)
-                                messagesListView.addNextPageMessages(newMessages, lifecycleScope)
-                            else messagesListView.addPrevPageMessages(newMessages, lifecycleScope)
-                        }
-                    } else
-                        messagesListView.setMessagesList(
-                            data = newMessages,
-                            lifecycleScope = lifecycleScope,
-                            force = response.loadKey?.key == LoadKeyType.ScrollToLastMessage.longValue
-                        )
-                } else
-                    checkToHildeLoadingMoreItemByLoadType(response.loadType)
-
-                if (response.dbResultWasEmpty)
-                    checkToScrollAfterResponse(response)
-
-                loadPrevOffsetId = response.data.data?.firstOrNull()?.id ?: 0
-                loadNextOffsetId = response.data.data?.lastOrNull()?.id ?: 0
-            }
-
-            is SceytResponse.Error -> {
-                checkToHildeLoadingMoreItemByLoadType(response.loadType)
-
-                // set isSearchingMessageToScroll value to false, to enable jumping to next message
-                if (response.loadKey?.key == LoadKeyType.ScrollToMessageBy.longValue)
-                    isPreparingToScrollToMessage.set(false)
-            }
-        }
-    }
-
-    suspend fun initMessagesResponse(response: PaginationResponse<SceytMessage>) {
-        when (response) {
-            is PaginationResponse.DBResponse -> initPaginationDbResponse(response)
-            is PaginationResponse.ServerResponse -> initPaginationServerResponse(response)
-            else -> return
-        }
-    }
-
     fun syncNearCenterVisibleMessageIfNeeded() {
         if (!needSyncMessagesWhenScrollStateIdle || loadingFromServer) return
         val centerPosition = messagesListView.getMessagesRecyclerView().centerVisibleItemPosition()
         if (centerPosition == RecyclerView.NO_POSITION) return
-        val item = messagesListView.getData().getOrNull(centerPosition)
+        val item = currentMessageListItems().getOrNull(centerPosition)
         val messageId = item?.getMessageId() ?: return
         if (lastSyncCenterOffsetId != messageId) {
             lastSyncCenterOffsetId = messageId
@@ -377,7 +268,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     ChannelsCache.channelUpdatedFlow
         .filter { it.channel.id == channel.id && it.eventType == ChannelUpdatedType.ClearedHistory }
         .onEach {
-            messagesListView.clearData()
+            clearMessages()
         }
         .launchIn(lifecycleOwner.lifecycleScope)
 
@@ -391,27 +282,10 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                     pinnedLastReadMessageId = syncChannel.lastDisplayedMessageId
 
                 lifecycleOwner.lifecycleScope.launch {
-                    val currentMessages = messagesListView.getData()
-                        .filterIsInstance<MessageItem>()
-                        .map { item -> item.message }
-                    val newMessages = messages.minus(currentMessages.toSet())
-                    if (newMessages.isNotEmpty()) {
-                        val isLastDisplaying = messagesListView.isLastCompletelyItemDisplaying()
-                        messagesListView.addNextPageMessages(
-                            mapToMessageListItem(
-                                data = newMessages,
-                                hasNext = false,
-                                hasPrev = false,
-                                compareMessage = messagesListView.getLastMessage()?.message,
-                                enableDateSeparator = messagesListView.style.enableDateSeparator
-                            ),
-                            lifecycleScope = lifecycleScope,
-                        )
-                        if (isLastDisplaying)
-                            messagesListView.scrollToLastMessage()
-
-                        messagesListView.sortMessages()
-                    }
+                    appendSyncedMessages(
+                        messages = messages,
+                        scrollToLastAfterAppend = messagesListView.isLastCompletelyItemDisplaying()
+                    )
                 }
             }
         }
@@ -429,13 +303,13 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         .onEach { stateData ->
             viewModelScope.launch(Dispatchers.IO) {
                 if (stateData.state == ConnectionState.Connected) {
-                    val message = messagesListView.getLastMessageBy {
+                    val message = currentMessageListItems().lastOrNull {
                         // First trying to get last displayed message
                         it is MessageItem && it.message.deliveryStatus == MessageDeliveryStatus.Displayed
-                    } ?: messagesListView.getFirstMessageBy {
+                    } ?: currentMessageListItems().firstOrNull {
                         // Next trying to get fist sent message
                         it is MessageItem && it.message.deliveryStatus == MessageDeliveryStatus.Sent
-                    } ?: messagesListView.getFirstMessageBy {
+                    } ?: currentMessageListItems().firstOrNull {
                         // Next trying to get fist received message
                         it is MessageItem && it.message.deliveryStatus == MessageDeliveryStatus.Received
                     }
@@ -450,48 +324,19 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }.launchIn(lifecycleOwner.lifecycleScope)
 
     syncCenteredMessageLiveData.observe(lifecycleOwner) { data ->
-        lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
-            if (data.missingMessages.isNotEmpty()) {
-                val items = messagesListView.getData().toMutableList()
-                items.findIndexed {
-                    it is MessageItem && it.message.id == data.centerMessageId
-                }?.let { (index) ->
-                    val topOffset =
-                        messagesListView.getMessagesRecyclerView().getChildTopByPosition(index)
-                    val compareMessage = getCompareMessage(LoadNear, data.missingMessages)
-
-                    items.addAll(
-                        mapToMessageListItem(
-                            data = data.missingMessages, hasNext = false, hasPrev = false,
-                            compareMessage, ignoreUnreadMessagesSeparator = true,
-                            enableDateSeparator = messagesListView.style.enableDateSeparator
-                        )
-                    )
-
-                    items.sortBy { item -> item.getMessageCreatedAt() }
-                    val filtered = mutableSetOf(*items.toTypedArray())
-
-                    withContext(Dispatchers.Main) {
-                        messagesListView.setMessagesList(filtered.toList(), lifecycleScope)
-
-                        val (position) = items.findIndexed { item ->
-                            item is MessageItem && item.message.id == data.centerMessageId
-                        } ?: return@withContext
-
-                        if (messagesListView.getMessagesRecyclerView()
-                                .isThePositionVisible(position)
-                        )
-                            messagesListView.scrollToMessage(data.centerMessageId, false, topOffset)
-                    }
-                }
-            }
+        lifecycleOwner.lifecycleScope.launch {
+            val (index) = currentMessageListItems().findIndexed {
+                it is MessageItem && it.message.id == data.centerMessageId
+            } ?: return@launch
+            val topOffset = messagesListView.getMessagesRecyclerView().getChildTopByPosition(index)
+            mergeMissingMessagesAroundCenter(data, topOffset)
         }
     }
 
     MessagesCache.messagesClearedFlow
         .filter { (channelId, _) -> channelId == channel.id }
         .onEach { (_, date) ->
-            messagesListView.deleteAllMessagesBefore {
+            deleteAllMessagesBefore {
                 it.getMessageCreatedAt() <= date && (it !is MessageItem || it.message.isNotPending())
             }
         }.launchIn(lifecycleOwner.lifecycleScope)
@@ -499,12 +344,8 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     MessagesCache.messagesHardDeletedFlow
         .filter { (channelId, _) -> channelId == channel.id }
         .onEach { (_, tIds) ->
-            messagesListView.forceDeleteMessageByTid(*tIds.toLongArray())
+            deleteMessagesByTid(*tIds.toLongArray())
         }.launchIn(lifecycleOwner.lifecycleScope)
-
-    loadMessagesFlow
-        .onEach(::initMessagesResponse)
-        .launchIn(lifecycleOwner.lifecycleScope)
 
     onChannelUpdatedEventFlow.onEach { channel ->
         setUnreadCounts(channel)
@@ -604,121 +445,17 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         it.forEach { response ->
             if (response is SceytResponse.Success) {
                 val data = response.data ?: return@observe
-                viewModelScope.launch(Dispatchers.Default) {
+                viewModelScope.launch {
                     val user = SceytChatUIKit.currentUser ?: return@launch
-                    val messages = messagesListView.getData()
-                    messages.forEachIndexed { index, listItem ->
-                        (listItem as? MessageItem)?.message?.let { message ->
-                            if (data.messageIds.contains(message.id)) {
-                                val updatedMessage = message.copy(
-                                    userMarkers = message.userMarkers.orEmpty()
-                                        .plus(
-                                            SceytMarker(
-                                                messageId = message.id,
-                                                user = user,
-                                                name = data.name,
-                                                createdAt = data.createdAt
-                                            )
-                                        )
-                                )
-                                val updatedItem = listItem.copy(message = updatedMessage)
-                                messagesListView.updateItemAt(index, updatedItem)
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    suspend fun onMessage(message: SceytMessage) {
-        if (hasNext || hasNextDb) return
-        val initMessage = mapToMessageListItem(
-            data = arrayListOf(message),
-            hasNext = false,
-            hasPrev = false,
-            compareMessage = messagesListView.getLastMessage()?.message,
-            enableDateSeparator = messagesListView.style.enableDateSeparator
-        )
-
-        messagesListView.addNewMessages(
-            data = initMessage.toTypedArray(),
-            lifecycleScope = lifecycleScope
-        )
-        messagesListView.updateViewState(PageState.Nothing)
-    }
-
-    suspend fun onOutgoingMessage(message: SceytMessage) {
-        if (hasNext || hasNextDb) return
-
-        // Use the parked update if available. It was already updated, but for some reason was not
-        // found in the UI to apply the update.
-        val messageToRender = pendingStatusReconciler.take(message.tid)?.let {
-            SceytLog.d(TAG, "Rendering previously not found updated message with tid: ${it.tid}")
-            it
-        } ?: message
-
-        val messageItems = mapToMessageListItem(
-            data = arrayListOf(messageToRender),
-            hasNext = false,
-            hasPrev = false,
-            compareMessage = messagesListView.getLastMessage()?.message,
-            enableDateSeparator = messagesListView.style.enableDateSeparator
-        )
-
-        suspendCancellableCoroutine { continuation ->
-            messagesListView.addNewMessages(
-                data = messageItems.toTypedArray(),
-                lifecycleScope = lifecycleScope,
-                addedCallback = {
-                    continuation.safeResume(Unit)
-                }
-            )
-            messagesListView.updateViewState(PageState.Nothing)
-        }
-    }
-
-    // Retries status updates parked while their target was missing during a list rebuild
-    // (e.g. a forwarded message stuck on "Pending"). Run on every list commit.
-    fun flushNotFoundStatusUpdates() {
-        if (pendingStatusReconciler.parkedCount == 0) return
-        viewModelScope.launch(Dispatchers.Main) {
-            outgoingMessageMutex.withLock {
-                pendingStatusReconciler.reconcile { messagesListView.updateMessage(it) }
-            }
-        }
-    }
-
-    fun onMessageUpdated(data: Pair<Long, List<SceytMessage>>) {
-        val (_, messages) = data
-
-        suspend fun update(sceytMessage: SceytMessage) {
-            val message = initMessageInfoData(sceytMessage)
-            withContext(Dispatchers.Main) {
-                when {
-                    message.state == MessageState.Deleted || message.state == MessageState.Edited -> {
-                        messagesListView.messageEditedOrDeleted(updateMessage = message)
-                    }
-
-                    message.isSelfDestructed() -> {
-                        messagesListView.messageSelfDestructed(message)
-                    }
-
-                    else -> {
-                        pendingStatusReconciler.onStatusUpdate(message) {
-                            messagesListView.updateMessage(it)
-                        }
-                    }
-                }
-            }
-        }
-
-        viewModelScope.launch(Dispatchers.Default) {
-            messages.forEach { message ->
-                if (message.incoming) {
-                    update(message)
-                } else outgoingMessageMutex.withLock {
-                    update(message)
+                    applyDisplayedMarkers(
+                        marker = data,
+                        userMarker = SceytMarker(
+                            messageId = 0,
+                            user = user,
+                            name = data.name,
+                            createdAt = data.createdAt
+                        )
+                    )
                 }
             }
         }
@@ -726,14 +463,18 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
     onNewOutGoingMessageFlow.onEach { message ->
         outgoingMessageMutex.withLock {
-            onOutgoingMessage(message)
+            appendOutgoingMessage(message)
         }
     }.launchIn(lifecycleOwner.lifecycleScope)
 
-    onNewMessageFlow.onEach(::onMessage).launchIn(lifecycleOwner.lifecycleScope)
+    onNewMessageFlow.onEach { message ->
+        outgoingMessageMutex.withLock {
+            appendIncomingMessage(message)
+        }
+    }.launchIn(lifecycleOwner.lifecycleScope)
 
     MessagesCache.messageUpdatedFlow.onEach { data ->
-        onMessageUpdated(data)
+        applyMessageUpdates(data)
     }.launchIn(lifecycleOwner.lifecycleScope)
 
     fun onVocePlaying(message: SceytMessage) {
@@ -756,7 +497,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
     FileTransferHelper.onTransferUpdatedLiveData.asFlow().onEach { transfer ->
         if (lifecycleOwner.isResumed()) {
-            messagesListView.updateProgress(transfer, false)
+            updateProgress(transfer, false)
         } else if (shouldDeferTransferUpdate(transfer)) {
             needToUpdateTransferAfterOnResume[transfer.messageTid] = transfer
         }
@@ -764,7 +505,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
     onChannelEventFlow.onEach { event ->
         when (event) {
-            is ClearedHistory -> messagesListView.clearData()
+            is ClearedHistory -> clearMessages()
             is Left -> {
                 event.leftMembers.forEach { member ->
                     if (member.id == SceytChatUIKit.chatUIFacade.myId && !channel.isPublic())
@@ -825,7 +566,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 }
 
                 val message = event.message.copy(isSelected = !wasSelected)
-                messagesListView.updateMessageSelection(message)
+                updateMessageSelection(message)
 
                 if (wasSelected) {
                     selectedMessagesMap.remove(message.tid)
@@ -843,7 +584,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             }
 
             is MessageCommandEvent.CancelMultiselectEvent -> {
-                selectedMessagesMap.clear()
+                clearMessageSelectionState()
                 messagesListView.cancelMultiSelectMode()
             }
 
@@ -916,7 +657,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     }
 
     messagesListView.setOnListCommittedListener {
-        flushNotFoundStatusUpdates()
+        this@bind.flushNotFoundStatusUpdates()
     }
 
     messagesListView.setOnWindowFocusChangeListener { hasFocus ->
@@ -942,8 +683,9 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     }
 
     messagesListView.setScrollStateChangeListener {
-        if (it == RecyclerView.SCROLL_STATE_IDLE)
+        if (it == RecyclerView.SCROLL_STATE_IDLE) {
             syncNearCenterVisibleMessageIfNeeded()
+        }
     }
 
     messagesListView.setNeedLoadPrevMessagesListener { offset, message ->

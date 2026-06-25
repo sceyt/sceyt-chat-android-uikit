@@ -109,52 +109,6 @@ class MessagesAdapter(
         }
     }
 
-    private fun updateDateAndState(
-        newItem: MessageListItem,
-        prevItem: MessageListItem?,
-        dateItem: MessageListItem?
-    ) {
-        if (newItem is MessageItem && prevItem is MessageItem) {
-            val prevMessage = prevItem.message
-            if (prevItem.message.isGroup) {
-                val prevIndex = messages.indexOf(prevItem)
-                messages[prevIndex] = prevItem.copy(
-                    message = prevMessage.copy(
-                        shouldShowAvatarAndName = prevMessage.incoming
-                                && prevMessage.user?.id != newItem.message.user?.id
-                    )
-                )
-                notifyItemChanged(prevIndex, Unit)
-            }
-
-            val needShowDate = !DateTimeUtil.isSameDay(
-                epochOne = prevMessage.createdAt,
-                epochTwo = newItem.message.createdAt
-            )
-            if (!needShowDate) {
-                val dateIndex = messages.indexOf(dateItem)
-                if (dateIndex != -1) {
-                    messages.removeAt(dateIndex)
-                    notifyItemRemoved(dateIndex)
-                }
-            }
-        }
-    }
-
-    fun addPrevPageMessagesList(items: List<MessageListItem>) {
-        removeLoadingPrev()
-        if (items.isEmpty()) return
-
-        val firstItem = getFirstMessageItem()
-        val dateItem = messages.find { item ->
-            item is MessageListItem.DateSeparatorItem && item.messageTid == firstItem?.message?.tid
-        }
-        messages.addAll(0, items)
-        notifyItemRangeInserted(0, items.size)
-        updateDateAndState(items.last(), firstItem, dateItem)
-        onListCommittedListener?.invoke()
-    }
-
     fun addNextPageMessagesList(items: List<MessageListItem>) {
         removeLoadingNext()
         if (items.isEmpty()) return
@@ -164,14 +118,13 @@ class MessagesAdapter(
         onListCommittedListener?.invoke()
     }
 
-    fun addNewMessages(items: List<MessageListItem>) {
+    fun addPreparedNewMessages(items: List<MessageListItem>) {
         removeLoadingNext()
         if (items.isEmpty()) return
-        val filteredItems = items.toSet().minus(messages.toSet())
-        if (filteredItems.isEmpty()) return
 
-        messages.addAll(filteredItems)
-        notifyItemRangeInserted(messages.lastIndex, filteredItems.size)
+        val insertStart = messages.size
+        messages.addAll(items)
+        notifyItemRangeInserted(insertStart, items.size)
         onListCommittedListener?.invoke()
     }
 
