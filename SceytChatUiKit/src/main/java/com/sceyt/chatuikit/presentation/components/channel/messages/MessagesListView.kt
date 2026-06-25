@@ -815,10 +815,6 @@ class MessagesListView @JvmOverloads constructor(
         updateViewState(PageState.StateEmpty())
     }
 
-    internal fun deleteAllMessagesBefore(predicate: Predicate<MessageListItem>) {
-        messagesRV.deleteAllMessagesBefore(predicate)
-    }
-
     internal fun setUnreadMessagesCount(unreadCount: Long) {
         binding.scrollDownView.setUnreadCount(unreadCount)
     }

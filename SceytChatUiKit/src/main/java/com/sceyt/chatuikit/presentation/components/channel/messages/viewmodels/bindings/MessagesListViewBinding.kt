@@ -125,9 +125,6 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             MessageListRenderEffect.Clear -> messagesListView.clearData()
             MessageListRenderEffect.HideLoadingPrev -> messagesListView.hideLoadingPrev()
             MessageListRenderEffect.HideLoadingNext -> messagesListView.hideLoadingNext()
-            MessageListRenderEffect.RemoveUnreadMessagesSeparator -> {
-                messagesListView.removeUnreadMessagesSeparator()
-            }
 
             is MessageListRenderEffect.ScrollToMessage -> {
                 messagesListView.scrollToMessage(
