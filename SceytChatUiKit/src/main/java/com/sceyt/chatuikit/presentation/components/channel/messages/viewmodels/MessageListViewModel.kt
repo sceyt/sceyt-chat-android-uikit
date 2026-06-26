@@ -97,17 +97,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -171,9 +167,11 @@ class MessageListViewModel internal constructor(
     internal val expandedMessagesMap by lazy { mutableMapOf<Long, Boolean>() }
     internal val pendingStatusReconciler by lazy { PendingMessageStatusReconciler() }
     internal val outgoingMessageMutex by lazy { Mutex() }
-    // Keeps async pagination, sync and realtime list reducers merging against the latest state.
-    private val messageListMutationMutex by lazy { Mutex() }
-    private val messageListItemsReducer by lazy { MessageListItemsReducer() }
+    // Owns the rendered list state, render-effect stream and reducer-backed list mutations.
+    private val store = MessageListStore(
+        recoveryScope = viewModelScope,
+        recoveryDispatcher = mainDispatcher,
+    )
     private val messageListItemMapper by lazy { MessageListItemMapper() }
     internal val pendingDisplayMsgIds by lazy { Collections.synchronizedSet(mutableSetOf<Long>()) }
     internal val needToUpdateTransferAfterOnResume = hashMapOf<Long, TransferData>()
@@ -200,13 +198,8 @@ class MessageListViewModel internal constructor(
 
     private var enableDateSeparator = true
 
-    private val _state = MutableStateFlow(MessageListState())
-    internal val state = _state.asStateFlow()
-
-    private val _renderEffects = MutableSharedFlow<MessageListRenderEffect>(
-        extraBufferCapacity = 64
-    )
-    internal val renderEffects = _renderEffects.asSharedFlow()
+    internal val state get() = store.state
+    internal val renderEffects get() = store.renderEffects
 
     private val _messageMarkerLiveData = MutableLiveData<List<SceytResponse<MessageListMarker>>>()
     val messageMarkerLiveData = _messageMarkerLiveData.asLiveData()
@@ -317,131 +310,45 @@ class MessageListViewModel internal constructor(
 
     fun configureMessageList(enableDateSeparator: Boolean) {
         this.enableDateSeparator = enableDateSeparator
+        store.enableDateSeparator = enableDateSeparator
     }
 
-    internal fun currentMessageListItems(): List<MessageListItem> = _state.value.items
+    internal fun currentMessageListItems(): List<MessageListItem> = store.items
 
-    internal fun currentMessageItems(): List<SceytMessage> {
-        return _state.value.items.filterIsInstance<MessageItem>().map { it.message }
-    }
+    internal fun currentMessageItems(): List<SceytMessage> = store.messageItems()
 
-    internal fun currentLastMessageItem(): MessageItem? {
-        return _state.value.items.lastOrNull { it is MessageItem } as? MessageItem
-    }
+    internal fun currentLastMessageItem(): MessageItem? = store.lastMessageItem()
 
-    private fun emitRenderEffect(effect: MessageListRenderEffect) {
-        _renderEffects.tryEmit(effect)
-    }
+    private fun emitRenderEffect(effect: MessageListRenderEffect) = store.emitEffect(effect)
 
-    private fun commitItems(
-        items: List<MessageListItem>,
-        hasLoadedInitialMessages: Boolean = true,
-    ) {
-        _state.update { current ->
-            current.copy(
-                items = items,
-                revision = current.revision + 1,
-                hasLoadedInitialMessages = current.hasLoadedInitialMessages || hasLoadedInitialMessages
-            )
-        }
-    }
+    private fun replaceMessages(items: List<MessageListItem>, force: Boolean) =
+        store.replace(items, force)
 
-    private fun messageItemsCount(items: List<MessageListItem> = _state.value.items): Int {
-        return items.count { it is MessageItem }
-    }
+    private fun addPrevPageItems(items: List<MessageListItem>) = store.addPrevPage(items)
 
-    private fun replaceMessages(
-        items: List<MessageListItem>,
-        force: Boolean,
-    ) {
-        val normalized = messageListItemsReducer.normalize(items, enableDateSeparator)
-        commitItems(normalized)
-        emitRenderEffect(
-            MessageListRenderEffect.Replace(
-                items = normalized,
-                force = force,
-            )
-        )
-    }
+    private fun addNextPageItems(items: List<MessageListItem>) = store.addNextPage(items)
 
-    private fun addPrevPageItems(items: List<MessageListItem>) {
-        val merged = messageListItemsReducer.mergePrevPage(
-            current = _state.value.items,
-            newItems = items,
-            enableDateSeparator = enableDateSeparator
-        )
-        if (merged == _state.value.items) {
-            emitRenderEffect(MessageListRenderEffect.HideLoadingPrev)
-            return
-        }
-        commitItems(merged)
-        emitRenderEffect(MessageListRenderEffect.PrependPage(resultItems = merged))
-    }
-
-    private fun addNextPageItems(items: List<MessageListItem>) {
-        val result = messageListItemsReducer.appendNextPage(
-            current = _state.value.items,
-            newItems = items
-        )
-        if (!result.changed) return
-
-        commitItems(result.resultItems)
-        if (result.insertedItems.isEmpty()) {
-            emitRenderEffect(MessageListRenderEffect.HideLoadingNext)
-            return
-        }
-
-        emitRenderEffect(MessageListRenderEffect.AppendPage(resultItems = result.insertedItems))
-    }
-
-    private fun addRealtimeItems(items: List<MessageListItem>, isOutgoing: Boolean): Boolean {
-        val result = messageListItemsReducer.appendRealtime(
-            current = _state.value.items,
-            newItems = items
-        )
-        if (!result.changed) return false
-
-        commitItems(result.resultItems)
-        emitRenderEffect(
-            MessageListRenderEffect.AppendRealtime(
-                items = result.insertedItems,
-                scroll = if (isOutgoing) AppendRealtimeScroll.Always else AppendRealtimeScroll.IfAtEnd
-            )
-        )
-        return true
-    }
+    private fun addRealtimeItems(items: List<MessageListItem>, isOutgoing: Boolean): Boolean =
+        store.addRealtime(items, isOutgoing)
 
 
     internal fun deleteMessagesByTid(vararg tid: Long) {
-        val ids = tid.toSet()
-        val current = _state.value.items
-        val updated = current.filterNot { item ->
-            (item is MessageItem && item.message.tid in ids) ||
-                    (item is MessageListItem.DateSeparatorItem && item.messageTid in ids)
-        }
-        if (updated == current) return
-        commitItems(updated)
-        emitRenderEffect(MessageListRenderEffect.DeleteTids(tid.toList()))
-        if (messageItemsCount(updated) == 0)
+        val outcome = store.deleteByTids(tid.toList())
+        if (outcome.changed && outcome.isEmpty)
             pageStateLiveDataInternal.postValue(PageState.StateEmpty())
     }
 
     internal fun clearMessages() {
-        commitItems(emptyList())
-        emitRenderEffect(MessageListRenderEffect.Clear)
+        store.clear()
         pageStateLiveDataInternal.postValue(PageState.StateEmpty())
     }
 
     internal fun deleteAllMessagesBefore(predicate: (MessageListItem) -> Boolean) {
-        val current = _state.value.items
-        val updated = current.filterNot(predicate)
-        if (updated == current) return
-        commitItems(updated)
-        emitRenderEffect(MessageListRenderEffect.Replace(updated, force = false))
+        store.deleteAllBefore(predicate)
     }
 
     internal fun updateMessageSelection(message: SceytMessage) {
-        updateMessageItem(
+        store.updateItem(
             predicate = { it.message.tid == message.tid },
             diff = MessageDiff.DEFAULT_FALSE.copy(selectionChanged = true),
             update = { item ->
@@ -452,7 +359,7 @@ class MessageListViewModel internal constructor(
 
     internal fun clearMessageSelectionState() {
         selectedMessagesMap.clear()
-        updateAllMessageItems(
+        store.updateAllItems(
             predicate = { it.message.isSelected },
             diff = MessageDiff.DEFAULT_FALSE.copy(selectionChanged = true),
             notifyVisibleOnly = true,
@@ -461,16 +368,13 @@ class MessageListViewModel internal constructor(
     }
 
     internal fun updateMessageByTid(message: SceytMessage): Boolean {
-        var found = false
-        updateMessageItem(
+        return store.updateItem(
             predicate = { it.message.tid == message.tid },
             diffProvider = { old, new -> old.message.diff(new.message) },
             update = { item ->
-                found = true
                 item.copy(message = item.message.getUpdateMessage(message))
             }
         )
-        return found
     }
 
     internal fun messageEditedOrDeleted(updateMessage: SceytMessage) {
@@ -479,7 +383,7 @@ class MessageListViewModel internal constructor(
             return
         }
 
-        updateMessageItem(
+        store.updateItem(
             predicate = { it.message.id == updateMessage.id },
             diffProvider = { old, new ->
                 if (updateMessage.state == MessageState.Deleted &&
@@ -495,7 +399,7 @@ class MessageListViewModel internal constructor(
     }
 
     internal fun messageSelfDestructed(updateMessage: SceytMessage) {
-        updateMessageItem(
+        store.updateItem(
             predicate = { it.message.id == updateMessage.id },
             diff = null,
             update = { item ->
@@ -506,7 +410,7 @@ class MessageListViewModel internal constructor(
     }
 
     private fun updateReplyParent(updateMessage: SceytMessage) {
-        updateAllMessageItems(
+        store.updateAllItems(
             predicate = { it.message.parentMessage?.id == updateMessage.id },
             diffProvider = { old, new -> old.message.diff(new.message) },
             update = { item ->
@@ -516,7 +420,7 @@ class MessageListViewModel internal constructor(
     }
 
     internal fun applyDisplayedMarkers(marker: MessageListMarker, userMarker: SceytMarker) {
-        updateAllMessageItems(
+        store.updateAllItems(
             predicate = { marker.messageIds.contains(it.message.id) },
             notifyVisibleOnly = true,
             update = { item ->
@@ -533,77 +437,7 @@ class MessageListViewModel internal constructor(
 
     internal fun expandMessageBodyState(messageTid: Long) {
         expandedMessagesMap[messageTid] = true
-        var changed = false
-        val current = _state.value.items
-        val updated = current.map { item ->
-            if (item is MessageItem && item.message.tid == messageTid) {
-                changed = true
-                item.copy(message = item.message.copy(isBodyExpanded = true))
-            } else item
-        }
-        if (changed)
-            commitItems(updated)
-    }
-
-    private fun updateMessageItem(
-        predicate: (MessageItem) -> Boolean,
-        diff: MessageDiff? = MessageDiff.DEFAULT_FALSE,
-        diffProvider: ((MessageItem, MessageItem) -> MessageDiff?)? = null,
-        notifyVisibleOnly: Boolean = false,
-        notify: Boolean = true,
-        update: (MessageItem) -> MessageItem,
-    ): Boolean {
-        val current = _state.value.items
-        val index = current.indexOfFirst { it is MessageItem && predicate(it) }
-        if (index == -1) return false
-        val oldItem = current[index] as MessageItem
-        val updatedItem = update(oldItem)
-        if (updatedItem === oldItem) return true
-
-        val updated = current.toMutableList()
-        updated[index] = updatedItem
-        commitItems(updated)
-        emitRenderEffect(
-            MessageListRenderEffect.UpdateItem(
-                index = index,
-                item = updatedItem,
-                diff = if (diffProvider != null) diffProvider(oldItem, updatedItem) else diff,
-                notifyVisibleOnly = notifyVisibleOnly,
-                notify = notify
-            )
-        )
-        return true
-    }
-
-    private fun updateAllMessageItems(
-        predicate: (MessageItem) -> Boolean,
-        diff: MessageDiff? = MessageDiff.DEFAULT_FALSE,
-        diffProvider: ((MessageItem, MessageItem) -> MessageDiff?)? = null,
-        notifyVisibleOnly: Boolean = false,
-        update: (MessageItem) -> MessageItem,
-    ) {
-        var changed = false
-        val effects = mutableListOf<MessageListRenderEffect.UpdateItem>()
-        val updated = _state.value.items.mapIndexed { index, item ->
-            if (item is MessageItem && predicate(item)) {
-                val updatedItem = update(item)
-                if (updatedItem !== item) {
-                    changed = true
-                    effects.add(
-                        MessageListRenderEffect.UpdateItem(
-                            index = index,
-                            item = updatedItem,
-                            diff = if (diffProvider != null) diffProvider(item, updatedItem) else diff,
-                            notifyVisibleOnly = notifyVisibleOnly
-                        )
-                    )
-                    updatedItem
-                } else item
-            } else item
-        }
-        if (!changed) return
-        commitItems(updated)
-        effects.forEach(::emitRenderEffect)
+        store.setBodyExpanded(messageTid)
     }
 
     fun loadPrevMessages(
@@ -813,7 +647,7 @@ class MessageListViewModel internal constructor(
         lastSyncCenterOffsetId = 0
         needSyncMessagesWhenScrollStateIdle = false
         isPreparingToScrollToMessage.set(false)
-        _state.value = MessageListState()
+        store.reset()
     }
 
     private suspend fun getCompareMessage(
@@ -836,22 +670,22 @@ class MessageListViewModel internal constructor(
     private fun checkToHideLoadingMoreItemByLoadType(loadType: PaginationResponse.LoadType) {
         when (loadType) {
             LoadPrev if !hasPrevDb -> {
-                commitItems(_state.value.items.filterNot { it is MessageListItem.LoadingPrevItem })
+                store.removeItems { it is MessageListItem.LoadingPrevItem }
                 emitRenderEffect(MessageListRenderEffect.HideLoadingPrev)
             }
 
             LoadNext if !hasNextDb -> {
-                commitItems(_state.value.items.filterNot { it is MessageListItem.LoadingNextItem })
+                store.removeItems { it is MessageListItem.LoadingNextItem }
                 emitRenderEffect(MessageListRenderEffect.HideLoadingNext)
             }
 
             LoadNear -> {
                 if (!hasPrevDb) {
-                    commitItems(_state.value.items.filterNot { it is MessageListItem.LoadingPrevItem })
+                    store.removeItems { it is MessageListItem.LoadingPrevItem }
                     emitRenderEffect(MessageListRenderEffect.HideLoadingPrev)
                 }
                 if (!hasNextDb) {
-                    commitItems(_state.value.items.filterNot { it is MessageListItem.LoadingNextItem })
+                    store.removeItems { it is MessageListItem.LoadingNextItem }
                     emitRenderEffect(MessageListRenderEffect.HideLoadingNext)
                 }
             }
@@ -931,7 +765,7 @@ class MessageListViewModel internal constructor(
 
     private suspend fun initPaginationDbResponse(
         response: PaginationResponse.DBResponse<SceytMessage>
-    ) = messageListMutationMutex.withLock {
+    ) = store.withMutation {
         if (response.offset == 0) {
             replaceMessages(
                 items = mapToMessageListItem(
@@ -1000,12 +834,12 @@ class MessageListViewModel internal constructor(
 
     private suspend fun initPaginationServerResponse(
         response: PaginationResponse.ServerResponse<SceytMessage>
-    ) = messageListMutationMutex.withLock {
+    ) = store.withMutation {
         when (response.data) {
             is SceytResponse.Success -> {
                 if (response.hasDiff) {
                     val dataToMap = if (response.dbResultWasEmpty) {
-                        response.data.data ?: return@withLock
+                        response.data.data ?: return@withMutation
                     } else response.cacheData
 
                     val newMessages = mapToMessageListItem(
@@ -1052,12 +886,12 @@ class MessageListViewModel internal constructor(
     internal suspend fun appendSyncedMessages(
         messages: List<SceytMessage>,
         scrollToLastAfterAppend: Boolean,
-    ) = messageListMutationMutex.withLock {
+    ) = store.withMutation {
         val currentMessages = currentMessageItems()
         val newMessages = messages.minus(currentMessages.toSet())
-        if (newMessages.isEmpty()) return@withLock
+        if (newMessages.isEmpty()) return@withMutation
 
-        addNextPageItems(
+        store.mergeSynced(
             mapToMessageListItem(
                 data = newMessages,
                 hasNext = false,
@@ -1066,7 +900,6 @@ class MessageListViewModel internal constructor(
                 enableDateSeparator = enableDateSeparator
             )
         )
-        sortMessageItems()
         if (scrollToLastAfterAppend)
             emitRenderEffect(MessageListRenderEffect.ScrollToLastMessage)
     }
@@ -1074,17 +907,13 @@ class MessageListViewModel internal constructor(
     internal suspend fun mergeMissingMessagesAroundCenter(
         data: SyncNearMessagesResult,
         topOffset: Int,
-    ) = messageListMutationMutex.withLock {
-        if (data.missingMessages.isEmpty()) return@withLock
-
-        val current = currentMessageListItems().toMutableList()
-        current.findIndexed { item ->
-            item is MessageItem && item.message.id == data.centerMessageId
-        } ?: return@withLock
+    ) = store.withMutation {
+        if (data.missingMessages.isEmpty()) return@withMutation
 
         val compareMessage = getCompareMessage(LoadNear, data.missingMessages)
-        current.addAll(
-            mapToMessageListItem(
+        val merged = store.mergeAroundCenter(
+            centerMessageId = data.centerMessageId,
+            newItems = mapToMessageListItem(
                 data = data.missingMessages,
                 hasNext = false,
                 hasPrev = false,
@@ -1093,12 +922,8 @@ class MessageListViewModel internal constructor(
                 enableDateSeparator = enableDateSeparator
             )
         )
-        current.sortBy { item -> item.getMessageCreatedAt() }
+        if (!merged) return@withMutation
 
-        val filtered = LinkedHashSet<MessageListItem>()
-        filtered.addAll(current)
-        val items = filtered.toList()
-        replaceMessages(items = items, force = false)
         emitRenderEffect(
             MessageListRenderEffect.ScrollToMessage(
                 messageId = data.centerMessageId,
@@ -1109,7 +934,7 @@ class MessageListViewModel internal constructor(
     }
 
     internal suspend fun appendIncomingMessage(message: SceytMessage): Boolean {
-        return messageListMutationMutex.withLock {
+        return store.withMutation {
             appendIncomingMessageInternal(message)
         }
     }
@@ -1130,7 +955,7 @@ class MessageListViewModel internal constructor(
     }
 
     internal suspend fun appendOutgoingMessage(message: SceytMessage): Boolean {
-        return messageListMutationMutex.withLock {
+        return store.withMutation {
             appendOutgoingMessageInternal(message)
         }
     }
@@ -1243,7 +1068,7 @@ class MessageListViewModel internal constructor(
                             message = message.copy(attachments = attachments)
                         )
                         withContext(mainDispatcher) {
-                            updateMessageItem(
+                            store.updateItem(
                                 predicate = { it.message.tid == data.messageTid },
                                 diff = MessageDiff.DEFAULT_FALSE.copy(filesChanged = true),
                                 notifyVisibleOnly = !updateRecyclerView,
@@ -1271,7 +1096,7 @@ class MessageListViewModel internal constructor(
                             )))
 
                     withContext(mainDispatcher) {
-                        updateMessageItem(
+                        store.updateItem(
                             predicate = { it.message.tid == message.tid },
                             diff = MessageDiff.DEFAULT_FALSE.copy(replyContainerChanged = true),
                             update = { updatedItem }
@@ -1282,14 +1107,6 @@ class MessageListViewModel internal constructor(
         }
     }
 
-    internal fun sortMessageItems() {
-        val sorted = currentMessageListItems().sortedWith(
-            com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.comporators.MessageItemComparator()
-        )
-        if (sorted == currentMessageListItems()) return
-        commitItems(sorted)
-        emitRenderEffect(MessageListRenderEffect.Sort(sorted))
-    }
 
     fun sendPendingMessages() {
         viewModelScope.launch(Dispatchers.IO) {

@@ -12,6 +12,57 @@ internal class MessageListItemsReducer {
         val changed: Boolean,
     )
 
+    data class DeleteResult(
+        val resultItems: List<MessageListItem>,
+        val changed: Boolean,
+        // False when a day header had to be reassigned to a surviving same-day message: the adapter's
+        // incremental delete-by-tid can't express that, so the caller must emit a full Replace instead.
+        val canUseIncrementalDelete: Boolean,
+    )
+
+    /**
+     * Removes message items by tid. A [MessageListItem.DateSeparatorItem] owned by a deleted message is
+     * reassigned to the next surviving same-day message (so the day header survives), or dropped when no
+     * same-day message remains.
+     */
+    fun deleteByTIds(
+        items: List<MessageListItem>,
+        tIds: Set<Long>,
+        enableDateSeparator: Boolean,
+    ): DeleteResult {
+        var reassignedSeparator = false
+        val result = ArrayList<MessageListItem>(items.size)
+        items.forEachIndexed { index, item ->
+            when (item) {
+                is MessageItem if item.message.tid in tIds -> Unit // drop deleted message
+                is MessageListItem.DateSeparatorItem if item.messageTid in tIds -> {
+                    val survivor = items
+                        .subList(index + 1, items.size)
+                        .firstOrNull { it is MessageItem && it.message.tid !in tIds } as? MessageItem
+                    if (survivor != null &&
+                        DateTimeUtil.isSameDay(item.createdAt, survivor.message.createdAt)
+                    ) {
+                        result.add(
+                            item.copy(
+                                messageTid = survivor.message.tid,
+                                messageId = survivor.message.id
+                            )
+                        )
+                        reassignedSeparator = true
+                    } // else: no same-day survivor, drop the header
+                }
+
+                else -> result.add(item)
+            }
+        }
+        val normalized = normalize(result, enableDateSeparator)
+        return DeleteResult(
+            resultItems = normalized,
+            changed = normalized != items,
+            canUseIncrementalDelete = !reassignedSeparator && normalized == result
+        )
+    }
+
     fun normalize(
         items: List<MessageListItem>,
         enableDateSeparator: Boolean,
@@ -127,5 +178,25 @@ internal class MessageListItemsReducer {
             insertedItems = insertedItems.toList(),
             changed = true
         )
+    }
+
+    fun mergeAroundCenter(
+        current: List<MessageListItem>,
+        newItems: List<MessageListItem>,
+        centerMessageId: Long,
+        enableDateSeparator: Boolean,
+    ): List<MessageListItem>? {
+        if (newItems.isEmpty()) return null
+        val hasCenter = current.any { item ->
+            item is MessageItem && item.message.id == centerMessageId
+        }
+        if (!hasCenter) return null
+
+        val merged = (current + newItems).toMutableList()
+        merged.sortBy { item -> item.getMessageCreatedAt() }
+
+        val deduped = LinkedHashSet<MessageListItem>()
+        deduped.addAll(merged)
+        return normalize(deduped.toList(), enableDateSeparator)
     }
 }
