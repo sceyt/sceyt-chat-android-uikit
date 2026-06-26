@@ -25,7 +25,7 @@ internal class MessageListItemsReducer {
      * reassigned to the next surviving same-day message (so the day header survives), or dropped when no
      * same-day message remains.
      */
-    fun deleteByTIds(
+    fun deleteByTids(
         items: List<MessageListItem>,
         tIds: Set<Long>,
         enableDateSeparator: Boolean,

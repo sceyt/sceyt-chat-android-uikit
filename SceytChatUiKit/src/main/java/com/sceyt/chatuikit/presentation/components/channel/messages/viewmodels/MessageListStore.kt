@@ -189,7 +189,7 @@ internal class MessageListStore(
     }
 
     fun deleteByTids(tids: List<Long>): DeleteOutcome = mutate { current ->
-        val result = reducer.deleteByTIds(current, tids.toSet(), enableDateSeparator)
+        val result = reducer.deleteByTids(current, tids.toSet(), enableDateSeparator)
         if (!result.changed) {
             MutationResult(current, changed = false, effects = emptyList(), value = DeleteOutcome(changed = false, isEmpty = false))
         } else {
