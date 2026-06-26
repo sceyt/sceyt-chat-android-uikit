@@ -192,11 +192,12 @@ internal class MessageListItemsReducer {
         }
         if (!hasCenter) return null
 
-        val merged = (current + newItems).toMutableList()
-        merged.sortBy { item -> item.getMessageCreatedAt() }
+        val sorted = (current + newItems).sortedBy { item -> item.getMessageCreatedAt() }
 
-        val deduped = LinkedHashSet<MessageListItem>()
-        deduped.addAll(merged)
-        return normalize(deduped.toList(), enableDateSeparator)
+        val seenTids = HashSet<Long>()
+        val deduped = sorted.filter { item ->
+            if (item is MessageItem) seenTids.add(item.message.tid) else true
+        }
+        return normalize(deduped, enableDateSeparator)
     }
 }
