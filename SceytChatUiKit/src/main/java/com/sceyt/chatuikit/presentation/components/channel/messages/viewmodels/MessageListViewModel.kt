@@ -196,8 +196,6 @@ class MessageListViewModel internal constructor(
     val channel: SceytChannel get() = _channel
     val conversationId: Long get() = _conversationId
 
-    private var enableDateSeparator = true
-
     internal val state get() = store.state
     internal val renderEffects get() = store.renderEffects
 
@@ -309,7 +307,6 @@ class MessageListViewModel internal constructor(
     }
 
     fun configureMessageList(enableDateSeparator: Boolean) {
-        this.enableDateSeparator = enableDateSeparator
         store.enableDateSeparator = enableDateSeparator
     }
 
@@ -545,25 +542,6 @@ class MessageListViewModel internal constructor(
         }
     }
 
-    @Suppress("unused")
-    fun loadNewestMessages(loadKey: LoadKeyData) {
-        setPagingLoadingStarted(LoadNewest)
-
-        loadNearJob?.cancel()
-        viewModelScope.launch(ioDispatcher) {
-            messageInteractor.loadNewestMessages(
-                conversationId = conversationId,
-                replyInThread = replyInThread,
-                loadKey = loadKey,
-                ignoreDb = false
-            ).collect { response ->
-                withContext(mainDispatcher) {
-                    initPaginationResponse(response)
-                }
-            }
-        }
-    }
-
     fun syncCenteredMessage(messageId: Long) {
         viewModelScope.launch(ioDispatcher) {
             val response = messageInteractor.syncNearMessages(
@@ -772,7 +750,6 @@ class MessageListViewModel internal constructor(
                     data = response.data,
                     hasNext = response.hasNext,
                     hasPrev = response.hasPrev,
-                    enableDateSeparator = enableDateSeparator
                 ),
                 force = true,
             )
@@ -784,7 +761,6 @@ class MessageListViewModel internal constructor(
                             data = response.data,
                             hasNext = response.hasNext,
                             hasPrev = response.hasPrev,
-                            enableDateSeparator = enableDateSeparator
                         )
                     )
                 }
@@ -798,7 +774,6 @@ class MessageListViewModel internal constructor(
                             hasNext = hasNext,
                             hasPrev = response.hasPrev,
                             compareMessage = compareMessage,
-                            enableDateSeparator = enableDateSeparator
                         )
                     )
                 }
@@ -810,7 +785,6 @@ class MessageListViewModel internal constructor(
                             data = response.data,
                             hasNext = hasNext,
                             hasPrev = response.hasPrev,
-                            enableDateSeparator = enableDateSeparator
                         ),
                         force = true
                     )
@@ -822,7 +796,6 @@ class MessageListViewModel internal constructor(
                             data = response.data,
                             hasNext = response.hasNext,
                             hasPrev = response.hasPrev,
-                            enableDateSeparator = enableDateSeparator
                         ),
                         force = true
                     )
@@ -847,7 +820,6 @@ class MessageListViewModel internal constructor(
                         hasNext = response.hasNext,
                         hasPrev = response.hasPrev,
                         compareMessage = getCompareMessage(response.loadType, dataToMap),
-                        enableDateSeparator = enableDateSeparator
                     )
 
                     if (response.dbResultWasEmpty) {
@@ -897,7 +869,6 @@ class MessageListViewModel internal constructor(
                 hasNext = false,
                 hasPrev = false,
                 compareMessage = currentLastMessageItem()?.message,
-                enableDateSeparator = enableDateSeparator
             )
         )
         if (scrollToLastAfterAppend)
@@ -919,7 +890,6 @@ class MessageListViewModel internal constructor(
                 hasPrev = false,
                 compareMessage = compareMessage,
                 ignoreUnreadMessagesSeparator = true,
-                enableDateSeparator = enableDateSeparator
             )
         )
         if (!merged) return@withMutation
@@ -946,7 +916,6 @@ class MessageListViewModel internal constructor(
             hasNext = false,
             hasPrev = false,
             compareMessage = currentLastMessageItem()?.message,
-            enableDateSeparator = enableDateSeparator
         )
         val added = addRealtimeItems(items, isOutgoing = false)
         if (added)
@@ -973,7 +942,6 @@ class MessageListViewModel internal constructor(
             hasNext = false,
             hasPrev = false,
             compareMessage = currentLastMessageItem()?.message,
-            enableDateSeparator = enableDateSeparator
         )
         val added = addRealtimeItems(items, isOutgoing = true)
         if (added)
@@ -1400,7 +1368,6 @@ class MessageListViewModel internal constructor(
         data: List<SceytMessage>?, hasNext: Boolean, hasPrev: Boolean,
         compareMessage: SceytMessage? = null,
         ignoreUnreadMessagesSeparator: Boolean = false,
-        enableDateSeparator: Boolean,
     ): List<MessageListItem> = withContext(defaultDispatcher) {
         messageListItemMapper.map(
             data = data,
@@ -1408,7 +1375,7 @@ class MessageListViewModel internal constructor(
             hasPrev = hasPrev,
             compareMessage = compareMessage,
             ignoreUnreadMessagesSeparator = ignoreUnreadMessagesSeparator,
-            enableDateSeparator = enableDateSeparator,
+            enableDateSeparator = store.enableDateSeparator,
             context = messageListItemMappingContext()
         )
     }
