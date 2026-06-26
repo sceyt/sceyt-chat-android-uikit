@@ -30,7 +30,6 @@ import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.MarkerType
-import com.sceyt.chatuikit.data.models.messages.PollOption
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMarker
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
@@ -183,7 +182,6 @@ class MessageListViewModel internal constructor(
     private var loadPrevJob: Job? = null
     private var loadNextJob: Job? = null
     private var loadNearJob: Job? = null
-    private var toggleVoteJob: Job? = null
     internal var mentionJob: Job? = null
 
     private companion object {
@@ -249,6 +247,8 @@ class MessageListViewModel internal constructor(
     internal val isPreparingToScrollToMessage = AtomicBoolean(false)
     private val mentionsController = createUnreadMentionsController()
     private val searchController = createMessageSearchController()
+    private val reactionController = createReactionController()
+    private val pollController = createPollController()
     val searchResult get() = searchController.searchResult
 
 
@@ -770,6 +770,25 @@ class MessageListViewModel internal constructor(
         isPreparingToScrollToMessage = isPreparingToScrollToMessage,
         messageListQueryLimit = { SceytChatUIKit.config.queryLimits.messageListQueryLimit },
         onScrollToSearchMessage = { _onScrollToSearchMessageLiveData.postValue(it) },
+    )
+
+    private fun createReactionController() = ReactionController(
+        scope = viewModelScope,
+        reactionInteractor = messageReactionInteractor,
+        channelId = { channel.id },
+        notifyResponse = { response, showError ->
+            notifyPageStateWithResponse(response, showError = showError)
+        },
+        ioDispatcher = ioDispatcher,
+    )
+
+    private fun createPollController() = PollController(
+        scope = viewModelScope,
+        pollInteractor = messagePollInteractor,
+        channelId = { channel.id },
+        notifyResponse = { response, showError ->
+            notifyPageStateWithResponse(response, showError = showError)
+        },
     )
 
     private fun onPendingChannelCreated(newChannel: SceytChannel) {
@@ -1320,29 +1339,12 @@ class MessageListViewModel internal constructor(
         reason: String = "",
         enforceUnique: Boolean = false,
     ) {
-        viewModelScope.launch(Dispatchers.IO) {
-            val response = messageReactionInteractor.addReaction(
-                channelId = channel.id,
-                messageId = message.id,
-                key = scoreKey,
-                score = score,
-                reason = reason,
-                enforceUnique = enforceUnique
-            )
-            notifyPageStateWithResponse(response, showError = false)
-        }
+        reactionController.add(message, scoreKey, score, reason, enforceUnique)
     }
 
     @SuppressWarnings("WeakerAccess")
     fun deleteReaction(message: SceytMessage, scoreKey: String) {
-        viewModelScope.launch(Dispatchers.IO) {
-            val response = messageReactionInteractor.deleteReaction(
-                channelId = channel.id,
-                messageId = message.id,
-                scoreKey = scoreKey
-            )
-            notifyPageStateWithResponse(response, showError = false)
-        }
+        reactionController.delete(message, scoreKey)
     }
 
     fun sendMessage(message: Message) {
@@ -1629,75 +1631,11 @@ class MessageListViewModel internal constructor(
     }
 
     internal fun onReactionEvent(event: ReactionEvent) {
-        when (event) {
-            is ReactionEvent.AddReaction -> {
-                addReaction(event.message, event.scoreKey)
-            }
-
-            is ReactionEvent.RemoveReaction -> {
-                deleteReaction(event.message, event.scoreKey)
-            }
-        }
+        reactionController.onEvent(event)
     }
 
     internal fun onPollEvent(event: PollEvent) {
-        if (toggleVoteJob?.isActive == true) return
-        toggleVoteJob = when (event) {
-            is PollEvent.ToggleVote -> {
-                togglePollVote(event.message, event.option)
-            }
-
-            is PollEvent.RetractVote -> {
-                retractVote(event.message)
-            }
-
-            is PollEvent.EndVote -> {
-                endVote(event.message)
-            }
-        }
-    }
-
-    private fun togglePollVote(
-        message: SceytMessage,
-        option: PollOption,
-    ) = viewModelScope.launch {
-        val poll = message.poll ?: return@launch
-        val response = messagePollInteractor.toggleVote(
-            channelId = channel.id,
-            messageTid = message.tid,
-            pollId = poll.id,
-            optionId = option.id
-        )
-        notifyPageStateWithResponse(response, showError = false)
-    }
-
-
-    private fun retractVote(
-        message: SceytMessage,
-    ) = viewModelScope.launch {
-        val poll = message.poll ?: return@launch
-        if (!poll.allowVoteRetract || poll.ownVotes.isEmpty()) return@launch
-
-        val response = messagePollInteractor.retractVote(
-            channelId = channel.id,
-            messageTid = message.tid,
-            pollId = poll.id
-        )
-        notifyPageStateWithResponse(response, showError = true)
-    }
-
-    private fun endVote(
-        message: SceytMessage,
-    ) = viewModelScope.launch {
-        val poll = message.poll ?: return@launch
-        if (poll.closed) return@launch
-
-        val response = messagePollInteractor.endPoll(
-            channelId = channel.id,
-            messageTid = message.tid,
-            pollId = poll.id
-        )
-        notifyPageStateWithResponse(response, showError = true)
+        pollController.onEvent(event)
     }
 
     internal fun needMediaInfo(data: NeedMediaInfoData) {
