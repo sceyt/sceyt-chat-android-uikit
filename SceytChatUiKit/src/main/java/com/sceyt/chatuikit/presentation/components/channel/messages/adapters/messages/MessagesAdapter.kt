@@ -2,7 +2,6 @@ package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.me
 
 import android.annotation.SuppressLint
 import android.view.ViewGroup
-import androidx.core.util.Predicate
 import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
@@ -109,8 +108,9 @@ class MessagesAdapter(
         removeLoadingNext()
         if (items.isEmpty()) return
 
+        val insertStart = messages.size
         messages.addAll(items)
-        notifyItemRangeInserted(messages.lastIndex, items.size)
+        notifyItemRangeInserted(insertStart, items.size)
         onListCommittedListener?.invoke()
     }
 

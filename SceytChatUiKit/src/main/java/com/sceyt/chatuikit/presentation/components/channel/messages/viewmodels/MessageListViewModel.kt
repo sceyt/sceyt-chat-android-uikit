@@ -3,7 +3,6 @@ package com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels
 import android.text.Editable
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.sceyt.chat.models.Types
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.DeleteMessageType
 import com.sceyt.chat.models.message.Message
@@ -29,16 +28,13 @@ import com.sceyt.chatuikit.data.models.channels.DraftAttachment
 import com.sceyt.chatuikit.data.models.channels.DraftMessage
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
-import com.sceyt.chatuikit.data.models.fold
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.MarkerType
-import com.sceyt.chatuikit.data.models.messages.MessageId
 import com.sceyt.chatuikit.data.models.messages.PollOption
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMarker
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.onErrorNonNull
-import com.sceyt.chatuikit.data.models.onSuccess
 import com.sceyt.chatuikit.data.models.onSuccessNotNull
 import com.sceyt.chatuikit.data.repositories.Keys.KEY_VIEW_ONCE_INFO_SHOWN
 import com.sceyt.chatuikit.domain.usecases.PauseOrResumeTransferUseCase
@@ -79,7 +75,6 @@ import com.sceyt.chatuikit.persistence.mappers.toBodyAttribute
 import com.sceyt.chatuikit.persistence.mappers.toVoiceAttachmentData
 import com.sceyt.chatuikit.persistence.repositories.SceytSharedPreference
 import com.sceyt.chatuikit.presentation.components.channel.input.data.InputUserAction
-import com.sceyt.chatuikit.presentation.components.channel.input.data.SearchResult
 import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
 import com.sceyt.chatuikit.presentation.components.channel.messages.PendingMessageStatusReconciler
@@ -189,7 +184,6 @@ class MessageListViewModel internal constructor(
     private var loadNextJob: Job? = null
     private var loadNearJob: Job? = null
     private var toggleVoteJob: Job? = null
-    private var searchJob: Job? = null
     internal var mentionJob: Job? = null
 
     private companion object {
@@ -253,10 +247,9 @@ class MessageListViewModel internal constructor(
 
     // Search messages
     internal val isPreparingToScrollToMessage = AtomicBoolean(false)
-    private val isLoadingNearToSearchMessagesServer = AtomicBoolean(false)
-    private var unreadMentionState = UnreadMentionState()
-    private var _searchResult = MutableLiveData<SearchResult>()
-    var searchResult = _searchResult.asLiveData()
+    private val mentionsController = createUnreadMentionsController()
+    private val searchController = createMessageSearchController()
+    val searchResult get() = searchController.searchResult
 
 
     init {
@@ -265,12 +258,12 @@ class MessageListViewModel internal constructor(
                 channel.id == this.channel.id /*&& it.second.replyInThread == replyInThread*/
             }
             .map { (_, message) ->
-                checkMaybeHaveUnreadMentionOnNewMessage(message)
+                mentionsController.onNewMessage(message)
                 initMessageInfoData(message)
             }
 
         editedOrDeletedMessagesFlow.onEach { message ->
-            checkUnreadMentionsOnMessageUpdated(message)
+            mentionsController.onMessageUpdated(message)
         }.launchIn(viewModelScope)
 
         channelMembersEventsFlow
@@ -317,9 +310,7 @@ class MessageListViewModel internal constructor(
         /*onOutGoingThreadMessageFlow = MessageEventsObserver.onOutgoingMessageFlow
             .filter { it.channelId == channel.id && it.replyInThread }*/
 
-        if (channel.newMentionCount > 0) {
-            getUnreadMentions(0)
-        }
+        mentionsController.onInit()
 
         loadInitialMessages()
     }
@@ -751,67 +742,7 @@ class MessageListViewModel internal constructor(
     }
 
     fun searchMessages(query: String) {
-        if (_searchResult.value?.searchQuery == query)
-            return
-
-        _searchResult.postValue(SearchResult(searchQuery = query, isLoading = true))
-
-        searchJob?.cancel()
-        searchJob = viewModelScope.launch {
-            messageInteractor.searchMessages(
-                conversationId = conversationId,
-                replyInThread = replyInThread,
-                query = query
-            ).onSuccess { response ->
-                val messages = response.data.sortedBy { it.id }
-                _searchResult.postValue(
-                    SearchResult(
-                        searchQuery = query,
-                        currentIndex = 0,
-                        messages = messages,
-                        hasNext = response.hasNext,
-                        isLoading = false
-                    )
-                )
-                _onScrollToSearchMessageLiveData.postValue(
-                    messages.firstOrNull() ?: return@launch
-                )
-            }
-        }
-    }
-
-    private fun getUnreadMentions(messageId: Long, scrollTo: Boolean = false) {
-        if (unreadMentionState.isLoadingMore) return
-        unreadMentionState = unreadMentionState.copy(isLoadingMore = true)
-        viewModelScope.launch {
-            messageInteractor.getUnreadMentions(
-                conversationId = conversationId,
-                direction = Types.Direction.DirectionNext,
-                messageId = messageId
-            ).fold(
-                onSuccess = {
-                    val unreadMentions = if (messageId == 0L)
-                        it.data.toSet() else unreadMentionState.messageIds.plus(it.data)
-
-                    unreadMentionState = unreadMentionState.copy(
-                        messageIds = unreadMentions,
-                        hasMore = it.hasNext,
-                        isLoadingMore = false
-                    )
-                    if (channel.newMentionCount > 0 && unreadMentions.isEmpty()) {
-                        updateChannel {
-                            copy(newMentionCount = 0)
-                        }
-                    }
-
-                    if (scrollTo)
-                        prepareToScrollToUnreadMention()
-                },
-                onError = {
-                    unreadMentionState = unreadMentionState.copy(isLoadingMore = false)
-                }
-            )
-        }
+        searchController.search(query)
     }
 
     private fun updateChannel(updateAction: SceytChannel.() -> SceytChannel) {
@@ -819,6 +750,27 @@ class MessageListViewModel internal constructor(
         _conversationId = _channel.id
         _onChannelUpdatedEventFlow.tryEmit(_channel)
     }
+
+    private fun createUnreadMentionsController() = UnreadMentionsController(
+        scope = viewModelScope,
+        messageInteractor = messageInteractor,
+        channelInteractor = channelInteractor,
+        currentChannel = { channel },
+        conversationId = { conversationId },
+        updateChannel = { action -> updateChannel(action) },
+        onScrollToMention = { _onScrollToUnredMentionMessageLiveData.postValue(it) },
+        currentUserId = { SceytChatUIKit.currentUserId },
+    )
+
+    private fun createMessageSearchController() = MessageSearchController(
+        scope = viewModelScope,
+        messageInteractor = messageInteractor,
+        conversationId = { conversationId },
+        replyInThread = replyInThread,
+        isPreparingToScrollToMessage = isPreparingToScrollToMessage,
+        messageListQueryLimit = { SceytChatUIKit.config.queryLimits.messageListQueryLimit },
+        onScrollToSearchMessage = { _onScrollToSearchMessageLiveData.postValue(it) },
+    )
 
     private fun onPendingChannelCreated(newChannel: SceytChannel) {
         val pendingChannelId = channel.id
@@ -843,40 +795,6 @@ class MessageListViewModel internal constructor(
         needSyncMessagesWhenScrollStateIdle = false
         isPreparingToScrollToMessage.set(false)
         _state.value = MessageListState()
-    }
-
-    private fun getNextUnreadMention(): MessageId? = with(unreadMentionState) {
-        if (messageIds.isEmpty()) {
-            if (channel.newMentionCount > 0) {
-                getUnreadMentions(0, true)
-            }
-            return@with null
-        }
-
-        val ids = messageIds.toMutableSet()
-        val element = ids.first()
-        ids.remove(element)
-
-        unreadMentionState = unreadMentionState.copy(messageIds = ids)
-
-        if (unreadMentionState.hasMore && messageIds.size < 5) {
-            getUnreadMentions(messageIds.last())
-        }
-        return@with MessageId(element)
-    }
-
-    private fun loadNextSearchedMessages() {
-        if (isLoadingNearToSearchMessagesServer.getAndSet(true)) return
-        viewModelScope.launch {
-            messageInteractor.loadNextSearchMessages().onSuccess {
-                val messages = it.data
-                val oldValue = _searchResult.value ?: return@launch
-                val loadedMessages = ArrayList(oldValue.messages)
-                val newMessages: List<SceytMessage> = loadedMessages.plus(messages.reversed())
-                _searchResult.postValue(oldValue.copy(messages = newMessages, hasNext = it.hasNext))
-            }
-            isLoadingNearToSearchMessagesServer.set(false)
-        }
     }
 
     private suspend fun getCompareMessage(
@@ -1354,56 +1272,6 @@ class MessageListViewModel internal constructor(
         emitRenderEffect(MessageListRenderEffect.Sort(sorted))
     }
 
-    private fun checkMaybeHaveUnreadMentionOnNewMessage(message: SceytMessage) {
-        if (!message.incoming || message.displayCount.toInt() == 0 || message.disableMentionsCount)
-            return
-
-        if (message.mentionedUsers?.any { it.id == SceytChatUIKit.currentUserId } == true) {
-            unreadMentionState = unreadMentionState.copy(
-                messageIds = unreadMentionState.messageIds.plus(message.id)
-            )
-
-            updateChannel {
-                copy(newMentionCount = newMentionCount + 1)
-            }
-        }
-    }
-
-    private fun checkUnreadMentionsOnMessageUpdated(message: SceytMessage) {
-        if (!message.incoming || message.displayCount.toInt() == 0) return
-        var newMentionsCount = channel.newMentionCount
-        when {
-            unreadMentionState.messageIds.contains(message.id) -> {
-                if (message.mentionedUsers.orEmpty()
-                        .none { it.id == SceytChatUIKit.currentUserId }
-                ) {
-                    unreadMentionState = unreadMentionState.copy(
-                        messageIds = unreadMentionState.messageIds.minus(message.id)
-                    )
-                    newMentionsCount = channel.newMentionCount - 1
-                }
-            }
-
-            else -> {
-                if (message.mentionedUsers.orEmpty()
-                        .any { it.id == SceytChatUIKit.currentUserId }
-                ) {
-                    unreadMentionState = unreadMentionState.copy(
-                        messageIds = unreadMentionState.messageIds.plus(message.id)
-                    )
-                    newMentionsCount = channel.newMentionCount + 1
-                }
-            }
-        }
-
-        if (channel.newMentionCount != newMentionsCount) {
-            viewModelScope.launch {
-                // Get channel form server to update new mentions count
-                channelInteractor.getChannelFromServer(channel.id)
-            }
-        }
-    }
-
     fun sendPendingMessages() {
         viewModelScope.launch(Dispatchers.IO) {
             messageInteractor.sendPendingMessages(conversationId)
@@ -1435,9 +1303,7 @@ class MessageListViewModel internal constructor(
     }
 
     fun prepareToScrollToUnreadMention() {
-        getNextUnreadMention()?.let {
-            _onScrollToUnredMentionMessageLiveData.postValue(it.messageId)
-        }
+        mentionsController.prepareToScrollToNext()
     }
 
     fun prepareToPauseOrResumeUpload(item: FileListItem) {
@@ -1526,14 +1392,10 @@ class MessageListViewModel internal constructor(
             )
             _messageMarkerLiveData.postValue(response)
 
-            // Cleat unread mentions when message is read
-            if (unreadMentionState.messageIds.isNotEmpty()) {
-                response.forEach {
-                    it.onSuccessNotNull { marker ->
-                        unreadMentionState = unreadMentionState.copy(
-                            messageIds = unreadMentionState.messageIds.minus(marker.messageIds.toSet())
-                        )
-                    }
+            // Clear unread mentions when message is read
+            response.forEach {
+                it.onSuccessNotNull { marker ->
+                    mentionsController.removeReadMentions(marker.messageIds)
                 }
             }
         }
@@ -1872,23 +1734,7 @@ class MessageListViewModel internal constructor(
     }
 
     internal fun scrollToSearchMessage(isPrev: Boolean) {
-        if (isPreparingToScrollToMessage.get()) return
-        val searchResult = searchResult.value ?: return
-        val messages = searchResult.messages
-        val nextIndex = if (isPrev) {
-            searchResult.currentIndex + 1
-        } else searchResult.currentIndex - 1
-        if (nextIndex < 0 || nextIndex >= messages.size)
-            return
-
-        isPreparingToScrollToMessage.set(true)
-        _searchResult.postValue(searchResult.copy(currentIndex = nextIndex))
-        _onScrollToSearchMessageLiveData.postValue(messages[nextIndex])
-
-        val queryLimit = SceytChatUIKit.config.queryLimits.messageListQueryLimit
-        if (searchResult.hasNext && messages.size - nextIndex < queryLimit / 2) {
-            loadNextSearchedMessages()
-        }
+        searchController.scrollToSearchMessage(isPrev)
     }
 
     private fun onChannelMemberEvent(eventData: ChannelMembersEventData) {
