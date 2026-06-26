@@ -99,9 +99,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.withContext
@@ -198,7 +200,7 @@ class MessageListViewModel(
     // Search messages
     internal val isPreparingToScrollToMessage = AtomicBoolean(false)
     private val isLoadingNearToSearchMessagesServer = AtomicBoolean(false)
-    private var unreadMentionState = UnreadMentionState()
+    private val unreadMentionState = MutableStateFlow(UnreadMentionState())
     private var _searchResult = MutableLiveData<SearchResult>()
     var searchResult = _searchResult.asLiveData()
 
@@ -432,23 +434,26 @@ class MessageListViewModel(
     }
 
     private fun getUnreadMentions(messageId: Long, scrollTo: Boolean = false) {
-        if (unreadMentionState.isLoadingMore) return
-        unreadMentionState = unreadMentionState.copy(isLoadingMore = true)
+        if (unreadMentionState.value.isLoadingMore) return
+        unreadMentionState.update { it.copy(isLoadingMore = true) }
         viewModelScope.launch {
             messageInteractor.getUnreadMentions(
                 conversationId = conversationId,
                 direction = Types.Direction.DirectionNext,
                 messageId = messageId
             ).fold(
-                onSuccess = {
+                onSuccess = { response ->
                     val unreadMentions = if (messageId == 0L)
-                        it.data.toSet() else unreadMentionState.messageIds.plus(it.data)
+                        response.data.toSet()
+                    else unreadMentionState.value.messageIds.plus(response.data)
 
-                    unreadMentionState = unreadMentionState.copy(
-                        messageIds = unreadMentions,
-                        hasMore = it.hasNext,
-                        isLoadingMore = false
-                    )
+                    unreadMentionState.update { state ->
+                        state.copy(
+                            messageIds = unreadMentions,
+                            hasMore = response.hasNext,
+                            isLoadingMore = false
+                        )
+                    }
                     if (channel.newMentionCount > 0 && unreadMentions.isEmpty()) {
                         updateChannel {
                             copy(newMentionCount = 0)
@@ -459,7 +464,7 @@ class MessageListViewModel(
                         prepareToScrollToUnreadMention()
                 },
                 onError = {
-                    unreadMentionState = unreadMentionState.copy(isLoadingMore = false)
+                    unreadMentionState.update { it.copy(isLoadingMore = false) }
                 }
             )
         }
@@ -495,24 +500,23 @@ class MessageListViewModel(
         isPreparingToScrollToMessage.set(false)
     }
 
-    private fun getNextUnreadMention(): MessageId? = with(unreadMentionState) {
-        if (messageIds.isEmpty()) {
+    private fun getNextUnreadMention(): MessageId? {
+        val current = unreadMentionState.value
+        if (current.messageIds.isEmpty()) {
             if (channel.newMentionCount > 0) {
                 getUnreadMentions(0, true)
             }
-            return@with null
+            return null
         }
 
-        val ids = messageIds.toMutableSet()
-        val element = ids.first()
-        ids.remove(element)
+        val element = current.messageIds.first()
+        val remaining = current.messageIds.minus(element)
+        unreadMentionState.update { it.copy(messageIds = remaining) }
 
-        unreadMentionState = unreadMentionState.copy(messageIds = ids)
-
-        if (unreadMentionState.hasMore && messageIds.size < 5) {
-            getUnreadMentions(messageIds.last())
+        if (current.hasMore && remaining.size < 5) {
+            (remaining.lastOrNull() ?: element).let { getUnreadMentions(it) }
         }
-        return@with MessageId(element)
+        return MessageId(element)
     }
 
     private fun loadNextSearchedMessages() {
@@ -563,44 +567,36 @@ class MessageListViewModel(
             return
 
         if (message.mentionedUsers?.any { it.id == SceytChatUIKit.currentUserId } == true) {
-            unreadMentionState = unreadMentionState.copy(
-                messageIds = unreadMentionState.messageIds.plus(message.id)
-            )
-
-            updateChannel {
-                copy(newMentionCount = newMentionCount + 1)
+            val prev = unreadMentionState.getAndUpdate { state ->
+                state.copy(messageIds = state.messageIds.plus(message.id))
+            }
+            // Only bump the channel counter when this id was not already tracked,
+            // otherwise re-processing the same message drifts the count upward.
+            if (!prev.messageIds.contains(message.id)) {
+                updateChannel {
+                    copy(newMentionCount = newMentionCount + 1)
+                }
             }
         }
     }
 
     private fun checkUnreadMentionsOnMessageUpdated(message: SceytMessage) {
         if (!message.incoming || message.displayCount.toInt() == 0) return
-        var newMentionsCount = channel.newMentionCount
-        when {
-            unreadMentionState.messageIds.contains(message.id) -> {
-                if (message.mentionedUsers.orEmpty()
-                        .none { it.id == SceytChatUIKit.currentUserId }
-                ) {
-                    unreadMentionState = unreadMentionState.copy(
-                        messageIds = unreadMentionState.messageIds.minus(message.id)
-                    )
-                    newMentionsCount = channel.newMentionCount - 1
-                }
-            }
+        val mentionsMe = message.mentionedUsers.orEmpty()
+            .any { it.id == SceytChatUIKit.currentUserId }
 
-            else -> {
-                if (message.mentionedUsers.orEmpty()
-                        .any { it.id == SceytChatUIKit.currentUserId }
-                ) {
-                    unreadMentionState = unreadMentionState.copy(
-                        messageIds = unreadMentionState.messageIds.plus(message.id)
-                    )
-                    newMentionsCount = channel.newMentionCount + 1
-                }
+        val prev = unreadMentionState.getAndUpdate { state ->
+            val contains = state.messageIds.contains(message.id)
+            when {
+                contains && !mentionsMe -> state.copy(messageIds = state.messageIds.minus(message.id))
+                !contains && mentionsMe -> state.copy(messageIds = state.messageIds.plus(message.id))
+                else -> state
             }
         }
 
-        if (channel.newMentionCount != newMentionsCount) {
+        val changed = prev.messageIds.contains(message.id) !=
+                unreadMentionState.value.messageIds.contains(message.id)
+        if (changed) {
             viewModelScope.launch {
                 // Get channel form server to update new mentions count
                 channelInteractor.getChannelFromServer(channel.id)
@@ -731,12 +727,12 @@ class MessageListViewModel(
             _messageMarkerLiveData.postValue(response)
 
             // Cleat unread mentions when message is read
-            if (unreadMentionState.messageIds.isNotEmpty()) {
+            if (unreadMentionState.value.messageIds.isNotEmpty()) {
                 response.forEach {
                     it.onSuccessNotNull { marker ->
-                        unreadMentionState = unreadMentionState.copy(
-                            messageIds = unreadMentionState.messageIds.minus(marker.messageIds.toSet())
-                        )
+                        unreadMentionState.update { state ->
+                            state.copy(messageIds = state.messageIds.minus(marker.messageIds.toSet()))
+                        }
                     }
                 }
             }
