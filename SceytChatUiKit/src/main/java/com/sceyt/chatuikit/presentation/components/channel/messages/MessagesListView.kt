@@ -11,12 +11,10 @@ import android.widget.PopupWindow
 import android.widget.Toast
 import androidx.appcompat.view.ContextThemeWrapper
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.util.Predicate
 import androidx.core.view.isVisible
 import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
@@ -40,7 +38,6 @@ import com.sceyt.chatuikit.extensions.openLink
 import com.sceyt.chatuikit.extensions.setClipboard
 import com.sceyt.chatuikit.extensions.setLayoutTransition
 import com.sceyt.chatuikit.extensions.updateWithScrollCompensation
-import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.media.audio.AudioFocusHelper
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.chatuikit.navigation.Destination
@@ -66,7 +63,6 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.fil
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem.MessageItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageViewHolderFactory
-import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessagesAdapter
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.reactions.ReactionItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.components.EmojiPickerBottomSheetFragment
@@ -91,7 +87,6 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.cl
 import com.sceyt.chatuikit.presentation.components.channel.messages.popups.MessageActionsPopupMenu
 import com.sceyt.chatuikit.presentation.components.channel.messages.popups.PopupReactionsAdapter
 import com.sceyt.chatuikit.presentation.components.channel.messages.popups.ReactionsPopup
-import com.sceyt.chatuikit.presentation.extensions.getUpdateMessage
 import com.sceyt.chatuikit.presentation.extensions.isPending
 import com.sceyt.chatuikit.presentation.helpers.KeyboardEventListener
 import com.sceyt.chatuikit.presentation.root.PageState
@@ -505,32 +500,6 @@ class MessagesListView @JvmOverloads constructor(
         messagesRV.scrollToEndAfterRealtimeAppend(addedItemsCount, alwaysScroll)
     }
 
-    internal fun updateMessage(message: SceytMessage): Boolean {
-        var foundToUpdate = false
-        val data = messagesRV.getData()
-        for ((index, item) in data.withIndex()) {
-            if (item is MessageItem && item.message.tid == message.tid) {
-                val updatedItem = item.copy(message = item.message.getUpdateMessage(message))
-                val diff = item.message.diff(updatedItem.message)
-                updateAdapterItem(index, updatedItem, diff)
-                SceytLog.d(
-                    TAG,
-                    "Found to update message: id ${item.message.id}, tid ${item.message.tid}," +
-                            " diff ${diff.statusChanged}, newStatus ${message.deliveryStatus}, index $index, size ${data.size}"
-                )
-                foundToUpdate = true
-                break
-            }
-        }
-        if (!foundToUpdate) {
-            SceytLog.d(
-                TAG, "Not found to update message: id ${message.id}, tid ${message.tid}," +
-                        " deliveryStatus ${message.deliveryStatus}, data size ${data.size}"
-            )
-        }
-        return foundToUpdate
-    }
-
     internal fun updateMessageSelection(message: SceytMessage) {
         val data = messagesRV.getData()
         for ((index, item) in data.withIndex()) {
@@ -557,62 +526,6 @@ class MessagesListView @JvmOverloads constructor(
 
     internal fun getMessageIndexedById(messageId: Long): Pair<Int, MessageListItem>? {
         return messagesRV.getData().findIndexed { it is MessageItem && it.message.id == messageId }
-    }
-
-    internal fun messageEditedOrDeleted(updateMessage: SceytMessage) {
-        val data = messagesRV.getData()
-        if (updateMessage.isPending() && updateMessage.state == MessageState.Deleted) {
-            messagesRV.deleteMessageByTid(updateMessage.tid)
-            if (messagesRV.isEmpty()) {
-                binding.pageStateView.updateState(PageState.StateEmpty())
-            }
-            return
-        }
-
-        // Update main message
-        data.findIndexed {
-            it is MessageItem && it.message.id == updateMessage.id
-        }?.let { (index, item) ->
-            val oldMessage = (item as MessageItem).message
-            val updatedItem = item.copy(message = oldMessage.getUpdateMessage(updateMessage))
-            messagesRV.updateItemAt(index, updatedItem)
-
-            if (updateMessage.state == MessageState.Deleted && oldMessage.state != MessageState.Deleted)
-                messagesRV.adapter?.notifyItemChanged(index)
-            else
-                updateItem(index, updatedItem, oldMessage.diff(updatedItem.message))
-        }
-
-        // Update replies
-        data.forEachIndexed { index, it ->
-            if (it is MessageItem && it.message.parentMessage?.id == updateMessage.id) {
-                val oldMessage = it.message
-                val updatedItem = it.copy(message = oldMessage.copy(parentMessage = updateMessage))
-                updateAdapterItem(index, updatedItem, oldMessage.diff(updatedItem.message))
-            }
-        }
-    }
-
-    internal fun messageSelfDestructed(updateMessage: SceytMessage) {
-        val data = messagesRV.getData()
-        // Update main message
-        data.findIndexed {
-            it is MessageItem && it.message.id == updateMessage.id
-        }?.let { (index, item) ->
-            val oldMessage = (item as MessageItem).message
-            val updatedItem = item.copy(message = oldMessage.getUpdateMessage(updateMessage))
-            messagesRV.updateItemAt(index, updatedItem)
-            messagesRV.adapter?.notifyItemChanged(index)
-        }
-
-        // Update replies
-        data.forEachIndexed { index, it ->
-            if (it is MessageItem && it.message.parentMessage?.id == updateMessage.id) {
-                val oldMessage = it.message
-                val updatedItem = it.copy(message = oldMessage.copy(parentMessage = updateMessage))
-                updateAdapterItem(index, updatedItem, oldMessage.diff(updatedItem.message))
-            }
-        }
     }
 
     internal fun forceDeleteMessageByTid(vararg tid: Long) {
