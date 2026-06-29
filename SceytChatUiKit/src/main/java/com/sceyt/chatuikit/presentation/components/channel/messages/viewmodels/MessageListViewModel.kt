@@ -1087,7 +1087,9 @@ class MessageListViewModel internal constructor(
     }
 
     fun prepareToShowMessageActions(event: MessageCommandEvent.ShowHideMessageActions) {
-        messageActionBridge.showMessageActions(event.message)
+        if (event.show)
+            messageActionBridge.showMessageActions(event.message)
+        else messageActionBridge.hideMessageActions()
     }
 
     fun prepareToShowSearchMessage(event: MessageCommandEvent.SearchMessages) {

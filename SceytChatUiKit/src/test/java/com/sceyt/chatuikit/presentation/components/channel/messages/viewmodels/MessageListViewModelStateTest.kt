@@ -1,16 +1,30 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels
 
+import android.view.Menu
+import android.view.MenuItem
+import android.widget.ImageView
+import android.widget.TextView
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LifecycleRegistry
 import androidx.lifecycle.viewModelScope
 import com.google.common.truth.Truth.assertThat
 import com.sceyt.chat.models.message.MessageState
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.createChannel
 import com.sceyt.chatuikit.createMessage
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.SyncNearMessagesResult
+import com.sceyt.chatuikit.data.models.channels.SceytChannel
+import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.domain.usecases.PauseOrResumeTransferUseCase
 import com.sceyt.chatuikit.koin.SceytKoinApp
+import com.sceyt.chatuikit.notifications.SceytNotifications
+import com.sceyt.chatuikit.notifications.push.PushNotification
+import com.sceyt.chatuikit.notifications.push.PushNotificationHandler
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
+import com.sceyt.chatuikit.persistence.di.CoroutineContextType
 import com.sceyt.chatuikit.persistence.interactor.AttachmentInteractor
 import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
 import com.sceyt.chatuikit.persistence.interactor.ChannelMemberInteractor
@@ -22,7 +36,19 @@ import com.sceyt.chatuikit.persistence.logic.PersistenceConnectionLogic
 import com.sceyt.chatuikit.persistence.repositories.SceytSharedPreference
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem.DateSeparatorItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem.MessageItem
+import com.sceyt.chatuikit.presentation.components.channel.header.MessagesListHeaderView
+import com.sceyt.chatuikit.presentation.components.channel.header.listeners.ui.MessageListHeaderUIElementsListener
+import com.sceyt.chatuikit.presentation.components.channel.input.MessageInputView
+import com.sceyt.chatuikit.presentation.components.channel.input.data.InputState
+import com.sceyt.chatuikit.presentation.components.channel.input.listeners.event.InputEventsListener
+import com.sceyt.chatuikit.presentation.components.channel.messages.MessagesListView
+import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageCommandEvent
+import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.bindings.bind
+import com.sceyt.chatuikit.presentation.custom_views.AvatarView
 import com.sceyt.chatuikit.services.sync.SceytSyncManager
+import com.sceyt.chatuikit.styles.common.MenuStyle
+import com.sceyt.chatuikit.styles.messages_list.MessagesListHeaderStyle
+import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
@@ -43,17 +69,24 @@ import org.junit.Rule
 import org.junit.Test
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
+import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import org.mockito.kotlin.any
+import org.mockito.kotlin.clearInvocations
+import org.mockito.kotlin.doAnswer
+import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import kotlin.coroutines.CoroutineContext
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class MessageListViewModelStateTest {
     private val dispatcher = StandardTestDispatcher()
     private val messageInteractor = mock<MessageInteractor>()
+    private val channelInteractor = mock<ChannelInteractor>()
+    private val channelMemberInteractor = mock<ChannelMemberInteractor>()
     private val createdViewModels = mutableListOf<MessageListViewModel>()
 
     @get:Rule
@@ -69,22 +102,37 @@ class MessageListViewModelStateTest {
             whenever(
                 messageInteractor.loadPrevMessages(any(), any(), any(), any(), any(), any(), any())
             ).thenReturn(emptyFlow())
+            whenever(channelInteractor.getChannelFromServer(any()))
+                .thenReturn(SceytResponse.Success(null))
+            whenever(channelMemberInteractor.getMembersCountFromDb(any()))
+                .thenReturn(1)
         }
+        val notificationHandler = mock<PushNotificationHandler>()
+        val pushNotification = mock<PushNotification>()
+        whenever(pushNotification.notificationHandler).thenReturn(notificationHandler)
+        val notifications = mock<SceytNotifications>()
+        whenever(notifications.pushNotification).thenReturn(pushNotification)
+        SceytChatUIKit.notifications = notifications
         SceytKoinApp.koinApp = startKoin {
             modules(
                 module {
                     single<MessageInteractor> { messageInteractor }
-                    single<ChannelInteractor> { mock() }
+                    single<ChannelInteractor> { channelInteractor }
                     single<MessageReactionInteractor> { mock() }
                     single<MessagePollInteractor> { mock() }
                     single<AttachmentInteractor> { mock() }
-                    single<ChannelMemberInteractor> { mock() }
-                    single<PersistenceConnectionLogic> { mock() }
+                    single<ChannelMemberInteractor> { channelMemberInteractor }
+                    single<PersistenceConnectionLogic> {
+                        mock {
+                            on { allPendingEventsSentFlow } doReturn emptyFlow()
+                        }
+                    }
                     single<UserInteractor> { mock() }
                     single<SceytSyncManager> { mock() }
                     single<FileTransferService> { mock() }
                     single<PauseOrResumeTransferUseCase> { mock() }
                     single<SceytSharedPreference> { mock() }
+                    single<CoroutineContext>(named(CoroutineContextType.SingleThreaded)) { dispatcher }
                 }
             )
         }
@@ -244,6 +292,81 @@ class MessageListViewModelStateTest {
     }
 
     @Test
+    fun `messages list binding restores multiselect mode from retained selection`() = runTest(dispatcher) {
+        val viewModel = viewModel()
+        val message = createMessage(createdAt = 1, id = 1, tid = 1).copy(isSelected = true)
+        viewModel.selectedMessagesMap[message.tid] = message
+        val messagesListView = messagesListView()
+
+        viewModel.bind(messagesListView, TestLifecycleOwner())
+        runCurrent()
+
+        verify(messagesListView).setMultiSelectableMode()
+    }
+
+    @Test
+    fun `messages list binding multiselect event enters mode and retains selection`() = runTest(dispatcher) {
+        val viewModel = viewModel()
+        val message = createMessage(createdAt = 1, id = 1, tid = 1)
+        var commandListener: ((MessageCommandEvent) -> Unit)? = null
+        val messagesListView = messagesListView { commandListener = it }
+        viewModel.bind(messagesListView, TestLifecycleOwner())
+        runCurrent()
+
+        commandListener?.invoke(MessageCommandEvent.MultiselectEvent(message))
+        runCurrent()
+
+        assertThat(viewModel.selectedMessagesMap.keys).containsExactly(message.tid)
+        verify(messagesListView).setMultiSelectableMode()
+    }
+
+    @Test
+    fun `messages list binding cancel event clears retained selection and exits mode`() = runTest(dispatcher) {
+        val viewModel = viewModel()
+        val message = createMessage(createdAt = 1, id = 1, tid = 1).copy(isSelected = true)
+        viewModel.selectedMessagesMap[message.tid] = message
+        var commandListener: ((MessageCommandEvent) -> Unit)? = null
+        val messagesListView = messagesListView { commandListener = it }
+        viewModel.bind(messagesListView, TestLifecycleOwner())
+        runCurrent()
+        clearInvocations(messagesListView)
+
+        commandListener?.invoke(MessageCommandEvent.CancelMultiselectEvent)
+        runCurrent()
+
+        assertThat(viewModel.selectedMessagesMap).isEmpty()
+        verify(messagesListView).cancelMultiSelectMode()
+    }
+
+    @Test
+    fun `header binding restores actions menu from retained selection`() = runTest(dispatcher) {
+        val viewModel = viewModel()
+        val message = createMessage(createdAt = 1, id = 1, tid = 1).copy(isSelected = true)
+        viewModel.selectedMessagesMap[message.tid] = message
+        val uiElements = RecordingHeaderUiElements()
+        val headerView = headerView(uiElements)
+
+        viewModel.bind(headerView, replyInThreadMessage = null, lifecycleOwner = TestLifecycleOwner())
+        runCurrent()
+
+        assertThat(uiElements.shownMessages.map { it.tid }).containsExactly(message.tid)
+    }
+
+    @Test
+    fun `input binding restores multiselect mode from retained selection`() = runTest(dispatcher) {
+        val viewModel = viewModel()
+        val message = createMessage(createdAt = 1, id = 1, tid = 1).copy(isSelected = true)
+        viewModel.selectedMessagesMap[message.tid] = message
+        val inputEvents = RecordingInputEvents()
+        val inputView = inputView(inputEvents)
+
+        viewModel.bind(inputView, replyInThreadMessage = null, lifecycleOwner = TestLifecycleOwner())
+        runCurrent()
+
+        assertThat(inputEvents.multiselectModes).contains(true)
+    }
+
+    @Test
     fun `soft delete update emits null diff to keep delete animation`() = runTest(dispatcher) {
         val viewModel = viewModel()
         val message = createMessage(createdAt = 1, id = 1, tid = 1)
@@ -334,5 +457,102 @@ class MessageListViewModelStateTest {
             it.configureMessageList(enableDateSeparator = false)
             createdViewModels.add(it)
         }
+    }
+
+    private fun messagesListView(
+        commandListener: (((MessageCommandEvent) -> Unit) -> Unit)? = null,
+    ): MessagesListView {
+        val style = mock<MessagesListViewStyle> {
+            on { enableDateSeparator } doReturn false
+        }
+        return mock<MessagesListView>().also { view ->
+            whenever(view.style).thenReturn(style)
+            commandListener?.let { capture ->
+                doAnswer { invocation ->
+                    @Suppress("UNCHECKED_CAST")
+                    capture(invocation.getArgument(0) as (MessageCommandEvent) -> Unit)
+                    null
+                }.whenever(view).setMessageCommandEventListener(any())
+            }
+        }
+    }
+
+    private fun headerView(uiElements: MessageListHeaderUIElementsListener.ElementsListeners): MessagesListHeaderView {
+        val style = mock<MessagesListHeaderStyle> {
+            on { messageActionsMenuStyle } doReturn MenuStyle()
+        }
+        return mock<MessagesListHeaderView>().also { view ->
+            whenever(view.uiElementsListeners).thenReturn(uiElements)
+            whenever(view.style).thenReturn(style)
+        }
+    }
+
+    private fun inputView(inputEvents: InputEventsListener.InputEventListeners): MessageInputView {
+        return mock<MessageInputView>().also { view ->
+            whenever(view.getEventListeners()).thenReturn(inputEvents)
+        }
+    }
+
+    private class TestLifecycleOwner : LifecycleOwner {
+        private val registry = LifecycleRegistry(this)
+
+        override val lifecycle: Lifecycle = registry
+
+        init {
+            registry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
+        }
+    }
+
+    private class RecordingHeaderUiElements : MessageListHeaderUIElementsListener.ElementsListeners {
+        val shownMessages = mutableListOf<SceytMessage>()
+
+        override fun onTitle(
+            titleTextView: TextView,
+            channel: SceytChannel,
+            replyMessage: SceytMessage?,
+            replyInThread: Boolean,
+        ) = Unit
+
+        override fun onSubTitle(
+            subjectTextView: TextView,
+            channel: SceytChannel,
+            replyMessage: SceytMessage?,
+            replyInThread: Boolean,
+        ) = Unit
+
+        override fun onAvatar(
+            avatar: AvatarView,
+            channel: SceytChannel,
+            replyInThread: Boolean,
+        ) = Unit
+
+        override fun onShowMessageActionsMenu(
+            vararg messages: SceytMessage,
+            menuStyle: MenuStyle,
+            listener: ((MenuItem, actionFinish: () -> Unit) -> Unit)?,
+        ) {
+            shownMessages.clear()
+            shownMessages.addAll(messages)
+        }
+
+        override fun onHideMessageActionsMenu() = Unit
+
+        override fun onInitToolbarActionsMenu(vararg messages: SceytMessage, menu: Menu) = Unit
+
+        override fun showSearchMessagesBar(event: MessageCommandEvent.SearchMessages) = Unit
+    }
+
+    private class RecordingInputEvents : InputEventsListener.InputEventListeners {
+        val multiselectModes = mutableListOf<Boolean>()
+
+        override fun onInputStateChanged(sendImage: ImageView, state: InputState) = Unit
+
+        override fun onMentionUsersListener(query: String) = Unit
+
+        override fun onMultiselectModeListener(isMultiselectMode: Boolean) {
+            multiselectModes.add(isMultiselectMode)
+        }
+
+        override fun onSearchModeChangeListener(inSearchMode: Boolean) = Unit
     }
 }

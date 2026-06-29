@@ -1,6 +1,5 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.bindings
 
-import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.asFlow
@@ -49,6 +48,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.MessagesList
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem.MessageItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageCommandEvent
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.AppendRealtimeScroll
+import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageActionBridge
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageListRenderEffect
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageListViewModel
 import com.sceyt.chatuikit.presentation.extensions.isNotPending
@@ -69,7 +69,6 @@ import kotlin.time.Duration.Companion.milliseconds
 @JvmName("bind")
 fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner: LifecycleOwner) {
     val lifecycleScope = lifecycleOwner.lifecycleScope
-    messageActionBridge.setMessagesListView(messagesListView)
     messagesListView.setMultiselectDestination(selectedMessagesMap)
     if (channel.isSelf) {
         messagesListView.setEmptyStateForSelfChannel()
@@ -171,11 +170,69 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
     renderEffects.onEach(::applyRenderEffect).launchIn(lifecycleScope)
 
-    lifecycleOwner.lifecycle.addObserver(object : DefaultLifecycleObserver {
-        override fun onDestroy(owner: LifecycleOwner) {
-            messageActionBridge.clearMessagesListView(messagesListView)
+    fun applyActionEffect(effect: MessageActionBridge.Effect) {
+        when (effect) {
+            is MessageActionBridge.Effect.MessageActionsShown -> messagesListView.setMultiSelectableMode()
+            is MessageActionBridge.Effect.MultiSelectCanceled -> {
+                clearMessageSelectionState()
+                messagesListView.cancelMultiSelectMode()
+            }
+
+            is MessageActionBridge.Effect.MessageActionsHidden,
+            is MessageActionBridge.Effect.SearchRequested,
+            is MessageActionBridge.Effect.SearchModeChanged -> Unit
         }
-    })
+    }
+
+    fun applyMenuEvent(event: MessageActionBridge.MenuEvent) {
+        when (event) {
+            is MessageActionBridge.MenuEvent.Copy -> {
+                messagesListView.messageActionsViewClickListeners.onCopyMessagesClick(*event.messages.toTypedArray())
+            }
+
+            is MessageActionBridge.MenuEvent.Delete -> {
+                messagesListView.messageActionsViewClickListeners.onDeleteMessageClick(
+                    messages = event.messages.toTypedArray(),
+                    requireForMe = event.requireForMe,
+                    actionFinish = event.actionFinish
+                )
+            }
+
+            is MessageActionBridge.MenuEvent.Edit -> {
+                messagesListView.messageActionsViewClickListeners.onEditMessageClick(event.message)
+            }
+
+            is MessageActionBridge.MenuEvent.MessageInfo -> {
+                messagesListView.messageActionsViewClickListeners.onMessageInfoClick(event.message)
+            }
+
+            is MessageActionBridge.MenuEvent.Forward -> {
+                messagesListView.messageActionsViewClickListeners.onForwardMessageClick(*event.messages.toTypedArray())
+            }
+
+            is MessageActionBridge.MenuEvent.Reply -> {
+                messagesListView.messageActionsViewClickListeners.onReplyMessageClick(event.message)
+            }
+
+            is MessageActionBridge.MenuEvent.ReplyInThread -> {
+                messagesListView.messageActionsViewClickListeners.onReplyMessageInThreadClick(event.message)
+            }
+
+            is MessageActionBridge.MenuEvent.RetractVote -> {
+                messagesListView.messageActionsViewClickListeners.onRetractVoteClick(event.message)
+            }
+
+            is MessageActionBridge.MenuEvent.EndVote -> {
+                messagesListView.messageActionsViewClickListeners.onEndVoteClick(event.message)
+            }
+        }
+    }
+
+    messageActionBridge.effects.onEach(::applyActionEffect).launchIn(lifecycleScope)
+    messageActionBridge.menuEvents.onEach(::applyMenuEvent).launchIn(lifecycleScope)
+
+    if (selectedMessagesMap.isNotEmpty())
+        messagesListView.setMultiSelectableMode()
 
     clearPreparingThumbs()
 
@@ -570,21 +627,18 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 if (wasSelected) {
                     selectedMessagesMap.remove(message.tid)
                     if (selectedMessagesMap.isEmpty()) {
-                        messageActionBridge.hideMessageActions()
-                        messagesListView.cancelMultiSelectMode()
+                        messageActionBridge.cancelMultiSelectMode()
                     } else {
                         messageActionBridge.showMessageActions(*selectedMessagesMap.values.toTypedArray())
                     }
                 } else {
                     selectedMessagesMap[message.tid] = message
                     messageActionBridge.showMessageActions(*selectedMessagesMap.values.toTypedArray())
-                    messagesListView.setMultiSelectableMode()
                 }
             }
 
             is MessageCommandEvent.CancelMultiselectEvent -> {
-                clearMessageSelectionState()
-                messagesListView.cancelMultiSelectMode()
+                messageActionBridge.cancelMultiSelectMode()
             }
 
             is MessageCommandEvent.Reply -> {
