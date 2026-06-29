@@ -13,7 +13,6 @@ import com.sceyt.chatuikit.data.managers.channel.ChannelEventManager
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelActionEvent
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMemberActivityEvent
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventData
-import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventEnum
 import com.sceyt.chatuikit.data.managers.message.MessageEventManager
 import com.sceyt.chatuikit.data.models.LoadKeyData
 import com.sceyt.chatuikit.data.models.PaginationResponse
@@ -26,16 +25,13 @@ import com.sceyt.chatuikit.data.models.SyncNearMessagesResult
 import com.sceyt.chatuikit.data.models.channels.DraftAttachment
 import com.sceyt.chatuikit.data.models.channels.DraftMessage
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
-import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.MarkerType
-import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.onErrorNonNull
 import com.sceyt.chatuikit.data.models.onSuccessNotNull
 import com.sceyt.chatuikit.data.repositories.Keys.KEY_VIEW_ONCE_INFO_SHOWN
 import com.sceyt.chatuikit.domain.usecases.PauseOrResumeTransferUseCase
-import com.sceyt.chatuikit.extensions.findIndexed
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.media.audio.AudioRecordData
@@ -45,18 +41,7 @@ import com.sceyt.chatuikit.persistence.extensions.asLiveData
 import com.sceyt.chatuikit.persistence.extensions.broadcastSharedFlow
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
-import com.sceyt.chatuikit.persistence.file_transfer.ThumbFor
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Downloaded
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState.FilePathChanged
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState.PauseUpload
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState.PendingUpload
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Preparing
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState.ThumbLoaded
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploaded
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploading
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState.WaitingToUpload
-import com.sceyt.chatuikit.persistence.file_transfer.isCompleted
 import com.sceyt.chatuikit.persistence.interactor.AttachmentInteractor
 import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
 import com.sceyt.chatuikit.persistence.interactor.ChannelMemberInteractor
@@ -98,7 +83,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -165,6 +149,7 @@ class MessageListViewModel internal constructor(
     internal val expandedMessagesMap by lazy { mutableMapOf<Long, Boolean>() }
     internal val pendingStatusReconciler by lazy { PendingMessageStatusReconciler() }
     internal val outgoingMessageMutex by lazy { Mutex() }
+
     // Owns the rendered list state, render-effect stream and reducer-backed list mutations.
     private val store = MessageListStore(
         recoveryScope = viewModelScope,
@@ -172,7 +157,6 @@ class MessageListViewModel internal constructor(
     )
     private val messageListItemMapper by lazy { MessageListItemMapper() }
     internal val pendingDisplayMsgIds by lazy { Collections.synchronizedSet(mutableSetOf<Long>()) }
-    internal val needToUpdateTransferAfterOnResume = hashMapOf<Long, TransferData>()
     private var showSenderAvatarAndNameIfNeeded = true
     internal var viewOnceSelected = false
     private var loadPrevJob: Job? = null
@@ -234,6 +218,8 @@ class MessageListViewModel internal constructor(
     private val searchController = createMessageSearchController()
     private val reactionController = createReactionController()
     private val pollController = createPollController()
+    private val memberController = createChannelMemberController()
+    private val transferController = createMessageTransferController()
     val searchResult get() = searchController.searchResult
 
 
@@ -253,7 +239,7 @@ class MessageListViewModel internal constructor(
 
         channelMembersEventsFlow
             .filter { it.channel.id == channel.id }
-            .onEach(::onChannelMemberEvent)
+            .onEach(memberController::onMemberEvent)
             .launchIn(viewModelScope)
 
         /*
@@ -579,6 +565,25 @@ class MessageListViewModel internal constructor(
         notifyResponse = { response, showError ->
             notifyPageStateWithResponse(response, showError = showError)
         },
+    )
+
+    private fun createChannelMemberController() = ChannelMemberController(
+        scope = viewModelScope,
+        memberInteractor = channelMemberInteractor,
+        currentChannel = { channel },
+        updateChannel = { action -> updateChannel(action) },
+        ioDispatcher = ioDispatcher,
+    )
+
+    private fun createMessageTransferController() = MessageTransferController(
+        scope = viewModelScope,
+        defaultDispatcher = defaultDispatcher,
+        mainDispatcher = mainDispatcher,
+        fileTransferService = fileTransferService,
+        pauseOrResumeTransferUseCase = pauseOrResumeTransferUseCase,
+        store = store,
+        channelId = { channel.id },
+        ioDispatcher = ioDispatcher,
     )
 
     private fun onPendingChannelCreated(newChannel: SceytChannel) {
@@ -970,88 +975,8 @@ class MessageListViewModel internal constructor(
         }
     }
 
-    internal suspend fun updateProgress(
-        data: TransferData,
-        updateRecyclerView: Boolean,
-    ) = withContext(defaultDispatcher) {
-        val messages = ArrayList(currentMessageListItems())
-        messages.findIndexed { item ->
-            item is MessageItem && item.message.tid == data.messageTid
-        }?.let { (_, item) ->
-            val message = (item as? MessageItem)?.message ?: return@withContext
-            val attachments = message.attachments?.toMutableList() ?: return@withContext
-
-            val predicate: (SceytAttachment) -> Boolean = when (data.state) {
-                Uploading, PendingUpload, PauseUpload, Uploaded, Preparing, WaitingToUpload -> { attachment ->
-                    attachment.messageTid == data.messageTid
-                }
-
-                else -> { attachment ->
-                    attachment.url == data.url
-                }
-            }
-            val foundAttachmentFile = item.message.files?.find { listItem ->
-                predicate(listItem.attachment)
-            }
-
-            if (data.state == ThumbLoaded) {
-                if (data.thumbData?.key == ThumbFor.MessagesLisView.value) {
-                    foundAttachmentFile?.updateThumbPath(data.filePath)
-                }
-                return@withContext
-            } else {
-                for ((attachmentIndex, sceytAttachment) in attachments.withIndex()) {
-                    if (predicate(sceytAttachment)) {
-                        val attachmentWithTransfer = sceytAttachment.getUpdatedWithTransferData(
-                            data = data
-                        )
-                        val updatedAttachment = foundAttachmentFile?.updateAttachment(
-                            file = attachmentWithTransfer
-                        )
-                        attachments[attachmentIndex] = updatedAttachment ?: attachmentWithTransfer
-                        val updatedItem = item.copy(
-                            message = message.copy(attachments = attachments)
-                        )
-                        withContext(mainDispatcher) {
-                            store.updateItem(
-                                predicate = { it.message.tid == data.messageTid },
-                                diff = MessageDiff.DEFAULT_FALSE.copy(filesChanged = true),
-                                notifyVisibleOnly = !updateRecyclerView,
-                                update = { updatedItem }
-                            )
-                        }
-                        break
-                    }
-                }
-            }
-        }
-
-        if (data.state == Downloaded) {
-            messages.forEach { item ->
-                if (item is MessageItem && item.message.parentMessage?.tid == data.messageTid) {
-                    val message = item.message
-                    val updatedItem = item.copy(
-                        message = message.copy(
-                            parentMessage = message.parentMessage.copy(
-                                attachments = item.message.parentMessage.attachments?.map { attachment ->
-                                    if (attachment.url == data.url) {
-                                        attachment.copy(filePath = data.filePath)
-                                    } else attachment
-                                }
-                            )))
-
-                    withContext(mainDispatcher) {
-                        store.updateItem(
-                            predicate = { it.message.tid == message.tid },
-                            diff = MessageDiff.DEFAULT_FALSE.copy(replyContainerChanged = true),
-                            update = { updatedItem }
-                        )
-                    }
-                }
-            }
-        }
-    }
-
+    internal suspend fun updateProgress(data: TransferData, updateRecyclerView: Boolean) =
+        transferController.updateProgress(data, updateRecyclerView)
 
     fun sendPendingMessages() {
         viewModelScope.launch(Dispatchers.IO) {
@@ -1089,11 +1014,8 @@ class MessageListViewModel internal constructor(
         mentionsController.prepareToScrollToNext()
     }
 
-    fun prepareToPauseOrResumeUpload(item: FileListItem) {
-        viewModelScope.launch {
-            pauseOrResumeTransferUseCase(item.attachment, channel.id)
-        }
-    }
+    fun prepareToPauseOrResumeUpload(item: FileListItem) =
+        transferController.pauseOrResumeUpload(item)
 
     @SuppressWarnings("WeakerAccess")
     fun addReaction(
@@ -1263,58 +1185,7 @@ class MessageListViewModel internal constructor(
         }
     }
 
-    fun loadChannelMembersIfNeeded() {
-        viewModelScope.launch(Dispatchers.IO) {
-            val count = channelMemberInteractor.getMembersCountFromDb(channel.id)
-            if (channel.memberCount > count)
-                loadChannelMembers(offset = 0, nextToken = "", role = null).collect()
-        }
-    }
-
-    @Suppress("unused")
-    fun loadChannelAllMembers() {
-        viewModelScope.launch(Dispatchers.IO) {
-
-            suspend fun loadMembers(
-                offset: Int,
-                nextToken: String
-            ): PaginationResponse.ServerResponse<SceytMember>? {
-                return channelMemberInteractor.loadChannelMembers(
-                    channel.id,
-                    offset,
-                    nextToken,
-                    null
-                )
-                    .firstOrNull {
-                        it is PaginationResponse.ServerResponse
-                    } as? PaginationResponse.ServerResponse<SceytMember>
-            }
-
-            val count = channelMemberInteractor.getMembersCountFromDb(channel.id)
-            if (channel.memberCount > count) {
-                var offset = 0
-                var rest = loadMembers(0, "")
-                while (rest?.hasNext == true) {
-                    offset += rest.data.data?.size ?: return@launch
-                    rest = loadMembers(offset, rest.nextToken)
-                }
-            }
-        }
-    }
-
-    @SuppressWarnings("WeakerAccess")
-    fun loadChannelMembers(
-        offset: Int,
-        nextToken: String,
-        role: String?
-    ): Flow<PaginationResponse<SceytMember>> {
-        return channelMemberInteractor.loadChannelMembers(
-            channelId = channel.id,
-            offset = offset,
-            nextToken = nextToken,
-            role = role
-        )
-    }
+    fun loadChannelMembersIfNeeded() = memberController.loadIfNeeded()
 
     fun clearHistory(forEveryOne: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -1399,69 +1270,23 @@ class MessageListViewModel internal constructor(
         pollController.onEvent(event)
     }
 
-    internal fun needMediaInfo(data: NeedMediaInfoData) {
-        val attachment = data.item
-        when (data) {
-            is NeedMediaInfoData.NeedDownload -> {
-                viewModelScope.launch(Dispatchers.IO) {
-                    fileTransferService.download(
-                        attachment = attachment,
-                        transferTask = fileTransferService.findOrCreateTransferTask(attachment)
-                    )
-                }
-            }
+    internal fun needMediaInfo(data: NeedMediaInfoData) = transferController.needMediaInfo(data)
 
-            is NeedMediaInfoData.NeedThumb -> {
-                viewModelScope.launch(Dispatchers.IO) {
-                    fileTransferService.getThumb(attachment.messageTid, attachment, data.thumbData)
-                }
-            }
-        }
-    }
+    internal fun shouldDeferTransferUpdate(transfer: TransferData): Boolean =
+        transferController.shouldDeferTransferUpdate(transfer)
 
-    internal fun shouldDeferTransferUpdate(transfer: TransferData): Boolean {
-        return transfer.state.isCompleted() ||
-                transfer.state == FilePathChanged || isMessageListThumbLoaded(transfer)
-    }
+    internal fun isMessageListThumbLoaded(transfer: TransferData): Boolean =
+        transferController.isMessageListThumbLoaded(transfer)
 
-    internal fun isMessageListThumbLoaded(transfer: TransferData): Boolean {
-        return transfer.state == ThumbLoaded && transfer.thumbData?.key == ThumbFor.MessagesLisView.value
-    }
+    internal fun clearPreparingThumbs() = transferController.clearPreparingThumbs()
 
-    internal fun clearPreparingThumbs() {
-        fileTransferService.clearPreparingThumbPaths()
-    }
+    internal fun deferTransferUpdate(transfer: TransferData) =
+        transferController.deferUpdate(transfer)
+
+    internal suspend fun flushDeferredTransferUpdates() = transferController.flushDeferred()
 
     internal fun scrollToSearchMessage(isPrev: Boolean) {
         searchController.scrollToSearchMessage(isPrev)
     }
 
-    private fun onChannelMemberEvent(eventData: ChannelMembersEventData) {
-        val sceytMembers = eventData.members
-        val channelMembers = channel.members?.toMutableList() ?: arrayListOf()
-
-        when (eventData.eventType) {
-            ChannelMembersEventEnum.Added -> {
-                channelMembers.addAll(sceytMembers)
-                updateChannel {
-                    copy(
-                        members = channelMembers,
-                        memberCount = channel.memberCount + sceytMembers.size
-                    )
-                }
-            }
-
-            ChannelMembersEventEnum.Kicked -> {
-                channelMembers.removeAll(sceytMembers)
-                updateChannel {
-                    copy(
-                        members = channelMembers,
-                        memberCount = channel.memberCount - sceytMembers.size
-                    )
-                }
-            }
-
-            else -> return
-        }
-    }
 }
