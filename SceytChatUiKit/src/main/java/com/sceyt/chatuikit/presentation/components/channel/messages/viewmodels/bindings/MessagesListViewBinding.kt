@@ -247,13 +247,8 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 sendPendingMessages()
             }
             messagesListView.post {
-                if (needToUpdateTransferAfterOnResume.isNotEmpty()) {
-                    needToUpdateTransferAfterOnResume.values.forEach { data ->
-                        lifecycleOwner.lifecycleScope.launch {
-                            updateProgress(data, true)
-                        }
-                    }
-                    needToUpdateTransferAfterOnResume.clear()
+                lifecycleOwner.lifecycleScope.launch {
+                    flushDeferredTransferUpdates()
                 }
             }
         }
@@ -535,7 +530,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         if (lifecycleOwner.isResumed()) {
             updateProgress(transfer, false)
         } else if (shouldDeferTransferUpdate(transfer)) {
-            needToUpdateTransferAfterOnResume[transfer.messageTid] = transfer
+            deferTransferUpdate(transfer)
         }
     }.launchIn(lifecycleScope)
 
