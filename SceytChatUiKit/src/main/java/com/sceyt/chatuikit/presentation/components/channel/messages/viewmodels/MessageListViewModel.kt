@@ -6,7 +6,6 @@ import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.DeleteMessageType
 import com.sceyt.chat.models.message.Message
-import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.constants.SceytConstants
@@ -31,7 +30,6 @@ import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
-import com.sceyt.chatuikit.data.models.messages.SceytMarker
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.onErrorNonNull
 import com.sceyt.chatuikit.data.models.onSuccessNotNull
@@ -195,12 +193,8 @@ class MessageListViewModel internal constructor(
     private val myId: String? get() = SceytChatUIKit.chatUIFacade.myId
     val channel: SceytChannel get() = _channel
     val conversationId: Long get() = _conversationId
-
-    internal val state get() = store.state
-    internal val renderEffects get() = store.renderEffects
-
-    private val _messageMarkerLiveData = MutableLiveData<List<SceytResponse<MessageListMarker>>>()
-    val messageMarkerLiveData = _messageMarkerLiveData.asLiveData()
+    val state get() = store.state
+    val renderEffects get() = store.renderEffects
 
     private val _syncCenteredMessageLiveData = MutableLiveData<SyncNearMessagesResult>()
     val syncCenteredMessageLiveData = _syncCenteredMessageLiveData.asLiveData()
@@ -412,22 +406,6 @@ class MessageListViewModel internal constructor(
             diffProvider = { old, new -> old.message.diff(new.message) },
             update = { item ->
                 item.copy(message = item.message.copy(parentMessage = updateMessage))
-            }
-        )
-    }
-
-    internal fun applyDisplayedMarkers(marker: MessageListMarker, userMarker: SceytMarker) {
-        store.updateAllItems(
-            predicate = { marker.messageIds.contains(it.message.id) },
-            notifyVisibleOnly = true,
-            update = { item ->
-                item.copy(
-                    message = item.message.copy(
-                        userMarkers = item.message.userMarkers.orEmpty().plus(
-                            userMarker.copy(messageId = item.message.id)
-                        )
-                    )
-                )
             }
         )
     }
@@ -958,8 +936,7 @@ class MessageListViewModel internal constructor(
         }
     }
 
-    internal fun applyMessageUpdates(data: Pair<Long, List<SceytMessage>>) {
-        val (_, messages) = data
+    internal fun applyMessageUpdates(messages: List<SceytMessage>) {
 
         suspend fun update(sceytMessage: SceytMessage) {
             val message = initMessageInfoData(sceytMessage)
@@ -1179,7 +1156,6 @@ class MessageListViewModel internal constructor(
                 marker = MarkerType.Displayed,
                 ids = messageIds
             )
-            _messageMarkerLiveData.postValue(response)
 
             // Clear unread mentions when message is read
             response.forEach {
@@ -1192,8 +1168,7 @@ class MessageListViewModel internal constructor(
 
     fun addMessageMarker(marker: String, vararg messageIds: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = messageInteractor.addMessagesMarker(channel.id, marker, *messageIds)
-            _messageMarkerLiveData.postValue(response)
+            messageInteractor.addMessagesMarker(channel.id, marker, *messageIds)
         }
     }
 

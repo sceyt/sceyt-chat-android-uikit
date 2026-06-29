@@ -135,60 +135,73 @@ class MessagesCache {
         emitMessageUpdated(channelId, *messages.toTypedArray())
     }
 
-    suspend fun updateMessagesStatus(
+    /**
+     * Applies marker-related cache changes in one mutation and emits one update event.
+     * [markersByTid] must contain only the marker that belongs to each message tid; [statusTids]
+     * can include extra messages whose delivery status should advance from the same marker event.
+     */
+    suspend fun applyMessageMarkerChanges(
         channelId: Long,
-        status: MessageDeliveryStatus,
-        vararg tIds: Long
+        markersByTid: Map<MessageTid, SceytMarker>,
+        status: MessageDeliveryStatus? = null,
+        statusTids: LongArray = markersByTid.keys.toLongArray(),
     ) = mutex.withLock {
         val updatedMessages = mutableListOf<SceytMessage>()
-        getMessagesMap(channelId)?.let { map ->
-            tIds.forEach { tid ->
-                val message = map[tid] ?: return@forEach
-                if (message.deliveryStatus < status) {
-                    val updatedMessage = message.copy(deliveryStatus = status)
-                    map[tid] = updatedMessage
-                    updatedMessages.add(updatedMessage)
+        val map = getMessagesMap(channelId) ?: return@withLock
+
+        val statusTidSet = statusTids.toHashSet()
+        val affectedTids = linkedSetOf<MessageTid>().apply {
+            addAll(statusTidSet)
+            addAll(markersByTid.keys)
+        }
+
+        affectedTids.forEach { tid ->
+            val message = map[tid] ?: return@forEach
+            var updatedMessage = message
+            var changed = false
+
+            if (status != null && tid in statusTidSet && updatedMessage.deliveryStatus < status) {
+                updatedMessage = updatedMessage.copy(deliveryStatus = status)
+                changed = true
+            }
+
+            markersByTid[tid]?.let { marker ->
+                val currentMarkers = updatedMessage.userMarkers.orEmpty()
+                val hasMarker = currentMarkers.any {
+                    it.messageId == marker.messageId &&
+                            it.userId == marker.userId &&
+                            it.name == marker.name
+                }
+
+                if (!hasMarker) {
+                    val markerTotalMap = updatedMessage.markerTotals
+                        ?.associateBy { it.name }
+                        ?.toMutableMap()
+                        ?: mutableMapOf()
+
+                    val existingTotal = markerTotalMap[marker.name]
+                    markerTotalMap[marker.name] = MarkerTotal(
+                        /* name = */ marker.name,
+                        /* count = */ (existingTotal?.count ?: 0) + 1
+                    )
+
+                    updatedMessage = updatedMessage.copy(
+                        userMarkers = currentMarkers + marker,
+                        markerTotals = markerTotalMap.values.toList()
+                    )
+                    changed = true
                 }
             }
-        }
-        emitMessageUpdated(channelId, *updatedMessages.toTypedArray())
-    }
 
-    suspend fun addMessageMarker(
-        channelId: Long,
-        markers: List<SceytMarker>,
-        tIds: LongArray
-    ) = mutex.withLock {
-        val updatedMessages = mutableListOf<SceytMessage>()
-        getMessagesMap(channelId)?.let { map ->
-            tIds.forEach { tid ->
-                val message = map[tid] ?: return@forEach
-                // Merge user markers
-                val newUserMarkers = (message.userMarkers.orEmpty() + markers).toSet()
-
-                // Update markerTotals
-                val markerTotalMap = message.markerTotals
-                    ?.associateBy { it.name }?.toMutableMap() ?: mutableMapOf()
-
-                markers.forEach { marker ->
-                    val existingTotal = markerTotalMap[marker.name]
-                    val updatedTotal = if (existingTotal != null) {
-                        MarkerTotal(existingTotal.name, existingTotal.count + 1)
-                    } else {
-                        MarkerTotal(marker.name, 1)
-                    }
-                    markerTotalMap[marker.name] = updatedTotal
-                }
-                val updatedMessage = message.copy(
-                    userMarkers = newUserMarkers.toList(),
-                    markerTotals = markerTotalMap.values.toList()
-                )
-
+            if (changed) {
                 map[tid] = updatedMessage
                 updatedMessages.add(updatedMessage)
             }
         }
-        emitMessageUpdated(channelId, *updatedMessages.toTypedArray())
+
+        // Emit once after all marker/status changes for this event are applied.
+        if (updatedMessages.isNotEmpty())
+            emitMessageUpdated(channelId, *updatedMessages.toTypedArray())
     }
 
     suspend fun hardDeleteMessage(channelId: Long, message: SceytMessage) = mutex.withLock {

@@ -3,13 +3,13 @@ package com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 
-internal data class MessageListState(
+data class MessageListState(
     val items: List<MessageListItem> = emptyList(),
     val revision: Long = 0,
     val hasLoadedInitialMessages: Boolean = false,
 )
 
-internal sealed interface MessageListRenderEffect {
+sealed interface MessageListRenderEffect {
     data class Replace(
         val items: List<MessageListItem>,
         val force: Boolean,
@@ -59,12 +59,12 @@ internal sealed interface MessageListRenderEffect {
     ) : MessageListRenderEffect
 }
 
-internal data class ScrollLoadOnMissing(
+data class ScrollLoadOnMissing(
     val loadKey: Long,
     val ignoreServer: Boolean,
 )
 
-internal enum class AppendRealtimeScroll {
+enum class AppendRealtimeScroll {
     Always,
     IfAtEnd,
 }
