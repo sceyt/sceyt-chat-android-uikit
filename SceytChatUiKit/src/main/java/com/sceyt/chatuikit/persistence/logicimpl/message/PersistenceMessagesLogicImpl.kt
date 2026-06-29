@@ -1705,41 +1705,49 @@ internal class PersistenceMessagesLogicImpl(
                         "name: ${data.name}"
             )
             val responseIds = data.messageIds.toList()
-            val tIds = messageDao.getMessageTIdsByIds(*responseIds.toLongArray())
+            val messagesIdTid = messageDao.getExistMessagesIdTidByIds(responseIds)
+            val deliveryStatus = marker.toDeliveryStatus()
 
-            marker.toDeliveryStatus()?.let { deliveryStatus ->
+            deliveryStatus?.let {
                 messageDao.updateMessagesStatus(channelId, responseIds, deliveryStatus)
-                messagesCache.updateMessagesStatus(
+            }
+
+            val userId = myId
+            val markersByTid = userId?.let {
+                messagesIdTid.mapNotNull { messageIdTid ->
+                    messageIdTid.id?.let { messageId ->
+                        messageIdTid.tid to SceytMarker(
+                            messageId = messageId,
+                            userId = it,
+                            user = SceytChatUIKit.currentUser,
+                            name = data.name,
+                            createdAt = data.createdAt
+                        )
+                    }
+                }.toMap()
+            }.orEmpty()
+
+            if (deliveryStatus != null || markersByTid.isNotEmpty()) {
+                messagesCache.applyMessageMarkerChanges(
                     channelId = channelId,
+                    markersByTid = markersByTid,
                     status = deliveryStatus,
-                    tIds = tIds.toLongArray()
+                    statusTids = messagesIdTid.map { it.tid }.toLongArray()
                 )
             }
 
             pendingMarkerDao.deleteMessagesMarkersByStatus(responseIds, marker)
-            myId?.let { userId ->
-                messageDao.insertUserMarkersIfExistMessage(responseIds.map {
-                    MarkerEntity(
-                        messageId = it,
-                        userId = userId,
-                        name = data.name,
-                        createdAt = data.createdAt
-                    )
-                })
-
-                messagesCache.addMessageMarker(
-                    channelId = channelId,
-                    markers = responseIds.map {
-                        SceytMarker(
-                            messageId = it,
-                            userId = userId,
-                            user = SceytChatUIKit.currentUser,
-                            name = marker,
+            userId?.let {
+                messageDao.insertUserMarkersIfExistMessage(messagesIdTid.mapNotNull { messageIdTid ->
+                    messageIdTid.id?.let { messageId ->
+                        MarkerEntity(
+                            messageId = messageId,
+                            userId = it,
+                            name = data.name,
                             createdAt = data.createdAt
                         )
-                    },
-                    tIds = tIds.toLongArray()
-                )
+                    }
+                })
             }
         }.onError { exception ->
             val errorType = SDKErrorTypeEnum.fromValue(exception?.type) ?: return@onError

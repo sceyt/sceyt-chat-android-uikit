@@ -25,7 +25,6 @@ import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
-import com.sceyt.chatuikit.data.models.messages.SceytMarker
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.asActivity
@@ -497,26 +496,6 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         pendingDisplayMsgIds.add(messageId)
     }
 
-    messageMarkerLiveData.observe(lifecycleOwner) {
-        it.forEach { response ->
-            if (response is SceytResponse.Success) {
-                val data = response.data ?: return@observe
-                viewModelScope.launch {
-                    val user = SceytChatUIKit.currentUser ?: return@launch
-                    applyDisplayedMarkers(
-                        marker = data,
-                        userMarker = SceytMarker(
-                            messageId = 0,
-                            user = user,
-                            name = data.name,
-                            createdAt = data.createdAt
-                        )
-                    )
-                }
-            }
-        }
-    }
-
     onNewOutGoingMessageFlow.onEach { message ->
         outgoingMessageMutex.withLock {
             appendOutgoingMessage(message)
@@ -529,8 +508,9 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     }.launchIn(lifecycleOwner.lifecycleScope)
 
-    MessagesCache.messageUpdatedFlow.onEach { data ->
-        applyMessageUpdates(data)
+    MessagesCache.messageUpdatedFlow.onEach { (channelId, messages) ->
+        if (channelId != channel.id) return@onEach
+        applyMessageUpdates(messages)
     }.launchIn(lifecycleOwner.lifecycleScope)
 
     fun onVocePlaying(message: SceytMessage) {
