@@ -156,6 +156,7 @@ class MessageListViewModel internal constructor(
         recoveryDispatcher = mainDispatcher,
     )
     private val messageListItemMapper by lazy { MessageListItemMapper() }
+    private val windowSyncGuard by lazy { MessageWindowSyncGuard() }
     internal val pendingDisplayMsgIds by lazy { Collections.synchronizedSet(mutableSetOf<Long>()) }
     private var showSenderAvatarAndNameIfNeeded = true
     internal var viewOnceSelected = false
@@ -180,8 +181,8 @@ class MessageListViewModel internal constructor(
     val state get() = store.state
     val renderEffects get() = store.renderEffects
 
-    private val _syncCenteredMessageLiveData = MutableLiveData<SyncNearMessagesResult>()
-    val syncCenteredMessageLiveData = _syncCenteredMessageLiveData.asLiveData()
+    private val _syncCenteredMessageLiveData = MutableLiveData<CenteredSyncMessagesResult>()
+    internal val syncCenteredMessageLiveData = _syncCenteredMessageLiveData.asLiveData()
 
     // Message events
     val onNewMessageFlow: Flow<SceytMessage>
@@ -483,6 +484,7 @@ class MessageListViewModel internal constructor(
     }
 
     fun loadNearMessages(messageId: Long, loadKey: LoadKeyData, ignoreServer: Boolean) {
+        invalidateCenteredSync()
         setPagingLoadingStarted(LoadNear, ignoreServer = ignoreServer)
         notifyPageLoadingState(false)
 
@@ -507,13 +509,21 @@ class MessageListViewModel internal constructor(
     }
 
     fun syncCenteredMessage(messageId: Long) {
+        val generation = startCenteredSync(messageId)
         viewModelScope.launch(ioDispatcher) {
             val response = messageInteractor.syncNearMessages(
                 conversationId = conversationId,
                 messageId = messageId,
                 replyInThread = replyInThread
             )
-            _syncCenteredMessageLiveData.postValue(response)
+            if (windowSyncGuard.canEmitCenteredSyncResult(response.centerMessageId, generation)) {
+                _syncCenteredMessageLiveData.postValue(
+                    CenteredSyncMessagesResult(
+                        generation = generation,
+                        data = response
+                    )
+                )
+            }
         }
     }
 
@@ -605,10 +615,20 @@ class MessageListViewModel internal constructor(
     private fun resetMessageLoadingState() {
         loadPrevOffsetId = 0
         loadNextOffsetId = 0
-        lastSyncCenterOffsetId = 0
+        invalidateCenteredSync()
         needSyncMessagesWhenScrollStateIdle = false
         isPreparingToScrollToMessage.set(false)
         store.reset()
+    }
+
+    private fun startCenteredSync(messageId: Long): Long {
+        lastSyncCenterOffsetId = messageId
+        return windowSyncGuard.startCenteredSync(messageId)
+    }
+
+    internal fun invalidateCenteredSync() {
+        lastSyncCenterOffsetId = 0L
+        windowSyncGuard.invalidateCenteredSync()
     }
 
     private suspend fun getCompareMessage(
@@ -841,12 +861,14 @@ class MessageListViewModel internal constructor(
     internal suspend fun appendSyncedMessages(
         messages: List<SceytMessage>,
         scrollToLastAfterAppend: Boolean,
-    ) = store.withMutation {
+    ): Boolean = store.withMutation {
+        if (!canAppendSyncedMessages()) return@withMutation false
+
         val currentMessages = currentMessageItems()
         val newMessages = messages.minus(currentMessages.toSet())
-        if (newMessages.isEmpty()) return@withMutation
+        if (newMessages.isEmpty()) return@withMutation false
 
-        store.mergeSynced(
+        val merged = store.mergeSynced(
             mapToMessageListItem(
                 data = newMessages,
                 hasNext = false,
@@ -854,8 +876,32 @@ class MessageListViewModel internal constructor(
                 compareMessage = currentLastMessageItem()?.message,
             )
         )
-        if (scrollToLastAfterAppend)
+        if (merged && scrollToLastAfterAppend)
             emitRenderEffect(MessageListRenderEffect.ScrollToLastMessage)
+
+        merged
+    }
+
+    private fun canAppendSyncedMessages(): Boolean {
+        return windowSyncGuard.canAppendSyncedMessages(
+            hasNext = hasNext,
+            hasNextDb = hasNextDb,
+            isPaging = loadingFromServer || loadingFromDb
+        )
+    }
+
+    internal fun canApplyCenteredSyncResult(
+        centerMessageId: Long,
+        generation: Long,
+        topOffset: Int,
+    ): Boolean {
+        return windowSyncGuard.canApplyCenteredSyncResult(
+            centerMessageId = centerMessageId,
+            generation = generation,
+            topOffset = topOffset,
+            isPaging = loadingFromServer || loadingFromDb,
+            isPreparingJump = isPreparingToScrollToMessage.get()
+        )
     }
 
     internal suspend fun mergeMissingMessagesAroundCenter(
