@@ -25,6 +25,7 @@ import com.sceyt.chatuikit.presentation.components.channel.input.data.InputUserA
 import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.MessageInputActionCallback
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
+import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageActionBridge
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageListViewModel
 import com.sceyt.chatuikit.presentation.root.PageState
 import kotlinx.coroutines.Dispatchers
@@ -40,7 +41,29 @@ fun MessageListViewModel.bind(
     lifecycleOwner: LifecycleOwner,
 ) {
 
-    messageActionBridge.setInputView(messageInputView)
+    messageActionBridge.effects.onEach { effect ->
+        when (effect) {
+            is MessageActionBridge.Effect.MessageActionsShown -> {
+                messageInputView.getEventListeners().onMultiselectModeListener(true)
+            }
+
+            MessageActionBridge.Effect.MessageActionsHidden,
+            MessageActionBridge.Effect.MultiSelectCanceled -> {
+                messageInputView.getEventListeners().onMultiselectModeListener(false)
+            }
+
+            is MessageActionBridge.Effect.SearchRequested -> {
+                messageInputView.getEventListeners().onSearchModeChangeListener(effect.event.show)
+            }
+
+            is MessageActionBridge.Effect.SearchModeChanged -> {
+                messageInputView.getEventListeners().onSearchModeChangeListener(effect.enabled)
+            }
+        }
+    }.launchIn(lifecycleOwner.lifecycleScope)
+
+    if (selectedMessagesMap.isNotEmpty())
+        messageInputView.getEventListeners().onMultiselectModeListener(true)
 
     if (placeToSavePathsList.isNotEmpty())
         messageInputView.addAttachment(*placeToSavePathsList.toTypedArray())
