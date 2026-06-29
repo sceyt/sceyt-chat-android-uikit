@@ -283,12 +283,12 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
     fun syncNearCenterVisibleMessageIfNeeded() {
         if (!needSyncMessagesWhenScrollStateIdle || loadingFromServer) return
-        val centerPosition = messagesListView.getMessagesRecyclerView().centerVisibleItemPosition()
+        val recyclerView = messagesListView.getMessagesRecyclerView()
+        val centerPosition = recyclerView.centerVisibleItemPosition()
         if (centerPosition == RecyclerView.NO_POSITION) return
-        val item = currentMessageListItems().getOrNull(centerPosition)
-        val messageId = item?.getMessageId() ?: return
+        val item = currentMessageListItems().getOrNull(centerPosition) as? MessageItem
+        val messageId = item?.message?.id ?: return
         if (lastSyncCenterOffsetId != messageId) {
-            lastSyncCenterOffsetId = messageId
             syncCenteredMessage(messageId = messageId)
         }
     }
@@ -367,18 +367,27 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                         syncManager.syncConversationMessagesAfter(conversationId, it.message.id)
                     }
                 } else {
-                    lastSyncCenterOffsetId = 0L
+                    invalidateCenteredSync()
                     needSyncMessagesWhenScrollStateIdle = true
                 }
             }
         }.launchIn(lifecycleOwner.lifecycleScope)
 
-    syncCenteredMessageLiveData.observe(lifecycleOwner) { data ->
+    syncCenteredMessageLiveData.observe(lifecycleOwner) { centeredSync ->
         lifecycleOwner.lifecycleScope.launch {
+            val data = centeredSync.data
+            val recyclerView = messagesListView.getMessagesRecyclerView()
             val (index) = currentMessageListItems().findIndexed {
                 it is MessageItem && it.message.id == data.centerMessageId
             } ?: return@launch
-            val topOffset = messagesListView.getMessagesRecyclerView().getChildTopByPosition(index)
+            val topOffset = recyclerView.getChildTopByPosition(index)
+            if (!canApplyCenteredSyncResult(
+                    centerMessageId = data.centerMessageId,
+                    generation = centeredSync.generation,
+                    topOffset = topOffset
+                )
+            ) return@launch
+
             mergeMissingMessagesAroundCenter(data, topOffset)
         }
     }

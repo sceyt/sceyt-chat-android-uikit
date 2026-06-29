@@ -14,6 +14,9 @@ import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.createChannel
 import com.sceyt.chatuikit.createMessage
+import com.sceyt.chatuikit.data.models.LoadKeyData
+import com.sceyt.chatuikit.data.models.PaginationResponse
+import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNear
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.SyncNearMessagesResult
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
@@ -35,6 +38,7 @@ import com.sceyt.chatuikit.persistence.interactor.UserInteractor
 import com.sceyt.chatuikit.persistence.logic.PersistenceConnectionLogic
 import com.sceyt.chatuikit.persistence.repositories.SceytSharedPreference
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem.DateSeparatorItem
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem.LoadingNextItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem.MessageItem
 import com.sceyt.chatuikit.presentation.components.channel.header.MessagesListHeaderView
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.ui.MessageListHeaderUIElementsListener
@@ -56,6 +60,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -200,6 +205,74 @@ class MessageListViewModelStateTest {
         assertThat(firstAdd).isTrue()
         assertThat(duplicateAdd).isFalse()
         assertThat(viewModel.state.value.items.filterIsInstance<MessageItem>()).hasSize(1)
+    }
+
+    @Test
+    fun `synced messages are not appended to load near window with next page`() = runTest(dispatcher) {
+        val viewModel = viewModel()
+        val centeredMessage = createMessage(createdAt = 1_000, id = 100, tid = 100)
+        whenever(
+            messageInteractor.loadNearMessages(
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        ).thenReturn(
+            flowOf(
+                PaginationResponse.DBResponse(
+                    data = listOf(centeredMessage),
+                    loadKey = LoadKeyData(value = centeredMessage.id),
+                    offset = 0,
+                    hasNext = true,
+                    hasPrev = false,
+                    loadType = LoadNear
+                )
+            )
+        )
+
+        viewModel.loadNearMessages(
+            messageId = centeredMessage.id,
+            loadKey = LoadKeyData(value = centeredMessage.id),
+            ignoreServer = true
+        )
+        advanceUntilIdle()
+
+        val appended = viewModel.appendSyncedMessages(
+            messages = listOf(createMessage(createdAt = 2_000, id = 200, tid = 200)),
+            scrollToLastAfterAppend = false
+        )
+
+        assertThat(appended).isFalse()
+        assertThat(viewModel.state.value.items).contains(LoadingNextItem)
+        assertThat(
+            viewModel.state.value.items
+                .filterIsInstance<MessageItem>()
+                .map { it.message.id }
+        ).containsExactly(centeredMessage.id)
+    }
+
+    @Test
+    fun `center sync response is not emitted after request invalidated`() = runTest(dispatcher) {
+        val viewModel = viewModel()
+        val message = createMessage(createdAt = 1_000, id = 100, tid = 100)
+        whenever(messageInteractor.syncNearMessages(any(), any(), any()))
+            .thenReturn(
+                SyncNearMessagesResult(
+                    centerMessageId = message.id,
+                    response = SceytResponse.Success(data = emptyList()),
+                    missingMessages = emptyList()
+                )
+            )
+
+        viewModel.syncCenteredMessage(message.id)
+        viewModel.invalidateCenteredSync()
+        advanceUntilIdle()
+
+        assertThat(viewModel.syncCenteredMessageLiveData.value).isNull()
     }
 
     @Test
