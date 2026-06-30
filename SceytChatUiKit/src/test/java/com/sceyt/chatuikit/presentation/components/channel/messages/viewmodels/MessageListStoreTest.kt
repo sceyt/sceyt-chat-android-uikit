@@ -333,4 +333,28 @@ class MessageListStoreTest {
         assertThat(ids(store.items)).containsExactly(1L, 2L).inOrder()
         assertThat(effects.single()).isInstanceOf(MessageListRenderEffect.Sort::class.java)
     }
+
+    // Rotation safety: render effects are one-shot. A collector that re-subscribes after a
+    // configuration change must not be re-delivered effects emitted before it subscribed,
+    // otherwise a scroll/highlight would replay on rotation.
+    @Test
+    fun `renderEffects does not replay to a late subscriber`() = runTest {
+        val store = store()
+        // Effect emitted while nothing is observing (e.g. before a rotated view re-subscribes).
+        store.clear()
+        advanceUntilIdle()
+
+        val (effects, job) = collectEffects(store)
+        advanceUntilIdle()
+
+        // The late subscriber must NOT receive the pre-subscription effect.
+        assertThat(effects).isEmpty()
+
+        // It still receives effects emitted after it subscribed.
+        store.replace(listOf(item(1)), force = true)
+        advanceUntilIdle()
+        job.cancel()
+
+        assertThat(effects.single()).isInstanceOf(MessageListRenderEffect.Replace::class.java)
+    }
 }

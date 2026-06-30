@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels
 
+import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 
@@ -54,8 +55,22 @@ sealed interface MessageListRenderEffect {
     data object ScrollToUnreadMessage : MessageListRenderEffect
     data object ScrollToLastMessage : MessageListRenderEffect
 
+    /**
+     * Scroll to the channel's newest message, loading the previous page first if it is not
+     * currently in the list. Unlike [ScrollToLastMessage] (which assumes the message is already
+     * loaded and just scrolls), this handles the "scroll to bottom" command from the UI.
+     */
+    data class ScrollToNewMessage(
+        val lastMessage: SceytMessage?,
+    ) : MessageListRenderEffect
+
     data class Sort(
         val resultItems: List<MessageListItem>,
+    ) : MessageListRenderEffect
+
+    /** Merge messages fetched by a centered window sync into the list, if still applicable. */
+    data class ApplyCenteredSync(
+        val result: CenteredSyncMessagesResult,
     ) : MessageListRenderEffect
 }
 

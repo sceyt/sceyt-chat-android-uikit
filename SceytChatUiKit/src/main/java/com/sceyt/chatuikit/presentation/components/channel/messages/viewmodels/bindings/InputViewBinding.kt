@@ -25,6 +25,7 @@ import com.sceyt.chatuikit.presentation.components.channel.input.data.InputUserA
 import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.MessageInputActionCallback
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
+import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageInputCommand
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageActionBridge
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageListViewModel
 import com.sceyt.chatuikit.presentation.root.PageState
@@ -101,13 +102,12 @@ fun MessageListViewModel.bind(
             customToastSnackBar(messageInputView, it.errorMessage.toString())
     }
 
-    onEditMessageCommandLiveData.observe(lifecycleOwner) {
-        messageInputView.editMessage(it, false)
-    }
-
-    onReplyMessageCommandLiveData.observe(lifecycleOwner) {
-        messageInputView.replyMessage(it, false)
-    }
+    inputCommands.onEach { command ->
+        when (command) {
+            is MessageInputCommand.Edit -> messageInputView.editMessage(command.message, false)
+            is MessageInputCommand.Reply -> messageInputView.replyMessage(command.message, false)
+        }
+    }.launchIn(lifecycleOwner.lifecycleScope)
 
     onChannelEventFlow.onEach { event ->
         when (event) {
