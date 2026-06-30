@@ -215,13 +215,6 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     }
 
-    val retainedState = state.value
-    if (retainedState.hasLoadedInitialMessages && retainedState.items.isNotEmpty()) {
-        messagesListView.setMessagesList(retainedState.items, lifecycleScope, force = true)
-    }
-
-    renderEffects.onEach(::applyRenderEffect).launchIn(lifecycleScope)
-
     fun applyActionEffect(effect: MessageActionBridge.Effect) {
         when (effect) {
             is MessageActionBridge.Effect.MessageActionsShown -> messagesListView.setMultiSelectableMode()
@@ -280,13 +273,69 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     }
 
-    messageActionBridge.effects.onEach(::applyActionEffect).launchIn(lifecycleScope)
-    messageActionBridge.menuEvents.onEach(::applyMenuEvent).launchIn(lifecycleScope)
+    fun setUnreadCounts(channel: SceytChannel) {
+        messagesListView.setUnreadMessagesCount(channel.newMessageCount)
+        messagesListView.setUnreadMentionsCount(channel.newMentionCount)
+    }
+
+    fun checkEnableDisableActions(channel: SceytChannel) {
+        messagesListView.setActionsEnabled(
+            enabled = !replyInThread && channel.checkIsMemberInChannel() &&
+                    (channel.isGroup || channel.getPeer()?.user?.blocked != true), false
+        )
+    }
+
+    fun onMessageDisplayed(message: SceytMessage) {
+        if (channel.userRole.isNullOrEmpty())
+            return
+
+        if (!message.incoming || message.userMarkers?.any { it.name == MarkerType.Displayed.value } == true)
+            return
+
+        if (lifecycleOwner.isResumed()) {
+            pendingDisplayMsgIds.add(message.id)
+            sendDisplayedHelper.submit {
+                markMessageAsRead(*(pendingDisplayMsgIds).toLongArray())
+                pendingDisplayMsgIds.clear()
+            }
+        } else pendingDisplayMsgIds.add(message.id)
+    }
+
+    fun onVoicePlaying(message: SceytMessage) {
+        if (message.userMarkers?.any { it.name == MarkerType.Played.value } == true)
+            return
+
+        addMessageMarker(MarkerType.Played.value, message.id)
+    }
+
+    val retainedState = state.value
+    if (retainedState.hasLoadedInitialMessages && retainedState.items.isNotEmpty()) {
+        messagesListView.setMessagesList(retainedState.items, lifecycleScope, force = true)
+    }
 
     if (selectedMessagesMap.isNotEmpty())
         messagesListView.setMultiSelectableMode()
 
     clearPreparingThumbs()
+
+    if (channel.unread)
+        markChannelAsRead(channel.id)
+
+    // Cancel notification for current channel
+    SceytChatUIKit.notifications.pushNotification.notificationHandler.cancelNotification(
+        notificationId = channel.id.toInt()
+    )
+
+    // If userRole is null or empty, get channel again to update channel
+    if (channel.userRole.isNullOrEmpty())
+        getChannel(channel.id)
+
+    checkEnableDisableActions(channel)
+    setUnreadCounts(channel)
+
+    renderEffects.onEach(::applyRenderEffect).launchIn(lifecycleScope)
+    messageActionBridge.effects.onEach(::applyActionEffect).launchIn(lifecycleScope)
+    messageActionBridge.menuEvents.onEach(::applyMenuEvent).launchIn(lifecycleScope)
 
     /** Send pending markers, pending messages and update attachments transfer states when
      * lifecycle come back onResume state. */
@@ -305,49 +354,6 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 }
             }
         }
-    }
-
-    if (channel.unread)
-        markChannelAsRead(channel.id)
-
-    // Cancel notification for current channel
-    SceytChatUIKit.notifications.pushNotification.notificationHandler.cancelNotification(
-        notificationId = channel.id.toInt()
-    )
-
-    // If userRole is null or empty, get channel again to update channel
-    if (channel.userRole.isNullOrEmpty())
-        getChannel(channel.id)
-
-    fun setUnreadCounts(channel: SceytChannel) {
-        messagesListView.setUnreadMessagesCount(channel.newMessageCount)
-        messagesListView.setUnreadMentionsCount(channel.newMentionCount)
-    }
-
-    fun checkEnableDisableActions(channel: SceytChannel) {
-        messagesListView.setActionsEnabled(
-            enabled = !replyInThread && channel.checkIsMemberInChannel() &&
-                    (channel.isGroup || channel.getPeer()?.user?.blocked != true), false
-        )
-    }
-
-    checkEnableDisableActions(channel)
-    setUnreadCounts(channel)
-
-    fun onMessageDisplayed(message: SceytMessage) {
-        if (channel.userRole.isNullOrEmpty())
-            return
-
-        if (!message.incoming || message.userMarkers?.any { it.name == MarkerType.Displayed.value } == true)
-            return
-
-        if (lifecycleOwner.isResumed()) {
-            pendingDisplayMsgIds.add(message.id)
-            sendDisplayedHelper.submit {
-                markMessageAsRead(*(pendingDisplayMsgIds).toLongArray())
-                pendingDisplayMsgIds.clear()
-            }
-        } else pendingDisplayMsgIds.add(message.id)
     }
 
     ChannelsCache.channelsDeletedFlow
@@ -449,13 +455,6 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         if (channelId != channel.id) return@onEach
         applyMessageUpdates(messages)
     }.launchIn(lifecycleOwner.lifecycleScope)
-
-    fun onVocePlaying(message: SceytMessage) {
-        if (message.userMarkers?.any { it.name == MarkerType.Played.value } == true)
-            return
-
-        addMessageMarker(MarkerType.Played.value, message.id)
-    }
 
     // todo reply in thread
     /*
@@ -685,6 +684,6 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
     messagesListView.setVoicePlayPauseListener { _, message, playing ->
         if (playing)
-            onVocePlaying(message)
+            onVoicePlaying(message)
     }
 }
