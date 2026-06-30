@@ -108,7 +108,16 @@ class MessageListViewModelStateTest {
         // loadInitialMessages() runs in the VM init; stub the loaders so construction's load is a no-op.
         runBlocking {
             whenever(
-                messageInteractor.loadPrevMessages(any(), any(), any(), any(), any(), any(), any())
+                messageInteractor.loadPrevMessages(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    0
+                )
             ).thenReturn(emptyFlow())
             whenever(channelInteractor.getChannelFromServer(any()))
                 .thenReturn(SceytResponse.Success(null))
@@ -179,7 +188,8 @@ class MessageListViewModelStateTest {
             any(),
             any(),
             any(),
-            any()
+            any(),
+            0
         )
     }
 
@@ -222,7 +232,7 @@ class MessageListViewModelStateTest {
                 any(),
                 any(),
                 any(),
-                any()
+                any(),
             )
         ).thenReturn(
             flowOf(

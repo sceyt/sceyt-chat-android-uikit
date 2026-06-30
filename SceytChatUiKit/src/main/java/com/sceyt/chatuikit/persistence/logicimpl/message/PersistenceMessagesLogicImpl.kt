@@ -113,7 +113,6 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.koin.core.component.inject
 import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Duration.Companion.seconds
 
 internal class PersistenceMessagesLogicImpl(
     private val context: Context,
@@ -241,6 +240,7 @@ internal class PersistenceMessagesLogicImpl(
         limit: Int,
         loadKey: LoadKeyData,
         ignoreDb: Boolean,
+        awaitToConnectTimeout: Long,
     ): Flow<PaginationResponse<SceytMessage>> = loadMessages(
         loadType = LoadPrev,
         conversationId = conversationId,
@@ -249,7 +249,8 @@ internal class PersistenceMessagesLogicImpl(
         offset = offset,
         limit = limit,
         loadKey = loadKey,
-        ignoreDb = ignoreDb
+        ignoreDb = ignoreDb,
+        awaitToConnectTimeout = awaitToConnectTimeout
     )
 
     override suspend fun loadNextMessages(
@@ -259,6 +260,7 @@ internal class PersistenceMessagesLogicImpl(
         offset: Int,
         limit: Int,
         ignoreDb: Boolean,
+        awaitToConnectTimeout: Long,
     ): Flow<PaginationResponse<SceytMessage>> = loadMessages(
         loadType = LoadNext,
         conversationId = conversationId,
@@ -266,7 +268,8 @@ internal class PersistenceMessagesLogicImpl(
         replyInThread = replyInThread,
         offset = offset,
         limit = limit,
-        ignoreDb = ignoreDb
+        ignoreDb = ignoreDb,
+        awaitToConnectTimeout = awaitToConnectTimeout
     )
 
     override suspend fun loadNearMessages(
@@ -277,6 +280,7 @@ internal class PersistenceMessagesLogicImpl(
         loadKey: LoadKeyData,
         ignoreDb: Boolean,
         ignoreServer: Boolean,
+        awaitToConnectTimeout: Long,
     ): Flow<PaginationResponse<SceytMessage>> = loadMessages(
         loadType = LoadNear,
         conversationId = conversationId,
@@ -286,7 +290,8 @@ internal class PersistenceMessagesLogicImpl(
         limit = limit,
         loadKey = loadKey,
         ignoreDb = ignoreDb,
-        ignoreServer = ignoreServer
+        ignoreServer = ignoreServer,
+        awaitToConnectTimeout = awaitToConnectTimeout
     )
 
     override suspend fun loadNewestMessages(
@@ -294,7 +299,8 @@ internal class PersistenceMessagesLogicImpl(
         replyInThread: Boolean,
         limit: Int,
         loadKey: LoadKeyData,
-        ignoreDb: Boolean
+        ignoreDb: Boolean,
+        awaitToConnectTimeout: Long
     ): Flow<PaginationResponse<SceytMessage>> = loadMessages(
         loadType = LoadNewest,
         conversationId = conversationId,
@@ -303,7 +309,8 @@ internal class PersistenceMessagesLogicImpl(
         offset = 0,
         limit = limit,
         loadKey = loadKey,
-        ignoreDb = ignoreDb
+        ignoreDb = ignoreDb,
+        awaitToConnectTimeout = awaitToConnectTimeout
     )
 
     override suspend fun searchMessages(
@@ -1107,6 +1114,7 @@ internal class PersistenceMessagesLogicImpl(
         loadKey: LoadKeyData = LoadKeyData(value = messageId),
         ignoreDb: Boolean,
         ignoreServer: Boolean = false,
+        awaitToConnectTimeout: Long,
     ): Flow<PaginationResponse<SceytMessage>> {
         return callbackFlow {
             if (offset == 0) messagesCache.clear(conversationId)
@@ -1137,7 +1145,8 @@ internal class PersistenceMessagesLogicImpl(
                     replyInThread = replyInThread,
                     loadKey = loadKey,
                     ignoreDb = ignoreDb,
-                    dbResultWasEmpty = dbResultWasEmpty
+                    dbResultWasEmpty = dbResultWasEmpty,
+                    awaitToConnectTimeout = awaitToConnectTimeout
                 )
 
                 trySend(response)
@@ -1263,6 +1272,7 @@ internal class PersistenceMessagesLogicImpl(
         loadKey: LoadKeyData = LoadKeyData(value = lastMessageId),
         ignoreDb: Boolean,
         dbResultWasEmpty: Boolean,
+        awaitToConnectTimeout: Long,
     ): PaginationResponse.ServerResponse<SceytMessage> {
         var hasNext = false
         var hasPrev = false
@@ -1271,7 +1281,7 @@ internal class PersistenceMessagesLogicImpl(
         var messages: List<SceytMessage> = emptyList()
         val response: SceytResponse<List<SceytMessage>>
 
-        ConnectionEventManager.awaitToConnectSceytWithTimeout(10.seconds.inWholeMilliseconds)
+        ConnectionEventManager.awaitToConnectSceytWithTimeout(awaitToConnectTimeout)
 
         val syncStartTime = ServerTimeSync.getCurrentServerTime()
 
