@@ -153,7 +153,8 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                                     key = it.loadKey,
                                     value = effect.messageId
                                 ),
-                                ignoreServer = it.ignoreServer
+                                ignoreServer = it.ignoreServer,
+                                awaitToConnectTimeout = 0
                             )
                         }
                     }

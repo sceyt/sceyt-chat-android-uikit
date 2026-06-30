@@ -94,6 +94,7 @@ import org.koin.core.component.inject
 import java.util.Collections
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.min
+import kotlin.time.Duration.Companion.seconds
 
 class MessageListViewModel internal constructor(
     private var _conversationId: Long,
@@ -415,7 +416,8 @@ class MessageListViewModel internal constructor(
                 lastMessageId = lastMessageId,
                 replyInThread = replyInThread,
                 offset = offset,
-                loadKey = loadKey
+                loadKey = loadKey,
+                awaitToConnectTimeout = 0
             ).collect {
                 withContext(mainDispatcher) {
                     initPaginationResponse(it)
@@ -471,7 +473,7 @@ class MessageListViewModel internal constructor(
                 conversationId = conversationId,
                 lastMessageId = lastMessageId,
                 replyInThread = replyInThread,
-                offset = offset
+                offset = offset,
             ).collect {
                 withContext(mainDispatcher) {
                     initPaginationResponse(it)
@@ -480,7 +482,12 @@ class MessageListViewModel internal constructor(
         }
     }
 
-    fun loadNearMessages(messageId: Long, loadKey: LoadKeyData, ignoreServer: Boolean) {
+    fun loadNearMessages(
+        messageId: Long,
+        loadKey: LoadKeyData,
+        ignoreServer: Boolean,
+        awaitToConnectTimeout: Long = 10.seconds.inWholeMilliseconds
+    ) {
         invalidateCenteredSync()
         setPagingLoadingStarted(LoadNear, ignoreServer = ignoreServer)
         notifyPageLoadingState(false)
@@ -496,7 +503,8 @@ class MessageListViewModel internal constructor(
                 replyInThread = replyInThread,
                 limit = limit,
                 loadKey = loadKey,
-                ignoreServer = ignoreServer
+                ignoreServer = ignoreServer,
+                awaitToConnectTimeout = awaitToConnectTimeout
             ).collect { response ->
                 withContext(mainDispatcher) {
                     initPaginationResponse(response)
