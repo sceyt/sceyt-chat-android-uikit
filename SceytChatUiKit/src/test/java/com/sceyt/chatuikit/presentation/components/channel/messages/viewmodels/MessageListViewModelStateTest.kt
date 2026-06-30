@@ -47,6 +47,8 @@ import com.sceyt.chatuikit.presentation.components.channel.input.data.InputState
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.event.InputEventsListener
 import com.sceyt.chatuikit.presentation.components.channel.messages.MessagesListView
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageCommandEvent
+import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageInputCommand
+import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.bindings.LoadKeyType
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.bindings.bind
 import com.sceyt.chatuikit.presentation.custom_views.AvatarView
 import com.sceyt.chatuikit.services.sync.SceytSyncManager
@@ -56,6 +58,7 @@ import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.emptyFlow
@@ -267,12 +270,39 @@ class MessageListViewModelStateTest {
                     missingMessages = emptyList()
                 )
             )
+        val effects = mutableListOf<MessageListRenderEffect>()
+        val job = launch { viewModel.renderEffects.collect { effects.add(it) } }
+        runCurrent()
 
         viewModel.syncCenteredMessage(message.id)
         viewModel.invalidateCenteredSync()
         advanceUntilIdle()
+        job.cancel()
 
-        assertThat(viewModel.syncCenteredMessageLiveData.value).isNull()
+        assertThat(effects.filterIsInstance<MessageListRenderEffect.ApplyCenteredSync>()).isEmpty()
+    }
+
+    @Test
+    fun `center sync response is emitted as an ApplyCenteredSync effect`() = runTest(dispatcher) {
+        val viewModel = viewModel()
+        val message = createMessage(createdAt = 1_000, id = 100, tid = 100)
+        whenever(messageInteractor.syncNearMessages(any(), any(), any()))
+            .thenReturn(
+                SyncNearMessagesResult(
+                    centerMessageId = message.id,
+                    response = SceytResponse.Success(data = emptyList()),
+                    missingMessages = emptyList()
+                )
+            )
+        val effect = async {
+            viewModel.renderEffects.first { it is MessageListRenderEffect.ApplyCenteredSync }
+                    as MessageListRenderEffect.ApplyCenteredSync
+        }
+        runCurrent()
+
+        viewModel.syncCenteredMessage(message.id)
+
+        assertThat(effect.await().result.data.centerMessageId).isEqualTo(message.id)
     }
 
     @Test
@@ -511,8 +541,153 @@ class MessageListViewModelStateTest {
         assertThat(messages.map { it.message.id }).containsExactly(10L, 20L, 100L).inOrder()
     }
 
-    private fun viewModel(): MessageListViewModel {
-        val channel = createChannel(id = 1, pinnedAt = 0, createdAt = 1)
+    @Test
+    fun `prepareToScrollToReplyMessage emits ScrollToMessage for the parent with highlight`() =
+        runTest(dispatcher) {
+            val viewModel = viewModel()
+            val parent = createMessage(createdAt = 1, id = 1, tid = 1)
+            val reply = createMessage(createdAt = 2, id = 2, tid = 2).copy(parentMessage = parent)
+            val effect = async {
+                viewModel.renderEffects.first { it is MessageListRenderEffect.ScrollToMessage }
+                        as MessageListRenderEffect.ScrollToMessage
+            }
+            runCurrent()
+
+            viewModel.prepareToScrollToReplyMessage(reply)
+
+            val scroll = effect.await()
+            assertThat(scroll.messageId).isEqualTo(parent.id)
+            assertThat(scroll.highlight).isTrue()
+            assertThat(scroll.offset).isEqualTo(200)
+            assertThat(scroll.loadOnMissing?.loadKey)
+                    .isEqualTo(LoadKeyType.ScrollToReplyMessage.longValue)
+            assertThat(scroll.loadOnMissing?.ignoreServer).isFalse()
+        }
+
+    @Test
+    fun `prepareToScrollToReplyMessage without a parent emits nothing`() = runTest(dispatcher) {
+        val viewModel = viewModel()
+        val withoutParent = createMessage(createdAt = 1, id = 1, tid = 1)
+        val withParent = createMessage(createdAt = 2, id = 2, tid = 2)
+                .copy(parentMessage = createMessage(createdAt = 3, id = 3, tid = 3))
+        val effect = async {
+            viewModel.renderEffects.first { it is MessageListRenderEffect.ScrollToMessage }
+                    as MessageListRenderEffect.ScrollToMessage
+        }
+        runCurrent()
+
+        // No parent -> early return, no effect. The following call is the first to emit one.
+        viewModel.prepareToScrollToReplyMessage(withoutParent)
+        viewModel.prepareToScrollToReplyMessage(withParent)
+
+        assertThat(effect.await().messageId).isEqualTo(3L)
+    }
+
+    // Rotation safety: reply-message scroll is a one-shot render effect. A collector that
+    // re-subscribes after rotation must not receive a previously emitted scroll/highlight command.
+    @Test
+    fun `prepareToScrollToReplyMessage does not replay to a late subscriber`() = runTest(dispatcher) {
+        val viewModel = viewModel()
+        val oldParent = createMessage(createdAt = 1, id = 1, tid = 1)
+        val oldReply = createMessage(createdAt = 2, id = 2, tid = 2).copy(parentMessage = oldParent)
+        viewModel.prepareToScrollToReplyMessage(oldReply)
+        advanceUntilIdle()
+
+        val effects = mutableListOf<MessageListRenderEffect.ScrollToMessage>()
+        val job = launch {
+            viewModel.renderEffects.collect {
+                if (it is MessageListRenderEffect.ScrollToMessage) effects.add(it)
+            }
+        }
+        runCurrent()
+
+        assertThat(effects).isEmpty()
+
+        val newParent = createMessage(createdAt = 3, id = 3, tid = 3)
+        val newReply = createMessage(createdAt = 4, id = 4, tid = 4).copy(parentMessage = newParent)
+        viewModel.prepareToScrollToReplyMessage(newReply)
+        advanceUntilIdle()
+        job.cancel()
+
+        assertThat(effects.single().messageId).isEqualTo(newParent.id)
+    }
+
+    @Test
+    fun `prepareToScrollToNewMessage emits ScrollToNewMessage with the channel last message`() =
+        runTest(dispatcher) {
+            val lastMessage = createMessage(createdAt = 10, id = 10, tid = 10)
+            val viewModel = viewModel(
+                channel = createChannel(
+                    id = 1,
+                    pinnedAt = 0,
+                    createdAt = 1,
+                    lastMessage = lastMessage
+                )
+            )
+            val effect = async {
+                viewModel.renderEffects.first { it is MessageListRenderEffect.ScrollToNewMessage }
+                        as MessageListRenderEffect.ScrollToNewMessage
+            }
+            runCurrent()
+
+            viewModel.prepareToScrollToNewMessage()
+
+            assertThat(effect.await().lastMessage?.id).isEqualTo(lastMessage.id)
+        }
+
+    @Test
+    fun `prepareToEditMessage emits an Edit input command`() = runTest(dispatcher) {
+        val viewModel = viewModel()
+        val message = createMessage(createdAt = 1, id = 1, tid = 1)
+        val command = async { viewModel.inputCommands.first() }
+        runCurrent()
+
+        viewModel.prepareToEditMessage(message)
+
+        val edit = command.await() as MessageInputCommand.Edit
+        assertThat(edit.message.id).isEqualTo(1L)
+    }
+
+    @Test
+    fun `prepareToReplyMessage emits a Reply input command`() = runTest(dispatcher) {
+        val viewModel = viewModel()
+        val message = createMessage(createdAt = 1, id = 1, tid = 1)
+        val command = async { viewModel.inputCommands.first() }
+        runCurrent()
+
+        viewModel.prepareToReplyMessage(message)
+
+        val reply = command.await() as MessageInputCommand.Reply
+        assertThat(reply.message.id).isEqualTo(1L)
+    }
+
+    // Rotation safety: input commands are one-shot. A collector that re-subscribes after a
+    // configuration change must not be re-delivered a command emitted before it subscribed.
+    @Test
+    fun `inputCommands does not replay to a late subscriber`() = runTest(dispatcher) {
+        val viewModel = viewModel()
+        // Emitted while nothing is observing (e.g. before a rotated view re-subscribes).
+        viewModel.prepareToEditMessage(createMessage(createdAt = 1, id = 1, tid = 1))
+        advanceUntilIdle()
+
+        val received = mutableListOf<MessageInputCommand>()
+        val job = launch { viewModel.inputCommands.collect { received.add(it) } }
+        runCurrent()
+
+        // The late subscriber must NOT receive the pre-subscription command.
+        assertThat(received).isEmpty()
+
+        // It still receives commands emitted after it subscribed.
+        viewModel.prepareToReplyMessage(createMessage(createdAt = 2, id = 2, tid = 2))
+        advanceUntilIdle()
+        job.cancel()
+
+        assertThat(received.single()).isInstanceOf(MessageInputCommand.Reply::class.java)
+    }
+
+    private fun viewModel(
+        channel: SceytChannel = createChannel(id = 1, pinnedAt = 0, createdAt = 1),
+    ): MessageListViewModel {
         return MessageListViewModel(
             _conversationId = channel.id,
             _channel = channel,

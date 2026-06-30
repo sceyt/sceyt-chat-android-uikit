@@ -75,6 +75,18 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
     configureMessageList(messagesListView.style.enableDateSeparator)
 
+    fun syncNearCenterVisibleMessageIfNeeded() {
+        if (!needSyncMessagesWhenScrollStateIdle || loadingFromServer) return
+        val recyclerView = messagesListView.getMessagesRecyclerView()
+        val centerPosition = recyclerView.centerVisibleItemPosition()
+        if (centerPosition == RecyclerView.NO_POSITION) return
+        val item = currentMessageListItems().getOrNull(centerPosition) as? MessageItem
+        val messageId = item?.message?.id ?: return
+        if (lastSyncCenterOffsetId != messageId) {
+            syncCenteredMessage(messageId = messageId)
+        }
+    }
+
     fun applyRenderEffect(effect: MessageListRenderEffect) {
         when (effect) {
             is MessageListRenderEffect.Replace -> {
@@ -156,8 +168,49 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 messagesListView.scrollToLastMessage()
             }
 
+            is MessageListRenderEffect.ScrollToNewMessage -> {
+                viewModelScope.launch(Dispatchers.Default) {
+                    val lastMsgId = effect.lastMessage?.id ?: return@launch
+                    messagesListView.getMessageIndexedById(lastMsgId)?.let {
+                        withContext(Dispatchers.Main) {
+                            messagesListView.scrollToLastMessage()
+                            lifecycleOwner.lifecycleScope.launch {
+                                delay(200.milliseconds)
+                                syncNearCenterVisibleMessageIfNeeded()
+                            }
+                        }
+                    } ?: run {
+                        loadPrevMessages(
+                            lastMessageId = lastMsgId,
+                            offset = 0,
+                            loadKey = LoadKeyData(key = LoadKeyType.ScrollToLastMessage.longValue)
+                        )
+                        markChannelAsRead(channel.id)
+                    }
+                }
+            }
+
             is MessageListRenderEffect.Sort -> {
                 messagesListView.setMessagesList(effect.resultItems, lifecycleScope)
+            }
+
+            is MessageListRenderEffect.ApplyCenteredSync -> {
+                lifecycleOwner.lifecycleScope.launch {
+                    val data = effect.result.data
+                    val recyclerView = messagesListView.getMessagesRecyclerView()
+                    val (index) = currentMessageListItems().findIndexed {
+                        it is MessageItem && it.message.id == data.centerMessageId
+                    } ?: return@launch
+                    val topOffset = recyclerView.getChildTopByPosition(index)
+                    if (!canApplyCenteredSyncResult(
+                            centerMessageId = data.centerMessageId,
+                            generation = effect.result.generation,
+                            topOffset = topOffset
+                        )
+                    ) return@launch
+
+                    mergeMissingMessagesAroundCenter(data, topOffset)
+                }
             }
         }
     }
@@ -281,18 +334,6 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     checkEnableDisableActions(channel)
     setUnreadCounts(channel)
 
-    fun syncNearCenterVisibleMessageIfNeeded() {
-        if (!needSyncMessagesWhenScrollStateIdle || loadingFromServer) return
-        val recyclerView = messagesListView.getMessagesRecyclerView()
-        val centerPosition = recyclerView.centerVisibleItemPosition()
-        if (centerPosition == RecyclerView.NO_POSITION) return
-        val item = currentMessageListItems().getOrNull(centerPosition) as? MessageItem
-        val messageId = item?.message?.id ?: return
-        if (lastSyncCenterOffsetId != messageId) {
-            syncCenteredMessage(messageId = messageId)
-        }
-    }
-
     fun onMessageDisplayed(message: SceytMessage) {
         if (channel.userRole.isNullOrEmpty())
             return
@@ -373,25 +414,6 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             }
         }.launchIn(lifecycleOwner.lifecycleScope)
 
-    syncCenteredMessageLiveData.observe(lifecycleOwner) { centeredSync ->
-        lifecycleOwner.lifecycleScope.launch {
-            val data = centeredSync.data
-            val recyclerView = messagesListView.getMessagesRecyclerView()
-            val (index) = currentMessageListItems().findIndexed {
-                it is MessageItem && it.message.id == data.centerMessageId
-            } ?: return@launch
-            val topOffset = recyclerView.getChildTopByPosition(index)
-            if (!canApplyCenteredSyncResult(
-                    centerMessageId = data.centerMessageId,
-                    generation = centeredSync.generation,
-                    topOffset = topOffset
-                )
-            ) return@launch
-
-            mergeMissingMessagesAroundCenter(data, topOffset)
-        }
-    }
-
     MessagesCache.messagesClearedFlow
         .filter { (channelId, _) -> channelId == channel.id }
         .onEach { (_, date) ->
@@ -410,95 +432,6 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         setUnreadCounts(channel)
         checkEnableDisableActions(channel)
     }.launchIn(lifecycleOwner.lifecycleScope)
-
-    onScrollToLastMessageLiveData.observe(lifecycleOwner) { lastMessage ->
-        viewModelScope.launch(Dispatchers.Default) {
-            val lastMsgId = lastMessage?.id ?: return@launch
-            messagesListView.getMessageIndexedById(lastMsgId)?.let {
-                withContext(Dispatchers.Main) {
-                    messagesListView.scrollToLastMessage()
-                    lifecycleOwner.lifecycleScope.launch {
-                        delay(200.milliseconds)
-                        syncNearCenterVisibleMessageIfNeeded()
-                    }
-                }
-            } ?: run {
-                loadPrevMessages(
-                    lastMessageId = lastMsgId,
-                    offset = 0,
-                    loadKey = LoadKeyData(key = LoadKeyType.ScrollToLastMessage.longValue)
-                )
-                markChannelAsRead(channel.id)
-            }
-        }
-    }
-
-    onScrollToReplyMessageLiveData.observe(lifecycleOwner) {
-        val messageId = it.id
-        messagesListView.scrollToMessage(
-            messageId = messageId,
-            offset = 200,
-            highlight = true,
-            onCompleted = { found ->
-                if (!found) {
-                    loadNearMessages(
-                        messageId = messageId,
-                        loadKey = LoadKeyData(
-                            key = LoadKeyType.ScrollToReplyMessage.longValue,
-                            value = messageId
-                        ),
-                        ignoreServer = false
-                    )
-                }
-            },
-        )
-    }
-
-    onScrollToSearchMessageLiveData.observe(lifecycleOwner) { message ->
-        val messageId = message.id
-        messagesListView.scrollToMessage(
-            messageId = message.id,
-            offset = 200,
-            highlight = true,
-            onCompleted = { found ->
-                if (found) {
-                    isPreparingToScrollToMessage.set(false)
-                    return@scrollToMessage
-                }
-                loadNearMessages(
-                    messageId = messageId,
-                    loadKey = LoadKeyData(
-                        key = LoadKeyType.ScrollToMessageBy.longValue,
-                        value = messageId
-                    ),
-                    ignoreServer = false
-                )
-            },
-        )
-    }
-
-    onScrollToUnredMentionMessageLiveData.observe(lifecycleOwner) { messageId ->
-        messagesListView.scrollToMessage(
-            messageId = messageId,
-            offset = 200,
-            highlight = true,
-            onCompleted = { found ->
-                if (found) {
-                    isPreparingToScrollToMessage.set(false)
-                    return@scrollToMessage
-                }
-                loadNearMessages(
-                    messageId = messageId,
-                    loadKey = LoadKeyData(
-                        key = LoadKeyType.ScrollToMessageBy.longValue,
-                        value = messageId
-                    ),
-                    ignoreServer = false
-                )
-            },
-        )
-        pendingDisplayMsgIds.add(messageId)
-    }
 
     onNewOutGoingMessageFlow.onEach { message ->
         outgoingMessageMutex.withLock {

@@ -48,7 +48,7 @@ internal class MessageWindowSyncGuard {
     }
 }
 
-internal data class CenteredSyncMessagesResult(
+data class CenteredSyncMessagesResult(
     val generation: Long,
     val data: SyncNearMessagesResult,
 )

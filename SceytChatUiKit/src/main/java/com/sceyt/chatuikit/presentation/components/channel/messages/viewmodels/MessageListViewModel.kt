@@ -1,7 +1,6 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels
 
 import android.text.Editable
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.DeleteMessageType
@@ -37,7 +36,6 @@ import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.media.audio.AudioRecordData
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.persistence.differs.diff
-import com.sceyt.chatuikit.persistence.extensions.asLiveData
 import com.sceyt.chatuikit.persistence.extensions.broadcastSharedFlow
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
@@ -64,6 +62,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.fil
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem.MessageItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageCommandEvent
+import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageInputCommand
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.PollEvent
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.ReactionEvent
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.bindings.LoadKeyType
@@ -80,6 +79,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filter
@@ -167,6 +167,7 @@ class MessageListViewModel internal constructor(
 
     private companion object {
         const val TAG = "MessageListViewModel"
+        const val SCROLL_TO_MESSAGE_OFFSET = 200
     }
 
     // Pagination sync
@@ -181,8 +182,6 @@ class MessageListViewModel internal constructor(
     val state get() = store.state
     val renderEffects get() = store.renderEffects
 
-    private val _syncCenteredMessageLiveData = MutableLiveData<CenteredSyncMessagesResult>()
-    internal val syncCenteredMessageLiveData = _syncCenteredMessageLiveData.asLiveData()
 
     // Message events
     val onNewMessageFlow: Flow<SceytMessage>
@@ -198,20 +197,9 @@ class MessageListViewModel internal constructor(
     private val _onChannelUpdatedEventFlow = broadcastSharedFlow<SceytChannel>(replay = 1)
     val onChannelUpdatedEventFlow = _onChannelUpdatedEventFlow.asSharedFlow()
 
-    //Command events
-    private val _onEditMessageCommandLiveData = MutableLiveData<SceytMessage>()
-    internal val onEditMessageCommandLiveData = _onEditMessageCommandLiveData.asLiveData()
-    private val _onReplyMessageCommandLiveData = MutableLiveData<SceytMessage>()
-    internal val onReplyMessageCommandLiveData = _onReplyMessageCommandLiveData.asLiveData()
-    private val _onScrollToLastMessageLiveData = MutableLiveData<SceytMessage?>()
-    internal val onScrollToLastMessageLiveData = _onScrollToLastMessageLiveData.asLiveData()
-    private val _onScrollToReplyMessageLiveData = MutableLiveData<SceytMessage>()
-    internal val onScrollToReplyMessageLiveData = _onScrollToReplyMessageLiveData.asLiveData()
-    private val _onScrollToSearchMessageLiveData = MutableLiveData<SceytMessage>()
-    internal val onScrollToSearchMessageLiveData = _onScrollToSearchMessageLiveData.asLiveData()
-    private val _onScrollToUnredMentionMessageLiveData = MutableLiveData<Long>()
-    internal val onScrollToUnredMentionMessageLiveData =
-        _onScrollToUnredMentionMessageLiveData.asLiveData()
+    // Input commands
+    private val _inputCommands = MutableSharedFlow<MessageInputCommand>(extraBufferCapacity = 8)
+    internal val inputCommands = _inputCommands.asSharedFlow()
 
     // Search messages
     internal val isPreparingToScrollToMessage = AtomicBoolean(false)
@@ -517,10 +505,9 @@ class MessageListViewModel internal constructor(
                 replyInThread = replyInThread
             )
             if (windowSyncGuard.canEmitCenteredSyncResult(response.centerMessageId, generation)) {
-                _syncCenteredMessageLiveData.postValue(
-                    CenteredSyncMessagesResult(
-                        generation = generation,
-                        data = response
+                emitRenderEffect(
+                    MessageListRenderEffect.ApplyCenteredSync(
+                        CenteredSyncMessagesResult(generation = generation, data = response)
                     )
                 )
             }
@@ -544,7 +531,7 @@ class MessageListViewModel internal constructor(
         currentChannel = { channel },
         conversationId = { conversationId },
         updateChannel = { action -> updateChannel(action) },
-        onScrollToMention = { _onScrollToUnredMentionMessageLiveData.postValue(it) },
+        onScrollToMention = { scrollToMessageBy(it, addToPendingDisplay = true) },
         currentUserId = { SceytChatUIKit.currentUserId },
     )
 
@@ -555,7 +542,7 @@ class MessageListViewModel internal constructor(
         replyInThread = replyInThread,
         isPreparingToScrollToMessage = isPreparingToScrollToMessage,
         messageListQueryLimit = { SceytChatUIKit.config.queryLimits.messageListQueryLimit },
-        onScrollToSearchMessage = { _onScrollToSearchMessageLiveData.postValue(it) },
+        onScrollToSearchMessage = { scrollToMessageBy(it.id) },
     )
 
     private fun createReactionController() = ReactionController(
@@ -1029,7 +1016,7 @@ class MessageListViewModel internal constructor(
     }
 
     fun prepareToEditMessage(message: SceytMessage) {
-        _onEditMessageCommandLiveData.postValue(message)
+        _inputCommands.tryEmit(MessageInputCommand.Edit(message))
     }
 
     fun prepareToShowMessageActions(event: MessageCommandEvent.ShowHideMessageActions) {
@@ -1043,19 +1030,45 @@ class MessageListViewModel internal constructor(
     }
 
     fun prepareToReplyMessage(message: SceytMessage) {
-        _onReplyMessageCommandLiveData.postValue(message)
+        _inputCommands.tryEmit(MessageInputCommand.Reply(message))
     }
 
     fun prepareToScrollToNewMessage() {
-        _onScrollToLastMessageLiveData.postValue(channel.lastMessage)
+        emitRenderEffect(MessageListRenderEffect.ScrollToNewMessage(channel.lastMessage))
     }
 
     fun prepareToScrollToReplyMessage(message: SceytMessage) {
-        _onScrollToReplyMessageLiveData.postValue(message.parentMessage ?: return)
+        val parent = message.parentMessage ?: return
+        emitRenderEffect(
+            MessageListRenderEffect.ScrollToMessage(
+                messageId = parent.id,
+                highlight = true,
+                offset = SCROLL_TO_MESSAGE_OFFSET,
+                loadOnMissing = ScrollLoadOnMissing(
+                    loadKey = LoadKeyType.ScrollToReplyMessage.longValue,
+                    ignoreServer = false,
+                ),
+            )
+        )
     }
 
     fun prepareToScrollToUnreadMention() {
         mentionsController.prepareToScrollToNext()
+    }
+
+    private fun scrollToMessageBy(messageId: Long, addToPendingDisplay: Boolean = false) {
+        if (addToPendingDisplay) pendingDisplayMsgIds.add(messageId)
+        emitRenderEffect(
+            MessageListRenderEffect.ScrollToMessage(
+                messageId = messageId,
+                highlight = true,
+                offset = SCROLL_TO_MESSAGE_OFFSET,
+                loadOnMissing = ScrollLoadOnMissing(
+                    loadKey = LoadKeyType.ScrollToMessageBy.longValue,
+                    ignoreServer = false,
+                ),
+            )
+        )
     }
 
     fun prepareToPauseOrResumeUpload(item: FileListItem) =
