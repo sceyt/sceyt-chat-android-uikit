@@ -850,8 +850,6 @@ class MessageListViewModel internal constructor(
             }
 
             is SceytResponse.Error -> {
-                checkToHideLoadingMoreItemByLoadType(response.loadType)
-
                 if (response.loadKey?.key == LoadKeyType.ScrollToMessageBy.longValue)
                     isPreparingToScrollToMessage.set(false)
             }
@@ -1320,9 +1318,6 @@ class MessageListViewModel internal constructor(
 
     internal fun shouldDeferTransferUpdate(transfer: TransferData): Boolean =
         transferController.shouldDeferTransferUpdate(transfer)
-
-    internal fun isMessageListThumbLoaded(transfer: TransferData): Boolean =
-        transferController.isMessageListThumbLoaded(transfer)
 
     internal fun clearPreparingThumbs() = transferController.clearPreparingThumbs()
 
