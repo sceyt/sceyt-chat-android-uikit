@@ -272,6 +272,15 @@ class MessageListViewModel internal constructor(
 
         mentionsController.onInit()
 
+        clearPreparingThumbs()
+
+        // If userRole is null or empty, get channel again to update channel
+        if (channel.userRole.isNullOrEmpty())
+            getChannel(channel.id)
+
+        if (channel.unread)
+            markChannelAsRead(channel.id)
+
         loadInitialMessages()
     }
 
@@ -1332,7 +1341,7 @@ class MessageListViewModel internal constructor(
     internal fun shouldDeferTransferUpdate(transfer: TransferData): Boolean =
         transferController.shouldDeferTransferUpdate(transfer)
 
-    internal fun clearPreparingThumbs() = transferController.clearPreparingThumbs()
+    private fun clearPreparingThumbs() = transferController.clearPreparingThumbs()
 
     internal fun deferTransferUpdate(transfer: TransferData) =
         transferController.deferUpdate(transfer)
