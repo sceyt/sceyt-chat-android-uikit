@@ -6,7 +6,6 @@ import android.os.Looper
 import android.util.AttributeSet
 import android.view.ViewGroup
 import android.view.animation.AnimationUtils
-import androidx.core.util.Predicate
 import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.ItemTouchHelper
@@ -17,9 +16,10 @@ import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.extensions.addRVScrollListener
 import com.sceyt.chatuikit.extensions.getFirstVisibleItemPosition
 import com.sceyt.chatuikit.extensions.getLastVisibleItemPosition
+import com.sceyt.chatuikit.extensions.lastCompletelyVisibleItemPosition
 import com.sceyt.chatuikit.extensions.lastVisibleItemPosition
-import com.sceyt.chatuikit.presentation.common.recyclerview.SpeedyLinearLayoutManager
 import com.sceyt.chatuikit.presentation.common.collections.SyncArrayList
+import com.sceyt.chatuikit.presentation.common.recyclerview.SpeedyLinearLayoutManager
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.ItemOffsetDecoration
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
@@ -30,7 +30,6 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.cl
 import com.sceyt.chatuikit.presentation.extensions.isNotPending
 import com.sceyt.chatuikit.shared.helpers.MessageSwipeController
 import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle
-import kotlin.math.absoluteValue
 
 
 class MessagesRV @JvmOverloads constructor(
@@ -63,7 +62,6 @@ class MessagesRV @JvmOverloads constructor(
     private var listCommittedListener: (() -> Unit)? = null
     private var enableSwipe: Boolean = true
     private lateinit var style: MessagesListViewStyle
-    private var scrollY = 0
 
     init {
         init()
@@ -91,7 +89,6 @@ class MessagesRV @JvmOverloads constructor(
 
     private fun addOnScrollListener() {
         addRVScrollListener(onScrolled = { _: RecyclerView, _: Int, dy: Int ->
-            scrollY += dy
             checkNeedLoadPrev(dy)
             checkNeedLoadNext(dy)
         }, onScrollStateChanged = { _, newState ->
@@ -100,7 +97,6 @@ class MessagesRV @JvmOverloads constructor(
 
         addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
             if (scrollState != SCROLL_STATE_IDLE || ::mAdapter.isInitialized.not()) return@addOnLayoutChangeListener
-            scrollY = computeVerticalScrollOffset()
             checkNeedLoadPrev(-1)
             checkNeedLoadNext(1)
         }
@@ -160,11 +156,17 @@ class MessagesRV @JvmOverloads constructor(
     }
 
     private fun checkScrollDown() {
-        val canScrollVertically = canScrollVertically(0)
-        if (!canScrollVertically)
-            scrollY = 0
+        if (!::mAdapter.isInitialized || mAdapter.itemCount == 0) {
+            showHideDownScroller?.invoke(false)
+            return
+        }
+        val lastCompletelyVisible = lastCompletelyVisibleItemPosition()
+        val atBottom =
+            lastCompletelyVisible == NO_POSITION || lastCompletelyVisible >= mAdapter.itemCount - 1
+        val distanceFromBottom =
+            computeVerticalScrollRange() - computeVerticalScrollExtent() - computeVerticalScrollOffset()
+        val show = !atBottom && distanceFromBottom >= SCROLL_DOWN_VISIBILITY_THRESHOLD_PX
 
-        val show = canScrollVertically && scrollY.absoluteValue >= 300
         showHideDownScroller?.invoke(show)
     }
 
@@ -385,5 +387,10 @@ class MessagesRV @JvmOverloads constructor(
     fun updateItemAt(index: Int, updatedItem: MessageListItem.MessageItem) {
         if (::mAdapter.isInitialized)
             mAdapter.updateItemAt(index, updatedItem)
+    }
+
+    companion object {
+        // Min scroll distance from the newest message before the scroll-down button shows.
+        private const val SCROLL_DOWN_VISIBILITY_THRESHOLD_PX = 300
     }
 }

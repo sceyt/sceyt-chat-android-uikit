@@ -11,7 +11,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 
 /**
@@ -73,29 +72,5 @@ internal class ChannelMemberController(
             nextToken = nextToken,
             role = role
         )
-    }
-
-    fun loadAll() {
-        scope.launch(ioDispatcher) {
-            suspend fun load(
-                offset: Int,
-                nextToken: String,
-            ): PaginationResponse.ServerResponse<SceytMember>? {
-                return memberInteractor.loadChannelMembers(currentChannel().id, offset, nextToken, null)
-                    .firstOrNull {
-                        it is PaginationResponse.ServerResponse
-                    } as? PaginationResponse.ServerResponse<SceytMember>
-            }
-
-            val count = memberInteractor.getMembersCountFromDb(currentChannel().id)
-            if (currentChannel().memberCount > count) {
-                var offset = 0
-                var rest = load(0, "")
-                while (rest?.hasNext == true) {
-                    offset += rest.data.data?.size ?: return@launch
-                    rest = load(offset, rest.nextToken)
-                }
-            }
-        }
     }
 }
