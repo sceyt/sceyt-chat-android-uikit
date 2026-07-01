@@ -83,6 +83,7 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.clearInvocations
 import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
@@ -116,7 +117,7 @@ class MessageListViewModelStateTest {
                     any(),
                     any(),
                     any(),
-                    0
+                    eq(0L)
                 )
             ).thenReturn(emptyFlow())
             whenever(channelInteractor.getChannelFromServer(any()))
@@ -189,7 +190,7 @@ class MessageListViewModelStateTest {
             any(),
             any(),
             any(),
-            0
+            eq(0L)
         )
     }
 
@@ -226,6 +227,7 @@ class MessageListViewModelStateTest {
         val centeredMessage = createMessage(createdAt = 1_000, id = 100, tid = 100)
         whenever(
             messageInteractor.loadNearMessages(
+                any(),
                 any(),
                 any(),
                 any(),
