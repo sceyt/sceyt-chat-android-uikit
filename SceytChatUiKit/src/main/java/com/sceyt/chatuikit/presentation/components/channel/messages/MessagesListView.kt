@@ -164,12 +164,6 @@ class MessagesListView @JvmOverloads constructor(
                 AudioPlayerHelper.stopAll()
             }
         }
-
-        post {
-            if (binding.layoutUnreadCounts.width == 0) {
-                binding.layoutUnreadCounts.requestLayout()
-            }
-        }
     }
 
     private fun initClickListeners() {
