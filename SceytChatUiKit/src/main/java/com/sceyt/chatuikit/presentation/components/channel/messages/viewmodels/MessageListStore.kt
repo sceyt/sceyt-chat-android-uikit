@@ -342,7 +342,8 @@ internal class MessageListStore(
         )
         when (merged) {
             null -> MutationResult(current, changed = false, effects = emptyList(), value = false)
-            current -> MutationResult(current, changed = false, effects = emptyList(), value = true)
+            current -> MutationResult(current, changed = false, effects = emptyList(), value = false)
+
             else -> MutationResult(
                 items = merged,
                 changed = true,
