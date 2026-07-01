@@ -62,7 +62,6 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.withContext
 import kotlin.time.Duration.Companion.milliseconds
 
 @JvmName("bind")
@@ -85,6 +84,36 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         if (lastSyncCenterOffsetId != messageId) {
             syncCenteredMessage(messageId = messageId)
         }
+    }
+
+    var pendingScrollToNewMessageId: Long? = null
+
+    fun clearPendingScrollToNewMessageIfSettled() {
+        if (!loadingFromServer && !loadingFromDb)
+            pendingScrollToNewMessageId = null
+    }
+
+    fun scrollToNewMessageIfLoaded(messageId: Long, syncAfterScroll: Boolean = false): Boolean {
+        if (messagesListView.getMessageIndexedById(messageId) == null)
+            return false
+
+        messagesListView.scrollToLastMessage()
+        clearPendingScrollToNewMessageIfSettled()
+        if (syncAfterScroll) {
+            lifecycleOwner.lifecycleScope.launch {
+                delay(200.milliseconds)
+                syncNearCenterVisibleMessageIfNeeded()
+            }
+        }
+        return true
+    }
+
+    fun scrollToPendingNewMessageIfPossible() {
+        val messageId = pendingScrollToNewMessageId ?: return
+        if (scrollToNewMessageIfLoaded(messageId))
+            return
+
+        clearPendingScrollToNewMessageIfSettled()
     }
 
     fun applyRenderEffect(effect: MessageListRenderEffect) {
@@ -170,25 +199,20 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             }
 
             is MessageListRenderEffect.ScrollToNewMessage -> {
-                viewModelScope.launch(Dispatchers.Default) {
-                    val lastMsgId = effect.lastMessage?.id ?: return@launch
-                    messagesListView.getMessageIndexedById(lastMsgId)?.let {
-                        withContext(Dispatchers.Main) {
-                            messagesListView.scrollToLastMessage()
-                            lifecycleOwner.lifecycleScope.launch {
-                                delay(200.milliseconds)
-                                syncNearCenterVisibleMessageIfNeeded()
-                            }
-                        }
-                    } ?: run {
-                        loadPrevMessages(
-                            lastMessageId = lastMsgId,
-                            offset = 0,
-                            loadKey = LoadKeyData(key = LoadKeyType.ScrollToLastMessage.longValue)
-                        )
-                        markChannelAsRead(channel.id)
-                    }
-                }
+                val targetId = effect.lastMessage?.id ?: return
+                pendingScrollToNewMessageId = targetId
+                if (scrollToNewMessageIfLoaded(targetId, syncAfterScroll = true))
+                    return
+
+                loadPrevMessages(
+                    lastMessageId = targetId,
+                    offset = 0,
+                    loadKey = LoadKeyData(
+                        key = LoadKeyType.ScrollToLastMessage.longValue,
+                        value = targetId
+                    )
+                )
+                markChannelAsRead(channel.id)
             }
 
             is MessageListRenderEffect.Sort -> {
@@ -373,7 +397,8 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 lifecycleOwner.lifecycleScope.launch {
                     appendSyncedMessages(
                         messages = messages,
-                        scrollToLastAfterAppend = messagesListView.isLastCompletelyItemDisplaying()
+                        scrollToLastAfterAppend = pendingScrollToNewMessageId != null ||
+                                messagesListView.isLastCompletelyItemDisplaying()
                     )
                 }
             }
@@ -618,6 +643,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     }
 
     messagesListView.setOnListCommittedListener {
+        scrollToPendingNewMessageIfPossible()
         this@bind.flushNotFoundStatusUpdates()
     }
 
