@@ -62,6 +62,7 @@ class MessagesRV @JvmOverloads constructor(
     private var listCommittedListener: (() -> Unit)? = null
     private var enableSwipe: Boolean = true
     private lateinit var style: MessagesListViewStyle
+    private var lastDownScrollerShown: Boolean? = null
 
     init {
         init()
@@ -157,16 +158,22 @@ class MessagesRV @JvmOverloads constructor(
 
     private fun checkScrollDown() {
         if (!::mAdapter.isInitialized || mAdapter.itemCount == 0) {
-            showHideDownScroller?.invoke(false)
+            updateDownScroller(false)
             return
         }
         val lastCompletelyVisible = lastCompletelyVisibleItemPosition()
-        val atBottom =
-            lastCompletelyVisible == NO_POSITION || lastCompletelyVisible >= mAdapter.itemCount - 1
+        if (lastCompletelyVisible == NO_POSITION) return
+        val atBottom = lastCompletelyVisible >= mAdapter.itemCount - 1
         val distanceFromBottom =
             computeVerticalScrollRange() - computeVerticalScrollExtent() - computeVerticalScrollOffset()
         val show = !atBottom && distanceFromBottom >= SCROLL_DOWN_VISIBILITY_THRESHOLD_PX
 
+        updateDownScroller(show)
+    }
+
+    private fun updateDownScroller(show: Boolean) {
+        if (show == lastDownScrollerShown) return
+        lastDownScrollerShown = show
         showHideDownScroller?.invoke(show)
     }
 
