@@ -840,7 +840,9 @@ class MessagesListView @JvmOverloads constructor(
     }
 
     fun scrollToLastMessage() = safeScrollTo {
-        messagesRV.scrollToPosition(messagesRV.getData().size - 1)
+        val lastMessageIndex = messagesRV.getData().indexOfLast { it is MessageItem }
+        if (lastMessageIndex != -1)
+            messagesRV.scrollToPosition(lastMessageIndex)
     }
 
     private fun safeScrollTo(block: () -> Unit) = messagesRV.awaitUpdating {

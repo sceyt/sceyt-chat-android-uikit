@@ -5,6 +5,7 @@ import com.sceyt.chatuikit.config.ChannelListConfig
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.SyncResult
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
+import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.persistence.extensions.safeResume
 import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
@@ -133,6 +134,17 @@ internal class SceytSyncManagerImpl(
         fromMessageId: Long,
         syncConversation: Boolean
     ) {
+        val syncedConversationMessages = mutableListOf<SceytMessage>()
+
+        fun emitSyncedConversationMessages() {
+            if (syncConversation && syncedConversationMessages.isNotEmpty()) {
+                SceytSyncManager.syncChannelMessagesFinished_.tryEmit(
+                    channel to syncedConversationMessages.toList()
+                )
+                syncedConversationMessages.clear()
+            }
+        }
+
         messageInteractor.syncMessagesAfterMessageId(
             conversationId = channel.id,
             replyInThread = false,
@@ -141,17 +153,20 @@ internal class SceytSyncManagerImpl(
             when (result) {
                 is SyncResult.Proportion -> {
                     if (syncConversation)
-                        SceytSyncManager.syncChannelMessagesFinished_.tryEmit(channel to result.items)
+                        syncedConversationMessages.addAll(result.items)
                     syncResultData.syncedMessagesCount += result.items.size
                 }
 
                 SyncResult.SuccessfullyFinished -> {
+                    emitSyncedConversationMessages()
                     channel.lastMessage?.let { message ->
                         channelSyncStateStore.updateSyncState(channel.id, message.id)
                     }
                 }
 
-                is SyncResult.Error -> Unit
+                is SyncResult.Error -> {
+                    emitSyncedConversationMessages()
+                }
             }
         }
     }
