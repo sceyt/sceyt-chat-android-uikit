@@ -9,6 +9,7 @@ import android.view.animation.AnimationUtils
 import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
@@ -16,7 +17,6 @@ import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.extensions.addRVScrollListener
 import com.sceyt.chatuikit.extensions.getFirstVisibleItemPosition
 import com.sceyt.chatuikit.extensions.getLastVisibleItemPosition
-import com.sceyt.chatuikit.extensions.lastCompletelyVisibleItemPosition
 import com.sceyt.chatuikit.extensions.lastVisibleItemPosition
 import com.sceyt.chatuikit.presentation.common.collections.SyncArrayList
 import com.sceyt.chatuikit.presentation.common.recyclerview.SpeedyLinearLayoutManager
@@ -92,6 +92,7 @@ class MessagesRV @JvmOverloads constructor(
         addRVScrollListener(onScrolled = { _: RecyclerView, _: Int, dy: Int ->
             checkNeedLoadPrev(dy)
             checkNeedLoadNext(dy)
+            checkScrollDown(dy)
         }, onScrollStateChanged = { _, newState ->
             scrollStateChangeListener?.invoke(newState)
         })
@@ -100,6 +101,8 @@ class MessagesRV @JvmOverloads constructor(
             if (scrollState != SCROLL_STATE_IDLE || ::mAdapter.isInitialized.not()) return@addOnLayoutChangeListener
             checkNeedLoadPrev(-1)
             checkNeedLoadNext(1)
+            // Re-evaluate on layout (e.g. after a configuration change) with a neutral dy.
+            checkScrollDown(0)
         }
     }
 
@@ -131,7 +134,6 @@ class MessagesRV @JvmOverloads constructor(
     private fun checkNeedLoadNext(dy: Int) {
         if (mAdapter.itemCount == 0) return
         val lastVisiblePosition = getLastVisibleItemPosition()
-        checkScrollDown()
 
         if (mAdapter.itemCount - lastVisiblePosition <= messageListQueryLimit / 2 && dy > 0) {
             if (lastVisiblePosition == mAdapter.itemCount - 1) {
@@ -156,19 +158,29 @@ class MessagesRV @JvmOverloads constructor(
         it is MessageListItem.MessageItem && it.message.isNotPending()
     }
 
-    private fun checkScrollDown() {
+    private fun checkScrollDown(dy: Int) {
         if (!::mAdapter.isInitialized || mAdapter.itemCount == 0) {
             updateDownScroller(false)
             return
         }
-        val lastCompletelyVisible = lastCompletelyVisibleItemPosition()
-        if (lastCompletelyVisible == NO_POSITION) return
-        val atBottom = lastCompletelyVisible >= mAdapter.itemCount - 1
-        val distanceFromBottom =
-            computeVerticalScrollRange() - computeVerticalScrollExtent() - computeVerticalScrollOffset()
-        val show = !atBottom && distanceFromBottom >= SCROLL_DOWN_VISIBILITY_THRESHOLD_PX
+        // null = layout not settled (mid-configuration change / not laid out) — keep current state.
+        val atBottom = isAtBottom() ?: return
+        // While scrolling up, never hide an already visible scroll-down button.
+        if (dy < 0 && lastDownScrollerShown == true) return
+        updateDownScroller(!atBottom)
+    }
 
-        updateDownScroller(show)
+    private fun isAtBottom(): Boolean? {
+        val layoutManager = layoutManager as? LinearLayoutManager ?: return null
+        val lastIndex = mAdapter.itemCount - 1
+        val lastVisible = layoutManager.findLastVisibleItemPosition()
+        if (lastVisible == NO_POSITION) return null
+        if (lastVisible < lastIndex) return false
+        // Last item is visible: at the bottom only if its (decorated) bottom edge fits the
+        // viewport. Handles a tall last message whose bottom is still below the fold.
+        val lastView = layoutManager.findViewByPosition(lastIndex) ?: return null
+        val viewportBottom = height - paddingBottom
+        return layoutManager.getDecoratedBottom(lastView) <= viewportBottom
     }
 
     private fun updateDownScroller(show: Boolean) {
@@ -394,10 +406,5 @@ class MessagesRV @JvmOverloads constructor(
     fun updateItemAt(index: Int, updatedItem: MessageListItem.MessageItem) {
         if (::mAdapter.isInitialized)
             mAdapter.updateItemAt(index, updatedItem)
-    }
-
-    companion object {
-        // Min scroll distance from the newest message before the scroll-down button shows.
-        private const val SCROLL_DOWN_VISIBILITY_THRESHOLD_PX = 300
     }
 }
