@@ -186,7 +186,10 @@ class MessagesRV @JvmOverloads constructor(
     private fun updateDownScroller(show: Boolean) {
         if (show == lastDownScrollerShown) return
         lastDownScrollerShown = show
-        showHideDownScroller?.invoke(show)
+        if (isInLayout)
+            post { showHideDownScroller?.invoke(show) }
+        else
+            showHideDownScroller?.invoke(show)
     }
 
     private fun checkScrollToEnd(addedItemsCount: Int, isMySendMessage: Boolean): Boolean {
