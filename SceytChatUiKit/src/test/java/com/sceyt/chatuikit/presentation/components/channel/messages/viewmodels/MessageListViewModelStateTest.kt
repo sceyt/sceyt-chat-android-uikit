@@ -271,6 +271,53 @@ class MessageListViewModelStateTest {
     }
 
     @Test
+    fun `load near scroll response preserves scroll request id`() = runTest(dispatcher) {
+        val viewModel = viewModel()
+        val message = createMessage(createdAt = 1_000, id = 100, tid = 100)
+        val loadKey = LoadKeyData(
+            key = LoadKeyType.ScrollToMessageBy.longValue,
+            value = message.id,
+            data = ScrollRequestData(requestId = 42)
+        )
+        whenever(
+            messageInteractor.loadNearMessages(
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+            )
+        ).thenReturn(
+            flowOf(
+                PaginationResponse.DBResponse(
+                    data = listOf(message),
+                    loadKey = loadKey,
+                    offset = 0,
+                    hasNext = false,
+                    hasPrev = false,
+                    loadType = LoadNear
+                )
+            )
+        )
+        val effect = async {
+            viewModel.renderEffects.first { it is MessageListRenderEffect.ScrollToMessage }
+                    as MessageListRenderEffect.ScrollToMessage
+        }
+        runCurrent()
+
+        viewModel.loadNearMessages(
+            messageId = message.id,
+            loadKey = loadKey,
+            ignoreServer = true
+        )
+
+        assertThat(effect.await().requestId).isEqualTo(42)
+    }
+
+    @Test
     fun `center sync response is not emitted after request invalidated`() = runTest(dispatcher) {
         val viewModel = viewModel()
         val message = createMessage(createdAt = 1_000, id = 100, tid = 100)
