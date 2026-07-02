@@ -50,6 +50,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.A
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageActionBridge
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageListRenderEffect
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageListViewModel
+import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.ScrollRequestData
 import com.sceyt.chatuikit.presentation.extensions.isNotPending
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.services.sync.SceytSyncManager
@@ -67,6 +68,7 @@ import kotlin.time.Duration.Companion.milliseconds
 @JvmName("bind")
 fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner: LifecycleOwner) {
     val lifecycleScope = lifecycleOwner.lifecycleScope
+    val scrollCoordinator = MessageScrollCoordinator()
     messagesListView.setMultiselectDestination(selectedMessagesMap)
     if (channel.isSelf) {
         messagesListView.setEmptyStateForSelfChannel()
@@ -86,34 +88,32 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     }
 
-    var pendingScrollToNewMessageId: Long? = null
-
-    fun clearPendingScrollToNewMessageIfSettled() {
-        if (!loadingFromServer && !loadingFromDb)
-            pendingScrollToNewMessageId = null
-    }
-
-    fun scrollToNewMessageIfLoaded(messageId: Long, syncAfterScroll: Boolean = false): Boolean {
+    fun scrollToNewestMessageIfLoaded(
+        request: MessageScrollCoordinator.Request,
+        syncAfterScroll: Boolean = false,
+    ): Boolean {
+        val messageId = request.targetMessageId ?: return false
         if (messagesListView.getMessageIndexedById(messageId) == null)
             return false
 
         messagesListView.scrollToLastMessage()
-        clearPendingScrollToNewMessageIfSettled()
+        scrollCoordinator.clearIfSettled(request, loadingFromServer || loadingFromDb)
         if (syncAfterScroll) {
             lifecycleOwner.lifecycleScope.launch {
                 delay(200.milliseconds)
-                syncNearCenterVisibleMessageIfNeeded()
+                if (scrollCoordinator.canRunDelayedWorkFor(request))
+                    syncNearCenterVisibleMessageIfNeeded()
             }
         }
         return true
     }
 
     fun scrollToPendingNewMessageIfPossible() {
-        val messageId = pendingScrollToNewMessageId ?: return
-        if (scrollToNewMessageIfLoaded(messageId))
+        val request = scrollCoordinator.activeNewestMessageRequest() ?: return
+        if (scrollToNewestMessageIfLoaded(request))
             return
 
-        clearPendingScrollToNewMessageIfSettled()
+        scrollCoordinator.clearIfSettled(request, loadingFromServer || loadingFromDb)
     }
 
     fun applyRenderEffect(effect: MessageListRenderEffect) {
@@ -166,26 +166,39 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             MessageListRenderEffect.HideLoadingNext -> messagesListView.hideLoadingNext()
 
             is MessageListRenderEffect.ScrollToMessage -> {
+                val request = if (effect.requestId == null) {
+                    scrollCoordinator.beginMessageRequest(effect.messageId)
+                } else {
+                    scrollCoordinator.activeRequestFor(effect.requestId) ?: return
+                }
                 messagesListView.scrollToMessage(
                     messageId = effect.messageId,
                     offset = effect.offset,
                     highlight = effect.highlight,
                     onCompleted = { found ->
+                        if (scrollCoordinator.activeRequestFor(request.id) == null)
+                            return@scrollToMessage
+
                         if (found) {
                             isPreparingToScrollToMessage.set(false)
+                            scrollCoordinator.clear(request)
                             return@scrollToMessage
                         }
+
                         effect.loadOnMissing?.let {
                             loadNearMessages(
                                 messageId = effect.messageId,
                                 loadKey = LoadKeyData(
                                     key = it.loadKey,
-                                    value = effect.messageId
+                                    value = effect.messageId,
+                                    data = ScrollRequestData(request.id)
                                 ),
                                 ignoreServer = it.ignoreServer,
                                 awaitToConnectTimeout = 0
                             )
+                            return@scrollToMessage
                         }
+                        scrollCoordinator.clear(request)
                     }
                 )
             }
@@ -194,14 +207,21 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 messagesListView.scrollToUnReadMessage()
             }
 
-            MessageListRenderEffect.ScrollToLastMessage -> {
+            is MessageListRenderEffect.ScrollToLastMessage -> {
+                val request = scrollCoordinator.activeRequestFor(effect.requestId)
+                if (effect.requestId != null && request == null)
+                    return
+
                 messagesListView.scrollToLastMessage()
+                request?.let {
+                    scrollCoordinator.clearIfSettled(it, loadingFromServer || loadingFromDb)
+                }
             }
 
             is MessageListRenderEffect.ScrollToNewMessage -> {
                 val targetId = effect.lastMessage?.id ?: return
-                pendingScrollToNewMessageId = targetId
-                if (scrollToNewMessageIfLoaded(targetId, syncAfterScroll = true))
+                val request = scrollCoordinator.beginNewestMessageRequest(targetId)
+                if (scrollToNewestMessageIfLoaded(request, syncAfterScroll = true))
                     return
 
                 loadPrevMessages(
@@ -209,7 +229,8 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                     offset = 0,
                     loadKey = LoadKeyData(
                         key = LoadKeyType.ScrollToLastMessage.longValue,
-                        value = targetId
+                        value = targetId,
+                        data = ScrollRequestData(request.id)
                     )
                 )
                 markChannelAsRead(channel.id)
@@ -397,7 +418,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 lifecycleOwner.lifecycleScope.launch {
                     appendSyncedMessages(
                         messages = messages,
-                        scrollToLastAfterAppend = pendingScrollToNewMessageId != null ||
+                        scrollToLastAfterAppend = scrollCoordinator.activeNewestMessageRequest() != null ||
                                 messagesListView.isLastCompletelyItemDisplaying()
                     )
                 }
@@ -670,8 +691,15 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     }
 
     messagesListView.setScrollStateChangeListener {
-        if (it == RecyclerView.SCROLL_STATE_IDLE) {
-            syncNearCenterVisibleMessageIfNeeded()
+        when (it) {
+            RecyclerView.SCROLL_STATE_DRAGGING -> {
+                scrollCoordinator.cancelActiveRequest()
+                isPreparingToScrollToMessage.set(false)
+            }
+
+            RecyclerView.SCROLL_STATE_IDLE -> {
+                syncNearCenterVisibleMessageIfNeeded()
+            }
         }
     }
 

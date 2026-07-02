@@ -50,10 +50,13 @@ sealed interface MessageListRenderEffect {
         val highlight: Boolean,
         val offset: Int = 0,
         val loadOnMissing: ScrollLoadOnMissing? = null,
+        val requestId: Long? = null,
     ) : MessageListRenderEffect
 
     data object ScrollToUnreadMessage : MessageListRenderEffect
-    data object ScrollToLastMessage : MessageListRenderEffect
+    data class ScrollToLastMessage(
+        val requestId: Long? = null,
+    ) : MessageListRenderEffect
 
     /**
      * Scroll to the channel's newest message, loading the previous page first if it is not
@@ -77,6 +80,10 @@ sealed interface MessageListRenderEffect {
 data class ScrollLoadOnMissing(
     val loadKey: Long,
     val ignoreServer: Boolean,
+)
+
+data class ScrollRequestData(
+    val requestId: Long,
 )
 
 enum class AppendRealtimeScroll {

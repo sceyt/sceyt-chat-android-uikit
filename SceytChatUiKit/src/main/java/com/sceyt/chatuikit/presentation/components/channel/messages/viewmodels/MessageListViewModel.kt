@@ -678,6 +678,7 @@ class MessageListViewModel internal constructor(
             is PaginationResponse.ServerResponse -> response.loadKey
             else -> null
         } ?: return
+        val requestId = (loadKey.data as? ScrollRequestData)?.requestId
 
         when (loadKey.key) {
             LoadKeyType.ScrollToUnreadMessage.longValue -> {
@@ -685,7 +686,7 @@ class MessageListViewModel internal constructor(
             }
 
             LoadKeyType.ScrollToLastMessage.longValue -> {
-                emitRenderEffect(MessageListRenderEffect.ScrollToLastMessage)
+                emitRenderEffect(MessageListRenderEffect.ScrollToLastMessage(requestId))
             }
 
             LoadKeyType.ScrollToReplyMessage.longValue -> {
@@ -693,7 +694,8 @@ class MessageListViewModel internal constructor(
                     MessageListRenderEffect.ScrollToMessage(
                         messageId = loadKey.value,
                         highlight = true,
-                        offset = 200
+                        offset = 200,
+                        requestId = requestId
                     )
                 )
             }
@@ -703,7 +705,8 @@ class MessageListViewModel internal constructor(
                     MessageListRenderEffect.ScrollToMessage(
                         messageId = loadKey.value,
                         highlight = true,
-                        offset = 200
+                        offset = 200,
+                        requestId = requestId
                     )
                 )
                 if (response is PaginationResponse.ServerResponse)
@@ -872,7 +875,7 @@ class MessageListViewModel internal constructor(
             )
         )
         if (merged && scrollToLastAfterAppend)
-            emitRenderEffect(MessageListRenderEffect.ScrollToLastMessage)
+            emitRenderEffect(MessageListRenderEffect.ScrollToLastMessage())
 
         merged
     }
