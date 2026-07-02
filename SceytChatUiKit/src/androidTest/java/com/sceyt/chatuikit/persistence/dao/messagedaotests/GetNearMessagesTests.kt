@@ -334,7 +334,7 @@ class GetNearMessagesTests {
     }
 
     @Test
-    fun loadNearMessages_HasPrevAndNextWhenOutOfRangeMessagesExistInDb() = runTest {
+    fun loadNearMessages_DoesNotSetPrevOrNextFromOutOfRangeMessagesInDb() = runTest {
         // Given DB holds messages older (1,2) and newer (10) than the load range [3-6].
         val messages = listOf(
             createMessage(1, 1),
@@ -357,15 +357,14 @@ class GetNearMessagesTests {
         val result = messageDao.getNearMessages(channelId, 5, limit)
         val messageIds = result.data.map { it.messageEntity.id }
 
-        // Then: only in-range messages returned, but both flags true so the loader stays
-        // and a server fetch can bridge the gap to the out-of-range messages.
+        // Then: only in-range messages are considered for near pagination flags.
         Truth.assertThat(messageIds).isEqualTo(listOf(3L, 5L, 6L))
-        Truth.assertThat(result.hasPrev).isTrue()
-        Truth.assertThat(result.hasNext).isTrue()
+        Truth.assertThat(result.hasPrev).isFalse()
+        Truth.assertThat(result.hasNext).isFalse()
     }
 
     @Test
-    fun loadNearMessages_HasPrevOnlyWhenOlderOutOfRangeMessagesExistInDb() = runTest {
+    fun loadNearMessages_DoesNotSetPrevFromOlderOutOfRangeMessagesInDb() = runTest {
         // Given older messages (1,2) exist out of range, nothing newer than the range [3-6].
         val messages = listOf(
             createMessage(1, 1),
@@ -387,12 +386,12 @@ class GetNearMessagesTests {
 
         // Then
         Truth.assertThat(result.data.map { it.messageEntity.id }).isEqualTo(listOf(3L, 5L, 6L))
-        Truth.assertThat(result.hasPrev).isTrue()
+        Truth.assertThat(result.hasPrev).isFalse()
         Truth.assertThat(result.hasNext).isFalse()
     }
 
     @Test
-    fun loadNearMessages_HasNextOnlyWhenNewerOutOfRangeMessagesExistInDb() = runTest {
+    fun loadNearMessages_DoesNotSetNextFromNewerOutOfRangeMessagesInDb() = runTest {
         // Given a newer message (10) exists out of range, nothing older than the range [3-6].
         val messages = listOf(
             createMessage(3, 3),
@@ -414,7 +413,36 @@ class GetNearMessagesTests {
         // Then
         Truth.assertThat(result.data.map { it.messageEntity.id }).isEqualTo(listOf(3L, 5L, 6L))
         Truth.assertThat(result.hasPrev).isFalse()
-        Truth.assertThat(result.hasNext).isTrue()
+        Truth.assertThat(result.hasNext).isFalse()
+    }
+
+    @Test
+    fun loadNearMessages_DoesNotSetNextFromDisconnectedNewerLoadRange() = runTest {
+        // Given the target sits in old range [3-6] and a newer cached range [100-110] exists.
+        val messages = listOf(
+            createMessage(3, 3),
+            createMessage(4, 4),
+            createMessage(5, 5),
+            createMessage(6, 6),
+            createMessage(100, 100),
+            createMessage(101, 101),
+        )
+
+        val ranges = listOf(
+            LoadRangeEntity(3, 6, channelId),
+            LoadRangeEntity(100, 110, channelId)
+        )
+
+        messageDao.upsertMessageEntitiesWithTransaction(messages)
+        rangeDao.insertAll(ranges)
+
+        // When
+        val result = messageDao.getNearMessages(channelId, 5, 4)
+
+        // Then: the disconnected newer range must not create a LoadingNextItem for this window.
+        Truth.assertThat(result.data.map { it.messageEntity.id }).isEqualTo(listOf(3L, 4L, 5L, 6L))
+        Truth.assertThat(result.hasPrev).isFalse()
+        Truth.assertThat(result.hasNext).isFalse()
     }
 
     @Test
