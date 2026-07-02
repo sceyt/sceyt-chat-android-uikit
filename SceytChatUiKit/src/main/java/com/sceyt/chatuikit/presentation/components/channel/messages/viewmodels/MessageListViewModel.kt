@@ -73,7 +73,6 @@ import com.sceyt.chatuikit.presentation.extensions.isSelfDestructed
 import com.sceyt.chatuikit.presentation.helpers.DebounceHelper
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import com.sceyt.chatuikit.presentation.root.PageState
-import com.sceyt.chatuikit.services.sync.SceytSyncManager
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -138,7 +137,6 @@ class MessageListViewModel internal constructor(
     internal val channelMemberInteractor: ChannelMemberInteractor by inject()
     internal val connectionLogic: PersistenceConnectionLogic by inject()
     internal val userInteractor: UserInteractor by inject()
-    internal val syncManager: SceytSyncManager by inject()
     private val fileTransferService: FileTransferService by inject()
     private val pauseOrResumeTransferUseCase: PauseOrResumeTransferUseCase by inject()
     private val preferences: SceytSharedPreference by inject()
@@ -158,6 +156,7 @@ class MessageListViewModel internal constructor(
     )
     private val messageListItemMapper by lazy { MessageListItemMapper() }
     private val windowSyncGuard by lazy { MessageWindowSyncGuard() }
+    private val pagingRetryState by lazy { MessagePagingRetryState() }
     internal val pendingDisplayMsgIds by lazy { Collections.synchronizedSet(mutableSetOf<Long>()) }
     private var showSenderAvatarAndNameIfNeeded = true
     internal var viewOnceSelected = false
@@ -635,6 +634,7 @@ class MessageListViewModel internal constructor(
     private fun resetMessageLoadingState() {
         loadPrevOffsetId = 0
         loadNextOffsetId = 0
+        pagingRetryState.reset()
         invalidateCenteredSync()
         needSyncMessagesWhenScrollStateIdle = false
         isPreparingToScrollToMessage.set(false)
@@ -693,6 +693,20 @@ class MessageListViewModel internal constructor(
 
             else -> Unit
         }
+    }
+
+    internal fun canRetryLoadPrevAfterReconnect(): Boolean {
+        return pagingRetryState.canRetryPrev(
+            loadingFromDb = loadingPrevItemsDb.get(),
+            loadingFromServer = loadingPrevItems.get()
+        )
+    }
+
+    internal fun canRetryLoadNextAfterReconnect(): Boolean {
+        return pagingRetryState.canRetryNext(
+            loadingFromDb = loadingNextItemsDb.get(),
+            loadingFromServer = loadingNextItems.get()
+        )
     }
 
     private fun checkToScrollAfterResponse(response: PaginationResponse<SceytMessage>) {
@@ -834,6 +848,7 @@ class MessageListViewModel internal constructor(
     private suspend fun initPaginationServerResponse(
         response: PaginationResponse.ServerResponse<SceytMessage>
     ) = store.withMutation {
+        pagingRetryState.onServerResponse(response)
         when (response.data) {
             is SceytResponse.Success -> {
                 if (response.hasDiff) {

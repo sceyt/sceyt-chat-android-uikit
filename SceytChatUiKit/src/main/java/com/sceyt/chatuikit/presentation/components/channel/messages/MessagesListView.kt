@@ -703,6 +703,10 @@ class MessagesListView @JvmOverloads constructor(
         messagesRV.setNeedLoadNextMessagesListener(listener)
     }
 
+    internal fun isNearStartForPaging() = messagesRV.isNearStartForPaging()
+
+    internal fun isNearEndForPaging() = messagesRV.isNearEndForPaging()
+
     internal fun setReachToStartListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
         messagesRV.setReachToStartListener(listener)
     }

@@ -18,6 +18,7 @@ import com.sceyt.chatuikit.data.models.LoadKeyData
 import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNear
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNewest
+import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadPrev
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.SyncNearMessagesResult
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
@@ -40,6 +41,7 @@ import com.sceyt.chatuikit.persistence.logic.PersistenceConnectionLogic
 import com.sceyt.chatuikit.persistence.repositories.SceytSharedPreference
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem.DateSeparatorItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem.LoadingNextItem
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem.LoadingPrevItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem.MessageItem
 import com.sceyt.chatuikit.presentation.components.channel.header.MessagesListHeaderView
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.ui.MessageListHeaderUIElementsListener
@@ -356,6 +358,129 @@ class MessageListViewModelStateTest {
                 .filterIsInstance<MessageItem>()
                 .map { it.message.id }
         ).containsExactly(latestMessage.id)
+    }
+
+    @Test
+    fun `load prev server error keeps loading item retryable when db side is exhausted`() = runTest(dispatcher) {
+        val viewModel = viewModel()
+        advanceUntilIdle()
+        val message = createMessage(createdAt = 1_000, id = 100, tid = 100)
+        val loadKey = LoadKeyData(value = message.id)
+        whenever(
+            messageInteractor.loadPrevMessages(
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                eq(0L)
+            )
+        ).thenReturn(
+            flowOf(
+                PaginationResponse.DBResponse(
+                    data = listOf(message),
+                    loadKey = loadKey,
+                    offset = 0,
+                    hasPrev = true,
+                    loadType = LoadPrev
+                ),
+                PaginationResponse.ServerResponse(
+                    data = SceytResponse.Success(emptyList()),
+                    cacheData = listOf(message),
+                    loadKey = loadKey,
+                    offset = 0,
+                    hasDiff = false,
+                    hasPrev = true,
+                    hasNext = false,
+                    loadType = LoadPrev,
+                    ignoredDb = false,
+                    dbResultWasEmpty = false
+                )
+            ),
+            flowOf(
+                PaginationResponse.DBResponse(
+                    data = emptyList(),
+                    loadKey = loadKey,
+                    offset = 1,
+                    hasPrev = false,
+                    loadType = LoadPrev
+                ),
+                PaginationResponse.ServerResponse(
+                    data = SceytResponse.Error(),
+                    cacheData = emptyList(),
+                    loadKey = loadKey,
+                    offset = 1,
+                    hasDiff = false,
+                    hasPrev = true,
+                    hasNext = false,
+                    loadType = LoadPrev,
+                    ignoredDb = false,
+                    dbResultWasEmpty = true
+                )
+            )
+        )
+
+        viewModel.loadPrevMessages(lastMessageId = message.id, offset = 0, loadKey = loadKey)
+        advanceUntilIdle()
+        assertThat(viewModel.state.value.items).contains(LoadingPrevItem)
+
+        viewModel.loadPrevMessages(lastMessageId = message.id, offset = 1, loadKey = loadKey)
+        advanceUntilIdle()
+
+        assertThat(viewModel.state.value.items).contains(LoadingPrevItem)
+        assertThat(viewModel.canLoadPrev()).isTrue()
+        assertThat(viewModel.canRetryLoadPrevAfterReconnect()).isTrue()
+    }
+
+    @Test
+    fun `initial load prev server error stays retryable when db side is exhausted`() = runTest(dispatcher) {
+        val viewModel = viewModel()
+        advanceUntilIdle()
+        val message = createMessage(createdAt = 1_000, id = 100, tid = 100)
+        val loadKey = LoadKeyData(value = message.id)
+        whenever(
+            messageInteractor.loadPrevMessages(
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                eq(0L)
+            )
+        ).thenReturn(
+            flowOf(
+                PaginationResponse.DBResponse(
+                    data = listOf(message),
+                    loadKey = loadKey,
+                    offset = 0,
+                    hasPrev = false,
+                    loadType = LoadPrev
+                ),
+                PaginationResponse.ServerResponse(
+                    data = SceytResponse.Error(),
+                    cacheData = listOf(message),
+                    loadKey = loadKey,
+                    offset = 0,
+                    hasDiff = false,
+                    hasPrev = false,
+                    hasNext = false,
+                    loadType = LoadPrev,
+                    ignoredDb = false,
+                    dbResultWasEmpty = false
+                )
+            )
+        )
+
+        viewModel.loadPrevMessages(lastMessageId = message.id, offset = 0, loadKey = loadKey)
+        advanceUntilIdle()
+
+        assertThat(viewModel.canLoadPrev()).isFalse()
+        assertThat(viewModel.canRetryLoadPrevAfterReconnect()).isTrue()
+        assertThat(viewModel.canRetryLoadNextAfterReconnect()).isFalse()
     }
 
     @Test
