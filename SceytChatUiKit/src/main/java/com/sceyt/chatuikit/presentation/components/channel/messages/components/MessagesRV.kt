@@ -109,7 +109,7 @@ class MessagesRV @JvmOverloads constructor(
     private fun checkNeedLoadPrev(dy: Int) {
         if (mAdapter.itemCount == 0) return
         val firstVisiblePosition = getFirstVisibleItemPosition()
-        if (firstVisiblePosition <= messageListQueryLimit / 2 && dy < 0) {
+        if (isNearStartPosition(firstVisiblePosition) && dy < 0) {
             if (firstVisiblePosition == 0) {
                 if (!reachToStartInvoked) {
                     val skip = mAdapter.getSkip()
@@ -135,7 +135,7 @@ class MessagesRV @JvmOverloads constructor(
         if (mAdapter.itemCount == 0) return
         val lastVisiblePosition = getLastVisibleItemPosition()
 
-        if (mAdapter.itemCount - lastVisiblePosition <= messageListQueryLimit / 2 && dy > 0) {
+        if (isNearEndPosition(lastVisiblePosition) && dy > 0) {
             if (lastVisiblePosition == mAdapter.itemCount - 1) {
                 if (!reachToEndInvoked) {
                     val skip = mAdapter.getSkip()
@@ -330,6 +330,28 @@ class MessagesRV @JvmOverloads constructor(
 
     fun setNeedLoadNextMessagesListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
         needLoadNextMessagesListener = listener
+    }
+
+    fun isNearStartForPaging(): Boolean {
+        if (::mAdapter.isInitialized.not() || mAdapter.itemCount == 0 || childCount == 0) return false
+        val firstVisiblePosition = getFirstVisibleItemPosition()
+        if (firstVisiblePosition == NO_POSITION) return false
+        return !canScrollVertically(-1) || isNearStartPosition(firstVisiblePosition)
+    }
+
+    fun isNearEndForPaging(): Boolean {
+        if (::mAdapter.isInitialized.not() || mAdapter.itemCount == 0 || childCount == 0) return false
+        val lastVisiblePosition = getLastVisibleItemPosition()
+        if (lastVisiblePosition == NO_POSITION) return false
+        return !canScrollVertically(1) || isNearEndPosition(lastVisiblePosition)
+    }
+
+    private fun isNearStartPosition(firstVisiblePosition: Int): Boolean {
+        return firstVisiblePosition <= messageListQueryLimit / 2
+    }
+
+    private fun isNearEndPosition(lastVisiblePosition: Int): Boolean {
+        return mAdapter.itemCount - lastVisiblePosition <= messageListQueryLimit / 2
     }
 
     fun setReachToStartListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {

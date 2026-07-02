@@ -24,7 +24,6 @@ import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.messages.MarkerType
-import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.asActivity
@@ -70,6 +69,7 @@ import kotlin.time.Duration.Companion.milliseconds
 fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner: LifecycleOwner) {
     val lifecycleScope = lifecycleOwner.lifecycleScope
     val scrollCoordinator = MessageScrollCoordinator()
+    var shouldRetryPagingOnReconnect = !ConnectionEventManager.isConnected
     messagesListView.setMultiselectDestination(selectedMessagesMap)
     if (channel.isSelf) {
         messagesListView.setEmptyStateForSelfChannel()
@@ -86,6 +86,29 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         val messageId = item?.message?.id ?: return
         if (lastSyncCenterOffsetId != messageId) {
             syncCenteredMessage(messageId = messageId)
+        }
+    }
+
+    fun retryVisibleEdgePagingAfterReconnect() {
+        if (loadingFromServer || loadingFromDb) return
+
+        val messageItems = currentMessageListItems().filterIsInstance<MessageItem>()
+        if (messageItems.isEmpty()) return
+
+        val offset = messageItems.size
+        if (messagesListView.isNearStartForPaging() &&
+                (canLoadPrev() || canRetryLoadPrevAfterReconnect())) {
+            loadPrevMessages(messageItems.first().message.id, offset)
+            needSyncMessagesWhenScrollStateIdle = true
+        }
+
+        if (messagesListView.isNearEndForPaging() &&
+                (canLoadNext() || canRetryLoadNextAfterReconnect())) {
+            val lastSentMessage = messageItems.lastOrNull { it.message.isNotPending() }
+            if (lastSentMessage != null) {
+                loadNextMessages(lastSentMessage.message.id, offset)
+                needSyncMessagesWhenScrollStateIdle = true
+            }
         }
     }
 
@@ -440,25 +463,17 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     ConnectionEventManager.onChangedConnectStatusFlow
         .distinctUntilChanged()
         .onEach { stateData ->
-            viewModelScope.launch(Dispatchers.IO) {
-                if (stateData.state == ConnectionState.Connected) {
-                    val message = currentMessageListItems().lastOrNull {
-                        // First trying to get last displayed message
-                        it is MessageItem && it.message.deliveryStatus == MessageDeliveryStatus.Displayed
-                    } ?: currentMessageListItems().firstOrNull {
-                        // Next trying to get fist sent message
-                        it is MessageItem && it.message.deliveryStatus == MessageDeliveryStatus.Sent
-                    } ?: currentMessageListItems().firstOrNull {
-                        // Next trying to get fist received message
-                        it is MessageItem && it.message.deliveryStatus == MessageDeliveryStatus.Received
-                    }
-                    (message as? MessageItem)?.let {
-                        syncManager.syncConversationMessagesAfter(conversationId, it.message.id)
-                    }
-                } else {
-                    invalidateCenteredSync()
+            if (stateData.state == ConnectionState.Connected) {
+                if (shouldRetryPagingOnReconnect) {
                     needSyncMessagesWhenScrollStateIdle = true
+                    retryVisibleEdgePagingAfterReconnect()
                 }
+                shouldRetryPagingOnReconnect = false
+                syncNearCenterVisibleMessageIfNeeded()
+            } else {
+                shouldRetryPagingOnReconnect = true
+                invalidateCenteredSync()
+                needSyncMessagesWhenScrollStateIdle = true
             }
         }.launchIn(lifecycleOwner.lifecycleScope)
 
