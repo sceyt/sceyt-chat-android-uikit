@@ -17,6 +17,7 @@ import com.sceyt.chatuikit.createMessage
 import com.sceyt.chatuikit.data.models.LoadKeyData
 import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNear
+import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNewest
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.SyncNearMessagesResult
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
@@ -268,6 +269,93 @@ class MessageListViewModelStateTest {
                 .filterIsInstance<MessageItem>()
                 .map { it.message.id }
         ).containsExactly(centeredMessage.id)
+    }
+
+    @Test
+    fun `load newest replaces load near window with next gap`() = runTest(dispatcher) {
+        val centeredMessage = createMessage(createdAt = 1_000, id = 100, tid = 100)
+        val latestMessage = createMessage(createdAt = 2_000, id = 200, tid = 200)
+        val viewModel = viewModel(
+            channel = createChannel(id = 1, pinnedAt = 0, createdAt = 1, lastMessage = latestMessage)
+        )
+        whenever(
+            messageInteractor.loadNearMessages(
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+            )
+        ).thenReturn(
+            flowOf(
+                PaginationResponse.DBResponse(
+                    data = listOf(centeredMessage),
+                    loadKey = LoadKeyData(value = centeredMessage.id),
+                    offset = 0,
+                    hasNext = true,
+                    hasPrev = false,
+                    loadType = LoadNear
+                )
+            )
+        )
+        viewModel.loadNearMessages(
+            messageId = centeredMessage.id,
+            loadKey = LoadKeyData(value = centeredMessage.id),
+            ignoreServer = true
+        )
+        advanceUntilIdle()
+        assertThat(viewModel.state.value.items).contains(LoadingNextItem)
+
+        val requestId = 77L
+        val loadKey = LoadKeyData(
+            key = LoadKeyType.ScrollToLastMessage.longValue,
+            value = latestMessage.id,
+            data = ScrollRequestData(requestId)
+        )
+        whenever(
+            messageInteractor.loadNewestMessages(
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        ).thenReturn(
+            flowOf(
+                PaginationResponse.ServerResponse(
+                    data = SceytResponse.Success(listOf(latestMessage)),
+                    cacheData = listOf(latestMessage),
+                    loadKey = loadKey,
+                    offset = 0,
+                    hasDiff = true,
+                    hasNext = false,
+                    hasPrev = true,
+                    loadType = LoadNewest,
+                    ignoredDb = false,
+                    dbResultWasEmpty = true
+                )
+            )
+        )
+        val effect = async {
+            viewModel.renderEffects.first { it is MessageListRenderEffect.ScrollToLastMessage }
+                    as MessageListRenderEffect.ScrollToLastMessage
+        }
+        runCurrent()
+
+        viewModel.loadNewestMessages(loadKey)
+        advanceUntilIdle()
+
+        assertThat(effect.await().requestId).isEqualTo(requestId)
+        assertThat(viewModel.state.value.items).doesNotContain(LoadingNextItem)
+        assertThat(
+            viewModel.state.value.items
+                .filterIsInstance<MessageItem>()
+                .map { it.message.id }
+        ).containsExactly(latestMessage.id)
     }
 
     @Test
