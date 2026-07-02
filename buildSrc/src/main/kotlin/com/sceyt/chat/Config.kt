@@ -12,7 +12,7 @@ object Config {
 
     // const val mavenCentralVersion = "2.1.5"
     // const val mavenCentralVersion = "local"
-    const val mavenCentralVersion = "2.1.531-SNAPSHOT"
+    const val mavenCentralVersion = "2.1.532-SNAPSHOT"
 
     /** App version */
     const val versionCode = 59
