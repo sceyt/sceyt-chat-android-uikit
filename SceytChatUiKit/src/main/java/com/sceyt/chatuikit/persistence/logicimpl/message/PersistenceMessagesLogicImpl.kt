@@ -1239,7 +1239,13 @@ internal class PersistenceMessagesLogicImpl(
             }
 
             LoadNewest -> {
-                messages = getPrevMessagesDb(channelId, Long.MAX_VALUE, offset, limit)
+                val lastMessageId = channelCache.getOneOf(channelId)?.lastMessage?.id
+                    ?: persistenceChannelsLogic.getChannelFromDb(channelId)?.lastMessage?.id
+                    ?: Long.MAX_VALUE
+                messages =
+                    getPrevMessagesDb(channelId, lastMessageId, offset, limit).takeIf { list ->
+                        lastMessageId == Long.MAX_VALUE || list.any { it.id == lastMessageId }
+                    }.orEmpty()
                 hasPrev = messages.size == messagesLoadSize
             }
         }

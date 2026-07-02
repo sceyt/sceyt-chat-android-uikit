@@ -1289,7 +1289,7 @@ class MessageListViewModel internal constructor(
     fun markChannelAsRead(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
             channelInteractor.markChannelAsRead(channelId).onErrorNonNull {
-                pageStateLiveDataInternal.postValue(PageState.StateError(it))
+                pageStateLiveDataInternal.postValue(PageState.StateError(it, showMessage = false))
             }
         }
     }
