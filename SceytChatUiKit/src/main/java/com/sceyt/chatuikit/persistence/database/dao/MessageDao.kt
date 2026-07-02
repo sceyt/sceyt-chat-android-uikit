@@ -471,19 +471,10 @@ internal abstract class MessageDao {
 
         // Within the loaded range there are more messages on a side only if the DB query
         // returned more than what we actually included in the window.
-        val hasMorePrevInRange = oldest.size > oldMessages.size
-        val hasMoreNextInRange = newest.size > newMessages.size
+        val hasPrev = oldest.size > oldMessages.size
+        val hasNext = newest.size > newMessages.size
 
         val data = (oldMessages + newMessages).sortedBy { it.messageEntity.createdAt }
-
-        // The query is restricted to the single load range containing [messageId]. If the DB
-        // still holds messages older/newer than this range (a separate, gapped segment),
-        // report hasPrev/hasNext = true to the caller.
-        val oldestId = data.firstOrNull()?.messageEntity?.id ?: messageId
-        val newestId = data.lastOrNull()?.messageEntity?.id ?: messageId
-
-        val hasPrev = hasMorePrevInRange || existsListedMessageBefore(channelId, oldestId)
-        val hasNext = hasMoreNextInRange || existsListedMessageAfter(channelId, newestId)
 
         return LoadNearData(data, hasNext = hasNext, hasPrev = hasPrev)
     }
@@ -646,32 +637,6 @@ internal abstract class MessageDao {
 
     @Query("SELECT EXISTS(SELECT * FROM $MESSAGE_TABLE WHERE message_id = :messageId)")
     abstract suspend fun existsMessageById(messageId: Long): Boolean
-
-    @Query(
-        """
-        SELECT EXISTS(
-            SELECT 1 FROM $MESSAGE_TABLE
-            WHERE channelId = :channelId
-              AND message_id < :messageId
-              AND deliveryStatus != $PENDING_STATUS
-              AND NOT unList
-        )
-        """
-    )
-    abstract suspend fun existsListedMessageBefore(channelId: Long, messageId: Long): Boolean
-
-    @Query(
-        """
-        SELECT EXISTS(
-            SELECT 1 FROM $MESSAGE_TABLE
-            WHERE channelId = :channelId
-              AND message_id > :messageId
-              AND deliveryStatus != $PENDING_STATUS
-              AND NOT unList
-        )
-        """
-    )
-    abstract suspend fun existsListedMessageAfter(channelId: Long, messageId: Long): Boolean
 
     @Query("SELECT EXISTS(SELECT * FROM $MESSAGE_TABLE WHERE tid = :tid)")
     abstract suspend fun existsMessageByTid(tid: Long): Boolean
