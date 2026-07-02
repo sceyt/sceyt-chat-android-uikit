@@ -580,8 +580,16 @@ class VoiceRecorderView @JvmOverloads constructor(
         binding.recording.updateLayoutParams<LayoutParams> { this.height = height }
     }
 
+    private fun releaseTimer() {
+        timerTask?.cancel()
+        timerTask = null
+        audioTimer?.cancel()
+        audioTimer = null
+    }
+
     override fun onDetachedFromWindow() {
         playbackStateCollector.stop()
+        releaseTimer()
         super.onDetachedFromWindow()
     }
 }
