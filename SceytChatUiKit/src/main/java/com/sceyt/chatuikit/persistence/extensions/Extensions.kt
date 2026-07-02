@@ -67,15 +67,15 @@ fun <T> MutableCollection<T>.removeFirstIf(filter: (T) -> Boolean): Int {
     return -1
 }
 
-inline fun <T> Flow<T>.collectWithLifecycle(
+fun <T> Flow<T>.collectWithLifecycle(
     owner: LifecycleOwner,
     minActiveState: Lifecycle.State = Lifecycle.State.STARTED,
-    crossinline collector: suspend (T) -> Unit
+    collector: suspend (T) -> Unit
 ) {
     owner.lifecycleScope.launch {
         owner.repeatOnLifecycle(minActiveState) {
-            this@collectWithLifecycle.collect {
-                collector(it)
+            collect { value ->
+                collector(value)
             }
         }
     }
