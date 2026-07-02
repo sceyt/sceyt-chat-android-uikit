@@ -475,6 +475,29 @@ class MessageListViewModel internal constructor(
         }
     }
 
+    fun loadNewestMessages(loadKey: LoadKeyData) {
+        invalidateCenteredSync()
+        setPagingLoadingStarted(LoadNewest)
+        notifyPageLoadingState(false)
+
+        loadPrevJob?.cancel()
+        loadNextJob?.cancel()
+        loadNearJob?.cancel()
+        loadPrevJob = viewModelScope.launch(ioDispatcher) {
+            messageInteractor.loadNewestMessages(
+                conversationId = conversationId,
+                replyInThread = replyInThread,
+                loadKey = loadKey,
+                ignoreDb = false,
+                awaitToConnectTimeout = 0
+            ).collect { response ->
+                withContext(mainDispatcher) {
+                    initPaginationResponse(response)
+                }
+            }
+        }
+    }
+
     fun loadNearMessages(
         messageId: Long,
         loadKey: LoadKeyData,
@@ -828,7 +851,8 @@ class MessageListViewModel internal constructor(
                     if (response.dbResultWasEmpty) {
                         when (response.loadType) {
                             LoadNear -> replaceMessages(newMessages, force = true)
-                            LoadNext, LoadNewest -> addNextPageItems(newMessages)
+                            LoadNext -> addNextPageItems(newMessages)
+                            LoadNewest -> replaceMessages(newMessages, force = true)
                             LoadPrev -> addPrevPageItems(newMessages)
                         }
                     } else {

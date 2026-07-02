@@ -44,6 +44,7 @@ import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelUpdatedType
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
 import com.sceyt.chatuikit.presentation.components.channel.messages.MessagesListView
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem.MessageItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageCommandEvent
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.AppendRealtimeScroll
@@ -86,6 +87,11 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         if (lastSyncCenterOffsetId != messageId) {
             syncCenteredMessage(messageId = messageId)
         }
+    }
+
+    fun hasNextMessageGap(): Boolean {
+        return hasNext || hasNextDb ||
+                currentMessageListItems().lastOrNull() is MessageListItem.LoadingNextItem
     }
 
     fun scrollToNewestMessageIfLoaded(
@@ -221,12 +227,10 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             is MessageListRenderEffect.ScrollToNewMessage -> {
                 val targetId = effect.lastMessage?.id ?: return
                 val request = scrollCoordinator.beginNewestMessageRequest(targetId)
-                if (scrollToNewestMessageIfLoaded(request, syncAfterScroll = true))
+                if (!hasNextMessageGap() && scrollToNewestMessageIfLoaded(request, syncAfterScroll = true))
                     return
 
-                loadPrevMessages(
-                    lastMessageId = targetId,
-                    offset = 0,
+                loadNewestMessages(
                     loadKey = LoadKeyData(
                         key = LoadKeyType.ScrollToLastMessage.longValue,
                         value = targetId,
