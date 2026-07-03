@@ -142,6 +142,9 @@ internal class PersistenceMessagesLogicImpl(
     private val dispatcherIO = Dispatchers.IO
     private val myId: String? get() = SceytChatUIKit.chatUIFacade.myId
     private val messagesLoadSize get() = SceytChatUIKit.config.queryLimits.messageListQueryLimit
+    private val syncedMessageStatusUpdater by lazy {
+        SyncedMessageStatusUpdater(messageDao = messageDao, messagesCache = messagesCache)
+    }
 
     private val onMessageFlow = MutableSharedFlow<Pair<SceytChannel, SceytMessage>>(
         extraBufferCapacity = 10,
@@ -365,6 +368,10 @@ internal class PersistenceMessagesLogicImpl(
         ).collect { result ->
             when (result) {
                 is SyncResult.Proportion -> {
+                    syncedMessageStatusUpdater.updatePreviousMessagesIfNeeded(
+                        channelId = conversationId,
+                        newestMessage = result.items.lastOrNull()
+                    )
                     val updatedMessages = saveMessagesToDb(result.items)
                     messagesCache.upsertMessages(
                         channelId = conversationId,
@@ -1088,6 +1095,12 @@ internal class PersistenceMessagesLogicImpl(
     override suspend fun saveChannelLastMessagesToDb(list: List<SceytMessage>?) {
         list ?: return
         withContext(dispatcherIO) {
+            list.forEach { message ->
+                syncedMessageStatusUpdater.updatePreviousMessagesIfNeeded(
+                    channelId = message.channelId,
+                    newestMessage = message
+                )
+            }
             saveMessagesToDb(list)
             // Create ranges for last message
             list.forEach {

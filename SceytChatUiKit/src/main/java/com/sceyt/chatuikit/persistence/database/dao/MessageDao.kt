@@ -577,6 +577,20 @@ internal abstract class MessageDao {
 
     @Query(
         """
+        SELECT deliveryStatus
+        FROM $MESSAGE_TABLE
+        WHERE channelId = :channelId
+          AND message_id = :messageId
+        LIMIT 1
+        """
+    )
+    abstract suspend fun getMessageDeliveryStatus(
+        channelId: Long,
+        messageId: Long
+    ): MessageDeliveryStatus?
+
+    @Query(
+        """
         SELECT message_id AS id, tid
         FROM $MESSAGE_TABLE
         WHERE channelId = :channelId
