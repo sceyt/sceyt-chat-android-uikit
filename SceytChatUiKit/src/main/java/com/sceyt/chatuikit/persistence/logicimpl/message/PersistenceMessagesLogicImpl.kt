@@ -355,7 +355,6 @@ internal class PersistenceMessagesLogicImpl(
         replyInThread: Boolean,
         messageId: Long,
     ): Flow<SyncResult<SceytMessage>> = flow {
-        ConnectionEventManager.awaitToConnectSceyt()
         var cursorId = messageId
 
         messagesRepository.syncMessagesAfterMessageId(
