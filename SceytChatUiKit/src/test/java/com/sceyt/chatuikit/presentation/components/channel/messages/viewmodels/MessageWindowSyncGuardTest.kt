@@ -83,35 +83,35 @@ class MessageWindowSyncGuardTest {
     }
 
     @Test
-    fun `synced messages append only when lower side is complete and idle`() {
+    fun `newest synced messages append only when newest side is complete and idle`() {
         val guard = MessageWindowSyncGuard()
 
         assertThat(
-            guard.canAppendSyncedMessages(
+            guard.canAppendNewestSyncedMessages(
                 hasNext = false,
                 hasNextDb = false,
-                isPaging = false
+                isNewestSidePaging = false
             )
         ).isTrue()
         assertThat(
-            guard.canAppendSyncedMessages(
+            guard.canAppendNewestSyncedMessages(
                 hasNext = true,
                 hasNextDb = false,
-                isPaging = false
+                isNewestSidePaging = false
             )
         ).isFalse()
         assertThat(
-            guard.canAppendSyncedMessages(
+            guard.canAppendNewestSyncedMessages(
                 hasNext = false,
                 hasNextDb = true,
-                isPaging = false
+                isNewestSidePaging = false
             )
         ).isFalse()
         assertThat(
-            guard.canAppendSyncedMessages(
+            guard.canAppendNewestSyncedMessages(
                 hasNext = false,
                 hasNextDb = false,
-                isPaging = true
+                isNewestSidePaging = true
             )
         ).isFalse()
     }

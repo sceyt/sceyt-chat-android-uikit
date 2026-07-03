@@ -11,6 +11,7 @@ import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
 import com.sceyt.chatuikit.persistence.logicimpl.sync.ChannelSyncStateStore
 import com.sceyt.chatuikit.presentation.common.collections.ConcurrentHashSet
 import com.sceyt.chatuikit.services.sync.SceytSyncManager.SyncResultData
+import com.sceyt.chatuikit.services.sync.SceytSyncManager.SyncedConversationMessages
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.Dispatchers
@@ -65,10 +66,14 @@ internal class SceytSyncManagerImpl(
         }
     }
 
-    override suspend fun syncConversationMessagesAfter(channelId: Long, fromMessageId: Long) {
+    override suspend fun syncConversationMessagesAfter(
+        channelId: Long,
+        fromMessageId: Long
+    ): SyncedConversationMessages? {
         val response = channelInteractor.getChannelFromServer(channelId)
-        if (response is SceytResponse.Success && response.data != null)
-            addSyncedMessagesCount(syncMessagesAfter(response.data, fromMessageId, true))
+        return if (response is SceytResponse.Success && response.data != null)
+            syncConversationMessagesAfter(response.data, fromMessageId)
+        else null
     }
 
     override fun cancelSync() {
@@ -152,25 +157,14 @@ internal class SceytSyncManagerImpl(
             TAG,
             "Syncing messages for channel ${channel.id} after message id ${channel.lastDisplayedMessageId}"
         )
-        return syncMessagesAfter(channel, channel.lastDisplayedMessageId, false)
+        return syncMessagesAfter(channel, channel.lastDisplayedMessageId)
     }
 
     private suspend fun syncMessagesAfter(
         channel: SceytChannel,
-        fromMessageId: Long,
-        syncConversation: Boolean
+        fromMessageId: Long
     ): Int {
-        val syncedConversationMessages = mutableListOf<SceytMessage>()
         var syncedMessagesCount = 0
-
-        fun emitSyncedConversationMessages() {
-            if (syncConversation && syncedConversationMessages.isNotEmpty()) {
-                SceytSyncManager.syncChannelMessagesFinished_.tryEmit(
-                    channel to syncedConversationMessages.toList()
-                )
-                syncedConversationMessages.clear()
-            }
-        }
 
         messageInteractor.syncMessagesAfterMessageId(
             conversationId = channel.id,
@@ -179,25 +173,55 @@ internal class SceytSyncManagerImpl(
         ).collect { result ->
             when (result) {
                 is SyncResult.Proportion -> {
-                    if (syncConversation)
-                        syncedConversationMessages.addAll(result.items)
                     syncedMessagesCount += result.items.size
                 }
 
                 SyncResult.SuccessfullyFinished -> {
-                    emitSyncedConversationMessages()
                     channel.lastMessage?.let { message ->
                         channelSyncStateStore.updateSyncState(channel.id, message.id)
                     }
                 }
 
-                is SyncResult.Error -> {
-                    emitSyncedConversationMessages()
-                }
+                is SyncResult.Error -> Unit
             }
         }
 
         return syncedMessagesCount
+    }
+
+    private suspend fun syncConversationMessagesAfter(
+        channel: SceytChannel,
+        fromMessageId: Long
+    ): SyncedConversationMessages? {
+        val syncedConversationMessages = mutableListOf<SceytMessage>()
+
+        messageInteractor.syncMessagesAfterMessageId(
+            conversationId = channel.id,
+            replyInThread = false,
+            messageId = fromMessageId
+        ).collect { result ->
+            when (result) {
+                is SyncResult.Proportion -> {
+                    syncedConversationMessages.addAll(result.items)
+                }
+
+                SyncResult.SuccessfullyFinished -> {
+                    channel.lastMessage?.let { message ->
+                        channelSyncStateStore.updateSyncState(channel.id, message.id)
+                    }
+                }
+
+                is SyncResult.Error -> Unit
+            }
+        }
+
+        return if (syncedConversationMessages.isNotEmpty()) {
+            SyncedConversationMessages(
+                channel = channel,
+                messages = syncedConversationMessages,
+                fromMessageId = fromMessageId
+            )
+        } else null
     }
 
     private fun createCoroutineContext(): CoroutineContext {

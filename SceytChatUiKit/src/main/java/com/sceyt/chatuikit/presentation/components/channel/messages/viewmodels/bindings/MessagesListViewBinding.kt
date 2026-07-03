@@ -53,7 +53,6 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.M
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.ScrollRequestData
 import com.sceyt.chatuikit.presentation.extensions.isNotPending
 import com.sceyt.chatuikit.presentation.root.PageState
-import com.sceyt.chatuikit.services.sync.SceytSyncManager
 import com.sceyt.chatuikit.styles.extensions.messages_list.setEmptyStateForSelfChannel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -424,26 +423,6 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
         .launchIn(lifecycleOwner.lifecycleScope)
 
-    SceytSyncManager.syncChannelMessagesFinished
-        .filter { it.first.id == channel.id }
-        .onEach { (syncChannel, messages) ->
-            if (syncChannel.id == channel.id) {
-                if (pinnedLastReadMessageId == 0L && syncChannel.lastDisplayedMessageId != 0L
-                    && syncChannel.lastDisplayedMessageId != syncChannel.lastMessage?.id
-                )
-                    pinnedLastReadMessageId = syncChannel.lastDisplayedMessageId
-
-                lifecycleOwner.lifecycleScope.launch {
-                    appendSyncedMessages(
-                        messages = messages,
-                        scrollToLastAfterAppend = scrollCoordinator.activeNewestMessageRequest() != null ||
-                                messagesListView.isLastCompletelyItemDisplaying()
-                    )
-                }
-            }
-        }
-        .launchIn(lifecycleOwner.lifecycleScope)
-
     connectionLogic.allPendingEventsSentFlow
         .onEach {
             // Sync messages near center visible message
@@ -460,6 +439,18 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                     retryVisibleEdgePagingAfterReconnect()
                 }
                 shouldRetryPagingOnReconnect = false
+
+                // Sync messages after loaded last message
+                (state.value.items.lastOrNull {
+                    it is MessageItem && it.message.isNotPending()
+                } as? MessageItem)?.let { item ->
+                    syncAndAppendMessagesAfter(
+                        fromMessageId = item.message.id,
+                        scrollToLastAfterAppend = scrollCoordinator.activeNewestMessageRequest() != null ||
+                                messagesListView.isLastCompletelyItemDisplaying()
+                    )
+                }
+                // After load newest messages, we cna sync centered messages
                 syncNearCenterVisibleMessageIfNeeded()
             } else {
                 shouldRetryPagingOnReconnect = true

@@ -100,6 +100,7 @@ class MessageListViewModelStateTest {
     private val messageInteractor = mock<MessageInteractor>()
     private val channelInteractor = mock<ChannelInteractor>()
     private val channelMemberInteractor = mock<ChannelMemberInteractor>()
+    private val syncManager = mock<SceytSyncManager>()
     private val createdViewModels = mutableListOf<MessageListViewModel>()
 
     @get:Rule
@@ -150,7 +151,7 @@ class MessageListViewModelStateTest {
                         }
                     }
                     single<UserInteractor> { mock() }
-                    single<SceytSyncManager> { mock() }
+                    single<SceytSyncManager> { syncManager }
                     single<FileTransferService> { mock() }
                     single<PauseOrResumeTransferUseCase> { mock() }
                     single<SceytSharedPreference> { mock() }
@@ -277,8 +278,10 @@ class MessageListViewModelStateTest {
 
     @Test
     fun `synced messages are not appended to load near window with next page`() = runTest(dispatcher) {
-        val viewModel = viewModel()
         val centeredMessage = createMessage(createdAt = 1_000, id = 100, tid = 100)
+        val syncedMessage = createMessage(createdAt = 2_000, id = 200, tid = 200)
+        val channel = createChannel(id = 1, pinnedAt = 0, createdAt = 1, lastMessage = syncedMessage)
+        val viewModel = viewModel(channel = channel)
         whenever(
             messageInteractor.loadNearMessages(
                 any(),
@@ -302,6 +305,14 @@ class MessageListViewModelStateTest {
                 )
             )
         )
+        whenever(syncManager.syncConversationMessagesAfter(channel.id, centeredMessage.id))
+            .thenReturn(
+                SceytSyncManager.SyncedConversationMessages(
+                    channel = channel,
+                    messages = listOf(syncedMessage),
+                    fromMessageId = centeredMessage.id
+                )
+            )
 
         viewModel.loadNearMessages(
             messageId = centeredMessage.id,
@@ -310,8 +321,8 @@ class MessageListViewModelStateTest {
         )
         advanceUntilIdle()
 
-        val appended = viewModel.appendSyncedMessages(
-            messages = listOf(createMessage(createdAt = 2_000, id = 200, tid = 200)),
+        val appended = viewModel.syncAndAppendMessagesAfter(
+            fromMessageId = centeredMessage.id,
             scrollToLastAfterAppend = false
         )
 
@@ -322,6 +333,67 @@ class MessageListViewModelStateTest {
                 .filterIsInstance<MessageItem>()
                 .map { it.message.id }
         ).containsExactly(centeredMessage.id)
+    }
+
+    @Test
+    fun `synced messages after anchor are ignored when anchor is no longer loaded`() = runTest(dispatcher) {
+        val anchorMessageId = 100L
+        val existingMessage = createMessage(createdAt = 1_000, id = 50, tid = 50)
+        val syncedMessage = createMessage(createdAt = 2_000, id = 200, tid = 200)
+        val channel = createChannel(id = 1, pinnedAt = 0, createdAt = 1, lastMessage = syncedMessage)
+        val viewModel = viewModel(channel = channel)
+        viewModel.appendIncomingMessage(existingMessage)
+        whenever(syncManager.syncConversationMessagesAfter(channel.id, anchorMessageId))
+            .thenReturn(
+                SceytSyncManager.SyncedConversationMessages(
+                    channel = channel,
+                    messages = listOf(syncedMessage),
+                    fromMessageId = anchorMessageId
+                )
+            )
+
+        val appended = viewModel.syncAndAppendMessagesAfter(
+            fromMessageId = anchorMessageId,
+            scrollToLastAfterAppend = false
+        )
+
+        assertThat(appended).isFalse()
+        assertThat(
+            viewModel.state.value.items
+                .filterIsInstance<MessageItem>()
+                .map { it.message.id }
+        ).containsExactly(existingMessage.id)
+    }
+
+    @Test
+    fun `newest synced messages append while prev page is loading`() = runTest(dispatcher) {
+        val anchorMessage = createMessage(createdAt = 1_000, id = 100, tid = 100)
+        val syncedMessage = createMessage(createdAt = 2_000, id = 200, tid = 200)
+        val channel = createChannel(id = 1, pinnedAt = 0, createdAt = 1, lastMessage = syncedMessage)
+        val viewModel = viewModel(channel = channel)
+        viewModel.appendIncomingMessage(anchorMessage)
+        viewModel.loadingPrevItems.set(true)
+        viewModel.loadingPrevItemsDb.set(true)
+        whenever(syncManager.syncConversationMessagesAfter(channel.id, anchorMessage.id))
+            .thenReturn(
+                SceytSyncManager.SyncedConversationMessages(
+                    channel = channel,
+                    messages = listOf(syncedMessage),
+                    fromMessageId = anchorMessage.id
+                )
+            )
+
+        val appended = viewModel.syncAndAppendMessagesAfter(
+            fromMessageId = anchorMessage.id,
+            scrollToLastAfterAppend = false
+        )
+
+        assertThat(appended).isTrue()
+        assertThat(
+            viewModel.state.value.items
+                .filterIsInstance<MessageItem>()
+                .map { it.message.id }
+        ).containsExactly(anchorMessage.id, syncedMessage.id).inOrder()
     }
 
     @Test

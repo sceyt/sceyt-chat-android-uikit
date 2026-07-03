@@ -54,7 +54,7 @@ class SceytSyncManagerImplTest {
     }
 
     @Test
-    fun `conversation sync emits collected messages once after finish`() = runTest {
+    fun `conversation sync returns collected messages once after finish`() = runTest {
         val messages = listOf(
             createMessage(createdAt = 1, id = 1, tid = 1),
             createMessage(createdAt = 2, id = 2, tid = 2),
@@ -66,13 +66,6 @@ class SceytSyncManagerImplTest {
             createdAt = 0,
             lastMessage = messages.last()
         )
-        val emissions = mutableListOf<Pair<Long, List<Long>>>()
-        val collector = launch {
-            SceytSyncManager.syncChannelMessagesFinished.collect { (syncedChannel, syncedMessages) ->
-                emissions.add(syncedChannel.id to syncedMessages.map { it.id })
-            }
-        }
-        runCurrent()
 
         whenever(channelInteractor.getChannelFromServer(channel.id))
             .thenReturn(SceytResponse.Success(channel))
@@ -90,11 +83,64 @@ class SceytSyncManagerImplTest {
             )
         )
 
-        syncManager().syncConversationMessagesAfter(channel.id, fromMessageId = 0)
-        runCurrent()
-        collector.cancel()
+        val result = syncManager().syncConversationMessagesAfter(channel.id, fromMessageId = 0)
 
-        assertThat(emissions).containsExactly(channel.id to messages.map { it.id })
+        assertThat(result?.channel?.id).isEqualTo(channel.id)
+        assertThat(result?.fromMessageId).isEqualTo(0)
+        assertThat(result?.messages?.map { it.id }).containsExactlyElementsIn(messages.map { it.id })
+    }
+
+    @Test
+    fun `conversation sync does not update channel sync result data`() = runTest {
+        val config = ChannelListConfig.default
+        val manager = syncManager()
+        val messages = listOf(
+            createMessage(createdAt = 1, id = 1, tid = 1),
+            createMessage(createdAt = 2, id = 2, tid = 2),
+        )
+        val channel = createChannel(
+            id = 10,
+            pinnedAt = 0,
+            createdAt = 0,
+            lastMessage = messages.last()
+        )
+        val channelSyncStarted = CompletableDeferred<Unit>()
+        val finishChannelSync = CompletableDeferred<Unit>()
+        val callbacks = mutableListOf<Result<SceytSyncManager.SyncResultData>>()
+        whenever(channelInteractor.syncChannels(config))
+            .thenReturn(
+                flow {
+                    channelSyncStarted.complete(Unit)
+                    finishChannelSync.await()
+                    emit(SyncResult.SuccessfullyFinished)
+                }
+            )
+        whenever(channelInteractor.getChannelFromServer(channel.id))
+            .thenReturn(SceytResponse.Success(channel))
+        whenever(
+            messageInteractor.syncMessagesAfterMessageId(
+                conversationId = channel.id,
+                replyInThread = false,
+                messageId = 0
+            )
+        ).thenReturn(
+            flowOf(
+                SyncResult.Proportion(messages),
+                SyncResult.SuccessfullyFinished
+            )
+        )
+
+        val syncJob = launch {
+            manager.startSync(config) { callbacks.add(it) }
+        }
+        channelSyncStarted.await()
+
+        manager.syncConversationMessagesAfter(channel.id, fromMessageId = 0)
+        finishChannelSync.complete(Unit)
+        syncJob.join()
+
+        assertThat(callbacks).hasSize(1)
+        assertThat(callbacks.first().getOrThrow().syncedMessagesCount).isEqualTo(0)
     }
 
     @Test

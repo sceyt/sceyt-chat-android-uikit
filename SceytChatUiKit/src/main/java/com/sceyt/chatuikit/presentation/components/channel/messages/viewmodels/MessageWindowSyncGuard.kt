@@ -39,12 +39,12 @@ internal class MessageWindowSyncGuard {
                 !isPreparingJump
     }
 
-    fun canAppendSyncedMessages(
+    fun canAppendNewestSyncedMessages(
         hasNext: Boolean,
         hasNextDb: Boolean,
-        isPaging: Boolean,
+        isNewestSidePaging: Boolean,
     ): Boolean {
-        return !hasNext && !hasNextDb && !isPaging
+        return !hasNext && !hasNextDb && !isNewestSidePaging
     }
 }
 
