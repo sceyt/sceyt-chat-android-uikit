@@ -43,6 +43,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.mes
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem.LoadingNextItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem.LoadingPrevItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem.MessageItem
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem.UnreadMessagesSeparatorItem
 import com.sceyt.chatuikit.presentation.components.channel.header.MessagesListHeaderView
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.ui.MessageListHeaderUIElementsListener
 import com.sceyt.chatuikit.presentation.components.channel.input.MessageInputView
@@ -194,6 +195,56 @@ class MessageListViewModelStateTest {
             any(),
             any(),
             eq(0L)
+        )
+    }
+
+    @Test
+    fun `initial target message load keeps unread separator boundary`() = runTest(dispatcher) {
+        val lastDisplayedMessage = createMessage(createdAt = 1_000, id = 3, tid = 3)
+        val targetMessage = createMessage(createdAt = 2_000, id = 4, tid = 4).copy(incoming = true)
+        val lastMessage = createMessage(createdAt = 3_000, id = 5, tid = 5).copy(incoming = true)
+        val channel = createChannel(id = 1, pinnedAt = 0, createdAt = 1, lastMessage = lastMessage)
+            .copy(lastDisplayedMessageId = lastDisplayedMessage.id)
+        val loadKey = LoadKeyData(
+            key = LoadKeyType.ScrollToMessageBy.longValue,
+            value = targetMessage.id
+        )
+        whenever(
+            messageInteractor.loadNearMessages(
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+            )
+        ).thenReturn(
+            flowOf(
+                PaginationResponse.DBResponse(
+                    data = listOf(lastDisplayedMessage, targetMessage, lastMessage),
+                    loadKey = loadKey,
+                    offset = 0,
+                    hasNext = false,
+                    hasPrev = false,
+                    loadType = LoadNear
+                )
+            )
+        )
+
+        val viewModel = viewModel(
+            channel = channel,
+            initialTargetMessageId = targetMessage.id
+        )
+        advanceUntilIdle()
+
+        val separators = viewModel.state.value.items.filterIsInstance<UnreadMessagesSeparatorItem>()
+        assertThat(separators).containsExactly(
+            UnreadMessagesSeparatorItem(
+                createdAt = targetMessage.createdAt,
+                msgId = lastDisplayedMessage.id
+            )
         )
     }
 
@@ -959,12 +1010,13 @@ class MessageListViewModelStateTest {
 
     private fun viewModel(
         channel: SceytChannel = createChannel(id = 1, pinnedAt = 0, createdAt = 1),
+        initialTargetMessageId: Long? = null,
     ): MessageListViewModel {
         return MessageListViewModel(
             _conversationId = channel.id,
             _channel = channel,
             replyInThread = false,
-            initialTargetMessageId = null,
+            initialTargetMessageId = initialTargetMessageId,
             ioDispatcher = dispatcher,
             defaultDispatcher = dispatcher,
             mainDispatcher = dispatcher,
