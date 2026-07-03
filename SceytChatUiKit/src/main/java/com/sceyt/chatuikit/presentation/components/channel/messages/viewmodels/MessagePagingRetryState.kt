@@ -41,7 +41,12 @@ internal class MessagePagingRetryState {
         when (loadType) {
             LoadPrev -> retryPrev = true
             LoadNext -> retryNext = true
-            LoadNear, LoadNewest -> Unit
+            LoadNear -> {
+                retryPrev = true
+                retryNext = true
+            }
+
+            LoadNewest -> Unit
         }
     }
 
