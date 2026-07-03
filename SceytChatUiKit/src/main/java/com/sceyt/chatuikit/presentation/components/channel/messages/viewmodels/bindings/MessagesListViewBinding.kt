@@ -97,13 +97,15 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
         val offset = messageItems.size
         if (messagesListView.isNearStartForPaging() &&
-                (canLoadPrev() || canRetryLoadPrevAfterReconnect())) {
+            (canLoadPrev() || canRetryLoadPrevAfterReconnect())
+        ) {
             loadPrevMessages(messageItems.first().message.id, offset)
             needSyncMessagesWhenScrollStateIdle = true
         }
 
         if (messagesListView.isNearEndForPaging() &&
-                (canLoadNext() || canRetryLoadNextAfterReconnect())) {
+            (canLoadNext() || canRetryLoadNextAfterReconnect())
+        ) {
             val lastSentMessage = messageItems.lastOrNull { it.message.isNotPending() }
             if (lastSentMessage != null) {
                 loadNextMessages(lastSentMessage.message.id, offset)
@@ -250,7 +252,11 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             is MessageListRenderEffect.ScrollToNewMessage -> {
                 val targetId = effect.lastMessage?.id ?: return
                 val request = scrollCoordinator.beginNewestMessageRequest(targetId)
-                if (!hasNextMessageGap() && scrollToNewestMessageIfLoaded(request, syncAfterScroll = true))
+                if (!hasNextMessageGap() && scrollToNewestMessageIfLoaded(
+                        request,
+                        syncAfterScroll = true
+                    )
+                )
                     return
 
                 loadNewestMessages(
@@ -359,19 +365,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     }
 
     fun onMessageDisplayed(message: SceytMessage) {
-        if (channel.userRole.isNullOrEmpty())
-            return
-
-        if (!message.incoming || message.userMarkers?.any { it.name == MarkerType.Displayed.value } == true)
-            return
-
-        if (lifecycleOwner.isResumed()) {
-            pendingDisplayMsgIds.add(message.id)
-            sendDisplayedHelper.submit {
-                markMessageAsRead(*(pendingDisplayMsgIds).toLongArray())
-                pendingDisplayMsgIds.clear()
-            }
-        } else pendingDisplayMsgIds.add(message.id)
+        markMessageAsDisplayedIfNeeded(message, lifecycleOwner.isResumed())
     }
 
     fun onVoicePlaying(message: SceytMessage) {
@@ -406,10 +400,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     viewModelScope.launch {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
             if (ConnectionEventManager.connectionState == ConnectionState.Connected) {
-                if (pendingDisplayMsgIds.isNotEmpty()) {
-                    markMessageAsRead(*pendingDisplayMsgIds.toLongArray())
-                    pendingDisplayMsgIds.clear()
-                }
+                flushPendingDisplayedMessages()
                 sendPendingMessages()
             }
             messagesListView.post {
@@ -631,9 +622,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             }
 
             is MessageCommandEvent.AttachmentLoaderClick -> {
-                viewModelScope.launch(Dispatchers.IO) {
-                    prepareToPauseOrResumeUpload(event.item)
-                }
+                prepareToPauseOrResumeUpload(event.item)
             }
 
             is MessageCommandEvent.UserClick -> {

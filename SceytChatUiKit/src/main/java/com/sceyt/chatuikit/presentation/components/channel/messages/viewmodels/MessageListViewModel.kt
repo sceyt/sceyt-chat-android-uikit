@@ -21,8 +21,6 @@ import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadPrev
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.SyncNearMessagesResult
-import com.sceyt.chatuikit.data.models.channels.DraftAttachment
-import com.sceyt.chatuikit.data.models.channels.DraftMessage
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.MarkerType
@@ -50,9 +48,6 @@ import com.sceyt.chatuikit.persistence.interactor.UserInteractor
 import com.sceyt.chatuikit.persistence.logic.PersistenceConnectionLogic
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessageTid
-import com.sceyt.chatuikit.persistence.mappers.createEmptyUser
-import com.sceyt.chatuikit.persistence.mappers.toBodyAttribute
-import com.sceyt.chatuikit.persistence.mappers.toVoiceAttachmentData
 import com.sceyt.chatuikit.persistence.repositories.SceytSharedPreference
 import com.sceyt.chatuikit.presentation.components.channel.input.data.InputUserAction
 import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
@@ -141,7 +136,7 @@ class MessageListViewModel internal constructor(
     private val pauseOrResumeTransferUseCase: PauseOrResumeTransferUseCase by inject()
     private val preferences: SceytSharedPreference by inject()
     internal var pinnedLastReadMessageId: Long = 0
-    internal val sendDisplayedHelper by lazy { DebounceHelper(200L, viewModelScope) }
+    private val sendDisplayedHelper by lazy { DebounceHelper(200L, viewModelScope) }
     internal val messageActionBridge by lazy { MessageActionBridge() }
     internal val placeToSavePathsList = mutableSetOf<Pair<AttachmentTypeEnum, String>>()
     internal val selectedMessagesMap by lazy { mutableMapOf<MessageTid, SceytMessage>() }
@@ -157,7 +152,7 @@ class MessageListViewModel internal constructor(
     private val messageListItemMapper by lazy { MessageListItemMapper() }
     private val windowSyncGuard by lazy { MessageWindowSyncGuard() }
     private val pagingRetryState by lazy { MessagePagingRetryState() }
-    internal val pendingDisplayMsgIds by lazy { Collections.synchronizedSet(mutableSetOf<Long>()) }
+    private val pendingDisplayMsgIds by lazy { Collections.synchronizedSet(mutableSetOf<Long>()) }
     private var showSenderAvatarAndNameIfNeeded = true
     internal var viewOnceSelected = false
     private var loadPrevJob: Job? = null
@@ -209,6 +204,7 @@ class MessageListViewModel internal constructor(
     private val pollController = createPollController()
     private val memberController = createChannelMemberController()
     private val transferController = createMessageTransferController()
+    private val draftController = createMessageDraftController()
     val searchResult get() = searchController.searchResult
 
 
@@ -624,6 +620,15 @@ class MessageListViewModel internal constructor(
         ioDispatcher = ioDispatcher,
     )
 
+    private fun createMessageDraftController() = MessageDraftController(
+        scope = viewModelScope,
+        ioDispatcher = ioDispatcher,
+        channelInteractor = channelInteractor,
+        conversationId = { conversationId },
+        isViewOnceSelected = { viewOnceSelected },
+        setViewOnceSelected = { viewOnceSelected = it },
+    )
+
     private fun onPendingChannelCreated(newChannel: SceytChannel) {
         val pendingChannelId = channel.id
         cancelMessageLoading()
@@ -815,7 +820,7 @@ class MessageListViewModel internal constructor(
                 }
 
                 LoadNext -> {
-                    val hasNext = checkMaybeHesNext(response)
+                    val hasNext = checkMaybeHasNext(response)
                     val compareMessage = getCompareMessage(response.loadType, response.data)
                     addNextPageItems(
                         mapToMessageListItem(
@@ -828,7 +833,7 @@ class MessageListViewModel internal constructor(
                 }
 
                 LoadNear -> {
-                    val hasNext = checkMaybeHesNext(response)
+                    val hasNext = checkMaybeHasNext(response)
                     replaceMessages(
                         items = mapToMessageListItem(
                             data = response.data,
@@ -1071,7 +1076,7 @@ class MessageListViewModel internal constructor(
         transferController.updateProgress(data, updateRecyclerView)
 
     fun sendPendingMessages() {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             messageInteractor.sendPendingMessages(conversationId)
         }
     }
@@ -1118,7 +1123,7 @@ class MessageListViewModel internal constructor(
     }
 
     private fun scrollToMessageBy(messageId: Long, addToPendingDisplay: Boolean = false) {
-        if (addToPendingDisplay) pendingDisplayMsgIds.add(messageId)
+        if (addToPendingDisplay) queuePendingDisplayedMessage(messageId)
         emitRenderEffect(
             MessageListRenderEffect.ScrollToMessage(
                 messageId = messageId,
@@ -1172,13 +1177,13 @@ class MessageListViewModel internal constructor(
     }
 
     fun editMessage(message: SceytMessage) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             messageInteractor.editMessage(channel.id, message)
         }
     }
 
     fun deleteMessage(message: SceytMessage, deleteType: DeleteMessageType) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             messageInteractor.deleteMessage(channel.id, message, deleteType)
         }
     }
@@ -1190,7 +1195,7 @@ class MessageListViewModel internal constructor(
     }
 
     fun markMessageAsRead(vararg messageIds: Long) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             val response = messageInteractor.markMessagesAs(
                 channelId = channel.id,
                 marker = MarkerType.Displayed,
@@ -1206,15 +1211,40 @@ class MessageListViewModel internal constructor(
         }
     }
 
+    internal fun markMessageAsDisplayedIfNeeded(message: SceytMessage, isResumed: Boolean) {
+        if (channel.userRole.isNullOrEmpty())
+            return
+
+        if (!message.incoming || message.userMarkers?.any { it.name == MarkerType.Displayed.value } == true)
+            return
+
+        queuePendingDisplayedMessage(message.id)
+        if (isResumed) {
+            sendDisplayedHelper.submit {
+                flushPendingDisplayedMessages()
+            }
+        }
+    }
+
+    internal fun flushPendingDisplayedMessages() {
+        if (pendingDisplayMsgIds.isEmpty()) return
+        markMessageAsRead(*pendingDisplayMsgIds.toLongArray())
+        pendingDisplayMsgIds.clear()
+    }
+
+    private fun queuePendingDisplayedMessage(messageId: Long) {
+        pendingDisplayMsgIds.add(messageId)
+    }
+
     fun addMessageMarker(marker: String, vararg messageIds: Long) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             messageInteractor.addMessagesMarker(channel.id, marker, *messageIds)
         }
     }
 
     fun sendChannelEvent(action: InputUserAction) {
         if (channel.pending) return
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             val event = when (action) {
                 is InputUserAction.Typing -> {
                     if (action.typing) {
@@ -1240,49 +1270,18 @@ class MessageListViewModel internal constructor(
         styling: List<BodyStyleRange>?,
         replyOrEditMessage: SceytMessage?,
         isReply: Boolean,
-    ) {
-        viewModelScope.launch {
-            withContext(NonCancellable) {
-                val bodyAttributes = mentionUsers.map { it.toBodyAttribute() }.toMutableSet()
-                styling?.let {
-                    bodyAttributes.addAll(it.map { styleRange -> styleRange.toBodyAttribute() })
-                }
-
-                val draftAttachments = attachments.mapNotNull { attachment ->
-                    DraftAttachment(
-                        channelId = conversationId,
-                        filePath = attachment.filePath ?: return@mapNotNull null,
-                        type = AttachmentTypeEnum.entries.find {
-                            it.value == attachment.type
-                        } ?: return@mapNotNull null
-                    )
-                }
-                if (viewOnceSelected && attachments.size != 1) {
-                    viewOnceSelected = false
-                }
-
-                val dratMessage = DraftMessage(
-                    channelId = conversationId,
-                    body = text?.toString(),
-                    createdAt = System.currentTimeMillis(),
-                    mentionUsers = mentionUsers.map {
-                        createEmptyUser(it.recipientId, it.name)
-                    },
-                    replyOrEditMessage = replyOrEditMessage,
-                    isReply = isReply,
-                    bodyAttributes = bodyAttributes.toList(),
-                    attachments = draftAttachments,
-                    voiceAttachment = audioRecordData?.toVoiceAttachmentData(conversationId),
-                    viewOnce = viewOnceSelected
-                )
-
-                channelInteractor.updateDraftMessage(dratMessage)
-            }
-        }
-    }
+    ) = draftController.updateDraftMessage(
+        text = text,
+        attachments = attachments,
+        audioRecordData = audioRecordData,
+        mentionUsers = mentionUsers,
+        styling = styling,
+        replyOrEditMessage = replyOrEditMessage,
+        isReply = isReply,
+    )
 
     fun join() {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             channelInteractor.join(channel.id).onErrorNonNull {
                 pageStateLiveDataInternal.postValue(PageState.StateError(it))
             }
@@ -1290,13 +1289,13 @@ class MessageListViewModel internal constructor(
     }
 
     fun getChannel(channelId: Long) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             channelInteractor.getChannelFromServer(channelId)
         }
     }
 
     fun markChannelAsRead(channelId: Long) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             channelInteractor.markChannelAsRead(channelId).onErrorNonNull {
                 pageStateLiveDataInternal.postValue(PageState.StateError(it, showMessage = false))
             }
@@ -1306,7 +1305,7 @@ class MessageListViewModel internal constructor(
     fun loadChannelMembersIfNeeded() = memberController.loadIfNeeded()
 
     fun clearHistory(forEveryOne: Boolean) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             channelInteractor.clearHistory(channel.id, forEveryOne).onErrorNonNull {
                 pageStateLiveDataInternal.postValue(PageState.StateError(it))
             }
@@ -1326,7 +1325,7 @@ class MessageListViewModel internal constructor(
         return preferences.getBoolean(KEY_VIEW_ONCE_INFO_SHOWN, true)
     }
 
-    fun setShouldShowViewOnceDialog(show: Boolean) = viewModelScope.launch(Dispatchers.IO) {
+    fun setShouldShowViewOnceDialog(show: Boolean) = viewModelScope.launch(ioDispatcher) {
         preferences.setBoolean(KEY_VIEW_ONCE_INFO_SHOWN, show)
     }
 
@@ -1368,7 +1367,7 @@ class MessageListViewModel internal constructor(
         expandedMessageTids = expandedMessagesMap.keys.toSet(),
     )
 
-    internal fun checkMaybeHesNext(response: PaginationResponse.DBResponse<SceytMessage>): Boolean {
+    internal fun checkMaybeHasNext(response: PaginationResponse.DBResponse<SceytMessage>): Boolean {
         var hasNext = response.hasNext
         if (!hasNext) {
             response.data.lastOrNull()?.let { lastMsg ->
@@ -1403,5 +1402,4 @@ class MessageListViewModel internal constructor(
     internal fun scrollToSearchMessage(isPrev: Boolean) {
         searchController.scrollToSearchMessage(isPrev)
     }
-
 }
