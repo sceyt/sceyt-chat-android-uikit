@@ -424,14 +424,7 @@ class MessageListViewModel internal constructor(
         val lastMessageId = lastMessage?.id ?: 0
         when {
             initialTargetMessageId != null -> {
-                loadNearMessages(
-                    messageId = initialTargetMessageId,
-                    loadKey = LoadKeyData(
-                        key = LoadKeyType.ScrollToMessageBy.longValue,
-                        value = initialTargetMessageId
-                    ),
-                    ignoreServer = false
-                )
+                loadTargetMessage(initialTargetMessageId)
             }
 
             lastDisplayedMessageId == 0L || lastMessage?.isPending() == true
@@ -444,7 +437,7 @@ class MessageListViewModel internal constructor(
             }
 
             else -> {
-                pinnedLastReadMessageId = lastDisplayedMessageId
+                pinUnreadSeparatorIfNeeded()
                 loadNearMessages(
                     messageId = pinnedLastReadMessageId,
                     loadKey = LoadKeyData(key = LoadKeyType.ScrollToUnreadMessage.longValue),
@@ -452,6 +445,22 @@ class MessageListViewModel internal constructor(
                 )
             }
         }
+    }
+
+    fun loadTargetMessage(messageId: Long) {
+        pinUnreadSeparatorIfNeeded()
+        loadNearMessages(
+            messageId = messageId,
+            loadKey = LoadKeyData(key = LoadKeyType.ScrollToMessageBy.longValue, value = messageId),
+            ignoreServer = false
+        )
+    }
+
+    private fun pinUnreadSeparatorIfNeeded() {
+        val lastDisplayedMessageId = channel.lastDisplayedMessageId
+        val lastMessageId = channel.lastMessage?.id ?: 0L
+        if (lastDisplayedMessageId != 0L && lastDisplayedMessageId < lastMessageId)
+            pinnedLastReadMessageId = lastDisplayedMessageId
     }
 
     fun loadNextMessages(lastMessageId: Long, offset: Int) {
