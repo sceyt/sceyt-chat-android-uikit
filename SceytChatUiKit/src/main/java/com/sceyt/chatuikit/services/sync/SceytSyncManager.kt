@@ -43,12 +43,12 @@ interface SceytSyncManager {
      * @param syncedChannelsCount is total synced channels count, include muted channels.
      * @param syncedMessagesCount is total synced messages count, include messages in muted channels.*/
     data class SyncResultData(
-        var totalUnreadChannelsCount: Int = 0,
-        var totalUnreadMessagesCount: Int = 0,
-        var unreadMutedChannelsCount: Int = 0,
-        var unreadMessagesImMutedChannelCount: Int = 0,
-        var syncedChannelsCount: Int = 0,
-        var syncedMessagesCount: Int = 0,
+        val totalUnreadChannelsCount: Int = 0,
+        val totalUnreadMessagesCount: Int = 0,
+        val unreadMutedChannelsCount: Int = 0,
+        val unreadMessagesImMutedChannelCount: Int = 0,
+        val syncedChannelsCount: Int = 0,
+        val syncedMessagesCount: Int = 0,
     ) {
         override fun toString(): String {
             return "unreadChannelsCount-> $totalUnreadChannelsCount, unreadMutedChannelsCount-> $unreadMutedChannelsCount " +
