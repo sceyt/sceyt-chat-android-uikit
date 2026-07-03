@@ -21,12 +21,12 @@ import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle
 import com.sceyt.chatuikit.styles.messages_list.ReactionPickerStyle
 import com.sceyt.chatuikit.styles.messages_list.ScrollButtonStyle
 import com.sceyt.chatuikit.styles.messages_list.UnreadMessagesSeparatorStyle
+import com.sceyt.chatuikit.styles.messages_list.item.AudioWaveformStyle
 import com.sceyt.chatuikit.styles.messages_list.item.LinkPreviewStyle
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 import com.sceyt.chatuikit.styles.messages_list.item.PollStyle
 import com.sceyt.chatuikit.styles.messages_list.item.ReadMoreStyle
 import com.sceyt.chatuikit.styles.messages_list.item.ReplyMessageStyle
-import com.sceyt.chatuikit.styles.messages_list.item.SelfDestructedMessageItemStyle
 
 internal fun MessagesListViewStyle.Builder.buildScrollDownTextStyle(
     typedArray: TypedArray,
@@ -337,13 +337,6 @@ internal fun MessageItemStyle.Builder.buildDeletedMessageTextStyle(
         index = R.styleable.MessagesListView_sceytUiMessagesListDeletedMessageTextFont
     )
     .build()
-
-/*SelfDestructedMessageIconColor*/
-internal fun SelfDestructedMessageItemStyle.Builder.buildSelfDestructedMessageIconColor(
-) = typedArray.getColor(
-    R.styleable.MessagesListView_sceytUiMessagesListSelfDestructedMessageIconTint,
-    context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor)
-)
 
 /*SenderNameTextStyle*/
 internal fun MessageItemStyle.Builder.buildSenderNameTextStyle(
@@ -822,7 +815,7 @@ internal fun MessageItemStyle.Builder.buildMediaLoaderStyle(
 /* Audio waveform style */
 internal fun MessageItemStyle.Builder.buildAudioWaveformStyle(
     typedArray: TypedArray,
-) = com.sceyt.chatuikit.styles.messages_list.item.AudioWaveformStyle.Builder(context, typedArray)
+) = AudioWaveformStyle.Builder(context, typedArray)
     .trackColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListAudioWaveformTrackColor,
         defValue = context.getCompatColor(SceytChatUIKit.theme.colors.iconSecondaryColor)
