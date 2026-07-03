@@ -29,7 +29,7 @@ internal class SceytSyncManagerImpl(
 ) : SceytSyncManager {
 
     private var syncResultData: SyncResultData = SyncResultData()
-    private var syncIsInProcess: AtomicBoolean = AtomicBoolean(false)
+    private val syncIsInProcess: AtomicBoolean = AtomicBoolean(false)
     private val syncResultCallbacks = ConcurrentHashSet<(Result<SyncResultData>) -> Unit>()
     private var syncContext: CoroutineContext? = null
 
@@ -42,20 +42,23 @@ internal class SceytSyncManagerImpl(
         resultCallback: ((Result<SyncResultData>) -> Unit)?
     ) {
         resultCallback?.let { syncResultCallbacks.add(it) }
-        if (syncIsInProcess.get())
+        if (!syncIsInProcess.compareAndSet(false, true))
             return
 
         val coroutineContext = createCoroutineContext().also { syncContext = it }
-        withContext(coroutineContext) {
-            syncIsInProcess.set(true)
-            syncResultData = SyncResultData()
-            val result = syncChannels(config)
-            withContext(Dispatchers.Main) {
-                syncResultCallbacks.forEach {
-                    it(Result.success(result))
+        try {
+            withContext(coroutineContext) {
+                syncResultData = SyncResultData()
+                val result = syncChannels(config)
+                withContext(Dispatchers.Main) {
+                    syncResultCallbacks.forEach {
+                        it(Result.success(result))
+                    }
                 }
             }
+        } finally {
             syncResultCallbacks.clear()
+            syncContext = null
             syncIsInProcess.set(false)
         }
     }
@@ -68,7 +71,9 @@ internal class SceytSyncManagerImpl(
 
     override fun cancelSync() {
         syncContext?.cancel()
+        syncContext = null
         syncResultCallbacks.clear()
+        syncIsInProcess.set(false)
     }
 
     private suspend fun syncChannels(config: ChannelListConfig): SyncResultData {
