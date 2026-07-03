@@ -12,10 +12,10 @@ import com.sceyt.chatuikit.logger.SceytLogLevel
 import com.sceyt.chatuikit.logger.SceytLoggerImpl
 import com.sceyt.chatuikit.services.sync.SceytSyncManager
 import com.sceyt.chatuikit.services.sync.SceytSyncManagerImpl
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
@@ -31,6 +31,7 @@ import org.junit.Before
 import org.junit.Test
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
+import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class SceytSyncManagerImplTest {
@@ -168,10 +169,34 @@ class SceytSyncManagerImplTest {
             .thenReturn(false)
 
         withContext(Dispatchers.Default.limitedParallelism(1)) {
-            withTimeout(1000) {
+            withTimeout(1000.milliseconds) {
                 manager.startSync(config) { callbacks.add(it) }
             }
         }
+
+        assertThat(callbacks).hasSize(1)
+        assertThat(callbacks.first().isSuccess).isTrue()
+    }
+
+    @Test
+    fun `cancelSync cancels in-flight channel sync and allows next sync`() = runTest {
+        val config = ChannelListConfig.default
+        val manager = syncManager()
+        val callbacks = mutableListOf<Result<SceytSyncManager.SyncResultData>>()
+        whenever(channelInteractor.syncChannels(config))
+            .thenReturn(
+                flow { awaitCancellation() },
+                flowOf(SyncResult.SuccessfullyFinished)
+            )
+
+        val syncJob = launch {
+            manager.startSync(config) { callbacks.add(it) }
+        }
+        runCurrent()
+
+        manager.cancelSync()
+        syncJob.join()
+        manager.startSync(config) { callbacks.add(it) }
 
         assertThat(callbacks).hasSize(1)
         assertThat(callbacks.first().isSuccess).isTrue()
