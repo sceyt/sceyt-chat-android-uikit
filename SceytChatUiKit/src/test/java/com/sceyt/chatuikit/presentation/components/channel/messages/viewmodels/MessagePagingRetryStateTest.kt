@@ -55,6 +55,16 @@ class MessagePagingRetryStateTest {
     }
 
     @Test
+    fun `load near server error enables edge retries`() {
+        val state = MessagePagingRetryState()
+
+        state.onServerResponse(serverResponse(LoadNear, SceytResponse.Error()))
+
+        assertThat(state.canRetryPrev(loadingFromDb = false, loadingFromServer = false)).isTrue()
+        assertThat(state.canRetryNext(loadingFromDb = false, loadingFromServer = false)).isTrue()
+    }
+
+    @Test
     fun `active loading blocks retry`() {
         val state = MessagePagingRetryState()
         state.onServerResponse(serverResponse(LoadPrev, SceytResponse.Error()))
