@@ -68,6 +68,7 @@ import com.sceyt.chatuikit.presentation.extensions.isSelfDestructed
 import com.sceyt.chatuikit.presentation.helpers.DebounceHelper
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import com.sceyt.chatuikit.presentation.root.PageState
+import com.sceyt.chatuikit.services.sync.SceytSyncManager
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -132,6 +133,7 @@ class MessageListViewModel internal constructor(
     internal val channelMemberInteractor: ChannelMemberInteractor by inject()
     internal val connectionLogic: PersistenceConnectionLogic by inject()
     internal val userInteractor: UserInteractor by inject()
+    private val syncManager: SceytSyncManager by inject()
     private val fileTransferService: FileTransferService by inject()
     private val pauseOrResumeTransferUseCase: PauseOrResumeTransferUseCase by inject()
     private val preferences: SceytSharedPreference by inject()
@@ -895,13 +897,41 @@ class MessageListViewModel internal constructor(
         }
     }
 
-    internal suspend fun appendSyncedMessages(
+    internal suspend fun syncAndAppendMessagesAfter(
+        fromMessageId: Long,
+        scrollToLastAfterAppend: Boolean,
+    ): Boolean {
+        val syncedMessages = withContext(ioDispatcher) {
+            syncManager.syncConversationMessagesAfter(
+                channelId = conversationId,
+                fromMessageId = fromMessageId
+            )
+        } ?: return false
+
+        if (syncedMessages.channel.id != channel.id)
+            return false
+
+        updatePinnedLastReadMessageId(syncedMessages.channel)
+        return appendSyncedMessages(
+            messages = syncedMessages.messages,
+            scrollToLastAfterAppend = scrollToLastAfterAppend,
+            requiredExistingMessageId = syncedMessages.fromMessageId
+        )
+    }
+
+    private suspend fun appendSyncedMessages(
         messages: List<SceytMessage>,
         scrollToLastAfterAppend: Boolean,
+        requiredExistingMessageId: Long?,
     ): Boolean = store.withMutation {
-        if (!canAppendSyncedMessages()) return@withMutation false
+        if (!canAppendNewestSyncedMessages()) return@withMutation false
 
         val currentMessages = currentMessageItems()
+        if (requiredExistingMessageId != null
+            && currentMessages.none { it.id == requiredExistingMessageId }
+        )
+            return@withMutation false
+
         val newMessages = messages.minus(currentMessages.toSet())
         if (newMessages.isEmpty()) return@withMutation false
 
@@ -919,11 +949,18 @@ class MessageListViewModel internal constructor(
         merged
     }
 
-    private fun canAppendSyncedMessages(): Boolean {
-        return windowSyncGuard.canAppendSyncedMessages(
+    private fun updatePinnedLastReadMessageId(syncChannel: SceytChannel) {
+        if (pinnedLastReadMessageId == 0L && syncChannel.lastDisplayedMessageId != 0L
+            && syncChannel.lastDisplayedMessageId != syncChannel.lastMessage?.id
+        )
+            pinnedLastReadMessageId = syncChannel.lastDisplayedMessageId
+    }
+
+    private fun canAppendNewestSyncedMessages(): Boolean {
+        return windowSyncGuard.canAppendNewestSyncedMessages(
             hasNext = hasNext,
             hasNextDb = hasNextDb,
-            isPaging = loadingFromServer || loadingFromDb
+            isNewestSidePaging = loadingNextItems.get() || loadingNextItemsDb.get()
         )
     }
 

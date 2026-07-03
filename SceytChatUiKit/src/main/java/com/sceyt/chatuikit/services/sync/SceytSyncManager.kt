@@ -5,7 +5,6 @@ import com.sceyt.chatuikit.data.models.SyncResult
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.persistence.extensions.broadcastSharedFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 
 interface SceytSyncManager {
@@ -15,7 +14,10 @@ interface SceytSyncManager {
         resultCallback: ((Result<SyncResultData>) -> Unit)? = null
     )
 
-    suspend fun syncConversationMessagesAfter(channelId: Long, fromMessageId: Long)
+    suspend fun syncConversationMessagesAfter(
+        channelId: Long,
+        fromMessageId: Long
+    ): SyncedConversationMessages?
 
     fun cancelSync()
 
@@ -28,13 +30,13 @@ interface SceytSyncManager {
             extraBufferCapacity = 8
         )
         val syncChannelsResult = syncChannelsResult_.asSharedFlow()
-
-        internal val syncChannelMessagesFinished_ =
-            broadcastSharedFlow<Pair<SceytChannel, List<SceytMessage>>>()
-
-        val syncChannelMessagesFinished: SharedFlow<Pair<SceytChannel, List<SceytMessage>>> =
-            syncChannelMessagesFinished_.asSharedFlow()
     }
+
+    data class SyncedConversationMessages(
+        val channel: SceytChannel,
+        val messages: List<SceytMessage>,
+        val fromMessageId: Long,
+    )
 
     /**@param totalUnreadChannelsCount is total unread channels count, include muted channels.
      * @param totalUnreadMessagesCount is total unread messages count, include messages in muted channels.
