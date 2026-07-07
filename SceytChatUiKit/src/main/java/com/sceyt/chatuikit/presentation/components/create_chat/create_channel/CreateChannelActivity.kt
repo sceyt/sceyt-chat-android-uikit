@@ -6,15 +6,11 @@ import android.os.Bundle
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.lifecycleScope
-import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.role.Role
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
-import com.sceyt.chatuikit.data.models.messages.SceytMessageType
-import com.sceyt.chatuikit.data.models.messages.SystemMsgBodyEnum
 import com.sceyt.chatuikit.databinding.SceytActivityCreateChannelBinding
 import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
 import com.sceyt.chatuikit.extensions.createIntent
@@ -34,7 +30,6 @@ import com.sceyt.chatuikit.presentation.components.select_users.SelectUsersPageA
 import com.sceyt.chatuikit.presentation.components.select_users.SelectUsersResult
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.styles.create_channel.CreateChannelStyle
-import kotlinx.coroutines.launch
 
 class CreateChannelActivity : AppCompatActivity() {
     private lateinit var binding: SceytActivityCreateChannelBinding
@@ -59,29 +54,17 @@ class CreateChannelActivity : AppCompatActivity() {
 
     private fun initViewModel() {
         viewModel.createChatLiveData.observe(this) {
-            lifecycleScope.launch {
-                SceytChatUIKit.chatUIFacade.messageInteractor.sendMessage(
-                    it.id, Message(
-                        Message.MessageBuilder()
-                            .setType(SceytMessageType.System.value)
-                            .withDisplayCount(0)
-                            .setSilent(true)
-                            .setBody(SystemMsgBodyEnum.ChannelCreated.value)
-                    )
-                )
-
-                createdChannel = it
-                val args = SelectUsersPageArgs(
-                    toolbarTitle = MemberTypeEnum.Subscriber.getPageTitle(this@CreateChannelActivity),
-                    actionButtonAlwaysEnable = true,
-                )
-                hideLoading()
-                SceytChatUIKit.navigator.navigateForResult(
-                    context = this@CreateChannelActivity,
-                    launcher = selectUsersActivityLauncher,
-                    destination = Destination.SelectUsers(args)
-                )
-            }
+            createdChannel = it
+            val args = SelectUsersPageArgs(
+                toolbarTitle = MemberTypeEnum.Subscriber.getPageTitle(this@CreateChannelActivity),
+                actionButtonAlwaysEnable = true,
+            )
+            hideLoading()
+            SceytChatUIKit.navigator.navigateForResult(
+                context = this@CreateChannelActivity,
+                launcher = selectUsersActivityLauncher,
+                destination = Destination.SelectUsers(args)
+            )
         }
 
         viewModel.addMembersLiveData.observe(this) {
@@ -110,7 +93,7 @@ class CreateChannelActivity : AppCompatActivity() {
     }
 
     fun createChannel(data: CreateChannelData) {
-        viewModel.createChat(data)
+        viewModel.createChannel(data)
     }
 
     private val selectUsersActivityLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
