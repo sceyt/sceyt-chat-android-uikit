@@ -142,7 +142,7 @@ class MessageListViewModel(
     internal var loadNextOffsetId = 0L
     internal var lastSyncCenterOffsetId = 0L
 
-    private val myId: String? get() = SceytChatUIKit.chatUIFacade.myId
+    private val myId: String? get() = userInteractor.getCurrentUserId()
     val channel: SceytChannel get() = _channel
     val conversationId: Long get() = _conversationId
 
