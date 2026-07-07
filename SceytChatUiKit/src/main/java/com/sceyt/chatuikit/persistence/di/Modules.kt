@@ -37,6 +37,7 @@ import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
 import com.sceyt.chatuikit.persistence.logic.PersistencePollLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceReactionsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceUsersLogic
+import com.sceyt.chatuikit.persistence.logic.SystemMessageSender
 import com.sceyt.chatuikit.persistence.logicimpl.FileTransferLogicImpl
 import com.sceyt.chatuikit.persistence.logicimpl.PersistenceChannelInviteKeyLogicImpl
 import com.sceyt.chatuikit.persistence.logicimpl.PersistenceConnectionLogicImpl
@@ -53,6 +54,7 @@ import com.sceyt.chatuikit.persistence.logicimpl.channel.PersistenceChannelsLogi
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessageLoadRangeUpdater
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
 import com.sceyt.chatuikit.persistence.logicimpl.message.PersistenceMessagesLogicImpl
+import com.sceyt.chatuikit.persistence.logicimpl.message.SystemMessageSenderImpl
 import com.sceyt.chatuikit.persistence.logicimpl.sync.ChannelSyncStateStore
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.AddPollVoteUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.CheckDeletedMessagesUseCase
@@ -174,6 +176,7 @@ internal val logicModule = module {
     singleOf(::PersistenceChannelInviteKeyLogicImpl) bind PersistenceChannelInviteKeyLogic::class
     singleOf(::FileTransferLogicImpl) bind FileTransferLogic::class
     singleOf(::GlobalSearchLocalInteractor) bind GlobalSearchDataSource::class
+    singleOf(::SystemMessageSenderImpl) bind SystemMessageSender::class
 }
 
 internal val useCaseModule = module {

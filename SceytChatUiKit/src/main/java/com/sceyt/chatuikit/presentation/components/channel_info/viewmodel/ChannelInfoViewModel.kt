@@ -14,12 +14,14 @@ import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.findIndexed
 import com.sceyt.chatuikit.koin.SceytKoinComponent
+import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.extensions.asLiveData
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
 import com.sceyt.chatuikit.persistence.interactor.ChannelMemberInteractor
 import com.sceyt.chatuikit.persistence.interactor.UserInteractor
+import com.sceyt.chatuikit.persistence.logic.SystemMessageSender
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import com.sceyt.chatuikit.services.SceytPresenceChecker
@@ -35,6 +37,7 @@ class ChannelInfoViewModel : BaseViewModel(), SceytKoinComponent {
     private val channelInteractor by inject<ChannelInteractor>()
     private val channelMemberInteractor by inject<ChannelMemberInteractor>()
     private val userInteractor by inject<UserInteractor>()
+    private val systemMessageSender by inject<SystemMessageSender>()
 
     private val _channelLiveData = MutableLiveData<SceytChannel>()
     val channelLiveData: LiveData<SceytChannel> = _channelLiveData
@@ -139,17 +142,37 @@ class ChannelInfoViewModel : BaseViewModel(), SceytKoinComponent {
         }
     }
 
-    fun leaveChannel(channelId: Long) {
+    fun leaveChannel(channel: SceytChannel) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelInteractor.leaveChannel(channelId)
+            sendLeftSystemMessageIfNeeded(channel)
+
+            val response = channelInteractor.leaveChannel(channel.id)
             notifyResponseAndPageState(_leaveChannelLiveData, response)
         }
     }
 
-    fun blockAndLeaveChannel(channelId: Long) {
+    fun sendDisappearingMessageSystemMessage(channelId: Long, duration: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelInteractor.blockAndLeaveChannel(channelId)
+            systemMessageSender.sendDisappearingMessageChanged(channelId, duration)
+        }
+    }
+
+    fun blockAndLeaveChannel(channel: SceytChannel) {
+        viewModelScope.launch(Dispatchers.IO) {
+            sendLeftSystemMessageIfNeeded(channel)
+
+            val response = channelInteractor.blockAndLeaveChannel(channel.id)
             notifyResponseAndPageState(_leaveChannelLiveData, response)
+        }
+    }
+
+    private suspend fun sendLeftSystemMessageIfNeeded(channel: SceytChannel) {
+        if (!channel.isGroup) return
+
+        runCatching {
+            systemMessageSender.sendMemberLeft(channel.id)
+        }.onFailure {
+            SceytLog.e(TAG, "Failed to send member-left system message: ${it.message}")
         }
     }
 
@@ -239,5 +262,9 @@ class ChannelInfoViewModel : BaseViewModel(), SceytKoinComponent {
 
             notifyPageStateWithResponse(response)
         }
+    }
+
+    private companion object {
+        val TAG: String = ChannelInfoViewModel::class.java.name
     }
 }
