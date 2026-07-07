@@ -87,7 +87,7 @@ fun SceytChannel.diff(other: SceytChannel): ChannelDiff {
     val userReactionsChanged =
         pendingReactionChanged || newReactions?.maxOfOrNull { it.id } != other.newReactions?.maxOfOrNull { it.id }
     val lastDraftMessageChanged = draftMessage != other.draftMessage
-    val membersCountChanged = memberCount != other.memberCount && userRole != other.userRole
+    val membersCountChanged = memberCount != other.memberCount || userRole != other.userRole
     val peerBlockedChanged = isDirect && peer?.user?.blocked != otherPeer?.user?.blocked
     val subjectChanged = isGroup && other.isGroup && subject.orEmpty() != other.subject.orEmpty()
     return ChannelDiff(
