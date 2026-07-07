@@ -8,8 +8,8 @@ import com.sceyt.chatuikit.data.models.messages.DisappearingMessageMetadata
 import com.sceyt.chatuikit.data.models.messages.MembersMetaData
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytUser
-import com.sceyt.chatuikit.data.models.messages.SystemMsgBodyEnum
-import com.sceyt.chatuikit.data.models.messages.SystemMsgBodyEnum.Companion.getTypeFromString
+import com.sceyt.chatuikit.data.models.messages.SystemMessageAction
+import com.sceyt.chatuikit.data.models.messages.SystemMessageAction.Companion.getTypeFromString
 import com.sceyt.chatuikit.extensions.formatDisappearingMessagesDuration
 import com.sceyt.chatuikit.formatters.Formatter
 
@@ -25,11 +25,11 @@ open class DefaultSystemMessageBodyFormatter : Formatter<SceytMessage> {
     private fun getSystemMessageBody(context: Context, message: SceytMessage, fromName: String): String {
         val string = StringBuilder()
         return when (getTypeFromString(message.body)) {
-            SystemMsgBodyEnum.GroupCreated, SystemMsgBodyEnum.ChannelCreated -> {
-                "$fromName ${SystemMsgBodyEnum.getTitle(message.body, context)}"
+            SystemMessageAction.GroupCreated, SystemMessageAction.ChannelCreated -> {
+                "$fromName ${SystemMessageAction.getTitle(message.body, context)}"
             }
 
-            SystemMsgBodyEnum.MemberAdded -> {
+            SystemMessageAction.MemberAdded -> {
                 message.metadata?.jsonToObject(MembersMetaData::class.java)?.let {
                     if (!it.members.isNullOrEmpty()) {
                         string.append("$fromName ${context.getString(R.string.sceyt_added)}")
@@ -39,7 +39,7 @@ open class DefaultSystemMessageBodyFormatter : Formatter<SceytMessage> {
                 string.toString()
             }
 
-            SystemMsgBodyEnum.MemberRemoved -> {
+            SystemMessageAction.MemberRemoved -> {
                 message.metadata?.jsonToObject(MembersMetaData::class.java)?.let {
                     if (!it.members.isNullOrEmpty()) {
                         string.append("$fromName ${context.getString(R.string.sceyt_removed)}")
@@ -49,16 +49,16 @@ open class DefaultSystemMessageBodyFormatter : Formatter<SceytMessage> {
                 string.toString()
             }
 
-            SystemMsgBodyEnum.MemberLeaved -> {
+            SystemMessageAction.MemberLeaved -> {
                 string.append("$fromName ${context.getString(R.string.sceyt_left_group)}")
                 string.toString()
             }
 
-            SystemMsgBodyEnum.JoinByInviteLink -> {
+            SystemMessageAction.JoinByInviteLink -> {
                 context.getString(R.string.sceyt_joined_via_invite_link, fromName)
             }
 
-            SystemMsgBodyEnum.DisappearingMessage -> {
+            SystemMessageAction.DisappearingMessage -> {
                 message.metadata?.jsonToObject(DisappearingMessageMetadata::class.java)?.let { data ->
                     val durationMillis = data.duration?.toLongOrNull() ?: 0L
 
