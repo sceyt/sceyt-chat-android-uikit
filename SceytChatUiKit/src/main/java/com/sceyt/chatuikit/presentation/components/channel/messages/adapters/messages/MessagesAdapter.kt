@@ -2,21 +2,16 @@ package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.me
 
 import android.annotation.SuppressLint
 import android.view.ViewGroup
-import androidx.core.util.Predicate
 import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytMessageType
-import com.sceyt.chatuikit.extensions.dispatchUpdatesToSafety
 import com.sceyt.chatuikit.extensions.dispatchUpdatesToSafetySuspend
 import com.sceyt.chatuikit.extensions.findIndexed
-import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
-import com.sceyt.chatuikit.presentation.helpers.DebounceHelper
 import com.sceyt.chatuikit.presentation.common.collections.SyncArrayList
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem.MessageItem
-import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.comporators.MessageItemComparator
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.sticky_date.StickyDateHeaderView
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.sticky_date.StickyHeaderInterface
@@ -40,7 +35,7 @@ class MessagesAdapter(
 ) : RecyclerView.Adapter<BaseMessageViewHolder>(), StickyHeaderInterface {
     private val loadingPrevItem by lazy { MessageListItem.LoadingPrevItem }
     private val loadingNextItem by lazy { MessageListItem.LoadingNextItem }
-    private val debounceHelper by lazy { DebounceHelper(300) }
+    private var updateJob: Job? = null
     private var isMultiSelectableMode = false
     private var lastHeaderPosition = -1
 
@@ -109,69 +104,23 @@ class MessagesAdapter(
         }
     }
 
-    private fun updateDateAndState(
-        newItem: MessageListItem,
-        prevItem: MessageListItem?,
-        dateItem: MessageListItem?
-    ) {
-        if (newItem is MessageItem && prevItem is MessageItem) {
-            val prevMessage = prevItem.message
-            if (prevItem.message.isGroup) {
-                val prevIndex = messages.indexOf(prevItem)
-                messages[prevIndex] = prevItem.copy(
-                    message = prevMessage.copy(
-                        shouldShowAvatarAndName = prevMessage.incoming
-                                && prevMessage.user?.id != newItem.message.user?.id
-                    )
-                )
-                notifyItemChanged(prevIndex, Unit)
-            }
-
-            val needShowDate = !DateTimeUtil.isSameDay(
-                epochOne = prevMessage.createdAt,
-                epochTwo = newItem.message.createdAt
-            )
-            if (!needShowDate) {
-                val dateIndex = messages.indexOf(dateItem)
-                if (dateIndex != -1) {
-                    messages.removeAt(dateIndex)
-                    notifyItemRemoved(dateIndex)
-                }
-            }
-        }
-    }
-
-    fun addPrevPageMessagesList(items: List<MessageListItem>) {
-        removeLoadingPrev()
-        if (items.isEmpty()) return
-
-        val firstItem = getFirstMessageItem()
-        val dateItem = messages.find { item ->
-            item is MessageListItem.DateSeparatorItem && item.messageTid == firstItem?.message?.tid
-        }
-        messages.addAll(0, items)
-        notifyItemRangeInserted(0, items.size)
-        updateDateAndState(items.last(), firstItem, dateItem)
-        onListCommittedListener?.invoke()
-    }
-
     fun addNextPageMessagesList(items: List<MessageListItem>) {
         removeLoadingNext()
         if (items.isEmpty()) return
 
+        val insertStart = messages.size
         messages.addAll(items)
-        notifyItemRangeInserted(messages.lastIndex, items.size)
+        notifyItemRangeInserted(insertStart, items.size)
         onListCommittedListener?.invoke()
     }
 
-    fun addNewMessages(items: List<MessageListItem>) {
+    fun addPreparedNewMessages(items: List<MessageListItem>) {
         removeLoadingNext()
         if (items.isEmpty()) return
-        val filteredItems = items.toSet().minus(messages.toSet())
-        if (filteredItems.isEmpty()) return
 
-        messages.addAll(filteredItems)
-        notifyItemRangeInserted(messages.lastIndex, filteredItems.size)
+        val insertStart = messages.size
+        messages.addAll(items)
+        notifyItemRangeInserted(insertStart, items.size)
         onListCommittedListener?.invoke()
     }
 
@@ -249,17 +198,6 @@ class MessagesAdapter(
         }
     }
 
-    fun deleteAllMessagesBefore(predicate: Predicate<MessageListItem>) {
-        ArrayList(messages).forEach { item ->
-            if (predicate.test(item)) {
-                messages.findIndexed { it == item }?.let {
-                    messages.removeAt(it.first)
-                    notifyItemRemoved(it.first)
-                }
-            }
-        }
-    }
-
     fun removeUnreadMessagesSeparator() {
         messages.findIndexed { item ->
             item is MessageListItem.UnreadMessagesSeparatorItem
@@ -288,39 +226,18 @@ class MessagesAdapter(
         return !DateTimeUtil.isSameDay(sceytMessage.createdAt, prevMessage.createdAt)
     }
 
-    fun sort(recyclerView: RecyclerView) {
-        debounceHelper.submit {
-            val sortedList = messages.sortedWith(MessageItemComparator())
-            val myDiffUtil = MessagesDiffUtil(
-                oldList = ArrayList(this@MessagesAdapter.messages),
-                newList = sortedList
-            )
-            val productDiffResult = DiffUtil.calculateDiff(myDiffUtil, true)
-
-            val isLastItemVisible = recyclerView.isLastItemDisplaying()
-            this@MessagesAdapter.messages = SyncArrayList(sortedList)
-            productDiffResult.dispatchUpdatesToSafety(recyclerView)
-            if (isLastItemVisible)
-                recyclerView.scrollToPosition(itemCount - 1)
-        }
-    }
-
     fun setMultiSelectableMode(enable: Boolean) {
         isMultiSelectableMode = enable
     }
 
     fun isMultiSelectableMode() = isMultiSelectableMode
 
-    companion object {
-        private var updateJob: Job? = null
-
-        fun awaitUpdating(cb: () -> Unit) {
-            if (updateJob == null || updateJob?.isCompleted == true || updateJob?.isCompleted == true)
-                cb.invoke()
-            else {
-                updateJob?.invokeOnCompletion { cb.invoke() }
-            }
-        }
+    fun awaitUpdating(cb: () -> Unit) {
+        val job = updateJob
+        if (job == null || job.isCompleted)
+            cb()
+        else
+            job.invokeOnCompletion { cb() }
     }
 
     override fun bindHeaderData(header: StickyDateHeaderView, headerPosition: Int) {

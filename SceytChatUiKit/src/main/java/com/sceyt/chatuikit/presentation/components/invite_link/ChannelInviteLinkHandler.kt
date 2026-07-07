@@ -16,6 +16,7 @@ import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withTimeout
 import org.koin.core.component.inject
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 sealed interface JoinByInviteLinkResult {
@@ -65,7 +66,7 @@ open class ChannelInviteLinkHandler(
 
         showLoader(context)
         try {
-            withTimeout(timeout) {
+            withTimeout(timeout.milliseconds) {
                 ConnectionEventManager.awaitToConnectSceyt()
                 channelInteractor.getChannelByInviteKey(key)
                     .onSuccessNotNull { channel ->
