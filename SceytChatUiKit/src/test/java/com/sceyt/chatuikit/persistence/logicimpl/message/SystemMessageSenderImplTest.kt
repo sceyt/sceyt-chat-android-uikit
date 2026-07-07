@@ -4,14 +4,18 @@ import com.google.common.truth.Truth.assertThat
 import com.google.gson.Gson
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.role.Role
+import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.config.SceytChatUIKitConfig
+import com.sceyt.chatuikit.config.SystemMessagesConfig
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.messages.DisappearingMessageMetadata
 import com.sceyt.chatuikit.data.models.messages.MembersMetaData
 import com.sceyt.chatuikit.data.models.messages.SceytMessageType
 import com.sceyt.chatuikit.data.models.messages.SceytUser
-import com.sceyt.chatuikit.data.models.messages.SystemMsgBodyEnum
+import com.sceyt.chatuikit.data.models.messages.SystemMessageAction
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
 import kotlinx.coroutines.test.runTest
+import org.junit.Before
 import org.junit.Test
 import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.eq
@@ -24,13 +28,18 @@ class SystemMessageSenderImplTest {
     private val sender = SystemMessageSenderImpl(messagesLogic)
     private val gson = Gson()
 
+    @Before
+    fun setUp() {
+        SceytChatUIKit.config = SceytChatUIKitConfig()
+    }
+
     @Test
     fun sendGroupCreated_buildsSilentSystemMessage() = runTest {
         sender.sendGroupCreated(CHANNEL_ID)
 
         val message = sentMessage()
 
-        assertSystemMessage(message, SystemMsgBodyEnum.GroupCreated)
+        assertSystemMessage(message, SystemMessageAction.GroupCreated)
         assertThat(message.metadata).isNull()
         assertThat(message.mentionedUsers).isNull()
     }
@@ -46,7 +55,7 @@ class SystemMessageSenderImplTest {
 
         assertSystemMessage(
             message = message,
-            body = SystemMsgBodyEnum.MemberAdded,
+            body = SystemMessageAction.MemberAdded,
             disableMentionsCount = true
         )
         assertThat(memberIds(message.metadata)).containsExactly("first", "second").inOrder()
@@ -61,12 +70,21 @@ class SystemMessageSenderImplTest {
     }
 
     @Test
+    fun sendMemberLeft_whenDisabledDoesNotSendMessage() = runTest {
+        SceytChatUIKit.config.systemMessagesConfig = SystemMessagesConfig(memberLeft = false)
+
+        sender.sendMemberLeft(CHANNEL_ID)
+
+        verifyNoInteractions(messagesLogic)
+    }
+
+    @Test
     fun sendDisappearingMessageChanged_buildsDurationMetadata() = runTest {
         sender.sendDisappearingMessageChanged(CHANNEL_ID, duration = 60_000L)
 
         val message = sentMessage()
 
-        assertSystemMessage(message, SystemMsgBodyEnum.DisappearingMessage)
+        assertSystemMessage(message, SystemMessageAction.DisappearingMessage)
         val metadata = gson.fromJson(message.metadata, DisappearingMessageMetadata::class.java)
         assertThat(metadata.duration).isEqualTo("60000")
     }
@@ -79,7 +97,7 @@ class SystemMessageSenderImplTest {
 
     private fun assertSystemMessage(
         message: Message,
-        body: SystemMsgBodyEnum,
+        body: SystemMessageAction,
         disableMentionsCount: Boolean = false,
     ) {
         assertThat(message.type).isEqualTo(SceytMessageType.System.value)
