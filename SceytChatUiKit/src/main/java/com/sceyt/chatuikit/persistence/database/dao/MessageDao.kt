@@ -337,13 +337,15 @@ internal abstract class MessageDao {
 
     @Transaction
     open suspend fun insertUserMarkersIfExistMessage(entities: List<MarkerEntity>): List<Long> {
-        val existMessageIds = getExistMessageByIds(entities.map { it.messageId }.toSet().toList())
+        if (entities.isEmpty()) return emptyList()
+
+        val existMessageIds = getExistMessageByIdsChunked(entities.map { it.messageId }.distinct()).toSet()
         // Filter markers which message exist in db
         val filtered = entities
             .filter { it.messageId in existMessageIds }
             .takeIf { it.isNotEmpty() } ?: return emptyList()
 
-        return insertUserMarkers(filtered)
+        return filtered.chunked(SQLITE_MAX_VARIABLE_NUMBER).flatMap { insertUserMarkers(it) }
     }
 
     @Transaction
@@ -467,11 +469,14 @@ internal abstract class MessageDao {
         if (oldMessages.size < limit && newMessages.size > halfLimit)
             newMessages = newest.take(limit - oldMessages.size)
 
-        val hasPrev = oldest.size > halfLimit
-        val hasNext = newest.size > halfLimit
+        // Within the loaded range there are more messages on a side only if the DB query
+        // returned more than what we actually included in the window.
+        val hasPrev = oldest.size > oldMessages.size
+        val hasNext = newest.size > newMessages.size
 
         val data = (oldMessages + newMessages).sortedBy { it.messageEntity.createdAt }
-        return LoadNearData(data, hasNext = hasNext, hasPrev)
+
+        return LoadNearData(data, hasNext = hasNext, hasPrev = hasPrev)
     }
 
     @Transaction
@@ -524,11 +529,29 @@ internal abstract class MessageDao {
     @Query("SELECT * FROM $MESSAGE_TABLE WHERE message_id IN (:ids)")
     abstract suspend fun getMessageEntitiesByIds(ids: List<Long>): List<MessageEntity>
 
+    @Transaction
+    open suspend fun getMessageEntitiesByIdsChunked(ids: List<Long>): List<MessageEntity> {
+        if (ids.isEmpty()) return emptyList()
+        return ids.chunked(SQLITE_MAX_VARIABLE_NUMBER).flatMap { getMessageEntitiesByIds(it) }
+    }
+
     @Query("SELECT message_id AS id, tid FROM $MESSAGE_TABLE WHERE message_id IN (:ids)")
     abstract suspend fun getExistMessagesIdTidByIds(ids: List<Long>): List<MessageIdAndTid>
 
+    @Transaction
+    open suspend fun getExistMessagesIdTidByIdsChunked(ids: List<Long>): List<MessageIdAndTid> {
+        if (ids.isEmpty()) return emptyList()
+        return ids.chunked(SQLITE_MAX_VARIABLE_NUMBER).flatMap { getExistMessagesIdTidByIds(it) }
+    }
+
     @Query("SELECT message_id FROM $MESSAGE_TABLE WHERE message_id IN (:ids)")
     abstract suspend fun getExistMessageByIds(ids: List<Long>): List<Long>
+
+    @Transaction
+    open suspend fun getExistMessageByIdsChunked(ids: List<Long>): List<Long> {
+        if (ids.isEmpty()) return emptyList()
+        return ids.chunked(SQLITE_MAX_VARIABLE_NUMBER).flatMap { getExistMessageByIds(it) }
+    }
 
     @Transaction
     @Query("SELECT * FROM $MESSAGE_TABLE WHERE tid = :tid")
@@ -551,6 +574,20 @@ internal abstract class MessageDao {
 
     @Query("SELECT tid FROM $MESSAGE_TABLE WHERE message_id = :id")
     abstract suspend fun getMessageTidById(id: Long): Long?
+
+    @Query(
+        """
+        SELECT deliveryStatus
+        FROM $MESSAGE_TABLE
+        WHERE channelId = :channelId
+          AND message_id = :messageId
+        LIMIT 1
+        """
+    )
+    abstract suspend fun getMessageDeliveryStatus(
+        channelId: Long,
+        messageId: Long
+    ): MessageDeliveryStatus?
 
     @Query(
         """

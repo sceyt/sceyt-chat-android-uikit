@@ -136,7 +136,8 @@ class StickyDateHeaderUpdater(
      * @param parent ViewGroup: RecyclerView in this case.
      */
     private fun fixLayoutSize(parent: ViewGroup, view: View) {
-        if (stickyHeaderHeight != 0) return // already fixed
+        if (stickyHeaderHeight != 0 && !view.isLayoutRequested) return
+
         // Specs for parent (RecyclerView)
         val widthSpec = View.MeasureSpec.makeMeasureSpec(parent.width, View.MeasureSpec.EXACTLY)
         val heightSpec = View.MeasureSpec.makeMeasureSpec(parent.height, View.MeasureSpec.UNSPECIFIED)
