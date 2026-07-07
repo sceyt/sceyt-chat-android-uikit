@@ -16,6 +16,7 @@ import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
 import com.sceyt.chatuikit.persistence.extensions.isPublic
 import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
+import com.sceyt.chatuikit.persistence.logic.SystemMessageSender
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem.ChannelItem
@@ -66,6 +67,7 @@ class ChannelsViewModel(
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : BaseViewModel(), SceytKoinComponent {
     private val channelInteractor: ChannelInteractor by inject()
+    private val systemMessageSender: SystemMessageSender by inject()
     private val getChannelsJobs: MutableSet<Job> = ConcurrentHashMap.newKeySet()
     private var searchChannelJob: Job? = null
     private var sortJob: Job? = null
@@ -480,9 +482,17 @@ class ChannelsViewModel(
         }
     }
 
-    fun leaveChannel(channelId: Long) {
+    fun leaveChannel(channel: SceytChannel) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelInteractor.leaveChannel(channelId)
+            if (channel.isGroup) {
+                runCatching {
+                    systemMessageSender.sendMemberLeft(channel.id)
+                }.onFailure {
+                    SceytLog.e(TAG, "Failed to send member-left system message: ${it.message}")
+                }
+            }
+
+            val response = channelInteractor.leaveChannel(channel.id)
             if (response is SceytResponse.Error)
                 notifyPageStateWithResponse(response)
         }
@@ -543,7 +553,7 @@ class ChannelsViewModel(
             is ChannelEvent.MarkAsRead -> markChannelAsRead(event.channel.id)
             is ChannelEvent.MarkAsUnRead -> markChannelAsUnRead(event.channel.id)
             is ChannelEvent.ClearHistory -> clearHistory(event.channel.id, event.channel.isPublic())
-            is ChannelEvent.LeaveChannel -> leaveChannel(event.channel.id)
+            is ChannelEvent.LeaveChannel -> leaveChannel(event.channel)
             is ChannelEvent.DeleteChannel -> deleteChannel(event.channel.id)
             is ChannelEvent.Mute -> muteChannel(event.channel.id, event.muteUntil)
             is ChannelEvent.UnMute -> unMuteChannel(event.channel.id)
