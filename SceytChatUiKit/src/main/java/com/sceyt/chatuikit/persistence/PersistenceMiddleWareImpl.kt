@@ -234,7 +234,10 @@ internal class PersistenceMiddleWareImpl(
         return channelLogic.syncChannels(config)
     }
 
-    override suspend fun reloadChannelsAfterSync(config: ChannelListConfig, limit: Int): SyncedChannelsWindow {
+    override suspend fun reloadChannelsAfterSync(
+        config: ChannelListConfig,
+        limit: Int
+    ): SyncedChannelsWindow {
         return channelLogic.reloadChannelsAfterSync(config, limit)
     }
 
@@ -442,9 +445,16 @@ internal class PersistenceMiddleWareImpl(
     }
 
     override suspend fun loadPrevMessages(
-        conversationId: Long, lastMessageId: Long, replyInThread: Boolean, offset: Int,
-        limit: Int, loadKey: LoadKeyData, ignoreDb: Boolean,
-    ): Flow<PaginationResponse<SceytMessage>> {
+        conversationId: Long,
+        lastMessageId: Long,
+        replyInThread: Boolean,
+        offset: Int,
+        limit: Int,
+        loadKey: LoadKeyData,
+        ignoreDb: Boolean,
+        awaitToConnectTimeout: Long,
+
+        ): Flow<PaginationResponse<SceytMessage>> {
         return messagesLogic.loadPrevMessages(
             conversationId = conversationId,
             lastMessageId = lastMessageId,
@@ -452,13 +462,19 @@ internal class PersistenceMiddleWareImpl(
             offset = offset,
             limit = limit,
             loadKey = loadKey,
-            ignoreDb = ignoreDb
+            ignoreDb = ignoreDb,
+            awaitToConnectTimeout = awaitToConnectTimeout
         )
     }
 
     override suspend fun loadNextMessages(
-        conversationId: Long, lastMessageId: Long, replyInThread: Boolean,
-        offset: Int, limit: Int, ignoreDb: Boolean,
+        conversationId: Long,
+        lastMessageId: Long,
+        replyInThread: Boolean,
+        offset: Int,
+        limit: Int,
+        ignoreDb: Boolean,
+        awaitToConnectTimeout: Long,
     ): Flow<PaginationResponse<SceytMessage>> {
         return messagesLogic.loadNextMessages(
             conversationId = conversationId,
@@ -466,13 +482,20 @@ internal class PersistenceMiddleWareImpl(
             replyInThread = replyInThread,
             offset = offset,
             limit = limit,
-            ignoreDb = ignoreDb
+            ignoreDb = ignoreDb,
+            awaitToConnectTimeout = awaitToConnectTimeout
         )
     }
 
     override suspend fun loadNearMessages(
-        conversationId: Long, messageId: Long, replyInThread: Boolean,
-        limit: Int, loadKey: LoadKeyData, ignoreDb: Boolean, ignoreServer: Boolean,
+        conversationId: Long,
+        messageId: Long,
+        replyInThread: Boolean,
+        limit: Int,
+        loadKey: LoadKeyData,
+        ignoreDb: Boolean,
+        ignoreServer: Boolean,
+        awaitToConnectTimeout: Long,
     ): Flow<PaginationResponse<SceytMessage>> {
         return messagesLogic.loadNearMessages(
             conversationId = conversationId,
@@ -481,7 +504,8 @@ internal class PersistenceMiddleWareImpl(
             limit = limit,
             loadKey = loadKey,
             ignoreDb = ignoreDb,
-            ignoreServer = ignoreServer
+            ignoreServer = ignoreServer,
+            awaitToConnectTimeout = awaitToConnectTimeout
         )
     }
 
@@ -491,13 +515,15 @@ internal class PersistenceMiddleWareImpl(
         limit: Int,
         loadKey: LoadKeyData,
         ignoreDb: Boolean,
+        awaitToConnectTimeout: Long,
     ): Flow<PaginationResponse<SceytMessage>> {
         return messagesLogic.loadNewestMessages(
             conversationId = conversationId,
             replyInThread = replyInThread,
             limit = limit,
             loadKey = loadKey,
-            ignoreDb = ignoreDb
+            ignoreDb = ignoreDb,
+            awaitToConnectTimeout = awaitToConnectTimeout
         )
     }
 

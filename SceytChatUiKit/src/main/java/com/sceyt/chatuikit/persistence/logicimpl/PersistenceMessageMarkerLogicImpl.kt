@@ -59,21 +59,37 @@ internal class PersistenceMessageMarkerLogicImpl(
             id = messageIds.maxOf { it }
         )
 
-        // 2️⃣ Update cache
-        messagesCache.updateMessagesStatus(
+        // 2️⃣ Resolve every message that should receive this marker and its numeric total.
+        val markerTargets = (updatedMessages + messageDao.getExistMessagesIdTidByIdsChunked(messageIds))
+            .filter { it.id != null && it.id != 0L }
+            .distinctBy { it.id }
+        val markerTargetIds = markerTargets.mapNotNull { it.id }
+        if (markerTargetIds.isEmpty()) return@withContext
+
+        // 3️⃣ Update cache before the remaining DB marker bookkeeping.
+        messagesCache.applyMessageMarkerChanges(
             channelId = channelId,
+            markersByTid = markerTargets.associate { target ->
+                target.tid to SceytMarker(
+                    messageId = requireNotNull(target.id),
+                    userId = userId,
+                    user = data.from,
+                    name = markerName,
+                    createdAt = createdAt
+                )
+            },
             status = data.status,
-            tIds = updatedMessages.map { it.tid }.toLongArray()
+            statusTids = updatedMessages.map { it.tid }.toLongArray()
         )
 
-        // 3️⃣ Insert per-user markers
-        val userMarkers = messageIds.map { messageId ->
+        // 4️⃣ Insert per-user markers
+        val userMarkers = markerTargetIds.map { messageId ->
             MarkerEntity(messageId, userId, markerName, createdAt)
         }
         messageDao.insertUserMarkersIfExistMessage(userMarkers)
 
-        // 4️⃣ Update marker totals in DB (batch)
-        val messages = messageDao.getMessageEntitiesByIds(messageIds)
+        // 5️⃣ Update marker totals in DB (batch)
+        val messages = messageDao.getMessageEntitiesByIdsChunked(markerTargetIds)
         val updatedMessagesWithTotals = messages.map { messageEntity ->
             val currentTotals = messageEntity.markerCount.orEmpty().toMutableList()
             val existingIndex = currentTotals.indexOfFirst { it.name == markerName }
@@ -103,34 +119,34 @@ internal class PersistenceMessageMarkerLogicImpl(
 
         if (messageIds.isEmpty()) return@withContext
 
-        // 1️⃣ Insert per-user markers
+        // 1️⃣ Get local messages for cache and DB marker updates
+        val messages = messageDao.getMessageEntitiesByIdsChunked(ids = messageIds)
+
+        // 2️⃣ Update cache
+        if (messages.isNotEmpty()) {
+            messagesCache.applyMessageMarkerChanges(
+                channelId = channelId,
+                markersByTid = messages.mapNotNull { message ->
+                    message.id?.let { messageId ->
+                        message.tid to SceytMarker(
+                            messageId = messageId,
+                            userId = userId,
+                            user = data.user,
+                            name = markerName,
+                            createdAt = createdAt
+                        )
+                    }
+                }.toMap()
+            )
+        }
+
+        // 3️⃣ Insert per-user markers
         val userMarkers = messageIds.map { messageId ->
             MarkerEntity(messageId, userId, markerName, createdAt)
         }
         messageDao.insertUserMarkersIfExistMessage(userMarkers)
-        val messages = messageDao.getMessageEntitiesByIds(ids = messageIds)
 
-        // 2️⃣ Get tIds for cache update
-        val tIds = messages.map { it.tid }
-        if (tIds.isNotEmpty()) {
-            val sceytMarkers = messageIds.map { messageId ->
-                SceytMarker(
-                    messageId = messageId,
-                    userId = userId,
-                    user = data.user,
-                    name = markerName,
-                    createdAt = createdAt
-                )
-            }
-
-            messagesCache.addMessageMarker(
-                channelId = channelId,
-                markers = sceytMarkers,
-                tIds = tIds.toLongArray()
-            )
-        }
-
-        // 3️⃣ Update marker totals in DB (batch)
+        // 4️⃣ Update marker totals in DB (batch)
         val updatedMessages = messages.map { messageEntity ->
             val currentTotals = messageEntity.markerCount.orEmpty().toMutableList()
             val existingIndex = currentTotals.indexOfFirst { it.name == markerName }

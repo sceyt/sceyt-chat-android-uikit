@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.presentation.di
 
+import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.presentation.components.channel.messages.fragments.viewmodel.ReactionsInfoViewModel
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageListViewModel
 import com.sceyt.chatuikit.presentation.components.channel_info.groups.viewmodel.ChannelInfoCommonGroupsViewModel
@@ -35,7 +36,21 @@ internal val viewModelModule = module {
         qualifier = ChannelInfoVoiceViewModelQualifier
     })
 
-    viewModelOf(::MessageListViewModel)
+    viewModelOf(
+        constructor = {
+                conversationId: Long,
+                channel: SceytChannel,
+                replyInThread: Boolean,
+                initialTargetMessageId: Long?,
+            ->
+            MessageListViewModel(
+                conversationId = conversationId,
+                channel = channel,
+                replyInThread = replyInThread,
+                initialTargetMessageId = initialTargetMessageId
+            )
+        }
+    )
     viewModelOf(::ChannelsViewModel)
     viewModelOf(::ChannelMembersViewModel)
     viewModelOf(::ChannelInfoCommonGroupsViewModel)

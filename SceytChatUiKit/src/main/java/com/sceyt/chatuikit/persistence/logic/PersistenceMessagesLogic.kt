@@ -28,26 +28,44 @@ interface PersistenceMessagesLogic {
     suspend fun handlePush(data: PushData): Boolean
     suspend fun onMessageEditedOrDeleted(message: SceytMessage)
     suspend fun loadPrevMessages(
-        conversationId: Long, lastMessageId: Long, replyInThread: Boolean, offset: Int,
-        limit: Int, loadKey: LoadKeyData,
+        conversationId: Long,
+        lastMessageId: Long,
+        replyInThread: Boolean,
+        offset: Int,
+        limit: Int,
+        loadKey: LoadKeyData,
         ignoreDb: Boolean,
+        awaitToConnectTimeout: Long
     ): Flow<PaginationResponse<SceytMessage>>
 
     suspend fun loadNextMessages(
-        conversationId: Long, lastMessageId: Long, replyInThread: Boolean,
-        offset: Int, limit: Int, ignoreDb: Boolean,
+        conversationId: Long,
+        lastMessageId: Long,
+        replyInThread: Boolean,
+        offset: Int,
+        limit: Int,
+        ignoreDb: Boolean,
+        awaitToConnectTimeout: Long
     ): Flow<PaginationResponse<SceytMessage>>
 
     suspend fun loadNearMessages(
-        conversationId: Long, messageId: Long, replyInThread: Boolean,
-        limit: Int, loadKey: LoadKeyData, ignoreDb: Boolean,
+        conversationId: Long,
+        messageId: Long,
+        replyInThread: Boolean,
+        limit: Int,
+        loadKey: LoadKeyData,
+        ignoreDb: Boolean,
         ignoreServer: Boolean,
+        awaitToConnectTimeout: Long
     ): Flow<PaginationResponse<SceytMessage>>
 
     suspend fun loadNewestMessages(
-        conversationId: Long, replyInThread: Boolean, limit: Int,
+        conversationId: Long,
+        replyInThread: Boolean,
+        limit: Int,
         loadKey: LoadKeyData,
         ignoreDb: Boolean,
+        awaitToConnectTimeout: Long,
     ): Flow<PaginationResponse<SceytMessage>>
 
     suspend fun searchMessages(

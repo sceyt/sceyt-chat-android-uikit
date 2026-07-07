@@ -7,7 +7,6 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.data.models.LoadKeyData
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.toIntentPayload
 import com.sceyt.chatuikit.databinding.SceytActivityChannelBinding
@@ -20,7 +19,6 @@ import com.sceyt.chatuikit.navigation.Destination
 import com.sceyt.chatuikit.navigation.navigate
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageListViewModel
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageListViewModelFactory
-import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.bindings.LoadKeyType
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.bindings.bind
 
 open class ChannelActivity : AppCompatActivity() {
@@ -56,14 +54,7 @@ open class ChannelActivity : AppCompatActivity() {
         val targetMessageId = intent.getTargetMessageId()
         if (channel.id == viewModel.channel.id) {
             targetMessageId?.let {
-                viewModel.loadNearMessages(
-                    messageId = it,
-                    loadKey = LoadKeyData(
-                        key = LoadKeyType.ScrollToMessageBy.longValue,
-                        value = it
-                    ),
-                    ignoreServer = false
-                )
+                viewModel.loadTargetMessage(it)
             }
             return
         }
