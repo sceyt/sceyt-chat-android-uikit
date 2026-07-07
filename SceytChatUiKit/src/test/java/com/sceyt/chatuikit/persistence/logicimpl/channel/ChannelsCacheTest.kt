@@ -234,7 +234,7 @@ class ChannelsCacheTest {
         )
         assertUpsertType(channel(id = 25).copy(pinnedAt = 10), ChannelUpdatedType.PinnedAt)
         assertUpsertType(channel(id = 26).copy(messageRetentionPeriod = 10), ChannelUpdatedType.AutoDeleteState)
-        assertUpsertType(channel(id = 27).copy(memberCount = 2, userRole = "owner"), ChannelUpdatedType.Members)
+        assertUpsertType(channel(id = 27).copy(memberCount = 2), ChannelUpdatedType.Members)
         assertUpsertType(channel(id = 28).copy(newMessageCount = 4), ChannelUpdatedType.UnreadCount)
         assertUpsertType(channel(id = 29).copy(metadata = "new metadata"), ChannelUpdatedType.Updated)
     }
