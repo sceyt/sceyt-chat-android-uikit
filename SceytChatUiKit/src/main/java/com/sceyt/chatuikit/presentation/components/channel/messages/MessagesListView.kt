@@ -11,12 +11,10 @@ import android.widget.PopupWindow
 import android.widget.Toast
 import androidx.appcompat.view.ContextThemeWrapper
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.util.Predicate
 import androidx.core.view.isVisible
 import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
@@ -40,7 +38,6 @@ import com.sceyt.chatuikit.extensions.openLink
 import com.sceyt.chatuikit.extensions.setClipboard
 import com.sceyt.chatuikit.extensions.setLayoutTransition
 import com.sceyt.chatuikit.extensions.updateWithScrollCompensation
-import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.media.audio.AudioFocusHelper
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.chatuikit.navigation.Destination
@@ -66,7 +63,6 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.fil
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem.MessageItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageViewHolderFactory
-import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessagesAdapter
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.reactions.ReactionItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.components.EmojiPickerBottomSheetFragment
@@ -91,7 +87,6 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.cl
 import com.sceyt.chatuikit.presentation.components.channel.messages.popups.MessageActionsPopupMenu
 import com.sceyt.chatuikit.presentation.components.channel.messages.popups.PopupReactionsAdapter
 import com.sceyt.chatuikit.presentation.components.channel.messages.popups.ReactionsPopup
-import com.sceyt.chatuikit.presentation.extensions.getUpdateMessage
 import com.sceyt.chatuikit.presentation.extensions.isPending
 import com.sceyt.chatuikit.presentation.helpers.KeyboardEventListener
 import com.sceyt.chatuikit.presentation.root.PageState
@@ -489,49 +484,20 @@ class MessagesListView @JvmOverloads constructor(
         messagesRV.addNextPageMessages(data, lifecycleScope)
     }
 
-    internal fun addPrevPageMessages(
-        data: List<MessageListItem>,
-        lifecycleScope: LifecycleCoroutineScope
-    ) {
-        messagesRV.addPrevPageMessages(messages = data, lifecycleScope = lifecycleScope)
-    }
-
-    internal fun addNewMessages(
+    internal fun addPreparedNewMessages(
         vararg data: MessageListItem,
         lifecycleScope: LifecycleCoroutineScope,
         addedCallback: () -> Unit = {},
     ) {
         if (data.isEmpty()) return
         messagesRV.awaitAnimationEnd {
-            messagesRV.addNewMessages(items = data, lifecycleScope = lifecycleScope)
+            messagesRV.addPreparedNewMessages(items = data, lifecycleScope = lifecycleScope)
             addedCallback.invoke()
         }
     }
 
-    internal fun updateMessage(message: SceytMessage): Boolean {
-        var foundToUpdate = false
-        val data = messagesRV.getData()
-        for ((index, item) in data.withIndex()) {
-            if (item is MessageItem && item.message.tid == message.tid) {
-                val updatedItem = item.copy(message = item.message.getUpdateMessage(message))
-                val diff = item.message.diff(updatedItem.message)
-                updateAdapterItem(index, updatedItem, diff)
-                SceytLog.d(
-                    TAG,
-                    "Found to update message: id ${item.message.id}, tid ${item.message.tid}," +
-                            " diff ${diff.statusChanged}, newStatus ${message.deliveryStatus}, index $index, size ${data.size}"
-                )
-                foundToUpdate = true
-                break
-            }
-        }
-        if (!foundToUpdate) {
-            SceytLog.d(
-                TAG, "Not found to update message: id ${message.id}, tid ${message.tid}," +
-                        " deliveryStatus ${message.deliveryStatus}, data size ${data.size}"
-            )
-        }
-        return foundToUpdate
+    internal fun scrollToEndAfterRealtimeAppend(addedItemsCount: Int, alwaysScroll: Boolean) {
+        messagesRV.scrollToEndAfterRealtimeAppend(addedItemsCount, alwaysScroll)
     }
 
     internal fun updateMessageSelection(message: SceytMessage) {
@@ -560,66 +526,6 @@ class MessagesListView @JvmOverloads constructor(
 
     internal fun getMessageIndexedById(messageId: Long): Pair<Int, MessageListItem>? {
         return messagesRV.getData().findIndexed { it is MessageItem && it.message.id == messageId }
-    }
-
-    internal fun sortMessages() {
-        messagesRV.sortMessages()
-    }
-
-    internal fun messageEditedOrDeleted(updateMessage: SceytMessage) {
-        val data = messagesRV.getData()
-        if (updateMessage.isPending() && updateMessage.state == MessageState.Deleted) {
-            messagesRV.deleteMessageByTid(updateMessage.tid)
-            if (messagesRV.isEmpty()) {
-                binding.pageStateView.updateState(PageState.StateEmpty())
-            }
-            return
-        }
-
-        // Update main message
-        data.findIndexed {
-            it is MessageItem && it.message.id == updateMessage.id
-        }?.let { (index, item) ->
-            val oldMessage = (item as MessageItem).message
-            val updatedItem = item.copy(message = oldMessage.getUpdateMessage(updateMessage))
-            messagesRV.updateItemAt(index, updatedItem)
-
-            if (updateMessage.state == MessageState.Deleted && oldMessage.state != MessageState.Deleted)
-                messagesRV.adapter?.notifyItemChanged(index)
-            else
-                updateItem(index, updatedItem, oldMessage.diff(updatedItem.message))
-        }
-
-        // Update replies
-        data.forEachIndexed { index, it ->
-            if (it is MessageItem && it.message.parentMessage?.id == updateMessage.id) {
-                val oldMessage = it.message
-                val updatedItem = it.copy(message = oldMessage.copy(parentMessage = updateMessage))
-                updateAdapterItem(index, updatedItem, oldMessage.diff(updatedItem.message))
-            }
-        }
-    }
-
-    internal fun messageSelfDestructed(updateMessage: SceytMessage) {
-        val data = messagesRV.getData()
-        // Update main message
-        data.findIndexed {
-            it is MessageItem && it.message.id == updateMessage.id
-        }?.let { (index, item) ->
-            val oldMessage = (item as MessageItem).message
-            val updatedItem = item.copy(message = oldMessage.getUpdateMessage(updateMessage))
-            messagesRV.updateItemAt(index, updatedItem)
-            messagesRV.adapter?.notifyItemChanged(index)
-        }
-
-        // Update replies
-        data.forEachIndexed { index, it ->
-            if (it is MessageItem && it.message.parentMessage?.id == updateMessage.id) {
-                val oldMessage = it.message
-                val updatedItem = it.copy(message = oldMessage.copy(parentMessage = updateMessage))
-                updateAdapterItem(index, updatedItem, oldMessage.diff(updatedItem.message))
-            }
-        }
     }
 
     internal fun forceDeleteMessageByTid(vararg tid: Long) {
@@ -797,6 +703,10 @@ class MessagesListView @JvmOverloads constructor(
         messagesRV.setNeedLoadNextMessagesListener(listener)
     }
 
+    internal fun isNearStartForPaging() = messagesRV.isNearStartForPaging()
+
+    internal fun isNearEndForPaging() = messagesRV.isNearEndForPaging()
+
     internal fun setReachToStartListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
         messagesRV.setReachToStartListener(listener)
     }
@@ -822,10 +732,6 @@ class MessagesListView @JvmOverloads constructor(
         updateViewState(PageState.StateEmpty())
     }
 
-    internal fun deleteAllMessagesBefore(predicate: Predicate<MessageListItem>) {
-        messagesRV.deleteAllMessagesBefore(predicate)
-    }
-
     internal fun setUnreadMessagesCount(unreadCount: Long) {
         binding.scrollDownView.setUnreadCount(unreadCount)
     }
@@ -845,15 +751,31 @@ class MessagesListView @JvmOverloads constructor(
         updateAdapterItemNotifyVisible(index, item)
     }
 
+    internal fun renderItemUpdate(
+        index: Int,
+        item: MessageItem,
+        diff: MessageDiff?,
+        notifyVisibleOnly: Boolean,
+        notify: Boolean,
+    ) {
+        if (notifyVisibleOnly)
+            updateAdapterItemNotifyVisible(index, item)
+        else
+            updateAdapterItem(index, item, diff, notify)
+    }
+
     private fun updateAdapterItem(
         index: Int,
         item: MessageItem,
-        diff: MessageDiff,
+        diff: MessageDiff?,
         notify: Boolean = true
     ) {
         messagesRV.updateItemAt(index, item)
-        if (notify)
-            updateItem(index, item, diff)
+        if (notify) {
+            if (diff == null)
+                messagesRV.adapter?.notifyItemChanged(index)
+            else updateItem(index, item, diff)
+        }
     }
 
     private fun updateAdapterItemNotifyVisible(index: Int, item: MessageItem) {
@@ -922,10 +844,12 @@ class MessagesListView @JvmOverloads constructor(
     }
 
     fun scrollToLastMessage() = safeScrollTo {
-        messagesRV.scrollToPosition(messagesRV.getData().size - 1)
+        val lastMessageIndex = messagesRV.getData().indexOfLast { it is MessageItem }
+        if (lastMessageIndex != -1)
+            messagesRV.scrollToPosition(lastMessageIndex)
     }
 
-    private fun safeScrollTo(block: () -> Unit) = MessagesAdapter.awaitUpdating {
+    private fun safeScrollTo(block: () -> Unit) = messagesRV.awaitUpdating {
         try {
             block()
         } catch (e: Exception) {

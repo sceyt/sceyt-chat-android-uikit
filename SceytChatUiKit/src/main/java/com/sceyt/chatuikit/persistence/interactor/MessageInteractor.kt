@@ -17,6 +17,7 @@ import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlin.time.Duration.Companion.seconds
 
 interface MessageInteractor {
     suspend fun loadPrevMessages(
@@ -27,6 +28,7 @@ interface MessageInteractor {
         limit: Int = SceytChatUIKit.config.queryLimits.messageListQueryLimit,
         loadKey: LoadKeyData,
         ignoreDb: Boolean = false,
+        awaitToConnectTimeout: Long = 10.seconds.inWholeMilliseconds,
     ): Flow<PaginationResponse<SceytMessage>>
 
     suspend fun loadNextMessages(
@@ -36,6 +38,7 @@ interface MessageInteractor {
         offset: Int,
         limit: Int = SceytChatUIKit.config.queryLimits.messageListQueryLimit,
         ignoreDb: Boolean = false,
+        awaitToConnectTimeout: Long = 10.seconds.inWholeMilliseconds
     ): Flow<PaginationResponse<SceytMessage>>
 
     suspend fun loadNearMessages(
@@ -46,6 +49,7 @@ interface MessageInteractor {
         loadKey: LoadKeyData,
         ignoreDb: Boolean = false,
         ignoreServer: Boolean = false,
+        awaitToConnectTimeout: Long = 10.seconds.inWholeMilliseconds,
     ): Flow<PaginationResponse<SceytMessage>>
 
     suspend fun loadNewestMessages(
@@ -54,6 +58,7 @@ interface MessageInteractor {
         limit: Int = SceytChatUIKit.config.queryLimits.messageListQueryLimit,
         loadKey: LoadKeyData,
         ignoreDb: Boolean,
+        awaitToConnectTimeout: Long = 10.seconds.inWholeMilliseconds,
     ): Flow<PaginationResponse<SceytMessage>>
 
     suspend fun searchMessages(

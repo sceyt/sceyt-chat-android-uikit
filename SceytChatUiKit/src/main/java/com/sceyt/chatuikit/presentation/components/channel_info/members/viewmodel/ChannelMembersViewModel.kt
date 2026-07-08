@@ -3,8 +3,6 @@ package com.sceyt.chatuikit.presentation.components.channel_info.members.viewmod
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.google.gson.Gson
-import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.role.Role
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.managers.channel.ChannelEventManager
@@ -19,16 +17,12 @@ import com.sceyt.chatuikit.data.models.channels.CreateChannelData
 import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
-import com.sceyt.chatuikit.data.models.messages.MembersMetaData
-import com.sceyt.chatuikit.data.models.messages.SceytMessageType
 import com.sceyt.chatuikit.data.models.messages.SceytUser
-import com.sceyt.chatuikit.data.models.messages.SystemMsgBodyEnum
 import com.sceyt.chatuikit.data.models.onSuccessNotNull
 import com.sceyt.chatuikit.persistence.extensions.asLiveData
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMembersLogic
-import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
-import com.sceyt.chatuikit.persistence.mappers.toUser
+import com.sceyt.chatuikit.persistence.logic.SystemMessageSender
 import com.sceyt.chatuikit.presentation.components.channel_info.members.adapter.MemberItem
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import kotlinx.coroutines.Dispatchers
@@ -38,14 +32,15 @@ import kotlinx.coroutines.withContext
 
 data class AddMemberResult(
     val channel: SceytChannel,
-    val notAddedMembers: List<SceytMember>
+    val notAddedMembers: List<SceytMember>,
+    val addedMembers: List<SceytMember>
 )
 
 class ChannelMembersViewModel(
     private val channelId: Long,
     private val channelsLogic: PersistenceChannelsLogic,
     private val membersLogic: PersistenceMembersLogic,
-    private val messageLogic: PersistenceMessagesLogic
+    private val systemMessageSender: SystemMessageSender
 ) : BaseViewModel() {
 
     private val _membersLiveData = MutableLiveData<PaginationResponse<MemberItem>>()
@@ -218,14 +213,23 @@ class ChannelMembersViewModel(
 
     fun addMembersToChannel(channelId: Long, members: List<SceytMember>) {
         viewModelScope.launch(Dispatchers.IO) {
+            val existingMemberIds = membersLogic.filterOnlyMembersByIds(
+                channelId = channelId,
+                ids = members.map { it.id }
+            ).toSet()
+            val requestedNewMembers = members.filter { it.id !in existingMemberIds }
+
             val response = membersLogic.addMembersToChannel(
                 channelId = channelId,
                 members = members
             ).onSuccessNotNull { channel ->
+                val responseMemberIds = channel.members.orEmpty().map { it.id }.toSet()
+                val addedMembers = requestedNewMembers.filter { it.id in responseMemberIds }
+                val addedMemberIds = addedMembers.map { it.id }.toSet()
                 val notAddedMembers = members.filter { member ->
-                    channel.members?.none { it.id == member.id } ?: true
+                    member.id in existingMemberIds || member.id !in addedMemberIds
                 }
-                val result = AddMemberResult(channel, notAddedMembers)
+                val result = AddMemberResult(channel, notAddedMembers, addedMembers)
                 _channelAddMemberLiveData.postValue(result)
             }
 
@@ -257,37 +261,13 @@ class ChannelMembersViewModel(
         channelId: Long,
         removedMembers: List<SceytMember>
     ) = viewModelScope.launch {
-        messageLogic.sendMessage(
-            channelId = channelId,
-            message = Message(
-                Message.MessageBuilder()
-                    .setType(SceytMessageType.System.value)
-                    .setMetadata(Gson().toJson(MembersMetaData(removedMembers.map { it.id })))
-                    .setMentionedUsers(removedMembers.map { it.user.toUser() }.toTypedArray())
-                    .withDisplayCount(0)
-                    .setDisableMentionsCount(true)
-                    .setSilent(true)
-                    .setBody(SystemMsgBodyEnum.MemberRemoved.value)
-            )
-        )
+        systemMessageSender.sendMembersRemoved(channelId, removedMembers)
     }
 
     fun sendAddedMemberMessage(
         channelId: Long,
         addedMembers: List<SceytMember>
     ) = viewModelScope.launch {
-        messageLogic.sendMessage(
-            channelId = channelId,
-            message = Message(
-                Message.MessageBuilder()
-                    .setType(SceytMessageType.System.value)
-                    .setMetadata(Gson().toJson(MembersMetaData(addedMembers.map { it.id })))
-                    .setMentionedUsers(addedMembers.map { it.user.toUser() }.toTypedArray())
-                    .withDisplayCount(0)
-                    .setDisableMentionsCount(true)
-                    .setSilent(true)
-                    .setBody(SystemMsgBodyEnum.MemberAdded.value)
-            )
-        )
+        systemMessageSender.sendMembersAdded(channelId, addedMembers)
     }
 }
