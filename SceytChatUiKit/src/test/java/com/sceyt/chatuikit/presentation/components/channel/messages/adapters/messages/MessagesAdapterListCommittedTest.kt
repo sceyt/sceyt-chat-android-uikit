@@ -42,31 +42,11 @@ class MessagesAdapterListCommittedTest {
     }
 
     @Test
-    fun `addNewMessages invokes listener`() {
-        val adapter = adapter()
-        val count = adapter.countCommits()
-
-        adapter.addNewMessages(listOf(item(1), item(2)))
-
-        assertThat(count[0]).isEqualTo(1)
-    }
-
-    @Test
     fun `addNextPageMessagesList invokes listener`() {
         val adapter = adapter(listOf(item(1)))
         val count = adapter.countCommits()
 
         adapter.addNextPageMessagesList(listOf(item(2)))
-
-        assertThat(count[0]).isEqualTo(1)
-    }
-
-    @Test
-    fun `addPrevPageMessagesList invokes listener`() {
-        val adapter = adapter(listOf(item(2)))
-        val count = adapter.countCommits()
-
-        adapter.addPrevPageMessagesList(listOf(item(1)))
 
         assertThat(count[0]).isEqualTo(1)
     }
@@ -82,14 +62,14 @@ class MessagesAdapterListCommittedTest {
     }
 
     @Test
-    fun `addNewMessages with no new items does not invoke listener`() {
+    fun `addPreparedNewMessages invokes listener without dedupe`() {
         val adapter = adapter(listOf(item(1)))
         val count = adapter.countCommits()
 
-        // Same item already present -> filtered out -> nothing committed.
-        adapter.addNewMessages(listOf(item(1)))
+        adapter.addPreparedNewMessages(listOf(item(1)))
 
-        assertThat(count[0]).isEqualTo(0)
+        assertThat(count[0]).isEqualTo(1)
+        assertThat(adapter.getData()).hasSize(2)
     }
 
     @Test

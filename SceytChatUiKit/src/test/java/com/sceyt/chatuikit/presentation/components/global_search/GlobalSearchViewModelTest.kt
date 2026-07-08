@@ -30,6 +30,7 @@ import org.mockito.MockedStatic
 import org.mockito.Mockito
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.mockStatic
+import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class GlobalSearchViewModelTest {
@@ -81,7 +82,7 @@ class GlobalSearchViewModelTest {
 
         viewModel.onQueryChanged("jam")
         advanceUntilIdle()
-        viewModel.onMemberSelected(SceytUser("member-7"))
+        viewModel.onUserSelected(SceytUser("member-7"))
 
         assertThat(viewModel.headerState.value.query).isEmpty()
         assertThat(viewModel.headerState.value.selectedUser?.id).isEqualTo("member-7")
@@ -95,7 +96,7 @@ class GlobalSearchViewModelTest {
             val viewModel = TestGlobalSearchViewModel(ioDispatcher = dispatcher)
             advanceUntilIdle()
 
-            viewModel.onMemberSelected(SceytUser("member-42"))
+            viewModel.onUserSelected(SceytUser("member-42"))
             viewModel.onQueryChanged("media")
             advanceUntilIdle()
 
@@ -117,7 +118,7 @@ class GlobalSearchViewModelTest {
         val viewModel = TestGlobalSearchViewModel(ioDispatcher = dispatcher)
         advanceUntilIdle()
 
-        viewModel.onMemberSelected(SceytUser("member-1"))
+        viewModel.onUserSelected(SceytUser("member-1"))
         viewModel.onEmptyQueryDeleteRequested()
 
         assertThat(viewModel.headerState.value.isSelectedMemberRemovalPending).isTrue()
@@ -132,7 +133,7 @@ class GlobalSearchViewModelTest {
         val viewModel = TestGlobalSearchViewModel(ioDispatcher = dispatcher)
         advanceUntilIdle()
 
-        viewModel.onMemberSelected(SceytUser("member-9"))
+        viewModel.onUserSelected(SceytUser("member-9"))
         viewModel.onClearRequested()
 
         assertThat(viewModel.headerState.value.selectedUser).isNull()
@@ -173,11 +174,11 @@ class GlobalSearchViewModelTest {
         advanceUntilIdle()
 
         viewModel.onQueryChanged("ali")
-        advanceTimeBy(199)
+        advanceTimeBy(199.milliseconds)
 
         assertThat(provider.calls).isEmpty()
 
-        advanceTimeBy(1)
+        advanceTimeBy(1.milliseconds)
         advanceUntilIdle()
 
         assertThat(provider.calls).containsExactly(SuggestionCall(query = "ali", limit = 8))

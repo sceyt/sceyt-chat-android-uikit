@@ -6,10 +6,10 @@ import android.os.Looper
 import android.util.AttributeSet
 import android.view.ViewGroup
 import android.view.animation.AnimationUtils
-import androidx.core.util.Predicate
 import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
@@ -18,8 +18,8 @@ import com.sceyt.chatuikit.extensions.addRVScrollListener
 import com.sceyt.chatuikit.extensions.getFirstVisibleItemPosition
 import com.sceyt.chatuikit.extensions.getLastVisibleItemPosition
 import com.sceyt.chatuikit.extensions.lastVisibleItemPosition
-import com.sceyt.chatuikit.presentation.common.recyclerview.SpeedyLinearLayoutManager
 import com.sceyt.chatuikit.presentation.common.collections.SyncArrayList
+import com.sceyt.chatuikit.presentation.common.recyclerview.SpeedyLinearLayoutManager
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.ItemOffsetDecoration
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
@@ -30,7 +30,6 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.cl
 import com.sceyt.chatuikit.presentation.extensions.isNotPending
 import com.sceyt.chatuikit.shared.helpers.MessageSwipeController
 import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle
-import kotlin.math.absoluteValue
 
 
 class MessagesRV @JvmOverloads constructor(
@@ -63,7 +62,7 @@ class MessagesRV @JvmOverloads constructor(
     private var listCommittedListener: (() -> Unit)? = null
     private var enableSwipe: Boolean = true
     private lateinit var style: MessagesListViewStyle
-    private var scrollY = 0
+    private var lastDownScrollerShown: Boolean? = null
 
     init {
         init()
@@ -91,25 +90,26 @@ class MessagesRV @JvmOverloads constructor(
 
     private fun addOnScrollListener() {
         addRVScrollListener(onScrolled = { _: RecyclerView, _: Int, dy: Int ->
-            scrollY += dy
             checkNeedLoadPrev(dy)
             checkNeedLoadNext(dy)
+            checkScrollDown(dy)
         }, onScrollStateChanged = { _, newState ->
             scrollStateChangeListener?.invoke(newState)
         })
 
         addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
             if (scrollState != SCROLL_STATE_IDLE || ::mAdapter.isInitialized.not()) return@addOnLayoutChangeListener
-            scrollY = computeVerticalScrollOffset()
             checkNeedLoadPrev(-1)
             checkNeedLoadNext(1)
+            // Re-evaluate on layout (e.g. after a configuration change) with a neutral dy.
+            checkScrollDown(0)
         }
     }
 
     private fun checkNeedLoadPrev(dy: Int) {
         if (mAdapter.itemCount == 0) return
         val firstVisiblePosition = getFirstVisibleItemPosition()
-        if (firstVisiblePosition <= messageListQueryLimit / 2 && dy < 0) {
+        if (isNearStartPosition(firstVisiblePosition) && dy < 0) {
             if (firstVisiblePosition == 0) {
                 if (!reachToStartInvoked) {
                     val skip = mAdapter.getSkip()
@@ -134,9 +134,8 @@ class MessagesRV @JvmOverloads constructor(
     private fun checkNeedLoadNext(dy: Int) {
         if (mAdapter.itemCount == 0) return
         val lastVisiblePosition = getLastVisibleItemPosition()
-        checkScrollDown()
 
-        if (mAdapter.itemCount - lastVisiblePosition <= messageListQueryLimit / 2 && dy > 0) {
+        if (isNearEndPosition(lastVisiblePosition) && dy > 0) {
             if (lastVisiblePosition == mAdapter.itemCount - 1) {
                 if (!reachToEndInvoked) {
                     val skip = mAdapter.getSkip()
@@ -159,13 +158,38 @@ class MessagesRV @JvmOverloads constructor(
         it is MessageListItem.MessageItem && it.message.isNotPending()
     }
 
-    private fun checkScrollDown() {
-        val canScrollVertically = canScrollVertically(0)
-        if (!canScrollVertically)
-            scrollY = 0
+    private fun checkScrollDown(dy: Int) {
+        if (!::mAdapter.isInitialized || mAdapter.itemCount == 0) {
+            updateDownScroller(false)
+            return
+        }
+        // null = layout not settled (mid-configuration change / not laid out) — keep current state.
+        val atBottom = isAtBottom() ?: return
+        // While scrolling up, never hide an already visible scroll-down button.
+        if (dy < 0 && lastDownScrollerShown == true) return
+        updateDownScroller(!atBottom)
+    }
 
-        val show = canScrollVertically && scrollY.absoluteValue >= 300
-        showHideDownScroller?.invoke(show)
+    private fun isAtBottom(): Boolean? {
+        val layoutManager = layoutManager as? LinearLayoutManager ?: return null
+        val lastIndex = mAdapter.itemCount - 1
+        val lastVisible = layoutManager.findLastVisibleItemPosition()
+        if (lastVisible == NO_POSITION) return null
+        if (lastVisible < lastIndex) return false
+        // Last item is visible: at the bottom only if its (decorated) bottom edge fits the
+        // viewport. Handles a tall last message whose bottom is still below the fold.
+        val lastView = layoutManager.findViewByPosition(lastIndex) ?: return null
+        val viewportBottom = height - paddingBottom
+        return layoutManager.getDecoratedBottom(lastView) <= viewportBottom
+    }
+
+    private fun updateDownScroller(show: Boolean) {
+        if (show == lastDownScrollerShown) return
+        lastDownScrollerShown = show
+        if (isInLayout)
+            post { showHideDownScroller?.invoke(show) }
+        else
+            showHideDownScroller?.invoke(show)
     }
 
     private fun checkScrollToEnd(addedItemsCount: Int, isMySendMessage: Boolean): Boolean {
@@ -273,30 +297,19 @@ class MessagesRV @JvmOverloads constructor(
             mAdapter.addNextPageMessagesList(messages)
     }
 
-    fun addPrevPageMessages(
-        messages: List<MessageListItem>,
-        lifecycleScope: LifecycleCoroutineScope
-    ) {
-        if (::mAdapter.isInitialized.not())
-            setData(messages, lifecycleScope)
-        else
-            mAdapter.addPrevPageMessagesList(messages)
-    }
-
-    fun addNewMessages(
+    fun addPreparedNewMessages(
         vararg items: MessageListItem,
         lifecycleScope: LifecycleCoroutineScope
     ) {
         if (::mAdapter.isInitialized.not())
             setData(items.toList(), lifecycleScope)
         else {
-            mAdapter.addNewMessages(items.toList())
-            var outGoing = true
-            items.find { it is MessageListItem.MessageItem }?.let {
-                outGoing = (it as MessageListItem.MessageItem).message.incoming.not()
-            }
-            checkScrollToEnd(items.size, outGoing)
+            mAdapter.addPreparedNewMessages(items.toList())
         }
+    }
+
+    fun scrollToEndAfterRealtimeAppend(addedItemsCount: Int, alwaysScroll: Boolean) {
+        checkScrollToEnd(addedItemsCount, alwaysScroll)
     }
 
     fun setOnListCommittedListener(listener: () -> Unit) {
@@ -317,6 +330,28 @@ class MessagesRV @JvmOverloads constructor(
 
     fun setNeedLoadNextMessagesListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
         needLoadNextMessagesListener = listener
+    }
+
+    fun isNearStartForPaging(): Boolean {
+        if (::mAdapter.isInitialized.not() || mAdapter.itemCount == 0 || childCount == 0) return false
+        val firstVisiblePosition = getFirstVisibleItemPosition()
+        if (firstVisiblePosition == NO_POSITION) return false
+        return !canScrollVertically(-1) || isNearStartPosition(firstVisiblePosition)
+    }
+
+    fun isNearEndForPaging(): Boolean {
+        if (::mAdapter.isInitialized.not() || mAdapter.itemCount == 0 || childCount == 0) return false
+        val lastVisiblePosition = getLastVisibleItemPosition()
+        if (lastVisiblePosition == NO_POSITION) return false
+        return !canScrollVertically(1) || isNearEndPosition(lastVisiblePosition)
+    }
+
+    private fun isNearStartPosition(firstVisiblePosition: Int): Boolean {
+        return firstVisiblePosition <= messageListQueryLimit / 2
+    }
+
+    private fun isNearEndPosition(lastVisiblePosition: Int): Boolean {
+        return mAdapter.itemCount - lastVisiblePosition <= messageListQueryLimit / 2
     }
 
     fun setReachToStartListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
@@ -356,9 +391,8 @@ class MessagesRV @JvmOverloads constructor(
 
     fun getViewHolderFactory() = viewHolderFactory
 
-    fun sortMessages() {
-        if (::mAdapter.isInitialized.not()) return
-        mAdapter.sort(this)
+    fun awaitUpdating(cb: () -> Unit) {
+        if (::mAdapter.isInitialized) mAdapter.awaitUpdating(cb) else cb()
     }
 
     fun deleteMessageByTid(vararg tid: Long) {
@@ -384,11 +418,6 @@ class MessagesRV @JvmOverloads constructor(
     fun clearData() {
         if (::mAdapter.isInitialized)
             mAdapter.clearData()
-    }
-
-    fun deleteAllMessagesBefore(predicate: Predicate<MessageListItem>) {
-        if (::mAdapter.isInitialized)
-            mAdapter.deleteAllMessagesBefore(predicate)
     }
 
     fun setSwipeToReplyEnabled(enabled: Boolean) {

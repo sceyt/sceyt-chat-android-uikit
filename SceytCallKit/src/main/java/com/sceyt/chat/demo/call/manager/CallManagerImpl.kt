@@ -719,37 +719,39 @@ class CallManagerImpl(
                     }
                 }
 
-                if (!isLocal) {
-                    when (state) {
-                        ParticipantState.Ringing -> {
-                            if (_callUiState.value.call?.isGroupCall != true) {
-                                _callUiState.update { uiState -> uiState.copy(isRemoteRinging = true) }
-                            }
+                when (state) {
+                    ParticipantState.Ringing -> {
+                        if (!isLocal && _callUiState.value.call?.isGroupCall != true) {
+                            _callUiState.update { uiState -> uiState.copy(isRemoteRinging = true) }
                         }
-
-                        ParticipantState.Left -> {
-                            if (_callUiState.value.call?.isGroupCall != true) {
-                                call.leave()
-                                handleCallEnded(EndedReason.RemoteHangup)
-                            }
-                        }
-
-                        ParticipantState.Declined -> {
-                            if (_callUiState.value.call?.isGroupCall != true) {
-                                call.leave()
-                                handleCallEnded(EndedReason.Declined(reason))
-                            }
-                        }
-
-                        ParticipantState.NoAnswer -> {
-                            if (_callUiState.value.call?.isGroupCall != true) {
-                                call.leave()
-                                handleCallEnded(EndedReason.NoAnswer)
-                            }
-                        }
-
-                        else -> Unit
                     }
+
+                    ParticipantState.Left -> {
+                        if (isLocal) {
+                            handleCallEnded(EndedReason.LocalHangup)
+                        } else if (_callUiState.value.call?.isGroupCall != true) {
+                            call.leave()
+                            handleCallEnded(EndedReason.RemoteHangup)
+                        }
+                    }
+
+                    ParticipantState.Declined -> {
+                        if (_callUiState.value.call?.isGroupCall != true) {
+                            call.leave()
+                            handleCallEnded(EndedReason.Declined(reason))
+                        }
+                    }
+
+                    ParticipantState.NoAnswer -> {
+                        if (isLocal) {
+                            handleCallEnded(EndedReason.NoAnswer)
+                        } else if (_callUiState.value.call?.isGroupCall != true) {
+                            call.leave()
+                            handleCallEnded(EndedReason.NoAnswer)
+                        }
+                    }
+
+                    else -> Unit
                 }
                 refreshDurationTimer()
             }
@@ -1319,17 +1321,18 @@ class CallManagerImpl(
         toneManager.playRingtoneAndVibrate()
     }
 
-    private suspend fun awaitWorkStart() = withTimeoutOrNull(5.seconds.inWholeMilliseconds.milliseconds) {
-        WorkManager.getInstance(context)
-            .getWorkInfosByTagFlow(IncomingCallWorker.INCOMING_CALL_WORK_NAME)
-            .first { infos ->
-                val running = infos.find { it.state == WorkInfo.State.RUNNING }
-                running != null && running.progress.getBoolean(
-                    key = IncomingCallWorker.KEY_FOREGROUND_READY,
-                    defaultValue = false,
-                )
-            }
-    }
+    private suspend fun awaitWorkStart() =
+        withTimeoutOrNull(5.seconds.inWholeMilliseconds.milliseconds) {
+            WorkManager.getInstance(context)
+                .getWorkInfosByTagFlow(IncomingCallWorker.INCOMING_CALL_WORK_NAME)
+                .first { infos ->
+                    val running = infos.find { it.state == WorkInfo.State.RUNNING }
+                    running != null && running.progress.getBoolean(
+                        key = IncomingCallWorker.KEY_FOREGROUND_READY,
+                        defaultValue = false,
+                    )
+                }
+        }
 
     private suspend fun playTone(config: ToneConfig) {
         toneManager.playTone(config)
