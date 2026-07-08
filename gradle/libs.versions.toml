@@ -42,9 +42,9 @@ photoview = "2.3.0"
 recyclerview = "1.4.0"
 robolectric = "4.16.1"
 room = "2.8.4"
-sceytCallAndroidSdk = "1.5.422-SNAPSHOT"
+sceytCallAndroidSdk = "1.5.425-SNAPSHOT"
 sceytChatAndroidSdk = "1.9.901-SNAPSHOT"
-sceytTonemanagerAndroidSdk = "1.0.1"
+sceytToneplayerAndroidSdk = "1.0.402-SNAPSHOT"
 sdpAndroid = "1.1.1"
 sspAndroid = "1.1.1"
 truth = "1.4.5"
@@ -119,7 +119,7 @@ room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
 room-testing = { module = "androidx.room:room-testing", version.ref = "room" }
 sceyt-call-android-sdk = { module = "com.sceyt:sceyt-call-android-sdk", version.ref = "sceytCallAndroidSdk" }
 sceyt-chat-android-sdk = { module = "com.sceyt:sceyt-chat-android-sdk", version.ref = "sceytChatAndroidSdk" }
-sceyt-tonemanager-android-sdk = { module = "com.sceyt:sceyt-tonemanager-android-sdk", version.ref = "sceytTonemanagerAndroidSdk" }
+sceyt-toneplayer-android-sdk = { module = "com.sceyt:sceyt-toneplayer-android-sdk", version.ref = "sceytToneplayerAndroidSdk" }
 sdp-android = { module = "com.intuit.sdp:sdp-android", version.ref = "sdpAndroid" }
 ssp-android = { module = "com.intuit.ssp:ssp-android", version.ref = "sspAndroid" }
 truth = { module = "com.google.truth:truth", version.ref = "truth" }
