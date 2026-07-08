@@ -20,7 +20,6 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyBlocking
-import org.mockito.kotlin.wheneverBlocking
 import org.mockito.kotlin.whenever
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -68,7 +67,7 @@ class ChannelMemberControllerTest {
     @Test
     fun `loadIfNeeded loads when channel has more members than the db`() = runTest(dispatcher) {
         channel = channel.copy(memberCount = 10)
-        wheneverBlocking { memberInteractor.getMembersCountFromDb(any()) }.thenReturn(3)
+        whenever { memberInteractor.getMembersCountFromDb(any()) }.thenReturn(3)
         whenever(memberInteractor.loadChannelMembers(any(), any(), any(), anyOrNullRole()))
             .thenReturn(emptyFlow())
         val controller = controller()
@@ -83,7 +82,7 @@ class ChannelMemberControllerTest {
     @Test
     fun `loadIfNeeded does nothing when db already has all members`() = runTest(dispatcher) {
         channel = channel.copy(memberCount = 3)
-        wheneverBlocking { memberInteractor.getMembersCountFromDb(any()) }.thenReturn(3)
+        whenever { memberInteractor.getMembersCountFromDb(any()) }.thenReturn(3)
         val controller = controller()
 
         controller.loadIfNeeded()
@@ -93,5 +92,5 @@ class ChannelMemberControllerTest {
     }
 
     // role is a nullable String; matcher helper to keep call sites readable.
-    private fun anyOrNullRole(): String? = org.mockito.kotlin.anyOrNull()
+    private fun anyOrNullRole(): String = org.mockito.kotlin.anyOrNull()
 }

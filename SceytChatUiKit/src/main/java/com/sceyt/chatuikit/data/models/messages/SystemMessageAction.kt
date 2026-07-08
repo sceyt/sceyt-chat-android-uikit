@@ -3,7 +3,7 @@ package com.sceyt.chatuikit.data.models.messages
 import android.content.Context
 import com.sceyt.chatuikit.R
 
-enum class SystemMsgBodyEnum(
+enum class SystemMessageAction(
     val value: String
 ) {
     GroupCreated("CG"),
@@ -23,8 +23,8 @@ enum class SystemMsgBodyEnum(
             }
         }
 
-        fun getTypeFromString(type: String?): SystemMsgBodyEnum? {
-            SystemMsgBodyEnum.entries.forEach {
+        fun getTypeFromString(type: String?): SystemMessageAction? {
+            SystemMessageAction.entries.forEach {
                 if (it.value == type) return it
             }
             return null
