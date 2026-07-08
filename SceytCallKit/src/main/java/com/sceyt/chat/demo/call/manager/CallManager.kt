@@ -149,6 +149,13 @@ interface CallManager {
     fun switchCamera(): Result<Unit>
 
     /**
+     * Send a DTMF tone through the active call and play local keypad feedback.
+     *
+     * @param tone Single DTMF key: 0-9, A-D, *, or #.
+     */
+    suspend fun sendDtmf(tone: Char): SceytCallResult<Unit>
+
+    /**
      * Select a specific audio output device.
      *
      * @param device The audio device to route audio to
