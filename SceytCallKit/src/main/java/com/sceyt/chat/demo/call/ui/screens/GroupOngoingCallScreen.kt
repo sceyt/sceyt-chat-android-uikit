@@ -78,7 +78,6 @@ import com.sceyt.chat.demo.call.manager.buildPageRows
 import com.sceyt.chat.demo.call.manager.displayTitle
 import com.sceyt.chat.demo.call.manager.paginateParticipants
 import com.sceyt.chat.demo.call.manager.resolveStatusText
-import com.sceyt.chat.demo.call.ui.components.AudioDeviceSelector
 import com.sceyt.chat.demo.call.ui.components.UserAvatar
 import com.sceyt.chat.demo.call.ui.components.StableVideoTrack
 import com.sceyt.chat.demo.call.ui.components.VideoRenderer
@@ -101,6 +100,7 @@ internal fun GroupOngoingCallScreen(
     onToggleMute: () -> Unit,
     onToggleCamera: () -> Unit,
     onSwitchCamera: () -> Unit,
+    onToggleSpeaker: () -> Unit,
     onSelectDevice: (AudioDevice) -> Unit,
     onEndCall: () -> Unit,
 ) {
@@ -116,7 +116,6 @@ internal fun GroupOngoingCallScreen(
     }
     val pagerState = rememberPagerState(pageCount = { pages.size })
     val (availableDevices, selectedDevice) = audioDeviceData
-    var showAudioDeviceSelector by remember { mutableStateOf(false) }
     var showMembersSheet by remember { mutableStateOf(false) }
     var showSettingsSheet by remember { mutableStateOf(false) }
     var showChrome by remember { mutableStateOf(true) }
@@ -131,101 +130,99 @@ internal fun GroupOngoingCallScreen(
         }
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(SurfaceDark)
-            .navigationBarsPadding()
-            .pointerInput(Unit) {
-                detectTapGestures(onTap = { showChrome = !showChrome })
-            }
-    ) {
-        HorizontalPager(
-            state = pagerState,
+    CallAudioRoutePicker(
+        availableDevices = availableDevices,
+        selectedDevice = selectedDevice,
+        onToggleSpeaker = onToggleSpeaker,
+        onSelectDevice = onSelectDevice
+    ) { onAudioRouteClick ->
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .statusBarsPadding()
-                .padding(start = 4.dp, end = 4.dp, top = 4.dp, bottom = GroupGridBottomPadding)
-        ) { pageIndex ->
-            GroupParticipantsPage(
-                participants = pages.getOrNull(pageIndex).orEmpty().toImmutableList(),
-                modifier = Modifier.fillMaxSize()
-            )
-        }
-
-        AnimatedVisibility(
-            visible = chromeVisible,
-            enter = fadeIn() + slideInVertically { -it },
-            exit = fadeOut() + slideOutVertically { -it },
-            modifier = Modifier.align(Alignment.TopCenter)
-        ) {
-            GroupTopBar(
-                title = title,
-                status = callState.resolveStatusText(duration),
-                isOwner = callState.isOwner,
-                onBack = { backDispatcher?.onBackPressed() },
-                onSettings = { showSettingsSheet = true },
-                onAddParticipant = { showMembersSheet = true },
-            )
-        }
-
-        AnimatedVisibility(
-            visible = chromeVisible,
-            enter = fadeIn() + slideInVertically { it },
-            exit = fadeOut() + slideOutVertically { it },
-            modifier = Modifier.align(Alignment.BottomCenter)
-        ) {
-            Column(
-                modifier = Modifier
-                    .windowInsetsPadding(WindowInsets.systemBars)
-                    .padding(bottom = 12.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                if (pages.size > 1) {
-                    PageDots(
-                        pageCount = pages.size,
-                        currentPage = pagerState.currentPage,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
+                .background(SurfaceDark)
+                .navigationBarsPadding()
+                .pointerInput(Unit) {
+                    detectTapGestures(onTap = { showChrome = !showChrome })
                 }
-
-                CallControlBar(
-                    modifier = Modifier.padding(horizontal = 12.dp),
-                    isMuted = callState.localParticipant?.isMuted == true,
-                    selectedAudioDevice = selectedDevice,
-                    isVideoEnabled = callState.localParticipant?.isVideoEnabled == true,
-                    videoDisabled = !callState.isOwner && (!callState.callPermissions.allowPublishVideo
-                        || callState.localParticipant?.canPublishVideo == false),
-                    muteDisabled = !callState.isOwner && (!callState.callPermissions.allowPublishAudio
-                        || callState.localParticipant?.canPublishAudio == false),
-                    onToggleMute = onToggleMute,
-                    onToggleSpeaker = { showAudioDeviceSelector = true },
-                    onToggleVideo = onToggleCamera,
-                    onHangup = onEndCall,
-                    onFlipCamera = onSwitchCamera
+        ) {
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .statusBarsPadding()
+                    .padding(start = 4.dp, end = 4.dp, top = 4.dp, bottom = GroupGridBottomPadding)
+            ) { pageIndex ->
+                GroupParticipantsPage(
+                    participants = pages.getOrNull(pageIndex).orEmpty().toImmutableList(),
+                    modifier = Modifier.fillMaxSize()
                 )
             }
-        }
 
-        if (showAudioDeviceSelector) {
-            AudioDeviceSelector(
-                availableDevices = availableDevices,
-                selectedDevice = selectedDevice,
-                onDeviceSelected = onSelectDevice,
-                onDismiss = { showAudioDeviceSelector = false }
-            )
-        }
+            AnimatedVisibility(
+                visible = chromeVisible,
+                enter = fadeIn() + slideInVertically { -it },
+                exit = fadeOut() + slideOutVertically { -it },
+                modifier = Modifier.align(Alignment.TopCenter)
+            ) {
+                GroupTopBar(
+                    title = title,
+                    status = callState.resolveStatusText(duration),
+                    isOwner = callState.isOwner,
+                    onBack = { backDispatcher?.onBackPressed() },
+                    onSettings = { showSettingsSheet = true },
+                    onAddParticipant = { showMembersSheet = true },
+                )
+            }
 
-        if (showMembersSheet) {
-            CallMembersBottomSheet(
-                onDismiss = { showMembersSheet = false },
-            )
-        }
+            AnimatedVisibility(
+                visible = chromeVisible,
+                enter = fadeIn() + slideInVertically { it },
+                exit = fadeOut() + slideOutVertically { it },
+                modifier = Modifier.align(Alignment.BottomCenter)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .windowInsetsPadding(WindowInsets.systemBars)
+                        .padding(bottom = 12.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    if (pages.size > 1) {
+                        PageDots(
+                            pageCount = pages.size,
+                            currentPage = pagerState.currentPage,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                    }
 
-        if (showSettingsSheet) {
-            CallSettingsBottomSheet(
-                onDismiss = { showSettingsSheet = false },
-            )
+                    CallControlBar(
+                        modifier = Modifier.padding(horizontal = 12.dp),
+                        isMuted = callState.localParticipant?.isMuted == true,
+                        selectedAudioDevice = selectedDevice,
+                        isVideoEnabled = callState.localParticipant?.isVideoEnabled == true,
+                        videoDisabled = !callState.isOwner && (!callState.callPermissions.allowPublishVideo
+                            || callState.localParticipant?.canPublishVideo == false),
+                        muteDisabled = !callState.isOwner && (!callState.callPermissions.allowPublishAudio
+                            || callState.localParticipant?.canPublishAudio == false),
+                        onToggleMute = onToggleMute,
+                        onToggleSpeaker = onAudioRouteClick,
+                        onToggleVideo = onToggleCamera,
+                        onHangup = onEndCall,
+                        onFlipCamera = onSwitchCamera
+                    )
+                }
+            }
+
+            if (showMembersSheet) {
+                CallMembersBottomSheet(
+                    onDismiss = { showMembersSheet = false },
+                )
+            }
+
+            if (showSettingsSheet) {
+                CallSettingsBottomSheet(
+                    onDismiss = { showSettingsSheet = false },
+                )
+            }
         }
     }
 }
@@ -242,6 +239,7 @@ private fun GroupOngoingCallScreenPreview(
         onToggleMute = {},
         onToggleCamera = {},
         onSwitchCamera = {},
+        onToggleSpeaker = {},
         onSelectDevice = {},
         onEndCall = {}
     )
