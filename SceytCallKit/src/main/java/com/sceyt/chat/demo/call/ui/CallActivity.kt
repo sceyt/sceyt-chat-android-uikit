@@ -60,7 +60,7 @@ class CallActivity : ComponentActivity() {
         // Setup window for full-screen calls
         setupWindowFlags()
 
-        applySystemBarsStyle(true)
+        applySystemBarsStyle(true, android.R.color.transparent, android.R.color.transparent)
 
         // Enter PiP instead of finishing when Back is pressed during an active call
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
