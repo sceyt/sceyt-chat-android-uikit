@@ -173,7 +173,7 @@ class MessageListViewModel internal constructor(
     internal var loadNextOffsetId = 0L
     internal var lastSyncCenterOffsetId = 0L
 
-    private val myId: String? get() = SceytChatUIKit.chatUIFacade.myId
+    private val myId: String? get() = userInteractor.getCurrentUserId()
     val channel: SceytChannel get() = _channel
     val conversationId: Long get() = _conversationId
     val state get() = store.state
@@ -1376,7 +1376,7 @@ class MessageListViewModel internal constructor(
         conversationId = { conversationId },
         updateChannel = { action -> updateChannel(action) },
         onScrollToMention = { scrollToMessageBy(it, addToPendingDisplay = true) },
-        currentUserId = { SceytChatUIKit.currentUserId },
+        currentUserId = { userInteractor.getCurrentUserId() },
     )
 
     private fun createMessageSearchController() = MessageSearchController(
