@@ -56,6 +56,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import java.util.UUID
 import kotlin.reflect.KClass
@@ -76,6 +77,8 @@ class CallManagerImpl(
         private const val TAG = "CallManagerImpl"
         private const val CALL_LISTENER_KEY = "call_manager_listener"
         private const val CALL_CLIENT_LISTENER_KEY = "app_call_listener"
+        private const val DTMF_FEEDBACK_DURATION_MS = 100
+        private const val DTMF_FEEDBACK_VOLUME = 80
     }
 
     private data class UserInfo(
@@ -324,6 +327,28 @@ class CallManagerImpl(
         } catch (e: Exception) {
             Log.e(TAG, "Error switching camera", e)
             Result.failure(e)
+        }
+    }
+
+    override suspend fun sendDtmf(
+        tone: Char
+    ): SceytCallResult<Unit> = withContext(Dispatchers.IO) {
+        val call = _currentCall ?: return@withContext SceytCallResult.Failure(
+            SceytCallException.IllegalState("No active call")
+        )
+
+        playDtmfFeedbackTone(tone)
+
+        call.sendDtmf(tone.toString())
+    }
+
+    private suspend fun playDtmfFeedbackTone(tone: Char) {
+        toneManager.playDtmfTone(
+            tone = tone,
+            durationMs = DTMF_FEEDBACK_DURATION_MS,
+            volume = DTMF_FEEDBACK_VOLUME
+        ).onFailure {
+            Log.w(TAG, "Failed to play DTMF feedback tone", it)
         }
     }
 

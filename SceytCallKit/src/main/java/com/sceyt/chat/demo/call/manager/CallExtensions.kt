@@ -6,6 +6,9 @@ import com.sceyt.chat.models.signal.MediaFlow
 internal val Call.isGroupCall: Boolean
     get() = mediaFlow == MediaFlow.SFU
 
+internal val Call.isS2WCall: Boolean
+    get() = mediaFlow == MediaFlow.S2W
+
 val Call.isDirectCall: Boolean
     get() = !isGroupCall
 

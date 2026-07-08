@@ -138,6 +138,7 @@ fun CallScreen(
                     onToggleMute = viewModel::onToggleMute,
                     onToggleCamera = onToggleCameraWithPermission,
                     onSwitchCamera = viewModel::onSwitchCamera,
+                    onSendDtmf = viewModel::onSendDtmf,
                     onSelectDevice = viewModel::onSelectAudioDevice,
                     onEndCall = viewModel::onEndCallClick,
                 )
