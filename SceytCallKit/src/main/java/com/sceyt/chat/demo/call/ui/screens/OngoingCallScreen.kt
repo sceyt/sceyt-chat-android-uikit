@@ -77,7 +77,6 @@ import com.sceyt.chat.demo.call.manager.displayTitle
 import com.sceyt.chat.demo.call.manager.isGroupCall
 import com.sceyt.chat.demo.call.manager.isS2WCall
 import com.sceyt.chat.demo.call.manager.isVideoCall
-import com.sceyt.chat.demo.call.ui.components.AudioDeviceSelector
 import com.sceyt.chat.demo.call.ui.components.CallActionButton
 import com.sceyt.chat.demo.call.ui.components.LocalVideoPreview
 import com.sceyt.chat.demo.call.ui.components.RemoteVideoView
@@ -108,6 +107,7 @@ fun OngoingCallScreen(
     onToggleCamera: () -> Unit,
     onSwitchCamera: () -> Unit,
     onSendDtmf: (Char) -> Unit,
+    onToggleSpeaker: () -> Unit,
     onSelectDevice: (AudioDevice) -> Unit,
     onEndCall: () -> Unit,
 ) {
@@ -119,6 +119,7 @@ fun OngoingCallScreen(
             onToggleMute = onToggleMute,
             onToggleCamera = onToggleCamera,
             onSwitchCamera = onSwitchCamera,
+            onToggleSpeaker = onToggleSpeaker,
             onSelectDevice = onSelectDevice,
             onEndCall = onEndCall,
         )
@@ -133,6 +134,7 @@ fun OngoingCallScreen(
         onToggleCamera = onToggleCamera,
         onSwitchCamera = onSwitchCamera,
         onSendDtmf = onSendDtmf,
+        onToggleSpeaker = onToggleSpeaker,
         onSelectDevice = onSelectDevice,
         onEndCall = onEndCall
     )
@@ -147,6 +149,7 @@ private fun DirectOngoingCallScreen(
     onToggleCamera: () -> Unit,
     onSwitchCamera: () -> Unit,
     onSendDtmf: (Char) -> Unit,
+    onToggleSpeaker: () -> Unit,
     onSelectDevice: (AudioDevice) -> Unit,
     onEndCall: () -> Unit
 ) {
@@ -168,7 +171,6 @@ private fun DirectOngoingCallScreen(
         else -> hasRemoteVideo || hasLocalVideo
     }
 
-    var showAudioDeviceSelector by remember { mutableStateOf(false) }
     var showDtmfPanel by remember { mutableStateOf(false) }
     var showControls by remember { mutableStateOf(true) }
     val isS2WCall = callState.call?.isS2WCall == true
@@ -191,82 +193,80 @@ private fun DirectOngoingCallScreen(
         showControls = true
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        if (showVideoLayout) {
-            DirectVideoOngoingLayout(
-                callState = callState,
-                remoteName = remoteName,
-                duration = duration,
-                remoteParticipant = remoteParticipant,
-                localParticipant = local,
-                showControls = controlsVisible,
-                onTap = { showControls = !showControls }
-            )
-        } else {
-            DirectAudioOngoingLayout(
-                callState = callState,
-                remoteName = remoteName,
-                remoteAvatar = remoteAvatar,
-                isRemoteMuted = remoteParticipant?.isMuted == true,
-                duration = duration,
-                showAvatar = !showDtmfPanel
-            )
-        }
+    CallAudioRoutePicker(
+        availableDevices = availableDevices,
+        selectedDevice = selectedDevice,
+        onToggleSpeaker = onToggleSpeaker,
+        onSelectDevice = onSelectDevice
+    ) { onAudioRouteClick ->
+        Box(modifier = Modifier.fillMaxSize()) {
+            if (showVideoLayout) {
+                DirectVideoOngoingLayout(
+                    callState = callState,
+                    remoteName = remoteName,
+                    duration = duration,
+                    remoteParticipant = remoteParticipant,
+                    localParticipant = local,
+                    showControls = controlsVisible,
+                    onTap = { showControls = !showControls }
+                )
+            } else {
+                DirectAudioOngoingLayout(
+                    callState = callState,
+                    remoteName = remoteName,
+                    remoteAvatar = remoteAvatar,
+                    isRemoteMuted = remoteParticipant?.isMuted == true,
+                    duration = duration,
+                    showAvatar = !showDtmfPanel
+                )
+            }
 
-        AnimatedVisibility(
-            visible = showDtmfPanel,
-            enter = fadeIn() + slideInVertically { it / 3 },
-            exit = fadeOut() + slideOutVertically { it / 3 },
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .navigationBarsPadding()
-                .padding(bottom = 104.dp)
-                .padding(horizontal = 12.dp)
-        ) {
-            DtmfPanel(
-                isDtmfEnabled = callState.phase == CallUiState.CallPhase.Connected,
-                onToneClick = onSendDtmf
-            )
-        }
-
-        AnimatedVisibility(
-            visible = controlsVisible,
-            enter = fadeIn() + slideInVertically { it },
-            exit = fadeOut() + slideOutVertically { it },
-            modifier = Modifier.align(Alignment.BottomCenter)
-        ) {
-            CallControlBar(
+            AnimatedVisibility(
+                visible = showDtmfPanel,
+                enter = fadeIn() + slideInVertically { it / 3 },
+                exit = fadeOut() + slideOutVertically { it / 3 },
                 modifier = Modifier
+                    .align(Alignment.BottomCenter)
                     .navigationBarsPadding()
-                    .padding(bottom = 12.dp)
-                    .padding(horizontal = 12.dp),
-                isMuted = local?.isMuted == true,
-                selectedAudioDevice = selectedDevice,
-                isVideoEnabled = local?.isVideoEnabled == true,
-                videoDisabled = !isConnected
-                        || (!callState.isOwner && (!callState.callPermissions.allowPublishVideo
-                        || local?.canPublishVideo == false)),
-                showDtmfButton = isS2WCall,
-                isDtmfSelected = showDtmfPanel,
-                dtmfDisabled = !showDtmfPanel && callState.phase != CallUiState.CallPhase.Connected,
-                muteDisabled = !callState.isOwner && (!callState.callPermissions.allowPublishAudio
-                        || local?.canPublishAudio == false),
-                onToggleMute = onToggleMute,
-                onToggleSpeaker = { showAudioDeviceSelector = true },
-                onToggleVideo = onToggleCamera,
-                onOpenDtmf = ::toggleDtmfPanel,
-                onHangup = onEndCall,
-                onFlipCamera = onSwitchCamera
-            )
-        }
+                    .padding(bottom = 104.dp)
+                    .padding(horizontal = 12.dp)
+            ) {
+                DtmfPanel(
+                    isDtmfEnabled = callState.phase == CallUiState.CallPhase.Connected,
+                    onToneClick = onSendDtmf
+                )
+            }
 
-        if (showAudioDeviceSelector) {
-            AudioDeviceSelector(
-                availableDevices = availableDevices,
-                selectedDevice = selectedDevice,
-                onDeviceSelected = onSelectDevice,
-                onDismiss = { showAudioDeviceSelector = false }
-            )
+            AnimatedVisibility(
+                visible = controlsVisible,
+                enter = fadeIn() + slideInVertically { it },
+                exit = fadeOut() + slideOutVertically { it },
+                modifier = Modifier.align(Alignment.BottomCenter)
+            ) {
+                CallControlBar(
+                    modifier = Modifier
+                        .navigationBarsPadding()
+                        .padding(bottom = 12.dp)
+                        .padding(horizontal = 12.dp),
+                    isMuted = local?.isMuted == true,
+                    selectedAudioDevice = selectedDevice,
+                    isVideoEnabled = local?.isVideoEnabled == true,
+                    videoDisabled = !isConnected
+                            || (!callState.isOwner && (!callState.callPermissions.allowPublishVideo
+                            || local?.canPublishVideo == false)),
+                    showDtmfButton = isS2WCall,
+                    isDtmfSelected = showDtmfPanel,
+                    dtmfDisabled = !showDtmfPanel && callState.phase != CallUiState.CallPhase.Connected,
+                    muteDisabled = !callState.isOwner && (!callState.callPermissions.allowPublishAudio
+                            || local?.canPublishAudio == false),
+                    onToggleMute = onToggleMute,
+                    onToggleSpeaker = onAudioRouteClick,
+                    onToggleVideo = onToggleCamera,
+                    onOpenDtmf = ::toggleDtmfPanel,
+                    onHangup = onEndCall,
+                    onFlipCamera = onSwitchCamera
+                )
+            }
         }
     }
 }
@@ -724,6 +724,7 @@ private fun OngoingCallScreenPreview(
         onToggleCamera = {},
         onSwitchCamera = {},
         onSendDtmf = {},
+        onToggleSpeaker = {},
         onSelectDevice = {},
         onEndCall = {}
     )
