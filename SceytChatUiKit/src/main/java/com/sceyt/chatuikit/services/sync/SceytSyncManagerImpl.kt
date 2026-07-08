@@ -149,7 +149,6 @@ internal class SceytSyncManagerImpl(
 
         val lastMessageId = channel.lastMessage.id
         if (channelSyncStateStore.isMessagesSynced(channel.id, lastMessageId)) {
-            SceytLog.d(TAG, "Messages are up to date, skipping sync for channel ${channel.id}")
             return 0
         }
 
