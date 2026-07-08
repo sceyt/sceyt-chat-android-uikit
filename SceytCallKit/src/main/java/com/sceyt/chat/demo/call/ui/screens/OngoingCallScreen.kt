@@ -8,8 +8,10 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateOffsetAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
@@ -36,6 +38,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.BluetoothAudio
+import androidx.compose.material.icons.filled.Dialpad
 import androidx.compose.material.icons.filled.Headset
 import androidx.compose.material.icons.filled.MicOff
 import androidx.compose.material3.Icon
@@ -72,6 +75,7 @@ import com.sceyt.chat.demo.call.manager.CallParticipantUiState
 import com.sceyt.chat.demo.call.manager.CallUiState
 import com.sceyt.chat.demo.call.manager.displayTitle
 import com.sceyt.chat.demo.call.manager.isGroupCall
+import com.sceyt.chat.demo.call.manager.isS2WCall
 import com.sceyt.chat.demo.call.manager.isVideoCall
 import com.sceyt.chat.demo.call.ui.components.AudioDeviceSelector
 import com.sceyt.chat.demo.call.ui.components.CallActionButton
@@ -103,6 +107,7 @@ fun OngoingCallScreen(
     onToggleMute: () -> Unit,
     onToggleCamera: () -> Unit,
     onSwitchCamera: () -> Unit,
+    onSendDtmf: (Char) -> Unit,
     onSelectDevice: (AudioDevice) -> Unit,
     onEndCall: () -> Unit,
 ) {
@@ -127,6 +132,7 @@ fun OngoingCallScreen(
         onToggleMute = onToggleMute,
         onToggleCamera = onToggleCamera,
         onSwitchCamera = onSwitchCamera,
+        onSendDtmf = onSendDtmf,
         onSelectDevice = onSelectDevice,
         onEndCall = onEndCall
     )
@@ -140,6 +146,7 @@ private fun DirectOngoingCallScreen(
     onToggleMute: () -> Unit,
     onToggleCamera: () -> Unit,
     onSwitchCamera: () -> Unit,
+    onSendDtmf: (Char) -> Unit,
     onSelectDevice: (AudioDevice) -> Unit,
     onEndCall: () -> Unit
 ) {
@@ -162,7 +169,9 @@ private fun DirectOngoingCallScreen(
     }
 
     var showAudioDeviceSelector by remember { mutableStateOf(false) }
+    var showDtmfPanel by remember { mutableStateOf(false) }
     var showControls by remember { mutableStateOf(true) }
+    val isS2WCall = callState.call?.isS2WCall == true
 
     LaunchedEffect(showControls, isConnected, showVideoLayout) {
         if (showControls && isConnected && showVideoLayout) {
@@ -171,7 +180,16 @@ private fun DirectOngoingCallScreen(
         }
     }
 
-    val controlsVisible = !showVideoLayout || !isConnected || showControls
+    LaunchedEffect(isS2WCall) {
+        if (!isS2WCall) showDtmfPanel = false
+    }
+
+    val controlsVisible = !showVideoLayout || !isConnected || showControls || showDtmfPanel
+
+    fun toggleDtmfPanel() {
+        showDtmfPanel = !showDtmfPanel
+        showControls = true
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         if (showVideoLayout) {
@@ -190,7 +208,24 @@ private fun DirectOngoingCallScreen(
                 remoteName = remoteName,
                 remoteAvatar = remoteAvatar,
                 isRemoteMuted = remoteParticipant?.isMuted == true,
-                duration = duration
+                duration = duration,
+                showAvatar = !showDtmfPanel
+            )
+        }
+
+        AnimatedVisibility(
+            visible = showDtmfPanel,
+            enter = fadeIn() + slideInVertically { it / 3 },
+            exit = fadeOut() + slideOutVertically { it / 3 },
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .navigationBarsPadding()
+                .padding(bottom = 104.dp)
+                .padding(horizontal = 12.dp)
+        ) {
+            DtmfPanel(
+                isDtmfEnabled = callState.phase == CallUiState.CallPhase.Connected,
+                onToneClick = onSendDtmf
             )
         }
 
@@ -203,19 +238,23 @@ private fun DirectOngoingCallScreen(
             CallControlBar(
                 modifier = Modifier
                     .navigationBarsPadding()
-                    .padding(bottom = 10.dp)
-                    .padding(horizontal = 16.dp),
+                    .padding(bottom = 12.dp)
+                    .padding(horizontal = 12.dp),
                 isMuted = local?.isMuted == true,
                 selectedAudioDevice = selectedDevice,
                 isVideoEnabled = local?.isVideoEnabled == true,
                 videoDisabled = !isConnected
-                    || (!callState.isOwner && (!callState.callPermissions.allowPublishVideo
+                        || (!callState.isOwner && (!callState.callPermissions.allowPublishVideo
                         || local?.canPublishVideo == false)),
+                showDtmfButton = isS2WCall,
+                isDtmfSelected = showDtmfPanel,
+                dtmfDisabled = !showDtmfPanel && callState.phase != CallUiState.CallPhase.Connected,
                 muteDisabled = !callState.isOwner && (!callState.callPermissions.allowPublishAudio
-                    || local?.canPublishAudio == false),
+                        || local?.canPublishAudio == false),
                 onToggleMute = onToggleMute,
                 onToggleSpeaker = { showAudioDeviceSelector = true },
                 onToggleVideo = onToggleCamera,
+                onOpenDtmf = ::toggleDtmfPanel,
                 onHangup = onEndCall,
                 onFlipCamera = onSwitchCamera
             )
@@ -238,7 +277,8 @@ private fun DirectAudioOngoingLayout(
     remoteName: String,
     remoteAvatar: String?,
     isRemoteMuted: Boolean,
-    duration: String
+    duration: String,
+    showAvatar: Boolean
 ) {
     val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
 
@@ -257,12 +297,20 @@ private fun DirectAudioOngoingLayout(
         ) {
             Spacer(modifier = Modifier.fillMaxHeight(0.15f))
 
-            UserAvatarWithOuter(
-                avatarUrl = remoteAvatar,
-                name = remoteName
-            )
+            AnimatedVisibility(
+                visible = showAvatar,
+                enter = fadeIn() + expandVertically(expandFrom = Alignment.Top),
+                exit = fadeOut() + shrinkVertically(shrinkTowards = Alignment.Top)
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    UserAvatarWithOuter(
+                        avatarUrl = remoteAvatar,
+                        name = remoteName
+                    )
 
-            Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
+                }
+            }
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -325,8 +373,10 @@ private fun DirectVideoOngoingLayout(
 ) {
     val hasRemoteVideo = remoteParticipant?.videoTrack != null && remoteParticipant.isVideoEnabled
     val hasLocalVideo = localParticipant?.shouldShowLocalPreview == true
-    val stableRemoteTrack = remember(remoteParticipant?.videoTrack) { StableVideoTrack(remoteParticipant?.videoTrack?.videoTrack) }
-    val stableLocalTrack = remember(localParticipant?.videoTrack) { StableVideoTrack(localParticipant?.videoTrack?.videoTrack) }
+    val stableRemoteTrack =
+        remember(remoteParticipant?.videoTrack) { StableVideoTrack(remoteParticipant?.videoTrack?.videoTrack) }
+    val stableLocalTrack =
+        remember(localParticipant?.videoTrack) { StableVideoTrack(localParticipant?.videoTrack?.videoTrack) }
 
     Box(
         modifier = Modifier
@@ -433,10 +483,14 @@ fun CallControlBar(
     selectedAudioDevice: AudioDevice? = null,
     isVideoEnabled: Boolean = false,
     videoDisabled: Boolean = false,
+    showDtmfButton: Boolean = false,
+    isDtmfSelected: Boolean = false,
+    dtmfDisabled: Boolean = false,
     muteDisabled: Boolean = false,
     onToggleMute: () -> Unit = {},
     onToggleSpeaker: () -> Unit = {},
     onToggleVideo: () -> Unit = {},
+    onOpenDtmf: () -> Unit = {},
     onHangup: () -> Unit = {},
     onFlipCamera: () -> Unit = {}
 ) {
@@ -457,8 +511,8 @@ fun CallControlBar(
             modifier = modifier
                 .fillMaxWidth()
                 .background(CallColors.ActionBarBg, RoundedCornerShape(20.dp))
-                .padding(vertical = 16.dp),
-            horizontalArrangement = Arrangement.SpaceAround,
+                .padding(horizontal = 16.dp, vertical = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (isVideoEnabled) {
@@ -521,17 +575,31 @@ fun CallControlBar(
                 )
             }
 
-            CallActionButton(
-                modifier = animationModifier,
-                iconRes = R.drawable.ic_call_video,
-                backgroundColor = if (isVideoEnabled) Color.White else CallColors.ButtonSurface,
-                iconTint = if (isVideoEnabled) CallColors.BackgroundDark else Color.White,
-                contentDescription = "Video",
-                onClick = onToggleVideo,
-                size = 48.dp,
-                iconSize = 28.dp,
-                enabled = !videoDisabled
-            )
+            if (showDtmfButton) {
+                CallActionButton(
+                    modifier = animationModifier,
+                    icon = Icons.Default.Dialpad,
+                    backgroundColor = if (isDtmfSelected) Color.White else CallColors.ButtonSurface,
+                    iconTint = if (isDtmfSelected) CallColors.BackgroundDark else Color.White,
+                    contentDescription = "Open keypad",
+                    onClick = onOpenDtmf,
+                    size = 48.dp,
+                    iconSize = 28.dp,
+                    enabled = !dtmfDisabled
+                )
+            } else {
+                CallActionButton(
+                    modifier = animationModifier,
+                    iconRes = R.drawable.ic_call_video,
+                    backgroundColor = if (isVideoEnabled) Color.White else CallColors.ButtonSurface,
+                    iconTint = if (isVideoEnabled) CallColors.BackgroundDark else Color.White,
+                    contentDescription = "Video",
+                    onClick = onToggleVideo,
+                    size = 48.dp,
+                    iconSize = 28.dp,
+                    enabled = !videoDisabled
+                )
+            }
 
             CallActionButton(
                 modifier = Modifier.animateBounds(
@@ -655,6 +723,7 @@ private fun OngoingCallScreenPreview(
         onToggleMute = {},
         onToggleCamera = {},
         onSwitchCamera = {},
+        onSendDtmf = {},
         onSelectDevice = {},
         onEndCall = {}
     )
