@@ -87,6 +87,13 @@ class CallViewModel(
         callManager.switchCamera()
     }
 
+    fun onSendDtmf(tone: Char) {
+        viewModelScope.launch {
+            callManager.sendDtmf(tone)
+                .emitFailure("Failed to send DTMF")
+        }
+    }
+
     fun onToggleSpeaker(): Boolean = callManager.toggleSpeaker()
 
     fun onSelectAudioDevice(device: AudioDevice) {

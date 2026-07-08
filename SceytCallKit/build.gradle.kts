@@ -35,7 +35,7 @@ dependencies {
     implementation(project(":SceytChatUiKit"))
 
     api(libs.sceyt.call.android.sdk)
-    implementation(libs.sceyt.tonemanager.android.sdk)
+    implementation(libs.sceyt.toneplayer.android.sdk)
 
     // WorkManager
     implementation(libs.work.runtime.ktx)
