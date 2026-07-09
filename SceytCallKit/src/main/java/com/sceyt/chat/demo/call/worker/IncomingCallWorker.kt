@@ -21,6 +21,7 @@ import com.sceyt.chat.demo.call.manager.CallUiState
 import com.sceyt.chat.demo.call.manager.CallUiState.CallPhase
 import com.sceyt.chat.demo.call.manager.displayTitle
 import com.sceyt.chat.demo.call.manager.isVideoCall
+import com.sceyt.chat.demo.call.manager.resolveStatusText
 import com.sceyt.chat.demo.call.notification.CallNotificationChannels
 import com.sceyt.chat.demo.call.notification.CallNotificationManager
 import com.sceyt.chatuikit.extensions.isAppOnForeground
@@ -31,7 +32,7 @@ import org.koin.core.component.inject
 /**
  * WorkManager worker that maintains a foreground service during an incoming call (ringing phase).
  * Uses FOREGROUND_SERVICE_TYPE_PHONE_CALL only — the microphone is not yet in use.
- * Stops automatically when the call phase transitions away from Incoming (answered or declined).
+ * Stops automatically when the call transitions away from the incoming/answering phase.
  */
 class IncomingCallWorker(
     context: Context,
@@ -81,9 +82,11 @@ class IncomingCallWorker(
             setForeground(foregroundInfo)
             setProgress(workDataOf(KEY_FOREGROUND_READY to true))
 
-            // Re-notify as caller name/avatar arrive via async user info fetch
+            // Re-notify as caller name/avatar arrive via async user info fetch.
+            // Keep this worker alive while answering so WorkManager does not stop its shared
+            // foreground service before OngoingCallWorker promotes its own ForegroundInfo.
             callManager.callUiState
-                .takeWhile { it.phase == CallPhase.Incoming }
+                .takeWhile { it.phase == CallPhase.Incoming || it.phase == CallPhase.Connecting }
                 .collect { state ->
                     systemNotificationManager?.notify(
                         CallNotificationChannels.CALL_NOTIFICATION_ID,
@@ -91,24 +94,31 @@ class IncomingCallWorker(
                     )
                 }
 
-            Log.d(TAG, "doWork completed — call is no longer Incoming")
+            Log.d(TAG, "doWork completed — call is no longer incoming or connecting")
             return Result.success()
         } catch (e: Exception) {
             Log.e(TAG, "doWork error", e)
             return Result.failure()
-        } finally {
-            systemNotificationManager?.cancel(CallNotificationChannels.CALL_NOTIFICATION_ID)
         }
     }
 
     private fun buildNotification(
         state: CallUiState = callManager.callUiState.value
     ): Notification {
-        return notificationManager.buildIncomingCallNotification(
-            callerName = state.call?.displayTitle(state.remoteParticipants)
-                ?: state.remoteParticipant?.displayName.orEmpty(),
-            isVideo = state.call?.isVideoCall == true,
-            suppressFullScreenIntent = applicationContext.isAppOnForeground()
-        )
+        val title = state.call?.displayTitle(state.remoteParticipants)
+            ?: state.remoteParticipant?.displayName.orEmpty()
+
+        return when (state.phase) {
+            CallPhase.Incoming -> notificationManager.buildIncomingCallNotification(
+                callerName = title,
+                isVideo = state.call?.isVideoCall == true,
+                suppressFullScreenIntent = applicationContext.isAppOnForeground()
+            )
+
+            else -> notificationManager.buildConnectingNotification(
+                title = title,
+                statusText = state.resolveStatusText("00:00").ifBlank { "Call in progress" }
+            )
+        }
     }
 }

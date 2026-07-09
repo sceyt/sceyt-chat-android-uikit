@@ -459,7 +459,11 @@ class MessagesListView @JvmOverloads constructor(
         val holder = messagesRV.findViewHolderForItemId(item.getItemId()) as? BaseMessageViewHolder
         if (holder != null) {
             holder.bind(item, diff)
-        } else messagesRV.adapter?.notifyItemChanged(index, diff)
+        } else {
+            val currentIndex = messagesRV.getData().indexOfFirst { it.getItemId() == item.getItemId() }
+                .takeIf { it >= 0 } ?: index
+            messagesRV.adapter?.notifyItemChanged(currentIndex, diff)
+        }
     }
 
     private fun notifyItemUpdatedToVisibleItems(item: MessageListItem) {
@@ -491,8 +495,11 @@ class MessagesListView @JvmOverloads constructor(
     ) {
         if (data.isEmpty()) return
         messagesRV.awaitAnimationEnd {
-            messagesRV.addPreparedNewMessages(items = data, lifecycleScope = lifecycleScope)
-            addedCallback.invoke()
+            messagesRV.addPreparedNewMessages(
+                items = data,
+                lifecycleScope = lifecycleScope,
+                commitCallback = addedCallback
+            )
         }
     }
 
@@ -747,10 +754,6 @@ class MessagesListView @JvmOverloads constructor(
 
     internal fun getMessageCommandEventListener() = messageCommandEventListener
 
-    internal fun updateItemAt(index: Int, item: MessageItem) {
-        updateAdapterItemNotifyVisible(index, item)
-    }
-
     internal fun renderItemUpdate(
         index: Int,
         item: MessageItem,
@@ -770,17 +773,25 @@ class MessagesListView @JvmOverloads constructor(
         diff: MessageDiff?,
         notify: Boolean = true
     ) {
-        messagesRV.updateItemAt(index, item)
-        if (notify) {
-            if (diff == null)
-                messagesRV.adapter?.notifyItemChanged(index)
-            else updateItem(index, item, diff)
+        messagesRV.awaitUpdating {
+            val currentIndex = messagesRV.replaceMessageItem(item, index)
+            if (currentIndex == RecyclerView.NO_POSITION)
+                return@awaitUpdating
+
+            if (notify) {
+                if (diff == null)
+                    messagesRV.adapter?.notifyItemChanged(currentIndex)
+                else updateItem(currentIndex, item, diff)
+            }
         }
     }
 
     private fun updateAdapterItemNotifyVisible(index: Int, item: MessageItem) {
-        messagesRV.updateItemAt(index, item)
-        notifyItemUpdatedToVisibleItems(item)
+        messagesRV.awaitUpdating {
+            val currentIndex = messagesRV.replaceMessageItem(item, index)
+            if (currentIndex != RecyclerView.NO_POSITION)
+                notifyItemUpdatedToVisibleItems(item)
+        }
     }
 
     fun hideLoadingPrev() {
@@ -1247,7 +1258,7 @@ class MessagesListView @JvmOverloads constructor(
             oldTop = oldTop,
             getNewTop = { holder.itemView.top },
             onUpdate = {
-                messagesRV.updateItemAt(position, expandedItem)
+                messagesRV.replaceMessageItem(expandedItem, position)
                 holder.bind(expandedItem, MessageDiff.DEFAULT_FALSE.copy(bodyChanged = true))
             }
         )
