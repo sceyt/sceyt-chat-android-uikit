@@ -25,6 +25,8 @@ import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.sceyt.chat.demo.call.manager.CallUiState
 import com.sceyt.chat.demo.call.manager.isGroupCall
 import com.sceyt.chat.demo.call.manager.isVideoCall
@@ -32,6 +34,8 @@ import com.sceyt.chat.demo.call.ui.screens.CallScreen
 import com.sceyt.chat.demo.call.ui.theme.CallTheme
 import com.sceyt.chatuikit.extensions.applySystemBarsStyle
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 /**
@@ -43,6 +47,9 @@ class CallActivity : ComponentActivity() {
     private val viewModel: CallViewModel by viewModel()
 
     private val isPipMode = MutableStateFlow(false)
+    private val proximityWakeLockController by lazy {
+        CallProximityWakeLockController(this)
+    }
 
     // Used for the notification "Answer" action — requests mic (required) and camera (video only).
     // Answer proceeds only if microphone is granted.
@@ -82,6 +89,8 @@ class CallActivity : ComponentActivity() {
             answerWithPermissionsIfNeeded()
         }
 
+        observeProximityWakeLock()
+
         setContent {
             CallTheme(darkTheme = true) {
                 Surface(
@@ -104,6 +113,28 @@ class CallActivity : ComponentActivity() {
                     if (callState.phase == CallUiState.CallPhase.Idle) {
                         finishAndRemoveTask()
                     }
+                }
+            }
+        }
+    }
+
+    private fun observeProximityWakeLock() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                try {
+                    combine(
+                        viewModel.callUiState,
+                        viewModel.selectedAudioDevice,
+                        isPipMode
+                    ) { callState, selectedAudioDevice, isInPictureInPictureMode ->
+                        shouldEnableProximityWakeLock(
+                            callState = callState,
+                            selectedAudioDevice = selectedAudioDevice,
+                            isInPictureInPictureMode = isInPictureInPictureMode,
+                        )
+                    }.collect(proximityWakeLockController::setEnabled)
+                } finally {
+                    proximityWakeLockController.release()
                 }
             }
         }
@@ -300,6 +331,7 @@ class CallActivity : ComponentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        proximityWakeLockController.release()
         // Worker will stop itself when call ends
     }
 
