@@ -299,12 +299,14 @@ class MessagesRV @JvmOverloads constructor(
 
     fun addPreparedNewMessages(
         vararg items: MessageListItem,
-        lifecycleScope: LifecycleCoroutineScope
+        lifecycleScope: LifecycleCoroutineScope,
+        commitCallback: (() -> Unit)? = null,
     ) {
-        if (::mAdapter.isInitialized.not())
+        if (::mAdapter.isInitialized.not()) {
             setData(items.toList(), lifecycleScope)
-        else {
-            mAdapter.addPreparedNewMessages(items.toList())
+            commitCallback?.invoke()
+        } else {
+            mAdapter.addPreparedNewMessages(items.toList(), commitCallback)
         }
     }
 
@@ -428,8 +430,12 @@ class MessagesRV @JvmOverloads constructor(
 
     fun getMessagesAdapter() = if (::mAdapter.isInitialized) mAdapter else null
 
-    fun updateItemAt(index: Int, updatedItem: MessageListItem.MessageItem) {
-        if (::mAdapter.isInitialized)
-            mAdapter.updateItemAt(index, updatedItem)
+    fun replaceMessageItem(
+        updatedItem: MessageListItem.MessageItem,
+        positionHint: Int = NO_POSITION,
+    ): Int {
+        return if (::mAdapter.isInitialized)
+            mAdapter.replaceMessageItem(updatedItem, positionHint)
+        else NO_POSITION
     }
 }

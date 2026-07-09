@@ -10,6 +10,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytMessageType
 import com.sceyt.chatuikit.extensions.dispatchUpdatesToSafetySuspend
 import com.sceyt.chatuikit.extensions.findIndexed
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
+import com.sceyt.chatuikit.persistence.differs.diff
 import com.sceyt.chatuikit.presentation.common.collections.SyncArrayList
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem.MessageItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMessageViewHolder
@@ -98,54 +99,140 @@ class MessagesAdapter(
     }
 
     fun removeLoadingNext() {
+        removeLoadingNextNow()
+    }
+
+    private fun removeLoadingNextNow() {
         messages.findIndexed { it is MessageListItem.LoadingNextItem }?.let {
             if (messages.remove(loadingNextItem))
                 notifyItemRemoved(it.first)
         }
     }
 
-    fun addNextPageMessagesList(items: List<MessageListItem>) {
-        removeLoadingNext()
-        if (items.isEmpty()) return
+    fun addNextPageMessagesList(
+        items: List<MessageListItem>,
+        commitCallback: (() -> Unit)? = null,
+    ) {
+        awaitUpdating {
+            removeLoadingNextNow()
+            if (items.isEmpty()) {
+                commitCallback?.invoke()
+                return@awaitUpdating
+            }
 
-        val insertStart = messages.size
-        messages.addAll(items)
-        notifyItemRangeInserted(insertStart, items.size)
-        onListCommittedListener?.invoke()
-    }
-
-    fun addPreparedNewMessages(items: List<MessageListItem>) {
-        removeLoadingNext()
-        if (items.isEmpty()) return
-
-        val insertStart = messages.size
-        messages.addAll(items)
-        notifyItemRangeInserted(insertStart, items.size)
-        onListCommittedListener?.invoke()
-    }
-
-    fun updateItemAt(index: Int, updatedItem: MessageItem) {
-        try {
-            messages[index] = updatedItem
-        } catch (e: Exception) {
-            e.printStackTrace()
+            val itemsToAppend = updateExistingAndFilterNew(items)
+            if (itemsToAppend.isNotEmpty()) {
+                val insertStart = messages.size
+                messages.addAll(itemsToAppend)
+                notifyItemRangeInserted(insertStart, itemsToAppend.size)
+            }
+            onListCommittedListener?.invoke()
+            commitCallback?.invoke()
         }
     }
 
-    fun notifyUpdate(messages: List<MessageListItem>) {
+    fun addPreparedNewMessages(
+        items: List<MessageListItem>,
+        commitCallback: (() -> Unit)? = null,
+    ) {
+        awaitUpdating {
+            removeLoadingNextNow()
+            if (items.isEmpty()) {
+                commitCallback?.invoke()
+                return@awaitUpdating
+            }
+
+            val itemsToAppend = updateExistingAndFilterNew(items)
+            if (itemsToAppend.isNotEmpty()) {
+                val insertStart = messages.size
+                messages.addAll(itemsToAppend)
+                notifyItemRangeInserted(insertStart, itemsToAppend.size)
+            }
+            onListCommittedListener?.invoke()
+            commitCallback?.invoke()
+        }
+    }
+
+    fun replaceMessageItem(
+        updatedItem: MessageItem,
+        positionHint: Int = RecyclerView.NO_POSITION,
+    ): Int {
+        val currentIndex = resolveMessageIndex(positionHint, updatedItem.message.tid)
+        if (currentIndex != RecyclerView.NO_POSITION)
+            messages[currentIndex] = updatedItem
+        return currentIndex
+    }
+
+    private fun resolveMessageIndex(positionHint: Int, tid: Long): Int {
+        val hintedItem = messages.getOrNull(positionHint) as? MessageItem
+        if (hintedItem?.message?.tid == tid)
+            return positionHint
+
+        return messages.indexOfFirst {
+            it is MessageItem && it.message.tid == tid
+        }.takeIf { it >= 0 } ?: RecyclerView.NO_POSITION
+    }
+
+    private fun updateExistingAndFilterNew(items: List<MessageListItem>): List<MessageListItem> {
+        if (items.isEmpty()) return items
+
+        // Index existing message items once: O(n) instead of O(n) per incoming item.
+        val existingIndexByTid = HashMap<Long, Int>()
+        val existingSeparatorTids = HashSet<Long>()
+        messages.forEachIndexed { index, item ->
+            when (item) {
+                is MessageItem -> existingIndexByTid[item.message.tid] = index
+                is MessageListItem.DateSeparatorItem -> existingSeparatorTids.add(item.messageTid)
+                else -> Unit
+            }
+        }
+
+        val duplicateTids = HashSet<Long>()
+        items.forEach { item ->
+            if (item is MessageItem && existingIndexByTid.containsKey(item.message.tid))
+                duplicateTids.add(item.message.tid)
+        }
+
+        if (duplicateTids.isEmpty())
+            return items
+
+        // Update the already-present items in place.
+        items.forEach { item ->
+            if (item is MessageItem && item.message.tid in duplicateTids) {
+                val index = existingIndexByTid[item.message.tid] ?: return@forEach
+                val oldItem = messages[index] as? MessageItem
+                messages[index] = item
+                val diff = oldItem?.message?.diff(item.message)
+                if (diff?.hasDifference() == true)
+                    notifyItemChanged(index, diff)
+            }
+        }
+
+        return items.filterNot { item ->
+            when (item) {
+                is MessageItem -> item.message.tid in duplicateTids
+                is MessageListItem.DateSeparatorItem ->
+                    item.messageTid in duplicateTids || item.messageTid in existingSeparatorTids
+
+                else -> false
+            }
+        }
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    fun notifyUpdate(newMessages: List<MessageListItem>) {
         updateJob?.cancel()
-        updateJob = scope.launch {
-            var productDiffResult: DiffUtil.DiffResult
-            withContext(backgroundDispatcher) {
-                val myDiffUtil =
-                    MessagesDiffUtil(ArrayList(this@MessagesAdapter.messages), messages)
-                productDiffResult = DiffUtil.calculateDiff(myDiffUtil, true)
+        updateJob = scope.launch(mainDispatcher) {
+            // Snapshot on main, then wait append/update operations until this job commits.
+            val oldList = ArrayList(messages)
+            val targetList = newMessages.toList()
+            val productDiffResult = withContext(backgroundDispatcher) {
+                DiffUtil.calculateDiff(MessagesDiffUtil(oldList, targetList), true)
             }
-            withContext(mainDispatcher) {
-                this@MessagesAdapter.messages = SyncArrayList(messages)
-                productDiffResult.dispatchUpdatesToSafetySuspend(recyclerView)
-                onListCommittedListener?.invoke()
-            }
+
+            this@MessagesAdapter.messages = SyncArrayList(targetList)
+            productDiffResult.dispatchUpdatesToSafetySuspend(recyclerView)
+            onListCommittedListener?.invoke()
         }
     }
 
@@ -175,6 +262,7 @@ class MessagesAdapter(
 
     @SuppressLint("NotifyDataSetChanged")
     fun clearData() {
+        updateJob?.cancel()
         messages.clear()
         notifyDataSetChanged()
     }
@@ -237,7 +325,11 @@ class MessagesAdapter(
         if (job == null || job.isCompleted)
             cb()
         else
-            job.invokeOnCompletion { cb() }
+            job.invokeOnCompletion {
+                scope.launch(mainDispatcher) {
+                    awaitUpdating(cb)
+                }
+            }
     }
 
     override fun bindHeaderData(header: StickyDateHeaderView, headerPosition: Int) {
