@@ -4,8 +4,10 @@ import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -16,6 +18,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,7 +39,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.Backspace
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -47,19 +49,23 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
@@ -71,11 +77,14 @@ import com.sceyt.chat.demo.call.ui.CallActivity
 import com.sceyt.chat.demo.call.ui.theme.CallColors
 import com.sceyt.chat.demo.call.ui.theme.CallTheme
 import com.sceyt.chat.models.signal.MediaFlow
+import com.sceyt.tonemanager.audio.dtmf.DtmfToneConfig
+import com.sceyt.tonemanager.manager.ToneManagerFactory
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 
 class DialPadActivity : ComponentActivity() {
     private val callManager: CallManager by inject()
+    private val toneManager by lazy { ToneManagerFactory.getInstance(this) }
     private var lastNumber: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -84,18 +93,32 @@ class DialPadActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         setContent {
-            CallTheme(darkTheme = false) {
+            CallTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
                     DialPadScreen(
                         onBack = ::finish,
+                        onToneClick = ::playDialPadTone,
                         onCallClick = { phoneNumber ->
                             makeCall(phoneNumber)
                         }
                     )
                 }
+            }
+        }
+    }
+
+    private fun playDialPadTone(tone: Char) {
+        lifecycleScope.launch {
+            toneManager.playDtmfTone(
+                tone = tone,
+                durationMs = DIAL_PAD_TONE_DURATION_MS,
+                volume = DIAL_PAD_TONE_VOLUME,
+                config = DtmfToneConfig.media()
+            ).onFailure {
+                Log.w(TAG, "Failed to play dial pad tone", it)
             }
         }
     }
@@ -154,6 +177,10 @@ class DialPadActivity : ComponentActivity() {
     }
 
     companion object {
+        private const val TAG = "DialPadActivity"
+        private const val DIAL_PAD_TONE_DURATION_MS = 100
+        private const val DIAL_PAD_TONE_VOLUME = 50
+
         fun createIntent(context: Context): Intent {
             return Intent(context, DialPadActivity::class.java)
         }
@@ -163,37 +190,53 @@ class DialPadActivity : ComponentActivity() {
 @Composable
 private fun DialPadScreen(
     onBack: () -> Unit,
+    onToneClick: (Char) -> Unit,
     onCallClick: (String) -> Unit,
+    initialPhoneNumber: String = "",
 ) {
     val context = LocalContext.current
     val repository = remember(context) { LastCalledNumberRepository(context.applicationContext) }
-    var phoneNumber by remember { mutableStateOf("") }
+    val colors = dialPadColors()
+    var phoneNumber by rememberSaveable(initialPhoneNumber) { mutableStateOf(initialPhoneNumber) }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(colors.background)
             .windowInsetsPadding(WindowInsets.statusBars)
             .padding(horizontal = 12.dp)
     ) {
-        DialPadToolbar(onBack = onBack)
+        DialPadToolbar(
+            colors = colors,
+            onBack = onBack
+        )
 
-        Spacer(modifier = Modifier.weight(1f))
-
-        PhoneNumberDisplay(phoneNumber = phoneNumber)
-
-        Spacer(modifier = Modifier.height(40.dp))
-
-        DialPad(
-            onDigitClick = { digit ->
-                phoneNumber += digit
-            },
+        PhoneNumberDisplay(
+            modifier = Modifier.weight(1f),
+            phoneNumber = phoneNumber,
+            colors = colors,
             onBackspaceClick = {
                 phoneNumber = phoneNumber.dropLast(1)
             },
             onClearClick = {
                 phoneNumber = ""
+            }
+        )
+
+        Spacer(modifier = Modifier.height(36.dp))
+
+        DialPad(
+            colors = colors,
+            onDigitClick = { tone, value ->
+                onToneClick(tone)
+                phoneNumber += value
             },
+        )
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        DialPadCallButton(
+            colors = colors,
             onCallClick = {
                 val number = phoneNumber.trim()
                 if (number.isEmpty()) {
@@ -216,36 +259,50 @@ private fun DialPadScreen(
 
 @Composable
 private fun PhoneNumberDisplay(
+    modifier: Modifier = Modifier,
     phoneNumber: String,
+    colors: DialPadColors,
+    onBackspaceClick: () -> Unit,
+    onClearClick: () -> Unit,
 ) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .height(72.dp)
             .padding(horizontal = 8.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = phoneNumber,
-            modifier = Modifier.fillMaxWidth(),
+            text = phoneNumber.ifEmpty { " " },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 40.dp),
             textAlign = TextAlign.Center,
             autoSize = TextAutoSize.StepBased(
                 minFontSize = 24.sp,
-                maxFontSize = 42.sp,
+                maxFontSize = 32.sp,
                 stepSize = 1.sp
             ),
-            fontSize = 42.sp,
+            fontSize = 32.sp,
             fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onSurface,
+            color = colors.primaryText,
             overflow = TextOverflow.StartEllipsis,
             softWrap = false,
             maxLines = 1
         )
+
+        if (phoneNumber.isNotEmpty()) {
+            DialPadClearButton(
+                onClick = onBackspaceClick,
+                onLongClick = onClearClick,
+                modifier = Modifier.align(Alignment.CenterEnd)
+            )
+        }
     }
 }
 
 @Composable
 private fun DialPadToolbar(
+    colors: DialPadColors,
     onBack: () -> Unit,
 ) {
     Box(
@@ -259,7 +316,8 @@ private fun DialPadToolbar(
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = ""
+                contentDescription = "",
+                tint = colors.toolbarIcon
             )
         }
     }
@@ -267,59 +325,38 @@ private fun DialPadToolbar(
 
 @Composable
 private fun DialPad(
-    onDigitClick: (String) -> Unit,
-    onBackspaceClick: () -> Unit,
-    onClearClick: () -> Unit,
-    onCallClick: () -> Unit,
+    colors: DialPadColors,
+    onDigitClick: (Char, String) -> Unit,
 ) {
-    val rows = listOf(
-        listOf("1", "2", "3"),
-        listOf("4", "5", "6"),
-        listOf("7", "8", "9"),
-        listOf("*", "0", "#")
-    )
-
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 20.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        rows.forEach { row ->
+        DialPadKeys.chunked(3).forEach { row ->
             Row(
                 modifier = Modifier.fillMaxWidth()
             ) {
-                row.forEach { digit ->
+                row.forEach { key ->
                     DialPadKey(
-                        label = digit,
-                        secondaryLabel = if (digit == "0") "+" else null,
-                        onClick = { onDigitClick(digit) },
-                        onLongClick = if (digit == "0") {
-                            { onDigitClick("+") }
+                        key = key,
+                        colors = colors,
+                        onClick = { onDigitClick(key.tone, key.tone.toString()) },
+                        onLongClick = if (key.tone == '0') {
+                            { onDigitClick(key.tone, "+") }
                         } else null
                     )
                 }
             }
-        }
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            DialPadEmptyKey()
-            DialPadCallButton(onClick = onCallClick)
-            DialPadBackspaceKey(
-                onClick = onBackspaceClick,
-                onLongClick = onClearClick
-            )
         }
     }
 }
 
 @Composable
 private fun RowScope.DialPadKey(
-    label: String,
-    secondaryLabel: String? = null,
+    key: DialPadKey,
+    colors: DialPadColors,
     onClick: () -> Unit,
     onLongClick: (() -> Unit)? = null,
 ) {
@@ -352,7 +389,7 @@ private fun RowScope.DialPadKey(
                 .size(72.dp)
                 .clip(CircleShape)
                 .background(
-                    color = MaterialTheme.colorScheme.surfaceVariant,
+                    color = colors.keyBackground,
                     shape = CircleShape
                 )
                 .indication(interactionSource, LocalIndication.current),
@@ -363,20 +400,21 @@ private fun RowScope.DialPadKey(
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = label,
+                    text = key.tone.toString(),
                     fontSize = 30.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.Normal,
+                    color = colors.primaryText,
                     lineHeight = 30.sp,
                     style = TextStyle(platformStyle = PlatformTextStyle(includeFontPadding = false))
                 )
-                if (secondaryLabel != null) {
+                if (key.letters.isNotEmpty()) {
                     Text(
-                        text = secondaryLabel,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        lineHeight = 13.sp
+                        text = key.letters,
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = colors.secondaryText,
+                        lineHeight = 10.sp,
+                        style = TextStyle(platformStyle = PlatformTextStyle(includeFontPadding = false))
                     )
                 }
             }
@@ -385,34 +423,36 @@ private fun RowScope.DialPadKey(
 }
 
 @Composable
-private fun RowScope.DialPadCallButton(
-    onClick: () -> Unit,
+private fun DialPadCallButton(
+    colors: DialPadColors,
+    onCallClick: () -> Unit,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val hapticFeedback = LocalHapticFeedback.current
 
-    Box(
+    Row(
         modifier = Modifier
-            .weight(1f)
-            .height(88.dp)
-            .combinedClickable(
-                interactionSource = interactionSource,
-                indication = null,
-                hapticFeedbackEnabled = false,
-                onClick = {
-                    hapticFeedback.performHapticFeedback(HapticFeedbackType.Confirm)
-                    onClick()
-                }
-            ),
-        contentAlignment = Alignment.Center
+            .fillMaxWidth()
+            .height(76.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             modifier = Modifier
                 .size(72.dp)
                 .clip(CircleShape)
                 .background(
-                    color = CallColors.AccentGreen,
+                    color = colors.callButton,
                     shape = CircleShape
+                )
+                .combinedClickable(
+                    interactionSource = interactionSource,
+                    indication = null,
+                    hapticFeedbackEnabled = false,
+                    onClick = {
+                        hapticFeedback.performHapticFeedback(HapticFeedbackType.Confirm)
+                        onCallClick()
+                    }
                 )
                 .indication(interactionSource, LocalIndication.current),
             contentAlignment = Alignment.Center
@@ -420,7 +460,7 @@ private fun RowScope.DialPadCallButton(
             Icon(
                 imageVector = Icons.Filled.Call,
                 contentDescription = stringResource(R.string.call),
-                tint = MaterialTheme.colorScheme.onSecondary,
+                tint = Color.White,
                 modifier = Modifier.size(30.dp)
             )
         }
@@ -428,26 +468,17 @@ private fun RowScope.DialPadCallButton(
 }
 
 @Composable
-private fun RowScope.DialPadEmptyKey() {
-    Spacer(
-        modifier = Modifier
-            .weight(1f)
-            .height(88.dp)
-    )
-}
-
-@Composable
-private fun RowScope.DialPadBackspaceKey(
+private fun DialPadClearButton(
     onClick: () -> Unit,
     onLongClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val hapticFeedback = LocalHapticFeedback.current
 
     Box(
-        modifier = Modifier
-            .weight(1f)
-            .height(88.dp)
+        modifier = modifier
+            .size(32.dp)
             .combinedClickable(
                 interactionSource = interactionSource,
                 indication = null,
@@ -463,21 +494,111 @@ private fun RowScope.DialPadBackspaceKey(
             ),
         contentAlignment = Alignment.Center
     ) {
-        Box(
-            modifier = Modifier
-                .size(72.dp)
-                .clip(CircleShape)
-                .indication(interactionSource, LocalIndication.current),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.Backspace,
-                contentDescription = "",
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(30.dp)
-            )
-        }
+
+        Icon(
+            painter = painterResource(R.drawable.ic_eraser_themed),
+            contentDescription = "Clear digit",
+            tint = Color.Unspecified,
+            modifier = Modifier.size(width = 32.dp, height = 24.dp)
+        )
     }
+}
+
+@Composable
+private fun dialPadColors(): DialPadColors {
+    return if (isSystemInDarkTheme()) {
+        DialPadColors(
+            background = CallColors.BackgroundDark,
+            keyBackground = Color(0xFF2C2C2E),
+            primaryText = Color.White,
+            secondaryText = Color(0xFF8A8A8E),
+            toolbarIcon = Color.White,
+            clearButtonBackground = Color(0xFF343437),
+            clearButtonIcon = Color.White.copy(alpha = 0.72f),
+            callButton = CallColors.CallAgainGreen
+        )
+    } else {
+        DialPadColors(
+            background = Color.White,
+            keyBackground = Color(0xFFF3F4F8),
+            primaryText = Color(0xFF111113),
+            secondaryText = Color(0xFF6D7280),
+            toolbarIcon = Color(0xFF111113),
+            clearButtonBackground = Color(0xFFECEEF3),
+            clearButtonIcon = Color(0xFF6D7280),
+            callButton = CallColors.CallAgainGreen
+        )
+    }
+}
+
+private data class DialPadColors(
+    val background: Color,
+    val keyBackground: Color,
+    val primaryText: Color,
+    val secondaryText: Color,
+    val toolbarIcon: Color,
+    val clearButtonBackground: Color,
+    val clearButtonIcon: Color,
+    val callButton: Color,
+)
+
+private data class DialPadKey(
+    val tone: Char,
+    val letters: String = "",
+)
+
+private val DialPadKeys = listOf(
+    DialPadKey('1'),
+    DialPadKey('2', "ABC"),
+    DialPadKey('3', "DEF"),
+    DialPadKey('4', "GHI"),
+    DialPadKey('5', "JKL"),
+    DialPadKey('6', "MNO"),
+    DialPadKey('7', "PQRS"),
+    DialPadKey('8', "TUV"),
+    DialPadKey('9', "WXYZ"),
+    DialPadKey('*'),
+    DialPadKey('0', "+"),
+    DialPadKey('#')
+)
+
+@Preview(
+    name = "Dial Pad Light",
+    showBackground = true,
+    backgroundColor = 0xFFFFFFFF,
+    widthDp = 393,
+    heightDp = 852
+)
+@Composable
+private fun DialPadScreenLightPreview() {
+    CallTheme(darkTheme = false) {
+        DialPadScreenPreviewContent()
+    }
+}
+
+@Preview(
+    name = "Dial Pad Dark",
+    showBackground = true,
+    backgroundColor = 0xFF19191B,
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+    widthDp = 393,
+    heightDp = 852
+)
+@Composable
+private fun DialPadScreenDarkPreview() {
+    CallTheme(darkTheme = true) {
+        DialPadScreenPreviewContent()
+    }
+}
+
+@Composable
+private fun DialPadScreenPreviewContent() {
+    DialPadScreen(
+        initialPhoneNumber = "989-568",
+        onBack = {},
+        onToneClick = {},
+        onCallClick = {}
+    )
 }
 
 private class LastCalledNumberRepository(context: Context) {
