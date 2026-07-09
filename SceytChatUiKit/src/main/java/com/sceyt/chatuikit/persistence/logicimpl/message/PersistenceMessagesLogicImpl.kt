@@ -180,6 +180,15 @@ internal class PersistenceMessagesLogicImpl(
 
         val messageDb = messageDao.getMessageById(message.id)
         val isReaction = data.type == NotificationType.MessageReaction
+        val isOwnMessagePush = message.user?.id == myId
+
+        if (isOwnMessagePush && !isReaction) {
+            SceytLog.i(
+                TAG,
+                "Ignored own message push, channelId: ${message.channelId}, messageId: ${message.id}"
+            )
+            return@withContext true
+        }
 
         if (messageDb == null && !isReaction) {
             saveMessagesToDb(
