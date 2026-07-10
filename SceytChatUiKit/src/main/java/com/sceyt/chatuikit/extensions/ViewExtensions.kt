@@ -217,13 +217,6 @@ fun TextPaint.getStaticLayout(title: CharSequence, includePadding: Boolean, text
     } else StaticLayout(title, this, textWidth, Layout.Alignment.ALIGN_NORMAL, 1f, 0f, includePadding)
 }
 
-fun View.checkIfInsideFragment(): Fragment? {
-    // Check if the context is an activity
-    return context.maybeFragmentActivity()?.let {
-        findFragment(it)
-    }
-}
-
 private fun View.findFragment(activity: FragmentActivity): Fragment? {
     val fragmentManager = activity.supportFragmentManager
 

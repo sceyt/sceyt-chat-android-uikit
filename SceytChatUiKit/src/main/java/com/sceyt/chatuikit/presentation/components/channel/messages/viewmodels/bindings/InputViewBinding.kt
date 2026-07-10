@@ -60,6 +60,8 @@ fun MessageListViewModel.bind(
             is MessageActionBridge.Effect.SearchModeChanged -> {
                 messageInputView.getEventListeners().onSearchModeChangeListener(effect.enabled)
             }
+
+            is MessageActionBridge.Effect.ExitSearchRequested -> Unit
         }
     }.launchIn(lifecycleOwner.lifecycleScope)
 
