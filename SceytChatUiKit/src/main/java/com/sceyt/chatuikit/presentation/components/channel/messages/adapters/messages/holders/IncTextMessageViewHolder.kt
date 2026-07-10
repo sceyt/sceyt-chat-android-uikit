@@ -4,18 +4,26 @@ import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.databinding.SceytItemIncTextMessageBinding
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
+import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
 class IncTextMessageViewHolder(
-        private val binding: SceytItemIncTextMessageBinding,
-        private val viewPool: RecyclerView.RecycledViewPool,
-        style: MessageItemStyle,
-        private val messageListeners: MessageClickListeners.ClickListeners?,
-        displayedListener: ((MessageListItem) -> Unit)?,
-) : BaseMessageViewHolder(binding.root, style, messageListeners, displayedListener) {
+    private val binding: SceytItemIncTextMessageBinding,
+    private val viewPool: RecyclerView.RecycledViewPool,
+    style: MessageItemStyle,
+    private val messageListeners: MessageClickListeners.ClickListeners?,
+    displayedListener: ((MessageListItem) -> Unit)?,
+    needMediaDataCallback: ((NeedMediaInfoData) -> Unit)? = null
+) : BaseMessageViewHolder(
+    view = binding.root,
+    itemStyle = style,
+    messageListeners = messageListeners,
+    displayedListener = displayedListener,
+    needMediaDataCallback = needMediaDataCallback
+) {
 
     init {
         with(binding) {
@@ -26,12 +34,18 @@ class IncTextMessageViewHolder(
             }
 
             root.setOnLongClickListener {
-                messageListeners?.onMessageLongClick(it, messageListItem as MessageListItem.MessageItem)
+                messageListeners?.onMessageLongClick(
+                    it,
+                    messageListItem as MessageListItem.MessageItem
+                )
                 return@setOnLongClickListener true
             }
 
             messageBody.doOnLongClick {
-                messageListeners?.onMessageLongClick(it, messageListItem as MessageListItem.MessageItem)
+                messageListeners?.onMessageLongClick(
+                    it,
+                    messageListItem as MessageListItem.MessageItem
+                )
             }
 
             messageBody.doOnClickWhenNoLink {
