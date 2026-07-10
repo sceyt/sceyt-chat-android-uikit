@@ -5,6 +5,7 @@ import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.databinding.SceytItemIncUnsupportedMessageBinding
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
+import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
@@ -16,7 +17,8 @@ class IncUnsupportedMessageViewHolder(
     private val style: MessageItemStyle,
     private val messageListeners: MessageClickListeners.ClickListeners?,
     displayedListener: ((MessageListItem) -> Unit)?,
-) : BaseMessageViewHolder(binding.root, style, messageListeners, displayedListener) {
+    needMediaDataCallback: ((NeedMediaInfoData) -> Unit)? = null,
+) : BaseMessageViewHolder(binding.root, style, messageListeners, displayedListener, needMediaDataCallback) {
 
     init {
         with(binding) {

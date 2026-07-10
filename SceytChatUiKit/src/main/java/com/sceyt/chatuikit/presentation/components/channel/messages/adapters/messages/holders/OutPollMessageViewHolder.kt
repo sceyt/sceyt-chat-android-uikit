@@ -6,6 +6,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.data.models.messages.SceytPollDetails
 import com.sceyt.chatuikit.databinding.SceytItemOutPollMessageBinding
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
+import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BasePollMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
@@ -16,10 +17,12 @@ class OutPollMessageViewHolder(
         private val viewPoolReactions: RecyclerView.RecycledViewPool,
         style: MessageItemStyle,
         messageListeners: MessageClickListeners.ClickListeners?,
+        needMediaDataCallback: ((NeedMediaInfoData) -> Unit)? = null,
 ) : BasePollMessageViewHolder(
     view = binding.root,
     style = style,
-    messageListeners = messageListeners
+    messageListeners = messageListeners,
+    needMediaDataCallback = needMediaDataCallback
 ) {
 
     init {

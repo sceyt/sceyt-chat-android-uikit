@@ -3,6 +3,7 @@ package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.me
 import android.view.View
 import com.sceyt.chatuikit.databinding.SceytItemSystemMessageBinding
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
+import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMessageViewHolder
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
@@ -11,7 +12,8 @@ class SystemMessageViewHolder(
     val binding: SceytItemSystemMessageBinding,
     style: MessageItemStyle,
     displayedListener: ((MessageListItem) -> Unit)?,
-) : BaseMessageViewHolder(binding.root, style, displayedListener = displayedListener) {
+    needMediaDataCallback: ((NeedMediaInfoData) -> Unit)? = null,
+) : BaseMessageViewHolder(binding.root, style, displayedListener = displayedListener, needMediaDataCallback = needMediaDataCallback) {
 
     private val systemMessageStyle = style.systemMessageItemStyle
 
