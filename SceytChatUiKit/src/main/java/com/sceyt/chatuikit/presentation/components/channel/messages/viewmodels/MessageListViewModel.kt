@@ -160,6 +160,9 @@ class MessageListViewModel internal constructor(
     private var loadPrevJob: Job? = null
     private var loadNextJob: Job? = null
     private var loadNearJob: Job? = null
+    // Load job that backs a pending scroll command (jump / scroll-to-bottom). Cancelled when the
+    // scroll is superseded, without touching history edge-paging.
+    private var scrollLoadJob: Job? = null
     internal var mentionJob: Job? = null
 
     private companion object {
@@ -504,7 +507,7 @@ class MessageListViewModel internal constructor(
                     initPaginationResponse(response)
                 }
             }
-        }
+        }.also { scrollLoadJob = it }
     }
 
     fun loadNearMessages(
@@ -535,7 +538,12 @@ class MessageListViewModel internal constructor(
                     initPaginationResponse(response)
                 }
             }
-        }
+        }.also { scrollLoadJob = it }
+    }
+
+    internal fun cancelInFlightScrollLoad() {
+        scrollLoadJob?.cancel()
+        scrollLoadJob = null
     }
 
     fun syncCenteredMessage(messageId: Long) {
@@ -1037,8 +1045,8 @@ class MessageListViewModel internal constructor(
 
     internal suspend fun handleLocalOutgoingMessage(message: SceytMessage) {
         val appended = appendOutgoingMessage(message)
-        /*  if (!appended && hasNewestMessageGap())
-              prepareToScrollToNewMessage()*/
+        if (!appended && hasNewestMessageGap())
+            prepareToScrollToNewMessage()
     }
 
     private suspend fun appendOutgoingMessageInternal(message: SceytMessage): Boolean {

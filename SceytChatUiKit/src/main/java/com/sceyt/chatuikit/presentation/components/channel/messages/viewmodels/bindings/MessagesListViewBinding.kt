@@ -67,7 +67,9 @@ import kotlin.time.Duration.Companion.milliseconds
 @JvmName("bind")
 fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner: LifecycleOwner) {
     val lifecycleScope = lifecycleOwner.lifecycleScope
-    val scrollCoordinator = MessageScrollCoordinator()
+    val scrollCoordinator = MessageScrollCoordinator(
+        cancelPendingLoad = { cancelInFlightScrollLoad() }
+    )
     var shouldRetryPagingOnReconnect = !ConnectionEventManager.isConnected
     messagesListView.setMultiselectDestination(selectedMessagesMap)
     if (channel.isSelf) {
@@ -126,7 +128,8 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         if (messagesListView.getMessageIndexedById(messageId) == null)
             return false
 
-        messagesListView.scrollToLastMessage()
+        val handle = messagesListView.scrollToLastMessage()
+        scrollCoordinator.attachPhysicalHandle(request.id, handle)
         scrollCoordinator.clearIfSettled(request, loadingFromServer || loadingFromDb)
         if (syncAfterScroll) {
             lifecycleOwner.lifecycleScope.launch {
@@ -191,10 +194,22 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                     data = effect.items.toTypedArray(),
                     lifecycleScope = lifecycleScope,
                     addedCallback = {
-                        messagesListView.scrollToEndAfterRealtimeAppend(
-                            addedItemsCount = effect.items.size,
-                            alwaysScroll = effect.scroll == AppendRealtimeScroll.Always
-                        )
+                        if (effect.scroll == AppendRealtimeScroll.Always) {
+                            // Own outgoing message: supersede any pending jump and go to bottom.
+                            val request = scrollCoordinator.beginRealtimeScrollRequest()
+                            val handle = messagesListView.scrollToEndAfterRealtimeAppend(
+                                addedItemsCount = effect.items.size,
+                                alwaysScroll = true
+                            )
+                            scrollCoordinator.attachPhysicalHandle(request.id, handle)
+                            scrollCoordinator.clear(request)
+                        } else if (!scrollCoordinator.hasActiveExplicitJump()) {
+                            // Incoming message: only follow to bottom when no explicit jump is pending.
+                            messagesListView.scrollToEndAfterRealtimeAppend(
+                                addedItemsCount = effect.items.size,
+                                alwaysScroll = false
+                            )
+                        }
                     }
                 )
             }
@@ -223,7 +238,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 } else {
                     scrollCoordinator.activeRequestFor(effect.requestId) ?: return
                 }
-                messagesListView.scrollToMessage(
+                val handle = messagesListView.scrollToMessage(
                     messageId = effect.messageId,
                     offset = effect.offset,
                     highlight = effect.highlight,
@@ -248,26 +263,34 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                                 ignoreServer = it.ignoreServer,
                                 awaitToConnectTimeout = 0
                             )
+                            scrollCoordinator.markLoadStarted(request.id)
                             return@scrollToMessage
                         }
                         scrollCoordinator.clear(request)
                     }
                 )
+                scrollCoordinator.attachPhysicalHandle(request.id, handle)
             }
 
             MessageListRenderEffect.ScrollToUnreadMessage -> {
-                messagesListView.scrollToUnReadMessage()
+                val request = scrollCoordinator.beginUnreadRequest()
+                val handle = messagesListView.scrollToUnReadMessage(
+                    onCompleted = { scrollCoordinator.clear(request) }
+                )
+                scrollCoordinator.attachPhysicalHandle(request.id, handle)
             }
 
             is MessageListRenderEffect.ScrollToLastMessage -> {
                 val request = scrollCoordinator.activeRequestFor(effect.requestId)
-                if (effect.requestId != null && request == null)
-                    return
+                    ?: if (effect.requestId != null) return
+                    else scrollCoordinator.beginLastMessageRequest(null)
 
-                messagesListView.scrollToLastMessage()
-                request?.let {
-                    scrollCoordinator.clearIfSettled(it, loadingFromServer || loadingFromDb)
-                }
+                val handle = messagesListView.scrollToLastMessage(
+                    onCompleted = {
+                        scrollCoordinator.clearIfSettled(request, loadingFromServer || loadingFromDb)
+                    }
+                )
+                scrollCoordinator.attachPhysicalHandle(request.id, handle)
             }
 
             is MessageListRenderEffect.ScrollToNewMessage -> {
@@ -287,6 +310,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                         data = ScrollRequestData(request.id)
                     )
                 )
+                scrollCoordinator.markLoadStarted(request.id)
                 markChannelAsRead(channel.id)
             }
 

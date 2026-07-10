@@ -1,9 +1,60 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.bindings
 
 import com.google.common.truth.Truth.assertThat
+import com.sceyt.chatuikit.presentation.common.recyclerview.ScrollHandle
 import org.junit.Test
 
 class MessageScrollCoordinatorTest {
+
+    @Test
+    fun `superseding a request cancels its physical scroll`() {
+        val coordinator = MessageScrollCoordinator()
+        val first = coordinator.beginMessageRequest(targetMessageId = 1)
+        val handle = ScrollHandle()
+        coordinator.attachPhysicalHandle(first.id, handle)
+
+        coordinator.beginMessageRequest(targetMessageId = 2)
+
+        assertThat(handle.cancelled).isTrue()
+    }
+
+    @Test
+    fun `superseding a request with a pending load cancels the load`() {
+        var loadCancelled = false
+        val coordinator = MessageScrollCoordinator(cancelPendingLoad = { loadCancelled = true })
+        val first = coordinator.beginMessageRequest(targetMessageId = 1)
+        coordinator.markLoadStarted(first.id)
+
+        coordinator.beginUnreadRequest()
+
+        assertThat(loadCancelled).isTrue()
+    }
+
+    @Test
+    fun `attaching a handle to a superseded request cancels it immediately`() {
+        val coordinator = MessageScrollCoordinator()
+        val first = coordinator.beginMessageRequest(targetMessageId = 1)
+        coordinator.beginMessageRequest(targetMessageId = 2)
+
+        val handle = ScrollHandle()
+        coordinator.attachPhysicalHandle(first.id, handle)
+
+        assertThat(handle.cancelled).isTrue()
+    }
+
+    @Test
+    fun `hasActiveExplicitJump reflects request type`() {
+        val coordinator = MessageScrollCoordinator()
+
+        coordinator.beginMessageRequest(targetMessageId = 1)
+        assertThat(coordinator.hasActiveExplicitJump()).isTrue()
+
+        coordinator.beginRealtimeScrollRequest()
+        assertThat(coordinator.hasActiveExplicitJump()).isFalse()
+
+        coordinator.beginUnreadRequest()
+        assertThat(coordinator.hasActiveExplicitJump()).isTrue()
+    }
 
     @Test
     fun `new request invalidates older request`() {

@@ -58,6 +58,7 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploading
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.WaitingToUpload
 import com.sceyt.chatuikit.persistence.mappers.isLink
 import com.sceyt.chatuikit.presentation.common.dialogs.SceytDialog
+import com.sceyt.chatuikit.presentation.common.recyclerview.ScrollHandle
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.openFile
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
@@ -503,8 +504,16 @@ class MessagesListView @JvmOverloads constructor(
         }
     }
 
-    internal fun scrollToEndAfterRealtimeAppend(addedItemsCount: Int, alwaysScroll: Boolean) {
-        messagesRV.scrollToEndAfterRealtimeAppend(addedItemsCount, alwaysScroll)
+    internal fun scrollToEndAfterRealtimeAppend(
+        addedItemsCount: Int,
+        alwaysScroll: Boolean
+    ): ScrollHandle {
+        // Instant scroll (no posted completion), so the handle is a uniform no-op token that
+        // still lets a superseding command mark this request cancelled.
+        val handle = ScrollHandle()
+        if (!handle.cancelled)
+            messagesRV.scrollToEndAfterRealtimeAppend(addedItemsCount, alwaysScroll)
+        return handle
     }
 
     internal fun updateMessageSelection(message: SceytMessage) {
@@ -818,12 +827,12 @@ class MessagesListView @JvmOverloads constructor(
         highlight: Boolean,
         offset: Int = 0,
         onCompleted: ((FoundToScroll) -> Unit)? = null,
-    ) {
-        getMessageIndexedById(messageId)?.let { (position, _) ->
+    ): ScrollHandle {
+        return getMessageIndexedById(messageId)?.let { (position, _) ->
             scrollToPosition(position, highlight, offset, onScrolled = {
                 onCompleted?.invoke(true)
             })
-        } ?: onCompleted?.invoke(false)
+        } ?: ScrollHandle().also { onCompleted?.invoke(false) }
     }
 
     fun scrollToPosition(
@@ -831,41 +840,63 @@ class MessagesListView @JvmOverloads constructor(
         highlight: Boolean,
         offset: Int = 0,
         onScrolled: (() -> Unit)? = null,
-    ) = safeScrollTo {
+    ): ScrollHandle = safeScrollTo { handle ->
         (messagesRV.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(
             position,
             offset
         )
 
         if (highlight || onScrolled != null) {
-            messagesRV.awaitToScrollFinish(position, callback = {
+            val finish = messagesRV.awaitToScrollFinish(position, callback = {
+                if (handle.cancelled) return@awaitToScrollFinish
                 if (highlight)
                     (messagesRV.findViewHolderForAdapterPosition(position) as? BaseMessageViewHolder)?.highlight()
                 onScrolled?.invoke()
             })
+            handle.bindFinish(finish)
         }
     }
 
-    fun scrollToUnReadMessage() = safeScrollTo {
-        messagesRV.getData()
+    fun scrollToUnReadMessage(onCompleted: (() -> Unit)? = null): ScrollHandle = safeScrollTo { handle ->
+        val index = messagesRV.getData()
             .indexOfLast { it is MessageListItem.UnreadMessagesSeparatorItem }
-            .takeIf { it != -1 }?.let { index ->
-                scrollToPosition(index, false)
-            }
-    }
-
-    fun scrollToLastMessage() = safeScrollTo {
-        val lastMessageIndex = messagesRV.getData().indexOfLast { it is MessageItem }
-        if (lastMessageIndex != -1)
-            messagesRV.scrollToPosition(lastMessageIndex)
-    }
-
-    private fun safeScrollTo(block: () -> Unit) = messagesRV.awaitUpdating {
-        try {
-            block()
-        } catch (e: Exception) {
-            messagesRV.awaitAnimationEnd { block() }
+        if (index != -1) {
+            val finish = messagesRV.awaitToScrollFinish(index, callback = {
+                if (!handle.cancelled) onCompleted?.invoke()
+            })
+            handle.bindFinish(finish)
+            (messagesRV.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(index, 0)
+        } else {
+            onCompleted?.invoke()
         }
+    }
+
+    fun scrollToLastMessage(onCompleted: (() -> Unit)? = null): ScrollHandle = safeScrollTo { handle ->
+        val lastMessageIndex = messagesRV.getData().indexOfLast { it is MessageItem }
+        if (lastMessageIndex != -1) {
+            val finish = messagesRV.awaitToScrollFinish(lastMessageIndex, callback = {
+                if (!handle.cancelled) onCompleted?.invoke()
+            })
+            handle.bindFinish(finish)
+            messagesRV.scrollToPosition(lastMessageIndex)
+        } else {
+            onCompleted?.invoke()
+        }
+    }
+
+    private fun safeScrollTo(
+        handle: ScrollHandle = ScrollHandle(),
+        block: (ScrollHandle) -> Unit,
+    ): ScrollHandle {
+        messagesRV.awaitUpdating {
+            if (handle.cancelled) return@awaitUpdating
+            try {
+                block(handle)
+            } catch (e: Exception) {
+                messagesRV.awaitAnimationEnd { if (!handle.cancelled) block(handle) }
+            }
+        }
+        return handle
     }
 
     fun cancelMultiSelectMode() {

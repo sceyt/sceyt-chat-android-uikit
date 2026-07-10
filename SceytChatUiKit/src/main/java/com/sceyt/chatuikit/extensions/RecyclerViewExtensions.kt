@@ -5,6 +5,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.LinearSmoothScroller
 import androidx.recyclerview.widget.RecyclerView
+import com.sceyt.chatuikit.presentation.common.recyclerview.ScrollFinishHandle
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.math.abs
 
@@ -151,28 +152,31 @@ fun RecyclerView.awaitAnimationEnd(callback: () -> Unit) {
     }
 }
 
-fun RecyclerView.awaitToScrollFinish(position: Int, callback: (Int) -> Unit) {
+fun RecyclerView.awaitToScrollFinish(position: Int, callback: (Int) -> Unit): ScrollFinishHandle {
     if (!checkIsNotVisibleItem(position)) {
         callback.invoke(scrollState)
-    } else {
-        addOnScrollListener(object : RecyclerView.OnScrollListener() {
-            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                super.onScrolled(recyclerView, dx, dy)
-                if (scrollState == RecyclerView.SCROLL_STATE_IDLE) {
-                    callback.invoke(scrollState)
-                    removeOnScrollListener(this)
-                }
-            }
-
-            override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
-                super.onScrollStateChanged(recyclerView, newState)
-                if (scrollState == RecyclerView.SCROLL_STATE_IDLE) {
-                    callback.invoke(scrollState)
-                    removeOnScrollListener(this)
-                }
-            }
-        })
+        return ScrollFinishHandle(this, null)
     }
+
+    val listener = object : RecyclerView.OnScrollListener() {
+        override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+            super.onScrolled(recyclerView, dx, dy)
+            if (scrollState == RecyclerView.SCROLL_STATE_IDLE) {
+                callback.invoke(scrollState)
+                removeOnScrollListener(this)
+            }
+        }
+
+        override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+            super.onScrollStateChanged(recyclerView, newState)
+            if (scrollState == RecyclerView.SCROLL_STATE_IDLE) {
+                callback.invoke(scrollState)
+                removeOnScrollListener(this)
+            }
+        }
+    }
+    addOnScrollListener(listener)
+    return ScrollFinishHandle(this, listener)
 }
 
 inline fun RecyclerView.addRVScrollListener(
