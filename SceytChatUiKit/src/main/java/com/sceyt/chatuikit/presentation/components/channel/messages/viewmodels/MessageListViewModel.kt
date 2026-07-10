@@ -1037,8 +1037,8 @@ class MessageListViewModel internal constructor(
 
     internal suspend fun handleLocalOutgoingMessage(message: SceytMessage) {
         val appended = appendOutgoingMessage(message)
-        if (!appended && hasNewestMessageGap())
-            prepareToScrollToNewMessage()
+        /*  if (!appended && hasNewestMessageGap())
+              prepareToScrollToNewMessage()*/
     }
 
     private suspend fun appendOutgoingMessageInternal(message: SceytMessage): Boolean {
