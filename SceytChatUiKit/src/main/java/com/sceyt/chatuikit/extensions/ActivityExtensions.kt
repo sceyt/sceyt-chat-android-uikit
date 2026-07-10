@@ -104,6 +104,6 @@ fun Activity.darkModeContext(): Context {
 }
 
 fun Context.isActivityFinishingOrDestroying(): Boolean {
-    val activity = maybeComponentActivity() ?: return false
+    val activity = asComponentActivityOrNull() ?: return false
     return activity.isFinishing || activity.isDestroyed
 }

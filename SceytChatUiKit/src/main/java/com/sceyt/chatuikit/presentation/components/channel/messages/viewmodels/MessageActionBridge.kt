@@ -32,6 +32,10 @@ internal class MessageActionBridge {
         _effects.tryEmit(Effect.SearchModeChanged(enabled))
     }
 
+    fun exitSearchMode() {
+        _effects.tryEmit(Effect.ExitSearchRequested)
+    }
+
     fun dispatchMenuEvent(event: MenuEvent) {
         _menuEvents.tryEmit(event)
     }
@@ -42,6 +46,7 @@ internal class MessageActionBridge {
         data object MultiSelectCanceled : Effect
         data class SearchRequested(val event: MessageCommandEvent.SearchMessages) : Effect
         data class SearchModeChanged(val enabled: Boolean) : Effect
+        data object ExitSearchRequested : Effect
     }
 
     sealed interface MenuEvent {

@@ -123,6 +123,10 @@ fun MessageListViewModel.bind(
             }
 
             is MessageActionBridge.Effect.SearchModeChanged -> Unit
+
+            is MessageActionBridge.Effect.ExitSearchRequested -> {
+                headerView.cancelSearchMessagesMode()
+            }
         }
     }.launchIn(lifecycleOwner.lifecycleScope)
 

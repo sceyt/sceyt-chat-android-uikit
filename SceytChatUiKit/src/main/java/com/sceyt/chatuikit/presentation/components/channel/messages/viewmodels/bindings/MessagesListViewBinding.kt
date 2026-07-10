@@ -325,6 +325,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
             is MessageActionBridge.Effect.MessageActionsHidden,
             is MessageActionBridge.Effect.SearchRequested,
+            is MessageActionBridge.Effect.ExitSearchRequested,
             is MessageActionBridge.Effect.SearchModeChanged -> Unit
         }
     }

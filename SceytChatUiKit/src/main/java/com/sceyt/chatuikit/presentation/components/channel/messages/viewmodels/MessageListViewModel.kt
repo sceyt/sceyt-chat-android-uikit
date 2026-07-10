@@ -1116,6 +1116,7 @@ class MessageListViewModel internal constructor(
     }
 
     fun prepareToReplyMessage(message: SceytMessage) {
+        messageActionBridge.exitSearchMode()
         _inputCommands.tryEmit(MessageInputCommand.Reply(message))
     }
 

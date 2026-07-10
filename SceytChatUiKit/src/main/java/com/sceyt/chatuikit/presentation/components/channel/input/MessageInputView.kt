@@ -33,7 +33,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytDisableMessageInputBinding
 import com.sceyt.chatuikit.databinding.SceytMessageInputViewBinding
 import com.sceyt.chatuikit.extensions.asComponentActivity
-import com.sceyt.chatuikit.extensions.maybeFragmentActivity
+import com.sceyt.chatuikit.extensions.asFragmentActivityOrNull
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.doAfterRealTextChanged
 import com.sceyt.chatuikit.extensions.doSafe
@@ -1169,7 +1169,7 @@ class MessageInputView @JvmOverloads constructor(
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
-        context.maybeFragmentActivity()?.let { activity ->
+        context.asFragmentActivityOrNull()?.let { activity ->
             activity.supportFragmentManager.setFragmentResultListener(
                 BottomSheetMediaPicker.REQUEST_KEY, activity
             ) { _, bundle -> onMediaPicked(BottomSheetMediaPicker.getSelectedMedia(bundle)) }
