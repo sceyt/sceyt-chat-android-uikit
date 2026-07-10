@@ -4,6 +4,7 @@ import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.databinding.SceytItemOutLinkMessageBinding
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
+import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseLinkMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
@@ -14,7 +15,8 @@ class OutLinkMessageViewHolder(
     private val viewPool: RecyclerView.RecycledViewPool,
     style: MessageItemStyle,
     private val messageListeners: MessageClickListeners.ClickListeners?,
-) : BaseLinkMessageViewHolder(binding.root, style, messageListeners) {
+    needMediaDataCallback: ((NeedMediaInfoData) -> Unit)? = null,
+) : BaseLinkMessageViewHolder(binding.root, style, messageListeners, needMediaDataCallback = needMediaDataCallback) {
 
     init {
         with(binding) {
