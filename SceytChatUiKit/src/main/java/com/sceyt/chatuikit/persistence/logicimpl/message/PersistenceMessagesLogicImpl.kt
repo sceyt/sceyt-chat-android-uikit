@@ -139,6 +139,7 @@ internal class PersistenceMessagesLogicImpl(
     private val persistenceAttachmentLogic: PersistenceAttachmentLogic by inject()
     private val persistenceReactionLogic: PersistenceReactionsLogic by inject()
     private val createChannelAndSendMessageMutex = Mutex()
+    private val incomingMessageMutex = Mutex()
     private val dispatcherIO = Dispatchers.IO
     private val myId: String? get() = SceytChatUIKit.chatUIFacade.myId
     private val messagesLoadSize get() = SceytChatUIKit.config.queryLimits.messageListQueryLimit
@@ -157,12 +158,14 @@ internal class PersistenceMessagesLogicImpl(
     ): Unit = withContext(dispatcherIO) {
         val channel = data.first
         val message = data.second
-        saveMessagesToDb(arrayListOf(message))
+        incomingMessageMutex.withLock {
+            saveMessagesToDb(arrayListOf(message))
 
-        messagesCache.add(channel.id, message)
-        onMessageFlow.tryEmit(data)
-        updateMessageLoadRangeOnMessageEvent(message, null)
-        channelSyncStateStore.updateSyncStateForMessage(channel.id, message.id)
+            messagesCache.add(channel.id, message)
+            onMessageFlow.tryEmit(data)
+            updateMessageLoadRangeOnMessageEvent(message, null)
+            channelSyncStateStore.updateSyncStateForMessage(channel.id, message.id)
+        }
 
         launch {
             if (message.incoming && sendDeliveryMarker)
@@ -178,39 +181,41 @@ internal class PersistenceMessagesLogicImpl(
         if (channel != null && message.createdAt <= channel.messagesClearedAt)
             return@withContext false
 
-        val messageDb = messageDao.getMessageById(message.id)
-        val isReaction = data.type == NotificationType.MessageReaction
-        val isOwnMessagePush = message.user?.id == myId
+        incomingMessageMutex.withLock {
+            val messageDb = messageDao.getMessageById(message.id)
+            val isReaction = data.type == NotificationType.MessageReaction
+            val isOwnMessagePush = message.user?.id == myId
 
-        if (isOwnMessagePush && !isReaction) {
-            SceytLog.i(
-                TAG,
-                "Ignored own message push, channelId: ${message.channelId}, messageId: ${message.id}"
-            )
-            return@withContext true
-        }
-
-        if (messageDb == null && !isReaction) {
-            saveMessagesToDb(
-                list = arrayListOf(message),
-                includeParents = false,
-                replaceUserOnConflict = false
-            )
-            messagesCache.add(data.channel.id, message)
-            onMessageFlow.tryEmit(Pair(data.channel, message))
-
-            updateMessageLoadRangeOnMessageEvent(message, channel?.lastMessage?.id)
-            persistenceChannelsLogic.handlePush(data)
-        }
-
-        if (messageDb != null && isReaction)
-            persistenceReactionLogic.onMessageReactionUpdated(
-                ReactionUpdateEventData(
-                    message = messageDb.toSceytMessage(),
-                    reaction = data.reaction!!,
-                    eventType = ReactionUpdateEventEnum.Add
+            if (isOwnMessagePush && !isReaction) {
+                SceytLog.i(
+                    TAG,
+                    "Ignored own message push, channelId: ${message.channelId}, messageId: ${message.id}"
                 )
-            )
+                return@withContext true
+            }
+
+            if (messageDb == null && !isReaction) {
+                saveMessagesToDb(
+                    list = arrayListOf(message),
+                    includeParents = false,
+                    replaceUserOnConflict = false
+                )
+                messagesCache.add(data.channel.id, message)
+                onMessageFlow.tryEmit(Pair(data.channel, message))
+
+                updateMessageLoadRangeOnMessageEvent(message, channel?.lastMessage?.id)
+                persistenceChannelsLogic.handlePush(data)
+            }
+
+            if (messageDb != null && isReaction)
+                persistenceReactionLogic.onMessageReactionUpdated(
+                    ReactionUpdateEventData(
+                        message = messageDb.toSceytMessage(),
+                        reaction = data.reaction!!,
+                        eventType = ReactionUpdateEventEnum.Add
+                    )
+                )
+        }
 
         return@withContext true
     }
