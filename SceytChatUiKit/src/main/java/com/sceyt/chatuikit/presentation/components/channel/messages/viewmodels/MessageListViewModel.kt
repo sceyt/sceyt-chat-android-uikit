@@ -211,6 +211,17 @@ class MessageListViewModel internal constructor(
 
 
     init {
+        mentionsController.onInit()
+        clearPreparingThumbs()
+        loadInitialMessages()
+
+        // If userRole is null or empty, get channel again to update channel
+        if (channel.userRole.isNullOrEmpty())
+            getChannel(channel.id)
+
+        if (channel.unread)
+            markChannelAsRead(channel.id)
+
         onNewMessageFlow = messageInteractor.getOnMessageFlow()
             .filter { (channel) ->
                 channel.id == this.channel.id /*&& it.second.replyInThread == replyInThread*/
@@ -260,19 +271,6 @@ class MessageListViewModel internal constructor(
 
         /*onOutGoingThreadMessageFlow = MessageEventsObserver.onOutgoingMessageFlow
             .filter { it.channelId == channel.id && it.replyInThread }*/
-
-        mentionsController.onInit()
-
-        clearPreparingThumbs()
-
-        // If userRole is null or empty, get channel again to update channel
-        if (channel.userRole.isNullOrEmpty())
-            getChannel(channel.id)
-
-        if (channel.unread)
-            markChannelAsRead(channel.id)
-
-        loadInitialMessages()
     }
 
     fun configureMessageList(enableDateSeparator: Boolean) {
