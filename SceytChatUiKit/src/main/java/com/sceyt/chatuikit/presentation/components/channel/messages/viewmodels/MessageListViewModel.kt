@@ -285,6 +285,11 @@ class MessageListViewModel internal constructor(
 
     internal fun currentLastMessageItem(): MessageItem? = store.lastMessageItem()
 
+    internal fun hasNewestMessageGap(): Boolean {
+        return hasNext || hasNextDb ||
+                currentMessageListItems().lastOrNull() is MessageListItem.LoadingNextItem
+    }
+
     private fun emitRenderEffect(effect: MessageListRenderEffect) = store.emitEffect(effect)
 
     private fun replaceMessages(items: List<MessageListItem>, force: Boolean) =
@@ -1013,7 +1018,7 @@ class MessageListViewModel internal constructor(
     }
 
     private suspend fun appendIncomingMessageInternal(message: SceytMessage): Boolean {
-        if (hasNext || hasNextDb) return false
+        if (hasNewestMessageGap()) return false
         val items = mapToMessageListItem(
             data = arrayListOf(message),
             hasNext = false,
@@ -1032,8 +1037,14 @@ class MessageListViewModel internal constructor(
         }
     }
 
+    internal suspend fun handleLocalOutgoingMessage(message: SceytMessage) {
+        val appended = appendOutgoingMessage(message)
+        if (!appended && hasNewestMessageGap())
+            prepareToScrollToNewMessage()
+    }
+
     private suspend fun appendOutgoingMessageInternal(message: SceytMessage): Boolean {
-        if (hasNext || hasNextDb) return false
+        if (hasNewestMessageGap()) return false
 
         val messageToRender = pendingStatusReconciler.take(message.tid)?.let {
             SceytLog.d(TAG, "Rendering previously not found updated message with tid: ${it.tid}")
