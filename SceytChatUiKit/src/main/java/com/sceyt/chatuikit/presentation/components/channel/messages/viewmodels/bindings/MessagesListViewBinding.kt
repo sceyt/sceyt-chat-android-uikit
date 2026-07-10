@@ -487,7 +487,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
     onNewOutGoingMessageFlow.onEach { message ->
         outgoingMessageMutex.withLock {
-            appendOutgoingMessage(message)
+            handleLocalOutgoingMessage(message)
         }
     }.launchIn(lifecycleOwner.lifecycleScope)
 

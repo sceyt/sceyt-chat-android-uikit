@@ -1031,6 +1031,70 @@ class MessageListViewModelStateTest {
         }
 
     @Test
+    fun `local outgoing message from a rendered newest gap requests newest page scroll`() =
+        runTest(dispatcher) {
+            val centeredMessage = createMessage(createdAt = 10, id = 10, tid = 10)
+            val lastMessage = createMessage(createdAt = 20, id = 20, tid = 20)
+            val outgoingMessage = createMessage(createdAt = 30, id = 0, tid = 30)
+            val viewModel = viewModel(
+                channel = createChannel(
+                    id = 1,
+                    pinnedAt = 0,
+                    createdAt = 1,
+                    lastMessage = lastMessage
+                )
+            )
+            whenever(
+                messageInteractor.loadNearMessages(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            ).thenReturn(
+                flowOf(
+                    PaginationResponse.DBResponse(
+                        data = listOf(centeredMessage),
+                        loadKey = LoadKeyData(value = centeredMessage.id),
+                        offset = 0,
+                        hasNext = true,
+                        hasPrev = false,
+                        loadType = LoadNear
+                    )
+                )
+            )
+            viewModel.loadNearMessages(
+                messageId = centeredMessage.id,
+                loadKey = LoadKeyData(value = centeredMessage.id),
+                ignoreServer = true
+            )
+            advanceUntilIdle()
+            viewModel.hasNext = false
+            viewModel.hasNextDb = false
+            assertThat(viewModel.hasNext).isFalse()
+            assertThat(viewModel.hasNextDb).isFalse()
+            assertThat(viewModel.state.value.items).contains(LoadingNextItem)
+
+            val effect = async {
+                viewModel.renderEffects.first { it is MessageListRenderEffect.ScrollToNewMessage }
+                        as MessageListRenderEffect.ScrollToNewMessage
+            }
+            runCurrent()
+
+            viewModel.handleLocalOutgoingMessage(outgoingMessage)
+            advanceUntilIdle()
+
+            assertThat(effect.await().lastMessage?.id).isEqualTo(lastMessage.id)
+            assertThat(
+                viewModel.state.value.items.filterIsInstance<MessageItem>().map { it.message.tid }
+            ).doesNotContain(outgoingMessage.tid)
+        }
+
+    @Test
     fun `prepareToEditMessage emits an Edit input command`() = runTest(dispatcher) {
         val viewModel = viewModel()
         val message = createMessage(createdAt = 1, id = 1, tid = 1)
