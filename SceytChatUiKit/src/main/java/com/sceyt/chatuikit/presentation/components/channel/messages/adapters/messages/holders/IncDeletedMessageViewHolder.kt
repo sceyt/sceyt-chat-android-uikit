@@ -2,6 +2,7 @@ package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.me
 
 import com.sceyt.chatuikit.databinding.SceytItemIncDeletedMessageBinding
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
+import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
@@ -12,7 +13,8 @@ class IncDeletedMessageViewHolder(
         private val style: MessageItemStyle,
         displayedListener: ((MessageListItem) -> Unit)?,
         private val messageListeners: MessageClickListeners.ClickListeners?,
-) : BaseMessageViewHolder(binding.root, style, displayedListener = displayedListener) {
+        needMediaDataCallback: ((NeedMediaInfoData) -> Unit)? = null,
+) : BaseMessageViewHolder(binding.root, style, displayedListener = displayedListener, needMediaDataCallback = needMediaDataCallback) {
 
     init {
         binding.setMessageItemStyle()

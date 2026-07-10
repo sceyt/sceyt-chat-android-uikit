@@ -6,6 +6,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.data.models.messages.SceytPollDetails
 import com.sceyt.chatuikit.databinding.SceytItemIncPollMessageBinding
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
+import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BasePollMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
@@ -17,11 +18,13 @@ class IncPollMessageViewHolder(
         style: MessageItemStyle,
         messageListeners: MessageClickListeners.ClickListeners?,
         displayedListener: ((MessageListItem) -> Unit)?,
+        needMediaDataCallback: ((NeedMediaInfoData) -> Unit)? = null,
 ) : BasePollMessageViewHolder(
     view = binding.root,
     style = style,
     messageListeners = messageListeners,
-    displayedListener = displayedListener
+    displayedListener = displayedListener,
+    needMediaDataCallback = needMediaDataCallback
 ) {
 
     init {
