@@ -4,11 +4,13 @@
 
     <item
         android:id="@+id/sceyt_add"
+        android:contentDescription="@string/sceyt_cd_add_reaction"
         android:title="@string/sceyt_add"
         app:showAsAction="ifRoom" />
 
     <item
         android:id="@+id/sceyt_remove"
+        android:contentDescription="@string/sceyt_cd_remove_reaction"
         android:title="@string/sceyt_remove"
         app:showAsAction="ifRoom" />
 </menu>

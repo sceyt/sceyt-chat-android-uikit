@@ -20,6 +20,7 @@
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvOptions"
+        android:contentDescription="@string/sceyt_cd_mute_notifications_options_list"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:nestedScrollingEnabled="false"

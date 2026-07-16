@@ -9,6 +9,7 @@
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/icSearch"
+        android:contentDescription="@string/sceyt_cd_search"
         android:layout_width="16dp"
         android:layout_height="16dp"
         android:layout_marginStart="14dp"
@@ -36,6 +37,7 @@
 
         <com.sceyt.chatuikit.presentation.custom_views.AvatarView
             android:id="@+id/avatar"
+            android:contentDescription="@string/sceyt_cd_global_search_avatar"
             android:layout_width="20dp"
             android:layout_height="20dp"
             app:sceytUiAvatarDefaultIcon="@drawable/sceyt_ic_default_avatars_selected_user" />
@@ -59,6 +61,7 @@
 
     <com.sceyt.chatuikit.shared.helpers.SceytClearFocusEditText
         android:id="@+id/input"
+        android:contentDescription="@string/sceyt_cd_global_search_input"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:background="@null"
@@ -78,6 +81,7 @@
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/icClear"
+        android:contentDescription="@string/sceyt_cd_clear_search"
         android:layout_width="32dp"
         android:layout_height="32dp"
         android:layout_marginEnd="6dp"

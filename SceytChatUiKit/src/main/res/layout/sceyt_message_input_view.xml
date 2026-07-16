@@ -17,6 +17,7 @@
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvAttachments"
+        android:contentDescription="@string/sceyt_cd_message_input_attachments_list"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="1dp"
@@ -32,6 +33,7 @@
 
     <com.sceyt.chatuikit.presentation.components.channel.input.components.MessageActionsView
         android:id="@+id/messageActionsView"
+        android:contentDescription="@string/sceyt_cd_message_actions"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:visibility="gone"
@@ -42,6 +44,7 @@
 
     <com.sceyt.chatuikit.presentation.components.channel.input.components.LinkPreviewView
         android:id="@+id/linkPreviewView"
+        android:contentDescription="@string/sceyt_cd_link_preview"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:visibility="gone"
@@ -66,6 +69,7 @@
 
         <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/icAddAttachments"
+            android:contentDescription="@string/sceyt_cd_add_attachment"
             android:layout_width="28dp"
             android:layout_height="28dp"
             android:layout_marginStart="8dp"
@@ -90,6 +94,7 @@
 
             <com.sceyt.chatuikit.presentation.components.channel.input.components.InputActionsView
                 android:id="@+id/rvLeadingActions"
+                android:contentDescription="@string/sceyt_cd_message_input_leading_actions_list"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:clipToPadding="false"
@@ -105,6 +110,7 @@
 
             <com.sceyt.chatuikit.presentation.components.channel.input.mention.MentionSupportEditText
                 android:id="@+id/messageInput"
+                android:contentDescription="@string/sceyt_cd_message_input"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:background="@android:color/transparent"
@@ -129,6 +135,7 @@
 
             <com.sceyt.chatuikit.presentation.components.channel.input.components.InputActionsView
                 android:id="@+id/rvTrailingActions"
+                android:contentDescription="@string/sceyt_cd_message_input_trailing_actions_list"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:clipToPadding="false"
@@ -146,6 +153,7 @@
 
         <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/icSendMessage"
+            android:contentDescription="@string/sceyt_cd_send_message"
             android:layout_width="36dp"
             android:layout_height="36dp"
             android:layout_marginEnd="10dp"
@@ -159,6 +167,7 @@
 
     <com.sceyt.chatuikit.presentation.custom_views.voice_recorder.VoiceRecordPlaybackView
         android:id="@+id/voiceRecordPlaybackView"
+        android:contentDescription="@string/sceyt_cd_voice_record_playback"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:clickable="true"
@@ -172,6 +181,7 @@
 
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btnJoin"
+        android:contentDescription="@string/sceyt_cd_join_channel"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:background="@color/sceyt_color_surface_1"
@@ -192,6 +202,7 @@
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/btnClearChat"
+        android:contentDescription="@string/sceyt_cd_clear_chat"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:background="@color/sceyt_color_background"

@@ -19,6 +19,7 @@
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/icQr"
+        android:contentDescription="@string/sceyt_cd_invite_qr_code"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginTop="40dp"
@@ -45,6 +46,7 @@
 
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btnShareQr"
+        android:contentDescription="@string/sceyt_cd_share_qr_code"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="20dp"

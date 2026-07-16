@@ -16,6 +16,7 @@
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvEmoji"
+            android:contentDescription="@string/sceyt_cd_emoji_reactions_list"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center"

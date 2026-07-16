@@ -8,6 +8,7 @@
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/revokeAdmin"
+        android:contentDescription="@string/sceyt_cd_revoke_admin"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?selectableItemBackground"
@@ -25,6 +26,7 @@
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/remove"
+        android:contentDescription="@string/sceyt_cd_remove_member"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?selectableItemBackground"
