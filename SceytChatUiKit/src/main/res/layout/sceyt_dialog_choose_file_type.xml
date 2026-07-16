@@ -8,6 +8,7 @@
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/takePhoto"
+        android:contentDescription="@string/sceyt_cd_take_photo"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?selectableItemBackground"
@@ -25,6 +26,7 @@
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/takeVideo"
+        android:contentDescription="@string/sceyt_cd_take_video"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?selectableItemBackground"
@@ -42,6 +44,7 @@
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/gallery"
+        android:contentDescription="@string/sceyt_cd_choose_from_gallery"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?selectableItemBackground"
@@ -59,6 +62,7 @@
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/file"
+        android:contentDescription="@string/sceyt_cd_choose_file"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?selectableItemBackground"
@@ -76,6 +80,7 @@
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/poll"
+        android:contentDescription="@string/sceyt_cd_create_poll"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?selectableItemBackground"

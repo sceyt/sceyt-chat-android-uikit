@@ -15,6 +15,7 @@
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvVoters"
+        android:contentDescription="@string/sceyt_cd_poll_option_voter_details_list"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:clipToPadding="false"

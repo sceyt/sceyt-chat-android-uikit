@@ -22,6 +22,7 @@
 
         <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/voicePlayPauseButton"
+            android:contentDescription="@string/sceyt_cd_play_or_pause_voice_message"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:background="@drawable/sceyt_bg_circle"
@@ -57,6 +58,7 @@
 
         <com.masoudss.lib.WaveformSeekBar
             android:id="@+id/voiceWaveformSeekBar"
+            android:contentDescription="@string/sceyt_cd_voice_waveform"
             android:layout_width="0dp"
             android:layout_height="20dp"
             android:layout_marginStart="16dp"
@@ -79,6 +81,7 @@
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/voicePlaybackSpeed"
+            android:contentDescription="@string/sceyt_cd_voice_playback_speed"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@drawable/sceyt_bg_corners_20"

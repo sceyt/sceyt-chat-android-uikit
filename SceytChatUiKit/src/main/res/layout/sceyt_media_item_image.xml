@@ -7,6 +7,7 @@
 
     <com.github.chrisbanes.photoview.PhotoView
         android:id="@+id/imageView"
+        android:contentDescription="@string/sceyt_cd_media_image"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:scaleType="fitCenter"
