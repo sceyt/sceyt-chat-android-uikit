@@ -566,7 +566,7 @@ class MessageListViewModel(
         if (!message.incoming || message.displayCount.toInt() == 0 || message.disableMentionsCount)
             return
 
-        if (message.mentionedUsers?.any { it.id == SceytChatUIKit.currentUserId } == true) {
+        if (message.mentionedUsers?.any { it.id == userInteractor.getCurrentUserId() } == true) {
             val prev = unreadMentionState.getAndUpdate { state ->
                 state.copy(messageIds = state.messageIds.plus(message.id))
             }
