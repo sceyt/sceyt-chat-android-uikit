@@ -28,6 +28,7 @@
 
             <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/icBack"
+                android:contentDescription="@string/sceyt_cd_back"
                 android:layout_width="32dp"
                 android:layout_height="32dp"
                 android:layout_marginStart="12dp"
@@ -40,6 +41,7 @@
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/layoutToolbarDetails"
+                android:contentDescription="@string/sceyt_cd_channel_details"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
                 android:background="?selectableItemBackground"
@@ -51,6 +53,7 @@
 
                 <com.sceyt.chatuikit.presentation.custom_views.AvatarView
                     android:id="@+id/avatar"
+                    android:contentDescription="@string/sceyt_cd_channel_avatar"
                     android:layout_width="0dp"
                     android:layout_height="0dp"
                     app:layout_constraintBottom_toBottomOf="parent"
@@ -165,6 +168,7 @@
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/layout_search"
+                android:contentDescription="@string/sceyt_cd_search_messages"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="16dp"
@@ -192,6 +196,7 @@
 
                 <com.sceyt.chatuikit.shared.helpers.SceytClearFocusEditText
                     android:id="@+id/inputSearch"
+                    android:contentDescription="@string/sceyt_cd_message_search_input"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:background="@null"
@@ -211,6 +216,7 @@
 
                 <androidx.appcompat.widget.AppCompatImageView
                     android:id="@+id/icClear"
+                    android:contentDescription="@string/sceyt_cd_clear_message_search"
                     android:layout_width="0dp"
                     android:layout_height="0dp"
                     android:layout_marginEnd="10dp"
@@ -238,4 +244,3 @@
         app:layout_constraintBottom_toBottomOf="parent" />
 
 </merge>
-

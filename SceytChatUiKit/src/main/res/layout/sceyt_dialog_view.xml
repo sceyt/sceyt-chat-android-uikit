@@ -34,6 +34,7 @@
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/buttonCancel"
+        android:contentDescription="@string/sceyt_cd_cancel"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_margin="8dp"
@@ -50,6 +51,7 @@
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/buttonAccept"
+        android:contentDescription="@string/sceyt_cd_accept"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_margin="8dp"

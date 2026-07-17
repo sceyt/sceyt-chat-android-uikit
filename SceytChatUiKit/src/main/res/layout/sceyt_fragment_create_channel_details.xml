@@ -24,6 +24,7 @@
 
             <com.sceyt.chatuikit.presentation.custom_views.AvatarView
                 android:id="@+id/avatar"
+                android:contentDescription="@string/sceyt_cd_channel_avatar"
                 android:layout_width="@dimen/_62sdp"
                 android:layout_height="@dimen/_62sdp"
                 android:layout_marginTop="24dp"
@@ -35,6 +36,7 @@
 
             <androidx.appcompat.widget.AppCompatEditText
                 android:id="@+id/inputSubject"
+                android:contentDescription="@string/sceyt_cd_channel_subject"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="15dp"
@@ -53,6 +55,7 @@
 
             <androidx.appcompat.widget.AppCompatEditText
                 android:id="@+id/inputDescription"
+                android:contentDescription="@string/sceyt_cd_channel_description"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:background="@drawable/sceyt_bg_underline"
@@ -84,6 +87,7 @@
 
             <androidx.appcompat.widget.AppCompatEditText
                 android:id="@+id/inputUri"
+                android:contentDescription="@string/sceyt_cd_channel_uri"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:background="@null"
@@ -134,6 +138,7 @@
 
     <com.sceyt.chatuikit.presentation.custom_views.CustomFloatingActonButton
         android:id="@+id/fabNext"
+        android:contentDescription="@string/sceyt_cd_next"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
@@ -144,5 +149,4 @@
         app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
-
 

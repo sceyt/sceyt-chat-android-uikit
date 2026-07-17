@@ -6,6 +6,7 @@
 
     <com.vanniktech.emoji.EmojiView
         android:id="@+id/emojiView"
+        android:contentDescription="@string/sceyt_cd_emoji_picker"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:paddingTop="5dp"

@@ -19,6 +19,7 @@
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvMedia"
+        android:contentDescription="@string/sceyt_cd_media_picker_list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@+id/tvTitle"
@@ -41,6 +42,7 @@
 
         <com.sceyt.chatuikit.presentation.custom_views.CustomFloatingActonButton
             android:id="@+id/btnNext"
+            android:contentDescription="@string/sceyt_cd_next"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="16dp"

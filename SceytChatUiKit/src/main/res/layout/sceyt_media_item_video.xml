@@ -6,6 +6,7 @@
 
     <androidx.media3.ui.PlayerView
         android:id="@+id/videoView"
+        android:contentDescription="@string/sceyt_cd_media_video_player"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:auto_show="true"

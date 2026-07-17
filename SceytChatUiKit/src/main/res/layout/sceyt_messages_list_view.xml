@@ -18,6 +18,7 @@
 
         <com.sceyt.chatuikit.presentation.custom_views.ScrollerView
             android:id="@+id/scrollToUnredMentionView"
+            android:contentDescription="@string/sceyt_cd_scroll_to_unread_mention"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:visibility="gone"
@@ -29,6 +30,7 @@
 
         <com.sceyt.chatuikit.presentation.custom_views.ScrollerView
             android:id="@+id/scrollDownView"
+            android:contentDescription="@string/sceyt_cd_scroll_down"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:visibility="gone"

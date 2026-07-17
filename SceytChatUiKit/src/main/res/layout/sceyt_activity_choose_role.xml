@@ -16,6 +16,7 @@
 
         <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/icBack"
+            android:contentDescription="@string/sceyt_cd_back"
             android:layout_width="32dp"
             android:layout_height="32dp"
             android:layout_marginStart="12dp"
@@ -45,6 +46,7 @@
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvRoles"
+        android:contentDescription="@string/sceyt_cd_roles_list"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingHorizontal="6dp"
