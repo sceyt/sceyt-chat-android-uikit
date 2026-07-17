@@ -18,6 +18,7 @@
 
     <FrameLayout
         android:id="@+id/layoutNewGroup"
+        android:contentDescription="@string/sceyt_cd_new_group"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?selectableItemBackground"
@@ -41,6 +42,7 @@
 
     <FrameLayout
         android:id="@+id/layoutNewChannel"
+        android:contentDescription="@string/sceyt_cd_new_channel"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?selectableItemBackground"
@@ -79,6 +81,7 @@
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvUsers"
+        android:contentDescription="@string/sceyt_cd_start_chat_users_list"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"

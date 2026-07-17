@@ -51,6 +51,7 @@
 
                 <androidx.appcompat.widget.AppCompatEditText
                     android:id="@+id/inputQuestion"
+                    android:contentDescription="@string/sceyt_cd_poll_question"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@android:color/transparent"
@@ -83,6 +84,7 @@
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvOptions"
+                android:contentDescription="@string/sceyt_cd_create_poll_options_list"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="16dp"
@@ -97,6 +99,7 @@
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/tvAddOption"
+                android:contentDescription="@string/sceyt_cd_add_poll_option"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
@@ -129,6 +132,7 @@
 
             <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switchAnonymous"
+                android:contentDescription="@string/sceyt_cd_anonymous_poll"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
@@ -146,6 +150,7 @@
 
             <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switchMultipleVotes"
+                android:contentDescription="@string/sceyt_cd_multiple_votes"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
@@ -172,6 +177,7 @@
 
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btnSend"
+        android:contentDescription="@string/sceyt_cd_send_poll"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="20dp"

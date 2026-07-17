@@ -28,7 +28,7 @@
         android:id="@+id/btnPlayPause"
         android:layout_width="56dp"
         android:layout_height="56dp"
-        android:contentDescription="@string/sceyt_play"
+        android:contentDescription="@string/sceyt_cd_play_or_pause_preview"
         android:padding="0dp"
         android:scaleType="centerInside"
         android:visibility="gone"
@@ -56,7 +56,7 @@
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:layout_weight="0"
-            android:contentDescription="@string/sceyt_retake"
+            android:contentDescription="@string/sceyt_cd_retake_media"
             android:padding="12dp"
             android:scaleType="centerInside"
             tools:src="@drawable/sceyt_ic_camera_retake_with_bg" />
@@ -70,7 +70,7 @@
             android:id="@+id/btnConfirm"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:contentDescription="@string/sceyt_confirm"
+            android:contentDescription="@string/sceyt_cd_confirm_media"
             android:padding="12dp"
             android:scaleType="centerInside"
             tools:src="@drawable/sceyt_ic_camera_confirm_with_bg" />

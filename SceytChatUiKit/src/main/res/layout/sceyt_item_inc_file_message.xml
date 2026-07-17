@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    android:contentDescription="@string/sceyt_cd_incoming_file_message" xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -7,6 +8,7 @@
 
     <androidx.appcompat.widget.AppCompatCheckBox
         android:id="@+id/selectView"
+        android:contentDescription="@string/sceyt_cd_select_incoming_file_message"
         android:layout_width="24dp"
         android:layout_height="24dp"
         android:background="@android:color/transparent"
@@ -18,6 +20,7 @@
 
     <com.sceyt.chatuikit.presentation.custom_views.AvatarView
         android:id="@+id/avatar"
+        android:contentDescription="@string/sceyt_cd_incoming_file_message_avatar"
         android:layout_width="@dimen/_28sdp"
         android:layout_height="@dimen/_28sdp"
         android:layout_marginStart="12dp"
@@ -128,6 +131,7 @@
 
         <View
             android:id="@+id/viewHandleClick"
+            android:contentDescription="@string/sceyt_cd_open_incoming_file_message"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             app:layout_constraintBottom_toBottomOf="@+id/icFile"
@@ -135,6 +139,7 @@
 
         <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/icFile"
+            android:contentDescription="@string/sceyt_cd_incoming_file_message_file"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:layout_marginVertical="8dp"
@@ -148,6 +153,7 @@
 
         <com.sceyt.chatuikit.presentation.custom_views.CircularProgressView
             android:id="@+id/loadProgress"
+            android:contentDescription="@string/sceyt_cd_load_incoming_file_message"
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:padding="1dp"
@@ -209,6 +215,7 @@
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tvReplyCount"
+        android:contentDescription="@string/sceyt_cd_incoming_file_message_reply_count"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="2dp"
@@ -224,6 +231,7 @@
 
     <ViewStub
         android:id="@+id/rvReactions"
+        android:contentDescription="@string/sceyt_cd_incoming_file_message_reactions_list"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="3dp"

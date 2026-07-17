@@ -21,6 +21,7 @@
 
             <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/icBack"
+                android:contentDescription="@string/sceyt_cd_back"
                 android:layout_width="32dp"
                 android:layout_height="32dp"
                 android:layout_marginStart="12dp"

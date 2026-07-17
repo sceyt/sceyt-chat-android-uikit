@@ -7,6 +7,7 @@
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/videoTimeContainer"
+        android:contentDescription="@string/sceyt_cd_video_time"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
@@ -20,6 +21,7 @@
 
         <com.sceyt.chatuikit.presentation.custom_views.PlayPauseImage
             android:id="@id/exo_play_pause"
+            android:contentDescription="@string/sceyt_cd_play_or_pause"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
