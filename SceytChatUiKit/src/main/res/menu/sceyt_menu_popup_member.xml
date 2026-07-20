@@ -4,21 +4,25 @@
 
     <item
         android:id="@+id/sceyt_set_owner"
+        android:contentDescription="@string/sceyt_cd_set_owner"
         android:title="@string/sceyt_set_owner"
         app:showAsAction="always" />
 
     <item
         android:id="@+id/sceyt_change_role"
+        android:contentDescription="@string/sceyt_cd_change_role"
         android:title="@string/sceyt_change_role"
         app:showAsAction="always" />
 
     <item
         android:id="@+id/sceyt_kick_member"
+        android:contentDescription="@string/sceyt_cd_kick_member"
         android:title="@string/sceyt_kick_member"
         app:showAsAction="ifRoom" />
 
     <item
         android:id="@+id/sceyt_block_and_kick_member"
+        android:contentDescription="@string/sceyt_cd_block_and_kick_member"
         android:title="@string/sceyt_block_and_kick_member"
         app:showAsAction="ifRoom" />
 

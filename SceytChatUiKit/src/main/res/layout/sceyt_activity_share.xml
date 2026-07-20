@@ -17,6 +17,7 @@
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvChannels"
+        android:contentDescription="@string/sceyt_cd_share_channels_list"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:clipToPadding="false"
@@ -39,6 +40,7 @@
 
     <androidx.appcompat.widget.AppCompatEditText
         android:id="@+id/messageInput"
+        android:contentDescription="@string/sceyt_cd_share_message_input"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:hint="@string/sceyt_write_a_message"
@@ -55,6 +57,7 @@
 
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btnShare"
+        android:contentDescription="@string/sceyt_cd_share_message"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="24dp"

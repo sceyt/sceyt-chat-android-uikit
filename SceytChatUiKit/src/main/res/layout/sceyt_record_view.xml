@@ -36,6 +36,7 @@
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/tvCancel"
+            android:contentDescription="@string/sceyt_cd_cancel_recording"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
@@ -163,6 +164,7 @@
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/icViewOnce"
+        android:contentDescription="@string/sceyt_cd_view_once"
         android:layout_width="42dp"
         android:layout_height="42dp"
         android:layout_marginEnd="6dp"
@@ -195,6 +197,7 @@
 
         <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/icStopRecording"
+            android:contentDescription="@string/sceyt_cd_stop_recording"
             android:layout_width="42dp"
             android:layout_height="42dp"
             android:background="@drawable/sceyt_bg_circle"
@@ -206,6 +209,7 @@
 
     <androidx.cardview.widget.CardView
         android:id="@+id/imageViewAudio"
+        android:contentDescription="@string/sceyt_cd_record_audio"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="10dp"
@@ -234,4 +238,3 @@
     </androidx.cardview.widget.CardView>
 
 </merge>
-

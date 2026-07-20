@@ -13,6 +13,7 @@
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/icSearch"
+        android:contentDescription="@string/sceyt_cd_search"
         android:layout_width="16dp"
         android:layout_height="16dp"
         android:layout_marginStart="14dp"
@@ -23,6 +24,7 @@
 
     <com.sceyt.chatuikit.shared.helpers.SceytClearFocusEditText
         android:id="@+id/input"
+        android:contentDescription="@string/sceyt_cd_search_input"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:background="@null"
@@ -43,6 +45,7 @@
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/icClear"
+        android:contentDescription="@string/sceyt_cd_clear_search"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginEnd="10dp"

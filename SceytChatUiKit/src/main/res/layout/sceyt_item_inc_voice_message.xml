@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    android:contentDescription="@string/sceyt_cd_incoming_voice_message" xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -7,6 +8,7 @@
 
     <androidx.appcompat.widget.AppCompatCheckBox
         android:id="@+id/selectView"
+        android:contentDescription="@string/sceyt_cd_select_incoming_voice_message"
         android:layout_width="24dp"
         android:layout_height="24dp"
         android:background="@android:color/transparent"
@@ -18,6 +20,7 @@
 
     <com.sceyt.chatuikit.presentation.custom_views.AvatarView
         android:id="@+id/avatar"
+        android:contentDescription="@string/sceyt_cd_incoming_voice_message_avatar"
         android:layout_width="@dimen/_28sdp"
         android:layout_height="@dimen/_28sdp"
         android:layout_marginStart="12dp"
@@ -129,6 +132,7 @@
 
         <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/playPauseButton"
+            android:contentDescription="@string/sceyt_cd_incoming_voice_message_play_or_pause"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:layout_marginVertical="8dp"
@@ -143,6 +147,7 @@
 
         <com.sceyt.chatuikit.presentation.custom_views.CircularProgressView
             android:id="@+id/loadProgress"
+            android:contentDescription="@string/sceyt_cd_load_incoming_voice_message"
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:padding="1dp"
@@ -172,6 +177,7 @@
 
         <com.masoudss.lib.WaveformSeekBar
             android:id="@+id/seekBar"
+            android:contentDescription="@string/sceyt_cd_incoming_voice_message_seek_bar"
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:layout_marginHorizontal="12dp"
@@ -193,6 +199,7 @@
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/playBackSpeed"
+            android:contentDescription="@string/sceyt_cd_incoming_voice_message_playback_speed"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="12dp"
@@ -237,6 +244,7 @@
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tvReplyCount"
+        android:contentDescription="@string/sceyt_cd_incoming_voice_message_reply_count"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="2dp"
@@ -252,6 +260,7 @@
 
     <ViewStub
         android:id="@+id/rvReactions"
+        android:contentDescription="@string/sceyt_cd_incoming_voice_message_reactions_list"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="3dp"

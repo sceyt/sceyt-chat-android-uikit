@@ -17,6 +17,7 @@
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvSelectedUsers"
+        android:contentDescription="@string/sceyt_cd_selected_users_list"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:clipToPadding="false"
@@ -44,6 +45,7 @@
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvUsers"
+        android:contentDescription="@string/sceyt_cd_select_users_list"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:clipToPadding="false"
@@ -58,6 +60,7 @@
 
     <com.sceyt.chatuikit.presentation.custom_views.CustomFloatingActonButton
         android:id="@+id/fabNext"
+        android:contentDescription="@string/sceyt_cd_next"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"

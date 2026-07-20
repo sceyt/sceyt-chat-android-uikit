@@ -12,6 +12,7 @@
 
         <com.sceyt.chatuikit.presentation.custom_views.AvatarView
             android:id="@+id/avatar"
+            android:contentDescription="@string/sceyt_cd_invite_channel_avatar"
             android:layout_width="90dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
@@ -50,6 +51,7 @@
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvMembers"
+            android:contentDescription="@string/sceyt_cd_join_by_invite_link_members_list"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="28dp"
@@ -78,6 +80,7 @@
 
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnJoinGroup"
+            android:contentDescription="@string/sceyt_cd_join_group"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="20dp"

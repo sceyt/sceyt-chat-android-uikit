@@ -21,6 +21,7 @@
 
         <com.sceyt.chatuikit.presentation.custom_views.AvatarView
             android:id="@+id/avatar"
+            android:contentDescription="@string/sceyt_cd_channel_avatar"
             android:layout_width="72dp"
             android:layout_height="72dp"
             android:layout_margin="16dp"

@@ -3,6 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/parentLayout"
+    android:contentDescription="@string/sceyt_cd_message_link_preview"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     tools:background="#E3E7FF">
