@@ -4,54 +4,63 @@
 
     <item
         android:id="@+id/sceyt_edit_message"
+        android:contentDescription="@string/sceyt_cd_edit_message"
         android:icon="@drawable/sceyt_ic_edit_stroked"
         android:title="@string/sceyt_edit"
         app:showAsAction="always" />
 
     <item
         android:id="@+id/sceyt_react"
+        android:contentDescription="@string/sceyt_cd_react"
         android:icon="@drawable/sceyt_ic_react"
         android:title="@string/sceyt_react"
         app:showAsAction="always" />
 
     <item
         android:id="@+id/sceyt_reply"
+        android:contentDescription="@string/sceyt_cd_reply"
         android:icon="@drawable/sceyt_ic_reply"
         android:title="@string/sceyt_reply"
         app:showAsAction="ifRoom" />
 
     <item
         android:id="@+id/sceyt_forward"
+        android:contentDescription="@string/sceyt_cd_forward_message"
         android:icon="@drawable/sceyt_ic_forward"
         android:title="@string/sceyt_forward"
         app:showAsAction="ifRoom" />
 
     <item
         android:id="@+id/sceyt_reply_in_thread"
+        android:contentDescription="@string/sceyt_cd_reply_in_thread"
         android:icon="@drawable/sceyt_ic_reply_in_thread"
         android:title="@string/sceyt_reply_in_thread"
         app:showAsAction="ifRoom" />
 
     <item
         android:id="@+id/sceyt_copy_message"
+        android:contentDescription="@string/sceyt_cd_copy_message"
         android:icon="@drawable/sceyt_ic_copy"
         android:title="@string/sceyt_copy"
         app:showAsAction="ifRoom" />
 
     <item
         android:id="@+id/sceyt_retract_vote"
+        android:contentDescription="@string/sceyt_cd_retract_vote"
         android:icon="@drawable/sceyt_ic_retract_votes"
         android:title="@string/sceyt_retract_vote"
         app:showAsAction="ifRoom" />
 
     <item
         android:id="@+id/sceyt_end_vote"
+        android:contentDescription="@string/sceyt_cd_end_vote"
         android:icon="@drawable/sceyt_ic_end_poll"
         android:title="@string/sceyt_end_vote"
         app:showAsAction="ifRoom" />
 
     <item
         android:id="@+id/sceyt_delete_message"
+        android:contentDescription="@string/sceyt_cd_delete_message"
         android:icon="@drawable/sceyt_ic_trash"
         android:title="@string/sceyt_delete"
         app:showAsAction="ifRoom" />

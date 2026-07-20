@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.cardview.widget.CardView
+    android:contentDescription="@string/sceyt_cd_search_suggestion_user_item" xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:toosl="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
@@ -19,6 +20,7 @@
 
         <com.sceyt.chatuikit.presentation.custom_views.AvatarView
             android:id="@+id/avatar"
+            android:contentDescription="@string/sceyt_cd_search_suggestion_user_avatar"
             android:layout_width="20dp"
             android:layout_height="20dp"
             app:layout_constraintBottom_toBottomOf="parent"

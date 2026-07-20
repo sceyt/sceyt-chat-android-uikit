@@ -101,6 +101,7 @@
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/icCancel"
+        android:contentDescription="@string/sceyt_cd_cancel"
         android:layout_width="24dp"
         android:layout_height="24dp"
         android:background="?attr/selectableItemBackgroundBorderless"

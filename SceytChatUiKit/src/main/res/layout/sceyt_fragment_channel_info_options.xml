@@ -15,6 +15,7 @@
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/members"
+            android:contentDescription="@string/sceyt_cd_members"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:background="@drawable/sceyt_bg_ripple"
@@ -40,6 +41,7 @@
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/admins"
+            android:contentDescription="@string/sceyt_cd_admins"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:background="@drawable/sceyt_bg_ripple"
@@ -65,6 +67,7 @@
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/searchMessages"
+            android:contentDescription="@string/sceyt_cd_search_messages"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:background="@drawable/sceyt_bg_ripple"

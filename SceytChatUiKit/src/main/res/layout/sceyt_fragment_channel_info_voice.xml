@@ -7,6 +7,7 @@
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvVoice"
+        android:contentDescription="@string/sceyt_cd_channel_voice_messages_list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:clipToPadding="false"
