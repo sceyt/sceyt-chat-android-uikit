@@ -151,7 +151,16 @@ class MessageListViewModelMentionTest {
             _channel = channel,
             replyInThread = false,
             initialTargetMessageId = null,
+            ioDispatcher = dispatcher,
+            defaultDispatcher = dispatcher,
+            mainDispatcher = dispatcher,
+            editedOrDeletedMessagesFlow = MutableSharedFlow(),
+            outgoingMessagesFlow = MutableSharedFlow(),
+            channelEventsFlow = MutableSharedFlow(),
+            channelMemberActivityEventsFlow = MutableSharedFlow(),
+            channelMembersEventsFlow = MutableSharedFlow(),
         ).also {
+            it.configureMessageList(enableDateSeparator = false)
             createdViewModels.add(it)
         }
     }
