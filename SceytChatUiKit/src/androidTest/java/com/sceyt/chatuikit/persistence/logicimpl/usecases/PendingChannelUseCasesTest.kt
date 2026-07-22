@@ -93,6 +93,7 @@ class PendingChannelUseCasesTest {
             draftMessageDao = database.draftMessageDao(),
             pendingReactionDao = database.pendingReactionDao(),
             pendingMessageStateDao = database.pendingMessageStateDao(),
+            pendingMessageDeleteByTidDao = database.pendingMessageDeleteByTidDao(),
             channelsCache = channelsCache,
             messagesCache = messagesCache,
             channelSyncStateStore = syncStateStore

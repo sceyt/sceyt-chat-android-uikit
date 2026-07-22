@@ -20,6 +20,7 @@ import com.sceyt.chatuikit.persistence.database.dao.MarkerDao
 import com.sceyt.chatuikit.persistence.database.dao.MemberDao
 import com.sceyt.chatuikit.persistence.database.dao.MessageDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingMarkerDao
+import com.sceyt.chatuikit.persistence.database.dao.PendingMessageDeleteByTidDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingMessageStateDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingPollVoteDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingReactionDao
@@ -50,6 +51,7 @@ import com.sceyt.chatuikit.persistence.database.entity.messages.PollVoteEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.ReactionEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.ReactionTotalEntity
 import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingMarkerEntity
+import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingMessageDeleteByTidEntity
 import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingMessageStateEntity
 import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingPollVoteEntity
 import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingReactionEntity
@@ -86,9 +88,10 @@ import com.sceyt.chatuikit.persistence.database.entity.user.UserMetadataEntity
         PollOptionEntity::class,
         PollVoteEntity::class,
         PendingPollVoteEntity::class,
+        PendingMessageDeleteByTidEntity::class,
         MessageFtsEntity::class,
     ],
-    version = 30,
+    version = 31,
     autoMigrations = [
         AutoMigration(from = 1, to = 2),
         AutoMigration(from = 2, to = 3),
@@ -116,6 +119,7 @@ import com.sceyt.chatuikit.persistence.database.entity.user.UserMetadataEntity
         AutoMigration(from = 26, to = 27),
         AutoMigration(from = 27, to = 28),
         AutoMigration(from = 29, to = 30),
+        AutoMigration(from = 30, to = 31),
     ]
 )
 
@@ -134,6 +138,7 @@ internal abstract class SceytDatabase : RoomDatabase() {
     abstract fun pendingMarkersDao(): PendingMarkerDao
     abstract fun pendingReactionDao(): PendingReactionDao
     abstract fun pendingMessageStateDao(): PendingMessageStateDao
+    abstract fun pendingMessageDeleteByTidDao(): PendingMessageDeleteByTidDao
     abstract fun fileChecksumDao(): FileChecksumDao
     abstract fun linkDao(): LinkDao
     abstract fun loadRangeDao(): LoadRangeDao

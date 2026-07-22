@@ -23,6 +23,7 @@ internal object DatabaseConstants {
     const val DRAFT_MESSAGE_USER_LINK_TABLE = "sceyt_draft_message_user_link_table"
     const val AUTO_DELETE_MESSAGES_TABLE = "sceyt_auto_delete_messages_table"
     const val PENDING_MESSAGE_STATE_TABLE = "sceyt_pending_message_state_table"
+    const val PENDING_MESSAGE_DELETE_BY_TID_TABLE = "sceyt_pending_message_delete_by_tid_table"
     const val LOAD_RANGE_TABLE = "sceyt_load_range_table"
 
     // Attachment
