@@ -62,14 +62,14 @@ class MessagesAdapterListCommittedTest {
     }
 
     @Test
-    fun `addPreparedNewMessages invokes listener without dedupe`() {
+    fun `addPreparedNewMessages invokes listener with dedupe`() {
         val adapter = adapter(listOf(item(1)))
         val count = adapter.countCommits()
 
         adapter.addPreparedNewMessages(listOf(item(1)))
 
         assertThat(count[0]).isEqualTo(1)
-        assertThat(adapter.getData()).hasSize(2)
+        assertThat(adapter.getData()).hasSize(1)
     }
 
     @Test
