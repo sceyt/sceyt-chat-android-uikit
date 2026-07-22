@@ -102,6 +102,7 @@ interface PersistenceMessagesLogic {
     suspend fun sendAllPendingMessages()
     suspend fun sendAllPendingMarkers()
     suspend fun sendAllPendingMessageStateUpdates()
+    suspend fun sendAllPendingMessageDeletesByTid()
     suspend fun markMessagesAs(
         channelId: Long, marker: MarkerType,
         vararg ids: Long,
