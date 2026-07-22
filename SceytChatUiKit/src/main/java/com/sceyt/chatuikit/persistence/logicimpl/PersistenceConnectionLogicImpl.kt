@@ -80,6 +80,7 @@ internal class PersistenceConnectionLogicImpl(
                 messageLogic.sendAllPendingMarkers()
                 messageLogic.sendAllPendingMessages()
                 messageLogic.sendAllPendingMessageStateUpdates()
+                messageLogic.sendAllPendingMessageDeletesByTid()
                 reactionsLogic.sendAllPendingReactions()
                 pollLogic.sendAllPendingVotes()
                 _allPendingEventsSentFlow.tryEmit(Unit)

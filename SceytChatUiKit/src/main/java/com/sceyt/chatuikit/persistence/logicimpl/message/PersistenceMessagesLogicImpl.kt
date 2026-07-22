@@ -53,6 +53,7 @@ import com.sceyt.chatuikit.persistence.database.dao.AttachmentDao
 import com.sceyt.chatuikit.persistence.database.dao.LoadRangeDao
 import com.sceyt.chatuikit.persistence.database.dao.MessageDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingMarkerDao
+import com.sceyt.chatuikit.persistence.database.dao.PendingMessageDeleteByTidDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingMessageStateDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingPollVoteDao
 import com.sceyt.chatuikit.persistence.database.dao.PollDao
@@ -63,6 +64,7 @@ import com.sceyt.chatuikit.persistence.database.entity.messages.MarkerEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageDb
 import com.sceyt.chatuikit.persistence.database.entity.messages.PendingPollVoteDb
 import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingMarkerEntity
+import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingMessageDeleteByTidEntity
 import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingMessageStateEntity
 import com.sceyt.chatuikit.persistence.database.entity.user.UserDb
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
@@ -124,6 +126,7 @@ internal class PersistenceMessagesLogicImpl(
     private val reactionDao: ReactionDao,
     private val userDao: UserDao,
     private val pendingMessageStateDao: PendingMessageStateDao,
+    private val pendingMessageDeleteByTidDao: PendingMessageDeleteByTidDao,
     private val pollDao: PollDao,
     private val pendingPollVoteDao: PendingPollVoteDao,
     private val fileTransferService: FileTransferService,
@@ -962,6 +965,17 @@ internal class PersistenceMessagesLogicImpl(
                     state = it.transferState ?: TransferState.Uploading
                 )
             }
+            // The send request may already have reached the server, so persist a delete-by-tid
+            // intent (retried on reconnect) and attempt to delete it on the server now.
+            pendingMessageDeleteByTidDao.insert(
+                PendingMessageDeleteByTidEntity(
+                    messageTid = message.tid,
+                    channelId = channelId,
+                    deleteType = deleteType,
+                    createdAt = System.currentTimeMillis()
+                )
+            )
+            deleteMessageByTidImpl(channelId, message.tid, DeleteHard)
             return@withContext SceytResponse.Success(clonedMessage)
         }
 
@@ -1043,6 +1057,34 @@ internal class PersistenceMessagesLogicImpl(
             }
         }
         return response
+    }
+
+    private suspend fun deleteMessageByTidImpl(
+        channelId: Long,
+        tid: Long,
+        deleteType: DeleteMessageType
+    ): SceytResponse<SceytMessage> {
+        val response = messagesRepository.deleteMessageByTid(channelId, tid, deleteType)
+        response.onSuccessNotNull {
+            pendingMessageDeleteByTidDao.deleteByTid(tid)
+        }.onError {
+            val errorType = SDKErrorTypeEnum.fromValue(it?.type) ?: return@onError
+            if (!errorType.isResendable) {
+                pendingMessageDeleteByTidDao.deleteByTid(tid)
+                SceytLog.e(
+                    TAG,
+                    "Delete message by tid non-resendable error: ${it?.message}, errorType: ${errorType.value}" +
+                            "deleting pending delete by tid state from db for message tid:$tid"
+                )
+            }
+        }
+        return response
+    }
+
+    override suspend fun sendAllPendingMessageDeletesByTid() = withContext(dispatcherIO) {
+        pendingMessageDeleteByTidDao.getAll().forEach { entity ->
+            deleteMessageByTidImpl(entity.channelId, entity.messageTid, entity.deleteType)
+        }
     }
 
     override suspend fun getMessageFromServerById(
