@@ -46,8 +46,11 @@ import com.sceyt.chatuikit.domain.usecases.PauseOrResumeTransferUseCase
 import com.sceyt.chatuikit.extensions.findIndexed
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.media.audio.AudioRecordData
+import com.sceyt.chatuikit.persistence.differs.diff
 import com.sceyt.chatuikit.persistence.extensions.asLiveData
 import com.sceyt.chatuikit.persistence.extensions.broadcastSharedFlow
+import com.sceyt.chatuikit.persistence.extensions.getPeer
+import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
@@ -87,6 +90,7 @@ import com.sceyt.chatuikit.presentation.extensions.isPending
 import com.sceyt.chatuikit.presentation.helpers.DebounceHelper
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import com.sceyt.chatuikit.presentation.root.PageState
+import com.sceyt.chatuikit.services.SceytPresenceChecker
 import com.sceyt.chatuikit.services.sync.SceytSyncManager
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.Dispatchers
@@ -182,6 +186,9 @@ class MessageListViewModel(
     private val _onChannelUpdatedEventFlow = broadcastSharedFlow<SceytChannel>(replay = 1)
     val onChannelUpdatedEventFlow = _onChannelUpdatedEventFlow.asSharedFlow()
 
+    private val _peerPresenceUpdatedFlow = MutableLiveData<SceytChannel>()
+    val peerPresenceUpdatedFlow = _peerPresenceUpdatedFlow.asLiveData()
+
     //Command events
     private val _onEditMessageCommandLiveData = MutableLiveData<SceytMessage>()
     internal val onEditMessageCommandLiveData = _onEditMessageCommandLiveData.asLiveData()
@@ -206,6 +213,8 @@ class MessageListViewModel(
 
 
     init {
+        observeToUserPresenceUpdateIfNeeded()
+
         onNewMessageFlow = messageInteractor.getOnMessageFlow()
             .filter { (channel) ->
                 channel.id == this.channel.id /*&& it.second.replyInThread == replyInThread*/
@@ -253,7 +262,8 @@ class MessageListViewModel(
         SceytSyncManager.syncChannelMessagesFinished
             .filter { (syncedChannel, _) -> syncedChannel.id == channel.id }
             .onEach { (syncedChannel, _) ->
-                updateChannel { syncedChannel }
+                if (channel.diff(syncedChannel).hasDifference())
+                    updateChannel { syncedChannel }
             }
             .launchIn(viewModelScope)
 
@@ -266,6 +276,29 @@ class MessageListViewModel(
         if (channel.newMentionCount > 0) {
             getUnreadMentions(0)
         }
+    }
+
+    private fun observeToUserPresenceUpdateIfNeeded() {
+        if (!channel.isDirect() || channel.isSelf) return
+        val peer = channel.getPeer() ?: return
+        SceytPresenceChecker.addNewUserToPresenceCheck(peer.id)
+
+        SceytPresenceChecker.onPresenceCheckUsersFlow
+            .onEach { users ->
+                val peer = channel.getPeer() ?: return@onEach
+                val presenceUser = users.find { it.user.id == peer.id } ?: return@onEach
+                if (peer.user.diff(presenceUser.user).hasDifference()) {
+                    updateChannel(notifyUpdate = false) {
+                        copy(members = members?.map {
+                            if (it.id == peer.id) {
+                                it.copy(user = presenceUser.user)
+                            } else it
+                        })
+                    }
+                    _peerPresenceUpdatedFlow.postValue(channel)
+                }
+            }
+            .launchIn(viewModelScope)
     }
 
     fun loadPrevMessages(
@@ -470,10 +503,14 @@ class MessageListViewModel(
         }
     }
 
-    private fun updateChannel(updateAction: SceytChannel.() -> SceytChannel) {
+    private fun updateChannel(
+        notifyUpdate: Boolean = true,
+        updateAction: SceytChannel.() -> SceytChannel,
+    ) {
         _channel = _channel.updateAction()
         _conversationId = _channel.id
-        _onChannelUpdatedEventFlow.tryEmit(_channel)
+        if (notifyUpdate)
+            _onChannelUpdatedEventFlow.tryEmit(_channel)
     }
 
     private fun onPendingChannelCreated(newChannel: SceytChannel) {
