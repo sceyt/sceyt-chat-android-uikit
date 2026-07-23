@@ -7,6 +7,7 @@ import com.sceyt.chatuikit.logger.SceytLog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import kotlin.time.Duration.Companion.milliseconds
 
 internal class SetUserPresenceUseCase {
 
@@ -32,7 +33,7 @@ internal class SetUserPresenceUseCase {
                     "setUserPresence state:$state failed, retrying (${retryCount + 1}/$MAX_RETRY_COUNT): ${exception?.message}"
                 )
                 // Exponential backoff
-                delay(delayMs)
+                delay(delayMs.milliseconds)
                 setUserPresenceWithRetry(retryCount + 1, delayMs * 2)
             } else {
                 SceytLog.e(

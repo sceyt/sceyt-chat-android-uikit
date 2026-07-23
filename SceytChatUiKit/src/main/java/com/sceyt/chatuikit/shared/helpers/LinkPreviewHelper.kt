@@ -11,6 +11,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.extensions.getImageBitmapWithGlideWithTimeout
 import com.sceyt.chatuikit.extensions.toBase64
 import com.sceyt.chatuikit.koin.SceytKoinComponent
+import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import com.sceyt.chatuikit.shared.utils.BitmapUtil
 import com.sceyt.chatuikit.shared.utils.FileResizeUtil
@@ -109,9 +110,11 @@ class LinkPreviewHelper : SceytKoinComponent {
     }
 
     private fun getImageThumb(bitmap: Bitmap): String? {
-        FileResizeUtil.resizeAndCompressImageAsByteArray(bitmap, 100)?.let { bm ->
+        FileResizeUtil.resizeAndCompressImageAsByteArray(bitmap, 100).onSuccess { bm ->
             val bytes = ThumbHash.rgbaToThumbHash(bm.width, bm.height, BitmapUtil.bitmapToRgba(bm))
             return bytes.toBase64()
+        }.onFailure {
+            SceytLog.e("LinkPreviewHelper", "getImageThumb failed with: ${it.message}")
         }
         return null
     }
