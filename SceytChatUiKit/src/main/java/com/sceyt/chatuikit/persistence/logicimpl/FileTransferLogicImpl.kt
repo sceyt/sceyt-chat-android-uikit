@@ -9,7 +9,6 @@ import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.FileChecksumData
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
-import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.getFileSize
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.koin.SceytKoinComponent
@@ -66,6 +65,10 @@ internal class FileTransferLogicImpl(
 
     private var sharingFilesPath = Collections.synchronizedSet<ShareFilesData>(mutableSetOf())
 
+    companion object {
+        private const val TAG = "FileTransferLogic"
+    }
+
     override fun uploadFile(attachment: SceytAttachment, task: TransferTask) {
         checkAndUpload(attachment, task)
     }
@@ -87,19 +90,17 @@ internal class FileTransferLogicImpl(
             }
 
             var uploadAttachment = attachment
-            checkAndResizeMessageAttachments(context, attachment, checksum, task) {
-                if (it.isSuccess) {
-                    it.getOrNull()?.let { path ->
-                        task.updateFileLocationCallback?.onUpdateFileLocation(path)
-                        uploadAttachment = uploadAttachment.copy(
-                            filePath = path,
-                            fileSize = getFileSize(path)
-                        )
-                    }
-                } else SceytLog.i(
-                    "resizeResult",
-                    "Couldn't resize sharing file with reason ${it.exceptionOrNull()}"
-                )
+            checkAndResizeMessageAttachments(context, attachment, checksum, task) { result ->
+                result.onSuccess { path ->
+                    task.updateFileLocationCallback?.onUpdateFileLocation(path)
+                    uploadAttachment = uploadAttachment.copy(
+                        filePath = path,
+                        fileSize = getFileSize(path)
+                    )
+
+                }.onFailure {
+                    SceytLog.i(TAG, "Couldn't resize sharing file with reason ${it.message}")
+                }
 
                 uploadSharedAttachment(uploadAttachment, task)
             }
@@ -275,16 +276,13 @@ internal class FileTransferLogicImpl(
             return
         } else {
             preparingThumbsMap[messageTid] = messageTid
-            val result = getAttachmentThumbPath(context, attachment, size)
-            if (result.isSuccess) {
-                result.getOrNull()?.let { path ->
-                    thumbPaths[thumbKey] = ThumbPathsData(messageTid, path, size)
-                    task.thumbCallback?.onThumb(path, data)
-                }
-            } else {
+            getAttachmentThumbPath(context, attachment, size).onSuccess { path ->
+                thumbPaths[thumbKey] = ThumbPathsData(messageTid, path, size)
+                task.thumbCallback?.onThumb(path, data)
+            }.onFailure {
                 SceytLog.e(
                     TAG, "Couldn't get a thumb for messageTid: $messageTid," +
-                            " path:${attachment.filePath} with reason ${result.exceptionOrNull()}"
+                            " path:${attachment.filePath} with reason ${it.message}"
                 )
             }
         }
@@ -326,25 +324,21 @@ internal class FileTransferLogicImpl(
             return
         }
         var uploadAttachment = attachment
-        checkAndResizeMessageAttachments(context, attachment, checksum, transferTask) {
+        checkAndResizeMessageAttachments(context, attachment, checksum, transferTask) { result ->
             // Check if task was paused
             if (pausedTasksMap[attachment.messageTid] != null) {
                 uploadNext()
                 return@checkAndResizeMessageAttachments
             }
-
-            if (it.isSuccess) {
-                it.getOrNull()?.let { path ->
-                    transferTask.updateFileLocationCallback?.onUpdateFileLocation(path)
-                    uploadAttachment = uploadAttachment.copy(
-                        filePath = path,
-                        fileSize = getFileSize(path)
-                    )
-                }
-            } else SceytLog.i(
-                "resizeResult",
-                "Couldn't resize file with reason ${it.exceptionOrNull()}"
-            )
+            result.onSuccess { path ->
+                transferTask.updateFileLocationCallback?.onUpdateFileLocation(path)
+                uploadAttachment = uploadAttachment.copy(
+                    filePath = path,
+                    fileSize = getFileSize(path)
+                )
+            }.onFailure {
+                SceytLog.i(TAG, "Couldn't resize file with reason ${it.message}")
+            }
 
             if (!transferUtility.resumeUpload(attachment)) {
                 transferUtility.uploadFile(
@@ -392,7 +386,7 @@ internal class FileTransferLogicImpl(
         context: Context,
         attachment: SceytAttachment,
         checksumData: FileChecksumData?,
-        task: TransferTask, callback: (Result<String?>) -> Unit,
+        task: TransferTask, callback: (Result<String>) -> Unit,
     ) {
 
         val path = checksumData?.resizedFilePath
@@ -434,7 +428,7 @@ internal class FileTransferLogicImpl(
                 }
             }
 
-            else -> callback.invoke(Result.success(null))
+            else -> callback.invoke(Result.failure(Exception("Unsupported attachment type: ${attachment.type}")))
         }
     }
 
@@ -492,22 +486,21 @@ internal class FileTransferLogicImpl(
         context: Context,
         attachment: SceytAttachment,
         size: Size,
-    ): Result<String?> {
+    ): Result<String> {
         val path = attachment.filePath ?: return Result.failure(FileNotFoundException())
         val minSize = max(size.height, size.width)
         val reqSize = if (minSize > 0) minSize.toFloat() else 800f
-        val resizePath = when (attachment.type) {
+        return when (attachment.type) {
             AttachmentTypeEnum.Image.value -> {
-                FileResizeUtil.getImageThumbAsFile(context, path, reqSize)?.path
+                FileResizeUtil.getImageThumbAsFile(context, path, reqSize).map { it.path }
             }
 
             AttachmentTypeEnum.Video.value -> {
-                FileResizeUtil.getVideoThumbAsFile(context, path, reqSize)?.path
+                FileResizeUtil.getVideoThumbAsFile(context, path, reqSize).map { it.path }
             }
 
-            else -> null
+            else -> Result.failure(Exception("Unsupported attachment type: ${attachment.type}"))
         }
-        return Result.success(resizePath)
     }
 
     private fun getPreparingThumbKey(attachment: SceytAttachment, data: ThumbData): String {

@@ -8,6 +8,7 @@ import com.sceyt.chatuikit.persistence.database.dao.ChannelDao
 import com.sceyt.chatuikit.persistence.database.dao.DraftMessageDao
 import com.sceyt.chatuikit.persistence.database.dao.LoadRangeDao
 import com.sceyt.chatuikit.persistence.database.dao.MessageDao
+import com.sceyt.chatuikit.persistence.database.dao.PendingMessageDeleteByTidDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingMessageStateDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingReactionDao
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
@@ -23,6 +24,7 @@ internal class MigratePendingChannelToRealChannelUseCase(
     private val draftMessageDao: DraftMessageDao,
     private val pendingReactionDao: PendingReactionDao,
     private val pendingMessageStateDao: PendingMessageStateDao,
+    private val pendingMessageDeleteByTidDao: PendingMessageDeleteByTidDao,
     private val channelsCache: ChannelsCache,
     private val messagesCache: MessagesCache,
     private val channelSyncStateStore: ChannelSyncStateStore
@@ -44,6 +46,7 @@ internal class MigratePendingChannelToRealChannelUseCase(
         moveDraftToChannel(pendingChannelId, realChannelId)
         pendingReactionDao.updateChannelId(pendingChannelId, realChannelId)
         pendingMessageStateDao.updateChannelId(pendingChannelId, realChannelId)
+        pendingMessageDeleteByTidDao.updateChannelId(pendingChannelId, realChannelId)
 
         if (lastMessage != realChannel.lastMessage) {
             channelDao.updateLastMessage(
