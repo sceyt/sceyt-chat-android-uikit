@@ -152,8 +152,8 @@ class ChannelEventChangeHelperTest {
     fun `getChannelEventState should return correct state for typing users`() {
         // Given
         val typingUsers = listOf(
-            ChannelEventData(testUser1, ChannelEventEnum.Typing),
-            ChannelEventData(testUser2, ChannelEventEnum.Recording)
+            ChannelEventData(testChannel, testUser1, ChannelEventEnum.Typing),
+            ChannelEventData(testChannel, testUser2, ChannelEventEnum.Recording)
         )
 
         // When
@@ -167,8 +167,8 @@ class ChannelEventChangeHelperTest {
     fun `getChannelEventState should return recording when only recording users`() {
         // Given
         val recordingUsers = listOf(
-            ChannelEventData(testUser1, ChannelEventEnum.Recording),
-            ChannelEventData(testUser2, ChannelEventEnum.Recording)
+            ChannelEventData(testChannel, testUser1, ChannelEventEnum.Recording),
+            ChannelEventData(testChannel, testUser2, ChannelEventEnum.Recording)
         )
 
         // When
@@ -230,15 +230,18 @@ class ChannelEventChangeHelperTest {
     }
 
     @Test
-    fun `equal active users should be based on user id`() {
+    fun `equal active users should be based on user id and channel id`() {
         // Given
-        val user1Typing = ChannelEventData(testUser1, ChannelEventEnum.Typing)
-        val user1Recording = ChannelEventData(testUser1, ChannelEventEnum.Recording)
-        val user2Typing = ChannelEventData(testUser2, ChannelEventEnum.Typing)
+        val otherChannel = createChannel(2, 0, 1)
+        val user1Typing = ChannelEventData(testChannel, testUser1, ChannelEventEnum.Typing)
+        val user1Recording = ChannelEventData(testChannel, testUser1, ChannelEventEnum.Recording)
+        val user2Typing = ChannelEventData(testChannel, testUser2, ChannelEventEnum.Typing)
+        val user1TypingInOtherChannel = ChannelEventData(otherChannel, testUser1, ChannelEventEnum.Typing)
 
         // When & Then
-        assertThat(user1Typing).isEqualTo(user1Recording) // Same user ID
+        assertThat(user1Typing).isEqualTo(user1Recording) // Same user ID and channel ID
         assertThat(user1Typing).isNotEqualTo(user2Typing) // Different user ID
+        assertThat(user1Typing).isNotEqualTo(user1TypingInOtherChannel) // Different channel ID
         assertThat(user1Typing.hashCode()).isEqualTo(user1Recording.hashCode()) // Same hash
     }
 

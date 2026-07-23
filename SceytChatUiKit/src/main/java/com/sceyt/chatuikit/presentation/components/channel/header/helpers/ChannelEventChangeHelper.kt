@@ -10,6 +10,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.time.Duration.Companion.milliseconds
 
 enum class ChannelEventState {
     Typing, Recording, None
@@ -58,7 +59,7 @@ class ChannelEventChangeHelper(
                 }
 
                 index++
-                delay(2000)
+                delay(2000.milliseconds)
             }
         }
     }
@@ -72,7 +73,7 @@ class ChannelEventChangeHelper(
             DebounceHelper(200, scope)
         }
         debounceHelper.submit {
-            val channelEventData = ChannelEventData(event.user, event.activity)
+            val channelEventData = ChannelEventData(event.channel, event.user, event.activity)
 
             // Remove last active user
             _channelEventData.remove(channelEventData)

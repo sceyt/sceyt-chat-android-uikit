@@ -1,7 +1,7 @@
 package com.sceyt.chatuikit.presentation.components.channel.header.listeners.event
 
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMemberActivityEvent
-import com.sceyt.chatuikit.data.models.messages.SceytUser
+import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.presentation.components.channel.header.MessagesListHeaderView
 
 open class MessageListHeaderEventsListenerImpl : MessageListHeaderEventsListener.EventListeners {
@@ -21,9 +21,9 @@ open class MessageListHeaderEventsListenerImpl : MessageListHeaderEventsListener
         memberActivityListener?.onActivityEvent(event)
     }
 
-    override fun onPresenceUpdateEvent(user: SceytUser) {
-        defaultListeners?.onPresenceUpdateEvent(user)
-        presenceUpdateListener?.onPresenceUpdateEvent(user)
+    override fun onPresenceUpdateEvent(channel: SceytChannel) {
+        defaultListeners?.onPresenceUpdateEvent(channel)
+        presenceUpdateListener?.onPresenceUpdateEvent(channel)
     }
 
     fun setListener(listener: MessageListHeaderEventsListener) {

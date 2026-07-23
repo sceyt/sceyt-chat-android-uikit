@@ -2,6 +2,7 @@ package com.sceyt.chatuikit.persistence.database.converters
 
 import androidx.room.TypeConverter
 import com.sceyt.chat.models.message.BodyAttribute
+import com.sceyt.chat.models.message.DeleteMessageType
 import com.sceyt.chat.models.message.MarkerTotal
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
@@ -39,6 +40,12 @@ class MessageConverter {
 
     @TypeConverter
     fun intToMessageState(value: Int) = value.toEnum<MessageState>()
+
+    @TypeConverter
+    fun deleteMessageTypeToInt(value: DeleteMessageType) = value.ordinal
+
+    @TypeConverter
+    fun intToDeleteMessageType(value: Int) = value.toEnum<DeleteMessageType>()
 
     @TypeConverter
     fun transferStateEnumToInt(value: TransferState?) = value?.ordinal

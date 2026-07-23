@@ -415,6 +415,29 @@ class MessagesRepositoryImpl : MessagesRepository {
             })
     }
 
+    override suspend fun deleteMessageByTid(
+        channelId: Long,
+        tid: Long,
+        deleteType: DeleteMessageType,
+    ): SceytResponse<SceytMessage> = suspendCancellableCoroutine { continuation ->
+        // Build a message with id = 0 and only the tid set, so the SDK deletes it by tid.
+        val message = Message.MessageBuilder(channelId).setTid(tid).build()
+        ChannelOperator.build(channelId)
+            .deleteMessage(message, deleteType, object : MessageCallback {
+                override fun onResult(msg: Message) {
+                    continuation.safeResume(SceytResponse.Success(msg.toSceytUiMessage()))
+                }
+
+                override fun onError(ex: SceytException?) {
+                    SceytLog.e(
+                        TAG,
+                        "deleteMessageByTid error: ${ex?.message}, tid: $tid, channelId: $channelId, deleteType: $deleteType"
+                    )
+                    continuation.safeResume(SceytResponse.Error(ex))
+                }
+            })
+    }
+
     override suspend fun editMessage(
         channelId: Long,
         message: SceytMessage

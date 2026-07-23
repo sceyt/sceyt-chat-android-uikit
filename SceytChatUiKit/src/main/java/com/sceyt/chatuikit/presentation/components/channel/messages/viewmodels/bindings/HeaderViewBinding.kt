@@ -6,22 +6,20 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.managers.connection.event.ConnectionStateData
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
-import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isDirect
-import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelUpdatedType
-import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.presentation.components.channel.header.MessagesListHeaderView
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageActionBridge
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageListViewModel
-import com.sceyt.chatuikit.services.SceytPresenceChecker
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 
 @JvmName("bind")
 fun MessageListViewModel.bind(
@@ -150,16 +148,7 @@ fun MessageListViewModel.bind(
     else
         headerView.setChannel(channel, true)
 
-    val peerId = channel.getPeer()?.id
-    if (channel.isDirect()) {
-        SceytPresenceChecker.addNewUserToPresenceCheck(peerId)
-        SceytPresenceChecker.onPresenceCheckUsersFlow.distinctUntilChanged()
-            .onEach {
-                it.find { user -> user.user.id == peerId }?.let { presenceUser ->
-                    headerView.onPresenceUpdate(presenceUser.user)
-                }
-            }.launchIn(lifecycleOwner.lifecycleScope)
-    }
+    peerPresenceUpdatedFlow.observe(lifecycleOwner, headerView::onPresenceUpdate)
 
     ConnectionEventManager.onChangedConnectStatusFlow
         .stateIn(
@@ -168,16 +157,23 @@ fun MessageListViewModel.bind(
             initialValue = ConnectionStateData(ConnectionEventManager.connectionState)
         )
         .onEach { state ->
-            state.state?.let { headerView.onConnectionStateUpdate(it) }
+            state.state?.let { headerView.onConnectionStateUpdate(it, channel) }
         }
         .launchIn(lifecycleOwner.lifecycleScope)
 
-    ChannelsCache.channelUpdatedFlow
-        .filter { it.channel.id == channel.id }
-        .onEach {
-            headerView.setChannel(it.channel, it.eventType != ChannelUpdatedType.Presence)
+    onChannelUpdatedEventFlow.onEach {
+        headerView.setChannel(it, true)
+    }.launchIn(lifecycleOwner.lifecycleScope)
+
+    if (channel.isDirect() && !channel.isSelf)
+        lifecycleOwner.lifecycleScope.launch {
+            while (isActive) {
+                delay((1000 * 60).milliseconds)
+
+                // Relative labels like "last seen 1 min ago" change with time even without presence events.
+                headerView.refreshSubTitle(channel)
+            }
         }
-        .launchIn(lifecycleOwner.lifecycleScope)
 
     onChannelMemberActivityEventFlow
         .onEach(headerView::handleMemberActivityEvent)

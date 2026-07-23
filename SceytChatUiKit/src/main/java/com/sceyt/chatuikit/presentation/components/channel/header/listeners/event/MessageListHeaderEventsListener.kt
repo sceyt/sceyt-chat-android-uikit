@@ -1,7 +1,7 @@
 package com.sceyt.chatuikit.presentation.components.channel.header.listeners.event
 
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMemberActivityEvent
-import com.sceyt.chatuikit.data.models.messages.SceytUser
+import com.sceyt.chatuikit.data.models.channels.SceytChannel
 
 sealed interface MessageListHeaderEventsListener {
 
@@ -10,7 +10,7 @@ sealed interface MessageListHeaderEventsListener {
     }
 
     fun interface PresenceUpdateListener : MessageListHeaderEventsListener {
-        fun onPresenceUpdateEvent(user: SceytUser)
+        fun onPresenceUpdateEvent(channel: SceytChannel)
     }
 
     /** Use this if you want to implement all callbacks */

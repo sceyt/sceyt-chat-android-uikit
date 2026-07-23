@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels
 
 import android.text.Editable
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.DeleteMessageType
@@ -34,7 +35,10 @@ import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.media.audio.AudioRecordData
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.persistence.differs.diff
+import com.sceyt.chatuikit.persistence.extensions.asLiveData
 import com.sceyt.chatuikit.persistence.extensions.broadcastSharedFlow
+import com.sceyt.chatuikit.persistence.extensions.getPeer
+import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
@@ -68,6 +72,7 @@ import com.sceyt.chatuikit.presentation.extensions.isSelfDestructed
 import com.sceyt.chatuikit.presentation.helpers.DebounceHelper
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import com.sceyt.chatuikit.presentation.root.PageState
+import com.sceyt.chatuikit.services.SceytPresenceChecker
 import com.sceyt.chatuikit.services.sync.SceytSyncManager
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -197,6 +202,8 @@ class MessageListViewModel internal constructor(
     // Input commands
     private val _inputCommands = MutableSharedFlow<MessageInputCommand>(extraBufferCapacity = 8)
     internal val inputCommands = _inputCommands.asSharedFlow()
+    private val _peerPresenceUpdatedFlow = MutableLiveData<SceytChannel>()
+    val peerPresenceUpdatedFlow = _peerPresenceUpdatedFlow.asLiveData()
 
     // Search messages
     internal val isPreparingToScrollToMessage = AtomicBoolean(false)
@@ -211,6 +218,7 @@ class MessageListViewModel internal constructor(
 
 
     init {
+        observeToUserPresenceUpdateIfNeeded()
         mentionsController.onInit()
         clearPreparingThumbs()
         loadInitialMessages()
@@ -393,6 +401,29 @@ class MessageListViewModel internal constructor(
         store.setBodyExpanded(messageTid)
     }
 
+    private fun observeToUserPresenceUpdateIfNeeded() {
+        if (!channel.isDirect() || channel.isSelf) return
+        val peer = channel.getPeer() ?: return
+        SceytPresenceChecker.addNewUserToPresenceCheck(peer.id)
+
+        SceytPresenceChecker.onPresenceCheckUsersFlow
+            .onEach { users ->
+                val peer = channel.getPeer() ?: return@onEach
+                val presenceUser = users.find { it.user.id == peer.id } ?: return@onEach
+                if (peer.user.diff(presenceUser.user).hasDifference()) {
+                    updateChannel(notifyUpdate = false) {
+                        copy(members = members?.map {
+                            if (it.id == peer.id) {
+                                it.copy(user = presenceUser.user)
+                            } else it
+                        })
+                    }
+                    _peerPresenceUpdatedFlow.postValue(channel)
+                }
+            }
+            .launchIn(viewModelScope)
+    }
+
     fun loadPrevMessages(
         lastMessageId: Long,
         offset: Int,
@@ -564,10 +595,14 @@ class MessageListViewModel internal constructor(
         searchController.scrollToSearchMessage(isPrev)
     }
 
-    private fun updateChannel(updateAction: SceytChannel.() -> SceytChannel) {
+    private fun updateChannel(
+        notifyUpdate: Boolean = true,
+        updateAction: SceytChannel.() -> SceytChannel,
+    ) {
         _channel = _channel.updateAction()
         _conversationId = _channel.id
-        _onChannelUpdatedEventFlow.tryEmit(_channel)
+        if (notifyUpdate)
+            _onChannelUpdatedEventFlow.tryEmit(_channel)
     }
 
     private fun onPendingChannelCreated(newChannel: SceytChannel) {

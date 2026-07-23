@@ -3,6 +3,7 @@ package com.sceyt.chatuikit.presentation.components.channel.header
 import android.animation.LayoutTransition
 import android.app.Activity
 import android.content.Context
+import android.text.TextUtils
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.Menu
@@ -19,7 +20,6 @@ import androidx.core.view.isVisible
 import androidx.core.view.marginLeft
 import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.lifecycleScope
 import com.google.android.material.appbar.AppBarLayout
 import com.sceyt.chat.models.ConnectionState
 import com.sceyt.chatuikit.R
@@ -29,10 +29,8 @@ import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytMessageType
-import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.databinding.SceytMessagesListHeaderViewBinding
 import com.sceyt.chatuikit.extensions.asActivityOrNull
-import com.sceyt.chatuikit.extensions.asComponentActivity
 import com.sceyt.chatuikit.extensions.asComponentActivityOrNull
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getScope
@@ -44,7 +42,6 @@ import com.sceyt.chatuikit.extensions.showSoftInput
 import com.sceyt.chatuikit.formatters.attributes.ChannelEventTitleFormatterAttributes
 import com.sceyt.chatuikit.navigation.Destination
 import com.sceyt.chatuikit.navigation.navigateForResult
-import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
 import com.sceyt.chatuikit.presentation.components.channel.header.helpers.ChannelEventChangeHelper
 import com.sceyt.chatuikit.presentation.components.channel.header.helpers.ChannelEventData
@@ -68,10 +65,6 @@ import com.sceyt.chatuikit.presentation.extensions.isPending
 import com.sceyt.chatuikit.presentation.extensions.isSupportedType
 import com.sceyt.chatuikit.styles.common.MenuStyle
 import com.sceyt.chatuikit.styles.messages_list.MessagesListHeaderStyle
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
-import kotlin.time.Duration.Companion.milliseconds
 
 @Suppress("MemberVisibilityCanBePrivate", "JoinDeclarationAndAssignment")
 class MessagesListHeaderView @JvmOverloads constructor(
@@ -150,24 +143,6 @@ class MessagesListHeaderView @JvmOverloads constructor(
                 binding.icClear.isVisible = it?.isNotEmpty() == true
             }
         }
-
-        if (!isInEditMode) {
-            updatePresenceEveryOneMin()
-        }
-    }
-
-    private fun updatePresenceEveryOneMin() {
-        context.asComponentActivity().lifecycleScope.launch {
-            while (isActive) {
-                delay((1000 * 60).milliseconds)
-                uiElementsListeners.onSubTitle(
-                    subjectTextView = binding.subTitle,
-                    channel = channel,
-                    replyMessage = replyMessage,
-                    replyInThread = isReplyInThread
-                )
-            }
-        }
     }
 
     @Suppress("unused", "UNUSED_PARAMETER")
@@ -195,7 +170,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
         replyMessage: SceytMessage? = null,
         replyInThread: Boolean = false,
     ) {
-        if (!enableSubTitle()) {
+        if (!enableSubTitle(channel)) {
             subjectTextView.isVisible = false
             return
         }
@@ -216,7 +191,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
         }
     }
 
-    private fun enableSubTitle(): Boolean {
+    private fun enableSubTitle(channel: SceytChannel): Boolean {
         return enablePresence && !channel.isPeerDeleted() && !channel.isSelf
     }
 
@@ -225,7 +200,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
             textView.isVisible = false
             return
         }
-        if (textView.text.equals(title) && textView.isVisible)
+        if (TextUtils.equals(textView.text, title) && textView.isVisible)
             return
 
         textView.text = title
@@ -340,22 +315,15 @@ class MessagesListHeaderView @JvmOverloads constructor(
         }
     }
 
-    private fun setPresenceUpdated(user: SceytUser) {
-        if (::channel.isInitialized.not() || channel.isGroup || enablePresence.not()) return
-        channel.getPeer()?.let { member ->
-            if (member.user.id == user.id) {
-                channel = channel.copy(members = channel.members?.map {
-                    if (it.user.id == user.id) it.copy(user = user.copy()) else it
-                })
-                if (!haveUserAction)
-                    uiElementsListeners.onSubTitle(
-                        subjectTextView = binding.subTitle,
-                        channel = channel,
-                        replyMessage = replyMessage,
-                        replyInThread = isReplyInThread
-                    )
-            }
-        }
+    private fun setPresenceUpdated(channel: SceytChannel) {
+        this.channel = channel
+        if (!haveUserAction)
+            uiElementsListeners.onSubTitle(
+                subjectTextView = binding.subTitle,
+                channel = channel,
+                replyMessage = replyMessage,
+                replyInThread = isReplyInThread
+            )
     }
 
     private fun SceytMessagesListHeaderViewBinding.hideMessageActions() {
@@ -386,17 +354,21 @@ class MessagesListHeaderView @JvmOverloads constructor(
         eventListeners.onActivityEvent(data)
     }
 
-    internal fun onPresenceUpdate(user: SceytUser) {
-        eventListeners.onPresenceUpdateEvent(user)
+    internal fun onPresenceUpdate(channel: SceytChannel) {
+        eventListeners.onPresenceUpdateEvent(channel)
     }
 
-    internal fun onConnectionStateUpdate(state: ConnectionState) = post {
+    internal fun refreshSubTitle(channel: SceytChannel) {
+        setPresenceUpdated(channel)
+    }
+
+    internal fun onConnectionStateUpdate(state: ConnectionState, channel: SceytChannel) = post {
         if (state == ConnectionState.Connected) {
             val title = style.subtitleFormatter.format(context, channel)
             setSubTitleText(
                 textView = binding.subTitle,
                 title = title,
-                visible = title.isNotBlank() && !haveUserAction && enableSubTitle()
+                visible = title.isNotBlank() && !haveUserAction && enableSubTitle(channel)
             )
             return@post
         }
@@ -407,7 +379,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
         setSubTitleText(
             textView = binding.subTitle,
             title = title,
-            visible = enableSubTitle()
+            visible = enableSubTitle(channel)
         )
     }
 
@@ -518,8 +490,8 @@ class MessagesListHeaderView @JvmOverloads constructor(
         channelEventChangeHelper.onActivityEvent(event)
     }
 
-    override fun onPresenceUpdateEvent(user: SceytUser) {
-        setPresenceUpdated(user)
+    override fun onPresenceUpdateEvent(channel: SceytChannel) {
+        setPresenceUpdated(channel)
     }
 
     //Ui elements listeners
