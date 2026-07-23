@@ -94,26 +94,30 @@ fun getBlurredBytesAndSizeAsString(
         when (type) {
             AttachmentTypeEnum.Image.value -> {
                 size = FileResizeUtil.getImageSizeOriented(path)
-                FileResizeUtil.resizeAndCompressBitmapWithFilePath(path, 100)?.let { bm ->
+                FileResizeUtil.resizeAndCompressBitmapWithFilePath(path, 100).onSuccess { bm ->
                     val bytes = ThumbHash.rgbaToThumbHash(
                         bm.width,
                         bm.height,
                         BitmapUtil.bitmapToRgba(bm)
                     )
                     base64String = bytes.toBase64()
+                }.onFailure {
+                    SceytLog.e(TAG, "Couldn't get a blurred thumb for image. Error: ${it.message}")
                 }
             }
 
             AttachmentTypeEnum.Video.value -> {
                 size = FileResizeUtil.getVideoSizeOriented(path)
                 durationMilliSec = FileResizeUtil.getVideoDuration(context, filePath)
-                FileResizeUtil.getVideoThumbByUrlAsByteArray(path, 100f)?.let { bm ->
+                FileResizeUtil.getVideoThumbByUrlAsByteArray(path, 100f).onSuccess { bm ->
                     val bytes = ThumbHash.rgbaToThumbHash(
                         bm.width,
                         bm.height,
                         BitmapUtil.bitmapToRgba(bm)
                     )
                     base64String = bytes.toBase64()
+                }.onFailure {
+                    SceytLog.e(TAG, "Couldn't get a blurred thumb for video. Error: ${it.message}")
                 }
             }
 

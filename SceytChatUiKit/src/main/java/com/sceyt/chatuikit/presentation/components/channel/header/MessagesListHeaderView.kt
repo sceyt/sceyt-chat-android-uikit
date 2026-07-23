@@ -71,6 +71,7 @@ import com.sceyt.chatuikit.styles.messages_list.MessagesListHeaderStyle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 
 @Suppress("MemberVisibilityCanBePrivate", "JoinDeclarationAndAssignment")
 class MessagesListHeaderView @JvmOverloads constructor(
@@ -158,7 +159,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
     private fun updatePresenceEveryOneMin() {
         context.asComponentActivity().lifecycleScope.launch {
             while (isActive) {
-                delay(1000 * 60)
+                delay((1000 * 60).milliseconds)
                 uiElementsListeners.onSubTitle(
                     subjectTextView = binding.subTitle,
                     channel = channel,
