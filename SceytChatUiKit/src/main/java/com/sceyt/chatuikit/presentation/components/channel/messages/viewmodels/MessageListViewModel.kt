@@ -1419,7 +1419,7 @@ class MessageListViewModel internal constructor(
         channelInteractor = channelInteractor,
         currentChannel = { channel },
         conversationId = { conversationId },
-        updateChannel = { action -> updateChannel(action) },
+        updateChannel = { action -> updateChannel(updateAction = action) },
         onScrollToMention = { scrollToMessageBy(it, addToPendingDisplay = true) },
         currentUserId = { userInteractor.getCurrentUserId() },
     )
@@ -1457,7 +1457,7 @@ class MessageListViewModel internal constructor(
         scope = viewModelScope,
         memberInteractor = channelMemberInteractor,
         currentChannel = { channel },
-        updateChannel = { action -> updateChannel(action) },
+        updateChannel = { action -> updateChannel(updateAction = action) },
         ioDispatcher = ioDispatcher,
     )
 
