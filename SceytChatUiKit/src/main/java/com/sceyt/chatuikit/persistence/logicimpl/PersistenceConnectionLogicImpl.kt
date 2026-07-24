@@ -88,7 +88,10 @@ internal class PersistenceConnectionLogicImpl(
                     sceytSyncManager.startSync(ChannelListConfig.default.copy(queryLimit = 30))
                 }
             }
-        } else SceytPresenceChecker.stopPresenceCheck()
+        } else {
+            SceytPresenceChecker.stopPresenceCheck()
+            sceytSyncManager.cancelSync()
+        }
     }
 
     override val allPendingEventsSentFlow: Flow<Unit>
