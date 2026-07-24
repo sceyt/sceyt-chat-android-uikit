@@ -35,7 +35,7 @@ import com.sceyt.chatuikit.extensions.findIndexed
 import com.sceyt.chatuikit.extensions.getFragmentManager
 import com.sceyt.chatuikit.extensions.hideSoftInput
 import com.sceyt.chatuikit.extensions.isLastCompletelyItemDisplaying
-import com.sceyt.chatuikit.extensions.maybeComponentActivity
+import com.sceyt.chatuikit.extensions.asComponentActivityOrNull
 import com.sceyt.chatuikit.extensions.openLink
 import com.sceyt.chatuikit.extensions.setClipboard
 import com.sceyt.chatuikit.extensions.setLayoutTransition
@@ -328,7 +328,7 @@ class MessagesListView @JvmOverloads constructor(
     }
 
     private fun addKeyBoardListener() {
-        context.maybeComponentActivity()?.let {
+        context.asComponentActivityOrNull()?.let {
             KeyboardEventListener(it) { isOpen ->
                 if (!isOpen) {
                     reactionsPopupWindow?.dismiss()

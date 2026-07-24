@@ -4,7 +4,7 @@ import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.findViewTreeLifecycleOwner
 import androidx.lifecycle.lifecycleScope
-import com.sceyt.chatuikit.extensions.maybeComponentActivity
+import com.sceyt.chatuikit.extensions.asComponentActivityOrNull
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -41,7 +41,7 @@ class DebounceHelper {
     constructor(debounceMs: Long, view: View) {
         this.debounceMs = debounceMs
         this.scope = (view.findViewTreeLifecycleOwner()
-                ?: view.context.maybeComponentActivity())?.lifecycleScope
+                ?: view.context.asComponentActivityOrNull())?.lifecycleScope
                 ?: CoroutineScope(Dispatchers.Main + SupervisorJob())
     }
 

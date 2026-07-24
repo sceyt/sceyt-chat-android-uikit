@@ -62,6 +62,6 @@ data class SceytMessage(
     }
 
     override fun hashCode(): Int {
-        return javaClass.name.hashCode()
+        return tid.hashCode()
     }
 }
