@@ -19,6 +19,9 @@ import com.sceyt.chatuikit.data.models.messages.SceytReaction
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.notifications.NotificationType
+import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
+import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
+import com.sceyt.chatuikit.persistence.interactor.MessageReactionInteractor
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.ShouldShowNotificationUseCase
 import com.sceyt.chatuikit.persistence.workers.HandleNotificationWorkManager.CHANNEL_ID
 import com.sceyt.chatuikit.persistence.workers.HandleNotificationWorkManager.MESSAGE_ID
@@ -26,7 +29,7 @@ import com.sceyt.chatuikit.persistence.workers.HandleNotificationWorkManager.NOT
 import com.sceyt.chatuikit.persistence.workers.HandleNotificationWorkManager.REACTION_ID
 import com.sceyt.chatuikit.push.PushData
 import org.koin.core.component.inject
-import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 internal object HandleNotificationWorkManager {
 
@@ -54,10 +57,13 @@ internal object HandleNotificationWorkManager {
 }
 
 internal class HandleNotificationWorker(
-        context: Context,
-        workerParams: WorkerParameters
+    context: Context,
+    workerParams: WorkerParameters
 ) : CoroutineWorker(context, workerParams), SceytKoinComponent {
     private val shouldShowNotificationUseCase by inject<ShouldShowNotificationUseCase>()
+    private val channelInteractor by inject<ChannelInteractor>()
+    private val messageInteractor by inject<MessageInteractor>()
+    private val messageReactionInteractor by inject<MessageReactionInteractor>()
     private val pushNotificationHandler by lazy {
         SceytChatUIKit.notifications.pushNotification.notificationHandler
     }
@@ -85,31 +91,28 @@ internal class HandleNotificationWorker(
     }
 
     private suspend fun getDataAndShowNotificationIfNeeded(
-            type: NotificationType,
-            channelId: Long,
-            messageId: Long,
-            reactionId: Long? = null
+        type: NotificationType,
+        channelId: Long,
+        messageId: Long,
+        reactionId: Long? = null
     ): Result {
         SceytLog.i(TAG, "Got a notification with chatId: $channelId, messageId: $messageId ")
 
-        val channel = SceytChatUIKit.chatUIFacade.channelInteractor.getChannelFromDb(channelId)
-                ?: run {
-                    return finishWorkWithFailure("Channel not found: $channelId")
-                }
-        val message = SceytChatUIKit.chatUIFacade.messageInteractor.getMessageFromDbById(messageId)
-                ?: run {
-                    return finishWorkWithFailure("Message not found: $messageId")
-                }
+        val channel = channelInteractor.getChannelFromDb(channelId) ?: run {
+            return finishWorkWithFailure("Channel not found: $channelId")
+        }
+        val message = messageInteractor.getMessageFromDbById(messageId) ?: run {
+            return finishWorkWithFailure("Message not found: $messageId")
+        }
 
         var reaction: SceytReaction? = null
         if (type == NotificationType.MessageReaction) {
-            reactionId?.let {
-                reaction = SceytChatUIKit.chatUIFacade.messageReactionInteractor.getLocalMessageReactionsById(
-                    reactionId = reactionId
-                )
-            } ?: run {
+            if (reactionId == null || reactionId <= 0L)
                 return finishWorkWithFailure("Reaction not found, but type is MessageReaction")
-            }
+
+            reaction =
+                messageReactionInteractor.getLocalMessageReactionsById(reactionId = reactionId)
+                    ?: return finishWorkWithFailure("Reaction not found, but type is MessageReaction")
         }
 
         if (shouldShowNotificationUseCase(type, channel, message, reaction)) {
@@ -120,24 +123,31 @@ internal class HandleNotificationWorker(
                     channel = channel,
                     message = message,
                     user = message.user
-                            ?: return finishWorkWithFailure("Message sender not found: $messageId"),
+                        ?: return finishWorkWithFailure("Message sender not found: $messageId"),
                     reaction = reaction
-                ))
+                )
+            )
         }
 
         if (ConnectionEventManager.isConnected) {
             SceytLog.i(TAG, "SceytChat is connected. Marking message as received: $messageId")
             markMessageAsReceived(channelId, message)
         } else {
-            SceytLog.i(TAG, "SceytChat is not connected. Connecting to mark message as received: $messageId")
-            val token = SceytChatUIKit.chatTokenProvider?.provideToken().takeIf { !it.isNullOrBlank() }
-                    ?: run {
-                        return finishWorkWithFailure("Couldn't get token to connect to mark message as received: $messageId")
-                    }
+            if (!ConnectionEventManager.isConnecting) {
+                SceytLog.i(
+                    TAG,
+                    "SceytChat is not connected. Connecting to mark message as received: $messageId"
+                )
+                val token = SceytChatUIKit.chatTokenProvider?.provideToken().takeIf {
+                    !it.isNullOrBlank()
+                } ?: run {
+                    return finishWorkWithFailure("Couldn't get token to connect to mark message as received: $messageId")
+                }
 
-            ChatClient.getClient().connect(token)
+                ChatClient.getClient().connect(token)
+            }
 
-            if (ConnectionEventManager.awaitToConnectSceytWithTimeout(1.minutes.inWholeMilliseconds)) {
+            if (ConnectionEventManager.awaitToConnectSceytWithTimeout(30.seconds)) {
                 markMessageAsReceived(channelId, message)
             }
         }
@@ -145,7 +155,7 @@ internal class HandleNotificationWorker(
     }
 
     private suspend fun markMessageAsReceived(channelId: Long, message: SceytMessage) {
-        val result = SceytChatUIKit.chatUIFacade.messageInteractor.markMessagesAs(
+        val result = messageInteractor.markMessagesAs(
             channelId,
             MarkerType.Received,
             message.id
@@ -153,7 +163,10 @@ internal class HandleNotificationWorker(
 
         if (result is SceytResponse.Success) {
             SceytLog.i(TAG, "Sent ack receive for Id: ${message.id} succeeded")
-        } else SceytLog.e(TAG, "Failed to send ack received for msgId: ${message.id} error: ${result?.message}")
+        } else SceytLog.e(
+            TAG,
+            "Failed to send ack received for msgId: ${message.id} error: ${result?.message}"
+        )
     }
 
     private fun finishWorkWithFailure(error: String): Result {

@@ -35,7 +35,7 @@ import com.sceyt.chatuikit.extensions.checkAndAskPermissions
 import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.initPermissionLauncher
-import com.sceyt.chatuikit.extensions.maybeComponentActivity
+import com.sceyt.chatuikit.extensions.asComponentActivityOrNull
 import com.sceyt.chatuikit.extensions.permissionIgnored
 import com.sceyt.chatuikit.extensions.screenWidthPx
 import com.sceyt.chatuikit.extensions.setBackgroundTint
@@ -99,7 +99,7 @@ class VoiceRecorderView @JvmOverloads constructor(
         layoutTransition = LayoutTransition().apply { setDuration(200) }
 
         post {
-            context.maybeComponentActivity()?.lifecycle?.addObserver(lifecycleEventObserver)
+            context.asComponentActivityOrNull()?.lifecycle?.addObserver(lifecycleEventObserver)
         }
     }
 
@@ -555,7 +555,7 @@ class VoiceRecorderView @JvmOverloads constructor(
     }
 
     private val requestVoicePermissionLauncher =
-        if (isInEditMode) null else context.maybeComponentActivity()?.run {
+        if (isInEditMode) null else context.asComponentActivityOrNull()?.run {
             if (!lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
                 initPermissionLauncher {
                     onVoicePermissionResult(it)

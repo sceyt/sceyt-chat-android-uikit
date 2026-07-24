@@ -14,13 +14,16 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 internal class PushServiceImpl(
-        private val context: Context,
-        private val scope: CoroutineScope,
-        private val messagesLogic: PersistenceMessagesLogic,
+    private val context: Context,
+    private val scope: CoroutineScope,
+    private val messagesLogic: PersistenceMessagesLogic,
 ) : PushService {
 
     override fun handlePush(data: PushData) {
-        SceytLog.d(TAG, "Handling push for messageId: ${data.message.id}, channelId: ${data.message.channelId}")
+        SceytLog.d(
+            TAG,
+            "Handling push for messageId: ${data.message.id}, channelId: ${data.message.channelId}"
+        )
         scope.launch {
             // At first, we call the handlePush method, which will save the message to the database
             if (!messagesLogic.handlePush(data)) return@launch
@@ -65,19 +68,26 @@ internal class PushServiceImpl(
             it.dataToken == device.token && it.service == device.service.stingValue()
         }
         if (registered) return
-        ChatClient.getClient().registerPushToken(device.token, device.service.stingValue(), object : ActionCallback {
-            override fun onSuccess() {
-                SceytLog.i(TAG, "Push token successfully registered, service: ${device.service}")
-            }
+        ChatClient.getClient().registerPushToken(
+            /* token = */ device.token,
+            /* service = */ device.service.stingValue(),
+            /* actionCallback = */ object : ActionCallback {
+                override fun onSuccess() {
+                    SceytLog.i(
+                        TAG, "Push token successfully registered, service: ${device.service}"
+                    )
+                }
 
-            override fun onError(e: SceytException) {
-                SceytLog.e(TAG, "Couldn't register push token: service: ${device.service}, error: $e")
-            }
-        })
+                override fun onError(e: SceytException) {
+                    SceytLog.e(
+                        TAG, "Couldn't register push token: service: ${device.service}, error: $e"
+                    )
+                }
+            })
     }
 
     private fun unregisterClientPushTokenImpl(
-            unregisterPushCallback: ((Result<Boolean>) -> Unit)?,
+        unregisterPushCallback: ((Result<Boolean>) -> Unit)?,
     ) {
         ChatClient.getClient().unregisterPushToken(object : ActionCallback {
             override fun onSuccess() {
@@ -85,8 +95,9 @@ internal class PushServiceImpl(
             }
 
             override fun onError(exception: SceytException?) {
-                unregisterPushCallback?.invoke(Result.failure(exception
-                        ?: Exception("Unknown error")))
+                unregisterPushCallback?.invoke(
+                    Result.failure(exception ?: Exception("Unknown error"))
+                )
             }
         })
     }
