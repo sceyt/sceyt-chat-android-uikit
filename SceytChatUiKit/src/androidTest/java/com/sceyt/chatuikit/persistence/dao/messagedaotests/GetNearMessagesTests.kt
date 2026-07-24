@@ -441,7 +441,37 @@ class GetNearMessagesTests {
 
         // Then: the disconnected newer range must not create a LoadingNextItem for this window.
         Truth.assertThat(result.data.map { it.messageEntity.id }).isEqualTo(listOf(3L, 4L, 5L, 6L))
-        Truth.assertThat(result.hasPrev).isFalse()
+        Truth.assertThat(result.hasPrev).isTrue()
+        Truth.assertThat(result.hasNext).isFalse()
+    }
+
+    @Test
+    fun loadNearMessages_ReturnsHasPrevFromDisconnectedNewerLoadRange() = runTest {
+        // Given the target sits in old range [3-6] and a newer cached range [100-110] exists.
+        val messages = listOf(
+            createMessage(2, 2),
+            createMessage(3, 3),
+            createMessage(4, 4),
+            createMessage(5, 5),
+            createMessage(6, 6),
+            createMessage(100, 100),
+            createMessage(101, 101),
+        )
+
+        val ranges = listOf(
+            LoadRangeEntity(2, 6, channelId),
+            LoadRangeEntity(100, 110, channelId)
+        )
+
+        messageDao.upsertMessageEntitiesWithTransaction(messages)
+        rangeDao.insertAll(ranges)
+
+        // When
+        val result = messageDao.getNearMessages(channelId, 5, 4)
+
+        // Then: the disconnected newer range must not create a LoadingNextItem for this window.
+        Truth.assertThat(result.data.map { it.messageEntity.id }).isEqualTo(listOf(3L, 4L, 5L, 6L))
+        Truth.assertThat(result.hasPrev).isTrue()
         Truth.assertThat(result.hasNext).isFalse()
     }
 
