@@ -585,6 +585,12 @@ class MessagesListHeaderView @JvmOverloads constructor(
         toolbarSearchModeChangeListener?.invoke(true)
     }
 
+    internal fun cancelSearchMessagesMode() {
+        if (!isShowingSearchBar) return
+        binding.toggleSearch(false)
+        toolbarSearchModeChangeListener?.invoke(false)
+    }
+
     //Click listeners
     override fun onAvatarClick(view: View) {
         clickListeners.onToolbarClick(view)
@@ -611,10 +617,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
                 toolbarActionsHiddenCallback?.invoke()
             }
 
-            isShowingSearchBar -> {
-                binding.toggleSearch(false)
-                toolbarSearchModeChangeListener?.invoke(false)
-            }
+            isShowingSearchBar -> cancelSearchMessagesMode()
 
             else -> context.asComponentActivityOrNull()?.onBackPressedDispatcher?.onBackPressed()
                 ?: context.asActivityOrNull()?.finish()
