@@ -247,14 +247,6 @@ class MessageListViewModel(
             }
             .launchIn(viewModelScope)
 
-        SceytSyncManager.syncChannelMessagesFinished
-            .filter { (syncedChannel, _) -> syncedChannel.id == channel.id }
-            .onEach { (syncedChannel, _) ->
-                if (channel.diff(syncedChannel).hasDifference())
-                    updateChannel { syncedChannel }
-            }
-            .launchIn(viewModelScope)
-
         onNewOutGoingMessageFlow = MessageEventManager.onOutgoingMessageFlow
             .filter { it.channelId == channel.id /*&& !it.replyInThread*/ }
 
