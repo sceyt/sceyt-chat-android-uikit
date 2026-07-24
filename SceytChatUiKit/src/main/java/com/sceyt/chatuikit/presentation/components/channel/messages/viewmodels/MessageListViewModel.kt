@@ -27,14 +27,10 @@ import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
-import com.sceyt.chatuikit.data.models.messages.SceytMessageType
-import com.sceyt.chatuikit.data.models.messages.SceytReactionTotal
 import com.sceyt.chatuikit.data.models.onErrorNonNull
 import com.sceyt.chatuikit.data.models.onSuccessNotNull
 import com.sceyt.chatuikit.data.repositories.Keys.KEY_VIEW_ONCE_INFO_SHOWN
-import com.sceyt.chatuikit.data.toFileListItem
 import com.sceyt.chatuikit.domain.usecases.PauseOrResumeTransferUseCase
-import com.sceyt.chatuikit.extensions.findIndexed
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.media.audio.AudioRecordData
 import com.sceyt.chatuikit.persistence.differs.diff
@@ -42,7 +38,6 @@ import com.sceyt.chatuikit.persistence.extensions.asLiveData
 import com.sceyt.chatuikit.persistence.extensions.broadcastSharedFlow
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isDirect
-import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.persistence.file_transfer.ThumbFor
@@ -67,7 +62,6 @@ import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
 import com.sceyt.chatuikit.presentation.components.channel.messages.PendingMessageStatusReconciler
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
-import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.reactions.ReactionItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageCommandEvent
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.PollEvent
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.ReactionEvent
@@ -79,7 +73,6 @@ import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.services.SceytPresenceChecker
 import com.sceyt.chatuikit.services.sync.SceytSyncManager
-import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
@@ -196,6 +189,7 @@ class MessageListViewModel(
     private val memberController = createChannelMemberController()
     private val draftController = createMessageDraftController()
     private val searchController = createMessageSearchController()
+    private val messageListItemMapper by lazy { MessageListItemMapper() }
 
     val searchResult get() = searchController.searchResult
 
@@ -736,65 +730,16 @@ class MessageListViewModel(
         compareMessage: SceytMessage? = null,
         ignoreUnreadMessagesSeparator: Boolean = false,
         enableDateSeparator: Boolean,
-    ): List<MessageListItem> {
-        if (data.isNullOrEmpty()) return arrayListOf()
-
-        val messageItems = arrayListOf<MessageListItem>()
-
-        withContext(Dispatchers.Default) {
-            var unreadLineMessage: MessageListItem.UnreadMessagesSeparatorItem? = null
-            data.forEachIndexed { index, message ->
-                var prevMessage = compareMessage
-                if (index > 0)
-                    prevMessage = data.getOrNull(index - 1)
-
-                if (enableDateSeparator && shouldShowDate(message, prevMessage))
-                    messageItems.add(
-                        MessageListItem.DateSeparatorItem(
-                            createdAt = message.createdAt,
-                            messageTid = message.tid,
-                            messageId = message.id
-                        )
-                    )
-
-                var messageWithData = initMessageInfoData(message, prevMessage, true)
-                val isSelected = selectedMessagesMap.containsKey(message.tid)
-                val isExpanded = expandedMessagesMap.containsKey(message.tid)
-
-                if (channel.lastMessage?.incoming == true && pinnedLastReadMessageId != 0L
-                    && prevMessage?.id == pinnedLastReadMessageId && unreadLineMessage == null
-                ) {
-
-                    messageWithData = messageWithData.copy(
-                        shouldShowAvatarAndName = messageWithData.incoming && channel.isGroup
-                                && showSenderAvatarAndNameIfNeeded,
-                        disabledShowAvatarAndName = !showSenderAvatarAndNameIfNeeded,
-                    )
-                    if (!ignoreUnreadMessagesSeparator)
-                        messageItems.add(
-                            MessageListItem.UnreadMessagesSeparatorItem(
-                                createdAt = message.createdAt,
-                                msgId = pinnedLastReadMessageId
-                            ).also {
-                                unreadLineMessage = it
-                            })
-                }
-
-                messageItems.add(
-                    MessageListItem.MessageItem(
-                        messageWithData.copy(isSelected = isSelected, isBodyExpanded = isExpanded)
-                    )
-                )
-            }
-
-            if (hasNext)
-                messageItems.add(MessageListItem.LoadingNextItem)
-
-            if (hasPrev)
-                messageItems.add(0, MessageListItem.LoadingPrevItem)
-        }
-
-        return messageItems
+    ): List<MessageListItem> = withContext(Dispatchers.Default) {
+        messageListItemMapper.map(
+            data = data,
+            hasNext = hasNext,
+            hasPrev = hasPrev,
+            compareMessage = compareMessage,
+            ignoreUnreadMessagesSeparator = ignoreUnreadMessagesSeparator,
+            enableDateSeparator = enableDateSeparator,
+            context = messageListItemMappingContext()
+        )
     }
 
     internal fun initMessageInfoData(
@@ -802,16 +747,22 @@ class MessageListViewModel(
         prevMessage: SceytMessage? = null,
         initNameAndAvatar: Boolean = false,
     ): SceytMessage {
-        return sceytMessage.copy(
-            isGroup = channel.isGroup,
-            files = sceytMessage.attachments?.map { it.toFileListItem() },
-            shouldShowAvatarAndName = if (initNameAndAvatar && showSenderAvatarAndNameIfNeeded)
-                shouldShowAvatarAndName(sceytMessage, prevMessage)
-            else sceytMessage.shouldShowAvatarAndName,
-            disabledShowAvatarAndName = !showSenderAvatarAndNameIfNeeded,
-            messageReactions = initReactionsItems(sceytMessage),
+        return messageListItemMapper.initMessageInfoData(
+            sceytMessage = sceytMessage,
+            prevMessage = prevMessage,
+            initNameAndAvatar = initNameAndAvatar,
+            context = messageListItemMappingContext()
         )
     }
+
+    private fun messageListItemMappingContext() = MessageListItemMappingContext(
+        channel = channel,
+        myIdProvider = { myId },
+        pinnedLastReadMessageId = pinnedLastReadMessageId,
+        showSenderAvatarAndName = showSenderAvatarAndNameIfNeeded,
+        selectedMessageTids = selectedMessagesMap.keys.toSet(),
+        expandedMessageTids = expandedMessagesMap.keys.toSet(),
+    )
 
     internal fun checkMaybeHesNext(response: PaginationResponse.DBResponse<SceytMessage>): Boolean {
         var hasNext = response.hasNext
@@ -823,83 +774,6 @@ class MessageListViewModel(
             }
         }
         return hasNext
-    }
-
-    private fun initReactionsItems(message: SceytMessage): List<ReactionItem.Reaction>? {
-        val pendingReactions = message.pendingReactions
-        val reactionItems = message.reactionTotals?.map {
-            ReactionItem.Reaction(
-                SceytReactionTotal(
-                    key = it.key, score = it.score.toInt(),
-                    containsSelf = message.userReactions?.find { reaction ->
-                        reaction.key == it.key && reaction.user?.id == myId
-                    } != null), message.tid, false)
-        }?.toArrayList()
-
-        if (!pendingReactions.isNullOrEmpty() && reactionItems != null) {
-            pendingReactions.forEach { pendingReaction ->
-                reactionItems.findIndexed { it.reaction.key == pendingReaction.key }
-                    ?.let { (index, item) ->
-                        val reaction = item.reaction
-                        if (pendingReaction.isAdd) {
-                            reactionItems[index] = item.copy(
-                                reaction = reaction.copy(
-                                    score = reaction.score + pendingReaction.score,
-                                    containsSelf = true
-                                ),
-                                isPending = true
-                            )
-                        } else {
-                            val score = reaction.score - pendingReaction.score
-                            if (score <= 0)
-                                reactionItems.remove(item)
-                            else {
-                                reactionItems[index] = item.copy(
-                                    reaction = reaction.copy(
-                                        score = reaction.score - pendingReaction.score,
-                                        containsSelf = false
-                                    ),
-                                    isPending = false
-                                )
-                            }
-                        }
-                    } ?: run {
-                    if (pendingReaction.isAdd)
-                        reactionItems.add(
-                            ReactionItem.Reaction(
-                                reaction = SceytReactionTotal(
-                                    pendingReaction.key,
-                                    pendingReaction.score,
-                                    true
-                                ),
-                                messageTid = message.tid,
-                                isPending = true
-                            )
-                        )
-                }
-            }
-        }
-        return reactionItems?.sortedBy { it.reaction.key }
-    }
-
-    private fun shouldShowDate(sceytMessage: SceytMessage, prevMessage: SceytMessage?): Boolean {
-        return if (prevMessage == null)
-            true
-        else !DateTimeUtil.isSameDay(sceytMessage.createdAt, prevMessage.createdAt)
-    }
-
-    private fun shouldShowAvatarAndName(
-        sceytMessage: SceytMessage,
-        prevMessage: SceytMessage?
-    ): Boolean {
-        if (!sceytMessage.incoming) return false
-        return if (prevMessage == null)
-            channel.isGroup
-        else {
-            val sameSender = prevMessage.user?.id == sceytMessage.user?.id
-            channel.isGroup && (!sameSender || shouldShowDate(sceytMessage, prevMessage)
-                    || prevMessage.type == SceytMessageType.System.value)
-        }
     }
 
     internal fun onReactionEvent(event: ReactionEvent) {
