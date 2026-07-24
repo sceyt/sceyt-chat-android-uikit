@@ -63,6 +63,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.PendingMessa
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageCommandEvent
+import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageInputCommand
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.PollEvent
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.ReactionEvent
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.bindings.LoadKeyType
@@ -77,6 +78,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -166,10 +168,8 @@ class MessageListViewModel(
     val peerPresenceUpdatedFlow = _peerPresenceUpdatedFlow.asLiveData()
 
     //Command events
-    private val _onEditMessageCommandLiveData = MutableLiveData<SceytMessage>()
-    internal val onEditMessageCommandLiveData = _onEditMessageCommandLiveData.asLiveData()
-    private val _onReplyMessageCommandLiveData = MutableLiveData<SceytMessage>()
-    internal val onReplyMessageCommandLiveData = _onReplyMessageCommandLiveData.asLiveData()
+    private val _inputCommands = MutableSharedFlow<MessageInputCommand>(extraBufferCapacity = 8)
+    internal val inputCommands = _inputCommands.asSharedFlow()
     private val _onScrollToLastMessageLiveData = MutableLiveData<SceytMessage?>()
     internal val onScrollToLastMessageLiveData = _onScrollToLastMessageLiveData.asLiveData()
     private val _onScrollToReplyMessageLiveData = MutableLiveData<SceytMessage>()
@@ -482,7 +482,7 @@ class MessageListViewModel(
     }
 
     fun prepareToEditMessage(message: SceytMessage) {
-        _onEditMessageCommandLiveData.postValue(message)
+        _inputCommands.tryEmit(MessageInputCommand.Edit(message))
     }
 
     fun prepareToShowMessageActions(event: MessageCommandEvent.ShowHideMessageActions) {
@@ -494,7 +494,8 @@ class MessageListViewModel(
     }
 
     fun prepareToReplyMessage(message: SceytMessage) {
-        _onReplyMessageCommandLiveData.postValue(message)
+        messageActionBridge.exitSearchMode()
+        _inputCommands.tryEmit(MessageInputCommand.Reply(message))
     }
 
     fun prepareToScrollToNewMessage() {
