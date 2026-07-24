@@ -39,7 +39,7 @@ class MessagesDiffUtilTest {
     }
 
     @Test
-    fun `date separator identity uses owning message tid`() {
+    fun `date separator identity changes when date changes`() {
         val oldItem = MessageListItem.DateSeparatorItem(
             createdAt = 1,
             messageTid = 10,
@@ -48,7 +48,7 @@ class MessagesDiffUtilTest {
         val newItem = oldItem.copy(createdAt = 2)
         val diff = MessagesDiffUtil(listOf(oldItem), listOf(newItem))
 
-        assertThat(diff.areItemsTheSame(0, 0)).isTrue()
+        assertThat(diff.areItemsTheSame(0, 0)).isFalse()
         assertThat(diff.areContentsTheSame(0, 0)).isFalse()
     }
 
