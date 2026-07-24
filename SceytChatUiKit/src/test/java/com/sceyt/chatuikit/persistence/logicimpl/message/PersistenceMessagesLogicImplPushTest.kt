@@ -17,6 +17,7 @@ import com.sceyt.chatuikit.persistence.database.dao.AttachmentDao
 import com.sceyt.chatuikit.persistence.database.dao.LoadRangeDao
 import com.sceyt.chatuikit.persistence.database.dao.MessageDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingMarkerDao
+import com.sceyt.chatuikit.persistence.database.dao.PendingMessageDeleteByTidDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingMessageStateDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingPollVoteDao
 import com.sceyt.chatuikit.persistence.database.dao.PollDao
@@ -155,6 +156,7 @@ internal class PersistenceMessagesLogicImplPushTest {
         messageLoadRangeUpdater = MessageLoadRangeUpdater(rangeDao),
         checkDeletedMessagesUseCase = mock<CheckDeletedMessagesUseCase>(),
         channelSyncStateStore = mock<ChannelSyncStateStore>(),
+        pendingMessageDeleteByTidDao = mock<PendingMessageDeleteByTidDao>(),
     )
 
     private fun pushData(messageId: Long): PushData {
