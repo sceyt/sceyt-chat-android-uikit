@@ -48,19 +48,19 @@ fun View.addPaddings(left: Int = 0, top: Int = 0, right: Int = 0, bottom: Int = 
 }
 
 fun View.setPaddings(
-        left: Int = paddingLeft,
-        top: Int = paddingTop,
-        right: Int = paddingRight,
-        bottom: Int = paddingBottom,
+    left: Int = paddingLeft,
+    top: Int = paddingTop,
+    right: Int = paddingRight,
+    bottom: Int = paddingBottom,
 ) {
     setPadding(left, top, right, bottom)
 }
 
 fun View.setMargins(
-        left: Int = marginLeft,
-        top: Int = marginTop,
-        right: Int = marginRight,
-        bottom: Int = marginBottom,
+    left: Int = marginLeft,
+    top: Int = marginTop,
+    right: Int = marginRight,
+    bottom: Int = marginBottom,
 ) {
     (layoutParams as? ViewGroup.MarginLayoutParams)?.let {
         it.setMargins(left, top, right, bottom)
@@ -92,9 +92,9 @@ fun View.screenWidthPx() = resources.displayMetrics.widthPixels
 fun View.screenHeightPx() = resources.displayMetrics.heightPixels
 
 fun View.delayOnLifecycle(
-        delayMillis: Long,
-        dispatcher: CoroutineDispatcher = Dispatchers.Main,
-        block: () -> Unit,
+    delayMillis: Long,
+    dispatcher: CoroutineDispatcher = Dispatchers.Main,
+    block: () -> Unit,
 ): Job? = findViewTreeLifecycleOwner()?.let { lifecycleOwner ->
     lifecycleOwner.lifecycle.coroutineScope.launch(dispatcher) {
         delay(delayMillis)
@@ -103,8 +103,8 @@ fun View.delayOnLifecycle(
 }
 
 fun View.invokeSuspendInLifecycle(
-        dispatcher: CoroutineDispatcher = Dispatchers.Main,
-        block: suspend () -> Unit,
+    dispatcher: CoroutineDispatcher = Dispatchers.Main,
+    block: suspend () -> Unit,
 ): Job? = findViewTreeLifecycleOwner()?.let { lifecycleOwner ->
     lifecycleOwner.lifecycle.coroutineScope.launch(dispatcher) {
         block()
@@ -122,7 +122,8 @@ fun EditText.setTextAndMoveSelectionEnd(text: CharSequence?) {
 
 fun View.getString(@StringRes resId: Int) = context.getString(resId)
 
-fun View.getString(@StringRes resId: Int, vararg formatArgs: Any?) = context.getString(resId, *formatArgs)
+fun View.getString(@StringRes resId: Int, vararg formatArgs: Any?) =
+    context.getString(resId, *formatArgs)
 
 @SuppressLint("ClickableViewAccessibility")
 fun SwitchCompat.setOnlyClickable() {
@@ -133,7 +134,11 @@ fun SwitchCompat.setOnlyClickable() {
     }
 }
 
-fun View.setOnClickListenerAvailable(clockAvailableData: ClickAvailableData, disableDuration: Long = 1000, onClickCallBack: (View) -> Unit) {
+fun View.setOnClickListenerAvailable(
+    clockAvailableData: ClickAvailableData,
+    disableDuration: Long = 1000,
+    onClickCallBack: (View) -> Unit
+) {
     setOnClickListener {
         if (clockAvailableData.isAvailable) {
             clockAvailableData.isAvailable = false
@@ -145,7 +150,11 @@ fun View.setOnClickListenerAvailable(clockAvailableData: ClickAvailableData, dis
     }
 }
 
-fun View.setOnLongClickListenerAvailable(clockAvailableData: ClickAvailableData, disableDuration: Long = 1000, onClickCallBack: (View) -> Unit) {
+fun View.setOnLongClickListenerAvailable(
+    clockAvailableData: ClickAvailableData,
+    disableDuration: Long = 1000,
+    onClickCallBack: (View) -> Unit
+) {
     setOnLongClickListener {
         if (clockAvailableData.isAvailable) {
             clockAvailableData.isAvailable = false
@@ -208,13 +217,25 @@ fun ProgressBar.setProgressColor(@ColorInt color: Int) {
 }
 
 @Suppress("DEPRECATION")
-fun TextPaint.getStaticLayout(title: CharSequence, includePadding: Boolean, textWidth: Int): StaticLayout {
+fun TextPaint.getStaticLayout(
+    title: CharSequence,
+    includePadding: Boolean,
+    textWidth: Int
+): StaticLayout {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
         StaticLayout.Builder.obtain(title, 0, title.length, this, textWidth)
             .setAlignment(Layout.Alignment.ALIGN_NORMAL)
             .setLineSpacing(0f, 1f)
             .setIncludePad(includePadding).build()
-    } else StaticLayout(title, this, textWidth, Layout.Alignment.ALIGN_NORMAL, 1f, 0f, includePadding)
+    } else StaticLayout(
+        title,
+        this,
+        textWidth,
+        Layout.Alignment.ALIGN_NORMAL,
+        1f,
+        0f,
+        includePadding
+    )
 }
 
 private fun View.findFragment(activity: FragmentActivity): Fragment? {
@@ -254,13 +275,14 @@ fun View.getScope(): LifecycleCoroutineScope {
 
 
 fun View.hideSoftInput() {
-    val inputMethodManager = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
+    val inputMethodManager =
+        context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
     inputMethodManager.hideSoftInputFromWindow(windowToken, 0)
 }
 
 fun ViewGroup.setLayoutTransition(
-        duration: Long = 200,
-        type: Int = LayoutTransition.DISAPPEARING,
+    duration: Long = 200,
+    type: Int = LayoutTransition.DISAPPEARING,
 ) {
     layoutTransition = LayoutTransition().apply {
         disableTransitionType(type)
