@@ -61,7 +61,6 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.M
 import com.sceyt.chatuikit.presentation.extensions.isNotPending
 import com.sceyt.chatuikit.presentation.extensions.isSelfDestructed
 import com.sceyt.chatuikit.presentation.root.PageState
-import com.sceyt.chatuikit.services.sync.SceytSyncManager
 import com.sceyt.chatuikit.styles.extensions.messages_list.setEmptyStateForSelfChannel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -168,6 +167,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 if (!hasNextDb)
                     messagesListView.hideLoadingNext()
             }
+
             else -> Unit
         }
     }
@@ -368,6 +368,42 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         } else pendingDisplayMsgIds.add(message.id)
     }
 
+    suspend fun syncChannelMessagesAfter(message: SceytMessage) {
+        val result = syncManager.syncConversationMessagesAfter(conversationId, message.id) ?: return
+        val resultChannel = result.channel
+        if (resultChannel.id == channel.id) {
+            if (pinnedLastReadMessageId == 0L && resultChannel.lastDisplayedMessageId != 0L
+                && resultChannel.lastDisplayedMessageId != resultChannel.lastMessage?.id
+            )
+                pinnedLastReadMessageId = resultChannel.lastDisplayedMessageId
+
+            lifecycleOwner.lifecycleScope.launch {
+                val currentMessages = messagesListView.getData()
+                    .filterIsInstance<MessageItem>()
+                    .map { item -> item.message }
+                val newMessages = result.messages.minus(currentMessages.toSet())
+                if (newMessages.isNotEmpty()) {
+                    val isLastDisplaying =
+                        messagesListView.isLastCompletelyItemDisplaying()
+                    messagesListView.addNextPageMessages(
+                        mapToMessageListItem(
+                            data = newMessages,
+                            hasNext = false,
+                            hasPrev = false,
+                            compareMessage = messagesListView.getLastMessage()?.message,
+                            enableDateSeparator = messagesListView.style.enableDateSeparator
+                        ),
+                        lifecycleScope = lifecycleScope,
+                    )
+                    if (isLastDisplaying)
+                        messagesListView.scrollToLastMessage()
+
+                    messagesListView.sortMessages()
+                }
+            }
+        }
+    }
+
     ChannelsCache.channelsDeletedFlow
         .filter { it.contains(channel.id) }
         .onEach {
@@ -378,42 +414,6 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         .filter { it.channel.id == channel.id && it.eventType == ChannelUpdatedType.ClearedHistory }
         .onEach {
             messagesListView.clearData()
-        }
-        .launchIn(lifecycleOwner.lifecycleScope)
-
-    SceytSyncManager.syncChannelMessagesFinished
-        .filter { it.first.id == channel.id }
-        .onEach { (syncChannel, messages) ->
-            if (syncChannel.id == channel.id) {
-                if (pinnedLastReadMessageId == 0L && syncChannel.lastDisplayedMessageId != 0L
-                    && syncChannel.lastDisplayedMessageId != syncChannel.lastMessage?.id
-                )
-                    pinnedLastReadMessageId = syncChannel.lastDisplayedMessageId
-
-                lifecycleOwner.lifecycleScope.launch {
-                    val currentMessages = messagesListView.getData()
-                        .filterIsInstance<MessageItem>()
-                        .map { item -> item.message }
-                    val newMessages = messages.minus(currentMessages.toSet())
-                    if (newMessages.isNotEmpty()) {
-                        val isLastDisplaying = messagesListView.isLastCompletelyItemDisplaying()
-                        messagesListView.addNextPageMessages(
-                            mapToMessageListItem(
-                                data = newMessages,
-                                hasNext = false,
-                                hasPrev = false,
-                                compareMessage = messagesListView.getLastMessage()?.message,
-                                enableDateSeparator = messagesListView.style.enableDateSeparator
-                            ),
-                            lifecycleScope = lifecycleScope,
-                        )
-                        if (isLastDisplaying)
-                            messagesListView.scrollToLastMessage()
-
-                        messagesListView.sortMessages()
-                    }
-                }
-            }
         }
         .launchIn(lifecycleOwner.lifecycleScope)
 
@@ -440,7 +440,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                         it is MessageItem && it.message.deliveryStatus == MessageDeliveryStatus.Received
                     }
                     (message as? MessageItem)?.let {
-                        syncManager.syncConversationMessagesAfter(conversationId, it.message.id)
+                        syncChannelMessagesAfter(it.message)
                     }
                 } else {
                     lastSyncCenterOffsetId = 0L
