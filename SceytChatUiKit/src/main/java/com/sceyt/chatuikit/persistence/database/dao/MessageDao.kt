@@ -469,10 +469,8 @@ internal abstract class MessageDao {
         if (oldMessages.size < limit && newMessages.size > halfLimit)
             newMessages = newest.take(limit - oldMessages.size)
 
-        // Within the loaded range there are more messages on a side only if the DB query
-        // returned more than what we actually included in the window.
-        val hasPrev = oldest.size > oldMessages.size
-        val hasNext = newest.size > newMessages.size
+        val hasPrev = oldest.size > halfLimit
+        val hasNext = newest.size > halfLimit
 
         val data = (oldMessages + newMessages).sortedBy { it.messageEntity.createdAt }
 
