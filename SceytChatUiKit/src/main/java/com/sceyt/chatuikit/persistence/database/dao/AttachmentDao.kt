@@ -113,7 +113,8 @@ internal abstract class AttachmentDao {
         val hasNext = newest.size > halfLimit
 
         val data = (oldAttachments + newAttachments).sortedBy { it.attachmentEntity.createdAt }
-        return LoadNearData(data, hasNext = hasNext, hasPrev)
+
+        return LoadNearData(data, hasNext = hasNext, hasPrev = hasPrev)
     }
 
     @Transaction
