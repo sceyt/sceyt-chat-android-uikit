@@ -337,13 +337,15 @@ internal abstract class MessageDao {
 
     @Transaction
     open suspend fun insertUserMarkersIfExistMessage(entities: List<MarkerEntity>): List<Long> {
-        val existMessageIds = getExistMessageByIds(entities.map { it.messageId }.toSet().toList())
+        if (entities.isEmpty()) return emptyList()
+
+        val existMessageIds = getExistMessageByIdsChunked(entities.map { it.messageId }.distinct()).toSet()
         // Filter markers which message exist in db
         val filtered = entities
             .filter { it.messageId in existMessageIds }
             .takeIf { it.isNotEmpty() } ?: return emptyList()
 
-        return insertUserMarkers(filtered)
+        return filtered.chunked(SQLITE_MAX_VARIABLE_NUMBER).flatMap { insertUserMarkers(it) }
     }
 
     @Transaction
@@ -529,6 +531,12 @@ internal abstract class MessageDao {
 
     @Query("SELECT message_id FROM $MESSAGE_TABLE WHERE message_id IN (:ids)")
     abstract suspend fun getExistMessageByIds(ids: List<Long>): List<Long>
+
+    @Transaction
+    open suspend fun getExistMessageByIdsChunked(ids: List<Long>): List<Long> {
+        if (ids.isEmpty()) return emptyList()
+        return ids.chunked(SQLITE_MAX_VARIABLE_NUMBER).flatMap { getExistMessageByIds(it) }
+    }
 
     @Transaction
     @Query("SELECT * FROM $MESSAGE_TABLE WHERE tid = :tid")
