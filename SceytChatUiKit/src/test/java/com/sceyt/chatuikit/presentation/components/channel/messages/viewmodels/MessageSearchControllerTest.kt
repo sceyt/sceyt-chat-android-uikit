@@ -17,12 +17,10 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verifyBlocking
 import org.mockito.kotlin.whenever
-import java.util.concurrent.atomic.AtomicBoolean
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class MessageSearchControllerTest {
     private val messageInteractor = mock<MessageInteractor>()
-    private val preparingToScroll = AtomicBoolean(false)
     private val scrolledTo = mutableListOf<Long>()
 
     @get:Rule
@@ -33,7 +31,6 @@ class MessageSearchControllerTest {
         messageInteractor = messageInteractor,
         conversationId = { 1L },
         replyInThread = false,
-        isPreparingToScrollToMessage = preparingToScroll,
         messageListQueryLimit = { queryLimit },
         onScrollToSearchMessage = { scrolledTo.add(it.id) },
     )
@@ -81,9 +78,8 @@ class MessageSearchControllerTest {
         controller.search("hi")
         advanceUntilIdle()
 
-        preparingToScroll.set(false)
         controller.scrollToSearchMessage(isPrev = true)
-        preparingToScroll.set(false)
+        controller.resetScrollPreparation()
         controller.scrollToSearchMessage(isPrev = true)
 
         assertThat(scrolledTo).containsExactly(1L, 2L, 3L).inOrder()
@@ -96,11 +92,15 @@ class MessageSearchControllerTest {
         controller.search("hi")
         advanceUntilIdle()
 
-        // search left preparing untouched; force the guard on.
-        preparingToScroll.set(true)
+        // the first step is still preparing, so the second one is dropped.
+        controller.scrollToSearchMessage(isPrev = true)
+        assertThat(controller.isPreparingToScrollToMessage).isTrue()
         controller.scrollToSearchMessage(isPrev = true)
 
-        assertThat(scrolledTo).containsExactly(1L)
+        assertThat(scrolledTo).containsExactly(1L, 2L).inOrder()
+
+        controller.resetScrollPreparation()
+        assertThat(controller.isPreparingToScrollToMessage).isFalse()
     }
 
     @Test
@@ -110,7 +110,6 @@ class MessageSearchControllerTest {
         controller.search("hi")
         advanceUntilIdle()
 
-        preparingToScroll.set(false)
         // currentIndex is 0; isPrev=false steps to -1 -> out of range.
         controller.scrollToSearchMessage(isPrev = false)
 
@@ -126,7 +125,6 @@ class MessageSearchControllerTest {
         controller.search("hi")
         advanceUntilIdle()
 
-        preparingToScroll.set(false)
         controller.scrollToSearchMessage(isPrev = true)
         advanceUntilIdle()
 

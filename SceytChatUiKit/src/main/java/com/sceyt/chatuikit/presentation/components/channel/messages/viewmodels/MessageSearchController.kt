@@ -15,15 +15,12 @@ import java.util.concurrent.atomic.AtomicBoolean
 /**
  * Owns in-conversation message search that used to live inside [MessageListViewModel]:
  * running a query, paging the next server batch, and stepping prev/next through results.
- *
- * [isPreparingToScrollToMessage] is shared with pagination, so it is injected rather than owned.
  */
 internal class MessageSearchController(
     private val scope: CoroutineScope,
     private val messageInteractor: MessageInteractor,
     private val conversationId: () -> Long,
     private val replyInThread: Boolean,
-    private val isPreparingToScrollToMessage: AtomicBoolean,
     private val messageListQueryLimit: () -> Int,
     private val onScrollToSearchMessage: (SceytMessage) -> Unit,
 ) {
@@ -32,6 +29,10 @@ internal class MessageSearchController(
 
     private var searchJob: Job? = null
     private val isLoadingNextFromServer = AtomicBoolean(false)
+    private val preparingToScrollToMessage = AtomicBoolean(false)
+
+    val isPreparingToScrollToMessage: Boolean
+        get() = preparingToScrollToMessage.get()
 
     fun search(query: String) {
         if (_searchResult.value?.searchQuery == query)
@@ -62,7 +63,7 @@ internal class MessageSearchController(
     }
 
     fun scrollToSearchMessage(isPrev: Boolean) {
-        if (isPreparingToScrollToMessage.get()) return
+        if (preparingToScrollToMessage.get()) return
         val current = _searchResult.value ?: return
         val messages = current.messages
         val nextIndex = if (isPrev) {
@@ -71,7 +72,7 @@ internal class MessageSearchController(
         if (nextIndex < 0 || nextIndex >= messages.size)
             return
 
-        isPreparingToScrollToMessage.set(true)
+        preparingToScrollToMessage.set(true)
         _searchResult.postValue(current.copy(currentIndex = nextIndex))
         onScrollToSearchMessage(messages[nextIndex])
 
@@ -79,6 +80,10 @@ internal class MessageSearchController(
         if (current.hasNext && messages.size - nextIndex < queryLimit / 2) {
             loadNext()
         }
+    }
+
+    fun resetScrollPreparation() {
+        preparingToScrollToMessage.set(false)
     }
 
     private fun loadNext() {
