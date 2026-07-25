@@ -92,7 +92,6 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.koin.core.component.inject
 import java.util.Collections
-import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.min
 import kotlin.time.Duration.Companion.seconds
 
@@ -205,8 +204,6 @@ class MessageListViewModel internal constructor(
     private val _peerPresenceUpdatedFlow = MutableLiveData<SceytChannel>()
     val peerPresenceUpdatedFlow = _peerPresenceUpdatedFlow.asLiveData()
 
-    // Search messages
-    internal val isPreparingToScrollToMessage = AtomicBoolean(false)
     private val mentionsController = createUnreadMentionsController()
     private val searchController = createMessageSearchController()
     private val reactionController = createReactionController()
@@ -627,7 +624,7 @@ class MessageListViewModel internal constructor(
         pagingRetryState.reset()
         invalidateCenteredSync()
         needSyncMessagesWhenScrollStateIdle = false
-        isPreparingToScrollToMessage.set(false)
+        resetPreparingToScrollToMessage()
         store.reset()
     }
 
@@ -737,7 +734,7 @@ class MessageListViewModel internal constructor(
                     )
                 )
                 if (response is PaginationResponse.ServerResponse)
-                    isPreparingToScrollToMessage.set(false)
+                    resetPreparingToScrollToMessage()
             }
         }
     }
@@ -930,7 +927,7 @@ class MessageListViewModel internal constructor(
 
             is SceytResponse.Error -> {
                 if (response.loadKey?.key == LoadKeyType.ScrollToMessageBy.longValue)
-                    isPreparingToScrollToMessage.set(false)
+                    resetPreparingToScrollToMessage()
             }
         }
     }
@@ -1012,7 +1009,7 @@ class MessageListViewModel internal constructor(
             generation = generation,
             topOffset = topOffset,
             isPaging = loadingFromServer || loadingFromDb,
-            isPreparingJump = isPreparingToScrollToMessage.get()
+            isPreparingJump = searchController.isPreparingToScrollToMessage
         )
     }
 
@@ -1413,6 +1410,10 @@ class MessageListViewModel internal constructor(
         preferences.setBoolean(KEY_VIEW_ONCE_INFO_SHOWN, show)
     }
 
+    internal fun resetPreparingToScrollToMessage() {
+        searchController.resetScrollPreparation()
+    }
+
     private fun createUnreadMentionsController() = UnreadMentionsController(
         scope = viewModelScope,
         messageInteractor = messageInteractor,
@@ -1429,7 +1430,6 @@ class MessageListViewModel internal constructor(
         messageInteractor = messageInteractor,
         conversationId = { conversationId },
         replyInThread = replyInThread,
-        isPreparingToScrollToMessage = isPreparingToScrollToMessage,
         messageListQueryLimit = { SceytChatUIKit.config.queryLimits.messageListQueryLimit },
         onScrollToSearchMessage = { scrollToMessageBy(it.id) },
     )

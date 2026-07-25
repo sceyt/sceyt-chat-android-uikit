@@ -232,7 +232,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                             return@scrollToMessage
 
                         if (found) {
-                            isPreparingToScrollToMessage.set(false)
+                            resetPreparingToScrollToMessage()
                             scrollCoordinator.clear(request)
                             return@scrollToMessage
                         }
@@ -700,7 +700,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         when (it) {
             RecyclerView.SCROLL_STATE_DRAGGING -> {
                 scrollCoordinator.cancelActiveRequest()
-                isPreparingToScrollToMessage.set(false)
+                resetPreparingToScrollToMessage()
             }
 
             RecyclerView.SCROLL_STATE_IDLE -> {
