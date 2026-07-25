@@ -258,12 +258,12 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                         if (response !is PaginationResponse.ServerResponse) {
                             return@scrollToMessage
                         }
-                        isPreparingToScrollToMessage.set(false)
+                        resetPreparingToScrollToMessage()
                         if (!found) {
                             SceytLog.w(
                                 TAG,
                                 "Called load near messages in channelId: ${channel.id} for scroll to message id: ${loadKey.value}, but message not found in server response." +
-                                        " Resetting isPreparingToScrollToMessage to false to avoid infinite waiting."
+                                        " Resetting the scroll preparation state to avoid infinite waiting."
                             )
                         }
                     })
@@ -389,7 +389,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
                 // set isSearchingMessageToScroll value to false, to enable jumping to next message
                 if (response.loadKey?.key == LoadKeyType.ScrollToMessageBy.longValue)
-                    isPreparingToScrollToMessage.set(false)
+                    resetPreparingToScrollToMessage()
             }
         }
     }
@@ -624,7 +624,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             highlight = true,
             onCompleted = { found ->
                 if (found) {
-                    isPreparingToScrollToMessage.set(false)
+                    resetPreparingToScrollToMessage()
                     return@scrollToMessage
                 }
                 loadNearMessages(
@@ -646,7 +646,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             highlight = true,
             onCompleted = { found ->
                 if (found) {
-                    isPreparingToScrollToMessage.set(false)
+                    resetPreparingToScrollToMessage()
                     return@scrollToMessage
                 }
                 loadNearMessages(

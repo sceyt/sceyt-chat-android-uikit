@@ -93,7 +93,6 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.withContext
 import org.koin.core.component.inject
 import java.util.Collections
-import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.min
 
 class MessageListViewModel(
@@ -179,9 +178,6 @@ class MessageListViewModel(
     private val _onScrollToUnredMentionMessageLiveData = MutableLiveData<Long>()
     internal val onScrollToUnredMentionMessageLiveData =
         _onScrollToUnredMentionMessageLiveData.asLiveData()
-
-    // Search messages
-    internal val isPreparingToScrollToMessage = AtomicBoolean(false)
 
     private val mentionsController = createUnreadMentionsController()
     private val reactionController = createReactionController()
@@ -443,7 +439,7 @@ class MessageListViewModel(
         loadNextOffsetId = 0
         lastSyncCenterOffsetId = 0
         needSyncMessagesWhenScrollStateIdle = false
-        isPreparingToScrollToMessage.set(false)
+        resetPreparingToScrollToMessage()
     }
 
     private fun initPaginationResponse(response: PaginationResponse<SceytMessage>) {
@@ -822,6 +818,10 @@ class MessageListViewModel(
         searchController.scrollToSearchMessage(isPrev)
     }
 
+    internal fun resetPreparingToScrollToMessage() {
+        searchController.resetScrollPreparation()
+    }
+
     private fun createChannelMemberController() = ChannelMemberController(
         scope = viewModelScope,
         memberInteractor = channelMemberInteractor,
@@ -845,7 +845,6 @@ class MessageListViewModel(
         messageInteractor = messageInteractor,
         conversationId = { conversationId },
         replyInThread = replyInThread,
-        isPreparingToScrollToMessage = isPreparingToScrollToMessage,
         messageListQueryLimit = { SceytChatUIKit.config.queryLimits.messageListQueryLimit },
         onScrollToSearchMessage = { _onScrollToSearchMessageLiveData.postValue(it) },
     )
