@@ -14,11 +14,11 @@ import com.sceyt.chatuikit.presentation.custom_views.voice_recorder.AudioMetadat
 sealed interface ChannelFileItem : AttachmentDataProvider, AttachmentDataUpdater {
 
     data class Item(
-            var data: AttachmentWithUserData,
-            val type: ChannelFileItemType,
-            private var _metadataPayload: AttachmentMetadataPayload,
-            private var _thumbPath: String?,
-            private var _transferData: TransferData?,
+        var data: AttachmentWithUserData,
+        val type: ChannelFileItemType,
+        private var _metadataPayload: AttachmentMetadataPayload,
+        private var _thumbPath: String?,
+        private var _transferData: TransferData?,
     ) : ChannelFileItem {
 
         override val attachment: SceytAttachment
@@ -58,7 +58,7 @@ sealed interface ChannelFileItem : AttachmentDataProvider, AttachmentDataUpdater
     }
 
     data class DateSeparator(
-            var data: AttachmentWithUserData,
+        var data: AttachmentWithUserData,
     ) : ChannelFileItem {
 
         override val attachment: SceytAttachment
