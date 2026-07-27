@@ -469,7 +469,10 @@ class MessageListViewModel internal constructor(
                 pinUnreadSeparatorIfNeeded()
                 loadNearMessages(
                     messageId = pinnedLastReadMessageId,
-                    loadKey = LoadKeyData(key = LoadKeyType.ScrollToUnreadMessage.longValue),
+                    loadKey = LoadKeyData(
+                        key = LoadKeyType.ScrollToUnreadMessage.longValue,
+                        value = pinnedLastReadMessageId
+                    ),
                     ignoreServer = false
                 )
             }
