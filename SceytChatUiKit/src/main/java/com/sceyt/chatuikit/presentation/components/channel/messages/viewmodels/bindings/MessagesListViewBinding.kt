@@ -238,7 +238,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         val loadKey = response.getLoadKey() ?: return
         when (loadKey.key) {
             LoadKeyType.ScrollToUnreadMessage.longValue -> {
-                messagesListView.scrollToUnReadMessage()
+                messagesListView.scrollToUnReadMessage(loadKey.value)
             }
 
             LoadKeyType.ScrollToLastMessage.longValue -> {
