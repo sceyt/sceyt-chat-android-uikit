@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.presentation.components.channel.messages
+package com.sceyt.chatuikit.presentation.helpers
 
 import android.util.Size
 import com.google.common.truth.Truth.assertThat
@@ -11,7 +11,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
-class MessageListTransferUpdatePolicyTest {
+class TransferUpdateUiPolicyTest {
 
     @Test
     fun `running and pending states do not reach message list or adapter updates`() {
@@ -27,8 +27,8 @@ class MessageListTransferUpdatePolicyTest {
         states.forEach { state ->
             val transfer = transfer(state)
 
-            assertThat(MessageListTransferUpdatePolicy.shouldApplyToMessageList(transfer)).isFalse()
-            assertThat(MessageListTransferUpdatePolicy.shouldUpdateAdapterItem(transfer)).isFalse()
+            assertThat(TransferUpdateUiPolicy.shouldApplyDeferredUpdate(transfer, ThumbFor.MessagesLisView)).isFalse()
+            assertThat(TransferUpdateUiPolicy.shouldUpdateAdapterItem(transfer)).isFalse()
         }
     }
 
@@ -47,8 +47,8 @@ class MessageListTransferUpdatePolicyTest {
         states.forEach { state ->
             val transfer = transfer(state)
 
-            assertThat(MessageListTransferUpdatePolicy.shouldApplyToMessageList(transfer)).isTrue()
-            assertThat(MessageListTransferUpdatePolicy.shouldUpdateAdapterItem(transfer)).isTrue()
+            assertThat(TransferUpdateUiPolicy.shouldApplyDeferredUpdate(transfer, ThumbFor.MessagesLisView)).isTrue()
+            assertThat(TransferUpdateUiPolicy.shouldUpdateAdapterItem(transfer)).isTrue()
         }
     }
 
@@ -62,10 +62,21 @@ class MessageListTransferUpdatePolicyTest {
             thumbData = ThumbData(ThumbFor.GlobalSearch.value, "/downloads/file.jpg", Size(100, 100))
         )
 
-        assertThat(MessageListTransferUpdatePolicy.isMessageListThumbLoaded(messageListThumb)).isTrue()
-        assertThat(MessageListTransferUpdatePolicy.shouldApplyToMessageList(messageListThumb)).isTrue()
-        assertThat(MessageListTransferUpdatePolicy.isMessageListThumbLoaded(globalSearchThumb)).isFalse()
-        assertThat(MessageListTransferUpdatePolicy.shouldApplyToMessageList(globalSearchThumb)).isFalse()
+        assertThat(TransferUpdateUiPolicy.isThumbLoadedFor(messageListThumb, ThumbFor.MessagesLisView)).isTrue()
+        assertThat(TransferUpdateUiPolicy.shouldApplyDeferredUpdate(messageListThumb, ThumbFor.MessagesLisView)).isTrue()
+        assertThat(TransferUpdateUiPolicy.isThumbLoadedFor(globalSearchThumb, ThumbFor.MessagesLisView)).isFalse()
+        assertThat(TransferUpdateUiPolicy.shouldApplyDeferredUpdate(globalSearchThumb, ThumbFor.MessagesLisView)).isFalse()
+    }
+
+    @Test
+    fun `thumb loaded deferred rule uses provided surface`() {
+        val channelInfoThumb = transfer(
+            state = TransferState.ThumbLoaded,
+            thumbData = ThumbData(ThumbFor.ChannelInfo.value, "/downloads/file.jpg", Size(100, 100))
+        )
+
+        assertThat(TransferUpdateUiPolicy.shouldApplyDeferredUpdate(channelInfoThumb, ThumbFor.ChannelInfo)).isTrue()
+        assertThat(TransferUpdateUiPolicy.shouldApplyDeferredUpdate(channelInfoThumb, ThumbFor.MessagesLisView)).isFalse()
     }
 
     private fun transfer(

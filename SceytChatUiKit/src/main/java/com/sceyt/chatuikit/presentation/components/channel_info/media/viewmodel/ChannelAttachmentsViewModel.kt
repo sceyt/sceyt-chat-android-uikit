@@ -14,13 +14,15 @@ import com.sceyt.chatuikit.domain.usecases.PauseOrResumeTransferUseCase
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferHelper
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
+import com.sceyt.chatuikit.persistence.file_transfer.ThumbFor
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import com.sceyt.chatuikit.persistence.mappers.getInfoFromMetadata
 import com.sceyt.chatuikit.persistence.mappers.toTransferData
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelFileItem
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelFileItemType
+import com.sceyt.chatuikit.presentation.helpers.DeferredTransferUpdateBuffer
+import com.sceyt.chatuikit.presentation.helpers.TransferUpdateUiPolicy
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.Dispatchers
@@ -36,7 +38,7 @@ class ChannelAttachmentsViewModel(
     private val fileTransferService: FileTransferService,
     private val pauseOrResumeTransferUseCase: PauseOrResumeTransferUseCase,
 ) : BaseViewModel() {
-    private val needToUpdateTransferAfterOnResume = hashMapOf<Long, TransferData>()
+    private val needToUpdateTransferAfterOnResume = DeferredTransferUpdateBuffer(ThumbFor.ChannelInfo)
 
     private val _filesFlow = MutableSharedFlow<List<ChannelFileItem>>(
         extraBufferCapacity = 5,
@@ -206,18 +208,22 @@ class ChannelAttachmentsViewModel(
         }
     }
 
-    fun observeToUpdateAfterOnResume(fragment: Fragment) {
-        FileTransferHelper.onTransferUpdatedLiveData.asFlow().onEach {
-            if (!fragment.isResumed && it.state != TransferState.Downloading && it.state != TransferState.Uploading)
-                needToUpdateTransferAfterOnResume[it.messageTid] = it
+    fun observeToUpdateAfterOnResume(
+        fragment: Fragment,
+        onTransferUpdate: (TransferData) -> Unit,
+    ) {
+        FileTransferHelper.onTransferUpdatedLiveData.asFlow().onEach { transferData ->
+            if (!fragment.isResumed &&
+                    TransferUpdateUiPolicy.shouldApplyDeferredUpdate(transferData, ThumbFor.ChannelInfo)) {
+                needToUpdateTransferAfterOnResume.add(transferData)
+            }
         }.launchIn(fragment.lifecycleScope)
 
         fragment.lifecycleScope.launch {
             fragment.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-                needToUpdateTransferAfterOnResume.forEach { (_, transferData) ->
-                    FileTransferHelper.emitAttachmentTransferUpdate(transferData)
+                needToUpdateTransferAfterOnResume.drain().forEach { transferData ->
+                    onTransferUpdate(transferData)
                 }
-                needToUpdateTransferAfterOnResume.clear()
             }
         }
     }

@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels
+package com.sceyt.chatuikit.presentation.helpers
 
 import android.util.Size
 import com.google.common.truth.Truth.assertThat
@@ -15,7 +15,7 @@ class DeferredTransferUpdateBufferTest {
 
     @Test
     fun `drain keeps transfer and thumb updates for same message`() {
-        val buffer = DeferredTransferUpdateBuffer()
+        val buffer = DeferredTransferUpdateBuffer(ThumbFor.MessagesLisView)
         val transfer = transfer(TransferState.Downloaded, filePath = "/downloads/file.jpg")
         val thumb = transfer(
             state = TransferState.ThumbLoaded,
@@ -37,7 +37,7 @@ class DeferredTransferUpdateBufferTest {
 
     @Test
     fun `drain keeps latest transfer and latest thumb update`() {
-        val buffer = DeferredTransferUpdateBuffer()
+        val buffer = DeferredTransferUpdateBuffer(ThumbFor.MessagesLisView)
         val error = transfer(TransferState.ErrorDownload, progress = 40f)
         val downloaded = transfer(TransferState.Downloaded, progress = 100f, filePath = "/downloads/file.jpg")
         val oldThumb = transfer(
@@ -53,6 +53,25 @@ class DeferredTransferUpdateBufferTest {
         buffer.add(latestThumb)
 
         assertThat(buffer.drain()).containsExactly(downloaded, latestThumb).inOrder()
+    }
+
+    @Test
+    fun `add ignores thumb updates for another surface`() {
+        val buffer = DeferredTransferUpdateBuffer(ThumbFor.ChannelInfo)
+        val messageListThumb = transfer(
+            state = TransferState.ThumbLoaded,
+            filePath = "/thumbs/message-list.jpg",
+            thumbData = ThumbData(ThumbFor.MessagesLisView.value, "/downloads/file.jpg", Size(80, 80))
+        )
+        val channelInfoThumb = messageListThumb.copy(
+            filePath = "/thumbs/channel-info.jpg",
+            thumbData = ThumbData(ThumbFor.ChannelInfo.value, "/downloads/file.jpg", Size(80, 80))
+        )
+
+        buffer.add(messageListThumb)
+        buffer.add(channelInfoThumb)
+
+        assertThat(buffer.drain()).containsExactly(channelInfoThumb)
     }
 
     private fun transfer(
