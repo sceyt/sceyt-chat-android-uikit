@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.presentation.components.channel.messages
+package com.sceyt.chatuikit.presentation.helpers
 
 import com.sceyt.chatuikit.persistence.file_transfer.ThumbFor
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
@@ -7,21 +7,20 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState.FilePathChang
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.PendingDownload
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.PendingUpload
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Preparing
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState.ThumbLoaded
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploading
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.WaitingToUpload
 import com.sceyt.chatuikit.persistence.file_transfer.isCompleted
 import com.sceyt.chatuikit.persistence.file_transfer.isError
 import com.sceyt.chatuikit.persistence.file_transfer.isPaused
 
-internal object MessageListTransferUpdatePolicy {
+internal object TransferUpdateUiPolicy {
 
-    fun shouldApplyToMessageList(transfer: TransferData): Boolean {
+    fun shouldApplyDeferredUpdate(transfer: TransferData, thumbFor: ThumbFor): Boolean {
         return transfer.state.isCompleted() ||
                 transfer.state.isError() ||
                 transfer.state.isPaused() ||
                 transfer.state == FilePathChanged ||
-                isMessageListThumbLoaded(transfer)
+                transfer.isThumbLoadedFor(thumbFor)
     }
 
     fun shouldUpdateAdapterItem(transfer: TransferData): Boolean {
@@ -31,7 +30,7 @@ internal object MessageListTransferUpdatePolicy {
         }
     }
 
-    fun isMessageListThumbLoaded(transfer: TransferData): Boolean {
-        return transfer.state == ThumbLoaded && transfer.thumbData?.key == ThumbFor.MessagesLisView.value
+    fun isThumbLoadedFor(transfer: TransferData, thumbFor: ThumbFor): Boolean {
+        return transfer.isThumbLoadedFor(thumbFor)
     }
 }

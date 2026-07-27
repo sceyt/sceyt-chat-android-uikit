@@ -1,17 +1,21 @@
-package com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels
+package com.sceyt.chatuikit.presentation.helpers
 
 import com.sceyt.chatuikit.persistence.file_transfer.ThumbFor
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.ThumbLoaded
 
-internal class DeferredTransferUpdateBuffer {
+internal class DeferredTransferUpdateBuffer(
+    private val thumbFor: ThumbFor,
+) {
     private val updates = linkedMapOf<Long, Entry>()
 
     fun isNotEmpty(): Boolean = updates.isNotEmpty()
 
     fun add(transfer: TransferData) {
+        if (transfer.state == ThumbLoaded && !transfer.isThumbLoadedFor(thumbFor)) return
+
         val entry = updates.getOrPut(transfer.messageTid) { Entry() }
-        if (transfer.isMessageListThumbLoaded()) {
+        if (transfer.isThumbLoadedFor(thumbFor)) {
             entry.thumb = transfer
         } else {
             entry.transfer = transfer
@@ -26,12 +30,12 @@ internal class DeferredTransferUpdateBuffer {
         return result
     }
 
-    private fun TransferData.isMessageListThumbLoaded(): Boolean {
-        return state == ThumbLoaded && thumbData?.key == ThumbFor.MessagesLisView.value
-    }
-
     private data class Entry(
         var transfer: TransferData? = null,
         var thumb: TransferData? = null,
     )
+}
+
+internal fun TransferData.isThumbLoadedFor(thumbFor: ThumbFor): Boolean {
+    return state == ThumbLoaded && thumbData?.key == thumbFor.value
 }

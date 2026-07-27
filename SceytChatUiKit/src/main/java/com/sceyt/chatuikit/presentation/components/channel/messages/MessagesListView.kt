@@ -90,6 +90,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.popups.React
 import com.sceyt.chatuikit.presentation.extensions.getUpdateMessage
 import com.sceyt.chatuikit.presentation.extensions.isPending
 import com.sceyt.chatuikit.presentation.helpers.KeyboardEventListener
+import com.sceyt.chatuikit.presentation.helpers.TransferUpdateUiPolicy
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.styles.extensions.messages_list.setPageStateViews
 import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle
@@ -681,7 +682,7 @@ class MessagesListView @JvmOverloads constructor(
                 }
                 return@withContext
             } else {
-                if (!MessageListTransferUpdatePolicy.shouldUpdateAdapterItem(data)) return@let
+                if (!TransferUpdateUiPolicy.shouldUpdateAdapterItem(data)) return@let
 
                 var itemForNotify: MessageItem? = null
                 for ((attachmentIndex, sceytAttachment) in attachments.withIndex()) {

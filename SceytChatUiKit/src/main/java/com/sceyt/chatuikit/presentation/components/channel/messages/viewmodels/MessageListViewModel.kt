@@ -40,6 +40,7 @@ import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
+import com.sceyt.chatuikit.persistence.file_transfer.ThumbFor
 import com.sceyt.chatuikit.persistence.interactor.AttachmentInteractor
 import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
 import com.sceyt.chatuikit.persistence.interactor.ChannelMemberInteractor
@@ -65,6 +66,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.b
 import com.sceyt.chatuikit.presentation.extensions.isNotPending
 import com.sceyt.chatuikit.presentation.extensions.isPending
 import com.sceyt.chatuikit.presentation.helpers.DebounceHelper
+import com.sceyt.chatuikit.presentation.helpers.DeferredTransferUpdateBuffer
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.services.SceytPresenceChecker
@@ -117,7 +119,7 @@ class MessageListViewModel(
     internal val pendingStatusReconciler by lazy { PendingMessageStatusReconciler() }
     internal val outgoingMessageMutex by lazy { Mutex() }
     internal val pendingDisplayMsgIds by lazy { Collections.synchronizedSet(mutableSetOf<Long>()) }
-    internal val needToUpdateTransferAfterOnResume = DeferredTransferUpdateBuffer()
+    internal val needToUpdateTransferAfterOnResume = DeferredTransferUpdateBuffer(ThumbFor.MessagesLisView)
     private var showSenderAvatarAndNameIfNeeded = true
     internal var viewOnceSelected = false
     private var loadPrevJob: Job? = null

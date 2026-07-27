@@ -51,10 +51,10 @@ import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isPublic
 import com.sceyt.chatuikit.persistence.extensions.safeResume
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferHelper
+import com.sceyt.chatuikit.persistence.file_transfer.ThumbFor
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelUpdatedType
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
-import com.sceyt.chatuikit.presentation.components.channel.messages.MessageListTransferUpdatePolicy
 import com.sceyt.chatuikit.presentation.components.channel.messages.MessagesListView
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem.MessageItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageCommandEvent
@@ -62,6 +62,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.M
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageListViewModel
 import com.sceyt.chatuikit.presentation.extensions.isNotPending
 import com.sceyt.chatuikit.presentation.extensions.isSelfDestructed
+import com.sceyt.chatuikit.presentation.helpers.TransferUpdateUiPolicy
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.styles.extensions.messages_list.setEmptyStateForSelfChannel
 import kotlinx.coroutines.Dispatchers
@@ -817,7 +818,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
   */
 
     FileTransferHelper.onTransferUpdatedLiveData.asFlow()
-        .filter(MessageListTransferUpdatePolicy::shouldApplyToMessageList)
+        .filter { TransferUpdateUiPolicy.shouldApplyDeferredUpdate(it, ThumbFor.MessagesLisView) }
         .onEach { transfer ->
             if (lifecycleOwner.isResumed()) {
                 messagesListView.updateProgress(transfer, false)

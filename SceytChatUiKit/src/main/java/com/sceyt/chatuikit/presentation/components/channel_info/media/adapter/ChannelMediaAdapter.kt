@@ -7,10 +7,14 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.databinding.SceytItemChannelMediaDateSeparatorBinding
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
+import com.sceyt.chatuikit.persistence.file_transfer.AttachmentTransferStateStore
+import com.sceyt.chatuikit.persistence.file_transfer.ThumbFor
+import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.presentation.common.collections.SyncArrayList
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.AttachmentsDiffUtil
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.holders.BaseFileViewHolder
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelFileItem
+import com.sceyt.chatuikit.presentation.helpers.isThumbLoadedFor
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import java.util.Date
 
@@ -96,6 +100,26 @@ class ChannelMediaAdapter(
     fun getFileItems() = attachments.filter { it.isMediaItem() }
 
     fun getData() = attachments
+
+    fun updateTransfer(data: TransferData) {
+        attachments.indexOfFirst {
+            it is ChannelFileItem.Item &&
+                    AttachmentTransferStateStore.isTransferDataForAttachment(data, it.attachment)
+        }.takeIf { it != -1 }?.let { index ->
+            val item = attachments[index] as? ChannelFileItem.Item ?: return@let
+
+            if (data.isThumbLoadedFor(ThumbFor.ChannelInfo)) {
+                item.updateThumbPath(data.filePath)
+            } else {
+                val attachmentWithTransfer = AttachmentTransferStateStore.getUpdatedAttachment(item.attachment, data)
+                item.updateAttachment(attachmentWithTransfer)
+                item.updateTransferData(
+                    AttachmentTransferStateStore.getTransferData(attachmentWithTransfer) ?: data
+                )
+            }
+            notifyItemChanged(index, Unit)
+        }
+    }
 
     @SuppressLint("NotifyDataSetChanged")
     fun clearData() {

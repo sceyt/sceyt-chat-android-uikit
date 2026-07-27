@@ -16,6 +16,7 @@ import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.screenHeightPx
 import com.sceyt.chatuikit.extensions.setBundleArguments
 import com.sceyt.chatuikit.koin.SceytKoinComponent
+import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.presentation.common.collections.SyncArrayList
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.openFile
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelFileItem
@@ -75,7 +76,7 @@ open class ChannelInfoFilesFragment : Fragment(), SceytKoinComponent, HistoryCle
     }
 
     private fun initViewModel() {
-        viewModel.observeToUpdateAfterOnResume(this)
+        viewModel.observeToUpdateAfterOnResume(this, ::onDeferredTransferUpdate)
 
         lifecycleScope.launch {
             viewModel.filesFlow.filterNot { it.isEmpty() }.collect(::onInitialFilesList)
@@ -124,6 +125,10 @@ open class ChannelInfoFilesFragment : Fragment(), SceytKoinComponent, HistoryCle
 
     open fun onMoreFilesList(list: List<ChannelFileItem>) {
         mediaAdapter?.addNewItems(list)
+    }
+
+    protected open fun onDeferredTransferUpdate(transferData: TransferData) {
+        mediaAdapter?.updateTransfer(transferData)
     }
 
     protected open fun onPageStateChange(pageState: PageState) {
