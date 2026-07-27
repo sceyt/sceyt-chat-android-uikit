@@ -9,6 +9,7 @@ import androidx.core.graphics.drawable.toDrawable
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.sceyt.chatuikit.extensions.glideRequestListener
+import com.sceyt.chatuikit.persistence.file_transfer.AttachmentTransferStateStore
 import com.sceyt.chatuikit.persistence.file_transfer.ThumbData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
@@ -82,14 +83,16 @@ class AttachmentViewHolderHelper(itemView: View) {
         item: AttachmentDataProvider,
         isValidThumb: (thumbData: ThumbData?) -> Boolean,
     ): Boolean {
-        if (data.messageTid != item.attachment.messageTid) return false
+        if (!AttachmentTransferStateStore.isTransferDataForAttachment(data, item.attachment))
+            return false
+
         if (data.state == TransferState.ThumbLoaded) {
-            if (isValidThumb(data.thumbData)) {
-                item.updateThumbPath(data.filePath)
-            }
+            if (!isValidThumb(data.thumbData)) return false
+            item.updateThumbPath(data.filePath)
         } else {
-            item.updateAttachment(item.attachment.getUpdatedWithTransferData(data))
-            item.updateTransferData(data)
+            val latestData = AttachmentTransferStateStore.getTransferData(item.attachment) ?: data
+            item.updateAttachment(AttachmentTransferStateStore.getUpdatedAttachment(item.attachment, latestData))
+            item.updateTransferData(latestData)
         }
         return true
     }

@@ -40,11 +40,6 @@ import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
-import com.sceyt.chatuikit.persistence.file_transfer.ThumbFor
-import com.sceyt.chatuikit.persistence.file_transfer.TransferData
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState.FilePathChanged
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState.ThumbLoaded
-import com.sceyt.chatuikit.persistence.file_transfer.isCompleted
 import com.sceyt.chatuikit.persistence.interactor.AttachmentInteractor
 import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
 import com.sceyt.chatuikit.persistence.interactor.ChannelMemberInteractor
@@ -122,7 +117,7 @@ class MessageListViewModel(
     internal val pendingStatusReconciler by lazy { PendingMessageStatusReconciler() }
     internal val outgoingMessageMutex by lazy { Mutex() }
     internal val pendingDisplayMsgIds by lazy { Collections.synchronizedSet(mutableSetOf<Long>()) }
-    internal val needToUpdateTransferAfterOnResume = hashMapOf<Long, TransferData>()
+    internal val needToUpdateTransferAfterOnResume = DeferredTransferUpdateBuffer()
     private var showSenderAvatarAndNameIfNeeded = true
     internal var viewOnceSelected = false
     private var loadPrevJob: Job? = null
@@ -802,15 +797,6 @@ class MessageListViewModel(
                 }
             }
         }
-    }
-
-    internal fun shouldDeferTransferUpdate(transfer: TransferData): Boolean {
-        return transfer.state.isCompleted() ||
-                transfer.state == FilePathChanged || isMessageListThumbLoaded(transfer)
-    }
-
-    internal fun isMessageListThumbLoaded(transfer: TransferData): Boolean {
-        return transfer.state == ThumbLoaded && transfer.thumbData?.key == ThumbFor.MessagesLisView.value
     }
 
     internal fun clearPreparingThumbs() {

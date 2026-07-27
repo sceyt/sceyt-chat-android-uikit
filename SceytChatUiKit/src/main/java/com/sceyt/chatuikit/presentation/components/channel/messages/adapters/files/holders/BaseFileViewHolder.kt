@@ -13,6 +13,7 @@ import com.sceyt.chatuikit.persistence.file_transfer.getProgressWithState
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.AttachmentDataProvider
 import com.sceyt.chatuikit.presentation.custom_views.CircularProgressView
 import com.sceyt.chatuikit.presentation.helpers.AttachmentViewHolderHelper
+import com.sceyt.chatuikit.presentation.helpers.applyLatestTransferState
 import com.sceyt.chatuikit.presentation.root.BaseViewHolder
 import com.sceyt.chatuikit.styles.common.MediaLoaderStyle
 
@@ -26,6 +27,7 @@ abstract class BaseFileViewHolder<Item : AttachmentDataProvider>(
 
     override fun bind(item: Item) {
         fileItem = item
+        fileItem.applyLatestTransferState(needThumbFor(), getThumbSize())
         viewHolderHelper.bind(item)
         initAttachment()
         setListener()

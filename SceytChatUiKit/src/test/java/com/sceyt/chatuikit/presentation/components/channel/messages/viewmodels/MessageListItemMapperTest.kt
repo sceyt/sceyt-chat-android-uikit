@@ -4,13 +4,24 @@ import com.google.common.truth.Truth.assertThat
 import com.sceyt.chatuikit.createChannel
 import com.sceyt.chatuikit.createMessage
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
+import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
+import com.sceyt.chatuikit.data.models.messages.SceytAttachment
+import com.sceyt.chatuikit.persistence.file_transfer.AttachmentTransferStateStore
+import com.sceyt.chatuikit.persistence.file_transfer.TransferData
+import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem.DateSeparatorItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem.MessageItem
+import org.junit.After
 import org.junit.Test
 
 class MessageListItemMapperTest {
     private val mapper = MessageListItemMapper()
+
+    @After
+    fun tearDown() {
+        AttachmentTransferStateStore.clear()
+    }
 
     @Test
     fun `map adds date separator and loading items`() {
@@ -107,6 +118,37 @@ class MessageListItemMapperTest {
         assertThat(result.disabledShowAvatarAndName).isTrue()
     }
 
+    @Test
+    fun `init message info overlays latest transfer data from store`() {
+        val attachment = attachment(
+            messageTid = 10,
+            url = "https://cdn.test/file.jpg",
+            state = TransferState.PendingDownload,
+            progress = 0f
+        )
+        AttachmentTransferStateStore.put(
+            TransferData(
+                messageTid = attachment.messageTid,
+                progressPercent = 65f,
+                state = TransferState.Downloading,
+                filePath = null,
+                url = attachment.url
+            )
+        )
+        val message = createMessage(createdAt = 1_000, id = 1, tid = attachment.messageTid)
+            .copy(attachments = listOf(attachment))
+
+        val result = mapper.initMessageInfoData(
+            sceytMessage = message,
+            context = context()
+        )
+
+        val file = result.files?.single()
+        assertThat(file?.transferData?.state).isEqualTo(TransferState.Downloading)
+        assertThat(file?.transferData?.progressPercent).isEqualTo(65f)
+        assertThat(file?.attachment?.transferState).isEqualTo(TransferState.Downloading)
+    }
+
     private fun context(
         channel: SceytChannel = createChannel(id = 1, pinnedAt = 0, createdAt = 1),
         myId: String? = null,
@@ -121,5 +163,29 @@ class MessageListItemMapperTest {
         showSenderAvatarAndName = showSenderAvatarAndName,
         selectedMessageTids = selected,
         expandedMessageTids = expanded,
+    )
+
+    private fun attachment(
+        messageTid: Long,
+        filePath: String? = null,
+        url: String? = null,
+        state: TransferState? = null,
+        progress: Float? = null,
+    ) = SceytAttachment(
+        id = messageTid,
+        messageId = messageTid,
+        messageTid = messageTid,
+        userId = null,
+        name = "file-$messageTid",
+        type = AttachmentTypeEnum.Image.value,
+        metadata = null,
+        fileSize = 100L,
+        createdAt = 1_000L,
+        url = url,
+        filePath = filePath,
+        transferState = state,
+        progressPercent = progress,
+        originalFilePath = null,
+        linkPreviewDetails = null,
     )
 }

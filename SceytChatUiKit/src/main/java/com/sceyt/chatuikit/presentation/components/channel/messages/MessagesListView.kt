@@ -48,17 +48,13 @@ import com.sceyt.chatuikit.navigation.MediaPreviewParams
 import com.sceyt.chatuikit.navigation.navigate
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.persistence.differs.diff
+import com.sceyt.chatuikit.persistence.file_transfer.AttachmentTransferStateStore
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.persistence.file_transfer.ThumbFor
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Downloaded
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState.PauseUpload
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState.PendingUpload
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Preparing
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.ThumbLoaded
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploaded
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploading
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState.WaitingToUpload
 import com.sceyt.chatuikit.persistence.mappers.isLink
 import com.sceyt.chatuikit.presentation.common.dialogs.SceytDialog
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
@@ -663,14 +659,8 @@ class MessagesListView @JvmOverloads constructor(
             val message = (item as? MessageItem)?.message ?: return@withContext
             val attachments = message.attachments?.toMutableList() ?: return@withContext
 
-            val predicate: (SceytAttachment) -> Boolean = when (data.state) {
-                Uploading, PendingUpload, PauseUpload, Uploaded, Preparing, WaitingToUpload -> { attachment ->
-                    attachment.messageTid == data.messageTid
-                }
-
-                else -> { attachment ->
-                    attachment.url == data.url
-                }
+            val predicate: (SceytAttachment) -> Boolean = { attachment ->
+                AttachmentTransferStateStore.isTransferDataForAttachment(data, attachment)
             }
             val foundAttachmentFile = item.message.files?.find { listItem ->
                 predicate(listItem.attachment)
@@ -679,31 +669,54 @@ class MessagesListView @JvmOverloads constructor(
             if (data.state == ThumbLoaded) {
                 if (data.thumbData?.key == ThumbFor.MessagesLisView.value) {
                     foundAttachmentFile?.updateThumbPath(data.filePath)
+                    if (updateRecyclerView) {
+                        withContext(Dispatchers.Main) {
+                            updateItem(
+                                index = index,
+                                item = item,
+                                diff = MessageDiff.DEFAULT_FALSE.copy(filesChanged = true)
+                            )
+                        }
+                    }
                 }
                 return@withContext
             } else {
+                if (!MessageListTransferUpdatePolicy.shouldUpdateAdapterItem(data)) return@let
+
+                var itemForNotify: MessageItem? = null
                 for ((attachmentIndex, sceytAttachment) in attachments.withIndex()) {
                     if (predicate(sceytAttachment)) {
-                        val attachmentWithTransfer = sceytAttachment.getUpdatedWithTransferData(
-                            data = data
+                        val attachmentWithTransfer = AttachmentTransferStateStore.getUpdatedAttachment(
+                            attachment = sceytAttachment,
+                            transferData = data
                         )
                         val updatedAttachment = foundAttachmentFile?.updateAttachment(
                             file = attachmentWithTransfer
+                        )
+                        foundAttachmentFile?.updateTransferData(
+                            AttachmentTransferStateStore.getTransferData(attachmentWithTransfer)
+                                ?: data
                         )
                         attachments[attachmentIndex] = updatedAttachment ?: attachmentWithTransfer
                         val updatedItem = item.copy(
                             message = message.copy(attachments = attachments)
                         )
                         updateAdapterItemNotifyVisible(index, updatedItem)
+                        itemForNotify = updatedItem
                         break
                     }
                 }
-            }
 
-            if (updateRecyclerView)
-                withContext(Dispatchers.Main) {
-                    updateItem(index, item, MessageDiff.DEFAULT_FALSE.copy(filesChanged = true))
+                if (updateRecyclerView && itemForNotify != null) {
+                    withContext(Dispatchers.Main) {
+                        updateItem(
+                            index = index,
+                            item = itemForNotify,
+                            diff = MessageDiff.DEFAULT_FALSE.copy(filesChanged = true)
+                        )
+                    }
                 }
+            }
         }
 
         // Update reply message

@@ -31,6 +31,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.cl
 import com.sceyt.chatuikit.presentation.custom_views.CircularProgressView
 import com.sceyt.chatuikit.presentation.extensions.isNotPending
 import com.sceyt.chatuikit.presentation.helpers.AttachmentViewHolderHelper
+import com.sceyt.chatuikit.presentation.helpers.applyLatestTransferState
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
@@ -57,6 +58,7 @@ abstract class BaseMediaMessageViewHolder(
         fileContainer?.let {
             setImageSize(it)
         }
+        fileItem.applyLatestTransferState(ThumbFor.MessagesLisView, getThumbSize())
         viewHolderHelper.bind(fileItem, resizedImageSize)
         setListener()
     }
