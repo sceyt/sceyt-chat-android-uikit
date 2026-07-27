@@ -29,13 +29,13 @@ import com.sceyt.chatuikit.data.models.messages.SceytReaction
 import com.sceyt.chatuikit.data.models.messages.SceytReactionTotal
 import com.sceyt.chatuikit.databinding.SceytMessagesListViewBinding
 import com.sceyt.chatuikit.extensions.asActivity
+import com.sceyt.chatuikit.extensions.asComponentActivityOrNull
 import com.sceyt.chatuikit.extensions.awaitAnimationEnd
 import com.sceyt.chatuikit.extensions.awaitToScrollFinish
 import com.sceyt.chatuikit.extensions.findIndexed
 import com.sceyt.chatuikit.extensions.getFragmentManager
 import com.sceyt.chatuikit.extensions.hideSoftInput
 import com.sceyt.chatuikit.extensions.isLastCompletelyItemDisplaying
-import com.sceyt.chatuikit.extensions.asComponentActivityOrNull
 import com.sceyt.chatuikit.extensions.openLink
 import com.sceyt.chatuikit.extensions.setClipboard
 import com.sceyt.chatuikit.extensions.setLayoutTransition
@@ -913,12 +913,15 @@ class MessagesListView @JvmOverloads constructor(
         }
     }
 
-    fun scrollToUnReadMessage() = safeScrollTo {
+    fun scrollToUnReadMessage(unreadMessageId: Long) = safeScrollTo {
         messagesRV.getData()
             .indexOfLast { it is MessageListItem.UnreadMessagesSeparatorItem }
             .takeIf { it != -1 }?.let { index ->
                 scrollToPosition(index, false)
-            }
+            } ?: run {
+            // If no unread messages separator is not found, scroll to the unread message
+            scrollToMessage(messageId = unreadMessageId, highlight = false)
+        }
     }
 
     fun scrollToLastMessage() = safeScrollTo {
