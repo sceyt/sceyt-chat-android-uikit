@@ -9,7 +9,9 @@ import com.sceyt.chatuikit.persistence.mappers.getInfoFromMetadata
 import com.sceyt.chatuikit.persistence.mappers.toSceytUser
 import com.sceyt.chatuikit.persistence.mappers.toTransferData
 import com.sceyt.chatuikit.persistence.mappers.toUser
+import com.sceyt.chatuikit.persistence.file_transfer.ThumbFor
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
+import com.sceyt.chatuikit.presentation.helpers.applyLatestTransferState
 
 fun Member.toSceytMember() = SceytMember(
     role = role,
@@ -34,7 +36,7 @@ fun SceytAttachment.toFileListItem(): FileListItem {
         type = type,
         _thumbPath = null,
         _transferData = toTransferData()
-    )
+    ).applyLatestTransferState(ThumbFor.MessagesLisView)
 }
 
 fun SceytPresence.hasDiff(other: SceytPresence?): Boolean {

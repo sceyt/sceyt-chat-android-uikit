@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.persistence.file_transfer
 
 import android.os.Parcelable
+import com.sceyt.chatuikit.extensions.toPrettySize
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
@@ -26,11 +27,18 @@ data class TransferData(
     companion object {
 
         fun TransferData.withPrettySizes(fileSize: Long): TransferData {
-            FileTransferHelper.getFilePrettySizes(fileSize, progressPercent).run {
+            getFilePrettySizes(fileSize, progressPercent).run {
                 return copy(
                     fileLoadedSize = first,
                     fileTotalSize = second)
             }
+        }
+
+        fun getFilePrettySizes(fileSize: Long, progressPercent: Float): Pair<String, String> {
+            val format = if (fileSize > 99f) "%.2f" else "%.1f"
+            val fileTotalSize = fileSize.toPrettySize()
+            val fileLoadedSize = (fileSize * progressPercent / 100).toPrettySize(format)
+            return Pair(fileLoadedSize, fileTotalSize)
         }
     }
 }

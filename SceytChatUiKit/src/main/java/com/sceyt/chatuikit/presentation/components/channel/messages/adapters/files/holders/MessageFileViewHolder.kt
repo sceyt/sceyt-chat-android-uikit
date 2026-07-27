@@ -3,11 +3,9 @@ package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.fi
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytMessageFileItemBinding
-import com.sceyt.chatuikit.extensions.asComponentActivity
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
 import com.sceyt.chatuikit.extensions.toPrettySize
-import com.sceyt.chatuikit.persistence.file_transfer.FileTransferHelper
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Downloaded
@@ -57,7 +55,6 @@ class MessageFileViewHolder(
     override fun bind(item: FileListItem, message: SceytMessage) {
         super.bind(item, message)
         val attachment = item.attachment
-        setListener()
 
         with(binding) {
             tvFileName.text = attachment.name
@@ -66,15 +63,13 @@ class MessageFileViewHolder(
         }
 
         fileItem.transferData?.let {
-            updateState(it)
+            updateState(it, true)
             if (it.filePath.isNullOrBlank() && it.state != PendingDownload)
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(attachment))
         }
     }
 
-    private fun updateState(data: TransferData) {
-        if (!viewHolderHelper.updateTransferData(data, fileItem, ::isValidThumb)) return
-
+    override fun updateState(data: TransferData, isOnBind: Boolean) {
         binding.loadProgress.getProgressWithState(data.state, style.mediaLoaderStyle,
             message.isNotPending(), data.progressPercent)
         when (data.state) {
@@ -101,10 +96,6 @@ class MessageFileViewHolder(
 
             FilePathChanged, ThumbLoaded -> return
         }
-    }
-
-    private fun setListener() {
-        FileTransferHelper.onTransferUpdatedLiveData.observe(context.asComponentActivity(), ::updateState)
     }
 
     private fun SceytMessageFileItemBinding.applyStyle() {

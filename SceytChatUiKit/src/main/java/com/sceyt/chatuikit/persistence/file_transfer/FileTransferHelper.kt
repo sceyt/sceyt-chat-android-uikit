@@ -9,7 +9,6 @@ import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.getFileSize
-import com.sceyt.chatuikit.extensions.toPrettySize
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.database.dao.FileChecksumDao
@@ -308,22 +307,20 @@ object FileTransferHelper : SceytKoinComponent {
             val size = getFilePrettySizes(it, transferData.progressPercent)
             transferData.copy(fileLoadedSize = size.first, fileTotalSize = size.second)
         } ?: transferData
+        val acceptedData = AttachmentTransferStateStore.put(data) ?: return
 
-        if (transferData.state == TransferState.Downloading || transferData.state == TransferState.Uploading) {
-            onTransferUpdatedLiveData_.postValue(data)
+        if (acceptedData.state == TransferState.Downloading || acceptedData.state == TransferState.Uploading) {
+            onTransferUpdatedLiveData_.postValue(acceptedData)
         } else {
             scope.launch(Dispatchers.Main.immediate) {
-                onTransferUpdatedLiveData_.value = data
+                onTransferUpdatedLiveData_.value = acceptedData
             }
         }
     }
 
     @JvmStatic
     fun getFilePrettySizes(fileSize: Long, progressPercent: Float): Pair<String, String> {
-        val format = if (fileSize > 99f) "%.2f" else "%.1f"
-        val fileTotalSize = fileSize.toPrettySize()
-        val fileLoadedSize = (fileSize * progressPercent / 100).toPrettySize(format)
-        return Pair(fileLoadedSize, fileTotalSize)
+        return TransferData.getFilePrettySizes(fileSize, progressPercent)
     }
 
     private fun getDimensions(type: String, path: String): Size? = try {

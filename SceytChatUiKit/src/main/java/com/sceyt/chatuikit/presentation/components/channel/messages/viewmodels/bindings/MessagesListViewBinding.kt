@@ -54,6 +54,7 @@ import com.sceyt.chatuikit.persistence.file_transfer.FileTransferHelper
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelUpdatedType
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
+import com.sceyt.chatuikit.presentation.components.channel.messages.MessageListTransferUpdatePolicy
 import com.sceyt.chatuikit.presentation.components.channel.messages.MessagesListView
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem.MessageItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageCommandEvent
@@ -162,12 +163,11 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             }
             messagesListView.post {
                 if (needToUpdateTransferAfterOnResume.isNotEmpty()) {
-                    needToUpdateTransferAfterOnResume.values.forEach { data ->
-                        lifecycleOwner.lifecycleScope.launch {
+                    lifecycleOwner.lifecycleScope.launch {
+                        needToUpdateTransferAfterOnResume.drain().forEach { data ->
                             messagesListView.updateProgress(data, true)
                         }
                     }
-                    needToUpdateTransferAfterOnResume.clear()
                 }
             }
         }
@@ -816,13 +816,15 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
       }.launchIn(lifecycleOwner.lifecycleScope)
   */
 
-    FileTransferHelper.onTransferUpdatedLiveData.asFlow().onEach { transfer ->
-        if (lifecycleOwner.isResumed()) {
-            messagesListView.updateProgress(transfer, false)
-        } else if (shouldDeferTransferUpdate(transfer)) {
-            needToUpdateTransferAfterOnResume[transfer.messageTid] = transfer
-        }
-    }.launchIn(lifecycleScope)
+    FileTransferHelper.onTransferUpdatedLiveData.asFlow()
+        .filter(MessageListTransferUpdatePolicy::shouldApplyToMessageList)
+        .onEach { transfer ->
+            if (lifecycleOwner.isResumed()) {
+                messagesListView.updateProgress(transfer, false)
+            } else {
+                needToUpdateTransferAfterOnResume.add(transfer)
+            }
+        }.launchIn(lifecycleScope)
 
     onChannelEventFlow.onEach { event ->
         when (event) {
