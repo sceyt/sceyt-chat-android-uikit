@@ -29,13 +29,19 @@ import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
 
 class IncImageMessageViewHolder(
-        private val binding: SceytItemIncImageMessageBinding,
-        private val viewPoolReactions: RecyclerView.RecycledViewPool,
-        private val style: MessageItemStyle,
-        private val messageListeners: MessageClickListeners.ClickListeners?,
-        displayedListener: ((MessageListItem) -> Unit)?,
-        private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
-) : BaseMediaMessageViewHolder(binding.root, style, messageListeners, displayedListener, needMediaDataCallback) {
+    private val binding: SceytItemIncImageMessageBinding,
+    private val viewPoolReactions: RecyclerView.RecycledViewPool,
+    private val style: MessageItemStyle,
+    private val messageListeners: MessageClickListeners.ClickListeners?,
+    displayedListener: ((MessageListItem) -> Unit)?,
+    private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
+) : BaseMediaMessageViewHolder(
+    view = binding.root,
+    style = style,
+    messageListeners = messageListeners,
+    displayedListener = displayedListener,
+    needMediaDataCallback = needMediaDataCallback
+) {
 
     init {
         with(binding) {
@@ -153,8 +159,7 @@ class IncImageMessageViewHolder(
             }
 
             FilePathChanged -> {
-                if (fileItem.thumbPath.isNullOrBlank())
-                    requestThumb()
+                requestThumb()
             }
 
             ThumbLoaded -> {

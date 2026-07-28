@@ -27,10 +27,10 @@ import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.li
 import com.sceyt.chatuikit.styles.channel_info.media.ChannelInfoMediaItemStyle
 
 class VideoViewHolder(
-        private val binding: SceytItemChannelVideoBinding,
-        private val style: ChannelInfoMediaItemStyle,
-        private val clickListeners: AttachmentClickListeners.ClickListeners,
-        private val needMediaDataCallback: (NeedMediaInfoData) -> Unit
+    private val binding: SceytItemChannelVideoBinding,
+    private val style: ChannelInfoMediaItemStyle,
+    private val clickListeners: AttachmentClickListeners.ClickListeners,
+    private val needMediaDataCallback: (NeedMediaInfoData) -> Unit
 ) : BaseFileViewHolder<ChannelFileItem>(binding.root, needMediaDataCallback) {
 
     init {
@@ -82,8 +82,7 @@ class VideoViewHolder(
             }
 
             FilePathChanged -> {
-                if (fileItem.thumbPath.isNullOrBlank())
-                    requestThumb()
+                requestThumb()
             }
 
             ThumbLoaded -> {

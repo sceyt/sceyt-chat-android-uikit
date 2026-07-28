@@ -30,10 +30,10 @@ import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
 
 class MessageVideoViewHolder(
-        private val binding: SceytMessageVideoItemBinding,
-        private val style: MessageItemStyle,
-        private val messageListeners: MessageClickListeners.ClickListeners?,
-        private val needMediaDataCallback: (NeedMediaInfoData) -> Unit
+    private val binding: SceytMessageVideoItemBinding,
+    private val style: MessageItemStyle,
+    private val messageListeners: MessageClickListeners.ClickListeners?,
+    private val needMediaDataCallback: (NeedMediaInfoData) -> Unit
 ) : BaseMessageFileViewHolder(binding.root, needMediaDataCallback) {
 
     init {
@@ -110,8 +110,7 @@ class MessageVideoViewHolder(
             }
 
             FilePathChanged -> {
-                if (fileItem.thumbPath.isNullOrBlank())
-                    requestThumb()
+                requestThumb()
             }
 
             ThumbLoaded -> {
