@@ -61,7 +61,7 @@ abstract class BaseFileViewHolder<Item : AttachmentDataProvider>(
     }
 
     protected fun isValidThumb(data: ThumbData?): Boolean {
-        return getThumbSize() == data?.size && needThumbFor()?.value == data.key
+        return needThumbFor()?.value == data?.key
     }
 
     open fun updateState(data: TransferData, isOnBind: Boolean = false) {
