@@ -128,7 +128,7 @@ abstract class BaseMediaMessageViewHolder(
     }
 
     protected open fun isValidThumb(thumbData: ThumbData?): Boolean {
-        return thumbData?.size == getThumbSize() && thumbData.key == ThumbFor.MessagesLisView.value
+        return thumbData?.key == ThumbFor.MessagesLisView.value
     }
 
     protected open fun setImageTopCorners(fileImage: ShapeableImageView, ignoreBody: Boolean = false) {
