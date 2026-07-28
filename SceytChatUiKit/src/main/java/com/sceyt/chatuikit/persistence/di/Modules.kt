@@ -45,6 +45,8 @@ import com.sceyt.chatuikit.persistence.logicimpl.PersistenceMembersLogicImpl
 import com.sceyt.chatuikit.persistence.logicimpl.PersistenceMessageMarkerLogicImpl
 import com.sceyt.chatuikit.persistence.logicimpl.PersistencePollLogicImpl
 import com.sceyt.chatuikit.persistence.logicimpl.PersistenceReactionsLogicImpl
+import com.sceyt.chatuikit.persistence.logicimpl.ThumbPathResolver
+import com.sceyt.chatuikit.persistence.logicimpl.AttachmentThumbPathResolver
 import com.sceyt.chatuikit.persistence.logicimpl.PersistenceUsersLogicImpl
 import com.sceyt.chatuikit.persistence.logicimpl.attachment.AttachmentsCache
 import com.sceyt.chatuikit.persistence.logicimpl.attachment.PersistenceAttachmentLogicImpl
@@ -178,6 +180,7 @@ internal val logicModule = module {
     singleOf(::FileTransferLogicImpl) bind FileTransferLogic::class
     singleOf(::GlobalSearchLocalInteractor) bind GlobalSearchDataSource::class
     singleOf(::SystemMessageSenderImpl) bind SystemMessageSender::class
+    factory<ThumbPathResolver> { AttachmentThumbPathResolver }
 }
 
 internal val useCaseModule = module {

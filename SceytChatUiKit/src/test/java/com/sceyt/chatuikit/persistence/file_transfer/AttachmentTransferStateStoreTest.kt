@@ -152,6 +152,40 @@ class AttachmentTransferStateStoreTest {
     }
 
     @Test
+    fun `thumb lookup falls back to latest target thumb when requested size differs`() {
+        val generatedThumbSize = Size(120, 90)
+        val requestedThumbSize = Size(240, 180)
+        val attachment = attachment(
+            url = "https://cdn.test/file",
+            filePath = "/downloads/file.jpg",
+            state = TransferState.Downloaded,
+            progress = 100f
+        )
+
+        AttachmentTransferStateStore.put(
+            transfer(
+                progress = 100f,
+                state = TransferState.Downloaded,
+                filePath = attachment.filePath,
+                url = attachment.url
+            )
+        )
+        AttachmentTransferStateStore.put(
+            transfer(
+                progress = 100f,
+                state = TransferState.ThumbLoaded,
+                filePath = "/thumbs/channel-file.jpg",
+                url = attachment.url,
+                thumbData = ThumbData(ThumbFor.ChannelInfo.value, attachment.filePath, generatedThumbSize)
+            )
+        )
+
+        assertThat(
+            AttachmentTransferStateStore.getThumbPath(attachment, ThumbFor.ChannelInfo, requestedThumbSize)
+        ).isEqualTo("/thumbs/channel-file.jpg")
+    }
+
+    @Test
     fun `blank update path does not overwrite existing local path`() {
         val attachment = attachment(
             url = "https://cdn.test/file",
