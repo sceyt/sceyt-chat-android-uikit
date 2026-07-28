@@ -4,7 +4,8 @@ package com.sceyt.chatuikit.persistence.file_transfer
  * Validates transfer state transitions to prevent invalid state changes.
  * 
  * Rules:
- * - Once a transfer is completed (Downloaded/Uploaded), only ThumbLoaded and FilePathChanged are allowed
+ * - Once a transfer is completed (Downloaded/Uploaded), only completed states, ThumbLoaded,
+ *   and FilePathChanged are allowed
  * - Progress cannot go backwards during Downloading/Uploading states
  */
 object TransferStateValidator {
@@ -24,9 +25,14 @@ object TransferStateValidator {
         currentProgress: Float,
         newProgress: Float
     ): Boolean {
-        // If already completed (Downloaded/Uploaded), only allow ThumbLoaded and FilePathChanged
+        // Uploaded/Downloaded can describe the same finished attachment through upload/download flows.
         if (currentState?.isCompleted() == true) {
-            return newState == TransferState.ThumbLoaded || newState == TransferState.FilePathChanged
+            return when (newState) {
+                TransferState.ThumbLoaded,
+                TransferState.FilePathChanged -> true
+
+                else -> newState.isCompleted()
+            }
         }
 
         // For progress updates (Downloading/Uploading), don't allow backward progress

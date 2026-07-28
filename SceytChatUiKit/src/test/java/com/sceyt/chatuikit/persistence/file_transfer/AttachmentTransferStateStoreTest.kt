@@ -73,6 +73,72 @@ class AttachmentTransferStateStoreTest {
     }
 
     @Test
+    fun `uploaded attachment can accept downloaded state for reply preview`() {
+        val attachment = attachment(
+            url = "https://cdn.test/image",
+            filePath = "/uploads/image.jpg",
+            state = TransferState.Uploaded,
+            progress = 100f
+        )
+
+        AttachmentTransferStateStore.put(
+            transfer(
+                progress = 100f,
+                state = TransferState.Uploaded,
+                filePath = attachment.filePath,
+                url = attachment.url
+            )
+        )
+
+        val downloaded = AttachmentTransferStateStore.put(
+            transfer(
+                progress = 100f,
+                state = TransferState.Downloaded,
+                filePath = "/downloads/image.jpg",
+                url = attachment.url
+            )
+        )
+
+        assertThat(downloaded?.state).isEqualTo(TransferState.Downloaded)
+        val latest = AttachmentTransferStateStore.getTransferData(attachment)
+        assertThat(latest?.state).isEqualTo(TransferState.Downloaded)
+        assertThat(latest?.filePath).isEqualTo("/downloads/image.jpg")
+        assertThat(latest?.url).isEqualTo(attachment.url)
+    }
+
+    @Test
+    fun `uploaded attachment still cannot regress to running state`() {
+        val attachment = attachment(
+            url = "https://cdn.test/image",
+            filePath = "/uploads/image.jpg",
+            state = TransferState.Uploaded,
+            progress = 100f
+        )
+
+        AttachmentTransferStateStore.put(
+            transfer(
+                progress = 100f,
+                state = TransferState.Uploaded,
+                filePath = attachment.filePath,
+                url = attachment.url
+            )
+        )
+
+        val rejected = AttachmentTransferStateStore.put(
+            transfer(
+                progress = 50f,
+                state = TransferState.Downloading,
+                url = attachment.url
+            )
+        )
+
+        assertThat(rejected).isNull()
+        val latest = AttachmentTransferStateStore.getTransferData(attachment)
+        assertThat(latest?.state).isEqualTo(TransferState.Uploaded)
+        assertThat(latest?.filePath).isEqualTo("/uploads/image.jpg")
+    }
+
+    @Test
     fun `file path changed before upload moves entry to resized file path`() {
         val attachment = attachment(
             filePath = "/uploads/original.jpg",
