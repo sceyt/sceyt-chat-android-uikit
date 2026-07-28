@@ -37,21 +37,19 @@ import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import com.sceyt.chatuikit.persistence.mappers.toTransferData
 import com.sceyt.chatuikit.presentation.extensions.isAttachmentExistAndFullyLoaded
 import com.sceyt.chatuikit.shared.media_encoder.VideoTranscodeHelper
-import com.sceyt.chatuikit.shared.utils.FileResizeUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.koin.core.component.inject
 import java.io.File
-import java.io.FileNotFoundException
 import java.util.LinkedList
 import java.util.Queue
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
-import kotlin.math.max
 
 internal class FileTransferLogicImpl(
     private val context: Context,
     private val attachmentLogic: PersistenceAttachmentLogic,
+    private val thumbPathResolver: ThumbPathResolver,
 ) : FileTransferLogic, SceytKoinComponent {
     private val fileTransferService: FileTransferService by inject()
     private val transferUtility by lazy { FileTransferUtility() }
@@ -275,7 +273,7 @@ internal class FileTransferLogicImpl(
             return
         } else {
             if (!preparingThumbKeys.add(preparingThumbKey)) return
-            getAttachmentThumbPath(context, attachment, size).onSuccess { path ->
+            thumbPathResolver.getThumbPath(context, attachment, size).onSuccess { path ->
                 thumbPaths[thumbKey] = ThumbPathsData(messageTid, path, size)
                 task.thumbCallback?.onThumb(path, data)
             }.onFailure {
@@ -488,27 +486,6 @@ internal class FileTransferLogicImpl(
         }
 
         return false to ""
-    }
-
-    private fun getAttachmentThumbPath(
-        context: Context,
-        attachment: SceytAttachment,
-        size: Size,
-    ): Result<String> {
-        val path = attachment.filePath ?: return Result.failure(FileNotFoundException())
-        val minSize = max(size.height, size.width)
-        val reqSize = if (minSize > 0) minSize.toFloat() else 800f
-        return when (attachment.type) {
-            AttachmentTypeEnum.Image.value -> {
-                FileResizeUtil.getImageThumbAsFile(context, path, reqSize).map { it.path }
-            }
-
-            AttachmentTypeEnum.Video.value -> {
-                FileResizeUtil.getVideoThumbAsFile(context, path, reqSize).map { it.path }
-            }
-
-            else -> Result.failure(Exception("Unsupported attachment type: ${attachment.type}"))
-        }
     }
 
     private fun getPreparingThumbKey(attachment: SceytAttachment, data: ThumbData): String {
