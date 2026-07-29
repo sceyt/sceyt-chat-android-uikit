@@ -252,6 +252,65 @@ class AttachmentTransferStateStoreTest {
     }
 
     @Test
+    fun `thumb loaded from stale source path is rejected after file path changes`() {
+        val thumbSize = Size(120, 90)
+        val originalAttachment = attachment(
+            filePath = "/uploads/original.jpg",
+            url = null,
+            state = TransferState.PendingUpload,
+            progress = 0f
+        )
+        val resizedAttachment = originalAttachment.copy(filePath = "/uploads/resized.jpg")
+
+        AttachmentTransferStateStore.put(
+            transfer(
+                progress = 0f,
+                state = TransferState.PendingUpload,
+                filePath = originalAttachment.filePath,
+                url = null
+            )
+        )
+        AttachmentTransferStateStore.put(
+            transfer(
+                progress = 0f,
+                state = TransferState.FilePathChanged,
+                filePath = resizedAttachment.filePath,
+                url = null
+            )
+        )
+
+        val staleThumb = AttachmentTransferStateStore.put(
+            transfer(
+                progress = 0f,
+                state = TransferState.ThumbLoaded,
+                filePath = "/thumbs/original.jpg",
+                url = null,
+                thumbData = ThumbData(ThumbFor.MessagesLisView.value, originalAttachment.filePath, thumbSize)
+            )
+        )
+
+        assertThat(staleThumb).isNull()
+        assertThat(
+            AttachmentTransferStateStore.getThumbPath(resizedAttachment, ThumbFor.MessagesLisView, thumbSize)
+        ).isNull()
+
+        val currentThumb = AttachmentTransferStateStore.put(
+            transfer(
+                progress = 0f,
+                state = TransferState.ThumbLoaded,
+                filePath = "/thumbs/resized.jpg",
+                url = null,
+                thumbData = ThumbData(ThumbFor.MessagesLisView.value, resizedAttachment.filePath, thumbSize)
+            )
+        )
+
+        assertThat(currentThumb).isNotNull()
+        assertThat(
+            AttachmentTransferStateStore.getThumbPath(resizedAttachment, ThumbFor.MessagesLisView, thumbSize)
+        ).isEqualTo("/thumbs/resized.jpg")
+    }
+
+    @Test
     fun `blank update path does not overwrite existing local path`() {
         val attachment = attachment(
             url = "https://cdn.test/file",

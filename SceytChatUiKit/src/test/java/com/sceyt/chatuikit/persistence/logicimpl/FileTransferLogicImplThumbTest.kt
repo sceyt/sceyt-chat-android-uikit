@@ -119,12 +119,84 @@ class FileTransferLogicImplThumbTest {
         assertThat(callbacks.map { it.key }).containsExactly(ThumbFor.ChannelInfo.value)
     }
 
+    @Test
+    fun `thumb request after file path changes reuses preparing original thumb and emits latest path`() {
+        val resolver = BlockingThumbPathResolver()
+        val logic = FileTransferLogicImpl(context, attachmentLogic, resolver)
+        val originalAttachment = attachment(
+            filePath = "/uploads/original.jpg",
+            originalFilePath = "/uploads/original.jpg",
+            url = null,
+            state = TransferState.PendingUpload,
+        )
+        val resizedAttachment = originalAttachment.copy(filePath = "/uploads/resized.jpg")
+        val callbacks = thumbCallbacksFor(originalAttachment)
+        val originalThumb = thumbData(ThumbFor.MessagesLisView, "/uploads/original.jpg")
+        val resizedThumb = thumbData(ThumbFor.MessagesLisView, "/uploads/resized.jpg")
+        val executor = Executors.newFixedThreadPool(2)
+
+        try {
+            val first = executor.submit {
+                logic.getAttachmentThumb(originalAttachment.messageTid, originalAttachment, originalThumb)
+            }
+            assertThat(resolver.awaitCallCount(1)).isTrue()
+
+            val second = executor.submit {
+                logic.getAttachmentThumb(resizedAttachment.messageTid, resizedAttachment, resizedThumb)
+            }
+            second.get(1, TimeUnit.SECONDS)
+
+            resolver.release()
+            first.get(1, TimeUnit.SECONDS)
+        } finally {
+            executor.shutdownNow()
+        }
+
+        assertThat(resolver.callCount.get()).isEqualTo(1)
+        assertThat(callbacks.map { it.filePath }).containsExactly("/uploads/resized.jpg")
+    }
+
+    @Test
+    fun `thumb cache is reused for different messages with same source file`() {
+        val resolver = BlockingThumbPathResolver().apply { release() }
+        val logic = FileTransferLogicImpl(context, attachmentLogic, resolver)
+        val firstAttachment = attachment(messageTid = 11L, filePath = "/downloads/shared.jpg")
+        val secondAttachment = attachment(messageTid = 22L, filePath = "/downloads/shared.jpg")
+        val callbacks = thumbCallbacksByTidFor(firstAttachment, secondAttachment)
+        val thumb = thumbData(ThumbFor.MessagesLisView, "/downloads/shared.jpg")
+
+        logic.getAttachmentThumb(firstAttachment.messageTid, firstAttachment, thumb)
+        logic.getAttachmentThumb(secondAttachment.messageTid, secondAttachment, thumb)
+
+        assertThat(resolver.callCount.get()).isEqualTo(1)
+        assertThat(callbacks.getValue(firstAttachment.messageTid).map { it.filePath })
+            .containsExactly("/downloads/shared.jpg")
+        assertThat(callbacks.getValue(secondAttachment.messageTid).map { it.filePath })
+            .containsExactly("/downloads/shared.jpg")
+    }
+
     private fun thumbCallbacksFor(attachment: SceytAttachment): CopyOnWriteArrayList<ThumbData> {
-        val callbacks = CopyOnWriteArrayList<ThumbData>()
-        val task = TransferTask(attachment, attachment.messageTid, attachment.transferState)
-        task.thumbCallback = ThumbCallback { _, thumbData -> callbacks.add(thumbData) }
-        whenever(fileTransferService.findOrCreateTransferTask(any())).thenReturn(task)
-        return callbacks
+        return thumbCallbacksByTidFor(attachment).getValue(attachment.messageTid)
+    }
+
+    private fun thumbCallbacksByTidFor(
+        vararg attachments: SceytAttachment
+    ): Map<Long, CopyOnWriteArrayList<ThumbData>> {
+        val callbacksByTid = mutableMapOf<Long, CopyOnWriteArrayList<ThumbData>>()
+        val tasksByTid = attachments.associate { attachment ->
+            val callbacks = CopyOnWriteArrayList<ThumbData>()
+            callbacksByTid[attachment.messageTid] = callbacks
+            val task = TransferTask(attachment, attachment.messageTid, attachment.transferState)
+            task.thumbCallback = ThumbCallback { _, thumbData -> callbacks.add(thumbData) }
+            attachment.messageTid to task
+        }
+
+        whenever(fileTransferService.findOrCreateTransferTask(any())).thenAnswer { invocation ->
+            val attachment = invocation.arguments.first() as SceytAttachment
+            tasksByTid.getValue(attachment.messageTid)
+        }
+
+        return callbacksByTid
     }
 
     private class BlockingThumbPathResolver : ThumbPathResolver {
@@ -154,27 +226,36 @@ class FileTransferLogicImplThumbTest {
         }
     }
 
-    private fun thumbData(thumbFor: ThumbFor) = ThumbData(
+    private fun thumbData(
+        thumbFor: ThumbFor,
+        filePath: String? = "/downloads/image.jpg",
+    ) = ThumbData(
         key = thumbFor.value,
-        filePath = "/downloads/image.jpg",
+        filePath = filePath,
         size = Size(120, 120)
     )
 
-    private fun attachment() = SceytAttachment(
-        id = MESSAGE_TID,
-        messageId = MESSAGE_TID,
-        messageTid = MESSAGE_TID,
+    private fun attachment(
+        messageTid: Long = MESSAGE_TID,
+        filePath: String? = "/downloads/image.jpg",
+        originalFilePath: String? = null,
+        url: String? = "https://cdn.test/image.jpg",
+        state: TransferState? = TransferState.Downloaded,
+    ) = SceytAttachment(
+        id = messageTid,
+        messageId = messageTid,
+        messageTid = messageTid,
         userId = null,
         name = "image.jpg",
         type = AttachmentTypeEnum.Image.value,
         metadata = null,
         fileSize = 100L,
         createdAt = 1_000L,
-        url = "https://cdn.test/image.jpg",
-        filePath = "/downloads/image.jpg",
-        transferState = TransferState.Downloaded,
+        url = url,
+        filePath = filePath,
+        transferState = state,
         progressPercent = 100f,
-        originalFilePath = null,
+        originalFilePath = originalFilePath,
         linkPreviewDetails = null,
     )
 

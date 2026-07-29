@@ -30,8 +30,7 @@ internal object AttachmentTransferStateStore {
     @Synchronized
     fun put(update: TransferData): TransferData? {
         if (update.state == ThumbLoaded) {
-            putThumb(update)
-            return update
+            return putThumb(update)
         }
 
         val key = resolveKey(update)
@@ -49,7 +48,13 @@ internal object AttachmentTransferStateStore {
         val current = findEntry(attachment)?.transferData ?: return null
         val attachmentState = attachment.transferState
         val attachmentProgress = attachment.progressPercent ?: 0f
-        if (!isValidTransition(attachmentState, current.state, attachmentProgress, current.progressPercent)) {
+        if (!isValidTransition(
+                currentState = attachmentState,
+                newState = current.state,
+                currentProgress = attachmentProgress,
+                newProgress = current.progressPercent
+            )
+        ) {
             return null
         }
         return current.merge(attachment)
@@ -66,7 +71,10 @@ internal object AttachmentTransferStateStore {
         return entry.thumbs.entries.lastOrNull { it.key.thumbFor == thumbFor.value }?.value
     }
 
-    fun getUpdatedAttachment(attachment: SceytAttachment, transferData: TransferData): SceytAttachment {
+    fun getUpdatedAttachment(
+        attachment: SceytAttachment,
+        transferData: TransferData
+    ): SceytAttachment {
         val merged = transferData.merge(attachment)
         return attachment.copy(
             transferState = merged.state,
@@ -89,11 +97,17 @@ internal object AttachmentTransferStateStore {
         entries.clear()
     }
 
-    private fun putThumb(update: TransferData) {
-        val thumbData = update.thumbData ?: return
+    private fun putThumb(update: TransferData): TransferData? {
+        val thumbData = update.thumbData ?: return null
         val key = resolveKey(update)
-        entries.getOrPut(key) { Entry() }
-            .thumbs[ThumbKey(thumbData.key, thumbData.size)] = update.filePath
+        val entry = entries.getOrPut(key) { Entry() }
+        val currentFilePath = entry.transferData?.filePath
+        if (!currentFilePath.isNullOrBlank() && !thumbData.filePath.isNullOrBlank()
+            && currentFilePath != thumbData.filePath
+        ) return null
+
+        entry.thumbs[ThumbKey(thumbData.key, thumbData.size)] = update.filePath
+        return update
     }
 
     private fun findEntry(attachment: SceytAttachment): Entry? {
@@ -104,13 +118,21 @@ internal object AttachmentTransferStateStore {
         }
 
         if (attachment.filePath.isNotNullOrBlank()) {
-            entries[TransferKey(attachment.messageTid, IdentityType.FilePath, attachment.filePath)]?.let {
+            entries[TransferKey(
+                messageTid = attachment.messageTid,
+                type = IdentityType.FilePath,
+                value = attachment.filePath
+            )]?.let {
                 return it
             }
         }
 
         if (attachment.originalFilePath.isNotNullOrBlank()) {
-            entries[TransferKey(attachment.messageTid, IdentityType.FilePath, attachment.originalFilePath)]?.let {
+            entries[TransferKey(
+                messageTid = attachment.messageTid,
+                type = IdentityType.FilePath,
+                value = attachment.originalFilePath
+            )]?.let {
                 return it
             }
         }
@@ -132,7 +154,8 @@ internal object AttachmentTransferStateStore {
         if (preferred.type != IdentityType.Message) {
             val previousKey = sameMessageEntries.keys.singleOrNull()
             if (previousKey != null &&
-                    (previousKey.type == IdentityType.Message || update.state == FilePathChanged)) {
+                (previousKey.type == IdentityType.Message || update.state == FilePathChanged)
+            ) {
                 entries.remove(previousKey)?.let { entry ->
                     entries[preferred] = entry
                 }
