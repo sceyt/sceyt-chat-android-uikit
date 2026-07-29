@@ -102,8 +102,8 @@ abstract class BaseMediaMessageViewHolder(
     }
 
     protected open fun requestThumb() {
-        val attachment = fileItem.attachment
         itemView.post {
+            val attachment = fileItem.attachment
             if (attachment.filePath.isNullOrBlank()) return@post
             val thumbData = ThumbData(
                 key = ThumbFor.MessagesLisView.value,
