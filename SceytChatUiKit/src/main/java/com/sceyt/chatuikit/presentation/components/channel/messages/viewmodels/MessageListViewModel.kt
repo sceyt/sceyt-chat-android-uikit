@@ -64,7 +64,6 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.events.PollE
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.ReactionEvent
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.bindings.LoadKeyType
 import com.sceyt.chatuikit.presentation.extensions.isNotPending
-import com.sceyt.chatuikit.presentation.extensions.isPending
 import com.sceyt.chatuikit.presentation.helpers.DebounceHelper
 import com.sceyt.chatuikit.presentation.helpers.DeferredTransferUpdateBuffer
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
@@ -307,7 +306,7 @@ class MessageListViewModel(
                 )
             }
 
-            lastDisplayedMessageId == 0L || lastMessage?.isPending() == true
+            lastDisplayedMessageId == 0L || lastMessage?.incoming == false
                     || lastDisplayedMessageId == lastMessageId -> {
                 loadPrevMessages(lastMessageId, 0)
             }
