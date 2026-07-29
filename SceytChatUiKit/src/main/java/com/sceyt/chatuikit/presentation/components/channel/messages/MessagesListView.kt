@@ -579,12 +579,13 @@ class MessagesListView @JvmOverloads constructor(
         }?.let { (index, item) ->
             val oldMessage = (item as MessageItem).message
             val updatedItem = item.copy(message = oldMessage.getUpdateMessage(updateMessage))
-            messagesRV.updateItemAt(index, updatedItem)
-
-            if (updateMessage.state == MessageState.Deleted && oldMessage.state != MessageState.Deleted)
-                messagesRV.adapter?.notifyItemChanged(index)
-            else
-                updateItem(index, updatedItem, oldMessage.diff(updatedItem.message))
+            val currentIndex = messagesRV.replaceMessageItem(updatedItem, index)
+            if (currentIndex != RecyclerView.NO_POSITION) {
+                if (updateMessage.state == MessageState.Deleted && oldMessage.state != MessageState.Deleted)
+                    messagesRV.adapter?.notifyItemChanged(currentIndex)
+                else
+                    updateItem(currentIndex, updatedItem, oldMessage.diff(updatedItem.message))
+            }
         }
 
         // Update replies
@@ -605,8 +606,9 @@ class MessagesListView @JvmOverloads constructor(
         }?.let { (index, item) ->
             val oldMessage = (item as MessageItem).message
             val updatedItem = item.copy(message = oldMessage.getUpdateMessage(updateMessage))
-            messagesRV.updateItemAt(index, updatedItem)
-            messagesRV.adapter?.notifyItemChanged(index)
+            val currentIndex = messagesRV.replaceMessageItem(updatedItem, index)
+            if (currentIndex != RecyclerView.NO_POSITION)
+                messagesRV.adapter?.notifyItemChanged(currentIndex)
         }
 
         // Update replies
@@ -865,14 +867,16 @@ class MessagesListView @JvmOverloads constructor(
         diff: MessageDiff,
         notify: Boolean = true
     ) {
-        messagesRV.updateItemAt(index, item)
+        val currentIndex = messagesRV.replaceMessageItem(item, index)
+        if (currentIndex == RecyclerView.NO_POSITION) return
         if (notify)
-            updateItem(index, item, diff)
+            updateItem(currentIndex, item, diff)
     }
 
     private fun updateAdapterItemNotifyVisible(index: Int, item: MessageItem) {
-        messagesRV.updateItemAt(index, item)
-        notifyItemUpdatedToVisibleItems(item)
+        val currentIndex = messagesRV.replaceMessageItem(item, index)
+        if (currentIndex != RecyclerView.NO_POSITION)
+            notifyItemUpdatedToVisibleItems(item)
     }
 
     fun hideLoadingPrev() {
@@ -1340,7 +1344,7 @@ class MessagesListView @JvmOverloads constructor(
             oldTop = oldTop,
             getNewTop = { holder.itemView.top },
             onUpdate = {
-                messagesRV.updateItemAt(position, expandedItem)
+                messagesRV.replaceMessageItem(expandedItem, position)
                 holder.bind(expandedItem, MessageDiff.DEFAULT_FALSE.copy(bodyChanged = true))
             }
         )

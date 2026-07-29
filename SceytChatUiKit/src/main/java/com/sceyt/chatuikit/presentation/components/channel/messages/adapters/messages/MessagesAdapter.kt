@@ -175,12 +175,24 @@ class MessagesAdapter(
         onListCommittedListener?.invoke()
     }
 
-    fun updateItemAt(index: Int, updatedItem: MessageItem) {
-        try {
-            messages[index] = updatedItem
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+    fun replaceMessageItem(
+        updatedItem: MessageItem,
+        positionHint: Int = RecyclerView.NO_POSITION,
+    ): Int {
+        val currentIndex = resolveMessageIndex(positionHint, updatedItem.message.tid)
+        if (currentIndex != RecyclerView.NO_POSITION)
+            messages[currentIndex] = updatedItem
+        return currentIndex
+    }
+
+    private fun resolveMessageIndex(positionHint: Int, tid: Long): Int {
+        val hintedItem = messages.getOrNull(positionHint) as? MessageItem
+        if (hintedItem?.message?.tid == tid)
+            return positionHint
+
+        return messages.indexOfFirst {
+            it is MessageItem && it.message.tid == tid
+        }.takeIf { it >= 0 } ?: RecyclerView.NO_POSITION
     }
 
     fun notifyUpdate(messages: List<MessageListItem>) {
