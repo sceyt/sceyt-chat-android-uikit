@@ -1181,8 +1181,15 @@ class MessageInputView @JvmOverloads constructor(
     }
 
     override fun onDetachedFromWindow() {
-        super.onDetachedFromWindow()
+        cleanupInputOnDetach()
         VoiceStateCoordinator.unregisterRecordingController()
+        super.onDetachedFromWindow()
+    }
+
+    private fun cleanupInputOnDetach() {
+        binding.messageInput.clearComposingText()
+        binding.messageInput.clearFocus()
+        binding.messageInput.hideSoftInput()
     }
 
     override fun onWindowFocusChanged(hasWindowFocus: Boolean) {
