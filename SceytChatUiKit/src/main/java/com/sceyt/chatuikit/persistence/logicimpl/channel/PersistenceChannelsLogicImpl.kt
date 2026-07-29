@@ -1128,10 +1128,7 @@ internal class PersistenceChannelsLogicImpl(
             if (cachedChannel == null) {
                 channelsCache.upsertChannel(channel)
             } else channelsCache.updateLastMessage(channelId, message)
-        } else {
-            // Check if sent message is last message of channel
-            if (channel.lastMessage?.tid != message.tid) return
-
+        } else if (isSameOrNewerLastMessage(channel.lastMessage, message)) {
             channelDao.updateLastMessageWithLastRead(
                 channelId = channelId,
                 lastMessageTid = message.tid,
@@ -1143,6 +1140,13 @@ internal class PersistenceChannelsLogicImpl(
                 channelsCache.updateLastMessageWithLastRead(channelId, message)
             else channelsCache.upsertChannel(channel)
         }
+    }
+
+    private fun isSameOrNewerLastMessage(currentLast: SceytMessage?, message: SceytMessage): Boolean {
+        currentLast ?: return true
+        if (currentLast.tid == message.tid) return true
+        return message.createdAt > currentLast.createdAt
+                || (message.createdAt == currentLast.createdAt && message.id >= currentLast.id)
     }
 
     override suspend fun updateLastMessageOnMessagesResponseIfNeeded(
