@@ -42,7 +42,7 @@ interface ChannelInteractor {
     suspend fun reloadChannelsAfterSync(config: ChannelListConfig, limit: Int): SyncedChannelsWindow
     suspend fun markChannelAsRead(channelId: Long): SceytResponse<SceytChannel>
     suspend fun markChannelAsUnRead(channelId: Long): SceytResponse<SceytChannel>
-    suspend fun clearHistory(channelId: Long, forEveryone: Boolean): SceytResponse<Long>
+    suspend fun clearHistory(channelId: Long, forEveryone: Boolean): SceytResponse<SceytChannel>
     suspend fun blockAndLeaveChannel(channelId: Long): SceytResponse<Long>
     suspend fun unblockChannel(channelId: Long): SceytResponse<SceytChannel>
     suspend fun deleteChannel(channelId: Long): SceytResponse<Long>

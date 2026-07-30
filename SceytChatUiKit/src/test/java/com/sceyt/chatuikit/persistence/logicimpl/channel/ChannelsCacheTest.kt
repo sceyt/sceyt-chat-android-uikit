@@ -309,8 +309,9 @@ class ChannelsCacheTest {
     }
 
     @Test
-    fun `clearedHistory resets message counters reactions and emits cleared history`() = runTest {
+    fun `clearedHistory updates cleared timestamp and resets message state`() = runTest {
         val cache = ChannelsCache()
+        val messagesClearedAt = 10L
         val cachedChannel = channel(
             id = 26,
             lastMessage = createMessage(createdAt = 1, id = 1),
@@ -321,9 +322,11 @@ class ChannelsCacheTest {
         val event = expectChannelUpdate(cachedChannel.id, ChannelUpdatedType.ClearedHistory)
         yield()
 
-        cache.clearedHistory(cachedChannel.id)
+        cache.clearedHistory(cachedChannel.id, messagesClearedAt)
 
         val update = event.await()
+        assertThat(update.channel.messagesClearedAt).isEqualTo(messagesClearedAt)
+        assertThat(update.diff.messagesClearedAtChanged).isTrue()
         assertThat(update.channel.lastMessage).isNull()
         assertThat(update.channel.newMessageCount).isEqualTo(0)
         assertThat(update.channel.newMentionCount).isEqualTo(0)
@@ -331,6 +334,33 @@ class ChannelsCacheTest {
         assertThat(update.channel.newReactions).isNull()
         assertThat(update.channel.pendingReactions).isNull()
         assertThat(update.needSorting).isTrue()
+    }
+
+    @Test
+    fun `message after local history clear is not classified as another history clear`() = runTest {
+        val cache = ChannelsCache()
+        val cachedChannel = channel(
+            id = 47,
+            lastMessage = createMessage(createdAt = 1, id = 1, tid = 1)
+        )
+        cache.addAll(allTypesConfig, listOf(cachedChannel), checkDifference = false)
+
+        val clearedEvent = expectChannelUpdate(cachedChannel.id, ChannelUpdatedType.ClearedHistory)
+        yield()
+        cache.clearedHistory(cachedChannel.id, messagesClearedAt = 10)
+        clearedEvent.await()
+
+        val newMessage = createMessage(createdAt = 11, id = 2, tid = 2)
+        val messageEvent = expectChannelUpdate(cachedChannel.id, ChannelUpdatedType.LastMessage)
+        yield()
+        cache.upsertChannel(
+            cache.getOneOf(cachedChannel.id)!!.copy(lastMessage = newMessage)
+        )
+
+        val update = messageEvent.await()
+        assertThat(update.diff.messagesClearedAtChanged).isFalse()
+        assertThat(update.channel.messagesClearedAt).isEqualTo(10)
+        assertThat(update.channel.lastMessage).isEqualTo(newMessage)
     }
 
     @Test

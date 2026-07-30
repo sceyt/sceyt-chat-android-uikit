@@ -486,7 +486,10 @@ class PendingChannelScenarioTests : SceytKoinComponent {
         }
 
         override suspend fun leaveChannel(channelId: Long): SceytResponse<Long> = unused()
-        override suspend fun clearHistory(channelId: Long, forEveryone: Boolean): SceytResponse<Long> = unused()
+        override suspend fun clearHistory(
+            channelId: Long,
+            forEveryone: Boolean
+        ): SceytResponse<SceytChannel> = unused()
         override suspend fun hideChannel(channelId: Long): SceytResponse<SceytChannel> = unused()
         override suspend fun unHideChannel(channelId: Long): SceytResponse<SceytChannel> = unused()
         override suspend fun markChannelAsRead(channelId: Long): SceytResponse<SceytChannel> = unused()

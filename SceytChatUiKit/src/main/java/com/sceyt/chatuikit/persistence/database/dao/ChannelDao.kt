@@ -221,6 +221,9 @@ internal abstract class ChannelDao {
         lastMessageAt: Long?
     )
 
+    @Query("""UPDATE $CHANNEL_TABLE SET messagesClearedAt = :messagesClearedAt WHERE chat_id = :channelId""")
+    abstract suspend fun updateMessagesClearedAt(channelId: Long, messagesClearedAt: Long)
+
     @Query(
         """UPDATE $CHANNEL_TABLE SET 
             lastMessageTid = :lastMessageTid,

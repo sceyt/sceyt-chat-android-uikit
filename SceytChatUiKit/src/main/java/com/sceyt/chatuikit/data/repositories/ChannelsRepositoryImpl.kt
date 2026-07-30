@@ -413,23 +413,24 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         }
     }
 
-    override suspend fun clearHistory(channelId: Long, forEveryone: Boolean): SceytResponse<Long> {
-        return suspendCancellableCoroutine { continuation ->
-            ChannelOperator.build(channelId)
-                .deleteAllChannelMessages(forEveryone, object : ActionCallback {
-                    override fun onSuccess() {
-                        continuation.safeResume(SceytResponse.Success(channelId))
-                    }
+    override suspend fun clearHistory(
+        channelId: Long,
+        forEveryone: Boolean
+    ): SceytResponse<SceytChannel> = suspendCancellableCoroutine { continuation ->
+        ChannelOperator.build(channelId)
+            .deleteAllChannelMessages(forEveryone, object : ChannelCallback {
+                override fun onResult(data: Channel) {
+                    continuation.safeResume(SceytResponse.Success(data.toSceytUiChannel()))
+                }
 
-                    override fun onError(e: SceytException?) {
-                        continuation.safeResume(SceytResponse.Error(e))
-                        SceytLog.e(
-                            TAG,
-                            "clearHistory error: ${e?.message}, code: ${e?.code}, channelId: $channelId, forEveryone: $forEveryone"
-                        )
-                    }
-                })
-        }
+                override fun onError(e: SceytException?) {
+                    continuation.safeResume(SceytResponse.Error(e))
+                    SceytLog.e(
+                        TAG,
+                        "clearHistory error: ${e?.message}, code: ${e?.code}, channelId: $channelId, forEveryone: $forEveryone"
+                    )
+                }
+            })
     }
 
     override suspend fun hideChannel(channelId: Long): SceytResponse<SceytChannel> {

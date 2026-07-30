@@ -144,7 +144,7 @@ internal class PersistenceChannelsLogicImpl(
             }
 
             is ClearedHistory -> {
-                clearHistory(event.channelId)
+                clearHistory(event.channel)
             }
 
             is Updated -> {
@@ -831,10 +831,13 @@ internal class PersistenceChannelsLogicImpl(
         return response
     }
 
-    override suspend fun clearHistory(channelId: Long, forEveryone: Boolean): SceytResponse<Long> {
-        if (channelsCache.isPending(channelId)) {
+    override suspend fun clearHistory(
+        channelId: Long,
+        forEveryone: Boolean
+    ): SceytResponse<SceytChannel> {
+        channelsCache.getOneOf(channelId)?.takeIf { it.pending }?.let { pendingChannel ->
             deleteChannelFromDbAndCache(channelId)
-            return SceytResponse.Success(channelId)
+            return SceytResponse.Success(pendingChannel)
         }
 
         val response = channelsRepository.clearHistory(channelId, forEveryone)
@@ -842,7 +845,9 @@ internal class PersistenceChannelsLogicImpl(
         if (response is SceytResponse.Success) {
             UploadAndSendAttachmentWorkManager.cancelWorksByTag(context, channelId.toString())
             SendForwardMessagesWorkManager.cancelWorksByTag(context, channelId.toString())
-            clearHistory(channelId)
+            response.onSuccessNotNull {
+                clearHistory(it)
+            }
         }
 
         return response
@@ -1142,7 +1147,10 @@ internal class PersistenceChannelsLogicImpl(
         }
     }
 
-    private fun isSameOrNewerLastMessage(currentLast: SceytMessage?, message: SceytMessage): Boolean {
+    private fun isSameOrNewerLastMessage(
+        currentLast: SceytMessage?,
+        message: SceytMessage
+    ): Boolean {
         currentLast ?: return true
         if (currentLast.tid == message.tid) return true
         return message.createdAt > currentLast.createdAt
@@ -1322,11 +1330,13 @@ internal class PersistenceChannelsLogicImpl(
         channelSyncStateStore.deleteSyncStates(channelIds)
     }
 
-    private suspend fun clearHistory(channelId: Long) {
+    private suspend fun clearHistory(channel: SceytChannel) {
+        val channelId = channel.id
+        channelDao.updateMessagesClearedAt(channelId, channel.messagesClearedAt)
         channelDao.updateLastMessage(channelId, null, null)
         messageDao.deleteAllMessagesByChannel(channelId)
         rangeDao.deleteChannelLoadRanges(channelId)
-        channelsCache.clearedHistory(channelId)
+        channelsCache.clearedHistory(channelId, channel.messagesClearedAt)
     }
 
     private suspend fun deleteMessage(channelId: Long, message: SceytMessage) {
