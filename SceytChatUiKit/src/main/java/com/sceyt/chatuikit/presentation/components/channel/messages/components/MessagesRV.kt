@@ -117,7 +117,7 @@ class MessagesRV @JvmOverloads constructor(
                     reachToStartInvoked = true
                     reachToPrefetchDistanceToLoadPrevInvoked = true
                     reachToStartListener?.invoke(skip, firstItem)
-                    needLoadPrevMessagesListener?.invoke(skip, firstItem)
+                    needLoadPrevMessagesListener?.invoke(skip, getFirstSentItem())
                 }
             } else reachToStartInvoked = false
 
@@ -125,7 +125,7 @@ class MessagesRV @JvmOverloads constructor(
                 reachToPrefetchDistanceToLoadPrevInvoked = true
                 needLoadPrevMessagesListener?.invoke(
                     mAdapter.getSkip(),
-                    mAdapter.getFirstMessageItem()
+                    getFirstSentItem()
                 )
             }
         } else reachToPrefetchDistanceToLoadPrevInvoked = false
@@ -157,6 +157,14 @@ class MessagesRV @JvmOverloads constructor(
     private fun getLastSentItem() = mAdapter.getLastMessageBy {
         it is MessageListItem.MessageItem && it.message.isNotPending()
     }
+
+    /**
+     * Pagination cursor must be a message which exists on the server. A pending message has id 0,
+     * and paginating from id 0 makes the server return the newest page instead of the older one.
+     */
+    private fun getFirstSentItem() = mAdapter.getFirstMessageBy {
+        it is MessageListItem.MessageItem && it.message.isNotPending()
+    } ?: mAdapter.getFirstMessageItem()
 
     private fun checkScrollDown(dy: Int) {
         if (!::mAdapter.isInitialized || mAdapter.itemCount == 0) {

@@ -13,6 +13,8 @@ import com.sceyt.chatuikit.extensions.dispatchUpdatesToSafetySuspend
 import com.sceyt.chatuikit.extensions.findIndexed
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
+import com.sceyt.chatuikit.persistence.differs.diff
+import com.sceyt.chatuikit.presentation.extensions.getUpdateMessage
 import com.sceyt.chatuikit.presentation.helpers.DebounceHelper
 import com.sceyt.chatuikit.presentation.common.collections.SyncArrayList
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem.MessageItem
@@ -144,35 +146,84 @@ class MessagesAdapter(
     fun addPrevPageMessagesList(items: List<MessageListItem>) {
         removeLoadingPrev()
         if (items.isEmpty()) return
+        val itemsToAdd = mergeAndFilterAlreadyExistingItems(items)
+        if (itemsToAdd.isEmpty()) return
 
         val firstItem = getFirstMessageItem()
         val dateItem = messages.find { item ->
             item is MessageListItem.DateSeparatorItem && item.messageTid == firstItem?.message?.tid
         }
-        messages.addAll(0, items)
-        notifyItemRangeInserted(0, items.size)
-        updateDateAndState(items.last(), firstItem, dateItem)
+        messages.addAll(0, itemsToAdd)
+        notifyItemRangeInserted(0, itemsToAdd.size)
+        updateDateAndState(itemsToAdd.last(), firstItem, dateItem)
         onListCommittedListener?.invoke()
     }
 
     fun addNextPageMessagesList(items: List<MessageListItem>) {
         removeLoadingNext()
         if (items.isEmpty()) return
+        val itemsToAdd = mergeAndFilterAlreadyExistingItems(items)
+        if (itemsToAdd.isEmpty()) return
 
-        messages.addAll(items)
-        notifyItemRangeInserted(messages.lastIndex, items.size)
+        val insertPosition = messages.size
+        messages.addAll(itemsToAdd)
+        notifyItemRangeInserted(insertPosition, itemsToAdd.size)
         onListCommittedListener?.invoke()
     }
 
     fun addNewMessages(items: List<MessageListItem>) {
         removeLoadingNext()
         if (items.isEmpty()) return
-        val filteredItems = items.toSet().minus(messages.toSet())
-        if (filteredItems.isEmpty()) return
+        val itemsToAdd = mergeAndFilterAlreadyExistingItems(items)
+        if (itemsToAdd.isEmpty()) return
 
-        messages.addAll(filteredItems)
-        notifyItemRangeInserted(messages.lastIndex, filteredItems.size)
+        val insertPosition = messages.size
+        messages.addAll(itemsToAdd)
+        notifyItemRangeInserted(insertPosition, itemsToAdd.size)
         onListCommittedListener?.invoke()
+    }
+
+    /**
+     * Messages are identified by tid in the whole UI layer, so the same message must never be
+     * inserted twice. It can arrive again from a pagination page or from a sync response, e.g. a
+     * message sent while offline is already displayed as pending, and comes back from the server
+     * with its id after reconnect.
+     *
+     * Instead of appending a second row, the already displayed item is updated in place with the
+     * newer data, and the incoming item (together with its date separator) is dropped.
+     */
+    private fun mergeAndFilterAlreadyExistingItems(
+        items: List<MessageListItem>,
+    ): List<MessageListItem> {
+        val existingIndexes = HashMap<Long, Int>()
+        messages.forEachIndexed { index, item ->
+            if (item is MessageItem) existingIndexes[item.message.tid] = index
+        }
+        if (existingIndexes.isEmpty()) return items
+
+        val duplicatedTids = items.filterIsInstance<MessageItem>()
+            .map { it.message.tid }
+            .filterTo(HashSet()) { existingIndexes.containsKey(it) }
+        if (duplicatedTids.isEmpty()) return items
+
+        items.filterIsInstance<MessageItem>().forEach { newItem ->
+            val index = existingIndexes[newItem.message.tid] ?: return@forEach
+            val existingItem = messages.getOrNull(index) as? MessageItem ?: return@forEach
+            val updatedMessage = existingItem.message.getUpdateMessage(newItem.message)
+            val diff = existingItem.message.diff(updatedMessage)
+            if (diff.hasDifference()) {
+                messages[index] = existingItem.copy(message = updatedMessage)
+                notifyItemChanged(index, diff)
+            }
+        }
+
+        return items.filter { item ->
+            when (item) {
+                is MessageItem -> !duplicatedTids.contains(item.message.tid)
+                is MessageListItem.DateSeparatorItem -> !duplicatedTids.contains(item.messageTid)
+                else -> true
+            }
+        }
     }
 
     fun replaceMessageItem(
