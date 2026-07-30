@@ -21,7 +21,6 @@ import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadPrev
 import com.sceyt.chatuikit.data.models.PaginationResponse.Nothing
 import com.sceyt.chatuikit.data.models.SceytResponse
-import com.sceyt.chatuikit.data.models.SyncNearMessagesResult
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
@@ -118,6 +117,8 @@ class MessageListViewModel(
     internal val pendingStatusReconciler by lazy { PendingMessageStatusReconciler() }
     internal val outgoingMessageMutex by lazy { Mutex() }
     internal val pendingDisplayMsgIds by lazy { Collections.synchronizedSet(mutableSetOf<Long>()) }
+    private val pagingRetryState by lazy { MessagePagingRetryState() }
+    private val windowSyncGuard by lazy { MessageWindowSyncGuard() }
     internal val needToUpdateTransferAfterOnResume = DeferredTransferUpdateBuffer(ThumbFor.MessagesLisView)
     private var showSenderAvatarAndNameIfNeeded = true
     internal var viewOnceSelected = false
@@ -142,8 +143,8 @@ class MessageListViewModel(
     private val _messageMarkerLiveData = MutableLiveData<List<SceytResponse<MessageListMarker>>>()
     val messageMarkerLiveData = _messageMarkerLiveData.asLiveData()
 
-    private val _syncCenteredMessageLiveData = MutableLiveData<SyncNearMessagesResult>()
-    val syncCenteredMessageLiveData = _syncCenteredMessageLiveData.asLiveData()
+    private val _syncCenteredMessageFlow = broadcastSharedFlow<CenteredSyncMessagesResult>()
+    internal val syncCenteredMessageFlow = _syncCenteredMessageFlow.asSharedFlow()
 
     // Message events
     val onNewMessageFlow: Flow<SceytMessage>
@@ -350,6 +351,7 @@ class MessageListViewModel(
     }
 
     fun loadNearMessages(messageId: Long, loadKey: LoadKeyData, ignoreServer: Boolean) {
+        invalidateCenteredSync()
         setPagingLoadingStarted(LoadNear, ignoreServer = ignoreServer)
         notifyPageLoadingState(false)
 
@@ -393,14 +395,51 @@ class MessageListViewModel(
     }
 
     fun syncCenteredMessage(messageId: Long) {
+        val generation = startCenteredSync(messageId)
         viewModelScope.launch(Dispatchers.IO) {
             val response = messageInteractor.syncNearMessages(
                 conversationId = conversationId,
                 messageId = messageId,
                 replyInThread = replyInThread
             )
-            _syncCenteredMessageLiveData.postValue(response)
+            if (windowSyncGuard.canEmitCenteredSyncResult(response.centerMessageId, generation)) {
+                _syncCenteredMessageFlow.emit(
+                    CenteredSyncMessagesResult(generation = generation, data = response)
+                )
+            }
         }
+    }
+
+    internal fun canApplyCenteredSyncResult(
+        centerMessageId: Long,
+        generation: Long,
+        topOffset: Int,
+    ): Boolean {
+        return windowSyncGuard.canApplyCenteredSyncResult(
+            centerMessageId = centerMessageId,
+            generation = generation,
+            topOffset = topOffset,
+            isPaging = loadingFromServer || loadingFromDb,
+            isPreparingJump = searchController.isPreparingToScrollToMessage
+        )
+    }
+
+    internal fun canAppendNewestSyncedMessages(): Boolean {
+        return windowSyncGuard.canAppendNewestSyncedMessages(
+            hasNext = hasNext,
+            hasNextDb = hasNextDb,
+            isNewestSidePaging = loadingNextItems.get() || loadingNextItemsDb.get()
+        )
+    }
+
+    private fun startCenteredSync(messageId: Long): Long {
+        lastSyncCenterOffsetId = messageId
+        return windowSyncGuard.startCenteredSync(messageId)
+    }
+
+    internal fun invalidateCenteredSync() {
+        lastSyncCenterOffsetId = 0L
+        windowSyncGuard.invalidateCenteredSync()
     }
 
     fun searchMessages(query: String) {
@@ -436,9 +475,24 @@ class MessageListViewModel(
     private fun resetMessageLoadingState() {
         loadPrevOffsetId = 0
         loadNextOffsetId = 0
-        lastSyncCenterOffsetId = 0
+        invalidateCenteredSync()
         needSyncMessagesWhenScrollStateIdle = false
+        pagingRetryState.reset()
         resetPreparingToScrollToMessage()
+    }
+
+    internal fun canRetryLoadPrevAfterReconnect(): Boolean {
+        return pagingRetryState.canRetryPrev(
+            loadingFromDb = loadingPrevItemsDb.get(),
+            loadingFromServer = loadingPrevItems.get()
+        )
+    }
+
+    internal fun canRetryLoadNextAfterReconnect(): Boolean {
+        return pagingRetryState.canRetryNext(
+            loadingFromDb = loadingNextItemsDb.get(),
+            loadingFromServer = loadingNextItems.get()
+        )
     }
 
     private fun initPaginationResponse(response: PaginationResponse<SceytMessage>) {
@@ -456,6 +510,7 @@ class MessageListViewModel(
             }
 
             is PaginationResponse.ServerResponse -> {
+                pagingRetryState.onServerResponse(response)
                 _loadMessagesFlow.value = response
                 notifyPageStateWithResponse(
                     response = response.data,
