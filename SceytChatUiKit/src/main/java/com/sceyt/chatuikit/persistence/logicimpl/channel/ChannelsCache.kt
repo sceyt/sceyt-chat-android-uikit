@@ -318,11 +318,12 @@ class ChannelsCache {
         }
     }
 
-    suspend fun clearedHistory(channelId: Long) {
+    suspend fun clearedHistory(channelId: Long, messagesClearedAt: Long? = null) {
         mutex.withLock {
             cachedData.forEachKeyValue { key, value ->
                 value[channelId]?.let { channel ->
                     val updatedChannel = channel.copy(
+                        messagesClearedAt = messagesClearedAt ?: channel.messagesClearedAt,
                         lastMessage = null,
                         newMessageCount = 0,
                         newMentionCount = 0,

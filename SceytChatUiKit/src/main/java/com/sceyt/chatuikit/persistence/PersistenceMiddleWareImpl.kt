@@ -246,7 +246,10 @@ internal class PersistenceMiddleWareImpl(
         return channelLogic.markChannelAsUnRead(channelId)
     }
 
-    override suspend fun clearHistory(channelId: Long, forEveryone: Boolean): SceytResponse<Long> {
+    override suspend fun clearHistory(
+        channelId: Long,
+        forEveryone: Boolean
+    ): SceytResponse<SceytChannel> {
         return channelLogic.clearHistory(channelId, forEveryone)
     }
 

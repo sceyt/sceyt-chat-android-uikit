@@ -31,7 +31,7 @@ interface ChannelsRepository {
     suspend fun getAllChannels(limit: Int): Flow<SyncResult<SceytChannel>>
     suspend fun createChannel(channelData: CreateChannelData): SceytResponse<SceytChannel>
     suspend fun leaveChannel(channelId: Long): SceytResponse<Long>
-    suspend fun clearHistory(channelId: Long, forEveryone: Boolean): SceytResponse<Long>
+    suspend fun clearHistory(channelId: Long, forEveryone: Boolean): SceytResponse<SceytChannel>
     suspend fun hideChannel(channelId: Long): SceytResponse<SceytChannel>
     suspend fun unHideChannel(channelId: Long): SceytResponse<SceytChannel>
     suspend fun markChannelAsRead(channelId: Long): SceytResponse<SceytChannel>

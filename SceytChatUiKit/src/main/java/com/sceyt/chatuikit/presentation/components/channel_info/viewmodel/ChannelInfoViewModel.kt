@@ -9,6 +9,7 @@ import com.sceyt.chatuikit.data.managers.channel.event.ChannelActionEvent
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventData
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventEnum
 import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.data.models.map
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.messages.SceytUser
@@ -138,7 +139,10 @@ class ChannelInfoViewModel : BaseViewModel(), SceytKoinComponent {
     fun clearHistory(channelId: Long, forEveryone: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = channelInteractor.clearHistory(channelId, forEveryone)
-            notifyResponseAndPageState(_clearHistoryLiveData, response)
+            notifyResponseAndPageState(
+                _clearHistoryLiveData,
+                response.map { it?.id ?: channelId }
+            )
         }
     }
 
