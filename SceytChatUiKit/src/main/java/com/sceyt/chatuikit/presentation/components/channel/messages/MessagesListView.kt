@@ -977,6 +977,10 @@ class MessagesListView @JvmOverloads constructor(
         multiselectDestination = map
     }
 
+    internal fun isNearStartForPaging() = messagesRV.isNearStartForPaging()
+
+    internal fun isNearEndForPaging() = messagesRV.isNearEndForPaging()
+
     fun removeUnreadMessagesSeparator() {
         messagesRV.removeUnreadMessagesSeparator()
     }

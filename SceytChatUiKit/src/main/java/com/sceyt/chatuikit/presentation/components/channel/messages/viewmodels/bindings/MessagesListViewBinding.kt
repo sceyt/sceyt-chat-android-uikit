@@ -56,6 +56,7 @@ import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelUpdatedType
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
 import com.sceyt.chatuikit.presentation.components.channel.messages.MessagesListView
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem.MessageItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageCommandEvent
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageActionBridge
@@ -82,6 +83,7 @@ private const val TAG = "MessagesListViewBinding"
 @JvmName("bind")
 fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner: LifecycleOwner) {
     val lifecycleScope = lifecycleOwner.lifecycleScope
+    var shouldRetryPagingOnReconnect = !ConnectionEventManager.isConnected
 
     fun applyActionEffect(effect: MessageActionBridge.Effect) {
         when (effect) {
@@ -407,12 +409,49 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         if (!needSyncMessagesWhenScrollStateIdle || loadingFromServer) return
         val centerPosition = messagesListView.getMessagesRecyclerView().centerVisibleItemPosition()
         if (centerPosition == RecyclerView.NO_POSITION) return
-        val item = messagesListView.getData().getOrNull(centerPosition)
-        val messageId = item?.getMessageId() ?: return
+        val item = messagesListView.getData().getOrNull(centerPosition) as? MessageItem
+        val messageId = item?.message?.id ?: return
         if (lastSyncCenterOffsetId != messageId) {
-            lastSyncCenterOffsetId = messageId
             syncCenteredMessage(messageId = messageId)
         }
+    }
+
+    fun retryVisibleEdgePagingAfterReconnect() {
+        if (loadingFromServer || loadingFromDb) return
+
+        val messageItems = messagesListView.getData().filterIsInstance<MessageItem>()
+        if (messageItems.isEmpty()) {
+            // Nothing has been loaded yet, e.g. the first load failed while offline. Edge paging
+            // has no anchor message to start from, so redo the initial load instead. Otherwise the
+            // list would stay empty until the screen is reopened. Only retry when a load actually
+            // failed, so channels that are genuinely empty don't reload on every reconnect.
+            if (canRetryLoadPrevAfterReconnect() || canRetryLoadNextAfterReconnect())
+                loadInitialMessagesForCurrentChannel()
+            return
+        }
+
+        val offset = messageItems.size
+        if (messagesListView.isNearStartForPaging() &&
+            (canLoadPrev() || canRetryLoadPrevAfterReconnect())
+        ) {
+            loadPrevMessages(messageItems.first().message.id, offset)
+            needSyncMessagesWhenScrollStateIdle = true
+        }
+
+        if (messagesListView.isNearEndForPaging() &&
+            (canLoadNext() || canRetryLoadNextAfterReconnect())
+        ) {
+            val lastSentMessage = messageItems.lastOrNull { it.message.isNotPending() }
+            if (lastSentMessage != null) {
+                loadNextMessages(lastSentMessage.message.id, offset)
+                needSyncMessagesWhenScrollStateIdle = true
+            }
+        }
+    }
+
+    fun hasNextMessageGap(): Boolean {
+        return hasNext || hasNextDb ||
+                messagesListView.getData().lastOrNull() is MessageListItem.LoadingNextItem
     }
 
     fun onMessageDisplayed(message: SceytMessage) {
@@ -440,10 +479,14 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             )
                 pinnedLastReadMessageId = resultChannel.lastDisplayedMessageId
 
-            lifecycleOwner.lifecycleScope.launch {
+            withContext(Dispatchers.Main) {
+                if (!canAppendNewestSyncedMessages()) return@withContext
+
                 val currentMessages = messagesListView.getData()
                     .filterIsInstance<MessageItem>()
                     .map { item -> item.message }
+                if (currentMessages.none { it.id == message.id }) return@withContext
+
                 val newMessages = result.messages.minus(currentMessages.toSet())
                 if (newMessages.isNotEmpty()) {
                     val isLastDisplaying =
@@ -480,6 +523,11 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
     connectionLogic.allPendingEventsSentFlow
         .onEach {
+            if (shouldRetryPagingOnReconnect) {
+                needSyncMessagesWhenScrollStateIdle = true
+                retryVisibleEdgePagingAfterReconnect()
+                shouldRetryPagingOnReconnect = false
+            }
             // Sync messages near center visible message
             syncNearCenterVisibleMessageIfNeeded()
         }
@@ -488,66 +536,73 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     ConnectionEventManager.onChangedConnectStatusFlow
         .distinctUntilChanged()
         .onEach { stateData ->
-            viewModelScope.launch(Dispatchers.IO) {
-                if (stateData.state == ConnectionState.Connected) {
-                    val message = messagesListView.getLastMessageBy {
-                        // First trying to get last displayed message
-                        it is MessageItem && it.message.deliveryStatus == MessageDeliveryStatus.Displayed
-                    } ?: messagesListView.getFirstMessageBy {
-                        // Next trying to get fist sent message
-                        it is MessageItem && it.message.deliveryStatus == MessageDeliveryStatus.Sent
-                    } ?: messagesListView.getFirstMessageBy {
-                        // Next trying to get fist received message
-                        it is MessageItem && it.message.deliveryStatus == MessageDeliveryStatus.Received
-                    }
-                    (message as? MessageItem)?.let {
-                        syncChannelMessagesAfter(it.message)
-                    }
-                } else {
-                    lastSyncCenterOffsetId = 0L
-                    needSyncMessagesWhenScrollStateIdle = true
+            if (stateData.state == ConnectionState.Connected) {
+                val message = messagesListView.getLastMessageBy {
+                    // First trying to get last displayed message
+                    it is MessageItem && it.message.deliveryStatus == MessageDeliveryStatus.Displayed
+                } ?: messagesListView.getFirstMessageBy {
+                    // Next trying to get fist sent message
+                    it is MessageItem && it.message.deliveryStatus == MessageDeliveryStatus.Sent
+                } ?: messagesListView.getFirstMessageBy {
+                    // Next trying to get fist received message
+                    it is MessageItem && it.message.deliveryStatus == MessageDeliveryStatus.Received
                 }
+                (message as? MessageItem)?.let { item ->
+                    lifecycleScope.launch { syncChannelMessagesAfter(item.message) }
+                }
+            } else {
+                invalidateCenteredSync()
+                needSyncMessagesWhenScrollStateIdle = true
+                shouldRetryPagingOnReconnect = true
             }
         }.launchIn(lifecycleOwner.lifecycleScope)
 
-    syncCenteredMessageLiveData.observe(lifecycleOwner) { data ->
-        lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
-            if (data.missingMessages.isNotEmpty()) {
-                val items = messagesListView.getData().toMutableList()
-                items.findIndexed {
-                    it is MessageItem && it.message.id == data.centerMessageId
-                }?.let { (index) ->
-                    val topOffset =
-                        messagesListView.getMessagesRecyclerView().getChildTopByPosition(index)
-                    val compareMessage = getCompareMessage(LoadNear, data.missingMessages)
+    syncCenteredMessageFlow
+        .onEach { centeredSync ->
+            val data = centeredSync.data
+            if (data.missingMessages.isEmpty()) return@onEach
 
-                    items.addAll(
-                        mapToMessageListItem(
-                            data = data.missingMessages, hasNext = false, hasPrev = false,
-                            compareMessage, ignoreUnreadMessagesSeparator = true,
-                            enableDateSeparator = messagesListView.style.enableDateSeparator
-                        )
+            val items = messagesListView.getData().toMutableList()
+            val (index) = items.findIndexed {
+                it is MessageItem && it.message.id == data.centerMessageId
+            } ?: return@onEach
+            val topOffset = messagesListView.getMessagesRecyclerView().getChildTopByPosition(index)
+            if (!canApplyCenteredSyncResult(
+                    centerMessageId = data.centerMessageId,
+                    generation = centeredSync.generation,
+                    topOffset = topOffset
+                )
+            ) return@onEach
+
+            withContext(Dispatchers.Default) {
+                val compareMessage = getCompareMessage(LoadNear, data.missingMessages)
+
+                items.addAll(
+                    mapToMessageListItem(
+                        data = data.missingMessages, hasNext = false, hasPrev = false,
+                        compareMessage, ignoreUnreadMessagesSeparator = true,
+                        enableDateSeparator = messagesListView.style.enableDateSeparator
                     )
+                )
 
-                    items.sortBy { item -> item.getMessageCreatedAt() }
-                    val filtered = mutableSetOf(*items.toTypedArray())
+                items.sortBy { item -> item.getMessageCreatedAt() }
+                val filtered = mutableSetOf(*items.toTypedArray())
 
-                    withContext(Dispatchers.Main) {
-                        messagesListView.setMessagesList(filtered.toList(), lifecycleScope)
+                withContext(Dispatchers.Main) {
+                    messagesListView.setMessagesList(filtered.toList(), lifecycleScope)
 
-                        val (position) = items.findIndexed { item ->
-                            item is MessageItem && item.message.id == data.centerMessageId
-                        } ?: return@withContext
+                    val (position) = items.findIndexed { item ->
+                        item is MessageItem && item.message.id == data.centerMessageId
+                    } ?: return@withContext
 
-                        if (messagesListView.getMessagesRecyclerView()
-                                .isThePositionVisible(position)
-                        )
-                            messagesListView.scrollToMessage(data.centerMessageId, false, topOffset)
-                    }
+                    if (messagesListView.getMessagesRecyclerView()
+                            .isThePositionVisible(position)
+                    )
+                        messagesListView.scrollToMessage(data.centerMessageId, false, topOffset)
                 }
             }
         }
-    }
+        .launchIn(lifecycleOwner.lifecycleScope)
 
     MessagesCache.messagesClearedFlow
         .filter { (channelId, _) -> channelId == channel.id }
@@ -840,13 +895,24 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     }.launchIn(lifecycleOwner.lifecycleScope)
 
-    pageStateLiveData.observe(lifecycleOwner) {
-        // If the page state is error, and channel is pending and there is no last message,
-        // this means that there is no messages to show, so set empty state instead of error state.
-        if (it is PageState.StateError && channel.pending && channel.lastMessage == null)
-            messagesListView.updateViewState(PageState.StateEmpty())
-        else
-            messagesListView.updateViewState(it, false)
+    pageStateLiveData.observe(lifecycleOwner) { state ->
+        when (state) {
+            // If the page state is error, and channel is pending and there is no last message,
+            // this means that there is no messages to show, so set empty state instead of error state.
+            is PageState.StateError if channel.pending && channel.lastMessage == null -> {
+                messagesListView.updateViewState(PageState.StateEmpty())
+            }
+
+            // Nothing is displayed and the load failed while disconnected. Paging is retried
+            // automatically once the connection is back, so keep the loader instead of leaving
+            // a blank screen. Messages already on screen keep the real error state.
+            is PageState.StateError if !ConnectionEventManager.isConnected
+                    && messagesListView.getData().none { item -> item is MessageItem } -> {
+                messagesListView.updateViewState(PageState.StateLoading(true), false)
+            }
+
+            else -> messagesListView.updateViewState(state, false)
+        }
     }
 
     messagesListView.setMessageCommandEventListener { event ->
