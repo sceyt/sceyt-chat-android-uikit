@@ -1517,8 +1517,18 @@ internal class PersistenceMessagesLogicImpl(
         var data = messageDao.getNearMessages(channelId, messageId, limit)
         val messages = data.data
 
-        if (offset == 0)
+        // Add pending messages to the list only if the last message exists in the messages portion.
+        // Otherwise, when navigating to a reply message, pending messages could be shown incorrectly.
+        val channel = channelCache.getOneOf(channelId)
+            ?: persistenceChannelsLogic.getChannelFromDb(channelId)
+
+        val includeLastMessage = if (channel != null) {
+            messages.any { it.id == channel.lastMessage?.id } || channel.lastMessage == null
+        } else false
+
+        if (offset == 0 && includeLastMessage) {
             data = data.copy(data = getPendingMessagesAndAddToList(channelId, messages))
+        }
 
         return data
     }

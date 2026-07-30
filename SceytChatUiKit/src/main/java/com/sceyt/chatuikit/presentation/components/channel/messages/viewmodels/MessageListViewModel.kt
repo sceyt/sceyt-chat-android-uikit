@@ -699,9 +699,7 @@ class MessageListViewModel(
 
     fun markChannelAsRead(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            channelInteractor.markChannelAsRead(channelId).onErrorNonNull {
-                pageStateLiveDataInternal.postValue(PageState.StateError(it))
-            }
+            channelInteractor.markChannelAsRead(channelId)
         }
     }
 

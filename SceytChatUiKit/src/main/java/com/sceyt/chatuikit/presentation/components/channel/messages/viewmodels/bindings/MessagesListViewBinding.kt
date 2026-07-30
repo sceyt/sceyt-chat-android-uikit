@@ -31,7 +31,6 @@ import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.getLoadKey
 import com.sceyt.chatuikit.data.models.messages.MarkerType
-import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import com.sceyt.chatuikit.data.models.messages.SceytMarker
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytUser
@@ -56,7 +55,6 @@ import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelUpdatedType
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
 import com.sceyt.chatuikit.presentation.components.channel.messages.MessagesListView
-import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem.MessageItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageCommandEvent
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageActionBridge
@@ -364,12 +362,18 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                     )
 
                     if (response.dbResultWasEmpty) {
-                        if (response.loadType == LoadNear)
-                            messagesListView.setMessagesList(newMessages, lifecycleScope, true)
-                        else {
-                            if (response.loadType == LoadNext || response.loadType == LoadNewest)
+                        when (response.loadType) {
+                            LoadNear, LoadNewest -> {
+                                messagesListView.setMessagesList(newMessages, lifecycleScope, true)
+                            }
+
+                            LoadNext -> {
                                 messagesListView.addNextPageMessages(newMessages, lifecycleScope)
-                            else messagesListView.addPrevPageMessages(newMessages, lifecycleScope)
+                            }
+
+                            LoadPrev -> {
+                                messagesListView.addPrevPageMessages(newMessages, lifecycleScope)
+                            }
                         }
                     } else
                         messagesListView.setMessagesList(
@@ -388,8 +392,6 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             }
 
             is SceytResponse.Error -> {
-                checkToHildeLoadingMoreItemByLoadType(response.loadType)
-
                 // set isSearchingMessageToScroll value to false, to enable jumping to next message
                 if (response.loadKey?.key == LoadKeyType.ScrollToMessageBy.longValue)
                     resetPreparingToScrollToMessage()
@@ -449,11 +451,6 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     }
 
-    fun hasNextMessageGap(): Boolean {
-        return hasNext || hasNextDb ||
-                messagesListView.getData().lastOrNull() is MessageListItem.LoadingNextItem
-    }
-
     fun onMessageDisplayed(message: SceytMessage) {
         if (channel.userRole.isNullOrEmpty())
             return
@@ -508,6 +505,24 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     }
 
+    suspend fun syncAfterPendingEventsSent() {
+        if (!ConnectionEventManager.isConnected) return
+
+        if (shouldRetryPagingOnReconnect) {
+            needSyncMessagesWhenScrollStateIdle = true
+            retryVisibleEdgePagingAfterReconnect()
+            shouldRetryPagingOnReconnect = false
+        }
+
+        (messagesListView.getData().lastOrNull {
+            it is MessageItem && it.message.isNotPending()
+        } as? MessageItem)?.let { item ->
+            syncChannelMessagesAfter(item.message)
+        }
+
+        syncNearCenterVisibleMessageIfNeeded()
+    }
+
     ChannelsCache.channelsDeletedFlow
         .filter { it.contains(channel.id) }
         .onEach {
@@ -523,13 +538,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
     connectionLogic.allPendingEventsSentFlow
         .onEach {
-            if (shouldRetryPagingOnReconnect) {
-                needSyncMessagesWhenScrollStateIdle = true
-                retryVisibleEdgePagingAfterReconnect()
-                shouldRetryPagingOnReconnect = false
-            }
-            // Sync messages near center visible message
-            syncNearCenterVisibleMessageIfNeeded()
+            syncAfterPendingEventsSent()
         }
         .launchIn(lifecycleOwner.lifecycleScope)
 
@@ -537,19 +546,8 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         .distinctUntilChanged()
         .onEach { stateData ->
             if (stateData.state == ConnectionState.Connected) {
-                val message = messagesListView.getLastMessageBy {
-                    // First trying to get last displayed message
-                    it is MessageItem && it.message.deliveryStatus == MessageDeliveryStatus.Displayed
-                } ?: messagesListView.getFirstMessageBy {
-                    // Next trying to get fist sent message
-                    it is MessageItem && it.message.deliveryStatus == MessageDeliveryStatus.Sent
-                } ?: messagesListView.getFirstMessageBy {
-                    // Next trying to get fist received message
-                    it is MessageItem && it.message.deliveryStatus == MessageDeliveryStatus.Received
-                }
-                (message as? MessageItem)?.let { item ->
-                    lifecycleScope.launch { syncChannelMessagesAfter(item.message) }
-                }
+                if (shouldRetryPagingOnReconnect)
+                    needSyncMessagesWhenScrollStateIdle = true
             } else {
                 invalidateCenteredSync()
                 needSyncMessagesWhenScrollStateIdle = true
@@ -630,7 +628,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     onScrollToLastMessageLiveData.observe(lifecycleOwner) { lastMessage ->
         viewModelScope.launch(Dispatchers.Default) {
             val lastMsgId = lastMessage?.id ?: return@launch
-            messagesListView.getMessageIndexedById(lastMsgId)?.let {
+            if (messagesListView.getMessageIndexedById(lastMsgId) != null) {
                 withContext(Dispatchers.Main) {
                     messagesListView.scrollToLastMessage()
                     lifecycleOwner.lifecycleScope.launch {
@@ -638,7 +636,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                         syncNearCenterVisibleMessageIfNeeded()
                     }
                 }
-            } ?: run {
+            } else {
                 loadPrevMessages(
                     lastMessageId = lastMsgId,
                     offset = 0,
