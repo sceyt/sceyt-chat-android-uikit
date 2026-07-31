@@ -961,30 +961,23 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                     val user = userInteractor.getUserFromDbById(
                         id = event.userId
                     ) ?: SceytUser(event.userId)
-                    val response = channelInteractor.findOrCreatePendingChannelByMembers(
+                    channelInteractor.findOrCreatePendingChannelByMembers(
                         data = CreateChannelData(
                             type = ChannelTypeEnum.Direct.value,
                             members = listOf(
-                                SceytMember(
-                                    roleName = RoleTypeEnum.Owner.value,
-                                    user = user
-                                )
+                                SceytMember(roleName = RoleTypeEnum.Owner.value, user = user)
                             ),
                         )
-                    )
-                    if (response is SceytResponse.Success)
-                        response.data?.let {
-                            navigator.navigate(
-                                context = messagesListView.context,
-                                destination = Destination.ChannelInfo(response.data)
-                            )
-                        }
+                    ).onSuccessNotNull {
+                        navigator.navigate(
+                            context = messagesListView.context,
+                            destination = Destination.ChannelInfo(it)
+                        )
+                    }
                 }
             }
 
-            is MessageCommandEvent.ReplyInThread -> {
-
-            }
+            is MessageCommandEvent.ReplyInThread -> Unit
 
             is MessageCommandEvent.PollViewResultsClick -> {
                 val poll = event.message.poll ?: return@setMessageCommandEventListener
