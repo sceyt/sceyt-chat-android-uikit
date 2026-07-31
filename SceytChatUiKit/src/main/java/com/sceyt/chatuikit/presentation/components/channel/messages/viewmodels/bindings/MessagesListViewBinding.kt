@@ -257,17 +257,20 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                     highlight = true,
                     offset = 200,
                     onCompleted = { found ->
-                        if (response !is PaginationResponse.ServerResponse) {
+                        if (found) {
+                            resetPreparingToScrollToMessage()
                             return@scrollToMessage
                         }
+
+                        if (response !is PaginationResponse.ServerResponse)
+                            return@scrollToMessage
+
                         resetPreparingToScrollToMessage()
-                        if (!found) {
-                            SceytLog.w(
-                                TAG,
-                                "Called load near messages in channelId: ${channel.id} for scroll to message id: ${loadKey.value}, but message not found in server response." +
-                                        " Resetting the scroll preparation state to avoid infinite waiting."
-                            )
-                        }
+                        SceytLog.w(
+                            TAG,
+                            "Called load near messages in channelId: ${channel.id} for scroll to message id: ${loadKey.value}, but message not found in server response." +
+                                    " Resetting the scroll preparation state to avoid infinite waiting."
+                        )
                     })
             }
         }
