@@ -6,7 +6,6 @@ import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.DeleteMessageType
 import com.sceyt.chat.models.message.Message
-import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.constants.SceytConstants
 import com.sceyt.chatuikit.data.managers.channel.ChannelEventManager
@@ -59,6 +58,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.fil
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageCommandEvent
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageInputCommand
+import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageScrollCommand
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.PollEvent
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.ReactionEvent
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.bindings.LoadKeyType
@@ -73,7 +73,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -140,18 +139,13 @@ class MessageListViewModel(
     private val _loadMessagesFlow = MutableStateFlow<PaginationResponse<SceytMessage>>(Nothing())
     val loadMessagesFlow = _loadMessagesFlow.asStateFlow()
 
-    private val _messageMarkerLiveData = MutableLiveData<List<SceytResponse<MessageListMarker>>>()
-    val messageMarkerLiveData = _messageMarkerLiveData.asLiveData()
-
     private val _syncCenteredMessageFlow = broadcastSharedFlow<CenteredSyncMessagesResult>()
     internal val syncCenteredMessageFlow = _syncCenteredMessageFlow.asSharedFlow()
 
     // Message events
     val onNewMessageFlow: Flow<SceytMessage>
     val onNewOutGoingMessageFlow: Flow<SceytMessage>
-
     //val onNewThreadMessageFlow: Flow<SceytMessage>// todo reply in thread
-
     // val onOutGoingThreadMessageFlow: Flow<SceytMessage>// todo reply in thread
 
     // Chanel events
@@ -160,21 +154,14 @@ class MessageListViewModel(
     private val _onChannelUpdatedEventFlow = broadcastSharedFlow<SceytChannel>(replay = 1)
     val onChannelUpdatedEventFlow = _onChannelUpdatedEventFlow.asSharedFlow()
 
+    //Command events
+    private val _inputCommands = broadcastSharedFlow<MessageInputCommand>()
+    internal val inputCommands = _inputCommands.asSharedFlow()
+    private val _scrollCommands = broadcastSharedFlow<MessageScrollCommand>()
+    internal val scrollCommands = _scrollCommands.asSharedFlow()
+
     private val _peerPresenceUpdatedFlow = MutableLiveData<SceytChannel>()
     val peerPresenceUpdatedFlow = _peerPresenceUpdatedFlow.asLiveData()
-
-    //Command events
-    private val _inputCommands = MutableSharedFlow<MessageInputCommand>(extraBufferCapacity = 8)
-    internal val inputCommands = _inputCommands.asSharedFlow()
-    private val _onScrollToLastMessageLiveData = MutableLiveData<SceytMessage?>()
-    internal val onScrollToLastMessageLiveData = _onScrollToLastMessageLiveData.asLiveData()
-    private val _onScrollToReplyMessageLiveData = MutableLiveData<SceytMessage>()
-    internal val onScrollToReplyMessageLiveData = _onScrollToReplyMessageLiveData.asLiveData()
-    private val _onScrollToSearchMessageLiveData = MutableLiveData<SceytMessage>()
-    internal val onScrollToSearchMessageLiveData = _onScrollToSearchMessageLiveData.asLiveData()
-    private val _onScrollToUnredMentionMessageLiveData = MutableLiveData<Long>()
-    internal val onScrollToUnredMentionMessageLiveData =
-        _onScrollToUnredMentionMessageLiveData.asLiveData()
 
     private val mentionsController = createUnreadMentionsController()
     private val reactionController = createReactionController()
@@ -549,11 +536,13 @@ class MessageListViewModel(
     }
 
     fun prepareToScrollToNewMessage() {
-        _onScrollToLastMessageLiveData.postValue(channel.lastMessage)
+        val lastMessageId = channel.lastMessage?.id ?: return
+        _scrollCommands.tryEmit(MessageScrollCommand.ToLastMessage(lastMessageId))
     }
 
     fun prepareToScrollToReplyMessage(message: SceytMessage) {
-        _onScrollToReplyMessageLiveData.postValue(message.parentMessage ?: return)
+        val parentMessageId = message.parentMessage?.id ?: return
+        _scrollCommands.tryEmit(MessageScrollCommand.ToReplyMessage(parentMessageId))
     }
 
     fun prepareToScrollToUnreadMention() {
@@ -627,7 +616,6 @@ class MessageListViewModel(
                 marker = MarkerType.Displayed,
                 ids = messageIds
             )
-            _messageMarkerLiveData.postValue(response)
 
             // Cleat unread mentions when message is read
             response.forEach {
@@ -640,8 +628,7 @@ class MessageListViewModel(
 
     fun addMessageMarker(marker: String, vararg messageIds: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = messageInteractor.addMessagesMarker(channel.id, marker, *messageIds)
-            _messageMarkerLiveData.postValue(response)
+            messageInteractor.addMessagesMarker(channel.id, marker, *messageIds)
         }
     }
 
@@ -879,7 +866,9 @@ class MessageListViewModel(
         currentChannel = { channel },
         conversationId = { conversationId },
         updateChannel = { action -> updateChannel(updateAction = action) },
-        onScrollToMention = { _onScrollToUnredMentionMessageLiveData.postValue(it) },
+        onScrollToMention = {
+            _scrollCommands.tryEmit(MessageScrollCommand.ToUnreadMention(it))
+        },
         currentUserId = { userInteractor.getCurrentUserId() },
     )
 
@@ -889,7 +878,9 @@ class MessageListViewModel(
         conversationId = { conversationId },
         replyInThread = replyInThread,
         messageListQueryLimit = { SceytChatUIKit.config.queryLimits.messageListQueryLimit },
-        onScrollToSearchMessage = { _onScrollToSearchMessageLiveData.postValue(it) },
+        onScrollToSearchMessage = {
+            _scrollCommands.tryEmit(MessageScrollCommand.ToSearchMessage(it.id))
+        },
     )
 
     private fun createMessageDraftController() = MessageDraftController(
