@@ -424,12 +424,14 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
         val messageItems = messagesListView.getData().filterIsInstance<MessageItem>()
         if (messageItems.isEmpty()) {
-            // Nothing has been loaded yet, e.g. the first load failed while offline. Edge paging
-            // has no anchor message to start from, so redo the initial load instead. Otherwise the
-            // list would stay empty until the screen is reopened. Only retry when a load actually
-            // failed, so channels that are genuinely empty don't reload on every reconnect.
-            if (canRetryLoadPrevAfterReconnect() || canRetryLoadNextAfterReconnect())
+            // Edge paging requires a loaded message as an anchor. Retry the initial load
+            // after a paging failure; otherwise refresh the newest messages in case the
+            // channel changed while disconnected.
+            if (canRetryLoadPrevAfterReconnect() || canRetryLoadNextAfterReconnect()) {
                 loadInitialMessagesForCurrentChannel()
+            } else {
+                loadNewestMessages()
+            }
             return
         }
 
