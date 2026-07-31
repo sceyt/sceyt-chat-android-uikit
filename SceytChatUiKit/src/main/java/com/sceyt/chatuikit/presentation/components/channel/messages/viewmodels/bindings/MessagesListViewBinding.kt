@@ -31,7 +31,6 @@ import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.getLoadKey
 import com.sceyt.chatuikit.data.models.messages.MarkerType
-import com.sceyt.chatuikit.data.models.messages.SceytMarker
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.asActivity
@@ -57,6 +56,7 @@ import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
 import com.sceyt.chatuikit.presentation.components.channel.messages.MessagesListView
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem.MessageItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageCommandEvent
+import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageScrollCommand
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageActionBridge
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageListViewModel
 import com.sceyt.chatuikit.presentation.extensions.isNotPending
@@ -66,6 +66,7 @@ import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.styles.extensions.messages_list.setEmptyStateForSelfChannel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
@@ -625,121 +626,75 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         checkEnableDisableActions(channel)
     }.launchIn(lifecycleOwner.lifecycleScope)
 
-    onScrollToLastMessageLiveData.observe(lifecycleOwner) { lastMessage ->
-        viewModelScope.launch(Dispatchers.Default) {
-            val lastMsgId = lastMessage?.id ?: return@launch
-            if (messagesListView.getMessageIndexedById(lastMsgId) != null) {
-                withContext(Dispatchers.Main) {
-                    messagesListView.scrollToLastMessage()
-                    lifecycleOwner.lifecycleScope.launch {
+    fun scrollToTargetMessage(messageId: Long) {
+        messagesListView.scrollToMessage(
+            messageId = messageId,
+            offset = 200,
+            highlight = true,
+            onCompleted = { found ->
+                if (found) {
+                    resetPreparingToScrollToMessage()
+                    return@scrollToMessage
+                }
+                loadNearMessages(
+                    messageId = messageId,
+                    loadKey = LoadKeyData(
+                        key = LoadKeyType.ScrollToMessageBy.longValue,
+                        value = messageId
+                    ),
+                    ignoreServer = false
+                )
+            },
+        )
+    }
+
+    lifecycleScope.launch {
+        scrollCommands.collectLatest { command ->
+            when (command) {
+                is MessageScrollCommand.ToLastMessage -> {
+                    val lastMsgId = command.messageId
+                    if (messagesListView.getMessageIndexedById(lastMsgId) != null) {
+                        messagesListView.scrollToLastMessage()
                         delay(200.milliseconds)
                         syncNearCenterVisibleMessageIfNeeded()
+                    } else {
+                        loadPrevMessages(
+                            lastMessageId = lastMsgId,
+                            offset = 0,
+                            loadKey = LoadKeyData(key = LoadKeyType.ScrollToLastMessage.longValue)
+                        )
+                        markChannelAsRead(channel.id)
                     }
                 }
-            } else {
-                loadPrevMessages(
-                    lastMessageId = lastMsgId,
-                    offset = 0,
-                    loadKey = LoadKeyData(key = LoadKeyType.ScrollToLastMessage.longValue)
-                )
-                markChannelAsRead(channel.id)
-            }
-        }
-    }
 
-    onScrollToReplyMessageLiveData.observe(lifecycleOwner) {
-        val messageId = it.id
-        messagesListView.scrollToMessage(
-            messageId = messageId,
-            offset = 200,
-            highlight = true,
-            onCompleted = { found ->
-                if (!found) {
-                    loadNearMessages(
+                is MessageScrollCommand.ToReplyMessage -> {
+                    val messageId = command.messageId
+                    messagesListView.scrollToMessage(
                         messageId = messageId,
-                        loadKey = LoadKeyData(
-                            key = LoadKeyType.ScrollToReplyMessage.longValue,
-                            value = messageId
-                        ),
-                        ignoreServer = false
+                        offset = 200,
+                        highlight = true,
+                        onCompleted = { found ->
+                            if (!found) {
+                                loadNearMessages(
+                                    messageId = messageId,
+                                    loadKey = LoadKeyData(
+                                        key = LoadKeyType.ScrollToReplyMessage.longValue,
+                                        value = messageId
+                                    ),
+                                    ignoreServer = false
+                                )
+                            }
+                        },
                     )
                 }
-            },
-        )
-    }
 
-    onScrollToSearchMessageLiveData.observe(lifecycleOwner) { message ->
-        val messageId = message.id
-        messagesListView.scrollToMessage(
-            messageId = message.id,
-            offset = 200,
-            highlight = true,
-            onCompleted = { found ->
-                if (found) {
-                    resetPreparingToScrollToMessage()
-                    return@scrollToMessage
+                is MessageScrollCommand.ToSearchMessage -> {
+                    scrollToTargetMessage(command.messageId)
                 }
-                loadNearMessages(
-                    messageId = messageId,
-                    loadKey = LoadKeyData(
-                        key = LoadKeyType.ScrollToMessageBy.longValue,
-                        value = messageId
-                    ),
-                    ignoreServer = false
-                )
-            },
-        )
-    }
 
-    onScrollToUnredMentionMessageLiveData.observe(lifecycleOwner) { messageId ->
-        messagesListView.scrollToMessage(
-            messageId = messageId,
-            offset = 200,
-            highlight = true,
-            onCompleted = { found ->
-                if (found) {
-                    resetPreparingToScrollToMessage()
-                    return@scrollToMessage
-                }
-                loadNearMessages(
-                    messageId = messageId,
-                    loadKey = LoadKeyData(
-                        key = LoadKeyType.ScrollToMessageBy.longValue,
-                        value = messageId
-                    ),
-                    ignoreServer = false
-                )
-            },
-        )
-        pendingDisplayMsgIds.add(messageId)
-    }
-
-    messageMarkerLiveData.observe(lifecycleOwner) {
-        it.forEach { response ->
-            if (response is SceytResponse.Success) {
-                val data = response.data ?: return@observe
-                viewModelScope.launch(Dispatchers.Default) {
-                    val user = SceytChatUIKit.currentUser ?: return@launch
-                    val messages = messagesListView.getData()
-                    messages.forEachIndexed { index, listItem ->
-                        (listItem as? MessageItem)?.message?.let { message ->
-                            if (data.messageIds.contains(message.id)) {
-                                val updatedMessage = message.copy(
-                                    userMarkers = message.userMarkers.orEmpty()
-                                        .plus(
-                                            SceytMarker(
-                                                messageId = message.id,
-                                                user = user,
-                                                name = data.name,
-                                                createdAt = data.createdAt
-                                            )
-                                        )
-                                )
-                                val updatedItem = listItem.copy(message = updatedMessage)
-                                messagesListView.updateItemAt(index, updatedItem)
-                            }
-                        }
-                    }
+                is MessageScrollCommand.ToUnreadMention -> {
+                    scrollToTargetMessage(command.messageId)
+                    pendingDisplayMsgIds.add(command.messageId)
                 }
             }
         }
