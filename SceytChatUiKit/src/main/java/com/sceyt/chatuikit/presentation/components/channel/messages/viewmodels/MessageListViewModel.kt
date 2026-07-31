@@ -362,12 +362,15 @@ class MessageListViewModel(
         }
     }
 
-    @Suppress("unused")
-    fun loadNewestMessages(loadKey: LoadKeyData) {
+    fun loadNewestMessages(loadKey: LoadKeyData = LoadKeyData()) {
+        invalidateCenteredSync()
         setPagingLoadingStarted(LoadNewest)
+        notifyPageLoadingState(false)
 
+        loadPrevJob?.cancel()
+        loadNextJob?.cancel()
         loadNearJob?.cancel()
-        viewModelScope.launch(Dispatchers.IO) {
+        loadPrevJob = viewModelScope.launch(Dispatchers.IO) {
             messageInteractor.loadNewestMessages(
                 conversationId = conversationId,
                 replyInThread = replyInThread,
