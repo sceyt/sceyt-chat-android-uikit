@@ -3,7 +3,7 @@ package com.sceyt.chat
 @Suppress("ConstPropertyName")
 object Config {
     const val compileSdk = 36
-    const val targetSdk = 35
+    const val targetSdk = 36
     const val minSdk = 24
 
     /** MavenCentral */

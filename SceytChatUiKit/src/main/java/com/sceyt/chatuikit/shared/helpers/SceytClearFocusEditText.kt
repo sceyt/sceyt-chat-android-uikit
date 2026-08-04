@@ -7,13 +7,27 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
 import android.view.inputmethod.InputConnectionWrapper
 import androidx.appcompat.widget.AppCompatEditText
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 
 class SceytClearFocusEditText : AppCompatEditText {
     var emptyDeleteListener: (() -> Boolean)? = null
+    private var wasImeVisible = false
 
     constructor(context: Context) : super(context)
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
     constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) : super(context, attrs, defStyleAttr)
+
+    init {
+        ViewCompat.setOnApplyWindowInsetsListener(this) { _, insets ->
+            val isImeVisible = insets.isVisible(WindowInsetsCompat.Type.ime())
+            if (wasImeVisible && !isImeVisible && hasFocus()) {
+                clearFocusAndKeepFocusable()
+            }
+            wasImeVisible = isImeVisible
+            insets
+        }
+    }
 
     override fun onCreateInputConnection(outAttrs: EditorInfo): InputConnection? {
         val baseConnection = super.onCreateInputConnection(outAttrs) ?: return null
@@ -37,17 +51,6 @@ class SceytClearFocusEditText : AppCompatEditText {
         }
     }
 
-    override fun onKeyPreIme(keyCode: Int, event: KeyEvent): Boolean {
-        if (event.keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_UP) {
-            // Hide cursor
-            isFocusable = false
-            // Set EditText to be focusable again
-            isFocusable = true
-            isFocusableInTouchMode = true
-        }
-        return super.onKeyPreIme(keyCode, event)
-    }
-
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
         if (keyCode == KeyEvent.KEYCODE_DEL && shouldHandleEmptyDelete()) {
             if (emptyDeleteListener?.invoke() == true) {
@@ -55,6 +58,12 @@ class SceytClearFocusEditText : AppCompatEditText {
             }
         }
         return super.onKeyDown(keyCode, event)
+    }
+
+    private fun clearFocusAndKeepFocusable() {
+        isFocusable = false
+        isFocusable = true
+        isFocusableInTouchMode = true
     }
 
     private fun shouldHandleEmptyDelete(): Boolean {
