@@ -12,7 +12,6 @@ import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.managers.message.MessageEventManager
 import com.sceyt.chatuikit.data.managers.message.event.ReactionUpdateEventData
 import com.sceyt.chatuikit.data.managers.message.event.ReactionUpdateEventEnum
@@ -115,7 +114,6 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.koin.core.component.inject
 import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Duration.Companion.seconds
 
 internal class PersistenceMessagesLogicImpl(
     private val context: Context,
@@ -365,7 +363,6 @@ internal class PersistenceMessagesLogicImpl(
         replyInThread: Boolean,
         messageId: Long,
     ): Flow<SyncResult<SceytMessage>> = flow {
-        ConnectionEventManager.awaitToConnectSceyt()
         var cursorId = messageId
 
         messagesRepository.syncMessagesAfterMessageId(
@@ -1322,12 +1319,10 @@ internal class PersistenceMessagesLogicImpl(
     ): PaginationResponse.ServerResponse<SceytMessage> {
         var hasNext = false
         var hasPrev = false
-        var hasDiff: Boolean
+        var hasDiff = false
         var forceHasDiff = false
         var messages: List<SceytMessage> = emptyList()
         val response: SceytResponse<List<SceytMessage>>
-
-        ConnectionEventManager.awaitToConnectSceytWithTimeout(10.seconds.inWholeMilliseconds)
 
         val syncStartTime = ServerTimeSync.getCurrentServerTime()
 
@@ -1418,16 +1413,16 @@ internal class PersistenceMessagesLogicImpl(
                 serverMessages = updatedMessages,
                 syncStartTime = syncStartTime
             )
+
+            hasDiff = messagesCache.addAll(
+                channelId = channelId,
+                list = updatedMessages,
+                checkDifference = true,
+                checkDiffAndNotifyUpdate = false
+            )
+
+            if (forceHasDiff) hasDiff = true
         }
-
-        hasDiff = messagesCache.addAll(
-            channelId = channelId,
-            list = updatedMessages,
-            checkDifference = true,
-            checkDiffAndNotifyUpdate = false
-        )
-
-        if (forceHasDiff) hasDiff = true
 
         return PaginationResponse.ServerResponse(
             data = response.map { updatedMessages },
@@ -1522,8 +1517,18 @@ internal class PersistenceMessagesLogicImpl(
         var data = messageDao.getNearMessages(channelId, messageId, limit)
         val messages = data.data
 
-        if (offset == 0)
+        // Add pending messages to the list only if the last message exists in the messages portion.
+        // Otherwise, when navigating to a reply message, pending messages could be shown incorrectly.
+        val channel = channelCache.getOneOf(channelId)
+            ?: persistenceChannelsLogic.getChannelFromDb(channelId)
+
+        val includeLastMessage = if (channel != null) {
+            messages.any { it.id == channel.lastMessage?.id } || channel.lastMessage == null
+        } else false
+
+        if (offset == 0 && includeLastMessage) {
             data = data.copy(data = getPendingMessagesAndAddToList(channelId, messages))
+        }
 
         return data
     }

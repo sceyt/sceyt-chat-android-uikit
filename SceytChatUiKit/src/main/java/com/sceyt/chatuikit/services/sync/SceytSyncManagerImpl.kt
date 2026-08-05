@@ -12,10 +12,10 @@ import com.sceyt.chatuikit.persistence.logicimpl.sync.ChannelSyncStateStore
 import com.sceyt.chatuikit.presentation.common.collections.ConcurrentHashSet
 import com.sceyt.chatuikit.services.sync.SceytSyncManager.SyncResultData
 import com.sceyt.chatuikit.services.sync.SceytSyncManager.SyncedConversationMessages
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.sync.Mutex
@@ -69,9 +69,9 @@ internal class SceytSyncManagerImpl(
     override suspend fun syncConversationMessagesAfter(
         channelId: Long,
         fromMessageId: Long
-    ): SyncedConversationMessages? {
+    ): SyncedConversationMessages? = withContext(Dispatchers.IO) {
         val response = channelInteractor.getChannelFromServer(channelId)
-        return if (response is SceytResponse.Success && response.data != null)
+        return@withContext if (response is SceytResponse.Success && response.data != null)
             syncConversationMessagesAfter(response.data, fromMessageId)
         else null
     }
