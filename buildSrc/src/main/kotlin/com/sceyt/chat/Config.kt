@@ -3,7 +3,7 @@ package com.sceyt.chat
 @Suppress("ConstPropertyName")
 object Config {
     const val compileSdk = 36
-    const val targetSdk = 35
+    const val targetSdk = 36
     const val minSdk = 24
 
     /** MavenCentral */
@@ -12,9 +12,9 @@ object Config {
 
     // const val mavenCentralVersion = "2.1.5"
     // const val mavenCentralVersion = "local"
-    const val mavenCentralVersion = "2.1.523011-SNAPSHOT"
+    const val mavenCentralVersion = "2.1.523013-SNAPSHOT"
 
     /** App version */
-    const val versionCode = 59
-    const val versionName = "1.3.0"
+    const val versionCode = 61
+    const val versionName = "1.3.1"
 }
