@@ -41,9 +41,9 @@ import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.extensions.getPresentableName
 import com.sceyt.chatuikit.extensions.isAppOnForeground
-import com.sceyt.tonemanager.audio.tone.ToneConfig
-import com.sceyt.tonemanager.manager.ToneManager
-import com.sceyt.tonemanager.manager.ToneManagerFactory
+import com.sceyt.toneplayer.audio.tone.ToneConfig
+import com.sceyt.toneplayer.player.TonePlayer
+import com.sceyt.toneplayer.player.TonePlayerFactory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -59,6 +59,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import java.util.UUID
+import kotlin.getValue
 import kotlin.reflect.KClass
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -87,7 +88,7 @@ class CallManagerImpl(
     )
 
     private val callClient: CallClient by lazy { CallClient.requireInstance() }
-    private val toneManager: ToneManager by lazy { ToneManagerFactory.getInstance(context) }
+    private val toneManager: TonePlayer by lazy { TonePlayerFactory.getInstance(context) }
     private val audioRouter: AudioRouter by lazy {
         AudioRouter.create(context, AudioRouterConfig(loggingEnabled = true))
     }
