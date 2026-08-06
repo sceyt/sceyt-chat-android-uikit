@@ -16,6 +16,6 @@ open class DefaultChannelDateFormatter : Formatter<Date> {
         override fun today(context: Context) = DateFormatData(format = "HH:mm")
         override fun thisWeek(context: Context) = DateFormatData(format = "EE")
         override fun thisYear(context: Context) = DateFormatData(format = "dd MMM")
-        override fun olderThisYear(context: Context) = DateFormatData(format = "dd.MM.yyyy")
+        override fun olderThisYear(context: Context) = DateFormatData(format = "dd.MM.yy")
     }
 }
