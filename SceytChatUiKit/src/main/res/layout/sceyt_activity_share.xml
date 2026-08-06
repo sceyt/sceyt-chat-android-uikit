@@ -40,7 +40,6 @@
 
     <androidx.appcompat.widget.AppCompatEditText
         android:id="@+id/messageInput"
-        android:contentDescription="@string/sceyt_cd_share_message_input"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:hint="@string/sceyt_write_a_message"
