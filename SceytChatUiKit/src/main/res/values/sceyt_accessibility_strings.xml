@@ -21,7 +21,6 @@
     <string name="sceyt_cd_capture_media">Capture media</string>
     <string name="sceyt_cd_change_role">Change role</string>
     <string name="sceyt_cd_channel_avatar">Channel avatar</string>
-    <string name="sceyt_cd_channel_description">Channel description</string>
     <string name="sceyt_cd_channel_details">Channel details</string>
     <string name="sceyt_cd_channel_file">Channel file</string>
     <string name="sceyt_cd_channel_files_list">Channel files list</string>
@@ -36,7 +35,6 @@
     <string name="sceyt_cd_channel_members_avatar">Channel members avatar</string>
     <string name="sceyt_cd_channel_members_item">Channel members item</string>
     <string name="sceyt_cd_channel_members_list">Channel members list</string>
-    <string name="sceyt_cd_channel_subject">Channel subject</string>
     <string name="sceyt_cd_channel_uri">Channel URI</string>
     <string name="sceyt_cd_channel_video">Channel video</string>
     <string name="sceyt_cd_channel_voice">Channel voice</string>
@@ -90,8 +88,6 @@
     <string name="sceyt_cd_global_search_suggestions_list">Global search suggestions list</string>
     <string name="sceyt_cd_global_search_tabs_list">Global search tabs list</string>
     <string name="sceyt_cd_group_avatar">Group avatar</string>
-    <string name="sceyt_cd_group_description">Group description</string>
-    <string name="sceyt_cd_group_subject">Group subject</string>
     <string name="sceyt_cd_incoming_attachments_message">Incoming attachments message</string>
     <string name="sceyt_cd_incoming_attachments_message_avatar">Incoming attachments message avatar</string>
     <string name="sceyt_cd_incoming_attachments_message_files_list">Incoming attachments message files list</string>
@@ -197,13 +193,11 @@
     <string name="sceyt_cd_message_file">Message file</string>
     <string name="sceyt_cd_message_image">Message image</string>
     <string name="sceyt_cd_message_info">Message info</string>
-    <string name="sceyt_cd_message_input">Message input</string>
     <string name="sceyt_cd_message_input_attachments_list">Message input attachments list</string>
     <string name="sceyt_cd_message_input_leading_actions_list">Message input leading actions list</string>
     <string name="sceyt_cd_message_input_trailing_actions_list">Message input trailing actions list</string>
     <string name="sceyt_cd_message_link_preview">Message link preview</string>
     <string name="sceyt_cd_message_reactions_list">Message reactions list</string>
-    <string name="sceyt_cd_message_search_input">Message search input</string>
     <string name="sceyt_cd_message_video">Message video</string>
     <string name="sceyt_cd_message_video_player">Message video player</string>
     <string name="sceyt_cd_message_video_thumbnail">Message video thumbnail</string>
@@ -286,7 +280,6 @@
     <string name="sceyt_cd_poll_option_item">Poll option item</string>
     <string name="sceyt_cd_poll_option_voter_details_list">Poll option voter details list</string>
     <string name="sceyt_cd_poll_option_voters_list">Poll option voters list</string>
-    <string name="sceyt_cd_poll_question">Poll question</string>
     <string name="sceyt_cd_poll_result_option_item">Poll result option item</string>
     <string name="sceyt_cd_poll_result_option_voters_list">Poll result option voters list</string>
     <string name="sceyt_cd_poll_result_vote_count">Poll result vote count</string>
@@ -323,7 +316,6 @@
     <string name="sceyt_cd_scroll_down">Scroll down</string>
     <string name="sceyt_cd_scroll_to_unread_mention">Scroll to unread mention</string>
     <string name="sceyt_cd_search">Search</string>
-    <string name="sceyt_cd_search_input">Search input</string>
     <string name="sceyt_cd_search_messages">Search messages</string>
     <string name="sceyt_cd_search_suggestion_user_avatar">Search suggestion user avatar</string>
     <string name="sceyt_cd_search_suggestion_user_item">Search suggestion user item</string>
@@ -371,7 +363,6 @@
     <string name="sceyt_cd_share_invite_link">Share invite link</string>
     <string name="sceyt_cd_share_media">Share media</string>
     <string name="sceyt_cd_share_message">Share message</string>
-    <string name="sceyt_cd_share_message_input">Share message input</string>
     <string name="sceyt_cd_share_qr_code">Share QR code</string>
     <string name="sceyt_cd_show_all_voters">Show all voters</string>
     <string name="sceyt_cd_show_in_chat">Show in chat</string>

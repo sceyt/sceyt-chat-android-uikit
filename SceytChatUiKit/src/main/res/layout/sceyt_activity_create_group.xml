@@ -47,7 +47,6 @@
 
                 <androidx.appcompat.widget.AppCompatEditText
                     android:id="@+id/inputSubject"
-                    android:contentDescription="@string/sceyt_cd_group_subject"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="24dp"
@@ -64,7 +63,6 @@
 
                 <androidx.appcompat.widget.AppCompatEditText
                     android:id="@+id/inputDescription"
-                    android:contentDescription="@string/sceyt_cd_group_description"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:background="@drawable/sceyt_bg_underline"
@@ -126,5 +124,4 @@
         tools:tint="@color/sceyt_color_on_primary" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
-
 

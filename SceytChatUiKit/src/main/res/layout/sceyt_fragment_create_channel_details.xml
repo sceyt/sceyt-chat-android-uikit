@@ -36,7 +36,6 @@
 
             <androidx.appcompat.widget.AppCompatEditText
                 android:id="@+id/inputSubject"
-                android:contentDescription="@string/sceyt_cd_channel_subject"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="15dp"
@@ -55,7 +54,6 @@
 
             <androidx.appcompat.widget.AppCompatEditText
                 android:id="@+id/inputDescription"
-                android:contentDescription="@string/sceyt_cd_channel_description"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:background="@drawable/sceyt_bg_underline"
@@ -87,7 +85,6 @@
 
             <androidx.appcompat.widget.AppCompatEditText
                 android:id="@+id/inputUri"
-                android:contentDescription="@string/sceyt_cd_channel_uri"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:background="@null"
@@ -149,4 +146,3 @@
         app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
-

@@ -43,7 +43,6 @@
 
     <androidx.appcompat.widget.AppCompatEditText
         android:id="@+id/input"
-        android:contentDescription="@string/sceyt_cd_search_input"
         android:layout_width="0dp"
         android:layout_height="?android:attr/actionBarSize"
         android:layout_marginStart="15dp"
