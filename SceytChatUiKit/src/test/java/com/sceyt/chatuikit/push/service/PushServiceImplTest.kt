@@ -6,6 +6,7 @@ import androidx.work.Operation
 import androidx.work.OutOfQuotaPolicy
 import androidx.work.WorkContinuation
 import androidx.work.impl.WorkManagerImpl
+import androidx.work.impl.utils.futures.SettableFuture
 import com.google.common.truth.Truth.assertThat
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.SceytException
@@ -28,6 +29,7 @@ import com.sceyt.chatuikit.persistence.workers.HandleNotificationWorkManager
 import com.sceyt.chatuikit.persistence.workers.HandleNotificationWorker
 import com.sceyt.chatuikit.push.PushData
 import com.sceyt.chatuikit.push.PushDevice
+import com.sceyt.chatuikit.push.PushHandleResult
 import com.sceyt.chatuikit.push.PushServiceType
 import com.sceyt.chatuikit.push.providers.PushDeviceProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -116,7 +118,7 @@ class PushServiceImplTest {
     @Test
     fun `handlePush includes reaction id when notification data has reaction`() = runTest {
         val workManager = installWorkManagerMock()
-        val reaction = reaction(id = 99, messageId = 43)
+        val reaction = reaction()
         val data = pushData(
             type = NotificationType.MessageReaction,
             messageId = 43,
@@ -200,6 +202,95 @@ class PushServiceImplTest {
 
         assertThat(workManager.requests).isEmpty()
         verifyNoInteractions(workManager.continuation)
+    }
+
+    @Test
+    fun `handlePushSuspended returns handled with scheduled notification`() = runTest {
+        val workManager = installWorkManagerMock()
+        val data = pushData()
+        whenever(messagesLogic.handlePush(data)).thenReturn(true)
+        setNotificationConfig(PushNotificationConfig(isPushEnabled = true))
+
+        val result = service(this).handlePushSuspended(data)
+
+        assertThat(result).isInstanceOf(PushHandleResult.Handled::class.java)
+        assertThat((result as PushHandleResult.Handled).notificationScheduled).isTrue()
+        assertThat(result.data).isSameInstanceAs(data)
+        assertThat(workManager.requests).hasSize(1)
+    }
+
+    @Test
+    fun `handlePushSuspended returns handled without scheduled notification when display is disabled`() =
+        runTest {
+            val workManager = installWorkManagerMock()
+            val data = pushData()
+            whenever(messagesLogic.handlePush(data)).thenReturn(true)
+            setNotificationConfig(PushNotificationConfig(isPushEnabled = false))
+
+            val result = service(this).handlePushSuspended(data)
+
+            assertThat(result).isInstanceOf(PushHandleResult.Handled::class.java)
+            assertThat((result as PushHandleResult.Handled).notificationScheduled).isFalse()
+            assertThat(workManager.requests).isEmpty()
+        }
+
+    @Test
+    fun `handlePushSuspended returns skipped when persistence rejects push`() = runTest {
+        val workManager = installWorkManagerMock()
+        val data = pushData()
+        whenever(messagesLogic.handlePush(data)).thenReturn(false)
+        setNotificationConfig(PushNotificationConfig(isPushEnabled = true))
+
+        val result = service(this).handlePushSuspended(data)
+
+        assertThat(result).isInstanceOf(PushHandleResult.Skipped::class.java)
+        assertThat(result.data).isSameInstanceAs(data)
+        assertThat(workManager.requests).isEmpty()
+    }
+
+    @Test
+    fun `handlePushSuspended returns failed when persistence throws`() = runTest {
+        installWorkManagerMock()
+        val data = pushData()
+        val error = IllegalStateException("db is down")
+        whenever(messagesLogic.handlePush(data)).thenThrow(error)
+        setNotificationConfig(PushNotificationConfig(isPushEnabled = true))
+
+        val result = service(this).handlePushSuspended(data)
+
+        assertThat(result).isInstanceOf(PushHandleResult.Failed::class.java)
+        assertThat((result as PushHandleResult.Failed).throwable).isSameInstanceAs(error)
+        assertThat(result.data).isSameInstanceAs(data)
+    }
+
+    @Test
+    fun `handlePush forwards result to callback`() = runTest {
+        installWorkManagerMock()
+        val data = pushData()
+        val results = mutableListOf<PushHandleResult>()
+        whenever(messagesLogic.handlePush(data)).thenReturn(true)
+        setNotificationConfig(PushNotificationConfig(isPushEnabled = true))
+
+        service(this).handlePush(data, results::add)
+        advanceUntilIdle()
+
+        val result = results.single()
+        assertThat(result).isInstanceOf(PushHandleResult.Handled::class.java)
+        assertThat((result as PushHandleResult.Handled).notificationScheduled).isTrue()
+        assertThat(result.data).isSameInstanceAs(data)
+    }
+
+    @Test
+    fun `handlePush does not throw when persistence fails`() = runTest {
+        val workManager = installWorkManagerMock()
+        val data = pushData()
+        whenever(messagesLogic.handlePush(data)).thenThrow(IllegalStateException("db is down"))
+        setNotificationConfig(PushNotificationConfig(isPushEnabled = true))
+
+        service(this).handlePush(data)
+        advanceUntilIdle()
+
+        assertThat(workManager.requests).isEmpty()
     }
 
     @Test
@@ -365,10 +456,10 @@ class PushServiceImplTest {
         )
     }
 
-    private fun reaction(id: Long, messageId: Long): SceytReaction {
+    private fun reaction(): SceytReaction {
         return SceytReaction(
-            id = id,
-            messageId = messageId,
+            id = 99,
+            messageId = 43,
             key = "like",
             score = 1,
             reason = "",
@@ -394,6 +485,9 @@ class PushServiceImplTest {
             capturedRequests += invocation.getArgument<List<OneTimeWorkRequest>>(0)
             workContinuation
         }.whenever(workManager).beginWith(any<List<OneTimeWorkRequest>>())
+        whenever(operation.result).thenReturn(
+            SettableFuture.create<Operation.State.SUCCESS>().apply { set(Operation.SUCCESS) }
+        )
         whenever(workContinuation.enqueue()).thenReturn(operation)
 
         return CapturingWorkManager(
