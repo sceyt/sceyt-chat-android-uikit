@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.push.service
 
 import android.content.Context
+import androidx.work.await
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.sceyt_callbacks.ActionCallback
@@ -10,6 +11,8 @@ import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
 import com.sceyt.chatuikit.persistence.workers.HandleNotificationWorkManager
 import com.sceyt.chatuikit.push.PushData
 import com.sceyt.chatuikit.push.PushDevice
+import com.sceyt.chatuikit.push.PushHandleResult
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -19,29 +22,51 @@ internal class PushServiceImpl(
     private val messagesLogic: PersistenceMessagesLogic,
 ) : PushService {
 
-    override fun handlePush(data: PushData) {
+    override fun handlePush(data: PushData, callback: ((PushHandleResult) -> Unit)?) {
+        scope.launch {
+            val result = handlePushSuspended(data)
+            callback?.invoke(result)
+        }
+    }
+
+    override suspend fun handlePushSuspended(data: PushData): PushHandleResult {
         SceytLog.d(
             TAG,
             "Handling push for messageId: ${data.message.id}, channelId: ${data.message.channelId}"
         )
-        scope.launch {
+        return try {
             // At first, we call the handlePush method, which will save the message to the database
-            if (!messagesLogic.handlePush(data)) return@launch
+            if (!messagesLogic.handlePush(data)) {
+                SceytLog.d(TAG, "Push skipped by persistence, messageId: ${data.message.id}")
+                return PushHandleResult.Skipped(data)
+            }
 
             val config = SceytChatUIKit.config.notificationConfig
-            if (config.isPushEnabled && config.shouldDisplayNotification(data)) {
-                val workerData = mutableMapOf<String, Any>(
-                    HandleNotificationWorkManager.NOTIFICATION_TYPE to data.type.ordinal,
-                    HandleNotificationWorkManager.CHANNEL_ID to data.channel.id,
-                    HandleNotificationWorkManager.MESSAGE_ID to data.message.id,
-                    HandleNotificationWorkManager.USER_ID to data.user.id,
-                )
-                data.reaction?.let {
-                    workerData[HandleNotificationWorkManager.REACTION_ID] = it.id
-                }
-                HandleNotificationWorkManager.schedule(context, workerData)
+            val shouldDisplay = config.isPushEnabled && config.shouldDisplayNotification(data)
+            if (shouldDisplay) {
+                scheduleNotificationWork(data)
             }
+            PushHandleResult.Handled(data = data, notificationScheduled = shouldDisplay)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Throwable) {
+            SceytLog.e(TAG, "Couldn't handle push for messageId: ${data.message.id}, error: $e")
+            PushHandleResult.Failed(data = data, throwable = e)
         }
+    }
+
+    /** Enqueues the notification work and suspends until the enqueue itself completes. */
+    private suspend fun scheduleNotificationWork(data: PushData) {
+        val workerData = mutableMapOf<String, Any>(
+            HandleNotificationWorkManager.NOTIFICATION_TYPE to data.type.ordinal,
+            HandleNotificationWorkManager.CHANNEL_ID to data.channel.id,
+            HandleNotificationWorkManager.MESSAGE_ID to data.message.id,
+            HandleNotificationWorkManager.USER_ID to data.user.id,
+        )
+        data.reaction?.let {
+            workerData[HandleNotificationWorkManager.REACTION_ID] = it.id
+        }
+        HandleNotificationWorkManager.schedule(context, workerData).await()
     }
 
     override fun registerPushDevice(device: PushDevice) {
