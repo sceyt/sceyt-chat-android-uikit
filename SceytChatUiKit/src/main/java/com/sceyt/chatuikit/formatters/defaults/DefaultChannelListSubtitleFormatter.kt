@@ -1,12 +1,14 @@
 package com.sceyt.chatuikit.formatters.defaults
 
 import android.content.Context
+import android.graphics.drawable.Drawable
 import android.text.SpannableStringBuilder
 import androidx.core.text.buildSpannedString
 import androidx.core.text.toSpannable
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessageType
 import com.sceyt.chatuikit.extensions.toSpannableString
 import com.sceyt.chatuikit.formatters.Formatter
@@ -18,8 +20,10 @@ import com.sceyt.chatuikit.persistence.mappers.toSceytAttachment
 import com.sceyt.chatuikit.persistence.mappers.toSceytReaction
 import com.sceyt.chatuikit.presentation.extensions.isPending
 import com.sceyt.chatuikit.presentation.extensions.isSupportedType
+import com.sceyt.chatuikit.styles.channel.ChannelItemStyle
 
 open class DefaultChannelListSubtitleFormatter : Formatter<ChannelItemSubtitleFormatterAttributes> {
+
     override fun format(
         context: Context,
         from: ChannelItemSubtitleFormatterAttributes
@@ -60,18 +64,12 @@ open class DefaultChannelListSubtitleFormatter : Formatter<ChannelItemSubtitleFo
             )
         )
 
-        if (message.type == SceytMessageType.System.value) {
-            return body
-        }
-
-        if (message.type == SceytMessageType.ViewOnce.value){
+        if (message.type == SceytMessageType.ViewOnce.value) {
             return body
         }
 
         val senderName = style.lastMessageSenderNameFormatter.format(context, channel)
-        val attachmentIcon = message.attachments?.firstOrNull()?.let {
-            style.attachmentIconProvider.provide(context, it)
-        }
+        val attachmentIcon = style.attachmentIcon(context, message.attachments?.firstOrNull())
 
         return buildSpannedString {
             if (senderName.isNotEmpty()) {
@@ -98,7 +96,7 @@ open class DefaultChannelListSubtitleFormatter : Formatter<ChannelItemSubtitleFo
         val removeReactions = pendingAddOrRemoveReaction?.get(false) ?: emptyList()
         val lastReaction = addReactions?.maxByOrNull { it.createdAt }?.toSceytReaction()
             ?: channel.newReactions?.filter {
-                it.user?.id != myId && removeReactions.none { rm ->
+                removeReactions.none { rm ->
                     rm.key == it.key && rm.messageId == it.messageId && it.user?.id == myId
                 }
             }?.maxByOrNull { it.id } ?: return false to ""
@@ -106,91 +104,85 @@ open class DefaultChannelListSubtitleFormatter : Formatter<ChannelItemSubtitleFo
         val message = ChatReactionMessagesCache.getMessageById(lastReaction.messageId)
             ?: return false to ""
 
-        if (lastReaction.id > (channel.lastMessage?.id ?: 0) || lastReaction.pending) {
-            val body = style.lastMessageBodyFormatter.format(
-                context = context,
-                from = MessageBodyFormatterAttributes(
-                    message = message,
-                    mentionTextStyle = style.mentionTextStyle
-                )
+        val isNewerThanLastMessage = lastReaction.id > (channel.lastMessage?.id ?: 0)
+        if (!isNewerThanLastMessage && !lastReaction.pending) return false to ""
+
+        val body = style.lastMessageBodyFormatter.format(
+            context = context,
+            from = MessageBodyFormatterAttributes(
+                message = message,
+                mentionTextStyle = style.mentionTextStyle
             )
+        )
 
-            val attachmentIcon = message.attachments?.firstOrNull()?.let {
-                style.attachmentIconProvider.provide(context, it)
+        val attachmentIcon = style.attachmentIcon(context, message.attachments?.firstOrNull())
+        val reactedWord = context.getString(R.string.sceyt_reacted)
+
+        val reactUserName = when {
+            channel.isGroup -> {
+                val name = lastReaction.user?.let {
+                    style.reactedUserNameFormatter.format(context, it)
+                } ?: ""
+                "$name ${reactedWord.lowercase()}"
             }
 
-            val toMessage = SpannableStringBuilder(attachmentIcon.toSpannableString())
-            toMessage.append(body)
-
-            val reactedWord = context.getString(R.string.sceyt_reacted)
-
-            val reactUserName = when {
-                channel.isGroup -> {
-                    val name = lastReaction.user?.let {
-                        style.reactedUserNameFormatter.format(
-                            context,
-                            it
-                        )
-                    }
-                        ?: ""
-                    "$name ${reactedWord.lowercase()}"
-                }
-
-                lastReaction.user?.id == myId -> "${context.getString(R.string.sceyt_you)} ${
-                    context.getString(
-                        R.string.sceyt_reacted
-                    ).lowercase()
-                }"
-
-                else -> context.getString(R.string.sceyt_reacted)
+            lastReaction.user?.id == myId -> {
+                "${context.getString(R.string.sceyt_you)} ${reactedWord.lowercase()}"
             }
 
-            val text = "$reactUserName ${lastReaction.key} ${context.getString(R.string.sceyt_to)}"
-            val title = SpannableStringBuilder("$text ")
-            title.append("\"")
-            title.append(toMessage)
-            title.append("\"")
-            return true to title
+            else -> reactedWord
         }
-        return false to ""
+
+        val title = buildSpannedString {
+            append(reactUserName)
+            append(" ")
+            append(lastReaction.key)
+            append(" ")
+            append(context.getString(R.string.sceyt_to))
+            append(" \"")
+            append(attachmentIcon.toSpannableString())
+            append(body)
+            append("\"")
+        }
+        return true to title
     }
 
     open fun checkHasDraftMessage(
         context: Context,
         attributes: ChannelItemSubtitleFormatterAttributes,
     ): Pair<Boolean, CharSequence> {
-        val channel = attributes.channel
         val style = attributes.channelItemStyle
-        val draftMessage = channel.draftMessage
-        return if (draftMessage != null) {
-            val draft = "${context.getString(R.string.sceyt_draft)}:".toSpannable()
-            style.draftPrefixTextStyle.apply(context, draft)
+        val draftMessage = attributes.channel.draftMessage ?: return false to ""
 
-            val formattedBody = style.draftMessageBodyFormatter.format(
-                context, DraftMessageBodyFormatterAttributes(
-                    message = draftMessage,
-                    mentionTextStyle = style.mentionTextStyle
-                )
+        val draft = "${context.getString(R.string.sceyt_draft)}:".toSpannable()
+        style.draftPrefixTextStyle.apply(context, draft)
+
+        val formattedBody = style.draftMessageBodyFormatter.format(
+            context, DraftMessageBodyFormatterAttributes(
+                message = draftMessage,
+                mentionTextStyle = style.mentionTextStyle
             )
+        )
 
-            if (formattedBody.isBlank()) {
-                return true to draft.removeSuffix(":").toSpannable()
-            }
+        if (formattedBody.isBlank())
+            return true to draft.removeSuffix(":").toSpannable()
 
-            val attachment = draftMessage.voiceAttachment?.toSceytAttachment()
-                ?: draftMessage.attachments?.singleOrNull()?.toSceytAttachment()
+        val attachment = draftMessage.voiceAttachment?.toSceytAttachment()
+            ?: draftMessage.attachments?.singleOrNull()?.toSceytAttachment()
 
-            val attachmentIcon = attachment?.let {
-                style.attachmentIconProvider.provide(context, it)
-            }
+        val attachmentIcon = style.attachmentIcon(context, attachment)
 
-            val body = buildSpannedString {
-                append(draft)
-                append(" ")
-                append(attachmentIcon.toSpannableString())
-                append(formattedBody)
-            }
-            true to body
-        } else false to ""
+        val body = buildSpannedString {
+            append(draft)
+            append(" ")
+            append(attachmentIcon.toSpannableString())
+            append(formattedBody)
+        }
+        return true to body
     }
+
+    private fun ChannelItemStyle.attachmentIcon(
+        context: Context,
+        attachment: SceytAttachment?,
+    ): Drawable? = attachment?.let { attachmentIconProvider.provide(context, it) }
 }
