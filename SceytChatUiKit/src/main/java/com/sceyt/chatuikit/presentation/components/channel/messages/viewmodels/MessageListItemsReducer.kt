@@ -14,6 +14,7 @@ import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 internal class MessageListItemsReducer(
     private val enableDateSeparator: Boolean,
 ) {
+    /** Rebuilds a canonical snapshot while preserving the supplied message order. */
     fun replace(items: List<MessageListItem>): List<MessageListItem> {
         return canonicalize(
             messages = upsert(current = emptyList(), incoming = items.messages()),
@@ -23,6 +24,7 @@ internal class MessageListItemsReducer(
         )
     }
 
+    /** Upserts an older page before current messages and adopts its previous-edge loader. */
     fun prependPage(
         current: List<MessageListItem>,
         incoming: List<MessageListItem>,
@@ -36,6 +38,7 @@ internal class MessageListItemsReducer(
         return current.ifSameSnapshot(result)
     }
 
+    /** Upserts a newer page after current messages and adopts its next-edge loader. */
     fun appendPage(
         current: List<MessageListItem>,
         incoming: List<MessageListItem>,
@@ -49,6 +52,7 @@ internal class MessageListItemsReducer(
         return current.ifSameSnapshot(result)
     }
 
+    /** Reconciles live messages, ignoring unseen tids while a newer-message gap exists. */
     fun appendRealtime(
         current: List<MessageListItem>,
         incoming: List<MessageListItem>,
@@ -69,6 +73,7 @@ internal class MessageListItemsReducer(
         return current.ifSameSnapshot(result)
     }
 
+    /** Updates one message by tid; returning the original item produces a no-op. */
     fun updateByTid(
         current: List<MessageListItem>,
         tid: Long,
@@ -100,6 +105,7 @@ internal class MessageListItemsReducer(
         return current.ifSameSnapshot(result)
     }
 
+    /** Removes matching messages and rebuilds their derived separators and group boundaries. */
     fun deleteByTids(
         current: List<MessageListItem>,
         tids: Set<Long>,
@@ -116,6 +122,7 @@ internal class MessageListItemsReducer(
         return current.ifSameSnapshot(result)
     }
 
+    /** Merges an anchored centered window and orders it with the message comparator. */
     fun mergeAroundCenter(
         current: List<MessageListItem>,
         incoming: List<MessageListItem>,
@@ -151,6 +158,7 @@ internal class MessageListItemsReducer(
         }
     }
 
+    /** Deduplicates by tid, reconciles overlaps in place, and preserves new-item order. */
     private fun upsert(
         current: List<MessageItem>,
         incoming: List<MessageItem>,
@@ -213,6 +221,7 @@ internal class MessageListItemsReducer(
                 first.shouldShowAvatarAndName != second.shouldShowAvatarAndName
     }
 
+    /** Derives loaders, separators, and group boundaries without sorting messages. */
     private fun canonicalize(
         messages: List<MessageItem>,
         sourceItems: List<MessageListItem>,
@@ -283,6 +292,7 @@ internal class MessageListItemsReducer(
     private fun List<MessageListItem>.messages() = filterIsInstance<MessageItem>()
     private fun List<MessageListItem>.hasLoadingPrev() = any { it is MessageListItem.LoadingPrevItem }
     private fun List<MessageListItem>.hasLoadingNext() = any { it is MessageListItem.LoadingNextItem }
+    /** Returns this list when [other] has the same item sequence and message-row instances. */
     private fun List<MessageListItem>.ifSameSnapshot(other: List<MessageListItem>) =
         if (hasSameItemInstances(this, other)) this else other
 
