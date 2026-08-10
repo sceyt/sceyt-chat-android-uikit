@@ -3,6 +3,8 @@ package com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels
 import com.google.common.truth.Truth.assertThat
 import com.sceyt.chatuikit.createMessage
 import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
+import com.sceyt.chatuikit.data.models.messages.SceytUser
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem.MessageItem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -139,6 +141,220 @@ class MessageListStateTest {
         input.add(item(tid = 2))
 
         assertThat(state.state.value.items).containsExactly(first)
+    }
+
+    @Test
+    fun `mutation results distinguish missing unchanged and committed updates`() {
+        val state = MessageListState(enableDateSeparator = false)
+
+        val inserted = state.replace(listOf(item(tid = 1)))
+        val unchanged = state.updateByTid(1) { it }
+        val missing = state.updateByTid(999) {
+            it.copy(message = it.message.copy(body = "never called"))
+        }
+        val changed = state.updateByTid(1) {
+            it.copy(message = it.message.copy(body = "edited"))
+        }
+
+        assertThat(inserted).isEqualTo(MessageListState.MutationResult(revision = 1, changed = true))
+        assertThat(unchanged).isEqualTo(
+            MessageListState.ItemUpdateResult(revision = 1, found = true, changed = false)
+        )
+        assertThat(missing).isEqualTo(
+            MessageListState.ItemUpdateResult(revision = 1, found = false, changed = false)
+        )
+        assertThat(changed).isEqualTo(
+            MessageListState.ItemUpdateResult(revision = 2, found = true, changed = true)
+        )
+    }
+
+    @Test
+    fun `loader removals report the revision that contains the change`() {
+        val state = MessageListState(enableDateSeparator = false)
+        state.replace(
+            listOf(
+                MessageListItem.LoadingPrevItem,
+                item(tid = 1),
+                MessageListItem.LoadingNextItem,
+            )
+        )
+
+        val removed = state.hideLoadingPrev()
+        val alreadyRemoved = state.hideLoadingPrev()
+
+        assertThat(removed).isEqualTo(MessageListState.MutationResult(revision = 2, changed = true))
+        assertThat(alreadyRemoved)
+            .isEqualTo(MessageListState.MutationResult(revision = 2, changed = false))
+        assertThat(state.state.value.items)
+            .containsExactly(item(tid = 1), MessageListItem.LoadingNextItem)
+            .inOrder()
+    }
+
+    @Test
+    fun `next loader removal preserves previous edge and is idempotent`() {
+        val state = MessageListState(enableDateSeparator = false)
+        state.replace(
+            listOf(
+                MessageListItem.LoadingPrevItem,
+                item(tid = 1),
+                MessageListItem.LoadingNextItem,
+            )
+        )
+
+        val removed = state.hideLoadingNext()
+        val alreadyRemoved = state.hideLoadingNext()
+
+        assertThat(removed).isEqualTo(MessageListState.MutationResult(revision = 2, changed = true))
+        assertThat(alreadyRemoved)
+            .isEqualTo(MessageListState.MutationResult(revision = 2, changed = false))
+        assertThat(state.state.value.items)
+            .containsExactly(MessageListItem.LoadingPrevItem, item(tid = 1))
+            .inOrder()
+    }
+
+    @Test
+    fun `unread removal preserves loaders repairs avatar and then becomes a no-op`() {
+        val user = SceytUser("same-user")
+        val first = item(tid = 1).let { item ->
+            item.copy(message = item.message.copy(incoming = true, isGroup = true, user = user))
+        }
+        val second = item(tid = 2).let { item ->
+            item.copy(message = item.message.copy(incoming = true, isGroup = true, user = user))
+        }
+        val unread = MessageListItem.UnreadMessagesSeparatorItem(
+            createdAt = second.message.createdAt,
+            msgId = 10,
+        )
+        val state = MessageListState(enableDateSeparator = false)
+        state.replace(
+            listOf(
+                MessageListItem.LoadingPrevItem,
+                first,
+                unread,
+                second,
+                MessageListItem.LoadingNextItem,
+            )
+        )
+
+        val removed = state.removeUnreadSeparator()
+        val repeated = state.removeUnreadSeparator()
+
+        assertThat(removed).isEqualTo(MessageListState.MutationResult(revision = 2, changed = true))
+        assertThat(repeated).isEqualTo(MessageListState.MutationResult(revision = 2, changed = false))
+        assertThat(state.state.value.items.first()).isEqualTo(MessageListItem.LoadingPrevItem)
+        assertThat(state.state.value.items.last()).isEqualTo(MessageListItem.LoadingNextItem)
+        assertThat(state.state.value.items.filterIsInstance<MessageItem>()
+            .map { it.message.shouldShowAvatarAndName })
+            .containsExactly(true, false)
+            .inOrder()
+    }
+
+    @Test
+    fun `batch reconciliation updates main and reply in one revision`() {
+        val state = MessageListState(enableDateSeparator = false)
+        val parent = item(tid = 1, id = 100)
+        val reply = item(tid = 2, id = 200).let { item ->
+            item.copy(message = item.message.copy(parentMessage = parent.message))
+        }
+        state.replace(listOf(parent, reply))
+        val update = parent.copy(message = parent.message.copy(body = "edited"))
+
+        val result = state.reconcileMessages(
+            rowOnlyUpdates = emptyList(),
+            rowAndReplyUpdates = listOf(update),
+        )
+
+        assertThat(result).isEqualTo(MessageListState.MutationResult(revision = 2, changed = true))
+        assertThat(state.state.value.revision).isEqualTo(2)
+        val messages = state.state.value.items.filterIsInstance<MessageItem>()
+        assertThat(messages[0].message.body).isEqualTo("edited")
+        assertThat(messages[1].message.parentMessage?.body).isEqualTo("edited")
+    }
+
+    @Test
+    fun `mixed batch keeps row-only updates out of previews and commits once`() {
+        val state = MessageListState(enableDateSeparator = false)
+        val statusParent = item(tid = 1, id = 100, status = MessageDeliveryStatus.Sent)
+        val editedParent = item(tid = 2, id = 200, status = MessageDeliveryStatus.Sent)
+        val statusReply = item(tid = 3, id = 300).let { item ->
+            item.copy(message = item.message.copy(parentMessage = statusParent.message))
+        }
+        val firstEditedReply = item(tid = 4, id = 400).let { item ->
+            item.copy(message = item.message.copy(parentMessage = editedParent.message))
+        }
+        val secondEditedReply = item(tid = 5, id = 500).let { item ->
+            item.copy(message = item.message.copy(parentMessage = editedParent.message))
+        }
+        state.replace(
+            listOf(statusParent, editedParent, statusReply, firstEditedReply, secondEditedReply)
+        )
+        val statusUpdate = statusParent.copy(
+            message = statusParent.message.copy(
+                body = "status-only",
+                deliveryStatus = MessageDeliveryStatus.Received,
+            )
+        )
+        val editUpdate = editedParent.copy(
+            message = editedParent.message.copy(body = "edited")
+        )
+
+        val result = state.reconcileMessages(
+            rowOnlyUpdates = listOf(statusUpdate),
+            rowAndReplyUpdates = listOf(editUpdate),
+        )
+
+        assertThat(result).isEqualTo(MessageListState.MutationResult(revision = 2, changed = true))
+        val messages = state.state.value.items.filterIsInstance<MessageItem>()
+        assertThat(messages[0].message.body).isEqualTo("status-only")
+        assertThat(messages[2].message.parentMessage?.body).isEmpty()
+        assertThat(messages[3].message.parentMessage?.body).isEqualTo("edited")
+        assertThat(messages[4].message.parentMessage?.body).isEqualTo("edited")
+    }
+
+    @Test
+    fun `history trim removes previous edge and failed rows but keeps pending at cutoff`() {
+        val state = MessageListState(enableDateSeparator = false)
+        val pending = item(tid = 2, id = 0, status = MessageDeliveryStatus.Pending)
+        val failed = item(tid = 3, id = 0, status = MessageDeliveryStatus.Failed)
+        val newer = item(tid = 4, status = MessageDeliveryStatus.Sent)
+        state.replace(
+            listOf(
+                MessageListItem.LoadingPrevItem,
+                pending,
+                failed,
+                newer,
+                MessageListItem.LoadingNextItem,
+            )
+        )
+
+        val trimmed = state.deleteAtOrBeforePreservingPending(createdAt = 3)
+        val repeated = state.deleteAtOrBeforePreservingPending(createdAt = 3)
+
+        assertThat(trimmed).isEqualTo(MessageListState.MutationResult(revision = 2, changed = true))
+        assertThat(repeated).isEqualTo(MessageListState.MutationResult(revision = 2, changed = false))
+        assertThat(state.state.value.items)
+            .containsExactly(pending, newer, MessageListItem.LoadingNextItem)
+            .inOrder()
+    }
+
+    @Test
+    fun `clear selection changes all rows in one revision and then becomes a no-op`() {
+        val state = MessageListState(enableDateSeparator = false)
+        state.replace(
+            listOf(
+                item(tid = 1).let { it.copy(message = it.message.copy(isSelected = true)) },
+                item(tid = 2).let { it.copy(message = it.message.copy(isSelected = true)) },
+            )
+        )
+
+        val cleared = state.clearSelection()
+        val repeated = state.clearSelection()
+
+        assertThat(cleared).isEqualTo(MessageListState.MutationResult(revision = 2, changed = true))
+        assertThat(repeated).isEqualTo(MessageListState.MutationResult(revision = 2, changed = false))
+        assertThat(
+            state.state.value.items.filterIsInstance<MessageItem>().map { it.message.isSelected }
+        ).containsExactly(false, false)
     }
 
     private fun item(

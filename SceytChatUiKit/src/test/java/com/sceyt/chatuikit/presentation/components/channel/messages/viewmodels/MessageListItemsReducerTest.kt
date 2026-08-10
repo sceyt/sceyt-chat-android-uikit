@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels
 
 import com.google.common.truth.Truth.assertThat
+import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chatuikit.createMessage
 import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import com.sceyt.chatuikit.data.models.messages.SceytMessageType
@@ -549,6 +550,253 @@ class MessageListItemsReducerTest {
         assertThat(result.messages().map { it.message.tid })
             .containsExactly(10L, 20L, 30L)
             .inOrder()
+    }
+
+    @Test
+    fun `window replacement keeps only incoming tids and reconciles stale overlaps`() {
+        val current = item(tid = 1, id = 100, createdAt = 1_000, body = "current")
+            .withMessage {
+                copy(
+                    deliveryStatus = MessageDeliveryStatus.Displayed,
+                    isSelected = true,
+                    isBodyExpanded = true,
+                )
+            }
+        val outsideWindow = item(tid = 2, id = 200, createdAt = 2_000)
+        val stale = item(tid = 1, id = 0, createdAt = 3_000, body = "stale")
+            .withMessage { copy(deliveryStatus = MessageDeliveryStatus.Pending) }
+        val newWindowItem = item(tid = 3, id = 300, createdAt = 4_000)
+        val reducer = reducer(enableDateSeparator = false)
+
+        val result = reducer.replaceWindow(
+            current = reducer.replace(listOf(current, outsideWindow)),
+            incoming = listOf(stale, newWindowItem),
+        )
+
+        assertThat(result.messages().map { it.message.tid }).containsExactly(1L, 3L).inOrder()
+        val reconciled = result.messages().first().message
+        assertThat(reconciled.id).isEqualTo(100)
+        assertThat(reconciled.body).isEqualTo("current")
+        assertThat(reconciled.deliveryStatus).isEqualTo(MessageDeliveryStatus.Displayed)
+        assertThat(reconciled.isSelected).isTrue()
+        assertThat(reconciled.isBodyExpanded).isTrue()
+    }
+
+    @Test
+    fun `loader removals affect only their requested edge`() {
+        val message = item(tid = 1)
+        val current = listOf(
+            MessageListItem.LoadingPrevItem,
+            message,
+            MessageListItem.LoadingNextItem,
+        )
+        val reducer = reducer(enableDateSeparator = false)
+
+        val withoutPrev = reducer.hideLoadingPrev(current)
+        val withoutNext = reducer.hideLoadingNext(current)
+
+        assertThat(withoutPrev).containsExactly(message, MessageListItem.LoadingNextItem).inOrder()
+        assertThat(withoutNext).containsExactly(MessageListItem.LoadingPrevItem, message).inOrder()
+        assertThat(reducer.hideLoadingPrev(withoutPrev)).isSameInstanceAs(withoutPrev)
+        assertThat(reducer.hideLoadingNext(withoutNext)).isSameInstanceAs(withoutNext)
+    }
+
+    @Test
+    fun `removing unread separator repairs same-sender avatar boundary`() {
+        val user = SceytUser("same-user")
+        val first = item(tid = 1, createdAt = 1_000).withMessage {
+            copy(incoming = true, isGroup = true, user = user)
+        }
+        val second = item(tid = 2, createdAt = 2_000).withMessage {
+            copy(incoming = true, isGroup = true, user = user)
+        }
+        val separator = unread(createdAt = second.message.createdAt, lastReadMessageId = 10)
+        val reducer = reducer(enableDateSeparator = false)
+        val current = reducer.replace(listOf(first, separator, second))
+
+        val result = reducer.removeUnreadSeparator(current)
+
+        assertThat(result.filterIsInstance<UnreadMessagesSeparatorItem>()).isEmpty()
+        assertThat(result.messages().map { it.message.shouldShowAvatarAndName })
+            .containsExactly(true, false)
+            .inOrder()
+    }
+
+    @Test
+    fun `history trim removes established messages and preserves pending messages`() {
+        val oldSent = item(tid = 1, createdAt = 1_000)
+            .withMessage { copy(deliveryStatus = MessageDeliveryStatus.Sent) }
+        val oldPending = item(tid = 2, id = 0, createdAt = 2_000)
+            .withMessage { copy(deliveryStatus = MessageDeliveryStatus.Pending) }
+        val newSent = item(tid = 3, createdAt = 3_000)
+            .withMessage { copy(deliveryStatus = MessageDeliveryStatus.Sent) }
+        val unread = unread(createdAt = oldPending.message.createdAt, lastReadMessageId = 10)
+        val reducer = reducer(enableDateSeparator = false)
+        val current = reducer.replace(
+            listOf(
+                MessageListItem.LoadingPrevItem,
+                oldSent,
+                unread,
+                oldPending,
+                newSent,
+                MessageListItem.LoadingNextItem,
+            )
+        )
+
+        val result = reducer.deleteAtOrBeforePreservingPending(current, createdAt = 2_500)
+
+        assertThat(result)
+            .containsExactly(
+                oldPending,
+                newSent,
+                MessageListItem.LoadingNextItem,
+            )
+            .inOrder()
+    }
+
+    @Test
+    fun `clear selection updates all selected rows without rebuilding structure`() {
+        val first = item(tid = 1).withMessage { copy(isSelected = true) }
+        val second = item(tid = 2).withMessage { copy(isSelected = false) }
+        val third = item(tid = 3).withMessage { copy(isSelected = true) }
+        val current = listOf(MessageListItem.LoadingPrevItem, first, second, third)
+        val reducer = reducer(enableDateSeparator = false)
+
+        val result = reducer.clearSelection(current)
+
+        assertThat(result.messages().map { it.message.isSelected })
+            .containsExactly(false, false, false)
+            .inOrder()
+        assertThat(result[0]).isSameInstanceAs(current[0])
+        assertThat(result[2]).isSameInstanceAs(second)
+        assertThat(reducer.clearSelection(result)).isSameInstanceAs(result)
+    }
+
+    @Test
+    fun `message reconciliation updates main rows and reply references atomically`() {
+        val parent = item(tid = 1, id = 100, body = "old")
+            .withMessage {
+                copy(
+                    deliveryStatus = MessageDeliveryStatus.Sent,
+                    isSelected = true,
+                )
+            }
+        val reply = item(tid = 2, id = 200).withMessage {
+            copy(parentMessage = parent.message)
+        }
+        val updatedParent = item(tid = 99, id = 100, body = "edited")
+            .withMessage { copy(deliveryStatus = MessageDeliveryStatus.Received) }
+        val unseen = item(tid = 3, id = 300, body = "not inserted")
+        val reducer = reducer(enableDateSeparator = false)
+        val current = reducer.replace(listOf(parent, reply))
+
+        val result = reducer.reconcileMessages(
+            current = current,
+            rowOnlyUpdates = emptyList(),
+            rowAndReplyUpdates = listOf(updatedParent, unseen),
+        )
+
+        assertThat(result.messages().map { it.message.tid }).containsExactly(99L, 2L).inOrder()
+        val main = result.messages()[0].message
+        val replyParent = result.messages()[1].message.parentMessage
+        assertThat(main.body).isEqualTo("edited")
+        assertThat(main.deliveryStatus).isEqualTo(MessageDeliveryStatus.Received)
+        assertThat(main.isSelected).isTrue()
+        assertThat(replyParent?.body).isEqualTo("edited")
+        assertThat(replyParent?.tid).isEqualTo(99L)
+        assertThat(replyParent?.deliveryStatus).isEqualTo(MessageDeliveryStatus.Received)
+    }
+
+    @Test
+    fun `main-only reconciliation does not rewrite reply references`() {
+        val parent = item(tid = 1, id = 100, body = "old")
+            .withMessage { copy(deliveryStatus = MessageDeliveryStatus.Sent) }
+        val reply = item(tid = 2, id = 200).withMessage {
+            copy(parentMessage = parent.message)
+        }
+        val statusUpdate = item(tid = 1, id = 100, body = "status update")
+            .withMessage { copy(deliveryStatus = MessageDeliveryStatus.Received) }
+        val reducer = reducer(enableDateSeparator = false)
+        val current = reducer.replace(listOf(parent, reply))
+
+        val result = reducer.reconcileMessages(
+            current = current,
+            rowOnlyUpdates = listOf(statusUpdate),
+            rowAndReplyUpdates = emptyList(),
+        )
+
+        assertThat(result.messages()[0].message.body).isEqualTo("status update")
+        assertThat(result.messages()[0].message.deliveryStatus)
+            .isEqualTo(MessageDeliveryStatus.Received)
+        assertThat(result.messages()[1].message.parentMessage?.body).isEqualTo("old")
+        assertThat(result.messages()[1].message.parentMessage?.deliveryStatus)
+            .isEqualTo(MessageDeliveryStatus.Sent)
+    }
+
+    @Test
+    fun `pending deleted reconciliation removes the main row and repairs separators`() {
+        val pending = item(tid = 1, id = 0, createdAt = 1_000)
+            .withMessage { copy(deliveryStatus = MessageDeliveryStatus.Pending) }
+        val next = item(tid = 2, createdAt = 2_000)
+        val deleted = pending.withMessage { copy(state = MessageState.Deleted) }
+        val reducer = reducer()
+        val current = reducer.replace(listOf(pending, next))
+
+        val result = reducer.reconcileMessages(
+            current = current,
+            rowOnlyUpdates = emptyList(),
+            rowAndReplyUpdates = listOf(deleted),
+        )
+
+        assertThat(result).containsExactly(date(next), next).inOrder()
+    }
+
+    @Test
+    fun `pending deletion does not rewrite an existing reply preview`() {
+        val pending = item(tid = 1, id = 0, body = "pending")
+            .withMessage { copy(deliveryStatus = MessageDeliveryStatus.Pending) }
+        val reply = item(tid = 2, id = 200).withMessage {
+            copy(parentMessage = pending.message)
+        }
+        val deleted = pending.withMessage { copy(state = MessageState.Deleted) }
+        val reducer = reducer(enableDateSeparator = false)
+        val current = reducer.replace(listOf(pending, reply))
+
+        val result = reducer.reconcileMessages(
+            current = current,
+            rowOnlyUpdates = emptyList(),
+            rowAndReplyUpdates = listOf(deleted),
+        )
+
+        assertThat(result.messages().map { it.message.tid }).containsExactly(2L)
+        assertThat(result.messages().single().message.parentMessage?.body).isEqualTo("pending")
+        assertThat(result.messages().single().message.parentMessage?.state)
+            .isNotEqualTo(MessageState.Deleted)
+    }
+
+    @Test
+    fun `stale pending delete cannot remove an established server row`() {
+        val current = item(tid = 1, id = 100, body = "server")
+            .withMessage { copy(deliveryStatus = MessageDeliveryStatus.Displayed) }
+        val staleDelete = item(tid = 1, id = 0, body = "stale")
+            .withMessage {
+                copy(
+                    deliveryStatus = MessageDeliveryStatus.Pending,
+                    state = MessageState.Deleted,
+                )
+            }
+        val reducer = reducer(enableDateSeparator = false)
+        val snapshot = reducer.replace(listOf(current))
+
+        val result = reducer.reconcileMessages(
+            current = snapshot,
+            rowOnlyUpdates = emptyList(),
+            rowAndReplyUpdates = listOf(staleDelete),
+        )
+
+        assertThat(result).isSameInstanceAs(snapshot)
+        assertThat(result.messages().single().message.id).isEqualTo(100)
+        assertThat(result.messages().single().message.body).isEqualTo("server")
     }
 
     private fun reducer(enableDateSeparator: Boolean = true) =

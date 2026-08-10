@@ -1,6 +1,8 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels
 
+import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
+import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytMessageType
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem.DateSeparatorItem
@@ -17,11 +19,25 @@ internal class MessageListItemsReducer(
     /** Rebuilds a canonical snapshot while preserving the supplied message order. */
     fun replace(items: List<MessageListItem>): List<MessageListItem> {
         return canonicalize(
-            messages = upsert(current = emptyList(), incoming = items.messages()),
+            messages = reconcileWindow(current = emptyList(), incoming = items.messages()),
             sourceItems = items,
             hasPrev = items.hasLoadingPrev(),
             hasNext = items.hasLoadingNext(),
         )
+    }
+
+    /** Replaces the visible window while reconciling overlapping rows with current state. */
+    fun replaceWindow(
+        current: List<MessageListItem>,
+        incoming: List<MessageListItem>,
+    ): List<MessageListItem> {
+        val result = canonicalize(
+            messages = reconcileWindow(current.messages(), incoming.messages()),
+            sourceItems = incoming,
+            hasPrev = incoming.hasLoadingPrev(),
+            hasNext = incoming.hasLoadingNext(),
+        )
+        return current.ifSameSnapshot(result)
     }
 
     /** Upserts an older page before current messages and adopts its previous-edge loader. */
@@ -73,6 +89,31 @@ internal class MessageListItemsReducer(
         return current.ifSameSnapshot(result)
     }
 
+    /** Removes the previous-edge loader if it is present. */
+    fun hideLoadingPrev(current: List<MessageListItem>): List<MessageListItem> {
+        if (!current.hasLoadingPrev()) return current
+        return current.filterNot { it is MessageListItem.LoadingPrevItem }
+    }
+
+    /** Removes the next-edge loader if it is present. */
+    fun hideLoadingNext(current: List<MessageListItem>): List<MessageListItem> {
+        if (!current.hasLoadingNext()) return current
+        return current.filterNot { it is MessageListItem.LoadingNextItem }
+    }
+
+    /** Removes the unread boundary and repairs the adjacent group/avatar boundary. */
+    fun removeUnreadSeparator(current: List<MessageListItem>): List<MessageListItem> {
+        if (current.none { it is UnreadMessagesSeparatorItem }) return current
+        val source = current.filterNot { it is UnreadMessagesSeparatorItem }
+        val result = canonicalize(
+            messages = source.messages(),
+            sourceItems = source,
+            hasPrev = current.hasLoadingPrev(),
+            hasNext = current.hasLoadingNext(),
+        )
+        return current.ifSameSnapshot(result)
+    }
+
     /** Updates one message by tid; returning the original item produces a no-op. */
     fun updateByTid(
         current: List<MessageListItem>,
@@ -116,6 +157,107 @@ internal class MessageListItemsReducer(
         val result = canonicalize(
             messages = current.messages().filterNot { it.message.tid in tids },
             sourceItems = current,
+            hasPrev = current.hasLoadingPrev(),
+            hasNext = current.hasLoadingNext(),
+        )
+        return current.ifSameSnapshot(result)
+    }
+
+    /** Deletes messages at or before [createdAt], retaining local pending messages. */
+    fun deleteAtOrBeforePreservingPending(
+        current: List<MessageListItem>,
+        createdAt: Long,
+    ): List<MessageListItem> {
+        val source = current.filterNot { item ->
+            item.getMessageCreatedAt() <= createdAt &&
+                    (item !is MessageItem ||
+                            item.message.deliveryStatus != MessageDeliveryStatus.Pending)
+        }
+        if (source.size == current.size) return current
+
+        val result = canonicalize(
+            messages = source.messages(),
+            sourceItems = source,
+            hasPrev = source.hasLoadingPrev(),
+            hasNext = source.hasLoadingNext(),
+        )
+        return current.ifSameSnapshot(result)
+    }
+
+    /** Clears selection on every visible message in one list mutation. */
+    fun clearSelection(current: List<MessageListItem>): List<MessageListItem> {
+        if (current.none { it is MessageItem && it.message.isSelected }) return current
+        return current.map { item ->
+            if (item is MessageItem && item.message.isSelected)
+                item.copy(message = item.message.copy(isSelected = false))
+            else item
+        }
+    }
+
+    /** Reconciles direct row updates and edit-like updates that also affect reply previews. */
+    fun reconcileMessages(
+        current: List<MessageListItem>,
+        rowOnlyUpdates: List<MessageItem>,
+        rowAndReplyUpdates: List<MessageItem>,
+    ): List<MessageListItem> {
+        if (rowOnlyUpdates.isEmpty() && rowAndReplyUpdates.isEmpty()) return current
+
+        val rowUpdatesByTid = LinkedHashMap<Long, MessageItem>()
+        rowOnlyUpdates.forEach { item ->
+            val existing = rowUpdatesByTid[item.message.tid]
+            rowUpdatesByTid[item.message.tid] = existing?.merge(item) ?: item
+        }
+        val withRepliesByTid = LinkedHashMap<Long, MessageItem>()
+        rowAndReplyUpdates.forEach { item ->
+            val existing = withRepliesByTid[item.message.tid]
+            withRepliesByTid[item.message.tid] = existing?.merge(item) ?: item
+        }
+        val withRepliesById = withRepliesByTid.values
+            .asSequence()
+            .filter { it.message.id > 0 }
+            .associateBy { it.message.id }
+
+        var changed = false
+        var requiresCanonicalization = false
+        val updated = current.mapNotNull { listItem ->
+            if (listItem !is MessageItem) return@mapNotNull listItem
+
+            val message = listItem.message
+            val localDelete = withRepliesByTid[message.tid]
+                ?.takeIf { message.id == 0L && it.isPendingDelete() }
+            if (localDelete != null) {
+                changed = true
+                requiresCanonicalization = true
+                return@mapNotNull null
+            }
+
+            val mainUpdate = withRepliesById[message.id].takeIf { message.id > 0 }
+                ?: rowUpdatesByTid[message.tid]
+            var result = mainUpdate?.let { listItem.merge(it) } ?: listItem
+            if (result !== listItem && listItem.affectsDerivedItemsComparedWith(result))
+                requiresCanonicalization = true
+
+            val parent = result.message.parentMessage
+            val parentUpdate = parent?.let { parentMessage ->
+                withRepliesById[parentMessage.id].takeIf { parentMessage.id > 0 }
+                    ?: withRepliesByTid[parentMessage.tid]
+                        ?.takeUnless { it.isPendingDelete() }
+            }
+            if (parent != null && parentUpdate != null) {
+                val updatedParent = parent.merge(parentUpdate.message)
+                if (updatedParent !== parent)
+                    result = result.copy(message = result.message.copy(parentMessage = updatedParent))
+            }
+
+            if (result !== listItem) changed = true
+            result
+        }
+        if (!changed) return current
+        if (!requiresCanonicalization) return updated
+
+        val result = canonicalize(
+            messages = upsert(current = emptyList(), incoming = updated.messages()),
+            sourceItems = updated,
             hasPrev = current.hasLoadingPrev(),
             hasNext = current.hasLoadingNext(),
         )
@@ -183,15 +325,37 @@ internal class MessageListItemsReducer(
         return tids.map { tid -> incomingByTid[tid] ?: requireNotNull(currentByTid[tid]) }
     }
 
+    /** Keeps only the incoming window while merging overlaps with the current snapshot. */
+    private fun reconcileWindow(
+        current: List<MessageItem>,
+        incoming: List<MessageItem>,
+    ): List<MessageItem> {
+        val currentByTid = LinkedHashMap<Long, MessageItem>()
+        current.forEach { item ->
+            val existing = currentByTid[item.message.tid]
+            currentByTid[item.message.tid] = existing?.merge(item) ?: item
+        }
+
+        val result = LinkedHashMap<Long, MessageItem>()
+        incoming.forEach { item ->
+            val existing = result[item.message.tid] ?: currentByTid[item.message.tid]
+            result[item.message.tid] = existing?.merge(item) ?: item
+        }
+        return result.values.toList()
+    }
+
     private fun MessageItem.merge(incoming: MessageItem): MessageItem {
         if (this === incoming) return this
-        if (message.id > 0 && incoming.message.id == 0L) return this
+        val updated = message.merge(incoming.message)
+        return if (updated === message) this else copy(message = updated)
+    }
 
-        val updated = message.getUpdateMessage(incoming.message)
-        val currentStatus = message.deliveryStatus
-        val incomingStatus = incoming.message.deliveryStatus
-        val deliveryStatus = currentStatus.advanceTo(incomingStatus)
-        return copy(message = updated.copy(deliveryStatus = deliveryStatus))
+    private fun SceytMessage.merge(incoming: SceytMessage): SceytMessage {
+        if (this === incoming) return this
+        if (id > 0 && incoming.id == 0L) return this
+
+        val updated = getUpdateMessage(incoming)
+        return updated.copy(deliveryStatus = deliveryStatus.advanceTo(incoming.deliveryStatus))
     }
 
     private fun MessageItem.normalizeUpdate(candidate: MessageItem): MessageItem {
@@ -199,6 +363,12 @@ internal class MessageListItemsReducer(
         val deliveryStatus = message.deliveryStatus.advanceTo(candidate.message.deliveryStatus)
         return if (deliveryStatus == candidate.message.deliveryStatus) candidate
         else candidate.copy(message = candidate.message.copy(deliveryStatus = deliveryStatus))
+    }
+
+    private fun MessageItem.isPendingDelete(): Boolean {
+        return message.id == 0L &&
+                message.deliveryStatus == MessageDeliveryStatus.Pending &&
+                message.state == MessageState.Deleted
     }
 
     private fun MessageDeliveryStatus.advanceTo(incoming: MessageDeliveryStatus): MessageDeliveryStatus {
@@ -212,6 +382,7 @@ internal class MessageListItemsReducer(
         val first = message
         val second = other.message
         return first.id != second.id ||
+                first.tid != second.tid ||
                 first.createdAt != second.createdAt ||
                 first.incoming != second.incoming ||
                 first.type != second.type ||
