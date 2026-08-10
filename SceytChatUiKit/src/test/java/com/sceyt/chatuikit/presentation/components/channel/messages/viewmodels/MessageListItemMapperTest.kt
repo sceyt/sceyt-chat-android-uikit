@@ -45,6 +45,48 @@ class MessageListItemMapperTest {
     }
 
     @Test
+    fun `map does not duplicate a same day separator across a page boundary`() {
+        val previousPageLast = createMessage(createdAt = 1_000, id = 1, tid = 1)
+        val nextPageFirst = createMessage(createdAt = 2_000, id = 2, tid = 2)
+
+        val result = mapper.map(
+            data = listOf(nextPageFirst),
+            hasNext = false,
+            hasPrev = false,
+            compareMessage = previousPageLast,
+            enableDateSeparator = true,
+            context = context()
+        )
+
+        assertThat(result.filterIsInstance<DateSeparatorItem>()).isEmpty()
+        assertThat(result.filterIsInstance<MessageItem>().map { it.message.tid })
+            .containsExactly(nextPageFirst.tid)
+    }
+
+    @Test
+    fun `map keeps a cross day separator across a page boundary`() {
+        val previousPageLast = createMessage(createdAt = 1_000, id = 1, tid = 1)
+        val nextPageFirst = createMessage(createdAt = 86_401_000, id = 2, tid = 2)
+
+        val result = mapper.map(
+            data = listOf(nextPageFirst),
+            hasNext = false,
+            hasPrev = false,
+            compareMessage = previousPageLast,
+            enableDateSeparator = true,
+            context = context()
+        )
+
+        assertThat(result.filterIsInstance<DateSeparatorItem>()).containsExactly(
+            DateSeparatorItem(
+                createdAt = nextPageFirst.createdAt,
+                messageTid = nextPageFirst.tid,
+                messageId = nextPageFirst.id,
+            )
+        )
+    }
+
+    @Test
     fun `map preserves selected and expanded message state`() {
         val message = createMessage(createdAt = 1_000, id = 1, tid = 10)
 
@@ -85,6 +127,28 @@ class MessageListItemMapperTest {
             )
         )
         assertThat(result[1]).isEqualTo(MessageItem(nextMessage))
+    }
+
+    @Test
+    fun `map suppresses unread separator when requested`() {
+        val pinnedMessage = createMessage(createdAt = 1_000, id = 1, tid = 1)
+        val nextMessage = createMessage(createdAt = 2_000, id = 2, tid = 2)
+        val channel = createChannel(id = 1, pinnedAt = 0, createdAt = 1)
+            .copy(lastMessage = createMessage(createdAt = 3_000, id = 3, tid = 3).copy(incoming = true))
+
+        val result = mapper.map(
+            data = listOf(nextMessage),
+            hasNext = false,
+            hasPrev = false,
+            compareMessage = pinnedMessage,
+            ignoreUnreadMessagesSeparator = true,
+            enableDateSeparator = false,
+            context = context(channel = channel, pinnedLastReadMessageId = pinnedMessage.id)
+        )
+
+        assertThat(result.filterIsInstance<MessageListItem.UnreadMessagesSeparatorItem>()).isEmpty()
+        assertThat(result.filterIsInstance<MessageItem>().map { it.message.tid })
+            .containsExactly(nextMessage.tid)
     }
 
     @Test

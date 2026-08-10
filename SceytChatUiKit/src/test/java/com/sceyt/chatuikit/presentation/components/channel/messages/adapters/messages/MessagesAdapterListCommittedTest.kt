@@ -6,6 +6,7 @@ import com.sceyt.chatuikit.createMessage
 import com.sceyt.chatuikit.presentation.common.collections.SyncArrayList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestCoroutineScheduler
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
@@ -113,6 +114,45 @@ class MessagesAdapterListCommittedTest {
         adapter.notifyUpdate(listOf(item(1), item(2)))
         advanceUntilIdle()
 
+        assertThat(count[0]).isEqualTo(1)
+    }
+
+    @Test
+    fun `newer notifyUpdate supersedes an already calculated but uncommitted older list`() {
+        val backgroundScheduler = TestCoroutineScheduler()
+        val mainScheduler = TestCoroutineScheduler()
+        val backgroundDispatcher = StandardTestDispatcher(backgroundScheduler)
+        val mainDispatcher = StandardTestDispatcher(mainScheduler)
+        val scope = mock<LifecycleCoroutineScope> {
+            on { coroutineContext } doReturn mainDispatcher
+        }
+        val adapter = MessagesAdapter(
+            messages = SyncArrayList(listOf(item(1))),
+            viewHolderFactory = mock(),
+            style = mock(),
+            scope = scope,
+            recyclerView = mock(),
+            backgroundDispatcher = backgroundDispatcher,
+            mainDispatcher = mainDispatcher,
+        )
+        val count = adapter.countCommits()
+
+        adapter.notifyUpdate(listOf(item(1), item(2)))
+        mainScheduler.runCurrent()
+        backgroundScheduler.runCurrent()
+
+        assertThat(adapter.getData()).containsExactly(item(1))
+        assertThat(count[0]).isEqualTo(0)
+
+        adapter.notifyUpdate(listOf(item(1), item(3)))
+        mainScheduler.runCurrent()
+        backgroundScheduler.runCurrent()
+        mainScheduler.runCurrent()
+
+        assertThat(
+            adapter.getData().filterIsInstance<MessageListItem.MessageItem>()
+                .map { it.message.tid }
+        ).containsExactly(1L, 3L).inOrder()
         assertThat(count[0]).isEqualTo(1)
     }
 }
