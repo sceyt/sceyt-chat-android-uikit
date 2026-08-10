@@ -14,15 +14,24 @@ internal class MessageListState(
         val revision: Long = 0,
     )
 
+    data class MutationResult(
+        val revision: Long,
+        val changed: Boolean,
+    )
+
+    data class ItemUpdateResult(
+        val revision: Long,
+        val found: Boolean,
+        val changed: Boolean,
+    )
+
     private val reducer = MessageListItemsReducer(enableDateSeparator)
     private val mutationLock = Any()
     private val _state = MutableStateFlow(Snapshot())
     val state = _state.asStateFlow()
 
     fun replace(items: List<MessageListItem>) = mutate { current ->
-        reducer.replace(items).let {
-            if (reducer.hasSameItemInstances(current, it)) current else it
-        }
+        reducer.replaceWindow(current, items)
     }
 
     fun prependPage(items: List<MessageListItem>) = mutate { current ->
@@ -37,13 +46,43 @@ internal class MessageListState(
         reducer.appendRealtime(current, items)
     }
 
+    fun hideLoadingPrev() = mutate(reducer::hideLoadingPrev)
+
+    fun hideLoadingNext() = mutate(reducer::hideLoadingNext)
+
+    fun removeUnreadSeparator() = mutate(reducer::removeUnreadSeparator)
+
     /** The callback runs once while state is locked; return the original item for a no-op. */
-    fun updateByTid(tid: Long, update: (MessageItem) -> MessageItem) = mutate { current ->
-        reducer.updateByTid(current, tid, update)
+    fun updateByTid(tid: Long, update: (MessageItem) -> MessageItem): ItemUpdateResult {
+        var found = false
+        val result = mutate { current ->
+            reducer.updateByTid(current, tid) { item ->
+                found = true
+                update(item)
+            }
+        }
+        return ItemUpdateResult(
+            revision = result.revision,
+            found = found,
+            changed = result.changed,
+        )
     }
 
     fun deleteByTids(tids: Set<Long>) = mutate { current ->
         reducer.deleteByTids(current, tids)
+    }
+
+    fun deleteAtOrBeforePreservingPending(createdAt: Long) = mutate { current ->
+        reducer.deleteAtOrBeforePreservingPending(current, createdAt)
+    }
+
+    fun clearSelection() = mutate(reducer::clearSelection)
+
+    fun reconcileMessages(
+        rowOnlyUpdates: List<MessageItem>,
+        rowAndReplyUpdates: List<MessageItem>,
+    ) = mutate { current ->
+        reducer.reconcileMessages(current, rowOnlyUpdates, rowAndReplyUpdates)
     }
 
     fun mergeAroundCenter(centerMessageId: Long, items: List<MessageListItem>) = mutate { current ->
@@ -52,12 +91,18 @@ internal class MessageListState(
 
     fun clear() = mutate { current -> if (current.isEmpty()) current else emptyList() }
 
-    private inline fun mutate(reduce: (List<MessageListItem>) -> List<MessageListItem>) {
-        synchronized(mutationLock) {
+    private inline fun mutate(
+        reduce: (List<MessageListItem>) -> List<MessageListItem>,
+    ): MutationResult {
+        return synchronized(mutationLock) {
             val current = _state.value
             val nextItems = reduce(current.items)
             if (nextItems !== current.items) {
-                _state.value = Snapshot(items = nextItems, revision = current.revision + 1)
+                val next = Snapshot(items = nextItems, revision = current.revision + 1)
+                _state.value = next
+                MutationResult(revision = next.revision, changed = true)
+            } else {
+                MutationResult(revision = current.revision, changed = false)
             }
         }
     }
