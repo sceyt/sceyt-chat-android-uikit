@@ -38,6 +38,18 @@ class MessagesAdapterNoDuplicatesTest {
             .copy(deliveryStatus = MessageDeliveryStatus.Sent)
     )
 
+    private fun sentItemAt(tid: Long, id: Long, createdAt: Long) =
+        sentItem(tid, id).let { item ->
+            item.copy(message = item.message.copy(createdAt = createdAt))
+        }
+
+    private fun dateItem(item: MessageListItem.MessageItem) =
+        MessageListItem.DateSeparatorItem(
+            createdAt = item.message.createdAt,
+            messageTid = item.message.tid,
+            messageId = item.message.id,
+        )
+
     private fun MessagesAdapter.messageItems() =
         getData().filterIsInstance<MessageListItem.MessageItem>()
 
@@ -81,6 +93,111 @@ class MessagesAdapterNoDuplicatesTest {
         val item = adapter.messageItems().single()
         assertThat(item.message.id).isEqualTo(110L)
         assertThat(item.message.deliveryStatus).isEqualTo(MessageDeliveryStatus.Sent)
+    }
+
+    @Test
+    fun `server echo updates fields while preserving local ui state and ordering time`() {
+        val pending = pendingItem(10).let { item ->
+            item.copy(
+                message = item.message.copy(
+                    body = "local body",
+                    createdAt = 1_000,
+                    isSelected = true,
+                    isBodyExpanded = true,
+                )
+            )
+        }
+        val server = sentItem(10, id = 110).let { item ->
+            item.copy(message = item.message.copy(body = "server body", createdAt = 2_000))
+        }
+        val adapter = adapter(listOf(pending))
+
+        adapter.addNewMessages(listOf(server))
+
+        val message = adapter.messageItems().single().message
+        assertThat(message.id).isEqualTo(110L)
+        assertThat(message.body).isEqualTo("server body")
+        assertThat(message.deliveryStatus).isEqualTo(MessageDeliveryStatus.Sent)
+        assertThat(message.createdAt).isEqualTo(1_000L)
+        assertThat(message.isSelected).isTrue()
+        assertThat(message.isBodyExpanded).isTrue()
+    }
+
+    @Test
+    fun `same day prepend keeps one date separator at the page boundary`() {
+        val currentMessage = sentItemAt(tid = 20, id = 120, createdAt = 2_000)
+        val adapter = adapter(listOf(dateItem(currentMessage), currentMessage))
+        val previousMessage = sentItemAt(tid = 10, id = 110, createdAt = 1_000)
+
+        adapter.addPrevPageMessagesList(
+            listOf(dateItem(previousMessage), previousMessage)
+        )
+
+        assertThat(adapter.getData())
+            .containsExactly(dateItem(previousMessage), previousMessage, currentMessage)
+            .inOrder()
+    }
+
+    @Test
+    fun `cross day prepend keeps both date separators at the page boundary`() {
+        val currentMessage = sentItemAt(tid = 20, id = 120, createdAt = 86_401_000)
+        val adapter = adapter(listOf(dateItem(currentMessage), currentMessage))
+        val previousMessage = sentItemAt(tid = 10, id = 110, createdAt = 1_000)
+
+        adapter.addPrevPageMessagesList(
+            listOf(dateItem(previousMessage), previousMessage)
+        )
+
+        assertThat(adapter.getData())
+            .containsExactly(
+                dateItem(previousMessage),
+                previousMessage,
+                dateItem(currentMessage),
+                currentMessage,
+            )
+            .inOrder()
+    }
+
+    @Test
+    fun `empty pages remove only their matching edge loader`() {
+        val message = sentItem(tid = 10, id = 110)
+        val previousAdapter = adapter(
+            listOf(MessageListItem.LoadingPrevItem, message, MessageListItem.LoadingNextItem)
+        )
+        val nextAdapter = adapter(
+            listOf(MessageListItem.LoadingPrevItem, message, MessageListItem.LoadingNextItem)
+        )
+
+        previousAdapter.addPrevPageMessagesList(emptyList())
+        nextAdapter.addNextPageMessagesList(emptyList())
+
+        assertThat(previousAdapter.getData())
+            .containsExactly(message, MessageListItem.LoadingNextItem)
+            .inOrder()
+        assertThat(nextAdapter.getData())
+            .containsExactly(MessageListItem.LoadingPrevItem, message)
+            .inOrder()
+    }
+
+    @Test
+    fun `duplicate only pages remove matching loader and retain the other edge`() {
+        val message = sentItem(tid = 10, id = 110)
+        val previousAdapter = adapter(
+            listOf(MessageListItem.LoadingPrevItem, message, MessageListItem.LoadingNextItem)
+        )
+        val nextAdapter = adapter(
+            listOf(MessageListItem.LoadingPrevItem, message, MessageListItem.LoadingNextItem)
+        )
+
+        previousAdapter.addPrevPageMessagesList(listOf(sentItem(tid = 10, id = 110)))
+        nextAdapter.addNextPageMessagesList(listOf(sentItem(tid = 10, id = 110)))
+
+        assertThat(previousAdapter.getData())
+            .containsExactly(message, MessageListItem.LoadingNextItem)
+            .inOrder()
+        assertThat(nextAdapter.getData())
+            .containsExactly(MessageListItem.LoadingPrevItem, message)
+            .inOrder()
     }
 
     @Test
