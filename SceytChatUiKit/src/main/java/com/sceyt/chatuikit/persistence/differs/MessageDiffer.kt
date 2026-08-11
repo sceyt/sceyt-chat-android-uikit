@@ -75,7 +75,8 @@ data class MessageDiff(
 fun SceytMessage.diff(other: SceytMessage): MessageDiff {
     return MessageDiff(
         edited = state != other.state,
-        bodyChanged = body != other.body || bodyAttributes != other.bodyAttributes,
+        bodyChanged = body != other.body || bodyAttributes != other.bodyAttributes ||
+                isBodyExpanded != other.isBodyExpanded,
         statusChanged = !incoming && deliveryStatus != other.deliveryStatus,
         avatarChanged = user?.avatarURL.equalsIgnoreNull(other.user?.avatarURL).not(),
         nameChanged = user?.fullName.equalsIgnoreNull(other.user?.fullName).not(),
@@ -96,7 +97,8 @@ fun SceytMessage.diff(other: SceytMessage): MessageDiff {
 fun SceytMessage.diffContent(other: SceytMessage): MessageDiff {
     return MessageDiff(
         edited = state != other.state,
-        bodyChanged = body != other.body || bodyAttributes != other.bodyAttributes,
+        bodyChanged = body != other.body || bodyAttributes != other.bodyAttributes ||
+                isBodyExpanded != other.isBodyExpanded,
         statusChanged = !incoming && deliveryStatus != other.deliveryStatus,
         avatarChanged = user?.avatarURL.equalsIgnoreNull(other.user?.avatarURL).not(),
         nameChanged = user?.fullName.equalsIgnoreNull(other.user?.fullName).not(),
