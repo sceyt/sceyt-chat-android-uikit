@@ -7,6 +7,7 @@ import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
+import com.sceyt.chatuikit.persistence.differs.diffContent
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.AttachmentMetadataPayload
@@ -45,6 +46,20 @@ class MessagesDiffUtilTest {
         )
 
         assertThat(diff.areItemsTheSame(0, 0)).isFalse()
+    }
+
+    @Test
+    fun `body expansion produces body payload`() {
+        val collapsed = messageItem(tid = 10)
+        val expanded = collapsed.copy(
+            message = collapsed.message.copy(isBodyExpanded = true)
+        )
+        val diff = MessagesDiffUtil(listOf(collapsed), listOf(expanded))
+
+        assertThat(diff.areItemsTheSame(0, 0)).isTrue()
+        assertThat(diff.areContentsTheSame(0, 0)).isFalse()
+        assertThat((diff.getChangePayload(0, 0) as MessageDiff).bodyChanged).isTrue()
+        assertThat(collapsed.message.diffContent(expanded.message).bodyChanged).isTrue()
     }
 
     @Test
