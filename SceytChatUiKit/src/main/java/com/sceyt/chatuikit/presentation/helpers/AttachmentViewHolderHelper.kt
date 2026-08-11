@@ -56,12 +56,16 @@ class AttachmentViewHolderHelper(itemView: View) {
             .into(imageView)
     }
 
-    fun drawThumbOrRequest(imageView: ImageView, requestThumb: () -> Unit) {
+    fun drawThumbOrRequest(
+        imageView: ImageView,
+        requestThumb: () -> Unit,
+        fallback: Drawable? = null,
+    ) {
         if (isFileItemInitialized.not()) return
         if (!fileItem.thumbPath.isNullOrBlank())
             drawImageWithBlurredThumb(fileItem.thumbPath, imageView)
         else {
-            loadBlurThumb(blurredThumb, imageView)
+            loadBlurThumb(blurredThumb ?: fallback, imageView)
             requestThumb()
         }
     }
