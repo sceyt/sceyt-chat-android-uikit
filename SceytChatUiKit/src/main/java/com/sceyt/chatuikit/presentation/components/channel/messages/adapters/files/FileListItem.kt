@@ -53,6 +53,19 @@ class FileListItem(
         _transferData = transferData
     }
 
+    /** Copies holder-mutable thumb and transfer state; parsed bitmap/audio values remain shared. */
+    internal fun copy(
+        attachment: SceytAttachment = this.attachment,
+        thumbPath: String? = this.thumbPath,
+        transferData: TransferData? = this.transferData,
+    ) = FileListItem(
+        _attachment = attachment,
+        _metadataPayload = _metadataPayload.copy(),
+        _thumbPath = thumbPath,
+        _transferData = transferData?.copy(),
+        type = type,
+    )
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is FileListItem) return false
