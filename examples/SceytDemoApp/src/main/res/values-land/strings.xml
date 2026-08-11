@@ -1,0 +1,5 @@
+<resources>
+    <!-- Landscape: no line breaks, vertical space is tight and views would overlap -->
+    <string name="login_screen_title">Fast and Seamless Chat API</string>
+    <string name="no_created_channels_description">You haven’t created channels yet, create one for sending messages.</string>
+</resources>
