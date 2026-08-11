@@ -6,6 +6,7 @@ import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytPresence
 import com.sceyt.chatuikit.persistence.mappers.getInfoFromMetadata
+import com.sceyt.chatuikit.persistence.mappers.getVisualMediaType
 import com.sceyt.chatuikit.persistence.mappers.toSceytUser
 import com.sceyt.chatuikit.persistence.mappers.toTransferData
 import com.sceyt.chatuikit.persistence.mappers.toUser
@@ -35,7 +36,8 @@ fun SceytAttachment.toFileListItem(): FileListItem {
         _metadataPayload = getInfoFromMetadata(),
         type = type,
         _thumbPath = null,
-        _transferData = toTransferData()
+        _transferData = toTransferData(),
+        isMediaFile = type == AttachmentTypeEnum.File && getVisualMediaType() != null
     ).applyLatestTransferState(ThumbFor.MessagesLisView)
 }
 
