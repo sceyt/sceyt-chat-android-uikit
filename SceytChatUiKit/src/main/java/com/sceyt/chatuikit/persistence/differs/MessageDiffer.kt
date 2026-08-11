@@ -2,7 +2,9 @@ package com.sceyt.chatuikit.persistence.differs
 
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytPollDetails
+import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.persistence.extensions.equalsIgnoreNull
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.extensions.isSelfDestructed
 
 data class MessageDiff(
@@ -78,13 +80,12 @@ fun SceytMessage.diff(other: SceytMessage): MessageDiff {
         avatarChanged = user?.avatarURL.equalsIgnoreNull(other.user?.avatarURL).not(),
         nameChanged = user?.fullName.equalsIgnoreNull(other.user?.fullName).not(),
         replyCountChanged = replyCount != other.replyCount,
-        replyContainerChanged = parentMessage != other.parentMessage || parentMessage?.user != other.parentMessage?.user
-                || parentMessage?.state != other.parentMessage?.state || parentMessage?.body != other.parentMessage?.body,
+        replyContainerChanged = hasReplyContentDifference(other),
         reactionsChanged = messageReactions?.equalsIgnoreNull(other.messageReactions)?.not()
             ?: other.reactionTotals.isNullOrEmpty().not(),
         showAvatarAndNameChanged = shouldShowAvatarAndName != other.shouldShowAvatarAndName
                 || disabledShowAvatarAndName != other.disabledShowAvatarAndName,
-        filesChanged = attachments?.size != other.attachments?.size,
+        filesChanged = hasFileContentDifference(other),
         selectionChanged = isSelected != other.isSelected,
         metadataChanged = metadata != other.metadata,
         pollChanged = poll?.pollChanged(other.poll) ?: (other.poll != null),
@@ -100,12 +101,11 @@ fun SceytMessage.diffContent(other: SceytMessage): MessageDiff {
         avatarChanged = user?.avatarURL.equalsIgnoreNull(other.user?.avatarURL).not(),
         nameChanged = user?.fullName.equalsIgnoreNull(other.user?.fullName).not(),
         replyCountChanged = replyCount != other.replyCount,
-        replyContainerChanged = parentMessage != other.parentMessage || parentMessage?.user != other.parentMessage?.user
-                || parentMessage?.state != other.parentMessage?.state || parentMessage?.body != other.parentMessage?.body,
+        replyContainerChanged = hasReplyContentDifference(other),
         reactionsChanged = reactionTotals?.equalsIgnoreNull(other.reactionTotals)?.not()
             ?: other.reactionTotals.isNullOrEmpty().not(),
         showAvatarAndNameChanged = false,
-        filesChanged = attachments?.size != other.attachments?.size,
+        filesChanged = hasFileContentDifference(other),
         selectionChanged = isSelected != other.isSelected,
         metadataChanged = metadata != other.metadata,
         pollChanged = poll?.pollChanged(other.poll) ?: (other.poll != null),
@@ -118,6 +118,52 @@ fun SceytMessage.isSelfDestructedChanged(other: SceytMessage): Boolean {
         return false
 
     return isSelfDestructed() != other.isSelfDestructed()
+}
+
+private fun SceytMessage.hasFileContentDifference(other: SceytMessage): Boolean {
+    return attachments.hasAttachmentContentDifference(other.attachments) ||
+            files.hasRenderStateDifference(other.files)
+}
+
+private fun List<FileListItem>?.hasRenderStateDifference(other: List<FileListItem>?): Boolean {
+    if (this === other) return false
+    val first = orEmpty()
+    val second = other.orEmpty()
+    if (first.size != second.size) return true
+
+    return first.indices.any {
+        first[it].attachment.hasContentDifferenceIgnoringProgress(second[it].attachment) ||
+                first[it].thumbPath != second[it].thumbPath
+    }
+}
+
+private fun SceytMessage.hasReplyContentDifference(other: SceytMessage): Boolean {
+    return parentMessage?.id != other.parentMessage?.id ||
+            parentMessage?.tid != other.parentMessage?.tid ||
+            parentMessage?.user != other.parentMessage?.user ||
+            parentMessage?.state != other.parentMessage?.state ||
+            parentMessage?.body != other.parentMessage?.body ||
+            parentMessage?.attachments.hasAttachmentContentDifference(
+                other.parentMessage?.attachments
+            )
+}
+
+private fun List<SceytAttachment>?.hasAttachmentContentDifference(
+    other: List<SceytAttachment>?,
+): Boolean {
+    if (this === other) return false
+    if (this == null || other == null || size != other.size) return true
+    return indices.any { get(it).hasContentDifferenceIgnoringProgress(other[it]) }
+}
+
+private fun SceytAttachment.hasContentDifferenceIgnoringProgress(
+    other: SceytAttachment,
+): Boolean {
+    if (linkPreviewDetails != other.linkPreviewDetails) return true
+    if (this == other) return false
+    if (progressPercent == other.progressPercent) return true
+
+    return copy(progressPercent = other.progressPercent) != other
 }
 
 fun SceytPollDetails.pollChanged(other: SceytPollDetails?): Boolean {

@@ -6,8 +6,8 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
-import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.presentation.custom_views.VideoControllerView
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.holders.BaseMessageFileViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.holders.FilesViewHolderFactory
@@ -15,9 +15,11 @@ import com.sceyt.chatuikit.shared.utils.MyDiffUtil
 
 class MessageFilesAdapter(
         private val message: SceytMessage,
-        private var files: List<FileListItem>,
+        files: List<FileListItem>,
         private var viewHolderFactory: FilesViewHolderFactory
 ) : RecyclerView.Adapter<BaseMessageFileViewHolder>() {
+
+    private var files = files.map { it.copy() }
 
     val videoControllersList = arrayListOf<VideoControllerView>()
 
@@ -59,16 +61,22 @@ class MessageFilesAdapter(
     fun getData() = files
 
     fun notifyUpdate(list: List<FileListItem>) {
-        val myDiffUtil = MyDiffUtil(files, list)
-        val productDiffResult = DiffUtil.calculateDiff(myDiffUtil, true)
-        productDiffResult.dispatchUpdatesTo(this)
-        val thumbs = files.map { Pair(it.thumbPath, it.attachment.messageTid) }
-        files = list.map {
-            thumbs.find { longPair -> longPair.second == it.attachment.messageTid }?.let { pair ->
-                it.updateThumbPath(pair.first)
+        val unmatchedOld = files.toMutableList()
+        val detached = list.map { item ->
+            val oldIndex = unmatchedOld.indexOfFirst {
+                it.attachment.hasSameFileIdentity(item.attachment)
             }
-            it
-        }.toArrayList()
+            val old = if (oldIndex == -1) null else unmatchedOld.removeAt(oldIndex)
+            val thumbPath = item.thumbPath
+                ?.takeIf { it.isNotBlank() }
+                ?: old?.thumbPath
+
+            item.copy(thumbPath = thumbPath)
+        }
+
+        val diff = DiffUtil.calculateDiff(MyDiffUtil(files, detached), true)
+        files = detached
+        diff.dispatchUpdatesTo(this)
     }
 
     private fun observeToAppLifeCycle() {
@@ -78,3 +86,21 @@ class MessageFilesAdapter(
         })
     }
 }
+
+private fun SceytAttachment.hasSameFileIdentity(other: SceytAttachment): Boolean {
+    if (messageTid != other.messageTid) return false
+
+    val firstId = id?.takeIf { it > 0 }
+    val secondId = other.id?.takeIf { it > 0 }
+    if (firstId != null && secondId != null)
+        return firstId == secondId
+
+    return url.sameNonBlank(other.url) ||
+            originalFilePath.sameNonBlank(other.originalFilePath) ||
+            originalFilePath.sameNonBlank(other.filePath) ||
+            filePath.sameNonBlank(other.originalFilePath) ||
+            filePath.sameNonBlank(other.filePath)
+}
+
+private fun String?.sameNonBlank(other: String?) =
+    !isNullOrBlank() && this == other
