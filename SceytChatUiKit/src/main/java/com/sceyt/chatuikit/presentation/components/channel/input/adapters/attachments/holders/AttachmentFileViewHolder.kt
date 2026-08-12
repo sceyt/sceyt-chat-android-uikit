@@ -1,9 +1,14 @@
 package com.sceyt.chatuikit.presentation.components.channel.input.adapters.attachments.holders
 
+import androidx.core.graphics.drawable.toDrawable
+import androidx.core.view.isVisible
+import com.bumptech.glide.Glide
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytItemInputFileAttachmentBinding
 import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
+import com.sceyt.chatuikit.persistence.mappers.getThumbFromMetadata
+import com.sceyt.chatuikit.persistence.mappers.getVisualMediaType
 import com.sceyt.chatuikit.persistence.mappers.toSceytAttachment
 import com.sceyt.chatuikit.presentation.components.channel.input.adapters.attachments.AttachmentItem
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.AttachmentClickListeners
@@ -22,6 +27,21 @@ class AttachmentFileViewHolder(
 
     override fun bind(item: AttachmentItem) {
         with(binding) {
+            val isMediaFile = item.attachment.getVisualMediaType() != null
+            icFile.isVisible = !isMediaFile
+            fileThumb.isVisible = isMediaFile
+            if (isMediaFile) {
+                val placeholder = getThumbFromMetadata(item.attachment.metadata)
+                    ?.toDrawable(context.resources)?.mutate()
+                    ?: style.fileAttachmentBackgroundColor.toDrawable()
+                Glide.with(context)
+                    .load(item.attachment.filePath)
+                    .placeholder(placeholder)
+                    .into(fileThumb)
+            } else {
+                Glide.with(context).clear(fileThumb)
+            }
+
             tvFileName.text = item.attachment.name
             val sceytAttachment = item.attachment.toSceytAttachment(
                 messageTid = 0L,
