@@ -176,7 +176,7 @@ class IncFileMessageViewHolder(
 
     private fun drawMediaThumbOrRequestIfNeeded(drawThumb: Boolean = true): Boolean {
         if (fileItem.isMediaFile && drawThumb) drawMediaThumbOrRequest()
-        return fileItem.isMediaFile && binding.fileThumb.isVisible
+        return fileItem.isMediaFile
     }
 
     private fun drawMediaThumbOrRequest() {
