@@ -36,10 +36,11 @@ import com.sceyt.chatuikit.persistence.database.dao.UserDao
 import com.sceyt.chatuikit.persistence.database.entity.messages.AttachmentEntity
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
-import com.sceyt.chatuikit.persistence.logicimpl.channel.PendingChannelMigrationLock
+import com.sceyt.chatuikit.persistence.logicimpl.channel.PendingChannelCoordinator
 import com.sceyt.chatuikit.persistence.logicimpl.channel.PersistenceChannelsLogicImpl
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
 import com.sceyt.chatuikit.persistence.logicimpl.sync.ChannelSyncStateStore
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.InsertChannelWithMembersUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.CreatePendingChannelUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.FindExistingChannelByMembersUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.FindRealChannelForPendingUseCase
@@ -133,6 +134,39 @@ class PendingChannelScenarioTests : SceytKoinComponent {
     }
 
     @Test
+    fun syncChannels_shouldMigratePendingChannelWhenRealChannelHasSameUri() = runTest {
+        val uri = "same-uri-sync"
+        val peerId = "same-uri-sync-peer"
+        val pendingChannel = channelLogic.findOrCreatePendingChannelByUri(
+            CreateChannelData(
+                type = ChannelTypeEnum.Direct.value,
+                uri = uri,
+                members = listOf(SceytMember(SceytUser(peerId), "participant"))
+            )
+        ).successData()
+        seedLocalState(
+            channelId = pendingChannel.id,
+            messageTid = 9006,
+            draftBody = "same uri sync draft"
+        )
+        val realChannel = directChannel(id = 5007, peerId = peerId, uri = uri)
+        channelsRepository.syncResults = listOf(
+            SyncResult.Proportion(listOf(realChannel)),
+            SyncResult.SuccessfullyFinished
+        )
+
+        channelLogic.syncChannels(directConfig()).toList()
+
+        assertMergedPendingChannel(
+            pendingChannelId = pendingChannel.id,
+            realChannelId = realChannel.id,
+            movedMessageTid = 9006,
+            draftBody = "same uri sync draft"
+        )
+        assertThat(channelDao.getChannelByUri(uri)?.channelEntity?.id).isEqualTo(realChannel.id)
+    }
+
+    @Test
     fun createNewChannelInsteadOfPendingChannel_shouldMigratePendingLocalStateFromCreateResponse() = runTest {
         val peerId = "create-peer"
         val pendingChannel = createPendingDirect(peerId)
@@ -152,6 +186,36 @@ class PendingChannelScenarioTests : SceytKoinComponent {
             realChannelId = realChannel.id,
             movedMessageTid = 9002,
             draftBody = "create draft"
+        )
+    }
+
+    @Test
+    fun createNewChannelInsteadOfPendingChannel_shouldMigrateWhenCreateResponseHasSameUri() = runTest {
+        val uri = "create-response-uri"
+        val peerId = "same-uri-create-peer"
+        val pendingChannel = channelLogic.findOrCreatePendingChannelByUri(
+            CreateChannelData(
+                type = ChannelTypeEnum.Direct.value,
+                uri = uri,
+                members = listOf(SceytMember(SceytUser(peerId), "participant"))
+            )
+        ).successData()
+        seedLocalState(
+            channelId = pendingChannel.id,
+            messageTid = 9005,
+            draftBody = "same uri create draft"
+        )
+        val realChannel = directChannel(id = 5006, peerId = peerId, uri = uri)
+        channelsRepository.createChannelResponse = SceytResponse.Success(realChannel)
+
+        val response = channelLogic.createNewChannelInsteadOfPendingChannel(pendingChannel)
+
+        assertThat(response.successData().id).isEqualTo(realChannel.id)
+        assertMergedPendingChannel(
+            pendingChannelId = pendingChannel.id,
+            realChannelId = realChannel.id,
+            movedMessageTid = 9005,
+            draftBody = "same uri create draft"
         )
     }
 
@@ -253,6 +317,17 @@ class PendingChannelScenarioTests : SceytKoinComponent {
     }
 
     private fun createChannelLogic(repository: ChannelsRepository): PersistenceChannelsLogic {
+        val pendingChannelCoordinator = PendingChannelCoordinator(
+            channelsRepository = repository,
+            channelDao = channelDao,
+            channelsCache = channelsCache,
+            findExistingChannelByMembersUseCase = getKoin().get<FindExistingChannelByMembersUseCase>(),
+            createPendingChannelUseCase = getKoin().get<CreatePendingChannelUseCase>(),
+            findRealChannelForPendingUseCase = getKoin().get<FindRealChannelForPendingUseCase>(),
+            migratePendingChannelToRealChannelUseCase = getKoin().get<MigratePendingChannelToRealChannelUseCase>(),
+            mergePendingDirectChannelsUseCase = getKoin().get<MergePendingDirectChannelsUseCase>(),
+            insertChannelWithMembersUseCase = getKoin().get<InsertChannelWithMembersUseCase>()
+        )
         return PersistenceChannelsLogicImpl(
             context = ApplicationProvider.getApplicationContext(),
             channelsRepository = repository,
@@ -266,12 +341,8 @@ class PendingChannelScenarioTests : SceytKoinComponent {
             pendingReactionDao = getKoin().get<PendingReactionDao>(),
             channelsCache = channelsCache,
             channelSyncStateStore = getKoin().get<ChannelSyncStateStore>(),
-            pendingChannelMigrationLock = getKoin().get<PendingChannelMigrationLock>(),
-            findExistingChannelByMembersUseCase = getKoin().get<FindExistingChannelByMembersUseCase>(),
-            createPendingChannelUseCase = getKoin().get<CreatePendingChannelUseCase>(),
-            findRealChannelForPendingUseCase = getKoin().get<FindRealChannelForPendingUseCase>(),
-            migratePendingChannelToRealChannelUseCase = getKoin().get<MigratePendingChannelToRealChannelUseCase>(),
-            mergePendingDirectChannelsUseCase = getKoin().get<MergePendingDirectChannelsUseCase>()
+            pendingChannelCoordinator = pendingChannelCoordinator,
+            insertChannelWithMembersUseCase = getKoin().get<InsertChannelWithMembersUseCase>(),
         )
     }
 
