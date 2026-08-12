@@ -17,10 +17,10 @@ import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytFragmentMessageActionsBinding
-import com.sceyt.chatuikit.extensions.isEqualsVideoOrImage
 import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
 import com.sceyt.chatuikit.formatters.attributes.MessageBodyFormatterAttributes
 import com.sceyt.chatuikit.persistence.mappers.getThumbFromMetadata
+import com.sceyt.chatuikit.persistence.mappers.getVisualMediaType
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.MessageInputClickListeners.CancelReplyMessageViewClickListener
 import com.sceyt.chatuikit.presentation.extensions.isSupportedType
 import com.sceyt.chatuikit.providers.VisualProvider
@@ -173,7 +173,7 @@ class MessageActionsView @JvmOverloads constructor(
             if (others.isNotEmpty()) {
                 val attachment = others[0]
                 when {
-                    attachment.type.isEqualsVideoOrImage() -> {
+                    attachment.getVisualMediaType() != null -> {
                         loadImage(imageAttachment, attachment.metadata, attachment.filePath)
                     }
 

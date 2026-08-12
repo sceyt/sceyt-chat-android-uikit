@@ -2,6 +2,7 @@ package com.sceyt.chatuikit.persistence.mappers
 
 import android.util.Size
 import com.google.common.truth.Truth.assertThat
+import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chatuikit.data.constants.SceytConstants
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
@@ -39,6 +40,17 @@ class AttachmentMediaTypeTest {
     @Test
     fun `regular file is not visual media`() {
         assertThat(attachment("document.pdf").getVisualMediaType()).isNull()
+    }
+
+    @Test
+    fun `input file attachment with video extension is visual media`() {
+        val attachment = Attachment.Builder(
+            "/cache/video.mp4",
+            "",
+            AttachmentTypeEnum.File.value,
+        ).setName("video.mp4").build()
+
+        assertThat(attachment.getVisualMediaType()).isEqualTo(AttachmentTypeEnum.Video)
     }
 
     @Test

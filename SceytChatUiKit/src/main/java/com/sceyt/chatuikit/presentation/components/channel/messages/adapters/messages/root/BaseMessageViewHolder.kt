@@ -54,6 +54,7 @@ import com.sceyt.chatuikit.formatters.attributes.MessageBodyFormatterAttributes
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.persistence.mappers.getThumbFromMetadata
+import com.sceyt.chatuikit.persistence.mappers.getVisualMediaType
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.reactions.ReactionItem
@@ -285,8 +286,17 @@ abstract class BaseMessageViewHolder(
                     }
                 }
                 when {
-                    attachment?.type.isEqualsVideoOrImage() -> {
-                        loadReplyMessageImageOrObserveToDownload(attachment, imageAttachment)
+                    attachment?.getVisualMediaType() != null -> {
+                        val fallback = if (attachment.type == AttachmentTypeEnum.File.value) {
+                            if (message.incoming)
+                                itemStyle.incomingFileMediaThumbPlaceholder
+                            else itemStyle.outgoingFileMediaThumbPlaceholder
+                        } else null
+                        loadReplyMessageImageOrObserveToDownload(
+                            attachment = attachment,
+                            imageAttachment = imageAttachment,
+                            fallback = fallback
+                        )
                         imageAttachment.isVisible = true
                         icFile.isVisible = false
                     }
@@ -347,13 +357,14 @@ abstract class BaseMessageViewHolder(
 
     protected open fun loadReplyMessageImageOrObserveToDownload(
         attachment: SceytAttachment?,
-        imageAttachment: ImageView
+        imageAttachment: ImageView,
+        fallback: Drawable? = null,
     ) {
         attachment ?: return
         val path = attachment.filePath
         val placeHolder = getThumbFromMetadata(
             metadata = attachment.metadata
-        )?.toDrawable(context.resources)?.mutate()
+        )?.toDrawable(context.resources)?.mutate() ?: fallback
 
         fun loadImage(filePath: String?) {
             Glide.with(itemView.context.applicationContext)

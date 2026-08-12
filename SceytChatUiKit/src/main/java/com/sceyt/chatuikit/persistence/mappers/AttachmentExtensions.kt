@@ -157,7 +157,17 @@ fun SceytAttachment.existThumb(): Boolean {
     }
 }
 
-fun SceytAttachment.getVisualMediaType(): AttachmentTypeEnum? {
+fun Attachment.getVisualMediaType(): AttachmentTypeEnum? =
+    getVisualMediaType(type, name, filePath)
+
+fun SceytAttachment.getVisualMediaType(): AttachmentTypeEnum? =
+    getVisualMediaType(type, name, filePath)
+
+private fun getVisualMediaType(
+    type: String?,
+    name: String?,
+    filePath: String?,
+): AttachmentTypeEnum? {
     when (type) {
         AttachmentTypeEnum.Image.value -> return AttachmentTypeEnum.Image
         AttachmentTypeEnum.Video.value -> return AttachmentTypeEnum.Video
