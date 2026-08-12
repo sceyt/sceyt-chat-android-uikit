@@ -191,9 +191,11 @@ class MessageActionsView @JvmOverloads constructor(
             } else {
                 val attachment = links[0]
                 val icon = attachmentIconProvider.provide(context, attachment)
-                attachment.linkPreviewDetails?.imageUrl?.let {
-                    loadImage(imageAttachment, attachment.metadata, it, icon)
-                } ?: imageAttachment.setImageDrawable(icon)
+                val linkDetails = attachment.linkPreviewDetails
+                val url = linkDetails?.imageUrl
+                if (linkDetails?.shouldShowImage == true)
+                    loadImage(imageAttachment, attachment.metadata, url, icon)
+                else imageAttachment.setImageDrawable(icon)
             }
         }
     }

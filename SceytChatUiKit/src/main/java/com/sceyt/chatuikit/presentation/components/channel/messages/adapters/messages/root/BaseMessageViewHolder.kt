@@ -387,10 +387,10 @@ abstract class BaseMessageViewHolder(
         icon: Drawable?
     ) {
         attachment ?: return
-        val url = attachment.linkPreviewDetails?.imageUrl
-        if (!url.isNullOrBlank()) {
+        val linkDetails = attachment.linkPreviewDetails
+        if (linkDetails?.shouldShowImage == true) {
             Glide.with(itemView.context)
-                .load(url)
+                .load(linkDetails.imageUrl)
                 .placeholder(icon)
                 .error(icon)
                 .override(imageAttachment.width, imageAttachment.height)
