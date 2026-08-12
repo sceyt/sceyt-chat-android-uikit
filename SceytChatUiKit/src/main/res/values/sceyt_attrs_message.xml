@@ -87,6 +87,8 @@
         <attr name="sceytUiMessagesListReactionsContainerBackgroundColor" format="reference|color" />
         <attr name="sceytUiMessagesListHighlightedMessageColor" format="reference|color" />
         <attr name="sceytUiMessagesListLinkTextColor" format="reference|color" />
+        <attr name="sceytUiMessagesListIncomingFileMediaThumbPlaceholder" format="reference|color" />
+        <attr name="sceytUiMessagesListOutgoingFileMediaThumbPlaceholder" format="reference|color" />
         <attr name="sceytUiMessagesListVideoIcon" format="reference" />
         <attr name="sceytUiMessagesListSwipeToReplyIcon" format="reference" />
         <attr name="sceytUiMessagesListForwardedIcon" format="reference" />

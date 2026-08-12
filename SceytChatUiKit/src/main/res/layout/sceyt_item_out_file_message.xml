@@ -101,39 +101,53 @@
             android:contentDescription="@string/sceyt_cd_open_outgoing_file_message"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            app:layout_constraintBottom_toBottomOf="@+id/icFile"
-            app:layout_constraintTop_toTopOf="@+id/icFile" />
+            app:layout_constraintBottom_toBottomOf="@+id/filePreviewContainer"
+            app:layout_constraintTop_toTopOf="@+id/filePreviewContainer" />
 
-        <androidx.appcompat.widget.AppCompatImageView
-            android:id="@+id/icFile"
-            android:contentDescription="@string/sceyt_cd_outgoing_file_message_file"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_gravity="center"
+        <FrameLayout
+            android:id="@+id/filePreviewContainer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_marginVertical="8dp"
-            android:layout_marginStart="12dp"
-            android:background="@drawable/sceyt_bg_circle"
-            android:padding="10dp"
+            android:layout_marginStart="8dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/messageBody"
-            app:srcCompat="@drawable/sceyt_ic_file_filled" />
+            app:layout_constraintTop_toBottomOf="@+id/messageBody">
 
-        <com.sceyt.chatuikit.presentation.custom_views.CircularProgressView
-            android:id="@+id/loadProgress"
-            android:contentDescription="@string/sceyt_cd_load_outgoing_file_message"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:padding="1dp"
-            android:visibility="gone"
-            app:layout_constraintBottom_toBottomOf="@+id/icFile"
-            app:layout_constraintEnd_toEndOf="@id/icFile"
-            app:layout_constraintStart_toStartOf="@+id/icFile"
-            app:layout_constraintTop_toTopOf="@+id/icFile"
-            app:sceytUiProgressColor="@color/sceyt_color_on_primary"
-            app:sceytUiProgressIconSizeInPercent="65"
-            app:sceytUiProgressMinProgress="2"
-            app:sceytUiProgressTrackColor="@android:color/transparent" />
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/icFile"
+                android:contentDescription="@string/sceyt_cd_outgoing_file_message_file"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_gravity="center"
+                android:background="@drawable/sceyt_bg_circle"
+                android:padding="10dp"
+                app:srcCompat="@drawable/sceyt_ic_file_filled" />
+
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/fileThumb"
+                android:contentDescription="@string/sceyt_cd_outgoing_file_message_file"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_gravity="center"
+                android:scaleType="centerCrop"
+                android:visibility="gone"
+                app:shapeAppearanceOverlay="@style/SceytShapeAppearanceOverlay.CornerSize8" />
+
+            <com.sceyt.chatuikit.presentation.custom_views.CircularProgressView
+                android:id="@+id/loadProgress"
+                android:contentDescription="@string/sceyt_cd_load_outgoing_file_message"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_gravity="center"
+                android:padding="1dp"
+                android:visibility="gone"
+                app:sceytUiProgressColor="@color/sceyt_color_on_primary"
+                app:sceytUiProgressIconSizeInPercent="65"
+                app:sceytUiProgressMinProgress="2"
+                app:sceytUiProgressTrackColor="@android:color/transparent" />
+
+        </FrameLayout>
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/tvFileName"
@@ -149,8 +163,8 @@
             app:layout_constrainedWidth="true"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0"
-            app:layout_constraintStart_toEndOf="@+id/icFile"
-            app:layout_constraintTop_toTopOf="@+id/icFile"
+            app:layout_constraintStart_toEndOf="@+id/filePreviewContainer"
+            app:layout_constraintTop_toTopOf="@+id/filePreviewContainer"
             tools:text="Montagabold.pdf" />
 
         <androidx.appcompat.widget.AppCompatTextView
@@ -158,9 +172,15 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="5dp"
+            android:layout_marginEnd="4dp"
+            android:ellipsize="end"
             android:includeFontPadding="false"
+            android:singleLine="true"
             android:textColor="@color/sceyt_color_text_secondary"
             android:textSize="@dimen/tinyTextSize"
+            app:layout_constrainedWidth="true"
+            app:layout_constraintEnd_toStartOf="@+id/messageDate"
+            app:layout_constraintHorizontal_bias="0"
             app:layout_constraintStart_toStartOf="@+id/tvFileName"
             app:layout_constraintTop_toBottomOf="@+id/tvFileName"
             tools:text="67 KB" />

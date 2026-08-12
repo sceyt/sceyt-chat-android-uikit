@@ -1,5 +1,8 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders
 
+import android.graphics.Color
+import android.view.ViewGroup
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.SceytChatUIKit
@@ -103,8 +106,10 @@ class IncFileMessageViewHolder(
             if (diff.replyContainerChanged)
                 setReplyMessageContainer(message, binding.viewReply, false)
 
-            if (diff.filesChanged)
+            if (diff.filesChanged) {
+                setFileIconStyle()
                 initAttachment()
+            }
 
             if (diff.reactionsChanged || diff.edited)
                 setOrUpdateReactions(item, rvReactions, viewPoolReactions)
@@ -137,31 +142,61 @@ class IncFileMessageViewHolder(
         super.updateState(data, isOnBind)
         when (data.state) {
             Uploaded, Downloaded -> {
-                val icon = style.attachmentIconProvider.provide(context, fileItem.attachment)
-                binding.icFile.setImageDrawable(icon)
+                if (!drawMediaThumbOrRequestIfNeeded()) setFileIconStyle()
                 binding.tvFileSize.text = data.fileTotalSize
                         ?: fileItem.attachment.fileSize.toPrettySize()
             }
 
             PendingUpload -> {
-                binding.icFile.setImageResource(0)
+                if (!drawMediaThumbOrRequestIfNeeded()) binding.icFile.setImageResource(0)
             }
 
             PendingDownload -> {
+                drawMediaThumbOrRequestIfNeeded()
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.attachment))
             }
 
             Downloading, Uploading, Preparing, WaitingToUpload -> {
-                binding.icFile.setImageResource(0)
+                if (!drawMediaThumbOrRequestIfNeeded(isOnBind)) binding.icFile.setImageResource(0)
                 setProgress(data)
             }
 
             ErrorUpload, ErrorDownload, PauseDownload, PauseUpload -> {
-                binding.icFile.setImageResource(0)
+                if (!drawMediaThumbOrRequestIfNeeded()) binding.icFile.setImageResource(0)
             }
 
-            FilePathChanged, ThumbLoaded -> return
+            FilePathChanged -> if (fileItem.isMediaFile) requestThumb()
+
+            ThumbLoaded -> if (fileItem.isMediaFile && isValidThumb(data.thumbData)) {
+                setFileThumbStyle()
+                viewHolderHelper.drawImageWithBlurredThumb(fileItem.thumbPath, binding.fileThumb)
+            }
         }
+    }
+
+    private fun drawMediaThumbOrRequestIfNeeded(drawThumb: Boolean = true): Boolean {
+        if (fileItem.isMediaFile && drawThumb) drawMediaThumbOrRequest()
+        return fileItem.isMediaFile
+    }
+
+    private fun drawMediaThumbOrRequest() {
+        setFileThumbStyle()
+        val fallback = style.incomingFileMediaThumbPlaceholder
+        viewHolderHelper.drawThumbOrRequest(binding.fileThumb, ::requestThumb, fallback)
+    }
+
+    private fun setFileIconStyle() {
+        binding.fileThumb.isVisible = false
+        binding.icFile.isVisible = true
+        binding.icFile.setImageDrawable(style.attachmentIconProvider.provide(context, fileItem.attachment))
+        binding.loadProgress.setBackgroundColor(Color.TRANSPARENT)
+        style.mediaLoaderStyle.apply(binding.loadProgress)
+    }
+
+    private fun setFileThumbStyle() {
+        binding.icFile.isVisible = false
+        binding.fileThumb.isVisible = true
+        style.overlayMediaLoaderStyle.apply(binding.loadProgress)
     }
 
     override val loadingProgressView: CircularProgressView
@@ -171,7 +206,9 @@ class IncFileMessageViewHolder(
         get() = true
 
     override fun setMaxWidth() {
-        binding.layoutDetails.layoutParams.width = bubbleMaxWidth
+        binding.layoutDetails.layoutParams.width = ViewGroup.LayoutParams.WRAP_CONTENT
+        (binding.layoutDetails.layoutParams as? ConstraintLayout.LayoutParams)
+            ?.matchConstraintMaxWidth = bubbleMaxWidth
     }
 
     private fun SceytItemIncFileMessageBinding.setMessageItemStyle() {

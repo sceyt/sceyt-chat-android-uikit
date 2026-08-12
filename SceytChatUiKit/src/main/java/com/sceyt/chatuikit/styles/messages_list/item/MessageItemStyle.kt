@@ -41,6 +41,7 @@ import com.sceyt.chatuikit.styles.extensions.messages_list.buildDeletedMessageTe
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildDeliveryStatusIconStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildForwardTitleTextStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildIncomingBubbleBackgroundStyle
+import com.sceyt.chatuikit.styles.extensions.messages_list.buildIncomingFileMediaThumbPlaceholder
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildIncomingLinkPreviewBackgroundStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildIncomingReplyBackgroundStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildLinkPreviewStyle
@@ -49,6 +50,7 @@ import com.sceyt.chatuikit.styles.extensions.messages_list.buildMentionTextStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildMessageDateTextStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildMessageStateTextStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildOutgoingBubbleBackgroundStyle
+import com.sceyt.chatuikit.styles.extensions.messages_list.buildOutgoingFileMediaThumbPlaceholder
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildOutgoingLinkPreviewBackgroundStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildOutgoingReplyBackgroundStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildOverlayMediaLoaderStyle
@@ -81,6 +83,8 @@ import java.util.Date
  * @property reactionsContainerBackgroundStyle Color for the reactions container background, default is [buildReactionsContainerBackgroundStyle]
  * @property highlightedMessageColor Color for the highlighted message, default is 30% blend of [Colors.accentColor]
  * @property linkTextColor Color for the link text, default is [R.color.sceyt_auto_link_color]
+ * @property incomingFileMediaThumbPlaceholder Placeholder for incoming media files without a thumbnail.
+ * @property outgoingFileMediaThumbPlaceholder Placeholder for outgoing media files without a thumbnail.
  * @property videoIcon Icon for the video duration, default is [R.drawable.sceyt_ic_video]
  * @property swipeToReplyIcon Icon for the swipe reply, default is [R.drawable.sceyt_is_reply_swipe]
  * @property forwardedIcon Icon for the forwarded message, default is [R.drawable.sceyt_ic_forward_14]
@@ -143,6 +147,8 @@ data class MessageItemStyle(
     @param:ColorInt val threadReplyArrowStrokeColor: Int,
     @param:ColorInt val highlightedMessageColor: Int,
     @param:ColorInt val linkTextColor: Int,
+    val incomingFileMediaThumbPlaceholder: Drawable?,
+    val outgoingFileMediaThumbPlaceholder: Drawable?,
     val videoIcon: Drawable?,
     val swipeToReplyIcon: Drawable?,
     val forwardedIcon: Drawable?,
@@ -291,6 +297,8 @@ data class MessageItemStyle(
                     threadReplyArrowStrokeColor = threadReplyArrowStrokeColor,
                     highlightedMessageColor = highlightedMessageColor,
                     linkTextColor = linkTextColor,
+                    incomingFileMediaThumbPlaceholder = buildIncomingFileMediaThumbPlaceholder(array),
+                    outgoingFileMediaThumbPlaceholder = buildOutgoingFileMediaThumbPlaceholder(array),
                     videoIcon = videoIcon,
                     swipeToReplyIcon = swipeToReplyIcon,
                     forwardedIcon = forwardedIcon,

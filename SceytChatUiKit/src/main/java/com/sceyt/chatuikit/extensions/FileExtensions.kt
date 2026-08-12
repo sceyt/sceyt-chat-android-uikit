@@ -3,41 +3,39 @@ package com.sceyt.chatuikit.extensions
 import android.content.Context
 import android.graphics.Bitmap
 import android.media.MediaScannerConnection
-import android.net.Uri
 import android.os.Environment
 import android.util.Base64
 import android.util.Base64OutputStream
 import android.webkit.MimeTypeMap
-import com.sceyt.chat.util.FileUtils
+import androidx.core.net.toUri
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
-import androidx.core.net.toUri
 
-fun getMimeType(url: String?): String? {
-    if (url.isNullOrBlank()) return null
+fun getMimeType(filePath: String?): String? {
+    if (filePath.isNullOrBlank()) return null
     return try {
-        MimeTypeMap.getSingleton().getMimeTypeFromExtension(url.substring(url.lastIndexOf(".") + 1))
+        MimeTypeMap.getSingleton().getMimeTypeFromExtension(filePath.substring(filePath.lastIndexOf(".") + 1))
     } catch (_: Exception) {
         null
     }
 }
 
-fun getMimeTypeTakeFirstPart(url: String?): String? {
-    return getMimeType(url)?.takeWhile { it != '/' }
+fun getMimeTypeTakeFirstPart(filePath: String?): String? {
+    return getMimeType(filePath)?.takeWhile { it != '/' }
 }
 
-fun getMimeTypeTakeExtension(url: String?): String? {
-    return getMimeType(url)?.split("/")?.getOrNull(1)?.let {
+fun getMimeTypeTakeExtension(filePath: String?): String? {
+    return getMimeType(filePath)?.split("/")?.getOrNull(1)?.let {
         ".$it"
     }
 }
 
-fun getFileSize(fileUri: String): Long {
+fun getFileSize(filePath: String): Long {
     return try {
         var sizeInBytes: Long = 0
-        val file = File(fileUri)
+        val file = File(filePath)
         if (file.isFile) sizeInBytes = file.length()
         sizeInBytes
     } catch (_: Exception) {
@@ -95,15 +93,6 @@ fun Bitmap?.bitmapToByteArray(): ByteArray? {
         null
     }
 
-}
-
-fun Context.getPathFromFile(uri: Uri?): String? {
-    uri ?: return null
-    try {
-        return FileUtils(this).getPath(uri)
-    } catch (_: Exception) {
-    }
-    return null
 }
 
 fun saveToGallery(context: Context, path: String, name: String, mimeType: String): File? {
