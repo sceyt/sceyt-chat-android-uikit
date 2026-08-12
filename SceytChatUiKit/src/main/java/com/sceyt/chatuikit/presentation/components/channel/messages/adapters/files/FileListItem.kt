@@ -17,6 +17,7 @@ class FileListItem(
     private var _thumbPath: String?,
     private var _transferData: TransferData?,
     val type: AttachmentTypeEnum,
+    val isMediaFile: Boolean = false,
 ) : AttachmentDataProvider, Parcelable {
 
     override val attachment: SceytAttachment
@@ -62,6 +63,7 @@ class FileListItem(
                 && _thumbPath == other._thumbPath
                 && _transferData == other._transferData
                 && type == other.type
+                && isMediaFile == other.isMediaFile
     }
 
     override fun hashCode(): Int {
@@ -70,6 +72,7 @@ class FileListItem(
         result = 31 * result + (_thumbPath?.hashCode() ?: 0)
         result = 31 * result + (_transferData?.hashCode() ?: 0)
         result = 31 * result + type.hashCode()
+        result = 31 * result + isMediaFile.hashCode()
         return result
     }
 }

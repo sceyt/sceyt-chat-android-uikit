@@ -1,8 +1,11 @@
 package com.sceyt.chatuikit.presentation.helpers
 
 import android.graphics.Bitmap
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.util.Size
 import android.view.View
+import android.widget.ImageView
 import com.google.common.truth.Truth.assertThat
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
@@ -97,6 +100,20 @@ class AttachmentViewHolderHelperTest {
         assertThat(item.transferData?.filePath).isEqualTo("/downloads/file.jpg")
         assertThat(item.attachment.progressPercent).isEqualTo(70f)
         assertThat(item.attachment.filePath).isEqualTo("/downloads/file.jpg")
+    }
+
+    @Test
+    fun `draw thumb uses fallback when old attachment has no blurred thumb`() {
+        val helper = helper()
+        val imageView = ImageView(RuntimeEnvironment.getApplication())
+        val fallback = ColorDrawable(Color.RED)
+        var requested = false
+        helper.bind(TestAttachmentItem(attachment()))
+
+        helper.drawThumbOrRequest(imageView, { requested = true }, fallback)
+
+        assertThat(imageView.drawable).isSameInstanceAs(fallback)
+        assertThat(requested).isTrue()
     }
 
     private fun helper() = AttachmentViewHolderHelper(View(RuntimeEnvironment.getApplication()))

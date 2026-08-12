@@ -183,7 +183,7 @@ fun SceytAttachment?.getShowName(context: Context): String {
         AttachmentTypeEnum.Video.value -> context.getString(R.string.sceyt_video)
         AttachmentTypeEnum.Image.value -> context.getString(R.string.sceyt_photo)
         AttachmentTypeEnum.Voice.value -> context.getString(R.string.sceyt_voice)
-        AttachmentTypeEnum.File.value -> context.getString(R.string.sceyt_file)
+        AttachmentTypeEnum.File.value -> name
         else -> name
     }
 }

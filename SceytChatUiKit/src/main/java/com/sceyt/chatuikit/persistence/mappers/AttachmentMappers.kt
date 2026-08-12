@@ -195,7 +195,8 @@ fun SceytAttachment.getInfoFromMetadata(): AttachmentMetadataPayload {
             metadata
                 ?: return AttachmentMetadataPayload()
         )
-        when (type) {
+        val metadataType = getVisualMediaType()?.value ?: type
+        when (metadataType) {
             AttachmentTypeEnum.File.value -> {
                 return AttachmentMetadataPayload()
             }
@@ -212,7 +213,7 @@ fun SceytAttachment.getInfoFromMetadata(): AttachmentMetadataPayload {
             AttachmentTypeEnum.Voice.value -> audioMetadata = getMetadataFromAttachment()
         }
 
-        if (type == AttachmentTypeEnum.Video.value || type == AttachmentTypeEnum.Voice.value)
+        if (metadataType == AttachmentTypeEnum.Video.value || metadataType == AttachmentTypeEnum.Voice.value)
             duration = jsonObject.getFromJsonObject(SceytConstants.Duration)?.toLongOrNull()
 
     } catch (_: Exception) {
