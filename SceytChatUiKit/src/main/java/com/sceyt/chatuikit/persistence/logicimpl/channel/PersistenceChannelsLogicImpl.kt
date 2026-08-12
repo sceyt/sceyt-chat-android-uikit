@@ -786,8 +786,8 @@ internal class PersistenceChannelsLogicImpl(
                     if (newChannel == null)
                         return@fold createErrorResponse("create channel response is success, but channel is null")
 
-                    insertChannelWithMembers(newChannel)
                     val pendingChannel = channelDao.getChannelById(channel.id)?.toChannel()
+                    insertChannelWithMembers(newChannel)
                     val mergedChannel = if (pendingChannel?.pending == true)
                         migratePendingChannelToRealChannelUseCase(pendingChannel, newChannel)
                     else newChannel
