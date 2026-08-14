@@ -37,7 +37,6 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.job
@@ -224,7 +223,6 @@ internal class AttachmentUploadCoordinator(
     fun cancelAll() {
         uploadJobs.values.forEach { it.cancel() }
         uploadJobs.clear()
-        scope.coroutineContext.cancelChildren()
 
         synchronized(uploadQueueLock) {
             pendingUploadQueue.clear()
