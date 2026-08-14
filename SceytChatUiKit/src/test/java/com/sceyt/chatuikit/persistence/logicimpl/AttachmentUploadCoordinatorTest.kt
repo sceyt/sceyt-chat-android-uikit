@@ -15,6 +15,7 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferResultCallback
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestScope
@@ -27,6 +28,7 @@ import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.dsl.module
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.doSuspendableAnswer
 import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
@@ -277,6 +279,35 @@ class AttachmentUploadCoordinatorTest {
     }
 
     @Test
+    fun `preparation failure is forwarded and advances queue`() {
+        SceytChatUIKit.config.preventDuplicateAttachmentUpload = true
+        val first = attachment(messageTid = 60L, filePath = "/tmp/first.txt")
+        val second = attachment(messageTid = 61L, filePath = "/tmp/second.txt")
+        val firstTask = transferTask(first)
+        val checksumStarted = CompletableDeferred<Unit>()
+        val releaseChecksum = CompletableDeferred<Unit>()
+        var result: SceytResponse<String>? = null
+        firstTask.uploadResultCallback = TransferResultCallback { result = it }
+        doSuspendableAnswer { invocation ->
+            if (invocation.getArgument<String?>(0) == first.originalFilePath) {
+                checksumStarted.complete(Unit)
+                releaseChecksum.await()
+                throw IllegalStateException("checksum failed")
+            }
+            null
+        }.whenever(attachmentLogic) { getFileChecksumData(org.mockito.kotlin.any()) }
+
+        coordinator.uploadFile(first, firstTask)
+        coordinator.uploadFile(second, transferTask(second))
+        releaseChecksum.complete(Unit)
+
+        assertThat(checksumStarted.isCompleted).isTrue()
+        assertThat(result).isInstanceOf(SceytResponse.Error::class.java)
+        assertThat(result?.message).isEqualTo("checksum failed")
+        assertThat(transport.uploadCalls.single().request.operationId).isEqualTo("upload:61")
+    }
+
+    @Test
     fun `preparing upload pauses without an active transport operation`() {
         val attachment = attachment(messageTid = 52L, state = TransferState.Preparing)
         val task = transferTask(attachment)
@@ -289,6 +320,34 @@ class AttachmentUploadCoordinatorTest {
         assertThat(transport.uploadCalls).isEmpty()
         assertThat(task.state).isEqualTo(TransferState.PauseUpload)
         assertThat(states).containsExactly(TransferState.PauseUpload)
+    }
+
+    @Test
+    fun `pause cancels upload while checksum is being prepared`() {
+        SceytChatUIKit.config.preventDuplicateAttachmentUpload = true
+        val attachment = attachment(
+            messageTid = 59L,
+            filePath = "/tmp/preparing.txt",
+            state = TransferState.Preparing,
+        )
+        val task = transferTask(attachment)
+        val checksumStarted = CompletableDeferred<Unit>()
+        val releaseChecksum = CompletableDeferred<Unit>()
+        service.addTransferTask(task)
+        doSuspendableAnswer {
+            checksumStarted.complete(Unit)
+            releaseChecksum.await()
+            null
+        }.whenever(attachmentLogic) { getFileChecksumData(attachment.originalFilePath) }
+
+        coordinator.uploadFile(attachment, task)
+        assertThat(checksumStarted.isCompleted).isTrue()
+
+        coordinator.pauseLoad(attachment, TransferState.Preparing)
+        releaseChecksum.complete(Unit)
+
+        assertThat(transport.uploadCalls).isEmpty()
+        assertThat(task.state).isEqualTo(TransferState.PauseUpload)
     }
 
     @Test
