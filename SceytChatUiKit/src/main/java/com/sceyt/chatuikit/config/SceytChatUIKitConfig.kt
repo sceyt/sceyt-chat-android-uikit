@@ -16,6 +16,7 @@ class SceytChatUIKitConfig {
     var channelTypesConfig: ChannelTypesConfig by lazyVar { ChannelTypesConfig() }
     var memberRolesConfig: MemberRolesConfig by lazyVar { MemberRolesConfig() }
     var notificationConfig: PushNotificationConfig by lazyVar { PushNotificationConfig() }
+    var attachmentTransferConfig: AttachmentTransferConfig by lazyVar { AttachmentTransferConfig() }
     var voiceRecorderConfig: VoiceRecorderConfig by lazyVar { VoiceRecorderConfig() }
     var globalSearchConfig: GlobalSearchConfig by lazyVar { GlobalSearchConfig() }
     var systemMessagesConfig: SystemMessagesConfig by lazyVar { SystemMessagesConfig() }

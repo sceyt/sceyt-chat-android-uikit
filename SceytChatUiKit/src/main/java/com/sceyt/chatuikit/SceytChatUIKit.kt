@@ -11,6 +11,7 @@ import com.sceyt.chatuikit.data.di.repositoryModule
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.data.transformers.MessageTransformer
 import com.sceyt.chatuikit.extensions.TAG
+import com.sceyt.chatuikit.filetransfer.SceytChatUIKitFileTransfer
 import com.sceyt.chatuikit.formatters.SceytChatUIKitFormatters
 import com.sceyt.chatuikit.koin.SceytKoinApp
 import com.sceyt.chatuikit.koin.SceytKoinComponent
@@ -51,6 +52,7 @@ object SceytChatUIKit : SceytKoinComponent {
     var theme: SceytChatUIKitTheme by lazyVar { SceytChatUIKitTheme() }
     var config: SceytChatUIKitConfig by lazyVar { SceytChatUIKitConfig() }
     var formatters: SceytChatUIKitFormatters by lazyVar { SceytChatUIKitFormatters() }
+    var fileTransfer: SceytChatUIKitFileTransfer by lazyVar { SceytChatUIKitFileTransfer() }
     var providers: SceytChatUIKitProviders by lazyVar { SceytChatUIKitProviders() }
     var renderers: SceytChatUIKitRenderers by lazyVar { SceytChatUIKitRenderers() }
     var notifications: SceytNotifications by lazyVar { SceytNotifications(appContext) }
@@ -154,4 +156,3 @@ object SceytChatUIKit : SceytKoinComponent {
         )
     }
 }
-
