@@ -3,9 +3,7 @@ package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.me
 import android.graphics.Color
 import android.transition.ChangeBounds
 import android.transition.TransitionManager
-import android.view.ViewGroup
 import android.view.animation.DecelerateInterpolator
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.SceytChatUIKit
@@ -38,13 +36,17 @@ import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
 
 class OutFileMessageViewHolder(
-        private val binding: SceytItemOutFileMessageBinding,
-        private val viewPoolReactions: RecyclerView.RecycledViewPool,
-        private val style: MessageItemStyle,
-        private val messageListeners: MessageClickListeners.ClickListeners?,
-        private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
-) : BaseMediaMessageViewHolder(binding.root, style, messageListeners,
-    needMediaDataCallback = needMediaDataCallback) {
+    private val binding: SceytItemOutFileMessageBinding,
+    private val viewPoolReactions: RecyclerView.RecycledViewPool,
+    private val style: MessageItemStyle,
+    private val messageListeners: MessageClickListeners.ClickListeners?,
+    private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
+) : BaseMediaMessageViewHolder(
+    view = binding.root,
+    style = style,
+    messageListeners = messageListeners,
+    needMediaDataCallback = needMediaDataCallback
+) {
 
     init {
         with(binding) {
@@ -196,7 +198,9 @@ class OutFileMessageViewHolder(
     private fun setFileIconStyle() {
         binding.fileThumb.isVisible = false
         binding.icFile.isVisible = true
-        binding.icFile.setImageDrawable(style.attachmentIconProvider.provide(context, fileItem.attachment))
+        binding.icFile.setImageDrawable(
+            style.attachmentIconProvider.provide(context, fileItem.attachment)
+        )
         binding.loadProgress.setBackgroundColor(Color.TRANSPARENT)
         style.mediaLoaderStyle.apply(binding.loadProgress)
     }
@@ -214,12 +218,6 @@ class OutFileMessageViewHolder(
 
     override val incoming: Boolean
         get() = false
-
-    override fun setMaxWidth() {
-        binding.layoutDetails.layoutParams.width = ViewGroup.LayoutParams.WRAP_CONTENT
-        (binding.layoutDetails.layoutParams as? ConstraintLayout.LayoutParams)
-            ?.matchConstraintMaxWidth = bubbleMaxWidth
-    }
 
     private fun SceytItemOutFileMessageBinding.setMessageItemStyle() {
         icFile.setBackgroundTintColorRes(SceytChatUIKit.theme.colors.accentColor)
