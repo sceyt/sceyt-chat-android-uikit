@@ -6,7 +6,7 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.filetransfer.FileDownloadRequest
-import com.sceyt.chatuikit.filetransfer.FileTransferCallback
+import com.sceyt.chatuikit.filetransfer.FileTransferEvent
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
@@ -19,16 +19,27 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState.PendingDownlo
 import com.sceyt.chatuikit.persistence.file_transfer.TransferTask
 import com.sceyt.chatuikit.persistence.mappers.toTransferData
 import com.sceyt.chatuikit.presentation.extensions.isAttachmentExistAndFullyLoaded
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.job
+import kotlinx.coroutines.launch
 import org.koin.core.component.inject
+import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 
 internal class AttachmentDownloadCoordinator(
     private val context: Context,
+    private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
 ) : SceytKoinComponent {
     private val fileTransferService: FileTransferService by inject()
 
-    private val downloadingUrlKeys = ConcurrentHashMap.newKeySet<String>()
-    private val pausedTaskIds = ConcurrentHashMap.newKeySet<Long>()
+    private val downloadJobs = ConcurrentHashMap<String, Job>()
 
     fun downloadFile(
         attachment: SceytAttachment,
@@ -51,13 +62,28 @@ internal class AttachmentDownloadCoordinator(
             return
         }
 
-        val downloadMapKey = attachment.downloadMapKey
+        startDownload(attachment, task, url, destinationFile)
+    }
 
-        if (!downloadingUrlKeys.add(downloadMapKey)) {
-            return
+    private fun startDownload(
+        attachment: SceytAttachment,
+        task: TransferTask,
+        url: String,
+        destinationFile: File,
+    ) {
+        val downloadMapKey = attachment.downloadMapKey
+        val request = FileDownloadRequest(
+            operationId = attachment.downloadOperationId,
+            url = url,
+            destinationFile = destinationFile,
+            attachment = attachment,
+        )
+
+        val job = scope.launch(start = CoroutineStart.LAZY) {
+            performDownload(request, task, url, downloadMapKey)
         }
 
-        pausedTaskIds.remove(attachment.messageTid)
+        if (downloadJobs.putIfAbsent(downloadMapKey, job) != null) return
 
         task.progressCallback?.onProgress(
             TransferData(
@@ -69,42 +95,53 @@ internal class AttachmentDownloadCoordinator(
             ),
         )
 
-        SceytChatUIKit.fileTransfer.transport.download(
-            request = FileDownloadRequest(
-                operationId = attachment.downloadOperationId,
-                url = url,
-                destinationFile = destinationFile,
-                attachment = attachment,
-            ),
-            callback = object : FileTransferCallback<String> {
-                override fun onProgress(progressPercent: Float) {
-                    if (pausedTaskIds.contains(attachment.messageTid)) {
-                        return
+        job.start()
+    }
+
+    private suspend fun performDownload(
+        request: FileDownloadRequest,
+        task: TransferTask,
+        url: String,
+        downloadMapKey: String,
+    ) {
+        val job = currentCoroutineContext().job
+
+        try {
+            val result = SceytChatUIKit.fileTransfer.transport.download(
+                request = request,
+                callback = { event ->
+                    if (job.isActive) {
+                        handleDownloadEvent(event, task, url)
                     }
+                },
+            )
+            currentCoroutineContext().ensureActive()
+            task.downloadCallback?.onResult(SceytResponse.Success(result))
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Throwable) {
+            request.destinationFile.delete()
+            task.downloadCallback?.onResult(SceytResponse.Error(error.toSceytException()))
+        } finally {
+            downloadJobs.remove(downloadMapKey, job)
+        }
+    }
 
-                    task.progressCallback?.onProgress(
-                        TransferData(
-                            messageTid = task.messageTid,
-                            progressPercent = progressPercent,
-                            state = Downloading,
-                            filePath = null,
-                            url = url,
-                        ),
-                    )
-                }
+    private fun handleDownloadEvent(
+        event: FileTransferEvent,
+        task: TransferTask,
+        url: String,
+    ) {
+        if (event !is FileTransferEvent.Progress) return
 
-                override fun onSuccess(result: String?) {
-                    task.downloadCallback?.onResult(SceytResponse.Success(result))
-                    downloadingUrlKeys.remove(downloadMapKey)
-                }
-
-                override fun onFailure(error: Throwable?) {
-                    destinationFile.delete()
-
-                    task.downloadCallback?.onResult(SceytResponse.Error(error.toSceytException()))
-                    downloadingUrlKeys.remove(downloadMapKey)
-                }
-            },
+        task.progressCallback?.onProgress(
+            TransferData(
+                messageTid = task.messageTid,
+                progressPercent = event.progressPercent,
+                state = Downloading,
+                filePath = null,
+                url = url,
+            ),
         )
     }
 
@@ -116,14 +153,12 @@ internal class AttachmentDownloadCoordinator(
             return
         }
 
-        pausedTaskIds.add(attachment.messageTid)
+        downloadJobs.remove(attachment.downloadMapKey)?.cancel()
 
         fileTransferService.findTransferTask(attachment)?.let { task ->
             task.state = PauseUpload
             task.resumePauseCallback?.onResumePause(attachment.toTransferData(PauseDownload))
         }
-
-        SceytChatUIKit.fileTransfer.transport.pause(attachment.downloadOperationId)
     }
 
     fun resumeLoad(
@@ -138,7 +173,14 @@ internal class AttachmentDownloadCoordinator(
             return
         }
 
-        pausedTaskIds.remove(attachment.messageTid)
+        val downloadMapKey = attachment.downloadMapKey
+        val currentJob = downloadJobs[downloadMapKey]
+
+        if (state != PendingDownload || currentJob?.isActive != true) {
+            if (currentJob != null && downloadJobs.remove(downloadMapKey, currentJob)) {
+                currentJob.cancel()
+            }
+        }
 
         val destinationFile =
             SceytChatUIKit.fileTransfer.destinationProvider
@@ -154,16 +196,10 @@ internal class AttachmentDownloadCoordinator(
             return
         }
 
-        val resumed = SceytChatUIKit.fileTransfer.transport.resume(attachment.downloadOperationId)
-
-        if (!resumed) {
-            downloadingUrlKeys.remove(attachment.downloadMapKey)
-
-            downloadFile(
-                attachment = attachment,
-                task = fileTransferService.findOrCreateTransferTask(attachment),
-            )
-        }
+        downloadFile(
+            attachment = attachment,
+            task = fileTransferService.findOrCreateTransferTask(attachment),
+        )
 
         task?.resumePauseCallback?.onResumePause(attachment.toTransferData(Downloading))
     }

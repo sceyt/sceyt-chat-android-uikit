@@ -1,17 +1,21 @@
 package com.sceyt.chatuikit.filetransfer
 
 interface FileTransferTransport {
-    fun upload(
+    /**
+     * Uploads the prepared source and returns its remote reference.
+     * Implementations must stop their work when the calling coroutine is cancelled.
+     */
+    suspend fun upload(
         request: FileUploadRequest,
-        callback: FileTransferCallback<String>,
-    )
+        callback: FileTransferCallback,
+    ): String?
 
-    fun download(
+    /**
+     * Downloads the remote file and returns the resulting local path.
+     * Implementations must stop their work when the calling coroutine is cancelled.
+     */
+    suspend fun download(
         request: FileDownloadRequest,
-        callback: FileTransferCallback<String>,
-    )
-
-    fun pause(operationId: String): Boolean = false
-
-    fun resume(operationId: String): Boolean = false
+        callback: FileTransferCallback,
+    ): String?
 }

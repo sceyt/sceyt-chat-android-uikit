@@ -14,6 +14,10 @@ import com.sceyt.chatuikit.persistence.file_transfer.ResumePauseCallback
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferResultCallback
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -26,6 +30,7 @@ import org.robolectric.RuntimeEnvironment
 import java.io.File
 
 @RunWith(RobolectricTestRunner::class)
+@OptIn(ExperimentalCoroutinesApi::class)
 class AttachmentDownloadCoordinatorTest {
     private lateinit var context: Context
     private lateinit var destinationFile: File
@@ -33,6 +38,7 @@ class AttachmentDownloadCoordinatorTest {
     private lateinit var transport: RecordingFileTransferTransport
     private lateinit var coordinator: AttachmentDownloadCoordinator
     private lateinit var previousFileTransfer: SceytChatUIKitFileTransfer
+    private lateinit var testScope: TestScope
 
     @Before
     fun setUp() {
@@ -43,6 +49,7 @@ class AttachmentDownloadCoordinatorTest {
         destinationFile.delete()
         service = TestFileTransferService()
         transport = RecordingFileTransferTransport()
+        testScope = TestScope(UnconfinedTestDispatcher())
         previousFileTransfer = SceytChatUIKit.fileTransfer
         SceytChatUIKit.fileTransfer = SceytChatUIKitFileTransfer().apply {
             this.transport = this@AttachmentDownloadCoordinatorTest.transport
@@ -51,7 +58,7 @@ class AttachmentDownloadCoordinatorTest {
         SceytKoinApp.koinApp = startKoin {
             modules(module { single<FileTransferService> { service } })
         }
-        coordinator = AttachmentDownloadCoordinator(context)
+        coordinator = AttachmentDownloadCoordinator(context, testScope)
     }
 
     @After
@@ -113,8 +120,8 @@ class AttachmentDownloadCoordinatorTest {
         task.downloadCallback = TransferResultCallback { result = it }
 
         coordinator.downloadFile(attachment, task)
-        transport.downloadCalls.single().callback.onProgress(42f)
-        transport.downloadCalls.single().callback.onSuccess(destinationFile.path)
+        transport.downloadCalls.single().progress(42f)
+        transport.downloadCalls.single().succeed(destinationFile.path)
 
         assertThat(progress.map { it.progressPercent }).containsExactly(0f, 42f).inOrder()
         assertThat(progress.map { it.state }).containsExactly(
@@ -133,7 +140,7 @@ class AttachmentDownloadCoordinatorTest {
 
         coordinator.downloadFile(attachment, task)
         destinationFile.writeBytes(byteArrayOf(1, 2))
-        transport.downloadCalls.single().callback.onFailure(SceytException(7, "failed"))
+        transport.downloadCalls.single().fail(SceytException(7, "failed"))
 
         assertThat(destinationFile.exists()).isFalse()
         assertThat(result).isInstanceOf(SceytResponse.Error::class.java)
@@ -141,7 +148,7 @@ class AttachmentDownloadCoordinatorTest {
     }
 
     @Test
-    fun `pause and unsupported resume preserve existing restart behavior`() {
+    fun `pause cancels download and resume starts a new call`() {
         val attachment = attachment(state = TransferState.Downloading)
         val task = transferTask(attachment)
         val states = mutableListOf<TransferState>()
@@ -152,13 +159,86 @@ class AttachmentDownloadCoordinatorTest {
         coordinator.pauseLoad(attachment, TransferState.Downloading)
         coordinator.resumeLoad(attachment, TransferState.PauseDownload)
 
-        assertThat(transport.pausedOperationIds).containsExactly("download:10")
-        assertThat(transport.resumedOperationIds).containsExactly("download:10")
+        assertThat(transport.downloadCalls.first().cancelled).isTrue()
         assertThat(transport.downloadCalls).hasSize(2)
         assertThat(task.state).isEqualTo(TransferState.PauseUpload)
         assertThat(states).containsExactly(
             TransferState.PauseDownload,
             TransferState.Downloading,
         ).inOrder()
+    }
+
+    @Test
+    fun `pausing active download cancels its job and publishes paused state`() {
+        val attachment = attachment(state = TransferState.PendingDownload)
+        val task = transferTask(attachment)
+        val states = mutableListOf<TransferState>()
+        task.resumePauseCallback = ResumePauseCallback { states += it.state }
+        service.addTransferTask(task)
+
+        coordinator.downloadFile(attachment, task)
+        coordinator.pauseLoad(attachment, TransferState.PendingDownload)
+
+        assertThat(transport.downloadCalls.single().cancelled).isTrue()
+        assertThat(task.state).isEqualTo(TransferState.PauseUpload)
+        assertThat(states).containsExactly(TransferState.PauseDownload)
+    }
+
+    @Test
+    fun `late result from cancelled download does not complete replacement`() {
+        val attachment = attachment(state = TransferState.Downloading)
+        val task = transferTask(attachment)
+        val states = mutableListOf<TransferState>()
+        val results = mutableListOf<String?>()
+        task.resumePauseCallback = ResumePauseCallback { states += it.state }
+        task.downloadCallback = TransferResultCallback { results += it.data }
+        service.addTransferTask(task)
+
+        coordinator.downloadFile(attachment, task)
+        val pausedCall = transport.downloadCalls.single()
+        coordinator.pauseLoad(attachment, TransferState.Downloading)
+        coordinator.resumeLoad(attachment, TransferState.PauseDownload)
+        val replacementCall = transport.downloadCalls.last()
+
+        pausedCall.progress(30f)
+        pausedCall.succeed("late-path")
+
+        assertThat(results).isEmpty()
+        assertThat(states).containsExactly(
+            TransferState.PauseDownload,
+            TransferState.Downloading,
+        ).inOrder()
+
+        coordinator.pauseLoad(attachment, TransferState.Downloading)
+
+        assertThat(replacementCall.cancelled).isTrue()
+        assertThat(states).containsExactly(
+            TransferState.PauseDownload,
+            TransferState.Downloading,
+            TransferState.PauseDownload,
+        ).inOrder()
+        assertThat(results).isEmpty()
+    }
+
+    @Test
+    fun `cancelled download cleanup does not remove replacement`() {
+        val attachment = attachment(state = TransferState.Downloading)
+        val task = transferTask(attachment)
+        val cancellationGate = CompletableDeferred<Unit>()
+        transport.downloadCancellationGate = cancellationGate
+        service.addTransferTask(task)
+
+        coordinator.downloadFile(attachment, task)
+        coordinator.pauseLoad(attachment, TransferState.Downloading)
+        coordinator.resumeLoad(attachment, TransferState.PauseDownload)
+
+        assertThat(transport.downloadCalls).hasSize(2)
+        val replacement = transport.downloadCalls.last()
+
+        cancellationGate.complete(Unit)
+        coordinator.downloadFile(attachment, task)
+
+        assertThat(transport.downloadCalls).hasSize(2)
+        assertThat(replacement.cancelled).isFalse()
     }
 }

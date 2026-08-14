@@ -4,6 +4,7 @@ import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.filetransfer.FileDownloadRequest
 import com.sceyt.chatuikit.filetransfer.FileTransferCallback
+import com.sceyt.chatuikit.filetransfer.FileTransferEvent
 import com.sceyt.chatuikit.filetransfer.FileTransferTransport
 import com.sceyt.chatuikit.filetransfer.FileUploadRequest
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferListeners
@@ -11,7 +12,12 @@ import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.file_transfer.ThumbData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 import com.sceyt.chatuikit.persistence.file_transfer.TransferTask
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.CopyOnWriteArrayList
 
 internal class TestFileTransferService : FileTransferService {
     private val tasks = ConcurrentHashMap<String, TransferTask>()
@@ -69,39 +75,93 @@ internal class TestFileTransferService : FileTransferService {
 }
 
 internal class RecordingFileTransferTransport : FileTransferTransport {
-    data class UploadCall(
+    class UploadCall(
         val request: FileUploadRequest,
-        val callback: FileTransferCallback<String>,
-    )
+        private val callback: FileTransferCallback,
+    ) {
+        val result = CompletableDeferred<String?>()
 
-    data class DownloadCall(
+        @Volatile
+        var cancelled = false
+
+        fun progress(progressPercent: Float) {
+            callback.onEvent(FileTransferEvent.Progress(progressPercent))
+        }
+
+        fun waitingForNetwork() {
+            callback.onEvent(FileTransferEvent.WaitingForNetwork)
+        }
+
+        fun succeed(remoteReference: String?) {
+            result.complete(remoteReference)
+        }
+
+        fun fail(error: Throwable) {
+            result.completeExceptionally(error)
+        }
+    }
+
+    class DownloadCall(
         val request: FileDownloadRequest,
-        val callback: FileTransferCallback<String>,
-    )
+        private val callback: FileTransferCallback,
+    ) {
+        val result = CompletableDeferred<String?>()
 
-    val uploadCalls = mutableListOf<UploadCall>()
-    val downloadCalls = mutableListOf<DownloadCall>()
-    val pausedOperationIds = mutableListOf<String>()
-    val resumedOperationIds = mutableListOf<String>()
-    var pauseResult = true
-    var resumeResult = false
+        @Volatile
+        var cancelled = false
 
-    override fun upload(request: FileUploadRequest, callback: FileTransferCallback<String>) {
-        uploadCalls += UploadCall(request, callback)
+        fun progress(progressPercent: Float) {
+            callback.onEvent(FileTransferEvent.Progress(progressPercent))
+        }
+
+        fun waitingForNetwork() {
+            callback.onEvent(FileTransferEvent.WaitingForNetwork)
+        }
+
+        fun succeed(localPath: String?) {
+            result.complete(localPath)
+        }
+
+        fun fail(error: Throwable) {
+            result.completeExceptionally(error)
+        }
     }
 
-    override fun download(request: FileDownloadRequest, callback: FileTransferCallback<String>) {
-        downloadCalls += DownloadCall(request, callback)
+    val uploadCalls = CopyOnWriteArrayList<UploadCall>()
+    val downloadCalls = CopyOnWriteArrayList<DownloadCall>()
+    var downloadCancellationGate: CompletableDeferred<Unit>? = null
+
+    override suspend fun upload(
+        request: FileUploadRequest,
+        callback: FileTransferCallback,
+    ): String? {
+        val call = UploadCall(request, callback)
+        uploadCalls += call
+        return try {
+            call.result.await()
+        } catch (error: CancellationException) {
+            call.cancelled = true
+            throw error
+        }
     }
 
-    override fun pause(operationId: String): Boolean {
-        pausedOperationIds += operationId
-        return pauseResult
-    }
-
-    override fun resume(operationId: String): Boolean {
-        resumedOperationIds += operationId
-        return resumeResult
+    override suspend fun download(
+        request: FileDownloadRequest,
+        callback: FileTransferCallback,
+    ): String? {
+        val call = DownloadCall(request, callback)
+        downloadCalls += call
+        return try {
+            call.result.await()
+        } catch (error: CancellationException) {
+            call.cancelled = true
+            downloadCancellationGate?.let { gate ->
+                withContext(NonCancellable) {
+                    gate.await()
+                }
+            }
+            throw error
+        }
     }
 }
 
