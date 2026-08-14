@@ -100,6 +100,12 @@ internal class FileTransferServiceImpl(
     override fun clearPreparingThumbPaths() {
         fileTransferLogic.clearPreparingThumbPaths()
     }
+
+    override fun cancelAllTransfers() {
+        fileTransferLogic.cancelAll()
+        listeners.cancelAllTransfers()
+        tasksMap.clear()
+    }
 }
 
 fun interface TransferResultCallback {
@@ -125,4 +131,3 @@ fun interface UpdateFileLocationCallback {
 fun interface ThumbCallback {
     fun onThumb(path: String, thumbData: ThumbData)
 }
-

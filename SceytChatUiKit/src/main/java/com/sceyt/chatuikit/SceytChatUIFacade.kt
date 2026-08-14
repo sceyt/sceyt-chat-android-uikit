@@ -2,6 +2,7 @@ package com.sceyt.chatuikit
 
 import android.content.Context
 import androidx.work.WorkManager
+import androidx.work.await
 import com.google.firebase.FirebaseApp
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.SceytException
@@ -112,7 +113,8 @@ class SceytChatUIFacade(
 
     fun logOut(unregisterPushCallback: ((Result<Boolean>) -> Unit)? = null) = scope.launch {
         sceytSyncManager.cancelSync()
-        WorkManager.getInstance(context).cancelAllWorkByTag(SCEYT_WORKER_TAG)
+        WorkManager.getInstance(context).cancelAllWorkByTag(SCEYT_WORKER_TAG).await()
+        filesTransferService.cancelAllTransfers()
         clearData()
         val result = unregisterFirebaseToken()
         ChatClient.getClient().disconnect()

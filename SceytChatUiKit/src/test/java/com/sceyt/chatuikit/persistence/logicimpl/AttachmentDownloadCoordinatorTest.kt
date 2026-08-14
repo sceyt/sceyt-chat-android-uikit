@@ -259,4 +259,42 @@ class AttachmentDownloadCoordinatorTest {
         assertThat(transport.downloadCalls).hasSize(2)
         assertThat(replacement.cancelled).isFalse()
     }
+
+    @Test
+    fun `pausing download keeps partial destination so resume can range request`() {
+        val attachment = attachment(state = TransferState.Downloading)
+        val task = transferTask(attachment)
+        val partialBytes = byteArrayOf(1, 2)
+        var result: SceytResponse<String>? = null
+        task.downloadCallback = TransferResultCallback { result = it }
+        service.addTransferTask(task)
+
+        coordinator.downloadFile(attachment, task)
+        destinationFile.writeBytes(partialBytes)
+        coordinator.pauseLoad(attachment, TransferState.Downloading)
+
+        assertThat(transport.downloadCalls.single().cancelled).isTrue()
+        assertThat(destinationFile.exists()).isTrue()
+        assertThat(destinationFile.readBytes()).isEqualTo(partialBytes)
+        assertThat(result).isNull()
+
+        coordinator.resumeLoad(attachment, TransferState.PauseDownload)
+
+        assertThat(transport.downloadCalls).hasSize(2)
+        assertThat(destinationFile.readBytes()).isEqualTo(partialBytes)
+    }
+
+    @Test
+    fun `cancel all stops active download and allows a new download`() {
+        val active = attachment(messageTid = 80L, state = TransferState.Downloading)
+        val next = attachment(messageTid = 81L, state = TransferState.PendingDownload)
+
+        coordinator.downloadFile(active, transferTask(active))
+        coordinator.cancelAll()
+        coordinator.downloadFile(next, transferTask(next))
+
+        assertThat(transport.downloadCalls).hasSize(2)
+        assertThat(transport.downloadCalls[0].cancelled).isTrue()
+        assertThat(transport.downloadCalls[1].request.operationId).isEqualTo("download:81")
+    }
 }

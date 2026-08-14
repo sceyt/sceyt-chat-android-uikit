@@ -385,4 +385,51 @@ class AttachmentUploadCoordinatorTest {
         ).inOrder()
         assertThat(results).isEmpty()
     }
+
+    @Test
+    fun `shared preparation failure is forwarded to every shared task`() {
+        SceytChatUIKit.config.preventDuplicateAttachmentUpload = true
+        val first = attachment(messageTid = 70L, filePath = "/tmp/shared-fail.txt")
+        val second = attachment(messageTid = 71L, filePath = "/tmp/shared-fail.txt")
+        val firstTask = transferTask(first)
+        val secondTask = transferTask(second)
+        val firstResults = mutableListOf<SceytResponse<String>>()
+        val secondResults = mutableListOf<SceytResponse<String>>()
+        firstTask.uploadResultCallback = TransferResultCallback { firstResults += it }
+        secondTask.uploadResultCallback = TransferResultCallback { secondResults += it }
+        val releaseChecksum = CompletableDeferred<Unit>()
+        doSuspendableAnswer { invocation ->
+            if (invocation.getArgument<String?>(0) == first.originalFilePath) {
+                releaseChecksum.await()
+                throw IllegalStateException("shared checksum failed")
+            }
+            null
+        }.whenever(attachmentLogic) { getFileChecksumData(org.mockito.kotlin.any()) }
+
+        coordinator.uploadSharedFile(first, firstTask)
+        coordinator.uploadSharedFile(second, secondTask)
+        releaseChecksum.complete(Unit)
+
+        assertThat(transport.uploadCalls).isEmpty()
+        assertThat(firstResults).hasSize(1)
+        assertThat(secondResults).hasSize(1)
+        assertThat(firstResults.single().message).isEqualTo("shared checksum failed")
+        assertThat(secondResults.single().message).isEqualTo("shared checksum failed")
+    }
+
+    @Test
+    fun `cancel all stops active and queued uploads and allows a new upload`() {
+        val active = attachment(messageTid = 80L, filePath = "/tmp/active.txt")
+        val queued = attachment(messageTid = 81L, filePath = "/tmp/queued.txt")
+        val next = attachment(messageTid = 82L, filePath = "/tmp/next.txt")
+
+        coordinator.uploadFile(active, transferTask(active))
+        coordinator.uploadFile(queued, transferTask(queued))
+        coordinator.cancelAll()
+        coordinator.uploadFile(next, transferTask(next))
+
+        assertThat(transport.uploadCalls).hasSize(2)
+        assertThat(transport.uploadCalls[0].cancelled).isTrue()
+        assertThat(transport.uploadCalls[1].request.operationId).isEqualTo("upload:82")
+    }
 }

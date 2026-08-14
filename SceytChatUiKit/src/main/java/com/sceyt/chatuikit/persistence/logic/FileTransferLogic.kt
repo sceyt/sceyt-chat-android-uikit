@@ -13,4 +13,5 @@ interface FileTransferLogic {
     fun resumeLoad(attachment: SceytAttachment, state: TransferState)
     fun getAttachmentThumb(messageTid: Long, attachment: SceytAttachment, data: ThumbData)
     fun clearPreparingThumbPaths()
+    fun cancelAll() = Unit
 }
