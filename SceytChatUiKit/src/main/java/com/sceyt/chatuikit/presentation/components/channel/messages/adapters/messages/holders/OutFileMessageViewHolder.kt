@@ -1,7 +1,10 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders
 
 import android.graphics.Color
+import android.transition.ChangeBounds
+import android.transition.TransitionManager
 import android.view.ViewGroup
+import android.view.animation.DecelerateInterpolator
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
@@ -130,13 +133,26 @@ class OutFileMessageViewHolder(
         binding.tvFileSize.text = text
     }
 
+    private fun setFileSizeText(text: CharSequence?, animateBounds: Boolean) {
+        if (binding.tvFileSize.text?.toString() == text?.toString()) return
+        if (animateBounds) {
+            TransitionManager.beginDelayedTransition(binding.root, ChangeBounds().apply {
+                duration = 200
+                interpolator = DecelerateInterpolator()
+            })
+        }
+        binding.tvFileSize.text = text
+    }
+
     override fun updateState(data: TransferData, isOnBind: Boolean) {
         super.updateState(data, isOnBind)
         when (data.state) {
             Uploaded, Downloaded -> {
                 if (!drawMediaThumbOrRequestIfNeeded()) setFileIconStyle()
-                binding.tvFileSize.text = data.fileTotalSize
-                        ?: fileItem.attachment.fileSize.toPrettySize()
+                setFileSizeText(
+                    text = data.fileTotalSize ?: fileItem.attachment.fileSize.toPrettySize(),
+                    animateBounds = !isOnBind
+                )
             }
 
             PendingUpload -> {

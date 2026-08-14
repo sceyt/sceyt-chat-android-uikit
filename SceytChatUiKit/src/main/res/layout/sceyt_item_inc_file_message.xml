@@ -132,9 +132,11 @@
         <View
             android:id="@+id/viewHandleClick"
             android:contentDescription="@string/sceyt_cd_open_incoming_file_message"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="0dp"
             app:layout_constraintBottom_toBottomOf="@+id/filePreviewContainer"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@+id/filePreviewContainer" />
 
         <FrameLayout
