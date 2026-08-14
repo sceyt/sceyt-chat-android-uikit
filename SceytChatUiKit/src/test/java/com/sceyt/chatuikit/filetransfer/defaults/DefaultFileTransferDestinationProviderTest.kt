@@ -3,6 +3,7 @@ package com.sceyt.chatuikit.filetransfer.defaults
 import android.content.Context
 import com.google.common.truth.Truth.assertThat
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.config.AttachmentTransferConfig
 import com.sceyt.chatuikit.config.SceytChatUIKitConfig
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.persistence.logicimpl.attachment
@@ -23,9 +24,11 @@ class DefaultFileTransferDestinationProviderTest {
         context = RuntimeEnvironment.getApplication()
         previousConfig = SceytChatUIKit.config
         SceytChatUIKit.config = SceytChatUIKitConfig().apply {
-            attachmentTransferConfig.imageDownloadDirectoryName = "Test Images"
-            attachmentTransferConfig.videoDownloadDirectoryName = "Test Videos"
-            attachmentTransferConfig.fileDownloadDirectoryName = "Test Files"
+            attachmentTransferConfig = AttachmentTransferConfig(
+                imageDownloadDirectoryName = "Test Images",
+                videoDownloadDirectoryName = "Test Videos",
+                fileDownloadDirectoryName = "Test Files",
+            )
         }
     }
 

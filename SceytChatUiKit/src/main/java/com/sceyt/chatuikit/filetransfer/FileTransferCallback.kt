@@ -1,11 +1,11 @@
 package com.sceyt.chatuikit.filetransfer
 
-interface FileTransferCallback<T> {
-    fun onProgress(progressPercent: Float)
+fun interface FileTransferCallback {
+    fun onEvent(event: FileTransferEvent)
+}
 
-    fun onWaitingForNetwork() = Unit
+sealed interface FileTransferEvent {
+    data class Progress(val progressPercent: Float) : FileTransferEvent
 
-    fun onSuccess(result: T?)
-
-    fun onFailure(error: Throwable?)
+    data object WaitingForNetwork : FileTransferEvent
 }

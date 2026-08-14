@@ -10,7 +10,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.extensions.getFileSize
 import com.sceyt.chatuikit.extensions.getMimeType
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
-import com.sceyt.chatuikit.filetransfer.FileTransferCallback
+import com.sceyt.chatuikit.filetransfer.FileTransferEvent
 import com.sceyt.chatuikit.filetransfer.FileUploadRequest
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.logger.SceytLog
@@ -31,7 +31,16 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferTask
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import com.sceyt.chatuikit.persistence.mappers.toTransferData
 import com.sceyt.chatuikit.shared.media_encoder.VideoTranscodeHelper
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.job
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.koin.core.component.inject
 import java.io.File
@@ -42,6 +51,7 @@ import java.util.concurrent.ConcurrentHashMap
 internal class AttachmentUploadCoordinator(
     private val context: Context,
     private val attachmentLogic: PersistenceAttachmentLogic,
+    private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
 ) : SceytKoinComponent {
     private val fileTransferService: FileTransferService by inject()
 
@@ -51,6 +61,7 @@ internal class AttachmentUploadCoordinator(
     private var currentUploadingAttachment: SceytAttachment? = null
 
     private val pausedTaskIds = ConcurrentHashMap.newKeySet<Long>()
+    private val uploadJobs = ConcurrentHashMap<Long, Job>()
     private val resizingAttachmentIds = ConcurrentHashMap.newKeySet<Long>()
     private val sharingFilesPath = ConcurrentHashMap.newKeySet<ShareFileData>()
 
@@ -126,6 +137,7 @@ internal class AttachmentUploadCoordinator(
             Preparing,
             FilePathChanged,
             WaitingToUpload -> {
+                uploadJobs.remove(attachment.messageTid)?.cancel()
                 pausedTaskIds.add(attachment.messageTid)
 
                 if (attachment.type == AttachmentTypeEnum.Video.value) {
@@ -137,9 +149,7 @@ internal class AttachmentUploadCoordinator(
                     task.resumePauseCallback?.onResumePause(attachment.toTransferData(PauseUpload))
                 }
 
-                SceytChatUIKit.fileTransfer.transport.pause(attachment.uploadOperationId)
-
-                uploadNext()
+                uploadNext(attachment.messageTid)
             }
 
             else -> return
@@ -186,10 +196,7 @@ internal class AttachmentUploadCoordinator(
                     ?.resumePauseCallback
                     ?.onResumePause(attachment.toTransferData(WaitingToUpload))
 
-                val resumed =
-                    SceytChatUIKit.fileTransfer.transport.resume(attachment.uploadOperationId)
-
-                if (!resumed && !resizingAttachmentIds.contains(attachment.messageTid)) {
+                if (!resizingAttachmentIds.contains(attachment.messageTid)) {
                     if (wasSharing) {
                         uploadSharedFile(
                             attachment = attachment,
@@ -236,8 +243,12 @@ internal class AttachmentUploadCoordinator(
         }
     }
 
-    private fun uploadNext() {
+    private fun uploadNext(messageTid: Long) {
         val nextUpload = synchronized(uploadQueueLock) {
+            if (currentUploadingAttachment?.messageTid != messageTid) {
+                return
+            }
+
             currentUploadingAttachment = null
 
             pendingUploadQueue.poll()?.also { (attachment) ->
@@ -257,7 +268,7 @@ internal class AttachmentUploadCoordinator(
 
         if (uploaded && url != null) {
             task.uploadResultCallback?.onResult(SceytResponse.Success(url))
-            uploadNext()
+            uploadNext(attachment.messageTid)
             return
         }
 
@@ -269,7 +280,7 @@ internal class AttachmentUploadCoordinator(
             task = task,
         ) { result ->
             if (pausedTaskIds.contains(attachment.messageTid)) {
-                uploadNext()
+                uploadNext(attachment.messageTid)
                 return@checkAndResizeMessageAttachments
             }
 
@@ -285,15 +296,11 @@ internal class AttachmentUploadCoordinator(
                 SceytLog.i(TAG, "Couldn't resize file with reason ${it.message}")
             }
 
-            val resumed = SceytChatUIKit.fileTransfer.transport.resume(attachment.uploadOperationId)
-
-            if (!resumed) {
-                uploadAttachmentWithTransport(
-                    attachment = uploadAttachment,
-                    task = task,
-                    onComplete = ::uploadNext,
-                )
-            }
+            uploadAttachmentWithTransport(
+                attachment = uploadAttachment,
+                task = task,
+                onComplete = { uploadNext(attachment.messageTid) },
+            )
         }
     }
 
@@ -341,59 +348,91 @@ internal class AttachmentUploadCoordinator(
         onComplete: (() -> Unit)? = null,
     ) {
         val sourceFile = File(attachment.filePath.orEmpty())
-
-        SceytChatUIKit.fileTransfer.transport.upload(
-            request = FileUploadRequest(
-                operationId = attachment.uploadOperationId,
-                sourceFile = sourceFile,
-                fileName = attachment.name,
-                mimeType = getMimeType(sourceFile.path),
-                attachment = attachment,
-            ),
-            callback = object : FileTransferCallback<String> {
-                override fun onProgress(progressPercent: Float) {
-                    if (onProgress != null) {
-                        onProgress(progressPercent)
-                    } else {
-                        task.progressCallback?.onProgress(
-                            TransferData(
-                                messageTid = task.messageTid,
-                                progressPercent = progressPercent,
-                                state = Uploading,
-                                filePath = attachment.filePath,
-                                url = null,
-                            ),
-                        )
-                    }
-                }
-
-                override fun onSuccess(result: String?) {
-                    val response = SceytResponse.Success(result)
-
-                    if (onResult != null) {
-                        onResult(response)
-                    } else {
-                        task.uploadResultCallback?.onResult(response)
-                    }
-
-                    onComplete?.invoke()
-                }
-
-                override fun onFailure(error: Throwable?) {
-                    val response = SceytResponse.Error<String>(
-                        error.toSceytException(),
-                    )
-
-                    if (onResult != null) {
-                        onResult(response)
-                    } else {
-                        task.uploadResultCallback?.onResult(response)
-                    }
-
-                    onComplete?.invoke()
-                }
-            },
+        val request = FileUploadRequest(
+            operationId = attachment.uploadOperationId,
+            sourceFile = sourceFile,
+            fileName = attachment.name,
+            mimeType = getMimeType(sourceFile.path),
+            attachment = attachment,
         )
+
+        val job = scope.launch(start = CoroutineStart.LAZY) {
+            performUpload(request, attachment, task, onProgress, onResult, onComplete)
+        }
+
+        uploadJobs.put(attachment.messageTid, job)?.cancel()
+        job.start()
+    }
+
+    private suspend fun performUpload(
+        request: FileUploadRequest,
+        attachment: SceytAttachment,
+        task: TransferTask,
+        onProgress: ((Float) -> Unit)?,
+        onResult: ((SceytResponse<String>) -> Unit)?,
+        onComplete: (() -> Unit)?,
+    ) {
+        val job = currentCoroutineContext().job
+
+        try {
+            val result = SceytChatUIKit.fileTransfer.transport.upload(
+                request = request,
+                callback = { event ->
+                    if (job.isActive) {
+                        handleUploadEvent(event, attachment, task, onProgress)
+                    }
+                },
+            )
+            currentCoroutineContext().ensureActive()
+            notifyUploadResult(SceytResponse.Success(result), task, onResult)
+            onComplete?.invoke()
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Throwable) {
+            notifyUploadResult(
+                response = SceytResponse.Error(error.toSceytException()),
+                task = task,
+                onResult = onResult,
+            )
+            onComplete?.invoke()
+        } finally {
+            uploadJobs.remove(attachment.messageTid, job)
+        }
+    }
+
+    private fun handleUploadEvent(
+        event: FileTransferEvent,
+        attachment: SceytAttachment,
+        task: TransferTask,
+        onProgress: ((Float) -> Unit)?,
+    ) {
+        if (event !is FileTransferEvent.Progress) return
+
+        if (onProgress != null) {
+            onProgress(event.progressPercent)
+        } else {
+            task.progressCallback?.onProgress(
+                TransferData(
+                    messageTid = task.messageTid,
+                    progressPercent = event.progressPercent,
+                    state = Uploading,
+                    filePath = attachment.filePath,
+                    url = null,
+                ),
+            )
+        }
+    }
+
+    private fun notifyUploadResult(
+        response: SceytResponse<String>,
+        task: TransferTask,
+        onResult: ((SceytResponse<String>) -> Unit)?,
+    ) {
+        if (onResult != null) {
+            onResult(response)
+        } else {
+            task.uploadResultCallback?.onResult(response)
+        }
     }
 
     private fun checkAndResizeMessageAttachments(

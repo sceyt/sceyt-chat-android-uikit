@@ -1,98 +1,86 @@
 package com.sceyt.chatuikit.filetransfer.defaults
 
 import com.sceyt.chatuikit.data.models.SceytResponse
-import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.filetransfer.FileDownloadRequest
 import com.sceyt.chatuikit.filetransfer.FileTransferCallback
+import com.sceyt.chatuikit.filetransfer.FileTransferEvent
 import com.sceyt.chatuikit.filetransfer.FileTransferTransport
 import com.sceyt.chatuikit.filetransfer.FileUploadRequest
 import com.sceyt.chatuikit.persistence.logicimpl.FileTransferUtility
-import java.util.concurrent.ConcurrentHashMap
+import kotlinx.coroutines.CancellableContinuation
+import kotlinx.coroutines.suspendCancellableCoroutine
+import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 class DefaultFileTransferTransport : FileTransferTransport {
     private val transferUtility = FileTransferUtility()
 
-    private val uploadAttachments = ConcurrentHashMap<String, SceytAttachment>()
-    private val downloadAttachments = ConcurrentHashMap<String, SceytAttachment>()
-
-    override fun upload(
+    override suspend fun upload(
         request: FileUploadRequest,
-        callback: FileTransferCallback<String>,
-    ) {
+        callback: FileTransferCallback,
+    ): String? = suspendCancellableCoroutine { continuation ->
+        val completed = AtomicBoolean()
         val attachment = request.attachment.copy(
             filePath = request.sourceFile.path,
         )
-        uploadAttachments[request.operationId] = attachment
 
         transferUtility.uploadFile(
             attachment = attachment,
-            onProgress = callback::onProgress,
-            onResult = { response ->
-                uploadAttachments.remove(request.operationId)
-
-                when (response) {
-                    is SceytResponse.Success -> {
-                        callback.onSuccess(response.data)
-                    }
-
-                    is SceytResponse.Error -> {
-                        callback.onFailure(response.exception)
-                    }
+            onProgress = { progressPercent ->
+                if (continuation.isActive) {
+                    callback.onEvent(FileTransferEvent.Progress(progressPercent))
                 }
             },
+            onResult = { response ->
+                continuation.completeWith(response, completed, "File upload failed")
+            },
         )
+
+        continuation.invokeOnCancellation {
+            completed.set(true)
+            transferUtility.pauseUpload(attachment)
+        }
     }
 
-    override fun download(
+    override suspend fun download(
         request: FileDownloadRequest,
-        callback: FileTransferCallback<String>,
-    ) {
+        callback: FileTransferCallback,
+    ): String? = suspendCancellableCoroutine { continuation ->
+        val completed = AtomicBoolean()
         val attachment = request.attachment.copy(url = request.url)
-        downloadAttachments[request.operationId] = attachment
 
         transferUtility.downloadFile(
             attachment = attachment,
             destFile = request.destinationFile,
-            onProgress = callback::onProgress,
-            onResult = { response ->
-                downloadAttachments.remove(request.operationId)
-
-                when (response) {
-                    is SceytResponse.Success -> {
-                        callback.onSuccess(response.data)
-                    }
-
-                    is SceytResponse.Error -> {
-                        callback.onFailure(response.exception)
-                    }
+            onProgress = { progressPercent ->
+                if (continuation.isActive) {
+                    callback.onEvent(FileTransferEvent.Progress(progressPercent))
                 }
             },
+            onResult = { response ->
+                continuation.completeWith(response, completed, "File download failed")
+            },
         )
-    }
 
-    override fun pause(operationId: String): Boolean {
-        uploadAttachments[operationId]?.let { attachment ->
-            transferUtility.pauseUpload(attachment)
-            return true
-        }
-
-        downloadAttachments[operationId]?.let { attachment ->
+        continuation.invokeOnCancellation {
+            completed.set(true)
             transferUtility.pauseDownload(attachment)
-            return true
         }
-
-        return false
     }
 
-    override fun resume(operationId: String): Boolean {
-        uploadAttachments[operationId]?.let { attachment ->
-            return transferUtility.resumeUpload(attachment)
-        }
+    private fun CancellableContinuation<String?>.completeWith(
+        response: SceytResponse<String>,
+        completed: AtomicBoolean,
+        fallbackErrorMessage: String,
+    ) {
+        if (!completed.compareAndSet(false, true)) return
 
-        downloadAttachments[operationId]?.let { attachment ->
-            return transferUtility.resumeDownload(attachment)
+        when (response) {
+            is SceytResponse.Success -> resume(response.data)
+            is SceytResponse.Error -> resumeWithException(
+                response.exception ?: IllegalStateException(fallbackErrorMessage),
+            )
         }
-
-        return false
     }
 }
