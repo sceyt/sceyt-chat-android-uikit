@@ -161,7 +161,7 @@ class AttachmentDownloadCoordinatorTest {
 
         assertThat(transport.downloadCalls.first().cancelled).isTrue()
         assertThat(transport.downloadCalls).hasSize(2)
-        assertThat(task.state).isEqualTo(TransferState.PauseUpload)
+        assertThat(task.state).isEqualTo(TransferState.PauseDownload)
         assertThat(states).containsExactly(
             TransferState.PauseDownload,
             TransferState.Downloading,
@@ -180,8 +180,26 @@ class AttachmentDownloadCoordinatorTest {
         coordinator.pauseLoad(attachment, TransferState.PendingDownload)
 
         assertThat(transport.downloadCalls.single().cancelled).isTrue()
-        assertThat(task.state).isEqualTo(TransferState.PauseUpload)
+        assertThat(task.state).isEqualTo(TransferState.PauseDownload)
         assertThat(states).containsExactly(TransferState.PauseDownload)
+    }
+
+    @Test
+    fun `pause uses stable operation id when url changes`() {
+        val attachment = attachment(
+            url = "https://cdn.test/old.txt",
+            state = TransferState.Downloading,
+        )
+        val task = transferTask(attachment)
+        service.addTransferTask(task)
+
+        coordinator.downloadFile(attachment, task)
+        coordinator.pauseLoad(
+            attachment.copy(url = "https://cdn.test/new.txt"),
+            TransferState.Downloading,
+        )
+
+        assertThat(transport.downloadCalls.single().cancelled).isTrue()
     }
 
     @Test

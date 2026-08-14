@@ -41,12 +41,14 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.suspendCancellableCoroutine
 import org.koin.core.component.inject
 import java.io.File
 import java.util.LinkedList
 import java.util.Queue
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.coroutines.resume
 
 internal class AttachmentUploadCoordinator(
     private val context: Context,
@@ -82,49 +84,48 @@ internal class AttachmentUploadCoordinator(
             originalPath = attachment.originalFilePath.toString(),
             messageTid = attachment.messageTid,
         )
+        val sharedUploadInProgress = sharingFilesPath
+            .filter { it.originalPath == attachment.originalFilePath }
+            .any { uploadJobs[it.messageTid]?.isActive == true }
 
-        if (
-            sharingFilesPath.none {
-                it.originalPath == attachment.originalFilePath
-            }
-        ) {
+        sharingFilesPath.add(shareFileData)
+        if (sharedUploadInProgress) return
+
+        launchUploadJob(attachment, task) {
+            if (pausedTaskIds.contains(attachment.messageTid)) return@launchUploadJob
+
             val checksum = getAttachmentChecksum(attachment.originalFilePath)
             val (uploaded, url) = checkMaybeAlreadyUploadedWithAnotherMessage(checksum, task)
 
             if (uploaded && url != null) {
-                sharingFilesPath.add(shareFileData)
-
                 getAppropriateTasks(task).forEach { transferTask ->
                     transferTask.uploadResultCallback?.onResult(SceytResponse.Success(url))
                 }
 
                 removeFromSharingPath(attachment.originalFilePath)
-                return
+                return@launchUploadJob
             }
 
-            var uploadAttachment = attachment
-
-            checkAndResizeMessageAttachments(
+            val result = prepareAttachment(
                 attachment = attachment,
                 checksumData = checksum,
                 task = task,
-            ) { result ->
-                result.onSuccess { path ->
+            )
+            currentCoroutineContext().ensureActive()
+
+            val uploadAttachment = result.fold(
+                onSuccess = { path ->
                     task.updateFileLocationCallback?.onUpdateFileLocation(path)
-
-                    uploadAttachment = uploadAttachment.copy(
-                        filePath = path,
-                        fileSize = getFileSize(path),
-                    )
-                }.onFailure {
+                    attachment.copy(filePath = path, fileSize = getFileSize(path))
+                },
+                onFailure = {
                     SceytLog.i(TAG, "Couldn't resize sharing file with reason ${it.message}")
-                }
+                    attachment
+                },
+            )
 
-                uploadSharedAttachment(uploadAttachment, task)
-            }
+            uploadSharedAttachment(uploadAttachment, task)
         }
-
-        sharingFilesPath.add(shareFileData)
     }
 
     fun pauseLoad(
@@ -196,18 +197,18 @@ internal class AttachmentUploadCoordinator(
                     ?.resumePauseCallback
                     ?.onResumePause(attachment.toTransferData(WaitingToUpload))
 
-                if (!resizingAttachmentIds.contains(attachment.messageTid)) {
-                    if (wasSharing) {
-                        uploadSharedFile(
-                            attachment = attachment,
-                            task = fileTransferService.findOrCreateTransferTask(attachment),
-                        )
-                    } else {
-                        uploadFile(
-                            attachment = attachment,
-                            task = fileTransferService.findOrCreateTransferTask(attachment),
-                        )
-                    }
+                if (resizingAttachmentIds.contains(attachment.messageTid)) return
+
+                if (wasSharing) {
+                    uploadSharedFile(
+                        attachment = attachment,
+                        task = fileTransferService.findOrCreateTransferTask(attachment),
+                    )
+                } else {
+                    uploadFile(
+                        attachment = attachment,
+                        task = fileTransferService.findOrCreateTransferTask(attachment),
+                    )
                 }
             }
 
@@ -262,55 +263,54 @@ internal class AttachmentUploadCoordinator(
     private fun uploadAttachment(
         attachment: SceytAttachment,
         task: TransferTask,
-    ) {
+    ) = launchUploadJob(attachment, task) {
+        if (pausedTaskIds.contains(attachment.messageTid)) {
+            uploadNext(attachment.messageTid)
+            return@launchUploadJob
+        }
+
         val checksum = getAttachmentChecksum(attachment.originalFilePath)
         val (uploaded, url) = checkMaybeAlreadyUploadedWithAnotherMessage(checksum, task)
 
         if (uploaded && url != null) {
             task.uploadResultCallback?.onResult(SceytResponse.Success(url))
             uploadNext(attachment.messageTid)
-            return
+            return@launchUploadJob
         }
 
-        var uploadAttachment = attachment
-
-        checkAndResizeMessageAttachments(
+        val result = prepareAttachment(
             attachment = attachment,
             checksumData = checksum,
             task = task,
-        ) { result ->
-            if (pausedTaskIds.contains(attachment.messageTid)) {
-                uploadNext(attachment.messageTid)
-                return@checkAndResizeMessageAttachments
-            }
+        )
+        currentCoroutineContext().ensureActive()
 
-            result.onSuccess { path ->
-                task.updateFileLocationCallback
-                    ?.onUpdateFileLocation(path)
-
-                uploadAttachment = uploadAttachment.copy(
-                    filePath = path,
-                    fileSize = getFileSize(path),
-                )
-            }.onFailure {
+        val uploadAttachment = result.fold(
+            onSuccess = { path ->
+                task.updateFileLocationCallback?.onUpdateFileLocation(path)
+                attachment.copy(filePath = path, fileSize = getFileSize(path))
+            },
+            onFailure = {
                 SceytLog.i(TAG, "Couldn't resize file with reason ${it.message}")
-            }
+                attachment
+            },
+        )
 
-            uploadAttachmentWithTransport(
-                attachment = uploadAttachment,
-                task = task,
-                onComplete = { uploadNext(attachment.messageTid) },
-            )
-        }
+        uploadAttachmentWithTransport(
+            attachment = uploadAttachment,
+            task = task,
+            onComplete = { uploadNext(attachment.messageTid) },
+        )
     }
 
-    private fun uploadSharedAttachment(
+    private suspend fun uploadSharedAttachment(
         attachment: SceytAttachment,
         task: TransferTask,
     ) {
         uploadAttachmentWithTransport(
             attachment = attachment,
             task = task,
+            isSharedUpload = true,
             onProgress = { progressPercent ->
                 if (pausedTaskIds.contains(attachment.messageTid)) {
                     return@uploadAttachmentWithTransport
@@ -340,9 +340,10 @@ internal class AttachmentUploadCoordinator(
         )
     }
 
-    private fun uploadAttachmentWithTransport(
+    private suspend fun uploadAttachmentWithTransport(
         attachment: SceytAttachment,
         task: TransferTask,
+        isSharedUpload: Boolean = false,
         onProgress: ((Float) -> Unit)? = null,
         onResult: ((SceytResponse<String>) -> Unit)? = null,
         onComplete: (() -> Unit)? = null,
@@ -354,13 +355,37 @@ internal class AttachmentUploadCoordinator(
             fileName = attachment.name,
             mimeType = getMimeType(sourceFile.path),
             attachment = attachment,
+            isSharedUpload = isSharedUpload,
         )
 
+        performUpload(request, attachment, task, onProgress, onResult, onComplete)
+    }
+
+    private fun launchUploadJob(
+        attachment: SceytAttachment,
+        task: TransferTask,
+        block: suspend () -> Unit,
+    ) {
+        val messageTid = attachment.messageTid
         val job = scope.launch(start = CoroutineStart.LAZY) {
-            performUpload(request, attachment, task, onProgress, onResult, onComplete)
+            try {
+                block()
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Throwable) {
+                SceytLog.e(TAG, "Upload preparation failed", error)
+                runCatching {
+                    task.uploadResultCallback?.onResult(
+                        SceytResponse.Error(error.toSceytException()),
+                    )
+                }
+                uploadNext(messageTid)
+            } finally {
+                uploadJobs.remove(messageTid, currentCoroutineContext().job)
+            }
         }
 
-        uploadJobs.put(attachment.messageTid, job)?.cancel()
+        uploadJobs.put(messageTid, job)?.cancel()
         job.start()
     }
 
@@ -395,8 +420,6 @@ internal class AttachmentUploadCoordinator(
                 onResult = onResult,
             )
             onComplete?.invoke()
-        } finally {
-            uploadJobs.remove(attachment.messageTid, job)
         }
     }
 
@@ -435,58 +458,67 @@ internal class AttachmentUploadCoordinator(
         }
     }
 
-    private fun checkAndResizeMessageAttachments(
+    private suspend fun prepareAttachment(
         attachment: SceytAttachment,
         checksumData: FileChecksumData?,
         task: TransferTask,
-        callback: (Result<String>) -> Unit,
-    ) {
+    ): Result<String> {
         val resizedPath = checksumData?.resizedFilePath
 
         if (resizedPath != null && File(resizedPath).exists()) {
-            callback(Result.success(resizedPath))
-            return
+            return Result.success(resizedPath)
         }
 
-        when (attachment.type) {
+        return when (attachment.type) {
             AttachmentTypeEnum.Image.value -> {
                 resizingAttachmentIds.add(attachment.messageTid)
-
-                val resizeConfig = SceytChatUIKit.config.imageAttachmentResizeConfig
-
-                val result = resizeImage(
-                    path = attachment.filePath,
-                    parentDir = context.filesDir,
-                    reqSize = resizeConfig.dimensionThreshold,
-                    quality = resizeConfig.compressionQuality,
-                )
-
-                resizingAttachmentIds.remove(attachment.messageTid)
-                callback(result)
-            }
-
-            AttachmentTypeEnum.Video.value -> {
-                resizingAttachmentIds.add(attachment.messageTid)
-
-                transcodeVideo(
-                    path = attachment.filePath,
-                    parentDir = context.filesDir,
-                    quality = SceytChatUIKit.config.attachmentTransferConfig.videoTranscodeQuality,
-                    progressCallback = { data ->
-                        if (!pausedTaskIds.contains(attachment.messageTid)) {
-                            task.preparingCallback?.onPreparing(
-                                attachment.toTransferData(Preparing, data.progressPercent),
-                            )
-                        }
-                    },
-                ) { result ->
+                try {
+                    val resizeConfig = SceytChatUIKit.config.imageAttachmentResizeConfig
+                    resizeImage(
+                        path = attachment.filePath,
+                        parentDir = context.filesDir,
+                        reqSize = resizeConfig.dimensionThreshold,
+                        quality = resizeConfig.compressionQuality,
+                    )
+                } finally {
                     resizingAttachmentIds.remove(attachment.messageTid)
-                    callback(result)
                 }
             }
 
-            else -> {
-                callback(Result.failure(Exception("Unsupported attachment type: ${attachment.type}")))
+            AttachmentTypeEnum.Video.value -> transcodeAttachment(attachment, task)
+
+            else -> Result.failure(Exception("Unsupported attachment type: ${attachment.type}"))
+        }
+    }
+
+    private suspend fun transcodeAttachment(
+        attachment: SceytAttachment,
+        task: TransferTask,
+    ): Result<String> = suspendCancellableCoroutine { continuation ->
+        val completed = AtomicBoolean()
+        resizingAttachmentIds.add(attachment.messageTid)
+
+        continuation.invokeOnCancellation {
+            completed.set(true)
+            resizingAttachmentIds.remove(attachment.messageTid)
+            VideoTranscodeHelper.cancel(attachment.filePath)
+        }
+
+        transcodeVideo(
+            path = attachment.filePath,
+            parentDir = context.filesDir,
+            quality = SceytChatUIKit.config.attachmentTransferConfig.videoTranscodeQuality,
+            progressCallback = { data ->
+                if (continuation.isActive && !pausedTaskIds.contains(attachment.messageTid)) {
+                    task.preparingCallback?.onPreparing(
+                        attachment.toTransferData(Preparing, data.progressPercent),
+                    )
+                }
+            },
+        ) { result ->
+            if (completed.compareAndSet(false, true)) {
+                resizingAttachmentIds.remove(attachment.messageTid)
+                continuation.resume(result)
             }
         }
     }
@@ -522,20 +554,14 @@ internal class AttachmentUploadCoordinator(
         }
     }
 
-    private fun getAttachmentChecksum(
+    private suspend fun getAttachmentChecksum(
         filePath: String?,
     ): FileChecksumData? {
         if (!SceytChatUIKit.config.preventDuplicateAttachmentUpload) {
             return null
         }
 
-        val data: FileChecksumData?
-
-        runBlocking(Dispatchers.IO) {
-            data = attachmentLogic.getFileChecksumData(filePath)
-        }
-
-        return data
+        return attachmentLogic.getFileChecksumData(filePath)
     }
 
     private fun checkMaybeAlreadyUploadedWithAnotherMessage(

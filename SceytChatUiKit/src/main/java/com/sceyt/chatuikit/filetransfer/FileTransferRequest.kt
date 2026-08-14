@@ -9,6 +9,7 @@ data class FileUploadRequest(
     val fileName: String,
     val mimeType: String?,
     val attachment: SceytAttachment,
+    val isSharedUpload: Boolean = false,
 )
 
 data class FileDownloadRequest(
