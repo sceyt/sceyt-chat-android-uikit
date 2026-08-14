@@ -31,6 +31,7 @@ import kotlinx.coroutines.launch
 import org.koin.core.component.inject
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicBoolean
 
 internal class AttachmentDownloadCoordinator(
     private val context: Context,
@@ -107,12 +108,16 @@ internal class AttachmentDownloadCoordinator(
         operationId: String,
     ) {
         val job = currentCoroutineContext().job
+        val waitingForNetwork = AtomicBoolean()
 
         try {
             val result = SceytChatUIKit.fileTransfer.transport.download(
                 request = request,
                 callback = { event ->
                     if (job.isActive) {
+                        if (event is FileTransferEvent.WaitingForNetwork) {
+                            waitingForNetwork.set(true)
+                        }
                         handleDownloadEvent(event, task, url)
                     }
                 },
@@ -122,7 +127,9 @@ internal class AttachmentDownloadCoordinator(
         } catch (error: CancellationException) {
             throw error
         } catch (error: Throwable) {
-            request.destinationFile.delete()
+            if (!waitingForNetwork.get()) {
+                request.destinationFile.delete()
+            }
             task.downloadCallback?.onResult(SceytResponse.Error(error.toSceytException()))
         } finally {
             downloadJobs.remove(operationId, job)
