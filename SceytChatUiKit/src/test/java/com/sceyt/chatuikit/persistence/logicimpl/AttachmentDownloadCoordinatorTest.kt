@@ -148,6 +148,23 @@ class AttachmentDownloadCoordinatorTest {
     }
 
     @Test
+    fun `waiting for network keeps partial destination and forwards error`() {
+        val attachment = attachment(state = TransferState.PendingDownload)
+        val task = transferTask(attachment)
+        val partialBytes = byteArrayOf(1, 2)
+        var result: SceytResponse<String>? = null
+        task.downloadCallback = TransferResultCallback { result = it }
+
+        coordinator.downloadFile(attachment, task)
+        destinationFile.writeBytes(partialBytes)
+        transport.downloadCalls.single().waitingForNetwork()
+        transport.downloadCalls.single().fail(IllegalStateException("No network connection"))
+
+        assertThat(destinationFile.readBytes()).isEqualTo(partialBytes)
+        assertThat(result).isInstanceOf(SceytResponse.Error::class.java)
+    }
+
+    @Test
     fun `pause cancels download and resume starts a new call`() {
         val attachment = attachment(state = TransferState.Downloading)
         val task = transferTask(attachment)
