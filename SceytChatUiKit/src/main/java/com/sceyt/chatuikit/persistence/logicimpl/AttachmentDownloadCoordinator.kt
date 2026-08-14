@@ -24,6 +24,7 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.job
@@ -204,6 +205,12 @@ internal class AttachmentDownloadCoordinator(
         )
 
         task?.resumePauseCallback?.onResumePause(attachment.toTransferData(Downloading))
+    }
+
+    fun cancelAll() {
+        downloadJobs.values.forEach { it.cancel() }
+        downloadJobs.clear()
+        scope.coroutineContext.cancelChildren()
     }
 
     private fun Throwable?.toSceytException(): SceytException? {

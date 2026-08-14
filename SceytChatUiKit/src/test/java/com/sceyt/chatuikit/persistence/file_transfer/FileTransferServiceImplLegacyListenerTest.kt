@@ -42,4 +42,14 @@ class FileTransferServiceImplLegacyListenerTest {
         verify(legacyListeners).download(attachment, task)
         verify(logic, never()).downloadFile(attachment, task)
     }
+
+    @Test
+    fun `cancel all cancels default and legacy transfers`() {
+        service.setCustomListener(legacyListeners)
+
+        service.cancelAllTransfers()
+
+        verify(logic).cancelAll()
+        verify(legacyListeners).cancelAllTransfers()
+    }
 }

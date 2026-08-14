@@ -32,5 +32,8 @@ sealed interface FileTransferListeners {
 
     /** Use this if you want to implement all callbacks */
     interface Listeners : UploadListener, UploadSharedListener, DownloadListener, PauseListener,
-            ResumeListener, ThumbListener
+            ResumeListener, ThumbListener {
+        /** Cancels transfer operations owned by this listener. */
+        fun cancelAllTransfers() = Unit
+    }
 }

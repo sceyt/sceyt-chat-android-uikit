@@ -37,6 +37,7 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.job
@@ -66,6 +67,7 @@ internal class AttachmentUploadCoordinator(
     private val uploadJobs = ConcurrentHashMap<Long, Job>()
     private val resizingAttachmentIds = ConcurrentHashMap.newKeySet<Long>()
     private val sharingFilesPath = ConcurrentHashMap.newKeySet<ShareFileData>()
+    private val sharingFilesLock = Any()
 
     fun uploadFile(
         attachment: SceytAttachment,
@@ -84,25 +86,32 @@ internal class AttachmentUploadCoordinator(
             originalPath = attachment.originalFilePath.toString(),
             messageTid = attachment.messageTid,
         )
-        val sharedUploadInProgress = sharingFilesPath
-            .filter { it.originalPath == attachment.originalFilePath }
-            .any { uploadJobs[it.messageTid]?.isActive == true }
-
-        sharingFilesPath.add(shareFileData)
+        val sharedUploadInProgress = synchronized(sharingFilesLock) {
+            val inProgress = sharingFilesPath.any {
+                it.originalPath == shareFileData.originalPath
+            }
+            sharingFilesPath.add(shareFileData)
+            inProgress
+        }
         if (sharedUploadInProgress) return
 
-        launchUploadJob(attachment, task) {
+        launchUploadJob(
+            attachment = attachment,
+            onError = { response ->
+                takeAppropriateTasks(task).forEach { transferTask ->
+                    runCatching { transferTask.uploadResultCallback?.onResult(response) }
+                }
+            },
+        ) {
             if (pausedTaskIds.contains(attachment.messageTid)) return@launchUploadJob
 
             val checksum = getAttachmentChecksum(attachment.originalFilePath)
             val (uploaded, url) = checkMaybeAlreadyUploadedWithAnotherMessage(checksum, task)
 
             if (uploaded && url != null) {
-                getAppropriateTasks(task).forEach { transferTask ->
+                takeAppropriateTasks(task).forEach { transferTask ->
                     transferTask.uploadResultCallback?.onResult(SceytResponse.Success(url))
                 }
-
-                removeFromSharingPath(attachment.originalFilePath)
                 return@launchUploadJob
             }
 
@@ -141,10 +150,6 @@ internal class AttachmentUploadCoordinator(
                 uploadJobs.remove(attachment.messageTid)?.cancel()
                 pausedTaskIds.add(attachment.messageTid)
 
-                if (attachment.type == AttachmentTypeEnum.Video.value) {
-                    VideoTranscodeHelper.cancel(attachment.filePath)
-                }
-
                 fileTransferService.findTransferTask(attachment)?.let { task ->
                     task.state = PauseUpload
                     task.resumePauseCallback?.onResumePause(attachment.toTransferData(PauseUpload))
@@ -169,11 +174,11 @@ internal class AttachmentUploadCoordinator(
 
                 var wasSharing = false
 
-                if (
+                if (synchronized(sharingFilesLock) {
                     sharingFilesPath.any {
                         it.originalPath == attachment.originalFilePath
                     }
-                ) {
+                }) {
                     wasSharing = true
 
                     fileTransferService.getTasks().values
@@ -213,6 +218,23 @@ internal class AttachmentUploadCoordinator(
             }
 
             else -> return
+        }
+    }
+
+    fun cancelAll() {
+        uploadJobs.values.forEach { it.cancel() }
+        uploadJobs.clear()
+        scope.coroutineContext.cancelChildren()
+
+        synchronized(uploadQueueLock) {
+            pendingUploadQueue.clear()
+            currentUploadingAttachment = null
+        }
+
+        pausedTaskIds.clear()
+        resizingAttachmentIds.clear()
+        synchronized(sharingFilesLock) {
+            sharingFilesPath.clear()
         }
     }
 
@@ -263,7 +285,10 @@ internal class AttachmentUploadCoordinator(
     private fun uploadAttachment(
         attachment: SceytAttachment,
         task: TransferTask,
-    ) = launchUploadJob(attachment, task) {
+    ) = launchUploadJob(
+        attachment = attachment,
+        onError = { response -> task.uploadResultCallback?.onResult(response) },
+    ) {
         if (pausedTaskIds.contains(attachment.messageTid)) {
             uploadNext(attachment.messageTid)
             return@launchUploadJob
@@ -331,11 +356,9 @@ internal class AttachmentUploadCoordinator(
                 }
             },
             onResult = { response ->
-                getAppropriateTasks(task).forEach { transferTask ->
+                takeAppropriateTasks(task).forEach { transferTask ->
                     transferTask.uploadResultCallback?.onResult(response)
                 }
-
-                removeFromSharingPath(attachment.originalFilePath)
             },
         )
     }
@@ -363,7 +386,7 @@ internal class AttachmentUploadCoordinator(
 
     private fun launchUploadJob(
         attachment: SceytAttachment,
-        task: TransferTask,
+        onError: (SceytResponse.Error<String>) -> Unit,
         block: suspend () -> Unit,
     ) {
         val messageTid = attachment.messageTid
@@ -374,11 +397,7 @@ internal class AttachmentUploadCoordinator(
                 throw error
             } catch (error: Throwable) {
                 SceytLog.e(TAG, "Upload preparation failed", error)
-                runCatching {
-                    task.uploadResultCallback?.onResult(
-                        SceytResponse.Error(error.toSceytException()),
-                    )
-                }
+                runCatching { onError(SceytResponse.Error(error.toSceytException())) }
                 uploadNext(messageTid)
             } finally {
                 uploadJobs.remove(messageTid, currentCoroutineContext().job)
@@ -523,21 +542,21 @@ internal class AttachmentUploadCoordinator(
         }
     }
 
-    private fun removeFromSharingPath(filePath: String?) {
-        val current = sharingFilesPath.firstOrNull {
-            it.originalPath == filePath
-        } ?: return
-
-        sharingFilesPath.removeAll {
-            it.originalPath == current.originalPath
-        }
-        sharingFilesPath.remove(current)
-    }
-
-    @Synchronized
     private fun getAppropriateTasks(
         task: TransferTask,
-    ): List<TransferTask> {
+    ): List<TransferTask> = synchronized(sharingFilesLock) {
+        getAppropriateTasksLocked(task)
+    }
+
+    private fun takeAppropriateTasks(
+        task: TransferTask,
+    ): List<TransferTask> = synchronized(sharingFilesLock) {
+        getAppropriateTasksLocked(task).also {
+            removeFromSharingPathLocked(task.attachment.originalFilePath)
+        }
+    }
+
+    private fun getAppropriateTasksLocked(task: TransferTask): List<TransferTask> {
         val currentTaskOriginalPath =
             sharingFilesPath.firstOrNull {
                 it.originalPath == task.attachment.originalFilePath
@@ -552,6 +571,10 @@ internal class AttachmentUploadCoordinator(
                 data.messageTid == transferTask.attachment.messageTid
             } && transferTask.state != PauseUpload
         }
+    }
+
+    private fun removeFromSharingPathLocked(filePath: String?) {
+        sharingFilesPath.removeAll { it.originalPath == filePath }
     }
 
     private suspend fun getAttachmentChecksum(

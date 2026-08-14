@@ -49,6 +49,10 @@ internal class TestFileTransferService : FileTransferService {
 
     override fun clearPreparingThumbPaths() = Unit
 
+    override fun cancelAllTransfers() {
+        tasks.clear()
+    }
+
     override fun upload(attachment: SceytAttachment, transferTask: TransferTask) {
         customListeners?.upload(attachment, transferTask)
     }

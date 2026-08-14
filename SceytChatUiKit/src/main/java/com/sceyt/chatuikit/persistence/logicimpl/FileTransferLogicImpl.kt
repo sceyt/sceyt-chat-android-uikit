@@ -18,14 +18,18 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState.WaitingToUplo
 import com.sceyt.chatuikit.persistence.file_transfer.TransferTask
 import com.sceyt.chatuikit.persistence.logic.FileTransferLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 
 internal class FileTransferLogicImpl(
     context: Context,
     attachmentLogic: PersistenceAttachmentLogic,
     thumbPathResolver: ThumbPathResolver,
 ) : FileTransferLogic {
-    private val uploadCoordinator = AttachmentUploadCoordinator(context, attachmentLogic)
-    private val downloadCoordinator = AttachmentDownloadCoordinator(context)
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val uploadCoordinator = AttachmentUploadCoordinator(context, attachmentLogic, scope)
+    private val downloadCoordinator = AttachmentDownloadCoordinator(context, scope)
     private val thumbCoordinator = AttachmentThumbCoordinator(context, thumbPathResolver)
 
     override fun uploadFile(attachment: SceytAttachment, task: TransferTask) {
@@ -73,6 +77,12 @@ internal class FileTransferLogicImpl(
     }
 
     override fun clearPreparingThumbPaths() {
+        thumbCoordinator.clearPreparingThumbPaths()
+    }
+
+    override fun cancelAll() {
+        uploadCoordinator.cancelAll()
+        downloadCoordinator.cancelAll()
         thumbCoordinator.clearPreparingThumbPaths()
     }
 }
