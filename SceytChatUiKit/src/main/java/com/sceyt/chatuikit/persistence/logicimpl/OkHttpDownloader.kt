@@ -20,7 +20,9 @@ import java.util.concurrent.TimeUnit
 
 class OkHttpDownloader {
 
-    private val downloadCalls = ConcurrentHashMap<Long, Call>()
+    // Keyed by the downloading file, not by the message, because a message can download
+    // more than one file, like a video with its thumb
+    private val downloadCalls = DownloadCallRegistry()
 
     private val httpClient: OkHttpClient by lazy {
         OkHttpClient.Builder()
@@ -36,11 +38,11 @@ class OkHttpDownloader {
         onProgress: (Float) -> Unit,
         onResult: (SceytResponse<String>) -> Unit,
     ) {
-        val messageTid = attachment.messageTid
         val url = attachment.url ?: run {
             onResult(SceytResponse.Error(SceytException(0, "URL is null")))
             return
         }
+        val downloadKey = DownloadKey(attachment.messageTid, url)
 
         // Create parent directories if they don't exist
         destFile.parentFile?.mkdirs()
@@ -62,12 +64,12 @@ class OkHttpDownloader {
         }
 
         val call = httpClient.newCall(request)
-        downloadCalls[messageTid] = call
+        downloadCalls.track(downloadKey, call)
 
         call.enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 if (call.isCanceled()) return
-                downloadCalls.remove(messageTid)
+                downloadCalls.remove(downloadKey, call)
                 SceytLog.e(TAG, "Download failed: ${e.message}")
                 onResult(SceytResponse.Error(SceytException(0, e.message)))
             }
@@ -77,7 +79,7 @@ class OkHttpDownloader {
 
                 try {
                     if (!response.isSuccessful) {
-                        downloadCalls.remove(messageTid)
+                        downloadCalls.remove(downloadKey, call)
                         onResult(
                             createErrorResponse(message = response.message, code = response.code)
                         )
@@ -126,19 +128,19 @@ class OkHttpDownloader {
 
                         if (call.isCanceled()) return
 
-                        downloadCalls.remove(messageTid)
+                        downloadCalls.remove(downloadKey, call)
                         onResult(SceytResponse.Success(destFile.absolutePath))
                     } catch (e: Exception) {
                         sink.close()
                         if (!call.isCanceled()) {
-                            downloadCalls.remove(messageTid)
+                            downloadCalls.remove(downloadKey, call)
                             SceytLog.e(TAG, "Download error: ${e.message}")
                             onResult(SceytResponse.Error(SceytException(0, e.message)))
                         }
                     }
 
                 } catch (e: Exception) {
-                    downloadCalls.remove(messageTid)
+                    downloadCalls.remove(downloadKey, call)
                     SceytLog.e(TAG, "Download error: ${e.message}")
                     onResult(SceytResponse.Error(SceytException(0, e.message)))
                 }
@@ -147,13 +149,12 @@ class OkHttpDownloader {
     }
 
     fun pauseDownload(attachment: SceytAttachment) {
-        downloadCalls[attachment.messageTid]?.cancel()
-        downloadCalls.remove(attachment.messageTid)
+        attachment.downloadKey?.let(downloadCalls::cancel)
     }
 
     fun resumeDownload(attachment: SceytAttachment): Boolean {
         // Check if there's already a download in progress
-        return if (downloadCalls.containsKey(attachment.messageTid)) {
+        return if (attachment.downloadKey?.let(downloadCalls::contains) == true) {
             true // Already downloading
         } else {
             false // Can resume - the downloadFile method will handle partial download
@@ -162,13 +163,12 @@ class OkHttpDownloader {
 
     @Suppress("unused")
     fun cancelAllDownloads() {
-        downloadCalls.values.forEach { it.cancel() }
-        downloadCalls.clear()
+        downloadCalls.cancelAll()
     }
 
     @Suppress("unused")
     fun isDownloading(messageTid: Long): Boolean {
-        return downloadCalls.containsKey(messageTid)
+        return downloadCalls.containsMessage(messageTid)
     }
 
     @Suppress("unused")
@@ -178,12 +178,61 @@ class OkHttpDownloader {
 
     @Suppress("unused")
     fun getActiveDownloads(): List<Long> {
-        return downloadCalls.keys.toList()
+        return downloadCalls.messageTids()
     }
 
     @Suppress("unused")
     fun cancelDownload(messageTid: Long) {
-        downloadCalls[messageTid]?.cancel()
-        downloadCalls.remove(messageTid)
+        downloadCalls.cancelMessage(messageTid)
     }
-} 
+
+    private val SceytAttachment.downloadKey: DownloadKey?
+        get() = url?.let { DownloadKey(messageTid, it) }
+}
+
+internal data class DownloadKey(
+    val messageTid: Long,
+    val url: String,
+)
+
+internal class DownloadCallRegistry {
+    private val calls = ConcurrentHashMap<DownloadKey, Call>()
+
+    val size: Int
+        get() = calls.size
+
+    fun track(key: DownloadKey, call: Call) {
+        calls.put(key, call)?.cancel()
+    }
+
+    fun remove(key: DownloadKey, call: Call): Boolean {
+        return calls.remove(key, call)
+    }
+
+    fun contains(key: DownloadKey): Boolean {
+        return calls.containsKey(key)
+    }
+
+    fun containsMessage(messageTid: Long): Boolean {
+        return calls.keys.any { it.messageTid == messageTid }
+    }
+
+    fun messageTids(): List<Long> {
+        return calls.keys.map(DownloadKey::messageTid).distinct()
+    }
+
+    fun cancel(key: DownloadKey) {
+        calls.remove(key)?.cancel()
+    }
+
+    fun cancelMessage(messageTid: Long) {
+        calls.keys.filter { it.messageTid == messageTid }.forEach { key ->
+            calls.remove(key)?.cancel()
+        }
+    }
+
+    fun cancelAll() {
+        calls.values.forEach(Call::cancel)
+        calls.clear()
+    }
+}

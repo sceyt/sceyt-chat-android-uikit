@@ -147,6 +147,21 @@ internal abstract class AttachmentDao {
         updateAttachmentPayLoadFilePathByMsgTid(tid, filePath)
     }
 
+    @Transaction
+    open suspend fun updateAttachmentAndPayLoadUrl(msgTid: Long, url: String?) {
+        updateAttachmentUrlByMsgTid(msgTid, url)
+        updateAttachmentPayLoadUrlByMsgTid(msgTid, url)
+    }
+
+    @Query("UPDATE $ATTACHMENT_TABLE SET url = :url WHERE messageTid = :msgTid AND type != :ignoreType")
+    abstract suspend fun updateAttachmentUrlByMsgTid(msgTid: Long, url: String?, ignoreType: String = AttachmentTypeEnum.Link.value)
+
+    @Query("UPDATE $ATTACHMENT_PAYLOAD_TABLE SET url = :url WHERE messageTid = :msgTid")
+    abstract suspend fun updateAttachmentPayLoadUrlByMsgTid(msgTid: Long, url: String?)
+
+    @Query("UPDATE $ATTACHMENT_TABLE SET metadata = :metadata WHERE messageTid = :msgTid AND type != :ignoreType")
+    abstract suspend fun updateAttachmentMetadataByMsgTid(msgTid: Long, metadata: String?, ignoreType: String = AttachmentTypeEnum.Link.value)
+
     @Query("UPDATE $ATTACHMENT_TABLE SET filePath = :filePath, url = :url WHERE messageTid = :msgTid AND type != :ignoreType")
     abstract suspend fun updateAttachmentByMsgTid(msgTid: Long, filePath: String?, url: String?, ignoreType: String = AttachmentTypeEnum.Link.value)
 

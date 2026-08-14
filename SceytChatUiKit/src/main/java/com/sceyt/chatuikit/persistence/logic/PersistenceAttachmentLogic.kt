@@ -52,6 +52,11 @@ interface PersistenceAttachmentLogic {
         metadata: String?
     )
 
+    suspend fun updateAttachmentMetadata(messageTid: Long, metadata: String?)
+    suspend fun updateAttachmentUrl(messageTid: Long, url: String?)
+    suspend fun updateFileChecksumUrl(filePath: String?, url: String?)
+    suspend fun updateFileChecksumMetadata(filePath: String?, metadata: String?)
+
     suspend fun getFileChecksumData(filePath: String?): FileChecksumData?
     suspend fun getLinkPreviewData(link: String?): SceytResponse<LinkPreviewDetails>
     suspend fun upsertLinkPreviewData(linkDetails: LinkPreviewDetails)

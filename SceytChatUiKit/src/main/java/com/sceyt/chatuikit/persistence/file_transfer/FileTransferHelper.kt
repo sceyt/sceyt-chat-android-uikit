@@ -230,7 +230,9 @@ object FileTransferHelper : SceytKoinComponent {
                 val transferData = TransferData(
                     currentAttachment.messageTid,
                     currentAttachment.progressPercent ?: 0f,
-                    ErrorUpload, currentAttachment.filePath, null
+                    // Keep the url, if the file itself was uploaded and only its thumb failed,
+                    // to not upload the file again on retry
+                    ErrorUpload, currentAttachment.filePath, currentAttachment.url
                 )
 
                 val updatedAttachment = updateAttachmentAndStateIfValid(

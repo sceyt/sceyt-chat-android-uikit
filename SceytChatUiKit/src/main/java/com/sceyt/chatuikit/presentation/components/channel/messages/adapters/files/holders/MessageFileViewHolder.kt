@@ -23,6 +23,7 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploaded
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploading
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.WaitingToUpload
 import com.sceyt.chatuikit.persistence.file_transfer.getProgressWithState
+import com.sceyt.chatuikit.persistence.file_transfer.isTransferring
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
 import com.sceyt.chatuikit.presentation.extensions.isNotPending
@@ -70,8 +71,13 @@ class MessageFileViewHolder(
     }
 
     override fun updateState(data: TransferData, isOnBind: Boolean) {
-        binding.loadProgress.getProgressWithState(data.state, style.mediaLoaderStyle,
-            message.isNotPending(), data.progressPercent)
+        binding.loadProgress.getProgressWithState(
+            state = data.state,
+            style = style.mediaLoaderStyle,
+            hideOnThumbLoaded = message.isNotPending()
+                    && !fileItem.transferData?.state.isTransferring(),
+            progressPercent = data.progressPercent
+        )
         when (data.state) {
             PendingUpload -> {
                 binding.icFile.setImageResource(0)

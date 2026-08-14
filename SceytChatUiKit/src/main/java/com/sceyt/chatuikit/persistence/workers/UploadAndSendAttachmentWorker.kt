@@ -36,6 +36,7 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
+import com.sceyt.chatuikit.persistence.mappers.needsVideoThumbUpload
 import com.sceyt.chatuikit.persistence.mappers.toMessage
 import com.sceyt.chatuikit.persistence.mappers.toTransferData
 import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager.FILE_TRANSFER_NOTIFICATION_ID
@@ -105,12 +106,17 @@ class UploadAndSendAttachmentWorker(
                 continue
 
             val payload = payloads.find { it.messageTid == attachment.messageTid }
-            if (payload != null && (payload.transferState == TransferState.Uploaded || payload.url.isNotNullOrBlank())) {
+            val isFileUploaded = payload != null &&
+                    (payload.transferState == TransferState.Uploaded || payload.url.isNotNullOrBlank())
+            // The file could be uploaded, while its video thumb upload failed, so the upload
+            // should be continued to upload only the missing thumb
+            if (isFileUploaded && !attachment.needsVideoThumbUpload()) {
                 val transferData = payload.toTransferData(TransferState.Uploaded, 100f)
                 attachmentLogic.updateAttachmentWithTransferData(transferData)
                 attachments[index] = attachment.copy(url = payload.url)
                 return kotlin.Result.success(attachments)
             } else {
+                val uploadAttachment = attachment.copy(url = payload?.url ?: attachment.url)
                 val filePath = attachment.originalFilePath ?: attachment.filePath
                 if (filePath.isNullOrEmpty()) {
                     SceytLog.i(TAG, "Skip uploading a file path is null or empty")
@@ -129,7 +135,7 @@ class UploadAndSendAttachmentWorker(
 
                         val transferData = TransferData(tmpMessage.tid, attachment.progressPercent
                                 ?: 0f, TransferState.WaitingToUpload,
-                            attachment.filePath, attachment.url)
+                            attachment.filePath, uploadAttachment.url)
 
                         FileTransferHelper.emitAttachmentTransferUpdate(transferData, attachment.fileSize)
 
@@ -137,7 +143,7 @@ class UploadAndSendAttachmentWorker(
                             attachmentLogic.updateAttachmentWithTransferData(transferData)
                         }
 
-                        uploadFile(attachment, continuation, isSharing)
+                        uploadFile(uploadAttachment, continuation, isSharing)
                     }
                 }
                 return result.fold(

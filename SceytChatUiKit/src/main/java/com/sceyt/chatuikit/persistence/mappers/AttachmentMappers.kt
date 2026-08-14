@@ -189,6 +189,7 @@ fun SceytAttachment.getInfoFromMetadata(): AttachmentMetadataPayload {
     var duration: Long? = null
     var blurredThumbBitmap: Bitmap? = null
     var audioMetadata: AudioMetadata? = null
+    var videoThumbUrl: String? = null
 
     try {
         val jsonObject = JSONObject(
@@ -216,10 +217,13 @@ fun SceytAttachment.getInfoFromMetadata(): AttachmentMetadataPayload {
         if (metadataType == AttachmentTypeEnum.Video.value || metadataType == AttachmentTypeEnum.Voice.value)
             duration = jsonObject.getFromJsonObject(SceytConstants.Duration)?.toLongOrNull()
 
+        if (metadataType == AttachmentTypeEnum.Video.value)
+            videoThumbUrl = jsonObject.getFromJsonObject(SceytConstants.VideoThumbUrl)
+
     } catch (_: Exception) {
     }
 
-    return AttachmentMetadataPayload(size, duration, blurredThumbBitmap, audioMetadata)
+    return AttachmentMetadataPayload(size, duration, blurredThumbBitmap, audioMetadata, videoThumbUrl)
 }
 
 fun getThumbFromMetadata(metadata: String?): Bitmap? {

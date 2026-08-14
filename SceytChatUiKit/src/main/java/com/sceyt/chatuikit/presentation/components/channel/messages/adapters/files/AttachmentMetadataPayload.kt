@@ -11,5 +11,6 @@ data class AttachmentMetadataPayload(
         var size: Size? = null,
         var duration: Long? = null,
         var blurredThumbBitmap: Bitmap? = null,
-        var audioMetadata: AudioMetadata? = null
+        var audioMetadata: AudioMetadata? = null,
+        var videoThumbUrl: String? = null
 ) : Parcelable

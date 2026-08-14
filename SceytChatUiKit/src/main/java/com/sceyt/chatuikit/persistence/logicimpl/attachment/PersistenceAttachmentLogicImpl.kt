@@ -178,6 +178,34 @@ internal class PersistenceAttachmentLogicImpl(
         }
     }
 
+    override suspend fun updateAttachmentMetadata(messageTid: Long, metadata: String?) {
+        messagesCache.updateAttachmentMetadata(messageTid, metadata)
+        withContext(Dispatchers.IO) {
+            attachmentDao.updateAttachmentMetadataByMsgTid(msgTid = messageTid, metadata = metadata)
+        }
+    }
+
+    override suspend fun updateAttachmentUrl(messageTid: Long, url: String?) {
+        messagesCache.updateAttachmentUrl(messageTid, url)
+        withContext(Dispatchers.IO) {
+            attachmentDao.updateAttachmentAndPayLoadUrl(msgTid = messageTid, url = url)
+        }
+    }
+
+    override suspend fun updateFileChecksumUrl(filePath: String?, url: String?) {
+        withContext(Dispatchers.IO) {
+            val checksum = FileChecksumCalculator.calculateFileChecksum(filePath ?: return@withContext)
+            fileChecksumDao.updateUrl(checksum ?: return@withContext, url)
+        }
+    }
+
+    override suspend fun updateFileChecksumMetadata(filePath: String?, metadata: String?) {
+        withContext(Dispatchers.IO) {
+            val checksum = FileChecksumCalculator.calculateFileChecksum(filePath ?: return@withContext)
+            fileChecksumDao.updateMetadata(checksum ?: return@withContext, metadata)
+        }
+    }
+
     override suspend fun getFileChecksumData(filePath: String?): FileChecksumData? {
         val checksum = FileChecksumCalculator.calculateFileChecksum(filePath ?: return null)
         return fileChecksumDao.getChecksum(checksum ?: return null)?.toFileChecksumData()

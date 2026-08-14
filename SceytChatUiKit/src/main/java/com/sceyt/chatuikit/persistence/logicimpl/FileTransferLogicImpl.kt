@@ -17,6 +17,7 @@ import com.sceyt.chatuikit.persistence.extensions.resizeImage
 import com.sceyt.chatuikit.persistence.extensions.transcodeVideo
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.file_transfer.ThumbData
+import com.sceyt.chatuikit.persistence.file_transfer.ThumbFor
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Downloading
@@ -34,6 +35,7 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState.WaitingToUplo
 import com.sceyt.chatuikit.persistence.file_transfer.TransferTask
 import com.sceyt.chatuikit.persistence.logic.FileTransferLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
+import com.sceyt.chatuikit.persistence.mappers.getVideoThumbUrl
 import com.sceyt.chatuikit.persistence.mappers.toTransferData
 import com.sceyt.chatuikit.presentation.extensions.isAttachmentExistAndFullyLoaded
 import com.sceyt.chatuikit.shared.media_encoder.VideoTranscodeHelper
@@ -53,6 +55,9 @@ internal class FileTransferLogicImpl(
 ) : FileTransferLogic, SceytKoinComponent {
     private val fileTransferService: FileTransferService by inject()
     private val transferUtility by lazy { FileTransferUtility() }
+    private val videoThumbUploader by lazy {
+        VideoThumbUploader(context, attachmentLogic, transferUtility)
+    }
     private val downloadingUrlKeys = ConcurrentHashMap.newKeySet<String>()
     private val thumbPaths = ConcurrentHashMap<String, ThumbPathsData>()
     private val preparingThumbs = ConcurrentHashMap<String, ThumbData>()
@@ -65,6 +70,8 @@ internal class FileTransferLogicImpl(
 
     companion object {
         private const val TAG = "FileTransferLogic"
+        private const val VIDEO_THUMB_FILE_NAME = "video_thumb.jpeg"
+        private val EMPTY_THUMB_SIZE = Size(0, 0)
     }
 
     override fun uploadFile(attachment: SceytAttachment, task: TransferTask) {
@@ -77,13 +84,13 @@ internal class FileTransferLogicImpl(
         if (sharingFilesPath.none { it.originalPath == attachment.originalFilePath }) {
             val checksum = getAttachmentChecksum(attachment.originalFilePath)
 
+            // Extract and upload the video first frame in parallel with the video itself
+            videoThumbUploader.start(attachment)
+
             val (uploaded, url) = checkMaybeAlreadyUploadedWithAnotherMessage(checksum, task)
             if (uploaded && url != null) {
                 sharingFilesPath.add(data)
-                getAppropriateTasks(task).forEach { transferTask ->
-                    transferTask.uploadResultCallback?.onResult(SceytResponse.Success(url))
-                }
-                removeFromSharingPath(attachment.originalFilePath)
+                deliverSharedUploadResult(attachment, task, SceytResponse.Success(url))
                 return
             }
 
@@ -107,6 +114,9 @@ internal class FileTransferLogicImpl(
     }
 
     override fun downloadFile(attachment: SceytAttachment, task: TransferTask) {
+        // The uploaded video thumb is much smaller, so it's shown while the video is downloading
+        downloadVideoThumb(attachment, task)
+
         if (attachment.url.isNullOrBlank()) {
             task.downloadCallback?.onResult(
                 SceytResponse.Error(SceytException(0, "Wrong url"))
@@ -159,8 +169,10 @@ internal class FileTransferLogicImpl(
         when (state) {
             PendingUpload, Uploading, Preparing, FilePathChanged, WaitingToUpload -> {
                 pausedTaskIds.add(attachment.messageTid)
-                if (attachment.type == AttachmentTypeEnum.Video.value)
+                if (attachment.type == AttachmentTypeEnum.Video.value) {
                     VideoTranscodeHelper.cancel(attachment.filePath)
+                    videoThumbUploader.cancel(attachment)
+                }
 
                 fileTransferService.findTransferTask(attachment)?.let {
                     it.state = PauseUpload
@@ -261,7 +273,6 @@ internal class FileTransferLogicImpl(
         attachment: SceytAttachment,
         data: ThumbData
     ) {
-        attachment.filePath ?: return
         val size = data.size
         val thumbKey = getThumbSourceKey(attachment, data)
         val preparingThumbKey = "${attachment.messageTid}_${thumbKey}_${data.key}"
@@ -271,20 +282,93 @@ internal class FileTransferLogicImpl(
         if (readyThumb != null) {
             task.thumbCallback?.onThumb(readyThumb.path, data)
             return
-        } else {
-            if (preparingThumbs.put(preparingThumbKey, data) != null) return
-            thumbPathResolver.getThumbPath(context, attachment, size).onSuccess { path ->
-                thumbPaths[thumbKey] = ThumbPathsData(messageTid, path, size)
-                task.thumbCallback?.onThumb(path, preparingThumbs.remove(preparingThumbKey) ?: data)
-            }.onFailure {
-                preparingThumbs.remove(preparingThumbKey)
-                SceytLog.e(
-                    TAG, "Couldn't get a thumb for messageTid: $messageTid," +
-                            " path:${attachment.filePath} with reason ${it.message}"
-                )
-            }
+        }
+
+        // The uploaded video thumb is already downloaded, so there is no need
+        // to generate a thumb from the video file
+        getDownloadedVideoThumbFile(attachment)?.let {
+            task.thumbCallback?.onThumb(it.path, data)
+            return
+        }
+
+        attachment.filePath ?: return
+        if (preparingThumbs.put(preparingThumbKey, data) != null) return
+        thumbPathResolver.getThumbPath(context, attachment, size).onSuccess { path ->
+            thumbPaths[thumbKey] = ThumbPathsData(messageTid, path, size)
+            task.thumbCallback?.onThumb(path, preparingThumbs.remove(preparingThumbKey) ?: data)
+        }.onFailure {
+            preparingThumbs.remove(preparingThumbKey)
+            SceytLog.e(
+                TAG, "Couldn't get a thumb for messageTid: $messageTid," +
+                        " path:${attachment.filePath} with reason ${it.message}"
+            )
         }
     }
+
+    /**
+     * Downloads the video thumb, which was uploaded with the video, to show the video preview
+     * without waiting for the video itself. The thumb is downloaded with the same flow as any
+     * other attachment, so a custom download implementation is used as well.
+     */
+    private fun downloadVideoThumb(attachment: SceytAttachment, task: TransferTask) {
+        if (attachment.filePath.isNotNullOrBlank()) return
+        val thumbAttachment = attachment.videoThumbAttachment ?: return
+        val destFile = getDestinationFile(context, thumbAttachment)
+
+        if (destFile.exists() && destFile.length() > 0L) {
+            notifyVideoThumbLoaded(task, destFile.path)
+            return
+        }
+
+        val downloadMapKey = thumbAttachment.downloadMapKey
+        if (!downloadingUrlKeys.add(downloadMapKey)) return
+
+        transferUtility.downloadFile(
+            attachment = thumbAttachment,
+            destFile = destFile,
+            onProgress = {},
+            onResult = { response ->
+                downloadingUrlKeys.remove(downloadMapKey)
+                if (response is SceytResponse.Success) {
+                    notifyVideoThumbLoaded(task, destFile.path)
+                } else {
+                    destFile.delete()
+                    SceytLog.e(
+                        TAG, "Couldn't download the video thumb for messageTid:" +
+                                " ${attachment.messageTid}, reason: ${response.message}"
+                    )
+                }
+            })
+    }
+
+    /** Notifies every screen, which shows the attachment, about the loaded thumb. */
+    private fun notifyVideoThumbLoaded(task: TransferTask, path: String) {
+        ThumbFor.entries.forEach { thumbFor ->
+            task.thumbCallback?.onThumb(path, ThumbData(thumbFor.value, null, EMPTY_THUMB_SIZE))
+        }
+    }
+
+    private fun getDownloadedVideoThumbFile(attachment: SceytAttachment): File? {
+        val thumbAttachment = attachment.videoThumbAttachment ?: return null
+        return getDestinationFile(context, thumbAttachment).takeIf {
+            it.exists() && it.length() > 0L
+        }
+    }
+
+    /** Image attachment, which points to the uploaded video thumb, to download it as a usual file. */
+    private val SceytAttachment.videoThumbAttachment: SceytAttachment?
+        get() {
+            val thumbUrl = getVideoThumbUrl()?.takeIf { it.isNotBlank() } ?: return null
+            return copy(
+                name = VIDEO_THUMB_FILE_NAME,
+                type = AttachmentTypeEnum.Image.value,
+                url = thumbUrl,
+                filePath = null,
+                originalFilePath = null,
+                metadata = null,
+                fileSize = 0
+            )
+        }
 
     override fun clearPreparingThumbPaths() {
         preparingThumbs.clear()
@@ -321,12 +405,15 @@ internal class FileTransferLogicImpl(
     }
 
     private fun uploadAttachment(attachment: SceytAttachment, transferTask: TransferTask) {
+        // Extract and upload the video first frame in parallel with the video itself
+        videoThumbUploader.start(attachment)
+
         val checksum = getAttachmentChecksum(attachment.originalFilePath)
 
         val (uploaded, url) = checkMaybeAlreadyUploadedWithAnotherMessage(checksum, transferTask)
         if (uploaded && url != null) {
-            transferTask.uploadResultCallback?.onResult(SceytResponse.Success(url))
             uploadNext()
+            deliverUploadResult(attachment, transferTask, SceytResponse.Success(url))
             return
         }
         var uploadAttachment = attachment
@@ -358,11 +445,42 @@ internal class FileTransferLogicImpl(
                         )
                     },
                     onResult = { response ->
-                        transferTask.uploadResultCallback?.onResult(response)
                         uploadNext()
+                        deliverUploadResult(uploadAttachment, transferTask, response)
                     })
             }
         }
+    }
+
+    /**
+     * Delivers the upload result, waiting for the video thumb upload result if the attachment
+     * is a video, which doesn't have an uploaded thumb yet.
+     */
+    private fun deliverUploadResult(
+        attachment: SceytAttachment,
+        transferTask: TransferTask,
+        response: SceytResponse<String>,
+    ) {
+        videoThumbUploader.deliverResult(
+            attachment = attachment,
+            tasks = listOf(transferTask),
+            response = response,
+            isPaused = pausedTaskIds::contains
+        )
+    }
+
+    private fun deliverSharedUploadResult(
+        attachment: SceytAttachment,
+        transferTask: TransferTask,
+        response: SceytResponse<String>,
+    ) {
+        videoThumbUploader.deliverResult(
+            attachment = attachment,
+            tasks = getAppropriateTasks(transferTask),
+            response = response,
+            isPaused = pausedTaskIds::contains,
+            onDelivered = { removeFromSharingPath(attachment.originalFilePath) }
+        )
     }
 
     private fun uploadSharedAttachment(attachment: SceytAttachment, transferTask: TransferTask) {
@@ -381,10 +499,7 @@ internal class FileTransferLogicImpl(
                 }
             },
             onResult = { response ->
-                getAppropriateTasks(transferTask).forEach { task ->
-                    task.uploadResultCallback?.onResult(response)
-                }
-                removeFromSharingPath(attachment.originalFilePath)
+                deliverSharedUploadResult(attachment, transferTask, response)
             })
     }
 
@@ -477,6 +592,11 @@ internal class FileTransferLogicImpl(
         checksumData: FileChecksumData?,
         task: TransferTask,
     ): Pair<Boolean, String?> {
+        // The video could be already uploaded by a previous attempt, which failed to upload its thumb
+        task.attachment.url?.takeIf {
+            it.isNotBlank() && task.attachment.type == AttachmentTypeEnum.Video.value
+        }?.let { return true to it }
+
         checksumData ?: return false to ""
         if (checksumData.url.isNotNullOrBlank()) {
             if (!checksumData.resizedFilePath.isNullOrEmpty())
@@ -490,7 +610,8 @@ internal class FileTransferLogicImpl(
 
     private fun getThumbSourceKey(attachment: SceytAttachment, data: ThumbData): String {
         val path = if (attachment.originalFilePath.isNullOrBlank())
-            attachment.filePath ?: data.filePath else attachment.originalFilePath
+            attachment.filePath ?: data.filePath ?: attachment.messageTid.toString()
+        else attachment.originalFilePath
         return "${path}_${data.size}"
     }
 
@@ -519,6 +640,7 @@ internal class FileTransferLogicImpl(
         get() = url + messageTid
 
     fun clear() {
+        videoThumbUploader.clear()
         pausedTaskIds.clear()
         downloadingUrlKeys.clear()
         resizingAttachmentIds.clear()

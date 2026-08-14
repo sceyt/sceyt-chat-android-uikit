@@ -21,6 +21,7 @@ import com.sceyt.chatuikit.shared.utils.BitmapUtil
 import com.sceyt.chatuikit.shared.utils.FileResizeUtil
 import com.sceyt.chatuikit.shared.utils.ThumbHash
 import org.json.JSONObject
+import java.io.File
 import java.util.concurrent.TimeUnit
 
 fun createMetadata(currentMetadata: String?, data: Map<String, Any>): String? {
@@ -155,6 +156,30 @@ fun SceytAttachment.existThumb(): Boolean {
     } catch (_: Exception) {
         false
     }
+}
+
+/** Url of the video first frame, which was uploaded to the server with the video attachment. */
+fun SceytAttachment.getVideoThumbUrl(): String? {
+    return try {
+        JSONObject(metadata ?: return null).getStringOrNull(SceytConstants.VideoThumbUrl)
+    } catch (_: Exception) {
+        null
+    }
+}
+
+fun SceytAttachment.upsertVideoThumbUrlMetadata(url: String): String? {
+    return createMetadata(metadata, mapOf(SceytConstants.VideoThumbUrl to url))
+}
+
+/**
+ * A video needs a thumb upload if it doesn't have an uploaded thumb yet, and its file
+ * is still available locally to extract the first frame from.
+ */
+internal fun SceytAttachment.needsVideoThumbUpload(): Boolean {
+    if (type != AttachmentTypeEnum.Video.value) return false
+    if (!getVideoThumbUrl().isNullOrBlank()) return false
+    val path = originalFilePath?.takeIf { it.isNotBlank() } ?: filePath
+    return !path.isNullOrBlank() && File(path).exists()
 }
 
 fun Attachment.getVisualMediaType(): AttachmentTypeEnum? =
