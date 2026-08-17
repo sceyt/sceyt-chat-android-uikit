@@ -287,7 +287,7 @@ internal class AttachmentDownloadCoordinator(
     }
 
     private val SceytAttachment.downloadOperationId: String
-        get() = "download:$messageTid"
+        get() = downloadOperationId(messageTid)
 
     companion object {
         private const val TAG = "AttachmentDownloadCoordinator"

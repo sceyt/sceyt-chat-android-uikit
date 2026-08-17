@@ -63,7 +63,7 @@ internal class AttachmentUploadCoordinator(
     private var currentUploadingAttachment: SceytAttachment? = null
 
     private val pausedTaskIds = ConcurrentHashMap.newKeySet<Long>()
-    private val uploadJobs = ConcurrentHashMap<Long, Job>()
+    private val uploadJobs = ConcurrentHashMap<String, Job>()
     private val sharingFilesPath = ConcurrentHashMap.newKeySet<ShareFileData>()
     private val sharingFilesLock = Any()
 
@@ -162,13 +162,14 @@ internal class AttachmentUploadCoordinator(
 
                 if (pauseSharedUpload(attachment, state)) return
 
-                val currentJob = uploadJobs[messageTid]
+                val operationId = attachment.uploadOperationId
+                val currentJob = uploadJobs[operationId]
                 val pausedByTransport = state == Uploading &&
                         currentJob?.isActive == true &&
-                        pauseTransport(attachment.uploadOperationId)
+                        pauseTransport(operationId)
 
                 if (!pausedByTransport && currentJob != null) {
-                    cancelUploadJob(messageTid, currentJob)
+                    cancelUploadJob(operationId, currentJob)
                 }
 
                 uploadNext(messageTid)
@@ -293,10 +294,11 @@ internal class AttachmentUploadCoordinator(
             return
         }
 
-        val currentJob = uploadJobs[messageTid]
+        val operationId = attachment.uploadOperationId
+        val currentJob = uploadJobs[operationId]
         if (currentJob?.isActive == true) {
-            if (resumeTransport(attachment.uploadOperationId)) return
-            cancelUploadJob(messageTid, currentJob)
+            if (resumeTransport(operationId)) return
+            cancelUploadJob(operationId, currentJob)
         }
 
         uploadAttachment(attachment, task)
@@ -310,9 +312,9 @@ internal class AttachmentUploadCoordinator(
         if (sharedMessageIds.isEmpty()) return false
         if (sharedMessageIds.any { !pausedTaskIds.contains(it) }) return true
 
-        findActiveSharedUpload(sharedMessageIds)?.let { (messageTid, job) ->
-            if (state != Uploading || !pauseTransport(uploadOperationId(messageTid))) {
-                cancelUploadJob(messageTid, job)
+        findActiveSharedUpload(sharedMessageIds)?.let { (operationId, job) ->
+            if (state != Uploading || !pauseTransport(operationId)) {
+                cancelUploadJob(operationId, job)
             }
         }
         return true
@@ -323,9 +325,9 @@ internal class AttachmentUploadCoordinator(
         task: TransferTask,
     ) {
         val sharedMessageIds = getSharedMessageIds(attachment)
-        findActiveSharedUpload(sharedMessageIds)?.let { (messageTid, job) ->
-            if (resumeTransport(uploadOperationId(messageTid))) return
-            cancelUploadJob(messageTid, job)
+        findActiveSharedUpload(sharedMessageIds)?.let { (operationId, job) ->
+            if (resumeTransport(operationId)) return
+            cancelUploadJob(operationId, job)
         }
 
         startSharedUpload(attachment, task)
@@ -374,10 +376,11 @@ internal class AttachmentUploadCoordinator(
         }
     }
 
-    private fun findActiveSharedUpload(messageIds: List<Long>): Pair<Long, Job>? {
+    private fun findActiveSharedUpload(messageIds: List<Long>): Pair<String, Job>? {
         messageIds.forEach { messageTid ->
-            uploadJobs[messageTid]?.takeIf(Job::isActive)?.let { job ->
-                return messageTid to job
+            val operationId = uploadOperationId(messageTid)
+            uploadJobs[operationId]?.takeIf(Job::isActive)?.let { job ->
+                return operationId to job
             }
         }
         return null
@@ -395,8 +398,8 @@ internal class AttachmentUploadCoordinator(
         }.getOrDefault(false)
     }
 
-    private fun cancelUploadJob(messageTid: Long, job: Job) {
-        if (uploadJobs.remove(messageTid, job)) {
+    private fun cancelUploadJob(operationId: String, job: Job) {
+        if (uploadJobs.remove(operationId, job)) {
             job.cancel()
         }
     }
@@ -521,6 +524,7 @@ internal class AttachmentUploadCoordinator(
         block: suspend () -> Unit,
     ) {
         val messageTid = attachment.messageTid
+        val operationId = attachment.uploadOperationId
         val job = scope.launch(start = CoroutineStart.LAZY) {
             try {
                 block()
@@ -531,11 +535,11 @@ internal class AttachmentUploadCoordinator(
                 runCatching { onError(SceytResponse.Error(error.toSceytException())) }
                 uploadNext(messageTid)
             } finally {
-                uploadJobs.remove(messageTid, currentCoroutineContext().job)
+                uploadJobs.remove(operationId, currentCoroutineContext().job)
             }
         }
 
-        uploadJobs.put(messageTid, job)?.cancel()
+        uploadJobs.put(operationId, job)?.cancel()
         job.start()
     }
 
@@ -773,9 +777,6 @@ internal class AttachmentUploadCoordinator(
 
     private val SceytAttachment.uploadOperationId: String
         get() = uploadOperationId(messageTid)
-
-    private fun uploadOperationId(messageTid: Long): String =
-        "upload:$messageTid"
 
     private data class ShareFileData(
         val sourceKey: String,

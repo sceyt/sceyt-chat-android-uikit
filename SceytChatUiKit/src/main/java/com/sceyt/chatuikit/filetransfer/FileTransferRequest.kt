@@ -10,6 +10,7 @@ data class FileUploadRequest(
     val mimeType: String?,
     val attachment: SceytAttachment,
     val isSharedUpload: Boolean = false,
+    val role: TransferRole = TransferRole.Main,
 )
 
 data class FileDownloadRequest(
@@ -17,4 +18,5 @@ data class FileDownloadRequest(
     val url: String,
     val destinationFile: File,
     val attachment: SceytAttachment,
+    val role: TransferRole = TransferRole.Main,
 )

@@ -95,12 +95,12 @@ class AttachmentUploadCoordinatorTest {
         coordinator.uploadFile(second, transferTask(second))
 
         assertThat(transport.uploadCalls).hasSize(1)
-        assertThat(transport.uploadCalls.single().request.operationId).isEqualTo("upload:1")
+        assertThat(transport.uploadCalls.single().request.operationId).isEqualTo(uploadOperationId(1L))
 
         transport.uploadCalls.first().succeed("first-url")
 
         assertThat(transport.uploadCalls).hasSize(2)
-        assertThat(transport.uploadCalls[1].request.operationId).isEqualTo("upload:2")
+        assertThat(transport.uploadCalls[1].request.operationId).isEqualTo(uploadOperationId(2L))
     }
 
     @Test
@@ -114,7 +114,7 @@ class AttachmentUploadCoordinatorTest {
         transport.uploadCalls.first().succeed("current-url")
 
         assertThat(transport.uploadCalls.map { it.request.operationId })
-            .containsExactly("upload:1", "upload:2").inOrder()
+            .containsExactly(uploadOperationId(1L), uploadOperationId(2L)).inOrder()
     }
 
     @Test
@@ -134,7 +134,7 @@ class AttachmentUploadCoordinatorTest {
         call.progress(55f)
         call.succeed("uploaded-url")
 
-        assertThat(call.request.operationId).isEqualTo("upload:30")
+        assertThat(call.request.operationId).isEqualTo(uploadOperationId(30L))
         assertThat(call.request.sourceFile.path).isEqualTo(attachment.filePath)
         assertThat(call.request.fileName).isEqualTo("document.txt")
         assertThat(call.request.attachment).isEqualTo(attachment)
@@ -220,13 +220,13 @@ class AttachmentUploadCoordinatorTest {
 
         coordinator.pauseLoad(second, TransferState.Uploading)
 
-        assertThat(transport.pauseCalls).containsExactly("upload:3")
+        assertThat(transport.pauseCalls).containsExactly(uploadOperationId(3L))
         assertThat(call.cancelled).isFalse()
 
         coordinator.resumeLoad(second, TransferState.PauseUpload)
         call.progress(50f)
 
-        assertThat(transport.resumeCalls).containsExactly("upload:3")
+        assertThat(transport.resumeCalls).containsExactly(uploadOperationId(3L))
         assertThat(transport.uploadCalls).hasSize(1)
         assertThat(firstProgress).isEmpty()
         assertThat(secondProgress).containsExactly(25f, 50f).inOrder()
@@ -251,7 +251,7 @@ class AttachmentUploadCoordinatorTest {
         scope.runCurrent()
 
         assertThat(transport.uploadCalls.map { it.request.operationId })
-            .containsExactly("upload:80")
+            .containsExactly(uploadOperationId(80L))
         assertThat(transport.uploadCalls.single().cancelled).isFalse()
     }
 
@@ -274,7 +274,7 @@ class AttachmentUploadCoordinatorTest {
         coordinator.uploadFile(regular, transferTask(regular).also(service::addTransferTask))
         coordinator.pauseLoad(regular, TransferState.Uploading)
 
-        assertThat(transport.pauseCalls).containsExactly("upload:84")
+        assertThat(transport.pauseCalls).containsExactly(uploadOperationId(84L))
         assertThat(transport.uploadCalls.first().cancelled).isFalse()
         assertThat(transport.uploadCalls.last().cancelled).isTrue()
     }
@@ -342,10 +342,10 @@ class AttachmentUploadCoordinatorTest {
 
         coordinator.pauseLoad(first, TransferState.Uploading)
 
-        assertThat(transport.pauseCalls).containsExactly("upload:5")
+        assertThat(transport.pauseCalls).containsExactly(uploadOperationId(5L))
         assertThat(firstCall.cancelled).isFalse()
         assertThat(transport.uploadCalls.map { it.request.operationId })
-            .containsExactly("upload:5", "upload:6").inOrder()
+            .containsExactly(uploadOperationId(5L), uploadOperationId(6L)).inOrder()
 
         coordinator.resumeLoad(first, TransferState.PauseUpload)
 
@@ -353,7 +353,7 @@ class AttachmentUploadCoordinatorTest {
 
         transport.uploadCalls.last().succeed("second-url")
 
-        assertThat(transport.resumeCalls).containsExactly("upload:5")
+        assertThat(transport.resumeCalls).containsExactly(uploadOperationId(5L))
         assertThat(transport.uploadCalls).hasSize(2)
 
         firstCall.succeed("first-url")
@@ -371,7 +371,7 @@ class AttachmentUploadCoordinatorTest {
         coordinator.pauseLoad(attachment, TransferState.Uploading)
         coordinator.resumeLoad(attachment, TransferState.PauseUpload)
 
-        assertThat(transport.resumeCalls).containsExactly("upload:7")
+        assertThat(transport.resumeCalls).containsExactly(uploadOperationId(7L))
         assertThat(transport.uploadCalls.first().cancelled).isTrue()
         assertThat(transport.uploadCalls).hasSize(2)
     }
@@ -411,7 +411,7 @@ class AttachmentUploadCoordinatorTest {
 
         assertThat(transport.uploadCalls.first().cancelled).isTrue()
         assertThat(transport.uploadCalls).hasSize(2)
-        assertThat(transport.uploadCalls.last().request.operationId).isEqualTo("upload:51")
+        assertThat(transport.uploadCalls.last().request.operationId).isEqualTo(uploadOperationId(51L))
         assertThat(firstTask.state).isEqualTo(TransferState.PauseUpload)
         assertThat(states).containsExactly(TransferState.PauseUpload)
     }
@@ -449,7 +449,7 @@ class AttachmentUploadCoordinatorTest {
 
         coordinator.resumeLoad(queued, TransferState.PauseUpload)
         assertThat(transport.uploadCalls).hasSize(2)
-        assertThat(transport.uploadCalls.last().request.operationId).isEqualTo("upload:55")
+        assertThat(transport.uploadCalls.last().request.operationId).isEqualTo(uploadOperationId(55L))
     }
 
     @Test
@@ -467,7 +467,7 @@ class AttachmentUploadCoordinatorTest {
         assertThat(result).isInstanceOf(SceytResponse.Error::class.java)
         assertThat(result?.message).isEqualTo("upload failed")
         assertThat(transport.uploadCalls).hasSize(2)
-        assertThat(transport.uploadCalls.last().request.operationId).isEqualTo("upload:57")
+        assertThat(transport.uploadCalls.last().request.operationId).isEqualTo(uploadOperationId(57L))
     }
 
     @Test
@@ -486,7 +486,7 @@ class AttachmentUploadCoordinatorTest {
         assertThat(firstCall.cancelled).isTrue()
         assertThat(result).isInstanceOf(SceytResponse.Error::class.java)
         assertThat(result?.message).isEqualTo("Waiting for network")
-        assertThat(transport.uploadCalls.last().request.operationId).isEqualTo("upload:93")
+        assertThat(transport.uploadCalls.last().request.operationId).isEqualTo(uploadOperationId(93L))
     }
 
     @Test
@@ -507,7 +507,7 @@ class AttachmentUploadCoordinatorTest {
 
         assertThat(callbackCount).isEqualTo(1)
         assertThat(transport.uploadCalls.map { it.request.operationId })
-            .containsExactly("upload:89", "upload:90").inOrder()
+            .containsExactly(uploadOperationId(89L), uploadOperationId(90L)).inOrder()
     }
 
     @Test
@@ -524,7 +524,7 @@ class AttachmentUploadCoordinatorTest {
 
         assertThat(result).isInstanceOf(SceytResponse.Error::class.java)
         assertThat(result?.message).isEqualTo("File upload returned an empty remote reference")
-        assertThat(transport.uploadCalls.last().request.operationId).isEqualTo("upload:63")
+        assertThat(transport.uploadCalls.last().request.operationId).isEqualTo(uploadOperationId(63L))
     }
 
     @Test
@@ -544,7 +544,7 @@ class AttachmentUploadCoordinatorTest {
 
         assertThat(result).isInstanceOf(SceytResponse.Error::class.java)
         assertThat(result?.message).isEqualTo("Attachment source path is missing")
-        assertThat(transport.uploadCalls.single().request.operationId).isEqualTo("upload:65")
+        assertThat(transport.uploadCalls.single().request.operationId).isEqualTo(uploadOperationId(65L))
     }
 
     @Test
@@ -595,7 +595,7 @@ class AttachmentUploadCoordinatorTest {
         assertThat(checksumStarted.isCompleted).isTrue()
         assertThat(result).isInstanceOf(SceytResponse.Error::class.java)
         assertThat(result?.message).isEqualTo("checksum failed")
-        assertThat(transport.uploadCalls.single().request.operationId).isEqualTo("upload:61")
+        assertThat(transport.uploadCalls.single().request.operationId).isEqualTo(uploadOperationId(61L))
     }
 
     @Test
@@ -857,7 +857,7 @@ class AttachmentUploadCoordinatorTest {
 
         assertThat(transport.uploadCalls).hasSize(2)
         assertThat(transport.uploadCalls[0].cancelled).isTrue()
-        assertThat(transport.uploadCalls[1].request.operationId).isEqualTo("upload:82")
+        assertThat(transport.uploadCalls[1].request.operationId).isEqualTo(uploadOperationId(82L))
     }
 
     private fun uploadSharedFile(

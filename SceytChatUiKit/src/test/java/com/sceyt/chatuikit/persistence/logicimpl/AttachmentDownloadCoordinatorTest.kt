@@ -107,7 +107,7 @@ class AttachmentDownloadCoordinatorTest {
         coordinator.downloadFile(attachment, task)
 
         assertThat(transport.downloadCalls).hasSize(1)
-        assertThat(transport.downloadCalls.single().request.operationId).isEqualTo("download:10")
+        assertThat(transport.downloadCalls.single().request.operationId).isEqualTo(downloadOperationId(10L))
     }
 
     @Test
@@ -218,8 +218,8 @@ class AttachmentDownloadCoordinatorTest {
         coordinator.pauseLoad(attachment, TransferState.Downloading)
         coordinator.resumeLoad(attachment, TransferState.PauseDownload)
 
-        assertThat(transport.pauseCalls).containsExactly("download:10")
-        assertThat(transport.resumeCalls).containsExactly("download:10")
+        assertThat(transport.pauseCalls).containsExactly(downloadOperationId(10L))
+        assertThat(transport.resumeCalls).containsExactly(downloadOperationId(10L))
         assertThat(call.cancelled).isFalse()
         assertThat(transport.downloadCalls).hasSize(1)
         assertThat(task.state).isEqualTo(TransferState.Downloading)
@@ -394,6 +394,6 @@ class AttachmentDownloadCoordinatorTest {
 
         assertThat(transport.downloadCalls).hasSize(2)
         assertThat(transport.downloadCalls[0].cancelled).isTrue()
-        assertThat(transport.downloadCalls[1].request.operationId).isEqualTo("download:81")
+        assertThat(transport.downloadCalls[1].request.operationId).isEqualTo(downloadOperationId(81L))
     }
 }
