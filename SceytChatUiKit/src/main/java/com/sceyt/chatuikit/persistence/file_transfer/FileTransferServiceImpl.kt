@@ -83,7 +83,7 @@ internal class FileTransferServiceImpl(
     }
 
     override fun findOrCreateTransferTask(attachment: SceytAttachment): TransferTask {
-        return tasksMap[attachment.messageTid.toString()] ?: run {
+        return tasksMap.computeIfAbsent(attachment.messageTid.toString()) {
             FileTransferHelper.createTransferTask(attachment)
         }
     }

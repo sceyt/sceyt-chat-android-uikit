@@ -78,8 +78,6 @@ internal class AttachmentUploadCoordinator(
         attachment: SceytAttachment,
         task: TransferTask,
     ) {
-        fileTransferService.addTransferTask(task)
-
         val shareFileData = ShareFileData(
             sourceKey = attachment.sharedSourceKey,
             messageTid = attachment.messageTid,
@@ -125,6 +123,10 @@ internal class AttachmentUploadCoordinator(
             )
             currentCoroutineContext().ensureActive()
 
+            if (isSharedTransferPaused(attachment)) {
+                return@launchUploadJob
+            }
+
             val uploadAttachment = result.fold(
                 onSuccess = { path ->
                     task.updateFileLocationCallback?.onUpdateFileLocation(path)
@@ -158,10 +160,11 @@ internal class AttachmentUploadCoordinator(
                     task.resumePauseCallback?.onResumePause(attachment.toTransferData(PauseUpload))
                 }
 
-                if (pauseSharedUpload(attachment)) return
+                if (pauseSharedUpload(attachment, state)) return
 
                 val currentJob = uploadJobs[messageTid]
-                val pausedByTransport = currentJob?.isActive == true &&
+                val pausedByTransport = state == Uploading &&
+                        currentJob?.isActive == true &&
                         pauseTransport(attachment.uploadOperationId)
 
                 if (!pausedByTransport && currentJob != null) {
@@ -299,13 +302,16 @@ internal class AttachmentUploadCoordinator(
         uploadAttachment(attachment, task)
     }
 
-    private fun pauseSharedUpload(attachment: SceytAttachment): Boolean {
+    private fun pauseSharedUpload(
+        attachment: SceytAttachment,
+        state: TransferState,
+    ): Boolean {
         val sharedMessageIds = getSharedMessageIds(attachment)
         if (sharedMessageIds.isEmpty()) return false
         if (sharedMessageIds.any { !pausedTaskIds.contains(it) }) return true
 
         findActiveSharedUpload(sharedMessageIds)?.let { (messageTid, job) ->
-            if (!pauseTransport(uploadOperationId(messageTid))) {
+            if (state != Uploading || !pauseTransport(uploadOperationId(messageTid))) {
                 cancelUploadJob(messageTid, job)
             }
         }
@@ -411,6 +417,11 @@ internal class AttachmentUploadCoordinator(
             task = task,
         )
         currentCoroutineContext().ensureActive()
+
+        if (pausedTaskIds.contains(attachment.messageTid)) {
+            uploadNext(attachment.messageTid)
+            return@launchUploadJob
+        }
 
         val uploadAttachment = result.fold(
             onSuccess = { path ->
@@ -521,16 +532,25 @@ internal class AttachmentUploadCoordinator(
         onResult: ((SceytResponse<String>) -> Unit)?,
         onComplete: (() -> Unit)?,
     ) {
-        val job = currentCoroutineContext().job
+        val uploadJob = currentCoroutineContext().job
+        val networkWaitTriggered = AtomicBoolean()
 
         val response = try {
             val result = SceytChatUIKit.fileTransfer.transport.upload(
                 request = request,
                 callback = { event ->
-                    if (job.isActive &&
-                        (request.isSharedUpload || !pausedTaskIds.contains(attachment.messageTid))
+                    if (uploadJob.isActive &&
+                        (request.isSharedUpload || attachment.messageTid !in pausedTaskIds)
                     ) {
-                        handleUploadEvent(event, attachment, task, onProgress)
+                        when (event) {
+                            is FileTransferEvent.WaitingForNetwork -> {
+                                if (networkWaitTriggered.compareAndSet(false, true)) {
+                                    uploadJob.cancel()
+                                }
+                            }
+
+                            else -> handleUploadEvent(event, attachment, task, onProgress)
+                        }
                     }
                 },
             ).takeUnless { it.isNullOrBlank() }
@@ -538,7 +558,8 @@ internal class AttachmentUploadCoordinator(
             currentCoroutineContext().ensureActive()
             SceytResponse.Success(result)
         } catch (error: CancellationException) {
-            throw error
+            if (!networkWaitTriggered.get()) throw error
+            SceytResponse.Error(SceytException(0, "Waiting for network"))
         } catch (error: Throwable) {
             SceytResponse.Error(error.toSceytException())
         }

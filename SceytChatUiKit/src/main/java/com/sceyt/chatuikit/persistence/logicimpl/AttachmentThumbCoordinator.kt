@@ -5,6 +5,7 @@ import android.util.Size
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.logger.SceytLog
+import com.sceyt.chatuikit.persistence.file_transfer.FileTransferHelper
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.file_transfer.ThumbData
 import org.koin.core.component.inject
@@ -27,7 +28,8 @@ internal class AttachmentThumbCoordinator(
         val thumbKey = getThumbSourceKey(attachment, data)
         val preparingThumbKey = "${attachment.messageTid}_${thumbKey}_${data.key}"
 
-        val task = fileTransferService.findOrCreateTransferTask(attachment)
+        val task = fileTransferService.findTransferTask(attachment)
+            ?: FileTransferHelper.createTransferTask(attachment)
         val readyThumb = thumbPaths[thumbKey]
 
         if (readyThumb != null) {
@@ -58,6 +60,11 @@ internal class AttachmentThumbCoordinator(
 
     fun clearPreparingThumbPaths() {
         preparingThumbs.clear()
+    }
+
+    fun clear() {
+        preparingThumbs.clear()
+        thumbPaths.clear()
     }
 
     private fun getThumbSourceKey(

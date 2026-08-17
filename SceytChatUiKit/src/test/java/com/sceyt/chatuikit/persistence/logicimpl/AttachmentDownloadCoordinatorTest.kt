@@ -132,33 +132,35 @@ class AttachmentDownloadCoordinatorTest {
     }
 
     @Test
-    fun `failure deletes partial destination and forwards error`() {
+    fun `failure keeps partial destination and forwards error`() {
         val attachment = attachment(state = TransferState.PendingDownload)
         val task = transferTask(attachment)
+        val partialBytes = byteArrayOf(1, 2)
         var result: SceytResponse<String>? = null
         task.downloadCallback = TransferResultCallback { result = it }
 
         coordinator.downloadFile(attachment, task)
-        destinationFile.writeBytes(byteArrayOf(1, 2))
+        destinationFile.writeBytes(partialBytes)
         transport.downloadCalls.single().fail(SceytException(7, "failed"))
 
-        assertThat(destinationFile.exists()).isFalse()
+        assertThat(destinationFile.readBytes()).isEqualTo(partialBytes)
         assertThat(result).isInstanceOf(SceytResponse.Error::class.java)
         assertThat(result?.code).isEqualTo(7)
     }
 
     @Test
-    fun `empty download result deletes partial destination and forwards error`() {
+    fun `empty download result keeps partial destination and forwards error`() {
         val attachment = attachment(state = TransferState.PendingDownload)
         val task = transferTask(attachment)
+        val partialBytes = byteArrayOf(1, 2)
         var result: SceytResponse<String>? = null
         task.downloadCallback = TransferResultCallback { result = it }
 
         coordinator.downloadFile(attachment, task)
-        destinationFile.writeBytes(byteArrayOf(1, 2))
+        destinationFile.writeBytes(partialBytes)
         transport.downloadCalls.single().succeed("")
 
-        assertThat(destinationFile.exists()).isFalse()
+        assertThat(destinationFile.readBytes()).isEqualTo(partialBytes)
         assertThat(result).isInstanceOf(SceytResponse.Error::class.java)
         assertThat(result?.message).isEqualTo("File download returned an empty local path")
     }
@@ -173,11 +175,13 @@ class AttachmentDownloadCoordinatorTest {
 
         coordinator.downloadFile(attachment, task)
         destinationFile.writeBytes(partialBytes)
-        transport.downloadCalls.single().waitingForNetwork()
-        transport.downloadCalls.single().fail(IllegalStateException("No network connection"))
+        val call = transport.downloadCalls.single()
+        call.waitingForNetwork()
 
+        assertThat(call.cancelled).isTrue()
         assertThat(destinationFile.readBytes()).isEqualTo(partialBytes)
         assertThat(result).isInstanceOf(SceytResponse.Error::class.java)
+        assertThat(result?.message).isEqualTo("Waiting for network")
     }
 
     @Test

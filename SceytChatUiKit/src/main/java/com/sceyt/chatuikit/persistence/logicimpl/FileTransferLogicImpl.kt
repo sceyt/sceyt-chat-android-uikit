@@ -84,7 +84,7 @@ internal class FileTransferLogicImpl(
     override fun cancelAll() {
         uploadCoordinator.cancelAll()
         downloadCoordinator.cancelAll()
-        thumbCoordinator.clearPreparingThumbPaths()
+        thumbCoordinator.clear()
         scope.coroutineContext.cancelChildren()
     }
 }

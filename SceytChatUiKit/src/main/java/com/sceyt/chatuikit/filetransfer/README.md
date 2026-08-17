@@ -77,7 +77,8 @@ ID for UI-kit pause and resume lookup.
 succeeds, fails, or is cancelled:
 
 - Report progress through `FileTransferCallback` as a value from `0f` to `100f`.
-- Report temporary network waiting with `FileTransferEvent.WaitingForNetwork`.
+- Report a network-blocked operation with `FileTransferEvent.WaitingForNetwork`. The UI kit treats
+  this event as terminal, cancels the transport call, and handles a later retry itself.
 - Return a non-blank remote reference from upload.
 - Return the destination path from download.
 - Throw on terminal failure.

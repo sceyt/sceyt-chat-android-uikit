@@ -6,6 +6,8 @@ import com.google.common.truth.Truth.assertThat
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.koin.SceytKoinApp
+import com.sceyt.chatuikit.persistence.database.dao.FileChecksumDao
+import com.sceyt.chatuikit.persistence.di.CoroutineContextType
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.file_transfer.ThumbCallback
 import com.sceyt.chatuikit.persistence.file_transfer.ThumbData
@@ -13,15 +15,19 @@ import com.sceyt.chatuikit.persistence.file_transfer.ThumbFor
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 import com.sceyt.chatuikit.persistence.file_transfer.TransferTask
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
+import kotlinx.coroutines.Dispatchers
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
+import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.never
+import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
@@ -30,11 +36,13 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.coroutines.CoroutineContext
 
 @RunWith(RobolectricTestRunner::class)
 class FileTransferLogicImplThumbTest {
     private val fileTransferService = mock<FileTransferService>()
     private val attachmentLogic = mock<PersistenceAttachmentLogic>()
+    private val fileChecksumDao = mock<FileChecksumDao>()
     private lateinit var context: Context
 
     @Before
@@ -44,6 +52,11 @@ class FileTransferLogicImplThumbTest {
         SceytKoinApp.koinApp = startKoin {
             modules(module {
                 single<FileTransferService> { fileTransferService }
+                single<PersistenceAttachmentLogic> { attachmentLogic }
+                single<FileChecksumDao> { fileChecksumDao }
+                single<CoroutineContext>(named(CoroutineContextType.SingleThreaded)) {
+                    Dispatchers.Unconfined
+                }
             })
         }
     }
@@ -175,6 +188,38 @@ class FileTransferLogicImplThumbTest {
             .containsExactly("/downloads/shared.jpg")
     }
 
+    @Test
+    fun `cancel all clears completed thumb cache`() {
+        val resolver = BlockingThumbPathResolver().apply { release() }
+        val logic = FileTransferLogicImpl(context, attachmentLogic, resolver)
+        val attachment = attachment()
+        val callbacks = thumbCallbacksFor(attachment)
+        val thumb = thumbData(ThumbFor.MessagesLisView)
+
+        logic.getAttachmentThumb(attachment.messageTid, attachment, thumb)
+        logic.cancelAll()
+        logic.getAttachmentThumb(attachment.messageTid, attachment, thumb)
+
+        assertThat(resolver.callCount.get()).isEqualTo(2)
+        assertThat(callbacks).hasSize(2)
+    }
+
+    @Test
+    fun `thumb-only request does not register a transfer task`() {
+        val resolver = BlockingThumbPathResolver().apply { release() }
+        val logic = FileTransferLogicImpl(context, attachmentLogic, resolver)
+        val attachment = attachment()
+
+        logic.getAttachmentThumb(
+            attachment.messageTid,
+            attachment,
+            thumbData(ThumbFor.MessagesLisView),
+        )
+
+        verify(fileTransferService, never()).findOrCreateTransferTask(any())
+        verify(fileTransferService, never()).addTransferTask(any())
+    }
+
     private fun thumbCallbacksFor(attachment: SceytAttachment): CopyOnWriteArrayList<ThumbData> {
         return thumbCallbacksByTidFor(attachment).getValue(attachment.messageTid)
     }
@@ -191,7 +236,7 @@ class FileTransferLogicImplThumbTest {
             attachment.messageTid to task
         }
 
-        whenever(fileTransferService.findOrCreateTransferTask(any())).thenAnswer { invocation ->
+        whenever(fileTransferService.findTransferTask(any())).thenAnswer { invocation ->
             val attachment = invocation.arguments.first() as SceytAttachment
             tasksByTid.getValue(attachment.messageTid)
         }
