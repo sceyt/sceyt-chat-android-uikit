@@ -217,7 +217,6 @@ class FileTransferLogicImplThumbTest {
         )
 
         verify(fileTransferService, never()).findOrCreateTransferTask(any())
-        verify(fileTransferService, never()).addTransferTask(any())
     }
 
     private fun thumbCallbacksFor(attachment: SceytAttachment): CopyOnWriteArrayList<ThumbData> {

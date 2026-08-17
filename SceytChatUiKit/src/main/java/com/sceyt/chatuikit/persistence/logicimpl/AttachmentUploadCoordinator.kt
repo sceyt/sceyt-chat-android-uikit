@@ -4,6 +4,7 @@ import android.content.Context
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.data.models.onSuccessNotNull
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.FileChecksumData
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
@@ -24,7 +25,6 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState.FilePathChang
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.PauseUpload
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.PendingUpload
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Preparing
-import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploaded
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploading
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.WaitingToUpload
 import com.sceyt.chatuikit.persistence.file_transfer.TransferTask
@@ -353,13 +353,24 @@ internal class AttachmentUploadCoordinator(
         }
 
     private fun findCompletedUpload(attachment: SceytAttachment): String? {
-        val sourceKey = attachment.sharedSourceKey
-        return fileTransferService.getTasks().values.firstNotNullOfOrNull { task ->
-            task.attachment.takeIf {
-                it.messageTid != attachment.messageTid &&
-                        it.sharedSourceKey == sourceKey &&
-                        it.transferState == Uploaded
-            }?.url?.takeIf(String::isNotBlank)
+        return synchronized(sharingFilesLock) {
+            sharingFilesPath.firstOrNull {
+                it.messageTid == attachment.messageTid
+            }?.completedUrl
+        }
+    }
+
+    private fun saveCompletedSharedUpload(attachment: SceytAttachment, url: String) {
+        synchronized(sharingFilesLock) {
+            val sourceKey = sharingFilesPath.firstOrNull {
+                it.messageTid == attachment.messageTid
+            }?.sourceKey ?: return
+
+            sharingFilesPath.forEach { member ->
+                if (member.sourceKey == sourceKey) {
+                    member.completedUrl = url
+                }
+            }
         }
     }
 
@@ -467,6 +478,10 @@ internal class AttachmentUploadCoordinator(
                 }
             },
             onResult = { response ->
+                response.onSuccessNotNull {
+                    saveCompletedSharedUpload(attachment, it)
+                }
+
                 takeAppropriateTasks(task).forEach { transferTask ->
                     notifyTaskResult(transferTask, response)
                 }
@@ -765,7 +780,9 @@ internal class AttachmentUploadCoordinator(
     private data class ShareFileData(
         val sourceKey: String,
         val messageTid: Long,
-    )
+    ) {
+        var completedUrl: String? = null
+    }
 
     private companion object {
         const val TAG = "FileTransferLogic"

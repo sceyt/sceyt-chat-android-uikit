@@ -167,6 +167,7 @@ object FileTransferHelper : SceytKoinComponent {
                 ) ?: return@fold
 
                 emitAttachmentTransferUpdate(transferData, updatedAttachment.fileSize)
+                complete(Result.success(updatedAttachment))
                 fileTransferService.removeTransferTask(messageTid)
                 enqueueDbUpdate(messageTid) {
                     attachmentLogic.updateAttachmentWithTransferData(transferData)
@@ -186,6 +187,7 @@ object FileTransferHelper : SceytKoinComponent {
                 ) ?: return@fold
 
                 emitAttachmentTransferUpdate(transferData, updatedAttachment.fileSize)
+                complete(Result.failure(exception ?: IllegalStateException("File download failed")))
                 fileTransferService.removeTransferTask(messageTid)
                 enqueueDbUpdate(messageTid) {
                     attachmentLogic.updateAttachmentWithTransferData(transferData)
@@ -248,9 +250,7 @@ object FileTransferHelper : SceytKoinComponent {
                 Result.failure(Throwable(response.message.orEmpty()))
             }
         }
-        fileTransferService.findTransferTask(attachment)?.onCompletionListeners?.forEach {
-            it.value.invoke(result)
-        }
+        complete(result)
         fileTransferService.removeTransferTask(messageTid)
     }
 

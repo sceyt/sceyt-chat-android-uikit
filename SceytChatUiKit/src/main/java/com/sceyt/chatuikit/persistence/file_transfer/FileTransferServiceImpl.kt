@@ -14,51 +14,25 @@ internal class FileTransferServiceImpl(
         private var context: Context,
         private var fileTransferLogic: FileTransferLogic,
 ) : FileTransferService {
-    private var tasksMap = ConcurrentHashMap<String, TransferTask>()
+    private val tasksMap = ConcurrentHashMap<String, TransferTask>()
 
-    private var listeners: FileTransferListeners.Listeners = object : FileTransferListeners.Listeners {
-        override fun upload(attachment: SceytAttachment, transferTask: TransferTask) {
-            fileTransferLogic.uploadFile(attachment, transferTask)
-        }
+    override fun upload(
+        attachment: SceytAttachment,
+        configureTask: TransferTask.() -> Unit,
+    ) = startTransfer(attachment, configureTask, fileTransferLogic::uploadFile)
 
-        override fun uploadSharedFile(attachment: SceytAttachment, transferTask: TransferTask) {
-            fileTransferLogic.uploadSharedFile(attachment, transferTask)
-        }
+    override fun uploadSharedFile(
+        attachment: SceytAttachment,
+        configureTask: TransferTask.() -> Unit,
+    ) = startTransfer(attachment, configureTask, fileTransferLogic::uploadSharedFile)
 
-        override fun download(attachment: SceytAttachment, transferTask: TransferTask) {
-            fileTransferLogic.downloadFile(attachment, transferTask)
-        }
-
-        override fun pause(messageTid: Long, attachment: SceytAttachment, state: TransferState) {
-            fileTransferLogic.pauseLoad(attachment, state)
-        }
-
-        override fun resume(messageTid: Long, attachment: SceytAttachment, state: TransferState) {
-            fileTransferLogic.resumeLoad(attachment, state)
-        }
-
-        override fun getThumb(messageTid: Long, attachment: SceytAttachment, thumbData: ThumbData) {
-            fileTransferLogic.getAttachmentThumb(messageTid, attachment, thumbData)
-        }
-    }
-
-    override fun upload(attachment: SceytAttachment, transferTask: TransferTask) {
-        addTransferTask(transferTask)
-        listeners.upload(attachment, transferTask)
-    }
-
-    override fun uploadSharedFile(attachment: SceytAttachment, transferTask: TransferTask) {
-        addTransferTask(transferTask)
-        listeners.uploadSharedFile(attachment, transferTask)
-    }
-
-    override fun download(attachment: SceytAttachment, transferTask: TransferTask) {
-        addTransferTask(transferTask)
-        listeners.download(attachment, transferTask)
-    }
+    override fun download(
+        attachment: SceytAttachment,
+        configureTask: TransferTask.() -> Unit,
+    ) = startTransfer(attachment, configureTask, fileTransferLogic::downloadFile)
 
     override fun pause(messageTid: Long, attachment: SceytAttachment, state: TransferState) {
-        listeners.pause(messageTid, attachment, state)
+        fileTransferLogic.pauseLoad(attachment, state)
     }
 
     override fun resume(messageTid: Long, attachment: SceytAttachment, state: TransferState) {
@@ -71,15 +45,11 @@ internal class FileTransferServiceImpl(
                 resumePausedUpload = true,
             )
         else
-            listeners.resume(messageTid, attachment, state)
+            fileTransferLogic.resumeLoad(attachment, state)
     }
 
     override fun getThumb(messageTid: Long, attachment: SceytAttachment, thumbData: ThumbData) {
-        listeners.getThumb(messageTid, attachment, thumbData)
-    }
-
-    override fun setCustomListener(fileTransferListeners: FileTransferListeners.Listeners) {
-        listeners = fileTransferListeners
+        fileTransferLogic.getAttachmentThumb(messageTid, attachment, thumbData)
     }
 
     override fun findOrCreateTransferTask(attachment: SceytAttachment): TransferTask {
@@ -90,10 +60,6 @@ internal class FileTransferServiceImpl(
 
     override fun findTransferTask(attachment: SceytAttachment): TransferTask? {
         return tasksMap[attachment.messageTid.toString()]
-    }
-
-    override fun addTransferTask(task: TransferTask) {
-        tasksMap[task.messageTid.toString()] = task
     }
 
     override fun removeTransferTask(messageTid: Long) {
@@ -108,8 +74,18 @@ internal class FileTransferServiceImpl(
 
     override fun cancelAllTransfers() {
         fileTransferLogic.cancelAll()
-        listeners.cancelAllTransfers()
         tasksMap.clear()
+    }
+
+    private fun startTransfer(
+        attachment: SceytAttachment,
+        configureTask: TransferTask.() -> Unit,
+        start: (SceytAttachment, TransferTask) -> Unit,
+    ): TransferTask {
+        val task = findOrCreateTransferTask(attachment)
+        task.configureTask()
+        start(task.attachment, task)
+        return task
     }
 }
 
