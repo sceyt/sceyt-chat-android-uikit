@@ -121,7 +121,8 @@ internal class AttachmentDownloadCoordinator(
                         handleDownloadEvent(event, task, url)
                     }
                 },
-            )
+            ).takeUnless { it.isNullOrBlank() }
+                ?: throw IllegalStateException("File download returned an empty local path")
             currentCoroutineContext().ensureActive()
             task.downloadCallback?.onResult(SceytResponse.Success(result))
         } catch (error: CancellationException) {
