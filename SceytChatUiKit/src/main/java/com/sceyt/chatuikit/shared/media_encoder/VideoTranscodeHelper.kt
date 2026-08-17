@@ -2,6 +2,7 @@ package com.sceyt.chatuikit.shared.media_encoder
 
 import android.app.Application
 import androidx.core.net.toUri
+import com.sceyt.chatuikit.config.VideoResizeConfig
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.shared.media_encoder.TranscodeResultEnum.Cancelled
@@ -25,10 +26,10 @@ object VideoTranscodeHelper : SceytKoinComponent {
     suspend fun transcodeAsResult(
             destination: File,
             path: String,
-            quality: VideoQuality = VideoQuality.MEDIUM
+            config: VideoResizeConfig = VideoResizeConfig.Medium
     ): VideoTranscodeData {
         return suspendCancellableCoroutine {
-            checkAndTranscode(destination, path, quality) { data ->
+            checkAndTranscode(destination, path, config) { data ->
                 when (data.resultType) {
                     Cancelled -> it.resume(VideoTranscodeData(Cancelled))
                     Failure -> {
@@ -46,16 +47,16 @@ object VideoTranscodeHelper : SceytKoinComponent {
     fun transcodeAsResultWithCallback(
             destination: File,
             path: String,
-            quality: VideoQuality = VideoQuality.MEDIUM,
+            config: VideoResizeConfig = VideoResizeConfig.Medium,
             callback: (VideoTranscodeData) -> Unit
     ) {
-        checkAndTranscode(destination, path, quality, callback)
+        checkAndTranscode(destination, path, config, callback)
     }
 
     private fun checkAndTranscode(
             destination: File,
             filePath: String,
-            quality: VideoQuality = VideoQuality.MEDIUM,
+            config: VideoResizeConfig = VideoResizeConfig.Medium,
             callback: (VideoTranscodeData) -> Unit
     ) {
 
@@ -66,10 +67,13 @@ object VideoTranscodeHelper : SceytKoinComponent {
                 srcUri = filePath.toUri(),
                 destPath = destination.absolutePath,
                 configureWith = TranscoderConfiguration(
-                    quality = quality,
+                    quality = config.quality,
+                    frameRate = config.frameRate,
                     isMinBitrateCheckEnabled = true,
                     disableAudio = false,
-                    videoBitrateCoefficient = 0.09f,
+                    videoBitrate = config.bitrate,
+                    videoBitrateCoefficient = config.bitrateCoefficient,
+                    shortSideThreshold = config.shortSideThreshold,
                 ),
                 listener = object : CompressionListener {
                     override fun onCancelled() {
@@ -100,7 +104,7 @@ object VideoTranscodeHelper : SceytKoinComponent {
             val alreadyExist = currentTranscodePath == filePath || pendingTranscodeQue.any { it.filePath == filePath }
 
             if (!alreadyExist)
-                pendingTranscodeQue.add(PendingTranscodeData(destination, filePath, quality, callback))
+                pendingTranscodeQue.add(PendingTranscodeData(destination, filePath, config, callback))
         }
     }
 
@@ -108,7 +112,7 @@ object VideoTranscodeHelper : SceytKoinComponent {
         currentTranscodePath = null
         if (pendingTranscodeQue.isEmpty()) return
         pendingTranscodeQue.poll()?.let {
-            checkAndTranscode(it.destination, it.filePath, it.quality, it.callback)
+            checkAndTranscode(it.destination, it.filePath, it.config, it.callback)
         }
     }
 
@@ -127,7 +131,7 @@ object VideoTranscodeHelper : SceytKoinComponent {
 private data class PendingTranscodeData(
         val destination: File,
         val filePath: String,
-        val quality: VideoQuality,
+        val config: VideoResizeConfig,
         val callback: (VideoTranscodeData) -> Unit
 )
 

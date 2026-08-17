@@ -662,7 +662,7 @@ internal class AttachmentUploadCoordinator(
         transcodeVideo(
             path = attachment.filePath,
             parentDir = context.filesDir,
-            quality = SceytChatUIKit.config.attachmentTransferConfig.videoTranscodeQuality,
+            config = SceytChatUIKit.config.videoAttachmentResizeConfig,
             progressCallback = { data ->
                 if (continuation.isActive && !pausedTaskIds.contains(attachment.messageTid)) {
                     task.preparingCallback?.onPreparing(

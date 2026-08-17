@@ -28,9 +28,17 @@ SceytChatUIKit.config.attachmentTransferConfig = AttachmentTransferConfig(
     imageDownloadDirectoryName = "Images",
     videoDownloadDirectoryName = "Videos",
     fileDownloadDirectoryName = "Files",
-    videoTranscodeQuality = VideoQuality.MEDIUM,
+)
+
+SceytChatUIKit.config.videoAttachmentResizeConfig = VideoResizeConfig(
+    shortSideThreshold = 480,
+    bitrateCoefficient = 0.09f,
 )
 ```
+
+`videoAttachmentResizeConfig` controls video preparation before upload. The output bitrate is
+resolved in order: `bitrate`, then `bitrateCoefficient`, then `quality`. Only the first non-null
+one applies, so leave the earlier ones null to use a later one.
 
 Do not replace the transport while operations are active.
 
