@@ -133,7 +133,11 @@ internal class RecordingFileTransferTransport : FileTransferTransport {
 
     val uploadCalls = CopyOnWriteArrayList<UploadCall>()
     val downloadCalls = CopyOnWriteArrayList<DownloadCall>()
+    val pauseCalls = CopyOnWriteArrayList<String>()
+    val resumeCalls = CopyOnWriteArrayList<String>()
     var downloadCancellationGate: CompletableDeferred<Unit>? = null
+    var pauseResult = false
+    var resumeResult = false
 
     override suspend fun upload(
         request: FileUploadRequest,
@@ -166,6 +170,16 @@ internal class RecordingFileTransferTransport : FileTransferTransport {
             }
             throw error
         }
+    }
+
+    override fun pause(operationId: String): Boolean {
+        pauseCalls += operationId
+        return pauseResult
+    }
+
+    override fun resume(operationId: String): Boolean {
+        resumeCalls += operationId
+        return resumeResult
     }
 }
 

@@ -64,7 +64,12 @@ internal class FileTransferServiceImpl(
     override fun resume(messageTid: Long, attachment: SceytAttachment, state: TransferState) {
         val workInfo = WorkManager.getInstance(context).getWorkInfosByTag(messageTid.toString())
         if ((state == PauseUpload || state == ErrorUpload) && (workInfo.get().isEmpty() || workInfo.isCancelled))
-            UploadAndSendAttachmentWorkManager.schedule(context, messageTid, null)
+            UploadAndSendAttachmentWorkManager.schedule(
+                context = context,
+                messageTid = messageTid,
+                channelId = null,
+                resumePausedUpload = true,
+            )
         else
             listeners.resume(messageTid, attachment, state)
     }

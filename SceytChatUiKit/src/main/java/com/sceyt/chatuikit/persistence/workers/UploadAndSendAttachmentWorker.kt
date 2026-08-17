@@ -41,6 +41,7 @@ import com.sceyt.chatuikit.persistence.mappers.toTransferData
 import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager.FILE_TRANSFER_NOTIFICATION_ID
 import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager.IS_SHARING
 import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager.MESSAGE_TID
+import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager.RESUME_PAUSED_UPLOAD
 import com.sceyt.chatuikit.presentation.extensions.isNotPending
 import com.sceyt.chatuikit.shared.utils.FileChecksumCalculator
 import kotlinx.coroutines.CancellableContinuation
@@ -53,6 +54,7 @@ object UploadAndSendAttachmentWorkManager {
 
     internal const val MESSAGE_TID = "MESSAGE_TID"
     internal const val IS_SHARING = "IS_SHARING"
+    internal const val RESUME_PAUSED_UPLOAD = "RESUME_PAUSED_UPLOAD"
     const val FILE_TRANSFER_NOTIFICATION_ID = 1223344
 
     fun schedule(
@@ -61,10 +63,12 @@ object UploadAndSendAttachmentWorkManager {
             channelId: Long?,
             workPolicy: ExistingWorkPolicy = ExistingWorkPolicy.KEEP,
             isSharing: Boolean = false,
+            resumePausedUpload: Boolean = false,
     ): Operation {
         val dataBuilder = Data.Builder()
         dataBuilder.putLong(MESSAGE_TID, messageTid)
         dataBuilder.putBoolean(IS_SHARING, isSharing)
+        dataBuilder.putBoolean(RESUME_PAUSED_UPLOAD, resumePausedUpload)
 
         val myWorkRequest = OneTimeWorkRequest.Builder(UploadAndSendAttachmentWorker::class.java)
             .addTag(messageTid.toString())
@@ -94,7 +98,8 @@ class UploadAndSendAttachmentWorker(
 
     private suspend fun checkToUploadAttachmentsBeforeSend(
             tmpMessage: SceytMessage,
-            isSharing: Boolean
+            isSharing: Boolean,
+            resumePausedUpload: Boolean,
     ): kotlin.Result<List<SceytAttachment>> {
         val payloads = attachmentLogic.getAllPayLoadsByMsgTid(tmpMessage.tid)
         val attachments = tmpMessage.attachments?.toMutableList()
@@ -124,21 +129,22 @@ class UploadAndSendAttachmentWorker(
                     fileChecksumDao.insert(checksumEntity)
                 }
 
+                if (!shouldStartUpload(attachment.transferState, resumePausedUpload)) {
+                    return kotlin.Result.failure(Exception("Attachment upload is paused"))
+                }
+
                 val result = suspendCancellableCoroutine { continuation ->
-                    if (attachment.transferState != TransferState.PauseUpload) {
+                    val transferData = TransferData(tmpMessage.tid, attachment.progressPercent
+                            ?: 0f, TransferState.WaitingToUpload,
+                        attachment.filePath, attachment.url)
 
-                        val transferData = TransferData(tmpMessage.tid, attachment.progressPercent
-                                ?: 0f, TransferState.WaitingToUpload,
-                            attachment.filePath, attachment.url)
+                    FileTransferHelper.emitAttachmentTransferUpdate(transferData, attachment.fileSize)
 
-                        FileTransferHelper.emitAttachmentTransferUpdate(transferData, attachment.fileSize)
-
-                        runBlocking {
-                            attachmentLogic.updateAttachmentWithTransferData(transferData)
-                        }
-
-                        uploadFile(attachment, continuation, isSharing)
+                    runBlocking {
+                        attachmentLogic.updateAttachmentWithTransferData(transferData)
                     }
+
+                    uploadFile(attachment, continuation, isSharing)
                 }
                 return result.fold(
                     onSuccess = {
@@ -180,6 +186,7 @@ class UploadAndSendAttachmentWorker(
         val data = inputData
         val messageTid = data.getLong(MESSAGE_TID, 0)
         val isSharing = data.getBoolean(IS_SHARING, false)
+        val resumePausedUpload = data.getBoolean(RESUME_PAUSED_UPLOAD, false)
         val tmpMessage = messageLogic.getMessageFromDbByTid(messageTid)
                 ?: return finishWorkWithFailure("Message not found: $messageTid")
 
@@ -189,7 +196,11 @@ class UploadAndSendAttachmentWorker(
         if (applicationContext.hasPermissions(android.Manifest.permission.FOREGROUND_SERVICE))
             startForeground(tmpMessage.channelId, tmpMessage)
 
-        val result = checkToUploadAttachmentsBeforeSend(tmpMessage, isSharing)
+        val result = checkToUploadAttachmentsBeforeSend(
+            tmpMessage = tmpMessage,
+            isSharing = isSharing,
+            resumePausedUpload = resumePausedUpload,
+        )
         return if (result.isSuccess && !isStopped) {
             val messageToSend = tmpMessage.copy(attachments = result.getOrThrow()).toMessage()
 
@@ -261,3 +272,8 @@ class UploadAndSendAttachmentWorker(
         private const val TAG = "UploadAndSendAttachmentWorker"
     }
 }
+
+internal fun shouldStartUpload(
+    state: TransferState?,
+    resumePausedUpload: Boolean,
+): Boolean = state != TransferState.PauseUpload || resumePausedUpload
