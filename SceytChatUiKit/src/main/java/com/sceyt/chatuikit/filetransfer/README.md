@@ -89,13 +89,6 @@ available to `resume(operationId)`. `resume(operationId)` returns `true` only wh
 suspended transport call continues. Returning `false` tells the UI kit to cancel and restart the
 operation using its normal ordering rules.
 
-## Legacy override
-
-`FileTransferService.setCustomListener()` remains supported for compatibility. A custom listener
-replaces the UI-kit coordinators and therefore takes precedence over the configured transport.
-New integrations should implement `FileTransferTransport` so ordering, preprocessing, sharing,
-and persistence remain owned by the UI kit.
-
 ## Lifecycle
 
 UI-kit transfer cancellation cancels the owning coroutines. A transport must treat coroutine

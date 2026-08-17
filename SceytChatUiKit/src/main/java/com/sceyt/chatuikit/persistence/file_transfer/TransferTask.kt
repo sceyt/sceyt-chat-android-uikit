@@ -61,7 +61,29 @@ class TransferTask(
 
     val onCompletionListeners: HashMap<String, (Result<SceytAttachment>) -> Unit> by lazy { hashMapOf() }
 
-    fun addOnCompletionListener(key: String, listener: (Result<SceytAttachment>) -> Unit) {
-        onCompletionListeners[key] = listener
+    /** Adds a listener that is notified when this transfer finishes. */
+    fun addOnCompletionListener(
+        key: String,
+        listener: (Result<SceytAttachment>) -> Unit,
+    ) {
+        synchronized(onCompletionListeners) {
+            onCompletionListeners[key] = listener
+        }
+    }
+
+    fun removeOnCompletionListener(key: String) {
+        synchronized(onCompletionListeners) {
+            onCompletionListeners.remove(key)
+        }
+    }
+
+    internal fun complete(result: Result<SceytAttachment>) {
+        val listeners = synchronized(onCompletionListeners) {
+            onCompletionListeners.values.toList().also {
+                onCompletionListeners.clear()
+            }
+        }
+
+        listeners.forEach { it(result) }
     }
 }

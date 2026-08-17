@@ -33,6 +33,7 @@ import com.sceyt.chatuikit.persistence.file_transfer.FileTransferHelper
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
+import com.sceyt.chatuikit.persistence.file_transfer.TransferTask
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
@@ -167,18 +168,18 @@ class UploadAndSendAttachmentWorker(
             continuation: CancellableContinuation<kotlin.Result<SceytAttachment>>,
             isSharing: Boolean
     ) {
+        val completionKey = this.toString()
+        val configureTask: TransferTask.() -> Unit = {
+            addOnCompletionListener(completionKey, continuation::safeResume)
+            continuation.invokeOnCancellation {
+                removeOnCompletionListener(completionKey)
+            }
+        }
+
         if (isSharing) {
-            fileTransferService.uploadSharedFile(
-                attachment = attachment,
-                transferTask = FileTransferHelper.createTransferTask(attachment).also { task ->
-                    task.addOnCompletionListener(this.toString(), listener = continuation::safeResume)
-                })
+            fileTransferService.uploadSharedFile(attachment, configureTask)
         } else {
-            fileTransferService.upload(
-                attachment = attachment,
-                transferTask = FileTransferHelper.createTransferTask(attachment).also { task ->
-                    task.addOnCompletionListener(this.toString(), listener = continuation::safeResume)
-                })
+            fileTransferService.upload(attachment, configureTask)
         }
     }
 

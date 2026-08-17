@@ -318,10 +318,7 @@ class MessageInfoViewModel(
         when (data) {
             is NeedMediaInfoData.NeedDownload -> {
                 viewModelScope.launch(Dispatchers.IO) {
-                    fileTransferService.download(
-                        attachment = attachment,
-                        transferTask = fileTransferService.findOrCreateTransferTask(attachment)
-                    )
+                    fileTransferService.download(attachment)
                 }
             }
 

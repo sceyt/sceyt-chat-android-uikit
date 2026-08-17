@@ -312,6 +312,7 @@ class AttachmentUploadCoordinatorTest {
                     transferState = TransferState.Uploaded,
                 )
                 secondTask.state = TransferState.Uploaded
+                service.removeTransferTask(second.messageTid)
             }
         }
 

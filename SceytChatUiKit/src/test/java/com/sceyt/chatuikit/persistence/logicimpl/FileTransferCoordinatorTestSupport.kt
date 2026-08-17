@@ -7,7 +7,6 @@ import com.sceyt.chatuikit.filetransfer.FileTransferCallback
 import com.sceyt.chatuikit.filetransfer.FileTransferEvent
 import com.sceyt.chatuikit.filetransfer.FileTransferTransport
 import com.sceyt.chatuikit.filetransfer.FileUploadRequest
-import com.sceyt.chatuikit.persistence.file_transfer.FileTransferListeners
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.file_transfer.ThumbData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
@@ -21,11 +20,21 @@ import java.util.concurrent.CopyOnWriteArrayList
 
 internal class TestFileTransferService : FileTransferService {
     private val tasks = ConcurrentHashMap<String, TransferTask>()
-    private var customListeners: FileTransferListeners.Listeners? = null
 
-    override fun setCustomListener(fileTransferListeners: FileTransferListeners.Listeners) {
-        customListeners = fileTransferListeners
-    }
+    override fun upload(
+        attachment: SceytAttachment,
+        configureTask: TransferTask.() -> Unit,
+    ) = startTask(attachment, configureTask)
+
+    override fun uploadSharedFile(
+        attachment: SceytAttachment,
+        configureTask: TransferTask.() -> Unit,
+    ) = startTask(attachment, configureTask)
+
+    override fun download(
+        attachment: SceytAttachment,
+        configureTask: TransferTask.() -> Unit,
+    ) = startTask(attachment, configureTask)
 
     override fun findOrCreateTransferTask(attachment: SceytAttachment): TransferTask {
         return tasks.getOrPut(attachment.messageTid.toString()) {
@@ -35,10 +44,6 @@ internal class TestFileTransferService : FileTransferService {
 
     override fun findTransferTask(attachment: SceytAttachment): TransferTask? {
         return tasks[attachment.messageTid.toString()]
-    }
-
-    override fun addTransferTask(task: TransferTask) {
-        tasks[task.messageTid.toString()] = task
     }
 
     override fun removeTransferTask(messageTid: Long) {
@@ -53,28 +58,25 @@ internal class TestFileTransferService : FileTransferService {
         tasks.clear()
     }
 
-    override fun upload(attachment: SceytAttachment, transferTask: TransferTask) {
-        customListeners?.upload(attachment, transferTask)
+    override fun pause(messageTid: Long, attachment: SceytAttachment, state: TransferState) = Unit
+
+    override fun resume(messageTid: Long, attachment: SceytAttachment, state: TransferState) = Unit
+
+    override fun getThumb(messageTid: Long, attachment: SceytAttachment, thumbData: ThumbData) = Unit
+
+    fun registerTask(task: TransferTask) {
+        tasks[task.messageTid.toString()] = task
     }
 
-    override fun uploadSharedFile(attachment: SceytAttachment, transferTask: TransferTask) {
-        customListeners?.uploadSharedFile(attachment, transferTask)
+    fun addTransferTask(task: TransferTask) {
+        registerTask(task)
     }
 
-    override fun download(attachment: SceytAttachment, transferTask: TransferTask) {
-        customListeners?.download(attachment, transferTask)
-    }
-
-    override fun pause(messageTid: Long, attachment: SceytAttachment, state: TransferState) {
-        customListeners?.pause(messageTid, attachment, state)
-    }
-
-    override fun resume(messageTid: Long, attachment: SceytAttachment, state: TransferState) {
-        customListeners?.resume(messageTid, attachment, state)
-    }
-
-    override fun getThumb(messageTid: Long, attachment: SceytAttachment, thumbData: ThumbData) {
-        customListeners?.getThumb(messageTid, attachment, thumbData)
+    private fun startTask(
+        attachment: SceytAttachment,
+        configureTask: TransferTask.() -> Unit,
+    ): TransferTask {
+        return findOrCreateTransferTask(attachment).apply(configureTask)
     }
 }
 

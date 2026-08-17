@@ -32,10 +32,7 @@ class PauseOrResumeTransferUseCase(
             }
 
             TransferState.PendingDownload, TransferState.ErrorDownload -> {
-                fileTransferService.download(
-                    attachment = attachment,
-                    transferTask = FileTransferHelper.createTransferTask(attachment)
-                )
+                fileTransferService.download(attachment)
             }
 
             TransferState.PauseDownload -> {
@@ -43,10 +40,7 @@ class PauseOrResumeTransferUseCase(
                 if (task != null)
                     fileTransferService.resume(attachment.messageTid, attachment, state)
                 else
-                    fileTransferService.download(
-                        attachment = attachment,
-                        transferTask = FileTransferHelper.createTransferTask(attachment)
-                    )
+                    fileTransferService.download(attachment)
             }
 
             TransferState.PauseUpload -> {

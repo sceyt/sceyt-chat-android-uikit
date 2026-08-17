@@ -196,10 +196,7 @@ open class LinksSearchViewModel(
         when (data) {
             is NeedMediaInfoData.NeedDownload -> {
                 viewModelScope.launch(Dispatchers.IO) {
-                    fileTransferService.download(
-                        attachment = data.item,
-                        transferTask = fileTransferService.findOrCreateTransferTask(data.item)
-                    )
+                    fileTransferService.download(data.item)
                 }
             }
 
