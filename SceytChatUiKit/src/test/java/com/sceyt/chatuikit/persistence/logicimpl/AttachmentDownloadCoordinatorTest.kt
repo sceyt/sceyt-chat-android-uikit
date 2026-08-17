@@ -148,6 +148,22 @@ class AttachmentDownloadCoordinatorTest {
     }
 
     @Test
+    fun `empty download result deletes partial destination and forwards error`() {
+        val attachment = attachment(state = TransferState.PendingDownload)
+        val task = transferTask(attachment)
+        var result: SceytResponse<String>? = null
+        task.downloadCallback = TransferResultCallback { result = it }
+
+        coordinator.downloadFile(attachment, task)
+        destinationFile.writeBytes(byteArrayOf(1, 2))
+        transport.downloadCalls.single().succeed("")
+
+        assertThat(destinationFile.exists()).isFalse()
+        assertThat(result).isInstanceOf(SceytResponse.Error::class.java)
+        assertThat(result?.message).isEqualTo("File download returned an empty local path")
+    }
+
+    @Test
     fun `waiting for network keeps partial destination and forwards error`() {
         val attachment = attachment(state = TransferState.PendingDownload)
         val task = transferTask(attachment)

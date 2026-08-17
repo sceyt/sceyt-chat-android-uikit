@@ -6,6 +6,7 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.config.SceytChatUIKitConfig
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.FileChecksumData
+import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.filetransfer.SceytChatUIKitFileTransfer
 import com.sceyt.chatuikit.koin.SceytKoinApp
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
@@ -32,6 +33,7 @@ import org.mockito.kotlin.doSuspendableAnswer
 import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import java.io.File
 
 @RunWith(RobolectricTestRunner::class)
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -77,8 +79,8 @@ class AttachmentUploadCoordinatorTest {
 
     @Test
     fun `regular uploads run sequentially`() {
-        val first = attachment(messageTid = 1L, filePath = "/tmp/first.txt")
-        val second = attachment(messageTid = 2L, filePath = "/tmp/second.txt")
+        val first = uploadAttachment(messageTid = 1L)
+        val second = uploadAttachment(messageTid = 2L)
 
         coordinator.uploadFile(first, transferTask(first))
         coordinator.uploadFile(second, transferTask(second))
@@ -94,8 +96,8 @@ class AttachmentUploadCoordinatorTest {
 
     @Test
     fun `duplicate queued upload is suppressed`() {
-        val current = attachment(messageTid = 1L)
-        val duplicate = attachment(messageTid = 2L)
+        val current = uploadAttachment(messageTid = 1L)
+        val duplicate = uploadAttachment(messageTid = 2L)
 
         coordinator.uploadFile(current, transferTask(current))
         coordinator.uploadFile(duplicate, transferTask(duplicate))
@@ -108,10 +110,9 @@ class AttachmentUploadCoordinatorTest {
 
     @Test
     fun `transport receives prepared request and forwards callbacks`() {
-        val attachment = attachment(
+        val attachment = uploadAttachment(
             messageTid = 30L,
             name = "document.txt",
-            filePath = "/tmp/document.txt",
         )
         val task = transferTask(attachment)
         val progress = mutableListOf<TransferData>()
@@ -125,7 +126,7 @@ class AttachmentUploadCoordinatorTest {
         call.succeed("uploaded-url")
 
         assertThat(call.request.operationId).isEqualTo("upload:30")
-        assertThat(call.request.sourceFile.path).isEqualTo("/tmp/document.txt")
+        assertThat(call.request.sourceFile.path).isEqualTo(attachment.filePath)
         assertThat(call.request.fileName).isEqualTo("document.txt")
         assertThat(call.request.attachment).isEqualTo(attachment)
         assertThat(progress.single().progressPercent).isEqualTo(55f)
@@ -136,11 +137,11 @@ class AttachmentUploadCoordinatorTest {
     @Test
     fun `existing checksum url skips transport`() = runBlocking {
         SceytChatUIKit.config.preventDuplicateAttachmentUpload = true
-        val attachment = attachment(filePath = "/tmp/reused.txt")
+        val attachment = uploadAttachment()
         val task = transferTask(attachment)
         var result: SceytResponse<String>? = null
         task.uploadResultCallback = TransferResultCallback { result = it }
-        whenever(attachmentLogic.getFileChecksumData("/tmp/reused.txt")).thenReturn(
+        whenever(attachmentLogic.getFileChecksumData(attachment.originalFilePath)).thenReturn(
             FileChecksumData(
                 checksum = 1L,
                 resizedFilePath = null,
@@ -158,8 +159,8 @@ class AttachmentUploadCoordinatorTest {
 
     @Test
     fun `shared attachments use one physical upload and fan out callbacks`() {
-        val first = attachment(messageTid = 1L, filePath = "/tmp/shared.txt")
-        val second = attachment(messageTid = 2L, filePath = "/tmp/shared.txt")
+        val first = uploadAttachment(messageTid = 1L)
+        val second = uploadAttachment(messageTid = 2L, filePath = first.filePath)
         val firstTask = transferTask(first)
         val secondTask = transferTask(second)
         val firstProgress = mutableListOf<Float>()
@@ -186,7 +187,7 @@ class AttachmentUploadCoordinatorTest {
 
     @Test
     fun `pause cancels upload and resume requeues it`() {
-        val attachment = attachment(messageTid = 40L, state = TransferState.Uploading)
+        val attachment = uploadAttachment(messageTid = 40L, state = TransferState.Uploading)
         val task = transferTask(attachment)
         val states = mutableListOf<TransferState>()
         task.resumePauseCallback = ResumePauseCallback { states += it.state }
@@ -206,8 +207,8 @@ class AttachmentUploadCoordinatorTest {
 
     @Test
     fun `pausing active upload advances the sequential queue`() {
-        val first = attachment(messageTid = 50L, state = TransferState.WaitingToUpload)
-        val second = attachment(messageTid = 51L, state = TransferState.WaitingToUpload)
+        val first = uploadAttachment(messageTid = 50L, state = TransferState.WaitingToUpload)
+        val second = uploadAttachment(messageTid = 51L, state = TransferState.WaitingToUpload)
         val firstTask = transferTask(first)
         val states = mutableListOf<TransferState>()
         firstTask.resumePauseCallback = ResumePauseCallback { states += it.state }
@@ -226,7 +227,7 @@ class AttachmentUploadCoordinatorTest {
 
     @Test
     fun `duplicate upload request does not resume a paused upload`() {
-        val attachment = attachment(messageTid = 58L, state = TransferState.Uploading)
+        val attachment = uploadAttachment(messageTid = 58L, state = TransferState.Uploading)
         val task = transferTask(attachment)
         service.addTransferTask(task)
 
@@ -240,8 +241,8 @@ class AttachmentUploadCoordinatorTest {
 
     @Test
     fun `pausing queued upload does not cancel or advance current upload`() {
-        val current = attachment(messageTid = 54L, state = TransferState.Uploading)
-        val queued = attachment(messageTid = 55L, state = TransferState.WaitingToUpload)
+        val current = uploadAttachment(messageTid = 54L, state = TransferState.Uploading)
+        val queued = uploadAttachment(messageTid = 55L, state = TransferState.WaitingToUpload)
         val queuedTask = transferTask(queued)
         service.addTransferTask(queuedTask)
 
@@ -262,8 +263,8 @@ class AttachmentUploadCoordinatorTest {
 
     @Test
     fun `upload failure is forwarded and advances queue`() {
-        val first = attachment(messageTid = 56L)
-        val second = attachment(messageTid = 57L)
+        val first = uploadAttachment(messageTid = 56L)
+        val second = uploadAttachment(messageTid = 57L)
         val firstTask = transferTask(first)
         var result: SceytResponse<String>? = null
         firstTask.uploadResultCallback = TransferResultCallback { result = it }
@@ -279,10 +280,69 @@ class AttachmentUploadCoordinatorTest {
     }
 
     @Test
+    fun `empty upload result is forwarded as failure and advances queue`() {
+        val first = uploadAttachment(messageTid = 62L)
+        val second = uploadAttachment(messageTid = 63L)
+        val firstTask = transferTask(first)
+        var result: SceytResponse<String>? = null
+        firstTask.uploadResultCallback = TransferResultCallback { result = it }
+
+        coordinator.uploadFile(first, firstTask)
+        coordinator.uploadFile(second, transferTask(second))
+        transport.uploadCalls.single().succeed(" ")
+
+        assertThat(result).isInstanceOf(SceytResponse.Error::class.java)
+        assertThat(result?.message).isEqualTo("File upload returned an empty remote reference")
+        assertThat(transport.uploadCalls.last().request.operationId).isEqualTo("upload:63")
+    }
+
+    @Test
+    fun `missing upload source is forwarded as failure and advances queue`() {
+        val first = attachment(
+            messageTid = 64L,
+            filePath = null,
+            originalFilePath = null,
+        )
+        val second = uploadAttachment(messageTid = 65L)
+        val firstTask = transferTask(first)
+        var result: SceytResponse<String>? = null
+        firstTask.uploadResultCallback = TransferResultCallback { result = it }
+
+        coordinator.uploadFile(first, firstTask)
+        coordinator.uploadFile(second, transferTask(second))
+
+        assertThat(result).isInstanceOf(SceytResponse.Error::class.java)
+        assertThat(result?.message).isEqualTo("Attachment source path is missing")
+        assertThat(transport.uploadCalls.single().request.operationId).isEqualTo("upload:65")
+    }
+
+    @Test
+    fun `nonexistent upload source is forwarded as failure`() {
+        val sourceFile = File(context.cacheDir, "upload-coordinator-tests/missing.txt")
+        sourceFile.delete()
+        val attachment = attachment(
+            messageTid = 66L,
+            filePath = sourceFile.path,
+            originalFilePath = sourceFile.path,
+        )
+        val task = transferTask(attachment)
+        var result: SceytResponse<String>? = null
+        task.uploadResultCallback = TransferResultCallback { result = it }
+
+        coordinator.uploadFile(attachment, task)
+
+        assertThat(transport.uploadCalls).isEmpty()
+        assertThat(result).isInstanceOf(SceytResponse.Error::class.java)
+        assertThat(result?.message).isEqualTo(
+            "Attachment source file does not exist: ${sourceFile.path}",
+        )
+    }
+
+    @Test
     fun `preparation failure is forwarded and advances queue`() {
         SceytChatUIKit.config.preventDuplicateAttachmentUpload = true
-        val first = attachment(messageTid = 60L, filePath = "/tmp/first.txt")
-        val second = attachment(messageTid = 61L, filePath = "/tmp/second.txt")
+        val first = uploadAttachment(messageTid = 60L)
+        val second = uploadAttachment(messageTid = 61L)
         val firstTask = transferTask(first)
         val checksumStarted = CompletableDeferred<Unit>()
         val releaseChecksum = CompletableDeferred<Unit>()
@@ -309,7 +369,7 @@ class AttachmentUploadCoordinatorTest {
 
     @Test
     fun `preparing upload pauses without an active transport operation`() {
-        val attachment = attachment(messageTid = 52L, state = TransferState.Preparing)
+        val attachment = uploadAttachment(messageTid = 52L, state = TransferState.Preparing)
         val task = transferTask(attachment)
         val states = mutableListOf<TransferState>()
         task.resumePauseCallback = ResumePauseCallback { states += it.state }
@@ -325,9 +385,8 @@ class AttachmentUploadCoordinatorTest {
     @Test
     fun `pause cancels upload while checksum is being prepared`() {
         SceytChatUIKit.config.preventDuplicateAttachmentUpload = true
-        val attachment = attachment(
+        val attachment = uploadAttachment(
             messageTid = 59L,
-            filePath = "/tmp/preparing.txt",
             state = TransferState.Preparing,
         )
         val task = transferTask(attachment)
@@ -352,7 +411,7 @@ class AttachmentUploadCoordinatorTest {
 
     @Test
     fun `late result from cancelled upload does not complete replacement`() {
-        val attachment = attachment(messageTid = 53L, state = TransferState.Uploading)
+        val attachment = uploadAttachment(messageTid = 53L, state = TransferState.Uploading)
         val task = transferTask(attachment)
         val states = mutableListOf<TransferState>()
         val results = mutableListOf<String?>()
@@ -389,8 +448,8 @@ class AttachmentUploadCoordinatorTest {
     @Test
     fun `shared preparation failure is forwarded to every shared task`() {
         SceytChatUIKit.config.preventDuplicateAttachmentUpload = true
-        val first = attachment(messageTid = 70L, filePath = "/tmp/shared-fail.txt")
-        val second = attachment(messageTid = 71L, filePath = "/tmp/shared-fail.txt")
+        val first = uploadAttachment(messageTid = 70L)
+        val second = uploadAttachment(messageTid = 71L, filePath = first.filePath)
         val firstTask = transferTask(first)
         val secondTask = transferTask(second)
         val firstResults = mutableListOf<SceytResponse<String>>()
@@ -419,9 +478,9 @@ class AttachmentUploadCoordinatorTest {
 
     @Test
     fun `cancel all stops active and queued uploads and allows a new upload`() {
-        val active = attachment(messageTid = 80L, filePath = "/tmp/active.txt")
-        val queued = attachment(messageTid = 81L, filePath = "/tmp/queued.txt")
-        val next = attachment(messageTid = 82L, filePath = "/tmp/next.txt")
+        val active = uploadAttachment(messageTid = 80L)
+        val queued = uploadAttachment(messageTid = 81L)
+        val next = uploadAttachment(messageTid = 82L)
 
         coordinator.uploadFile(active, transferTask(active))
         coordinator.uploadFile(queued, transferTask(queued))
@@ -431,5 +490,25 @@ class AttachmentUploadCoordinatorTest {
         assertThat(transport.uploadCalls).hasSize(2)
         assertThat(transport.uploadCalls[0].cancelled).isTrue()
         assertThat(transport.uploadCalls[1].request.operationId).isEqualTo("upload:82")
+    }
+
+    private fun uploadAttachment(
+        messageTid: Long = 10L,
+        name: String = "attachment.txt",
+        state: TransferState? = TransferState.PendingUpload,
+        filePath: String? = null,
+    ): SceytAttachment {
+        val sourceFile = filePath?.let(::File)
+            ?: File(context.cacheDir, "upload-coordinator-tests/$messageTid-$name")
+        sourceFile.parentFile?.mkdirs()
+        sourceFile.createNewFile()
+
+        return attachment(
+            messageTid = messageTid,
+            name = name,
+            filePath = sourceFile.path,
+            originalFilePath = sourceFile.path,
+            state = state,
+        )
     }
 }

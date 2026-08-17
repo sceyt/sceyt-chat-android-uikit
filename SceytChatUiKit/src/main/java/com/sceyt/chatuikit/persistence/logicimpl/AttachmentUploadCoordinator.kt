@@ -369,7 +369,12 @@ internal class AttachmentUploadCoordinator(
         onResult: ((SceytResponse<String>) -> Unit)? = null,
         onComplete: (() -> Unit)? = null,
     ) {
-        val sourceFile = File(attachment.filePath.orEmpty())
+        val sourcePath = attachment.filePath
+        require(!sourcePath.isNullOrBlank()) { "Attachment source path is missing" }
+
+        val sourceFile = File(sourcePath)
+        require(sourceFile.isFile) { "Attachment source file does not exist: $sourcePath" }
+
         val request = FileUploadRequest(
             operationId = attachment.uploadOperationId,
             sourceFile = sourceFile,
@@ -424,7 +429,8 @@ internal class AttachmentUploadCoordinator(
                         handleUploadEvent(event, attachment, task, onProgress)
                     }
                 },
-            )
+            ).takeUnless { it.isNullOrBlank() }
+                ?: throw IllegalStateException("File upload returned an empty remote reference")
             currentCoroutineContext().ensureActive()
             notifyUploadResult(SceytResponse.Success(result), task, onResult)
             onComplete?.invoke()

@@ -69,7 +69,7 @@ class FileTransferScopeIsolationTest {
     fun `cancelling uploads leaves downloads on the shared scope running`() {
         val uploads = AttachmentUploadCoordinator(context, attachmentLogic, sharedScope)
         val downloads = AttachmentDownloadCoordinator(context, sharedScope)
-        val uploaded = attachment(messageTid = 90L, filePath = "/tmp/upload.txt")
+        val uploaded = uploadAttachment(messageTid = 90L)
         val downloaded = attachment(messageTid = 91L, state = TransferState.PendingDownload)
 
         uploads.uploadFile(uploaded, transferTask(uploaded))
@@ -88,7 +88,7 @@ class FileTransferScopeIsolationTest {
     fun `cancelling downloads leaves uploads on the shared scope running`() {
         val uploads = AttachmentUploadCoordinator(context, attachmentLogic, sharedScope)
         val downloads = AttachmentDownloadCoordinator(context, sharedScope)
-        val uploaded = attachment(messageTid = 92L, filePath = "/tmp/upload.txt")
+        val uploaded = uploadAttachment(messageTid = 92L)
         val downloaded = attachment(messageTid = 93L, state = TransferState.PendingDownload)
 
         uploads.uploadFile(uploaded, transferTask(uploaded))
@@ -107,7 +107,7 @@ class FileTransferScopeIsolationTest {
             thumbPathResolver = mock(),
             scope = sharedScope,
         )
-        val uploaded = attachment(messageTid = 94L, filePath = "/tmp/upload.txt")
+        val uploaded = uploadAttachment(messageTid = 94L)
         val downloaded = attachment(messageTid = 95L, state = TransferState.PendingDownload)
 
         logic.uploadFile(uploaded, transferTask(uploaded))
@@ -117,4 +117,18 @@ class FileTransferScopeIsolationTest {
         assertThat(transport.uploadCalls.single().cancelled).isTrue()
         assertThat(transport.downloadCalls.single().cancelled).isTrue()
     }
+
+    private fun uploadAttachment(messageTid: Long) =
+        File(context.cacheDir, "scope-isolation-tests/$messageTid-upload.txt")
+            .apply {
+                parentFile?.mkdirs()
+                createNewFile()
+            }
+            .let { sourceFile ->
+                attachment(
+                    messageTid = messageTid,
+                    filePath = sourceFile.path,
+                    originalFilePath = sourceFile.path,
+                )
+            }
 }
