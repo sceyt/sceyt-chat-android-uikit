@@ -7,7 +7,7 @@ import com.sceyt.chatuikit.shared.media_encoder.TranscodeResultEnum.Failure
 import com.sceyt.chatuikit.shared.media_encoder.TranscodeResultEnum.Progress
 import com.sceyt.chatuikit.shared.media_encoder.TranscodeResultEnum.Start
 import com.sceyt.chatuikit.shared.media_encoder.TranscodeResultEnum.Success
-import com.sceyt.chatuikit.shared.media_encoder.VideoQuality
+import com.sceyt.chatuikit.config.VideoResizeConfig
 import com.sceyt.chatuikit.shared.media_encoder.VideoTranscodeData
 import com.sceyt.chatuikit.shared.media_encoder.VideoTranscodeHelper
 import com.sceyt.chatuikit.shared.utils.FileResizeUtil
@@ -39,7 +39,7 @@ fun resizeImage(
 fun transcodeVideo(
     path: String?,
     parentDir: File,
-    quality: VideoQuality = VideoQuality.MEDIUM,
+    config: VideoResizeConfig = VideoResizeConfig.Medium,
     progressCallback: ((VideoTranscodeData) -> Unit)? = null,
     callback: (Result<String>) -> Unit
 ) {
@@ -52,7 +52,7 @@ fun transcodeVideo(
     VideoTranscodeHelper.transcodeAsResultWithCallback(
         destination = dest,
         path = path,
-        quality = quality
+        config = config
     ) { data ->
         when (data.resultType) {
             Cancelled -> callback(Result.failure(Exception("Canceled")))

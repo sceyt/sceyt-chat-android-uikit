@@ -17,6 +17,7 @@ import com.sceyt.chatuikit.shared.media_encoder.CompressorUtils.prepareVideoHeig
 import com.sceyt.chatuikit.shared.media_encoder.CompressorUtils.prepareVideoWidth
 import com.sceyt.chatuikit.shared.media_encoder.CompressorUtils.printException
 import com.sceyt.chatuikit.shared.media_encoder.CompressorUtils.setOutputFileParameters
+import com.sceyt.chatuikit.shared.media_encoder.CompressorUtils.shouldResizeVideo
 import com.sceyt.chatuikit.shared.media_encoder.CompressorUtils.validateInputs
 import com.sceyt.chatuikit.shared.media_encoder.transcoder.CallbackBasedTranscoder
 import com.sceyt.chatuikit.shared.media_encoder.transcoder.InputSurface
@@ -136,7 +137,7 @@ object CustomCompressor {
             return Result.failure(Exception(INVALID_BITRATE))
         }
 
-        if (width <= 480 || height <= 480) {
+        if (!shouldResizeVideo(width, height, configuration.shortSideThreshold)) {
             Log.i(
                 "CompressorUtil",
                 "Ignore compressing: Video ratio is too small to resize width = $width, height = $height"
@@ -162,7 +163,8 @@ object CustomCompressor {
         //Handle new width and height values
         var (newWidth, newHeight) = generateWidthAndHeight(
             width,
-            height
+            height,
+            configuration.shortSideThreshold
         )
 
         //Handle rotation values and swapping height and width if needed
