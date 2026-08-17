@@ -82,12 +82,12 @@ internal class AttachmentDownloadCoordinator(
             attachment = attachment,
         )
 
-        val job = scope.launch(start = CoroutineStart.LAZY) {
+        val downloadJob = scope.launch(start = CoroutineStart.LAZY) {
             performDownload(request, task, url, operationId)
         }
 
-        if (downloadJobs.putIfAbsent(operationId, job) != null) {
-            job.cancel()
+        if (downloadJobs.putIfAbsent(operationId, downloadJob) != null) {
+            downloadJob.cancel()
             return
         }
 
@@ -101,7 +101,7 @@ internal class AttachmentDownloadCoordinator(
             ),
         )
 
-        job.start()
+        downloadJob.start()
     }
 
     private suspend fun performDownload(
@@ -110,19 +110,24 @@ internal class AttachmentDownloadCoordinator(
         url: String,
         operationId: String,
     ) {
-        val job = currentCoroutineContext().job
-        val waitingForNetwork = AtomicBoolean()
+        val downloadJob = currentCoroutineContext().job
+        val networkWaitTriggered = AtomicBoolean()
 
         try {
             val response = try {
                 val result = SceytChatUIKit.fileTransfer.transport.download(
                     request = request,
                     callback = { event ->
-                        if (job.isActive && !pausedOperationIds.contains(operationId)) {
-                            if (event is FileTransferEvent.WaitingForNetwork) {
-                                waitingForNetwork.set(true)
+                        if (downloadJob.isActive && operationId !in pausedOperationIds) {
+                            when (event) {
+                                is FileTransferEvent.WaitingForNetwork -> {
+                                    if (networkWaitTriggered.compareAndSet(false, true)) {
+                                        downloadJob.cancel()
+                                    }
+                                }
+
+                                else -> handleDownloadEvent(event, task, url)
                             }
-                            handleDownloadEvent(event, task, url)
                         }
                     },
                 ).takeUnless { it.isNullOrBlank() }
@@ -130,17 +135,15 @@ internal class AttachmentDownloadCoordinator(
                 currentCoroutineContext().ensureActive()
                 SceytResponse.Success(result)
             } catch (error: CancellationException) {
-                throw error
+                if (!networkWaitTriggered.get()) throw error
+                SceytResponse.Error(SceytException(0, "Waiting for network"))
             } catch (error: Throwable) {
-                if (!waitingForNetwork.get()) {
-                    request.destinationFile.delete()
-                }
                 SceytResponse.Error(error.toSceytException())
             }
 
             notifyDownloadResult(task, response)
         } finally {
-            if (downloadJobs.remove(operationId, job)) {
+            if (downloadJobs.remove(operationId, downloadJob)) {
                 pausedOperationIds.remove(operationId)
             }
         }
