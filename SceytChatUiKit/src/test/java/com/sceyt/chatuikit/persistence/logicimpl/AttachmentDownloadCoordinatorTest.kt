@@ -194,11 +194,73 @@ class AttachmentDownloadCoordinatorTest {
 
         assertThat(transport.downloadCalls.first().cancelled).isTrue()
         assertThat(transport.downloadCalls).hasSize(2)
-        assertThat(task.state).isEqualTo(TransferState.PauseDownload)
+        assertThat(task.state).isEqualTo(TransferState.Downloading)
         assertThat(states).containsExactly(
             TransferState.PauseDownload,
             TransferState.Downloading,
         ).inOrder()
+    }
+
+    @Test
+    fun `native download pause and resume keep the original call`() {
+        transport.pauseResult = true
+        transport.resumeResult = true
+        val attachment = attachment(state = TransferState.Downloading)
+        val task = transferTask(attachment)
+        service.addTransferTask(task)
+
+        coordinator.downloadFile(attachment, task)
+        val call = transport.downloadCalls.single()
+        coordinator.pauseLoad(attachment, TransferState.Downloading)
+        coordinator.resumeLoad(attachment, TransferState.PauseDownload)
+
+        assertThat(transport.pauseCalls).containsExactly("download:10")
+        assertThat(transport.resumeCalls).containsExactly("download:10")
+        assertThat(call.cancelled).isFalse()
+        assertThat(transport.downloadCalls).hasSize(1)
+        assertThat(task.state).isEqualTo(TransferState.Downloading)
+
+        call.succeed(destinationFile.path)
+    }
+
+    @Test
+    fun `native paused download ignores late progress until resumed`() {
+        transport.pauseResult = true
+        transport.resumeResult = true
+        val attachment = attachment(state = TransferState.Downloading)
+        val task = transferTask(attachment)
+        val progress = mutableListOf<Float>()
+        task.progressCallback = ProgressUpdateCallback { progress += it.progressPercent }
+        service.addTransferTask(task)
+
+        coordinator.downloadFile(attachment, task)
+        val call = transport.downloadCalls.single()
+        coordinator.pauseLoad(attachment, TransferState.Downloading)
+        call.progress(25f)
+
+        assertThat(progress).containsExactly(0f)
+
+        coordinator.resumeLoad(attachment, TransferState.PauseDownload)
+        call.progress(50f)
+
+        assertThat(progress).containsExactly(0f, 50f).inOrder()
+        call.succeed(destinationFile.path)
+    }
+
+    @Test
+    fun `success callback exception is swallowed and does not invoke error callback`() {
+        val attachment = attachment(state = TransferState.PendingDownload)
+        val task = transferTask(attachment)
+        var callbackCount = 0
+        task.downloadCallback = TransferResultCallback {
+            callbackCount++
+            throw IllegalStateException("callback failed")
+        }
+
+        coordinator.downloadFile(attachment, task)
+        transport.downloadCalls.single().succeed(destinationFile.path)
+
+        assertThat(callbackCount).isEqualTo(1)
     }
 
     @Test

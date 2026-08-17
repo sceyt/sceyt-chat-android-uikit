@@ -18,4 +18,19 @@ interface FileTransferTransport {
         request: FileDownloadRequest,
         callback: FileTransferCallback,
     ): String?
+
+    /**
+     * Pauses the existing operation.
+     *
+     * @return `true` when the operation remains available for [resume], or `false` when the
+     * UI kit must cancel it and use restart fallback.
+     */
+    fun pause(operationId: String): Boolean = false
+
+    /**
+     * Resumes the existing paused operation.
+     *
+     * @return `true` when the same operation continues, or `false` when the UI kit must restart it.
+     */
+    fun resume(operationId: String): Boolean = false
 }

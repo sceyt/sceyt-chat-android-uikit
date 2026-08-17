@@ -61,14 +61,25 @@ class DefaultFileTransferDestinationProviderTest {
     }
 
     @Test
-    fun `blank attachment name produces a unique file name`() {
+    fun `blank attachment name produces a stable file name`() {
         val attachment = attachment(name = "", type = AttachmentTypeEnum.File.value)
 
         val first = DefaultFileTransferDestinationProvider.provideDestination(context, attachment)
         val second = DefaultFileTransferDestinationProvider.provideDestination(context, attachment)
 
         assertThat(first.name).isNotEmpty()
-        assertThat(second.name).isNotEmpty()
-        assertThat(first.name).isNotEqualTo(second.name)
+        assertThat(second).isEqualTo(first)
+        assertThat(first.name).isEqualTo("attachment-${attachment.messageTid}")
+    }
+
+    @Test
+    fun `destination uses only safe basename from attachment name`() {
+        val attachment = attachment(name = "../../other/place/media.bin")
+
+        val destination = DefaultFileTransferDestinationProvider
+            .provideDestination(context, attachment)
+
+        assertThat(destination.name).isEqualTo("media.bin")
+        assertThat(destination.parentFile?.name).isEqualTo(attachment.messageTid.toString())
     }
 }

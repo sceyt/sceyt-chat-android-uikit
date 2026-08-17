@@ -41,6 +41,14 @@ class DefaultFileTransferTransportTest {
     }
 
     @Test
+    fun `native pause and resume are unsupported`() {
+        val transport = DefaultFileTransferTransport()
+
+        assertThat(transport.pause("upload:10")).isFalse()
+        assertThat(transport.resume("upload:10")).isFalse()
+    }
+
+    @Test
     fun `upload uses prepared source and returns result`() = runTest {
         val transport = DefaultFileTransferTransport()
         val utility = utilityConstruction.constructed().single()

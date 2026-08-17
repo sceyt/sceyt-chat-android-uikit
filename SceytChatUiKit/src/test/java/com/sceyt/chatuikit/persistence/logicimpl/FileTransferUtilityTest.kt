@@ -8,11 +8,14 @@ import com.sceyt.chat.sceyt_callbacks.UrlCallback
 import com.sceyt.chatuikit.data.models.SceytResponse
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito
 import org.mockito.kotlin.any
 import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
+import java.io.File
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -84,6 +87,27 @@ class FileTransferUtilityTest {
             assertThat(progress).containsExactly(40f)
             assertThat(results).hasSize(1)
             assertThat(results.single()).isInstanceOf(SceytResponse.Error::class.java)
+        }
+    }
+
+    @Test
+    fun `download methods delegate to downloader`() {
+        Mockito.mockConstruction(OkHttpDownloader::class.java).use { construction ->
+            val utility = FileTransferUtility()
+            val downloader = construction.constructed().single()
+            val attachment = attachment()
+            val destination = File("/tmp/download.txt")
+            val onProgress: (Float) -> Unit = {}
+            val onResult: (SceytResponse<String>) -> Unit = {}
+            whenever(downloader.resumeDownload(attachment)).thenReturn(true)
+
+            utility.downloadFile(attachment, destination, onProgress, onResult)
+            utility.pauseDownload(attachment)
+
+            verify(downloader).downloadFile(attachment, destination, onProgress, onResult)
+            verify(downloader).pauseDownload(attachment)
+            assertThat(utility.resumeDownload(attachment)).isTrue()
+            assertThat(utility.resumeUpload(attachment)).isFalse()
         }
     }
 

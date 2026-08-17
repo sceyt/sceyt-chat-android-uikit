@@ -5,6 +5,7 @@ import com.google.common.truth.Truth.assertThat
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.config.SceytChatUIKitConfig
 import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.FileChecksumData
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.filetransfer.SceytChatUIKitFileTransfer
@@ -19,8 +20,10 @@ import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.runCurrent
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -28,12 +31,17 @@ import org.junit.runner.RunWith
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.dsl.module
+import org.mockito.Mockito
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.doSuspendableAnswer
 import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import java.io.File
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
+import kotlin.concurrent.thread
 
 @RunWith(RobolectricTestRunner::class)
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -186,6 +194,187 @@ class AttachmentUploadCoordinatorTest {
     }
 
     @Test
+    fun `shared upload pauses physically only after every task is paused`() {
+        transport.pauseResult = true
+        transport.resumeResult = true
+        val first = uploadAttachment(messageTid = 3L)
+        val second = uploadAttachment(messageTid = 4L, filePath = first.filePath)
+        val firstTask = transferTask(first)
+        val secondTask = transferTask(second)
+        val firstProgress = mutableListOf<Float>()
+        val secondProgress = mutableListOf<Float>()
+        firstTask.progressCallback = ProgressUpdateCallback { firstProgress += it.progressPercent }
+        secondTask.progressCallback = ProgressUpdateCallback { secondProgress += it.progressPercent }
+
+        coordinator.uploadSharedFile(first, firstTask)
+        coordinator.uploadSharedFile(second, secondTask)
+        val call = transport.uploadCalls.single()
+
+        coordinator.pauseLoad(first, TransferState.Uploading)
+        call.progress(25f)
+
+        assertThat(transport.pauseCalls).isEmpty()
+        assertThat(firstProgress).isEmpty()
+        assertThat(secondProgress).containsExactly(25f)
+
+        coordinator.pauseLoad(second, TransferState.Uploading)
+
+        assertThat(transport.pauseCalls).containsExactly("upload:3")
+        assertThat(call.cancelled).isFalse()
+
+        coordinator.resumeLoad(second, TransferState.PauseUpload)
+        call.progress(50f)
+
+        assertThat(transport.resumeCalls).containsExactly("upload:3")
+        assertThat(transport.uploadCalls).hasSize(1)
+        assertThat(firstProgress).isEmpty()
+        assertThat(secondProgress).containsExactly(25f, 50f).inOrder()
+
+        call.succeed("shared-url")
+    }
+
+    @Test
+    fun `paused shared owner still uploads for an active follower`() {
+        val scope = TestScope(StandardTestDispatcher())
+        val coordinator = AttachmentUploadCoordinator(context, attachmentLogic, scope)
+        val first = uploadAttachment(messageTid = 80L, state = TransferState.Uploading)
+        val second = uploadAttachment(
+            messageTid = 81L,
+            filePath = first.filePath,
+            state = TransferState.Uploading,
+        )
+
+        coordinator.uploadSharedFile(first, transferTask(first))
+        coordinator.uploadSharedFile(second, transferTask(second))
+        coordinator.pauseLoad(first, TransferState.Uploading)
+        scope.runCurrent()
+
+        assertThat(transport.uploadCalls.map { it.request.operationId })
+            .containsExactly("upload:80")
+        assertThat(transport.uploadCalls.single().cancelled).isFalse()
+    }
+
+    @Test
+    fun `regular upload with shared source is not treated as a shared member`() {
+        val shared = uploadAttachment(messageTid = 82L, state = TransferState.Uploading)
+        val follower = uploadAttachment(
+            messageTid = 83L,
+            filePath = shared.filePath,
+            state = TransferState.Uploading,
+        )
+        val regular = uploadAttachment(
+            messageTid = 84L,
+            filePath = shared.filePath,
+            state = TransferState.Uploading,
+        )
+
+        coordinator.uploadSharedFile(shared, transferTask(shared))
+        coordinator.uploadSharedFile(follower, transferTask(follower))
+        coordinator.uploadFile(regular, transferTask(regular).also(service::addTransferTask))
+        coordinator.pauseLoad(regular, TransferState.Uploading)
+
+        assertThat(transport.pauseCalls).containsExactly("upload:84")
+        assertThat(transport.uploadCalls.first().cancelled).isFalse()
+        assertThat(transport.uploadCalls.last().cancelled).isTrue()
+    }
+
+    @Test
+    fun `shared upload falls back to file path when original path is missing`() {
+        val first = uploadAttachment(messageTid = 85L).copy(originalFilePath = null)
+        val second = uploadAttachment(
+            messageTid = 86L,
+            filePath = first.filePath,
+        ).copy(originalFilePath = null)
+
+        coordinator.uploadSharedFile(first, transferTask(first))
+        coordinator.uploadSharedFile(second, transferTask(second))
+
+        assertThat(transport.uploadCalls).hasSize(1)
+    }
+
+    @Test
+    fun `paused shared member reuses result completed by active member`() {
+        val first = uploadAttachment(messageTid = 87L, state = TransferState.Uploading)
+        val second = uploadAttachment(
+            messageTid = 88L,
+            filePath = first.filePath,
+            state = TransferState.Uploading,
+        )
+        val firstTask = transferTask(first)
+        val secondTask = transferTask(second)
+        val firstResults = mutableListOf<String?>()
+        firstTask.uploadResultCallback = TransferResultCallback { firstResults += it.data }
+        secondTask.uploadResultCallback = TransferResultCallback { response ->
+            response.data?.let { url ->
+                secondTask.attachment = secondTask.attachment.copy(
+                    url = url,
+                    transferState = TransferState.Uploaded,
+                )
+                secondTask.state = TransferState.Uploaded
+            }
+        }
+
+        coordinator.uploadSharedFile(first, firstTask)
+        coordinator.uploadSharedFile(second, secondTask)
+        coordinator.pauseLoad(first, TransferState.Uploading)
+        transport.uploadCalls.single().succeed("shared-url")
+
+        coordinator.resumeLoad(first, TransferState.PauseUpload)
+
+        assertThat(firstResults).containsExactly("shared-url")
+        assertThat(transport.uploadCalls).hasSize(1)
+    }
+
+    @Test
+    fun `native upload resume waits for its queue turn`() {
+        transport.pauseResult = true
+        transport.resumeResult = true
+        val first = uploadAttachment(messageTid = 5L, state = TransferState.Uploading)
+        val second = uploadAttachment(messageTid = 6L)
+        val firstTask = transferTask(first)
+        service.addTransferTask(firstTask)
+
+        coordinator.uploadFile(first, firstTask)
+        coordinator.uploadFile(second, transferTask(second))
+        val firstCall = transport.uploadCalls.single()
+
+        coordinator.pauseLoad(first, TransferState.Uploading)
+
+        assertThat(transport.pauseCalls).containsExactly("upload:5")
+        assertThat(firstCall.cancelled).isFalse()
+        assertThat(transport.uploadCalls.map { it.request.operationId })
+            .containsExactly("upload:5", "upload:6").inOrder()
+
+        coordinator.resumeLoad(first, TransferState.PauseUpload)
+
+        assertThat(transport.resumeCalls).isEmpty()
+
+        transport.uploadCalls.last().succeed("second-url")
+
+        assertThat(transport.resumeCalls).containsExactly("upload:5")
+        assertThat(transport.uploadCalls).hasSize(2)
+
+        firstCall.succeed("first-url")
+    }
+
+    @Test
+    fun `failed native upload resume restarts the operation`() {
+        transport.pauseResult = true
+        transport.resumeResult = false
+        val attachment = uploadAttachment(messageTid = 7L, state = TransferState.Uploading)
+        val task = transferTask(attachment)
+        service.addTransferTask(task)
+
+        coordinator.uploadFile(attachment, task)
+        coordinator.pauseLoad(attachment, TransferState.Uploading)
+        coordinator.resumeLoad(attachment, TransferState.PauseUpload)
+
+        assertThat(transport.resumeCalls).containsExactly("upload:7")
+        assertThat(transport.uploadCalls.first().cancelled).isTrue()
+        assertThat(transport.uploadCalls).hasSize(2)
+    }
+
+    @Test
     fun `pause cancels upload and resume requeues it`() {
         val attachment = uploadAttachment(messageTid = 40L, state = TransferState.Uploading)
         val task = transferTask(attachment)
@@ -277,6 +466,27 @@ class AttachmentUploadCoordinatorTest {
         assertThat(result?.message).isEqualTo("upload failed")
         assertThat(transport.uploadCalls).hasSize(2)
         assertThat(transport.uploadCalls.last().request.operationId).isEqualTo("upload:57")
+    }
+
+    @Test
+    fun `throwing result callback is invoked once and does not block queue`() {
+        val first = uploadAttachment(messageTid = 89L)
+        val second = uploadAttachment(messageTid = 90L)
+        var callbackCount = 0
+        val firstTask = transferTask(first).apply {
+            uploadResultCallback = TransferResultCallback {
+                callbackCount++
+                error("callback failed")
+            }
+        }
+
+        coordinator.uploadFile(first, firstTask)
+        coordinator.uploadFile(second, transferTask(second))
+        transport.uploadCalls.single().succeed("first-url")
+
+        assertThat(callbackCount).isEqualTo(1)
+        assertThat(transport.uploadCalls.map { it.request.operationId })
+            .containsExactly("upload:89", "upload:90").inOrder()
     }
 
     @Test
@@ -410,6 +620,94 @@ class AttachmentUploadCoordinatorTest {
     }
 
     @Test
+    fun `late transcode result after pause is ignored and resume can transcode again`() {
+        val transcodeCallbacks = mutableListOf<(Result<String>) -> Unit>()
+        @Suppress("UNCHECKED_CAST")
+        val extensionsClass = Class.forName(
+            "com.sceyt.chatuikit.persistence.extensions.AttachmentResizeExtensionsKt",
+        ) as Class<Any>
+
+        Mockito.mockStatic(extensionsClass) { invocation ->
+            if (invocation.method.name == "transcodeVideo") {
+                @Suppress("UNCHECKED_CAST")
+                transcodeCallbacks += invocation.arguments[4] as (Result<String>) -> Unit
+                null
+            } else {
+                invocation.callRealMethod()
+            }
+        }.use {
+            val attachment = uploadAttachment(
+                messageTid = 67L,
+                type = AttachmentTypeEnum.Video.value,
+                state = TransferState.Preparing,
+            )
+            val task = transferTask(attachment)
+            service.addTransferTask(task)
+
+            coordinator.uploadFile(attachment, task)
+            assertThat(transcodeCallbacks).hasSize(1)
+
+            coordinator.pauseLoad(attachment, TransferState.Preparing)
+            transcodeCallbacks.single().invoke(Result.success("late-transcoded.mp4"))
+
+            assertThat(transport.uploadCalls).isEmpty()
+            assertThat(task.state).isEqualTo(TransferState.PauseUpload)
+
+            coordinator.resumeLoad(attachment, TransferState.PauseUpload)
+
+            assertThat(transcodeCallbacks).hasSize(2)
+            assertThat(transport.uploadCalls).isEmpty()
+        }
+    }
+
+    @Test
+    fun `resume during image resize starts a replacement upload`() {
+        val resizeStarted = CountDownLatch(1)
+        val releaseResize = CountDownLatch(1)
+        val resizeCalls = AtomicInteger()
+        @Suppress("UNCHECKED_CAST")
+        val extensionsClass = Class.forName(
+            "com.sceyt.chatuikit.persistence.extensions.AttachmentResizeExtensionsKt",
+        ) as Class<Any>
+        val attachment = uploadAttachment(
+            messageTid = 91L,
+            type = AttachmentTypeEnum.Image.value,
+            state = TransferState.Preparing,
+        )
+        val task = transferTask(attachment)
+        service.addTransferTask(task)
+
+        Mockito.mockStatic(extensionsClass) { invocation ->
+            if (invocation.method.name == "resizeImage") {
+                if (resizeCalls.incrementAndGet() == 1) {
+                    resizeStarted.countDown()
+                    releaseResize.await(2, TimeUnit.SECONDS)
+                }
+                invocation.arguments[0] as String
+            } else {
+                invocation.callRealMethod()
+            }
+        }.use {
+            val pauseCompleted = CountDownLatch(1)
+            val pauser = thread {
+                resizeStarted.await(2, TimeUnit.SECONDS)
+                coordinator.pauseLoad(attachment, TransferState.Preparing)
+                pauseCompleted.countDown()
+                releaseResize.countDown()
+            }
+
+            coordinator.uploadFile(attachment, task)
+            assertThat(pauseCompleted.await(2, TimeUnit.SECONDS)).isTrue()
+            coordinator.resumeLoad(attachment, TransferState.PauseUpload)
+            testScope.runCurrent()
+            pauser.join(2_000)
+
+            assertThat(resizeCalls.get()).isEqualTo(2)
+            assertThat(transport.uploadCalls).hasSize(1)
+        }
+    }
+
+    @Test
     fun `late result from cancelled upload does not complete replacement`() {
         val attachment = uploadAttachment(messageTid = 53L, state = TransferState.Uploading)
         val task = transferTask(attachment)
@@ -495,6 +793,7 @@ class AttachmentUploadCoordinatorTest {
     private fun uploadAttachment(
         messageTid: Long = 10L,
         name: String = "attachment.txt",
+        type: String = AttachmentTypeEnum.File.value,
         state: TransferState? = TransferState.PendingUpload,
         filePath: String? = null,
     ): SceytAttachment {
@@ -506,6 +805,7 @@ class AttachmentUploadCoordinatorTest {
         return attachment(
             messageTid = messageTid,
             name = name,
+            type = type,
             filePath = sourceFile.path,
             originalFilePath = sourceFile.path,
             state = state,
