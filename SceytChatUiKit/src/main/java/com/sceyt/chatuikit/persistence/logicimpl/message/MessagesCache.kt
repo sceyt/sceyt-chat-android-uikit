@@ -505,6 +505,37 @@ class MessagesCache {
         }
     }
 
+    suspend fun updateAttachmentMetadata(
+        messageTid: Long,
+        metadata: String?
+    ) = mutex.withLock {
+        updateAttachmentsByTid(messageTid) { copy(metadata = metadata) }
+    }
+
+    suspend fun updateAttachmentUrl(
+        messageTid: Long,
+        url: String?
+    ) = mutex.withLock {
+        updateAttachmentsByTid(messageTid) { copy(url = url) }
+    }
+
+    private fun updateAttachmentsByTid(
+        messageTid: Long,
+        updater: SceytAttachment.() -> SceytAttachment
+    ) {
+        cachedMessages.values.forEach { messageHashMap ->
+            messageHashMap[messageTid]?.let { message ->
+                val attachments = message.attachments?.toMutableList() ?: return@let
+                attachments.forEachIndexed att@{ index, attachment ->
+                    if (attachment.type == AttachmentTypeEnum.Link.value)
+                        return@att
+                    attachments[index] = attachment.updater()
+                }
+                messageHashMap[messageTid] = message.copy(attachments = attachments)
+            }
+        }
+    }
+
     suspend fun updateAttachmentLinkDetails(data: LinkPreviewDetails) = mutex.withLock {
         updateAllAttachments(predicate = { it.url == data.link }, updater = {
             copy(linkPreviewDetails = data)
