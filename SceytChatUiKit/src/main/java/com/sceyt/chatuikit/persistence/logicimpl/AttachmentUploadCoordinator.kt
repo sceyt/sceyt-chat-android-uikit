@@ -56,6 +56,7 @@ internal class AttachmentUploadCoordinator(
     private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
 ) : SceytKoinComponent {
     private val fileTransferService: FileTransferService by inject()
+    private val videoThumbUploader by lazy { VideoThumbUploader(context, attachmentLogic) }
 
     private val pendingUploadQueue: Queue<Pair<SceytAttachment, TransferTask>> = LinkedList()
     private val uploadQueueLock = Any()
@@ -107,6 +108,10 @@ internal class AttachmentUploadCoordinator(
             },
         ) {
             val checksum = getAttachmentChecksum(attachment.sourcePath)
+            // Before the video, so its url is part of the attachment when the message is sent
+            videoThumbUploader.uploadAndApplyThumb(attachment, getAppropriateTasks(task), checksum)
+            currentCoroutineContext().ensureActive()
+
             val (uploaded, url) = checkMaybeAlreadyUploadedWithAnotherMessage(checksum, task)
 
             if (uploaded && url != null) {
@@ -417,6 +422,10 @@ internal class AttachmentUploadCoordinator(
         }
 
         val checksum = getAttachmentChecksum(attachment.sourcePath)
+        // Before the video, so its url is part of the attachment when the message is sent
+        videoThumbUploader.uploadAndApplyThumb(attachment, listOf(task), checksum)
+        currentCoroutineContext().ensureActive()
+
         val (uploaded, url) = checkMaybeAlreadyUploadedWithAnotherMessage(checksum, task)
 
         if (uploaded && url != null) {
