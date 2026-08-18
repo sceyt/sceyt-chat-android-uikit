@@ -1,15 +1,20 @@
 package com.sceyt.chatuikit.persistence.logicimpl
 
+import android.util.Size
 import android.content.Context
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.filetransfer.FileDownloadRequest
 import com.sceyt.chatuikit.filetransfer.FileTransferEvent
+import com.sceyt.chatuikit.filetransfer.TransferRole
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
+import com.sceyt.chatuikit.persistence.file_transfer.ThumbData
+import com.sceyt.chatuikit.persistence.file_transfer.ThumbFor
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Downloading
@@ -17,6 +22,7 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState.ErrorDownload
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.PauseDownload
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.PendingDownload
 import com.sceyt.chatuikit.persistence.file_transfer.TransferTask
+import com.sceyt.chatuikit.persistence.mappers.getVideoThumbUrl
 import com.sceyt.chatuikit.persistence.mappers.toTransferData
 import com.sceyt.chatuikit.presentation.extensions.isAttachmentExistAndFullyLoaded
 import kotlinx.coroutines.CancellationException
@@ -48,6 +54,9 @@ internal class AttachmentDownloadCoordinator(
         attachment: SceytAttachment,
         task: TransferTask,
     ) {
+        // The uploaded poster is much smaller, so it is shown while the video downloads
+        downloadVideoThumb(attachment, task)
+
         val url = attachment.url
 
         if (url.isNullOrBlank()) {
@@ -56,7 +65,8 @@ internal class AttachmentDownloadCoordinator(
         }
 
         val destinationFile =
-            SceytChatUIKit.fileTransfer.destinationProvider.provideDestination(context, attachment)
+            SceytChatUIKit.fileTransfer.destinationProvider
+                .provideDestination(context, attachment, TransferRole.Main)
 
         val existingFile = attachment.isAttachmentExistAndFullyLoaded(destinationFile)
 
@@ -102,6 +112,70 @@ internal class AttachmentDownloadCoordinator(
         )
 
         downloadJob.start()
+    }
+
+    /**
+     * Downloads the poster frame uploaded with the video, so the message can show a real preview
+     * without waiting for the video. It runs beside the video download, under its own operation id,
+     * and stays silent on failure because the blurred thumb in the metadata remains as a fallback.
+     */
+    private fun downloadVideoThumb(attachment: SceytAttachment, task: TransferTask) {
+        if (attachment.filePath.isNotNullOrBlank()) return
+        val thumbUrl = attachment.getVideoThumbUrl()?.takeIf { it.isNotBlank() } ?: return
+
+        val destinationFile = SceytChatUIKit.fileTransfer.destinationProvider
+            .provideDestination(context, attachment, TransferRole.Thumbnail)
+
+        if (destinationFile.exists() && destinationFile.length() > 0L) {
+            notifyVideoThumbLoaded(task, destinationFile.path)
+            return
+        }
+
+        val operationId = downloadOperationId(attachment.messageTid, TransferRole.Thumbnail)
+        val request = FileDownloadRequest(
+            operationId = operationId,
+            url = thumbUrl,
+            destinationFile = destinationFile,
+            attachment = attachment,
+            role = TransferRole.Thumbnail,
+        )
+
+        val thumbJob = scope.launch(start = CoroutineStart.LAZY) {
+            val job = currentCoroutineContext().job
+            try {
+                SceytChatUIKit.fileTransfer.transport.download(request) {}
+                currentCoroutineContext().ensureActive()
+                notifyVideoThumbLoaded(task, destinationFile.path)
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Throwable) {
+                destinationFile.delete()
+                SceytLog.e(
+                    TAG, "Couldn't download the video thumb for messageTid:" +
+                            " ${attachment.messageTid}, reason: ${error.message}"
+                )
+            } finally {
+                downloadJobs.remove(operationId, job)
+            }
+        }
+
+        if (downloadJobs.putIfAbsent(operationId, thumbJob) != null) {
+            thumbJob.cancel()
+            return
+        }
+
+        thumbJob.start()
+    }
+
+    /** Notifies every screen which shows the attachment about the loaded poster. */
+    private fun notifyVideoThumbLoaded(task: TransferTask, path: String) {
+        ThumbFor.entries.forEach { thumbFor ->
+            runCatching {
+                task.thumbCallback?.onThumb(path, ThumbData(thumbFor.value, null, EMPTY_THUMB_SIZE))
+            }.onFailure { error ->
+                SceytLog.e(TAG, "File transfer callback failed", error)
+            }
+        }
     }
 
     private suspend fun performDownload(
@@ -232,7 +306,7 @@ internal class AttachmentDownloadCoordinator(
 
         val destinationFile =
             SceytChatUIKit.fileTransfer.destinationProvider
-                .provideDestination(context, attachment)
+                .provideDestination(context, attachment, TransferRole.Main)
 
         val existingFile =
             attachment.isAttachmentExistAndFullyLoaded(destinationFile)
@@ -291,5 +365,6 @@ internal class AttachmentDownloadCoordinator(
 
     companion object {
         private const val TAG = "AttachmentDownloadCoordinator"
+        private val EMPTY_THUMB_SIZE = Size(0, 0)
     }
 }

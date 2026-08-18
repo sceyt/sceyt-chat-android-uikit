@@ -6,6 +6,7 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.config.AttachmentTransferConfig
 import com.sceyt.chatuikit.config.SceytChatUIKitConfig
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
+import com.sceyt.chatuikit.filetransfer.TransferRole
 import com.sceyt.chatuikit.persistence.logicimpl.attachment
 import org.junit.After
 import org.junit.Before
@@ -51,7 +52,7 @@ class DefaultFileTransferDestinationProviderTest {
         typesAndDirectories.forEach { (type, directoryName) ->
             val attachment = attachment(messageTid = 25L, type = type, name = "media.bin")
             val destination = DefaultFileTransferDestinationProvider
-                .provideDestination(context, attachment)
+                .provideDestination(context, attachment, TransferRole.Main)
 
             assertThat(destination.name).isEqualTo("media.bin")
             assertThat(destination.parentFile?.name).isEqualTo("25")
@@ -64,8 +65,8 @@ class DefaultFileTransferDestinationProviderTest {
     fun `blank attachment name produces a stable file name`() {
         val attachment = attachment(name = "", type = AttachmentTypeEnum.File.value)
 
-        val first = DefaultFileTransferDestinationProvider.provideDestination(context, attachment)
-        val second = DefaultFileTransferDestinationProvider.provideDestination(context, attachment)
+        val first = DefaultFileTransferDestinationProvider.provideDestination(context, attachment, TransferRole.Main)
+        val second = DefaultFileTransferDestinationProvider.provideDestination(context, attachment, TransferRole.Main)
 
         assertThat(first.name).isNotEmpty()
         assertThat(second).isEqualTo(first)
@@ -77,7 +78,7 @@ class DefaultFileTransferDestinationProviderTest {
         val attachment = attachment(name = "../../other/place/media.bin")
 
         val destination = DefaultFileTransferDestinationProvider
-            .provideDestination(context, attachment)
+            .provideDestination(context, attachment, TransferRole.Main)
 
         assertThat(destination.name).isEqualTo("media.bin")
         assertThat(destination.parentFile?.name).isEqualTo(attachment.messageTid.toString())

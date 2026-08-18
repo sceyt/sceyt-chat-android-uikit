@@ -50,7 +50,7 @@ class FileTransferScopeIsolationTest {
         previousFileTransfer = SceytChatUIKit.fileTransfer
         SceytChatUIKit.fileTransfer = SceytChatUIKitFileTransfer().apply {
             this.transport = this@FileTransferScopeIsolationTest.transport
-            destinationProvider = FileTransferDestinationProvider { _, _ -> destinationFile }
+            destinationProvider = FileTransferDestinationProvider { _, _, _ -> destinationFile }
         }
         SceytKoinApp.koinApp = startKoin {
             modules(module { single<FileTransferService> { service } })

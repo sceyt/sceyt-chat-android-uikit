@@ -2,13 +2,17 @@ package com.sceyt.chatuikit.persistence.logicimpl
 
 import android.content.Context
 import android.util.Size
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
+import com.sceyt.chatuikit.filetransfer.TransferRole
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferHelper
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
+import com.sceyt.chatuikit.persistence.mappers.getVideoThumbUrl
 import com.sceyt.chatuikit.persistence.file_transfer.ThumbData
 import org.koin.core.component.inject
+import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 
 internal class AttachmentThumbCoordinator(
@@ -24,7 +28,6 @@ internal class AttachmentThumbCoordinator(
         attachment: SceytAttachment,
         data: ThumbData,
     ) {
-        attachment.filePath ?: return
         val thumbKey = getThumbSourceKey(attachment, data)
         val preparingThumbKey = "${attachment.messageTid}_${thumbKey}_${data.key}"
 
@@ -37,6 +40,14 @@ internal class AttachmentThumbCoordinator(
             return
         }
 
+        // The poster uploaded with the video is already downloaded, so there is no need
+        // to extract a frame from the video file
+        downloadedVideoThumbFile(attachment)?.let {
+            task.thumbCallback?.onThumb(it.path, data)
+            return
+        }
+
+        attachment.filePath ?: return
         if (preparingThumbs.put(preparingThumbKey, data) != null) return
 
         thumbPathResolver.getThumbPath(context, attachment, data.size)
@@ -65,6 +76,13 @@ internal class AttachmentThumbCoordinator(
     fun clear() {
         preparingThumbs.clear()
         thumbPaths.clear()
+    }
+
+    private fun downloadedVideoThumbFile(attachment: SceytAttachment): File? {
+        if (attachment.getVideoThumbUrl().isNullOrBlank()) return null
+        return SceytChatUIKit.fileTransfer.destinationProvider
+            .provideDestination(context, attachment, TransferRole.Thumbnail)
+            .takeIf { it.exists() && it.length() > 0L }
     }
 
     private fun getThumbSourceKey(
