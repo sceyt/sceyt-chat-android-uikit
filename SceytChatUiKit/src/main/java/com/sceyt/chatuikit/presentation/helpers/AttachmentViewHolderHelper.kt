@@ -8,6 +8,7 @@ import android.widget.ImageView
 import androidx.core.graphics.drawable.toDrawable
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
+import com.bumptech.glide.request.target.Target
 import com.sceyt.chatuikit.extensions.glideRequestListener
 import com.sceyt.chatuikit.persistence.file_transfer.AttachmentTransferStateStore
 import com.sceyt.chatuikit.persistence.file_transfer.ThumbData
@@ -41,14 +42,17 @@ class AttachmentViewHolderHelper(itemView: View) {
     fun drawImageWithBlurredThumb(
         path: String?,
         imageView: ImageView,
+        placeholder: Drawable? = blurredThumb,
         onResourceReady: (() -> Unit)? = null
     ) {
-        val width = resizedImageSize?.width ?: imageView.width
-        val height = resizedImageSize?.height ?: imageView.height
+        val width = (resizedImageSize?.width ?: imageView.width).takeIf { it > 0 }
+            ?: Target.SIZE_ORIGINAL
+        val height = (resizedImageSize?.height ?: imageView.height).takeIf { it > 0 }
+            ?: Target.SIZE_ORIGINAL
         Glide.with(context.applicationContext)
             .load(path)
             .transition(DrawableTransitionOptions.withCrossFade())
-            .placeholder(blurredThumb)
+            .placeholder(placeholder)
             .override(width, height)
             .listener(glideRequestListener<Drawable>(onResourceReady = { _, _, _, _, _ ->
                 onResourceReady?.invoke()
@@ -70,14 +74,24 @@ class AttachmentViewHolderHelper(itemView: View) {
         }
     }
 
+    /**
+     * Draws the already loaded thumb if it exists, otherwise the blurred thumb from the metadata.
+     * Used when the file itself is not loaded yet.
+     */
     fun loadBlurThumb(thumb: Drawable? = blurredThumb, imageView: ImageView) {
-        imageView.setImageDrawable(thumb)
+        if (isFileItemInitialized && !fileItem.thumbPath.isNullOrBlank())
+            drawImageWithBlurredThumb(fileItem.thumbPath, imageView, thumb)
+        else imageView.setImageDrawable(thumb)
     }
 
     fun drawOriginalFile(imageView: ImageView, onResourceReady: (() -> Unit)? = null) {
         if (isFileItemInitialized.not()) return
         if (!fileItem.attachment.filePath.isNullOrBlank())
-            drawImageWithBlurredThumb(fileItem.attachment.filePath, imageView, onResourceReady)
+            drawImageWithBlurredThumb(
+                path = fileItem.attachment.filePath,
+                imageView = imageView,
+                onResourceReady = onResourceReady
+            )
         else
             loadBlurThumb(blurredThumb, imageView)
     }

@@ -25,6 +25,7 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.PauseDownload
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.PendingDownload
 import com.sceyt.chatuikit.persistence.file_transfer.getProgressWithState
+import com.sceyt.chatuikit.persistence.file_transfer.isTransferring
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
@@ -157,7 +158,8 @@ abstract class BaseMediaMessageViewHolder(
         loadingProgressView.getProgressWithState(
             state = data.state,
             style = style.mediaLoaderStyle,
-            hideOnThumbLoaded = requireMessage.isNotPending(),
+            hideOnThumbLoaded = requireMessage.isNotPending()
+                    && !fileItem.transferData?.state.isTransferring(),
             progressPercent = data.progressPercent
         )
     }

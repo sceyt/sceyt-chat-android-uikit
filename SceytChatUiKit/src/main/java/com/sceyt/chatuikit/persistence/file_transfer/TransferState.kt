@@ -77,6 +77,15 @@ fun CircularProgressView.getProgressWithState(
     }
 }
 
+/**
+ * The file is not transferred yet, so the loader should stay visible, even if a thumb is
+ * already loaded, like the video poster, which loads before the video itself.
+ */
+fun TransferState?.isTransferring(): Boolean {
+    this ?: return false
+    return isRunning() || isPending() || this == WaitingToUpload || this == FilePathChanged
+}
+
 fun TransferState.isRunning(): Boolean {
     return this == Downloading || this == Uploading || this == Preparing
 }
