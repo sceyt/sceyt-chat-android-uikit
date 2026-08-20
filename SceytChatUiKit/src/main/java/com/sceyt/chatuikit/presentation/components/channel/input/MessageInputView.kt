@@ -1182,8 +1182,14 @@ class MessageInputView @JvmOverloads constructor(
 
     override fun onDetachedFromWindow() {
         cleanupInputOnDetach()
+        clearMediaPickerResultListener()
         VoiceStateCoordinator.unregisterRecordingController()
         super.onDetachedFromWindow()
+    }
+
+    private fun clearMediaPickerResultListener() {
+        context.asFragmentActivityOrNull()?.supportFragmentManager
+            ?.clearFragmentResultListener(BottomSheetMediaPicker.REQUEST_KEY)
     }
 
     private fun cleanupInputOnDetach() {
