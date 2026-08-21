@@ -578,9 +578,12 @@ class MessageInputView @JvmOverloads constructor(
             onStateChanged(newState)
         }
 
-        val showVoiceIcon = newState == InputState.Voice ||
-                (newState is InputState.Recording && !newState.isPreviewState)
+        val showVoiceIcon = enableVoiceRecord && (newState == InputState.Voice ||
+                (newState is InputState.Recording && !newState.isPreviewState))
+        val showDisabledSendIcon = !enableVoiceRecord && newState == InputState.Voice
         binding.icSendMessage.isInvisible = showVoiceIcon
+        binding.icSendMessage.isEnabled = !showDisabledSendIcon
+        binding.icSendMessage.alpha = if (showDisabledSendIcon) 0.4f else 1f
         binding.icAddAttachments.isVisible = enableSendAttachment && !isEditing
         binding.viewAttachments.isVisible = hasAttachments
         if (showVoiceIcon) {
@@ -1256,7 +1259,8 @@ class MessageInputView @JvmOverloads constructor(
 
     override fun onInputStateChanged(sendImage: ImageView, state: InputState) {
         val iconResId = when (state) {
-            is InputState.Voice -> style.voiceRecordIcon
+            is InputState.Voice ->
+                if (enableVoiceRecord) style.voiceRecordIcon else style.sendMessageIcon
             is InputState.Text, is InputState.TextWithAttachments,
             is InputState.Attachments, is InputState.Recording -> style.sendMessageIcon
         }
@@ -1404,7 +1408,7 @@ class MessageInputView @JvmOverloads constructor(
         applySearchResultStyle(style.messageSearchControlsStyle)
         layoutInputCover.applyInputCoverStyle(style.inputCoverStyle)
         icAddAttachments.isVisible = enableSendAttachment
-        if (isInEditMode) {
+        if (!enableVoiceRecord || isInEditMode) {
             icSendMessage.setImageDrawable(
                 if (enableVoiceRecord)
                     style.voiceRecordIcon else style.sendMessageIcon
