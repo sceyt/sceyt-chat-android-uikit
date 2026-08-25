@@ -28,6 +28,11 @@
     <string name="login_screen_title">Fast and Seamless \nChat API</string>
     <string name="no_created_channels_description">You haven’t created channels yet, \n create one for sending messages.</string>
     <string name="choose_account">Choose Account</string>
+    <string name="use_user_id">Connect by User ID</string>
+    <string name="connect_with_user_id">Connect with User ID</string>
+    <string name="connect_with_user_id_hint">Enter an existing user ID to connect as that user.</string>
+    <string name="user_id">User ID</string>
+    <string name="user_id_is_empty">User ID is empty</string>
     <string name="first_name">First name</string>
     <string name="last_name">Last name</string>
     <string name="user_name">username</string>
@@ -38,4 +43,5 @@
     <string name="username_length_error">Username length must be 3 to 20 characters</string>
     <string name="username_invalid_characters">Use a–z, 0–9 and underscores</string>
     <string name="delete_user">Delete user</string>
+    <string name="_connect">Connect</string>
 </resources>
