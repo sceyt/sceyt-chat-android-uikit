@@ -31,6 +31,12 @@
             android:turnScreenOn="true"
             tools:targetApi="o_mr1" />
 
+        <activity
+            android:name="com.sceyt.chat.demo.call.ui.dialpad.DialPadActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.MaterialComponents.Light.NoActionBar" />
+
         <!-- Call Broadcast Receiver for notification actions -->
         <receiver
             android:name="com.sceyt.chat.demo.call.receiver.CallBroadcastReceiver"
