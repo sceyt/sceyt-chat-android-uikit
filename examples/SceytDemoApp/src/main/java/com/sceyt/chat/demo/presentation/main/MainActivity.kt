@@ -12,14 +12,15 @@ import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.demo.R
 import com.sceyt.chat.demo.call.manager.CallManager
 import com.sceyt.chat.demo.call.ui.attachActiveCallBanner
+import com.sceyt.chat.demo.call.ui.dialpad.DialPadActivity
 import com.sceyt.chat.demo.databinding.ActivityMainBinding
 import com.sceyt.chat.demo.presentation.main.adapters.MainViewPagerAdapter
 import com.sceyt.chat.demo.presentation.main.profile.ProfileFragment
 import com.sceyt.chat.demo.presentation.welcome.create.CreateAccountViewModel
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
-import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.applySystemBarsStyle
+import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.navigation.Destination
 import com.sceyt.chatuikit.navigation.navigate
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.ChannelListFragment
@@ -70,6 +71,10 @@ class MainActivity : AppCompatActivity() {
         }
         requestNotificationPermission()
         checkChannelInviteLink(intent)
+
+        binding.btnDialPad.setOnClickListener {
+            startActivity(DialPadActivity.createIntent(this))
+        }
     }
 
     override fun onNewIntent(intent: Intent) {
