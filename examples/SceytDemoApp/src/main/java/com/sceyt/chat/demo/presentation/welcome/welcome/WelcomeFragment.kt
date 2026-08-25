@@ -12,6 +12,7 @@ import com.sceyt.chat.demo.presentation.Constants.KEY_USER_ID_REQUEST
 import com.sceyt.chat.demo.presentation.main.MainActivity
 import com.sceyt.chat.demo.presentation.welcome.WelcomeActivity
 import com.sceyt.chat.demo.presentation.welcome.accounts_bottomsheet.SelectAccountBottomSheetFragment
+import com.sceyt.chat.demo.presentation.welcome.custom_user_id.CustomUserIdBottomSheetFragment
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.launchActivity
 import com.sceyt.chatuikit.presentation.common.dialogs.SceytLoader.hideLoading
@@ -74,6 +75,13 @@ class WelcomeFragment : Fragment() {
         with(binding) {
             btnCreateAccount.setOnClickListener {
                 (activity as? WelcomeActivity)?.openCreateAccountFragment()
+            }
+
+            btnConnectUserId.setOnClickListener {
+                CustomUserIdBottomSheetFragment().show(
+                    parentFragmentManager,
+                    CustomUserIdBottomSheetFragment::class.java.simpleName
+                )
             }
 
             btnChooseAccount.setOnClickListener {
