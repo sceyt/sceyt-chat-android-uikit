@@ -2,7 +2,6 @@ package com.sceyt.chatuikit.persistence.logicimpl
 
 import android.content.Context
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.data.models.messages.FileChecksumData
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.extensions.getMimeType
 import com.sceyt.chatuikit.filetransfer.FileUploadRequest
@@ -10,21 +9,23 @@ import com.sceyt.chatuikit.filetransfer.TransferRole
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.file_transfer.TransferTask
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
-import com.sceyt.chatuikit.persistence.mappers.getVideoThumbUrl
 import com.sceyt.chatuikit.persistence.mappers.needsVideoThumbUpload
 import com.sceyt.chatuikit.persistence.mappers.upsertVideoThumbUrlMetadata
 import com.sceyt.chatuikit.shared.utils.FileResizeUtil
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.delay
 import java.io.File
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Uploads the first frame of a video as a separate file, so a receiver can show a real preview
  * before downloading the video itself. The url is written to the attachment metadata under
  * [com.sceyt.chatuikit.data.constants.SceytConstants.VideoThumbUrl].
  *
- * This runs before the video upload, so the url is already part of the attachment by the time the
- * message is sent. A failure is not fatal: the video still uploads, and receivers fall back to the
- * blurred thumb which every video carries in its metadata.
+ * This runs beside the video transfer. Failed uploads are retried while the video is still being
+ * processed or uploaded. The caller cancels this work when the video finishes, so a missing poster
+ * never fails or delays the message.
  */
 internal class VideoThumbUploader(
     private val context: Context,
@@ -32,45 +33,39 @@ internal class VideoThumbUploader(
     private val thumbFileProvider: (Context, String) -> Result<File> = { ctx, path ->
         FileResizeUtil.getVideoThumbAsFile(ctx, path, THUMB_MAX_SIZE)
     },
+    private val retryDelay: Duration = RETRY_DELAY,
 ) {
 
-    suspend fun uploadAndApplyThumb(
-        attachment: SceytAttachment,
-        tasks: List<TransferTask>,
-        checksumData: FileChecksumData?,
-    ) {
-        if (!attachment.needsVideoThumbUpload()) return
+    suspend fun uploadThumb(attachment: SceytAttachment): String? {
+        if (!attachment.needsVideoThumbUpload()) return null
 
-        // The same file uploaded with another message already has a thumb on the server
-        val knownUrl = getVideoThumbUrl(checksumData?.metadata)?.takeIf { it.isNotBlank() }
-        if (knownUrl != null) {
-            applyThumbUrl(attachment, tasks, knownUrl)
-            return
-        }
-
-        val sourcePath = attachment.thumbSourcePath ?: return
+        val sourcePath = attachment.thumbSourcePath ?: return null
         val thumbFile = thumbFileProvider(context, sourcePath).getOrElse { error ->
             SceytLog.e(TAG, "Couldn't extract a video thumb from $sourcePath: ${error.message}")
-            return
+            return null
         }
 
         try {
-            val url = uploadThumb(attachment, thumbFile)?.takeIf { it.isNotBlank() }
-            if (url == null) {
-                SceytLog.e(TAG, "Video thumb upload returned an empty url for $sourcePath")
-                return
+            while (true) {
+                try {
+                    return uploadThumbFile(attachment, thumbFile)?.takeIf { it.isNotBlank() }
+                        ?: throw IllegalStateException("Video thumb upload returned an empty url")
+                } catch (error: CancellationException) {
+                    throw error
+                } catch (error: Throwable) {
+                    SceytLog.e(
+                        TAG,
+                        "Couldn't upload a video thumb for $sourcePath: ${error.message}",
+                    )
+                    delay(retryDelay)
+                }
             }
-            applyThumbUrl(attachment, tasks, url)
-        } catch (error: CancellationException) {
-            throw error
-        } catch (error: Throwable) {
-            SceytLog.e(TAG, "Couldn't upload a video thumb for $sourcePath: ${error.message}")
         } finally {
             thumbFile.delete()
         }
     }
 
-    private suspend fun uploadThumb(
+    private suspend fun uploadThumbFile(
         attachment: SceytAttachment,
         thumbFile: File,
     ): String? {
@@ -87,23 +82,35 @@ internal class VideoThumbUploader(
         return SceytChatUIKit.fileTransfer.transport.upload(request) {}
     }
 
-    private suspend fun applyThumbUrl(
+    suspend fun applyThumbUrl(
         attachment: SceytAttachment,
         tasks: List<TransferTask>,
         url: String,
     ) {
         tasks.forEach { task ->
-            val metadata = task.attachment.upsertVideoThumbUrlMetadata(url) ?: return@forEach
-            task.updateAttachmentAndStateIfValid(
-                validate = { true },
-                update = { it.copy(metadata = metadata) }
-            )
-            attachmentLogic.updateAttachmentMetadata(task.messageTid, metadata)
+            try {
+                val metadata = task.attachment.upsertVideoThumbUrlMetadata(url) ?: return@forEach
+                task.updateAttachmentAndStateIfValid(
+                    validate = { true },
+                    update = { it.copy(metadata = metadata) }
+                )
+                attachmentLogic.updateAttachmentMetadata(task.messageTid, metadata)
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Throwable) {
+                SceytLog.e(TAG, "Couldn't persist a video thumb for ${task.messageTid}", error)
+            }
         }
 
         attachment.thumbSourcePath?.let { path ->
-            val metadata = attachment.upsertVideoThumbUrlMetadata(url) ?: return@let
-            attachmentLogic.updateFileChecksumMetadata(path, metadata)
+            try {
+                val metadata = attachment.upsertVideoThumbUrlMetadata(url) ?: return@let
+                attachmentLogic.updateFileChecksumMetadata(path, metadata)
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Throwable) {
+                SceytLog.e(TAG, "Couldn't persist video thumb checksum metadata for $path", error)
+            }
         }
     }
 
@@ -113,5 +120,6 @@ internal class VideoThumbUploader(
     private companion object {
         const val TAG = "VideoThumbUploader"
         const val THUMB_MAX_SIZE = 600f
+        val RETRY_DELAY = 1.seconds
     }
 }

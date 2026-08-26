@@ -141,6 +141,9 @@ internal class RecordingFileTransferTransport : FileTransferTransport {
     var pauseResult = false
     var resumeResult = false
 
+    val pauseResults = ConcurrentHashMap<String, Boolean>()
+    val resumeResults = ConcurrentHashMap<String, Boolean>()
+
     override suspend fun upload(
         request: FileUploadRequest,
         callback: FileTransferCallback,
@@ -176,12 +179,12 @@ internal class RecordingFileTransferTransport : FileTransferTransport {
 
     override fun pause(operationId: String): Boolean {
         pauseCalls += operationId
-        return pauseResult
+        return pauseResults[operationId] ?: pauseResult
     }
 
     override fun resume(operationId: String): Boolean {
         resumeCalls += operationId
-        return resumeResult
+        return resumeResults[operationId] ?: resumeResult
     }
 }
 

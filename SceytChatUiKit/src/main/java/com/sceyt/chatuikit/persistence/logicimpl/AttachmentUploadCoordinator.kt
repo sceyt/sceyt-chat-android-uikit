@@ -13,6 +13,7 @@ import com.sceyt.chatuikit.extensions.getMimeType
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.filetransfer.FileTransferEvent
 import com.sceyt.chatuikit.filetransfer.FileUploadRequest
+import com.sceyt.chatuikit.filetransfer.TransferRole
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.extensions.resizeImage
@@ -29,14 +30,19 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploading
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.WaitingToUpload
 import com.sceyt.chatuikit.persistence.file_transfer.TransferTask
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
+import com.sceyt.chatuikit.persistence.mappers.getVideoThumbUrl
+import com.sceyt.chatuikit.persistence.mappers.needsVideoThumbUpload
 import com.sceyt.chatuikit.persistence.mappers.toTransferData
 import com.sceyt.chatuikit.shared.media_encoder.VideoTranscodeHelper
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.job
@@ -54,9 +60,10 @@ internal class AttachmentUploadCoordinator(
     private val context: Context,
     private val attachmentLogic: PersistenceAttachmentLogic,
     private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
+    private val videoThumbUploader: VideoThumbUploader =
+        VideoThumbUploader(context, attachmentLogic),
 ) : SceytKoinComponent {
     private val fileTransferService: FileTransferService by inject()
-    private val videoThumbUploader by lazy { VideoThumbUploader(context, attachmentLogic) }
 
     private val pendingUploadQueue: Queue<Pair<SceytAttachment, TransferTask>> = LinkedList()
     private val uploadQueueLock = Any()
@@ -83,14 +90,22 @@ internal class AttachmentUploadCoordinator(
             sourceKey = attachment.sharedSourceKey,
             messageTid = attachment.messageTid,
         )
-        val sharedUploadInProgress = synchronized(sharingFilesLock) {
-            val inProgress = sharingFilesPath.any {
+        val (sharedUploadInProgress, completedThumbUrl) = synchronized(sharingFilesLock) {
+            val existing = sharingFilesPath.firstOrNull {
                 it.sourceKey == shareFileData.sourceKey
             }
+            shareFileData.completedThumbUrl = existing?.completedThumbUrl
             sharingFilesPath.add(shareFileData)
-            inProgress
+            (existing != null) to existing?.completedThumbUrl
         }
-        if (sharedUploadInProgress) return
+        if (sharedUploadInProgress) {
+            completedThumbUrl?.let { url ->
+                scope.launch {
+                    videoThumbUploader.applyThumbUrl(attachment, listOf(task), url)
+                }
+            }
+            return
+        }
 
         startSharedUpload(attachment, task)
     }
@@ -108,42 +123,50 @@ internal class AttachmentUploadCoordinator(
             },
         ) {
             val checksum = getAttachmentChecksum(attachment.sourcePath)
-            // Before the video, so its url is part of the attachment when the message is sent
-            videoThumbUploader.uploadAndApplyThumb(attachment, getAppropriateTasks(task), checksum)
-            currentCoroutineContext().ensureActive()
-
-            val (uploaded, url) = checkMaybeAlreadyUploadedWithAnotherMessage(checksum, task)
-
-            if (uploaded && url != null) {
-                takeAppropriateTasks(task).forEach { transferTask ->
-                    notifyTaskResult(transferTask, SceytResponse.Success(url))
-                }
-                return@launchUploadJob
-            }
-
-            val result = prepareAttachment(
+            val response: SceytResponse<String>? = withVideoThumbUpload(
                 attachment = attachment,
+                tasks = { getAppropriateTasksIncludingPaused(task) },
                 checksumData = checksum,
-                task = task,
-            )
-            currentCoroutineContext().ensureActive()
+            ) {
+                val (uploaded, url) = checkMaybeAlreadyUploadedWithAnotherMessage(checksum, task)
 
-            if (isSharedTransferPaused(attachment)) {
-                return@launchUploadJob
+                if (uploaded && url != null) {
+                    return@withVideoThumbUpload SceytResponse.Success(url)
+                }
+
+                val result = prepareAttachment(
+                    attachment = attachment,
+                    checksumData = checksum,
+                    task = task,
+                )
+                currentCoroutineContext().ensureActive()
+
+                if (isSharedTransferPaused(attachment)) {
+                    return@withVideoThumbUpload null
+                }
+
+                val uploadAttachment = result.fold(
+                    onSuccess = { path ->
+                        task.updateFileLocationCallback?.onUpdateFileLocation(path)
+                        attachment.copy(filePath = path, fileSize = getFileSize(path))
+                    },
+                    onFailure = {
+                        SceytLog.i(TAG, "Couldn't resize sharing file with reason ${it.message}")
+                        attachment
+                    },
+                )
+
+                uploadSharedAttachment(uploadAttachment, task)
             }
 
-            val uploadAttachment = result.fold(
-                onSuccess = { path ->
-                    task.updateFileLocationCallback?.onUpdateFileLocation(path)
-                    attachment.copy(filePath = path, fileSize = getFileSize(path))
-                },
-                onFailure = {
-                    SceytLog.i(TAG, "Couldn't resize sharing file with reason ${it.message}")
-                    attachment
-                },
-            )
-
-            uploadSharedAttachment(uploadAttachment, task)
+            response?.onSuccessNotNull {
+                saveCompletedSharedUpload(attachment, it)
+            }
+            response?.let {
+                takeAppropriateTasks(task).forEach { transferTask ->
+                    notifyTaskResult(transferTask, it)
+                }
+            }
         }
     }
 
@@ -171,7 +194,7 @@ internal class AttachmentUploadCoordinator(
                 val currentJob = uploadJobs[operationId]
                 val pausedByTransport = state == Uploading &&
                         currentJob?.isActive == true &&
-                        pauseTransport(operationId)
+                        pauseUploadOperations(messageTid)
 
                 if (!pausedByTransport && currentJob != null) {
                     cancelUploadJob(operationId, currentJob)
@@ -302,7 +325,7 @@ internal class AttachmentUploadCoordinator(
         val operationId = attachment.uploadOperationId
         val currentJob = uploadJobs[operationId]
         if (currentJob?.isActive == true) {
-            if (resumeTransport(operationId)) return
+            if (resumeUploadOperations(messageTid)) return
             cancelUploadJob(operationId, currentJob)
         }
 
@@ -317,9 +340,9 @@ internal class AttachmentUploadCoordinator(
         if (sharedMessageIds.isEmpty()) return false
         if (sharedMessageIds.any { !pausedTaskIds.contains(it) }) return true
 
-        findActiveSharedUpload(sharedMessageIds)?.let { (operationId, job) ->
-            if (state != Uploading || !pauseTransport(operationId)) {
-                cancelUploadJob(operationId, job)
+        findActiveSharedUpload(sharedMessageIds)?.let { (messageTid, job) ->
+            if (state != Uploading || !pauseUploadOperations(messageTid)) {
+                cancelUploadJob(uploadOperationId(messageTid), job)
             }
         }
         return true
@@ -330,9 +353,9 @@ internal class AttachmentUploadCoordinator(
         task: TransferTask,
     ) {
         val sharedMessageIds = getSharedMessageIds(attachment)
-        findActiveSharedUpload(sharedMessageIds)?.let { (operationId, job) ->
-            if (resumeTransport(operationId)) return
-            cancelUploadJob(operationId, job)
+        findActiveSharedUpload(sharedMessageIds)?.let { (messageTid, job) ->
+            if (resumeUploadOperations(messageTid)) return
+            cancelUploadJob(uploadOperationId(messageTid), job)
         }
 
         startSharedUpload(attachment, task)
@@ -368,6 +391,17 @@ internal class AttachmentUploadCoordinator(
     }
 
     private fun saveCompletedSharedUpload(attachment: SceytAttachment, url: String) {
+        updateSharedMembers(attachment) { it.completedUrl = url }
+    }
+
+    private fun saveCompletedSharedThumb(attachment: SceytAttachment, url: String) {
+        updateSharedMembers(attachment) { it.completedThumbUrl = url }
+    }
+
+    private fun updateSharedMembers(
+        attachment: SceytAttachment,
+        update: (ShareFileData) -> Unit,
+    ) {
         synchronized(sharingFilesLock) {
             val sourceKey = sharingFilesPath.firstOrNull {
                 it.messageTid == attachment.messageTid
@@ -375,20 +409,44 @@ internal class AttachmentUploadCoordinator(
 
             sharingFilesPath.forEach { member ->
                 if (member.sourceKey == sourceKey) {
-                    member.completedUrl = url
+                    update(member)
                 }
             }
         }
     }
 
-    private fun findActiveSharedUpload(messageIds: List<Long>): Pair<String, Job>? {
+    private fun findActiveSharedUpload(messageIds: List<Long>): Pair<Long, Job>? {
         messageIds.forEach { messageTid ->
             val operationId = uploadOperationId(messageTid)
             uploadJobs[operationId]?.takeIf(Job::isActive)?.let { job ->
-                return operationId to job
+                return messageTid to job
             }
         }
         return null
+    }
+
+    private fun pauseUploadOperations(messageTid: Long): Boolean {
+        if (!pauseTransport(uploadOperationId(messageTid))) return false
+
+        val thumbOperationId = uploadOperationId(messageTid, TransferRole.Thumbnail)
+        uploadJobs[thumbOperationId]?.takeIf(Job::isActive)?.let { job ->
+            if (!pauseTransport(thumbOperationId)) {
+                cancelUploadJob(thumbOperationId, job)
+            }
+        }
+        return true
+    }
+
+    private fun resumeUploadOperations(messageTid: Long): Boolean {
+        if (!resumeTransport(uploadOperationId(messageTid))) return false
+
+        val thumbOperationId = uploadOperationId(messageTid, TransferRole.Thumbnail)
+        uploadJobs[thumbOperationId]?.takeIf(Job::isActive)?.let { job ->
+            if (!resumeTransport(thumbOperationId)) {
+                cancelUploadJob(thumbOperationId, job)
+            }
+        }
+        return true
     }
 
     private fun pauseTransport(operationId: String): Boolean {
@@ -409,6 +467,54 @@ internal class AttachmentUploadCoordinator(
         }
     }
 
+    private suspend fun <T> withVideoThumbUpload(
+        attachment: SceytAttachment,
+        tasks: () -> List<TransferTask>,
+        checksumData: FileChecksumData?,
+        block: suspend () -> T,
+    ): T = coroutineScope {
+        if (attachment.type != AttachmentTypeEnum.Video.value) {
+            return@coroutineScope block()
+        }
+
+        val knownThumbUrl = attachment.getVideoThumbUrl()?.takeIf(String::isNotBlank)
+            ?: getVideoThumbUrl(checksumData?.metadata)?.takeIf(String::isNotBlank)
+        if (knownThumbUrl != null) {
+            saveCompletedSharedThumb(attachment, knownThumbUrl)
+            videoThumbUploader.applyThumbUrl(attachment, tasks(), knownThumbUrl)
+            return@coroutineScope block()
+        }
+
+        if (!attachment.needsVideoThumbUpload()) {
+            return@coroutineScope block()
+        }
+
+        val thumbJob = launch {
+            try {
+                videoThumbUploader.uploadThumb(attachment)?.let { url ->
+                    saveCompletedSharedThumb(attachment, url)
+                    val targetTasks = tasks()
+                    scope.launch {
+                        videoThumbUploader.applyThumbUrl(attachment, targetTasks, url)
+                    }
+                }
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Throwable) {
+                SceytLog.e(TAG, "Video thumb upload failed", error)
+            }
+        }
+        val thumbOperationId = uploadOperationId(attachment.messageTid, TransferRole.Thumbnail)
+        uploadJobs.put(thumbOperationId, thumbJob)?.cancel()
+
+        try {
+            block()
+        } finally {
+            uploadJobs.remove(thumbOperationId, thumbJob)
+            thumbJob.cancel()
+        }
+    }
+
     private fun uploadAttachment(
         attachment: SceytAttachment,
         task: TransferTask,
@@ -422,53 +528,51 @@ internal class AttachmentUploadCoordinator(
         }
 
         val checksum = getAttachmentChecksum(attachment.sourcePath)
-        // Before the video, so its url is part of the attachment when the message is sent
-        videoThumbUploader.uploadAndApplyThumb(attachment, listOf(task), checksum)
-        currentCoroutineContext().ensureActive()
-
-        val (uploaded, url) = checkMaybeAlreadyUploadedWithAnotherMessage(checksum, task)
-
-        if (uploaded && url != null) {
-            notifyTaskResult(task, SceytResponse.Success(url))
-            uploadNext(attachment.messageTid)
-            return@launchUploadJob
-        }
-
-        val result = prepareAttachment(
+        val response: SceytResponse<String>? = withVideoThumbUpload(
             attachment = attachment,
+            tasks = { listOf(task) },
             checksumData = checksum,
-            task = task,
-        )
-        currentCoroutineContext().ensureActive()
+        ) {
+            val (uploaded, url) = checkMaybeAlreadyUploadedWithAnotherMessage(checksum, task)
 
-        if (pausedTaskIds.contains(attachment.messageTid)) {
-            uploadNext(attachment.messageTid)
-            return@launchUploadJob
+            if (uploaded && url != null) {
+                return@withVideoThumbUpload SceytResponse.Success(url)
+            }
+
+            val result = prepareAttachment(
+                attachment = attachment,
+                checksumData = checksum,
+                task = task,
+            )
+            currentCoroutineContext().ensureActive()
+
+            if (pausedTaskIds.contains(attachment.messageTid)) {
+                return@withVideoThumbUpload null
+            }
+
+            val uploadAttachment = result.fold(
+                onSuccess = { path ->
+                    task.updateFileLocationCallback?.onUpdateFileLocation(path)
+                    attachment.copy(filePath = path, fileSize = getFileSize(path))
+                },
+                onFailure = {
+                    SceytLog.i(TAG, "Couldn't resize file with reason ${it.message}")
+                    attachment
+                },
+            )
+
+            uploadAttachmentWithTransport(uploadAttachment, task)
         }
 
-        val uploadAttachment = result.fold(
-            onSuccess = { path ->
-                task.updateFileLocationCallback?.onUpdateFileLocation(path)
-                attachment.copy(filePath = path, fileSize = getFileSize(path))
-            },
-            onFailure = {
-                SceytLog.i(TAG, "Couldn't resize file with reason ${it.message}")
-                attachment
-            },
-        )
-
-        uploadAttachmentWithTransport(
-            attachment = uploadAttachment,
-            task = task,
-            onComplete = { uploadNext(attachment.messageTid) },
-        )
+        response?.let { notifyTaskResult(task, it) }
+        uploadNext(attachment.messageTid)
     }
 
     private suspend fun uploadSharedAttachment(
         attachment: SceytAttachment,
         task: TransferTask,
-    ) {
-        uploadAttachmentWithTransport(
+    ): SceytResponse<String> {
+        return uploadAttachmentWithTransport(
             attachment = attachment,
             task = task,
             isSharedUpload = true,
@@ -489,15 +593,6 @@ internal class AttachmentUploadCoordinator(
                     }.onFailure(::logCallbackFailure)
                 }
             },
-            onResult = { response ->
-                response.onSuccessNotNull {
-                    saveCompletedSharedUpload(attachment, it)
-                }
-
-                takeAppropriateTasks(task).forEach { transferTask ->
-                    notifyTaskResult(transferTask, response)
-                }
-            },
         )
     }
 
@@ -506,9 +601,7 @@ internal class AttachmentUploadCoordinator(
         task: TransferTask,
         isSharedUpload: Boolean = false,
         onProgress: ((Float) -> Unit)? = null,
-        onResult: ((SceytResponse<String>) -> Unit)? = null,
-        onComplete: (() -> Unit)? = null,
-    ) {
+    ): SceytResponse<String> {
         val sourcePath = attachment.filePath
         require(!sourcePath.isNullOrBlank()) { "Attachment source path is missing" }
 
@@ -524,7 +617,7 @@ internal class AttachmentUploadCoordinator(
             isSharedUpload = isSharedUpload,
         )
 
-        performUpload(request, attachment, task, onProgress, onResult, onComplete)
+        return performUpload(request, attachment, task, onProgress)
     }
 
     private fun launchUploadJob(
@@ -557,31 +650,33 @@ internal class AttachmentUploadCoordinator(
         attachment: SceytAttachment,
         task: TransferTask,
         onProgress: ((Float) -> Unit)?,
-        onResult: ((SceytResponse<String>) -> Unit)?,
-        onComplete: (() -> Unit)?,
-    ) {
-        val uploadJob = currentCoroutineContext().job
+    ): SceytResponse<String> = coroutineScope {
         val networkWaitTriggered = AtomicBoolean()
+        lateinit var transferJob: Deferred<String?>
 
         val response = try {
-            val result = SceytChatUIKit.fileTransfer.transport.upload(
-                request = request,
-                callback = { event ->
-                    if (uploadJob.isActive &&
-                        (request.isSharedUpload || attachment.messageTid !in pausedTaskIds)
-                    ) {
-                        when (event) {
-                            is FileTransferEvent.WaitingForNetwork -> {
-                                if (networkWaitTriggered.compareAndSet(false, true)) {
-                                    uploadJob.cancel()
+            transferJob = async(start = CoroutineStart.LAZY) {
+                SceytChatUIKit.fileTransfer.transport.upload(
+                    request = request,
+                    callback = { event ->
+                        if (transferJob.isActive &&
+                            (request.isSharedUpload || attachment.messageTid !in pausedTaskIds)
+                        ) {
+                            when (event) {
+                                is FileTransferEvent.WaitingForNetwork -> {
+                                    if (networkWaitTriggered.compareAndSet(false, true)) {
+                                        transferJob.cancel()
+                                    }
                                 }
-                            }
 
-                            else -> handleUploadEvent(event, attachment, task, onProgress)
+                                else -> handleUploadEvent(event, attachment, task, onProgress)
+                            }
                         }
-                    }
-                },
-            ).takeUnless { it.isNullOrBlank() }
+                    },
+                )
+            }
+            transferJob.start()
+            val result = transferJob.await().takeUnless { it.isNullOrBlank() }
                 ?: throw IllegalStateException("File upload returned an empty remote reference")
             currentCoroutineContext().ensureActive()
             SceytResponse.Success(result)
@@ -592,8 +687,7 @@ internal class AttachmentUploadCoordinator(
             SceytResponse.Error(error.toSceytException())
         }
 
-        notifyUploadResult(response, task, onResult)
-        runCatching { onComplete?.invoke() }.onFailure(::logCallbackFailure)
+        response
     }
 
     private fun handleUploadEvent(
@@ -617,20 +711,6 @@ internal class AttachmentUploadCoordinator(
                 ),
             )
         }
-    }
-
-    private fun notifyUploadResult(
-        response: SceytResponse<String>,
-        task: TransferTask,
-        onResult: ((SceytResponse<String>) -> Unit)?,
-    ) {
-        runCatching {
-            if (onResult != null) {
-                onResult(response)
-            } else {
-                task.uploadResultCallback?.onResult(response)
-            }
-        }.onFailure(::logCallbackFailure)
     }
 
     private suspend fun prepareAttachment(
@@ -693,13 +773,19 @@ internal class AttachmentUploadCoordinator(
     private fun getAppropriateTasks(
         task: TransferTask,
     ): List<TransferTask> = synchronized(sharingFilesLock) {
-        getAppropriateTasksLocked(task)
+        getAppropriateTasksLocked(task, includePaused = false)
+    }
+
+    private fun getAppropriateTasksIncludingPaused(
+        task: TransferTask,
+    ): List<TransferTask> = synchronized(sharingFilesLock) {
+        getAppropriateTasksLocked(task, includePaused = true)
     }
 
     private fun takeAppropriateTasks(
         task: TransferTask,
     ): List<TransferTask> = synchronized(sharingFilesLock) {
-        getAppropriateTasksLocked(task).also {
+        getAppropriateTasksLocked(task, includePaused = false).also {
             val completedMessageIds = it.mapTo(HashSet(), TransferTask::messageTid)
             sharingFilesPath.removeAll { member ->
                 completedMessageIds.contains(member.messageTid)
@@ -707,7 +793,10 @@ internal class AttachmentUploadCoordinator(
         }
     }
 
-    private fun getAppropriateTasksLocked(task: TransferTask): List<TransferTask> {
+    private fun getAppropriateTasksLocked(
+        task: TransferTask,
+        includePaused: Boolean,
+    ): List<TransferTask> {
         val sourceKey = sharingFilesPath.firstOrNull {
             it.messageTid == task.messageTid
         }?.sourceKey ?: return emptyList()
@@ -719,7 +808,7 @@ internal class AttachmentUploadCoordinator(
         return fileTransferService.getTasks().values.filter { transferTask ->
             sharedTasks.any { data ->
                 data.messageTid == transferTask.attachment.messageTid
-            } && !pausedTaskIds.contains(transferTask.messageTid)
+            } && (includePaused || !pausedTaskIds.contains(transferTask.messageTid))
         }
     }
 
@@ -792,6 +881,7 @@ internal class AttachmentUploadCoordinator(
         val messageTid: Long,
     ) {
         var completedUrl: String? = null
+        var completedThumbUrl: String? = null
     }
 
     private companion object {

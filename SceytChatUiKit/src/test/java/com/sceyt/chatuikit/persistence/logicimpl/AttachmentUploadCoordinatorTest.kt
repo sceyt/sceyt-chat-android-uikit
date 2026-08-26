@@ -9,6 +9,7 @@ import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.FileChecksumData
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.filetransfer.SceytChatUIKitFileTransfer
+import com.sceyt.chatuikit.filetransfer.TransferRole
 import com.sceyt.chatuikit.koin.SceytKoinApp
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.file_transfer.ProgressUpdateCallback
@@ -18,6 +19,7 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferResultCallback
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 import com.sceyt.chatuikit.persistence.file_transfer.TransferTask
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
+import com.sceyt.chatuikit.persistence.mappers.getVideoThumbUrl
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
@@ -33,6 +35,7 @@ import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.dsl.module
 import org.mockito.Mockito
+import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.doSuspendableAnswer
 import org.mockito.kotlin.whenever
@@ -101,6 +104,237 @@ class AttachmentUploadCoordinatorTest {
 
         assertThat(transport.uploadCalls).hasSize(2)
         assertThat(transport.uploadCalls[1].request.operationId).isEqualTo(uploadOperationId(2L))
+    }
+
+    @Test
+    fun `video finishes without waiting for a failed poster upload`() {
+        SceytChatUIKit.config.preventDuplicateAttachmentUpload = true
+        val source = File(context.cacheDir, "parallel-video-source.mp4").apply {
+            parentFile?.mkdirs()
+            writeText("source")
+        }
+        val prepared = File(context.cacheDir, "parallel-video-prepared.mp4").apply {
+            writeText("prepared")
+        }
+        val poster = File(context.cacheDir, "parallel-video-poster.jpeg").apply {
+            writeText("poster")
+        }
+        val attachment = attachment(
+            messageTid = 101L,
+            name = "video.mp4",
+            type = AttachmentTypeEnum.Video.value,
+            filePath = source.path,
+            originalFilePath = source.path,
+        )
+        val checksum = FileChecksumData(
+            checksum = 1L,
+            resizedFilePath = prepared.path,
+            url = null,
+            metadata = null,
+            fileSize = prepared.length(),
+        )
+        runBlocking {
+            whenever(attachmentLogic.getFileChecksumData(source.path)).thenReturn(checksum)
+        }
+        coordinator = AttachmentUploadCoordinator(
+            context = context,
+            attachmentLogic = attachmentLogic,
+            scope = testScope,
+            videoThumbUploader = VideoThumbUploader(
+                context = context,
+                attachmentLogic = attachmentLogic,
+                thumbFileProvider = { _, _ -> Result.success(poster) },
+            ),
+        )
+        val task = transferTask(attachment)
+        var result: SceytResponse<String>? = null
+        task.uploadResultCallback = TransferResultCallback { result = it }
+
+        coordinator.uploadFile(attachment, task)
+
+        val posterCall = transport.uploadCalls.single { it.request.role == TransferRole.Thumbnail }
+        val videoCall = transport.uploadCalls.single { it.request.role == TransferRole.Main }
+        posterCall.fail(IllegalStateException("poster failed"))
+        videoCall.succeed("video-url")
+
+        assertThat(result).isInstanceOf(SceytResponse.Success::class.java)
+        assertThat((result as SceytResponse.Success).data).isEqualTo("video-url")
+        assertThat(transport.uploadCalls).hasSize(2)
+        assertThat(poster.exists()).isFalse()
+        assertThat(task.attachment.getVideoThumbUrl()).isNull()
+    }
+
+    @Test
+    fun `reused video applies known poster before completing`() = runBlocking {
+        SceytChatUIKit.config.preventDuplicateAttachmentUpload = true
+        val attachment = uploadAttachment(
+            messageTid = 102L,
+            name = "video.mp4",
+            type = AttachmentTypeEnum.Video.value,
+        )
+        val task = transferTask(attachment)
+        var result: SceytResponse<String>? = null
+        task.uploadResultCallback = TransferResultCallback { result = it }
+        whenever(attachmentLogic.getFileChecksumData(attachment.originalFilePath)).thenReturn(
+            FileChecksumData(
+                checksum = 1L,
+                resizedFilePath = null,
+                url = "video-url",
+                metadata = """{"video_thumb":"poster-url"}""",
+                fileSize = attachment.fileSize,
+            ),
+        )
+        whenever(attachmentLogic.updateAttachmentMetadata(any(), any()))
+            .thenThrow(IllegalStateException("database failed"))
+        val scope = TestScope(StandardTestDispatcher())
+        coordinator = AttachmentUploadCoordinator(context, attachmentLogic, scope)
+
+        coordinator.uploadFile(attachment, task)
+        scope.runCurrent()
+
+        assertThat(result?.data).isEqualTo("video-url")
+        assertThat(task.attachment.getVideoThumbUrl()).isEqualTo("poster-url")
+        assertThat(transport.uploadCalls).isEmpty()
+    }
+
+    @Test
+    fun `video pause and resume include its active poster`() {
+        SceytChatUIKit.config.preventDuplicateAttachmentUpload = true
+        transport.pauseResult = true
+        transport.resumeResult = true
+        val source = uploadAttachment(
+            messageTid = 103L,
+            name = "video.mp4",
+            type = AttachmentTypeEnum.Video.value,
+            state = TransferState.Uploading,
+        )
+        val poster = File(context.cacheDir, "pause-video-poster.jpeg").apply {
+            writeText("poster")
+        }
+        runBlocking {
+            whenever(attachmentLogic.getFileChecksumData(source.originalFilePath)).thenReturn(
+                FileChecksumData(1L, source.filePath, null, null, source.fileSize),
+            )
+        }
+        coordinator = AttachmentUploadCoordinator(
+            context = context,
+            attachmentLogic = attachmentLogic,
+            scope = testScope,
+            videoThumbUploader = VideoThumbUploader(
+                context = context,
+                attachmentLogic = attachmentLogic,
+                thumbFileProvider = { _, _ -> Result.success(poster) },
+            ),
+        )
+        val task = transferTask(source)
+        service.addTransferTask(task)
+
+        coordinator.uploadFile(source, task)
+        coordinator.pauseLoad(source, TransferState.Uploading)
+        coordinator.resumeLoad(source, TransferState.PauseUpload)
+
+        assertThat(transport.pauseCalls).containsExactly(
+            uploadOperationId(source.messageTid),
+            uploadOperationId(source.messageTid, TransferRole.Thumbnail),
+        ).inOrder()
+        assertThat(transport.resumeCalls).containsExactly(
+            uploadOperationId(source.messageTid),
+            uploadOperationId(source.messageTid, TransferRole.Thumbnail),
+        ).inOrder()
+
+        transport.uploadCalls.single { it.request.role == TransferRole.Thumbnail }
+            .succeed("poster-url")
+        transport.uploadCalls.single { it.request.role == TransferRole.Main }
+            .succeed("video-url")
+    }
+
+    @Test
+    fun `a poster that cannot pause is dropped without restarting the video`() {
+        SceytChatUIKit.config.preventDuplicateAttachmentUpload = true
+        val source = uploadAttachment(
+            messageTid = 106L,
+            name = "video.mp4",
+            type = AttachmentTypeEnum.Video.value,
+            state = TransferState.Uploading,
+        )
+        val thumbOperationId = uploadOperationId(source.messageTid, TransferRole.Thumbnail)
+        transport.pauseResults[uploadOperationId(source.messageTid)] = true
+        transport.pauseResults[thumbOperationId] = false
+        val poster = File(context.cacheDir, "veto-video-poster.jpeg").apply { writeText("poster") }
+        runBlocking {
+            whenever(attachmentLogic.getFileChecksumData(source.originalFilePath)).thenReturn(
+                FileChecksumData(1L, source.filePath, null, null, source.fileSize),
+            )
+        }
+        coordinator = AttachmentUploadCoordinator(
+            context = context,
+            attachmentLogic = attachmentLogic,
+            scope = testScope,
+            videoThumbUploader = VideoThumbUploader(
+                context = context,
+                attachmentLogic = attachmentLogic,
+                thumbFileProvider = { _, _ -> Result.success(poster) },
+            ),
+        )
+        val task = transferTask(source)
+        service.addTransferTask(task)
+
+        coordinator.uploadFile(source, task)
+        val videoCall = transport.uploadCalls.single { it.request.role == TransferRole.Main }
+        val posterCall = transport.uploadCalls.single { it.request.role == TransferRole.Thumbnail }
+
+        coordinator.pauseLoad(source, TransferState.Uploading)
+
+        assertThat(posterCall.cancelled).isTrue()
+        assertThat(videoCall.cancelled).isFalse()
+        assertThat(transport.uploadCalls.count { it.request.role == TransferRole.Main })
+            .isEqualTo(1)
+    }
+
+    @Test
+    fun `late shared follower receives completed poster`() {
+        SceytChatUIKit.config.preventDuplicateAttachmentUpload = true
+        val first = uploadAttachment(
+            messageTid = 104L,
+            name = "video.mp4",
+            type = AttachmentTypeEnum.Video.value,
+        )
+        val second = uploadAttachment(
+            messageTid = 105L,
+            name = "video.mp4",
+            type = AttachmentTypeEnum.Video.value,
+            filePath = first.filePath,
+        )
+        val poster = File(context.cacheDir, "shared-video-poster.jpeg").apply {
+            writeText("poster")
+        }
+        runBlocking {
+            whenever(attachmentLogic.getFileChecksumData(first.originalFilePath)).thenReturn(
+                FileChecksumData(1L, first.filePath, null, null, first.fileSize),
+            )
+        }
+        coordinator = AttachmentUploadCoordinator(
+            context = context,
+            attachmentLogic = attachmentLogic,
+            scope = testScope,
+            videoThumbUploader = VideoThumbUploader(
+                context = context,
+                attachmentLogic = attachmentLogic,
+                thumbFileProvider = { _, _ -> Result.success(poster) },
+            ),
+        )
+        val firstTask = transferTask(first)
+        val secondTask = transferTask(second)
+
+        uploadSharedFile(first, firstTask)
+        transport.uploadCalls.single { it.request.role == TransferRole.Thumbnail }
+            .succeed("poster-url")
+        uploadSharedFile(second, secondTask)
+
+        assertThat(secondTask.attachment.getVideoThumbUrl()).isEqualTo("poster-url")
+
+        transport.uploadCalls.single { it.request.role == TransferRole.Main }
+            .succeed("video-url")
     }
 
     @Test
@@ -586,7 +820,7 @@ class AttachmentUploadCoordinatorTest {
                 throw IllegalStateException("checksum failed")
             }
             null
-        }.whenever(attachmentLogic) { getFileChecksumData(org.mockito.kotlin.any()) }
+        }.whenever(attachmentLogic) { getFileChecksumData(any()) }
 
         coordinator.uploadFile(first, firstTask)
         coordinator.uploadFile(second, transferTask(second))
@@ -831,7 +1065,7 @@ class AttachmentUploadCoordinatorTest {
                 throw IllegalStateException("shared checksum failed")
             }
             null
-        }.whenever(attachmentLogic) { getFileChecksumData(org.mockito.kotlin.any()) }
+        }.whenever(attachmentLogic) { getFileChecksumData(any()) }
 
         uploadSharedFile(first, firstTask)
         uploadSharedFile(second, secondTask)

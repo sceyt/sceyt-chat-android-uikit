@@ -8,10 +8,12 @@ import com.sceyt.chatuikit.filetransfer.FileDownloadRequest
 import com.sceyt.chatuikit.filetransfer.FileTransferCallback
 import com.sceyt.chatuikit.filetransfer.FileTransferEvent
 import com.sceyt.chatuikit.filetransfer.FileUploadRequest
+import com.sceyt.chatuikit.filetransfer.TransferRole
 import com.sceyt.chatuikit.persistence.logicimpl.FileTransferUtility
 import com.sceyt.chatuikit.persistence.logicimpl.attachment
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runCurrent
@@ -23,7 +25,9 @@ import org.mockito.MockedConstruction
 import org.mockito.Mockito
 import org.mockito.kotlin.any
 import org.mockito.kotlin.argumentCaptor
+import org.mockito.kotlin.doSuspendableAnswer
 import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
 import java.io.File
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -62,29 +66,22 @@ class DefaultFileTransferTransportTest {
         )
         val events = mutableListOf<FileTransferEvent>()
         val attachmentCaptor = argumentCaptor<SceytAttachment>()
-        val progressCaptor = argumentCaptor<(Float) -> Unit>()
-        val resultCaptor = argumentCaptor<(SceytResponse<String>) -> Unit>()
+        doSuspendableAnswer { invocation ->
+            invocation.getArgument<(Float) -> Unit>(1)(35f)
+            SceytResponse.Success("uploaded-url")
+        }.whenever(utility) { uploadFile(any(), any()) }
 
-        val result = async {
-            transport.upload(request, FileTransferCallback(events::add))
-        }
-        runCurrent()
+        val result = transport.upload(request, FileTransferCallback(events::add))
 
-        verify(utility).uploadFile(
-            attachmentCaptor.capture(),
-            progressCaptor.capture(),
-            resultCaptor.capture(),
-        )
-        progressCaptor.firstValue(35f)
-        resultCaptor.firstValue(SceytResponse.Success("uploaded-url"))
+        verify(utility).uploadFile(attachmentCaptor.capture(), any())
 
         assertThat(attachmentCaptor.firstValue.filePath).isEqualTo(sourceFile.path)
         assertThat(events).containsExactly(FileTransferEvent.Progress(35f))
-        assertThat(result.await()).isEqualTo("uploaded-url")
+        assertThat(result).isEqualTo("uploaded-url")
     }
 
     @Test
-    fun `duplicate upload results complete once`() = runTest {
+    fun `upload forwards SDK failure`() = runTest {
         val transport = DefaultFileTransferTransport()
         val utility = utilityConstruction.constructed().single()
         val request = FileUploadRequest(
@@ -94,18 +91,12 @@ class DefaultFileTransferTransportTest {
             mimeType = "text/plain",
             attachment = attachment(),
         )
-        val resultCaptor = argumentCaptor<(SceytResponse<String>) -> Unit>()
+        val error = SceytException(1, "upload failed")
+        whenever(utility.uploadFile(any(), any())).thenReturn(SceytResponse.Error(error))
 
-        val result = async {
-            transport.upload(request) { }
-        }
-        runCurrent()
-        verify(utility).uploadFile(any(), any(), resultCaptor.capture())
+        val result = runCatching { transport.upload(request) { } }
 
-        resultCaptor.firstValue(SceytResponse.Success("uploaded-url"))
-        resultCaptor.firstValue(SceytResponse.Error(SceytException(1, "late failure")))
-
-        assertThat(result.await()).isEqualTo("uploaded-url")
+        assertThat(result.exceptionOrNull()).isSameInstanceAs(error)
     }
 
     @Test
@@ -145,7 +136,7 @@ class DefaultFileTransferTransportTest {
     }
 
     @Test
-    fun `cancelling upload pauses default utility and ignores late result`() = runTest {
+    fun `cancelling upload cancels its suspended SDK bridge`() = runTest {
         val transport = DefaultFileTransferTransport()
         val utility = utilityConstruction.constructed().single()
         val request = FileUploadRequest(
@@ -155,19 +146,83 @@ class DefaultFileTransferTransportTest {
             mimeType = "text/plain",
             attachment = attachment(),
         )
-        val resultCaptor = argumentCaptor<(SceytResponse<String>) -> Unit>()
+        var bridgeCancelled = false
+        doSuspendableAnswer {
+            try {
+                awaitCancellation()
+            } finally {
+                bridgeCancelled = true
+            }
+        }.whenever(utility) { uploadFile(any(), any()) }
 
         val job = launch {
             transport.upload(request) { }
         }
         runCurrent()
-        verify(utility).uploadFile(any(), any(), resultCaptor.capture())
+        verify(utility).uploadFile(any(), any())
 
         job.cancelAndJoin()
-        resultCaptor.firstValue(SceytResponse.Success("late-result"))
-
-        verify(utility).pauseUpload(any())
+        assertThat(bridgeCancelled).isTrue()
         assertThat(job.isCancelled).isTrue()
+    }
+
+    @Test
+    fun `thumbnail upload uses prepared source directly and leaves cleanup to its owner`() = runTest {
+        val transport = DefaultFileTransferTransport()
+        val utility = utilityConstruction.constructed().single()
+        val sourceFile = File.createTempFile("poster", ".jpeg").apply { writeText("poster") }
+        val request = FileUploadRequest(
+            operationId = "upload:10:thumb",
+            sourceFile = sourceFile,
+            fileName = sourceFile.name,
+            mimeType = "image/jpeg",
+            attachment = attachment(),
+            role = TransferRole.Thumbnail,
+        )
+        val attachmentCaptor = argumentCaptor<SceytAttachment>()
+        whenever(utility.uploadFile(any(), any())).thenReturn(SceytResponse.Success("thumb-url"))
+
+        try {
+            assertThat(transport.upload(request) {}).isEqualTo("thumb-url")
+
+            verify(utility).uploadFile(attachmentCaptor.capture(), any())
+            assertThat(attachmentCaptor.firstValue.filePath).isEqualTo(sourceFile.path)
+            assertThat(sourceFile.readText()).isEqualTo("poster")
+        } finally {
+            sourceFile.delete()
+        }
+    }
+
+    @Test
+    fun `cancelled thumbnail upload leaves source cleanup to its owner`() = runTest {
+        val transport = DefaultFileTransferTransport()
+        val utility = utilityConstruction.constructed().single()
+        val sourceFile = File.createTempFile("poster", ".jpeg").apply { writeText("poster") }
+        val request = FileUploadRequest(
+            operationId = "upload:11:thumb",
+            sourceFile = sourceFile,
+            fileName = sourceFile.name,
+            mimeType = "image/jpeg",
+            attachment = attachment(),
+            role = TransferRole.Thumbnail,
+        )
+        val attachmentCaptor = argumentCaptor<SceytAttachment>()
+        doSuspendableAnswer { awaitCancellation() }
+            .whenever(utility) { uploadFile(any(), any()) }
+
+        val job = launch { transport.upload(request) { } }
+        runCurrent()
+        try {
+            verify(utility).uploadFile(attachmentCaptor.capture(), any())
+            assertThat(attachmentCaptor.firstValue.filePath).isEqualTo(sourceFile.path)
+
+            job.cancelAndJoin()
+
+            assertThat(sourceFile.exists()).isTrue()
+        } finally {
+            job.cancelAndJoin()
+            sourceFile.delete()
+        }
     }
 
     @Test

@@ -3,6 +3,8 @@
 The UI kit owns attachment-transfer decisions. A customer transport only uploads or downloads
 the prepared file described by a request.
 
+See [FILE_TRANSFER_BEHAVIOR.md](FILE_TRANSFER_BEHAVIOR.md) for the same rules as a condensed list.
+
 ## Responsibilities
 
 | UI kit | Customer transport |
@@ -70,6 +72,10 @@ upload. When the poster succeeds, its remote reference is stored in the attachme
 
 Main and poster operations have distinct operation IDs. A customer transport must also map them to
 distinct backend identifiers; the two uploads may be active at the same time.
+
+Pausing or resuming a video also pauses or resumes an active poster, but the poster cannot block
+the video: a poster that returns `false` is cancelled and not restarted, while the video keeps its
+physical operation.
 
 ## Download behavior
 
