@@ -1217,9 +1217,8 @@ class MessageInputView @JvmOverloads constructor(
     // Choose file type popup listeners
     override fun onCustomCameraClick() {
         binding.messageInput.clearFocus()
-        filePickerHelper?.openCustomCamera { filePath, isVideo ->
-            val attachmentType = if (isVideo) AttachmentTypeEnum.Video else AttachmentTypeEnum.Image
-            addAttachment(attachmentType to filePath)
+        filePickerHelper?.openCustomCameraForAttachments { attachments ->
+            addAttachment(*attachments.toTypedArray())
         }
     }
 
