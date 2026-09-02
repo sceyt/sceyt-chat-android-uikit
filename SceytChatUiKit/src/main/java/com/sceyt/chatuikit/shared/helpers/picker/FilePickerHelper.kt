@@ -397,27 +397,7 @@ class FilePickerHelper {
 
     private fun onCustomCameraResult(result: ActivityResult) {
         if (result.resultCode == AppCompatActivity.RESULT_OK) {
-            val data = result.data
-            val selectedMedia = data
-                ?.parcelableArrayList<BottomSheetMediaPicker.SelectedMediaData>(
-                    CustomCameraActivity.EXTRA_RESULT_SELECTED_MEDIA
-                )
-                .orEmpty()
-
-            val attachments = if (selectedMedia.isNotEmpty()) {
-                selectedMedia.map { media -> media.mediaType.value to media.realPath }
-            } else {
-                val filePath = data?.getStringExtra(CustomCameraActivity.EXTRA_RESULT_URI)
-                val isVideo = data?.getBooleanExtra(
-                    CustomCameraActivity.EXTRA_IS_VIDEO,
-                    false
-                ) ?: false
-                filePath?.let { path ->
-                    listOf(
-                        (if (isVideo) AttachmentTypeEnum.Video else AttachmentTypeEnum.Image) to path
-                    )
-                }.orEmpty()
-            }
+            val attachments = result.data?.toCustomCameraAttachments().orEmpty()
 
             if (attachments.isNotEmpty()) {
                 placeToSavePathsList.addAll(attachments)
@@ -505,4 +485,19 @@ class FilePickerHelper {
             placeToSavePathsList.add(AttachmentTypeEnum.Video to file.path)
         }
     }
+}
+
+internal fun Intent.toCustomCameraAttachments(): List<Pair<AttachmentTypeEnum, String>> {
+    val selectedMedia = parcelableArrayList<BottomSheetMediaPicker.SelectedMediaData>(
+        CustomCameraActivity.EXTRA_RESULT_SELECTED_MEDIA
+    ).orEmpty()
+
+    if (selectedMedia.isNotEmpty()) {
+        return selectedMedia.map { media -> media.mediaType.value to media.realPath }
+    }
+
+    val filePath = getStringExtra(CustomCameraActivity.EXTRA_RESULT_URI) ?: return emptyList()
+    val isVideo = getBooleanExtra(CustomCameraActivity.EXTRA_IS_VIDEO, false)
+    val attachmentType = if (isVideo) AttachmentTypeEnum.Video else AttachmentTypeEnum.Image
+    return listOf(attachmentType to filePath)
 }
