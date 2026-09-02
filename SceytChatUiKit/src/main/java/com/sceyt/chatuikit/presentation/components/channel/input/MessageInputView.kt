@@ -459,6 +459,12 @@ class MessageInputView @JvmOverloads constructor(
         AudioPlayerHelper.pauseAll()
         audioRecorderHelper.startRecording(
             directoryToSaveFile = directoryToSaveRecording,
+            onRecorderStart = { started ->
+                if (!started) onRecordingFailed()
+            },
+            onRecorderError = { _, _ ->
+                onRecordingFailed()
+            },
             onRecordReachedMaxDurationListener = {
                 stopRecordAndShowPreviewIfNeeded()
             }
@@ -470,6 +476,17 @@ class MessageInputView @JvmOverloads constructor(
         determineInputState()
         onUserActionStateChange(InputUserAction.Recording(recording = true))
         startRecordingUpdateJob()
+    }
+
+    private fun onRecordingFailed() {
+        val recorderView = voiceRecorderView
+        if (recorderView != null) {
+            recorderView.forceStopRecording()
+        } else {
+            audioRecorderHelper.cancelRecording {
+                finishRecording()
+            }
+        }
     }
 
     private fun onRecordingCompletedOrCanceled() {
