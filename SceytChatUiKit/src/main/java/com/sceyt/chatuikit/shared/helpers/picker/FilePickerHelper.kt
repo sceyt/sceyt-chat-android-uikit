@@ -30,6 +30,7 @@ import com.sceyt.chatuikit.extensions.initCustomCameraLauncher
 import com.sceyt.chatuikit.extensions.initPermissionLauncher
 import com.sceyt.chatuikit.extensions.initVideoCameraLauncher
 import com.sceyt.chatuikit.extensions.oneOfPermissionsIgnored
+import com.sceyt.chatuikit.extensions.parcelableArrayList
 import com.sceyt.chatuikit.extensions.permissionIgnored
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.navigation.Destination
@@ -67,7 +68,7 @@ class FilePickerHelper {
     private var parentDirToCopyProvider: () -> File = { context.cacheDir }
     private var takePictureCb: ((String) -> Unit)? = null
     private var takeVideoCb: ((String) -> Unit)? = null
-    private var customCameraCb: ((String, Boolean) -> Unit)? = null
+    private var customCameraCb: ((List<Pair<AttachmentTypeEnum, String>>) -> Unit)? = null
     private var pendingCustomCameraMode: CameraState.AllowedMode? = null
     private var scope: CoroutineScope
     private var placeToSavePathsList: MutableSet<Pair<AttachmentTypeEnum, String>> = mutableSetOf()
@@ -222,6 +223,17 @@ class FilePickerHelper {
     fun openCustomCamera(
         allowedMode: CameraState.AllowedMode,
         result: (filePath: String, isVideo: Boolean) -> Unit
+    ) {
+        openCustomCameraForAttachments(allowedMode) { attachments ->
+            attachments.forEach { (attachmentType, filePath) ->
+                result(filePath, attachmentType == AttachmentTypeEnum.Video)
+            }
+        }
+    }
+
+    internal fun openCustomCameraForAttachments(
+        allowedMode: CameraState.AllowedMode = CameraState.AllowedMode.BOTH,
+        result: (List<Pair<AttachmentTypeEnum, String>>) -> Unit
     ) {
         customCameraCb = result
         pendingCustomCameraMode = allowedMode
@@ -385,15 +397,31 @@ class FilePickerHelper {
 
     private fun onCustomCameraResult(result: ActivityResult) {
         if (result.resultCode == AppCompatActivity.RESULT_OK) {
-            val filePath = result.data?.getStringExtra(CustomCameraActivity.EXTRA_RESULT_URI)
-            val isVideo =
-                result.data?.getBooleanExtra(CustomCameraActivity.EXTRA_IS_VIDEO, false) ?: false
-
-            filePath?.let { path ->
-                placeToSavePathsList.add(
-                    (if (isVideo) AttachmentTypeEnum.Video else AttachmentTypeEnum.Image) to path
+            val data = result.data
+            val selectedMedia = data
+                ?.parcelableArrayList<BottomSheetMediaPicker.SelectedMediaData>(
+                    CustomCameraActivity.EXTRA_RESULT_SELECTED_MEDIA
                 )
-                customCameraCb?.invoke(path, isVideo)
+                .orEmpty()
+
+            val attachments = if (selectedMedia.isNotEmpty()) {
+                selectedMedia.map { media -> media.mediaType.value to media.realPath }
+            } else {
+                val filePath = data?.getStringExtra(CustomCameraActivity.EXTRA_RESULT_URI)
+                val isVideo = data?.getBooleanExtra(
+                    CustomCameraActivity.EXTRA_IS_VIDEO,
+                    false
+                ) ?: false
+                filePath?.let { path ->
+                    listOf(
+                        (if (isVideo) AttachmentTypeEnum.Video else AttachmentTypeEnum.Image) to path
+                    )
+                }.orEmpty()
+            }
+
+            if (attachments.isNotEmpty()) {
+                placeToSavePathsList.addAll(attachments)
+                customCameraCb?.invoke(attachments)
             }
         }
     }
