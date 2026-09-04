@@ -587,19 +587,19 @@ fun CallControlBar(
                     iconSize = 28.dp,
                     enabled = !dtmfDisabled
                 )
-            } else {
-                CallActionButton(
-                    modifier = animationModifier,
-                    iconRes = R.drawable.ic_call_video,
-                    backgroundColor = if (isVideoEnabled) Color.White else CallColors.ButtonSurface,
-                    iconTint = if (isVideoEnabled) CallColors.BackgroundDark else Color.White,
-                    contentDescription = "Video",
-                    onClick = onToggleVideo,
-                    size = 48.dp,
-                    iconSize = 28.dp,
-                    enabled = !videoDisabled
-                )
             }
+
+            CallActionButton(
+                modifier = animationModifier,
+                iconRes = R.drawable.ic_call_video,
+                backgroundColor = if (isVideoEnabled) Color.White else CallColors.ButtonSurface,
+                iconTint = if (isVideoEnabled) CallColors.BackgroundDark else Color.White,
+                contentDescription = "Video",
+                onClick = onToggleVideo,
+                size = 48.dp,
+                iconSize = 28.dp,
+                enabled = !videoDisabled
+            )
 
             CallActionButton(
                 modifier = Modifier.animateBounds(

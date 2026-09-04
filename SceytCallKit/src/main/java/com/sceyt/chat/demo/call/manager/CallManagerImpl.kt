@@ -645,7 +645,7 @@ class CallManagerImpl(
             val joinCallOptions = JoinCallOptions.default().copy(
                 audioSettings = AudioSettings(disableManageAudioRoute = true),
                 videoSettings = if (isVideo) VideoSettings(publishVideo = true) else null,
-                localVideoTracks = if (call.mediaFlow == MediaFlow.S2W) null else CallDefaults.createDefaultVideoTracks()
+                localVideoTracks = CallDefaults.createDefaultVideoTracks()
             )
             call.join(joinCallOptions)
             if (shouldPlayRingback) {
