@@ -58,6 +58,7 @@ class BottomSheetMediaPicker : BottomSheetDialogFragment(), LoaderManager.Loader
     private val selectedMedia = mutableSetOf<MediaData>()
     private var selectedMediaPaths = mutableSetOf<String>()
     private var requestedSelectionMediaPaths = mutableSetOf<String>()
+    private var displayedSelectionPaths = mutableSetOf<String>()
     private val screenHeight by lazy { screenHeightPx() }
     private val peekHeight by lazy { screenHeight / 1.5 }
     private var maxSelectCount: Int = MAX_SELECT_MEDIA_COUNT
@@ -72,6 +73,7 @@ class BottomSheetMediaPicker : BottomSheetDialogFragment(), LoaderManager.Loader
 
         savedInstanceState?.getStringArray(STATE_SELECTION)?.let {
             selectedMediaPaths = it.filter { path -> path.isNotNullOrBlank() }.toMutableSet()
+            displayedSelectionPaths = selectedMediaPaths.toMutableSet()
         } ?: run {
             arguments?.getStringArray(STATE_SELECTION)?.let {
                 requestedSelectionMediaPaths =
@@ -162,6 +164,7 @@ class BottomSheetMediaPicker : BottomSheetDialogFragment(), LoaderManager.Loader
             })
             setFragmentResult(REQUEST_KEY, Bundle().apply {
                 putParcelableArrayList(RESULT_SELECTED_MEDIA, result)
+                putStringArray(RESULT_DISPLAYED_SELECTIONS, displayedSelectionPaths.toTypedArray())
             })
             dismissSafety()
         }
@@ -265,9 +268,12 @@ class BottomSheetMediaPicker : BottomSheetDialogFragment(), LoaderManager.Loader
         val realPath = mediaItem.media.realPath
         var contains = selectedMediaPaths.contains(realPath)
 
-        if (!contains && requestedSelectionMediaPaths.contains(realPath)) {
-            contains = true
-            selectedMediaPaths.add(realPath)
+        if (requestedSelectionMediaPaths.contains(realPath)) {
+            displayedSelectionPaths.add(realPath)
+            if (!contains) {
+                contains = true
+                selectedMediaPaths.add(realPath)
+            }
         }
 
         if (contains) selectedMedia.add(mediaItem.media)
@@ -369,9 +375,13 @@ class BottomSheetMediaPicker : BottomSheetDialogFragment(), LoaderManager.Loader
 
         const val REQUEST_KEY = "BottomSheetMediaPicker.REQUEST_KEY"
         private const val RESULT_SELECTED_MEDIA = "RESULT_SELECTED_MEDIA"
+        private const val RESULT_DISPLAYED_SELECTIONS = "RESULT_DISPLAYED_SELECTIONS"
 
         fun getSelectedMedia(result: Bundle): List<SelectedMediaData> =
             result.parcelableArrayList(RESULT_SELECTED_MEDIA) ?: emptyList()
+
+        internal fun getDisplayedSelections(result: Bundle): Set<String> =
+            result.getStringArray(RESULT_DISPLAYED_SELECTIONS)?.toSet() ?: emptySet()
 
         fun instance(
             maxSelectCount: Int = MAX_SELECT_MEDIA_COUNT,

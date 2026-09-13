@@ -41,7 +41,6 @@ import com.sceyt.chatuikit.extensions.empty
 import com.sceyt.chatuikit.extensions.getScope
 import com.sceyt.chatuikit.extensions.getString
 import com.sceyt.chatuikit.extensions.hideSoftInput
-import com.sceyt.chatuikit.extensions.isEqualsVideoOrImage
 import com.sceyt.chatuikit.extensions.notAutoCorrectable
 import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.extensions.setSafeOnClickListener
@@ -1173,13 +1172,15 @@ class MessageInputView @JvmOverloads constructor(
         messageInputActionCallback?.join()
     }
 
-    private fun onMediaPicked(items: List<BottomSheetMediaPicker.SelectedMediaData>) {
+    private fun onMediaPicked(
+        items: List<BottomSheetMediaPicker.SelectedMediaData>,
+        displayedPaths: Set<String>
+    ) {
         addAttachment(*items.map { mediaData ->
             mediaData.mediaType.value to mediaData.realPath
         }.toTypedArray())
-        // Remove attachments that are not in the picker result
         allAttachments.filter { item ->
-            item.type.isEqualsVideoOrImage() && items.none { mediaData -> mediaData.realPath == item.filePath }
+            displayedPaths.contains(item.filePath) && items.none { it.realPath == item.filePath }
         }.forEach { attachment ->
             val item = AttachmentItem(attachment)
             attachmentsAdapter.removeItem(item)
@@ -1192,7 +1193,12 @@ class MessageInputView @JvmOverloads constructor(
         context.asFragmentActivityOrNull()?.let { activity ->
             activity.supportFragmentManager.setFragmentResultListener(
                 BottomSheetMediaPicker.REQUEST_KEY, activity
-            ) { _, bundle -> onMediaPicked(BottomSheetMediaPicker.getSelectedMedia(bundle)) }
+            ) { _, bundle ->
+                onMediaPicked(
+                    items = BottomSheetMediaPicker.getSelectedMedia(bundle),
+                    displayedPaths = BottomSheetMediaPicker.getDisplayedSelections(bundle)
+                )
+            }
         }
         VoiceStateCoordinator.registerRecordingController(
             isRecordingProvider = { getRecordingState().isRecording },
