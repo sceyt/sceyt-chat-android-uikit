@@ -13,10 +13,16 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytFragmentChatsSearchBinding
 import com.sceyt.chatuikit.extensions.addRVScrollListener
+import com.sceyt.chatuikit.extensions.hideSoftInput
 import com.sceyt.chatuikit.extensions.setBundleArguments
+import com.sceyt.chatuikit.persistence.extensions.checkIsMemberInChannel
 import com.sceyt.chatuikit.persistence.extensions.collectWithLifecycle
+import com.sceyt.chatuikit.presentation.components.channel_list.channels.data.ChannelEvent
+import com.sceyt.chatuikit.presentation.components.channel_list.channels.dialogs.ChannelActionConfirmationWithDialog
+import com.sceyt.chatuikit.presentation.components.channel_list.channels.dialogs.ChannelActionsDialog
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.listeners.click.ChannelClickListeners
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.listeners.click.ChannelClickListenersImpl
+import com.sceyt.chatuikit.presentation.components.channel_list.channels.viewmodel.ChannelActionsViewModel
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchActivity
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchClickListener
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchListItem
@@ -35,6 +41,7 @@ open class ChatsSearchFragment : Fragment(R.layout.sceyt_fragment_chats_search) 
     protected open val viewModel: ChatsSearchViewModel by viewModels {
         createViewModelFactory(session)
     }
+    protected open val channelActionsViewModel: ChannelActionsViewModel by viewModels()
     private var _binding: SceytFragmentChatsSearchBinding? = null
     protected val binding: SceytFragmentChatsSearchBinding
         get() = checkNotNull(_binding)
@@ -101,6 +108,10 @@ open class ChatsSearchFragment : Fragment(R.layout.sceyt_fragment_chats_search) 
             setListener(ChannelClickListeners.ChannelClickListener { _, item ->
                 onChannelClicked(item.channel)
             })
+
+            setListener(ChannelClickListeners.ChannelLongClickListener { view, item ->
+                onChannelLongClicked(view, item.channel)
+            })
         }
     }
 
@@ -143,6 +154,69 @@ open class ChatsSearchFragment : Fragment(R.layout.sceyt_fragment_chats_search) 
 
     protected open fun onChannelAvatarClicked(channel: SceytChannel) {
         onChannelClicked(channel)
+    }
+
+    protected open fun onChannelLongClicked(view: View, channel: SceytChannel) {
+        if (!channel.checkIsMemberInChannel()) return
+        view.hideSoftInput()
+        showChannelActionsDialog(channel)
+    }
+
+    protected open fun showChannelActionsDialog(channel: SceytChannel) {
+        ChannelActionsDialog.newInstance(requireContext(), channel).also {
+            it.setChooseTypeCb { action ->
+                onChannelActionSelected(action, channel)
+            }
+        }.show()
+    }
+
+    protected open fun onChannelActionSelected(
+        action: ChannelActionsDialog.ActionsEnum,
+        channel: SceytChannel,
+    ) {
+        when (action) {
+            ChannelActionsDialog.ActionsEnum.Pin -> {
+                onChannelCommandEvent(ChannelEvent.Pin(channel))
+            }
+
+            ChannelActionsDialog.ActionsEnum.UnPin -> {
+                onChannelCommandEvent(ChannelEvent.UnPin(channel))
+            }
+
+            ChannelActionsDialog.ActionsEnum.MarkAsRead -> {
+                onChannelCommandEvent(ChannelEvent.MarkAsRead(channel))
+            }
+
+            ChannelActionsDialog.ActionsEnum.MarkAsUnRead -> {
+                onChannelCommandEvent(ChannelEvent.MarkAsUnRead(channel))
+            }
+
+            ChannelActionsDialog.ActionsEnum.Mute -> {
+                ChannelActionConfirmationWithDialog.confirmMuteUntilAction(requireContext()) { until ->
+                    onChannelCommandEvent(ChannelEvent.Mute(channel, until))
+                }
+            }
+
+            ChannelActionsDialog.ActionsEnum.UnMute -> {
+                onChannelCommandEvent(ChannelEvent.UnMute(channel))
+            }
+
+            ChannelActionsDialog.ActionsEnum.Leave -> {
+                ChannelActionConfirmationWithDialog.confirmLeaveAction(requireContext(), channel) {
+                    onChannelCommandEvent(ChannelEvent.LeaveChannel(channel))
+                }
+            }
+
+            ChannelActionsDialog.ActionsEnum.Delete -> {
+                ChannelActionConfirmationWithDialog.confirmDeleteChatAction(requireContext(), channel) {
+                    onChannelCommandEvent(ChannelEvent.DeleteChannel(channel))
+                }
+            }
+        }
+    }
+
+    protected open fun onChannelCommandEvent(event: ChannelEvent) {
+        channelActionsViewModel.onChannelCommandEvent(event)
     }
 
     protected open fun onMessageClicked(messageId: Long, channel: SceytChannel) {
