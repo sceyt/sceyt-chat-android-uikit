@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Tag keys used to remember the padding and margin a view was laid out with, so window
+         insets are applied to the original values instead of compounding on repeated calls. -->
+    <item name="sceyt_tag_initial_padding" type="id" />
+    <item name="sceyt_tag_initial_margin" type="id" />
+</resources>
