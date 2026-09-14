@@ -68,6 +68,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.rea
 import com.sceyt.chatuikit.presentation.components.channel.messages.components.EmojiPickerBottomSheetFragment
 import com.sceyt.chatuikit.presentation.components.channel.messages.components.MessagesRV
 import com.sceyt.chatuikit.presentation.components.channel.messages.dialogs.DeleteMessageDialog
+import com.sceyt.chatuikit.presentation.components.channel.messages.dialogs.PinMessageDialog
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageCommandEvent
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.PollEvent
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.ReactionEvent
@@ -349,24 +350,9 @@ class MessagesListView @JvmOverloads constructor(
 
     private fun showModifyReactionsPopup(view: View, message: SceytMessage): ReactionsPopup? {
         if (message.isPending()) return null
-        val maxSize = SceytChatUIKit.config.messageReactionPerUserLimit
-        val reactions = message.messageReactions
-            ?.sortedByDescending { it.reaction.containsSelf }
-            ?.map { it.reaction.key }
-            ?.toMutableList() ?: mutableListOf()
-
-        if (reactions.size < maxSize) {
-            reactions.addAll(
-                SceytChatUIKit.config.defaultReactions
-                    .minus(reactions.toSet())
-                    .take(maxSize - reactions.size)
-            )
-        }
-
         return ReactionsPopup.showPopup(
             anchorView = view,
             message = message,
-            reactions = reactions.take(maxSize),
             style = style.reactionPickerStyle,
             clickListener = object : PopupReactionsAdapter.OnItemClickListener {
                 override fun onReactionClick(reaction: ReactionItem.Reaction) {
@@ -1289,6 +1275,19 @@ class MessagesListView @JvmOverloads constructor(
 
     override fun onReplyMessageInThreadClick(message: SceytMessage) {
         messageCommandEventListener?.invoke(MessageCommandEvent.ReplyInThread(message))
+    }
+
+    override fun onPinMessageClick(message: SceytMessage, actionFinish: () -> Unit) {
+        PinMessageDialog(context) { pinType ->
+            actionFinish()
+            messageCommandEventListener?.invoke(
+                MessageCommandEvent.PinMessage(message = message, pinType = pinType)
+            )
+        }.show()
+    }
+
+    override fun onUnpinMessageClick(message: SceytMessage) {
+        messageCommandEventListener?.invoke(MessageCommandEvent.UnpinMessage(message))
     }
 
     override fun onRetractVoteClick(message: SceytMessage) {

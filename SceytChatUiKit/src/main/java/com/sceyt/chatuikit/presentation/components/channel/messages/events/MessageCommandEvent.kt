@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages.events
 
+import com.sceyt.chat.models.message.PinDetails.PinType
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
 
@@ -55,6 +56,15 @@ sealed interface MessageCommandEvent {
     ) : MessageCommandEvent
 
     data class PollViewResultsClick(
+            val message: SceytMessage,
+    ) : MessageCommandEvent
+
+    data class PinMessage(
+            val message: SceytMessage,
+            val pinType: PinType,
+    ) : MessageCommandEvent
+
+    data class UnpinMessage(
             val message: SceytMessage,
     ) : MessageCommandEvent
 }
