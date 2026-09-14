@@ -54,6 +54,16 @@
         android:visible="false"
         app:showAsAction="ifRoom" />
 
+    <!-- Title and icon flip to unpin when the selected message is already pinned;
+         see MessagesListHeaderView.onInitToolbarActionsMenu. -->
+    <item
+        android:id="@+id/sceyt_pin_message"
+        android:contentDescription="@string/sceyt_cd_pin_message"
+        android:icon="@drawable/sceyt_ic_pin"
+        android:title="@string/sceyt_pin"
+        android:visible="false"
+        app:showAsAction="ifRoom" />
+
     <item
         android:id="@+id/sceyt_retract_vote"
         android:contentDescription="@string/sceyt_cd_retract_vote"
