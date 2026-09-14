@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  Row wrapper for the pinned-messages list.
+
+  The conversation's own message cell is added into bubbleContainer at runtime, so pinned
+  messages render exactly as they do in the chat — attachments, reactions, replies, polls.
+  Tapping a bubble therefore does what it does in the conversation, which is why the jump
+  gets its own affordance instead of owning the row.
+-->
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingTop="4dp"
+    android:paddingBottom="8dp">
+
+    <!--
+      The end margin keeps the button's lane (8dp gap + 36dp button + 8dp outer margin) clear of
+      an incoming bubble, which would otherwise grow underneath the button. Outgoing rows drop it
+      in PinnedMessagesAdapter — the button sits on their free side, and the bubble's own width
+      cap always leaves room there.
+    -->
+    <FrameLayout
+        android:id="@+id/bubbleContainer"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="52dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!--
+      Parked at the container's top-start corner. PinnedMessagesAdapter translates it from
+      there to the bubble, landing its bottom edge on the bubble's bottom.
+
+      The top is the anchor on purpose. Anchoring the bottom to the container instead would
+      follow the reactions, which sit below the bubble and grow the container; and correcting
+      for that means translating the button upwards, out of the row, where the list clips it.
+      From the top it only ever moves down, and stays inside.
+    -->
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/navigateButton"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:contentDescription="@string/sceyt_pinned_message"
+        android:foreground="@drawable/sceyt_bg_ripple_circle"
+        android:padding="7dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/bubbleContainer"
+        tools:src="@drawable/sceyt_ic_pinned_message_navigate" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
