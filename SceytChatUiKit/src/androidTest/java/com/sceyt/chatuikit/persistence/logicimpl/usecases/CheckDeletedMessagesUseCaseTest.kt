@@ -1349,6 +1349,7 @@ class CheckDeletedMessagesUseCaseTest {
             metadata = "",
             updatedAt = 0,
             unList = false,
+            pinDetails = null,
             disableMentionsCount = false,
             viewOnce = false
         )
@@ -1388,6 +1389,7 @@ class CheckDeletedMessagesUseCaseTest {
             forwardingDetails = null,
             pendingReactions = null,
             bodyAttributes = null,
+            pinDetails = null,
             disableMentionsCount = false,
             poll = null
         )
