@@ -169,6 +169,14 @@ internal class PersistenceMiddleWareImpl(
         }
     }
 
+    private fun onPinUpdated(event: PinUpdateEvent) {
+        scope.launch {
+            pinLogic.onPinUpdated(event)
+            if (event is PinUpdateEvent.Pinned)
+                realtimeNotificationManager.onMessagesPinned(event.channelId, event.messages)
+        }
+    }
+
     private fun onMessageEditedOrDeleted(sceytMessage: SceytMessage) {
         scope.launch(Dispatchers.IO) { messagesLogic.onMessageEditedOrDeleted(sceytMessage) }
         scope.launch(Dispatchers.IO) { channelLogic.onMessageEditedOrDeleted(sceytMessage) }
