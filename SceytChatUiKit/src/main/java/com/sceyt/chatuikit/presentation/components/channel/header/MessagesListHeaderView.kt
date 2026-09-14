@@ -61,6 +61,8 @@ import com.sceyt.chatuikit.presentation.components.channel.header.listeners.ui.s
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageCommandEvent
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoActivity
 import com.sceyt.chatuikit.presentation.custom_views.AvatarView
+import com.sceyt.chatuikit.presentation.extensions.isDeletedOrHardDeleted
+import com.sceyt.chatuikit.presentation.extensions.isEphemeral
 import com.sceyt.chatuikit.presentation.extensions.isPending
 import com.sceyt.chatuikit.presentation.extensions.isSupportedType
 import com.sceyt.chatuikit.styles.common.MenuStyle
@@ -530,54 +532,8 @@ class MessagesListHeaderView @JvmOverloads constructor(
     }
 
     override fun onInitToolbarActionsMenu(vararg messages: SceytMessage, menu: Menu) {
-        if (messages.isEmpty()) return
-
-        fun Menu.setVisible(id: Int, visible: Boolean) {
-            findItem(id)?.isVisible = visible
-        }
-
-        val isSingle = messages.size == 1
-        val firstMessage = messages.first()
-        val now = System.currentTimeMillis()
-
-        val isUnsupportedFirst = !firstMessage.isSupportedType()
-
-        val anyPending = messages.any { it.isPending() }
-        val anyPollInSelection = messages.any { it.type == SceytMessageType.Poll.value }
-        val anyUnsupportedInSelection = messages.any { !it.isSupportedType() }
-        val anyViewOnceMessage = messages.any { it.viewOnce }
-
-        val poll = firstMessage.poll
-        val isPollMessage = poll != null
-        val pollClosed = poll?.closed == true
-        val hasVoted = poll?.ownVotes?.isNotEmpty() == true
-        val allowRetract = poll?.allowVoteRetract == true
-
-        val editTimeoutMs = SceytChatUIKit.config.messageEditTimeout
-        val editExpired = (now - firstMessage.createdAt) > editTimeoutMs
-        val isOutgoing = !firstMessage.incoming
-        val hasText = firstMessage.body.isNotNullOrBlank()
-
-        val canReply = isSingle && !anyPending
-        val canForward =
-            !anyPending && !isPollMessage && !anyPollInSelection && !anyUnsupportedInSelection && !anyViewOnceMessage
-        val canEdit =
-            isSingle && !isUnsupportedFirst && isOutgoing && hasText && !editExpired && !isPollMessage && !anyViewOnceMessage
-        val canShowInfo = isSingle && isOutgoing && !anyPending
-        val canCopy =
-            messages.any { it.body.isNotNullOrBlank() } && !anyPollInSelection && !anyUnsupportedInSelection && !anyViewOnceMessage
-
-        val canRetractVote = !anyPending && isSingle && allowRetract && hasVoted && !pollClosed
-        val canEndVote = !anyPending && isSingle && isOutgoing && isPollMessage && !pollClosed
-
-        menu.setVisible(R.id.sceyt_reply, canReply)
-        menu.setVisible(R.id.sceyt_forward, canForward)
-        menu.setVisible(R.id.sceyt_edit_message, canEdit)
-        menu.setVisible(R.id.sceyt_message_info, canShowInfo)
-        menu.setVisible(R.id.sceyt_copy_message, canCopy)
-        menu.setVisible(R.id.sceyt_retract_vote, canRetractVote)
-        menu.setVisible(R.id.sceyt_end_vote, canEndVote)
-        // menu.setVisible(R.id.sceyt_reply_in_thread, isSingle && !anyPending) // keep commented if not used
+        // Shared with the pinned-messages screen, which offers the same menu.
+        MessageActionsMenuInitializer.init(context, menu, *messages)
     }
 
     override fun showSearchMessagesBar(event: MessageCommandEvent.SearchMessages) {

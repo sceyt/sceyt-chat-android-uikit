@@ -22,6 +22,8 @@ open class MessageActionsViewClickListenersImpl : MessageActionsViewClickListene
     private var replyInThreadMessageListener: MessageActionsViewClickListeners.ReplyInThreadMessage? = null
     private var retractVoteListener: MessageActionsViewClickListeners.RetractVote? = null
     private var endVoteListener: MessageActionsViewClickListeners.EndVote? = null
+    private var pinMessageListener: MessageActionsViewClickListeners.PinMessage? = null
+    private var unpinMessageListener: MessageActionsViewClickListeners.UnpinMessage? = null
 
     override fun onCopyMessagesClick(vararg messages: SceytMessage) {
         defaultListeners?.onCopyMessagesClick(*messages)
@@ -73,6 +75,16 @@ open class MessageActionsViewClickListenersImpl : MessageActionsViewClickListene
         endVoteListener?.onEndVoteClick(message)
     }
 
+    override fun onPinMessageClick(message: SceytMessage, actionFinish: () -> Unit) {
+        defaultListeners?.onPinMessageClick(message, actionFinish)
+        pinMessageListener?.onPinMessageClick(message, actionFinish)
+    }
+
+    override fun onUnpinMessageClick(message: SceytMessage) {
+        defaultListeners?.onUnpinMessageClick(message)
+        unpinMessageListener?.onUnpinMessageClick(message)
+    }
+
     fun setListener(listener: MessageActionsViewClickListeners) {
         when (listener) {
             is MessageActionsViewClickListeners.ActionsViewClickListeners -> {
@@ -86,6 +98,8 @@ open class MessageActionsViewClickListenersImpl : MessageActionsViewClickListene
                 replyInThreadMessageListener = listener
                 retractVoteListener = listener
                 endVoteListener = listener
+                pinMessageListener = listener
+                unpinMessageListener = listener
             }
 
             is MessageActionsViewClickListeners.CopyMessage -> {
@@ -126,6 +140,14 @@ open class MessageActionsViewClickListenersImpl : MessageActionsViewClickListene
 
             is MessageActionsViewClickListeners.EndVote -> {
                 endVoteListener = listener
+            }
+
+            is MessageActionsViewClickListeners.PinMessage -> {
+                pinMessageListener = listener
+            }
+
+            is MessageActionsViewClickListeners.UnpinMessage -> {
+                unpinMessageListener = listener
             }
         }
     }
