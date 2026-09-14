@@ -1563,6 +1563,7 @@ class CheckDeletedNearMessagesUseCaseTest {
             metadata = "",
             updatedAt = 0,
             unList = false,
+            pinDetails = null,
             disableMentionsCount = false
         )
     }
@@ -1601,6 +1602,7 @@ class CheckDeletedNearMessagesUseCaseTest {
             forwardingDetails = null,
             pendingReactions = null,
             bodyAttributes = null,
+            pinDetails = null,
             disableMentionsCount = false,
             poll = null
         )

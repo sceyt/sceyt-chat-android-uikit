@@ -88,6 +88,7 @@ class ReactionDaoTest {
         autoDeleteAt = null,
         forwardingDetailsDb = null,
         bodyAttribute = null,
+        pinDetails = null,
         disableMentionsCount = false,
         unList = false,
     )
