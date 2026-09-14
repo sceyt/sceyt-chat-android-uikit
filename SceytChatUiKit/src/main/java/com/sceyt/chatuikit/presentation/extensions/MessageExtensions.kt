@@ -10,10 +10,14 @@ import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
+import com.sceyt.chatuikit.data.models.messages.PinnedMessageMetadata
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.data.models.messages.SystemMessageAction
 import com.sceyt.chatuikit.data.models.messages.SceytMessageType
 import com.sceyt.chatuikit.data.models.messages.SceytUser
+import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.getFileSize
+import com.sceyt.chatuikit.extensions.jsonToObject
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.persistence.mappers.toSceytAttachment
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.MessageBodyStyleHelper.buildWithAttributes
@@ -66,10 +70,17 @@ fun SceytMessage?.setChatMessageDateAndStatusIcon(
     dateText: CharSequence,
     edited: Boolean,
 ) {
+    val showPin = this?.pinDetails?.isPinned == true &&
+            this.state?.isDeletedOrHardDeleted() != true
+    val pinIcon = itemStyle.pinnedIcon.takeIf { showPin }
+    val pinIconPadding = dpToPx(4f)
+
     if (this?.deliveryStatus == null || state == MessageState.Deleted || incoming) {
         decoratedTextView.appearanceBuilder()
             .setText(dateText)
             .setTextStyle(itemStyle.messageDateTextStyle)
+            .setLeadingIcon(pinIcon)
+            .setLeadingIconPadding(pinIconPadding)
             .setTrailingIcon(null)
             .enableLeadingText(edited)
             .setLeadingText(itemStyle.editedStateText)
@@ -91,6 +102,8 @@ fun SceytMessage?.setChatMessageDateAndStatusIcon(
         decoratedTextView.appearanceBuilder()
             .setText(dateText)
             .setTextStyle(itemStyle.messageDateTextStyle)
+            .setLeadingIcon(pinIcon)
+            .setLeadingIconPadding(pinIconPadding)
             .setTrailingIcon(it)
             .enableLeadingText(edited)
             .setLeadingText(itemStyle.editedStateText)
@@ -203,6 +216,13 @@ fun SceytAttachment?.isAttachmentExistAndFullyLoaded(loadedFile: File): File? {
 fun SceytMessage.isPending() = deliveryStatus == MessageDeliveryStatus.Pending
 
 fun SceytMessage.isNotPending() = !isPending()
+
+/**
+ * A message that is meant to disappear. Such a message cannot be pinned: the pin would
+ * outlive the message it points at and keep it reachable after it vanished from the timeline.
+ */
+fun SceytMessage.isEphemeral() =
+    isTransient || viewOnce || (autoDeleteAt ?: 0L) > 0L
 
 fun MessageState.isDeletedOrHardDeleted() =
     this == MessageState.Deleted || this == MessageState.DeletedHard

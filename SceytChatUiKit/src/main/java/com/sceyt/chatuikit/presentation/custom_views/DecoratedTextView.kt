@@ -407,6 +407,7 @@ class DecoratedTextView @JvmOverloads constructor(
 
     inner class DecoratedTextViewAppearance(
             val leadingIconSize: Int = this@DecoratedTextView.leadingIconSize,
+            val leadingIconPadding: Int = this@DecoratedTextView.leadingIconPadding,
             val trailingIconSize: Int = this@DecoratedTextView.trailingIconSize,
             val leadingIcon: Drawable? = this@DecoratedTextView.leadingIcon,
             val trailingIcon: Drawable? = this@DecoratedTextView.trailingIcon,
@@ -426,6 +427,7 @@ class DecoratedTextView @JvmOverloads constructor(
             }
 
             this@DecoratedTextView.leadingIconSize = leadingIconSize
+            this@DecoratedTextView.leadingIconPadding = leadingIconPadding
             this@DecoratedTextView.trailingIconSize = trailingIconSize
             this@DecoratedTextView.leadingIcon = leading
             this@DecoratedTextView.trailingIcon = trailing
@@ -443,6 +445,7 @@ class DecoratedTextView @JvmOverloads constructor(
 
     inner class AppearanceBuilder {
         private var leadingIconSize = this@DecoratedTextView.leadingIconSize
+        private var leadingIconPadding = this@DecoratedTextView.leadingIconPadding
         private var trailingIconSize = this@DecoratedTextView.trailingIconSize
         private var leadingIcon = this@DecoratedTextView.leadingIcon
         private var trailingIcon = this@DecoratedTextView.trailingIcon
@@ -466,6 +469,12 @@ class DecoratedTextView @JvmOverloads constructor(
 
         fun setLeadingIconSize(size: Int): AppearanceBuilder {
             leadingIconSize = size
+            return this
+        }
+
+        /** Gap between the leading icon and the text. Ignored while there is no leading icon. */
+        fun setLeadingIconPadding(padding: Int): AppearanceBuilder {
+            leadingIconPadding = padding
             return this
         }
 
@@ -506,6 +515,7 @@ class DecoratedTextView @JvmOverloads constructor(
 
         fun build() = DecoratedTextViewAppearance(
             leadingIconSize = leadingIconSize,
+            leadingIconPadding = leadingIconPadding,
             trailingIconSize = trailingIconSize,
             leadingIcon = leadingIcon,
             trailingIcon = trailingIcon,

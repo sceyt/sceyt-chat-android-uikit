@@ -127,7 +127,7 @@ class IncVoiceMessageViewHolder(
                 setMessageBody(messageBody, message)
             } else messageBody.isVisible = false
 
-            if (diff.edited || diff.statusChanged)
+            if (diff.infoRowChanged())
                 setMessageStatusAndDateText(message, messageDate)
 
             if (diff.avatarChanged || diff.showAvatarAndNameChanged)
