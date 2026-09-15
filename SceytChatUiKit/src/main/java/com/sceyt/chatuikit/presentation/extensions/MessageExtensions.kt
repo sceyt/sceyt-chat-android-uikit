@@ -261,6 +261,7 @@ fun SceytMessage.getUpdateMessage(message: SceytMessage): SceytMessage {
         bodyAttributes = message.bodyAttributes,
         disableMentionsCount = message.disableMentionsCount,
         poll = message.poll,
+        pinDetails = message.pinDetails,
         messageReactions = message.messageReactions,
         files = message.files,
     )
@@ -282,4 +283,21 @@ fun SceytMessage.isSelfDestructed(): Boolean {
     return if (incoming) {
         userMarkers?.any { it.name == MarkerType.Opened.value } ?: false
     } else markerTotals?.any { it.name == MarkerType.Opened.value } ?: false
+}
+
+/**
+ * The message a system message points at, or null when it points at nothing.
+ *
+ * Prefers the parent, falling back to the metadata id: `parentMessage` is populated by the
+ * server, so on the sender's own optimistic copy the metadata is all there is.
+ */
+fun SceytMessage.systemMessageTargetId(): Long? {
+    if (SystemMessageAction.getTypeFromString(body) != SystemMessageAction.PinMessage) return null
+    parentMessage?.let { parent ->
+        // Nothing to jump to once the message is gone: the announcement stays in the thread
+        // as a record, but it stops being a link.
+        if (parent.state.isDeletedOrHardDeleted()) return null
+        parent.id.takeIf { it != 0L }?.let { return it }
+    }
+    return metadata?.jsonToObject(PinnedMessageMetadata::class.java)?.id?.toLongOrNull()
 }
