@@ -18,6 +18,7 @@ import com.sceyt.chatuikit.persistence.database.dao.UserDao
 import com.sceyt.chatuikit.persistence.extensions.broadcastSharedFlow
 import com.sceyt.chatuikit.persistence.logic.PersistenceConnectionLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
+import com.sceyt.chatuikit.persistence.logic.PersistencePinLogic
 import com.sceyt.chatuikit.persistence.logic.PersistencePollLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceReactionsLogic
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.SetUserPresenceUseCase
@@ -47,6 +48,7 @@ internal class PersistenceConnectionLogicImpl(
     private val messageLogic: PersistenceMessagesLogic by inject()
     private val reactionsLogic: PersistenceReactionsLogic by inject()
     private val pollLogic: PersistencePollLogic by inject()
+    private val pinLogic: PersistencePinLogic by inject()
     private val sceytSyncManager: SceytSyncManager by inject()
 
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
@@ -83,6 +85,7 @@ internal class PersistenceConnectionLogicImpl(
                 messageLogic.sendAllPendingMessageDeletesByTid()
                 reactionsLogic.sendAllPendingReactions()
                 pollLogic.sendAllPendingVotes()
+                pinLogic.sendAllPendingPins()
                 _allPendingEventsSentFlow.tryEmit(Unit)
                 if (SceytChatUIKit.config.syncChannelsAfterConnect) {
                     sceytSyncManager.startSync(ChannelListConfig.default.copy(queryLimit = 30))
