@@ -61,9 +61,10 @@ class SyncChannelPinsUseCaseTest {
 
         val firstSync = launch { useCase(7L) }
         firstPageStored.await()
-        useCase(8L)
+        val secondSync = launch { useCase(8L) }
         otherChannelCompleted.complete(Unit)
         firstSync.join()
+        secondSync.join()
 
         verify(pinnedMessageDao).getSyncedExcluding(7L, listOf(10L, 11L))
         verify(pinnedMessageDao).getSyncedExcluding(8L, listOf(20L))
@@ -72,6 +73,8 @@ class SyncChannelPinsUseCaseTest {
 
     @Before
     fun stubMirrorRepair() = runTest {
+        whenever(sendPendingPinsUseCase.localUpdateMutex).thenReturn(kotlinx.coroutines.sync.Mutex())
+        whenever(sendPendingPinsUseCase.requestMutex).thenReturn(kotlinx.coroutines.sync.Mutex())
         whenever(pinnedMessageDao.getDriftedMirrorTids(any())).thenReturn(emptyList())
     }
 

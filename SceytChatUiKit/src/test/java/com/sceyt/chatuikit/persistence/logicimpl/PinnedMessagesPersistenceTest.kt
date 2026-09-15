@@ -28,6 +28,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.CoroutineStart
+import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -49,7 +52,8 @@ class PinnedMessagesPersistenceTest {
 
     private lateinit var database: SceytDatabase
     private val pinRepository = mock<PinRepository>()
-    private val refreshCache = mock<RefreshPinnedMessageCacheUseCase>()
+    private val cache = com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache()
+    private lateinit var refreshCache: RefreshPinnedMessageCacheUseCase
     private val systemMessageSender = mock<SystemMessageSender>()
     private lateinit var logic: PersistencePinLogicImpl
 
@@ -60,6 +64,7 @@ class PinnedMessagesPersistenceTest {
         ).allowMainThreadQueries().build()
         val dao = database.pinnedMessageDao()
         val messages = database.messageDao()
+        refreshCache = RefreshPinnedMessageCacheUseCase(messages, cache)
         val confirm = ConfirmPinUseCase(dao)
         val send = SendPendingPinsUseCase(dao, pinRepository, confirm, systemMessageSender, refreshCache)
         val store = StorePinsUseCase(messages, dao, refreshCache)
@@ -157,4 +162,149 @@ class PinnedMessagesPersistenceTest {
         verify(systemMessageSender, times(1)).sendMessagePinned(7L, 42L)
         assertThat(logic.getPinnedMessages(7L)).hasSize(1)
     }
+    @Test
+    fun `unpin refreshes the bubble before a stalled pin request returns`() = runTest {
+        database.messageDao().upsertMessage(messageDb())
+        cache.add(7L, sceytMessage())
+        val started = CompletableDeferred<Unit>()
+        val release = CompletableDeferred<Unit>()
+        doSuspendableAnswer {
+            started.complete(Unit)
+            release.await()
+            SceytResponse.Success(listOf(sceytPinnedMessage()))
+        }.whenever(pinRepository) { pinMessages(any(), any(), any(), anyOrNull()) }
+        whenever(pinRepository.unpinMessages(any(), any())).thenReturn(SceytResponse.Error(null))
+
+        val pin = launch { logic.pinMessage(7L, 42L, PinType.SHARED) }
+        started.await()
+        assertThat(cache.get(7L, 42L)?.pinDetails?.isPinned).isTrue()
+        val hidden = async(start = CoroutineStart.UNDISPATCHED) {
+            MessagesCache.messageUpdatedFlow.first { (_, messages) ->
+                messages.any { it.tid == 42L && it.pinDetails == null }
+            }
+        }
+        val unpin = launch { logic.unpinMessage(7L, 42L) }
+        hidden.await()
+        assertThat(cache.get(7L, 42L)?.pinDetails).isNull()
+        assertThat(database.pinnedMessageDao().getByTid(42L, 7L)?.syncState)
+            .isEqualTo(PinSyncStateEntity.PendingUnpin.value)
+
+        release.complete(Unit)
+        pin.join()
+        unpin.join()
+        assertThat(cache.get(7L, 42L)?.pinDetails).isNull()
+        assertThat(database.pinnedMessageDao().getByTid(42L, 7L)?.syncState)
+            .isEqualTo(PinSyncStateEntity.PendingUnpin.value)
+    }
+
+    @Test
+    fun `repin refreshes the bubble before a stalled unpin returns`() = runTest {
+        database.messageDao().upsertMessage(messageDb())
+        database.pinnedMessageDao().upsertWithMirror(pinnedEntity(syncState = PinSyncStateEntity.Synced.value))
+        cache.add(7L, sceytMessage())
+        refreshCache(7L, 42L)
+        val started = CompletableDeferred<Unit>()
+        val release = CompletableDeferred<Unit>()
+        doSuspendableAnswer {
+            started.complete(Unit)
+            release.await()
+            SceytResponse.Success(emptyList<com.sceyt.chatuikit.data.models.messages.SceytPinnedMessage>())
+        }.whenever(pinRepository) { unpinMessages(any(), any()) }
+        whenever(pinRepository.pinMessages(any(), any(), any(), anyOrNull()))
+            .thenReturn(SceytResponse.Error(null))
+
+        val unpin = launch { logic.unpinMessage(7L, 42L) }
+        started.await()
+        assertThat(cache.get(7L, 42L)?.pinDetails).isNull()
+        val shown = async(start = CoroutineStart.UNDISPATCHED) {
+            MessagesCache.messageUpdatedFlow.first { (_, messages) ->
+                messages.any { it.tid == 42L && it.pinDetails?.isPinned == true }
+            }
+        }
+        val pin = launch { logic.pinMessage(7L, 42L, PinType.SHARED) }
+        shown.await()
+        assertThat(cache.get(7L, 42L)?.pinDetails?.isPinned).isTrue()
+
+        release.complete(Unit)
+        unpin.join()
+        pin.join()
+        assertThat(cache.get(7L, 42L)?.pinDetails?.isPinned).isTrue()
+        assertThat(database.pinnedMessageDao().getByTid(42L, 7L)?.syncState)
+            .isEqualTo(PinSyncStateEntity.PendingPin.value)
+    }
+
+    @Test
+    fun `pin refreshes the bubble while channel sync is stalled`() = runTest {
+        database.messageDao().upsertMessage(messageDb())
+        cache.add(7L, sceytMessage())
+        val started = CompletableDeferred<Unit>()
+        val release = CompletableDeferred<Unit>()
+        whenever(pinRepository.getPinnedMessages(7L)).thenReturn(kotlinx.coroutines.flow.flow {
+            started.complete(Unit)
+            release.await()
+            emit(SceytPagingResponse.Success(emptyList(), hasNext = false))
+        })
+        whenever(pinRepository.pinMessages(any(), any(), any(), anyOrNull()))
+            .thenReturn(SceytResponse.Error(null))
+        val sync = launch { logic.syncChannelPins(7L) }
+        started.await()
+        val shown = async(start = CoroutineStart.UNDISPATCHED) {
+            MessagesCache.messageUpdatedFlow.first { (_, messages) ->
+                messages.any { it.tid == 42L && it.pinDetails?.isPinned == true }
+            }
+        }
+        val pin = launch { logic.pinMessage(7L, 42L, PinType.SHARED) }
+        shown.await()
+        assertThat(cache.get(7L, 42L)?.pinDetails?.isPinned).isTrue()
+        release.complete(Unit)
+        sync.join()
+        pin.join()
+        assertThat(logic.getPinnedMessages(7L)).hasSize(1)
+    }
+
+    @Test
+    fun `late rejection of an old pin cannot remove a newer pin intent`() = runTest {
+        database.messageDao().upsertMessage(messageDb())
+        cache.add(7L, sceytMessage())
+        val started = CompletableDeferred<Unit>()
+        val release = CompletableDeferred<Unit>()
+        val rejection = mock<com.sceyt.chat.models.SceytException> {
+            on { type }.thenReturn("NotAllowed")
+        }
+        var calls = 0
+        doSuspendableAnswer {
+            if (calls++ == 0) {
+                started.complete(Unit)
+                release.await()
+                SceytResponse.Error<List<com.sceyt.chatuikit.data.models.messages.SceytPinnedMessage>>(rejection)
+            } else SceytResponse.Success(listOf(sceytPinnedMessage()))
+        }.whenever(pinRepository) { pinMessages(any(), any(), any(), anyOrNull()) }
+        val firstPin = launch { logic.pinMessage(7L, 42L, PinType.SHARED) }
+        started.await()
+        val hidden = async(start = CoroutineStart.UNDISPATCHED) {
+            MessagesCache.messageUpdatedFlow.first { (_, messages) ->
+                messages.any { it.tid == 42L && it.pinDetails == null }
+            }
+        }
+        val unpin = launch { logic.unpinMessage(7L, 42L) }
+        hidden.await()
+        val shown = async(start = CoroutineStart.UNDISPATCHED) {
+            MessagesCache.messageUpdatedFlow.first { (_, messages) ->
+                messages.any { it.tid == 42L && it.pinDetails?.isPinned == true }
+            }
+        }
+        val lastPin = launch { logic.pinMessage(7L, 42L, PinType.SHARED) }
+        shown.await()
+        release.complete(Unit)
+        firstPin.join()
+        unpin.join()
+        lastPin.join()
+
+        assertThat(cache.get(7L, 42L)?.pinDetails?.isPinned).isTrue()
+        assertThat(database.pinnedMessageDao().getByTid(42L, 7L)?.syncState)
+            .isEqualTo(PinSyncStateEntity.Synced.value)
+        verify(systemMessageSender, times(1)).sendMessagePinned(7L, 42L)
+        verify(pinRepository, org.mockito.kotlin.never()).unpinMessages(any(), any())
+    }
+
 }

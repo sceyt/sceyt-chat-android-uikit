@@ -38,6 +38,13 @@ class SendPendingPinsUseCaseTest {
         refreshPinnedMessageCache,
     )
 
+    @org.junit.Before
+    fun stubCurrentIntent() = runTest {
+        org.mockito.kotlin.doSuspendableAnswer {
+            pinnedMessageDao.getPendingByChannel(7L).orEmpty().firstOrNull()
+        }.whenever(pinnedMessageDao) { getByTid(any(), any()) }
+    }
+
     @Test
     fun `a pending pin without a server message id waits for its message acknowledgement`() = runTest {
         whenever(pinnedMessageDao.getPendingByChannel(7L)).thenReturn(
@@ -154,6 +161,8 @@ class SendPendingPinsUseCaseTest {
         whenever(pinRepository.pinMessages(any(), any(), any(), anyOrNull()))
             .thenAnswer { SceytResponse.Error<List<SceytPinnedMessage>>(error) }
 
+        org.mockito.kotlin.doReturn(pinnedEntity(syncState = PinSyncStateEntity.PendingPin.value))
+            .whenever(pinnedMessageDao).getByTid(42L, 7L)
         val response = useCase.sendPin(pinnedEntity(syncState = PinSyncStateEntity.PendingPin.value))
 
         assertThat((response as SceytResponse.Error).exception).isSameInstanceAs(error)
@@ -167,6 +176,8 @@ class SendPendingPinsUseCaseTest {
         val error = mock<SceytException> { on { type }.thenReturn("NotAllowed") }
         whenever(pinRepository.unpinMessages(any(), any())).thenAnswer { SceytResponse.Error<List<SceytPinnedMessage>>(error) }
 
+        org.mockito.kotlin.doReturn(pinnedEntity(syncState = PinSyncStateEntity.PendingUnpin.value))
+            .whenever(pinnedMessageDao).getByTid(42L, 7L)
         val response = useCase.sendUnpin(pinnedEntity(syncState = PinSyncStateEntity.PendingUnpin.value))
 
         assertThat((response as SceytResponse.Error).exception).isSameInstanceAs(error)
@@ -182,6 +193,8 @@ class SendPendingPinsUseCaseTest {
         val error = mock<SceytException> { on { type }.thenReturn("NotFound") }
         whenever(pinRepository.unpinMessages(any(), any())).thenAnswer { SceytResponse.Error<List<SceytPinnedMessage>>(error) }
 
+        org.mockito.kotlin.doReturn(pinnedEntity(syncState = PinSyncStateEntity.PendingUnpin.value))
+            .whenever(pinnedMessageDao).getByTid(42L, 7L)
         useCase.sendUnpin(pinnedEntity(syncState = PinSyncStateEntity.PendingUnpin.value))
 
         verify(pinnedMessageDao).deleteWithMirror(42L, 7L)

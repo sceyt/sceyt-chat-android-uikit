@@ -6,21 +6,17 @@ import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.persistence.interactor.MessagePinInteractor
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
-/** Owns pin actions and prevents duplicate taps, like [PollController]. */
+/** Local pin updates are serialized by persistence, independently of network requests. */
 internal class PinController(
     private val scope: CoroutineScope,
     private val pinInteractor: MessagePinInteractor,
     private val channelId: () -> Long,
     private val notifyResponse: (SceytResponse<*>, showError: Boolean) -> Unit,
 ) {
-    private var pinJob: Job? = null
-
     fun pin(message: SceytMessage, pinType: PinType) {
-        if (pinJob?.isActive == true) return
-        pinJob = scope.launch {
+        scope.launch {
             val response = pinInteractor.pinMessage(
                 channelId = channelId(),
                 messageTid = message.tid,
@@ -31,8 +27,7 @@ internal class PinController(
     }
 
     fun unpin(messageTid: Long) {
-        if (pinJob?.isActive == true) return
-        pinJob = scope.launch {
+        scope.launch {
             val response = pinInteractor.unpinMessage(
                 channelId = channelId(),
                 messageTid = messageTid

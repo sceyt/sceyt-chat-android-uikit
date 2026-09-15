@@ -12,6 +12,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.runCurrent
 import org.junit.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.doReturn
@@ -51,7 +52,7 @@ class PinControllerTest {
     }
 
     @Test
-    fun `a second pin while one is in flight is ignored`() = runTest(dispatcher) {
+    fun `each tap reaches persistence which owns duplicate detection`() = runTest(dispatcher) {
         whenever(pinInteractor.pinMessage(any(), any(), any()))
             .doReturn(SceytResponse.Success(null))
         val controller = controller(this)
@@ -61,8 +62,8 @@ class PinControllerTest {
         controller.pin(message, PinType.SHARED)
         advanceUntilIdle()
 
-        // A double tap must not produce two server calls, even though the store is idempotent.
-        verifyBlocking(pinInteractor, times(1)) { pinMessage(any(), any(), any()) }
+        // Persistence can reject a duplicate without blocking local updates for other taps.
+        verifyBlocking(pinInteractor, times(2)) { pinMessage(any(), any(), any()) }
     }
 
     @Test
@@ -114,6 +115,25 @@ class PinControllerTest {
         advanceUntilIdle()
 
         assertThat(notifications.single().second).isTrue()
+    }
+
+    @Test
+    fun `unpin reaches persistence while the previous pin request is stalled`() = runTest(dispatcher) {
+        val started = kotlinx.coroutines.CompletableDeferred<Unit>()
+        val release = kotlinx.coroutines.CompletableDeferred<Unit>()
+        org.mockito.kotlin.doSuspendableAnswer {
+            started.complete(Unit)
+            release.await()
+            SceytResponse.Success<SceytPinnedMessage>(null)
+        }.whenever(pinInteractor) { pinMessage(any(), any(), any()) }
+        whenever(pinInteractor.unpinMessage(any(), any())).doReturn(SceytResponse.Success(true))
+        val controller = controller(this)
+        controller.pin(createMessage(createdAt = 1, id = 1, tid = 1), PinType.SHARED)
+        started.await()
+        controller.unpin(1L)
+        runCurrent()
+        verifyBlocking(pinInteractor) { unpinMessage(channelId, 1L) }
+        release.complete(Unit)
     }
 
 }
