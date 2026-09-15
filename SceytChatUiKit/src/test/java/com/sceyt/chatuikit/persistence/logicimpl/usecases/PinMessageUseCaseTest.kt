@@ -39,6 +39,15 @@ class PinMessageUseCaseTest {
         refreshPinnedMessageCache = mock(),
     )
 
+    @org.junit.Before
+    fun trackStoredPin() = runTest {
+        org.mockito.kotlin.doSuspendableAnswer { call ->
+            val entity = call.getArgument<PinnedMessageEntity>(0)
+            whenever(pinnedMessageDao.getByTid(entity.messageTid, entity.channelId)).thenReturn(entity)
+            Unit
+        }.whenever(pinnedMessageDao) { upsertWithMirror(any()) }
+    }
+
     private val channelId = 7L
 
     @Test

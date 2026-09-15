@@ -31,13 +31,27 @@ class UnpinMessageUseCaseTest {
             refreshPinnedMessageCache,
         )
 
+    @org.junit.Before
+    fun trackPendingUnpin() = runTest {
+        org.mockito.kotlin.doSuspendableAnswer { call ->
+            val tid = call.getArgument<Long>(0)
+            val channel = call.getArgument<Long>(1)
+            val now = call.getArgument<Long>(2)
+            val current = pinnedMessageDao.getByTid(tid, channel)!!
+            whenever(pinnedMessageDao.getByTid(tid, channel)).thenReturn(current.copy(
+                syncState = PinSyncStateEntity.PendingUnpin.value, lastAttemptAt = now
+            ))
+            Unit
+        }.whenever(pinnedMessageDao) { markPendingUnpinWithMirror(any(), any(), any()) }
+    }
+
     private val channelId = 7L
 
     @Test
-    fun `pin then unpin while offline makes no server call at all`() = runTest {
-        // The pin never reached the server, so there is nothing to unpin there.
+    fun `unpin of an unsent message makes no server call`() = runTest {
+        // A message without a server ID could not have been pinned remotely.
         whenever(pinnedMessageDao.getByTid(42L, channelId))
-            .thenReturn(pinnedEntity(syncState = PinSyncStateEntity.PendingPin.value))
+            .thenReturn(pinnedEntity(messageId = 0L, syncState = PinSyncStateEntity.PendingPin.value))
 
         val result = useCase(channelId, messageTid = 42L)
 
