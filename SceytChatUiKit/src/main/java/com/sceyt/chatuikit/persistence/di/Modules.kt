@@ -84,7 +84,7 @@ import com.sceyt.chatuikit.persistence.logicimpl.usecases.PinMessageUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.RefreshPinnedMessageCacheUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.SendPendingPinsUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.StorePinsUseCase
-import com.sceyt.chatuikit.persistence.logicimpl.usecases.SyncChannelPinsUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.SyncChannelPinsController
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.TogglePollVoteUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.UnpinMessageUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.UpdatePinnedMessagesUseCase
@@ -208,8 +208,8 @@ internal val useCaseModule = module {
     factoryOf(::UnpinMessageUseCase)
     factoryOf(::ConfirmPinUseCase)
     factoryOf(::StorePinsUseCase)
-    factoryOf(::SendPendingPinsUseCase)
-    factoryOf(::SyncChannelPinsUseCase)
+    singleOf(::SendPendingPinsUseCase)
+    factoryOf(::SyncChannelPinsController)
     factoryOf(::UpdatePinnedMessagesUseCase)
     factoryOf(::TogglePollVoteUseCase)
     factoryOf(::RetractPollVoteUseCase)

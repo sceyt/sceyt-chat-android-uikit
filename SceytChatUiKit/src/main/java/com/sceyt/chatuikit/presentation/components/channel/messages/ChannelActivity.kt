@@ -51,11 +51,7 @@ open class ChannelActivity : AppCompatActivity() {
         viewModel.bind(binding.headerView, null, lifecycleOwner = this)
     }
 
-    /**
-     * What the pinned-messages screen hands back: a row to scroll to, or a message to reply
-     * to or edit — the two actions that need this screen's composer.
-     */
-    private val pinnedMessagesListLauncher = registerForActivityResult(
+    protected val pinnedMessagesListLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode != RESULT_OK) return@registerForActivityResult

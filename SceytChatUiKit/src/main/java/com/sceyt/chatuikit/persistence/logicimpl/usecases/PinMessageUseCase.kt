@@ -6,12 +6,12 @@ import com.sceyt.chatuikit.data.models.createErrorResponse
 import com.sceyt.chatuikit.data.models.messages.SceytPinnedMessage
 import com.sceyt.chatuikit.persistence.database.dao.MessageDao
 import com.sceyt.chatuikit.persistence.database.dao.PinnedMessageDao
-import com.sceyt.chatuikit.persistence.database.entity.messages.PinSyncStateEntity
+import com.sceyt.chatuikit.data.models.messages.PinSyncState
 import com.sceyt.chatuikit.persistence.database.entity.messages.PinnedMessageEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.PinnedMessageEntity.Companion.UNKNOWN_SERVER_PIN_ID
-import com.sceyt.chatuikit.persistence.mappers.toPinScopeEntity
+import com.sceyt.chatuikit.persistence.mappers.toStoredPinScope
 import com.sceyt.chatuikit.persistence.mappers.toSceytMessage
-import com.sceyt.chatuikit.presentation.extensions.isEphemeral
+import com.sceyt.chatuikit.presentation.extensions.isDisappearing
 import com.sceyt.chatuikit.presentation.extensions.isPending
 import kotlinx.coroutines.sync.withLock
 
@@ -47,11 +47,11 @@ internal class PinMessageUseCase(
         val message = messageDb.toSceytMessage()
 
         // Ephemeral messages must not outlive their disappearance in the pin list.
-        if (message.isEphemeral())
+        if (message.isDisappearing())
             return createErrorResponse("Ephemeral messages cannot be pinned")
 
         val existing = pinnedMessageDao.getByTid(messageTid, channelId)
-        if (existing != null && existing.syncState != PinSyncStateEntity.PendingUnpin.value)
+        if (existing != null && existing.syncState != PinSyncState.PendingUnpin.value)
             return createErrorResponse("Message is already pinned")
 
         // Distinguish rapid pin/unpin/pin intents even within the same millisecond.
@@ -60,13 +60,13 @@ internal class PinMessageUseCase(
             messageTid = messageTid,
             channelId = channelId,
             messageId = message.id,
-            pinScope = pinType.toPinScopeEntity().value,
+            pinScope = pinType.toStoredPinScope().value,
             pinnedAt = now,
             pinnedUntil = null,
             pinnedByUserId = null,
             messageCreatedAt = message.createdAt,
             serverPinId = UNKNOWN_SERVER_PIN_ID,
-            syncState = PinSyncStateEntity.PendingPin.value,
+            syncState = PinSyncState.PendingPin.value,
             retryCount = 0,
             lastAttemptAt = now,
         )

@@ -251,7 +251,7 @@ internal class PersistenceChannelsLogicImpl(
                         channelsCache.updateLastMessage(message.channelId, null)
                     } else
                         channelsCache.updateLastMessage(message.channelId, message)
-                } else if (lastMessage.isRenderedFrom(message)) {
+                } else if (message.isParentOf(lastMessage)) {
                     channelsCache.updateLastMessage(
                         message.channelId,
                         lastMessage.copy(parentMessage = message)
@@ -266,9 +266,9 @@ internal class PersistenceChannelsLogicImpl(
         }
     }
 
-    private fun SceytMessage.isRenderedFrom(other: SceytMessage): Boolean {
-        val parent = parentMessage ?: return false
-        return parent.tid == other.tid || (other.id != 0L && parent.id == other.id)
+    private fun SceytMessage.isParentOf(other: SceytMessage): Boolean {
+        val parent = other.parentMessage ?: return false
+        return parent.tid == tid || (id != 0L && parent.id == id)
     }
 
     private suspend fun upsertChannelDbAndCache(channel: SceytChannel?) {

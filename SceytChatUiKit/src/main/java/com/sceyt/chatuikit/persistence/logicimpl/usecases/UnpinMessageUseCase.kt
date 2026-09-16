@@ -3,7 +3,7 @@ package com.sceyt.chatuikit.persistence.logicimpl.usecases
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.createErrorResponse
 import com.sceyt.chatuikit.persistence.database.dao.PinnedMessageDao
-import com.sceyt.chatuikit.persistence.database.entity.messages.PinSyncStateEntity
+import com.sceyt.chatuikit.data.models.messages.PinSyncState
 import com.sceyt.chatuikit.persistence.database.entity.messages.PinnedMessageEntity
 import kotlinx.coroutines.sync.withLock
 
@@ -37,7 +37,7 @@ internal class UnpinMessageUseCase(
         }
 
         // A pending pin may already be in flight. Retain removal until the server acknowledges it.
-        if (existing.syncState == PinSyncStateEntity.PendingPin.value && existing.messageId == 0L) {
+        if (existing.syncState == PinSyncState.PendingPin.value && existing.messageId == 0L) {
             pinnedMessageDao.deleteWithMirror(messageTid, channelId)
             refreshPinnedMessageCache(channelId, messageTid)
             return SceytResponse.Success(null)
@@ -48,7 +48,7 @@ internal class UnpinMessageUseCase(
         refreshPinnedMessageCache(channelId, messageTid)
 
         return SceytResponse.Success(existing.copy(
-            syncState = PinSyncStateEntity.PendingUnpin.value, lastAttemptAt = now
+            syncState = PinSyncState.PendingUnpin.value, lastAttemptAt = now
         ))
     }
 }

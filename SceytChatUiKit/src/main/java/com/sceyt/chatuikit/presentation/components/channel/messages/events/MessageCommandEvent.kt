@@ -42,6 +42,8 @@ sealed interface MessageCommandEvent {
 
     data object ScrollToUnreadMention : MessageCommandEvent
 
+    data class ScrollToPinnedMessage(val messageId: Long) : MessageCommandEvent
+
     data class ScrollToReplyMessage(
             val message: SceytMessage,
     ) : MessageCommandEvent
