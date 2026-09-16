@@ -12,11 +12,8 @@ import com.sceyt.chatuikit.persistence.logicimpl.usecases.SyncChannelPinsUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.UnpinMessageUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.UpdatePinnedMessagesUseCase
 import com.sceyt.chatuikit.persistence.mappers.toSceytPinnedMessage
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.sync.withLock
 
 internal class PersistencePinLogicImpl(
@@ -34,7 +31,6 @@ internal class PersistencePinLogicImpl(
         pinnedMessageDao
             .getPinnedMessagesFlow(channelId, System.currentTimeMillis())
             .map { list -> list.mapNotNull { it.toSceytPinnedMessage() } }
-            .observeUnexpiredPins()
 
     override suspend fun getPinnedMessages(channelId: Long): List<SceytPinnedMessage> =
         pinnedMessageDao
@@ -67,21 +63,5 @@ internal class PersistencePinLogicImpl(
 
     override suspend fun onMessageDeleted(channelId: Long, messageTid: Long) {
         pinUpdateMutex.withLock { pinnedMessageDao.deleteWithMirror(messageTid, channelId) }
-    }
-}
-
-@OptIn(ExperimentalCoroutinesApi::class)
-internal fun Flow<List<SceytPinnedMessage>>.observeUnexpiredPins(
-    currentTime: () -> Long = System::currentTimeMillis,
-): Flow<List<SceytPinnedMessage>> = transformLatest { pins ->
-    while (true) {
-        val now = currentTime()
-        val active = pins.filter { pin ->
-            pin.pinnedUntil == null || pin.pinnedUntil == 0L || pin.pinnedUntil > now
-        }
-        emit(active)
-        val nextExpiry = active.mapNotNull { it.pinnedUntil?.takeIf { expiry -> expiry > now } }
-            .minOrNull() ?: return@transformLatest
-        delay(nextExpiry - now)
     }
 }
