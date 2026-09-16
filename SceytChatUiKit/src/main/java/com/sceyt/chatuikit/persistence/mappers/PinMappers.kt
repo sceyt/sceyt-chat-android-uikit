@@ -10,7 +10,6 @@ import com.sceyt.chatuikit.persistence.database.entity.messages.PinScopeEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.PinSyncStateEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.PinnedMessageDb
 import com.sceyt.chatuikit.persistence.database.entity.messages.PinnedMessageEntity
-import com.sceyt.chatuikit.persistence.database.entity.messages.PinDetailsDb
 
 internal fun PinDetails.toSceytPinDetails() = SceytPinDetails(
     isPinned = isPinned,
@@ -22,18 +21,6 @@ internal fun SceytPinDetails.toPinDetails() = PinDetails(
     isPinned,
     pinnedTill,
     pinType.ordinal,
-)
-
-internal fun SceytPinDetails.toPinDetailsDb() = PinDetailsDb(
-    isPinned = isPinned,
-    pinnedTill = pinnedTill,
-    pinType = pinType,
-)
-
-internal fun PinDetailsDb.toSceytPinDetails() = SceytPinDetails(
-    isPinned = isPinned,
-    pinnedTill = pinnedTill,
-    pinType = pinType,
 )
 
 internal fun PinType.toPinScopeEntity() = when (this) {
@@ -107,10 +94,6 @@ internal fun SceytPinnedMessage.toPinnedMessageEntity(
     retryCount = 0,
     lastAttemptAt = 0L,
 )
-
-/**
- * Pin state for the message bubble, derived from the durable pin row.
- */
 internal fun PinnedMessageEntity.toSceytPinDetails(): SceytPinDetails? {
     if (syncState == PinSyncStateEntity.PendingUnpin.value) return null
     return SceytPinDetails(
@@ -118,4 +101,10 @@ internal fun PinnedMessageEntity.toSceytPinDetails(): SceytPinDetails? {
         pinnedTill = pinnedUntil ?: 0L,
         pinType = PinScopeEntity.fromValue(pinScope).toPinType(),
     )
+}
+
+internal fun PinScopeEntity.toPinTypeOrdinal(): Int = when (this) {
+    PinScopeEntity.ForMe -> PinType.PERSONAL.ordinal
+    PinScopeEntity.ForAll, PinScopeEntity.Unspecified ->
+        PinType.SHARED.ordinal
 }
