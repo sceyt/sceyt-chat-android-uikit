@@ -3,17 +3,17 @@ package com.sceyt.chatuikit.presentation.components.media.adapter.holders
 import android.annotation.SuppressLint
 import android.view.MotionEvent
 import android.view.View
+import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.annotation.OptIn
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.DefaultTimeBar
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.databinding.SceytMediaItemVideoBinding
-import com.sceyt.chatuikit.extensions.applySystemWindowInsetsPadding
 import com.sceyt.chatuikit.extensions.doSafe
+import com.sceyt.chatuikit.extensions.forceApplySystemWindowInsetsPadding
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.persistence.file_transfer.ThumbFor
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
@@ -48,7 +48,7 @@ class MediaVideoViewHolder(
 ) : BaseFileViewHolder<MediaItem>(binding.root, needMediaDataCallback),
     SharedTransitionViewProvider {
     private var playerHelper: ExoPlayerHelper? = null
-    private var videoController: ConstraintLayout? = null
+    private var videoController: FrameLayout? = null
     private val mediaAdapter by lazy { bindingAdapter as? MediaAdapter }
     private var pendingReadyCallback: (() -> Unit)? = null
     private var isOriginalImageReady = false
@@ -79,10 +79,10 @@ class MediaVideoViewHolder(
     private fun initVideoController() {
         doSafe { binding.videoView.controllerHideOnTouch = false }
         var isPlayingBeforePause = false
-        binding.videoView.findViewById<ConstraintLayout>(R.id.videoTimeContainer)
+        binding.videoView.findViewById<FrameLayout>(R.id.videoTimeContainer)
             ?.let { videoTimeContainer ->
                 with(videoTimeContainer) {
-                    applySystemWindowInsetsPadding(
+                    forceApplySystemWindowInsetsPadding(
                         applyBottom = true,
                         applyRight = true,
                         applyLeft = true
