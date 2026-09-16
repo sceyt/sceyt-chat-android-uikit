@@ -24,14 +24,14 @@ import org.mockito.kotlin.verifyBlocking
 import org.mockito.kotlin.whenever
 
 @RunWith(RobolectricTestRunner::class)
-class SyncChannelPinsUseCaseTest {
+class SyncChannelPinsControllerTest {
 
     private val pinnedMessageDao = mock<PinnedMessageDao>()
     private val pinRepository = mock<PinRepository>()
     private val sendPendingPinsUseCase = mock<SendPendingPinsUseCase>()
     private val storePinsUseCase = mock<StorePinsUseCase>()
 
-    private val useCase = SyncChannelPinsUseCase(
+    private val useCase = SyncChannelPinsController(
         pinnedMessageDao = pinnedMessageDao,
         pinRepository = pinRepository,
         sendPendingPinsUseCase = sendPendingPinsUseCase,

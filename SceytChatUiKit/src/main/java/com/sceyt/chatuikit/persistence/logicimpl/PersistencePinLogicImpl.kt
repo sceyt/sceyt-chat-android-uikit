@@ -8,7 +8,7 @@ import com.sceyt.chatuikit.persistence.database.dao.PinnedMessageDao
 import com.sceyt.chatuikit.persistence.logic.PersistencePinLogic
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.PinMessageUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.SendPendingPinsUseCase
-import com.sceyt.chatuikit.persistence.logicimpl.usecases.SyncChannelPinsUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.SyncChannelPinsController
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.UnpinMessageUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.UpdatePinnedMessagesUseCase
 import com.sceyt.chatuikit.persistence.mappers.toSceytPinnedMessage
@@ -20,7 +20,7 @@ internal class PersistencePinLogicImpl(
     private val pinnedMessageDao: PinnedMessageDao,
     private val pinMessageUseCase: PinMessageUseCase,
     private val unpinMessageUseCase: UnpinMessageUseCase,
-    private val syncChannelPinsUseCase: SyncChannelPinsUseCase,
+    private val syncChannelPinsController: SyncChannelPinsController,
     private val sendPendingPinsUseCase: SendPendingPinsUseCase,
     private val updatePinnedMessagesUseCase: UpdatePinnedMessagesUseCase,
 ) : PersistencePinLogic {
@@ -50,7 +50,7 @@ internal class PersistencePinLogicImpl(
     ): SceytResponse<Boolean> = unpinMessageUseCase(channelId, messageTid)
 
     override suspend fun syncChannelPins(channelId: Long) {
-        syncChannelPinsUseCase(channelId)
+        syncChannelPinsController(channelId)
     }
 
     override suspend fun sendAllPendingPins() {

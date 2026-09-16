@@ -8,7 +8,7 @@ import com.sceyt.chatuikit.persistence.repositories.PinRepository
 import kotlinx.coroutines.sync.withLock
 
 /** Sends pending intent before reconciling a complete server snapshot. */
-internal class SyncChannelPinsUseCase(
+internal class SyncChannelPinsController(
     private val pinnedMessageDao: PinnedMessageDao,
     private val pinRepository: PinRepository,
     private val sendPendingPinsUseCase: SendPendingPinsUseCase,
