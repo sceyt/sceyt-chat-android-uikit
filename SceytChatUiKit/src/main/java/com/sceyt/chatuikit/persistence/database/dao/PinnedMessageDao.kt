@@ -7,8 +7,8 @@ import androidx.room.Query
 import androidx.room.Transaction
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.MESSAGE_TABLE
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.PINNED_MESSAGE_TABLE
-import com.sceyt.chatuikit.persistence.database.entity.messages.PinScopeEntity
-import com.sceyt.chatuikit.persistence.database.entity.messages.PinSyncStates
+import com.sceyt.chatuikit.persistence.database.entity.messages.StoredPinScope
+import com.sceyt.chatuikit.data.models.messages.PinSyncStates
 import com.sceyt.chatuikit.persistence.database.entity.messages.PinnedMessageDb
 import com.sceyt.chatuikit.persistence.database.entity.messages.PinnedMessageEntity
 import com.sceyt.chatuikit.persistence.mappers.toPinTypeOrdinal
@@ -164,7 +164,7 @@ internal interface PinnedMessageDao {
             messageTid = entity.messageTid,
             isPinned = true,
             pinnedTill = entity.pinnedUntil ?: 0L,
-            pinType = PinScopeEntity.fromValue(entity.pinScope).toPinTypeOrdinal()
+            pinType = StoredPinScope.fromValue(entity.pinScope).toPinTypeOrdinal()
         )
     }
 

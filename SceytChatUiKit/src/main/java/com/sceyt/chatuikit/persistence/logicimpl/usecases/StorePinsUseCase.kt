@@ -4,7 +4,7 @@ import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chatuikit.data.models.messages.SceytPinnedMessage
 import com.sceyt.chatuikit.persistence.database.dao.MessageDao
 import com.sceyt.chatuikit.persistence.database.dao.PinnedMessageDao
-import com.sceyt.chatuikit.persistence.database.entity.messages.PinSyncStateEntity
+import com.sceyt.chatuikit.data.models.messages.PinSyncState
 import com.sceyt.chatuikit.persistence.mappers.getTid
 import com.sceyt.chatuikit.persistence.mappers.toMessageDb
 import com.sceyt.chatuikit.persistence.mappers.toPinnedMessageEntity
@@ -26,8 +26,8 @@ internal class StorePinsUseCase(
             val existingTid = messageDao.getMessageById(message.id)?.messageEntity?.tid
             val messageTid = existingTid ?: getTid(message.id, message.tid, message.incoming)
             val existingPin = pinnedMessageDao.getByTid(messageTid, channelId)
-            if (existingPin?.syncState == PinSyncStateEntity.PendingPin.value ||
-                existingPin?.syncState == PinSyncStateEntity.PendingUnpin.value
+            if (existingPin?.syncState == PinSyncState.PendingPin.value ||
+                existingPin?.syncState == PinSyncState.PendingUnpin.value
             ) return@forEach
 
             if (existingTid == null)

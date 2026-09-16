@@ -7,8 +7,8 @@ import com.sceyt.chatuikit.data.models.messages.SceytPinnedMessage
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.database.dao.PinnedMessageDao
-import com.sceyt.chatuikit.persistence.database.entity.messages.PinScopeEntity
-import com.sceyt.chatuikit.persistence.database.entity.messages.PinSyncStateEntity
+import com.sceyt.chatuikit.persistence.database.entity.messages.StoredPinScope
+import com.sceyt.chatuikit.data.models.messages.PinSyncState
 import com.sceyt.chatuikit.persistence.database.entity.messages.PinnedMessageEntity
 import com.sceyt.chatuikit.persistence.logic.SystemMessageSender
 import com.sceyt.chatuikit.persistence.mappers.toPinType
@@ -34,8 +34,8 @@ internal class SendPendingPinsUseCase(
             ?: pinnedMessageDao.getAllPending()
         pending.forEach { entity ->
             when (entity.syncState) {
-                PinSyncStateEntity.PendingPin.value -> sendPin(entity)
-                PinSyncStateEntity.PendingUnpin.value -> sendUnpin(entity)
+                PinSyncState.PendingPin.value -> sendPin(entity)
+                PinSyncState.PendingUnpin.value -> sendUnpin(entity)
             }
         }
     }
@@ -44,7 +44,7 @@ internal class SendPendingPinsUseCase(
         if (!localUpdateMutex.withLock { isCurrent(entity) })
             return@withLock SceytResponse.Success(null)
         if (entity.messageId == 0L) return@withLock SceytResponse.Success(null)
-        val pinType = PinScopeEntity.fromValue(entity.pinScope).toPinType()
+        val pinType = StoredPinScope.fromValue(entity.pinScope).toPinType()
         val response = pinRepository.pinMessages(
             channelId = entity.channelId,
             messageIds = listOf(entity.messageId),
@@ -109,7 +109,7 @@ internal class SendPendingPinsUseCase(
                 pinnedMessageDao.deleteWithMirror(entity.messageTid, entity.channelId)
             } else {
                 pinnedMessageDao.upsertWithMirror(
-                    entity.copy(syncState = PinSyncStateEntity.Synced.value, retryCount = 0)
+                    entity.copy(syncState = PinSyncState.Synced.value, retryCount = 0)
                 )
             }
             refreshPinnedMessageCache(entity.channelId, entity.messageTid)

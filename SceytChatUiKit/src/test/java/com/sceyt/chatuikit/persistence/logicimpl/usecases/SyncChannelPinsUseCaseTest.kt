@@ -3,7 +3,7 @@ package com.sceyt.chatuikit.persistence.logicimpl.usecases
 import com.sceyt.chatuikit.data.models.messages.SceytPinnedMessage
 import com.sceyt.chatuikit.data.models.SceytPagingResponse
 import com.sceyt.chatuikit.persistence.database.dao.PinnedMessageDao
-import com.sceyt.chatuikit.persistence.database.entity.messages.PinSyncStateEntity
+import com.sceyt.chatuikit.data.models.messages.PinSyncState
 import com.sceyt.chatuikit.persistence.repositories.PinRepository
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.flow.flowOf
@@ -137,7 +137,7 @@ class SyncChannelPinsUseCaseTest {
         whenever(pinRepository.getPinnedMessages(channelId))
             .thenReturn(flowOf(SceytPagingResponse.Success(emptyList(), hasNext = false)))
         whenever(pinnedMessageDao.getSyncedExcluding(any(), any())).thenReturn(
-            listOf(pinnedEntity(messageTid = 5L, syncState = PinSyncStateEntity.Synced.value))
+            listOf(pinnedEntity(messageTid = 5L, syncState = PinSyncState.Synced.value))
         )
 
         useCase(channelId)
