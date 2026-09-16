@@ -11,7 +11,7 @@ import com.sceyt.chatuikit.persistence.database.entity.messages.PinScopeEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.PinSyncStates
 import com.sceyt.chatuikit.persistence.database.entity.messages.PinnedMessageDb
 import com.sceyt.chatuikit.persistence.database.entity.messages.PinnedMessageEntity
-import com.sceyt.chatuikit.persistence.database.entity.messages.toPinTypeOrdinal
+import com.sceyt.chatuikit.persistence.mappers.toPinTypeOrdinal
 import kotlinx.coroutines.flow.Flow
 
 @Dao

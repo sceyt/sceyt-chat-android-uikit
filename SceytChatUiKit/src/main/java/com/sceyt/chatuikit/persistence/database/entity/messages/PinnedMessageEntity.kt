@@ -76,13 +76,3 @@ internal enum class PinSyncStateEntity(val value: Int) {
         fun fromValue(value: Int) = entries.firstOrNull { it.value == value } ?: Unspecified
     }
 }
-
-/**
- * The ordinal the pin mirror stores, matching `PinDetails.PinType` as written by
- * `MessageConverter.pinTypeToInt`.
- */
-internal fun PinScopeEntity.toPinTypeOrdinal(): Int = when (this) {
-    PinScopeEntity.ForMe -> com.sceyt.chat.models.message.PinDetails.PinType.PERSONAL.ordinal
-    PinScopeEntity.ForAll, PinScopeEntity.Unspecified ->
-        com.sceyt.chat.models.message.PinDetails.PinType.SHARED.ordinal
-}
