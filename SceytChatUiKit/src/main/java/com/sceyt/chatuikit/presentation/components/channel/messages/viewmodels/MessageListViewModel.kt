@@ -66,7 +66,6 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.events.PollE
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.ReactionEvent
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.bindings.LoadKeyType
 import com.sceyt.chatuikit.presentation.extensions.isNotPending
-import com.sceyt.chatuikit.presentation.extensions.systemMessageTargetId
 import com.sceyt.chatuikit.presentation.helpers.DebounceHelper
 import com.sceyt.chatuikit.presentation.helpers.DeferredTransferUpdateBuffer
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
@@ -566,7 +565,6 @@ class MessageListViewModel(
 
     fun prepareToScrollToReplyMessage(message: SceytMessage) {
         val parentMessageId = message.parentMessage?.id?.takeIf { it != 0L }
-            ?: message.systemMessageTargetId()
             ?: return
         _scrollCommands.tryEmit(MessageScrollCommand.ToReplyMessage(parentMessageId))
     }

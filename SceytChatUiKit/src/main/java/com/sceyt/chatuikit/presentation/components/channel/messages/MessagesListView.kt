@@ -90,6 +90,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.popups.Popup
 import com.sceyt.chatuikit.presentation.components.channel.messages.popups.ReactionsPopup
 import com.sceyt.chatuikit.presentation.extensions.getUpdateMessage
 import com.sceyt.chatuikit.presentation.extensions.isPending
+import com.sceyt.chatuikit.presentation.extensions.systemMessageTargetId
 import com.sceyt.chatuikit.presentation.helpers.KeyboardEventListener
 import com.sceyt.chatuikit.presentation.helpers.TransferUpdateUiPolicy
 import com.sceyt.chatuikit.presentation.root.PageState
@@ -196,6 +197,12 @@ class MessagesListView @JvmOverloads constructor(
             override fun onReplyMessageContainerClick(view: View, item: MessageItem) {
                 checkMaybeInMultiSelectMode(view, item.message) {
                     clickListeners.onReplyMessageContainerClick(view, item)
+                }
+            }
+
+            override fun onPinnedSystemMessageClick(view: View, item: MessageItem) {
+                checkMaybeInMultiSelectMode(view, item.message) {
+                    clickListeners.onPinnedSystemMessageClick(view, item)
                 }
             }
 
@@ -1092,6 +1099,11 @@ class MessagesListView @JvmOverloads constructor(
 
     override fun onReplyMessageContainerClick(view: View, item: MessageItem) {
         onReplyMessageContainerClick(item)
+    }
+
+    override fun onPinnedSystemMessageClick(view: View, item: MessageItem) {
+        val messageId = item.message.systemMessageTargetId() ?: return
+        messageCommandEventListener?.invoke(MessageCommandEvent.ScrollToPinnedMessage(messageId))
     }
 
     override fun onReplyCountClick(view: View, item: MessageItem) {
