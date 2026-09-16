@@ -1,3 +1,4 @@
+import com.sceyt.chat.Config
 import com.sceyt.chat.MainGradlePlugin
 import com.sceyt.chat.configureMavenPublishing
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -9,8 +10,9 @@ plugins {
 
 apply<MainGradlePlugin>()
 configureMavenPublishing(
-    artifactId = "sceyt-chat-connection",
-    artifactDescription = "Sceyt Chat connection and lifecycle management for Android"
+    artifactId = Config.ChatConnection.artifactId,
+    artifactDescription = Config.ChatConnection.description,
+    version = Config.ChatConnection.version
 )
 
 android {
