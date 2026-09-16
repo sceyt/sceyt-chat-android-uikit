@@ -1154,8 +1154,7 @@ class MessageInputView @JvmOverloads constructor(
     }
 
     override fun onRemoveAttachmentClick(item: AttachmentItem) {
-        attachmentsAdapter.removeItem(item)
-        allAttachments.remove(item.attachment)
+        removeAttachment(item)
         updateDraftMessage()
         determineInputState()
         // Delete file if it was copied to the app's internal storage
@@ -1163,6 +1162,12 @@ class MessageInputView @JvmOverloads constructor(
         val copedFileDir = File(context.filesDir, SceytConstants.CopyFileDirName)
         if (file.parent?.startsWith(copedFileDir.path) == true)
             doSafe { file.delete() }
+    }
+
+    private fun removeAttachment(item: AttachmentItem) {
+        attachmentsAdapter.removeItem(item)
+        allAttachments.remove(item.attachment)
+        filePickerHelper?.removeSavedPath(item.attachment.filePath)
     }
 
     override fun onAttachmentClick(item: AttachmentItem) {
@@ -1179,7 +1184,9 @@ class MessageInputView @JvmOverloads constructor(
         }.toTypedArray())
         // Remove attachments that are not in the picker result
         allAttachments.filter { item ->
-            item.type.isEqualsVideoOrImage() && items.none { mediaData -> mediaData.realPath == item.filePath }
+            item.type.isEqualsVideoOrImage()
+                    && !File(item.filePath).startsWith(context.filesDir)
+                    && items.none { mediaData -> mediaData.realPath == item.filePath }
         }.forEach { attachment ->
             val item = AttachmentItem(attachment)
             attachmentsAdapter.removeItem(item)
