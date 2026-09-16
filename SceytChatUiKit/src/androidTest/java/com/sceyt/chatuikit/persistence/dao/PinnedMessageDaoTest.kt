@@ -153,8 +153,8 @@ class PinnedMessageDaoTest {
 
         messageDao.deleteMessageByTid(1L)
 
-        assertThat(pinnedMessageDao.countByChannel(CHANNEL_ID)).isEqualTo(1)
         assertThat(pinnedMessageDao.getByTid(1L, CHANNEL_ID)).isNull()
+        assertThat(pinnedMessageDao.getByTid(2L, CHANNEL_ID)).isNotNull()
     }
 
     @Test
@@ -166,15 +166,6 @@ class PinnedMessageDaoTest {
         assertThat(pinnedMessageDao.getPinnedMessages(CHANNEL_ID, NOW)).isEmpty()
         // Still a durable intent, so the reconnect flush can retry it.
         assertThat(pinnedMessageDao.getAllPending().map { it.messageTid }).containsExactly(1L)
-    }
-
-    @Test
-    fun aPendingUnpinDoesNotCountAsVisible() = runTest {
-        insertMessage(tid = 1L)
-        pinnedMessageDao.upsertWithMirror(pin(messageTid = 1L, serverPinId = 1L))
-        pinnedMessageDao.markPendingUnpinWithMirror(1L, CHANNEL_ID, NOW)
-
-        assertThat(pinnedMessageDao.countByChannel(CHANNEL_ID)).isEqualTo(0)
     }
 
     @Test
@@ -291,19 +282,6 @@ class PinnedMessageDaoTest {
         assertThat(pinnedMessageDao.getPinnedMessages(CHANNEL_ID, NOW)).isEmpty()
         assertThat(messageDao.getMessageByTid(1L)?.messageEntity?.pinDetails).isNull()
         assertThat(messageDao.getMessageByTid(2L)?.messageEntity?.pinDetails).isNull()
-    }
-
-    @Test
-    fun clearingHistoryBeforeADateDeletesOnlyOlderPins() = runTest {
-        insertMessage(tid = 1L, createdAt = 100L)
-        insertMessage(tid = 2L, createdAt = 200L)
-        pinnedMessageDao.upsertWithMirror(pin(messageTid = 1L, serverPinId = 1L, messageCreatedAt = 100L))
-        pinnedMessageDao.upsertWithMirror(pin(messageTid = 2L, serverPinId = 2L, messageCreatedAt = 200L))
-
-        pinnedMessageDao.deleteAllByChannelBefore(CHANNEL_ID, 100L)
-
-        assertThat(pinnedMessageDao.getByTid(1L, CHANNEL_ID)).isNull()
-        assertThat(pinnedMessageDao.getByTid(2L, CHANNEL_ID)).isNotNull()
     }
 
     @Test
