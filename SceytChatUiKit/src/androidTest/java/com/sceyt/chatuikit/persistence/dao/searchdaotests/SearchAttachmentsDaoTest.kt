@@ -853,6 +853,7 @@ class SearchAttachmentsDaoTest {
         autoDeleteAt = null,
         forwardingDetailsDb = null,
         bodyAttribute = null,
+        pinDetails = null,
         disableMentionsCount = false,
         unList = unList,
     )

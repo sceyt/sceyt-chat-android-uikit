@@ -1,9 +1,11 @@
 package com.sceyt.chatuikit.formatters.defaults
 
 import android.content.Context
+import androidx.annotation.StringRes
 import com.google.gson.Gson
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.DisappearingMessageMetadata
 import com.sceyt.chatuikit.data.models.messages.MembersMetaData
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
@@ -12,6 +14,7 @@ import com.sceyt.chatuikit.data.models.messages.SystemMessageAction
 import com.sceyt.chatuikit.data.models.messages.SystemMessageAction.Companion.getTypeFromString
 import com.sceyt.chatuikit.extensions.formatDisappearingMessagesDuration
 import com.sceyt.chatuikit.formatters.Formatter
+import com.sceyt.chatuikit.presentation.extensions.isDeletedOrHardDeleted
 
 open class DefaultSystemMessageBodyFormatter : Formatter<SceytMessage> {
     override fun format(context: Context, from: SceytMessage): CharSequence {
@@ -72,9 +75,54 @@ open class DefaultSystemMessageBodyFormatter : Formatter<SceytMessage> {
                 string.toString()
             }
 
+            SystemMessageAction.PinMessage -> {
+                val parent = message.parentMessage
+                    ?.takeIf { !it.state.isDeletedOrHardDeleted() }
+                val preview = parent
+                    ?.let { pinnedPreview(context, it) }
+                    ?.takeIf { it.isNotBlank() }
+                val attachmentAnnouncement = parent?.attachmentAnnouncement()
+
+                when {
+                    preview == null -> context.getString(
+                        R.string.sceyt_pinned_a_message, fromName
+                    )
+
+                    attachmentAnnouncement != null -> context.getString(
+                        attachmentAnnouncement, fromName
+                    )
+
+                    else -> context.getString(R.string.sceyt_pinned_body, fromName, preview)
+                }
+            }
+
             else -> ""
         }
     }
+
+    @StringRes
+    protected open fun SceytMessage.attachmentAnnouncement(): Int? {
+        if (body.isNotBlank()) return null
+        return when (attachments?.firstOrNull()?.type) {
+            null -> null
+            AttachmentTypeEnum.Voice.value -> R.string.sceyt_pinned_voice_message
+            AttachmentTypeEnum.Image.value -> R.string.sceyt_pinned_photo_message
+            AttachmentTypeEnum.Video.value -> R.string.sceyt_pinned_video_message
+            else -> R.string.sceyt_pinned_file_message
+        }
+    }
+
+    protected open fun pinnedPreview(
+        context: Context,
+        parent: SceytMessage,
+    ): CharSequence = SceytChatUIKit.formatters.pinnedMessageBodyFormatter.format(
+        context,
+        com.sceyt.chatuikit.formatters.attributes.PinnedMessageBodyFormatterAttributes(
+            message = parent,
+            mentionTextStyle = com.sceyt.chatuikit.styles.common.TextStyle(),
+            deletedStateText = context.getString(R.string.sceyt_message_was_deleted),
+        )
+    )
 
     private fun initNames(
         context: Context,

@@ -14,6 +14,7 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
     private var messageLongClickListener: MessageClickListeners.MessageLongClickListener? = null
     private var avatarClickListener: MessageClickListeners.AvatarClickListener? = null
     private var replyMessageContainerClickListener: MessageClickListeners.ReplyMessageContainerClickListener? = null
+    private var pinnedSystemMessageClickListener: MessageClickListeners.PinnedSystemMessageClickListener? = null
     private var replyCountClickListener: MessageClickListeners.ReplyCountClickListener? = null
     private var addReactionClickListener: MessageClickListeners.AddReactionClickListener? = null
     private var reactionClickListener: MessageClickListeners.ReactionClickListener? = null
@@ -55,6 +56,11 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
     override fun onReplyMessageContainerClick(view: View, item: MessageListItem.MessageItem) {
         defaultListeners?.onReplyMessageContainerClick(view, item)
         replyMessageContainerClickListener?.onReplyMessageContainerClick(view, item)
+    }
+
+    override fun onPinnedSystemMessageClick(view: View, item: MessageListItem.MessageItem) {
+        defaultListeners?.onPinnedSystemMessageClick(view, item)
+        pinnedSystemMessageClickListener?.onPinnedSystemMessageClick(view, item)
     }
 
     override fun onReplyCountClick(view: View, item: MessageListItem.MessageItem) {
@@ -144,6 +150,7 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
                 messageLongClickListener = listener
                 avatarClickListener = listener
                 replyMessageContainerClickListener = listener
+                pinnedSystemMessageClickListener = listener
                 replyCountClickListener = listener
                 addReactionClickListener = listener
                 reactionClickListener = listener
@@ -176,6 +183,10 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
 
             is MessageClickListeners.ReplyMessageContainerClickListener -> {
                 replyMessageContainerClickListener = listener
+            }
+
+            is MessageClickListeners.PinnedSystemMessageClickListener -> {
+                pinnedSystemMessageClickListener = listener
             }
 
             is MessageClickListeners.ReplyCountClickListener -> {

@@ -7,10 +7,13 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.messages.DisappearingMessageMetadata
 import com.sceyt.chatuikit.data.models.messages.MembersMetaData
+import com.sceyt.chatuikit.data.models.messages.PinnedMessageMetadata
+import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytMessageType
 import com.sceyt.chatuikit.data.models.messages.SystemMessageAction
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
 import com.sceyt.chatuikit.persistence.logic.SystemMessageSender
+import com.sceyt.chatuikit.persistence.mappers.toMessage
 import com.sceyt.chatuikit.persistence.mappers.toUser
 
 class SystemMessageSenderImpl(
@@ -66,12 +69,24 @@ class SystemMessageSenderImpl(
         )
     }
 
+    override suspend fun sendMessagePinned(channelId: Long, pinnedMessageId: Long) {
+        sendSystemMessage(
+            channelId = channelId,
+            body = SystemMessageAction.PinMessage,
+            metadata = gson.toJson(PinnedMessageMetadata(pinnedMessageId.toString())),
+            parentMessageId = pinnedMessageId,
+            parentMessage = messagesLogic.getMessageFromDbById(pinnedMessageId),
+        )
+    }
+
     private suspend fun sendSystemMessage(
         channelId: Long,
         body: SystemMessageAction,
         metadata: String? = null,
         mentionedUsers: List<User>? = null,
         disableMentionsCount: Boolean = false,
+        parentMessageId: Long? = null,
+        parentMessage: SceytMessage? = null,
     ) {
         if (!SceytChatUIKit.config.systemMessagesConfig.isEnabled(body)) return
 
@@ -80,6 +95,9 @@ class SystemMessageSenderImpl(
             .withDisplayCount(0)
             .setSilent(true)
             .setBody(body.value)
+
+        parentMessageId?.takeIf { it != 0L }?.let(builder::setParentMessageId)
+        parentMessage?.let { builder.setParentMessage(it.toMessage()) }
 
         metadata?.let(builder::setMetadata)
         mentionedUsers?.takeIf { it.isNotEmpty() }?.let {

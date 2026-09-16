@@ -218,6 +218,8 @@ open class DefaultPushNotificationHandler(
                 showedNotifications.add(pushData.reaction.id)
                 false
             }
+
+            NotificationType.MessagePinned -> false
         }
     }
 }

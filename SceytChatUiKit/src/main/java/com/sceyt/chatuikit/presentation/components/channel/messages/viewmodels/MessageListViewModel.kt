@@ -25,6 +25,7 @@ import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.data.models.messages.SceytPinnedMessage
 import com.sceyt.chatuikit.data.models.onErrorNonNull
 import com.sceyt.chatuikit.data.models.onSuccessNotNull
 import com.sceyt.chatuikit.data.repositories.Keys.KEY_VIEW_ONCE_INFO_SHOWN
@@ -43,6 +44,8 @@ import com.sceyt.chatuikit.persistence.interactor.AttachmentInteractor
 import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
 import com.sceyt.chatuikit.persistence.interactor.ChannelMemberInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
+import com.sceyt.chat.models.message.PinDetails.PinType
+import com.sceyt.chatuikit.persistence.interactor.MessagePinInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessagePollInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageReactionInteractor
 import com.sceyt.chatuikit.persistence.interactor.UserInteractor
@@ -82,6 +85,9 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.withContext
@@ -99,6 +105,7 @@ class MessageListViewModel(
     internal val channelInteractor: ChannelInteractor by inject()
     private val messageReactionInteractor: MessageReactionInteractor by inject()
     private val messagePollInteractor: MessagePollInteractor by inject()
+    private val messagePinInteractor: MessagePinInteractor by inject()
     internal val attachmentInteractor: AttachmentInteractor by inject()
     internal val channelMemberInteractor: ChannelMemberInteractor by inject()
     internal val connectionLogic: PersistenceConnectionLogic by inject()
@@ -142,6 +149,11 @@ class MessageListViewModel(
     private val _syncCenteredMessageFlow = broadcastSharedFlow<CenteredSyncMessagesResult>()
     internal val syncCenteredMessageFlow = _syncCenteredMessageFlow.asSharedFlow()
 
+    internal val pinnedMessages: SharedFlow<List<SceytPinnedMessage>> by lazy {
+        messagePinInteractor.getPinnedMessagesFlow(channel.id)
+            .shareIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), replay = 1)
+    }
+
     // Message events
     val onNewMessageFlow: Flow<SceytMessage>
     val onNewOutGoingMessageFlow: Flow<SceytMessage>
@@ -166,6 +178,7 @@ class MessageListViewModel(
     private val mentionsController = createUnreadMentionsController()
     private val reactionController = createReactionController()
     private val pollController = createPollController()
+    private val pinController = createPinController()
     private val memberController = createChannelMemberController()
     private val draftController = createMessageDraftController()
     private val searchController = createMessageSearchController()
@@ -279,6 +292,7 @@ class MessageListViewModel(
     }
 
     fun loadInitialMessagesForCurrentChannel() {
+        syncPinnedMessages()
         val lastMessage = channel.lastMessage
         val lastDisplayedMessageId = channel.lastDisplayedMessageId
         val lastMessageId = lastMessage?.id ?: 0
@@ -334,6 +348,12 @@ class MessageListViewModel(
                     initPaginationResponse(it)
                 }
             }
+        }
+    }
+
+    fun syncPinnedMessages() {
+        viewModelScope.launch(Dispatchers.IO) {
+            messagePinInteractor.syncChannelPins(channel.id)
         }
     }
 
@@ -544,8 +564,14 @@ class MessageListViewModel(
     }
 
     fun prepareToScrollToReplyMessage(message: SceytMessage) {
-        val parentMessageId = message.parentMessage?.id ?: return
+        val parentMessageId = message.parentMessage?.id?.takeIf { it != 0L }
+            ?: return
         _scrollCommands.tryEmit(MessageScrollCommand.ToReplyMessage(parentMessageId))
+    }
+
+    fun prepareToScrollToPinnedMessage(messageId: Long) {
+        if (messageId == 0L) return
+        _scrollCommands.tryEmit(MessageScrollCommand.ToSearchMessage(messageId))
     }
 
     fun prepareToScrollToUnreadMention() {
@@ -823,6 +849,14 @@ class MessageListViewModel(
         pollController.onEvent(event)
     }
 
+    internal fun pinMessage(message: SceytMessage, pinType: PinType) {
+        pinController.pin(message, pinType)
+    }
+
+    internal fun unpinMessage(message: SceytMessage) {
+        pinController.unpin(message.tid)
+    }
+
     internal fun needMediaInfo(data: NeedMediaInfoData) {
         val attachment = data.item
         when (data) {
@@ -907,6 +941,15 @@ class MessageListViewModel(
     private fun createPollController() = PollController(
         scope = viewModelScope,
         pollInteractor = messagePollInteractor,
+        channelId = { channel.id },
+        notifyResponse = { response, showError ->
+            notifyPageStateWithResponse(response, showError = showError)
+        },
+    )
+
+    private fun createPinController() = PinController(
+        scope = viewModelScope,
+        pinInteractor = messagePinInteractor,
         channelId = { channel.id },
         notifyResponse = { response, showError ->
             notifyPageStateWithResponse(response, showError = showError)

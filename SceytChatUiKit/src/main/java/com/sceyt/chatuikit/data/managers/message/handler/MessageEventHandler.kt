@@ -2,6 +2,7 @@ package com.sceyt.chatuikit.data.managers.message.handler
 
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.data.models.messages.SceytPinnedMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
 import com.sceyt.chatuikit.data.models.messages.Vote
 
@@ -43,6 +44,15 @@ sealed interface MessageEventHandler {
         fun onPollClosed(message: SceytMessage)
     }
 
+    fun interface OnMessagesPinned : MessageEventHandler {
+        fun onMessagesPinned(channelId: Long, messages: List<SceytPinnedMessage>)
+    }
+
+    fun interface OnMessagesUnPinned : MessageEventHandler {
+        fun onMessagesUnPinned(channelId: Long, messages: List<SceytPinnedMessage>)
+    }
+
     interface AllEventManagers : OnMessage, OnDirectMessage, OnMessageDeleted, OnMessageEdited,
-        OnReactionAdded, OnReactionDeleted, OnVotesChanged, OnVoteRetracted, OnPollClosed
+        OnReactionAdded, OnReactionDeleted, OnVotesChanged, OnVoteRetracted, OnPollClosed,
+        OnMessagesPinned, OnMessagesUnPinned
 }

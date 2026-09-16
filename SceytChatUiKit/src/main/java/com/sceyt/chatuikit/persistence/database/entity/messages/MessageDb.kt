@@ -48,6 +48,9 @@ internal data class MessageDb(
 
     @Relation(parentColumn = "tid", entityColumn = "messageTid", entity = PollEntity::class)
     val poll: PollDb?,
+
+    @Relation(parentColumn = "tid", entityColumn = "messageTid")
+    val pinnedMessage: PinnedMessageEntity?,
 ) {
     val selfReactions get() = reactions?.filter { it.from?.id == SceytChatUIKit.chatUIFacade.myId }
 
