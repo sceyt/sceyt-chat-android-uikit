@@ -99,6 +99,7 @@ android {
 }
 
 dependencies {
+    implementation(project(":SceytChatConnection"))
     implementation(project(":SceytChatUiKit"))
     implementation(project(":SceytCallKit"))
 

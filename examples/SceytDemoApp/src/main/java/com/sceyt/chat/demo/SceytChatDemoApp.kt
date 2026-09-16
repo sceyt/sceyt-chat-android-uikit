@@ -7,10 +7,10 @@ import com.callclient.logger.CallLog
 import com.callclient.logger.CallLogLevel
 import com.callclient.logger.CallLogPriority
 import com.sceyt.chat.ChatClient
+import com.sceyt.chat.connection.SceytChatConnectionManager
 import com.sceyt.chat.demo.call.di.callModule
 import com.sceyt.chat.demo.call.manager.CallManager
-import com.sceyt.chat.demo.connection.ChatClientConnectionInterceptor
-import com.sceyt.chat.demo.connection.SceytConnectionProvider
+import com.sceyt.chat.demo.data.AppSharedPreference
 import com.sceyt.chat.demo.di.apiModule
 import com.sceyt.chat.demo.di.appModules
 import com.sceyt.chat.demo.di.repositoryModule
@@ -22,7 +22,7 @@ import com.sceyt.chat.models.SCTLogLevel
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.config.ChannelInviteDeepLinkConfig
 import com.sceyt.chatuikit.config.PushNotificationConfig
-import com.sceyt.chatuikit.providers.ChatTokenProvider
+import com.sceyt.chatuikit.providers.ChatConnectionProvider
 import com.sceyt.chatuikit.push.providers.firebase.FirebasePushServiceProvider
 import org.koin.android.ext.android.inject
 import org.koin.android.ext.koin.androidContext
@@ -30,8 +30,8 @@ import org.koin.core.context.startKoin
 import java.util.UUID
 
 class SceytChatDemoApp : Application() {
-    private val connectionProvider by inject<SceytConnectionProvider>()
-    private val chatClientConnectionInterceptor by inject<ChatClientConnectionInterceptor>()
+    private val connectionManager by inject<SceytChatConnectionManager>()
+    private val preference by inject<AppSharedPreference>()
     private val callManager by inject<CallManager>()
 
     override fun onCreate() {
@@ -44,14 +44,14 @@ class SceytChatDemoApp : Application() {
                     viewModelModules,
                     apiModule,
                     repositoryModule,
-                    callModule(onChatConnectNeeded = { connectionProvider.connectChatClient() })
+                    callModule(onChatConnectNeeded = { connectChatClient() })
                 )
             )
         }
 
         initSceyt()
         initCallClient()
-        connectionProvider.init()
+        connectChatClient()
     }
 
     private fun initSceyt() {
@@ -64,6 +64,7 @@ class SceytChatDemoApp : Application() {
         )
 
         SceytChatUIKit.navigator = DemoAppNavigator()
+        setupConnectionProvider()
         setupNotifications()
 
         ChatClient.setSceytLogLevel(SCTLogLevel.Info) { i: Int, s: String, s1: String ->
@@ -114,15 +115,25 @@ class SceytChatDemoApp : Application() {
             fileTransferServiceNotification.notificationBuilder =
                 CustomFileTransferNotificationBuilder(this@SceytChatDemoApp)
         }
+    }
 
-        // Sets the token provider for the SceytChatUIKit.
-        // This provider is responsible for supplying authentication tokens required by the ChatClient to establish a connection
-        // and mark messages as received when a push notification is received.
-        // It retrieves the current user's ID and uses it to fetch a chat token via the chat client connection interceptor.
-        SceytChatUIKit.chatTokenProvider = ChatTokenProvider {
-            val userId = SceytChatUIKit.currentUserId ?: return@ChatTokenProvider null
-            chatClientConnectionInterceptor.getChatToken(userId)
+    private fun setupConnectionProvider() {
+        SceytChatUIKit.chatConnectionProvider = ChatConnectionProvider { timeoutMillis ->
+            val userId = SceytChatUIKit.currentUserId
+                ?: preference.getString(AppSharedPreference.PREF_USER_ID)
+
+            if (userId.isNullOrBlank()) {
+                Result.failure(IllegalStateException("Current user is not available"))
+            } else {
+                connectionManager.connectAndAwait(userId, timeoutMillis)
+            }
         }
+    }
+
+    private fun connectChatClient() {
+        preference.getString(AppSharedPreference.PREF_USER_ID)
+            ?.takeIf { it.isNotBlank() }
+            ?.let(connectionManager::connect)
     }
 
     private fun initCallClient() {

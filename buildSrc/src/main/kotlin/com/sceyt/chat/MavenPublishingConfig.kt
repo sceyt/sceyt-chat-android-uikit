@@ -10,7 +10,10 @@ import org.gradle.plugins.signing.Sign
 import java.io.File
 import java.util.Properties
 
-fun Project.configureMavenPublishing() {
+fun Project.configureMavenPublishing(
+    artifactId: String = Config.mavenCentralArtifactId,
+    artifactDescription: String = "Sceyt Chat Android UIKit"
+) {
     plugins.apply("com.vanniktech.maven.publish")
     plugins.apply("maven-publish")
 
@@ -25,13 +28,13 @@ fun Project.configureMavenPublishing() {
     configure<MavenPublishBaseExtension> {
         coordinates(
             groupId = Config.mavenCentralGroup,
-            artifactId = Config.mavenCentralArtifactId,
+            artifactId = artifactId,
             version = Config.mavenCentralVersion
         )
 
         pom {
-            name.set(Config.mavenCentralArtifactId)
-            description.set("Sceyt Chat Android UIKit")
+            name.set(artifactId)
+            description.set(artifactDescription)
             url.set("https://github.com/sceyt/sceyt-chat-android-uikit")
 
             licenses {
