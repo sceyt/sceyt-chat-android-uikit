@@ -365,6 +365,10 @@ class MessagesListHeaderView @JvmOverloads constructor(
     }
 
     internal fun onConnectionStateUpdate(state: ConnectionState, channel: SceytChannel) = post {
+        eventListeners.onConnectionStateChanged(state, channel)
+    }
+
+    private fun renderConnectionState(state: ConnectionState, channel: SceytChannel) {
         if (state == ConnectionState.Connected) {
             val title = style.subtitleFormatter.format(context, channel)
             setSubTitleText(
@@ -372,7 +376,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
                 title = title,
                 visible = title.isNotBlank() && !haveUserAction && enableSubTitle(channel)
             )
-            return@post
+            return
         }
         val title = SceytChatUIKit.formatters.connectionStateTitleFormatter.format(
             context = context,
@@ -494,6 +498,10 @@ class MessagesListHeaderView @JvmOverloads constructor(
 
     override fun onPresenceUpdateEvent(channel: SceytChannel) {
         setPresenceUpdated(channel)
+    }
+
+    override fun onConnectionStateChanged(state: ConnectionState, channel: SceytChannel) {
+        renderConnectionState(state, channel)
     }
 
     //Ui elements listeners
