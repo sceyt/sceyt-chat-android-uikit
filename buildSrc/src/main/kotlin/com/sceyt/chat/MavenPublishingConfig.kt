@@ -10,7 +10,11 @@ import org.gradle.plugins.signing.Sign
 import java.io.File
 import java.util.Properties
 
-fun Project.configureMavenPublishing() {
+fun Project.configureMavenPublishing(
+    artifactId: String = Config.UiKit.artifactId,
+    artifactDescription: String = Config.UiKit.description,
+    version: String = Config.UiKit.version
+) {
     plugins.apply("com.vanniktech.maven.publish")
     plugins.apply("maven-publish")
 
@@ -25,13 +29,13 @@ fun Project.configureMavenPublishing() {
     configure<MavenPublishBaseExtension> {
         coordinates(
             groupId = Config.mavenCentralGroup,
-            artifactId = Config.mavenCentralArtifactId,
-            version = Config.mavenCentralVersion
+            artifactId = artifactId,
+            version = version
         )
 
         pom {
-            name.set(Config.mavenCentralArtifactId)
-            description.set("Sceyt Chat Android UIKit")
+            name.set(artifactId)
+            description.set(artifactDescription)
             url.set("https://github.com/sceyt/sceyt-chat-android-uikit")
 
             licenses {
@@ -58,7 +62,7 @@ fun Project.configureMavenPublishing() {
 
         // Remote publishing only
         if (!isLocalPublish) {
-            if (Config.mavenCentralVersion.contains("-SNAPSHOT")) {
+            if (version.contains("-SNAPSHOT")) {
                 publishSnapshotToMavenCentral()
             } else {
                 publishToMavenCentral(true)

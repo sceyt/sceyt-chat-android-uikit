@@ -1,8 +1,8 @@
 package com.sceyt.chat.demo.di
 
 import com.sceyt.chat.demo.BuildConfig
-import com.sceyt.chat.demo.connection.ChatClientConnectionInterceptor
-import com.sceyt.chat.demo.connection.SceytConnectionProvider
+import com.sceyt.chat.connection.ChatTokenProvider
+import com.sceyt.chat.connection.SceytChatConnectionManager
 import com.sceyt.chat.demo.data.AppSharedPreference
 import com.sceyt.chat.demo.data.AppSharedPreferenceImpl
 import com.sceyt.chat.demo.data.api.AuthApiService
@@ -32,8 +32,15 @@ const val VALIDATOR_SERVICE = "ValidatorService"
 
 val appModules = module {
     single<AppSharedPreference> { AppSharedPreferenceImpl(get()) }
-    single { ChatClientConnectionInterceptor(get(), get()) }
-    single { SceytConnectionProvider(get(), get(), get()) }
+    single<ChatTokenProvider> {
+        val connectionRepo = get<ConnectionRepo>()
+        ChatTokenProvider { userId ->
+            connectionRepo.getSceytToken(userId).getOrNull()?.token
+        }
+    }
+    single {
+        SceytChatConnectionManager(context = get(), tokenProvider = get())
+    }
 }
 
 val viewModelModules = module {
