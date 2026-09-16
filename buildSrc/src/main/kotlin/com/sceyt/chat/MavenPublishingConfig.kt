@@ -11,8 +11,9 @@ import java.io.File
 import java.util.Properties
 
 fun Project.configureMavenPublishing(
-    artifactId: String = Config.mavenCentralArtifactId,
-    artifactDescription: String = "Sceyt Chat Android UIKit"
+    artifactId: String = Config.UiKit.artifactId,
+    artifactDescription: String = Config.UiKit.description,
+    version: String = Config.UiKit.version
 ) {
     plugins.apply("com.vanniktech.maven.publish")
     plugins.apply("maven-publish")
@@ -29,7 +30,7 @@ fun Project.configureMavenPublishing(
         coordinates(
             groupId = Config.mavenCentralGroup,
             artifactId = artifactId,
-            version = Config.mavenCentralVersion
+            version = version
         )
 
         pom {
@@ -61,7 +62,7 @@ fun Project.configureMavenPublishing(
 
         // Remote publishing only
         if (!isLocalPublish) {
-            if (Config.mavenCentralVersion.contains("-SNAPSHOT")) {
+            if (version.contains("-SNAPSHOT")) {
                 publishSnapshotToMavenCentral()
             } else {
                 publishToMavenCentral(true)
