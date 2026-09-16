@@ -7,11 +7,11 @@ import androidx.room.Query
 import androidx.room.Transaction
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.MESSAGE_TABLE
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.PINNED_MESSAGE_TABLE
-import com.sceyt.chatuikit.persistence.database.entity.messages.PinScopeEntity
-import com.sceyt.chatuikit.persistence.database.entity.messages.PinSyncStates
+import com.sceyt.chatuikit.persistence.database.entity.messages.StoredPinScope
+import com.sceyt.chatuikit.data.models.messages.PinSyncStates
 import com.sceyt.chatuikit.persistence.database.entity.messages.PinnedMessageDb
 import com.sceyt.chatuikit.persistence.database.entity.messages.PinnedMessageEntity
-import com.sceyt.chatuikit.persistence.database.entity.messages.toPinTypeOrdinal
+import com.sceyt.chatuikit.persistence.mappers.toPinTypeOrdinal
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -56,9 +56,6 @@ internal interface PinnedMessageDao {
     @Query("SELECT * FROM $PINNED_MESSAGE_TABLE WHERE messageTid = :messageTid AND channelId = :channelId")
     suspend fun getByTid(messageTid: Long, channelId: Long): PinnedMessageEntity?
 
-    @Query("SELECT * FROM $PINNED_MESSAGE_TABLE WHERE messageId = :messageId AND channelId = :channelId")
-    suspend fun getByMessageId(messageId: Long, channelId: Long): PinnedMessageEntity?
-
     /** Every unacknowledged intent, oldest attempt first, across all channels. */
     @Query(
         """SELECT * FROM $PINNED_MESSAGE_TABLE
@@ -93,14 +90,8 @@ internal interface PinnedMessageDao {
         keepServerPinIds: List<Long>
     ): List<PinnedMessageEntity>
 
-    @Query("UPDATE $PINNED_MESSAGE_TABLE SET messageId = :messageId WHERE messageTid = :messageTid")
-    suspend fun updateMessageId(messageTid: Long, messageId: Long)
-
     @Query("UPDATE $PINNED_MESSAGE_TABLE SET retryCount = retryCount + 1, lastAttemptAt = :now WHERE messageTid = :messageTid AND channelId = :channelId")
     suspend fun incrementRetry(messageTid: Long, channelId: Long, now: Long)
-
-    @Query("UPDATE $PINNED_MESSAGE_TABLE SET channelId = :toChannelId WHERE channelId = :fromChannelId")
-    suspend fun moveToChannel(fromChannelId: Long, toChannelId: Long)
 
     @Query("DELETE FROM $PINNED_MESSAGE_TABLE WHERE messageTid = :messageTid AND channelId = :channelId")
     suspend fun deleteByTid(messageTid: Long, channelId: Long)
@@ -110,19 +101,6 @@ internal interface PinnedMessageDao {
 
     @Query("DELETE FROM $PINNED_MESSAGE_TABLE WHERE channelId = :channelId")
     suspend fun deleteAllByChannel(channelId: Long)
-
-    @Query("DELETE FROM $PINNED_MESSAGE_TABLE WHERE channelId = :channelId AND messageCreatedAt <= :before")
-    suspend fun deleteAllByChannelBefore(channelId: Long, before: Long)
-
-    /**
-     * Rows whose channel no longer exists. Room's foreign key covers the message side, but
-     * nothing links a pin to its channel, so channel deletion needs this sweep.
-     */
-    @Query("DELETE FROM $PINNED_MESSAGE_TABLE WHERE channelId NOT IN (SELECT chat_id FROM sceyt_channel_table)")
-    suspend fun pruneOrphans()
-
-    @Query("SELECT COUNT(*) FROM $PINNED_MESSAGE_TABLE WHERE channelId = :channelId AND syncState != ${PinSyncStates.PENDING_UNPIN}")
-    suspend fun countByChannel(channelId: Long): Int
 
     @Query(
         """UPDATE $MESSAGE_TABLE
@@ -164,7 +142,7 @@ internal interface PinnedMessageDao {
             messageTid = entity.messageTid,
             isPinned = true,
             pinnedTill = entity.pinnedUntil ?: 0L,
-            pinType = PinScopeEntity.fromValue(entity.pinScope).toPinTypeOrdinal()
+            pinType = StoredPinScope.fromValue(entity.pinScope).toPinTypeOrdinal()
         )
     }
 

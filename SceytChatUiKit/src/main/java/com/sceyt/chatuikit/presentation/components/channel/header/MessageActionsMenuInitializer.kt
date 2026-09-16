@@ -8,7 +8,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytMessageType
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.presentation.extensions.isDeletedOrHardDeleted
-import com.sceyt.chatuikit.presentation.extensions.isEphemeral
+import com.sceyt.chatuikit.presentation.extensions.isDisappearing
 import com.sceyt.chatuikit.presentation.extensions.isPending
 import com.sceyt.chatuikit.presentation.extensions.isSupportedType
 
@@ -67,7 +67,7 @@ internal object MessageActionsMenuInitializer {
         // — an existing pin must always be liftable, or it could be stranded.
         val canUnpin = isSingle && isPinned
         val canPin = isSingle && !isPinned && !anyPending && !isUnsupportedFirst &&
-                !firstMessage.isEphemeral() && !firstMessage.state.isDeletedOrHardDeleted()
+                !firstMessage.isDisappearing() && !firstMessage.state.isDeletedOrHardDeleted()
 
         menu.setVisible(R.id.sceyt_reply, canReply)
         menu.setVisible(R.id.sceyt_forward, canForward)

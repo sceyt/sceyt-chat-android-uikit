@@ -7,16 +7,11 @@ import com.sceyt.chatuikit.data.managers.message.event.PinUpdateEvent
 import com.sceyt.chatuikit.data.models.SceytPagingResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.persistence.database.SceytDatabase
-import com.sceyt.chatuikit.persistence.database.entity.messages.PinSyncStateEntity
+import com.sceyt.chatuikit.data.models.messages.PinSyncState
 import com.sceyt.chatuikit.persistence.logic.SystemMessageSender
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.ConfirmPinUseCase
-import com.sceyt.chatuikit.persistence.logicimpl.usecases.PinMessageUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.RefreshPinnedMessageCacheUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.SendPendingPinsUseCase
-import com.sceyt.chatuikit.persistence.logicimpl.usecases.StorePinsUseCase
-import com.sceyt.chatuikit.persistence.logicimpl.usecases.SyncChannelPinsUseCase
-import com.sceyt.chatuikit.persistence.logicimpl.usecases.UnpinMessageUseCase
-import com.sceyt.chatuikit.persistence.logicimpl.usecases.UpdatePinnedMessagesUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.messageDb
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.messageEntity
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.pinnedEntity
@@ -33,6 +28,10 @@ import kotlinx.coroutines.CoroutineStart
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
+import com.sceyt.chatuikit.persistence.di.useCaseModule
+import org.koin.core.KoinApplication
+import org.koin.dsl.koinApplication
+import org.koin.dsl.module
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -51,8 +50,9 @@ import org.robolectric.RuntimeEnvironment
 class PinnedMessagesPersistenceTest {
 
     private lateinit var database: SceytDatabase
+    private lateinit var dependencies: KoinApplication
     private val pinRepository = mock<PinRepository>()
-    private val cache = com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache()
+    private val cache = MessagesCache()
     private lateinit var refreshCache: RefreshPinnedMessageCacheUseCase
     private val systemMessageSender = mock<SystemMessageSender>()
     private lateinit var logic: PersistencePinLogicImpl
@@ -64,28 +64,41 @@ class PinnedMessagesPersistenceTest {
         ).allowMainThreadQueries().build()
         val dao = database.pinnedMessageDao()
         val messages = database.messageDao()
-        refreshCache = RefreshPinnedMessageCacheUseCase(messages, cache)
-        val confirm = ConfirmPinUseCase(dao)
-        val send = SendPendingPinsUseCase(dao, pinRepository, confirm, systemMessageSender, refreshCache)
-        val store = StorePinsUseCase(messages, dao, refreshCache)
+        dependencies = koinApplication {
+            modules(useCaseModule, module {
+                single { dao }
+                single { messages }
+                single { cache }
+                single { pinRepository }
+                single { systemMessageSender }
+            })
+        }
+        val koin = dependencies.koin
+        refreshCache = koin.get()
         logic = PersistencePinLogicImpl(
-            dao,
-            PinMessageUseCase(messages, dao, send, refreshCache),
-            UnpinMessageUseCase(dao, send, refreshCache),
-            SyncChannelPinsUseCase(dao, pinRepository, send, store, refreshCache),
-            send,
-            UpdatePinnedMessagesUseCase(messages, dao, refreshCache, store),
+            dao, koin.get(), koin.get(), koin.get(), koin.get(), koin.get()
         )
     }
 
     @After
-    fun tearDown() = database.close()
+    fun tearDown() {
+        dependencies.close()
+        database.close()
+    }
+
+    @Test
+    fun `dependency injection shares pin coordination locks across consumers`() {
+        val first = dependencies.koin.get<SendPendingPinsUseCase>()
+        val second = dependencies.koin.get<SendPendingPinsUseCase>()
+        assertThat(first.localUpdateMutex).isSameInstanceAs(second.localUpdateMutex)
+        assertThat(first.requestMutex).isSameInstanceAs(second.requestMutex)
+    }
 
     @Test
     fun `failed unpin followed by successful sync preserves removal intent`() = runTest {
         val dao = database.pinnedMessageDao()
         database.messageDao().upsertMessage(messageDb())
-        dao.upsertWithMirror(pinnedEntity(syncState = PinSyncStateEntity.Synced.value))
+        dao.upsertWithMirror(pinnedEntity(syncState = PinSyncState.Synced.value))
         whenever(pinRepository.unpinMessages(any(), any())).thenReturn(SceytResponse.Error(null))
         whenever(pinRepository.getPinnedMessages(7L)).thenReturn(
             flowOf(SceytPagingResponse.Success(listOf(sceytPinnedMessage()), hasNext = false))
@@ -94,7 +107,7 @@ class PinnedMessagesPersistenceTest {
         logic.unpinMessage(7L, 42L)
         logic.syncChannelPins(7L)
 
-        assertThat(dao.getByTid(42L, 7L)?.syncState).isEqualTo(PinSyncStateEntity.PendingUnpin.value)
+        assertThat(dao.getByTid(42L, 7L)?.syncState).isEqualTo(PinSyncState.PendingUnpin.value)
         assertThat(logic.getPinnedMessages(7L)).isEmpty()
         assertThat(database.messageDao().getMessageByTid(42L)?.messageEntity?.pinDetails).isNull()
     }
@@ -103,7 +116,7 @@ class PinnedMessagesPersistenceTest {
     fun `concurrent confirmations resolve the pending pin only once`() = runTest {
         val dao = database.pinnedMessageDao()
         database.messageDao().upsertMessage(messageDb())
-        dao.upsertWithMirror(pinnedEntity(syncState = PinSyncStateEntity.PendingPin.value))
+        dao.upsertWithMirror(pinnedEntity(syncState = PinSyncState.PendingPin.value))
         val confirm = ConfirmPinUseCase(dao)
 
         val responses = List(2) { async(Dispatchers.IO) { confirm(7L, 42L, 900L) } }.awaitAll()
@@ -116,13 +129,13 @@ class PinnedMessagesPersistenceTest {
     fun `a late pin acknowledgement cannot revive a pending unpin`() = runTest {
         val dao = database.pinnedMessageDao()
         database.messageDao().upsertMessage(messageDb())
-        dao.upsertWithMirror(pinnedEntity(syncState = PinSyncStateEntity.Synced.value))
+        dao.upsertWithMirror(pinnedEntity(syncState = PinSyncState.Synced.value))
         dao.markPendingUnpinWithMirror(42L, 7L, 1_000L)
 
         val result = ConfirmPinUseCase(dao)(7L, 42L, 900L)
 
         assertThat(result.didFlipPendingIntent).isFalse()
-        assertThat(dao.getByTid(42L, 7L)?.syncState).isEqualTo(PinSyncStateEntity.PendingUnpin.value)
+        assertThat(dao.getByTid(42L, 7L)?.syncState).isEqualTo(PinSyncState.PendingUnpin.value)
         assertThat(logic.getPinnedMessages(7L)).isEmpty()
     }
 
@@ -130,7 +143,7 @@ class PinnedMessagesPersistenceTest {
     fun `realtime unpin removes the stored outgoing pin when the server omits tid`() = runTest {
         val dao = database.pinnedMessageDao()
         database.messageDao().upsertMessage(messageDb(messageEntity(tid = 77L)))
-        dao.upsertWithMirror(pinnedEntity(messageTid = 77L, syncState = PinSyncStateEntity.Synced.value))
+        dao.upsertWithMirror(pinnedEntity(messageTid = 77L, syncState = PinSyncState.Synced.value))
 
         logic.onPinUpdated(PinUpdateEvent.Unpinned(
             7L, listOf(sceytPinnedMessage(message = sceytMessage(id = 42L, tid = 0L)))
@@ -187,20 +200,20 @@ class PinnedMessagesPersistenceTest {
         hidden.await()
         assertThat(cache.get(7L, 42L)?.pinDetails).isNull()
         assertThat(database.pinnedMessageDao().getByTid(42L, 7L)?.syncState)
-            .isEqualTo(PinSyncStateEntity.PendingUnpin.value)
+            .isEqualTo(PinSyncState.PendingUnpin.value)
 
         release.complete(Unit)
         pin.join()
         unpin.join()
         assertThat(cache.get(7L, 42L)?.pinDetails).isNull()
         assertThat(database.pinnedMessageDao().getByTid(42L, 7L)?.syncState)
-            .isEqualTo(PinSyncStateEntity.PendingUnpin.value)
+            .isEqualTo(PinSyncState.PendingUnpin.value)
     }
 
     @Test
     fun `repin refreshes the bubble before a stalled unpin returns`() = runTest {
         database.messageDao().upsertMessage(messageDb())
-        database.pinnedMessageDao().upsertWithMirror(pinnedEntity(syncState = PinSyncStateEntity.Synced.value))
+        database.pinnedMessageDao().upsertWithMirror(pinnedEntity(syncState = PinSyncState.Synced.value))
         cache.add(7L, sceytMessage())
         refreshCache(7L, 42L)
         val started = CompletableDeferred<Unit>()
@@ -230,7 +243,7 @@ class PinnedMessagesPersistenceTest {
         pin.join()
         assertThat(cache.get(7L, 42L)?.pinDetails?.isPinned).isTrue()
         assertThat(database.pinnedMessageDao().getByTid(42L, 7L)?.syncState)
-            .isEqualTo(PinSyncStateEntity.PendingPin.value)
+            .isEqualTo(PinSyncState.PendingPin.value)
     }
 
     @Test
@@ -302,7 +315,7 @@ class PinnedMessagesPersistenceTest {
 
         assertThat(cache.get(7L, 42L)?.pinDetails?.isPinned).isTrue()
         assertThat(database.pinnedMessageDao().getByTid(42L, 7L)?.syncState)
-            .isEqualTo(PinSyncStateEntity.Synced.value)
+            .isEqualTo(PinSyncState.Synced.value)
         verify(systemMessageSender, times(1)).sendMessagePinned(7L, 42L)
         verify(pinRepository, org.mockito.kotlin.never()).unpinMessages(any(), any())
     }

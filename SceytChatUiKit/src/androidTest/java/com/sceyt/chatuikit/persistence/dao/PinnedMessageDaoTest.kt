@@ -13,9 +13,9 @@ import com.sceyt.chatuikit.persistence.database.dao.MessageDao
 import com.sceyt.chatuikit.persistence.database.dao.PinnedMessageDao
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageDb
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageEntity
-import com.sceyt.chatuikit.persistence.database.entity.messages.PinSyncStateEntity
-import com.sceyt.chatuikit.persistence.database.entity.messages.PinSyncStates
-import com.sceyt.chatuikit.persistence.database.entity.messages.PinScopeEntity
+import com.sceyt.chatuikit.data.models.messages.PinSyncState
+import com.sceyt.chatuikit.data.models.messages.PinSyncStates
+import com.sceyt.chatuikit.persistence.database.entity.messages.StoredPinScope
 import com.sceyt.chatuikit.persistence.database.entity.messages.PinnedMessageEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.PinnedMessageEntity.Companion.UNKNOWN_SERVER_PIN_ID
 import kotlinx.coroutines.test.runTest
@@ -153,8 +153,8 @@ class PinnedMessageDaoTest {
 
         messageDao.deleteMessageByTid(1L)
 
-        assertThat(pinnedMessageDao.countByChannel(CHANNEL_ID)).isEqualTo(1)
         assertThat(pinnedMessageDao.getByTid(1L, CHANNEL_ID)).isNull()
+        assertThat(pinnedMessageDao.getByTid(2L, CHANNEL_ID)).isNotNull()
     }
 
     @Test
@@ -166,15 +166,6 @@ class PinnedMessageDaoTest {
         assertThat(pinnedMessageDao.getPinnedMessages(CHANNEL_ID, NOW)).isEmpty()
         // Still a durable intent, so the reconnect flush can retry it.
         assertThat(pinnedMessageDao.getAllPending().map { it.messageTid }).containsExactly(1L)
-    }
-
-    @Test
-    fun aPendingUnpinDoesNotCountAsVisible() = runTest {
-        insertMessage(tid = 1L)
-        pinnedMessageDao.upsertWithMirror(pin(messageTid = 1L, serverPinId = 1L))
-        pinnedMessageDao.markPendingUnpinWithMirror(1L, CHANNEL_ID, NOW)
-
-        assertThat(pinnedMessageDao.countByChannel(CHANNEL_ID)).isEqualTo(0)
     }
 
     @Test
@@ -223,7 +214,7 @@ class PinnedMessageDaoTest {
         insertMessage(tid = 1L)
 
         pinnedMessageDao.upsertWithMirror(
-            pin(messageTid = 1L, serverPinId = 1L, pinScope = PinScopeEntity.ForMe.value)
+            pin(messageTid = 1L, serverPinId = 1L, pinScope = StoredPinScope.ForMe.value)
         )
 
         assertThat(messageDao.getMessageByTid(1L)?.messageEntity?.pinDetails?.pinType)
@@ -246,7 +237,7 @@ class PinnedMessageDaoTest {
 
         val stored = pinnedMessageDao.getByTid(1L, CHANNEL_ID)
         assertThat(stored?.serverPinId).isEqualTo(500L)
-        assertThat(stored?.syncState).isEqualTo(PinSyncStateEntity.Synced.value)
+        assertThat(stored?.syncState).isEqualTo(PinSyncState.Synced.value)
         assertThat(stored?.retryCount).isEqualTo(0)
     }
 
@@ -276,7 +267,7 @@ class PinnedMessageDaoTest {
         val pending = pinnedMessageDao.getAllPending()
         assertThat(pending.map { it.messageTid }).containsExactly(2L, 1L).inOrder()
         assertThat(pending.last().retryCount).isEqualTo(1)
-        assertThat(pending.last().syncState).isEqualTo(PinSyncStateEntity.PendingPin.value)
+        assertThat(pending.last().syncState).isEqualTo(PinSyncState.PendingPin.value)
     }
 
     @Test
@@ -291,19 +282,6 @@ class PinnedMessageDaoTest {
         assertThat(pinnedMessageDao.getPinnedMessages(CHANNEL_ID, NOW)).isEmpty()
         assertThat(messageDao.getMessageByTid(1L)?.messageEntity?.pinDetails).isNull()
         assertThat(messageDao.getMessageByTid(2L)?.messageEntity?.pinDetails).isNull()
-    }
-
-    @Test
-    fun clearingHistoryBeforeADateDeletesOnlyOlderPins() = runTest {
-        insertMessage(tid = 1L, createdAt = 100L)
-        insertMessage(tid = 2L, createdAt = 200L)
-        pinnedMessageDao.upsertWithMirror(pin(messageTid = 1L, serverPinId = 1L, messageCreatedAt = 100L))
-        pinnedMessageDao.upsertWithMirror(pin(messageTid = 2L, serverPinId = 2L, messageCreatedAt = 200L))
-
-        pinnedMessageDao.deleteAllByChannelBefore(CHANNEL_ID, 100L)
-
-        assertThat(pinnedMessageDao.getByTid(1L, CHANNEL_ID)).isNull()
-        assertThat(pinnedMessageDao.getByTid(2L, CHANNEL_ID)).isNotNull()
     }
 
     @Test
@@ -365,9 +343,9 @@ class PinnedMessageDaoTest {
     private fun pin(
         messageTid: Long,
         serverPinId: Long,
-        syncState: Int = PinSyncStateEntity.Synced.value,
+        syncState: Int = PinSyncState.Synced.value,
         pinnedUntil: Long? = null,
-        pinScope: Int = PinScopeEntity.ForAll.value,
+        pinScope: Int = StoredPinScope.ForAll.value,
         messageCreatedAt: Long = messageTid,
         retryCount: Int = 0,
         lastAttemptAt: Long = 0L,

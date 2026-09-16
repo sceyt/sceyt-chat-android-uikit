@@ -117,14 +117,6 @@ internal class PinnedMessagesAdapter(
     }
 
     private companion object {
-        private fun SceytMessage.expansionChanged(other: SceytMessage) =
-            isBodyExpanded != other.isBodyExpanded
-
-        val GAP = 8.dpToPx()
-
-        val NAV_LANE = 52.dpToPx()
-
-        val NAVIGATION_BOTTOM_INSET = 4.dpToPx()
 
         val DIFF = object : DiffUtil.ItemCallback<MessageListItem>() {
             override fun areItemsTheSame(
@@ -155,5 +147,14 @@ internal class PinnedMessagesAdapter(
                 else diff
             }
         }
+
+        private fun SceytMessage.expansionChanged(other: SceytMessage) =
+            isBodyExpanded != other.isBodyExpanded
+
+        val GAP = 8.dpToPx()
+
+        val NAV_LANE = 52.dpToPx()
+
+        val NAVIGATION_BOTTOM_INSET = 4.dpToPx()
     }
 }

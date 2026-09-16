@@ -7,7 +7,7 @@ import com.sceyt.chat.models.message.PinDetails.PinType
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.SceytPinnedMessage
 import com.sceyt.chatuikit.persistence.database.dao.PinnedMessageDao
-import com.sceyt.chatuikit.persistence.database.entity.messages.PinSyncStateEntity
+import com.sceyt.chatuikit.data.models.messages.PinSyncState
 import com.sceyt.chatuikit.persistence.repositories.PinRepository
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
@@ -51,7 +51,7 @@ class SendPendingPinsUseCaseTest {
             listOf(
                 pinnedEntity(
                     messageId = 0L,
-                    syncState = PinSyncStateEntity.PendingPin.value,
+                    syncState = PinSyncState.PendingPin.value,
                 )
             )
         )
@@ -68,7 +68,7 @@ class SendPendingPinsUseCaseTest {
                 pinnedEntity(
                     pinScope = 1,
                     pinnedUntil = 9_000L,
-                    syncState = PinSyncStateEntity.PendingPin.value,
+                    syncState = PinSyncState.PendingPin.value,
                 )
             )
         )
@@ -85,7 +85,7 @@ class SendPendingPinsUseCaseTest {
     @Test
     fun `a failed pending pin remains queued and records another attempt`() = runTest {
         whenever(pinnedMessageDao.getPendingByChannel(7L)).thenReturn(
-            listOf(pinnedEntity(syncState = PinSyncStateEntity.PendingPin.value))
+            listOf(pinnedEntity(syncState = PinSyncState.PendingPin.value))
         )
         whenever(pinRepository.pinMessages(any(), any(), any(), anyOrNull()))
             .thenReturn(SceytResponse.Error(null))
@@ -102,7 +102,7 @@ class SendPendingPinsUseCaseTest {
             .thenReturn(ConfirmPinResponse(null, didFlipPendingIntent = false))
         val serverPin = sceytPinnedMessage(id = 900L)
         whenever(pinnedMessageDao.getPendingByChannel(7L)).thenReturn(
-            listOf(pinnedEntity(syncState = PinSyncStateEntity.PendingPin.value))
+            listOf(pinnedEntity(syncState = PinSyncState.PendingPin.value))
         )
         whenever(pinRepository.pinMessages(any(), any(), any(), anyOrNull()))
             .thenReturn(SceytResponse.Success(listOf(serverPin)))
@@ -117,7 +117,7 @@ class SendPendingPinsUseCaseTest {
         whenever(pinnedMessageDao.getPendingByChannel(7L)).thenReturn(
             listOf(
                 pinnedEntity(
-                    syncState = PinSyncStateEntity.PendingUnpin.value,
+                    syncState = PinSyncState.PendingUnpin.value,
                     messageId = 42L,
                 )
             )
@@ -134,7 +134,7 @@ class SendPendingPinsUseCaseTest {
     @Test
     fun `a failed pending unpin remains queued and records another attempt`() = runTest {
         whenever(pinnedMessageDao.getPendingByChannel(7L)).thenReturn(
-            listOf(pinnedEntity(syncState = PinSyncStateEntity.PendingUnpin.value))
+            listOf(pinnedEntity(syncState = PinSyncState.PendingUnpin.value))
         )
         whenever(pinRepository.unpinMessages(any(), any()))
             .thenReturn(SceytResponse.Error(null))
@@ -161,9 +161,9 @@ class SendPendingPinsUseCaseTest {
         whenever(pinRepository.pinMessages(any(), any(), any(), anyOrNull()))
             .thenAnswer { SceytResponse.Error<List<SceytPinnedMessage>>(error) }
 
-        org.mockito.kotlin.doReturn(pinnedEntity(syncState = PinSyncStateEntity.PendingPin.value))
+        org.mockito.kotlin.doReturn(pinnedEntity(syncState = PinSyncState.PendingPin.value))
             .whenever(pinnedMessageDao).getByTid(42L, 7L)
-        val response = useCase.sendPin(pinnedEntity(syncState = PinSyncStateEntity.PendingPin.value))
+        val response = useCase.sendPin(pinnedEntity(syncState = PinSyncState.PendingPin.value))
 
         assertThat((response as SceytResponse.Error).exception).isSameInstanceAs(error)
         verify(pinnedMessageDao).deleteWithMirror(42L, 7L)
@@ -176,14 +176,14 @@ class SendPendingPinsUseCaseTest {
         val error = mock<SceytException> { on { type }.thenReturn("NotAllowed") }
         whenever(pinRepository.unpinMessages(any(), any())).thenAnswer { SceytResponse.Error<List<SceytPinnedMessage>>(error) }
 
-        org.mockito.kotlin.doReturn(pinnedEntity(syncState = PinSyncStateEntity.PendingUnpin.value))
+        org.mockito.kotlin.doReturn(pinnedEntity(syncState = PinSyncState.PendingUnpin.value))
             .whenever(pinnedMessageDao).getByTid(42L, 7L)
-        val response = useCase.sendUnpin(pinnedEntity(syncState = PinSyncStateEntity.PendingUnpin.value))
+        val response = useCase.sendUnpin(pinnedEntity(syncState = PinSyncState.PendingUnpin.value))
 
         assertThat((response as SceytResponse.Error).exception).isSameInstanceAs(error)
         val restored = argumentCaptor<PinnedMessageEntity>()
         verify(pinnedMessageDao).upsertWithMirror(restored.capture())
-        assertThat(restored.firstValue.syncState).isEqualTo(PinSyncStateEntity.Synced.value)
+        assertThat(restored.firstValue.syncState).isEqualTo(PinSyncState.Synced.value)
         verifyBlocking(refreshPinnedMessageCache) { invoke(7L, 42L) }
         verify(pinnedMessageDao, never()).incrementRetry(any(), any(), any())
     }
@@ -193,9 +193,9 @@ class SendPendingPinsUseCaseTest {
         val error = mock<SceytException> { on { type }.thenReturn("NotFound") }
         whenever(pinRepository.unpinMessages(any(), any())).thenAnswer { SceytResponse.Error<List<SceytPinnedMessage>>(error) }
 
-        org.mockito.kotlin.doReturn(pinnedEntity(syncState = PinSyncStateEntity.PendingUnpin.value))
+        org.mockito.kotlin.doReturn(pinnedEntity(syncState = PinSyncState.PendingUnpin.value))
             .whenever(pinnedMessageDao).getByTid(42L, 7L)
-        useCase.sendUnpin(pinnedEntity(syncState = PinSyncStateEntity.PendingUnpin.value))
+        useCase.sendUnpin(pinnedEntity(syncState = PinSyncState.PendingUnpin.value))
 
         verify(pinnedMessageDao).deleteWithMirror(42L, 7L)
         verify(pinnedMessageDao, never()).upsertWithMirror(any())

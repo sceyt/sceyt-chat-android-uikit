@@ -70,8 +70,7 @@ fun SceytMessage?.setChatMessageDateAndStatusIcon(
     dateText: CharSequence,
     edited: Boolean,
 ) {
-    val showPin = this?.pinDetails?.isPinned == true &&
-            this.state?.isDeletedOrHardDeleted() != true
+    val showPin = this?.pinDetails?.isPinned == true && !this.state.isDeletedOrHardDeleted()
     val pinIcon = itemStyle.pinnedIcon.takeIf { showPin }
     val pinIconPadding = dpToPx(4f)
 
@@ -221,7 +220,7 @@ fun SceytMessage.isNotPending() = !isPending()
  * A message that is meant to disappear. Such a message cannot be pinned: the pin would
  * outlive the message it points at and keep it reachable after it vanished from the timeline.
  */
-fun SceytMessage.isEphemeral() =
+fun SceytMessage.isDisappearing() =
     isTransient || viewOnce || (autoDeleteAt ?: 0L) > 0L
 
 fun MessageState.isDeletedOrHardDeleted() =

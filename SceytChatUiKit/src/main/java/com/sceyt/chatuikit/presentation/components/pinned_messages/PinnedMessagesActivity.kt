@@ -13,7 +13,6 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -65,11 +64,7 @@ open class PinnedMessagesActivity : AppCompatActivity() {
     private lateinit var channel: SceytChannel
 
     private val viewModel: PinnedMessagesViewModel by viewModels {
-        object : ViewModelProvider.Factory {
-            @Suppress("UNCHECKED_CAST")
-            override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T =
-                PinnedMessagesViewModel(channel) as T
-        }
+        PinnedMessagesViewModelFactory(channel)
     }
 
     private val messagesListStyle: MessagesListViewStyle by lazy {
@@ -169,6 +164,8 @@ open class PinnedMessagesActivity : AppCompatActivity() {
         override fun onReplyMessageContainerClick(view: View, item: MessageItem) {
             item.message.parentMessage?.let(::finishWithJump)
         }
+
+        override fun onPinnedSystemMessageClick(view: View, item: MessageItem) = Unit
 
         override fun onPollOptionClick(view: View, item: MessageItem, option: PollOption) {
             viewModel.toggleVote(item.message, option)

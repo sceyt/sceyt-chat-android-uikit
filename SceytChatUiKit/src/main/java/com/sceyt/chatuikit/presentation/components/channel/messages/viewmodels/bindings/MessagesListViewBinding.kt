@@ -955,6 +955,10 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 prepareToScrollToUnreadMention()
             }
 
+            is MessageCommandEvent.ScrollToPinnedMessage -> {
+                prepareToScrollToPinnedMessage(event.messageId)
+            }
+
             is MessageCommandEvent.ScrollToReplyMessage -> {
                 prepareToScrollToReplyMessage(event.message)
             }

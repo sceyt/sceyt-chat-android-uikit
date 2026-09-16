@@ -66,7 +66,6 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.events.PollE
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.ReactionEvent
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.bindings.LoadKeyType
 import com.sceyt.chatuikit.presentation.extensions.isNotPending
-import com.sceyt.chatuikit.presentation.extensions.systemMessageTargetId
 import com.sceyt.chatuikit.presentation.helpers.DebounceHelper
 import com.sceyt.chatuikit.presentation.helpers.DeferredTransferUpdateBuffer
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
@@ -149,6 +148,11 @@ class MessageListViewModel(
 
     private val _syncCenteredMessageFlow = broadcastSharedFlow<CenteredSyncMessagesResult>()
     internal val syncCenteredMessageFlow = _syncCenteredMessageFlow.asSharedFlow()
+
+    internal val pinnedMessages: SharedFlow<List<SceytPinnedMessage>> by lazy {
+        messagePinInteractor.getPinnedMessagesFlow(channel.id)
+            .shareIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), replay = 1)
+    }
 
     // Message events
     val onNewMessageFlow: Flow<SceytMessage>
@@ -561,14 +565,8 @@ class MessageListViewModel(
 
     fun prepareToScrollToReplyMessage(message: SceytMessage) {
         val parentMessageId = message.parentMessage?.id?.takeIf { it != 0L }
-            ?: message.systemMessageTargetId()
             ?: return
         _scrollCommands.tryEmit(MessageScrollCommand.ToReplyMessage(parentMessageId))
-    }
-
-    internal val pinnedMessages: SharedFlow<List<SceytPinnedMessage>> by lazy {
-        messagePinInteractor.getPinnedMessagesFlow(channel.id)
-            .shareIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), replay = 1)
     }
 
     fun prepareToScrollToPinnedMessage(messageId: Long) {

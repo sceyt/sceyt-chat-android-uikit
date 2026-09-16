@@ -14,13 +14,6 @@
         app:sceytUiToolbarTitle="@string/sceyt_pinned_messages"
         tools:navigationIcon="@drawable/sceyt_ic_arrow_back" />
 
-    <!--
-      Takes over the toolbar's title area while a message is selected, exactly as it does in
-      the conversation header, so the same menu and the same icons appear on both screens. It
-      carries no navigation icon of its own: the toolbar's back arrow stays visible beside it
-      and doubles as "clear the selection", and MessageActionsToolbar expects its first child
-      to be the menu.
-    -->
     <com.sceyt.chatuikit.presentation.components.channel.header.MessageActionsToolbar
         android:id="@+id/toolbarMessageActions"
         android:layout_width="0dp"
