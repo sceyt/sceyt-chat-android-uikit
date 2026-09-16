@@ -10,13 +10,8 @@ import com.sceyt.chatuikit.persistence.database.SceytDatabase
 import com.sceyt.chatuikit.data.models.messages.PinSyncState
 import com.sceyt.chatuikit.persistence.logic.SystemMessageSender
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.ConfirmPinUseCase
-import com.sceyt.chatuikit.persistence.logicimpl.usecases.PinMessageUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.RefreshPinnedMessageCacheUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.SendPendingPinsUseCase
-import com.sceyt.chatuikit.persistence.logicimpl.usecases.StorePinsUseCase
-import com.sceyt.chatuikit.persistence.logicimpl.usecases.SyncChannelPinsUseCase
-import com.sceyt.chatuikit.persistence.logicimpl.usecases.UnpinMessageUseCase
-import com.sceyt.chatuikit.persistence.logicimpl.usecases.UpdatePinnedMessagesUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.messageDb
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.messageEntity
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.pinnedEntity
@@ -33,6 +28,10 @@ import kotlinx.coroutines.CoroutineStart
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
+import com.sceyt.chatuikit.persistence.di.useCaseModule
+import org.koin.core.KoinApplication
+import org.koin.dsl.koinApplication
+import org.koin.dsl.module
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -51,8 +50,9 @@ import org.robolectric.RuntimeEnvironment
 class PinnedMessagesPersistenceTest {
 
     private lateinit var database: SceytDatabase
+    private lateinit var dependencies: KoinApplication
     private val pinRepository = mock<PinRepository>()
-    private val cache = com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache()
+    private val cache = MessagesCache()
     private lateinit var refreshCache: RefreshPinnedMessageCacheUseCase
     private val systemMessageSender = mock<SystemMessageSender>()
     private lateinit var logic: PersistencePinLogicImpl
@@ -64,22 +64,35 @@ class PinnedMessagesPersistenceTest {
         ).allowMainThreadQueries().build()
         val dao = database.pinnedMessageDao()
         val messages = database.messageDao()
-        refreshCache = RefreshPinnedMessageCacheUseCase(messages, cache)
-        val confirm = ConfirmPinUseCase(dao)
-        val send = SendPendingPinsUseCase(dao, pinRepository, confirm, systemMessageSender, refreshCache)
-        val store = StorePinsUseCase(messages, dao, refreshCache)
+        dependencies = koinApplication {
+            modules(useCaseModule, module {
+                single { dao }
+                single { messages }
+                single { cache }
+                single { pinRepository }
+                single { systemMessageSender }
+            })
+        }
+        val koin = dependencies.koin
+        refreshCache = koin.get()
         logic = PersistencePinLogicImpl(
-            dao,
-            PinMessageUseCase(messages, dao, send, refreshCache),
-            UnpinMessageUseCase(dao, send, refreshCache),
-            SyncChannelPinsUseCase(dao, pinRepository, send, store, refreshCache),
-            send,
-            UpdatePinnedMessagesUseCase(messages, dao, refreshCache, store),
+            dao, koin.get(), koin.get(), koin.get(), koin.get(), koin.get()
         )
     }
 
     @After
-    fun tearDown() = database.close()
+    fun tearDown() {
+        dependencies.close()
+        database.close()
+    }
+
+    @Test
+    fun `dependency injection shares pin coordination locks across consumers`() {
+        val first = dependencies.koin.get<SendPendingPinsUseCase>()
+        val second = dependencies.koin.get<SendPendingPinsUseCase>()
+        assertThat(first.localUpdateMutex).isSameInstanceAs(second.localUpdateMutex)
+        assertThat(first.requestMutex).isSameInstanceAs(second.requestMutex)
+    }
 
     @Test
     fun `failed unpin followed by successful sync preserves removal intent`() = runTest {
