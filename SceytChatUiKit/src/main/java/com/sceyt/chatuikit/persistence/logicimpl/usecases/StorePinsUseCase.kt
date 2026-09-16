@@ -8,7 +8,7 @@ import com.sceyt.chatuikit.data.models.messages.PinSyncState
 import com.sceyt.chatuikit.persistence.mappers.getTid
 import com.sceyt.chatuikit.persistence.mappers.toMessageDb
 import com.sceyt.chatuikit.persistence.mappers.toPinnedMessageEntity
-import com.sceyt.chatuikit.presentation.extensions.isEphemeral
+import com.sceyt.chatuikit.presentation.extensions.isDisappearing
 
 internal class StorePinsUseCase(
     private val messageDao: MessageDao,
@@ -19,7 +19,7 @@ internal class StorePinsUseCase(
     suspend operator fun invoke(channelId: Long, pins: List<SceytPinnedMessage>) {
         pins.forEach { pin ->
             val message = pin.message
-            if (message.id == 0L || message.isEphemeral() ||
+            if (message.id == 0L || message.isDisappearing() ||
                 message.state == MessageState.Deleted || message.state == MessageState.DeletedHard
             ) return@forEach
 

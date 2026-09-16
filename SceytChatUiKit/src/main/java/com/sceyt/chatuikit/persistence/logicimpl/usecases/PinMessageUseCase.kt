@@ -11,7 +11,7 @@ import com.sceyt.chatuikit.persistence.database.entity.messages.PinnedMessageEnt
 import com.sceyt.chatuikit.persistence.database.entity.messages.PinnedMessageEntity.Companion.UNKNOWN_SERVER_PIN_ID
 import com.sceyt.chatuikit.persistence.mappers.toStoredPinScope
 import com.sceyt.chatuikit.persistence.mappers.toSceytMessage
-import com.sceyt.chatuikit.presentation.extensions.isEphemeral
+import com.sceyt.chatuikit.presentation.extensions.isDisappearing
 import com.sceyt.chatuikit.presentation.extensions.isPending
 import kotlinx.coroutines.sync.withLock
 
@@ -47,7 +47,7 @@ internal class PinMessageUseCase(
         val message = messageDb.toSceytMessage()
 
         // Ephemeral messages must not outlive their disappearance in the pin list.
-        if (message.isEphemeral())
+        if (message.isDisappearing())
             return createErrorResponse("Ephemeral messages cannot be pinned")
 
         val existing = pinnedMessageDao.getByTid(messageTid, channelId)
