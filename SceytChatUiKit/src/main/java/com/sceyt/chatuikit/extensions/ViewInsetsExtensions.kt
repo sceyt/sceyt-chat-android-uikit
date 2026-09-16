@@ -105,6 +105,25 @@ fun View.applyRoundedCorners(insets: WindowInsets?) {
     }
 }
 
+fun View.forceApplySystemWindowInsetsPadding(
+    applyLeft: Boolean = false,
+    applyTop: Boolean = false,
+    applyRight: Boolean = false,
+    applyBottom: Boolean = false,
+){
+    setOnApplyWindowInsetsListener { view, insets ->
+        val insetsCompat = WindowInsetsCompat.toWindowInsetsCompat(insets)
+        val left = if (applyLeft) insetsCompat.getInsetsIgnoringVisibility(WindowInsetsCompat.Type.systemBars()).left else 0
+        val top = if (applyTop) insetsCompat.getInsetsIgnoringVisibility(WindowInsetsCompat.Type.systemBars()).top else 0
+        val right = if (applyRight) insetsCompat.getInsetsIgnoringVisibility(WindowInsetsCompat.Type.systemBars()).right else 0
+        val bottom = if (applyBottom) insetsCompat.getInsetsIgnoringVisibility(WindowInsetsCompat.Type.systemBars()).bottom else 0
+
+        view.setPadding(left, top, right, bottom)
+        insets
+    }
+    requestApplyInsetsWhenAttached()
+}
+
 fun View.applySystemWindowInsetsPadding(
         applyLeft: Boolean = false,
         applyTop: Boolean = false,

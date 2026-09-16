@@ -5,91 +5,94 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <FrameLayout
         android:id="@+id/videoTimeContainer"
-        android:contentDescription="@string/sceyt_cd_video_time"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
         android:background="@color/sceyt_media_primary_color"
         android:clickable="true"
-        android:focusable="true"
-        android:padding="10dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
+        android:contentDescription="@string/sceyt_cd_video_time"
+        android:focusable="true">
 
-        <com.sceyt.chatuikit.presentation.custom_views.PlayPauseImage
-            android:id="@id/exo_play_pause"
-            android:contentDescription="@string/sceyt_cd_play_or_pause"
-            android:layout_width="wrap_content"
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:background="?selectableItemBackgroundBorderless"
-            android:padding="5dp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/sceyt_ic_pause" />
+            android:padding="10dp">
 
-        <androidx.media3.ui.DefaultTimeBar
-            android:id="@+id/exo_progress"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginStart="7dp"
-            android:layout_marginEnd="7dp"
-            android:layout_weight="1"
-            app:buffered_color="#757D8B"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/exo_position"
-            app:layout_constraintStart_toEndOf="@+id/exo_play_pause"
-            app:layout_constraintTop_toTopOf="parent"
-            app:played_color="@color/sceyt_color_on_primary"
-            app:scrubber_color="@color/sceyt_color_on_primary"
-            app:unplayed_color="@color/sceyt_color_icon_secondary" />
+            <com.sceyt.chatuikit.presentation.custom_views.PlayPauseImage
+                android:id="@id/exo_play_pause"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:background="?selectableItemBackgroundBorderless"
+                android:contentDescription="@string/sceyt_cd_play_or_pause"
+                android:padding="5dp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:srcCompat="@drawable/sceyt_ic_pause" />
 
-        <androidx.appcompat.widget.AppCompatTextView
-            android:id="@id/exo_position"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:gravity="end"
-            android:minWidth="50dp"
-            android:textColor="@color/sceyt_color_on_primary"
-            android:textSize="13sp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/tvMiddle"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="00:00" />
+            <androidx.media3.ui.DefaultTimeBar
+                android:id="@+id/exo_progress"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginStart="7dp"
+                android:layout_marginEnd="7dp"
+                android:layout_weight="1"
+                app:buffered_color="#757D8B"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/exo_position"
+                app:layout_constraintStart_toEndOf="@+id/exo_play_pause"
+                app:layout_constraintTop_toTopOf="parent"
+                app:played_color="@color/sceyt_color_on_primary"
+                app:scrubber_color="@color/sceyt_color_on_primary"
+                app:unplayed_color="@color/sceyt_color_icon_secondary" />
 
-        <androidx.appcompat.widget.AppCompatTextView
-            android:id="@+id/tvMiddle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:paddingHorizontal="3dp"
-            android:singleLine="true"
-            android:text="/"
-            android:textColor="@color/sceyt_color_on_primary"
-            android:textSize="13sp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/exo_duration"
-            app:layout_constraintHorizontal_bias="0.5"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:ignore="HardcodedText" />
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@id/exo_position"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="end"
+                android:minWidth="50dp"
+                android:textColor="@color/sceyt_color_on_primary"
+                android:textSize="13sp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/tvMiddle"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:text="00:00" />
 
-        <androidx.appcompat.widget.AppCompatTextView
-            android:id="@id/exo_duration"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:minWidth="50dp"
-            android:textColor="@color/sceyt_color_on_primary"
-            android:textSize="13sp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="00:00" />
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tvMiddle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="3dp"
+                android:singleLine="true"
+                android:text="/"
+                android:textColor="@color/sceyt_color_on_primary"
+                android:textSize="13sp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/exo_duration"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:ignore="HardcodedText" />
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@id/exo_duration"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:minWidth="50dp"
+                android:textColor="@color/sceyt_color_on_primary"
+                android:textSize="13sp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:text="00:00" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </FrameLayout>
 
 </FrameLayout>
