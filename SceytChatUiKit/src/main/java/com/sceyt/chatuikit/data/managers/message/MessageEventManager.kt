@@ -143,16 +143,18 @@ object MessageEventManager : AllEventManagers {
             }
 
             override fun onMessagesPinned(channelId: Long, messages: List<PinnedMessage>?) {
+                messages ?: return
                 eventManager.onMessagesPinned(
                     channelId = channelId,
-                    messages = messages?.mapNotNull { it.toSceytPinnedMessage(channelId) }.orEmpty()
+                    messages = messages.mapNotNull { it.toSceytPinnedMessage(channelId) }
                 )
             }
 
             override fun onMessagesUnPinned(channelId: Long, messages: List<PinnedMessage>?) {
+                messages ?: return
                 eventManager.onMessagesUnPinned(
                     channelId = channelId,
-                    messages = messages?.mapNotNull { it.toSceytPinnedMessage(channelId) }.orEmpty()
+                    messages = messages.mapNotNull { it.toSceytPinnedMessage(channelId) }
                 )
             }
         })
