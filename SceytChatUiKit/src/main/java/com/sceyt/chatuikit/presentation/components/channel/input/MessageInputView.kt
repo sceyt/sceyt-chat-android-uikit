@@ -1179,19 +1179,18 @@ class MessageInputView @JvmOverloads constructor(
     }
 
     private fun onMediaPicked(items: List<BottomSheetMediaPicker.SelectedMediaData>) {
-        addAttachment(*items.map { mediaData ->
-            mediaData.mediaType.value to mediaData.realPath
-        }.toTypedArray())
         // Remove attachments that are not in the picker result
         allAttachments.filter { item ->
             item.type.isEqualsVideoOrImage()
                     && !File(item.filePath).startsWith(context.filesDir)
                     && items.none { mediaData -> mediaData.realPath == item.filePath }
         }.forEach { attachment ->
-            val item = AttachmentItem(attachment)
-            attachmentsAdapter.removeItem(item)
-            allAttachments.remove(attachment)
+            removeAttachment(AttachmentItem(attachment))
         }
+        // Save the draft after applying deselections so recreation restores the current selection.
+        addAttachment(*items.map { mediaData ->
+            mediaData.mediaType.value to mediaData.realPath
+        }.toTypedArray())
     }
 
     override fun onAttachedToWindow() {
