@@ -150,6 +150,11 @@ class MessageListViewModel(
     private val _syncCenteredMessageFlow = broadcastSharedFlow<CenteredSyncMessagesResult>()
     internal val syncCenteredMessageFlow = _syncCenteredMessageFlow.asSharedFlow()
 
+    internal val pinnedMessages: SharedFlow<List<SceytPinnedMessage>> by lazy {
+        messagePinInteractor.getPinnedMessagesFlow(channel.id)
+            .shareIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), replay = 1)
+    }
+
     // Message events
     val onNewMessageFlow: Flow<SceytMessage>
     val onNewOutGoingMessageFlow: Flow<SceytMessage>
@@ -564,11 +569,6 @@ class MessageListViewModel(
             ?: message.systemMessageTargetId()
             ?: return
         _scrollCommands.tryEmit(MessageScrollCommand.ToReplyMessage(parentMessageId))
-    }
-
-    internal val pinnedMessages: SharedFlow<List<SceytPinnedMessage>> by lazy {
-        messagePinInteractor.getPinnedMessagesFlow(channel.id)
-            .shareIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), replay = 1)
     }
 
     fun prepareToScrollToPinnedMessage(messageId: Long) {
