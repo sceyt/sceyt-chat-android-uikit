@@ -3,6 +3,7 @@ package com.sceyt.chatuikit.data.managers.message
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.message.Message
+import com.sceyt.chat.models.message.PinnedMessage
 import com.sceyt.chat.models.message.Reaction
 import com.sceyt.chat.models.poll.PollVote
 import com.sceyt.chat.sceyt_listeners.MessageListener
@@ -129,6 +130,20 @@ object MessageEventManager : AllEventManagers {
             override fun onPollClosed(message: Message?) {
                 message ?: return
                 eventManager.onPollClosed(message.toSceytUiMessage())
+            }
+
+            override fun onMessagesPinned(
+                channelId: Long,
+                pins: List<PinnedMessage?>?
+            ) {
+
+            }
+
+            override fun onMessagesUnPinned(
+                channelId: Long,
+                pins: List<PinnedMessage?>?
+            ) {
+
             }
         })
     }
