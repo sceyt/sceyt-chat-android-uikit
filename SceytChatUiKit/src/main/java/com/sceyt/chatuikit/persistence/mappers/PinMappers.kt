@@ -6,8 +6,7 @@ import com.sceyt.chat.models.message.PinnedMessage
 import com.sceyt.chatuikit.data.models.messages.PinSyncState
 import com.sceyt.chatuikit.data.models.messages.SceytPinDetails
 import com.sceyt.chatuikit.data.models.messages.SceytPinnedMessage
-import com.sceyt.chatuikit.persistence.database.entity.messages.PinScopeEntity
-import com.sceyt.chatuikit.persistence.database.entity.messages.PinSyncStateEntity
+import com.sceyt.chatuikit.persistence.database.entity.messages.StoredPinScope
 import com.sceyt.chatuikit.persistence.database.entity.messages.PinnedMessageDb
 import com.sceyt.chatuikit.persistence.database.entity.messages.PinnedMessageEntity
 
@@ -23,21 +22,14 @@ internal fun SceytPinDetails.toPinDetails() = PinDetails(
     pinType.ordinal,
 )
 
-internal fun PinType.toPinScopeEntity() = when (this) {
-    PinType.PERSONAL -> PinScopeEntity.ForMe
-    PinType.SHARED -> PinScopeEntity.ForAll
+internal fun PinType.toStoredPinScope() = when (this) {
+    PinType.PERSONAL -> StoredPinScope.ForMe
+    PinType.SHARED -> StoredPinScope.ForAll
 }
 
-internal fun PinScopeEntity.toPinType() = when (this) {
-    PinScopeEntity.ForMe -> PinType.PERSONAL
-    PinScopeEntity.ForAll, PinScopeEntity.Unspecified -> PinType.SHARED
-}
-
-internal fun PinSyncStateEntity.toPinSyncState() = when (this) {
-    PinSyncStateEntity.Unspecified -> PinSyncState.Unspecified
-    PinSyncStateEntity.Synced -> PinSyncState.Synced
-    PinSyncStateEntity.PendingPin -> PinSyncState.PendingPin
-    PinSyncStateEntity.PendingUnpin -> PinSyncState.PendingUnpin
+internal fun StoredPinScope.toPinType() = when (this) {
+    StoredPinScope.ForMe -> PinType.PERSONAL
+    StoredPinScope.ForAll, StoredPinScope.Unspecified -> PinType.SHARED
 }
 
 internal fun PinnedMessageDb.toSceytPinnedMessage(): SceytPinnedMessage? {
@@ -48,12 +40,12 @@ internal fun PinnedMessageDb.toSceytPinnedMessage(): SceytPinnedMessage? {
             channelId = channelId,
             messageId = messageId,
             messageTid = messageTid,
-            scope = PinScopeEntity.fromValue(pinScope).toPinType(),
+            scope = StoredPinScope.fromValue(pinScope).toPinType(),
             pinnedAt = pinnedAt,
             pinnedUntil = pinnedUntil,
             pinnedBy = this@toSceytPinnedMessage.pinnedBy?.toSceytUser(),
             message = message,
-            syncState = PinSyncStateEntity.fromValue(syncState).toPinSyncState(),
+            syncState = PinSyncState.fromValue(syncState),
             retryCount = retryCount,
         )
     }
@@ -84,27 +76,27 @@ internal fun SceytPinnedMessage.toPinnedMessageEntity(
     messageTid = messageTid,
     channelId = channelId,
     messageId = message.id,
-    pinScope = scope.toPinScopeEntity().value,
+    pinScope = scope.toStoredPinScope().value,
     pinnedAt = pinnedAt,
     pinnedUntil = pinnedUntil?.takeIf { it > 0L },
     pinnedByUserId = pinnedBy?.id,
     messageCreatedAt = message.createdAt,
     serverPinId = id,
-    syncState = PinSyncStateEntity.Synced.value,
+    syncState = PinSyncState.Synced.value,
     retryCount = 0,
     lastAttemptAt = 0L,
 )
 internal fun PinnedMessageEntity.toSceytPinDetails(): SceytPinDetails? {
-    if (syncState == PinSyncStateEntity.PendingUnpin.value) return null
+    if (syncState == PinSyncState.PendingUnpin.value) return null
     return SceytPinDetails(
         isPinned = true,
         pinnedTill = pinnedUntil ?: 0L,
-        pinType = PinScopeEntity.fromValue(pinScope).toPinType(),
+        pinType = StoredPinScope.fromValue(pinScope).toPinType(),
     )
 }
 
-internal fun PinScopeEntity.toPinTypeOrdinal(): Int = when (this) {
-    PinScopeEntity.ForMe -> PinType.PERSONAL.ordinal
-    PinScopeEntity.ForAll, PinScopeEntity.Unspecified ->
+internal fun StoredPinScope.toPinTypeOrdinal(): Int = when (this) {
+    StoredPinScope.ForMe -> PinType.PERSONAL.ordinal
+    StoredPinScope.ForAll, StoredPinScope.Unspecified ->
         PinType.SHARED.ordinal
 }

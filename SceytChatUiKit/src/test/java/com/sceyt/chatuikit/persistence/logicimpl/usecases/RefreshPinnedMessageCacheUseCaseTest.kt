@@ -2,7 +2,7 @@ package com.sceyt.chatuikit.persistence.logicimpl.usecases
 
 import com.google.common.truth.Truth.assertThat
 import com.sceyt.chatuikit.persistence.database.dao.MessageDao
-import com.sceyt.chatuikit.persistence.database.entity.messages.PinSyncStateEntity
+import com.sceyt.chatuikit.data.models.messages.PinSyncState
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
@@ -30,7 +30,7 @@ class RefreshPinnedMessageCacheUseCaseTest {
     fun `refresh updates pin details on an already loaded message`() = runTest {
         cache.add(7L, sceytMessage())
         whenever(messageDao.getMessageByTid(42L)).thenReturn(
-            messageDb().copy(pinnedMessage = pinnedEntity(syncState = PinSyncStateEntity.Synced.value))
+            messageDb().copy(pinnedMessage = pinnedEntity(syncState = PinSyncState.Synced.value))
         )
 
         useCase(7L, 42L)

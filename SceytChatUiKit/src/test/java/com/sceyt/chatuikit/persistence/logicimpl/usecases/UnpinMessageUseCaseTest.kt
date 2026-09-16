@@ -3,7 +3,7 @@ package com.sceyt.chatuikit.persistence.logicimpl.usecases
 import com.google.common.truth.Truth.assertThat
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.persistence.database.dao.PinnedMessageDao
-import com.sceyt.chatuikit.persistence.database.entity.messages.PinSyncStateEntity
+import com.sceyt.chatuikit.data.models.messages.PinSyncState
 import com.sceyt.chatuikit.persistence.repositories.PinRepository
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
@@ -39,7 +39,7 @@ class UnpinMessageUseCaseTest {
             val now = call.getArgument<Long>(2)
             val current = pinnedMessageDao.getByTid(tid, channel)!!
             whenever(pinnedMessageDao.getByTid(tid, channel)).thenReturn(current.copy(
-                syncState = PinSyncStateEntity.PendingUnpin.value, lastAttemptAt = now
+                syncState = PinSyncState.PendingUnpin.value, lastAttemptAt = now
             ))
             Unit
         }.whenever(pinnedMessageDao) { markPendingUnpinWithMirror(any(), any(), any()) }
@@ -51,7 +51,7 @@ class UnpinMessageUseCaseTest {
     fun `unpin of an unsent message makes no server call`() = runTest {
         // A message without a server ID could not have been pinned remotely.
         whenever(pinnedMessageDao.getByTid(42L, channelId))
-            .thenReturn(pinnedEntity(messageId = 0L, syncState = PinSyncStateEntity.PendingPin.value))
+            .thenReturn(pinnedEntity(messageId = 0L, syncState = PinSyncState.PendingPin.value))
 
         val result = useCase(channelId, messageTid = 42L)
 
@@ -64,7 +64,7 @@ class UnpinMessageUseCaseTest {
     fun `unpinning a synced pin keeps the row as a pending intent until the server acks`() =
         runTest {
             whenever(pinnedMessageDao.getByTid(42L, channelId))
-                .thenReturn(pinnedEntity(syncState = PinSyncStateEntity.Synced.value))
+                .thenReturn(pinnedEntity(syncState = PinSyncState.Synced.value))
             whenever(pinRepository.unpinMessages(any(), any()))
                 .thenReturn(SceytResponse.Error(null))
 
@@ -80,7 +80,7 @@ class UnpinMessageUseCaseTest {
     @Test
     fun `drops the row once the server acknowledges the unpin`() = runTest {
         whenever(pinnedMessageDao.getByTid(42L, channelId))
-            .thenReturn(pinnedEntity(syncState = PinSyncStateEntity.Synced.value))
+            .thenReturn(pinnedEntity(syncState = PinSyncState.Synced.value))
         whenever(pinRepository.unpinMessages(any(), any()))
             .thenReturn(SceytResponse.Success(emptyList()))
 
@@ -93,7 +93,7 @@ class UnpinMessageUseCaseTest {
     @Test
     fun `the conversation copy is refreshed as soon as the unpin is acknowledged`() = runTest {
         whenever(pinnedMessageDao.getByTid(42L, channelId))
-            .thenReturn(pinnedEntity(syncState = PinSyncStateEntity.Synced.value))
+            .thenReturn(pinnedEntity(syncState = PinSyncState.Synced.value))
         whenever(pinRepository.unpinMessages(any(), any()))
             .thenReturn(SceytResponse.Success(emptyList()))
 

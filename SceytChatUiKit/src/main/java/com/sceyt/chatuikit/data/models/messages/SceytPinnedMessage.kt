@@ -24,14 +24,22 @@ data class SceytPinnedMessage(
     val isExpired: Boolean
         get() = pinnedUntil?.let { it != 0L && it <= System.currentTimeMillis() } == true
 
+}
+
+enum class PinSyncState(val value: Int) {
+    Unspecified(PinSyncStates.UNSPECIFIED),
+    Synced(PinSyncStates.SYNCED),
+    PendingPin(PinSyncStates.PENDING_PIN),
+    PendingUnpin(PinSyncStates.PENDING_UNPIN);
+
     companion object {
-        const val UNKNOWN_SERVER_PIN_ID = Long.MAX_VALUE
+        fun fromValue(value: Int) = entries.firstOrNull { it.value == value } ?: Unspecified
     }
 }
 
-enum class PinSyncState {
-    Unspecified,
-    Synced,
-    PendingPin,
-    PendingUnpin,
+internal object PinSyncStates {
+    const val UNSPECIFIED = 0
+    const val SYNCED = 1
+    const val PENDING_PIN = 2
+    const val PENDING_UNPIN = 3
 }

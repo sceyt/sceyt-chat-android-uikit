@@ -7,7 +7,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytPinnedMessage
 import com.sceyt.chatuikit.data.models.messages.SceytPinDetails
 import com.sceyt.chatuikit.persistence.database.dao.MessageDao
 import com.sceyt.chatuikit.persistence.database.dao.PinnedMessageDao
-import com.sceyt.chatuikit.persistence.database.entity.messages.PinSyncStateEntity
+import com.sceyt.chatuikit.data.models.messages.PinSyncState
 import com.sceyt.chatuikit.persistence.database.entity.messages.PinnedMessageEntity
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
@@ -51,7 +51,7 @@ class StorePinsUseCaseTest {
         assertThat(entity.firstValue.serverPinId).isEqualTo(900L)
         assertThat(entity.firstValue.pinScope).isEqualTo(1)
         assertThat(entity.firstValue.pinnedUntil).isEqualTo(5_000L)
-        assertThat(entity.firstValue.syncState).isEqualTo(PinSyncStateEntity.Synced.value)
+        assertThat(entity.firstValue.syncState).isEqualTo(PinSyncState.Synced.value)
         verifyBlocking(messageDao, never()) { upsertMessage(any()) }
         verifyBlocking(refreshPinnedMessageCache) { invoke(7L, 77L) }
     }
@@ -87,7 +87,7 @@ class StorePinsUseCaseTest {
     fun `a server snapshot preserves a pending unpin and its cleared mirror`() = runTest {
         whenever(messageDao.getMessageById(42L)).thenReturn(messageDb())
         whenever(pinnedMessageDao.getByTid(42L, 7L))
-            .thenReturn(pinnedEntity(syncState = PinSyncStateEntity.PendingUnpin.value))
+            .thenReturn(pinnedEntity(syncState = PinSyncState.PendingUnpin.value))
 
         useCase(7L, listOf(sceytPinnedMessage()))
 
@@ -98,7 +98,7 @@ class StorePinsUseCaseTest {
     fun `a server snapshot preserves a pending pin with a different scope`() = runTest {
         whenever(messageDao.getMessageById(42L)).thenReturn(messageDb())
         whenever(pinnedMessageDao.getByTid(42L, 7L))
-            .thenReturn(pinnedEntity(syncState = PinSyncStateEntity.PendingPin.value, pinScope = 1))
+            .thenReturn(pinnedEntity(syncState = PinSyncState.PendingPin.value, pinScope = 1))
 
         useCase(7L, listOf(sceytPinnedMessage(scope = PinType.SHARED)))
 

@@ -6,7 +6,7 @@ import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import com.sceyt.chatuikit.persistence.database.dao.MessageDao
 import com.sceyt.chatuikit.persistence.database.dao.PinnedMessageDao
-import com.sceyt.chatuikit.persistence.database.entity.messages.PinSyncStateEntity
+import com.sceyt.chatuikit.data.models.messages.PinSyncState
 import com.sceyt.chatuikit.persistence.database.entity.messages.PinnedMessageEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.PinnedMessageEntity.Companion.UNKNOWN_SERVER_PIN_ID
 import com.sceyt.chatuikit.persistence.repositories.PinRepository
@@ -61,7 +61,7 @@ class PinMessageUseCaseTest {
         val captor = argumentCaptor<PinnedMessageEntity>()
         verify(pinnedMessageDao).upsertWithMirror(captor.capture())
         with(captor.firstValue) {
-            assertThat(syncState).isEqualTo(PinSyncStateEntity.PendingPin.value)
+            assertThat(syncState).isEqualTo(PinSyncState.PendingPin.value)
             // Sorts to the newest-pin end so an optimistic pin appends rather than
             // jumping to the head of the banner.
             assertThat(serverPinId).isEqualTo(UNKNOWN_SERVER_PIN_ID)
@@ -118,7 +118,7 @@ class PinMessageUseCaseTest {
     fun `refuses to pin the same message twice`() = runTest {
         whenever(messageDao.getMessageByTid(42L)).thenReturn(messageDb())
         whenever(pinnedMessageDao.getByTid(42L, channelId))
-            .thenReturn(pinnedEntity(syncState = PinSyncStateEntity.Synced.value))
+            .thenReturn(pinnedEntity(syncState = PinSyncState.Synced.value))
 
         val result = useCase(channelId, messageTid = 42L, pinType = PinType.SHARED)
 

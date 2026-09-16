@@ -6,7 +6,7 @@ import com.sceyt.chat.models.message.PinDetails.PinType
 import com.sceyt.chatuikit.data.managers.message.event.PinUpdateEvent
 import com.sceyt.chatuikit.persistence.database.dao.MessageDao
 import com.sceyt.chatuikit.persistence.database.dao.PinnedMessageDao
-import com.sceyt.chatuikit.persistence.database.entity.messages.PinSyncStateEntity
+import com.sceyt.chatuikit.data.models.messages.PinSyncState
 import com.sceyt.chatuikit.persistence.database.entity.messages.PinnedMessageEntity
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
@@ -50,7 +50,7 @@ class UpdatePinnedMessagesUseCaseTest {
         assertThat(entity.firstValue.serverPinId).isEqualTo(900L)
         assertThat(entity.firstValue.pinScope).isEqualTo(1)
         assertThat(entity.firstValue.pinnedUntil).isEqualTo(5_000L)
-        assertThat(entity.firstValue.syncState).isEqualTo(PinSyncStateEntity.Synced.value)
+        assertThat(entity.firstValue.syncState).isEqualTo(PinSyncState.Synced.value)
         verifyBlocking(refreshPinnedMessageCache) { invoke(7L, 77L) }
         verifyBlocking(messageDao, never()) { upsertMessage(any()) }
     }
@@ -116,7 +116,7 @@ class UpdatePinnedMessagesUseCaseTest {
     fun `a realtime pin does not overwrite a queued unpin`() = runTest {
         whenever(messageDao.getMessageById(42L)).thenReturn(messageDb())
         whenever(pinnedMessageDao.getByTid(42L, 7L))
-            .thenReturn(pinnedEntity(syncState = PinSyncStateEntity.PendingUnpin.value))
+            .thenReturn(pinnedEntity(syncState = PinSyncState.PendingUnpin.value))
 
         useCase(PinUpdateEvent.Pinned(7L, listOf(sceytPinnedMessage())))
 
@@ -127,7 +127,7 @@ class UpdatePinnedMessagesUseCaseTest {
     fun `a realtime unpin does not discard a queued local pin`() = runTest {
         whenever(messageDao.getMessageById(42L)).thenReturn(messageDb())
         whenever(pinnedMessageDao.getByTid(42L, 7L))
-            .thenReturn(pinnedEntity(syncState = PinSyncStateEntity.PendingPin.value))
+            .thenReturn(pinnedEntity(syncState = PinSyncState.PendingPin.value))
 
         useCase(PinUpdateEvent.Unpinned(7L, listOf(sceytPinnedMessage())))
 

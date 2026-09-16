@@ -13,9 +13,9 @@ import com.sceyt.chatuikit.persistence.database.dao.MessageDao
 import com.sceyt.chatuikit.persistence.database.dao.PinnedMessageDao
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageDb
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageEntity
-import com.sceyt.chatuikit.persistence.database.entity.messages.PinSyncStateEntity
-import com.sceyt.chatuikit.persistence.database.entity.messages.PinSyncStates
-import com.sceyt.chatuikit.persistence.database.entity.messages.PinScopeEntity
+import com.sceyt.chatuikit.data.models.messages.PinSyncState
+import com.sceyt.chatuikit.data.models.messages.PinSyncStates
+import com.sceyt.chatuikit.persistence.database.entity.messages.StoredPinScope
 import com.sceyt.chatuikit.persistence.database.entity.messages.PinnedMessageEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.PinnedMessageEntity.Companion.UNKNOWN_SERVER_PIN_ID
 import kotlinx.coroutines.test.runTest
@@ -223,7 +223,7 @@ class PinnedMessageDaoTest {
         insertMessage(tid = 1L)
 
         pinnedMessageDao.upsertWithMirror(
-            pin(messageTid = 1L, serverPinId = 1L, pinScope = PinScopeEntity.ForMe.value)
+            pin(messageTid = 1L, serverPinId = 1L, pinScope = StoredPinScope.ForMe.value)
         )
 
         assertThat(messageDao.getMessageByTid(1L)?.messageEntity?.pinDetails?.pinType)
@@ -246,7 +246,7 @@ class PinnedMessageDaoTest {
 
         val stored = pinnedMessageDao.getByTid(1L, CHANNEL_ID)
         assertThat(stored?.serverPinId).isEqualTo(500L)
-        assertThat(stored?.syncState).isEqualTo(PinSyncStateEntity.Synced.value)
+        assertThat(stored?.syncState).isEqualTo(PinSyncState.Synced.value)
         assertThat(stored?.retryCount).isEqualTo(0)
     }
 
@@ -276,7 +276,7 @@ class PinnedMessageDaoTest {
         val pending = pinnedMessageDao.getAllPending()
         assertThat(pending.map { it.messageTid }).containsExactly(2L, 1L).inOrder()
         assertThat(pending.last().retryCount).isEqualTo(1)
-        assertThat(pending.last().syncState).isEqualTo(PinSyncStateEntity.PendingPin.value)
+        assertThat(pending.last().syncState).isEqualTo(PinSyncState.PendingPin.value)
     }
 
     @Test
@@ -365,9 +365,9 @@ class PinnedMessageDaoTest {
     private fun pin(
         messageTid: Long,
         serverPinId: Long,
-        syncState: Int = PinSyncStateEntity.Synced.value,
+        syncState: Int = PinSyncState.Synced.value,
         pinnedUntil: Long? = null,
-        pinScope: Int = PinScopeEntity.ForAll.value,
+        pinScope: Int = StoredPinScope.ForAll.value,
         messageCreatedAt: Long = messageTid,
         retryCount: Int = 0,
         lastAttemptAt: Long = 0L,
