@@ -51,6 +51,7 @@ import com.sceyt.chatuikit.presentation.components.channel.header.listeners.clic
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.click.MessageListHeaderClickListenersImpl
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.click.setListener
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.event.MessageListHeaderEventsListener
+import com.sceyt.chatuikit.presentation.components.channel.header.listeners.event.MessageListHeaderEventsListener.ConnectionStateListener
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.event.MessageListHeaderEventsListener.EventListeners
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.event.MessageListHeaderEventsListenerImpl
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.event.setListener
@@ -72,7 +73,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0,
 ) : AppBarLayout(context, attrs, defStyleAttr), ClickListeners,
-    EventListeners, ElementsListeners {
+    EventListeners, ElementsListeners, ConnectionStateListener {
 
     private val binding: SceytMessagesListHeaderViewBinding
     private var clickListeners: ClickListeners = MessageListHeaderClickListenersImpl(this)
@@ -363,6 +364,14 @@ class MessagesListHeaderView @JvmOverloads constructor(
     }
 
     internal fun onConnectionStateUpdate(state: ConnectionState, channel: SceytChannel) = post {
+        val listener = eventListeners as? ConnectionStateListener
+        if (listener != null)
+            listener.onConnectionStateChanged(state, channel)
+        else
+            onConnectionStateChanged(state, channel)
+    }
+
+    private fun renderConnectionState(state: ConnectionState, channel: SceytChannel) {
         if (state == ConnectionState.Connected) {
             val title = style.subtitleFormatter.format(context, channel)
             setSubTitleText(
@@ -370,7 +379,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
                 title = title,
                 visible = title.isNotBlank() && !haveUserAction && enableSubTitle(channel)
             )
-            return@post
+            return
         }
         val title = SceytChatUIKit.formatters.connectionStateTitleFormatter.format(
             context = context,
@@ -492,6 +501,10 @@ class MessagesListHeaderView @JvmOverloads constructor(
 
     override fun onPresenceUpdateEvent(channel: SceytChannel) {
         setPresenceUpdated(channel)
+    }
+
+    override fun onConnectionStateChanged(state: ConnectionState, channel: SceytChannel) {
+        renderConnectionState(state, channel)
     }
 
     //Ui elements listeners
