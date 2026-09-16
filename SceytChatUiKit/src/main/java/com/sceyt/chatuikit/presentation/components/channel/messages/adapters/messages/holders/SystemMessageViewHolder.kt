@@ -35,7 +35,7 @@ class SystemMessageViewHolder(
                 title.isClickable = targetId != null
                 if (targetId != null)
                     title.setOnClickListener {
-                        messageListeners?.onReplyMessageContainerClick(it, item)
+                        messageListeners?.onPinnedSystemMessageClick(it, item)
                     }
                 else title.setOnClickListener(null)
             }

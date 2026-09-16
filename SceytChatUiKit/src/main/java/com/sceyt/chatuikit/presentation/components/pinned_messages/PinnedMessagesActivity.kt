@@ -165,6 +165,8 @@ open class PinnedMessagesActivity : AppCompatActivity() {
             item.message.parentMessage?.let(::finishWithJump)
         }
 
+        override fun onPinnedSystemMessageClick(view: View, item: MessageItem) = Unit
+
         override fun onPollOptionClick(view: View, item: MessageItem, option: PollOption) {
             viewModel.toggleVote(item.message, option)
         }
