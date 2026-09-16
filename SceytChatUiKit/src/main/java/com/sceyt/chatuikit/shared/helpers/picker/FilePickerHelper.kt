@@ -453,6 +453,10 @@ class FilePickerHelper {
         placeToSavePathsList = savePathsTo
     }
 
+    internal fun removeSavedPath(filePath: String) {
+        placeToSavePathsList.removeAll { it.second == filePath }
+    }
+
     private fun showPermissionDeniedDialog(titleId: Int, descId: Int) {
         SceytDialog.showDialog(
             context = context,
