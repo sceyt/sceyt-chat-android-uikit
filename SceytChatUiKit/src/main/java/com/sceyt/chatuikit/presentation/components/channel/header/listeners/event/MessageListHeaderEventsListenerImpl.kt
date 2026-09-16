@@ -5,6 +5,8 @@ import com.sceyt.chatuikit.data.managers.channel.event.ChannelMemberActivityEven
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.presentation.components.channel.header.MessagesListHeaderView
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.event.MessageListHeaderEventsListener.ConnectionStateListener
+import com.sceyt.chatuikit.presentation.components.channel.header.listeners.event.MessageListHeaderEventsListener.MemberActivityListener
+import com.sceyt.chatuikit.presentation.components.channel.header.listeners.event.MessageListHeaderEventsListener.PresenceUpdateListener
 
 open class MessageListHeaderEventsListenerImpl : MessageListHeaderEventsListener.EventListeners,
     ConnectionStateListener {
@@ -16,8 +18,8 @@ open class MessageListHeaderEventsListenerImpl : MessageListHeaderEventsListener
     }
 
     private var defaultListeners: MessageListHeaderEventsListener.EventListeners? = null
-    private var memberActivityListener: MessageListHeaderEventsListener.MemberActivityListener? = null
-    private var presenceUpdateListener: MessageListHeaderEventsListener.PresenceUpdateListener? = null
+    private var memberActivityListener: MemberActivityListener? = null
+    private var presenceUpdateListener: PresenceUpdateListener? = null
     private var connectionStateListener: ConnectionStateListener? = null
 
     override fun onActivityEvent(event: ChannelMemberActivityEvent) {
@@ -31,7 +33,7 @@ open class MessageListHeaderEventsListenerImpl : MessageListHeaderEventsListener
     }
 
     override fun onConnectionStateChanged(state: ConnectionState, channel: SceytChannel) {
-        (defaultListeners as? ConnectionStateListener)?.onConnectionStateChanged(state, channel)
+        defaultListeners?.onConnectionStateChanged(state, channel)
         connectionStateListener?.onConnectionStateChanged(state, channel)
     }
 
@@ -43,11 +45,11 @@ open class MessageListHeaderEventsListenerImpl : MessageListHeaderEventsListener
                 connectionStateListener = listener
             }
 
-            is MessageListHeaderEventsListener.MemberActivityListener -> {
+            is MemberActivityListener -> {
                 memberActivityListener = listener
             }
 
-            is MessageListHeaderEventsListener.PresenceUpdateListener -> {
+            is PresenceUpdateListener -> {
                 presenceUpdateListener = listener
             }
 
@@ -58,7 +60,7 @@ open class MessageListHeaderEventsListenerImpl : MessageListHeaderEventsListener
     }
 
     internal fun withDefaultListeners(
-            listeners: MessageListHeaderEventsListener.EventListeners
+        listeners: MessageListHeaderEventsListener.EventListeners
     ): MessageListHeaderEventsListenerImpl {
         defaultListeners = listeners
         return this

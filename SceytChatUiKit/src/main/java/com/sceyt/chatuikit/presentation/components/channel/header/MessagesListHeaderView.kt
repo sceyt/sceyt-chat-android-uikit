@@ -51,7 +51,6 @@ import com.sceyt.chatuikit.presentation.components.channel.header.listeners.clic
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.click.MessageListHeaderClickListenersImpl
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.click.setListener
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.event.MessageListHeaderEventsListener
-import com.sceyt.chatuikit.presentation.components.channel.header.listeners.event.MessageListHeaderEventsListener.ConnectionStateListener
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.event.MessageListHeaderEventsListener.EventListeners
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.event.MessageListHeaderEventsListenerImpl
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.event.setListener
@@ -73,7 +72,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0,
 ) : AppBarLayout(context, attrs, defStyleAttr), ClickListeners,
-    EventListeners, ElementsListeners, ConnectionStateListener {
+    EventListeners, ElementsListeners {
 
     private val binding: SceytMessagesListHeaderViewBinding
     private var clickListeners: ClickListeners = MessageListHeaderClickListenersImpl(this)
@@ -364,11 +363,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
     }
 
     internal fun onConnectionStateUpdate(state: ConnectionState, channel: SceytChannel) = post {
-        val listener = eventListeners as? ConnectionStateListener
-        if (listener != null)
-            listener.onConnectionStateChanged(state, channel)
-        else
-            onConnectionStateChanged(state, channel)
+        eventListeners.onConnectionStateChanged(state, channel)
     }
 
     private fun renderConnectionState(state: ConnectionState, channel: SceytChannel) {
