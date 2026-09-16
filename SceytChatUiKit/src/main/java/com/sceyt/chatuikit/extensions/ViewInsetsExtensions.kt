@@ -16,7 +16,6 @@ import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updateLayoutParams
-import com.sceyt.chatuikit.R
 
 fun Activity.applyInsetsAndWindowColor(
         rootView: View,
@@ -152,6 +151,7 @@ fun View.applySystemWindowInsetsMargin(
 fun View.doOnApplyWindowInsets(
         block: (View, WindowInsetsCompat, InitialPadding, InitialMargin) -> Unit,
 ) {
+    // Create a snapshot of the view's padding & margin states
     val initialPadding = recordInitialPaddingForView(this)
     val initialMargin = recordInitialMarginForView(this)
     // Set an actual OnApplyWindowInsetsListener which proxies to the given
@@ -169,20 +169,14 @@ class InitialPadding(val left: Int, val top: Int, val right: Int, val bottom: In
 
 class InitialMargin(val left: Int, val top: Int, val right: Int, val bottom: Int)
 
-private fun recordInitialPaddingForView(view: View): InitialPadding {
-    (view.getTag(R.id.sceyt_tag_initial_padding) as? InitialPadding)?.let { return it }
-    return InitialPadding(
-        view.paddingLeft, view.paddingTop, view.paddingRight, view.paddingBottom
-    ).also { view.setTag(R.id.sceyt_tag_initial_padding, it) }
-}
+private fun recordInitialPaddingForView(view: View) = InitialPadding(
+    view.paddingLeft, view.paddingTop, view.paddingRight, view.paddingBottom
+)
 
 private fun recordInitialMarginForView(view: View): InitialMargin {
-    (view.getTag(R.id.sceyt_tag_initial_margin) as? InitialMargin)?.let { return it }
     val lp = view.layoutParams as? ViewGroup.MarginLayoutParams
             ?: throw IllegalArgumentException("Invalid view layout params")
-    return InitialMargin(
-        lp.leftMargin, lp.topMargin, lp.rightMargin, lp.bottomMargin
-    ).also { view.setTag(R.id.sceyt_tag_initial_margin, it) }
+    return InitialMargin(lp.leftMargin, lp.topMargin, lp.rightMargin, lp.bottomMargin)
 }
 
 fun View.requestApplyInsetsWhenAttached() {
