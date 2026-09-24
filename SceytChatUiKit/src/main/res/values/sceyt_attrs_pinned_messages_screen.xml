@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="PinnedMessages">
+        <attr name="sceytUiPinnedMessagesScreenBackgroundColor" format="color" />
+        <attr name="sceytUiToolbarTitle" />
+        <attr name="sceytUiToolbarTitleTextColor" />
+        <attr name="sceytUiToolbarNavigationIcon" />
+        <attr name="sceytUiToolbarDividerColor" />
+        <attr name="sceytUiPinnedMessagesTitleTextFont" />
+        <attr name="sceytUiPinnedMessagesTitleTextSize" />
+        <attr name="sceytUiPinnedMessagesNavigateIcon" format="reference" />
+        <attr name="sceytUiPinnedMessagesNavigateBackgroundColor" format="color" />
+        <attr name="sceytUiPinnedMessagesEmptyText" format="string" />
+        <attr name="sceytUiPinnedMessagesEmptyTextColor" format="color" />
+        <attr name="sceytUiPinnedMessagesEmptyTextSize" format="dimension" />
+    </declare-styleable>
+</resources>

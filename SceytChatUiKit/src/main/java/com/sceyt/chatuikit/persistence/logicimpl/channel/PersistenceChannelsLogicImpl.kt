@@ -251,6 +251,11 @@ internal class PersistenceChannelsLogicImpl(
                         channelsCache.updateLastMessage(message.channelId, null)
                     } else
                         channelsCache.updateLastMessage(message.channelId, message)
+                } else if (message.isParentOf(lastMessage)) {
+                    channelsCache.updateLastMessage(
+                        message.channelId,
+                        lastMessage.copy(parentMessage = message)
+                    )
                 }
             } ?: run {
                 if (state.isHardDeleted() || message.isPending() && state.isDeleted())
@@ -259,6 +264,11 @@ internal class PersistenceChannelsLogicImpl(
                     channelsCache.upsertChannel(channel.copy(lastMessage = message))
             }
         }
+    }
+
+    private fun SceytMessage.isParentOf(other: SceytMessage): Boolean {
+        val parent = other.parentMessage ?: return false
+        return parent.tid == tid || (id != 0L && parent.id == id)
     }
 
     private suspend fun upsertChannelDbAndCache(channel: SceytChannel?) {

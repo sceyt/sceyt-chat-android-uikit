@@ -20,4 +20,7 @@ internal data class ParentMessageDb(
 
         @Relation(parentColumn = "tid", entityColumn = "messageTid", entity = PollEntity::class)
         val poll: PollDb?,
+
+        @Relation(parentColumn = "tid", entityColumn = "messageTid")
+        val pinnedMessage: PinnedMessageEntity? = null,
 )

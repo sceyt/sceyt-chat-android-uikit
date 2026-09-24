@@ -68,6 +68,8 @@
     <string name="sceyt_cd_delete_direct_channel">Delete direct channel</string>
     <string name="sceyt_cd_delete_group_channel">Delete group channel</string>
     <string name="sceyt_cd_delete_message">Delete message</string>
+    <string name="sceyt_cd_pin_message">Pin message</string>
+    <string name="sceyt_cd_unpin_message">Unpin message</string>
     <string name="sceyt_cd_delete_voice_recording">Delete voice recording</string>
     <string name="sceyt_cd_delivered_to_users_list">Delivered to users list</string>
     <string name="sceyt_cd_edit_channel">Edit channel</string>

@@ -11,10 +11,12 @@ import com.sceyt.chatuikit.config.SystemMessagesConfig
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.messages.DisappearingMessageMetadata
 import com.sceyt.chatuikit.data.models.messages.MembersMetaData
+import com.sceyt.chatuikit.data.models.messages.PinnedMessageMetadata
 import com.sceyt.chatuikit.data.models.messages.SceytMessageType
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.data.models.messages.SystemMessageAction
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.sceytMessage
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
@@ -26,6 +28,7 @@ import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
+import org.mockito.kotlin.whenever
 
 class SystemMessageSenderImplTest {
     private val messagesLogic = mock<PersistenceMessagesLogic>()
@@ -104,6 +107,25 @@ class SystemMessageSenderImplTest {
         assertThat(metadata.duration).isEqualTo("60000")
     }
 
+    @Test
+    fun sendMessagePinned_attachesTheRealParentMessage() = runTest {
+        val pinned = sceytMessage(id = PINNED_MESSAGE_ID)
+        whenever(messagesLogic.getMessageFromDbById(PINNED_MESSAGE_ID)).thenReturn(pinned)
+
+        sender.sendMessagePinned(CHANNEL_ID, PINNED_MESSAGE_ID)
+
+        val message = sentMessage()
+
+        assertSystemMessage(message, SystemMessageAction.PinMessage)
+        // An id alone leaves the parent as the builder's empty stub, whose blank type reads
+        // as an unsupported message in the preview until the server echo brings the real one.
+        assertThat(message.parentMessage.id).isEqualTo(PINNED_MESSAGE_ID)
+        assertThat(message.parentMessage.type).isEqualTo(pinned.type)
+        assertThat(message.parentMessage.body).isEqualTo(pinned.body)
+        val metadata = gson.fromJson(message.metadata, PinnedMessageMetadata::class.java)
+        assertThat(metadata.id).isEqualTo(PINNED_MESSAGE_ID.toString())
+    }
+
     private suspend fun sentMessage(): Message {
         val captor = argumentCaptor<Message>()
         verify(messagesLogic).sendMessage(eq(CHANNEL_ID), captor.capture())
@@ -133,5 +155,6 @@ class SystemMessageSenderImplTest {
     private companion object {
         const val CHANNEL_ID = 123L
         const val MESSAGE_TID = 456L
+        const val PINNED_MESSAGE_ID = 789L
     }
 }

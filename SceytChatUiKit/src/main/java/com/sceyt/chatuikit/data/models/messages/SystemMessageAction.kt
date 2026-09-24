@@ -12,7 +12,8 @@ enum class SystemMessageAction(
     MemberRemoved("RM"),
     MemberLeaved("LG"),
     JoinByInviteLink("JL"),
-    DisappearingMessage("ADM");
+    DisappearingMessage("ADM"),
+    PinMessage("PM");
 
     companion object {
         fun getTitle(string: String, context: Context): String {

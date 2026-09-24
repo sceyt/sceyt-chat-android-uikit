@@ -57,7 +57,7 @@ class IncSelfDestructedMessageViewHolder(
             with(binding) {
                 val message = item.message
 
-                if (diff.edited || diff.statusChanged)
+                if (diff.infoRowChanged())
                     setMessageStatusAndDateText(message, messageDate)
 
                 if (diff.edited || diff.bodyChanged) {

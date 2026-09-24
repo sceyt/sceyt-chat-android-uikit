@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout">
+
+    <!-- Segment indicator: one bar per pin, drawn in code so the count and the selection
+         can animate. -->
+    <com.sceyt.chatuikit.presentation.components.channel.messages.components.PinSegmentIndicatorView
+        android:id="@+id/segmentIndicator"
+        android:layout_width="2dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginVertical="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <FrameLayout
+        android:id="@+id/thumbnailContainer"
+        android:clipToOutline="true"
+        android:background="@drawable/sceyt_bg_pinned_thumbnail"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginStart="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/segmentIndicator"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/thumbnail"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            tools:src="@tools:sample/backgrounds/scenic" />
+    </FrameLayout>
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/title"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:ellipsize="end"
+        android:includeFontPadding="false"
+        android:maxLines="1"
+        android:text="@string/sceyt_pinned_message"
+        app:layout_constraintBottom_toTopOf="@+id/body"
+        app:layout_constraintEnd_toStartOf="@+id/pinListButton"
+        app:layout_constraintStart_toEndOf="@+id/thumbnailContainer"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_chainStyle="packed"
+        tools:text="Pinned message" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/body"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:ellipsize="end"
+        android:includeFontPadding="false"
+        android:maxLines="1"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/pinListButton"
+        app:layout_constraintStart_toEndOf="@+id/thumbnailContainer"
+        app:layout_constraintTop_toBottomOf="@+id/title"
+        tools:text="What's the most useful in feature?" />
+
+    <!--
+      Sized for the finger, not for the icon: the box is 40dp and the padding keeps the icon
+      itself at 24dp, sitting exactly where a 12dp end margin used to put it (4dp margin +
+      8dp padding).
+    -->
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/pinListButton"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginEnd="4dp"
+        android:padding="8dp"
+        android:background="?selectableItemBackgroundBorderless"
+        android:contentDescription="@string/sceyt_pinned_messages"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:src="@drawable/sceyt_ic_pin" />
+
+    <View
+        android:id="@+id/separator"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+</merge>

@@ -24,6 +24,7 @@ import com.sceyt.chatuikit.persistence.database.dao.PendingMessageDeleteByTidDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingMessageStateDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingPollVoteDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingReactionDao
+import com.sceyt.chatuikit.persistence.database.dao.PinnedMessageDao
 import com.sceyt.chatuikit.persistence.database.dao.PollDao
 import com.sceyt.chatuikit.persistence.database.dao.ReactionDao
 import com.sceyt.chatuikit.persistence.database.dao.UserDao
@@ -45,6 +46,7 @@ import com.sceyt.chatuikit.persistence.database.entity.messages.MarkerEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.MentionUserMessageLinkEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageFtsEntity
+import com.sceyt.chatuikit.persistence.database.entity.messages.PinnedMessageEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.PollEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.PollOptionEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.PollVoteEntity
@@ -84,6 +86,7 @@ import com.sceyt.chatuikit.persistence.database.entity.user.UserMetadataEntity
         LoadRangeEntity::class,
         AutoDeleteMessageEntity::class,
         UserMetadataEntity::class,
+        PinnedMessageEntity::class,
         PollEntity::class,
         PollOptionEntity::class,
         PollVoteEntity::class,
@@ -91,7 +94,7 @@ import com.sceyt.chatuikit.persistence.database.entity.user.UserMetadataEntity
         PendingMessageDeleteByTidEntity::class,
         MessageFtsEntity::class,
     ],
-    version = 31,
+    version = 32,
     autoMigrations = [
         AutoMigration(from = 1, to = 2),
         AutoMigration(from = 2, to = 3),
@@ -120,6 +123,7 @@ import com.sceyt.chatuikit.persistence.database.entity.user.UserMetadataEntity
         AutoMigration(from = 27, to = 28),
         AutoMigration(from = 29, to = 30),
         AutoMigration(from = 30, to = 31),
+        AutoMigration(from = 31, to = 32),
     ]
 )
 
@@ -143,6 +147,7 @@ internal abstract class SceytDatabase : RoomDatabase() {
     abstract fun linkDao(): LinkDao
     abstract fun loadRangeDao(): LoadRangeDao
     abstract fun markerDao(): MarkerDao
+    abstract fun pinnedMessageDao(): PinnedMessageDao
     abstract fun pollDao(): PollDao
     abstract fun pendingPollVoteDao(): PendingPollVoteDao
 }

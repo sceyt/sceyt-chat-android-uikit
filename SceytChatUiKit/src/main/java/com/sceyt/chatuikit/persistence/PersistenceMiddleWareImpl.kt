@@ -5,6 +5,7 @@ import com.sceyt.chat.models.Types
 import com.sceyt.chat.models.message.DeleteMessageType
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
+import com.sceyt.chat.models.message.PinDetails.PinType
 import com.sceyt.chat.models.settings.UserSettings
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.UserListQuery
@@ -19,6 +20,7 @@ import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.managers.connection.event.ConnectionStateData
 import com.sceyt.chatuikit.data.managers.message.MessageEventManager
 import com.sceyt.chatuikit.data.managers.message.event.MessageStatusChangeData
+import com.sceyt.chatuikit.data.managers.message.event.PinUpdateEvent
 import com.sceyt.chatuikit.data.managers.message.event.PollUpdateEvent
 import com.sceyt.chatuikit.data.managers.message.event.ReactionUpdateEventData
 import com.sceyt.chatuikit.data.models.ChangeVoteResponseData
@@ -42,6 +44,7 @@ import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.SceytMarker
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.data.models.messages.SceytPinnedMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.notifications.managers.RealtimeNotificationManager
@@ -52,6 +55,7 @@ import com.sceyt.chatuikit.persistence.interactor.ChannelInviteKeyInteractor
 import com.sceyt.chatuikit.persistence.interactor.ChannelMemberInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageMarkerInteractor
+import com.sceyt.chatuikit.persistence.interactor.MessagePinInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessagePollInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageReactionInteractor
 import com.sceyt.chatuikit.persistence.interactor.UserInteractor
@@ -62,6 +66,7 @@ import com.sceyt.chatuikit.persistence.logic.PersistenceConnectionLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMembersLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessageMarkerLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
+import com.sceyt.chatuikit.persistence.logic.PersistencePinLogic
 import com.sceyt.chatuikit.persistence.logic.PersistencePollLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceReactionsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceUsersLogic
@@ -82,6 +87,7 @@ internal class PersistenceMiddleWareImpl(
     private val attachmentsLogic: PersistenceAttachmentLogic,
     private val reactionsLogic: PersistenceReactionsLogic,
     private val pollLogic: PersistencePollLogic,
+    private val pinLogic: PersistencePinLogic,
     private val messageMarkerLogic: PersistenceMessageMarkerLogic,
     private val membersLogic: PersistenceMembersLogic,
     private val usersLogic: PersistenceUsersLogic,
@@ -90,7 +96,8 @@ internal class PersistenceMiddleWareImpl(
     private val realtimeNotificationManager: RealtimeNotificationManager,
 ) : ChannelMemberInteractor, MessageInteractor, ChannelInteractor,
     UserInteractor, AttachmentInteractor, MessageMarkerInteractor,
-    MessageReactionInteractor, MessagePollInteractor, ChannelInviteKeyInteractor {
+    MessageReactionInteractor, MessagePollInteractor, MessagePinInteractor,
+    ChannelInviteKeyInteractor {
 
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
@@ -111,6 +118,7 @@ internal class PersistenceMiddleWareImpl(
         MessageEventManager.onMessageEditedOrDeletedFlow.onEach(::onMessageEditedOrDeleted)
             .launchIn(scope)
         MessageEventManager.onPollUpdatedFlow.onEach(::onPollUpdated).launchIn(scope)
+        MessageEventManager.onPinUpdatedFlow.onEach(::onPinUpdated).launchIn(scope)
 
         // Connection events
         ConnectionEventManager.onChangedConnectStatusFlow.onEach(::onChangedConnectStatus)
@@ -166,6 +174,14 @@ internal class PersistenceMiddleWareImpl(
     private fun onPollUpdated(event: PollUpdateEvent) {
         scope.launch {
             pollLogic.onPollUpdated(event)
+        }
+    }
+
+    private fun onPinUpdated(event: PinUpdateEvent) {
+        scope.launch {
+            pinLogic.onPinUpdated(event)
+            if (event is PinUpdateEvent.Pinned)
+                realtimeNotificationManager.onMessagesPinned(event.channelId, event.messages)
         }
     }
 
@@ -886,6 +902,37 @@ internal class PersistenceMiddleWareImpl(
 
     override suspend fun sendAllPendingVotes() {
         pollLogic.sendAllPendingVotes()
+    }
+
+    override fun getPinnedMessagesFlow(channelId: Long): Flow<List<SceytPinnedMessage>> {
+        return pinLogic.getPinnedMessagesFlow(channelId)
+    }
+
+    override suspend fun getPinnedMessages(channelId: Long): List<SceytPinnedMessage> {
+        return pinLogic.getPinnedMessages(channelId)
+    }
+
+    override suspend fun pinMessage(
+        channelId: Long,
+        messageTid: Long,
+        pinType: PinType
+    ): SceytResponse<SceytPinnedMessage> {
+        return pinLogic.pinMessage(channelId, messageTid, pinType)
+    }
+
+    override suspend fun unpinMessage(
+        channelId: Long,
+        messageTid: Long
+    ): SceytResponse<Boolean> {
+        return pinLogic.unpinMessage(channelId, messageTid)
+    }
+
+    override suspend fun syncChannelPins(channelId: Long) {
+        pinLogic.syncChannelPins(channelId)
+    }
+
+    override suspend fun sendAllPendingPins() {
+        pinLogic.sendAllPendingPins()
     }
 
     override suspend fun getMessageMarkers(

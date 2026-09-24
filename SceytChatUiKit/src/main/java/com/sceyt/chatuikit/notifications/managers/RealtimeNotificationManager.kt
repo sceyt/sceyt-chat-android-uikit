@@ -7,6 +7,7 @@ import com.sceyt.chatuikit.data.managers.message.event.ReactionUpdateEventData
 import com.sceyt.chatuikit.data.managers.message.event.ReactionUpdateEventEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.data.models.messages.SceytPinnedMessage
 import com.sceyt.chatuikit.notifications.NotificationType
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.ShouldShowNotificationUseCase
 import com.sceyt.chatuikit.push.PushData
@@ -15,6 +16,7 @@ internal interface RealtimeNotificationManager {
     suspend fun onMessageReceived(channel: SceytChannel, message: SceytMessage)
     suspend fun onMessageStateChanged(message: SceytMessage)
     suspend fun onReactionEvent(data: ReactionUpdateEventData)
+    suspend fun onMessagesPinned(channelId: Long, pinnedMessages: List<SceytPinnedMessage>)
 }
 
 internal class RealtimeNotificationManagerImpl(
@@ -33,6 +35,29 @@ internal class RealtimeNotificationManagerImpl(
             reaction = null
         )
         showNotificationIfNeeded(pushData)
+    }
+
+    override suspend fun onMessagesPinned(
+        channelId: Long,
+        pinnedMessages: List<SceytPinnedMessage>,
+    ) {
+        val channel = SceytChatUIKit.chatUIFacade.channelInteractor.getChannelFromDb(channelId)
+            ?: return
+
+        pinnedMessages.forEach { pinned ->
+            val pinnedBy = pinned.pinnedBy ?: return@forEach
+            if (pinnedBy.id == SceytChatUIKit.currentUserId) return@forEach
+
+            showNotificationIfNeeded(
+                PushData(
+                    type = NotificationType.MessagePinned,
+                    channel = channel,
+                    message = pinned.message,
+                    user = pinnedBy,
+                    reaction = null
+                )
+            )
+        }
     }
 
     override suspend fun onMessageStateChanged(message: SceytMessage) {
