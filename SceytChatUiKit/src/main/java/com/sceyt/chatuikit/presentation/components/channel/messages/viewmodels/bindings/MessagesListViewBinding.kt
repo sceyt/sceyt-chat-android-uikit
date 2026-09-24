@@ -159,6 +159,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     messageActionBridge.menuEvents.onEach(::applyMenuEvent).launchIn(lifecycleScope)
     messagesListView.setMultiselectDestination(selectedMessagesMap)
     if (channel.isSelf) {
+        messagesListView.setAlwaysPinForMe(true)
         messagesListView.setEmptyStateForSelfChannel()
     }
 
