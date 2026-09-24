@@ -9,6 +9,7 @@ import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.channels.SelfChannelMetadata
 import com.sceyt.chatuikit.data.models.channels.stringToEnum
 import com.sceyt.chatuikit.extensions.toBoolean
+import org.checkerframework.checker.units.qual.m
 
 fun SceytChannel.checkIsMemberInChannel(): Boolean {
     return if (isGroup) {
@@ -29,10 +30,14 @@ fun SceytChannel.getChannelType(): ChannelTypeEnum {
 }
 
 fun SceytChannel.getPeer(): SceytMember? {
-    return members?.firstOrNull { it.id != SceytChatUIKit.chatUIFacade.myId } ?: run {
-        if (isSelf) members?.firstOrNull() else null
-    }
+    val myId = SceytChatUIKit.chatUIFacade.myId
+    val allMembers = members ?: return null
+    if (isSelf) return allMembers.firstOrNull { it.id == myId } ?: allMembers.firstOrNull()
+    val otherMembers = allMembers.filter { it.id != myId }
+    return otherMembers.firstOrNull { it.id.isNotBlank() }
+        ?: otherMembers.firstOrNull()
 }
+
 
 fun ChannelTypeEnum?.isGroup() = this != ChannelTypeEnum.Direct
 
