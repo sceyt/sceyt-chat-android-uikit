@@ -10,8 +10,10 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
+import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.formatters.attributes.PinnedMessageBodyFormatterAttributes
+import com.sceyt.chatuikit.providers.VisualProvider
 import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.SceytComponentStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
@@ -29,6 +31,7 @@ import com.sceyt.chatuikit.styles.common.TextStyle
  * @property mentionTextStyle mentions inside the preview.
  * @property deletedStateText shown when the pinned message was deleted.
  * @property bodyFormatter builds the preview text.
+ * @property iconProvider the leading icon for a pin that carries no visual attachment
  */
 data class PinnedMessagesViewStyle(
     @param:ColorInt val backgroundColor: Int,
@@ -41,6 +44,7 @@ data class PinnedMessagesViewStyle(
     val mentionTextStyle: TextStyle,
     val deletedStateText: CharSequence,
     val bodyFormatter: Formatter<PinnedMessageBodyFormatterAttributes>,
+    val iconProvider: VisualProvider<SceytMessage, Drawable?>,
 ) : SceytComponentStyle() {
 
     companion object {
@@ -135,6 +139,7 @@ data class PinnedMessagesViewStyle(
                         mentionTextStyle = mentionTextStyle,
                         deletedStateText = context.getString(R.string.sceyt_message_was_deleted),
                         bodyFormatter = SceytChatUIKit.formatters.pinnedMessageBodyFormatter,
+                        iconProvider = SceytChatUIKit.providers.pinnedMessageIconProvider,
                     ).let { styleCustomizer.apply(context, it) }
                 }
         }
