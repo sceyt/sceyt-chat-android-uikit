@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <merge xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout">
 
-    <!-- Segment indicator: one bar per pin, drawn in code so the count and the selection
-         can animate. -->
     <com.sceyt.chatuikit.presentation.components.channel.messages.components.PinSegmentIndicatorView
         android:id="@+id/segmentIndicator"
         android:layout_width="2dp"
@@ -33,6 +32,7 @@
             android:layout_height="match_parent"
             android:scaleType="centerCrop"
             tools:src="@tools:sample/backgrounds/scenic" />
+
     </FrameLayout>
 
     <androidx.appcompat.widget.AppCompatTextView
@@ -52,26 +52,37 @@
         app:layout_constraintVertical_chainStyle="packed"
         tools:text="Pinned message" />
 
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/bodyIcon"
+        android:layout_width="16dp"
+        android:layout_height="16dp"
+        android:layout_marginStart="8dp"
+        android:scaleType="centerInside"
+        app:layout_constraintEnd_toStartOf="@id/body"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@+id/body"
+        app:layout_constraintStart_toEndOf="@+id/thumbnailContainer"
+        app:layout_constraintTop_toTopOf="@+id/body"
+        tools:src="@drawable/sceyt_ic_pin"
+        tools:visibility="visible" />
+
+
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/body"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
+        android:layout_marginStart="4dp"
         android:layout_marginEnd="8dp"
         android:ellipsize="end"
         android:includeFontPadding="false"
         android:maxLines="1"
+        app:layout_goneMarginStart="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/pinListButton"
-        app:layout_constraintStart_toEndOf="@+id/thumbnailContainer"
+        app:layout_constraintStart_toEndOf="@+id/bodyIcon"
         app:layout_constraintTop_toBottomOf="@+id/title"
         tools:text="What's the most useful in feature?" />
 
-    <!--
-      Sized for the finger, not for the icon: the box is 40dp and the padding keeps the icon
-      itself at 24dp, sitting exactly where a 12dp end margin used to put it (4dp margin +
-      8dp padding).
-    -->
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/pinListButton"
         android:layout_width="40dp"
