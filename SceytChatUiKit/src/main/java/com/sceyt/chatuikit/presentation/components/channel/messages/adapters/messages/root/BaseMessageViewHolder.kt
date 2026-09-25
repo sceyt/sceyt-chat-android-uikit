@@ -66,6 +66,7 @@ import com.sceyt.chatuikit.presentation.custom_views.AvatarView
 import com.sceyt.chatuikit.presentation.custom_views.ClickableTextView
 import com.sceyt.chatuikit.presentation.custom_views.DecoratedTextView
 import com.sceyt.chatuikit.presentation.custom_views.ToReplyLineView
+import com.sceyt.chatuikit.presentation.extensions.isPending
 import com.sceyt.chatuikit.presentation.extensions.isSupportedType
 import com.sceyt.chatuikit.presentation.extensions.setChatMessageDateAndStatusIcon
 import com.sceyt.chatuikit.shared.helpers.RecyclerItemOffsetDecoration
@@ -110,7 +111,10 @@ abstract class BaseMessageViewHolder(
 
     protected abstract val incoming: Boolean
     protected abstract val selectMessageView: View?
-    open val enableReply = true
+    open val enableReply: Boolean
+        get() = !::messageListItem.isInitialized
+                || (messageListItem as? MessageListItem.MessageItem)?.message?.isPending() != true
+
     protected val requireMessageItem get() = messageListItem as MessageListItem.MessageItem
     protected val requireMessage get() = (messageListItem as MessageListItem.MessageItem).message
 
