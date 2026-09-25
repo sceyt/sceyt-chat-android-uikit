@@ -16,6 +16,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.message.DeleteMessageType
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
@@ -30,9 +31,11 @@ import com.sceyt.chatuikit.extensions.createIntent
 import com.sceyt.chatuikit.extensions.openLink
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.setClipboard
+import com.sceyt.chatuikit.extensions.updateWithScrollCompensation
 import com.sceyt.chatuikit.navigation.Destination
 import com.sceyt.chatuikit.navigation.MediaPreviewParams
 import com.sceyt.chatuikit.navigation.navigate
+import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.presentation.common.dialogs.SceytDialog
 import com.sceyt.chatuikit.presentation.components.channel.header.MessageActionsMenuInitializer
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
@@ -78,26 +81,35 @@ open class PinnedMessagesActivity : AppCompatActivity() {
     private val adapter by lazy {
         PinnedMessagesAdapter(
             style = style,
+            messagesListStyle = messagesListStyle,
             viewHolderFactory = viewHolderFactory,
             onNavigateClick = ::finishWithJump,
+            onSelectClick = ::toggleSelection,
         )
     }
 
-    private var selectedMessage: SceytMessage? = null
     private var reactionsPopup: ReactionsPopup? = null
 
     protected open val messageClickListeners = object : MessageClickListeners.ClickListeners {
 
         override fun onMessageClick(view: View, item: MessageItem) {
+            if (viewModel.selectedMessages.isNotEmpty()) {
+                toggleSelection(item.message)
+                return
+            }
             if (reactionsPopup == null) showReactionsPopup(view, item.message)
         }
 
         override fun onMessageLongClick(view: View, item: MessageItem) {
-            showMessageActions(view, item.message)
+            toggleSelection(item.message)
+        }
+
+        override fun onMultiSelectClick(view: View, message: SceytMessage) {
+            toggleSelection(message)
         }
 
         override fun onAttachmentLongClick(view: View, item: FileListItem, message: SceytMessage) {
-            showMessageActions(view, message)
+            toggleSelection(message)
         }
 
         override fun onAddReactionClick(view: View, message: SceytMessage) {
@@ -187,9 +199,26 @@ open class PinnedMessagesActivity : AppCompatActivity() {
             openUser(userId)
         }
         override fun onReplyCountClick(view: View, item: MessageItem) = Unit
-        override fun onMultiSelectClick(view: View, message: SceytMessage) = Unit
         override fun onReadMoreClick(view: View, item: MessageItem) {
+            val rv = binding.rvPinnedMessages
+            val holder = rv.findViewHolderForItemId(item.getItemId())
+                    as? PinnedMessagesAdapter.ViewHolder ?: return
+            val position = holder.bindingAdapterPosition
+            if (position == RecyclerView.NO_POSITION) return
+
             viewModel.expandBody(item.message.tid)
+
+            val expandedItem = item.copy(message = item.message.copy(isBodyExpanded = true))
+            val oldTop = holder.itemView.top
+
+            rv.updateWithScrollCompensation(
+                oldTop = oldTop,
+                getNewTop = { holder.itemView.top },
+                onUpdate = {
+                    adapter.replaceMessageItem(expandedItem, position)
+                    holder.bind(expandedItem, MessageDiff.DEFAULT_FALSE.copy(bodyChanged = true))
+                }
+            )
         }
 
         override fun onScrollToDownClick(view: View) = Unit
@@ -211,7 +240,7 @@ open class PinnedMessagesActivity : AppCompatActivity() {
         observeState()
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                if (binding.toolbarMessageActions.isVisible) hideMessageActions() else finish()
+                if (viewModel.selectedMessages.isNotEmpty()) clearSelection() else finish()
             }
         })
     }
@@ -222,7 +251,7 @@ open class PinnedMessagesActivity : AppCompatActivity() {
 
     protected open fun initViews() = with(binding) {
         toolbar.setNavigationClickListener {
-            if (toolbarMessageActions.isVisible) hideMessageActions() else finish()
+            if (viewModel.selectedMessages.isNotEmpty()) clearSelection() else finish()
         }
         rvPinnedMessages.layoutManager = LinearLayoutManager(this@PinnedMessagesActivity).apply {
             stackFromEnd = true
@@ -230,7 +259,6 @@ open class PinnedMessagesActivity : AppCompatActivity() {
         rvPinnedMessages.adapter = adapter
     }
 
-    /** Override for custom message types; use [applyFactoryDefaults] to retain listeners and style. */
     protected open fun createViewHolderFactory(): MessageViewHolderFactory {
         return MessageViewHolderFactory(this).also { applyFactoryDefaults(it) }
     }
@@ -249,17 +277,43 @@ open class PinnedMessagesActivity : AppCompatActivity() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.pinnedMessages.collect { items ->
-                    adapter.submitList(items)
-                    // The screen stays up when the last pin goes away rather than popping.
+                    adapter.submit(items)
                     binding.emptyStateView.isVisible = items.isEmpty()
-                    // Unpinning or deleting the selected message takes the row away with it.
-                    val selectedTid = selectedMessage?.tid
-                    if (items.none { it is MessageItem && it.message.tid == selectedTid })
-                        hideMessageActions()
+                    val tids = items.filterIsInstance<MessageItem>().map { it.message.tid }
+                    if (viewModel.selectedMessages.keys.any { it !in tids }) clearSelection()
                 }
             }
         }
     }
+
+    protected open fun toggleSelection(message: SceytMessage) {
+        val updated = viewModel.toggleSelection(message)
+        if (updated == null) {
+            val limit = SceytChatUIKit.config.messageMultiselectLimit
+            Toast.makeText(
+                this,
+                getString(R.string.sceyt_reach_max_message_select_count, limit.toString()),
+                Toast.LENGTH_SHORT
+            ).show()
+            return
+        }
+        adapter.updateItemSelection(updated)
+
+        val selected = viewModel.selectedMessages.values
+        if (selected.isEmpty()) {
+            clearSelection()
+        } else {
+            adapter.setSelectableMode(true)
+            showMessageActions(*selected.toTypedArray())
+        }
+    }
+
+    protected open fun clearSelection() {
+        viewModel.selectedMessages.clear()
+        adapter.setSelectableMode(false)
+        hideMessageActions()
+    }
+
 
     protected open fun openUser(userId: String?) {
         viewModel.openUser(userId ?: return) { channel ->
@@ -290,7 +344,6 @@ open class PinnedMessagesActivity : AppCompatActivity() {
             }
         ).also { popup ->
             popup.setOnDismissListener {
-                // Ignore the tap that dismissed the popup.
                 lifecycleScope.launch {
                     delay(100.milliseconds)
                     reactionsPopup = null
@@ -315,74 +368,59 @@ open class PinnedMessagesActivity : AppCompatActivity() {
         }.show(supportFragmentManager, null)
     }
 
-    /** Override to present a custom menu and dispatch selections through [onMessageAction]. */
-    protected open fun showMessageActions(view: View, message: SceytMessage) {
-        selectedMessage = message
+    protected open fun showMessageActions(vararg messages: SceytMessage) {
+        if (messages.isEmpty()) return
         with(binding) {
-            toolbarMessageActions.setToolbarIconsVisibilityInitializer { messages, menu ->
-                MessageActionsMenuInitializer.init(this@PinnedMessagesActivity, menu, *messages)
-                // Message info belongs to the conversation, where the message sits among the
-                // others it was delivered with.
+            toolbarMessageActions.setToolbarIconsVisibilityInitializer { selected, menu ->
+                MessageActionsMenuInitializer.init(this@PinnedMessagesActivity, menu, *selected)
                 menu.findItem(R.id.sceyt_message_info)?.isVisible = false
             }
-            toolbarMessageActions.setupMenuWithMessages(style.messageActionsMenuStyle, message)
+            toolbarMessageActions.setupMenuWithMessages(style.messageActionsMenuStyle, *messages)
             toolbarMessageActions.setMenuItemClickListener { item ->
-                onMessageActionClick(item, message)
+                onMessageActionClick(item, *messages)
             }
             toolbarMessageActions.isVisible = true
-            // The toolbar stays for its back arrow; only its title gives way.
             toolbar.setTitle("")
         }
     }
 
     protected open fun hideMessageActions() = with(binding) {
         if (!toolbarMessageActions.isVisible) return@with
-        selectedMessage = null
         toolbarMessageActions.isVisible = false
         toolbar.setTitle(style.toolbarTitle)
     }
 
-    protected open fun onMessageActionClick(item: MenuItem, message: SceytMessage) {
-        onMessageAction(item.itemId, message)
+    protected open fun onMessageActionClick(item: MenuItem, vararg messages: SceytMessage) {
+        onMessageAction(item.itemId, *messages)
     }
 
-    /** Handles actions from the default menu or a subclass's custom menu. */
-    protected open fun onMessageAction(actionId: Int, message: SceytMessage) {
+    protected open fun onMessageAction(actionId: Int, vararg messages: SceytMessage) {
+        val message = messages.firstOrNull() ?: return
+        val selected = messages.toList()
+        clearSelection()
+
         when (actionId) {
             R.id.sceyt_reply -> finishWithAction(Action.Reply, message)
             R.id.sceyt_edit_message -> finishWithAction(Action.Edit, message)
 
-            R.id.sceyt_forward -> {
-                hideMessageActions()
-                SceytChatUIKit.navigator.navigate(this, Destination.Forward(message))
-            }
+            R.id.sceyt_forward -> SceytChatUIKit.navigator.navigate(
+                this, Destination.Forward(selected)
+            )
 
             R.id.sceyt_copy_message -> {
-                hideMessageActions()
-                setClipboard(MessageCopyHelper.buildCopyableText(this, message))
+                setClipboard(MessageCopyHelper.buildCopyableText(this, *messages))
                 Toast.makeText(this, R.string.sceyt_message_copied, Toast.LENGTH_SHORT).show()
             }
 
             R.id.sceyt_delete_message -> DeleteMessageDialog(this)
-                .setDeleteMessagesCount(1)
-                .setRequireForMe(message.incoming)
-                .setAcceptCallback { forMe ->
-                    hideMessageActions()
-                    viewModel.delete(message, deleteType(forMe))
-                }
+                .setDeleteMessagesCount(selected.size)
+                .setRequireForMe(selected.any { it.incoming })
+                .setAcceptCallback { forMe -> viewModel.delete(selected, deleteType(forMe)) }
                 .show()
 
-            R.id.sceyt_pin_message -> {
-                // Everything on this screen is pinned, so this is always the unpin side of
-                // the shared menu item.
-                hideMessageActions()
-                viewModel.unpin(message.tid)
-            }
+            R.id.sceyt_pin_message -> viewModel.unpin(message.tid)
 
-            R.id.sceyt_retract_vote -> {
-                hideMessageActions()
-                viewModel.retractVote(message)
-            }
+            R.id.sceyt_retract_vote -> viewModel.retractVote(message)
 
             R.id.sceyt_end_vote -> SceytDialog.showDialog(
                 context = this,
@@ -390,10 +428,7 @@ open class PinnedMessagesActivity : AppCompatActivity() {
                 descId = R.string.sceyt_end_poll_dialog_desc,
                 positiveBtnTitleId = R.string.sceyt_end,
                 negativeBtnTitleId = R.string.sceyt_not_now,
-                positiveCb = {
-                    hideMessageActions()
-                    viewModel.endVote(message)
-                }
+                positiveCb = { viewModel.endVote(message) }
             )
         }
     }
@@ -405,7 +440,6 @@ open class PinnedMessagesActivity : AppCompatActivity() {
     }
 
     protected open fun finishWithJump(message: SceytMessage) {
-        // A pin whose message has no server id yet cannot be jumped to.
         if (message.id == 0L) return
         finishWithAction(Action.Jump, message)
     }

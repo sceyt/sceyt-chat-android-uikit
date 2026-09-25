@@ -7,14 +7,29 @@
     android:paddingTop="4dp"
     android:paddingBottom="8dp">
 
+    <androidx.appcompat.widget.AppCompatCheckBox
+        android:id="@+id/selectView"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_marginStart="11dp"
+        android:background="@android:color/transparent"
+        android:clickable="false"
+        android:contentDescription="@string/sceyt_cd_select_message"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@+id/bubbleContainer"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/bubbleContainer"
+        tools:visibility="visible" />
+
     <FrameLayout
         android:id="@+id/bubbleContainer"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginEnd="52dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintStart_toEndOf="@+id/selectView"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_goneMarginStart="0dp" />
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/navigateButton"
