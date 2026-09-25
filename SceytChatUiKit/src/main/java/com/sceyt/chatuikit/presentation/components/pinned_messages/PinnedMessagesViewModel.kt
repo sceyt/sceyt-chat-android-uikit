@@ -33,12 +33,10 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.P
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.ReactionController
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.shareIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.core.component.inject
@@ -84,45 +82,57 @@ class PinnedMessagesViewModel(
         }
     )
 
-    // Preserve expanded bodies across database updates.
-    private val expandedMessageTids = MutableStateFlow<Set<Long>>(emptySet())
+    private val expandedMessageTids = mutableSetOf<Long>()
+    val selectedMessages = mutableMapOf<Long, SceytMessage>()
 
     // Pins use pin order, so omit timeline separators.
     val pinnedMessages: SharedFlow<List<MessageListItem>> =
-        combine(
-            pinInteractor.getPinnedMessagesFlow(channel.id),
-            expandedMessageTids
-        ) { pins, expanded ->
-            itemMapper.map(
-                data = pins.map { it.message },
-                hasNext = false,
-                hasPrev = false,
-                ignoreUnreadMessagesSeparator = true,
-                enableDateSeparator = false,
-                context = MessageListItemMappingContext(
-                    channel = channel,
-                    myIdProvider = { SceytChatUIKit.currentUserId },
-                    pinnedLastReadMessageId = 0L,
-                    showSenderAvatarAndName = channel.isGroup,
-                    selectedMessageTids = emptySet(),
-                    expandedMessageTids = expanded,
+        pinInteractor.getPinnedMessagesFlow(channel.id)
+            .map { pins ->
+                itemMapper.map(
+                    data = pins.map { it.message },
+                    hasNext = false,
+                    hasPrev = false,
+                    ignoreUnreadMessagesSeparator = true,
+                    enableDateSeparator = false,
+                    context = MessageListItemMappingContext(
+                        channel = channel,
+                        myIdProvider = { SceytChatUIKit.currentUserId },
+                        pinnedLastReadMessageId = 0L,
+                        showSenderAvatarAndName = channel.isGroup,
+                        selectedMessageTids = selectedMessages.keys,
+                        expandedMessageTids = expandedMessageTids,
+                    )
                 )
-            )
-        }
+            }
             .shareIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), replay = 1)
 
     fun expandBody(messageTid: Long) {
-        expandedMessageTids.update { it + messageTid }
+        expandedMessageTids += messageTid
+    }
+
+    /** @return the message with its new selection state, or null if the cap was reached. */
+    fun toggleSelection(message: SceytMessage): SceytMessage? {
+        val wasSelected = selectedMessages.containsKey(message.tid)
+        if (!wasSelected && selectedMessages.size >= SceytChatUIKit.config.messageMultiselectLimit)
+            return null
+
+        val updated = message.copy(isSelected = !wasSelected)
+        if (wasSelected) selectedMessages.remove(message.tid)
+        else selectedMessages[message.tid] = updated
+        return updated
     }
 
     fun unpin(messageTid: Long) {
         pinController.unpin(messageTid)
     }
 
-    fun delete(message: SceytMessage, deleteType: DeleteMessageType) {
+    fun delete(messages: List<SceytMessage>, deleteType: DeleteMessageType) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = messageInteractor.deleteMessage(channel.id, message, deleteType)
-            notifyPageStateWithResponse(response)
+            messages.forEach { message ->
+                val response = messageInteractor.deleteMessage(channel.id, message, deleteType)
+                notifyPageStateWithResponse(response)
+            }
         }
     }
 

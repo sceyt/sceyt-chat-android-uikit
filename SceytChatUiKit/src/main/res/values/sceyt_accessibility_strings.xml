@@ -322,6 +322,7 @@
     <string name="sceyt_cd_search_suggestion_user_avatar">Search suggestion user avatar</string>
     <string name="sceyt_cd_search_suggestion_user_item">Search suggestion user item</string>
     <string name="sceyt_cd_select_delete_for_everyone">Select delete for everyone</string>
+    <string name="sceyt_cd_select_message">Select message</string>
     <string name="sceyt_cd_select_incoming_attachments_message">Select incoming attachments message</string>
     <string name="sceyt_cd_select_incoming_deleted_message">Select incoming deleted message</string>
     <string name="sceyt_cd_select_incoming_file_message">Select incoming file message</string>

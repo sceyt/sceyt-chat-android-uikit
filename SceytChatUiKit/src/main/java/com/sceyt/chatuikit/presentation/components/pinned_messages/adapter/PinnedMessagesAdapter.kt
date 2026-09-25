@@ -5,28 +5,92 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewGroup.MarginLayoutParams
+import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
 import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytItemPinnedMessageBinding
 import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
-import com.sceyt.chatuikit.persistence.differs.diff
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageViewHolderFactory
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessagesDiffUtil
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMessageViewHolder
+import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle
 import com.sceyt.chatuikit.styles.pinned_messages.PinnedMessagesStyle
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 internal class PinnedMessagesAdapter(
     private val style: PinnedMessagesStyle,
+    private val messagesListStyle: MessagesListViewStyle,
     private val viewHolderFactory: MessageViewHolderFactory,
     private val onNavigateClick: (SceytMessage) -> Unit,
-) : ListAdapter<MessageListItem, PinnedMessagesAdapter.ViewHolder>(DIFF) {
+    private val onSelectClick: (SceytMessage) -> Unit,
+) : RecyclerView.Adapter<PinnedMessagesAdapter.ViewHolder>() {
+
+    private var items: List<MessageListItem> = emptyList()
+    private var selectableMode = false
+
+    init {
+        setHasStableIds(true)
+    }
+    fun setSelectableMode(enable: Boolean) {
+        if (selectableMode == enable) return
+        selectableMode = enable
+        notifyItemRangeChanged(
+            0, itemCount, MessageDiff.DEFAULT_FALSE.copy(selectionChanged = true)
+        )
+    }
+
+    fun updateItemSelection(message: SceytMessage) {
+        val item = items.firstOrNull {
+            it is MessageListItem.MessageItem && it.message.tid == message.tid
+        } as? MessageListItem.MessageItem ?: return
+        val updated = item.copy(message = item.message.copy(isSelected = message.isSelected))
+        val index = replaceMessageItem(updated)
+        if (index != RecyclerView.NO_POSITION)
+            notifyItemChanged(index, MessageDiff.DEFAULT_FALSE.copy(selectionChanged = true))
+    }
+
+    override fun getItemCount(): Int = items.size
+
+    private fun getItem(position: Int) = items[position]
+
+    override fun getItemId(position: Int): Long = items[position].getItemId()
 
     override fun getItemViewType(position: Int): Int =
         viewHolderFactory.getItemViewType(getItem(position))
+
+    suspend fun submit(newItems: List<MessageListItem>) {
+        val oldItems = items
+        val result = withContext(Dispatchers.Default) {
+            DiffUtil.calculateDiff(MessagesDiffUtil(oldItems, newItems), true)
+        }
+        items = newItems
+        result.dispatchUpdatesTo(this)
+    }
+
+    fun replaceMessageItem(
+        updatedItem: MessageListItem.MessageItem,
+        positionHint: Int = RecyclerView.NO_POSITION,
+    ): Int {
+        val currentIndex = resolveMessageIndex(positionHint, updatedItem.message.tid)
+        if (currentIndex != RecyclerView.NO_POSITION)
+            items = items.toMutableList().also { it[currentIndex] = updatedItem }
+        return currentIndex
+    }
+
+    private fun resolveMessageIndex(positionHint: Int, tid: Long): Int {
+        val hintedItem = items.getOrNull(positionHint) as? MessageListItem.MessageItem
+        if (hintedItem?.message?.tid == tid)
+            return positionHint
+
+        return items.indexOfFirst {
+            it is MessageListItem.MessageItem && it.message.tid == tid
+        }.takeIf { it >= 0 } ?: RecyclerView.NO_POSITION
+    }
 
     override fun onViewAttachedToWindow(holder: ViewHolder) {
         super.onViewAttachedToWindow(holder)
@@ -45,6 +109,7 @@ internal class PinnedMessagesAdapter(
         val messageHolder = viewHolderFactory.createViewHolder(binding.bubbleContainer, viewType)
         binding.bubbleContainer.addView(messageHolder.itemView)
         style.navigateButtonBackgroundStyle.apply(binding.navigateButton)
+        messagesListStyle.messageItemStyle.selectionCheckboxStyle.apply(binding.selectView)
         return ViewHolder(binding, messageHolder)
     }
 
@@ -80,6 +145,12 @@ internal class PinnedMessagesAdapter(
         fun bind(item: MessageListItem.MessageItem, diff: MessageDiff) = with(binding) {
             val message = item.message
             messageHolder.bind(item, diff)
+
+            selectView.isVisible = selectableMode
+            selectView.isChecked = message.isSelected
+            // The checkbox itself stays non-clickable, as it is in the conversation's cells;
+            // the row takes the tap, which also covers the space beside the bubble.
+            root.setOnClickListener { if (selectableMode) onSelectClick(message) }
 
             incoming = message.incoming
             bubbleContainer.updateLayoutParams<MarginLayoutParams> {
@@ -117,39 +188,6 @@ internal class PinnedMessagesAdapter(
     }
 
     private companion object {
-
-        val DIFF = object : DiffUtil.ItemCallback<MessageListItem>() {
-            override fun areItemsTheSame(
-                oldItem: MessageListItem,
-                newItem: MessageListItem,
-            ) = oldItem.getItemId() == newItem.getItemId()
-
-            override fun areContentsTheSame(
-                oldItem: MessageListItem,
-                newItem: MessageListItem,
-            ) = when {
-                oldItem is MessageListItem.MessageItem && newItem is MessageListItem.MessageItem ->
-                    !oldItem.message.expansionChanged(newItem.message) &&
-                            !oldItem.message.diff(newItem.message).hasDifference()
-
-                else -> oldItem == newItem
-            }
-
-            override fun getChangePayload(
-                oldItem: MessageListItem,
-                newItem: MessageListItem,
-            ): Any? {
-                if (oldItem !is MessageListItem.MessageItem) return null
-                if (newItem !is MessageListItem.MessageItem) return null
-                val diff = oldItem.message.diff(newItem.message)
-                return if (oldItem.message.expansionChanged(newItem.message))
-                    diff.copy(bodyChanged = true)
-                else diff
-            }
-        }
-
-        private fun SceytMessage.expansionChanged(other: SceytMessage) =
-            isBodyExpanded != other.isBodyExpanded
 
         val GAP = 8.dpToPx()
 
