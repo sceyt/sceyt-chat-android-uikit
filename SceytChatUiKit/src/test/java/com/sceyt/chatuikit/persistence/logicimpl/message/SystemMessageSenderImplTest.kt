@@ -28,7 +28,6 @@ import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
-import org.mockito.kotlin.whenever
 
 class SystemMessageSenderImplTest {
     private val messagesLogic = mock<PersistenceMessagesLogic>()
@@ -110,9 +109,8 @@ class SystemMessageSenderImplTest {
     @Test
     fun sendMessagePinned_attachesTheRealParentMessage() = runTest {
         val pinned = sceytMessage(id = PINNED_MESSAGE_ID)
-        whenever(messagesLogic.getMessageFromDbById(PINNED_MESSAGE_ID)).thenReturn(pinned)
 
-        sender.sendMessagePinned(CHANNEL_ID, PINNED_MESSAGE_ID)
+        sender.sendMessagePinned(CHANNEL_ID, pinned)
 
         val message = sentMessage()
 

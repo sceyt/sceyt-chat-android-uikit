@@ -3,14 +3,12 @@ package com.sceyt.chatuikit.persistence.logicimpl.usecases
 import com.sceyt.chatuikit.data.models.messages.SceytPinnedMessage
 import com.sceyt.chatuikit.data.models.SceytPagingResponse
 import com.sceyt.chatuikit.persistence.database.dao.PinnedMessageDao
-import com.sceyt.chatuikit.data.models.messages.PinSyncState
 import com.sceyt.chatuikit.persistence.repositories.PinRepository
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.launch
-import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -24,17 +22,15 @@ import org.mockito.kotlin.verifyBlocking
 import org.mockito.kotlin.whenever
 
 @RunWith(RobolectricTestRunner::class)
-class SyncChannelPinsControllerTest {
+class SyncChannelPinsUseCaseTest {
 
     private val pinnedMessageDao = mock<PinnedMessageDao>()
     private val pinRepository = mock<PinRepository>()
-    private val sendPendingPinsUseCase = mock<SendPendingPinsUseCase>()
     private val storePinsUseCase = mock<StorePinsUseCase>()
 
-    private val useCase = SyncChannelPinsController(
+    private val useCase = SyncChannelPinsUseCase(
         pinnedMessageDao = pinnedMessageDao,
         pinRepository = pinRepository,
-        sendPendingPinsUseCase = sendPendingPinsUseCase,
         storePinsUseCase = storePinsUseCase,
         refreshPinnedMessageCache = mock(),
     )
@@ -48,7 +44,7 @@ class SyncChannelPinsControllerTest {
         val firstPin = sceytPinnedMessage(id = 10L)
         val secondPin = sceytPinnedMessage(id = 11L)
         val otherPin = sceytPinnedMessage(id = 20L)
-        whenever(pinnedMessageDao.getSyncedExcluding(any(), any())).thenReturn(emptyList())
+        whenever(pinnedMessageDao.getExcluding(any(), any())).thenReturn(emptyList())
         whenever(pinRepository.getPinnedMessages(7L)).thenReturn(flow {
             emit(SceytPagingResponse.Success(listOf(firstPin), hasNext = true))
             firstPageStored.complete(Unit)
@@ -66,16 +62,9 @@ class SyncChannelPinsControllerTest {
         firstSync.join()
         secondSync.join()
 
-        verify(pinnedMessageDao).getSyncedExcluding(7L, listOf(10L, 11L))
-        verify(pinnedMessageDao).getSyncedExcluding(8L, listOf(20L))
+        verify(pinnedMessageDao).getExcluding(7L, listOf(10L, 11L))
+        verify(pinnedMessageDao).getExcluding(8L, listOf(20L))
         verify(storePinsUseCase).invoke(7L, listOf(secondPin))
-    }
-
-    @Before
-    fun stubMirrorRepair() = runTest {
-        whenever(sendPendingPinsUseCase.localUpdateMutex).thenReturn(kotlinx.coroutines.sync.Mutex())
-        whenever(sendPendingPinsUseCase.requestMutex).thenReturn(kotlinx.coroutines.sync.Mutex())
-        whenever(pinnedMessageDao.getDriftedMirrorTids(any())).thenReturn(emptyList())
     }
 
     @Test
@@ -86,8 +75,8 @@ class SyncChannelPinsControllerTest {
         useCase(channelId)
 
         // A half-read answer must not drive a reconcile.
-        verifyBlocking(pinnedMessageDao, never()) { getSyncedExcluding(any(), any()) }
-        verify(pinnedMessageDao, never()).deleteWithMirror(any(), any())
+        verifyBlocking(pinnedMessageDao, never()) { getExcluding(any(), any()) }
+        verify(pinnedMessageDao, never()).deleteByTids(any())
     }
 
     @Test
@@ -100,20 +89,7 @@ class SyncChannelPinsControllerTest {
 
         useCase(channelId)
 
-        verifyBlocking(pinnedMessageDao, never()) { getSyncedExcluding(any(), any()) }
-    }
-
-    @Test
-    fun `pending intents are sent before the server is read`() = runTest {
-        whenever(pinRepository.getPinnedMessages(channelId))
-            .thenReturn(flowOf(SceytPagingResponse.Success(emptyList(), hasNext = false)))
-        whenever(pinnedMessageDao.getSyncedExcluding(any(), any())).thenReturn(emptyList())
-
-        useCase(channelId)
-
-        val order = org.mockito.kotlin.inOrder(sendPendingPinsUseCase, pinRepository)
-        order.verify(sendPendingPinsUseCase).invoke(channelId)
-        order.verify(pinRepository).getPinnedMessages(channelId)
+        verifyBlocking(pinnedMessageDao, never()) { getExcluding(any(), any()) }
     }
 
     @Test
@@ -124,7 +100,7 @@ class SyncChannelPinsControllerTest {
                 SceytPagingResponse.Success(emptyList(), hasNext = true),
                 SceytPagingResponse.Success(emptyList(), hasNext = false)
             ))
-        whenever(pinnedMessageDao.getSyncedExcluding(any(), any())).thenReturn(emptyList())
+        whenever(pinnedMessageDao.getExcluding(any(), any())).thenReturn(emptyList())
 
         useCase(channelId)
 
@@ -133,15 +109,15 @@ class SyncChannelPinsControllerTest {
     }
 
     @Test
-    fun `a completed sweep deletes only the synced pins the server did not report`() = runTest {
+    fun `a completed sweep deletes only the confirmed pins the server did not report`() = runTest {
         whenever(pinRepository.getPinnedMessages(channelId))
             .thenReturn(flowOf(SceytPagingResponse.Success(emptyList(), hasNext = false)))
-        whenever(pinnedMessageDao.getSyncedExcluding(any(), any())).thenReturn(
-            listOf(pinnedEntity(messageTid = 5L, syncState = PinSyncState.Synced.value))
+        whenever(pinnedMessageDao.getExcluding(any(), any())).thenReturn(
+            listOf(pinnedEntity(messageTid = 5L))
         )
 
         useCase(channelId)
 
-        verify(pinnedMessageDao).deleteWithMirror(5L, channelId)
+        verify(pinnedMessageDao).deleteByTids(listOf(5L))
     }
 }

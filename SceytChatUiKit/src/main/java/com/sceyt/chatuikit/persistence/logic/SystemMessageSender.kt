@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.persistence.logic
 
 import com.sceyt.chatuikit.data.models.channels.SceytMember
+import com.sceyt.chatuikit.data.models.messages.SceytMessage
 
 interface SystemMessageSender {
     suspend fun sendGroupCreated(channelId: Long)
@@ -10,5 +11,5 @@ interface SystemMessageSender {
     suspend fun sendMemberLeft(channelId: Long)
     suspend fun sendJoinedByInviteLink(channelId: Long)
     suspend fun sendDisappearingMessageChanged(channelId: Long, duration: Long)
-    suspend fun sendMessagePinned(channelId: Long, pinnedMessageId: Long)
+    suspend fun sendMessagePinned(channelId: Long, pinnedMessage: SceytMessage)
 }
