@@ -52,4 +52,5 @@ internal object DatabaseConstants {
     const val POLL_OPTION_TABLE = "sceyt_poll_option_table"
     const val POLL_VOTE_TABLE = "sceyt_poll_vote_table"
     const val PENDING_POLL_VOTE_TABLE = "sceyt_pending_poll_vote_table"
+    const val PENDING_PIN_TABLE = "sceyt_pending_pin_table"
 }

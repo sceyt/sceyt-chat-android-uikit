@@ -5,144 +5,118 @@ import com.sceyt.chat.models.message.PinDetails.PinType
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import com.sceyt.chatuikit.persistence.database.dao.MessageDao
-import com.sceyt.chatuikit.persistence.database.dao.PinnedMessageDao
-import com.sceyt.chatuikit.data.models.messages.PinSyncState
-import com.sceyt.chatuikit.persistence.database.entity.messages.PinnedMessageEntity
-import com.sceyt.chatuikit.persistence.database.entity.messages.PinnedMessageEntity.Companion.UNKNOWN_SERVER_PIN_ID
-import com.sceyt.chatuikit.persistence.repositories.PinRepository
+import com.sceyt.chatuikit.persistence.database.dao.PendingPinDao
+import com.sceyt.chatuikit.persistence.database.entity.messages.StoredPinScope
+import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingPinEntity
 import kotlinx.coroutines.test.runTest
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 import org.mockito.kotlin.any
-import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.argumentCaptor
+import org.mockito.kotlin.doSuspendableAnswer
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
-import org.mockito.kotlin.verifyBlocking
 import org.mockito.kotlin.whenever
+import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class PinMessageUseCaseTest {
 
     private val messageDao = mock<MessageDao>()
-    private val pinnedMessageDao = mock<PinnedMessageDao>()
-    private val pinRepository = mock<PinRepository>()
-
-    private val useCase = PinMessageUseCase(
-        messageDao = messageDao,
-        pinnedMessageDao = pinnedMessageDao,
-        sendPendingPinsUseCase = SendPendingPinsUseCase(
-            pinnedMessageDao, pinRepository, ConfirmPinUseCase(pinnedMessageDao), mock(), mock(),
-        ),
-        refreshPinnedMessageCache = mock(),
-    )
-
-    @org.junit.Before
-    fun trackStoredPin() = runTest {
-        org.mockito.kotlin.doSuspendableAnswer { call ->
-            val entity = call.getArgument<PinnedMessageEntity>(0)
-            whenever(pinnedMessageDao.getByTid(entity.messageTid, entity.channelId)).thenReturn(entity)
-            Unit
-        }.whenever(pinnedMessageDao) { upsertWithMirror(any()) }
-    }
-
+    private val pendingPinDao = mock<PendingPinDao>()
+    private val useCase = PinMessageUseCase(messageDao, pendingPinDao, mock())
     private val channelId = 7L
 
+    @Before
+    fun storeRequests() = runTest {
+        doSuspendableAnswer { it.getArgument<PendingPinEntity>(0).copy(id = 1L) }
+            .whenever(pendingPinDao).replace(any())
+    }
+
     @Test
-    fun `writes the optimistic row as a pending intent before contacting the server`() = runTest {
+    fun `stores a pin request with the chosen scope`() = runTest {
         whenever(messageDao.getMessageByTid(42L)).thenReturn(messageDb())
-        whenever(pinRepository.pinMessages(any(), any(), any(), anyOrNull()))
-            .thenReturn(SceytResponse.Error(null))
 
-        useCase(channelId, messageTid = 42L, pinType = PinType.SHARED)
+        val result = useCase(channelId, messageTid = 42L, pinType = PinType.PERSONAL)
 
-        val captor = argumentCaptor<PinnedMessageEntity>()
-        verify(pinnedMessageDao).upsertWithMirror(captor.capture())
+        assertThat(result).isInstanceOf(SceytResponse.Success::class.java)
+        val captor = argumentCaptor<PendingPinEntity>()
+        verify(pendingPinDao).replace(captor.capture())
         with(captor.firstValue) {
-            assertThat(syncState).isEqualTo(PinSyncState.PendingPin.value)
-            // Sorts to the newest-pin end so an optimistic pin appends rather than
-            // jumping to the head of the banner.
-            assertThat(serverPinId).isEqualTo(UNKNOWN_SERVER_PIN_ID)
+            assertThat(isPin).isTrue()
+            assertThat(messageTid).isEqualTo(42L)
+            assertThat(channelId).isEqualTo(7L)
+            assertThat(messageId).isEqualTo(42L)
+            assertThat(pinScope).isEqualTo(StoredPinScope.ForMe.value)
         }
     }
 
     @Test
-    fun `keeps the pending row when the server call fails`() = runTest {
-        whenever(messageDao.getMessageByTid(42L)).thenReturn(messageDb())
-        whenever(pinRepository.pinMessages(any(), any(), any(), anyOrNull()))
-            .thenReturn(SceytResponse.Error(null))
+    fun `refuses to pin a pending message`() = runTest {
+        whenever(messageDao.getMessageByTid(99L)).thenReturn(
+            messageDb(messageEntity(id = 0L, tid = 99L, deliveryStatus = MessageDeliveryStatus.Pending))
+        )
 
-        val result = useCase(channelId, messageTid = 42L, pinType = PinType.SHARED)
+        assertThat(useCase(channelId, 99L, PinType.SHARED)).isInstanceOf(SceytResponse.Error::class.java)
+        verify(pendingPinDao, never()).replace(any())
+    }
 
-        assertThat(result).isInstanceOf(SceytResponse.Error::class.java)
-        // Never rolled back — the row stays a durable intent for the reconnect flush.
-        verify(pinnedMessageDao, never()).deleteWithMirror(any(), any())
-        verifyBlocking(pinnedMessageDao) { incrementRetry(any(), any(), any()) }
+    @Test
+    fun `pinning again after a pending unpin replaces the unpin`() = runTest {
+        whenever(messageDao.getMessageByTid(42L)).thenReturn(
+            messageDb(pinnedMessage = pinnedEntity(), pendingPin = pendingPin(isPin = false))
+        )
+
+        assertThat(useCase(channelId, 42L, PinType.SHARED)).isInstanceOf(SceytResponse.Success::class.java)
+        verify(pendingPinDao).replace(any())
+    }
+
+    @Test
+    fun `refuses to pin a message that is already pinned`() = runTest {
+        whenever(messageDao.getMessageByTid(42L)).thenReturn(messageDb(pinnedMessage = pinnedEntity()))
+
+        assertThat(useCase(channelId, 42L, PinType.SHARED)).isInstanceOf(SceytResponse.Error::class.java)
+        verify(pendingPinDao, never()).replace(any())
+    }
+
+    @Test
+    fun `refuses to pin a message with a pending pin`() = runTest {
+        whenever(messageDao.getMessageByTid(42L)).thenReturn(messageDb(pendingPin = pendingPin()))
+
+        assertThat(useCase(channelId, 42L, PinType.SHARED)).isInstanceOf(SceytResponse.Error::class.java)
+        verify(pendingPinDao, never()).replace(any())
     }
 
     @Test
     fun `refuses to pin a view-once message`() = runTest {
-        whenever(messageDao.getMessageByTid(42L))
-            .thenReturn(messageDb(messageEntity(viewOnce = true)))
+        whenever(messageDao.getMessageByTid(42L)).thenReturn(messageDb(messageEntity(viewOnce = true)))
 
-        val result = useCase(channelId, messageTid = 42L, pinType = PinType.SHARED)
-
-        assertThat(result).isInstanceOf(SceytResponse.Error::class.java)
-        verify(pinnedMessageDao, never()).upsertWithMirror(any())
-        verifyBlocking(pinRepository, never()) { pinMessages(any(), any(), any(), anyOrNull()) }
+        assertThat(useCase(channelId, 42L, PinType.SHARED)).isInstanceOf(SceytResponse.Error::class.java)
+        verify(pendingPinDao, never()).replace(any())
     }
 
     @Test
     fun `refuses to pin a transient message`() = runTest {
-        whenever(messageDao.getMessageByTid(42L))
-            .thenReturn(messageDb(messageEntity(isTransient = true)))
+        whenever(messageDao.getMessageByTid(42L)).thenReturn(messageDb(messageEntity(isTransient = true)))
 
-        assertThat(useCase(channelId, 42L, PinType.SHARED))
-            .isInstanceOf(SceytResponse.Error::class.java)
-        verify(pinnedMessageDao, never()).upsertWithMirror(any())
+        assertThat(useCase(channelId, 42L, PinType.SHARED)).isInstanceOf(SceytResponse.Error::class.java)
+        verify(pendingPinDao, never()).replace(any())
     }
 
     @Test
     fun `refuses to pin an auto-deleting message`() = runTest {
-        whenever(messageDao.getMessageByTid(42L))
-            .thenReturn(messageDb(messageEntity(autoDeleteAt = 5_000L)))
+        whenever(messageDao.getMessageByTid(42L)).thenReturn(messageDb(messageEntity(autoDeleteAt = 5_000L)))
 
-        assertThat(useCase(channelId, 42L, PinType.SHARED))
-            .isInstanceOf(SceytResponse.Error::class.java)
-        verify(pinnedMessageDao, never()).upsertWithMirror(any())
+        assertThat(useCase(channelId, 42L, PinType.SHARED)).isInstanceOf(SceytResponse.Error::class.java)
+        verify(pendingPinDao, never()).replace(any())
     }
 
     @Test
-    fun `refuses to pin the same message twice`() = runTest {
-        whenever(messageDao.getMessageByTid(42L)).thenReturn(messageDb())
-        whenever(pinnedMessageDao.getByTid(42L, channelId))
-            .thenReturn(pinnedEntity(syncState = PinSyncState.Synced.value))
+    fun `fails when the message is not stored`() = runTest {
+        whenever(messageDao.getMessageByTid(42L)).thenReturn(null)
 
-        val result = useCase(channelId, messageTid = 42L, pinType = PinType.SHARED)
-
-        assertThat(result).isInstanceOf(SceytResponse.Error::class.java)
-        verify(pinnedMessageDao, never()).upsertWithMirror(any())
-    }
-
-    @Test
-    fun `does not contact the server for a message with no server id yet`() = runTest {
-        whenever(messageDao.getMessageByTid(99L)).thenReturn(
-            messageDb(
-                messageEntity(
-                    id = 0L,
-                    tid = 99L,
-                    deliveryStatus = MessageDeliveryStatus.Pending
-                )
-            )
-        )
-
-        useCase(channelId, messageTid = 99L, pinType = PinType.SHARED)
-
-        // The row is still written, so the reconnect flush sends it once the send ack has
-        // promoted tid -> id.
-        verify(pinnedMessageDao).upsertWithMirror(any())
-        verifyBlocking(pinRepository, never()) { pinMessages(any(), any(), any(), anyOrNull()) }
+        assertThat(useCase(channelId, 42L, PinType.SHARED)).isInstanceOf(SceytResponse.Error::class.java)
     }
 }

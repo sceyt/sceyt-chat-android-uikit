@@ -7,13 +7,12 @@ import com.sceyt.chatuikit.data.models.messages.SceytPinnedMessage
 import com.sceyt.chatuikit.data.models.messages.SceytPinDetails
 import com.sceyt.chatuikit.persistence.database.dao.MessageDao
 import com.sceyt.chatuikit.persistence.database.dao.PinnedMessageDao
-import com.sceyt.chatuikit.data.models.messages.PinSyncState
+import com.sceyt.chatuikit.persistence.database.entity.messages.MessageDb
 import com.sceyt.chatuikit.persistence.database.entity.messages.PinnedMessageEntity
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.argumentCaptor
-import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
@@ -41,17 +40,17 @@ class StorePinsUseCaseTest {
                 pinDetails = SceytPinDetails(true, 5_000L, PinType.PERSONAL),
             ),
         )
-        whenever(messageDao.getMessageById(42L)).thenReturn(messageDb(messageEntity(tid = 77L)))
+        whenever(messageDao.getMessageTidById(42L)).thenReturn(77L)
 
         useCase(channelId = 7L, pins = listOf(pin))
 
-        val entity = argumentCaptor<PinnedMessageEntity>()
-        verify(pinnedMessageDao).upsertWithMirror(entity.capture())
-        assertThat(entity.firstValue.messageTid).isEqualTo(77L)
-        assertThat(entity.firstValue.serverPinId).isEqualTo(900L)
-        assertThat(entity.firstValue.pinScope).isEqualTo(1)
-        assertThat(entity.firstValue.pinnedUntil).isEqualTo(5_000L)
-        assertThat(entity.firstValue.syncState).isEqualTo(PinSyncState.Synced.value)
+        val entities = argumentCaptor<List<PinnedMessageEntity>>()
+        verify(pinnedMessageDao).insertAllIfMessagesExist(entities.capture())
+        val entity = entities.firstValue.single()
+        assertThat(entity.messageTid).isEqualTo(77L)
+        assertThat(entity.serverPinId).isEqualTo(900L)
+        assertThat(entity.pinScope).isEqualTo(1)
+        assertThat(entity.pinnedUntil).isEqualTo(5_000L)
         verifyBlocking(messageDao, never()) { upsertMessage(any()) }
         verifyBlocking(refreshPinnedMessageCache) { invoke(7L, 77L) }
     }
@@ -61,11 +60,9 @@ class StorePinsUseCaseTest {
         val pin = serverPin(
             message = sceytMessage(id = 42L, tid = 11L),
         )
-        whenever(messageDao.getMessageById(42L)).thenReturn(null)
-
         useCase(channelId = 7L, pins = listOf(pin))
 
-        val stored = argumentCaptor<com.sceyt.chatuikit.persistence.database.entity.messages.MessageDb>()
+        val stored = argumentCaptor<MessageDb>()
         verifyBlocking(messageDao) { upsertMessage(stored.capture()) }
         assertThat(stored.firstValue.messageEntity.unList).isTrue()
         assertThat(stored.firstValue.messageEntity.tid).isEqualTo(11L)
@@ -79,30 +76,8 @@ class StorePinsUseCaseTest {
 
         useCase(channelId = 7L, pins = listOf(missingId, transient, deleted))
 
-        verify(pinnedMessageDao, never()).upsertWithMirror(any())
+        verify(pinnedMessageDao, never()).insertAllIfMessagesExist(any())
         verifyBlocking(messageDao, never()) { upsertMessage(any()) }
-    }
-
-    @Test
-    fun `a server snapshot preserves a pending unpin and its cleared mirror`() = runTest {
-        whenever(messageDao.getMessageById(42L)).thenReturn(messageDb())
-        whenever(pinnedMessageDao.getByTid(42L, 7L))
-            .thenReturn(pinnedEntity(syncState = PinSyncState.PendingUnpin.value))
-
-        useCase(7L, listOf(sceytPinnedMessage()))
-
-        verify(pinnedMessageDao, never()).upsertWithMirror(any())
-    }
-
-    @Test
-    fun `a server snapshot preserves a pending pin with a different scope`() = runTest {
-        whenever(messageDao.getMessageById(42L)).thenReturn(messageDb())
-        whenever(pinnedMessageDao.getByTid(42L, 7L))
-            .thenReturn(pinnedEntity(syncState = PinSyncState.PendingPin.value, pinScope = 1))
-
-        useCase(7L, listOf(sceytPinnedMessage(scope = PinType.SHARED)))
-
-        verify(pinnedMessageDao, never()).upsertWithMirror(any())
     }
 
     private fun serverPin(

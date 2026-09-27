@@ -88,7 +88,6 @@ class PendingMessageDeleteByTidDaoTest {
             forwardingDetailsDb = null,
             bodyAttribute = null,
             unList = false,
-            pinDetails = null,
             disableMentionsCount = false,
             viewOnce = false,
         ),
@@ -103,6 +102,7 @@ class PendingMessageDeleteByTidDaoTest {
         mentionedUsers = null,
         poll = null,
         pinnedMessage = null,
+        pendingPin = null,
     )
 
     @Test

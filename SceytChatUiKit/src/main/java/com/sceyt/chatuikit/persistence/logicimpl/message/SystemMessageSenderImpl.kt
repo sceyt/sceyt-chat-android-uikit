@@ -69,13 +69,13 @@ class SystemMessageSenderImpl(
         )
     }
 
-    override suspend fun sendMessagePinned(channelId: Long, pinnedMessageId: Long) {
+    override suspend fun sendMessagePinned(channelId: Long, pinnedMessage: SceytMessage) {
         sendSystemMessage(
             channelId = channelId,
             body = SystemMessageAction.PinMessage,
-            metadata = gson.toJson(PinnedMessageMetadata(pinnedMessageId.toString())),
-            parentMessageId = pinnedMessageId,
-            parentMessage = messagesLogic.getMessageFromDbById(pinnedMessageId),
+            metadata = gson.toJson(PinnedMessageMetadata(pinnedMessage.id.toString())),
+            parentMessageId = pinnedMessage.id,
+            parentMessage = pinnedMessage,
         )
     }
 
