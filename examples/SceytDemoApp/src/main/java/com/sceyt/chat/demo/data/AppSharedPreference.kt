@@ -3,7 +3,6 @@ package com.sceyt.chat.demo.data
 interface AppSharedPreference {
     companion object {
         const val PREF_USER_ID = "user_id"
-        const val PREF_USER_TOKEN = "token"
         const val PREF_USER_IDS = "user_ids"
     }
 

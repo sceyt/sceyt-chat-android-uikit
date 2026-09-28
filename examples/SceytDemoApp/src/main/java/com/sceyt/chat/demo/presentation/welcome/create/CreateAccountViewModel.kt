@@ -2,15 +2,13 @@ package com.sceyt.chat.demo.presentation.welcome.create
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.sceyt.chat.demo.connection.SceytConnectionProvider
+import com.sceyt.chat.connection.SceytChatConnectionManager
 import com.sceyt.chat.demo.data.AppSharedPreference
 import com.sceyt.chat.demo.data.repositories.UserRepository
 import com.sceyt.chat.demo.presentation.Constants.CORRECT_USERNAME_REGEX
 import com.sceyt.chat.demo.presentation.common.ui.UsernameValidationEnum
-import com.sceyt.chat.models.ConnectionState
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.persistence.extensions.asLiveData
@@ -26,15 +24,14 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
-import kotlin.coroutines.resume
+import kotlin.time.Duration.Companion.milliseconds
 
 
 @Suppress("OPT_IN_USAGE")
 class CreateAccountViewModel(
         private val preference: AppSharedPreference,
-        private val connectionProvider: SceytConnectionProvider,
+        private val connectionManager: SceytChatConnectionManager,
         private val userRepository: UserRepository
 ) : BaseViewModel() {
 
@@ -58,7 +55,7 @@ class CreateAccountViewModel(
 
     init {
         _usernameInput
-            .debounce(200)
+            .debounce(200.milliseconds)
             .distinctUntilChanged()
             .onEach { username ->
                 if (isValidUsername(username)) {
@@ -119,32 +116,8 @@ class CreateAccountViewModel(
                 )
             }
 
-    private suspend fun connectUser(userId: String): Result<Boolean> {
-        return withContext(Dispatchers.IO) {
-            var job: Job? = null
-            suspendCancellableCoroutine { continuation ->
-                job = ConnectionEventManager.onChangedConnectStatusFlow.onEach {
-                    when (it.state) {
-                        ConnectionState.Connected -> {
-                            continuation.resume(Result.success(true))
-                            job?.cancel()
-                        }
-
-                        ConnectionState.Disconnected, ConnectionState.Failed -> {
-                            continuation.resume(
-                                Result.failure(Exception(it.exception?.message))
-                            )
-                            job?.cancel()
-                        }
-
-                        else -> {}
-                    }
-                }.launchIn(this)
-
-                connectionProvider.connectChatClient(userId)
-            }
-        }
-    }
+    private suspend fun connectUser(userId: String): Result<Unit> =
+        connectionManager.connectAndAwait(userId)
 
     private fun validateUsername(username: String) {
         validateJob?.cancel()

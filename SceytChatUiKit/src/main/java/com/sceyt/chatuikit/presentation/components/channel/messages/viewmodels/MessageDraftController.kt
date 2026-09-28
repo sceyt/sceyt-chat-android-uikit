@@ -37,20 +37,19 @@ internal class MessageDraftController(
         isReply: Boolean,
     ) {
         val viewOnce = normalizedViewOnce(attachments.size)
+        val draftMessage = buildDraftMessage(
+            text = text,
+            attachments = attachments,
+            audioRecordData = audioRecordData,
+            mentionUsers = mentionUsers,
+            styling = styling,
+            replyOrEditMessage = replyOrEditMessage,
+            isReply = isReply,
+            viewOnce = viewOnce
+        )
         scope.launch(ioDispatcher) {
             withContext(NonCancellable) {
-                channelInteractor.updateDraftMessage(
-                    buildDraftMessage(
-                        text = text,
-                        attachments = attachments,
-                        audioRecordData = audioRecordData,
-                        mentionUsers = mentionUsers,
-                        styling = styling,
-                        replyOrEditMessage = replyOrEditMessage,
-                        isReply = isReply,
-                        viewOnce = viewOnce
-                    )
-                )
+                channelInteractor.updateDraftMessage(draftMessage)
             }
         }
     }

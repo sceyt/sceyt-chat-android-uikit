@@ -98,6 +98,22 @@ class MessageDraftControllerTest {
     }
 
     @Test
+    fun `snapshots attachments before async persistence`() = runTest(dispatcher) {
+        val attachments = mutableListOf(
+            attachment(filePath = "/a.jpg", type = AttachmentTypeEnum.Image.value)
+        )
+
+        update(attachments = attachments)
+        attachments.clear()
+        attachments.add(attachment(filePath = "/b.jpg", type = AttachmentTypeEnum.Image.value))
+        advanceUntilIdle()
+
+        val captor = argumentCaptor<com.sceyt.chatuikit.data.models.channels.DraftMessage>()
+        verifyBlocking(channelInteractor) { updateDraftMessage(captor.capture()) }
+        assertThat(captor.firstValue.attachments?.single()?.filePath).isEqualTo("/a.jpg")
+    }
+
+    @Test
     fun `view once cleared when attachment count not one`() = runTest(dispatcher) {
         viewOnceSelected = true
         val two = listOf(

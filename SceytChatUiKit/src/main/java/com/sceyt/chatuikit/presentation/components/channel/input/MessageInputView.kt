@@ -459,6 +459,12 @@ class MessageInputView @JvmOverloads constructor(
         AudioPlayerHelper.pauseAll()
         audioRecorderHelper.startRecording(
             directoryToSaveFile = directoryToSaveRecording,
+            onRecorderStart = { started ->
+                if (!started) onRecordingFailed()
+            },
+            onRecorderError = { _, _ ->
+                onRecordingFailed()
+            },
             onRecordReachedMaxDurationListener = {
                 stopRecordAndShowPreviewIfNeeded()
             }
@@ -470,6 +476,17 @@ class MessageInputView @JvmOverloads constructor(
         determineInputState()
         onUserActionStateChange(InputUserAction.Recording(recording = true))
         startRecordingUpdateJob()
+    }
+
+    private fun onRecordingFailed() {
+        val recorderView = voiceRecorderView
+        if (recorderView != null) {
+            recorderView.forceStopRecording()
+        } else {
+            audioRecorderHelper.cancelRecording {
+                finishRecording()
+            }
+        }
     }
 
     private fun onRecordingCompletedOrCanceled() {
@@ -578,9 +595,12 @@ class MessageInputView @JvmOverloads constructor(
             onStateChanged(newState)
         }
 
-        val showVoiceIcon = newState == InputState.Voice ||
-                (newState is InputState.Recording && !newState.isPreviewState)
+        val showVoiceIcon = enableVoiceRecord && (newState == InputState.Voice ||
+                (newState is InputState.Recording && !newState.isPreviewState))
+        val showDisabledSendIcon = !enableVoiceRecord && newState == InputState.Voice
         binding.icSendMessage.isInvisible = showVoiceIcon
+        binding.icSendMessage.isEnabled = !showDisabledSendIcon
+        binding.icSendMessage.alpha = if (showDisabledSendIcon) 0.4f else 1f
         binding.icAddAttachments.isVisible = enableSendAttachment && !isEditing
         binding.viewAttachments.isVisible = hasAttachments
         if (showVoiceIcon) {
@@ -1134,8 +1154,7 @@ class MessageInputView @JvmOverloads constructor(
     }
 
     override fun onRemoveAttachmentClick(item: AttachmentItem) {
-        attachmentsAdapter.removeItem(item)
-        allAttachments.remove(item.attachment)
+        removeAttachment(item)
         updateDraftMessage()
         determineInputState()
         // Delete file if it was copied to the app's internal storage
@@ -1143,6 +1162,12 @@ class MessageInputView @JvmOverloads constructor(
         val copedFileDir = File(context.filesDir, SceytConstants.CopyFileDirName)
         if (file.parent?.startsWith(copedFileDir.path) == true)
             doSafe { file.delete() }
+    }
+
+    private fun removeAttachment(item: AttachmentItem) {
+        attachmentsAdapter.removeItem(item)
+        allAttachments.remove(item.attachment)
+        filePickerHelper?.removeSavedPath(item.attachment.filePath)
     }
 
     override fun onAttachmentClick(item: AttachmentItem) {
@@ -1154,17 +1179,18 @@ class MessageInputView @JvmOverloads constructor(
     }
 
     private fun onMediaPicked(items: List<BottomSheetMediaPicker.SelectedMediaData>) {
+        // Remove attachments that are not in the picker result
+        allAttachments.filter { item ->
+            item.type.isEqualsVideoOrImage()
+                    && !File(item.filePath).startsWith(context.filesDir)
+                    && items.none { mediaData -> mediaData.realPath == item.filePath }
+        }.forEach { attachment ->
+            removeAttachment(AttachmentItem(attachment))
+        }
+        // Save the draft after applying deselections so recreation restores the current selection.
         addAttachment(*items.map { mediaData ->
             mediaData.mediaType.value to mediaData.realPath
         }.toTypedArray())
-        // Remove attachments that are not in the picker result
-        allAttachments.filter { item ->
-            item.type.isEqualsVideoOrImage() && items.none { mediaData -> mediaData.realPath == item.filePath }
-        }.forEach { attachment ->
-            val item = AttachmentItem(attachment)
-            attachmentsAdapter.removeItem(item)
-            allAttachments.remove(attachment)
-        }
     }
 
     override fun onAttachedToWindow() {
@@ -1182,8 +1208,14 @@ class MessageInputView @JvmOverloads constructor(
 
     override fun onDetachedFromWindow() {
         cleanupInputOnDetach()
+        clearMediaPickerResultListener()
         VoiceStateCoordinator.unregisterRecordingController()
         super.onDetachedFromWindow()
+    }
+
+    private fun clearMediaPickerResultListener() {
+        context.asFragmentActivityOrNull()?.supportFragmentManager
+            ?.clearFragmentResultListener(BottomSheetMediaPicker.REQUEST_KEY)
     }
 
     private fun cleanupInputOnDetach() {
@@ -1208,9 +1240,8 @@ class MessageInputView @JvmOverloads constructor(
     // Choose file type popup listeners
     override fun onCustomCameraClick() {
         binding.messageInput.clearFocus()
-        filePickerHelper?.openCustomCamera { filePath, isVideo ->
-            val attachmentType = if (isVideo) AttachmentTypeEnum.Video else AttachmentTypeEnum.Image
-            addAttachment(attachmentType to filePath)
+        filePickerHelper?.openCustomCameraForAttachments { attachments ->
+            addAttachment(*attachments.toTypedArray())
         }
     }
 
@@ -1250,7 +1281,8 @@ class MessageInputView @JvmOverloads constructor(
 
     override fun onInputStateChanged(sendImage: ImageView, state: InputState) {
         val iconResId = when (state) {
-            is InputState.Voice -> style.voiceRecordIcon
+            is InputState.Voice ->
+                if (enableVoiceRecord) style.voiceRecordIcon else style.sendMessageIcon
             is InputState.Text, is InputState.TextWithAttachments,
             is InputState.Attachments, is InputState.Recording -> style.sendMessageIcon
         }
@@ -1398,7 +1430,7 @@ class MessageInputView @JvmOverloads constructor(
         applySearchResultStyle(style.messageSearchControlsStyle)
         layoutInputCover.applyInputCoverStyle(style.inputCoverStyle)
         icAddAttachments.isVisible = enableSendAttachment
-        if (isInEditMode) {
+        if (!enableVoiceRecord || isInEditMode) {
             icSendMessage.setImageDrawable(
                 if (enableVoiceRecord)
                     style.voiceRecordIcon else style.sendMessageIcon

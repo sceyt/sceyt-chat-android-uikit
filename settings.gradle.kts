@@ -22,6 +22,7 @@ rootProject.name = "SceytUiKit"
 
 include(":benchmark")
 include(":SceytChatUiKit")
+include(":SceytChatConnection")
 include(":SceytDemoApp")
 project(":SceytDemoApp").projectDir = file("./examples/SceytDemoApp")
 include(":SceytCallKit")

@@ -30,7 +30,7 @@ class MainGradlePlugin : Plugin<Project> {
                 testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
                 vectorDrawables.useSupportLibrary = true
 
-                buildConfigField("String", "MAVEN_VERSION", "\"${Config.mavenCentralVersion}\"")
+                buildConfigField("String", "MAVEN_VERSION", "\"${Config.UiKit.version}\"")
             }
 
             compileOptions {

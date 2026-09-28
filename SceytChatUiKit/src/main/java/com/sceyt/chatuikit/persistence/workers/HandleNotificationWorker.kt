@@ -8,7 +8,6 @@ import androidx.work.Operation
 import androidx.work.OutOfQuotaPolicy
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
-import com.sceyt.chat.ChatClient
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.constants.SceytConstants.SCEYT_WORKER_TAG
 import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
@@ -30,6 +29,7 @@ import com.sceyt.chatuikit.persistence.workers.HandleNotificationWorkManager.REA
 import com.sceyt.chatuikit.push.PushData
 import org.koin.core.component.inject
 import kotlin.time.Duration.Companion.seconds
+import kotlin.Result as KtResult
 
 internal object HandleNotificationWorkManager {
 
@@ -133,22 +133,20 @@ internal class HandleNotificationWorker(
             SceytLog.i(TAG, "SceytChat is connected. Marking message as received: $messageId")
             markMessageAsReceived(channelId, message)
         } else {
-            if (!ConnectionEventManager.isConnecting) {
-                SceytLog.i(
-                    TAG,
-                    "SceytChat is not connected. Connecting to mark message as received: $messageId"
-                )
-                val token = SceytChatUIKit.chatTokenProvider?.provideToken().takeIf {
-                    !it.isNullOrBlank()
-                } ?: run {
-                    return finishWorkWithFailure("Couldn't get token to connect to mark message as received: $messageId")
-                }
+            SceytLog.i(
+                TAG,
+                "SceytChat is not connected. Connecting to mark message as received: $messageId"
+            )
+            val connectionResult = SceytChatUIKit.chatConnectionProvider
+                ?.connect(30.seconds.inWholeMilliseconds)
+                ?: KtResult.failure(IllegalStateException("ChatConnectionProvider is not configured"))
 
-                ChatClient.getClient().connect(token)
-            }
-
-            if (ConnectionEventManager.awaitToConnectSceytWithTimeout(30.seconds)) {
+            connectionResult.onSuccess {
                 markMessageAsReceived(channelId, message)
+            }.onFailure {
+                return finishWorkWithFailure(
+                    "Could not connect to mark message as received: $messageId. " + it.message
+                )
             }
         }
         return finishWorkWithSuccess()
