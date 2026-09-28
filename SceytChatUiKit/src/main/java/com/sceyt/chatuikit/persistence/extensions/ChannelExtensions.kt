@@ -9,7 +9,6 @@ import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.channels.SelfChannelMetadata
 import com.sceyt.chatuikit.data.models.channels.stringToEnum
 import com.sceyt.chatuikit.extensions.toBoolean
-import org.checkerframework.checker.units.qual.m
 
 fun SceytChannel.checkIsMemberInChannel(): Boolean {
     return if (isGroup) {
