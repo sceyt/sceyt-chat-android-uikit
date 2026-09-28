@@ -287,7 +287,8 @@ fun SceytMessage.toMessage(): Message {
         forwardingDetails,
         bodyAttributes?.toTypedArray(),
         disableMentionsCount,
-        poll?.toPollDetails()
+        poll?.toPollDetails(),
+        null
     )
 }
 
