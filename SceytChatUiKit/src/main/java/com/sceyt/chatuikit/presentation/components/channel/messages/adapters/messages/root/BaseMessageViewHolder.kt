@@ -66,6 +66,7 @@ import com.sceyt.chatuikit.presentation.custom_views.AvatarView
 import com.sceyt.chatuikit.presentation.custom_views.ClickableTextView
 import com.sceyt.chatuikit.presentation.custom_views.DecoratedTextView
 import com.sceyt.chatuikit.presentation.custom_views.ToReplyLineView
+import com.sceyt.chatuikit.presentation.extensions.isPending
 import com.sceyt.chatuikit.presentation.extensions.isSupportedType
 import com.sceyt.chatuikit.presentation.extensions.setChatMessageDateAndStatusIcon
 import com.sceyt.chatuikit.shared.helpers.RecyclerItemOffsetDecoration
@@ -110,12 +111,16 @@ abstract class BaseMessageViewHolder(
 
     protected abstract val incoming: Boolean
     protected abstract val selectMessageView: View?
-    open val enableReply = true
     protected val requireMessageItem get() = messageListItem as MessageListItem.MessageItem
-    protected val requireMessage get() = (messageListItem as MessageListItem.MessageItem).message
+    protected val requireMessage get() = requireMessageItem.message
+    protected val optionalMessageItem get() = messageListItem as? MessageListItem.MessageItem
+    protected val optionalMessage get() = optionalMessageItem?.message
+    protected val isMessageItemisInitialized get() = ::messageListItem.isInitialized
+
+    open val enableReply get() = !isMessageItemisInitialized || optionalMessage?.isPending() != true
 
     /** The Pair's param ViewGroup is layout bubble, the param Boolean when true, that mean the
-     *  layout bubble with will resize depend reactions. */
+     *  layout bubble with will resize depend on reactions. */
     open val layoutBubbleConfig: Pair<ViewGroup, Boolean>? = null
 
     protected val layoutBubble get() = layoutBubbleConfig?.first
@@ -126,7 +131,7 @@ abstract class BaseMessageViewHolder(
     }
 
     fun rebind(diff: MessageDiff = MessageDiff.DEFAULT): Boolean {
-        return if (::messageListItem.isInitialized) {
+        return if (isMessageItemisInitialized) {
             bind(messageListItem, diff)
             true
         } else false
@@ -144,7 +149,7 @@ abstract class BaseMessageViewHolder(
 
     @CallSuper
     open fun onViewAttachedToWindow() {
-        if (::messageListItem.isInitialized) {
+        if (isMessageItemisInitialized) {
             displayedListener?.invoke(messageListItem)
             selectableAnimHelper.doOnAttach(selectMessageView, messageListItem)
         }
