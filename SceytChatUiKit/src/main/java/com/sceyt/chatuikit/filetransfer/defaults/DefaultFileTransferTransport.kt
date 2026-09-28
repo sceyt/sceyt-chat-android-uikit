@@ -19,27 +19,23 @@ class DefaultFileTransferTransport : FileTransferTransport {
     override suspend fun upload(
         request: FileUploadRequest,
         callback: FileTransferCallback,
-    ): String? = suspendCancellableCoroutine { continuation ->
-        val completed = AtomicBoolean()
+    ): String? {
         val attachment = request.attachment.copy(
             filePath = request.sourceFile.path,
         )
 
-        transferUtility.uploadFile(
+        val response = transferUtility.uploadFile(
             attachment = attachment,
             onProgress = { progressPercent ->
-                if (continuation.isActive) {
-                    callback.onEvent(FileTransferEvent.Progress(progressPercent))
-                }
-            },
-            onResult = { response ->
-                continuation.completeWith(response, completed, "File upload failed")
+                callback.onEvent(FileTransferEvent.Progress(progressPercent))
             },
         )
 
-        continuation.invokeOnCancellation {
-            completed.set(true)
-            transferUtility.pauseUpload(attachment)
+        return when (response) {
+            is SceytResponse.Success -> response.data
+            is SceytResponse.Error -> {
+                throw response.exception ?: IllegalStateException("File upload failed")
+            }
         }
     }
 
