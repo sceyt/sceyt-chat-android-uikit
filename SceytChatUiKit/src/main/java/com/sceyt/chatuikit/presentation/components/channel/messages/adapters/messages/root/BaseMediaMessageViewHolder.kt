@@ -172,7 +172,8 @@ abstract class BaseMediaMessageViewHolder(
     }
 
     private val observer: Observer<TransferData> = Observer { transferData ->
-        if (viewHolderHelper.updateTransferData(transferData, fileItem, ::isValidThumb))
-            updateState(transferData)
+        viewHolderHelper.updateAndResolveTransferData(transferData, fileItem, ::isValidThumb)?.let {
+            updateState(it)
+        }
     }
 }
