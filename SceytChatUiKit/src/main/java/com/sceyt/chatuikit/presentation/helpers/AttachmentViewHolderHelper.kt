@@ -86,18 +86,25 @@ class AttachmentViewHolderHelper(itemView: View) {
         data: TransferData,
         item: AttachmentDataProvider,
         isValidThumb: (thumbData: ThumbData?) -> Boolean,
-    ): Boolean {
+    ): Boolean = updateAndResolveTransferData(data, item, isValidThumb) != null
+
+    internal fun updateAndResolveTransferData(
+        data: TransferData,
+        item: AttachmentDataProvider,
+        isValidThumb: (thumbData: ThumbData?) -> Boolean,
+    ): TransferData? {
         if (!AttachmentTransferStateStore.isTransferDataForAttachment(data, item.attachment))
-            return false
+            return null
 
         if (data.state == TransferState.ThumbLoaded) {
-            if (!isValidThumb(data.thumbData)) return false
+            if (!isValidThumb(data.thumbData)) return null
             item.updateThumbPath(data.filePath)
+            return data
         } else {
             val latestData = AttachmentTransferStateStore.getTransferData(item.attachment) ?: data
             item.updateAttachment(AttachmentTransferStateStore.getUpdatedAttachment(item.attachment, latestData))
             item.updateTransferData(latestData)
+            return latestData
         }
-        return true
     }
 }
