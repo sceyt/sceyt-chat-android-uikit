@@ -10,8 +10,6 @@ internal interface PersistencePinLogic {
 
     fun getPinnedMessagesFlow(channelId: Long): Flow<List<SceytPinnedMessage>>
 
-    suspend fun getPinnedMessages(channelId: Long): List<SceytPinnedMessage>
-
     suspend fun pinMessage(
         channelId: Long,
         messageTid: Long,
@@ -25,6 +23,4 @@ internal interface PersistencePinLogic {
     suspend fun sendAllPendingPins()
 
     suspend fun onPinUpdated(event: PinUpdateEvent)
-
-    suspend fun onMessageDeleted(channelId: Long, messageTid: Long)
 }

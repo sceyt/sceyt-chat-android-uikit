@@ -90,7 +90,6 @@ class GetNearAttachmentsTests {
             metadata = "",
             updatedAt = 0,
             unList = false,
-            pinDetails = null,
             disableMentionsCount = false,
             viewOnce = false
         )

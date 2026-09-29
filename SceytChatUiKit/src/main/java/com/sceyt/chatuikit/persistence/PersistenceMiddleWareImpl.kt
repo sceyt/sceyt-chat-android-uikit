@@ -908,10 +908,6 @@ internal class PersistenceMiddleWareImpl(
         return pinLogic.getPinnedMessagesFlow(channelId)
     }
 
-    override suspend fun getPinnedMessages(channelId: Long): List<SceytPinnedMessage> {
-        return pinLogic.getPinnedMessages(channelId)
-    }
-
     override suspend fun pinMessage(
         channelId: Long,
         messageTid: Long,

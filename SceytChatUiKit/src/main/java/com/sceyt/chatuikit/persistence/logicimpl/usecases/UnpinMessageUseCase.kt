@@ -2,15 +2,15 @@ package com.sceyt.chatuikit.persistence.logicimpl.usecases
 
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.createErrorResponse
-import com.sceyt.chatuikit.persistence.database.dao.PinnedMessageDao
-import com.sceyt.chatuikit.data.models.messages.PinSyncState
-import com.sceyt.chatuikit.persistence.database.entity.messages.PinnedMessageEntity
-import kotlinx.coroutines.sync.withLock
+import com.sceyt.chatuikit.persistence.database.dao.MessageDao
+import com.sceyt.chatuikit.persistence.database.dao.PendingPinDao
+import com.sceyt.chatuikit.persistence.database.entity.messages.StoredPinScope
+import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingPinEntity
+import com.sceyt.chatuikit.persistence.mappers.toSceytMessage
 
-/** Hides the pin immediately and retains intent until removal is acknowledged. */
 internal class UnpinMessageUseCase(
-    private val pinnedMessageDao: PinnedMessageDao,
-    private val sendPendingPinsUseCase: SendPendingPinsUseCase,
+    private val messageDao: MessageDao,
+    private val pendingPinDao: PendingPinDao,
     private val refreshPinnedMessageCache: RefreshPinnedMessageCacheUseCase,
 ) {
 
@@ -18,37 +18,23 @@ internal class UnpinMessageUseCase(
         channelId: Long,
         messageTid: Long,
     ): SceytResponse<Boolean> {
-        val prepared = sendPendingPinsUseCase.localUpdateMutex.withLock {
-            prepare(channelId, messageTid)
-        }
-        return when (prepared) {
-            is SceytResponse.Error -> SceytResponse.Error(prepared.exception)
-            is SceytResponse.Success -> prepared.data?.let { sendPendingPinsUseCase.sendUnpin(it) }
-                ?: SceytResponse.Success(true)
-        }
-    }
-
-    private suspend fun prepare(channelId: Long, messageTid: Long): SceytResponse<PinnedMessageEntity> {
-        val existing = pinnedMessageDao.getByTid(messageTid, channelId)
-        if (existing == null) {
-            pinnedMessageDao.clearMessagePinMirror(messageTid)
-            refreshPinnedMessageCache(channelId, messageTid)
+        val message = messageDao.getMessageByTid(messageTid)?.toSceytMessage()
+            ?: return createErrorResponse("Message not found in database")
+        if (message.pinDetails?.isPinned != true)
             return createErrorResponse("Message is not pinned")
-        }
 
-        // A pending pin may already be in flight. Retain removal until the server acknowledges it.
-        if (existing.syncState == PinSyncState.PendingPin.value && existing.messageId == 0L) {
-            pinnedMessageDao.deleteWithMirror(messageTid, channelId)
-            refreshPinnedMessageCache(channelId, messageTid)
-            return SceytResponse.Success(null)
-        }
+        pendingPinDao.replace(
+            PendingPinEntity(
+                messageTid = messageTid,
+                channelId = channelId,
+                messageId = message.id,
+                isPin = false,
+                pinScope = StoredPinScope.Unspecified.value,
+                createdAt = System.currentTimeMillis(),
+            )
+        ) ?: return createErrorResponse("Message not found in database")
 
-        val now = maxOf(System.currentTimeMillis(), existing.lastAttemptAt + 1)
-        pinnedMessageDao.markPendingUnpinWithMirror(messageTid, channelId, now)
         refreshPinnedMessageCache(channelId, messageTid)
-
-        return SceytResponse.Success(existing.copy(
-            syncState = PinSyncState.PendingUnpin.value, lastAttemptAt = now
-        ))
+        return SceytResponse.Success(true)
     }
 }

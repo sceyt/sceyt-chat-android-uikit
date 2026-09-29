@@ -17,6 +17,7 @@ import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.message.MessageState
+import com.sceyt.chat.models.message.PinDetails.PinType
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
@@ -124,6 +125,7 @@ class MessagesListView @JvmOverloads constructor(
     private var onWindowFocusChangeListener: ((Boolean) -> Unit)? = null
     private var multiselectDestination: Map<Long, SceytMessage>? = null
     private var forceDisabledActions = false
+    private var alwaysPinForMe = false
     private val audioFocusHelper = AudioFocusHelper(context)
     val style: MessagesListViewStyle
     var enabledActions = true
@@ -982,6 +984,10 @@ class MessagesListView @JvmOverloads constructor(
         multiselectDestination = map
     }
 
+    internal fun setAlwaysPinForMe(alwaysForMe: Boolean) {
+        alwaysPinForMe = alwaysForMe
+    }
+
     internal fun isNearStartForPaging() = messagesRV.isNearStartForPaging()
 
     internal fun isNearEndForPaging() = messagesRV.isNearEndForPaging()
@@ -1290,6 +1296,14 @@ class MessagesListView @JvmOverloads constructor(
     }
 
     override fun onPinMessageClick(message: SceytMessage, actionFinish: () -> Unit) {
+        if (alwaysPinForMe) {
+            actionFinish()
+            messageCommandEventListener?.invoke(
+                MessageCommandEvent.PinMessage(message = message, pinType = PinType.PERSONAL)
+            )
+            return
+        }
+
         PinMessageDialog(context) { pinType ->
             actionFinish()
             messageCommandEventListener?.invoke(

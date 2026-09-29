@@ -84,7 +84,6 @@ class AttachmentDaoTest {
         autoDeleteAt = null,
         forwardingDetailsDb = null,
         bodyAttribute = null,
-        pinDetails = null,
         disableMentionsCount = false,
         unList = false,
     )
@@ -129,6 +128,7 @@ class AttachmentDaoTest {
         mentionedUsers = null,
         poll = null,
         pinnedMessage = null,
+        pendingPin = null,
     )
 
     private suspend fun insertWithPayload(message: MessageEntity, vararg attachments: AttachmentEntity) {

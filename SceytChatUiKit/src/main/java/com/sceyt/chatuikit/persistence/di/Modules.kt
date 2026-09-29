@@ -79,12 +79,13 @@ import com.sceyt.chatuikit.persistence.logicimpl.usecases.RetractPollVoteUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.SendPollPendingVotesUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.SetUserPresenceUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.ShouldShowNotificationUseCase
-import com.sceyt.chatuikit.persistence.logicimpl.usecases.ConfirmPinUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.PinMessageUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.RefreshPinnedMessageCacheUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.SendPendingPinsUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.SendPinUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.SendUnpinUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.StorePinsUseCase
-import com.sceyt.chatuikit.persistence.logicimpl.usecases.SyncChannelPinsController
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.SyncChannelPinsUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.TogglePollVoteUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.UnpinMessageUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.UpdatePinnedMessagesUseCase
@@ -162,6 +163,7 @@ internal fun databaseModule(enableDatabase: Boolean) = module {
     single { get<SceytDatabase>().pinnedMessageDao() }
     single { get<SceytDatabase>().pollDao() }
     single { get<SceytDatabase>().pendingPollVoteDao() }
+    single { get<SceytDatabase>().pendingPinDao() }
 }
 
 internal val interactorModule = module {
@@ -206,10 +208,11 @@ internal val useCaseModule = module {
     factoryOf(::RefreshPinnedMessageCacheUseCase)
     factoryOf(::PinMessageUseCase)
     factoryOf(::UnpinMessageUseCase)
-    factoryOf(::ConfirmPinUseCase)
     factoryOf(::StorePinsUseCase)
-    singleOf(::SendPendingPinsUseCase)
-    factoryOf(::SyncChannelPinsController)
+    factoryOf(::SendPendingPinsUseCase)
+    factoryOf(::SendPinUseCase)
+    factoryOf(::SendUnpinUseCase)
+    factoryOf(::SyncChannelPinsUseCase)
     factoryOf(::UpdatePinnedMessagesUseCase)
     factoryOf(::TogglePollVoteUseCase)
     factoryOf(::RetractPollVoteUseCase)

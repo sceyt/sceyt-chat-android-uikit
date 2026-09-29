@@ -3,12 +3,13 @@ package com.sceyt.chatuikit.persistence.mappers
 import com.sceyt.chat.models.message.PinDetails
 import com.sceyt.chat.models.message.PinDetails.PinType
 import com.sceyt.chat.models.message.PinnedMessage
-import com.sceyt.chatuikit.data.models.messages.PinSyncState
 import com.sceyt.chatuikit.data.models.messages.SceytPinDetails
 import com.sceyt.chatuikit.data.models.messages.SceytPinnedMessage
-import com.sceyt.chatuikit.persistence.database.entity.messages.StoredPinScope
 import com.sceyt.chatuikit.persistence.database.entity.messages.PinnedMessageDb
 import com.sceyt.chatuikit.persistence.database.entity.messages.PinnedMessageEntity
+import com.sceyt.chatuikit.persistence.database.entity.messages.StoredPinScope
+import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingPinDb
+import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingPinEntity
 
 internal fun PinDetails.toSceytPinDetails() = SceytPinDetails(
     isPinned = isPinned,
@@ -32,6 +33,37 @@ internal fun StoredPinScope.toPinType() = when (this) {
     StoredPinScope.ForAll, StoredPinScope.Unspecified -> PinType.SHARED
 }
 
+internal fun pinDetailsOf(
+    confirmed: PinnedMessageEntity?,
+    pending: PendingPinEntity?,
+): SceytPinDetails? = when {
+    pending?.isPin == false -> null
+    confirmed != null -> SceytPinDetails(
+        isPinned = true,
+        pinnedTill = confirmed.pinnedUntil ?: 0L,
+        pinType = StoredPinScope.fromValue(confirmed.pinScope).toPinType(),
+    )
+
+    pending != null -> SceytPinDetails(
+        isPinned = true,
+        pinnedTill = 0L,
+        pinType = StoredPinScope.fromValue(pending.pinScope).toPinType(),
+    )
+
+    else -> null
+}
+
+internal fun mergePins(
+    confirmed: List<SceytPinnedMessage>,
+    pending: List<PendingPinDb>,
+): List<SceytPinnedMessage> {
+    val pendingByTid = pending.associateBy { it.pendingPin.messageTid }
+    val confirmedTids = confirmed.mapTo(HashSet()) { it.messageTid }
+    return confirmed.filter { pendingByTid[it.messageTid]?.pendingPin?.isPin != false } +
+            pending.filter { it.pendingPin.isPin && it.pendingPin.messageTid !in confirmedTids }
+                .mapNotNull { it.toSceytPinnedMessage() }
+}
+
 internal fun PinnedMessageDb.toSceytPinnedMessage(): SceytPinnedMessage? {
     val message = message?.toSceytMessage() ?: return null
     return with(pinnedMessageEntity) {
@@ -45,8 +77,23 @@ internal fun PinnedMessageDb.toSceytPinnedMessage(): SceytPinnedMessage? {
             pinnedUntil = pinnedUntil,
             pinnedBy = this@toSceytPinnedMessage.pinnedBy?.toSceytUser(),
             message = message,
-            syncState = PinSyncState.fromValue(syncState),
-            retryCount = retryCount,
+        )
+    }
+}
+
+internal fun PendingPinDb.toSceytPinnedMessage(): SceytPinnedMessage? {
+    val message = message?.toSceytMessage() ?: return null
+    return with(pendingPin) {
+        SceytPinnedMessage(
+            id = 0L,
+            channelId = channelId,
+            messageId = messageId,
+            messageTid = messageTid,
+            scope = StoredPinScope.fromValue(pinScope).toPinType(),
+            pinnedAt = createdAt,
+            pinnedUntil = null,
+            pinnedBy = null,
+            message = message,
         )
     }
 }
@@ -64,8 +111,6 @@ internal fun PinnedMessage.toSceytPinnedMessage(channelId: Long): SceytPinnedMes
         pinnedUntil = sdkMessage.pinDetails?.pinnedTill,
         pinnedBy = pinnedBy?.toSceytUser(),
         message = uiMessage,
-        syncState = PinSyncState.Synced,
-        retryCount = 0,
     )
 }
 
@@ -82,21 +127,4 @@ internal fun SceytPinnedMessage.toPinnedMessageEntity(
     pinnedByUserId = pinnedBy?.id,
     messageCreatedAt = message.createdAt,
     serverPinId = id,
-    syncState = PinSyncState.Synced.value,
-    retryCount = 0,
-    lastAttemptAt = 0L,
 )
-internal fun PinnedMessageEntity.toSceytPinDetails(): SceytPinDetails? {
-    if (syncState == PinSyncState.PendingUnpin.value) return null
-    return SceytPinDetails(
-        isPinned = true,
-        pinnedTill = pinnedUntil ?: 0L,
-        pinType = StoredPinScope.fromValue(pinScope).toPinType(),
-    )
-}
-
-internal fun StoredPinScope.toPinTypeOrdinal(): Int = when (this) {
-    StoredPinScope.ForMe -> PinType.PERSONAL.ordinal
-    StoredPinScope.ForAll, StoredPinScope.Unspecified ->
-        PinType.SHARED.ordinal
-}
