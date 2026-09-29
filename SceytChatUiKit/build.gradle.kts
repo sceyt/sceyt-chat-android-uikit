@@ -31,6 +31,10 @@ android {
         buildConfig = true
     }
 
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+    }
+
     kotlin {
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_11)

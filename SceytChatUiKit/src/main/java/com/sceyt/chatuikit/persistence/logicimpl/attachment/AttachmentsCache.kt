@@ -71,10 +71,11 @@ class AttachmentsCache {
                 .filterKeys { it in types }
                 .flatMap { it.value.values }
 
+            val comparator = compareBy<SceytAttachment>({ it.createdAt }, { it.id })
             val sortedAttachments = if (desc) {
-                filteredAttachments.sortedByDescending { it.id }
+                filteredAttachments.sortedWith(comparator.reversed())
             } else {
-                filteredAttachments.sortedBy { it.id }
+                filteredAttachments.sortedWith(comparator)
             }
 
             return sortedAttachments
