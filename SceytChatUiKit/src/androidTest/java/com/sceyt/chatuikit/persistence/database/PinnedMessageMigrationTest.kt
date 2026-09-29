@@ -7,14 +7,14 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.google.common.truth.Truth.assertThat
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
-import com.sceyt.chatuikit.data.models.messages.PinSyncStates
 import org.junit.After
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * Guards the v31 -> v32 hop, which adds the pinned-messages table.
+ * Guards the v31 -> v32 hop, which adds the pinned-messages table, and the v32 -> v33 hop,
+ * which splits unconfirmed pins into their own table.
  *
  * The DAO tests all build a fresh database, so only this exercises the migration against an
  * existing one — and the cascade assertion is what the "delete a message, the pin goes with
@@ -106,6 +106,64 @@ class PinnedMessageMigrationTest {
             ).isEqualTo(20L)
         }
     }
+    @Test
+    fun migrate32To33_keepsMessagesAndConfirmedPins() {
+        helper.createDatabase(TEST_DB_NAME, 32).apply {
+            insertMessageRow(tid = 1L, messageId = 101L, body = "pin me")
+            insertMessageRow(tid = 2L, messageId = 102L, body = "leave me")
+            insertPinRow(messageTid = 1L, messageId = 101L, serverPinId = 10L)
+            close()
+        }
+
+        helper.runMigrationsAndValidate(TEST_DB_NAME, 33, true).use { migrated ->
+            assertThat(
+                queryLong(migrated, "SELECT COUNT(*) FROM ${DatabaseConstants.MESSAGE_TABLE}")
+            ).isEqualTo(2L)
+            assertThat(
+                queryLong(migrated, "SELECT serverPinId FROM ${DatabaseConstants.PINNED_MESSAGE_TABLE}")
+            ).isEqualTo(10L)
+            assertThat(pendingPinCount(migrated)).isEqualTo(0L)
+        }
+    }
+
+    @Test
+    fun migrate32To33_movesUnconfirmedPinsOfSentMessagesToThePendingTable() {
+        helper.createDatabase(TEST_DB_NAME, 32).apply {
+            insertMessageRow(tid = 1L, messageId = 101L, body = "pin me")
+            insertMessageRow(tid = 2L, messageId = 0L, body = "not sent yet")
+            insertPinRow(messageTid = 1L, messageId = 101L, serverPinId = Long.MAX_VALUE, syncState = 2)
+            insertPinRow(messageTid = 2L, messageId = 0L, serverPinId = Long.MAX_VALUE, syncState = 2)
+            close()
+        }
+
+        helper.runMigrationsAndValidate(TEST_DB_NAME, 33, true).use { migrated ->
+            assertThat(pinCount(migrated)).isEqualTo(0L)
+            // The pin of the unsent message is dropped: pending messages can no longer be pinned.
+            assertThat(pendingPinCount(migrated)).isEqualTo(1L)
+            assertThat(
+                queryLong(
+                    migrated,
+                    "SELECT COUNT(*) FROM ${DatabaseConstants.PENDING_PIN_TABLE} " +
+                            "WHERE messageTid = 1 AND messageId = 101 AND isPin = 1 AND pinScope = 2 AND createdAt = 500"
+                )
+            ).isEqualTo(1L)
+        }
+    }
+
+    @Test
+    fun migrate31To33_keepsExistingMessages() {
+        helper.createDatabase(TEST_DB_NAME, 31).apply {
+            insertMessageRow(tid = 1L, messageId = 101L, body = "keep me")
+            close()
+        }
+
+        helper.runMigrationsAndValidate(TEST_DB_NAME, 33, true).use { migrated ->
+            assertThat(
+                queryLong(migrated, "SELECT COUNT(*) FROM ${DatabaseConstants.MESSAGE_TABLE}")
+            ).isEqualTo(1L)
+            assertThat(tableExists(migrated, DatabaseConstants.PENDING_PIN_TABLE)).isTrue()
+        }
+    }
 }
 
 private const val TEST_DB_NAME = "pinned-message-migration-test.db"
@@ -113,12 +171,15 @@ private const val TEST_DB_NAME = "pinned-message-migration-test.db"
 private fun pinCount(database: SupportSQLiteDatabase): Long =
     queryLong(database, "SELECT COUNT(*) FROM ${DatabaseConstants.PINNED_MESSAGE_TABLE}")
 
+private fun pendingPinCount(database: SupportSQLiteDatabase): Long =
+    queryLong(database, "SELECT COUNT(*) FROM ${DatabaseConstants.PENDING_PIN_TABLE}")
+
 private fun SupportSQLiteDatabase.insertPinRow(
     messageTid: Long,
     messageId: Long,
     serverPinId: Long,
     channelId: Long = 1L,
-    syncState: Int = PinSyncStates.SYNCED,
+    syncState: Int = 1, // v32: 1 synced, 2 pending pin, 3 pending unpin
 ) {
     execSQL(
         """
@@ -128,7 +189,7 @@ private fun SupportSQLiteDatabase.insertPinRow(
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """.trimIndent(),
         arrayOf<Any?>(
-            messageTid, channelId, messageId, 2, 0L, null,
+            messageTid, channelId, messageId, 2, 500L, null,
             null, messageTid * 100L, serverPinId, syncState, 0, 0L,
         )
     )

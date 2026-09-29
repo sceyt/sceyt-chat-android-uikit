@@ -6,10 +6,10 @@ import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytPinDetails
 import com.sceyt.chatuikit.data.models.messages.SceytPinnedMessage
-import com.sceyt.chatuikit.data.models.messages.PinSyncState
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageDb
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.PinnedMessageEntity
+import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingPinEntity
 
 /**
  * Shared fixtures for the pin use-case tests. Real entities rather than mocks, because the
@@ -50,11 +50,14 @@ internal fun messageEntity(
     forwardingDetailsDb = null,
     bodyAttribute = null,
     disableMentionsCount = false,
-    pinDetails = null,
     unList = false,
 )
 
-internal fun messageDb(entity: MessageEntity = messageEntity()) = MessageDb(
+internal fun messageDb(
+    entity: MessageEntity = messageEntity(),
+    pinnedMessage: PinnedMessageEntity? = null,
+    pendingPin: PendingPinEntity? = null,
+) = MessageDb(
     messageEntity = entity,
     from = null,
     parent = null,
@@ -66,14 +69,14 @@ internal fun messageDb(entity: MessageEntity = messageEntity()) = MessageDb(
     forwardingUser = null,
     mentionedUsers = null,
     poll = null,
-    pinnedMessage = null,
+    pinnedMessage = pinnedMessage,
+    pendingPin = pendingPin,
 )
 
 internal fun pinnedEntity(
     messageTid: Long = 42L,
     channelId: Long = 7L,
     messageId: Long = 42L,
-    syncState: Int,
     serverPinId: Long = 1L,
     pinScope: Int = 2,
     pinnedUntil: Long? = null,
@@ -87,9 +90,23 @@ internal fun pinnedEntity(
     pinnedByUserId = null,
     messageCreatedAt = 0L,
     serverPinId = serverPinId,
-    syncState = syncState,
-    retryCount = 0,
-    lastAttemptAt = 0L,
+)
+
+internal fun pendingPin(
+    messageTid: Long = 42L,
+    channelId: Long = 7L,
+    isPin: Boolean = true,
+    pinScope: Int = 2,
+    id: Long = 1L,
+    messageId: Long = messageTid,
+) = PendingPinEntity(
+    messageTid = messageTid,
+    channelId = channelId,
+    messageId = messageId,
+    isPin = isPin,
+    pinScope = pinScope,
+    createdAt = 0L,
+    id = id,
 )
 
 internal fun sceytMessage(
@@ -153,6 +170,4 @@ internal fun sceytPinnedMessage(
     pinnedUntil = pinnedUntil,
     pinnedBy = null,
     message = message,
-    syncState = PinSyncState.Synced,
-    retryCount = 0,
 )

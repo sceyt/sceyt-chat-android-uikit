@@ -34,12 +34,4 @@ internal data class PinnedMessageEntity(
     val pinnedByUserId: String?,
     val messageCreatedAt: Long?,
     val serverPinId: Long,
-    val syncState: Int,
-    val retryCount: Int,
-    val lastAttemptAt: Long,
-) {
-
-    companion object {
-        const val UNKNOWN_SERVER_PIN_ID = Long.MAX_VALUE
-    }
-}
+)

@@ -47,8 +47,7 @@ internal fun SceytMessage.toMessageEntity(unList: Boolean) = MessageEntity(
     forwardingDetailsDb = forwardingDetails?.toForwardingDetailsDb(),
     unList = unList,
     bodyAttribute = bodyAttributes,
-    disableMentionsCount = disableMentionsCount,
-    pinDetails = null
+    disableMentionsCount = disableMentionsCount
 )
 
 fun getTid(msgId: Long, tid: Long, incoming: Boolean): Long {
@@ -79,6 +78,7 @@ internal fun SceytMessage.toMessageDb(unList: Boolean): MessageDb {
         mentionedUsers = null,
         poll = poll?.toPollDb(),
         pinnedMessage = null,
+        pendingPin = null,
     )
 }
 
@@ -123,7 +123,7 @@ internal fun MessageDb.toSceytMessage(): SceytMessage {
             bodyAttributes = bodyAttribute,
             disableMentionsCount = disableMentionsCount,
             poll = poll?.toSceytPollDetails(),
-            pinDetails = this@toSceytMessage.pinnedMessage?.toSceytPinDetails()
+            pinDetails = pinDetailsOf(this@toSceytMessage.pinnedMessage, this@toSceytMessage.pendingPin)
         )
     }
 }
@@ -136,7 +136,7 @@ internal fun ParentMessageDb.toSceytMessage(): SceytMessage {
             it.user?.toSceytUser() ?: SceytUser(it.link.userId)
         },
         pollDetails = this@toSceytMessage.poll?.toSceytPollDetails(),
-        pinDetails = pinnedMessage?.toSceytPinDetails()
+        pinDetails = pinDetailsOf(pinnedMessage, pendingPin)
     )
 }
 

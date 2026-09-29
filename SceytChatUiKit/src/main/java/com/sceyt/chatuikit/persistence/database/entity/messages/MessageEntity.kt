@@ -48,8 +48,6 @@ internal data class MessageEntity(
     val bodyAttribute: List<BodyAttribute>?,
     @ColumnInfo(defaultValue = "0")
     val disableMentionsCount: Boolean,
-    @Embedded(prefix = "pin_")
-    val pinDetails: PinDetailsDb?,
     @ColumnInfo(index = true)
     // This flag is used to ignore getting this message, when querying get channel messages
     val unList: Boolean,

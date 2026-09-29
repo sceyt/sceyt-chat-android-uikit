@@ -55,6 +55,7 @@ import com.sceyt.chatuikit.persistence.database.dao.PendingMarkerDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingMessageDeleteByTidDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingMessageStateDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingPollVoteDao
+import com.sceyt.chatuikit.persistence.database.dao.PendingPinDao
 import com.sceyt.chatuikit.persistence.database.dao.PinnedMessageDao
 import com.sceyt.chatuikit.persistence.database.dao.PollDao
 import com.sceyt.chatuikit.persistence.database.dao.ReactionDao
@@ -128,6 +129,7 @@ internal class PersistenceMessagesLogicImpl(
     private val pendingMessageDeleteByTidDao: PendingMessageDeleteByTidDao,
     private val pollDao: PollDao,
     private val pinnedMessageDao: PinnedMessageDao,
+    private val pendingPinDao: PendingPinDao,
     private val pendingPollVoteDao: PendingPollVoteDao,
     private val fileTransferService: FileTransferService,
     private val messagesRepository: MessagesRepository,
@@ -1680,7 +1682,8 @@ internal class PersistenceMessagesLogicImpl(
         messageDao.deleteAttachmentsChunked(listOf(tid))
         messageDao.deleteAttachmentsPayloadsChunked(listOf(tid))
         reactionDao.deleteAllReactionsAndTotals(id)
-        pinnedMessageDao.deleteByTidWithMirror(tid)
+        pinnedMessageDao.deleteByTids(listOf(tid))
+        pendingPinDao.deleteByTids(listOf(tid))
     }
 
     private fun getMessagesTid(messages: List<SceytMessage>?): List<Long> {
