@@ -30,8 +30,10 @@ import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingReactionE
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
 import com.sceyt.chatuikit.persistence.logicimpl.sync.ChannelSyncStateStore
+import com.sceyt.chatuikit.persistence.mappers.toChannel
 import com.sceyt.chatuikit.persistence.mappers.toChannelEntity
 import com.sceyt.chatuikit.persistence.mappers.toMessageDb
+import com.sceyt.chatuikit.persistence.mappers.toUserDb
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
@@ -131,6 +133,32 @@ class PendingChannelUseCasesTest {
         assertThat(withCurrentUserAndDuplicatePeer.id).isEqualTo(peerOnly.id)
         assertThat(withCurrentUserAndDuplicatePeer.members!!.map { it.id }).containsExactly(currentUser.id, "peer")
         assertThat(channelsCache.isPending(withCurrentUserAndDuplicatePeer.id)).isTrue()
+    }
+
+    @Test
+    fun createPendingChannel_withUserIds_shouldUseDbUsersAndNotOverwriteThem() = runTest {
+        val peer = SceytUser("peer").copy(firstName = "Peer", lastName = "User")
+        database.userDao().insertUsersWithMetadata(listOf(peer.toUserDb()))
+
+        val channel = createPendingChannelUseCase(
+            data = CreateChannelData(
+                type = ChannelTypeEnum.Direct.value,
+                userIds = listOf("peer"),
+                roleName = "owner"
+            ),
+            currentUserId = currentUser.id
+        ).successData()
+
+        val peerMember = channel.members!!.first { it.id == "peer" }
+        assertThat(peerMember.role.name).isEqualTo("owner")
+        assertThat(peerMember.user.fullName).isEqualTo("Peer User")
+        assertThat(channelsCache.getOneOf(channel.id)?.members?.first { it.id == "peer" }?.user?.fullName)
+            .isEqualTo("Peer User")
+        assertThat(database.userDao().getUserById("peer")?.user?.firstName).isEqualTo("Peer")
+        assertThat(
+            database.channelDao().getChannelById(channel.id)?.toChannel()
+                ?.members?.first { it.id == "peer" }?.user?.fullName
+        ).isEqualTo("Peer User")
     }
 
     @Test
