@@ -3,15 +3,13 @@ package com.sceyt.chatuikit.data.models.channels
 import com.sceyt.chatuikit.SceytChatUIKit
 
 data class CreateChannelData(
-        var type: String,
-        var uri: String = "",
-        var subject: String = "",
-        var avatarUrl: String = "",
-        var metadata: String = "",
-        var members: List<SceytMember> = emptyList(),
+        val type: String,
+        val uri: String = "",
+        val subject: String = "",
+        val avatar: ChannelAvatar? = null,
+        val metadata: String = "",
+        val members: List<SceytMember> = emptyList(),
 ) {
-    var avatarUploaded: Boolean = false
-
     @JvmOverloads
     constructor(
             type: String,
@@ -19,13 +17,13 @@ data class CreateChannelData(
             roleName: String = SceytChatUIKit.config.memberRolesConfig.participant,
             uri: String = "",
             subject: String = "",
-            avatarUrl: String = "",
+            avatar: ChannelAvatar? = null,
             metadata: String = "",
     ) : this(
         type = type,
         uri = uri,
         subject = subject,
-        avatarUrl = avatarUrl,
+        avatar = avatar,
         metadata = metadata,
         members = userIds.map { SceytMember(it, roleName) }
     )

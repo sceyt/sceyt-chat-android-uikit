@@ -4,6 +4,7 @@ import com.google.gson.Gson
 import com.sceyt.chat.models.role.Role
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.data.models.channels.ChannelAvatar
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
 import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
@@ -14,8 +15,10 @@ import com.sceyt.chatuikit.data.models.createErrorResponse
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.toSha256
 import com.sceyt.chatuikit.persistence.database.dao.ChannelDao
+import com.sceyt.chatuikit.persistence.database.dao.PendingChannelAvatarDao
 import com.sceyt.chatuikit.persistence.database.dao.UserDao
 import com.sceyt.chatuikit.persistence.database.entity.channel.UserChatLinkEntity
+import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingChannelAvatarEntity
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.persistence.mappers.createPendingChannel
 import com.sceyt.chatuikit.persistence.mappers.toChannelEntity
@@ -25,6 +28,7 @@ import com.sceyt.chatuikit.persistence.mappers.toUserDb
 internal class CreatePendingChannelUseCase(
     private val channelDao: ChannelDao,
     private val usersDao: UserDao,
+    private val pendingChannelAvatarDao: PendingChannelAvatarDao,
     private val channelsCache: ChannelsCache
 ) {
 
@@ -82,6 +86,10 @@ internal class CreatePendingChannelUseCase(
         channelDao.insertChannelAndLinks(channel.toChannelEntity(), members.map {
             UserChatLinkEntity(userId = it.id, chatId = channel.id, role = it.role.name)
         })
+
+        (data.avatar as? ChannelAvatar.Local)?.let {
+            pendingChannelAvatarDao.insert(PendingChannelAvatarEntity(channel.id, it.filePath))
+        }
         channelsCache.upsertPendingChannel(channel)
         return SceytResponse.Success(channel)
     }

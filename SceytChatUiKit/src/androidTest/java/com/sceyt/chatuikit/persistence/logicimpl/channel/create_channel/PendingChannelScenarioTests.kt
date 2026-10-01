@@ -31,6 +31,7 @@ import com.sceyt.chatuikit.persistence.database.dao.DraftMessageDao
 import com.sceyt.chatuikit.persistence.database.dao.GlobalSearchDao
 import com.sceyt.chatuikit.persistence.database.dao.LoadRangeDao
 import com.sceyt.chatuikit.persistence.database.dao.MessageDao
+import com.sceyt.chatuikit.persistence.database.dao.PendingChannelAvatarDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingReactionDao
 import com.sceyt.chatuikit.persistence.database.dao.UserDao
 import com.sceyt.chatuikit.persistence.database.entity.messages.AttachmentEntity
@@ -320,6 +321,7 @@ class PendingChannelScenarioTests : SceytKoinComponent {
         val pendingChannelCoordinator = PendingChannelCoordinator(
             channelsRepository = repository,
             channelDao = channelDao,
+            pendingChannelAvatarDao = getKoin().get<PendingChannelAvatarDao>(),
             channelsCache = channelsCache,
             findExistingChannelByMembersUseCase = getKoin().get<FindExistingChannelByMembersUseCase>(),
             createPendingChannelUseCase = getKoin().get<CreatePendingChannelUseCase>(),
