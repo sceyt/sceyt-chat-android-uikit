@@ -48,6 +48,13 @@ internal class CreatePendingChannelUseCase(
             )
         }
 
+        val dbUsers = usersDao.getUsersById(members.map { it.id })
+            .associateBy({ it.user.id }, { it.toSceytUser() })
+
+        members = members.map { member ->
+            dbUsers[member.id]?.let { member.copy(user = it) } ?: member
+        }
+
         val isSelfChannel =
             members.size == 1 && members[0].id == myId && data.type == ChannelTypeEnum.Direct.value
         val metadata = if (isSelfChannel)
@@ -68,7 +75,10 @@ internal class CreatePendingChannelUseCase(
             )
         )
 
-        usersDao.insertUsersWithMetadata(members.map { it.toUserDb() })
+        usersDao.insertUsersWithMetadata(
+            users = members.map { it.toUserDb() },
+            replaceUserOnConflict = false
+        )
         channelDao.insertChannelAndLinks(channel.toChannelEntity(), members.map {
             UserChatLinkEntity(userId = it.id, chatId = channel.id, role = it.role.name)
         })
