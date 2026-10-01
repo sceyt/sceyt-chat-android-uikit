@@ -134,6 +134,12 @@ internal abstract class ChannelDao {
     @Query("""UPDATE $CHANNEL_TABLE SET uri = :uri WHERE chat_id = :channelId""")
     abstract suspend fun updateUri(channelId: Long, uri: String?)
 
+    @Query("""SELECT avatarUrl FROM $CHANNEL_TABLE WHERE chat_id = :channelId""")
+    abstract suspend fun getAvatarUrl(channelId: Long): String?
+
+    @Query("""UPDATE $CHANNEL_TABLE SET avatarUrl = :avatarUrl WHERE chat_id = :channelId""")
+    abstract suspend fun updateAvatarUrl(channelId: Long, avatarUrl: String?)
+
     @Transaction
     @Query("""SELECT * FROM $CHANNEL_TABLE WHERE isSelf = 1""")
     abstract suspend fun getSelfChannel(): ChannelDb?
