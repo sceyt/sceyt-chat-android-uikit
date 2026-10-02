@@ -156,6 +156,7 @@ internal fun databaseModule(enableDatabase: Boolean) = module {
     single { get<SceytDatabase>().pendingReactionDao() }
     single { get<SceytDatabase>().pendingMessageStateDao() }
     single { get<SceytDatabase>().pendingMessageDeleteByTidDao() }
+    single { get<SceytDatabase>().pendingChannelAvatarDao() }
     single { get<SceytDatabase>().fileChecksumDao() }
     single { get<SceytDatabase>().linkDao() }
     single { get<SceytDatabase>().loadRangeDao() }

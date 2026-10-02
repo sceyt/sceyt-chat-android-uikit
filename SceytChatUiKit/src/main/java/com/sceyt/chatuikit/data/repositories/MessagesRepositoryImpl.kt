@@ -25,7 +25,6 @@ import com.sceyt.chatuikit.data.models.createErrorResponse
 import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.retryOnResendableError
-import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.extensions.safeResume
 import com.sceyt.chatuikit.persistence.mappers.toMessage
@@ -38,6 +37,10 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 
 class MessagesRepositoryImpl : MessagesRepository {
     private var searchMessageListQuery: MessagesListQuery? = null
+
+    companion object {
+        private const val TAG = "MessagesRepository"
+    }
 
     /**
      * @param conversationId id of current conversation, if is reply in thread, it is the reply message id, else channel id.
@@ -377,7 +380,7 @@ class MessagesRepositoryImpl : MessagesRepository {
             override fun onResult(message: Message) {
                 SceytLog.i(
                     TAG,
-                    "send message success with tid: ${message.tid}, initialTid: ${message.tid}, channelId: $channelId"
+                    "send message success with tid: ${message.tid}, initialTid: ${message.tid}, id: ${message.id} channelId: $channelId"
                 )
                 val resultTransformed = SceytChatUIKit.messageTransformer?.transformToGet(message)
                     ?: message

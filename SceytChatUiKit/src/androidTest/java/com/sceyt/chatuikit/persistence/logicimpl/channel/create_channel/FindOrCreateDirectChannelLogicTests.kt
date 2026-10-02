@@ -14,6 +14,7 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.di.repositoryModule
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelActionEvent
 import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.data.models.channels.ChannelAvatar
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
 import com.sceyt.chatuikit.data.models.channels.DraftMessage
@@ -30,6 +31,7 @@ import com.sceyt.chatuikit.persistence.database.dao.ChannelDao
 import com.sceyt.chatuikit.persistence.database.dao.MessageDao
 import com.sceyt.chatuikit.persistence.database.entity.messages.AttachmentEntity
 import com.sceyt.chatuikit.persistence.di.logicModule
+import com.sceyt.chatuikit.persistence.extensions.toAvatarUrl
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.MergePendingDirectChannelsUseCase
@@ -45,8 +47,10 @@ import org.junit.runner.RunWith
 import org.koin.core.component.inject
 import org.koin.test.KoinTestRule
 import java.util.UUID
+import kotlin.time.Duration.Companion.milliseconds
 
 
+@Suppress("SameParameterValue")
 @RunWith(AndroidJUnit4::class)
 @SmallTest
 class FindOrCreateDirectChannelLogicTests : SceytKoinComponent {
@@ -95,7 +99,7 @@ class FindOrCreateDirectChannelLogicTests : SceytKoinComponent {
     fun findOrCreatePendingChannelByMembers_should_create_new_channel_if_channel_not_found() = runTest {
         val data = CreateChannelData(
             type = "direct",
-            avatarUrl = "http://www.bing.com/search?q=litora",
+            avatar = ChannelAvatar.Remote("http://www.bing.com/search?q=litora"),
             metadata = "deterruisset",
             members = listOf(
                 SceytMember(currentUser.toSceytUser(), "owner"),
@@ -110,7 +114,7 @@ class FindOrCreateDirectChannelLogicTests : SceytKoinComponent {
         val channel = (result as SceytResponse.Success).data!!
         Truth.assertThat(channel.members?.map { it.id }?.sorted() == data.members.map { it.user.id }.sorted()).isTrue()
         Truth.assertThat(channel.type == data.type).isTrue()
-        Truth.assertThat(channel.avatarUrl == data.avatarUrl).isTrue()
+        Truth.assertThat(channel.avatarUrl == data.avatar.toAvatarUrl()).isTrue()
         Truth.assertThat(channel.metadata == data.metadata).isTrue()
 
         // Verify channel is stored correctly in database
@@ -121,7 +125,7 @@ class FindOrCreateDirectChannelLogicTests : SceytKoinComponent {
     fun findOrCreatePendingChannelByMembers_should_not_create_new_channel_if_channel_already_exists() = runTest {
         val data = CreateChannelData(
             type = "direct",
-            avatarUrl = "http://www.bing.com/search?q=litora",
+            avatar = ChannelAvatar.Remote("http://www.bing.com/search?q=litora"),
             metadata = "deterruisset",
             members = listOf(
                 SceytMember(currentUser.toSceytUser(), "owner"),
@@ -137,7 +141,7 @@ class FindOrCreateDirectChannelLogicTests : SceytKoinComponent {
         verifyChannelInDatabase(createdChannel, data, shouldBePending = true)
 
         // Delay to make sure that the created channel cratedAt is different from the previous one
-        delay(500)
+        delay(500.milliseconds)
         val result = channelLogic.findOrCreatePendingChannelByMembers(data)
         Truth.assertThat(result is SceytResponse.Success && result.data != null).isTrue()
         Truth.assertThat(result.data?.createdAt == createdChannel.createdAt).isTrue()
@@ -172,7 +176,7 @@ class FindOrCreateDirectChannelLogicTests : SceytKoinComponent {
         val data = CreateChannelData(
             type = "group",
             subject = "Test Group",
-            avatarUrl = "https://example.com/avatar.jpg",
+            avatar = ChannelAvatar.Remote("https://example.com/avatar.jpg"),
             metadata = "group metadata",
             members = listOf(
                 SceytMember(currentUser.toSceytUser(), "owner"),
@@ -437,7 +441,7 @@ class FindOrCreateDirectChannelLogicTests : SceytKoinComponent {
         val data = CreateChannelData(
             type = "group",
             subject = "", // Empty subject
-            avatarUrl = "", // Empty avatar URL
+            avatar = null, // No avatar
             metadata = "", // Empty metadata
             members = listOf(
                 SceytMember(currentUser.toSceytUser(), "owner")
@@ -842,7 +846,7 @@ class FindOrCreateDirectChannelLogicTests : SceytKoinComponent {
             Truth.assertThat(id).isEqualTo(channel.id)
             Truth.assertThat(type).isEqualTo(expectedData.type)
             Truth.assertThat(subject.orEmpty()).isEqualTo(expectedData.subject)
-            Truth.assertThat(avatarUrl.orEmpty()).isEqualTo(expectedData.avatarUrl)
+            Truth.assertThat(avatarUrl.orEmpty()).isEqualTo(expectedData.avatar.toAvatarUrl())
             if (channel.isSelf) {
                 Truth.assertThat(metadata).isEqualTo(Gson().toJson(SelfChannelMetadata(1)))
             } else {

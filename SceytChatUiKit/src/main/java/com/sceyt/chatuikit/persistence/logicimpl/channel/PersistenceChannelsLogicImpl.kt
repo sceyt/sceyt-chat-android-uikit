@@ -56,6 +56,7 @@ import com.sceyt.chatuikit.persistence.database.entity.user.UserDb
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
+import com.sceyt.chatuikit.persistence.extensions.uploadIfLocal
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
 import com.sceyt.chatuikit.persistence.logicimpl.sync.ChannelSyncStateStore
@@ -977,16 +978,10 @@ internal class PersistenceChannelsLogicImpl(
         channelId: Long,
         data: EditChannelData
     ): SceytResponse<SceytChannel> {
-        if (data.avatarEdited && data.avatarUrl != null) {
-            when (val uploadResult = channelsRepository.uploadAvatar(data.avatarUrl.toString())) {
-                is SceytResponse.Success -> {
-                    data.avatarUrl = uploadResult.data
-                }
-
-                is SceytResponse.Error -> return SceytResponse.Error(uploadResult.exception)
-            }
-        }
-        val response = channelsRepository.editChannel(channelId, data)
+        val avatar = data.avatar.uploadIfLocal(channelsRepository::uploadAvatar)
+            .onError { return SceytResponse.Error(it) }
+            .data
+        val response = channelsRepository.editChannel(channelId, data.copy(avatar = avatar))
         if (response is SceytResponse.Success) {
             response.data?.let {
                 channelDao.updateChannel(it.toChannelEntity())

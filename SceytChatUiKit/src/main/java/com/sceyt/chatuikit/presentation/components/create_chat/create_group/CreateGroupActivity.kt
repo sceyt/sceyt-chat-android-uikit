@@ -12,6 +12,7 @@ import androidx.core.widget.doAfterTextChanged
 import com.google.gson.Gson
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.data.models.channels.ChannelAvatar
 import com.sceyt.chatuikit.data.models.channels.ChannelDescriptionData
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
@@ -48,7 +49,7 @@ class CreateGroupActivity : AppCompatActivity() {
     private lateinit var style: CreateGroupStyle
     private val viewModel: CreateChatViewModel by viewModels()
     private val filePickerHelper = FilePickerHelper(this)
-    private val createChannelData by lazy { CreateChannelData(ChannelTypeEnum.Group.value) }
+    private var avatarPath = ""
     private lateinit var members: List<SceytMember>
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -112,7 +113,7 @@ class CreateGroupActivity : AppCompatActivity() {
         avatar.setOnClickListener {
             EditAvatarTypeDialog(
                 context = this@CreateGroupActivity,
-                enableDelete = createChannelData.avatarUrl.isNotBlank()
+                enableDelete = avatarPath.isNotBlank()
             ) {
                 when (it) {
                     EditAvatarTypeDialog.EditAvatarType.ChooseFromGallery -> {
@@ -139,13 +140,14 @@ class CreateGroupActivity : AppCompatActivity() {
         }
 
         btnCreate.setOnClickListener {
-            with(createChannelData) {
-                subject = inputSubject.text.toString().trim()
-                type = ChannelTypeEnum.Group.value
-                metadata =
-                    Gson().toJson(ChannelDescriptionData(inputDescription.text.toString().trim()))
+            val avatar = avatarPath.takeIf { it.isNotBlank() }?.let { ChannelAvatar.Local(it) }
+            val createChannelData = CreateChannelData(
+                type = ChannelTypeEnum.Group.value,
+                subject = inputSubject.text.toString().trim(),
+                avatar = avatar,
+                metadata = Gson().toJson(ChannelDescriptionData(inputDescription.text.toString().trim())),
                 members = this@CreateGroupActivity.members
-            }
+            )
 
             viewModel.createGroup(createChannelData)
             hideSoftInput()
@@ -161,7 +163,7 @@ class CreateGroupActivity : AppCompatActivity() {
     }
 
     private fun setAvatarImage(filePath: String?) {
-        createChannelData.avatarUrl = filePath.let {
+        avatarPath = filePath.let {
             val reqSize = SceytChatUIKit.config.avatarResizeConfig.dimensionThreshold
             val quality = SceytChatUIKit.config.avatarResizeConfig.compressionQuality
             resizeImage(
@@ -171,7 +173,7 @@ class CreateGroupActivity : AppCompatActivity() {
                 quality = quality
             ).getOrNull() ?: ""
         }
-        binding.avatar.setImageUrl(createChannelData.avatarUrl)
+        binding.avatar.setImageUrl(avatarPath)
     }
 
     private fun cropImage(filePath: String?) {

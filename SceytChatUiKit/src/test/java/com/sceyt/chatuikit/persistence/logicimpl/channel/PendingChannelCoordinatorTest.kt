@@ -5,9 +5,11 @@ import com.sceyt.chat.models.SceytException
 import com.sceyt.chatuikit.config.ChannelListConfig
 import com.sceyt.chatuikit.createChannel
 import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.data.models.channels.ChannelAvatar
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.persistence.database.dao.ChannelDao
+import com.sceyt.chatuikit.persistence.database.dao.PendingChannelAvatarDao
 import com.sceyt.chatuikit.persistence.database.entity.channel.ChannelDb
 import com.sceyt.chatuikit.persistence.database.entity.channel.UserChatLinkEntity
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.CreatePendingChannelUseCase
@@ -33,6 +35,7 @@ import org.mockito.kotlin.doSuspendableAnswer
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
+import org.mockito.kotlin.times
 import org.mockito.kotlin.verifyBlocking
 import org.mockito.kotlin.whenever
 import java.util.concurrent.atomic.AtomicBoolean
@@ -47,10 +50,13 @@ class PendingChannelCoordinatorTest {
         const val PENDING_CHANNEL_ID = 10L
         const val REAL_CHANNEL_ID = 20L
         const val CHANNEL_URI = "shared-uri"
+        const val LOCAL_AVATAR_PATH = "/data/avatar.png"
+        const val REMOTE_AVATAR_URL = "avatars/remote.png"
     }
 
     private val channelsRepository = mock<ChannelsRepository>()
     private val channelDao = mock<ChannelDao>()
+    private val pendingChannelAvatarDao = mock<PendingChannelAvatarDao>()
     private val channelsCache = mock<ChannelsCache>()
     private val findExistingChannelByMembersUseCase = mock<FindExistingChannelByMembersUseCase>()
     private val createPendingChannelUseCase = mock<CreatePendingChannelUseCase>()
@@ -61,6 +67,7 @@ class PendingChannelCoordinatorTest {
     private val coordinator = PendingChannelCoordinator(
         channelsRepository = channelsRepository,
         channelDao = channelDao,
+        pendingChannelAvatarDao = pendingChannelAvatarDao,
         channelsCache = channelsCache,
         findExistingChannelByMembersUseCase = findExistingChannelByMembersUseCase,
         createPendingChannelUseCase = createPendingChannelUseCase,
@@ -175,6 +182,109 @@ class PendingChannelCoordinatorTest {
                 assertThat(data.subject).isEqualTo("the subject")
                 assertThat(data.metadata).isEqualTo("{}")
             })
+        }
+    }
+
+    @Test
+    fun `uploads the stored local avatar and saves it before creating the real channel`() = runTest {
+        val pendingChannel = pendingChannel().copy(avatarUrl = LOCAL_AVATAR_PATH)
+        val events = mutableListOf<String>()
+        whenever(pendingChannelAvatarDao.getFilePath(PENDING_CHANNEL_ID)).thenReturn(LOCAL_AVATAR_PATH)
+        whenever(findRealChannelForPendingUseCase(pendingChannel, CURRENT_USER_ID)).thenReturn(null)
+        whenever(channelsRepository.uploadAvatar(LOCAL_AVATAR_PATH))
+            .thenReturn(SceytResponse.Success(REMOTE_AVATAR_URL))
+        doSuspendableAnswer {
+            events += "save avatar url"
+        }.whenever(channelDao) { updateAvatarUrl(PENDING_CHANNEL_ID, REMOTE_AVATAR_URL) }
+        doSuspendableAnswer {
+            events += "delete local avatar"
+        }.whenever(pendingChannelAvatarDao) { delete(PENDING_CHANNEL_ID) }
+        doSuspendableAnswer {
+            events += "create channel"
+            SceytResponse.Success(realChannel())
+        }.whenever(channelsRepository) { createChannel(any()) }
+        whenever(channelDao.getChannelById(PENDING_CHANNEL_ID)).thenReturn(null)
+
+        coordinator.createRealFromPending(pendingChannel, CURRENT_USER_ID)
+
+        assertThat(events).containsExactly("save avatar url", "delete local avatar", "create channel").inOrder()
+        verifyBlocking(channelsRepository) {
+            createChannel(check { data ->
+                assertThat(data.avatar).isEqualTo(ChannelAvatar.Remote(REMOTE_AVATAR_URL))
+            })
+        }
+    }
+
+    @Test
+    fun `does not upload the avatar again when retrying after a failed create`() = runTest {
+        val stalePendingChannel = pendingChannel().copy(avatarUrl = LOCAL_AVATAR_PATH)
+        whenever(pendingChannelAvatarDao.getFilePath(PENDING_CHANNEL_ID)).thenReturn(LOCAL_AVATAR_PATH, null)
+        whenever(channelDao.getAvatarUrl(PENDING_CHANNEL_ID)).thenReturn(LOCAL_AVATAR_PATH, REMOTE_AVATAR_URL)
+        whenever(findRealChannelForPendingUseCase(stalePendingChannel, CURRENT_USER_ID)).thenReturn(null)
+        whenever(channelsRepository.uploadAvatar(LOCAL_AVATAR_PATH))
+            .thenReturn(SceytResponse.Success(REMOTE_AVATAR_URL))
+        whenever(channelsRepository.createChannel(any())).thenReturn(
+            SceytResponse.Error(SceytException(1, "create failed")),
+            SceytResponse.Success(realChannel())
+        )
+        whenever(channelDao.getChannelById(PENDING_CHANNEL_ID)).thenReturn(null)
+
+        coordinator.createRealFromPending(stalePendingChannel, CURRENT_USER_ID)
+        coordinator.createRealFromPending(stalePendingChannel, CURRENT_USER_ID)
+
+        verifyBlocking(channelsRepository, times(1)) { uploadAvatar(any()) }
+        verifyBlocking(channelsRepository, times(2)) {
+            createChannel(check { data ->
+                assertThat(data.avatar).isEqualTo(ChannelAvatar.Remote(REMOTE_AVATAR_URL))
+            })
+        }
+    }
+
+    @Test
+    fun `returns the avatar upload error without creating the real channel`() = runTest {
+        val pendingChannel = pendingChannel().copy(avatarUrl = LOCAL_AVATAR_PATH)
+        val exception = SceytException(5, "upload failed")
+        whenever(pendingChannelAvatarDao.getFilePath(PENDING_CHANNEL_ID)).thenReturn(LOCAL_AVATAR_PATH)
+        whenever(findRealChannelForPendingUseCase(pendingChannel, CURRENT_USER_ID)).thenReturn(null)
+        whenever(channelsRepository.uploadAvatar(LOCAL_AVATAR_PATH))
+            .thenReturn(SceytResponse.Error(exception))
+
+        val response = coordinator.createRealFromPending(pendingChannel, CURRENT_USER_ID)
+
+        assertThat((response as SceytResponse.Error).exception).isEqualTo(exception)
+        verifyBlocking(channelsRepository, never()) { createChannel(any()) }
+        verifyBlocking(pendingChannelAvatarDao, never()) { delete(any()) }
+    }
+
+    @Test
+    fun `sends the pending channel avatar as remote when no local avatar is stored`() = runTest {
+        val pendingChannel = pendingChannel().copy(avatarUrl = REMOTE_AVATAR_URL)
+        whenever(findRealChannelForPendingUseCase(pendingChannel, CURRENT_USER_ID)).thenReturn(null)
+        whenever(channelsRepository.createChannel(any()))
+            .thenReturn(SceytResponse.Success(realChannel()))
+        whenever(channelDao.getChannelById(PENDING_CHANNEL_ID)).thenReturn(null)
+
+        coordinator.createRealFromPending(pendingChannel, CURRENT_USER_ID)
+
+        verifyBlocking(channelsRepository) {
+            createChannel(check { data ->
+                assertThat(data.avatar).isEqualTo(ChannelAvatar.Remote(REMOTE_AVATAR_URL))
+            })
+        }
+    }
+
+    @Test
+    fun `sends no avatar when the pending channel has none`() = runTest {
+        val pendingChannel = pendingChannel().copy(avatarUrl = "")
+        whenever(findRealChannelForPendingUseCase(pendingChannel, CURRENT_USER_ID)).thenReturn(null)
+        whenever(channelsRepository.createChannel(any()))
+            .thenReturn(SceytResponse.Success(realChannel()))
+        whenever(channelDao.getChannelById(PENDING_CHANNEL_ID)).thenReturn(null)
+
+        coordinator.createRealFromPending(pendingChannel, CURRENT_USER_ID)
+
+        verifyBlocking(channelsRepository) {
+            createChannel(check { data -> assertThat(data.avatar).isNull() })
         }
     }
 
@@ -430,6 +540,20 @@ class PendingChannelCoordinatorTest {
         assertThat(response.data).isEqualTo(pendingChannel)
     }
 
+    @Test
+    fun `creates a pending channel by members with a local avatar without uploading it`() = runTest {
+        val pendingChannel = pendingChannel()
+        val data = createChannelData().copy(avatar = ChannelAvatar.Local(LOCAL_AVATAR_PATH))
+        whenever(findExistingChannelByMembersUseCase(data, CURRENT_USER_ID)).thenReturn(null)
+        whenever(createPendingChannelUseCase(data, CURRENT_USER_ID))
+            .thenReturn(SceytResponse.Success(pendingChannel))
+
+        val response = coordinator.findOrCreateByMembers(data, CURRENT_USER_ID)
+
+        assertThat(response.data).isEqualTo(pendingChannel)
+        verifyBlocking(channelsRepository, never()) { uploadAvatar(any()) }
+    }
+
     // endregion
 
     // region findOrCreateByUri
@@ -496,6 +620,22 @@ class PendingChannelCoordinatorTest {
 
         assertThat(response.data?.id).isEqualTo(PENDING_CHANNEL_ID)
         verifyBlocking(createPendingChannelUseCase, never()) { invoke(any(), any()) }
+    }
+
+    @Test
+    fun `creates a pending channel by uri offline with a local avatar without uploading it`() = runTest {
+        val pendingChannel = pendingChannel()
+        val data = createChannelData().copy(avatar = ChannelAvatar.Local(LOCAL_AVATAR_PATH))
+        whenever(channelDao.getChannelByUri(CHANNEL_URI)).thenReturn(null)
+        whenever(channelsRepository.getChannelByUri(CHANNEL_URI))
+            .thenReturn(SceytResponse.Error(SceytException(1, "offline")))
+        whenever(createPendingChannelUseCase(data, CURRENT_USER_ID))
+            .thenReturn(SceytResponse.Success(pendingChannel))
+
+        val response = coordinator.findOrCreateByUri(data, CURRENT_USER_ID)
+
+        assertThat(response.data).isEqualTo(pendingChannel)
+        verifyBlocking(channelsRepository, never()) { uploadAvatar(any()) }
     }
 
     // endregion
