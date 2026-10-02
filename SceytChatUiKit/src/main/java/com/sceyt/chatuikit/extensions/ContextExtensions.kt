@@ -214,7 +214,7 @@ fun Context.showSoftInput(editText: EditText) {
         editText.requestFocus()
         val inputMethodManager =
             getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-        showed = inputMethodManager.showSoftInput(editText, InputMethodManager.SHOW_IMPLICIT)
+        showed = inputMethodManager.showSoftInput(editText, 0)
     }
     run.run()
     if (!showed)
