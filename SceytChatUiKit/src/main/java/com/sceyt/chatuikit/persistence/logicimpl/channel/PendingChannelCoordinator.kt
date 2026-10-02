@@ -2,12 +2,17 @@ package com.sceyt.chatuikit.persistence.logicimpl.channel
 
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.data.models.channels.ChannelAvatar
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.createErrorResponse
 import com.sceyt.chatuikit.data.models.fold
+import com.sceyt.chatuikit.data.models.onError
 import com.sceyt.chatuikit.persistence.database.dao.ChannelDao
+import com.sceyt.chatuikit.persistence.database.dao.PendingChannelAvatarDao
 import com.sceyt.chatuikit.persistence.database.entity.channel.UserChatLinkEntity
+import com.sceyt.chatuikit.persistence.extensions.toAvatarUrl
+import com.sceyt.chatuikit.persistence.extensions.uploadIfLocal
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.CreatePendingChannelUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.FindExistingChannelByMembersUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.FindRealChannelForPendingUseCase
@@ -24,6 +29,7 @@ import kotlinx.coroutines.sync.withLock
 internal class PendingChannelCoordinator(
     private val channelsRepository: ChannelsRepository,
     private val channelDao: ChannelDao,
+    private val pendingChannelAvatarDao: PendingChannelAvatarDao,
     private val channelsCache: ChannelsCache,
     private val findExistingChannelByMembersUseCase: FindExistingChannelByMembersUseCase,
     private val createPendingChannelUseCase: CreatePendingChannelUseCase,
@@ -136,7 +142,13 @@ internal class PendingChannelCoordinator(
             findRealAndMigratePendingChannelUnlocked(channel, currentUserId)
         }?.let { return SceytResponse.Success(it) }
 
-        val response = channelsRepository.createChannel(channel.toCreateChannelData())
+        val data = channel.toCreateChannelData()
+        val avatar = data.avatar.uploadIfLocal(channelsRepository::uploadAvatar)
+            .onError { return SceytResponse.Error(it) }
+            .data
+        if (data.avatar is ChannelAvatar.Local) saveUploadedPendingAvatar(channel.id, avatar)
+
+        val response = channelsRepository.createChannel(data.copy(avatar = avatar))
 
         return mutex.withLock {
             findRealAndMigratePendingChannelUnlocked(channel, currentUserId)?.let { realChannel ->
@@ -215,12 +227,27 @@ internal class PendingChannelCoordinator(
         }
     }
 
-    private fun SceytChannel.toCreateChannelData() = CreateChannelData(
-        type = type,
-        uri = uri.orEmpty(),
-        subject = subject.orEmpty(),
-        avatarUrl = avatarUrl.orEmpty(),
-        metadata = metadata.orEmpty(),
-        members = members.orEmpty()
-    )
+    private suspend fun saveUploadedPendingAvatar(channelId: Long, avatar: ChannelAvatar?) {
+        channelDao.updateAvatarUrl(channelId, avatar.toAvatarUrl())
+        pendingChannelAvatarDao.delete(channelId)
+    }
+
+    private suspend fun SceytChannel.toCreateChannelData(): CreateChannelData {
+        val localAvatarPath = pendingChannelAvatarDao.getFilePath(id)
+        val storedAvatarUrl = channelDao.getAvatarUrl(id) ?: avatarUrl
+        val remoteAvatarUrl = storedAvatarUrl?.takeIf { it.isNotBlank() }
+        val avatar = when {
+            localAvatarPath != null -> ChannelAvatar.Local(localAvatarPath)
+            remoteAvatarUrl != null -> ChannelAvatar.Remote(remoteAvatarUrl)
+            else -> null
+        }
+        return CreateChannelData(
+            type = type,
+            uri = uri.orEmpty(),
+            subject = subject.orEmpty(),
+            avatar = avatar,
+            metadata = metadata.orEmpty(),
+            members = members.orEmpty()
+        )
+    }
 }

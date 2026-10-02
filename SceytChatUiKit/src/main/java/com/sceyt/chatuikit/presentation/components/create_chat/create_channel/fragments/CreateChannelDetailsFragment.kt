@@ -17,6 +17,7 @@ import androidx.lifecycle.lifecycleScope
 import com.google.gson.Gson
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.data.models.channels.ChannelAvatar
 import com.sceyt.chatuikit.data.models.channels.ChannelDescriptionData
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
@@ -42,7 +43,7 @@ open class CreateChannelDetailsFragment : Fragment() {
     private lateinit var binding: SceytFragmentCreateChannelDetailsBinding
     private lateinit var style: CreateChannelStyle
     private val filePickerHelper = FilePickerHelper(this)
-    private val createChannelData by lazy { CreateChannelData(ChannelTypeEnum.Public.value) }
+    private var avatarPath = ""
     private val viewModel: CreateChatViewModel by viewModels()
     private val debounceHelper by lazy { DebounceHelper(200, lifecycleScope) }
     private var urlIsValidByServer = false
@@ -95,7 +96,7 @@ open class CreateChannelDetailsFragment : Fragment() {
         }
 
         avatar.setOnClickListener {
-            EditAvatarTypeDialog(requireContext(), createChannelData.avatarUrl.isNotBlank()) {
+            EditAvatarTypeDialog(requireContext(), avatarPath.isNotBlank()) {
                 when (it) {
                     EditAvatarTypeDialog.EditAvatarType.ChooseFromGallery -> {
                         filePickerHelper.chooseFromGallery(allowMultiple = false, onlyImages = true) { uris ->
@@ -118,13 +119,14 @@ open class CreateChannelDetailsFragment : Fragment() {
         }
 
         fabNext.setOnClickListener {
-            with(createChannelData) {
-                subject = inputSubject.text.toString().trim()
-                type = ChannelTypeEnum.Public.value
-                uri = inputUri.text?.toString()?.trim()?.lowercase().toString()
+            val avatar = avatarPath.takeIf { it.isNotBlank() }?.let { ChannelAvatar.Local(it) }
+            val createChannelData = CreateChannelData(
+                type = ChannelTypeEnum.Public.value,
+                uri = inputUri.text?.toString()?.trim()?.lowercase().toString(),
+                subject = inputSubject.text.toString().trim(),
+                avatar = avatar,
                 metadata = Gson().toJson(ChannelDescriptionData(inputDescription.text.toString().trim()))
-                members = arrayListOf()
-            }
+            )
 
             (requireActivity() as CreateChannelActivity).createChannel(createChannelData)
             requireActivity().hideSoftInput()
@@ -190,7 +192,7 @@ open class CreateChannelDetailsFragment : Fragment() {
     }
 
     private fun setAvatarImage(filePath: String?) {
-        createChannelData.avatarUrl = filePath.let {
+        avatarPath = filePath.let {
             val reqSize = SceytChatUIKit.config.avatarResizeConfig.dimensionThreshold
             val quality = SceytChatUIKit.config.avatarResizeConfig.compressionQuality
             resizeImage(
@@ -200,7 +202,7 @@ open class CreateChannelDetailsFragment : Fragment() {
                 quality = quality
             ).getOrNull() ?: ""
         }
-        binding.avatar.setImageUrl(createChannelData.avatarUrl)
+        binding.avatar.setImageUrl(avatarPath)
     }
 
     private fun cropImage(filePath: String?) {
