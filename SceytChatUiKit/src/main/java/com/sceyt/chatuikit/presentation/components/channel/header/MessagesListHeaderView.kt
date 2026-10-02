@@ -383,7 +383,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
         setSubTitleText(
             textView = binding.subTitle,
             title = title,
-            visible = enableSubTitle(channel)
+            visible = title.isNotBlank() && enableSubTitle(channel)
         )
     }
 
