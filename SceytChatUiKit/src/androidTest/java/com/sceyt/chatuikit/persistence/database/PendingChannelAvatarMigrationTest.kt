@@ -27,8 +27,8 @@ class PendingChannelAvatarMigrationTest {
     }
 
     @Test
-    fun migrate31To32_marksAvatarsOfExistingPendingChannelsAsLocal() {
-        helper.createDatabase(TEST_DB_NAME, 31).apply {
+    fun migrate33To34_marksAvatarsOfExistingPendingChannelsAsLocal() {
+        helper.createDatabase(TEST_DB_NAME, 33).apply {
             insertChannelRow(id = 1L, avatarUrl = "/data/avatar.png", pending = true)
             insertChannelRow(id = 2L, avatarUrl = "https://example.com/real.png", pending = false)
             insertChannelRow(id = 3L, avatarUrl = "", pending = true)
@@ -36,7 +36,7 @@ class PendingChannelAvatarMigrationTest {
             close()
         }
 
-        helper.runMigrationsAndValidate(TEST_DB_NAME, 32, true).use { migrated ->
+        helper.runMigrationsAndValidate(TEST_DB_NAME, 34, true).use { migrated ->
             migrated.query(
                 "SELECT channelId, filePath FROM ${DatabaseConstants.PENDING_CHANNEL_AVATAR_TABLE}"
             ).use { cursor ->
