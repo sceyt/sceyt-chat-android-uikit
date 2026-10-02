@@ -116,7 +116,7 @@ internal object DatabaseMigrations {
     @RenameTable(fromTableName = "UserMetadata", toTableName = USER_METADATA_TABLE)
     class AutoMigrationSpec18To19 : AutoMigrationSpec
 
-    class AutoMigrationSpec31To32 : AutoMigrationSpec {
+    class AutoMigrationSpec33To34 : AutoMigrationSpec {
         override fun onPostMigrate(db: SupportSQLiteDatabase) {
             db.execSQL(
                 "INSERT OR IGNORE INTO `$PENDING_CHANNEL_AVATAR_TABLE` (`channelId`, `filePath`) " +

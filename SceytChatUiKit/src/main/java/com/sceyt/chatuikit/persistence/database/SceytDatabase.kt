@@ -131,7 +131,7 @@ import com.sceyt.chatuikit.persistence.database.entity.user.UserMetadataEntity
         AutoMigration(from = 30, to = 31),
         AutoMigration(from = 31, to = 32),
         AutoMigration(from = 32, to = 33, spec = DatabaseMigrations.AutoMigrationSpec32To33::class),
-        AutoMigration(from = 33, to = 34, spec = DatabaseMigrations.AutoMigrationSpec31To32::class),
+        AutoMigration(from = 33, to = 34, spec = DatabaseMigrations.AutoMigrationSpec33To34::class),
     ]
 )
 
