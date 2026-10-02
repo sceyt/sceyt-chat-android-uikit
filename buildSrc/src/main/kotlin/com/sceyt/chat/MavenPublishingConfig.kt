@@ -79,6 +79,29 @@ fun Project.configureMavenPublishing(
             enabled = false
         }
     }
+
+    val cleanTask = tasks.named("clean")
+    // Order artifact generation as well as publishing after clean.
+    tasks.configureEach {
+        if (name != "clean") {
+            mustRunAfter(cleanTask)
+        }
+    }
+
+    tasks.register("publishToMavenLocalClean") {
+        group = "publishing"
+        description = "Cleans, builds and publishes $artifactId to Maven Local."
+        dependsOn(cleanTask, "publishToMavenLocal")
+    }
+
+    if (!isLocalPublish) {
+        val isSnapshot = version.contains("-SNAPSHOT")
+        tasks.register(if (isSnapshot) "publishSnapshotClean" else "publishReleaseClean") {
+            group = "publishing"
+            description = "Cleans, builds and publishes $artifactId to Maven Central${if (isSnapshot) " snapshots" else ""}."
+            dependsOn(cleanTask, "publish")
+        }
+    }
 }
 
 private fun Project.publishSnapshotToMavenCentral() {
