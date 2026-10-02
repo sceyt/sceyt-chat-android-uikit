@@ -10,6 +10,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.data.toSceytMember
 import com.sceyt.chatuikit.persistence.database.entity.channel.ChannelDb
 import com.sceyt.chatuikit.persistence.database.entity.channel.ChannelEntity
+import com.sceyt.chatuikit.persistence.extensions.toAvatarUrl
 
 internal fun SceytChannel.toChannelEntity() = ChannelEntity(
     id = id,
@@ -137,7 +138,7 @@ fun createPendingChannel(
     uri = data.uri,
     type = data.type,
     subject = data.subject,
-    avatarUrl = data.avatarUrl,
+    avatarUrl = data.avatar.toAvatarUrl(),
     metadata = data.metadata,
     createdAt = System.currentTimeMillis(),
     updatedAt = 0,

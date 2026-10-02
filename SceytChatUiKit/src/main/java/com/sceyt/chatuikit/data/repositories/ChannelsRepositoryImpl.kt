@@ -28,12 +28,15 @@ import com.sceyt.chatuikit.data.models.channels.CreateChannelData
 import com.sceyt.chatuikit.data.models.channels.EditChannelData
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
+import com.sceyt.chatuikit.data.models.onError
 import com.sceyt.chatuikit.data.retryOnResendableError
 import com.sceyt.chatuikit.data.toMember
 import com.sceyt.chatuikit.data.toSceytMember
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.extensions.safeResume
+import com.sceyt.chatuikit.persistence.extensions.toAvatarUrl
+import com.sceyt.chatuikit.persistence.extensions.uploadIfLocal
 import com.sceyt.chatuikit.persistence.mappers.toSceytUiChannel
 import com.sceyt.chatuikit.persistence.repositories.ChannelsRepository
 import kotlinx.coroutines.channels.awaitClose
@@ -309,25 +312,18 @@ class ChannelsRepositoryImpl : ChannelsRepository {
 
     override suspend fun createChannel(channelData: CreateChannelData): SceytResponse<SceytChannel> {
         // Upload avatar first (outside retry loop as it's a separate operation)
-        if (channelData.avatarUrl.isBlank().not() && channelData.avatarUploaded.not()) {
-            when (val uploadResult = uploadAvatar(channelData.avatarUrl)) {
-                is SceytResponse.Success -> {
-                    channelData.avatarUrl = uploadResult.data ?: ""
-                    channelData.avatarUploaded = true
-                }
-
-                is SceytResponse.Error -> {
-                    SceytLog.e(
-                        TAG,
-                        "uploadAvatar error: ${uploadResult.message}, code: ${uploadResult.code}, channelData: $channelData"
-                    )
-                    return SceytResponse.Error(uploadResult.exception)
-                }
+        val avatar = channelData.avatar.uploadIfLocal(::uploadAvatar)
+            .onError {
+                SceytLog.e(
+                    TAG,
+                    "uploadAvatar error: ${it?.message}, code: ${it?.code}, channelData: $channelData"
+                )
+                return SceytResponse.Error(it)
             }
-        }
+            .data
 
         return retryOnResendableError {
-            createChannelImpl(channelData)
+            createChannelImpl(channelData.copy(avatar = avatar))
         }
     }
 
@@ -353,7 +349,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         return CreateChannelRequest.Builder(channelData.type)
             .withMembers(channelData.members.map { it.toMember() })
             .withUri(channelData.uri)
-            .withAvatarUrl(channelData.avatarUrl)
+            .withAvatarUrl(channelData.avatar.toAvatarUrl())
             .withSubject(channelData.subject)
             .withMetadata(channelData.metadata)
             .build()
@@ -570,7 +566,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
                 data.channelUri ?: "",
                 data.newSubject ?: "",
                 data.metadata ?: "",
-                data.avatarUrl ?: "",
+                data.avatar.toAvatarUrl(),
                 channelCallback
             )
         }
