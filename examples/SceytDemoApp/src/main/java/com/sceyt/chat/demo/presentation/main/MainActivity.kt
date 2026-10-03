@@ -10,8 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.graphics.toColorInt
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.demo.R
-import com.sceyt.chat.demo.call.manager.CallManager
-import com.sceyt.chat.demo.call.ui.attachActiveCallBanner
+import com.sceyt.chat.demo.call.attachActiveCallBanner
 import com.sceyt.chat.demo.databinding.ActivityMainBinding
 import com.sceyt.chat.demo.presentation.main.adapters.MainViewPagerAdapter
 import com.sceyt.chat.demo.presentation.main.profile.ProfileFragment
@@ -34,7 +33,6 @@ import org.koin.android.ext.android.inject
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private val createProfileViewModel by inject<CreateAccountViewModel>()
-    private val callManager: CallManager by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,7 +46,7 @@ class MainActivity : AppCompatActivity() {
         setPagerAdapter()
         setBottomNavClickListeners()
         initViewModel()
-        attachActiveCallBanner(callManager, binding.root, R.id.viewPager)
+        attachActiveCallBanner(binding.root, R.id.viewPager)
 
         SceytChatUIKit.chatUIFacade.channelInteractor.getTotalUnreadCount().onEach {
             binding.bottomNavigationView.getOrCreateBadge(R.id.channelsFragment).apply {

@@ -2,14 +2,11 @@ package com.sceyt.chat.demo
 
 import android.app.Application
 import android.util.Log
-import com.callclient.CallClient
-import com.callclient.logger.CallLog
 import com.callclient.logger.CallLogLevel
 import com.callclient.logger.CallLogPriority
+import com.sceyt.calluikit.ui.SceytCallUiKit
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.connection.SceytChatConnectionManager
-import com.sceyt.chat.demo.call.di.callModule
-import com.sceyt.chat.demo.call.manager.CallManager
 import com.sceyt.chat.demo.data.AppSharedPreference
 import com.sceyt.chat.demo.di.apiModule
 import com.sceyt.chat.demo.di.appModules
@@ -32,7 +29,6 @@ import java.util.UUID
 class SceytChatDemoApp : Application() {
     private val connectionManager by inject<SceytChatConnectionManager>()
     private val preference by inject<AppSharedPreference>()
-    private val callManager by inject<CallManager>()
 
     override fun onCreate() {
         super.onCreate()
@@ -44,13 +40,12 @@ class SceytChatDemoApp : Application() {
                     viewModelModules,
                     apiModule,
                     repositoryModule,
-                    callModule(onChatConnectNeeded = { connectChatClient() })
                 )
             )
         }
 
         initSceyt()
-        initCallClient()
+        initCallUiKit()
         connectChatClient()
     }
 
@@ -77,7 +72,7 @@ class SceytChatDemoApp : Application() {
             }
         }
 
-        CallLog.setLogger(CallLogLevel.Verbose) { priority, tag, message, throwable ->
+        SceytCallUiKit.setLogger(CallLogLevel.Verbose) { priority, tag, message, throwable ->
             when (priority) {
                 CallLogPriority.Info -> Log.i("[CALL_LOG] $tag", message ?: "", throwable)
                 CallLogPriority.Debug -> Log.d("[CALL_LOG] $tag", message ?: "", throwable)
@@ -136,9 +131,10 @@ class SceytChatDemoApp : Application() {
             ?.let(connectionManager::connect)
     }
 
-    private fun initCallClient() {
-        // Initialize CallClient with ChatClient
-        CallClient.initialize(this, ChatClient.getClient())
-        callManager.init()
+    private fun initCallUiKit() {
+        SceytCallUiKit.initialize(
+            application = this,
+            chatClient = ChatClient.getClient(),
+        )
     }
 }
