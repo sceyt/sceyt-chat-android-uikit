@@ -1,7 +1,7 @@
 package com.sceyt.chatuikit.shared.media_encoder
 
 import android.app.Application
-import com.sceyt.chatuikit.extensions.toMediaUri
+import androidx.core.net.toUri
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.shared.media_encoder.TranscodeResultEnum.Cancelled
@@ -61,9 +61,13 @@ object VideoTranscodeHelper : SceytKoinComponent {
 
         if (currentTranscodePath == null) {
             currentTranscodePath = filePath
+            val isLocalPath = filePath.startsWith("/")
+            val srcUri = if (isLocalPath) null else filePath.toUri()
+            val srcPath = if (isLocalPath) filePath else null
             CustomVideoCompressor.start(
                 context = application,
-                srcUri = filePath.toMediaUri(),
+                srcUri = srcUri,
+                srcPath = srcPath,
                 destPath = destination.absolutePath,
                 configureWith = TranscoderConfiguration(
                     quality = quality,
