@@ -17,6 +17,7 @@ import androidx.media3.ui.PlayerView
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.databinding.SceytVideoControllerViewBinding
 import com.sceyt.chatuikit.extensions.getCompatDrawable
+import com.sceyt.chatuikit.extensions.toMediaUri
 
 class VideoControllerView @JvmOverloads constructor(
         context: Context,
@@ -139,7 +140,7 @@ class VideoControllerView @JvmOverloads constructor(
 
     private fun setMediaItem(player: Player, path: String?) {
         if (path == null) return
-        val mediaItem = MediaItem.fromUri(path)
+        val mediaItem = MediaItem.fromUri(path.toMediaUri())
         player.setMediaItem(mediaItem)
     }
 
