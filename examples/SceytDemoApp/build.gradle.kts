@@ -8,6 +8,7 @@ plugins {
     id("kotlin-parcelize")
     id("com.google.gms.google-services")
     id("com.google.firebase.crashlytics")
+    id("org.jetbrains.kotlin.plugin.compose")
 }
 
 android {
@@ -89,6 +90,7 @@ android {
         viewBinding = true
         buildConfig = true
         resValues = true
+        compose = true
     }
 }
 
@@ -101,7 +103,7 @@ kotlin {
 dependencies {
     implementation(project(":SceytChatConnection"))
     implementation(project(":SceytChatUiKit"))
-    implementation(project(":SceytCallKit"))
+    implementation(libs.sceyt.call.uikit.ui)
 
     implementation(libs.appcompat)
     implementation(libs.material)

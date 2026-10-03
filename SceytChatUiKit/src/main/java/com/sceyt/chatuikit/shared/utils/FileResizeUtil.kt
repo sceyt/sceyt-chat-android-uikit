@@ -7,10 +7,10 @@ import android.graphics.Matrix
 import android.media.MediaMetadataRetriever
 import android.util.Size
 import androidx.core.graphics.scale
-import androidx.core.net.toUri
 import androidx.exifinterface.media.ExifInterface
 import com.sceyt.chatuikit.extensions.bitmapToByteArray
 import com.sceyt.chatuikit.extensions.getFileSizeMb
+import com.sceyt.chatuikit.extensions.toMediaUri
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.FileInputStream
@@ -214,7 +214,7 @@ object FileResizeUtil {
     fun getVideoDuration(context: Context, path: String): Long? {
         val retriever = MediaMetadataRetriever()
         val timeInMilliSec: Long? = try {
-            retriever.setDataSource(context, path.toUri())
+            retriever.setDataSource(context, path.toMediaUri())
             val time = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
             retriever.release()
             time?.toLongOrNull()
