@@ -17,3 +17,11 @@ data class DisappearingMessageMetadata(
     @SerializedName("autoDeletePeriod")
     val duration: String?
 )
+
+/**
+ * Metadata for the pin system message.
+ */
+data class PinnedMessageMetadata(
+    @SerializedName("id")
+    val id: String?
+)

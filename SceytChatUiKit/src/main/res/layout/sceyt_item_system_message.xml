@@ -7,13 +7,16 @@
     android:layout_height="wrap_content"
     android:paddingHorizontal="15dp">
 
+
     <TextView
         android:id="@+id/title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
+        android:ellipsize="end"
         android:gravity="center"
         android:includeFontPadding="false"
+        android:maxLines="1"
         android:paddingHorizontal="8dp"
         android:paddingVertical="5dp"
         android:visibility="visible"

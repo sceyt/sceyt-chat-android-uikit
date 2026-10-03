@@ -238,6 +238,14 @@ class MessagesCache {
         }
     }
 
+    internal suspend fun refreshMessages(channelId: Long, vararg messages: SceytMessage) = mutex.withLock {
+        val cached = cachedMessages[channelId] ?: return@withLock
+        messages.forEach { message ->
+            if (cached.containsKey(message.tid))
+                putAndCheckHasDiff(channelId, false, true, message)
+        }
+    }
+
     suspend fun upsertNotifyUpdateAnyway(
         channelId: Long,
         vararg message: SceytMessage

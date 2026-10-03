@@ -17,6 +17,7 @@ import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.message.MessageState
+import com.sceyt.chat.models.message.PinDetails.PinType
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
@@ -68,6 +69,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.rea
 import com.sceyt.chatuikit.presentation.components.channel.messages.components.EmojiPickerBottomSheetFragment
 import com.sceyt.chatuikit.presentation.components.channel.messages.components.MessagesRV
 import com.sceyt.chatuikit.presentation.components.channel.messages.dialogs.DeleteMessageDialog
+import com.sceyt.chatuikit.presentation.components.channel.messages.dialogs.PinMessageDialog
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageCommandEvent
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.PollEvent
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.ReactionEvent
@@ -89,6 +91,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.popups.Popup
 import com.sceyt.chatuikit.presentation.components.channel.messages.popups.ReactionsPopup
 import com.sceyt.chatuikit.presentation.extensions.getUpdateMessage
 import com.sceyt.chatuikit.presentation.extensions.isPending
+import com.sceyt.chatuikit.presentation.extensions.systemMessageTargetId
 import com.sceyt.chatuikit.presentation.helpers.KeyboardEventListener
 import com.sceyt.chatuikit.presentation.helpers.TransferUpdateUiPolicy
 import com.sceyt.chatuikit.presentation.root.PageState
@@ -122,6 +125,7 @@ class MessagesListView @JvmOverloads constructor(
     private var onWindowFocusChangeListener: ((Boolean) -> Unit)? = null
     private var multiselectDestination: Map<Long, SceytMessage>? = null
     private var forceDisabledActions = false
+    private var alwaysPinForMe = false
     private val audioFocusHelper = AudioFocusHelper(context)
     val style: MessagesListViewStyle
     var enabledActions = true
@@ -195,6 +199,12 @@ class MessagesListView @JvmOverloads constructor(
             override fun onReplyMessageContainerClick(view: View, item: MessageItem) {
                 checkMaybeInMultiSelectMode(view, item.message) {
                     clickListeners.onReplyMessageContainerClick(view, item)
+                }
+            }
+
+            override fun onPinnedSystemMessageClick(view: View, item: MessageItem) {
+                checkMaybeInMultiSelectMode(view, item.message) {
+                    clickListeners.onPinnedSystemMessageClick(view, item)
                 }
             }
 
@@ -349,24 +359,9 @@ class MessagesListView @JvmOverloads constructor(
 
     private fun showModifyReactionsPopup(view: View, message: SceytMessage): ReactionsPopup? {
         if (message.isPending()) return null
-        val maxSize = SceytChatUIKit.config.messageReactionPerUserLimit
-        val reactions = message.messageReactions
-            ?.sortedByDescending { it.reaction.containsSelf }
-            ?.map { it.reaction.key }
-            ?.toMutableList() ?: mutableListOf()
-
-        if (reactions.size < maxSize) {
-            reactions.addAll(
-                SceytChatUIKit.config.defaultReactions
-                    .minus(reactions.toSet())
-                    .take(maxSize - reactions.size)
-            )
-        }
-
         return ReactionsPopup.showPopup(
             anchorView = view,
             message = message,
-            reactions = reactions.take(maxSize),
             style = style.reactionPickerStyle,
             clickListener = object : PopupReactionsAdapter.OnItemClickListener {
                 override fun onReactionClick(reaction: ReactionItem.Reaction) {
@@ -989,6 +984,10 @@ class MessagesListView @JvmOverloads constructor(
         multiselectDestination = map
     }
 
+    internal fun setAlwaysPinForMe(alwaysForMe: Boolean) {
+        alwaysPinForMe = alwaysForMe
+    }
+
     internal fun isNearStartForPaging() = messagesRV.isNearStartForPaging()
 
     internal fun isNearEndForPaging() = messagesRV.isNearEndForPaging()
@@ -1106,6 +1105,11 @@ class MessagesListView @JvmOverloads constructor(
 
     override fun onReplyMessageContainerClick(view: View, item: MessageItem) {
         onReplyMessageContainerClick(item)
+    }
+
+    override fun onPinnedSystemMessageClick(view: View, item: MessageItem) {
+        val messageId = item.message.systemMessageTargetId() ?: return
+        messageCommandEventListener?.invoke(MessageCommandEvent.ScrollToPinnedMessage(messageId))
     }
 
     override fun onReplyCountClick(view: View, item: MessageItem) {
@@ -1289,6 +1293,27 @@ class MessagesListView @JvmOverloads constructor(
 
     override fun onReplyMessageInThreadClick(message: SceytMessage) {
         messageCommandEventListener?.invoke(MessageCommandEvent.ReplyInThread(message))
+    }
+
+    override fun onPinMessageClick(message: SceytMessage, actionFinish: () -> Unit) {
+        if (alwaysPinForMe) {
+            actionFinish()
+            messageCommandEventListener?.invoke(
+                MessageCommandEvent.PinMessage(message = message, pinType = PinType.PERSONAL)
+            )
+            return
+        }
+
+        PinMessageDialog(context) { pinType ->
+            actionFinish()
+            messageCommandEventListener?.invoke(
+                MessageCommandEvent.PinMessage(message = message, pinType = pinType)
+            )
+        }.show()
+    }
+
+    override fun onUnpinMessageClick(message: SceytMessage) {
+        messageCommandEventListener?.invoke(MessageCommandEvent.UnpinMessage(message))
     }
 
     override fun onRetractVoteClick(message: SceytMessage) {

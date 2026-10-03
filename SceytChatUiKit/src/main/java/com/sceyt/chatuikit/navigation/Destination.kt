@@ -28,6 +28,8 @@ import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchAct
 import com.sceyt.chatuikit.presentation.components.invite_link.ChannelInviteLinkActivity
 import com.sceyt.chatuikit.presentation.components.media.MediaPreviewActivity
 import com.sceyt.chatuikit.presentation.components.message_info.MessageInfoActivity
+import com.sceyt.chatuikit.presentation.components.pinned_messages.PinnedMessagesActivity
+import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle
 import com.sceyt.chatuikit.presentation.components.poll_results.PollResultsActivity
 import com.sceyt.chatuikit.presentation.components.select_users.SelectUsersActivity
 import com.sceyt.chatuikit.presentation.components.select_users.SelectUsersPageArgs
@@ -208,6 +210,21 @@ sealed class Destination {
 
         override fun createIntent(context: Context): Intent {
             return ForwardActivity.createIntent(context, messages)
+        }
+    }
+
+    /**
+     * Opens the channel's pinned-messages list.
+     *
+     * @param listStyle the conversation's own list style, so pins render exactly as they do
+     * in the chat — including customisations registered against the message list's view id.
+     */
+    open class PinnedMessages(
+        val channel: SceytChannel,
+        val listStyle: MessagesListViewStyle? = null,
+    ) : Destination() {
+        override fun createIntent(context: Context): Intent {
+            return PinnedMessagesActivity.createIntent(context, channel, listStyle)
         }
     }
 

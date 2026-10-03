@@ -54,7 +54,7 @@ class IncLinkMessageViewHolder(
                 val linkAttachment = message.attachments?.firstOrNull()
                 loadLinkPreview(message, linkAttachment, layoutLinkPreview)
 
-                if (diff.edited || diff.statusChanged)
+                if (diff.infoRowChanged())
                     setMessageStatusAndDateText(message, messageDate)
 
                 if (diff.edited || diff.bodyChanged) {

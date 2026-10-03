@@ -61,6 +61,13 @@ open class DefaultNotificationBodyFormatter : Formatter<PushData> {
                     append("\"")
                 }
             }
+
+            NotificationType.MessagePinned -> buildSpannedString {
+                append(context.getString(R.string.sceyt_pinned_notification).whitSpace())
+                append("\"")
+                append(formattedBody)
+                append("\"")
+            }
         }
     }
 

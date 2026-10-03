@@ -1,0 +1,25 @@
+package com.sceyt.chatuikit.persistence.interactor
+
+import com.sceyt.chat.models.message.PinDetails.PinType
+import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.data.models.messages.SceytPinnedMessage
+import kotlinx.coroutines.flow.Flow
+
+interface MessagePinInteractor {
+    fun getPinnedMessagesFlow(channelId: Long): Flow<List<SceytPinnedMessage>>
+
+    suspend fun pinMessage(
+        channelId: Long,
+        messageTid: Long,
+        pinType: PinType,
+    ): SceytResponse<SceytPinnedMessage>
+
+    suspend fun unpinMessage(
+        channelId: Long,
+        messageTid: Long,
+    ): SceytResponse<Boolean>
+
+    suspend fun syncChannelPins(channelId: Long)
+
+    suspend fun sendAllPendingPins()
+}

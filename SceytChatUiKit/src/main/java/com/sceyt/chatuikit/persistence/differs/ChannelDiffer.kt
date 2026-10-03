@@ -83,6 +83,8 @@ fun SceytChannel.diff(other: SceytChannel): ChannelDiff {
             || lastMessage?.body.equalsIgnoreNull(other.lastMessage?.body).not()
             || lastMessage?.state != other.lastMessage?.state
             || lastMessage?.bodyAttributes.equalsIgnoreNull(lastMessage?.bodyAttributes).not()
+            || lastMessage?.parentMessage?.body.equalsIgnoreNull(other.lastMessage?.parentMessage?.body).not()
+            || lastMessage?.parentMessage?.state != other.lastMessage?.parentMessage?.state
     val pendingReactionChanged = pendingReactions != other.pendingReactions
     val userReactionsChanged =
         pendingReactionChanged || newReactions?.maxOfOrNull { it.id } != other.newReactions?.maxOfOrNull { it.id }

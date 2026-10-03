@@ -127,7 +127,7 @@ class IncVoiceMessageViewHolder(
                 setMessageBody(messageBody, message)
             } else messageBody.isVisible = false
 
-            if (diff.edited || diff.statusChanged)
+            if (diff.infoRowChanged())
                 setMessageStatusAndDateText(message, messageDate)
 
             if (diff.avatarChanged || diff.showAvatarAndNameChanged)
@@ -164,7 +164,7 @@ class IncVoiceMessageViewHolder(
         }
     }
 
-    override val layoutBubbleConfig get() = Pair(binding.root, false)
+    override val layoutBubbleConfig get() = Pair(binding.layoutDetails, false)
 
     private fun SceytItemIncVoiceMessageBinding.initVoiceMessage() {
         val metaDuration: Long = fileItem.duration?.times(1000L) ?: 0

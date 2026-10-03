@@ -95,7 +95,7 @@ class OutVideoMessageViewHolder(
 
             if (!diff.hasDifference()) return
 
-            if (diff.edited || diff.statusChanged)
+            if (diff.infoRowChanged())
                 setMessageStatusAndDateText(message, messageDate)
 
             if (diff.replyCountChanged)
