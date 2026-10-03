@@ -7,10 +7,11 @@ import android.graphics.Matrix
 import android.media.MediaMetadataRetriever
 import android.util.Size
 import androidx.core.graphics.scale
+import androidx.core.net.toUri
 import androidx.exifinterface.media.ExifInterface
 import com.sceyt.chatuikit.extensions.bitmapToByteArray
 import com.sceyt.chatuikit.extensions.getFileSizeMb
-import com.sceyt.chatuikit.extensions.toMediaUri
+import com.sceyt.chatuikit.extensions.setDataSourceFromPath
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.FileInputStream
@@ -165,7 +166,7 @@ object FileResizeUtil {
     fun getVideoSize(path: String): Size? {
         val metaRetriever = MediaMetadataRetriever()
         return try {
-            metaRetriever.setDataSource(path)
+            metaRetriever.setDataSourceFromPath(path)
             val height =
                 metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT)
                     ?.toIntOrNull()
@@ -186,7 +187,7 @@ object FileResizeUtil {
     fun getVideoSizeOriented(path: String): Size? {
         val metaRetriever = MediaMetadataRetriever()
         return try {
-            metaRetriever.setDataSource(path)
+            metaRetriever.setDataSourceFromPath(path)
             val rotation =
                 metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION)
                     ?.toIntOrNull()
@@ -214,7 +215,8 @@ object FileResizeUtil {
     fun getVideoDuration(context: Context, path: String): Long? {
         val retriever = MediaMetadataRetriever()
         val timeInMilliSec: Long? = try {
-            retriever.setDataSource(context, path.toMediaUri())
+            if (path.startsWith("/")) retriever.setDataSourceFromPath(path)
+            else retriever.setDataSource(context, path.toUri())
             val time = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
             retriever.release()
             time?.toLongOrNull()
@@ -238,7 +240,7 @@ object FileResizeUtil {
         val retriever = MediaMetadataRetriever()
         return try {
             val bitmap = retriever.apply {
-                setDataSource(path)
+                setDataSourceFromPath(path)
             }.getFrameAtTime(1000)
                 ?: return Result.failure(IllegalArgumentException("Failed to retrieve video frame from $path"))
             resizeAndCompressImageAsByteArray(bitmap, reqSize = maxImageSize.toInt())
@@ -258,7 +260,7 @@ object FileResizeUtil {
         val retriever = MediaMetadataRetriever()
         return try {
             val bitmap = retriever.apply {
-                setDataSource(path)
+                setDataSourceFromPath(path)
             }.getFrameAtTime(1000)
             resizeAndCompressImageAsFile(
                 bitmap = bitmap
