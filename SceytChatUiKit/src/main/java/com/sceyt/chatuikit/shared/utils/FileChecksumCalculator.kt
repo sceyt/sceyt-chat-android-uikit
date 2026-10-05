@@ -38,12 +38,12 @@ object FileChecksumCalculator {
         return checksum
     }
 
-    private fun calculateChecksumFor1Mb(fis: FileInputStream, crc32: CRC32, skip: Long) {
+    private fun calculateChecksumFor1Mb(fis: FileInputStream, crc32: CRC32, offset: Long) {
         try {
             val loopBufferSize = 8192 * 4 //32 kb
             val maxBufferSize = 1024 * 1024 * 1 //1 mb
             var bytesRead = 0
-            fis.skip(skip)
+            fis.channel.position(offset)
             var loadedBufferSize = 0
             val buffer = ByteArray(loopBufferSize)
             while (loadedBufferSize < maxBufferSize && fis.read(buffer).also { bytesRead = it } != -1) {
