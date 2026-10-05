@@ -84,7 +84,7 @@ internal class AttachmentUploadCoordinator(
         )
         val sharedUploadInProgress = synchronized(sharingFilesLock) {
             val inProgress = sharingFilesPath.any {
-                it.sourceKey == shareFileData.sourceKey
+                it.sourceKey == shareFileData.sourceKey && it.completedUrl == null
             }
             sharingFilesPath.add(shareFileData)
             inProgress

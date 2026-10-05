@@ -328,6 +328,70 @@ class AttachmentUploadCoordinatorTest {
     }
 
     @Test
+    fun `new share starts after group completes with a paused member`() {
+        val first = uploadAttachment(messageTid = 94L)
+        val paused = uploadAttachment(messageTid = 95L, filePath = first.filePath)
+        val next = uploadAttachment(messageTid = 96L, filePath = first.filePath)
+        val pausedResults = mutableListOf<String?>()
+        val nextResults = mutableListOf<String?>()
+        val pausedTask = transferTask(paused).apply {
+            uploadResultCallback = TransferResultCallback { pausedResults += it.data }
+        }
+        val nextTask = transferTask(next).apply {
+            uploadResultCallback = TransferResultCallback { nextResults += it.data }
+        }
+
+        uploadSharedFile(first, transferTask(first))
+        uploadSharedFile(paused, pausedTask)
+        coordinator.pauseLoad(paused, TransferState.Uploading)
+        transport.uploadCalls.single().succeed("first-url")
+
+        uploadSharedFile(next, nextTask)
+
+        assertThat(transport.uploadCalls).hasSize(2)
+        assertThat(transport.uploadCalls.last().request.operationId).isEqualTo("upload:96")
+        assertThat(pausedResults).isEmpty()
+
+        coordinator.resumeLoad(paused, TransferState.PauseUpload)
+        transport.uploadCalls.last().succeed("next-url")
+
+        assertThat(pausedResults).containsExactly("first-url")
+        assertThat(nextResults).containsExactly("next-url")
+        assertThat(transport.uploadCalls).hasSize(2)
+    }
+
+    @Test
+    fun `new share reuses checksum after group completes with a paused member`() = runBlocking {
+        SceytChatUIKit.config.preventDuplicateAttachmentUpload = true
+        val first = uploadAttachment(messageTid = 97L)
+        val paused = uploadAttachment(messageTid = 98L, filePath = first.filePath)
+        val next = uploadAttachment(messageTid = 99L, filePath = first.filePath)
+        val results = mutableListOf<String?>()
+        val nextTask = transferTask(next).apply {
+            uploadResultCallback = TransferResultCallback { results += it.data }
+        }
+
+        uploadSharedFile(first, transferTask(first))
+        uploadSharedFile(paused, transferTask(paused))
+        coordinator.pauseLoad(paused, TransferState.Uploading)
+        transport.uploadCalls.single().succeed("cached-url")
+        whenever(attachmentLogic.getFileChecksumData(first.originalFilePath)).thenReturn(
+            FileChecksumData(
+                checksum = 1L,
+                resizedFilePath = null,
+                url = "cached-url",
+                metadata = null,
+                fileSize = 4L,
+            ),
+        )
+
+        uploadSharedFile(next, nextTask)
+
+        assertThat(results).containsExactly("cached-url")
+        assertThat(transport.uploadCalls).hasSize(1)
+    }
+
+    @Test
     fun `native upload resume waits for its queue turn`() {
         transport.pauseResult = true
         transport.resumeResult = true
