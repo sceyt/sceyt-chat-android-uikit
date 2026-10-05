@@ -10,6 +10,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.ui.PlayerView
 import com.sceyt.chatuikit.extensions.doSafe
+import com.sceyt.chatuikit.extensions.toMediaUri
 
 class ExoPlayerHelper(
         private val context: Context,
@@ -55,7 +56,7 @@ class ExoPlayerHelper(
     fun setMediaPath(url: String?, playVideo: Boolean, startPositionMs: Long = 0) {
         if (isSetMediaPath) return
         url?.let {
-            exoPlayer.setMediaItem(MediaItem.fromUri(it))
+            exoPlayer.setMediaItem(MediaItem.fromUri(it.toMediaUri()))
             exoPlayer.prepare()
             if (startPositionMs > 0) exoPlayer.seekTo(startPositionMs)
             exoPlayer.playWhenReady = playVideo

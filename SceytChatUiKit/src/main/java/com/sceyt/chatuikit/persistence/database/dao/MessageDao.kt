@@ -30,6 +30,7 @@ import com.sceyt.chatuikit.persistence.database.entity.messages.MentionUserMessa
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageDb
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageIdAndTid
+import com.sceyt.chatuikit.persistence.database.entity.messages.ParentMessageDb
 import com.sceyt.chatuikit.persistence.database.entity.messages.PollEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.PollOptionEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.PollVoteEntity
@@ -75,10 +76,11 @@ internal abstract class MessageDao {
     }
 
     @Transaction
-    open suspend fun insertMessageIgnored(messagesDb: MessageDb) {
+    open suspend fun insertMessageIgnored(messagesDb: MessageDb): Boolean {
         val rowId = insertIgnored(messagesDb.messageEntity)
-        if (rowId != -1L)
-            insertMessagesPayloads(listOf(messagesDb))
+        if (rowId == -1L) return false
+        insertMessagesPayloads(listOf(messagesDb))
+        return true
     }
 
     private suspend fun insertMessagesPayloads(messages: List<MessageDb>) {
@@ -522,6 +524,10 @@ internal abstract class MessageDao {
     @Transaction
     @Query("SELECT * FROM $MESSAGE_TABLE WHERE message_id = :id")
     abstract suspend fun getMessageById(id: Long): MessageDb?
+
+    @Transaction
+    @Query("SELECT * FROM $MESSAGE_TABLE WHERE message_id = :id")
+    abstract suspend fun getParentMessageById(id: Long): ParentMessageDb?
 
     @Query("SELECT * FROM $MESSAGE_TABLE WHERE message_id IN (:ids)")
     abstract suspend fun getMessageEntitiesByIds(ids: List<Long>): List<MessageEntity>

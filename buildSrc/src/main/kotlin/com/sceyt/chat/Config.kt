@@ -2,7 +2,7 @@ package com.sceyt.chat
 
 @Suppress("ConstPropertyName", "unused")
 object Config {
-    const val compileSdk = 36
+    const val compileSdk = 37
     const val targetSdk = 36
     const val minSdk = 24
 
