@@ -4,21 +4,6 @@ import com.sceyt.chat.models.link.LinkDetails
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.persistence.database.entity.link.LinkDetailsEntity
 
-internal fun LinkPreviewDetails.toLinkDetailsEntity(link: String, thumb: String?): LinkDetailsEntity {
-    return LinkDetailsEntity(
-        link = link,
-        url = url,
-        title = title,
-        description = description,
-        siteName = siteName,
-        faviconUrl = faviconUrl,
-        imageUrl = imageUrl,
-        imageWidth = imageWidth,
-        imageHeight = imageHeight,
-        thumb = thumb
-    )
-}
-
 internal fun LinkPreviewDetails.toLinkDetailsEntity() = LinkDetailsEntity(
     link = link,
     url = url,
@@ -62,3 +47,37 @@ internal fun LinkDetailsEntity.toLinkPreviewDetails(hideDetails: Boolean): LinkP
     thumb = thumb,
     hideDetails = hideDetails
 )
+
+internal fun LinkPreviewDetails.mergeWith(newer: LinkPreviewDetails): LinkPreviewDetails {
+    val sizeSource = if (hasSize(newer.imageWidth, newer.imageHeight)) newer else this
+    return newer.copy(
+        url = newer.url.orIfBlank(url),
+        title = newer.title.orIfBlank(title),
+        description = newer.description.orIfBlank(description),
+        siteName = newer.siteName.orIfBlank(siteName),
+        faviconUrl = newer.faviconUrl.orIfBlank(faviconUrl),
+        imageUrl = newer.imageUrl.orIfBlank(imageUrl),
+        imageWidth = sizeSource.imageWidth,
+        imageHeight = sizeSource.imageHeight,
+        thumb = newer.thumb.orIfBlank(thumb)
+    )
+}
+
+internal fun LinkDetailsEntity.mergeWith(newer: LinkDetailsEntity): LinkDetailsEntity {
+    val merged = toLinkPreviewDetails(false).mergeWith(newer.toLinkPreviewDetails(false))
+    return merged.toLinkDetailsEntity()
+}
+
+internal fun LinkDetailsEntity.keepImageDataFrom(stored: LinkDetailsEntity?): LinkDetailsEntity {
+    if (stored == null || imageUrl.isNullOrBlank() || imageUrl != stored.imageUrl) return this
+    val sizeSource = if (hasSize(imageWidth, imageHeight)) this else stored
+    return copy(
+        imageWidth = sizeSource.imageWidth,
+        imageHeight = sizeSource.imageHeight,
+        thumb = thumb.orIfBlank(stored.thumb)
+    )
+}
+
+private fun hasSize(width: Int?, height: Int?): Boolean = (width ?: 0) > 0 && (height ?: 0) > 0
+
+private fun String?.orIfBlank(fallback: String?): String? = if (isNullOrBlank()) fallback else this
