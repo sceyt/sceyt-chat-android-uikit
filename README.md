@@ -11,6 +11,7 @@ chat into your Android application with minimal coding.
 * [Requirements](#requirements)
 * [Installation](#installation)
 * [Usage](#usage)
+* [Demo calling](#demo-calling)
 * [Customization](#customization)
 * [Proguard](#proguard)
 * [License](#license)
@@ -94,6 +95,20 @@ fun connectToChatClient(){
     SceytChatUIKit.connect(token)
 }
 ```
+
+## Demo calling
+
+The demo uses `com.sceyt:sceyt-call-uikit-ui`, initialized with the same `ChatClient`
+as Chat UI Kit. `SceytChatConnectionManager` continues to handle authentication and connection.
+
+Conversation call actions start P2P calls for direct channels and SFU calls for group channels.
+Group calls keep `channel_id` and `channel_name` metadata so the conversation can join an existing
+channel call. The main and conversation screens embed the Call UI Kit's customizable active-call
+banner; Call UI Kit owns the call screens, notifications, media controls, and call lifecycle.
+
+The demo registers one `DemoFirebaseMessagingService` to route call pushes to `CallPushHandler`
+and chat pushes and token updates to `FirebaseMessagingDelegate`. Its manifest removes Chat UI Kit's
+default Firebase receiver to avoid competing messaging services.
 
 ## Customization
 

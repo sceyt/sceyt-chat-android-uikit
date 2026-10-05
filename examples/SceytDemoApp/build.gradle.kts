@@ -4,11 +4,11 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
     id("com.google.devtools.ksp")
     id("kotlin-parcelize")
     id("com.google.gms.google-services")
     id("com.google.firebase.crashlytics")
+    id("org.jetbrains.kotlin.plugin.compose")
 }
 
 android {
@@ -89,19 +89,21 @@ android {
     buildFeatures {
         viewBinding = true
         buildConfig = true
+        resValues = true
+        compose = true
     }
+}
 
-    kotlin {
-        compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_11)
-        }
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_11)
     }
 }
 
 dependencies {
     implementation(project(":SceytChatConnection"))
     implementation(project(":SceytChatUiKit"))
-    implementation(project(":SceytCallKit"))
+    implementation(libs.sceyt.call.uikit.ui)
 
     implementation(libs.appcompat)
     implementation(libs.material)

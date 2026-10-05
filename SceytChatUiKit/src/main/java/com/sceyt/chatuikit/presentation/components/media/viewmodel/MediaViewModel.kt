@@ -48,25 +48,36 @@ class MediaViewModel(
     private val fileTransferService: FileTransferService by inject()
 
     val openedWithAttachment = openedAttachmentData?.attachment
-    var initialScrollIndex: Int = preloadedData?.initialIndex ?: 0
-        private set
-
-    // One-time scroll correction for LoadNear. -1 = nothing pending.
-    // initialScrollSet prevents repeated correction scheduling across DB/server responses.
-    private var pendingInitialScrollIndex: Int = -1
-    private var initialScrollSet = false
-
-    fun consumePendingScrollIndex(): Int {
-        val idx = pendingInitialScrollIndex
-        pendingInitialScrollIndex = -1
-        return idx
-    }
 
     private val isPreloaded = preloadedData != null
 
-    private val initialItems: List<MediaItem> =
-        preloadedData?.items?.mapNotNull { it.toMediaItem() }
-            ?: openedAttachmentData?.toMediaItem()?.let(::listOf).orEmpty()
+    private val initialSourceItems: List<MediaItem?> =
+        preloadedData?.items?.map { it.toMediaItem() } ?: listOf(openedAttachmentData.toMediaItem())
+
+    private val initialItems: List<MediaItem> = initialSourceItems.filterNotNull()
+
+    private var targetItem: MediaItem? =
+        initialSourceItems.getOrNull(preloadedData?.initialIndex ?: 0)
+
+    val targetAttachmentId: Long?
+        get() = targetItem?.attachment?.id
+
+    fun onPageSettled(item: MediaItem) {
+        targetItem = item
+    }
+
+    fun findTargetIndex(items: List<MediaItem>): Int {
+        val target = targetItem ?: return -1
+        val targetAttachment = target.attachment
+        val targetId = targetAttachment.id
+        if (targetId != null && targetId != 0L) return items.indexOfFirst { it.attachment.id == targetId }
+
+        val sameItemIndex = items.indexOfFirst { it === target }
+        if (sameItemIndex >= 0 || targetAttachment.messageTid == 0L) return sameItemIndex
+        return items.indexOfFirst {
+            it.attachment.messageTid == targetAttachment.messageTid && it.attachment.type == targetAttachment.type
+        }
+    }
 
     private val _mediaItems = MutableStateFlow(initialItems)
     val mediaItems: StateFlow<List<MediaItem>> = _mediaItems.asStateFlow()
@@ -207,6 +218,7 @@ class MediaViewModel(
                 newItems = newItems,
                 loadType = response.loadType,
             )
+            logTargetPosition(source = "db", loadType = response.loadType)
 
             notifyPageStateWithResponse(
                 response = SceytResponse.Success(null),
@@ -223,14 +235,8 @@ class MediaViewModel(
 
         withContext(Dispatchers.Main) {
             if (response.hasDiff) {
-                val ordered = newItems.applyDisplayOrder()
-                if (response.loadType == LoadNear && !initialScrollSet) {
-                    val pos = ordered.indexOfFirst { it.attachment.id == openedWithAttachment?.id }
-                    if (pos >= 0) {
-                        setPendingInitialScroll(pos, source = "server")
-                    }
-                }
-                _mediaItems.update { ordered }
+                _mediaItems.update { newItems.applyDisplayOrder() }
+                logTargetPosition(source = "server", loadType = response.loadType)
             }
 
             notifyPageStateWithResponse(
@@ -247,13 +253,7 @@ class MediaViewModel(
     ) {
         when (loadType) {
             LoadNear -> {
-                val ordered = newItems.applyDisplayOrder()
-                val openedId = openedWithAttachment?.id
-                val posInNewList = ordered.indexOfFirst { it.attachment.id == openedId }
-                if (posInNewList >= 0 && !initialScrollSet) {
-                    setPendingInitialScroll(posInNewList, source = "db")
-                }
-                _mediaItems.update { ordered }
+                _mediaItems.update { newItems.applyDisplayOrder() }
             }
 
             LoadPrev -> {
@@ -355,16 +355,16 @@ class MediaViewModel(
         return messageInteractor.getMessageFromDbById(messageId)
     }
 
-    private fun setPendingInitialScroll(
-        position: Int,
+    private fun logTargetPosition(
         source: String,
+        loadType: LoadType,
     ) {
-        initialScrollIndex = position
-        pendingInitialScrollIndex = position
-        initialScrollSet = true
+        val items = _mediaItems.value
         SceytLog.i(
             LOG_TAG,
-            "Set pending initial scroll source=$source index=$position openedAttachment=${openedWithAttachment.toLogString()}"
+            "Target position source=$source loadType=$loadType index=${findTargetIndex(items)} " +
+                    "listSize=${items.size} target=${targetItem?.attachment.toLogString()} " +
+                    "openedAttachment=${openedWithAttachment.toLogString()}"
         )
     }
 

@@ -36,6 +36,7 @@ import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
 import com.sceyt.chatuikit.data.models.onError
+import com.sceyt.chatuikit.data.models.onSuccess
 import com.sceyt.chatuikit.data.models.onSuccessNotNull
 import com.sceyt.chatuikit.extensions.findIndexed
 import com.sceyt.chatuikit.koin.SceytKoinComponent
@@ -55,6 +56,7 @@ import com.sceyt.chatuikit.persistence.database.entity.user.UserDb
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
+import com.sceyt.chatuikit.persistence.extensions.uploadIfLocal
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
 import com.sceyt.chatuikit.persistence.logicimpl.sync.ChannelSyncStateStore
@@ -81,6 +83,9 @@ import com.sceyt.chatuikit.presentation.extensions.isPending
 import com.sceyt.chatuikit.push.PushData
 import com.sceyt.chatuikit.services.SceytPresenceChecker
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flow
@@ -494,50 +499,89 @@ internal class PersistenceChannelsLogicImpl(
 
     override suspend fun syncChannels(config: ChannelListConfig) = flow {
         val syncedChannels = arrayListOf<SceytChannel>()
-        channelsRepository.getAllChannels(config.queryLimit)
-            .collect { response ->
-                when (response) {
-                    is SyncResult.Proportion -> {
-                        val filledChannels = saveChannelsToDb(response.items)
-                        syncedChannels.addAll(filledChannels)
-                        messageLogic.onSyncedChannels(filledChannels)
-                        channelsCache.updateChannel(config, *filledChannels.toTypedArray())
-                        emit(response)
-                    }
+        channelsRepository.getAllChannels(config.queryLimit).collect { response ->
+            when (response) {
+                is SyncResult.Proportion -> {
+                    syncedChannels.addAll(persistSyncedChannels(config, response.items))
+                    emit(response)
+                }
 
-                    is SyncResult.SuccessfullyFinished -> {
-                        if (syncedChannels.isNotEmpty()) {
-                            val syncedIds = syncedChannels.map { it.id }
-                            val deletedChannelIds =
-                                channelDao.getNotExistingChannelIdsByIdsAndTypes(
-                                    ids = syncedIds,
-                                    types = config.types,
-                                    onlyMine = true
-                                )
-                            deleteChannelsFromDbAndCache(channelIds = deletedChannelIds)
-                            SceytLog.i(
-                                TAG, "syncChannelsResult:" +
-                                        " deletedChannelsIds: $deletedChannelIds," +
-                                        " syncedChannelsCount: ${syncedChannels.size} "
+                is SyncResult.SuccessfullyFinished -> {
+                    if (syncedChannels.isNotEmpty()) {
+                        val syncedIds = syncedChannels.map { it.id }
+                        val missingChannelIds =
+                            channelDao.getNotExistingChannelIdsByIdsAndTypes(
+                                ids = syncedIds,
+                                types = config.types,
+                                onlyMine = true
                             )
-                        } else {
-                            val ids = channelDao.getAllChannelIdsByTypes(config.types, true)
-                            deleteChannelsFromDbAndCache(ids)
-                            SceytLog.i(
-                                TAG, "syncChannelsResult: syncedChannels is empty, " +
-                                        "clear all channels. To be deleted size: ${ids.size}"
-                            )
-                        }
+                        val (existingChannels, deletedChannelIds) = confirmMissingChannels(
+                            channelIds = missingChannelIds
+                        )
+                        deleteChannelsFromDbAndCache(channelIds = deletedChannelIds)
 
-                        emit(response)
+                        if (existingChannels.isNotEmpty())
+                            persistSyncedChannels(config, existingChannels)
+
+                        SceytLog.i(
+                            TAG, "syncChannelsResult:" +
+                                    " deletedChannelsIds: $deletedChannelIds," +
+                                    " recoveredChannelsIds: ${existingChannels.map { it.id }}," +
+                                    " syncedChannelsCount: ${syncedChannels.size} "
+                        )
+                    } else {
+                        val ids = channelDao.getAllChannelIdsByTypes(config.types, true)
+                        deleteChannelsFromDbAndCache(ids)
+                        SceytLog.i(
+                            TAG, "syncChannelsResult: syncedChannels is empty, " +
+                                    "clear all channels. To be deleted size: ${ids.size}"
+                        )
                     }
 
-                    is SyncResult.Error -> {
-                        emit(response)
-                        SceytLog.e(TAG, "syncChannelsResult: syncChannels error: ${response.error}")
-                    }
+                    emit(response)
+                }
+
+                is SyncResult.Error -> {
+                    emit(response)
+                    SceytLog.e(TAG, "syncChannelsResult: syncChannels error: ${response.error}")
                 }
             }
+        }
+    }
+
+    private suspend fun persistSyncedChannels(
+        config: ChannelListConfig,
+        channels: List<SceytChannel>,
+    ): List<SceytChannel> {
+        val filledChannels = saveChannelsToDb(channels)
+        messageLogic.onSyncedChannels(filledChannels)
+        channelsCache.updateChannel(config, *filledChannels.toTypedArray())
+        return filledChannels
+    }
+
+    private suspend fun confirmMissingChannels(
+        channelIds: List<Long>,
+    ): Pair<List<SceytChannel>, List<Long>> = coroutineScope {
+        val existingChannels = arrayListOf<SceytChannel>()
+        val deletedChannelIds = arrayListOf<Long>()
+        val responses = channelIds.map { channelId ->
+            async { channelId to channelsRepository.getChannel(channelId) }
+        }.awaitAll()
+
+        responses.forEach { (channelId, response) ->
+            response
+                .onSuccess { channel ->
+                    if (channel == null || channel.hidden || channel.archived || channel.userRole.isNullOrBlank())
+                        deletedChannelIds.add(channelId)
+                    else existingChannels.add(channel)
+                }
+                .onError { exception ->
+                    val errorType = SDKErrorTypeEnum.fromValue(exception?.type)
+                    if (errorType?.isResendable == false)
+                        deletedChannelIds.add(channelId)
+                }
+        }
+        existingChannels to deletedChannelIds
     }
 
     override suspend fun reloadChannelsAfterSync(
@@ -924,16 +968,10 @@ internal class PersistenceChannelsLogicImpl(
         channelId: Long,
         data: EditChannelData
     ): SceytResponse<SceytChannel> {
-        if (data.avatarEdited && data.avatarUrl != null) {
-            when (val uploadResult = channelsRepository.uploadAvatar(data.avatarUrl.toString())) {
-                is SceytResponse.Success -> {
-                    data.avatarUrl = uploadResult.data
-                }
-
-                is SceytResponse.Error -> return SceytResponse.Error(uploadResult.exception)
-            }
-        }
-        val response = channelsRepository.editChannel(channelId, data)
+        val avatar = data.avatar.uploadIfLocal(channelsRepository::uploadAvatar)
+            .onError { return SceytResponse.Error(it) }
+            .data
+        val response = channelsRepository.editChannel(channelId, data.copy(avatar = avatar))
         if (response is SceytResponse.Success) {
             response.data?.let {
                 channelDao.updateChannel(it.toChannelEntity())

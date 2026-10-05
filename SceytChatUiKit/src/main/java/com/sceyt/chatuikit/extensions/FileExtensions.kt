@@ -2,7 +2,10 @@ package com.sceyt.chatuikit.extensions
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.media.MediaMetadataRetriever
+import android.media.MediaPlayer
 import android.media.MediaScannerConnection
+import android.net.Uri
 import android.os.Environment
 import android.util.Base64
 import android.util.Base64OutputStream
@@ -10,6 +13,7 @@ import android.webkit.MimeTypeMap
 import androidx.core.net.toUri
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
 
@@ -136,4 +140,17 @@ fun checkAndCreateUniqueFile(parent: File, name: String): File {
         newFile = File(parent, newName)
     }
     return newFile
+}
+
+internal fun String.toMediaUri(): Uri =
+    if (startsWith("/")) Uri.fromFile(File(this)) else toUri()
+
+internal fun MediaMetadataRetriever.setDataSourceFromPath(path: String) {
+    if (path.startsWith("/")) FileInputStream(path).use { setDataSource(it.fd) }
+    else setDataSource(path)
+}
+
+internal fun MediaPlayer.setDataSourceFromPath(path: String) {
+    if (path.startsWith("/")) FileInputStream(path).use { setDataSource(it.fd) }
+    else setDataSource(path)
 }
