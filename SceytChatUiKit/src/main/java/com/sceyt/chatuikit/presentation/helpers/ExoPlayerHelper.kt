@@ -9,6 +9,8 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.ui.PlayerView
+import com.sceyt.chatuikit.extensions.doSafe
+import com.sceyt.chatuikit.extensions.toMediaUri
 
 class ExoPlayerHelper(
         private val context: Context,
@@ -27,12 +29,18 @@ class ExoPlayerHelper(
 
     companion object {
         var lastPlayer: ExoPlayer? = null
+            private set
+
+        internal fun clearLastPlayerIfOwned(player: Player) {
+            if (lastPlayer === player) lastPlayer = null
+        }
     }
 
     @OptIn(UnstableApi::class)
     private fun initializePlayer() {
-        lastPlayer?.stop()
-        lastPlayer?.release()
+        // Pause only: the previous player belongs to another view holder or screen, which may
+        // still be using it and is responsible for releasing it.
+        doSafe { lastPlayer?.pause() }
         val appContext = context.applicationContext
         exoPlayer = ExoPlayer.Builder(
             appContext,
@@ -48,7 +56,7 @@ class ExoPlayerHelper(
     fun setMediaPath(url: String?, playVideo: Boolean, startPositionMs: Long = 0) {
         if (isSetMediaPath) return
         url?.let {
-            exoPlayer.setMediaItem(MediaItem.fromUri(it))
+            exoPlayer.setMediaItem(MediaItem.fromUri(it.toMediaUri()))
             exoPlayer.prepare()
             if (startPositionMs > 0) exoPlayer.seekTo(startPositionMs)
             exoPlayer.playWhenReady = playVideo
@@ -71,7 +79,7 @@ class ExoPlayerHelper(
     fun releasePlayer() {
         playerView.player = null
         exoPlayer.release()
-        if (lastPlayer === exoPlayer) lastPlayer = null
+        clearLastPlayerIfOwned(exoPlayer)
     }
 
     fun restartVideo() {

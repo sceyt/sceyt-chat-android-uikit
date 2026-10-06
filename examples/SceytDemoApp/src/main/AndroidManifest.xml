@@ -16,9 +16,6 @@
     <uses-permission
         android:name="com.google.android.gms.permission.AD_ID"
         tools:node="remove" />
-    <uses-permission
-        android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION"
-        tools:node="remove" />
 
     <uses-feature
         android:name="android.hardware.camera"
@@ -91,11 +88,17 @@
             android:exported="true"
             android:windowSoftInputMode="adjustResize" />
 
-        <!-- WorkManager foreground service for calls -->
         <service
-            android:name="androidx.work.impl.foreground.SystemForegroundService"
-            android:foregroundServiceType="phoneCall|microphone"
-            tools:node="merge" />
+            android:name="com.sceyt.chatuikit.services.SceytFirebaseMessageReceiver"
+            tools:node="remove" />
+
+        <service
+            android:name=".call.DemoFirebaseMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
 
         <meta-data
             android:name="firebase_crashlytics_collection_enabled"

@@ -14,6 +14,7 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.di.repositoryModule
 import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager.awaitToConnectSceytWithTimeout
 import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.data.models.channels.ChannelAvatar
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.messages.SceytUser
@@ -21,6 +22,7 @@ import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.database.SceytDatabase
 import com.sceyt.chatuikit.persistence.database.dao.ChannelDao
 import com.sceyt.chatuikit.persistence.di.logicModule
+import com.sceyt.chatuikit.persistence.extensions.toAvatarUrl
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.mappers.toSceytUser
 import kotlinx.coroutines.delay
@@ -35,6 +37,7 @@ import org.koin.core.component.inject
 import org.koin.test.KoinTestRule
 import java.net.URL
 import java.util.UUID
+import kotlin.time.Duration.Companion.milliseconds
 
 
 @RunWith(AndroidJUnit4::class)
@@ -101,7 +104,7 @@ class FindOrCreateChanelByUriTests : SceytKoinComponent {
                 if (response.data == null) {
                     val data = CreateChannelData(
                         type = "direct",
-                        avatarUrl = "http://www.bing.com/search?q=litora",
+                        avatar = ChannelAvatar.Remote("http://www.bing.com/search?q=litora"),
                         metadata = "deterruisset",
                         members = listOf(
                             SceytMember(currentUser.toSceytUser(), "owner"),
@@ -123,7 +126,7 @@ class FindOrCreateChanelByUriTests : SceytKoinComponent {
                                 Truth.assertThat(channel.members?.map { it.id }
                                     ?.sorted() == data.members.map { it.user.id }.sorted()).isTrue()
                                 Truth.assertThat(channel.type == data.type).isTrue()
-                                Truth.assertThat(channel.avatarUrl == data.avatarUrl).isTrue()
+                                Truth.assertThat(channel.avatarUrl == data.avatar.toAvatarUrl()).isTrue()
                                 Truth.assertThat(channel.metadata == data.metadata).isTrue()
                                 Truth.assertThat(channel.uri == data.uri).isTrue()
                             }
@@ -145,7 +148,7 @@ class FindOrCreateChanelByUriTests : SceytKoinComponent {
             if (response is SceytResponse.Success && response.data == null) {
                 val data = CreateChannelData(
                     type = "direct",
-                    avatarUrl = "http://www.bing.com/search?q=litora",
+                    avatar = ChannelAvatar.Remote("http://www.bing.com/search?q=litora"),
                     metadata = "deterruisset",
                     members = listOf(
                         SceytMember(currentUser.toSceytUser(), "owner"),
@@ -157,7 +160,7 @@ class FindOrCreateChanelByUriTests : SceytKoinComponent {
                 )
                 val createdChannel = channelLogic.findOrCreatePendingChannelByUri(data).data!!
                 // Delay to make sure that the created channel cratedAt is different from the previous one
-                delay(500)
+                delay(500.milliseconds)
                 val result = channelLogic.findOrCreatePendingChannelByUri(data)
 
                 if (!result.assertIfError("Error creating channel")) {

@@ -1,71 +1,61 @@
 [versions]
-activityCompose = "1.13.0"
-appcompat = "1.7.1"
-benchmark = "1.4.1"
-coilCompose = "2.7.0"
-composeBom = "2026.06.00"
-constraintlayout = "2.2.1"
+appcompat = "1.8.0"
+benchmark = "1.5.0"
+constraintlayout = "2.2.2"
 converterMoshi = "3.0.0"
 converterGson = "3.0.0"
-coreKtx = "1.18.0"
+coreKtx = "1.19.1"
 coreTesting = "2.2.0"
 coreZxing = "3.5.4"
-emoji2Bundled = "1.6.0"
+emoji2Bundled = "1.7.0"
 vanniktechEmoji = "0.23.0"
 espressoCore = "3.7.0"
-firebaseBom = "34.15.0"
+firebaseBom = "34.19.0"
 firebaseMessagingKtx = "24.1.2"
 flexbox = "3.0.0"
-fragmentKtx = "1.8.9"
-glide = "5.0.7"
+fragmentKtx = "1.9.1"
+glide = "5.0.9"
 glideTransformations = "4.3.0"
 gson = "2.14.0"
 junit = "4.13.2"
 junitKtx = "1.3.0"
 koinAndroid = "4.2.2"
-kotlinxCollectionsImmutable = "0.5.0"
-kotlinxCoroutinesTest = "1.11.0"
-libphonenumber = "9.0.32"
-lifecycleRuntimeCompose = "2.10.0"
-lifecycleRuntimeKtx = "2.10.0"
-lifecycleViewmodelCompose = "2.10.0"
+kotlinxCoroutines = "1.11.0"
+libphonenumber = "9.0.40"
+lifecycleRuntimeKtx = "2.11.0"
 lottie = "6.7.1"
 material = "1.14.0"
-media3Exoplayer = "1.10.1"
-mockitoCore = "5.23.0"
+media3Exoplayer = "1.11.1"
+mockitoCore = "5.24.0"
 mockitoInline = "5.2.0"
-mockitoKotlin = "6.3.0"
+mockitoKotlin = "6.4.0"
 moshi = "1.15.2"
 moshiKotlin = "1.15.2"
-okhttp = "5.4.0"
+okhttp = "5.5.0"
 photoview = "2.3.0"
 recyclerview = "1.4.0"
-robolectric = "4.16.1"
-room = "2.8.4"
-sceytCallAndroidSdk = "1.5.431-SNAPSHOT"
-sceytChatAndroidSdk = "1.10.100002-SNAPSHOT"
-sceytToneplayerAndroidSdk = "1.0.6"
+robolectric = "4.17"
+room = "2.8.5"
+sceytCallUiKit = "1.0.3-SNAPSHOT"
+sceytChatAndroidSdk = "1.10.104-SNAPSHOT"
 sdpAndroid = "1.1.1"
 sspAndroid = "1.1.1"
 truth = "1.4.5"
 ucrop = "2.2.11"
 waveformseekbar = "5.0.2"
-workRuntimeKtx = "2.10.0"
-lifecycleProcess = "2.10.0"
+workRuntimeKtx = "2.12.0"
+lifecycleProcess = "2.11.0"
 google-services = "4.5.0"
-firebase-crashlytics = "3.0.7"
-ksp = "2.3.6"
+firebase-crashlytics = "3.0.8"
+ksp = "2.3.11"
 documentfile = "1.1.0"
-cameraX = "1.6.1"
-compose = "2.4.0"
+cameraX = "1.6.2"
+compose = "2.4.20"
 leakcanary = "2.14"
 
 [libraries]
-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
 appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
 benchmark-junit4 = { module = "androidx.benchmark:benchmark-junit4", version.ref = "benchmark" }
-coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }
-compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }
 constraintlayout = { module = "androidx.constraintlayout:constraintlayout", version.ref = "constraintlayout" }
 converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGson" }
 converter-moshi = { module = "com.squareup.retrofit2:converter-moshi", version.ref = "converterMoshi" }
@@ -87,21 +77,15 @@ gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 junit = { module = "junit:junit", version.ref = "junit" }
 junit-ktx = { module = "androidx.test.ext:junit-ktx", version.ref = "junitKtx" }
 koin-android = { module = "io.insert-koin:koin-android", version.ref = "koinAndroid" }
-koin-androidx-compose = { module = "io.insert-koin:koin-androidx-compose", version.ref = "koinAndroid" }
 koin-test = { module = "io.insert-koin:koin-test", version.ref = "koinAndroid" }
 koin-test-junit4 = { module = "io.insert-koin:koin-test-junit4", version.ref = "koinAndroid" }
-kotlinx-collections-immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version.ref = "kotlinxCollectionsImmutable" }
-kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutinesTest" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinxCoroutines" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutines" }
 libphonenumber = { module = "com.googlecode.libphonenumber:libphonenumber", version.ref = "libphonenumber" }
 lifecycle-livedata-ktx = { module = "androidx.lifecycle:lifecycle-livedata-ktx", version.ref = "lifecycleRuntimeKtx" }
-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycleRuntimeCompose" }
 lifecycle-runtime-ktx = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleViewmodelCompose" }
 lottie = { module = "com.airbnb.android:lottie", version.ref = "lottie" }
-lottie-compose = { module = "com.airbnb.android:lottie-compose", version.ref = "lottie" }
 material = { module = "com.google.android.material:material", version.ref = "material" }
-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
-material3 = { module = "androidx.compose.material3:material3" }
 media3-exoplayer = { module = "androidx.media3:media3-exoplayer", version.ref = "media3Exoplayer" }
 media3-ui = { module = "androidx.media3:media3-ui", version.ref = "media3Exoplayer" }
 mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockitoCore" }
@@ -117,17 +101,12 @@ room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
 room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
 room-testing = { module = "androidx.room:room-testing", version.ref = "room" }
-sceyt-call-android-sdk = { module = "com.sceyt:sceyt-call-android-sdk", version.ref = "sceytCallAndroidSdk" }
+sceyt-call-uikit-ui = { module = "com.sceyt:sceyt-call-uikit-ui", version.ref = "sceytCallUiKit" }
 sceyt-chat-android-sdk = { module = "com.sceyt:sceyt-chat-android-sdk", version.ref = "sceytChatAndroidSdk" }
-sceyt-toneplayer-android-sdk = { module = "com.sceyt:sceyt-toneplayer-android-sdk", version.ref = "sceytToneplayerAndroidSdk" }
 sdp-android = { module = "com.intuit.sdp:sdp-android", version.ref = "sdpAndroid" }
 ssp-android = { module = "com.intuit.ssp:ssp-android", version.ref = "sspAndroid" }
 truth = { module = "com.google.truth:truth", version.ref = "truth" }
 ucrop = { module = "com.github.yalantis:ucrop", version.ref = "ucrop" }
-ui-graphics = { module = "androidx.compose.ui:ui-graphics" }
-ui = { module = "androidx.compose.ui:ui" }
-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
 waveformSeekBar = { module = "com.github.massoudss:waveformSeekBar", version.ref = "waveformseekbar" }
 work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
 lifecycle-process = { group = "androidx.lifecycle", name = "lifecycle-process", version.ref = "lifecycleProcess" }

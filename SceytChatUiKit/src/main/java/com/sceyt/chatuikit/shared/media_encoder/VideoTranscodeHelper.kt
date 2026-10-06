@@ -62,9 +62,13 @@ object VideoTranscodeHelper : SceytKoinComponent {
 
         if (currentTranscodePath == null) {
             currentTranscodePath = filePath
+            val isLocalPath = filePath.startsWith("/")
+            val srcUri = if (isLocalPath) null else filePath.toUri()
+            val srcPath = if (isLocalPath) filePath else null
             CustomVideoCompressor.start(
                 context = application,
-                srcUri = filePath.toUri(),
+                srcUri = srcUri,
+                srcPath = srcPath,
                 destPath = destination.absolutePath,
                 configureWith = TranscoderConfiguration(
                     quality = config.quality,
