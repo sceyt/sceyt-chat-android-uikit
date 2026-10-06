@@ -46,26 +46,24 @@ object CustomVideoCompressor : CoroutineScope {
             streamableFile: String? = null,
             listener: CompressionListener,
             configureWith: TranscoderConfiguration,
-    ) {
-        job = doVideoCompression(
-            context,
-            srcUri,
-            srcPath,
-            destPath,
-            streamableFile,
-            configureWith,
-            listener,
-        )
-    }
+    ): Job = doVideoCompression(
+        context,
+        srcUri,
+        srcPath,
+        destPath,
+        streamableFile,
+        configureWith,
+        listener,
+    ).also { job = it }
 
     /**
      * Call this function to cancel video compression process which will call [CompressionListener.onCancelled]
      */
     @JvmStatic
     fun cancel() {
-        job?.cancel()
-        isRunning = false
         CustomCompressor.cancel()
+        isRunning = false
+        job?.cancel()
     }
 
     private fun doVideoCompression(
