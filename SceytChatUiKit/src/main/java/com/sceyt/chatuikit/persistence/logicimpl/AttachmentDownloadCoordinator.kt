@@ -152,9 +152,12 @@ internal class AttachmentDownloadCoordinator(
                 SceytResponse.Error(SceytException(0, "Waiting for network"))
             } else {
                 currentCoroutineContext().ensureActive()
+                request.destinationFile.delete()
                 SceytResponse.Error(error.toSceytException())
             }
         } catch (error: Throwable) {
+            currentCoroutineContext().ensureActive()
+            request.destinationFile.delete()
             SceytResponse.Error(error.toSceytException())
         }
     }
