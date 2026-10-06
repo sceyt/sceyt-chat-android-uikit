@@ -154,10 +154,16 @@ internal class AttachmentUploadCoordinator(
             Preparing,
             FilePathChanged,
             WaitingToUpload -> {
+                val task = fileTransferService.findTransferTask(attachment)
+                // The UI may still show Uploading after a failure removes the task. Ignore that pause
+                // so it cannot block retry. PendingUpload and WaitingToUpload are allowed because
+                // their task may not exist yet, but the user must still be able to pause them.
+                if (task == null && state != PendingUpload && state != WaitingToUpload) return
+
                 val messageTid = attachment.messageTid
                 pausedTaskIds.add(messageTid)
 
-                fileTransferService.findTransferTask(attachment)?.let { task ->
+                task?.let {
                     task.state = PauseUpload
                     task.resumePauseCallback?.onResumePause(attachment.toTransferData(PauseUpload))
                 }
@@ -581,11 +587,14 @@ internal class AttachmentUploadCoordinator(
                 SceytResponse.Error(error.toSceytException())
             }
         } catch (error: Throwable) {
+            if (!networkWaitTriggered.get()) currentCoroutineContext().ensureActive()
             SceytResponse.Error(error.toSceytException())
         }
 
         notifyUploadResult(response, task, onResult)
-        runCatching { onComplete?.invoke() }.onFailure(::logCallbackFailure)
+        if (uploadJobs[attachment.messageTid] === uploadJob) {
+            runCatching { onComplete?.invoke() }.onFailure(::logCallbackFailure)
+        }
     }
 
     private fun handleUploadEvent(
@@ -756,6 +765,7 @@ internal class AttachmentUploadCoordinator(
         task: TransferTask,
         response: SceytResponse<String>,
     ) {
+        pausedTaskIds.remove(task.messageTid)
         runCatching {
             task.uploadResultCallback?.onResult(response)
         }.onFailure(::logCallbackFailure)

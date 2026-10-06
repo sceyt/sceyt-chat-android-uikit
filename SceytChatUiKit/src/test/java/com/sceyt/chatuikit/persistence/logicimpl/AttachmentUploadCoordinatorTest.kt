@@ -28,6 +28,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
@@ -35,6 +36,7 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withContext
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -49,6 +51,7 @@ import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import java.io.File
+import java.io.IOException
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
@@ -332,6 +335,8 @@ class AttachmentUploadCoordinatorTest {
         coordinator.pauseLoad(first, TransferState.Uploading)
         transport.uploadCalls.single().succeed("shared-url")
 
+        coordinator.uploadFile(first, firstTask)
+        assertThat(transport.uploadCalls).hasSize(1)
         coordinator.resumeLoad(first, TransferState.PauseUpload)
 
         assertThat(firstResults).containsExactly("shared-url")
@@ -428,6 +433,8 @@ class AttachmentUploadCoordinatorTest {
         coordinator.pauseLoad(paused, TransferState.Uploading)
         transport.uploadCalls.single().fail(IllegalStateException("upload failed"))
 
+        coordinator.uploadFile(paused, pausedTask)
+        assertThat(transport.uploadCalls).hasSize(1)
         uploadSharedFile(next, transferTask(next).apply {
             uploadResultCallback = TransferResultCallback { nextResults += it.data }
         })
@@ -641,6 +648,207 @@ class AttachmentUploadCoordinatorTest {
         assertThat(transport.resumeCalls).containsExactly("upload:7")
         assertThat(transport.uploadCalls.first().cancelled).isTrue()
         assertThat(transport.uploadCalls).hasSize(2)
+    }
+
+    @Test
+    fun `failed natively paused upload can retry without resumeLoad`() {
+        transport.pauseResult = true
+        val attachment = uploadAttachment(messageTid = 114L)
+        val results = mutableListOf<SceytResponse<String>>()
+        val task = transferTask(attachment).apply {
+            uploadResultCallback = TransferResultCallback {
+                results += it
+                service.removeTransferTask(this)
+            }
+        }
+        service.addTransferTask(task)
+
+        coordinator.uploadFile(attachment, task)
+        coordinator.pauseLoad(attachment, TransferState.Uploading)
+        transport.uploadCalls.single().fail(IOException("upload failed"))
+        assertThat(results.single()).isInstanceOf(SceytResponse.Error::class.java)
+        assertThat(service.findTransferTask(attachment)).isNull()
+
+        val retry = attachment.copy(transferState = TransferState.ErrorUpload)
+        val retryTask = service.findOrCreateTransferTask(retry).apply {
+            uploadResultCallback = TransferResultCallback { results += it }
+        }
+        coordinator.uploadFile(retry, retryTask)
+
+        assertThat(transport.uploadCalls).hasSize(2)
+        transport.uploadCalls.last().succeed("retry-url")
+        assertThat(results.map { it.data }).containsExactly(null, "retry-url").inOrder()
+    }
+
+    @Test
+    fun `stale pause during failed upload callback does not block retry`() {
+        transport.pauseResult = true
+        val attachment = uploadAttachment(messageTid = 121L)
+        val results = mutableListOf<SceytResponse<String>>()
+        val task = transferTask(attachment).apply {
+            uploadResultCallback = TransferResultCallback {
+                results += it
+                service.removeTransferTask(this)
+                coordinator.pauseLoad(attachment, TransferState.Uploading)
+            }
+        }
+        service.addTransferTask(task)
+
+        coordinator.uploadFile(attachment, task)
+        coordinator.pauseLoad(attachment, TransferState.Uploading)
+        transport.uploadCalls.single().fail(IOException("upload failed"))
+
+        val retry = attachment.copy(transferState = TransferState.ErrorUpload)
+        val retryTask = service.findOrCreateTransferTask(retry).apply {
+            uploadResultCallback = TransferResultCallback { results += it }
+        }
+        coordinator.uploadFile(retry, retryTask)
+
+        assertThat(transport.pauseCalls).containsExactly("upload:121")
+        assertThat(transport.uploadCalls).hasSize(2)
+        transport.uploadCalls.last().succeed("retry-url")
+        assertThat(results.map { it.data }).containsExactly(null, "retry-url").inOrder()
+    }
+
+    @Test
+    fun `stale pause after failed upload job finishes does not block retry`() {
+        transport.pauseResult = true
+        val attachment = uploadAttachment(messageTid = 122L)
+        val results = mutableListOf<SceytResponse<String>>()
+        val task = transferTask(attachment).apply {
+            uploadResultCallback = TransferResultCallback {
+                results += it
+                service.removeTransferTask(this)
+            }
+        }
+        service.addTransferTask(task)
+
+        coordinator.uploadFile(attachment, task)
+        coordinator.pauseLoad(attachment, TransferState.Uploading)
+        transport.uploadCalls.single().fail(IOException("upload failed"))
+        coordinator.pauseLoad(attachment, TransferState.Uploading)
+
+        val retry = attachment.copy(transferState = TransferState.ErrorUpload)
+        val retryTask = service.findOrCreateTransferTask(retry).apply {
+            uploadResultCallback = TransferResultCallback { results += it }
+        }
+        coordinator.uploadFile(retry, retryTask)
+
+        assertThat(transport.uploadCalls).hasSize(2)
+        transport.uploadCalls.last().succeed("retry-url")
+        assertThat(results.map { it.data }).containsExactly(null, "retry-url").inOrder()
+    }
+
+    @Test
+    fun `pending and queued uploads can pause before task registration`() {
+        listOf(TransferState.PendingUpload, TransferState.WaitingToUpload).forEachIndexed { index, state ->
+            val attachment = uploadAttachment(messageTid = 123L + index, state = state)
+            coordinator.pauseLoad(attachment, state)
+
+            val task = service.findOrCreateTransferTask(attachment)
+            coordinator.uploadFile(attachment, task)
+            assertThat(transport.uploadCalls).hasSize(index)
+
+            coordinator.resumeLoad(attachment, TransferState.PauseUpload)
+            assertThat(transport.uploadCalls).hasSize(index + 1)
+            transport.uploadCalls.last().succeed("uploaded-url")
+        }
+    }
+
+    @Test
+    fun `retry from paused upload failure callback retains its queue turn`() {
+        transport.pauseResult = true
+        val attachment = uploadAttachment(messageTid = 115L)
+        val queued = uploadAttachment(messageTid = 116L)
+        val retryResults = mutableListOf<String?>()
+        val task = transferTask(attachment).apply {
+            uploadResultCallback = TransferResultCallback {
+                service.removeTransferTask(this)
+                val retry = attachment.copy(transferState = TransferState.ErrorUpload)
+                val retryTask = service.findOrCreateTransferTask(retry).apply {
+                    uploadResultCallback = TransferResultCallback { retryResults += it.data }
+                }
+                coordinator.uploadFile(retry, retryTask)
+                coordinator.uploadFile(queued, transferTask(queued))
+            }
+        }
+        service.addTransferTask(task)
+
+        coordinator.uploadFile(attachment, task)
+        coordinator.pauseLoad(attachment, TransferState.Uploading)
+        transport.uploadCalls.single().fail(IOException("upload failed"))
+
+        assertThat(transport.uploadCalls.map { it.request.operationId })
+            .containsExactly("upload:115", "upload:115").inOrder()
+        transport.uploadCalls.last().succeed("retry-url")
+        assertThat(retryResults).containsExactly("retry-url")
+        assertThat(transport.uploadCalls.last().request.operationId).isEqualTo("upload:116")
+        transport.uploadCalls.last().succeed("queued-url")
+    }
+
+    @Test
+    fun `late IOException from cancelled upload does not fail or advance its replacement`() {
+        val cancellationGate = CompletableDeferred<Unit>()
+        SceytChatUIKit.fileTransfer.transport = object : FileTransferTransport by transport {
+            override suspend fun upload(request: FileUploadRequest, callback: FileTransferCallback): String? {
+                return try {
+                    transport.upload(request, callback)
+                } catch (_: CancellationException) {
+                    withContext(NonCancellable) { cancellationGate.await() }
+                    throw IOException("backend cancelled")
+                }
+            }
+        }
+        val attachment = uploadAttachment(messageTid = 117L)
+        val queued = uploadAttachment(messageTid = 118L)
+        val results = mutableListOf<SceytResponse<String>>()
+        val task = transferTask(attachment).apply {
+            uploadResultCallback = TransferResultCallback { results += it }
+        }
+        service.addTransferTask(task)
+
+        coordinator.uploadFile(attachment, task)
+        coordinator.pauseLoad(attachment, TransferState.Uploading)
+        coordinator.uploadFile(attachment, task)
+        assertThat(transport.uploadCalls).hasSize(1)
+        coordinator.resumeLoad(attachment, TransferState.PauseUpload)
+        coordinator.uploadFile(queued, transferTask(queued))
+        cancellationGate.complete(Unit)
+
+        assertThat(results).isEmpty()
+        assertThat(transport.uploadCalls).hasSize(2)
+        transport.uploadCalls.last().succeed("replacement-url")
+        assertThat(results.single().data).isEqualTo("replacement-url")
+        assertThat(transport.uploadCalls.last().request.operationId).isEqualTo("upload:118")
+        transport.uploadCalls.last().succeed("queued-url")
+    }
+
+    @Test
+    fun `waiting for network still advances queue when cancellation throws IOException`() {
+        SceytChatUIKit.fileTransfer.transport = object : FileTransferTransport by transport {
+            override suspend fun upload(request: FileUploadRequest, callback: FileTransferCallback): String? {
+                return try {
+                    transport.upload(request, callback)
+                } catch (_: CancellationException) {
+                    throw IOException("backend cancelled")
+                }
+            }
+        }
+        val attachment = uploadAttachment(messageTid = 119L)
+        val queued = uploadAttachment(messageTid = 120L)
+        val results = mutableListOf<SceytResponse<String>>()
+        val task = transferTask(attachment).apply {
+            uploadResultCallback = TransferResultCallback { results += it }
+        }
+
+        coordinator.uploadFile(attachment, task)
+        coordinator.uploadFile(queued, transferTask(queued))
+        transport.uploadCalls.single().waitingForNetwork()
+
+        assertThat(results.single()).isInstanceOf(SceytResponse.Error::class.java)
+        assertThat(transport.uploadCalls.first().cancelled).isTrue()
+        assertThat(transport.uploadCalls.last().request.operationId).isEqualTo("upload:120")
+        transport.uploadCalls.last().succeed("queued-url")
     }
 
     @Test
