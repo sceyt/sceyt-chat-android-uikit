@@ -18,6 +18,7 @@ import com.sceyt.chatuikit.persistence.file_transfer.ResumePauseCallback
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferResultCallback
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
+import com.sceyt.chatuikit.persistence.file_transfer.transferKey
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -118,7 +119,8 @@ class AttachmentDownloadCoordinatorTest {
         coordinator.downloadFile(attachment, task)
 
         assertThat(transport.downloadCalls).hasSize(1)
-        assertThat(transport.downloadCalls.single().request.operationId).isEqualTo("download:10")
+        assertThat(transport.downloadCalls.single().request.operationId)
+            .isEqualTo("download:${attachment.transferKey}")
     }
 
     @Test
@@ -150,6 +152,76 @@ class AttachmentDownloadCoordinatorTest {
 
         assertThat(firstResults).containsExactly(firstCall.request.destinationFile.path)
         assertThat(secondResults).containsExactly(secondCall.request.destinationFile.path)
+    }
+
+    @Test
+    fun `downloads without assigned ids use separate url operation ids`() {
+        val first = attachment(state = TransferState.Downloading).copy(id = null)
+        val second = first.copy(id = 0L, name = "second.txt", url = "second-url")
+        SceytChatUIKit.fileTransfer.destinationProvider = FileTransferDestinationProvider { _, value ->
+            File(destinationFile.parentFile, value.name)
+        }
+
+        coordinator.downloadFile(first, transferTask(first))
+        coordinator.downloadFile(second, transferTask(second))
+
+        assertThat(transport.downloadCalls).hasSize(2)
+        val firstCall = transport.downloadCalls.first()
+        val secondCall = transport.downloadCalls.last()
+        assertThat(firstCall.request.operationId)
+            .isEqualTo("download:${first.messageTid}:url:${first.url}")
+        assertThat(secondCall.request.operationId)
+            .isEqualTo("download:${second.messageTid}:url:${second.url}")
+
+        coordinator.pauseLoad(first, TransferState.Downloading)
+
+        assertThat(firstCall.cancelled).isTrue()
+        assertThat(secondCall.cancelled).isFalse()
+        secondCall.succeed(secondCall.request.destinationFile.path)
+    }
+
+    @Test
+    fun `native pause and resume affect only the selected attachment in a message`() {
+        transport.pauseResult = true
+        transport.resumeResult = true
+        val first = attachment(state = TransferState.Downloading)
+        val second = first.copy(id = 11L, name = "second.txt", url = "second-url")
+        val firstTask = transferTask(first)
+        val secondTask = transferTask(second)
+        val firstProgress = mutableListOf<Float>()
+        val secondProgress = mutableListOf<Float>()
+        firstTask.progressCallback = ProgressUpdateCallback { firstProgress += it.progressPercent }
+        secondTask.progressCallback = ProgressUpdateCallback { secondProgress += it.progressPercent }
+        service.addTransferTask(firstTask)
+        service.addTransferTask(secondTask)
+        SceytChatUIKit.fileTransfer.destinationProvider = FileTransferDestinationProvider { _, value ->
+            File(destinationFile.parentFile, value.name)
+        }
+
+        coordinator.downloadFile(first, firstTask)
+        coordinator.downloadFile(second, secondTask)
+        val firstCall = transport.downloadCalls.first()
+        val secondCall = transport.downloadCalls.last()
+
+        coordinator.pauseLoad(first, TransferState.Downloading)
+        firstCall.progress(30f)
+        secondCall.progress(50f)
+
+        assertThat(transport.pauseCalls).containsExactly(firstCall.request.operationId)
+        assertThat(firstTask.state).isEqualTo(TransferState.PauseDownload)
+        assertThat(secondTask.state).isEqualTo(TransferState.Downloading)
+        assertThat(firstProgress).containsExactly(0f)
+        assertThat(secondProgress).containsExactly(0f, 50f).inOrder()
+
+        coordinator.resumeLoad(first, TransferState.PauseDownload)
+        firstCall.progress(40f)
+
+        assertThat(transport.resumeCalls).containsExactly(firstCall.request.operationId)
+        assertThat(transport.downloadCalls).hasSize(2)
+        assertThat(firstProgress).containsExactly(0f, 40f).inOrder()
+        assertThat(secondCall.cancelled).isFalse()
+        firstCall.succeed(firstCall.request.destinationFile.path)
+        secondCall.succeed(secondCall.request.destinationFile.path)
     }
 
     @Test
@@ -376,8 +448,8 @@ class AttachmentDownloadCoordinatorTest {
         coordinator.pauseLoad(attachment, TransferState.Downloading)
         coordinator.resumeLoad(attachment, TransferState.PauseDownload)
 
-        assertThat(transport.pauseCalls).containsExactly("download:10")
-        assertThat(transport.resumeCalls).containsExactly("download:10")
+        assertThat(transport.pauseCalls).containsExactly("download:${attachment.transferKey}")
+        assertThat(transport.resumeCalls).containsExactly("download:${attachment.transferKey}")
         assertThat(call.cancelled).isFalse()
         assertThat(transport.downloadCalls).hasSize(1)
         assertThat(task.state).isEqualTo(TransferState.Downloading)
@@ -589,7 +661,8 @@ class AttachmentDownloadCoordinatorTest {
 
         assertThat(transport.downloadCalls).hasSize(2)
         assertThat(transport.downloadCalls[0].cancelled).isTrue()
-        assertThat(transport.downloadCalls[1].request.operationId).isEqualTo("download:81")
+        assertThat(transport.downloadCalls[1].request.operationId)
+            .isEqualTo("download:${next.transferKey}")
         assertThat(results).isEmpty()
     }
 }

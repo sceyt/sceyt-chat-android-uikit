@@ -168,7 +168,7 @@ object FileTransferHelper : SceytKoinComponent {
 
                 emitAttachmentTransferUpdate(transferData, updatedAttachment.fileSize)
                 complete(Result.success(updatedAttachment))
-                fileTransferService.removeTransferTask(messageTid)
+                fileTransferService.removeTransferTask(this)
                 enqueueDbUpdate(messageTid) {
                     attachmentLogic.updateAttachmentWithTransferData(transferData)
                     removeMutexForAttachment(messageTid)
@@ -188,7 +188,7 @@ object FileTransferHelper : SceytKoinComponent {
 
                 emitAttachmentTransferUpdate(transferData, updatedAttachment.fileSize)
                 complete(Result.failure(exception ?: IllegalStateException("File download failed")))
-                fileTransferService.removeTransferTask(messageTid)
+                fileTransferService.removeTransferTask(this)
                 enqueueDbUpdate(messageTid) {
                     attachmentLogic.updateAttachmentWithTransferData(transferData)
                 }
@@ -251,7 +251,7 @@ object FileTransferHelper : SceytKoinComponent {
             }
         }
         complete(result)
-        fileTransferService.removeTransferTask(messageTid)
+        fileTransferService.removeTransferTask(this)
     }
 
     @Suppress("MemberVisibilityCanBePrivate")
