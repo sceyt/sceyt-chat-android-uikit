@@ -84,14 +84,15 @@ internal class AttachmentUploadCoordinator(
         )
         val sharedUploadInProgress = synchronized(sharingFilesLock) {
             val inProgress = sharingFilesPath.any {
-                it.sourceKey == shareFileData.sourceKey && it.completedUrl == null
+                it.sourceKey == shareFileData.sourceKey && it.completedUrl == null &&
+                        !pausedTaskIds.contains(it.messageTid)
             }
             sharingFilesPath.add(shareFileData)
             inProgress
         }
         if (sharedUploadInProgress) return
 
-        startSharedUpload(attachment, task)
+        resumeSharedUpload(attachment, task)
     }
 
     private fun startSharedUpload(
@@ -110,6 +111,7 @@ internal class AttachmentUploadCoordinator(
             val (uploaded, url) = checkMaybeAlreadyUploadedWithAnotherMessage(checksum, task)
 
             if (uploaded && url != null) {
+                saveCompletedSharedUpload(attachment, url)
                 takeAppropriateTasks(task).forEach { transferTask ->
                     notifyTaskResult(transferTask, SceytResponse.Success(url))
                 }
@@ -348,7 +350,7 @@ internal class AttachmentUploadCoordinator(
             }?.sourceKey ?: return@synchronized emptyList()
 
             sharingFilesPath
-                .filter { it.sourceKey == sourceKey }
+                .filter { it.sourceKey == sourceKey && it.completedUrl == null }
                 .map(ShareFileData::messageTid)
         }
 
@@ -367,7 +369,7 @@ internal class AttachmentUploadCoordinator(
             }?.sourceKey ?: return
 
             sharingFilesPath.forEach { member ->
-                if (member.sourceKey == sourceKey) {
+                if (member.sourceKey == sourceKey && member.completedUrl == null) {
                     member.completedUrl = url
                 }
             }

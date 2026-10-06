@@ -378,14 +378,18 @@ class AttachmentUploadCoordinatorTest {
         val paused = uploadAttachment(messageTid = 98L, filePath = first.filePath)
         val next = uploadAttachment(messageTid = 99L, filePath = first.filePath)
         val results = mutableListOf<String?>()
+        val pausedResults = mutableListOf<String?>()
+        val pausedTask = transferTask(paused).apply {
+            uploadResultCallback = TransferResultCallback { pausedResults += it.data }
+        }
         val nextTask = transferTask(next).apply {
             uploadResultCallback = TransferResultCallback { results += it.data }
         }
 
         uploadSharedFile(first, transferTask(first))
-        uploadSharedFile(paused, transferTask(paused))
+        uploadSharedFile(paused, pausedTask)
         coordinator.pauseLoad(paused, TransferState.Uploading)
-        transport.uploadCalls.single().succeed("cached-url")
+        transport.uploadCalls.single().succeed("first-url")
         whenever(attachmentLogic.getFileChecksumData(first.originalFilePath)).thenReturn(
             FileChecksumData(
                 checksum = 1L,
@@ -399,7 +403,195 @@ class AttachmentUploadCoordinatorTest {
         uploadSharedFile(next, nextTask)
 
         assertThat(results).containsExactly("cached-url")
+        assertThat(pausedResults).isEmpty()
+        coordinator.resumeLoad(paused, TransferState.PauseUpload)
+        assertThat(pausedResults).containsExactly("first-url")
         assertThat(transport.uploadCalls).hasSize(1)
+    }
+
+    @Test
+    fun `new share starts after group fails with a paused member`() {
+        val first = uploadAttachment(messageTid = 100L)
+        val paused = uploadAttachment(messageTid = 101L, filePath = first.filePath)
+        val next = uploadAttachment(messageTid = 102L, filePath = first.filePath)
+        val firstResults = mutableListOf<SceytResponse<String>>()
+        val pausedResults = mutableListOf<String?>()
+        val nextResults = mutableListOf<String?>()
+        val pausedTask = transferTask(paused).apply {
+            uploadResultCallback = TransferResultCallback { pausedResults += it.data }
+        }
+
+        uploadSharedFile(first, transferTask(first).apply {
+            uploadResultCallback = TransferResultCallback { firstResults += it }
+        })
+        uploadSharedFile(paused, pausedTask)
+        coordinator.pauseLoad(paused, TransferState.Uploading)
+        transport.uploadCalls.single().fail(IllegalStateException("upload failed"))
+
+        uploadSharedFile(next, transferTask(next).apply {
+            uploadResultCallback = TransferResultCallback { nextResults += it.data }
+        })
+
+        assertThat(firstResults.single()).isInstanceOf(SceytResponse.Error::class.java)
+        assertThat(pausedResults).isEmpty()
+        assertThat(transport.uploadCalls).hasSize(2)
+        transport.uploadCalls.last().succeed("next-url")
+        assertThat(nextResults).containsExactly("next-url")
+
+        coordinator.resumeLoad(paused, TransferState.PauseUpload)
+        assertThat(pausedResults).containsExactly("next-url")
+        assertThat(transport.uploadCalls).hasSize(2)
+    }
+
+    @Test
+    fun `checksum shared completion retains result for paused member and allows next share`() = runBlocking {
+        SceytChatUIKit.config.preventDuplicateAttachmentUpload = true
+        testScope = TestScope(StandardTestDispatcher())
+        coordinator = AttachmentUploadCoordinator(context, attachmentLogic, testScope)
+        val first = uploadAttachment(messageTid = 103L)
+        val paused = uploadAttachment(messageTid = 104L, filePath = first.filePath)
+        val next = uploadAttachment(messageTid = 105L, filePath = first.filePath)
+        val firstResults = mutableListOf<String?>()
+        val pausedResults = mutableListOf<String?>()
+        val nextResults = mutableListOf<String?>()
+        val pausedTask = transferTask(paused).apply {
+            uploadResultCallback = TransferResultCallback { pausedResults += it.data }
+        }
+        whenever(attachmentLogic.getFileChecksumData(first.originalFilePath)).thenReturn(
+            FileChecksumData(
+                checksum = 1L,
+                resizedFilePath = null,
+                url = "cached-url",
+                metadata = null,
+                fileSize = 4L,
+            ),
+        )
+
+        uploadSharedFile(first, transferTask(first).apply {
+            uploadResultCallback = TransferResultCallback { firstResults += it.data }
+        })
+        uploadSharedFile(paused, pausedTask)
+        coordinator.pauseLoad(paused, TransferState.PendingUpload)
+        testScope.runCurrent()
+
+        uploadSharedFile(next, transferTask(next).apply {
+            uploadResultCallback = TransferResultCallback { nextResults += it.data }
+        })
+        testScope.runCurrent()
+
+        assertThat(firstResults).containsExactly("cached-url")
+        assertThat(nextResults).containsExactly("cached-url")
+        assertThat(pausedResults).isEmpty()
+        coordinator.resumeLoad(paused, TransferState.PauseUpload)
+        testScope.runCurrent()
+        assertThat(pausedResults).containsExactly("cached-url")
+        Mockito.verify(attachmentLogic, Mockito.times(2))
+            .getFileChecksumData(first.originalFilePath)
+        assertThat(transport.uploadCalls).isEmpty()
+    }
+
+    @Test
+    fun `new share resumes natively paused group without another upload`() {
+        transport.pauseResult = true
+        transport.resumeResult = true
+        val first = uploadAttachment(messageTid = 106L)
+        val paused = uploadAttachment(messageTid = 107L, filePath = first.filePath)
+        val next = uploadAttachment(messageTid = 108L, filePath = first.filePath)
+        val firstResults = mutableListOf<String?>()
+        val pausedResults = mutableListOf<String?>()
+        val nextResults = mutableListOf<String?>()
+        val firstTask = transferTask(first).apply {
+            uploadResultCallback = TransferResultCallback { firstResults += it.data }
+        }
+        val pausedTask = transferTask(paused).apply {
+            uploadResultCallback = TransferResultCallback { pausedResults += it.data }
+        }
+
+        uploadSharedFile(first, firstTask)
+        uploadSharedFile(paused, pausedTask)
+        coordinator.pauseLoad(first, TransferState.Uploading)
+        coordinator.pauseLoad(paused, TransferState.Uploading)
+        uploadSharedFile(next, transferTask(next).apply {
+            uploadResultCallback = TransferResultCallback { nextResults += it.data }
+        })
+
+        assertThat(transport.pauseCalls).containsExactly("upload:106")
+        assertThat(transport.resumeCalls).containsExactly("upload:106")
+        assertThat(transport.uploadCalls).hasSize(1)
+        transport.uploadCalls.single().succeed("shared-url")
+        assertThat(nextResults).containsExactly("shared-url")
+        assertThat(firstResults).isEmpty()
+        assertThat(pausedResults).isEmpty()
+
+        coordinator.resumeLoad(first, TransferState.PauseUpload)
+        coordinator.resumeLoad(paused, TransferState.PauseUpload)
+        assertThat(firstResults).containsExactly("shared-url")
+        assertThat(pausedResults).containsExactly("shared-url")
+        assertThat(transport.uploadCalls).hasSize(1)
+    }
+
+    @Test
+    fun `new share restarts paused group when native resume is unsupported`() {
+        transport.pauseResult = true
+        val first = uploadAttachment(messageTid = 109L)
+        val next = uploadAttachment(messageTid = 110L, filePath = first.filePath)
+        val firstResults = mutableListOf<String?>()
+        val nextResults = mutableListOf<String?>()
+        val firstTask = transferTask(first).apply {
+            uploadResultCallback = TransferResultCallback { firstResults += it.data }
+        }
+
+        uploadSharedFile(first, firstTask)
+        val firstCall = transport.uploadCalls.single()
+        coordinator.pauseLoad(first, TransferState.Uploading)
+        uploadSharedFile(next, transferTask(next).apply {
+            uploadResultCallback = TransferResultCallback { nextResults += it.data }
+        })
+
+        assertThat(transport.resumeCalls).containsExactly("upload:109")
+        assertThat(firstCall.cancelled).isTrue()
+        assertThat(transport.uploadCalls).hasSize(2)
+        transport.uploadCalls.last().succeed("next-url")
+        assertThat(nextResults).containsExactly("next-url")
+        assertThat(firstResults).isEmpty()
+
+        coordinator.resumeLoad(first, TransferState.PauseUpload)
+        assertThat(firstResults).containsExactly("next-url")
+        assertThat(transport.uploadCalls).hasSize(2)
+    }
+
+    @Test
+    fun `share started from completion callback does not resume completed owner`() {
+        transport.resumeResult = true
+        val first = uploadAttachment(messageTid = 111L)
+        val follower = uploadAttachment(messageTid = 112L, filePath = first.filePath)
+        val next = uploadAttachment(messageTid = 113L, filePath = first.filePath)
+        val firstResults = mutableListOf<String?>()
+        val nextResults = mutableListOf<String?>()
+        val firstTask = transferTask(first).apply {
+            uploadResultCallback = TransferResultCallback { firstResults += it.data }
+        }
+        val nextTask = transferTask(next).apply {
+            uploadResultCallback = TransferResultCallback { nextResults += it.data }
+        }
+        val followerTask = transferTask(follower).apply {
+            uploadResultCallback = TransferResultCallback {
+                uploadSharedFile(next, nextTask)
+            }
+        }
+
+        uploadSharedFile(first, firstTask)
+        uploadSharedFile(follower, followerTask)
+        coordinator.pauseLoad(first, TransferState.Uploading)
+        transport.uploadCalls.single().succeed("first-url")
+
+        assertThat(transport.resumeCalls).isEmpty()
+        assertThat(transport.uploadCalls).hasSize(2)
+        transport.uploadCalls.last().succeed("next-url")
+        assertThat(nextResults).containsExactly("next-url")
+        coordinator.resumeLoad(first, TransferState.PauseUpload)
+        assertThat(firstResults).containsExactly("first-url")
+        assertThat(transport.uploadCalls).hasSize(2)
     }
 
     @Test
