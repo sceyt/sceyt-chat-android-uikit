@@ -5,7 +5,10 @@ import com.google.common.truth.Truth.assertThat
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.filetransfer.FileDownloadRequest
+import com.sceyt.chatuikit.filetransfer.FileTransferCallback
 import com.sceyt.chatuikit.filetransfer.FileTransferDestinationProvider
+import com.sceyt.chatuikit.filetransfer.FileTransferTransport
 import com.sceyt.chatuikit.filetransfer.SceytChatUIKitFileTransfer
 import com.sceyt.chatuikit.koin.SceytKoinApp
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
@@ -14,10 +17,14 @@ import com.sceyt.chatuikit.persistence.file_transfer.ResumePauseCallback
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferResultCallback
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.withTimeout
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -28,6 +35,7 @@ import org.koin.dsl.module
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import java.io.File
+import kotlin.time.Duration.Companion.milliseconds
 
 @RunWith(RobolectricTestRunner::class)
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -146,6 +154,53 @@ class AttachmentDownloadCoordinatorTest {
         assertThat(destinationFile.readBytes()).isEqualTo(partialBytes)
         assertThat(result).isInstanceOf(SceytResponse.Error::class.java)
         assertThat(result?.code).isEqualTo(7)
+    }
+
+    @Test
+    fun `transport cancellation is forwarded as failure and allows retry`() {
+        val attachment = attachment(state = TransferState.PendingDownload)
+        val results = mutableListOf<SceytResponse<String>>()
+        val task = transferTask(attachment).apply {
+            downloadCallback = TransferResultCallback { results += it }
+        }
+
+        coordinator.downloadFile(attachment, task)
+        transport.downloadCalls.single().fail(CancellationException("transport cancelled"))
+
+        assertThat(results).hasSize(1)
+        assertThat(results.single()).isInstanceOf(SceytResponse.Error::class.java)
+        assertThat(results.single().message).isEqualTo("transport cancelled")
+        coordinator.downloadFile(attachment, task)
+        assertThat(transport.downloadCalls).hasSize(2)
+        transport.downloadCalls.last().succeed(destinationFile.path)
+        assertThat(results).hasSize(2)
+        assertThat(results.last().data).isEqualTo(destinationFile.path)
+    }
+
+    @Test
+    fun `transport timeout is forwarded as failure and allows retry`() {
+        SceytChatUIKit.fileTransfer.transport = object : FileTransferTransport by transport {
+            override suspend fun download(request: FileDownloadRequest, callback: FileTransferCallback) =
+                withTimeout(10.milliseconds) { transport.download(request, callback) }
+        }
+        val attachment = attachment(state = TransferState.PendingDownload)
+        val results = mutableListOf<SceytResponse<String>>()
+        val task = transferTask(attachment).apply {
+            downloadCallback = TransferResultCallback { results += it }
+        }
+
+        coordinator.downloadFile(attachment, task)
+        testScope.advanceTimeBy(10.milliseconds)
+        testScope.runCurrent()
+
+        assertThat(results).hasSize(1)
+        assertThat(results.single()).isInstanceOf(SceytResponse.Error::class.java)
+        assertThat(transport.downloadCalls.first().cancelled).isTrue()
+        coordinator.downloadFile(attachment, task)
+        assertThat(transport.downloadCalls).hasSize(2)
+        transport.downloadCalls.last().succeed(destinationFile.path)
+        assertThat(results).hasSize(2)
+        assertThat(results.last().data).isEqualTo(destinationFile.path)
     }
 
     @Test
@@ -387,13 +442,18 @@ class AttachmentDownloadCoordinatorTest {
     fun `cancel all stops active download and allows a new download`() {
         val active = attachment(messageTid = 80L, state = TransferState.Downloading)
         val next = attachment(messageTid = 81L, state = TransferState.PendingDownload)
+        val results = mutableListOf<SceytResponse<String>>()
+        val activeTask = transferTask(active).apply {
+            downloadCallback = TransferResultCallback { results += it }
+        }
 
-        coordinator.downloadFile(active, transferTask(active))
+        coordinator.downloadFile(active, activeTask)
         coordinator.cancelAll()
         coordinator.downloadFile(next, transferTask(next))
 
         assertThat(transport.downloadCalls).hasSize(2)
         assertThat(transport.downloadCalls[0].cancelled).isTrue()
         assertThat(transport.downloadCalls[1].request.operationId).isEqualTo("download:81")
+        assertThat(results).isEmpty()
     }
 }

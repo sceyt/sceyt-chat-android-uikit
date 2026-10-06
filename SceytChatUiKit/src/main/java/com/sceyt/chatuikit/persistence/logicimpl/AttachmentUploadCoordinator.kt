@@ -524,9 +524,8 @@ internal class AttachmentUploadCoordinator(
         val job = scope.launch(start = CoroutineStart.LAZY) {
             try {
                 block()
-            } catch (error: CancellationException) {
-                throw error
             } catch (error: Throwable) {
+                currentCoroutineContext().ensureActive()
                 SceytLog.e(TAG, "Upload preparation failed", error)
                 runCatching { onError(SceytResponse.Error(error.toSceytException())) }
                 uploadNext(messageTid)
@@ -573,8 +572,12 @@ internal class AttachmentUploadCoordinator(
             currentCoroutineContext().ensureActive()
             SceytResponse.Success(result)
         } catch (error: CancellationException) {
-            if (!networkWaitTriggered.get()) throw error
-            SceytResponse.Error(SceytException(0, "Waiting for network"))
+            if (networkWaitTriggered.get()) {
+                SceytResponse.Error(SceytException(0, "Waiting for network"))
+            } else {
+                currentCoroutineContext().ensureActive()
+                SceytResponse.Error(error.toSceytException())
+            }
         } catch (error: Throwable) {
             SceytResponse.Error(error.toSceytException())
         }
@@ -611,13 +614,11 @@ internal class AttachmentUploadCoordinator(
         task: TransferTask,
         onResult: ((SceytResponse<String>) -> Unit)?,
     ) {
-        runCatching {
-            if (onResult != null) {
-                onResult(response)
-            } else {
-                task.uploadResultCallback?.onResult(response)
-            }
-        }.onFailure(::logCallbackFailure)
+        if (onResult != null) {
+            runCatching { onResult(response) }.onFailure(::logCallbackFailure)
+        } else {
+            notifyTaskResult(task, response)
+        }
     }
 
     private suspend fun prepareAttachment(

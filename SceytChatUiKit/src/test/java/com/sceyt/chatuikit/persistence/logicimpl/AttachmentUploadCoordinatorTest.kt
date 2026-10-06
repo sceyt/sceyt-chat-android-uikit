@@ -9,6 +9,9 @@ import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.FileChecksumData
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
+import com.sceyt.chatuikit.filetransfer.FileTransferCallback
+import com.sceyt.chatuikit.filetransfer.FileTransferTransport
+import com.sceyt.chatuikit.filetransfer.FileUploadRequest
 import com.sceyt.chatuikit.filetransfer.SceytChatUIKitFileTransfer
 import com.sceyt.chatuikit.koin.SceytKoinApp
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
@@ -21,6 +24,7 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferTask
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import com.sceyt.chatuikit.shared.media_encoder.CompressionListener
 import com.sceyt.chatuikit.shared.media_encoder.CustomVideoCompressor
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -28,7 +32,9 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.withTimeout
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -47,6 +53,7 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.concurrent.thread
+import kotlin.time.Duration.Companion.milliseconds
 
 @RunWith(RobolectricTestRunner::class)
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -539,6 +546,82 @@ class AttachmentUploadCoordinatorTest {
     }
 
     @Test
+    fun `transport cancellation is forwarded as failure and advances queue`() {
+        val first = uploadAttachment(messageTid = 56L)
+        val second = uploadAttachment(messageTid = 57L)
+        val results = mutableListOf<SceytResponse<String>>()
+        val firstTask = transferTask(first).apply {
+            uploadResultCallback = TransferResultCallback { results += it }
+        }
+
+        coordinator.uploadFile(first, firstTask)
+        coordinator.uploadFile(second, transferTask(second))
+        transport.uploadCalls.single().fail(CancellationException("transport cancelled"))
+
+        assertThat(results).hasSize(1)
+        assertThat(results.single()).isInstanceOf(SceytResponse.Error::class.java)
+        assertThat(results.single().message).isEqualTo("transport cancelled")
+        assertThat(transport.uploadCalls).hasSize(2)
+        assertThat(transport.uploadCalls.last().request.operationId).isEqualTo("upload:57")
+    }
+
+    @Test
+    fun `transport timeout fails upload and next queued upload can complete`() {
+        SceytChatUIKit.fileTransfer.transport = object : FileTransferTransport by transport {
+            override suspend fun upload(request: FileUploadRequest, callback: FileTransferCallback) =
+                withTimeout(10.milliseconds) { transport.upload(request, callback) }
+        }
+        val first = uploadAttachment(messageTid = 56L)
+        val second = uploadAttachment(messageTid = 57L)
+        val firstResults = mutableListOf<SceytResponse<String>>()
+        val secondResults = mutableListOf<SceytResponse<String>>()
+        val firstTask = transferTask(first).apply {
+            uploadResultCallback = TransferResultCallback { firstResults += it }
+        }
+        val secondTask = transferTask(second).apply {
+            uploadResultCallback = TransferResultCallback { secondResults += it }
+        }
+
+        coordinator.uploadFile(first, firstTask)
+        coordinator.uploadFile(second, secondTask)
+        testScope.advanceTimeBy(10.milliseconds)
+        testScope.runCurrent()
+
+        assertThat(firstResults).hasSize(1)
+        assertThat(firstResults.single()).isInstanceOf(SceytResponse.Error::class.java)
+        assertThat(transport.uploadCalls.first().cancelled).isTrue()
+        assertThat(transport.uploadCalls).hasSize(2)
+        transport.uploadCalls.last().succeed("second-url")
+        assertThat(secondResults.single().data).isEqualTo("second-url")
+    }
+
+    @Test
+    fun `shared transport cancellation fails every active member and allows a new share`() {
+        val first = uploadAttachment(messageTid = 56L)
+        val second = uploadAttachment(messageTid = 57L, filePath = first.filePath)
+        val firstResults = mutableListOf<SceytResponse<String>>()
+        val secondResults = mutableListOf<SceytResponse<String>>()
+        val firstTask = transferTask(first).apply {
+            uploadResultCallback = TransferResultCallback { firstResults += it }
+        }
+        val secondTask = transferTask(second).apply {
+            uploadResultCallback = TransferResultCallback { secondResults += it }
+        }
+
+        uploadSharedFile(first, firstTask)
+        uploadSharedFile(second, secondTask)
+        transport.uploadCalls.single().fail(CancellationException("transport cancelled"))
+
+        assertThat(firstResults).hasSize(1)
+        assertThat(secondResults).hasSize(1)
+        assertThat(firstResults.single().message).isEqualTo("transport cancelled")
+        assertThat(secondResults.single().message).isEqualTo("transport cancelled")
+        val next = uploadAttachment(messageTid = 58L, filePath = first.filePath)
+        uploadSharedFile(next, transferTask(next))
+        assertThat(transport.uploadCalls).hasSize(2)
+    }
+
+    @Test
     fun `waiting for network cancels transport and advances queue`() {
         val first = uploadAttachment(messageTid = 92L)
         val second = uploadAttachment(messageTid = 93L)
@@ -663,6 +746,34 @@ class AttachmentUploadCoordinatorTest {
         assertThat(checksumStarted.isCompleted).isTrue()
         assertThat(result).isInstanceOf(SceytResponse.Error::class.java)
         assertThat(result?.message).isEqualTo("checksum failed")
+        assertThat(transport.uploadCalls.single().request.operationId).isEqualTo("upload:61")
+    }
+
+    @Test
+    fun `preparation cancellation with active job is forwarded and advances queue`() {
+        SceytChatUIKit.config.preventDuplicateAttachmentUpload = true
+        val first = uploadAttachment(messageTid = 60L)
+        val second = uploadAttachment(messageTid = 61L)
+        val results = mutableListOf<SceytResponse<String>>()
+        val firstTask = transferTask(first).apply {
+            uploadResultCallback = TransferResultCallback { results += it }
+        }
+        val releaseChecksum = CompletableDeferred<Unit>()
+        doSuspendableAnswer { invocation ->
+            if (invocation.getArgument<String?>(0) == first.originalFilePath) {
+                releaseChecksum.await()
+                throw CancellationException("checksum cancelled")
+            }
+            null
+        }.whenever(attachmentLogic) { getFileChecksumData(org.mockito.kotlin.any()) }
+
+        coordinator.uploadFile(first, firstTask)
+        coordinator.uploadFile(second, transferTask(second))
+        releaseChecksum.complete(Unit)
+
+        assertThat(results).hasSize(1)
+        assertThat(results.single()).isInstanceOf(SceytResponse.Error::class.java)
+        assertThat(results.single().message).isEqualTo("checksum cancelled")
         assertThat(transport.uploadCalls.single().request.operationId).isEqualTo("upload:61")
     }
 
@@ -984,8 +1095,12 @@ class AttachmentUploadCoordinatorTest {
         val active = uploadAttachment(messageTid = 80L)
         val queued = uploadAttachment(messageTid = 81L)
         val next = uploadAttachment(messageTid = 82L)
+        val results = mutableListOf<SceytResponse<String>>()
+        val activeTask = transferTask(active).apply {
+            uploadResultCallback = TransferResultCallback { results += it }
+        }
 
-        coordinator.uploadFile(active, transferTask(active))
+        coordinator.uploadFile(active, activeTask)
         coordinator.uploadFile(queued, transferTask(queued))
         coordinator.cancelAll()
         coordinator.uploadFile(next, transferTask(next))
@@ -993,6 +1108,7 @@ class AttachmentUploadCoordinatorTest {
         assertThat(transport.uploadCalls).hasSize(2)
         assertThat(transport.uploadCalls[0].cancelled).isTrue()
         assertThat(transport.uploadCalls[1].request.operationId).isEqualTo("upload:82")
+        assertThat(results).isEmpty()
     }
 
     private fun verifyPausingOneTranscodeKeepsOtherUpload(pauseShared: Boolean) {
