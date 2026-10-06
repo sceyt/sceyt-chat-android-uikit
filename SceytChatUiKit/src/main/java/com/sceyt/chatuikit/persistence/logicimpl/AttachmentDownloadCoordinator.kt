@@ -156,8 +156,10 @@ internal class AttachmentDownloadCoordinator(
                 SceytResponse.Error(error.toSceytException())
             }
         } catch (error: Throwable) {
-            currentCoroutineContext().ensureActive()
-            request.destinationFile.delete()
+            if (!networkWaitTriggered.get()) {
+                currentCoroutineContext().ensureActive()
+                request.destinationFile.delete()
+            }
             SceytResponse.Error(error.toSceytException())
         }
     }
