@@ -36,16 +36,17 @@ fun resizeImage(
     }
 }
 
+/** Returns the unique destination identifying this request for cancellation, or null for an invalid path. */
 fun transcodeVideo(
     path: String?,
     parentDir: File,
     config: VideoResizeConfig = VideoResizeConfig.Medium,
     progressCallback: ((VideoTranscodeData) -> Unit)? = null,
     callback: (Result<String>) -> Unit
-) {
+): File? {
     if (path.isNullOrBlank()) {
         callback(Result.failure(Exception("Wrong file path")))
-        return
+        return null
     }
 
     val dest = File(parentDir, "${UUID.randomUUID()}${getMimeTypeTakeExtension(path)}")
@@ -62,4 +63,5 @@ fun transcodeVideo(
             Start -> progressCallback?.invoke(data)
         }
     }
+    return dest
 }

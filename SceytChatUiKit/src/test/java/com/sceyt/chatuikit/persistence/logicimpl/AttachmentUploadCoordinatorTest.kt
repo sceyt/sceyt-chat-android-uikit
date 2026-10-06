@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.persistence.logicimpl
 
+import android.app.Application
 import android.content.Context
 import com.google.common.truth.Truth.assertThat
 import com.sceyt.chatuikit.SceytChatUIKit
@@ -18,8 +19,11 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferResultCallback
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 import com.sceyt.chatuikit.persistence.file_transfer.TransferTask
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
+import com.sceyt.chatuikit.shared.media_encoder.CompressionListener
+import com.sceyt.chatuikit.shared.media_encoder.CustomVideoCompressor
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
@@ -748,6 +752,73 @@ class AttachmentUploadCoordinatorTest {
     }
 
     @Test
+    fun `quick video resume completes and advances the upload queue`() {
+        checkNotNull(SceytKoinApp.koinApp).koin.loadModules(
+            listOf(module { single<Application> { context as Application } }),
+        )
+        val destinations = mutableListOf<String>()
+        var activeListener: CompressionListener? = null
+        Mockito.mockStatic(CustomVideoCompressor::class.java) { invocation ->
+            when (invocation.method.name) {
+                "start" -> {
+                    destinations += invocation.getArgument<String>(3)
+                    activeListener = invocation.getArgument<CompressionListener>(5)
+                    Job()
+                }
+
+                "cancel" -> null
+                else -> invocation.callRealMethod()
+            }
+        }.use {
+            try {
+                val video = uploadAttachment(
+                    messageTid = 100L,
+                    type = AttachmentTypeEnum.Video.value,
+                    state = TransferState.Preparing,
+                )
+                val next = uploadAttachment(messageTid = 101L)
+                val results = mutableListOf<String?>()
+                val task = transferTask(video).apply {
+                    uploadResultCallback = TransferResultCallback { results += it.data }
+                }
+                service.addTransferTask(task)
+
+                coordinator.uploadFile(video, task)
+                coordinator.pauseLoad(video, TransferState.Preparing)
+                coordinator.resumeLoad(video, TransferState.PauseUpload)
+                coordinator.uploadFile(next, transferTask(next))
+
+                assertThat(destinations).hasSize(1)
+                checkNotNull(activeListener).also { activeListener = null }.onCancelled()
+
+                assertThat(destinations).hasSize(2)
+                assertThat(transport.uploadCalls).isEmpty()
+                File(destinations.last()).writeText("transcoded video")
+                checkNotNull(activeListener).also { activeListener = null }.onSuccess()
+                transport.uploadCalls.single().succeed("video-url")
+
+                assertThat(results).containsExactly("video-url")
+                assertThat(transport.uploadCalls.map { it.request.operationId })
+                    .containsExactly("upload:100", "upload:101").inOrder()
+                transport.uploadCalls.last().succeed("next-url")
+            } finally {
+                coordinator.cancelAll()
+                activeListener?.onCancelled()
+            }
+        }
+    }
+
+    @Test
+    fun `pausing shared transcode preserves regular upload of same file`() {
+        verifyPausingOneTranscodeKeepsOtherUpload(pauseShared = true)
+    }
+
+    @Test
+    fun `pausing regular transcode preserves shared upload of same file`() {
+        verifyPausingOneTranscodeKeepsOtherUpload(pauseShared = false)
+    }
+
+    @Test
     fun `shared preparation stops only after every task is paused`() {
         val transcodeCallbacks = mutableListOf<(Result<String>) -> Unit>()
         @Suppress("UNCHECKED_CAST")
@@ -922,6 +993,74 @@ class AttachmentUploadCoordinatorTest {
         assertThat(transport.uploadCalls).hasSize(2)
         assertThat(transport.uploadCalls[0].cancelled).isTrue()
         assertThat(transport.uploadCalls[1].request.operationId).isEqualTo("upload:82")
+    }
+
+    private fun verifyPausingOneTranscodeKeepsOtherUpload(pauseShared: Boolean) {
+        checkNotNull(SceytKoinApp.koinApp).koin.loadModules(
+            listOf(module { single<Application> { context as Application } }),
+        )
+        val destinations = mutableListOf<String>()
+        var activeListener: CompressionListener? = null
+        Mockito.mockStatic(CustomVideoCompressor::class.java) { invocation ->
+            when (invocation.method.name) {
+                "start" -> {
+                    destinations += invocation.getArgument<String>(3)
+                    activeListener = invocation.getArgument<CompressionListener>(5)
+                    Job()
+                }
+
+                "cancel" -> null
+                else -> invocation.callRealMethod()
+            }
+        }.use {
+            try {
+                val shared = uploadAttachment(
+                    messageTid = 100L,
+                    type = AttachmentTypeEnum.Video.value,
+                    state = TransferState.Preparing,
+                )
+                val regular = uploadAttachment(
+                    messageTid = 101L,
+                    type = AttachmentTypeEnum.Video.value,
+                    state = TransferState.Preparing,
+                    filePath = shared.filePath,
+                )
+                val results = mutableListOf<String?>()
+                val remaining = if (pauseShared) regular else shared
+                val sharedTask = transferTask(shared)
+                val regularTask = transferTask(regular)
+                val remainingTask = if (pauseShared) regularTask else sharedTask
+                remainingTask.uploadResultCallback = TransferResultCallback { results += it.data }
+                service.addTransferTask(regularTask)
+
+                if (pauseShared) {
+                    uploadSharedFile(shared, sharedTask)
+                    coordinator.uploadFile(regular, regularTask)
+                } else {
+                    coordinator.uploadFile(regular, regularTask)
+                    uploadSharedFile(shared, sharedTask)
+                }
+                coordinator.pauseLoad(if (pauseShared) shared else regular, TransferState.Preparing)
+                checkNotNull(activeListener).also { activeListener = null }.onCancelled()
+
+                assertThat(destinations).hasSize(2)
+                File(destinations.last()).writeText("transcoded video")
+                checkNotNull(activeListener).also { activeListener = null }.onSuccess()
+
+                assertThat(transport.uploadCalls.single().request.operationId)
+                    .isEqualTo("upload:${remaining.messageTid}")
+                transport.uploadCalls.single().succeed("video-url")
+                assertThat(results).containsExactly("video-url")
+
+                val next = uploadAttachment(messageTid = 102L)
+                coordinator.uploadFile(next, transferTask(next))
+                assertThat(transport.uploadCalls.last().request.operationId).isEqualTo("upload:102")
+                transport.uploadCalls.last().succeed("next-url")
+            } finally {
+                coordinator.cancelAll()
+                activeListener?.onCancelled()
+            }
+        }
     }
 
     private fun uploadSharedFile(

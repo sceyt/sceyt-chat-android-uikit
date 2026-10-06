@@ -67,7 +67,7 @@ object CustomCompressor {
             listener: CompressionProgressListener,
             startCompressingListener: () -> Unit,
     ): Result<Boolean> {
-
+        isCancelled = false
         extractor = MediaExtractor()
         compressionProgressListener = listener
         // Retrieve the source's metadata to be used as input to generate new values for compression

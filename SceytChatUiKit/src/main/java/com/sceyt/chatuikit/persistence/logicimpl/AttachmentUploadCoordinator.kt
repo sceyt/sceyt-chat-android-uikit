@@ -653,13 +653,7 @@ internal class AttachmentUploadCoordinator(
         task: TransferTask,
     ): Result<String> = suspendCancellableCoroutine { continuation ->
         val completed = AtomicBoolean()
-
-        continuation.invokeOnCancellation {
-            completed.set(true)
-            VideoTranscodeHelper.cancel(attachment.filePath)
-        }
-
-        transcodeVideo(
+        val destination = transcodeVideo(
             path = attachment.filePath,
             parentDir = context.filesDir,
             config = SceytChatUIKit.config.videoAttachmentResizeConfig,
@@ -674,6 +668,10 @@ internal class AttachmentUploadCoordinator(
             if (completed.compareAndSet(false, true)) {
                 continuation.resume(result)
             }
+        }
+        continuation.invokeOnCancellation {
+            completed.set(true)
+            destination?.let(VideoTranscodeHelper::cancel)
         }
     }
 
