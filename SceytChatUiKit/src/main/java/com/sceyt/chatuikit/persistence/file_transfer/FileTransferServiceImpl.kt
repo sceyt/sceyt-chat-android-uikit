@@ -53,17 +53,17 @@ internal class FileTransferServiceImpl(
     }
 
     override fun findOrCreateTransferTask(attachment: SceytAttachment): TransferTask {
-        return tasksMap.computeIfAbsent(attachment.messageTid.toString()) {
+        return tasksMap.computeIfAbsent(attachment.transferKey) {
             FileTransferHelper.createTransferTask(attachment)
         }
     }
 
     override fun findTransferTask(attachment: SceytAttachment): TransferTask? {
-        return tasksMap[attachment.messageTid.toString()]
+        return tasksMap[attachment.transferKey]
     }
 
-    override fun removeTransferTask(messageTid: Long) {
-        tasksMap.remove(messageTid.toString())
+    override fun removeTransferTask(task: TransferTask) {
+        tasksMap.entries.removeIf { it.value === task }
     }
 
     override fun getTasks(): Map<String, TransferTask> = tasksMap
@@ -84,7 +84,7 @@ internal class FileTransferServiceImpl(
     ): TransferTask {
         val task = findOrCreateTransferTask(attachment)
         task.configureTask()
-        start(task.attachment, task)
+        start(attachment, task)
         return task
     }
 }

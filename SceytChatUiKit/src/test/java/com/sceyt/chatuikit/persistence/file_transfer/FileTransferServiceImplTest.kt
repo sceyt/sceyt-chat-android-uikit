@@ -1,6 +1,5 @@
 package com.sceyt.chatuikit.persistence.file_transfer
 
-import android.content.Context
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequest
 import androidx.work.Operation
@@ -33,7 +32,7 @@ import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
-import org.mockito.kotlin.times
+import org.mockito.kotlin.reset
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
@@ -42,13 +41,20 @@ import kotlin.coroutines.CoroutineContext
 
 @RunWith(RobolectricTestRunner::class)
 class FileTransferServiceImplTest {
-    private val context: Context = RuntimeEnvironment.getApplication()
-    private val logic = mock<FileTransferLogic>()
-    private val service = FileTransferServiceImpl(context, logic)
     private val workManager = mock<WorkManagerImpl>()
+
+    companion object {
+        // FileTransferHelper retains injected dependencies for the lifetime of its singleton.
+        private val logic = mock<FileTransferLogic>()
+        private val service by lazy {
+            FileTransferServiceImpl(RuntimeEnvironment.getApplication(), logic)
+        }
+    }
 
     @Before
     fun setUp() {
+        service.cancelAllTransfers()
+        reset(logic)
         WorkManagerImpl.setDelegate(workManager)
         val continuation = mock<WorkContinuation>()
         whenever(workManager.beginUniqueWork(any(), any(), any<OneTimeWorkRequest>()))
@@ -93,13 +99,101 @@ class FileTransferServiceImplTest {
     @Test
     fun `duplicate download reuses its active task`() {
         val attachment = attachment(state = TransferState.PendingDownload)
-        val updatedAttachment = attachment.copy(url = "updated-url")
+        val updatedAttachment = attachment.copy(progressPercent = 40f)
 
         val firstTask = service.download(attachment)
         val duplicateTask = service.download(updatedAttachment)
 
         assertThat(duplicateTask).isSameInstanceAs(firstTask)
-        verify(logic, times(2)).downloadFile(attachment, firstTask)
+        verify(logic).downloadFile(attachment, firstTask)
+        verify(logic).downloadFile(updatedAttachment, firstTask)
+    }
+
+    @Test
+    fun `download task keeps its identity when url changes`() {
+        val attachment = attachment(state = TransferState.PendingDownload)
+        val updatedAttachment = attachment.copy(url = "updated-url")
+
+        val task = service.download(attachment)
+        val reusedTask = service.download(updatedAttachment)
+
+        assertThat(reusedTask).isSameInstanceAs(task)
+        assertThat(service.findTransferTask(updatedAttachment)).isSameInstanceAs(task)
+        verify(logic).downloadFile(updatedAttachment, task)
+    }
+
+    @Test
+    fun `different attachment ids keep tasks separate even with the same url`() {
+        val first = attachment(state = TransferState.PendingDownload)
+        val second = first.copy(id = 11L, name = "second.txt")
+
+        val firstTask = service.download(first)
+        val secondTask = service.download(second)
+
+        assertThat(secondTask).isNotSameInstanceAs(firstTask)
+        assertThat(service.findTransferTask(first)).isSameInstanceAs(firstTask)
+        assertThat(service.findTransferTask(second)).isSameInstanceAs(secondTask)
+    }
+
+    @Test
+    fun `attachments without assigned ids use url to separate tasks`() {
+        for (id in listOf(null, 0L)) {
+            val first = attachment(state = TransferState.PendingDownload).copy(id = id)
+            val second = first.copy(name = "second.txt", url = "second-url")
+
+            val firstTask = service.download(first)
+            val secondTask = service.download(second)
+
+            assertThat(first.transferKey).isEqualTo("${first.messageTid}:url:${first.url}")
+            assertThat(secondTask).isNotSameInstanceAs(firstTask)
+            assertThat(service.download(first.copy(progressPercent = 40f)))
+                .isSameInstanceAs(firstTask)
+        }
+    }
+
+    @Test
+    fun `downloads from one message use separate tasks and supplied attachments`() {
+        val first = attachment(state = TransferState.PendingDownload)
+        val second = first.copy(id = 11L, name = "second.txt", url = "second-url")
+
+        val firstTask = service.download(first)
+        val secondTask = service.download(second)
+
+        assertThat(secondTask).isNotSameInstanceAs(firstTask)
+        assertThat(service.findTransferTask(first)).isSameInstanceAs(firstTask)
+        assertThat(service.findTransferTask(second)).isSameInstanceAs(secondTask)
+        verify(logic).downloadFile(first, firstTask)
+        verify(logic).downloadFile(second, secondTask)
+    }
+
+    @Test
+    fun `completing one download leaves the other attachment task registered`() {
+        val first = attachment(state = TransferState.PendingDownload)
+        val second = first.copy(id = 11L, name = "second.txt", url = "second-url")
+        val firstTask = service.download(first)
+        val secondTask = service.download(second)
+
+        firstTask.downloadCallback?.onResult(SceytResponse.Success("first-file"))
+
+        assertThat(service.findTransferTask(first)).isNull()
+        assertThat(service.findTransferTask(second)).isSameInstanceAs(secondTask)
+
+        secondTask.downloadCallback?.onResult(SceytResponse.Success("second-file"))
+
+        assertThat(service.getTasks()).isEmpty()
+    }
+
+    @Test
+    fun `failed download leaves the other attachment task registered`() {
+        val first = attachment(state = TransferState.PendingDownload)
+        val second = first.copy(id = 11L, name = "second.txt", url = "second-url")
+        val firstTask = service.download(first)
+        val secondTask = service.download(second)
+
+        firstTask.downloadCallback?.onResult(SceytResponse.Error())
+
+        assertThat(service.findTransferTask(first)).isNull()
+        assertThat(service.findTransferTask(second)).isSameInstanceAs(secondTask)
     }
 
     @Test
@@ -124,10 +218,33 @@ class FileTransferServiceImplTest {
         val attachment = attachment()
         val completedTask = service.upload(attachment)
 
-        service.removeTransferTask(attachment.messageTid)
+        service.removeTransferTask(completedTask)
         val retryTask = service.upload(attachment)
 
         assertThat(retryTask).isNotSameInstanceAs(completedTask)
+    }
+
+    @Test
+    fun `late cleanup does not remove a replacement task`() {
+        val attachment = attachment()
+        val oldTask = service.upload(attachment)
+        service.removeTransferTask(oldTask)
+        val replacement = service.upload(attachment)
+
+        service.removeTransferTask(oldTask)
+
+        assertThat(service.findTransferTask(attachment)).isSameInstanceAs(replacement)
+    }
+
+    @Test
+    fun `upload result removes a task even when its url changes`() {
+        val attachment = attachment(url = null).copy(id = null)
+        val task = service.upload(attachment)
+
+        task.uploadResultCallback?.onResult(SceytResponse.Success("uploaded-url"))
+
+        assertThat(task.attachment.url).isEqualTo("uploaded-url")
+        assertThat(service.getTasks()).isEmpty()
     }
 
     @Test

@@ -11,6 +11,7 @@ import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.file_transfer.ThumbData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 import com.sceyt.chatuikit.persistence.file_transfer.TransferTask
+import com.sceyt.chatuikit.persistence.file_transfer.transferKey
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.NonCancellable
@@ -37,17 +38,17 @@ internal class TestFileTransferService : FileTransferService {
     ) = startTask(attachment, configureTask)
 
     override fun findOrCreateTransferTask(attachment: SceytAttachment): TransferTask {
-        return tasks.getOrPut(attachment.messageTid.toString()) {
+        return tasks.getOrPut(attachment.transferKey) {
             TransferTask(attachment, attachment.messageTid, attachment.transferState)
         }
     }
 
     override fun findTransferTask(attachment: SceytAttachment): TransferTask? {
-        return tasks[attachment.messageTid.toString()]
+        return tasks[attachment.transferKey]
     }
 
-    override fun removeTransferTask(messageTid: Long) {
-        tasks.remove(messageTid.toString())
+    override fun removeTransferTask(task: TransferTask) {
+        tasks.entries.removeIf { it.value === task }
     }
 
     override fun getTasks(): Map<String, TransferTask> = tasks
@@ -65,7 +66,7 @@ internal class TestFileTransferService : FileTransferService {
     override fun getThumb(messageTid: Long, attachment: SceytAttachment, thumbData: ThumbData) = Unit
 
     fun registerTask(task: TransferTask) {
-        tasks[task.messageTid.toString()] = task
+        tasks[task.attachment.transferKey] = task
     }
 
     fun addTransferTask(task: TransferTask) {

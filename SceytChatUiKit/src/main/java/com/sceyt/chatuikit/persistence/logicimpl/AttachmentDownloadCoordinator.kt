@@ -17,6 +17,7 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState.ErrorDownload
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.PauseDownload
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.PendingDownload
 import com.sceyt.chatuikit.persistence.file_transfer.TransferTask
+import com.sceyt.chatuikit.persistence.file_transfer.transferKey
 import com.sceyt.chatuikit.persistence.mappers.toTransferData
 import com.sceyt.chatuikit.presentation.extensions.isAttachmentExistAndFullyLoaded
 import kotlinx.coroutines.CancellationException
@@ -302,7 +303,7 @@ internal class AttachmentDownloadCoordinator(
     }
 
     private val SceytAttachment.downloadOperationId: String
-        get() = "download:$messageTid"
+        get() = "download:$transferKey"
 
     companion object {
         private const val TAG = "AttachmentDownloadCoordinator"

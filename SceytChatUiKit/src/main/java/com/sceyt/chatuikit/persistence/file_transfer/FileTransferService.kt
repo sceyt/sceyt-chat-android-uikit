@@ -23,7 +23,8 @@ interface FileTransferService {
     fun getThumb(messageTid: Long, attachment: SceytAttachment, thumbData: ThumbData)
     fun findOrCreateTransferTask(attachment: SceytAttachment): TransferTask
     fun findTransferTask(attachment: SceytAttachment): TransferTask?
-    fun removeTransferTask(messageTid: Long)
+    /** Removes only this task, leaving other attachments and newer attempts registered. */
+    fun removeTransferTask(task: TransferTask)
     fun getTasks(): Map<String, TransferTask>
     fun clearPreparingThumbPaths()
     fun cancelAllTransfers()
