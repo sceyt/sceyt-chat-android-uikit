@@ -8,6 +8,7 @@ import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.filetransfer.FileDownloadRequest
 import com.sceyt.chatuikit.filetransfer.FileTransferCallback
 import com.sceyt.chatuikit.filetransfer.FileTransferDestinationProvider
+import com.sceyt.chatuikit.filetransfer.FileTransferEvent
 import com.sceyt.chatuikit.filetransfer.FileTransferTransport
 import com.sceyt.chatuikit.filetransfer.SceytChatUIKitFileTransfer
 import com.sceyt.chatuikit.koin.SceytKoinApp
@@ -118,6 +119,37 @@ class AttachmentDownloadCoordinatorTest {
 
         assertThat(transport.downloadCalls).hasSize(1)
         assertThat(transport.downloadCalls.single().request.operationId).isEqualTo("download:10")
+    }
+
+    @Test
+    fun `different attachments in one message download concurrently`() {
+        val first = attachment(state = TransferState.PendingDownload)
+        val second = first.copy(id = 11L, name = "second.txt", url = "second-url")
+        val firstTask = transferTask(first)
+        val secondTask = transferTask(second)
+        val firstResults = mutableListOf<String?>()
+        val secondResults = mutableListOf<String?>()
+        firstTask.downloadCallback = TransferResultCallback { firstResults += it.data }
+        secondTask.downloadCallback = TransferResultCallback { secondResults += it.data }
+        SceytChatUIKit.fileTransfer.destinationProvider = FileTransferDestinationProvider { _, value ->
+            File(destinationFile.parentFile, value.name)
+        }
+
+        coordinator.downloadFile(first, firstTask)
+        coordinator.downloadFile(second, secondTask)
+
+        assertThat(transport.downloadCalls).hasSize(2)
+        val firstCall = transport.downloadCalls.first()
+        val secondCall = transport.downloadCalls.last()
+        assertThat(firstCall.request.operationId).isNotEqualTo(secondCall.request.operationId)
+        assertThat(firstCall.request.url).isEqualTo(first.url)
+        assertThat(secondCall.request.url).isEqualTo(second.url)
+
+        secondCall.succeed(secondCall.request.destinationFile.path)
+        firstCall.succeed(firstCall.request.destinationFile.path)
+
+        assertThat(firstResults).containsExactly(firstCall.request.destinationFile.path)
+        assertThat(secondResults).containsExactly(secondCall.request.destinationFile.path)
     }
 
     @Test
@@ -269,6 +301,45 @@ class AttachmentDownloadCoordinatorTest {
         assertThat(destinationFile.readBytes()).isEqualTo(partialBytes)
         assertThat(result).isInstanceOf(SceytResponse.Error::class.java)
         assertThat(result?.message).isEqualTo("Waiting for network")
+    }
+
+    @Test
+    fun `waiting for network followed by failure preserves partial destination and allows retry`() {
+        var waitingForNetwork = true
+        SceytChatUIKit.fileTransfer.transport = object : FileTransferTransport by transport {
+            override suspend fun download(request: FileDownloadRequest, callback: FileTransferCallback): String? {
+                if (waitingForNetwork) {
+                    waitingForNetwork = false
+                    callback.onEvent(FileTransferEvent.WaitingForNetwork)
+                    throw IllegalStateException("No network connection")
+                }
+                return transport.download(request, callback)
+            }
+        }
+        val partialBytes = byteArrayOf(1, 2)
+        destinationFile.writeBytes(partialBytes)
+        val attachment = attachment(state = TransferState.PendingDownload)
+        val results = mutableListOf<SceytResponse<String>>()
+        val task = transferTask(attachment).apply {
+            downloadCallback = TransferResultCallback { results += it }
+        }
+        service.addTransferTask(task)
+
+        coordinator.downloadFile(attachment, task)
+
+        assertThat(results).hasSize(1)
+        assertThat(results.single()).isInstanceOf(SceytResponse.Error::class.java)
+        assertThat(results.single().message).isEqualTo("No network connection")
+        assertThat(destinationFile.readBytes()).isEqualTo(partialBytes)
+
+        coordinator.resumeLoad(attachment, TransferState.ErrorDownload)
+
+        assertThat(transport.downloadCalls).hasSize(1)
+        assertThat(destinationFile.readBytes()).isEqualTo(partialBytes)
+        destinationFile.writeBytes(byteArrayOf(1, 2, 3, 4))
+        transport.downloadCalls.single().succeed(destinationFile.path)
+        assertThat(results).hasSize(2)
+        assertThat(results.last().data).isEqualTo(destinationFile.path)
     }
 
     @Test
