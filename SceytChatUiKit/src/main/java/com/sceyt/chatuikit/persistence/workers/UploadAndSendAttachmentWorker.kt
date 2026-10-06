@@ -138,7 +138,7 @@ class UploadAndSendAttachmentWorker(
                 }
 
                 if (!shouldStartUpload(attachment.transferState, resumePausedUpload)) {
-                    return kotlin.Result.failure(Exception("Attachment upload is paused"))
+                    return KtResult.failure(Exception("Attachment upload is paused"))
                 }
 
                 val result = suspendCancellableCoroutine { continuation ->
@@ -190,7 +190,11 @@ class UploadAndSendAttachmentWorker(
             }
         }
 
-        if (isSharing) {
+        val task = fileTransferService.findTransferTask(attachment)
+        if (task?.state == TransferState.PauseUpload && inputData.getBoolean(RESUME_PAUSED_UPLOAD, false)) {
+            task.configureTask()
+            fileTransferService.resume(attachment.messageTid, attachment, TransferState.PauseUpload)
+        } else if (isSharing) {
             fileTransferService.uploadSharedFile(attachment, configureTask)
         } else {
             fileTransferService.upload(attachment, configureTask)
