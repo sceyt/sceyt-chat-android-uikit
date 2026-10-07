@@ -13,6 +13,9 @@ class TransferTask(
     @PublishedApi
     internal val lock = Any()
 
+    // Remember sharing before a paused upload has joined its shared group.
+    internal var isSharedUpload = false
+
     var attachment: SceytAttachment
         get() = _attachment
         set(value) {

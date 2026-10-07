@@ -20,8 +20,11 @@ import com.sceyt.chatuikit.koin.SceytKoinApp
 import com.sceyt.chatuikit.notifications.SceytNotifications
 import com.sceyt.chatuikit.persistence.database.dao.FileChecksumDao
 import com.sceyt.chatuikit.persistence.di.CoroutineContextType
+import com.sceyt.chatuikit.persistence.file_transfer.AttachmentTransferStateStore
+import com.sceyt.chatuikit.persistence.file_transfer.FileTransferHelper
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferServiceImpl
+import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
@@ -35,7 +38,7 @@ import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManage
 import com.sceyt.chatuikit.providers.ChatConnectionProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
-import kotlinx.coroutines.cancel
+import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -53,33 +56,46 @@ import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
+import org.mockito.kotlin.reset
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import org.robolectric.annotation.Config
 import java.io.File
 import kotlin.coroutines.CoroutineContext
 
 @RunWith(RobolectricTestRunner::class)
+// Isolate the real service from other suites' FileTransferHelper singleton dependencies.
+@Config(instrumentedPackages = ["com.sceyt.chatuikit.persistence.workers"])
 @OptIn(ExperimentalCoroutinesApi::class)
 class UploadAndSendAttachmentWorkerTest {
     @get:Rule
     val instantTaskExecutorRule = InstantTaskExecutorRule()
 
     private val context: Context = RuntimeEnvironment.getApplication()
-    private val attachmentLogic = mock<PersistenceAttachmentLogic>()
     private val messageLogic = mock<PersistenceMessagesLogic>()
     private val workManager = mock<WorkManagerImpl>()
     private val transport = RecordingFileTransferTransport()
-    private val testScope = TestScope(UnconfinedTestDispatcher())
-    private val logic = FileTransferLogicImpl(context, attachmentLogic, mock(), testScope.coroutineContext)
-    private val service = FileTransferServiceImpl(context, logic)
     private lateinit var previousFileTransfer: SceytChatUIKitFileTransfer
     private lateinit var previousConfig: SceytChatUIKitConfig
     private var previousConnectionProvider: ChatConnectionProvider? = null
 
+    private companion object {
+        // FileTransferHelper retains injected dependencies, so reuse them across worker tests.
+        val attachmentLogic = mock<PersistenceAttachmentLogic>()
+        val testScope = TestScope(UnconfinedTestDispatcher())
+        val service by lazy {
+            val context = RuntimeEnvironment.getApplication()
+            val logic = FileTransferLogicImpl(context, attachmentLogic, mock(), testScope.coroutineContext)
+            FileTransferServiceImpl(context, logic)
+        }
+    }
+
     @Before
     fun setUp() = runBlocking {
+        reset(attachmentLogic)
+        AttachmentTransferStateStore.clear()
         previousFileTransfer = SceytChatUIKit.fileTransfer
         previousConfig = SceytChatUIKit.config
         previousConnectionProvider = SceytChatUIKit.chatConnectionProvider
@@ -119,7 +135,8 @@ class UploadAndSendAttachmentWorkerTest {
     @After
     fun tearDown() {
         service.cancelAllTransfers()
-        testScope.cancel()
+        testScope.coroutineContext.cancelChildren()
+        AttachmentTransferStateStore.clear()
         WorkManagerImpl.setDelegate(null)
         SceytChatUIKit.fileTransfer = previousFileTransfer
         SceytChatUIKit.config = previousConfig
@@ -156,6 +173,78 @@ class UploadAndSendAttachmentWorkerTest {
                 resumePausedUpload = false,
             ),
         ).isTrue()
+    }
+
+    @Test
+    fun `pause before task registration publishes and persists paused state`() = runBlocking {
+        val attachment = localAttachment().copy(transferState = TransferState.WaitingToUpload)
+
+        service.pause(attachment.messageTid, attachment, TransferState.WaitingToUpload)
+
+        assertThat(service.findTransferTask(attachment)?.state).isEqualTo(TransferState.PauseUpload)
+        assertThat(FileTransferHelper.onTransferUpdatedLiveData.value?.state)
+            .isEqualTo(TransferState.PauseUpload)
+        val update = argumentCaptor<TransferData>()
+        verify(attachmentLogic).updateTransferDataByMsgTid(update.capture())
+        assertThat(update.firstValue.state).isEqualTo(TransferState.PauseUpload)
+    }
+
+    @Test
+    fun `worker with stale state finishes when paused before task registration`() {
+        for (shared in listOf(false, true)) {
+            for (state in listOf(TransferState.PendingUpload, TransferState.WaitingToUpload)) {
+                val attachment = localAttachment().copy(
+                    messageTid = (if (shared) 100L else 200L) + state.ordinal,
+                    transferState = state,
+                )
+                service.pause(attachment.messageTid, attachment, state)
+
+                val worker = worker(attachment, shared = shared)
+                val work = testScope.async { worker.doWork() }
+
+                assertThat(work.isCompleted).isTrue()
+                runBlocking {
+                    assertThat(work.await()).isEqualTo(androidx.work.ListenableWorker.Result.success())
+                }
+                assertThat(service.findTransferTask(attachment)?.state).isEqualTo(TransferState.PauseUpload)
+                assertThat(FileTransferHelper.onTransferUpdatedLiveData.value?.state)
+                    .isEqualTo(TransferState.PauseUpload)
+            }
+        }
+        assertThat(transport.uploadCalls).isEmpty()
+        runBlocking {
+            verify(messageLogic, never()).sendMessageWithUploadedAttachments(any(), any())
+        }
+    }
+
+    @Test
+    fun `explicit worker resume starts upload paused before task registration`() {
+        val attachment = localAttachment().copy(transferState = TransferState.WaitingToUpload)
+        service.pause(attachment.messageTid, attachment, TransferState.WaitingToUpload)
+
+        val worker = worker(attachment.copy(transferState = TransferState.PauseUpload), resume = true)
+        val work = testScope.async { worker.doWork() }
+
+        assertThat(transport.uploadCalls).hasSize(1)
+        transport.uploadCalls.single().succeed("resumed-url")
+        assertThat(work.isCompleted).isTrue()
+        assertSentUrl(attachment, "resumed-url")
+    }
+
+    @Test
+    fun `explicit shared resume joins existing upload after pause before registration`() {
+        val first = localAttachment()
+        val paused = first.copy(messageTid = 11L, transferState = TransferState.WaitingToUpload)
+        service.uploadSharedFile(first)
+        service.pause(paused.messageTid, paused, TransferState.WaitingToUpload)
+
+        val worker = worker(paused.copy(transferState = TransferState.PauseUpload), resume = true, shared = true)
+        val work = testScope.async { worker.doWork() }
+
+        assertThat(transport.uploadCalls).hasSize(1)
+        transport.uploadCalls.single().succeed("shared-url")
+        assertThat(work.isCompleted).isTrue()
+        assertSentUrl(paused, "shared-url")
     }
 
     @Test

@@ -4,10 +4,10 @@ import android.content.Context
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.SceytResponse
-import com.sceyt.chatuikit.data.models.onSuccessNotNull
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.FileChecksumData
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
+import com.sceyt.chatuikit.data.models.onSuccessNotNull
 import com.sceyt.chatuikit.extensions.getFileSize
 import com.sceyt.chatuikit.extensions.getMimeType
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
@@ -78,6 +78,9 @@ internal class AttachmentUploadCoordinator(
         attachment: SceytAttachment,
         task: TransferTask,
     ) {
+        task.isSharedUpload = true
+        if (completeIfPaused(attachment, task)) return
+
         val shareFileData = ShareFileData(
             sourceKey = attachment.sharedSourceKey,
             messageTid = attachment.messageTid,
@@ -158,13 +161,12 @@ internal class AttachmentUploadCoordinator(
                 // their task may not exist yet, but the user must still be able to pause them.
                 if (task == null && state != PendingUpload && state != WaitingToUpload) return
 
+                val pausedTask = task ?: fileTransferService.findOrCreateTransferTask(attachment)
                 val messageTid = attachment.messageTid
                 pausedTaskIds.add(messageTid)
 
-                task?.let {
-                    task.state = PauseUpload
-                    task.resumePauseCallback?.onResumePause(attachment.toTransferData(PauseUpload))
-                }
+                pausedTask.state = PauseUpload
+                pausedTask.resumePauseCallback?.onResumePause(attachment.toTransferData(PauseUpload))
 
                 if (pauseSharedUpload(attachment, state)) return
 
@@ -193,7 +195,8 @@ internal class AttachmentUploadCoordinator(
             PauseUpload,
             ErrorUpload -> {
                 val wasSharedTransferPaused = isSharedTransferPaused(attachment)
-                val wasSharing = isSharedUpload(attachment)
+                val wasSharing = isSharedUpload(attachment) ||
+                        fileTransferService.findTransferTask(attachment)?.isSharedUpload == true
                 pausedTaskIds.remove(attachment.messageTid)
 
                 if (wasSharing) {
@@ -212,10 +215,18 @@ internal class AttachmentUploadCoordinator(
 
                 if (wasSharing) {
                     val task = fileTransferService.findOrCreateTransferTask(attachment)
-                    if (wasSharedTransferPaused) {
-                        resumeSharedUpload(attachment, task)
-                    } else if (findActiveSharedUpload(getSharedMessageIds(attachment)) == null) {
-                        startSharedUpload(attachment, task)
+                    when {
+                        !isSharedUpload(attachment) -> {
+                            uploadSharedFile(attachment, task)
+                        }
+
+                        wasSharedTransferPaused -> {
+                            resumeSharedUpload(attachment, task)
+                        }
+
+                        findActiveSharedUpload(getSharedMessageIds(attachment)) == null -> {
+                            startSharedUpload(attachment, task)
+                        }
                     }
                     return
                 } else {
@@ -249,6 +260,8 @@ internal class AttachmentUploadCoordinator(
         attachment: SceytAttachment,
         task: TransferTask,
     ) {
+        if (completeIfPaused(attachment, task)) return
+
         val shouldUpload = synchronized(uploadQueueLock) {
             if (currentUploadingAttachment == null) {
                 currentUploadingAttachment = attachment
@@ -294,7 +307,7 @@ internal class AttachmentUploadCoordinator(
         task: TransferTask,
     ) {
         val messageTid = attachment.messageTid
-        if (pausedTaskIds.contains(messageTid)) {
+        if (completeIfPaused(attachment, task)) {
             uploadNext(messageTid)
             return
         }
@@ -306,6 +319,15 @@ internal class AttachmentUploadCoordinator(
         }
 
         uploadAttachment(attachment, task)
+    }
+
+    private fun completeIfPaused(attachment: SceytAttachment, task: TransferTask): Boolean {
+        if (attachment.messageTid !in pausedTaskIds) return false
+        task.state = PauseUpload
+        task.resumePauseCallback?.onResumePause(attachment.toTransferData(PauseUpload))
+        // Finish the worker attempt without failing the attachment or clearing its pause.
+        task.complete(Result.failure(IllegalStateException("Attachment upload is paused")))
+        return true
     }
 
     private fun pauseSharedUpload(
