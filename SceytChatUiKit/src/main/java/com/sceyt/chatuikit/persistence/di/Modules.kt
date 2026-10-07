@@ -179,7 +179,14 @@ internal val logicModule = module {
     singleOf(::PersistenceMessageMarkerLogicImpl) bind PersistenceMessageMarkerLogic::class
     singleOf(::PersistenceConnectionLogicImpl) bind PersistenceConnectionLogic::class
     singleOf(::PersistenceChannelInviteKeyLogicImpl) bind PersistenceChannelInviteKeyLogic::class
-    singleOf(::FileTransferLogicImpl) bind FileTransferLogic::class
+    single {
+        FileTransferLogicImpl(
+            context = get(),
+            attachmentLogic = get(),
+            thumbPathResolver = get(),
+            coroutineContext = get(named(CoroutineContextType.IO)),
+        )
+    } bind FileTransferLogic::class
     singleOf(::GlobalSearchLocalInteractor) bind GlobalSearchDataSource::class
     singleOf(::SystemMessageSenderImpl) bind SystemMessageSender::class
     factory<ThumbPathResolver> { AttachmentThumbPathResolver }

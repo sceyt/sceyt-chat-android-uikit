@@ -72,7 +72,7 @@ class UploadAndSendAttachmentWorkerTest {
     private val workManager = mock<WorkManagerImpl>()
     private val transport = RecordingFileTransferTransport()
     private val testScope = TestScope(UnconfinedTestDispatcher())
-    private val logic = FileTransferLogicImpl(context, attachmentLogic, mock(), testScope)
+    private val logic = FileTransferLogicImpl(context, attachmentLogic, mock(), testScope.coroutineContext)
     private val service = FileTransferServiceImpl(context, logic)
     private lateinit var previousFileTransfer: SceytChatUIKitFileTransfer
     private lateinit var previousConfig: SceytChatUIKitConfig

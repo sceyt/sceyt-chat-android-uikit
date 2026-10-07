@@ -105,7 +105,7 @@ class FileTransferScopeIsolationTest {
             context = context,
             attachmentLogic = attachmentLogic,
             thumbPathResolver = mock(),
-            scope = sharedScope,
+            coroutineContext = sharedScope.coroutineContext,
         )
         val uploaded = uploadAttachment(messageTid = 94L)
         val downloaded = attachment(messageTid = 95L, state = TransferState.PendingDownload)
