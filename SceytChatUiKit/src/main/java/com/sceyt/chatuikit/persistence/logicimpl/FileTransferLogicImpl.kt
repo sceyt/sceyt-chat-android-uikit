@@ -19,16 +19,17 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferTask
 import com.sceyt.chatuikit.persistence.logic.FileTransferLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancelChildren
+import kotlin.coroutines.CoroutineContext
 
 internal class FileTransferLogicImpl(
     context: Context,
     attachmentLogic: PersistenceAttachmentLogic,
     thumbPathResolver: ThumbPathResolver,
-    private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
+    coroutineContext: CoroutineContext,
 ) : FileTransferLogic {
+    private val scope = CoroutineScope(coroutineContext + SupervisorJob())
     private val uploadCoordinator = AttachmentUploadCoordinator(context, attachmentLogic, scope)
     private val downloadCoordinator = AttachmentDownloadCoordinator(context, scope)
     private val thumbCoordinator = AttachmentThumbCoordinator(context, thumbPathResolver)
