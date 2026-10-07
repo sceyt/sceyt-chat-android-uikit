@@ -11,6 +11,8 @@ interface FileTransferLogic {
     fun downloadFile(attachment: SceytAttachment, task: TransferTask)
     fun pauseLoad(attachment: SceytAttachment, state: TransferState)
     fun resumeLoad(attachment: SceytAttachment, state: TransferState)
+    /** Cancels this upload without stopping other messages sharing it. */
+    fun cancelUpload(attachment: SceytAttachment)
     fun getAttachmentThumb(messageTid: Long, attachment: SceytAttachment, data: ThumbData)
     fun clearPreparingThumbPaths()
     fun cancelAll() = Unit

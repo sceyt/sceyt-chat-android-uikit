@@ -46,6 +46,10 @@ internal class FileTransferLogicImpl(
         downloadCoordinator.downloadFile(attachment, task)
     }
 
+    override fun cancelUpload(attachment: SceytAttachment) {
+        uploadCoordinator.cancelUpload(attachment)
+    }
+
     override fun pauseLoad(attachment: SceytAttachment, state: TransferState) {
         when (state) {
             PendingUpload, Uploading, Preparing, FilePathChanged, WaitingToUpload ->

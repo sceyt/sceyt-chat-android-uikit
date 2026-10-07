@@ -118,6 +118,253 @@ class AttachmentUploadCoordinatorTest {
     }
 
     @Test
+    fun `cancel queued upload removes it without stopping current upload`() {
+        val first = uploadAttachment(messageTid = 130L)
+        val queued = uploadAttachment(messageTid = 131L)
+        val next = uploadAttachment(messageTid = 132L)
+        coordinator.uploadFile(first, transferTask(first))
+        coordinator.uploadFile(queued, transferTask(queued))
+        coordinator.uploadFile(next, transferTask(next))
+
+        cancelUpload(queued)
+        assertThat(transport.uploadCalls.single().cancelled).isFalse()
+        transport.uploadCalls.first().succeed("first-url")
+
+        assertThat(transport.uploadCalls.map { it.request.operationId })
+            .containsExactly("upload:130", "upload:132").inOrder()
+    }
+
+    @Test
+    fun `cancel active upload cancels job advances queue and ignores late callbacks`() {
+        transport.pauseResult = true
+        val first = uploadAttachment(messageTid = 133L)
+        val next = uploadAttachment(messageTid = 134L)
+        val progress = mutableListOf<Float>()
+        val results = mutableListOf<SceytResponse<String>>()
+        val task = transferTask(first).apply {
+            progressCallback = ProgressUpdateCallback { progress += it.progressPercent }
+            uploadResultCallback = TransferResultCallback { results += it }
+        }
+        service.addTransferTask(task)
+        coordinator.uploadFile(first, task)
+        coordinator.uploadFile(next, transferTask(next))
+        val call = transport.uploadCalls.single()
+
+        cancelUpload(first)
+        call.progress(50f)
+        call.fail(IOException("late cancellation error"))
+
+        assertThat(call.cancelled).isTrue()
+        assertThat(transport.pauseCalls).isEmpty()
+        assertThat(progress).isEmpty()
+        assertThat(results).isEmpty()
+        assertThat(transport.uploadCalls.last().request.operationId).isEqualTo("upload:134")
+    }
+
+    @Test
+    fun `cancel natively paused upload does not disturb the next upload`() {
+        transport.pauseResult = true
+        val first = uploadAttachment(messageTid = 135L)
+        val next = uploadAttachment(messageTid = 136L)
+        val task = transferTask(first)
+        service.addTransferTask(task)
+        coordinator.uploadFile(first, task)
+        coordinator.uploadFile(next, transferTask(next))
+        val call = transport.uploadCalls.single()
+        coordinator.pauseLoad(first, TransferState.Uploading)
+        assertThat(call.cancelled).isFalse()
+
+        cancelUpload(first)
+
+        assertThat(call.cancelled).isTrue()
+        assertThat(transport.uploadCalls).hasSize(2)
+        assertThat(transport.uploadCalls.last().cancelled).isFalse()
+    }
+
+    @Test
+    fun `cancel before upload starts does not register a task or leave a pause`() {
+        val attachment = uploadAttachment(messageTid = 137L)
+
+        cancelUpload(attachment)
+
+        assertThat(service.getTasks()).isEmpty()
+        coordinator.uploadFile(attachment, transferTask(attachment))
+        assertThat(transport.uploadCalls).hasSize(1)
+    }
+
+    @Test
+    fun `cancel during preparation prevents upload and advances queue`() {
+        SceytChatUIKit.config.preventDuplicateAttachmentUpload = true
+        val first = uploadAttachment(messageTid = 138L)
+        val next = uploadAttachment(messageTid = 139L)
+        val releaseChecksum = CompletableDeferred<Unit>()
+        doSuspendableAnswer {
+            releaseChecksum.await()
+            null
+        }.whenever(attachmentLogic) { getFileChecksumData(first.originalFilePath) }
+        coordinator.uploadFile(first, transferTask(first))
+        coordinator.uploadFile(next, transferTask(next))
+
+        cancelUpload(first)
+        releaseChecksum.complete(Unit)
+
+        assertThat(transport.uploadCalls.single().request.operationId).isEqualTo("upload:139")
+    }
+
+    @Test
+    fun `cancel shared owner keeps follower upload and cleans up owner after result`() {
+        val owner = uploadAttachment(messageTid = 140L)
+        val follower = uploadAttachment(messageTid = 141L, filePath = owner.filePath)
+        val ownerProgress = mutableListOf<Float>()
+        val ownerResults = mutableListOf<String?>()
+        val followerResults = mutableListOf<String?>()
+        uploadSharedFile(owner, transferTask(owner).apply {
+            progressCallback = ProgressUpdateCallback { ownerProgress += it.progressPercent }
+            uploadResultCallback = TransferResultCallback { ownerResults += it.data }
+        })
+        uploadSharedFile(follower, transferTask(follower).apply {
+            uploadResultCallback = TransferResultCallback { followerResults += it.data }
+        })
+        val call = transport.uploadCalls.single()
+
+        cancelUpload(owner)
+        assertThat(call.cancelled).isFalse()
+        call.progress(50f)
+        call.succeed("shared-url")
+
+        assertThat(ownerProgress).isEmpty()
+        assertThat(ownerResults).isEmpty()
+        assertThat(followerResults).containsExactly("shared-url")
+        uploadSharedFile(owner, transferTask(owner))
+        assertThat(transport.uploadCalls).hasSize(2)
+    }
+
+    @Test
+    fun `cancel shared owner during preparation preserves follower without updating deleted task`() {
+        SceytChatUIKit.config.preventDuplicateAttachmentUpload = true
+        val owner = uploadAttachment(messageTid = 148L)
+        val follower = uploadAttachment(messageTid = 149L, filePath = owner.filePath)
+        val releaseChecksum = CompletableDeferred<Unit>()
+        val ownerPaths = mutableListOf<String>()
+        val followerResults = mutableListOf<String?>()
+        doSuspendableAnswer {
+            releaseChecksum.await()
+            FileChecksumData(1L, owner.filePath, null, null, owner.fileSize)
+        }.whenever(attachmentLogic) { getFileChecksumData(owner.originalFilePath) }
+        uploadSharedFile(owner, transferTask(owner).apply {
+            updateFileLocationCallback = { ownerPaths += it }
+        })
+        uploadSharedFile(follower, transferTask(follower).apply {
+            uploadResultCallback = TransferResultCallback { followerResults += it.data }
+        })
+
+        cancelUpload(owner)
+        releaseChecksum.complete(Unit)
+        transport.uploadCalls.single().succeed("shared-url")
+
+        assertThat(ownerPaths).isEmpty()
+        assertThat(followerResults).containsExactly("shared-url")
+    }
+
+    @Test
+    fun `cancel shared owner during network wait still delivers follower failure`() {
+        val releaseCancellation = CompletableDeferred<Unit>()
+        SceytChatUIKit.fileTransfer.transport = object : FileTransferTransport by transport {
+            override suspend fun upload(request: FileUploadRequest, callback: FileTransferCallback): String? {
+                try {
+                    return transport.upload(request, callback)
+                } finally {
+                    withContext(NonCancellable) { releaseCancellation.await() }
+                }
+            }
+        }
+        val owner = uploadAttachment(messageTid = 150L)
+        val follower = uploadAttachment(messageTid = 151L, filePath = owner.filePath)
+        val followerResults = mutableListOf<SceytResponse<String>>()
+        uploadSharedFile(owner, transferTask(owner))
+        uploadSharedFile(follower, transferTask(follower).apply {
+            uploadResultCallback = TransferResultCallback { followerResults += it }
+        })
+
+        transport.uploadCalls.single().waitingForNetwork()
+        cancelUpload(owner)
+        releaseCancellation.complete(Unit)
+
+        assertThat(followerResults.single().message).isEqualTo("Waiting for network")
+        uploadSharedFile(owner, transferTask(owner))
+        assertThat(transport.uploadCalls).hasSize(2)
+    }
+
+    @Test
+    fun `cancel shared follower leaves owner running`() {
+        val owner = uploadAttachment(messageTid = 142L)
+        val follower = uploadAttachment(messageTid = 143L, filePath = owner.filePath)
+        val ownerResults = mutableListOf<String?>()
+        val followerResults = mutableListOf<String?>()
+        uploadSharedFile(owner, transferTask(owner).apply {
+            uploadResultCallback = TransferResultCallback { ownerResults += it.data }
+        })
+        uploadSharedFile(follower, transferTask(follower).apply {
+            uploadResultCallback = TransferResultCallback { followerResults += it.data }
+        })
+        val call = transport.uploadCalls.single()
+
+        cancelUpload(follower)
+        assertThat(call.cancelled).isFalse()
+        call.succeed("shared-url")
+
+        assertThat(ownerResults).containsExactly("shared-url")
+        assertThat(followerResults).isEmpty()
+    }
+
+    @Test
+    fun `remaining shared member can pause resume and cancel after owner deletion`() {
+        transport.pauseResult = true
+        transport.resumeResult = true
+        val owner = uploadAttachment(messageTid = 144L)
+        val follower = uploadAttachment(messageTid = 145L, filePath = owner.filePath)
+        uploadSharedFile(owner, transferTask(owner))
+        uploadSharedFile(follower, transferTask(follower))
+        val call = transport.uploadCalls.single()
+
+        cancelUpload(owner)
+        coordinator.pauseLoad(follower, TransferState.Uploading)
+        coordinator.resumeLoad(follower, TransferState.PauseUpload)
+
+        assertThat(transport.pauseCalls).containsExactly("upload:144")
+        assertThat(transport.resumeCalls).containsExactly("upload:144")
+        assertThat(transport.uploadCalls).hasSize(1)
+        cancelUpload(follower)
+        assertThat(call.cancelled).isTrue()
+        assertThat(service.getTasks()).isEmpty()
+        uploadSharedFile(owner, transferTask(owner))
+        assertThat(transport.uploadCalls).hasSize(2)
+    }
+
+    @Test
+    fun `cancel last active shared member cancels operation but preserves paused member resume`() {
+        transport.pauseResult = true
+        val owner = uploadAttachment(messageTid = 146L)
+        val follower = uploadAttachment(messageTid = 147L, filePath = owner.filePath)
+        val followerResults = mutableListOf<String?>()
+        uploadSharedFile(owner, transferTask(owner))
+        uploadSharedFile(follower, transferTask(follower).apply {
+            uploadResultCallback = TransferResultCallback { followerResults += it.data }
+        })
+        val call = transport.uploadCalls.single()
+        coordinator.pauseLoad(follower, TransferState.Uploading)
+
+        cancelUpload(owner)
+
+        assertThat(call.cancelled).isTrue()
+        assertThat(transport.pauseCalls).isEmpty()
+        coordinator.resumeLoad(follower, TransferState.PauseUpload)
+        assertThat(transport.uploadCalls).hasSize(2)
+        transport.uploadCalls.last().succeed("resumed-url")
+        assertThat(followerResults).containsExactly("resumed-url")
+    }
+
+    @Test
     fun `duplicate queued upload is suppressed`() {
         val current = uploadAttachment(messageTid = 1L)
         val duplicate = uploadAttachment(messageTid = 2L)
@@ -1585,6 +1832,11 @@ class AttachmentUploadCoordinatorTest {
     ) {
         service.addTransferTask(task)
         coordinator.uploadSharedFile(attachment, task)
+    }
+
+    private fun cancelUpload(attachment: SceytAttachment) {
+        service.findTransferTask(attachment)?.let(service::removeTransferTask)
+        coordinator.cancelUpload(attachment)
     }
 
     private fun uploadAttachment(

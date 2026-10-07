@@ -20,6 +20,8 @@ interface FileTransferService {
 
     fun pause(messageTid: Long, attachment: SceytAttachment, state: TransferState)
     fun resume(messageTid: Long, attachment: SceytAttachment, state: TransferState)
+    /** Cancels this upload without stopping other messages sharing it. */
+    fun cancelUpload(attachment: SceytAttachment)
     fun getThumb(messageTid: Long, attachment: SceytAttachment, thumbData: ThumbData)
     fun findOrCreateTransferTask(attachment: SceytAttachment): TransferTask
     fun findTransferTask(attachment: SceytAttachment): TransferTask?

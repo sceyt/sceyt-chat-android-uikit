@@ -184,7 +184,7 @@ class UploadAndSendAttachmentWorker(
     ) {
         val completionKey = this.toString()
         val configureTask: TransferTask.() -> Unit = {
-            isSharedUpload = isSharing
+            isSharedUpload = isSharedUpload || isSharing
             addOnCompletionListener(completionKey, continuation::safeResume)
             continuation.invokeOnCancellation {
                 removeOnCompletionListener(completionKey)
