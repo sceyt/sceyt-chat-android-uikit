@@ -96,6 +96,98 @@ class AttachmentDownloadCoordinatorTest {
     }
 
     @Test
+    fun `failing destination provider reports download error instead of throwing`() {
+        SceytChatUIKit.fileTransfer.destinationProvider = FileTransferDestinationProvider { _, _ ->
+            throw IllegalStateException("no destination")
+        }
+        val attachment = attachment(state = TransferState.PendingDownload)
+        val task = transferTask(attachment)
+        var result: SceytResponse<String>? = null
+        task.downloadCallback = TransferResultCallback { result = it }
+
+        coordinator.downloadFile(attachment, task)
+
+        assertThat(transport.downloadCalls).isEmpty()
+        assertThat(result).isInstanceOf(SceytResponse.Error::class.java)
+        assertThat(result?.message).isEqualTo("no destination")
+    }
+
+    @Test
+    fun `failing destination provider on resume reports download error instead of throwing`() {
+        SceytChatUIKit.fileTransfer.destinationProvider = FileTransferDestinationProvider { _, _ ->
+            throw IllegalStateException("no destination")
+        }
+        val attachment = attachment(state = TransferState.ErrorDownload)
+        val task = transferTask(attachment).also(service::addTransferTask)
+        var result: SceytResponse<String>? = null
+        task.downloadCallback = TransferResultCallback { result = it }
+
+        coordinator.resumeLoad(attachment, TransferState.ErrorDownload)
+
+        assertThat(transport.downloadCalls).isEmpty()
+        assertThat(result).isInstanceOf(SceytResponse.Error::class.java)
+        assertThat(result?.message).isEqualTo("no destination")
+    }
+
+    @Test
+    fun `resume resolves destination only once`() {
+        var destinationCalls = 0
+        SceytChatUIKit.fileTransfer.destinationProvider = FileTransferDestinationProvider { _, _ ->
+            check(++destinationCalls == 1) { "destination resolved twice" }
+            destinationFile
+        }
+        val attachment = attachment(state = TransferState.ErrorDownload)
+        val task = transferTask(attachment).also(service::addTransferTask)
+        val results = mutableListOf<SceytResponse<String>>()
+        task.downloadCallback = TransferResultCallback { results += it }
+
+        coordinator.resumeLoad(attachment, TransferState.ErrorDownload)
+
+        assertThat(destinationCalls).isEqualTo(1)
+        assertThat(transport.downloadCalls).hasSize(1)
+        assertThat(results).isEmpty()
+        transport.downloadCalls.single().succeed(destinationFile.path)
+        assertThat(results.single().data).isEqualTo(destinationFile.path)
+    }
+
+    @Test
+    fun `resume does not overwrite an immediate transfer failure with downloading`() {
+        SceytChatUIKit.fileTransfer.transport = object : FileTransferTransport by transport {
+            override suspend fun download(request: FileDownloadRequest, callback: FileTransferCallback): String? {
+                throw IllegalStateException("download failed")
+            }
+        }
+        val attachment = attachment(state = TransferState.ErrorDownload)
+        val task = transferTask(attachment).also(service::addTransferTask)
+        val states = mutableListOf<TransferState>()
+        task.resumePauseCallback = ResumePauseCallback { states += it.state }
+        task.downloadCallback = TransferResultCallback {
+            assertThat(it).isInstanceOf(SceytResponse.Error::class.java)
+            states += TransferState.ErrorDownload
+        }
+
+        coordinator.resumeLoad(attachment, TransferState.ErrorDownload)
+
+        assertThat(states).containsExactly(TransferState.Downloading, TransferState.ErrorDownload).inOrder()
+    }
+
+    @Test
+    fun `pause from resume callback stops download before transport starts`() {
+        val attachment = attachment(state = TransferState.PauseDownload)
+        val task = transferTask(attachment).also(service::addTransferTask)
+        task.resumePauseCallback = ResumePauseCallback {
+            if (it.state == TransferState.Downloading) {
+                coordinator.pauseLoad(attachment, TransferState.Downloading)
+            }
+        }
+
+        coordinator.resumeLoad(attachment, TransferState.PauseDownload)
+
+        assertThat(transport.downloadCalls).isEmpty()
+        assertThat(task.state).isEqualTo(TransferState.PauseDownload)
+    }
+
+    @Test
     fun `existing complete destination skips transport`() {
         destinationFile.writeBytes(byteArrayOf(1, 2, 3, 4))
         val attachment = attachment(fileSize = 4L, state = TransferState.PendingDownload)

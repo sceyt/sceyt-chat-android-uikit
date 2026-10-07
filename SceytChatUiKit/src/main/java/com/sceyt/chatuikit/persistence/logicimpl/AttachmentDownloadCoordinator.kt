@@ -56,8 +56,7 @@ internal class AttachmentDownloadCoordinator(
             return
         }
 
-        val destinationFile =
-            SceytChatUIKit.fileTransfer.destinationProvider.provideDestination(context, attachment)
+        val destinationFile = provideDestination(attachment, task) ?: return
 
         val existingFile = attachment.isAttachmentExistAndFullyLoaded(destinationFile)
 
@@ -74,6 +73,7 @@ internal class AttachmentDownloadCoordinator(
         task: TransferTask,
         url: String,
         destinationFile: File,
+        isResuming: Boolean = false,
     ) {
         val operationId = attachment.downloadOperationId
         val request = FileDownloadRequest(
@@ -102,6 +102,9 @@ internal class AttachmentDownloadCoordinator(
             ),
         )
 
+        if (isResuming) {
+            task.resumePauseCallback?.onResumePause(attachment.toTransferData(Downloading))
+        }
         downloadJob.start()
     }
 
@@ -246,14 +249,12 @@ internal class AttachmentDownloadCoordinator(
 
         pausedOperationIds.remove(operationId)
 
-        val destinationFile =
-            SceytChatUIKit.fileTransfer.destinationProvider
-                .provideDestination(context, attachment)
+        val transferTask = task ?: fileTransferService.findOrCreateTransferTask(attachment)
+        val destinationFile = provideDestination(attachment, transferTask) ?: return
 
         val existingFile =
             attachment.isAttachmentExistAndFullyLoaded(destinationFile)
 
-        val transferTask = task ?: fileTransferService.findOrCreateTransferTask(attachment)
         transferTask.state = Downloading
 
         if (existingFile != null) {
@@ -261,12 +262,13 @@ internal class AttachmentDownloadCoordinator(
             return
         }
 
-        downloadFile(
-            attachment = attachment,
-            task = transferTask,
-        )
+        val url = attachment.url
+        if (url.isNullOrBlank()) {
+            notifyDownloadResult(transferTask, SceytResponse.Error(SceytException(0, "Wrong url")))
+            return
+        }
 
-        transferTask.resumePauseCallback?.onResumePause(attachment.toTransferData(Downloading))
+        startDownload(attachment, transferTask, url, destinationFile, isResuming = true)
     }
 
     private fun pauseTransport(operationId: String): Boolean = runCatching {
@@ -289,6 +291,16 @@ internal class AttachmentDownloadCoordinator(
             is SceytException -> this
             else -> SceytException(0, message)
         }
+    }
+
+    private fun provideDestination(
+        attachment: SceytAttachment,
+        task: TransferTask,
+    ): File? = runCatching {
+        SceytChatUIKit.fileTransfer.destinationProvider.provideDestination(context, attachment)
+    }.getOrElse { error ->
+        notifyDownloadResult(task, SceytResponse.Error(error.toSceytException()))
+        null
     }
 
     private fun notifyDownloadResult(

@@ -8,6 +8,7 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState.ErrorUpload
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.PauseUpload
 import com.sceyt.chatuikit.persistence.logic.FileTransferLogic
 import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager
+import kotlinx.coroutines.CancellationException
 import java.util.concurrent.ConcurrentHashMap
 
 internal class FileTransferServiceImpl(
@@ -33,6 +34,13 @@ internal class FileTransferServiceImpl(
 
     override fun pause(messageTid: Long, attachment: SceytAttachment, state: TransferState) {
         fileTransferLogic.pauseLoad(attachment, state)
+    }
+
+    override fun cancelUpload(attachment: SceytAttachment) {
+        val task = findTransferTask(attachment)
+        task?.let(::removeTransferTask)
+        fileTransferLogic.cancelUpload(attachment)
+        task?.complete(Result.failure(CancellationException("Attachment upload cancelled")))
     }
 
     override fun resume(messageTid: Long, attachment: SceytAttachment, state: TransferState) {

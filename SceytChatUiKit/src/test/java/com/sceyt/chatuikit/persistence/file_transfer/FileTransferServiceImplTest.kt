@@ -17,6 +17,7 @@ import com.sceyt.chatuikit.persistence.logic.FileTransferLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import com.sceyt.chatuikit.persistence.logicimpl.attachment
 import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager.RESUME_PAUSED_UPLOAD
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import org.junit.After
 import org.junit.Before
@@ -245,6 +246,51 @@ class FileTransferServiceImplTest {
 
         assertThat(task.attachment.url).isEqualTo("uploaded-url")
         assertThat(service.getTasks()).isEmpty()
+    }
+
+    @Test
+    fun `cancel upload removes its task before cancellation and releases listeners`() {
+        val attachment = attachment()
+        var completion: Result<SceytAttachment>? = null
+        val task = service.upload(attachment) {
+            addOnCompletionListener("worker") { completion = it }
+        }
+        val originalState = task.state
+        doAnswer {
+            assertThat(service.findTransferTask(attachment)).isNull()
+        }.`when`(logic).cancelUpload(attachment)
+
+        service.cancelUpload(attachment)
+
+        verify(logic).cancelUpload(attachment)
+        verify(logic, never()).pauseLoad(any(), any())
+        assertThat(completion?.exceptionOrNull()).isInstanceOf(CancellationException::class.java)
+        assertThat(task.onCompletionListeners).isEmpty()
+        assertThat(task.state).isEqualTo(originalState)
+        assertThat(service.getTasks()).isEmpty()
+    }
+
+    @Test
+    fun `cancel upload without a task does not create one`() {
+        val attachment = attachment()
+
+        service.cancelUpload(attachment)
+
+        verify(logic).cancelUpload(attachment)
+        assertThat(service.getTasks()).isEmpty()
+    }
+
+    @Test
+    fun `cancel upload leaves other attachment tasks registered`() {
+        val first = attachment()
+        val second = first.copy(id = 11L, url = "second-url")
+        service.upload(first)
+        val secondTask = service.upload(second)
+
+        service.cancelUpload(first)
+
+        assertThat(service.findTransferTask(first)).isNull()
+        assertThat(service.findTransferTask(second)).isSameInstanceAs(secondTask)
     }
 
     @Test

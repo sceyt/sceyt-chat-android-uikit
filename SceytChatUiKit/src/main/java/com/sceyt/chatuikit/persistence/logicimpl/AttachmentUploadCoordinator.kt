@@ -133,7 +133,11 @@ internal class AttachmentUploadCoordinator(
 
         val uploadAttachment = result.fold(
             onSuccess = { path ->
-                task.updateFileLocationCallback?.onUpdateFileLocation(path)
+                // A shared upload may continue for other messages after this message is deleted.
+                // Only notify the task if it is still registered.
+                if (fileTransferService.findTransferTask(attachment) === task) {
+                    task.updateFileLocationCallback?.onUpdateFileLocation(path)
+                }
                 attachment.copy(filePath = path, fileSize = getFileSize(path))
             },
             onFailure = {
@@ -239,6 +243,47 @@ internal class AttachmentUploadCoordinator(
 
             else -> return
         }
+    }
+
+    fun cancelUpload(attachment: SceytAttachment) {
+        val messageTid = attachment.messageTid
+        synchronized(uploadQueueLock) {
+            pendingUploadQueue.removeAll { it.first.messageTid == messageTid }
+        }
+
+        val sharedMessageIds = getSharedMessageIds(attachment)
+        // A network-wait job is cancelled before it delivers results to the remaining members.
+        val sharedJob = sharedMessageIds.firstNotNullOfOrNull { tid ->
+            uploadJobs[tid]?.takeUnless(Job::isCompleted)?.let { tid to it }
+        }
+        val registeredMessageIds = fileTransferService.getTasks().values
+            .mapTo(HashSet(), TransferTask::messageTid)
+        val hasActiveSharedMember = sharedMessageIds.any {
+            it in registeredMessageIds && it !in pausedTaskIds
+        }
+        val retainedOwner = sharedJob?.first?.takeIf { hasActiveSharedMember }
+
+        if (retainedOwner == messageTid) {
+            // Keep the operation's owner until its result can reach the remaining shared messages.
+            pausedTaskIds.add(messageTid)
+        } else {
+            if (!hasActiveSharedMember) {
+                sharedJob?.let { (ownerTid, job) -> cancelUploadJob(ownerTid, job) }
+            }
+            uploadJobs[messageTid]?.let { cancelUploadJob(messageTid, it) }
+            pausedTaskIds.remove(messageTid)
+            removeSharedMember(messageTid)
+        }
+
+        synchronized(sharingFilesLock) {
+            sharingFilesPath.removeAll { member ->
+                val detached = member.messageTid in sharedMessageIds &&
+                        member.messageTid !in registeredMessageIds && member.messageTid != retainedOwner
+                if (detached) pausedTaskIds.remove(member.messageTid)
+                detached
+            }
+        }
+        uploadNext(messageTid)
     }
 
     fun cancelAll() {
@@ -714,10 +759,16 @@ internal class AttachmentUploadCoordinator(
     private fun takeAppropriateTasks(
         task: TransferTask,
     ): List<TransferTask> = synchronized(sharingFilesLock) {
+        val sourceKey = sharingFilesPath.firstOrNull { it.messageTid == task.messageTid }?.sourceKey
+        val registeredMessageIds = fileTransferService.getTasks().values
+            .mapTo(HashSet(), TransferTask::messageTid)
         getAppropriateTasksLocked(task).also {
             val completedMessageIds = it.mapTo(HashSet(), TransferTask::messageTid)
             sharingFilesPath.removeAll { member ->
-                completedMessageIds.contains(member.messageTid)
+                val removed = member.messageTid in completedMessageIds ||
+                        (member.sourceKey == sourceKey && member.messageTid !in registeredMessageIds)
+                if (removed) pausedTaskIds.remove(member.messageTid)
+                removed
             }
         }
     }

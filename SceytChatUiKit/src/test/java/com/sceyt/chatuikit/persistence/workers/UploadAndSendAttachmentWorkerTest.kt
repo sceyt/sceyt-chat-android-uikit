@@ -79,6 +79,7 @@ class UploadAndSendAttachmentWorkerTest {
     private val transport = RecordingFileTransferTransport()
     private lateinit var previousFileTransfer: SceytChatUIKitFileTransfer
     private lateinit var previousConfig: SceytChatUIKitConfig
+    private lateinit var previousNotifications: SceytNotifications
     private var previousConnectionProvider: ChatConnectionProvider? = null
 
     private companion object {
@@ -99,6 +100,9 @@ class UploadAndSendAttachmentWorkerTest {
         previousFileTransfer = SceytChatUIKit.fileTransfer
         previousConfig = SceytChatUIKit.config
         previousConnectionProvider = SceytChatUIKit.chatConnectionProvider
+        // UIKit is not initialized here, so its lazy notifications may not exist yet.
+        previousNotifications = runCatching { SceytChatUIKit.notifications }
+            .getOrElse { SceytNotifications(context) }
         SceytChatUIKit.fileTransfer = SceytChatUIKitFileTransfer().apply {
             transport = this@UploadAndSendAttachmentWorkerTest.transport
         }
@@ -141,6 +145,7 @@ class UploadAndSendAttachmentWorkerTest {
         SceytChatUIKit.fileTransfer = previousFileTransfer
         SceytChatUIKit.config = previousConfig
         SceytChatUIKit.chatConnectionProvider = previousConnectionProvider
+        SceytChatUIKit.notifications = previousNotifications
         SceytKoinApp.koinApp = null
         stopKoin()
     }
@@ -239,6 +244,23 @@ class UploadAndSendAttachmentWorkerTest {
         service.pause(paused.messageTid, paused, TransferState.WaitingToUpload)
 
         val worker = worker(paused.copy(transferState = TransferState.PauseUpload), resume = true, shared = true)
+        val work = testScope.async { worker.doWork() }
+
+        assertThat(transport.uploadCalls).hasSize(1)
+        transport.uploadCalls.single().succeed("shared-url")
+        assertThat(work.isCompleted).isTrue()
+        assertSentUrl(paused, "shared-url")
+    }
+
+    @Test
+    fun `production resume worker keeps sharing of upload paused before joining group`() {
+        val first = localAttachment()
+        val paused = first.copy(messageTid = 12L, transferState = TransferState.WaitingToUpload)
+        service.uploadSharedFile(first)
+        service.pause(paused.messageTid, paused, TransferState.WaitingToUpload)
+        service.uploadSharedFile(paused)
+
+        val worker = worker(paused.copy(transferState = TransferState.PauseUpload), resume = true)
         val work = testScope.async { worker.doWork() }
 
         assertThat(transport.uploadCalls).hasSize(1)

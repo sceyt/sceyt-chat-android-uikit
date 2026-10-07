@@ -974,12 +974,8 @@ internal class PersistenceMessagesLogicImpl(
             messagesCache.hardDeleteMessage(channelId, message)
             persistenceChannelsLogic.onMessageEditedOrDeleted(clonedMessage)
             UploadAndSendAttachmentWorkManager.cancelWorksByTag(context, message.tid.toString())
-            storedMessage.attachments?.firstOrNull()?.let {
-                fileTransferService.pause(
-                    messageTid = it.messageTid,
-                    attachment = it,
-                    state = it.transferState ?: TransferState.Uploading
-                )
+            storedMessage.attachments?.forEach {
+                fileTransferService.cancelUpload(it)
             }
             // The send request may already have reached the server, so persist a delete-by-tid
             // intent (retried on reconnect) and attempt to delete it on the server now.
