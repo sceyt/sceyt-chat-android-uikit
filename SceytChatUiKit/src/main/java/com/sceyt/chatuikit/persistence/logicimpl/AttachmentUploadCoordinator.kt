@@ -98,50 +98,48 @@ internal class AttachmentUploadCoordinator(
     private fun startSharedUpload(
         attachment: SceytAttachment,
         task: TransferTask,
+    ) = launchUploadJob(
+        attachment = attachment,
+        onError = { response ->
+            takeAppropriateTasks(task).forEach { transferTask ->
+                notifyTaskResult(transferTask, response)
+            }
+        },
     ) {
-        launchUploadJob(
-            attachment = attachment,
-            onError = { response ->
-                takeAppropriateTasks(task).forEach { transferTask ->
-                    notifyTaskResult(transferTask, response)
-                }
-            },
-        ) {
-            val checksum = getAttachmentChecksum(attachment.sourcePath)
-            val (uploaded, url) = checkMaybeAlreadyUploadedWithAnotherMessage(checksum, task)
+        val checksum = getAttachmentChecksum(attachment.sourcePath)
+        val (uploaded, url) = checkMaybeAlreadyUploadedWithAnotherMessage(checksum, task)
 
-            if (uploaded && url != null) {
-                saveCompletedSharedUpload(attachment, url)
-                takeAppropriateTasks(task).forEach { transferTask ->
-                    notifyTaskResult(transferTask, SceytResponse.Success(url))
-                }
-                return@launchUploadJob
+        if (uploaded && url != null) {
+            saveCompletedSharedUpload(attachment, url)
+            takeAppropriateTasks(task).forEach { transferTask ->
+                notifyTaskResult(transferTask, SceytResponse.Success(url))
             }
-
-            val result = prepareAttachment(
-                attachment = attachment,
-                checksumData = checksum,
-                task = task,
-            )
-            currentCoroutineContext().ensureActive()
-
-            if (isSharedTransferPaused(attachment)) {
-                return@launchUploadJob
-            }
-
-            val uploadAttachment = result.fold(
-                onSuccess = { path ->
-                    task.updateFileLocationCallback?.onUpdateFileLocation(path)
-                    attachment.copy(filePath = path, fileSize = getFileSize(path))
-                },
-                onFailure = {
-                    SceytLog.i(TAG, "Couldn't resize sharing file with reason ${it.message}")
-                    attachment
-                },
-            )
-
-            uploadSharedAttachment(uploadAttachment, task)
+            return@launchUploadJob
         }
+
+        val result = prepareAttachment(
+            attachment = attachment,
+            checksumData = checksum,
+            task = task,
+        )
+        currentCoroutineContext().ensureActive()
+
+        if (isSharedTransferPaused(attachment)) {
+            return@launchUploadJob
+        }
+
+        val uploadAttachment = result.fold(
+            onSuccess = { path ->
+                task.updateFileLocationCallback?.onUpdateFileLocation(path)
+                attachment.copy(filePath = path, fileSize = getFileSize(path))
+            },
+            onFailure = {
+                SceytLog.i(TAG, "Couldn't resize sharing file with reason ${it.message}")
+                attachment
+            },
+        )
+
+        uploadSharedAttachment(uploadAttachment, task)
     }
 
     fun pauseLoad(
@@ -463,39 +461,37 @@ internal class AttachmentUploadCoordinator(
     private suspend fun uploadSharedAttachment(
         attachment: SceytAttachment,
         task: TransferTask,
-    ) {
-        uploadAttachmentWithTransport(
-            attachment = attachment,
-            task = task,
-            isSharedUpload = true,
-            onProgress = { progressPercent ->
-                getAppropriateTasks(task).forEach { transferTask ->
-                    transferTask.state = Uploading
+    ) = uploadAttachmentWithTransport(
+        attachment = attachment,
+        task = task,
+        isSharedUpload = true,
+        onProgress = { progressPercent ->
+            getAppropriateTasks(task).forEach { transferTask ->
+                transferTask.state = Uploading
 
-                    runCatching {
-                        transferTask.progressCallback?.onProgress(
-                            TransferData(
-                                messageTid = transferTask.messageTid,
-                                progressPercent = progressPercent,
-                                state = Uploading,
-                                filePath = transferTask.attachment.filePath,
-                                url = null,
-                            ),
-                        )
-                    }.onFailure(::logCallbackFailure)
-                }
-            },
-            onResult = { response ->
-                response.onSuccessNotNull {
-                    saveCompletedSharedUpload(attachment, it)
-                }
+                runCatching {
+                    transferTask.progressCallback?.onProgress(
+                        TransferData(
+                            messageTid = transferTask.messageTid,
+                            progressPercent = progressPercent,
+                            state = Uploading,
+                            filePath = transferTask.attachment.filePath,
+                            url = null,
+                        ),
+                    )
+                }.onFailure(::logCallbackFailure)
+            }
+        },
+        onResult = { response ->
+            response.onSuccessNotNull {
+                saveCompletedSharedUpload(attachment, it)
+            }
 
-                takeAppropriateTasks(task).forEach { transferTask ->
-                    notifyTaskResult(transferTask, response)
-                }
-            },
-        )
-    }
+            takeAppropriateTasks(task).forEach { transferTask ->
+                notifyTaskResult(transferTask, response)
+            }
+        },
+    )
 
     private suspend fun uploadAttachmentWithTransport(
         attachment: SceytAttachment,
