@@ -23,7 +23,7 @@ class AttachmentViewHolderHelper(itemView: View) {
     private var context: Context = itemView.context
     private lateinit var fileItem: AttachmentDataProvider
     val isFileItemInitialized get() = this::fileItem.isInitialized
-    val optionalFileItem get() = if (isFileItemInitialized) fileItem else null
+    private val optionalFileItem get() = if (isFileItemInitialized) fileItem else null
     var blurredThumb: Drawable? = null
         private set
     var size: Size? = null
@@ -89,12 +89,21 @@ class AttachmentViewHolderHelper(itemView: View) {
         val width = resizedImageSize?.width ?: imageView.width
         val height = resizedImageSize?.height ?: imageView.height
         val messageTid = optionalFileItem?.attachment?.messageTid
+        val onThumbLoaded = {
+            if (isFileItemInitialized && fileItem.thumbPath == path
+                && fileItem.attachment.messageTid == messageTid
+            )
+                lastInvalidatedThumbKey = null
+        }
         val listener = glideRequestListener<Drawable>(
             onLoadFailed = { e ->
                 logLoadFailed(messageTid, path, e)
                 onLoadFailed?.invoke(e)
             },
-            onResourceReady = { _, _, _, _, _ -> onResourceReady?.invoke() }
+            onResourceReady = { _, _, _, _, _ ->
+                onThumbLoaded()
+                onResourceReady?.invoke()
+            }
         )
         Glide.with(context.applicationContext)
             .load(path)

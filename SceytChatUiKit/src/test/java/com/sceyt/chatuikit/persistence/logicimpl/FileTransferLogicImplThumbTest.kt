@@ -207,11 +207,11 @@ class FileTransferLogicImplThumbTest {
         val resolver = ThumbPathResolver { _, _, _ -> Result.failure(FileNotFoundException()) }
         val logic = FileTransferLogicImpl(context, attachmentLogic, resolver)
         val attachment = attachment(state = TransferState.Uploaded)
-        val task = taskFor(attachment)
+        taskFor(attachment)
 
         logic.getAttachmentThumb(attachment.messageTid, attachment, thumbData(ThumbFor.MessagesLisView))
 
-        verify(fileTransferService).download(attachment, task)
+        verify(fileTransferService).redownload(attachment)
     }
 
     @Test
@@ -223,7 +223,7 @@ class FileTransferLogicImplThumbTest {
 
         logic.getAttachmentThumb(attachment.messageTid, attachment, thumbData(ThumbFor.MessagesLisView))
 
-        verify(fileTransferService, never()).download(any(), any())
+        verify(fileTransferService, never()).redownload(any())
     }
 
     @Test
@@ -231,11 +231,11 @@ class FileTransferLogicImplThumbTest {
         val resolver = ThumbPathResolver { _, _, _ -> Result.failure(FileNotFoundException()) }
         val logic = FileTransferLogicImpl(context, attachmentLogic, resolver)
         val attachment = attachment(state = TransferState.Downloaded)
-        val task = taskFor(attachment)
+        taskFor(attachment)
 
         logic.getAttachmentThumb(attachment.messageTid, attachment, thumbData(ThumbFor.MessagesLisView))
 
-        verify(fileTransferService).download(attachment, task)
+        verify(fileTransferService).redownload(attachment)
     }
 
     @Test
@@ -249,7 +249,7 @@ class FileTransferLogicImplThumbTest {
             logic.getAttachmentThumb(attachment.messageTid, attachment, thumbData(ThumbFor.MessagesLisView))
         }
 
-        verify(fileTransferService, never()).download(any(), any())
+        verify(fileTransferService, never()).redownload(any())
     }
 
     @Test
@@ -262,7 +262,7 @@ class FileTransferLogicImplThumbTest {
 
         logic.getAttachmentThumb(attachment.messageTid, attachment, thumbData(ThumbFor.MessagesLisView))
 
-        verify(fileTransferService, never()).download(any(), any())
+        verify(fileTransferService, never()).redownload(any())
     }
 
     @Test
@@ -274,7 +274,7 @@ class FileTransferLogicImplThumbTest {
 
         logic.getAttachmentThumb(attachment.messageTid, attachment, thumbData(ThumbFor.MessagesLisView))
 
-        verify(fileTransferService, never()).download(any(), any())
+        verify(fileTransferService, never()).redownload(any())
     }
 
     private fun taskFor(attachment: SceytAttachment): TransferTask {

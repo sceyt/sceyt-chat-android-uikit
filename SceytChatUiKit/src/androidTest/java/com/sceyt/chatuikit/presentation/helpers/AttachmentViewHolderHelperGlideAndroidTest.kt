@@ -106,6 +106,54 @@ class AttachmentViewHolderHelperGlideAndroidTest {
         assertThat(item.thumbPath).isEqualTo(thumb.path)
     }
 
+    @Test
+    fun deletingSameThumbAgainAfterRecoveryRequestsAgain() {
+        val thumb = File(dir, "small-original.jpg")
+        val item = TestAttachmentItem(attachment(), thumb.path)
+        val requestCount = AtomicInteger()
+        lateinit var helper: AttachmentViewHolderHelper
+        lateinit var imageView: ImageView
+        onMain {
+            imageView = ImageView(context)
+            helper = AttachmentViewHolderHelper(View(context))
+            helper.bind(item, Size(100, 100))
+        }
+
+        redraw(helper, imageView) { requestCount.incrementAndGet() }
+        assertThat(awaitRequestCount(requestCount, 1)).isTrue()
+
+        writeJpeg(thumb)
+        onMain { Glide.with(context.applicationContext).clear(imageView) }
+        clearGlide()
+        onMain {
+            item.updateThumbPath(thumb.path)
+            // Match the rendering path used by ThumbLoaded handlers.
+            helper.drawImageWithBlurredThumb(thumb.path, imageView)
+        }
+        assertThat(awaitGlideRequestDone(imageView)).isTrue()
+        assertThat(awaitDrawable(imageView)).isNotNull()
+
+        thumb.delete()
+        redraw(helper, imageView) { requestCount.incrementAndGet() }
+
+        assertThat(awaitRequestCount(requestCount, 2)).isTrue()
+        assertThat(item.thumbPath).isNull()
+    }
+
+    private fun redraw(helper: AttachmentViewHolderHelper, imageView: ImageView, requestThumb: () -> Unit) {
+        onMain { Glide.with(context.applicationContext).clear(imageView) }
+        clearGlide()
+        onMain { helper.drawThumbOrRequest(imageView, requestThumb) }
+    }
+
+    private fun awaitRequestCount(requestCount: AtomicInteger, expected: Int): Boolean {
+        repeat(50) {
+            if (requestCount.get() == expected) return true
+            Thread.sleep(100)
+        }
+        return false
+    }
+
     private fun drawThumbOrRequest(item: TestAttachmentItem, requestThumb: () -> Unit): ImageView {
         lateinit var imageView: ImageView
         onMain {
