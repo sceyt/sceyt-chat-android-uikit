@@ -116,6 +116,47 @@ class AttachmentViewHolderHelperTest {
         assertThat(requested).isTrue()
     }
 
+    @Test
+    fun `invalidate thumb clears item thumb and requests new one`() {
+        val helper = helper()
+        val item = TestAttachmentItem(attachment(), currentThumbPath = DEAD_THUMB_PATH)
+        var requestCount = 0
+        helper.bind(item)
+
+        helper.invalidateThumb(DEAD_THUMB_PATH) { requestCount++ }
+
+        assertThat(item.thumbPath).isNull()
+        assertThat(requestCount).isEqualTo(1)
+    }
+
+    @Test
+    fun `invalidate thumb ignores path that is no longer item thumb`() {
+        val helper = helper()
+        val item = TestAttachmentItem(attachment(), currentThumbPath = "/thumbs/new.jpg")
+        var requestCount = 0
+        helper.bind(item)
+
+        helper.invalidateThumb(DEAD_THUMB_PATH) { requestCount++ }
+
+        assertThat(item.thumbPath).isEqualTo("/thumbs/new.jpg")
+        assertThat(requestCount).isEqualTo(0)
+    }
+
+    @Test
+    fun `invalidate thumb requests only once for same path`() {
+        val helper = helper()
+        val item = TestAttachmentItem(attachment(), currentThumbPath = DEAD_THUMB_PATH)
+        var requestCount = 0
+        helper.bind(item)
+
+        helper.invalidateThumb(DEAD_THUMB_PATH) { requestCount++ }
+        item.updateThumbPath(DEAD_THUMB_PATH)
+        helper.invalidateThumb(DEAD_THUMB_PATH) { requestCount++ }
+
+        assertThat(item.thumbPath).isEqualTo(DEAD_THUMB_PATH)
+        assertThat(requestCount).isEqualTo(1)
+    }
+
     private fun helper() = AttachmentViewHolderHelper(View(RuntimeEnvironment.getApplication()))
 
     private fun transfer(
@@ -185,5 +226,6 @@ class AttachmentViewHolderHelperTest {
 
     private companion object {
         const val MESSAGE_TID = 10L
+        const val DEAD_THUMB_PATH = "/thumbs/deleted.jpg"
     }
 }
