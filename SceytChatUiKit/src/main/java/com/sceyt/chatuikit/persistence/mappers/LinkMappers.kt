@@ -49,17 +49,19 @@ internal fun LinkDetailsEntity.toLinkPreviewDetails(hideDetails: Boolean): LinkP
 )
 
 internal fun LinkPreviewDetails.mergeWith(newer: LinkPreviewDetails): LinkPreviewDetails {
-    val sizeSource = if (hasSize(newer.imageWidth, newer.imageHeight)) newer else this
+    val imageSource = if (newer.imageUrl.isNullOrBlank()) this else newer
+    val sameImage = !imageUrl.isNullOrBlank() && imageUrl == imageSource.imageUrl
+    val sizeSource = if (sameImage && !hasSize(imageSource.imageWidth, imageSource.imageHeight)) this else imageSource
     return newer.copy(
         url = newer.url.orIfBlank(url),
         title = newer.title.orIfBlank(title),
         description = newer.description.orIfBlank(description),
         siteName = newer.siteName.orIfBlank(siteName),
         faviconUrl = newer.faviconUrl.orIfBlank(faviconUrl),
-        imageUrl = newer.imageUrl.orIfBlank(imageUrl),
+        imageUrl = imageSource.imageUrl,
         imageWidth = sizeSource.imageWidth,
         imageHeight = sizeSource.imageHeight,
-        thumb = newer.thumb.orIfBlank(thumb)
+        thumb = if (sameImage) imageSource.thumb.orIfBlank(thumb) else imageSource.thumb
     )
 }
 

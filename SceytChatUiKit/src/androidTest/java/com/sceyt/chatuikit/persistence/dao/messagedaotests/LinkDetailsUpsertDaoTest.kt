@@ -129,6 +129,39 @@ class LinkDetailsUpsertDaoTest {
         assertThat(linkDao.getLinkDetailsEntity(link)).isEqualTo(full.copy(title = "New title", thumb = "thumb"))
     }
 
+    @Test
+    fun linkDaoUpsert_changedImageDoesNotKeepStoredImageData() = runTest {
+        linkDao.insert(full.copy(thumb = "thumb"))
+        val newer = full.copy(
+            imageUrl = "https://example.com/new.png",
+            imageWidth = null,
+            imageHeight = null,
+            thumb = null
+        )
+        linkDao.upsert(newer)
+
+        assertThat(linkDao.getLinkDetailsEntity(link)).isEqualTo(newer)
+    }
+
+    @Test
+    fun linkDaoUpsert_changedImageWithSizeDoesNotKeepStoredThumb() = runTest {
+        linkDao.insert(full.copy(thumb = "thumb"))
+        val newer = full.copy(imageUrl = "https://example.com/new.png", imageWidth = 400, imageHeight = 400)
+        linkDao.upsert(newer)
+
+        assertThat(linkDao.getLinkDetailsEntity(link)).isEqualTo(newer)
+    }
+
+    @Test
+    fun laterMessage_doesNotFillStoredImageDataFromDifferentImage() = runTest {
+        val stored = full.copy(imageWidth = null, imageHeight = null)
+        messageDao.upsertMessage(messageWithLink(tid = 1, details = stored))
+        val other = full.copy(imageUrl = "https://example.com/new.png", thumb = "otherThumb")
+        messageDao.upsertMessage(messageWithLink(tid = 2, details = other))
+
+        assertThat(linkDao.getLinkDetailsEntity(link)).isEqualTo(stored)
+    }
+
     private fun messageWithLink(tid: Long, details: LinkDetailsEntity) = MessageDb(
         messageEntity = message(tid),
         from = null,
