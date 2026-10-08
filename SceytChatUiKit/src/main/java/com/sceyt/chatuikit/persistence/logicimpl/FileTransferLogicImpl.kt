@@ -268,10 +268,11 @@ internal class FileTransferLogicImpl(
 
         val task = fileTransferService.findOrCreateTransferTask(attachment)
         val readyThumb = thumbPaths[thumbKey]
-        if (readyThumb != null) {
+        if (readyThumb != null && File(readyThumb.path).exists()) {
             task.thumbCallback?.onThumb(readyThumb.path, data)
             return
         } else {
+            readyThumb?.let { thumbPaths.remove(thumbKey, it) }
             if (preparingThumbs.put(preparingThumbKey, data) != null) return
             thumbPathResolver.getThumbPath(context, attachment, size).onSuccess { path ->
                 thumbPaths[thumbKey] = ThumbPathsData(messageTid, path, size)

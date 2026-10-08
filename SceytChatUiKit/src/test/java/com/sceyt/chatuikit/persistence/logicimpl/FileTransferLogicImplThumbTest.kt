@@ -15,7 +15,9 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferTask
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import org.junit.After
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
@@ -25,6 +27,7 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import java.io.File
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
@@ -33,6 +36,9 @@ import java.util.concurrent.atomic.AtomicInteger
 
 @RunWith(RobolectricTestRunner::class)
 class FileTransferLogicImplThumbTest {
+    @get:Rule
+    val tempFolder = TemporaryFolder()
+
     private val fileTransferService = mock<FileTransferService>()
     private val attachmentLogic = mock<PersistenceAttachmentLogic>()
     private lateinit var context: Context
@@ -56,7 +62,7 @@ class FileTransferLogicImplThumbTest {
 
     @Test
     fun `thumb request for another target is not suppressed while message list thumb is preparing`() {
-        val resolver = BlockingThumbPathResolver()
+        val resolver = BlockingThumbPathResolver(tempFolder.root)
         val logic = FileTransferLogicImpl(context, attachmentLogic, resolver)
         val attachment = attachment()
         val callbacks = thumbCallbacksFor(attachment)
@@ -91,7 +97,7 @@ class FileTransferLogicImplThumbTest {
 
     @Test
     fun `duplicate thumb request for same target is suppressed while preparing`() {
-        val resolver = BlockingThumbPathResolver()
+        val resolver = BlockingThumbPathResolver(tempFolder.root)
         val logic = FileTransferLogicImpl(context, attachmentLogic, resolver)
         val attachment = attachment()
         val callbacks = thumbCallbacksFor(attachment)
@@ -121,7 +127,7 @@ class FileTransferLogicImplThumbTest {
 
     @Test
     fun `thumb request after file path changes reuses preparing original thumb and emits latest path`() {
-        val resolver = BlockingThumbPathResolver()
+        val resolver = BlockingThumbPathResolver(tempFolder.root)
         val logic = FileTransferLogicImpl(context, attachmentLogic, resolver)
         val originalAttachment = attachment(
             filePath = "/uploads/original.jpg",
@@ -158,7 +164,7 @@ class FileTransferLogicImplThumbTest {
 
     @Test
     fun `thumb cache is reused for different messages with same source file`() {
-        val resolver = BlockingThumbPathResolver().apply { release() }
+        val resolver = BlockingThumbPathResolver(tempFolder.root).apply { release() }
         val logic = FileTransferLogicImpl(context, attachmentLogic, resolver)
         val firstAttachment = attachment(messageTid = 11L, filePath = "/downloads/shared.jpg")
         val secondAttachment = attachment(messageTid = 22L, filePath = "/downloads/shared.jpg")
@@ -173,6 +179,23 @@ class FileTransferLogicImplThumbTest {
             .containsExactly("/downloads/shared.jpg")
         assertThat(callbacks.getValue(secondAttachment.messageTid).map { it.filePath })
             .containsExactly("/downloads/shared.jpg")
+    }
+
+    @Test
+    fun `deleted cached thumb is regenerated on next request`() {
+        val resolver = BlockingThumbPathResolver(tempFolder.root).apply { release() }
+        val logic = FileTransferLogicImpl(context, attachmentLogic, resolver)
+        val attachment = attachment()
+        val thumbPaths = thumbPathCallbacksFor(attachment)
+        val thumb = thumbData(ThumbFor.MessagesLisView)
+
+        logic.getAttachmentThumb(attachment.messageTid, attachment, thumb)
+        File(thumbPaths.single()).delete()
+        logic.getAttachmentThumb(attachment.messageTid, attachment, thumb)
+
+        assertThat(resolver.callCount.get()).isEqualTo(2)
+        assertThat(thumbPaths).hasSize(2)
+        assertThat(File(thumbPaths.last()).exists()).isTrue()
     }
 
     private fun thumbCallbacksFor(attachment: SceytAttachment): CopyOnWriteArrayList<ThumbData> {
@@ -199,7 +222,15 @@ class FileTransferLogicImplThumbTest {
         return callbacksByTid
     }
 
-    private class BlockingThumbPathResolver : ThumbPathResolver {
+    private fun thumbPathCallbacksFor(attachment: SceytAttachment): CopyOnWriteArrayList<String> {
+        val paths = CopyOnWriteArrayList<String>()
+        val task = TransferTask(attachment, attachment.messageTid, attachment.transferState)
+        task.thumbCallback = ThumbCallback { path, _ -> paths.add(path) }
+        whenever(fileTransferService.findOrCreateTransferTask(any())).thenReturn(task)
+        return paths
+    }
+
+    private class BlockingThumbPathResolver(private val dir: File) : ThumbPathResolver {
         val callCount = AtomicInteger()
         private val release = CountDownLatch(1)
 
@@ -210,7 +241,8 @@ class FileTransferLogicImplThumbTest {
         ): Result<String> {
             val callIndex = callCount.incrementAndGet()
             check(release.await(2, TimeUnit.SECONDS))
-            return Result.success("/thumbs/thumb-$callIndex.jpg")
+            val thumb = File(dir, "thumb-$callIndex.jpg").apply { createNewFile() }
+            return Result.success(thumb.path)
         }
 
         fun awaitCallCount(expectedCount: Int): Boolean {

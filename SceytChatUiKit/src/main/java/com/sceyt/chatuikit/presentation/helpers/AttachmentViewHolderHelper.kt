@@ -7,8 +7,10 @@ import android.view.View
 import android.widget.ImageView
 import androidx.core.graphics.drawable.toDrawable
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.sceyt.chatuikit.extensions.glideRequestListener
+import com.sceyt.chatuikit.extensions.isFileNotFound
 import com.sceyt.chatuikit.persistence.file_transfer.AttachmentTransferStateStore
 import com.sceyt.chatuikit.persistence.file_transfer.ThumbData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
@@ -25,6 +27,7 @@ class AttachmentViewHolderHelper(itemView: View) {
         private set
     var resizedImageSize: Size? = null
         private set
+    private var lastInvalidatedThumbPath: String? = null
 
     fun bind(item: AttachmentDataProvider, resizedImageSize: Size? = null) {
         if (isFileItemInitialized && item.thumbPath == null && !fileItem.thumbPath.isNullOrBlank()
@@ -43,17 +46,7 @@ class AttachmentViewHolderHelper(itemView: View) {
         imageView: ImageView,
         onResourceReady: (() -> Unit)? = null
     ) {
-        val width = resizedImageSize?.width ?: imageView.width
-        val height = resizedImageSize?.height ?: imageView.height
-        Glide.with(context.applicationContext)
-            .load(path)
-            .transition(DrawableTransitionOptions.withCrossFade())
-            .placeholder(blurredThumb)
-            .override(width, height)
-            .listener(glideRequestListener<Drawable>(onResourceReady = { _, _, _, _, _ ->
-                onResourceReady?.invoke()
-            }))
-            .into(imageView)
+        loadImage(path, imageView, onResourceReady, null)
     }
 
     fun drawThumbOrRequest(
@@ -62,12 +55,45 @@ class AttachmentViewHolderHelper(itemView: View) {
         fallback: Drawable? = null,
     ) {
         if (isFileItemInitialized.not()) return
-        if (!fileItem.thumbPath.isNullOrBlank())
-            drawImageWithBlurredThumb(fileItem.thumbPath, imageView)
-        else {
+        val thumbPath = fileItem.thumbPath
+        if (!thumbPath.isNullOrBlank()) {
+            val onLoadFailed: (GlideException?) -> Unit = { e ->
+                if (e.isFileNotFound()) invalidateThumb(thumbPath, requestThumb)
+            }
+            loadImage(thumbPath, imageView, null, onLoadFailed)
+        } else {
             loadBlurThumb(blurredThumb ?: fallback, imageView)
             requestThumb()
         }
+    }
+
+    internal fun invalidateThumb(path: String, requestThumb: () -> Unit) {
+        if (isFileItemInitialized.not() || fileItem.thumbPath != path) return
+        if (lastInvalidatedThumbPath == path) return
+        lastInvalidatedThumbPath = path
+        fileItem.updateThumbPath(null)
+        requestThumb()
+    }
+
+    private fun loadImage(
+        path: String?,
+        imageView: ImageView,
+        onResourceReady: (() -> Unit)?,
+        onLoadFailed: ((GlideException?) -> Unit)?,
+    ) {
+        val width = resizedImageSize?.width ?: imageView.width
+        val height = resizedImageSize?.height ?: imageView.height
+        val listener = glideRequestListener<Drawable>(
+            onLoadFailed = { onLoadFailed?.invoke(it) },
+            onResourceReady = { _, _, _, _, _ -> onResourceReady?.invoke() }
+        )
+        Glide.with(context.applicationContext)
+            .load(path)
+            .transition(DrawableTransitionOptions.withCrossFade())
+            .placeholder(blurredThumb)
+            .override(width, height)
+            .listener(listener)
+            .into(imageView)
     }
 
     fun loadBlurThumb(thumb: Drawable? = blurredThumb, imageView: ImageView) {
