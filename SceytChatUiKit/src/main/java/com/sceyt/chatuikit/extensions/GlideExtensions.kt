@@ -17,8 +17,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import java.io.File
 import java.io.FileNotFoundException
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Duration.Companion.milliseconds
 
 fun getImageBitmapWithGlide(
     context: Context, url: String?,
@@ -37,9 +36,9 @@ fun getImageBitmapWithGlide(
 
 suspend fun getImageBitmapWithGlideWithTimeout(
     context: Context, url: String?,
-    timeout: Duration = 4.seconds
+    timeout: Long = 4000L
 ): Bitmap? = withContext(Dispatchers.IO) {
-    withTimeoutOrNull(timeout) {
+    withTimeoutOrNull(timeout.milliseconds) {
         try {
             withContext(Dispatchers.IO) {
                 Glide.with(context)

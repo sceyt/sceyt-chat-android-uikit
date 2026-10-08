@@ -157,6 +157,41 @@ class AttachmentViewHolderHelperTest {
         assertThat(requestCount).isEqualTo(1)
     }
 
+    @Test
+    fun `invalidate thumb requests again after rebind to another message with same path`() {
+        val helper = helper()
+        val first = TestAttachmentItem(attachment(), currentThumbPath = DEAD_THUMB_PATH)
+        val second = TestAttachmentItem(
+            attachment().copy(id = OTHER_MESSAGE_TID, messageId = OTHER_MESSAGE_TID, messageTid = OTHER_MESSAGE_TID),
+            currentThumbPath = DEAD_THUMB_PATH
+        )
+        var requestCount = 0
+
+        helper.bind(first)
+        helper.invalidateThumb(DEAD_THUMB_PATH) { requestCount++ }
+        helper.bind(second)
+        helper.invalidateThumb(DEAD_THUMB_PATH) { requestCount++ }
+
+        assertThat(second.thumbPath).isNull()
+        assertThat(requestCount).isEqualTo(2)
+    }
+
+    @Test
+    fun `invalidate thumb requests again after original is downloaded to new path`() {
+        val helper = helper()
+        val item = TestAttachmentItem(attachment(filePath = "/gallery/deleted.jpg"), currentThumbPath = DEAD_THUMB_PATH)
+        var requestCount = 0
+        helper.bind(item)
+
+        helper.invalidateThumb(DEAD_THUMB_PATH) { requestCount++ }
+        item.updateAttachment(item.attachment.copy(filePath = "/downloads/redownloaded.jpg"))
+        item.updateThumbPath(DEAD_THUMB_PATH)
+        helper.invalidateThumb(DEAD_THUMB_PATH) { requestCount++ }
+
+        assertThat(item.thumbPath).isNull()
+        assertThat(requestCount).isEqualTo(2)
+    }
+
     private fun helper() = AttachmentViewHolderHelper(View(RuntimeEnvironment.getApplication()))
 
     private fun transfer(
@@ -226,6 +261,7 @@ class AttachmentViewHolderHelperTest {
 
     private companion object {
         const val MESSAGE_TID = 10L
+        const val OTHER_MESSAGE_TID = 11L
         const val DEAD_THUMB_PATH = "/thumbs/deleted.jpg"
     }
 }

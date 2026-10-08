@@ -9,8 +9,10 @@ import androidx.core.graphics.drawable.toDrawable
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
+import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.glideRequestListener
 import com.sceyt.chatuikit.extensions.isFileNotFound
+import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.file_transfer.AttachmentTransferStateStore
 import com.sceyt.chatuikit.persistence.file_transfer.ThumbData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
@@ -21,13 +23,14 @@ class AttachmentViewHolderHelper(itemView: View) {
     private var context: Context = itemView.context
     private lateinit var fileItem: AttachmentDataProvider
     val isFileItemInitialized get() = this::fileItem.isInitialized
+    val optionalFileItem get() = if (isFileItemInitialized) fileItem else null
     var blurredThumb: Drawable? = null
         private set
     var size: Size? = null
         private set
     var resizedImageSize: Size? = null
         private set
-    private var lastInvalidatedThumbPath: String? = null
+    private var lastInvalidatedThumbKey: String? = null
 
     fun bind(item: AttachmentDataProvider, resizedImageSize: Size? = null) {
         if (isFileItemInitialized && item.thumbPath == null && !fileItem.thumbPath.isNullOrBlank()
@@ -69,8 +72,10 @@ class AttachmentViewHolderHelper(itemView: View) {
 
     internal fun invalidateThumb(path: String, requestThumb: () -> Unit) {
         if (isFileItemInitialized.not() || fileItem.thumbPath != path) return
-        if (lastInvalidatedThumbPath == path) return
-        lastInvalidatedThumbPath = path
+        val attachment = fileItem.attachment
+        val invalidatedThumbKey = "${attachment.messageTid}_${attachment.filePath}_$path"
+        if (lastInvalidatedThumbKey == invalidatedThumbKey) return
+        lastInvalidatedThumbKey = invalidatedThumbKey
         fileItem.updateThumbPath(null)
         requestThumb()
     }
@@ -83,8 +88,12 @@ class AttachmentViewHolderHelper(itemView: View) {
     ) {
         val width = resizedImageSize?.width ?: imageView.width
         val height = resizedImageSize?.height ?: imageView.height
+        val messageTid = optionalFileItem?.attachment?.messageTid
         val listener = glideRequestListener<Drawable>(
-            onLoadFailed = { onLoadFailed?.invoke(it) },
+            onLoadFailed = { e ->
+                logLoadFailed(messageTid, path, e)
+                onLoadFailed?.invoke(e)
+            },
             onResourceReady = { _, _, _, _, _ -> onResourceReady?.invoke() }
         )
         Glide.with(context.applicationContext)
@@ -94,6 +103,13 @@ class AttachmentViewHolderHelper(itemView: View) {
             .override(width, height)
             .listener(listener)
             .into(imageView)
+    }
+
+    private fun logLoadFailed(messageTid: Long?, path: String?, e: GlideException?) {
+        SceytLog.w(
+            TAG, "Glide couldn't load image for messageTid: ${messageTid}, path:$path," +
+                    " fileNotFound:${e.isFileNotFound()}", e
+        )
     }
 
     fun loadBlurThumb(thumb: Drawable? = blurredThumb, imageView: ImageView) {
