@@ -114,11 +114,44 @@ class LinkPreviewDetailsMergeTest {
     }
 
     @Test
-    fun `newer image url without size keeps old size and thumb`() {
+    fun `newer image url without size drops old size and thumb`() {
         val newer = partialFromMetadata.copy(imageUrl = "https://example.com/new.png")
         val merged = full.mergeWith(newer)
 
         assertThat(merged.imageUrl).isEqualTo(newer.imageUrl)
+        assertThat(merged.imageWidth).isNull()
+        assertThat(merged.imageHeight).isNull()
+        assertThat(merged.thumb).isNull()
+    }
+
+    @Test
+    fun `different image keeps its own size without old thumb`() {
+        val newer = full.copy(imageUrl = "https://example.com/new.png", imageWidth = 400, imageHeight = 400, thumb = null)
+
+        assertThat(full.mergeWith(newer)).isEqualTo(newer)
+        assertThat(newer.mergeWith(full.copy(thumb = null))).isEqualTo(full.copy(thumb = null))
+    }
+
+    @Test
+    fun `different image with incomplete size does not use old size`() {
+        val newer = full.copy(imageUrl = "https://example.com/new.png", imageWidth = 400, imageHeight = null, thumb = "newThumb")
+
+        assertThat(full.mergeWith(newer)).isEqualTo(newer)
+    }
+
+    @Test
+    fun `same image without size or thumb keeps old image data`() {
+        val newer = full.copy(imageWidth = null, imageHeight = null, thumb = null)
+
+        assertThat(full.mergeWith(newer)).isEqualTo(full)
+    }
+
+    @Test
+    fun `metadata without image url does not replace retained image data`() {
+        val newer = partialFromMetadata.copy(imageWidth = 400, imageHeight = 400, thumb = "unrelatedThumb")
+        val merged = full.mergeWith(newer)
+
+        assertThat(merged.imageUrl).isEqualTo(full.imageUrl)
         assertThat(merged.imageWidth).isEqualTo(full.imageWidth)
         assertThat(merged.imageHeight).isEqualTo(full.imageHeight)
         assertThat(merged.thumb).isEqualTo(full.thumb)
