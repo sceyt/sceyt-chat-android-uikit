@@ -71,6 +71,21 @@ class MessagesCacheLinkDetailsTest {
         assertThat(cachedDetails(cache)).isEqualTo(incoming)
     }
 
+    @Test
+    fun `same message with changed image does not keep cached image data`() = runTest {
+        val cache = MessagesCache()
+        cache.add(channelId, messageWithLink(full))
+        val incoming = full.copy(
+            imageUrl = "https://example.com/new.png",
+            imageWidth = null,
+            imageHeight = null,
+            thumb = null
+        )
+        cache.upsertMessages(channelId, messageWithLink(incoming))
+
+        assertThat(cachedDetails(cache)).isEqualTo(incoming)
+    }
+
     private suspend fun cachedDetails(cache: MessagesCache): LinkPreviewDetails? {
         return cache.get(channelId, 1L)?.attachments?.single()?.linkPreviewDetails
     }
