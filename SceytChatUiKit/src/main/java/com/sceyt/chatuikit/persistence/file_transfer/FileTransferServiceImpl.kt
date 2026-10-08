@@ -6,6 +6,7 @@ import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.ErrorUpload
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.PauseUpload
+import com.sceyt.chatuikit.persistence.file_transfer.TransferState.PendingDownload
 import com.sceyt.chatuikit.persistence.logic.FileTransferLogic
 import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager
 import java.util.concurrent.ConcurrentHashMap
@@ -55,6 +56,17 @@ internal class FileTransferServiceImpl(
     override fun download(attachment: SceytAttachment, transferTask: TransferTask) {
         addTransferTask(transferTask)
         listeners.download(attachment, transferTask)
+    }
+
+    override fun redownload(attachment: SceytAttachment) {
+        removeTransferTask(attachment.messageTid)
+        val pendingAttachment = attachment.copy(
+            transferState = PendingDownload,
+            progressPercent = 0f,
+            filePath = null
+        )
+        FileTransferHelper.resetToPendingDownload(pendingAttachment)
+        download(pendingAttachment, findOrCreateTransferTask(pendingAttachment))
     }
 
     override fun pause(messageTid: Long, attachment: SceytAttachment, state: TransferState) {

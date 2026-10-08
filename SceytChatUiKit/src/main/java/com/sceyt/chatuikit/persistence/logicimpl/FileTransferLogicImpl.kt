@@ -292,7 +292,7 @@ internal class FileTransferLogicImpl(
                         TAG, "Original file is missing, downloading again for messageTid: $messageTid," +
                                 " path:${attachment.filePath}, url:${attachment.url}"
                     )
-                    fileTransferService.download(attachment, task)
+                    fileTransferService.redownload(attachment)
                 }
                 SceytLog.e(
                     TAG, "Couldn't get a thumb for messageTid: $messageTid," +

@@ -72,11 +72,11 @@ class ThumbRecoveryAndroidTest {
         assertThat(thumbPaths.first()).startsWith(context.cacheDir.path)
         assertThat(thumbPaths.last()).isNotEqualTo(thumbPaths.first())
         assertThat(BitmapFactory.decodeFile(thumbPaths.last())).isNotNull()
-        assertThat(fileTransferService.downloads).isEmpty()
+        assertThat(fileTransferService.redownloads).isEmpty()
     }
 
     @Test
-    fun deletedImageOriginalIsDownloadedAgain() {
+    fun deletedImageOriginalIsRedownloaded() {
         val attachment = attachment(
             filePath = File(dir, "deleted.jpg").path,
             state = TransferState.Uploaded,
@@ -86,11 +86,11 @@ class ThumbRecoveryAndroidTest {
         logic.getAttachmentThumb(attachment.messageTid, attachment, thumbData())
 
         assertThat(thumbPaths).isEmpty()
-        assertThat(fileTransferService.downloads).containsExactly(attachment)
+        assertThat(fileTransferService.redownloads).containsExactly(attachment)
     }
 
     @Test
-    fun deletedVideoOriginalIsDownloadedAgain() {
+    fun deletedVideoOriginalIsRedownloaded() {
         val attachment = attachment(
             filePath = File(dir, "deleted.mp4").path,
             state = TransferState.Downloaded,
@@ -102,7 +102,7 @@ class ThumbRecoveryAndroidTest {
         logic.getAttachmentThumb(attachment.messageTid, attachment, thumbData())
 
         assertThat(thumbPaths).isEmpty()
-        assertThat(fileTransferService.downloads).containsExactly(attachment)
+        assertThat(fileTransferService.redownloads).containsExactly(attachment)
     }
 
     private fun taskFor(attachment: SceytAttachment): TransferTask {
@@ -155,13 +155,15 @@ class ThumbRecoveryAndroidTest {
 
     private class FakeFileTransferService : FileTransferService {
         lateinit var task: TransferTask
-        val downloads = CopyOnWriteArrayList<SceytAttachment>()
+        val redownloads = CopyOnWriteArrayList<SceytAttachment>()
 
         override fun findOrCreateTransferTask(attachment: SceytAttachment) = task
         override fun findTransferTask(attachment: SceytAttachment) = task
-        override fun download(attachment: SceytAttachment, transferTask: TransferTask) {
-            downloads.add(attachment)
+        override fun redownload(attachment: SceytAttachment) {
+            redownloads.add(attachment)
         }
+
+        override fun download(attachment: SceytAttachment, transferTask: TransferTask) = Unit
 
         override fun setCustomListener(fileTransferListeners: FileTransferListeners.Listeners) = Unit
         override fun addTransferTask(task: TransferTask) = Unit

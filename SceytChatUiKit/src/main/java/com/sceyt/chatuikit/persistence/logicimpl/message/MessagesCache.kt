@@ -422,7 +422,16 @@ class MessagesCache {
         }
     }
 
-    suspend fun updateAttachmentTransferData(updateDate: TransferData) = mutex.withLock {
+    suspend fun updateAttachmentTransferData(updateDate: TransferData) =
+        applyAttachmentTransferData(updateDate, validate = true)
+
+    internal suspend fun resetAttachmentTransferData(updateDate: TransferData) =
+        applyAttachmentTransferData(updateDate, validate = false)
+
+    private suspend fun applyAttachmentTransferData(
+        updateDate: TransferData,
+        validate: Boolean,
+    ) = mutex.withLock {
         fun update(attachment: SceytAttachment): SceytAttachment? {
             // Validate state transition to prevent out-of-order updates
             val isValid = TransferStateValidator.isValidStateTransition(
@@ -432,7 +441,7 @@ class MessagesCache {
                 newProgress = updateDate.progressPercent
             )
 
-            if (!isValid) {
+            if (validate && !isValid) {
                 println(
                     "MessagesCache: Skipping invalid update for attachment ${attachment.messageTid} - " +
                             "current: ${attachment.transferState}/${attachment.progressPercent}%, " +
