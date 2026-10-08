@@ -24,10 +24,14 @@ import org.koin.core.context.stopKoin
 import org.koin.dsl.module
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.never
+import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import java.io.File
+import java.io.FileNotFoundException
+import java.io.IOException
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
@@ -196,6 +200,87 @@ class FileTransferLogicImplThumbTest {
         assertThat(resolver.callCount.get()).isEqualTo(2)
         assertThat(thumbPaths).hasSize(2)
         assertThat(File(thumbPaths.last()).exists()).isTrue()
+    }
+
+    @Test
+    fun `missing original is downloaded again when thumb source is not found`() {
+        val resolver = ThumbPathResolver { _, _, _ -> Result.failure(FileNotFoundException()) }
+        val logic = FileTransferLogicImpl(context, attachmentLogic, resolver)
+        val attachment = attachment(state = TransferState.Uploaded)
+        val task = taskFor(attachment)
+
+        logic.getAttachmentThumb(attachment.messageTid, attachment, thumbData(ThumbFor.MessagesLisView))
+
+        verify(fileTransferService).download(attachment, task)
+    }
+
+    @Test
+    fun `original is not downloaded again when thumb fails for another reason`() {
+        val resolver = ThumbPathResolver { _, _, _ -> Result.failure(IOException("decode failed")) }
+        val logic = FileTransferLogicImpl(context, attachmentLogic, resolver)
+        val attachment = attachment()
+        taskFor(attachment)
+
+        logic.getAttachmentThumb(attachment.messageTid, attachment, thumbData(ThumbFor.MessagesLisView))
+
+        verify(fileTransferService, never()).download(any(), any())
+    }
+
+    @Test
+    fun `missing downloaded original is downloaded again`() {
+        val resolver = ThumbPathResolver { _, _, _ -> Result.failure(FileNotFoundException()) }
+        val logic = FileTransferLogicImpl(context, attachmentLogic, resolver)
+        val attachment = attachment(state = TransferState.Downloaded)
+        val task = taskFor(attachment)
+
+        logic.getAttachmentThumb(attachment.messageTid, attachment, thumbData(ThumbFor.MessagesLisView))
+
+        verify(fileTransferService).download(attachment, task)
+    }
+
+    @Test
+    fun `missing original without url is not downloaded`() {
+        val resolver = ThumbPathResolver { _, _, _ -> Result.failure(FileNotFoundException()) }
+        val logic = FileTransferLogicImpl(context, attachmentLogic, resolver)
+
+        listOf(null, "", "  ").forEach { url ->
+            val attachment = attachment(url = url, state = TransferState.Downloaded)
+            taskFor(attachment)
+            logic.getAttachmentThumb(attachment.messageTid, attachment, thumbData(ThumbFor.MessagesLisView))
+        }
+
+        verify(fileTransferService, never()).download(any(), any())
+    }
+
+    @Test
+    fun `existing original is not downloaded again when thumb source open fails`() {
+        val resolver = ThumbPathResolver { _, _, _ -> Result.failure(FileNotFoundException("ENOSPC")) }
+        val logic = FileTransferLogicImpl(context, attachmentLogic, resolver)
+        val original = tempFolder.newFile("original.jpg")
+        val attachment = attachment(filePath = original.path, state = TransferState.Uploaded)
+        taskFor(attachment)
+
+        logic.getAttachmentThumb(attachment.messageTid, attachment, thumbData(ThumbFor.MessagesLisView))
+
+        verify(fileTransferService, never()).download(any(), any())
+    }
+
+    @Test
+    fun `paused download is not resumed when thumb source is not found`() {
+        val resolver = ThumbPathResolver { _, _, _ -> Result.failure(FileNotFoundException()) }
+        val logic = FileTransferLogicImpl(context, attachmentLogic, resolver)
+        val attachment = attachment(state = TransferState.PauseDownload)
+        taskFor(attachment)
+
+        logic.getAttachmentThumb(attachment.messageTid, attachment, thumbData(ThumbFor.MessagesLisView))
+
+        verify(fileTransferService, never()).download(any(), any())
+    }
+
+    private fun taskFor(attachment: SceytAttachment): TransferTask {
+        val task = TransferTask(attachment, attachment.messageTid, attachment.transferState)
+        whenever(fileTransferService.findOrCreateTransferTask(any())).thenReturn(task)
+        return task
     }
 
     private fun thumbCallbacksFor(attachment: SceytAttachment): CopyOnWriteArrayList<ThumbData> {

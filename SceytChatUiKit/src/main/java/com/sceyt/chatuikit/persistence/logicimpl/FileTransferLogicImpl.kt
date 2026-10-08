@@ -32,6 +32,7 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploaded
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploading
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.WaitingToUpload
 import com.sceyt.chatuikit.persistence.file_transfer.TransferTask
+import com.sceyt.chatuikit.persistence.file_transfer.isCompleted
 import com.sceyt.chatuikit.persistence.logic.FileTransferLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import com.sceyt.chatuikit.persistence.mappers.toTransferData
@@ -41,6 +42,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.koin.core.component.inject
 import java.io.File
+import java.io.FileNotFoundException
 import java.util.LinkedList
 import java.util.Queue
 import java.util.UUID
@@ -272,13 +274,26 @@ internal class FileTransferLogicImpl(
             task.thumbCallback?.onThumb(readyThumb.path, data)
             return
         } else {
-            readyThumb?.let { thumbPaths.remove(thumbKey, it) }
+            readyThumb?.let {
+                SceytLog.w(
+                    TAG, "Cached thumb file is missing, regenerating for messageTid: $messageTid," +
+                            " thumb:${it.path}, source:${attachment.filePath}"
+                )
+                thumbPaths.remove(thumbKey, it)
+            }
             if (preparingThumbs.put(preparingThumbKey, data) != null) return
             thumbPathResolver.getThumbPath(context, attachment, size).onSuccess { path ->
                 thumbPaths[thumbKey] = ThumbPathsData(messageTid, path, size)
                 task.thumbCallback?.onThumb(path, preparingThumbs.remove(preparingThumbKey) ?: data)
             }.onFailure {
                 preparingThumbs.remove(preparingThumbKey)
+                if (it is FileNotFoundException && attachment.canDownloadAgain()) {
+                    SceytLog.w(
+                        TAG, "Original file is missing, downloading again for messageTid: $messageTid," +
+                                " path:${attachment.filePath}, url:${attachment.url}"
+                    )
+                    fileTransferService.download(attachment, task)
+                }
                 SceytLog.e(
                     TAG, "Couldn't get a thumb for messageTid: $messageTid," +
                             " path:${attachment.filePath} with reason ${it.message}"
@@ -493,6 +508,11 @@ internal class FileTransferLogicImpl(
         val path = if (attachment.originalFilePath.isNullOrBlank())
             attachment.filePath ?: data.filePath else attachment.originalFilePath
         return "${path}_${data.size}"
+    }
+
+    private fun SceytAttachment.canDownloadAgain(): Boolean {
+        val path = filePath ?: return false
+        return !url.isNullOrBlank() && transferState?.isCompleted() == true && !File(path).exists()
     }
 
     private fun Context.getSaveFileLocationRoot(type: String): File {
