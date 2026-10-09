@@ -328,6 +328,52 @@ class AttachmentTransferStateStoreTest {
     }
 
     @Test
+    fun `reset moves completed transfer back to pending download and accepts progress`() {
+        val attachment = attachment(
+            filePath = "/gallery/deleted.jpg",
+            state = TransferState.Uploaded,
+            progress = 100f
+        )
+        AttachmentTransferStateStore.put(
+            transfer(
+                progress = 100f,
+                state = TransferState.Uploaded,
+                filePath = attachment.filePath,
+                url = attachment.url
+            )
+        )
+
+        AttachmentTransferStateStore.reset(
+            transfer(progress = 0f, state = TransferState.PendingDownload, url = attachment.url)
+        )
+        val progress = AttachmentTransferStateStore.put(
+            transfer(progress = 30f, state = TransferState.Downloading, url = attachment.url)
+        )
+
+        assertThat(progress?.state).isEqualTo(TransferState.Downloading)
+        assertThat(progress?.filePath).isNull()
+    }
+
+    @Test
+    fun `completed transfer still rejects pending download without reset`() {
+        val attachment = attachment(filePath = "/downloads/file.jpg", state = TransferState.Downloaded, progress = 100f)
+        AttachmentTransferStateStore.put(
+            transfer(
+                progress = 100f,
+                state = TransferState.Downloaded,
+                filePath = attachment.filePath,
+                url = attachment.url
+            )
+        )
+
+        val update = AttachmentTransferStateStore.put(
+            transfer(progress = 0f, state = TransferState.PendingDownload, url = attachment.url)
+        )
+
+        assertThat(update).isNull()
+    }
+
+    @Test
     fun `store evicts least recently used entries when capacity is exceeded`() {
         repeat(513) { index ->
             AttachmentTransferStateStore.put(
