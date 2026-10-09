@@ -176,7 +176,7 @@ internal class FileTransferLogicImpl(
             PendingDownload, Downloading -> {
                 pausedTaskIds.add(attachment.messageTid)
                 fileTransferService.findTransferTask(attachment)?.let {
-                    it.state = PauseUpload
+                    it.state = PauseDownload
                     it.resumePauseCallback?.onResumePause(attachment.toTransferData(PauseDownload))
                 }
 
