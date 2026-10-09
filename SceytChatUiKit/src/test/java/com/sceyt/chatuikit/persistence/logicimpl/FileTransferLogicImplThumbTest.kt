@@ -277,6 +277,52 @@ class FileTransferLogicImplThumbTest {
         verify(fileTransferService, never()).redownload(any())
     }
 
+    @Test
+    fun `failed thumb generation releases preparing marker and allows retry`() {
+        val resolver = mock<ThumbPathResolver>()
+        whenever(resolver.getThumbPath(any(), any(), any()))
+            .thenReturn(Result.failure(IllegalStateException("invalid image")))
+            .thenReturn(Result.success("/thumbs/retried.jpg"))
+        val logic = FileTransferLogicImpl(context, attachmentLogic, resolver)
+        val attachment = attachment()
+        val callbacks = thumbCallbacksFor(attachment)
+        val thumb = thumbData(ThumbFor.MessagesLisView)
+
+        logic.getAttachmentThumb(attachment.messageTid, attachment, thumb)
+        assertThat(callbacks).isEmpty()
+        logic.getAttachmentThumb(attachment.messageTid, attachment, thumb)
+
+        assertThat(callbacks).hasSize(1)
+        verify(resolver, org.mockito.kotlin.times(2)).getThumbPath(any(), any(), any())
+    }
+
+    @Test
+    fun `thumb without local path does not invoke resolver or create task`() {
+        val resolver = mock<ThumbPathResolver>()
+        val logic = FileTransferLogicImpl(context, attachmentLogic, resolver)
+        val attachment = attachment(filePath = null)
+
+        logic.getAttachmentThumb(attachment.messageTid, attachment, thumbData(ThumbFor.MessagesLisView))
+
+        verify(resolver, never()).getThumbPath(any(), any(), any())
+        verify(fileTransferService, never()).findOrCreateTransferTask(any())
+    }
+
+    @Test
+    fun `thumb cache separates requests with different sizes`() {
+        val resolver = BlockingThumbPathResolver(tempFolder.root).apply { release() }
+        val logic = FileTransferLogicImpl(context, attachmentLogic, resolver)
+        val attachment = attachment()
+        val callbacks = thumbCallbacksFor(attachment)
+        val thumb = thumbData(ThumbFor.MessagesLisView)
+
+        logic.getAttachmentThumb(attachment.messageTid, attachment, thumb)
+        logic.getAttachmentThumb(attachment.messageTid, attachment, thumb.copy(size = Size(240, 240)))
+
+        assertThat(resolver.callCount.get()).isEqualTo(2)
+        assertThat(callbacks.map { it.size }).containsExactly(Size(120, 120), Size(240, 240))
+    }
+
     private fun taskFor(attachment: SceytAttachment): TransferTask {
         val task = TransferTask(attachment, attachment.messageTid, attachment.transferState)
         whenever(fileTransferService.findOrCreateTransferTask(any())).thenReturn(task)

@@ -7,7 +7,6 @@ Use this format:
 - <change 1>
 - <change 2>
 - <change 3>
-- Version: `<version>`
 
 SDK mapping:
 - `Connection`, `ChatConnection`, or artifact `sceyt-chat-android-connection` → `ChatConnection`
@@ -61,8 +60,9 @@ Version update rules:
 - Do not include the version number in the summary.
 - If only a version changes, use `chore`.
 - Mention the changed SDK/config block in the body where useful.
-- Add the final version as the last bullet:
+- Add the final version as the last bullet only when the commit changes that SDK's version:
   - `- Version: \`<version>\``
+- Omit the version bullet when the commit does not change a version. Mentioning a version in documentation or a dependency example does not count as changing the SDK version.
 
 Do not include explanations before or after the commit message.
 Return only the commit message.

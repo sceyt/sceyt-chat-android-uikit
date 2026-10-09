@@ -35,7 +35,9 @@ val appModules = module {
     single<ChatTokenProvider> {
         val connectionRepo = get<ConnectionRepo>()
         ChatTokenProvider { userId ->
-            connectionRepo.getSceytToken(userId).getOrNull()?.token
+            connectionRepo.getSceytToken(userId).mapCatching { response ->
+                checkNotNull(response?.token) { "Token response does not contain a token" }
+            }
         }
     }
     single {
