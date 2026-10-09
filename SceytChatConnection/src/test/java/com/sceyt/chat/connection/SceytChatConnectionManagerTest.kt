@@ -881,6 +881,52 @@ class SceytChatConnectionManagerTest {
     }
 
     @Test
+    fun connectAndAwaitIgnoresAuthFailureReceivedBeforeRecoveryConnect() = runTest {
+        listOf(ConnectionState.Disconnected, ConnectionState.Failed).forEach { state ->
+            val recoveryToken = CompletableDeferred<String>()
+            var tokenRequestCount = 0
+            val fixture = createFixture(
+                tokenProvider = ChatTokenProvider {
+                    tokenRequestCount++
+                    Result.success(if (tokenRequestCount == 1) "token-1" else recoveryToken.await())
+                }
+            )
+
+            val result = async {
+                fixture.manager.connectAndAwait("alice", timeoutMillis = 1_000L)
+            }
+            runCurrent()
+            val authError = SceytException(
+                ChatConnectionConfig.TOKEN_EXPIRED_ERROR_CODE,
+                "token rejected"
+            )
+            fixture.client.emitConnectionState(ConnectionState.Disconnected, authError)
+            runCurrent()
+            fixture.client.emitConnectionState(state, authError)
+            runCurrent()
+
+            assertThat(result.isCompleted).isFalse()
+
+            recoveryToken.complete("token-2")
+            runCurrent()
+
+            assertThat(fixture.client.connectedTokens)
+                .containsExactly("token-1", "token-2")
+                .inOrder()
+            assertThat(fixture.manager.status.value.error).isNull()
+            assertThat(result.isCompleted).isFalse()
+
+            fixture.client.emitConnectionState(ConnectionState.Connected)
+            runCurrent()
+
+            assertThat(tokenRequestCount).isEqualTo(2)
+            assertThat(result.await().isSuccess).isTrue()
+
+            fixture.close()
+        }
+    }
+
+    @Test
     fun tokenEventsWithoutUserDoNotRequestToken() = runTest {
         var tokenRequestCount = 0
         val fixture = createFixture(
