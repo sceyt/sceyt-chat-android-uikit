@@ -10,18 +10,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
-import java.util.concurrent.TimeUnit
-import kotlin.math.floor
-import kotlin.math.pow
 import kotlin.math.roundToInt
-
-fun Double.cmToFoot(): Number {
-    return (this / 30.48)
-}
-
-fun Double.footToCm(): Number {
-    return (this * 30.48).roundToInt()
-}
 
 fun Number.roundUp(): Int {
     return try {
@@ -38,22 +27,6 @@ fun Number.scale(scale: Int): Double {
     return toDouble().toBigDecimal().setScale(scale, RoundingMode.UP).toDouble()
 }
 
-fun Double.getIntOrDoubleNumberValue(): Number {
-    val pow10 = getPow10(toDouble())
-    val myCount = (toDouble() * pow10).roundToInt() / pow10
-    return if (myCount == floor(myCount) && !java.lang.Double.isInfinite(myCount)) {
-        return myCount.toInt()
-    } else (myCount * pow10).roundToInt() / pow10
-}
-
-private fun getPow10(skip: Double): Double {
-    val value: String = skip.toString()
-    return if (value.contains(".")) {
-        val k = (value.length) - value.indexOf(".")
-        10.0.pow(k.toDouble())
-    } else 10.0
-}
-
 fun Number.toPrettySize(format: String = "%.2f"): String {
     val sizeInKb = toDouble() / 1000
     val sizeInMb = sizeInKb / 1000f
@@ -62,15 +35,6 @@ fun Number.toPrettySize(format: String = "%.2f"): String {
         sizeInKb >= 1 -> String.format(Locale.getDefault(), format, sizeInKb) + "KB"
         else -> "${this}B"
     }
-}
-
-fun Long.convertMSIntoHourMinSeconds(): String {
-    return String.format(Locale.getDefault(), "%02d:%02d:%02d",
-        TimeUnit.MILLISECONDS.toHours(this),
-        TimeUnit.MILLISECONDS.toMinutes(this) -
-                TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(this)),
-        TimeUnit.MILLISECONDS.toSeconds(this) -
-                TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(this)))
 }
 
 /**
@@ -92,7 +56,8 @@ fun Float.spToPx(): Float {
 }
 
 fun Int.spToPx(): Int {
-    return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, toFloat(), displayMetrics()).toInt()
+    return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, toFloat(), displayMetrics())
+        .toInt()
 }
 
 /**
@@ -112,7 +77,12 @@ fun Float.inNotNanOrZero(): Float {
     return if (isNaN()) 0f else this
 }
 
-fun calculateScaleWidthHeight(defaultSize: Int, minSize: Int, imageWidth: Int, imageHeight: Int): Size {
+fun calculateScaleWidthHeight(
+    defaultSize: Int,
+    minSize: Int,
+    imageWidth: Int,
+    imageHeight: Int
+): Size {
     val coefficient = imageWidth.toDouble() / imageHeight.toDouble()
     var scaleWidth = defaultSize
     var scaleHeight = defaultSize
@@ -156,9 +126,10 @@ fun Long.formatMemberCount(): String {
             if (this % 1000L == 0L) {
                 "${this / 1000}k"
             } else {
-                String.format("%.1f", decimalValue) + "k"
+                String.format(Locale.ROOT, "%.1f", decimalValue) + "k"
             }
         }
+
         else -> "${this / 1000}k"
     }
 }
