@@ -30,12 +30,28 @@ class HttpChatTokenProviderTest {
             client = client
         )
 
-        val token = provider.provideToken("alice smith")
+        val token = provider.provideToken("alice smith").getOrThrow()
 
         assertThat(token).isEqualTo("token-1")
         assertThat(capturedRequest.url.queryParameter("member")).isEqualTo("alice smith")
         assertThat(capturedRequest.url.queryParameter("source")).isEqualTo("android")
         assertThat(capturedRequest.header("Authorization")).isEqualTo("Bearer api-token")
+    }
+
+    @Test
+    fun networkFailureIsReturnedAsResult() = runTest {
+        val failure = IOException("network unavailable")
+        val client = OkHttpClient.Builder()
+            .addInterceptor { throw failure }
+            .build()
+        val provider = HttpChatTokenProvider(
+            endpoint = "https://example.com/token",
+            userIdQueryParameter = "user",
+            headers = emptyMap(),
+            client = client
+        )
+
+        assertThat(provider.provideToken("alice").exceptionOrNull()).isSameInstanceAs(failure)
     }
 
     @Test
@@ -47,7 +63,7 @@ class HttpChatTokenProviderTest {
             client = clientReturning(body = "", code = 401)
         )
 
-        val error = runCatching { provider.provideToken("alice") }.exceptionOrNull()
+        val error = provider.provideToken("alice").exceptionOrNull()
 
         assertThat(error).isInstanceOf(IOException::class.java)
         assertThat(error).hasMessageThat().isEqualTo("Token request failed with HTTP 401")
@@ -62,7 +78,7 @@ class HttpChatTokenProviderTest {
             client = clientReturning("{\"value\":\"missing-token\"}")
         )
 
-        val error = runCatching { provider.provideToken("alice") }.exceptionOrNull()
+        val error = provider.provideToken("alice").exceptionOrNull()
 
         assertThat(error).isInstanceOf(IOException::class.java)
         assertThat(error).hasMessageThat().isEqualTo("Token response does not contain a token")
@@ -77,7 +93,7 @@ class HttpChatTokenProviderTest {
             client = clientReturning("{\"token\":123}")
         )
 
-        val error = runCatching { provider.provideToken("alice") }.exceptionOrNull()
+        val error = provider.provideToken("alice").exceptionOrNull()
 
         assertThat(error).isInstanceOf(IOException::class.java)
         assertThat(error).hasMessageThat().isEqualTo("Token response is invalid")

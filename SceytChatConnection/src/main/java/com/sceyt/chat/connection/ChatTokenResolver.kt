@@ -9,16 +9,16 @@ internal class ChatTokenResolver(
     private val expirationLeewaySeconds: Long,
     private val currentTimeMillis: () -> Long = System::currentTimeMillis
 ) {
-    suspend fun resolve(userId: String, forceRefresh: Boolean = false): String? {
+    suspend fun resolve(userId: String, forceRefresh: Boolean = false): Result<String> = runCatchingCancellable {
         if (forceRefresh) {
             invalidate()
         } else {
-            reusableToken(userId)?.let { return it }
+            reusableToken(userId)?.let { return@runCatchingCancellable it }
         }
 
-        val token = provider.provideToken(userId)
+        val token = provider.provideToken(userId).getOrThrow()
         currentCoroutineContext().ensureActive()
-        if (token.isNullOrBlank()) return token
+        check(token.isNotBlank()) { "Token provider returned no token" }
 
         val expirationEpochSeconds = token.jwtExpirationEpochSeconds()
         if (expirationEpochSeconds != null && !isReusable(expirationEpochSeconds)) {
@@ -30,7 +30,7 @@ internal class ChatTokenResolver(
         } else {
             storage.clear()
         }
-        return token
+        token
     }
 
     fun invalidate() {
