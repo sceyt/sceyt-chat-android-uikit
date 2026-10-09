@@ -399,6 +399,63 @@ class SceytChatConnectionManagerTest {
     }
 
     @Test
+    fun disconnectDuringTokenUpdateDoesNotReconnect() = runTest {
+        val fixture = createFixture(tokens = listOf("token-1", "token-2"))
+        fixture.client.pendingTokenUpdate = CompletableDeferred()
+
+        fixture.manager.connect("alice")
+        runCurrent()
+        fixture.client.emitConnectionState(ConnectionState.Connected)
+        fixture.client.emitTokenWillExpire()
+        runCurrent()
+
+        assertThat(fixture.client.updatedTokens).containsExactly("token-2")
+        assertThat(fixture.manager.status.value.isFetchingToken).isTrue()
+
+        fixture.manager.disconnect()
+        runCurrent()
+
+        assertThat(fixture.client.disconnectCount).isEqualTo(1)
+        assertThat(fixture.client.connectedTokens).containsExactly("token-1")
+        assertThat(fixture.manager.status.value.connectionState)
+            .isEqualTo(ConnectionState.Disconnected)
+        assertThat(fixture.manager.status.value.isFetchingToken).isFalse()
+
+        fixture.close()
+    }
+
+    @Test
+    fun backgroundDisconnectDuringTokenUpdateDoesNotReconnect() = runTest {
+        val fixture = createFixture(
+            tokens = listOf("token-1", "token-2"),
+            config = ChatConnectionConfig(
+                backgroundConnectionPolicy = BackgroundConnectionPolicy.Disconnect()
+            )
+        )
+        fixture.client.pendingTokenUpdate = CompletableDeferred()
+
+        fixture.manager.connect("alice")
+        runCurrent()
+        fixture.client.emitConnectionState(ConnectionState.Connected)
+        fixture.client.emitTokenWillExpire()
+        runCurrent()
+
+        assertThat(fixture.client.updatedTokens).containsExactly("token-2")
+        assertThat(fixture.manager.status.value.isFetchingToken).isTrue()
+
+        fixture.lifecycleOwner.stop()
+        runCurrent()
+
+        assertThat(fixture.client.disconnectCount).isEqualTo(1)
+        assertThat(fixture.client.connectedTokens).containsExactly("token-1")
+        assertThat(fixture.manager.status.value.connectionState)
+            .isEqualTo(ConnectionState.Disconnected)
+        assertThat(fixture.manager.status.value.isFetchingToken).isFalse()
+
+        fixture.close()
+    }
+
+    @Test
     fun tokenExpiredReconnectsWithFreshToken() = runTest {
         val fixture = createFixture(tokens = listOf("token-1", "token-2"))
 
@@ -891,6 +948,7 @@ class SceytChatConnectionManagerTest {
         var connectError: Exception? = null
         var updateTokenError: Exception? = null
         var updateTokenResult: Result<Unit> = Result.success(Unit)
+        var pendingTokenUpdate: CompletableDeferred<Result<Unit>>? = null
 
         private var listener: ChatConnectionClient.Listener? = null
 
@@ -915,7 +973,7 @@ class SceytChatConnectionManagerTest {
         override suspend fun updateToken(token: String): Result<Unit> {
             updatedTokens += token
             updateTokenError?.let { throw it }
-            return updateTokenResult
+            return pendingTokenUpdate?.await() ?: updateTokenResult
         }
 
         fun emitConnectionState(

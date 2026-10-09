@@ -373,10 +373,8 @@ class SceytChatConnectionManager internal constructor(
     }
 
     private suspend fun updateToken(userId: String, token: String) {
-        val result = try {
-            client.updateToken(token)
-        } catch (error: Exception) {
-            Result.failure(error)
+        val result = runCatchingCancellable {
+            client.updateToken(token).getOrThrow()
         }
 
         if (result.isFailure && isCurrentUser(userId)) {
