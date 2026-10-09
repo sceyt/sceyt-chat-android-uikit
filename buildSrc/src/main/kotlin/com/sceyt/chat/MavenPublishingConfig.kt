@@ -89,7 +89,7 @@ fun Project.configureMavenPublishing(
     }
 
     tasks.register("publishToMavenLocalClean") {
-        group = "publishing"
+        group = "sceyt publishing"
         description = "Cleans, builds and publishes $artifactId to Maven Local."
         dependsOn(cleanTask, "publishToMavenLocal")
     }
@@ -97,7 +97,7 @@ fun Project.configureMavenPublishing(
     if (!isLocalPublish) {
         val isSnapshot = version.contains("-SNAPSHOT")
         tasks.register(if (isSnapshot) "publishSnapshotClean" else "publishReleaseClean") {
-            group = "publishing"
+            group = "sceyt publishing"
             description = "Cleans, builds and publishes $artifactId to Maven Central${if (isSnapshot) " snapshots" else ""}."
             dependsOn(cleanTask, "publish")
         }
