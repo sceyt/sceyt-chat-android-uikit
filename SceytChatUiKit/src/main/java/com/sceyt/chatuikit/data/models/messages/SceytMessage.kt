@@ -42,6 +42,7 @@ data class SceytMessage(
     val bodyAttributes: List<BodyAttribute>?,
     val disableMentionsCount: Boolean,
     val poll: SceytPollDetails?,
+    val pinDetails: SceytPinDetails?,
     // Local properties
     val shouldShowAvatarAndName: Boolean = false,
     val disabledShowAvatarAndName: Boolean = false,

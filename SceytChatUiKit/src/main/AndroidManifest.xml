@@ -105,6 +105,10 @@
             android:name=".presentation.components.poll_results.PollResultsActivity"
             android:exported="false"
             android:theme="@style/DefaultFontTheme" />
+        <activity
+            android:name=".presentation.components.pinned_messages.PinnedMessagesActivity"
+            android:exported="false"
+            android:theme="@style/DefaultFontTheme" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

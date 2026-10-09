@@ -10,10 +10,14 @@ import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
+import com.sceyt.chatuikit.data.models.messages.PinnedMessageMetadata
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.data.models.messages.SystemMessageAction
 import com.sceyt.chatuikit.data.models.messages.SceytMessageType
 import com.sceyt.chatuikit.data.models.messages.SceytUser
+import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.getFileSize
+import com.sceyt.chatuikit.extensions.jsonToObject
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.persistence.mappers.toSceytAttachment
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.MessageBodyStyleHelper.buildWithAttributes
@@ -66,10 +70,16 @@ fun SceytMessage?.setChatMessageDateAndStatusIcon(
     dateText: CharSequence,
     edited: Boolean,
 ) {
+    val showPin = this?.pinDetails?.isPinned == true && !this.state.isDeletedOrHardDeleted()
+    val pinIcon = itemStyle.pinnedIcon.takeIf { showPin }
+    val pinIconPadding = dpToPx(4f)
+
     if (this?.deliveryStatus == null || state == MessageState.Deleted || incoming) {
         decoratedTextView.appearanceBuilder()
             .setText(dateText)
             .setTextStyle(itemStyle.messageDateTextStyle)
+            .setLeadingIcon(pinIcon)
+            .setLeadingIconPadding(pinIconPadding)
             .setTrailingIcon(null)
             .enableLeadingText(edited)
             .setLeadingText(itemStyle.editedStateText)
@@ -91,6 +101,8 @@ fun SceytMessage?.setChatMessageDateAndStatusIcon(
         decoratedTextView.appearanceBuilder()
             .setText(dateText)
             .setTextStyle(itemStyle.messageDateTextStyle)
+            .setLeadingIcon(pinIcon)
+            .setLeadingIconPadding(pinIconPadding)
             .setTrailingIcon(it)
             .enableLeadingText(edited)
             .setLeadingText(itemStyle.editedStateText)
@@ -204,6 +216,13 @@ fun SceytMessage.isPending() = deliveryStatus == MessageDeliveryStatus.Pending
 
 fun SceytMessage.isNotPending() = !isPending()
 
+/**
+ * A message that is meant to disappear. Such a message cannot be pinned: the pin would
+ * outlive the message it points at and keep it reachable after it vanished from the timeline.
+ */
+fun SceytMessage.isDisappearing() =
+    isTransient || viewOnce || (autoDeleteAt ?: 0L) > 0L
+
 fun MessageState.isDeletedOrHardDeleted() =
     this == MessageState.Deleted || this == MessageState.DeletedHard
 
@@ -241,6 +260,7 @@ fun SceytMessage.getUpdateMessage(message: SceytMessage): SceytMessage {
         bodyAttributes = message.bodyAttributes,
         disableMentionsCount = message.disableMentionsCount,
         poll = message.poll,
+        pinDetails = message.pinDetails,
         messageReactions = message.messageReactions,
         files = message.files,
     )
@@ -262,4 +282,21 @@ fun SceytMessage.isSelfDestructed(): Boolean {
     return if (incoming) {
         userMarkers?.any { it.name == MarkerType.Opened.value } ?: false
     } else markerTotals?.any { it.name == MarkerType.Opened.value } ?: false
+}
+
+/**
+ * The message a system message points at, or null when it points at nothing.
+ *
+ * Prefers the parent, falling back to the metadata id: `parentMessage` is populated by the
+ * server, so on the sender's own optimistic copy the metadata is all there is.
+ */
+fun SceytMessage.systemMessageTargetId(): Long? {
+    if (SystemMessageAction.getTypeFromString(body) != SystemMessageAction.PinMessage) return null
+    parentMessage?.let { parent ->
+        // Nothing to jump to once the message is gone: the announcement stays in the thread
+        // as a record, but it stops being a link.
+        if (parent.state.isDeletedOrHardDeleted()) return null
+        parent.id.takeIf { it != 0L }?.let { return it }
+    }
+    return metadata?.jsonToObject(PinnedMessageMetadata::class.java)?.id?.toLongOrNull()
 }

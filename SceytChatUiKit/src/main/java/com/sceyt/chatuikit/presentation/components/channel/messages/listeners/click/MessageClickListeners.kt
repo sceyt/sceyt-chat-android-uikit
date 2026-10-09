@@ -25,6 +25,10 @@ sealed interface MessageClickListeners {
         fun onReplyMessageContainerClick(view: View, item: MessageListItem.MessageItem)
     }
 
+    fun interface PinnedSystemMessageClickListener : MessageClickListeners {
+        fun onPinnedSystemMessageClick(view: View, item: MessageListItem.MessageItem)
+    }
+
     fun interface ReplyCountClickListener : MessageClickListeners {
         fun onReplyCountClick(view: View, item: MessageListItem.MessageItem)
     }
@@ -97,6 +101,7 @@ sealed interface MessageClickListeners {
             LinkDetailsClickListener,
             AvatarClickListener,
             ReplyMessageContainerClickListener,
+            PinnedSystemMessageClickListener,
             ReplyCountClickListener,
             AddReactionClickListener,
             ReactionClickListener,

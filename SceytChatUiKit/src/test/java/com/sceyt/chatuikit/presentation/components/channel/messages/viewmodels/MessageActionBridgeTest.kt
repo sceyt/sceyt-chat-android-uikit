@@ -56,4 +56,42 @@ class MessageActionBridgeTest {
 
         assertThat(effects).containsExactly(MessageActionBridge.Effect.MessageActionsHidden)
     }
+
+    @Test
+    fun `Pin carries actionFinish so the chooser can defer dismissing the selection`() =
+        runTest {
+            val bridge = MessageActionBridge()
+            val events = mutableListOf<MessageActionBridge.MenuEvent>()
+            val job: Job = launch { bridge.menuEvents.collect { events.add(it) } }
+            advanceUntilIdle()
+
+            var finished = false
+            bridge.dispatchMenuEvent(
+                MessageActionBridge.MenuEvent.Pin(message(1)) { finished = true }
+            )
+            advanceUntilIdle()
+            job.cancel()
+
+            val event = events.single() as MessageActionBridge.MenuEvent.Pin
+            assertThat(event.message.tid).isEqualTo(1L)
+            // Not called on dispatch — only once a scope is picked.
+            assertThat(finished).isFalse()
+            event.actionFinish()
+            assertThat(finished).isTrue()
+        }
+
+    @Test
+    fun `Unpin emits one menu event for the selected message`() = runTest {
+        val bridge = MessageActionBridge()
+        val events = mutableListOf<MessageActionBridge.MenuEvent>()
+        val job: Job = launch { bridge.menuEvents.collect { events.add(it) } }
+        advanceUntilIdle()
+
+        bridge.dispatchMenuEvent(MessageActionBridge.MenuEvent.Unpin(message(3)))
+        advanceUntilIdle()
+        job.cancel()
+
+        val event = events.single() as MessageActionBridge.MenuEvent.Unpin
+        assertThat(event.message.tid).isEqualTo(3L)
+    }
 }

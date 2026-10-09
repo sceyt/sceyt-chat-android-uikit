@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 32,
-    "identityHash": "b3509e6b2a4fac50c68c8527ba835431",
+    "identityHash": "8b13b8bc59a35ad6feed3516ab1df906",
     "entities": [
       {
         "tableName": "sceyt_channel_table",
@@ -432,7 +432,7 @@
       },
       {
         "tableName": "sceyt_message_table",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`tid` INTEGER NOT NULL, `message_id` INTEGER, `channelId` INTEGER NOT NULL, `body` TEXT NOT NULL, `type` TEXT NOT NULL, `metadata` TEXT, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, `incoming` INTEGER NOT NULL, `isTransient` INTEGER NOT NULL, `silent` INTEGER NOT NULL, `viewOnce` INTEGER NOT NULL DEFAULT 0, `deliveryStatus` INTEGER NOT NULL, `state` INTEGER NOT NULL, `fromId` TEXT, `markerCount` TEXT, `mentionedUsersIds` TEXT, `parentId` INTEGER, `replyCount` INTEGER NOT NULL, `displayCount` INTEGER NOT NULL, `autoDeleteAt` INTEGER, `bodyAttribute` TEXT, `disableMentionsCount` INTEGER NOT NULL DEFAULT 0, `unList` INTEGER NOT NULL, `messageId` INTEGER, `userId` TEXT, `hops` INTEGER, PRIMARY KEY(`tid`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`tid` INTEGER NOT NULL, `message_id` INTEGER, `channelId` INTEGER NOT NULL, `body` TEXT NOT NULL, `type` TEXT NOT NULL, `metadata` TEXT, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, `incoming` INTEGER NOT NULL, `isTransient` INTEGER NOT NULL, `silent` INTEGER NOT NULL, `viewOnce` INTEGER NOT NULL DEFAULT 0, `deliveryStatus` INTEGER NOT NULL, `state` INTEGER NOT NULL, `fromId` TEXT, `markerCount` TEXT, `mentionedUsersIds` TEXT, `parentId` INTEGER, `replyCount` INTEGER NOT NULL, `displayCount` INTEGER NOT NULL, `autoDeleteAt` INTEGER, `bodyAttribute` TEXT, `disableMentionsCount` INTEGER NOT NULL DEFAULT 0, `unList` INTEGER NOT NULL, `messageId` INTEGER, `userId` TEXT, `hops` INTEGER, `pin_isPinned` INTEGER, `pin_pinnedTill` INTEGER, `pin_pinType` INTEGER, PRIMARY KEY(`tid`))",
         "fields": [
           {
             "fieldPath": "tid",
@@ -585,6 +585,21 @@
           {
             "fieldPath": "forwardingDetailsDb.hops",
             "columnName": "hops",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "pinDetails.isPinned",
+            "columnName": "pin_isPinned",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "pinDetails.pinnedTill",
+            "columnName": "pin_pinnedTill",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "pinDetails.pinType",
+            "columnName": "pin_pinType",
             "affinity": "INTEGER"
           }
         ],
@@ -2042,6 +2057,120 @@
         ]
       },
       {
+        "tableName": "sceyt_pinned_message_table",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`messageTid` INTEGER NOT NULL, `channelId` INTEGER NOT NULL, `messageId` INTEGER NOT NULL, `pinScope` INTEGER NOT NULL, `pinnedAt` INTEGER, `pinnedUntil` INTEGER, `pinnedByUserId` TEXT, `messageCreatedAt` INTEGER, `serverPinId` INTEGER NOT NULL, `syncState` INTEGER NOT NULL, `retryCount` INTEGER NOT NULL, `lastAttemptAt` INTEGER NOT NULL, PRIMARY KEY(`messageTid`), FOREIGN KEY(`messageTid`) REFERENCES `sceyt_message_table`(`tid`) ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED)",
+        "fields": [
+          {
+            "fieldPath": "messageTid",
+            "columnName": "messageTid",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "channelId",
+            "columnName": "channelId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "messageId",
+            "columnName": "messageId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "pinScope",
+            "columnName": "pinScope",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "pinnedAt",
+            "columnName": "pinnedAt",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "pinnedUntil",
+            "columnName": "pinnedUntil",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "pinnedByUserId",
+            "columnName": "pinnedByUserId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "messageCreatedAt",
+            "columnName": "messageCreatedAt",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "serverPinId",
+            "columnName": "serverPinId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "syncState",
+            "columnName": "syncState",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "retryCount",
+            "columnName": "retryCount",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastAttemptAt",
+            "columnName": "lastAttemptAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "messageTid"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_sceyt_pinned_message_table_messageTid_channelId",
+            "unique": true,
+            "columnNames": [
+              "messageTid",
+              "channelId"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_sceyt_pinned_message_table_messageTid_channelId` ON `${TABLE_NAME}` (`messageTid`, `channelId`)"
+          },
+          {
+            "name": "index_sceyt_pinned_message_table_channelId",
+            "unique": false,
+            "columnNames": [
+              "channelId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sceyt_pinned_message_table_channelId` ON `${TABLE_NAME}` (`channelId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "sceyt_message_table",
+            "onDelete": "CASCADE",
+            "onUpdate": "CASCADE",
+            "columns": [
+              "messageTid"
+            ],
+            "referencedColumns": [
+              "tid"
+            ]
+          }
+        ]
+      },
+      {
         "tableName": "sceyt_poll_table",
         "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `messageTid` INTEGER NOT NULL, `name` TEXT NOT NULL, `description` TEXT NOT NULL, `anonymous` INTEGER NOT NULL, `votesPerOption` TEXT NOT NULL, `allowMultipleVotes` INTEGER NOT NULL, `allowVoteRetract` INTEGER NOT NULL, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, `closedAt` INTEGER NOT NULL, `closed` INTEGER NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`messageTid`) REFERENCES `sceyt_message_table`(`tid`) ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED)",
         "fields": [
@@ -2491,48 +2620,11 @@
           "CREATE TRIGGER IF NOT EXISTS room_fts_content_sync_message_fts_AFTER_UPDATE AFTER UPDATE ON `sceyt_message_table` BEGIN INSERT INTO `message_fts`(`docid`, `body`) VALUES (NEW.`rowid`, NEW.`body`); END",
           "CREATE TRIGGER IF NOT EXISTS room_fts_content_sync_message_fts_AFTER_INSERT AFTER INSERT ON `sceyt_message_table` BEGIN INSERT INTO `message_fts`(`docid`, `body`) VALUES (NEW.`rowid`, NEW.`body`); END"
         ]
-      },
-      {
-        "tableName": "sceyt_pending_channel_avatar_table",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`channelId` INTEGER NOT NULL, `filePath` TEXT NOT NULL, PRIMARY KEY(`channelId`), FOREIGN KEY(`channelId`) REFERENCES `sceyt_channel_table`(`chat_id`) ON UPDATE CASCADE ON DELETE CASCADE )",
-        "fields": [
-          {
-            "fieldPath": "channelId",
-            "columnName": "channelId",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
-            "fieldPath": "filePath",
-            "columnName": "filePath",
-            "affinity": "TEXT",
-            "notNull": true
-          }
-        ],
-        "primaryKey": {
-          "autoGenerate": false,
-          "columnNames": [
-            "channelId"
-          ]
-        },
-        "foreignKeys": [
-          {
-            "table": "sceyt_channel_table",
-            "onDelete": "CASCADE",
-            "onUpdate": "CASCADE",
-            "columns": [
-              "channelId"
-            ],
-            "referencedColumns": [
-              "chat_id"
-            ]
-          }
-        ]
       }
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'b3509e6b2a4fac50c68c8527ba835431')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '8b13b8bc59a35ad6feed3516ab1df906')"
     ]
   }
 }

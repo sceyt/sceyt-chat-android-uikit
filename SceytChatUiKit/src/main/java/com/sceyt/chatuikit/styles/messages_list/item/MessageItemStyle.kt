@@ -93,6 +93,7 @@ import java.util.Date
  * @property voicePauseIcon Icon for the voice pause, default is [R.drawable.sceyt_ic_pause]
  * @property viewOnceBadgeStyle Style for the view once badge on voice messages (icon + background).
  * @property viewCountIcon Icon for the view count, default is [R.drawable.sceyt_ic_display_count]
+ * @property pinnedIcon Shown beside the timestamp while the message is pinned, default is [R.drawable.sceyt_ic_pin_message]
  * @property messageDeliveryStatusIcons Icons for the message delivery status.
  * @property editedStateText Title for the edited state, default is [R.string.sceyt_edited].
  * @property deletedStateText Title for the deleted state, default is [R.string.sceyt_message_was_deleted].
@@ -157,6 +158,7 @@ data class MessageItemStyle(
     val voicePauseIcon: Drawable?,
     val viewOnceBadgeStyle: ViewOnceBadgeStyle,
     val viewCountIcon: Drawable?,
+    val pinnedIcon: Drawable?,
     val editedStateText: String,
     val deletedStateText: String,
     val forwardedText: String,
@@ -261,6 +263,11 @@ data class MessageItemStyle(
                             context.getCompatColor(SceytChatUIKit.theme.colors.iconSecondaryColor)
                         )
 
+                val pinnedIcon = array.getDrawable(R.styleable.MessagesListView_sceytUiMessagesListPinnedIcon)
+                        ?: context.getCompatDrawable(R.drawable.sceyt_ic_pin_message).applyTint(
+                            context.getCompatColor(SceytChatUIKit.theme.colors.iconSecondaryColor)
+                        )
+
                 val swipeToReplyIcon = array.getDrawable(R.styleable.MessagesListView_sceytUiMessagesListSwipeToReplyIcon)
                         ?: context.getCompatDrawable(R.drawable.sceyt_is_reply_swipe).applyTint(
                             context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor)
@@ -307,6 +314,7 @@ data class MessageItemStyle(
                     voicePauseIcon = voicePauseIcon,
                     viewOnceBadgeStyle = viewOnceBadgeStyle,
                     viewCountIcon = viewCountIcon,
+                    pinnedIcon = pinnedIcon,
                     editedStateText = editedStateText,
                     deletedStateText = deletedStateText,
                     forwardedText = forwardedText,
