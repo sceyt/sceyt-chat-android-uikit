@@ -161,6 +161,14 @@ internal class PersistenceAttachmentLogicImpl(
         }
     }
 
+    override suspend fun resetToPendingDownload(data: TransferData) {
+        messagesCache.resetAttachmentTransferData(data)
+        attachmentsCache.resetAttachmentTransferData(data)
+        withContext(Dispatchers.IO) {
+            attachmentDao.updateAttachmentAndPayLoad(data)
+        }
+    }
+
     override suspend fun updateAttachmentFilePathAndMetadata(
         messageTid: Long,
         newPath: String,
