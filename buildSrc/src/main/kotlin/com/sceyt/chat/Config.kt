@@ -23,7 +23,7 @@ object Config {
         const val description = "Sceyt Chat connection and lifecycle management for Android"
 
         // const val version = "local"
-        const val version = "1.0.0-SNAPSHOT"
+        const val version = "1.0.0"
     }
 
     /** App version */

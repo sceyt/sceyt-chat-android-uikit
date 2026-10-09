@@ -20,14 +20,13 @@ dependencyResolutionManagement {
 }
 ```
 
-The Sonatype snapshot repository is required for `-SNAPSHOT` versions of the connection module
-and its Chat SDK dependency.
+The Sonatype snapshot repository is required for the module's `-SNAPSHOT` Chat SDK dependency.
 
 2. Add the connection dependency to your app's `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    implementation("com.sceyt:sceyt-chat-connection:1.0.0-SNAPSHOT")
+    implementation("com.sceyt:sceyt-chat-connection:1.0.0")
 }
 ```
 
