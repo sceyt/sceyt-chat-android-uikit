@@ -370,6 +370,9 @@ class SceytChatConnectionManager internal constructor(
         if (this.userId != userId) return
 
         try {
+            _status.update {
+                it.copy(connectionState = ConnectionState.Connecting, error = null)
+            }
             client.connect(token)
         } catch (error: Exception) {
             setTokenError(userId, error)
