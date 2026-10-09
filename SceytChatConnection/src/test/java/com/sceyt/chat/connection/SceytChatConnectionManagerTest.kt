@@ -62,6 +62,80 @@ class SceytChatConnectionManagerTest {
     }
 
     @Test
+    fun connectAndAwaitIgnoresConnectedCallbackForPreviousUser() = runTest {
+        val bobToken = CompletableDeferred<String?>()
+        val fixture = createFixture(
+            tokenProvider = ChatTokenProvider { userId ->
+                if (userId == "alice") "alice-token" else bobToken.await()
+            }
+        )
+
+        fixture.manager.connect("alice")
+        runCurrent()
+        fixture.client.emitConnectionState(ConnectionState.Connected)
+        runCurrent()
+
+        val result = async {
+            fixture.manager.connectAndAwait("bob", timeoutMillis = 1_000L)
+        }
+        runCurrent()
+
+        fixture.client.emitConnectionState(
+            ConnectionState.Connected,
+            connectedUserId = "alice"
+        )
+        runCurrent()
+
+        assertThat(fixture.manager.status.value.userId).isEqualTo("bob")
+        assertThat(fixture.manager.status.value.connectionState)
+            .isNotEqualTo(ConnectionState.Connected)
+        assertThat(result.isCompleted).isFalse()
+
+        bobToken.complete("bob-token")
+        runCurrent()
+        fixture.client.emitConnectionState(
+            ConnectionState.Connected,
+            connectedUserId = "bob"
+        )
+        runCurrent()
+
+        assertThat(fixture.client.connectedTokens)
+            .containsExactly("alice-token", "bob-token")
+            .inOrder()
+        assertThat(result.await().isSuccess).isTrue()
+
+        fixture.close()
+    }
+
+    @Test
+    fun connectAndAwaitIgnoresDelayedConnectedCallbackWhileSdkIsConnecting() = runTest {
+        val fixture = createFixture(
+            tokens = listOf("alice-token"),
+            connectedUserId = "alice"
+        )
+
+        val result = async {
+            fixture.manager.connectAndAwait("alice", timeoutMillis = 1_000L)
+        }
+        runCurrent()
+
+        fixture.client.emitDelayedConnectionState(ConnectionState.Connected)
+        runCurrent()
+
+        assertThat(fixture.client.connectionState).isEqualTo(ConnectionState.Connecting)
+        assertThat(fixture.manager.status.value.connectionState)
+            .isNotEqualTo(ConnectionState.Connected)
+        assertThat(result.isCompleted).isFalse()
+
+        fixture.client.emitConnectionState(ConnectionState.Connected)
+        runCurrent()
+
+        assertThat(result.await().isSuccess).isTrue()
+
+        fixture.close()
+    }
+
+    @Test
     fun connectAndAwaitReturnsTokenProviderFailure() = runTest {
         val failure = IllegalStateException("token request failed")
         val fixture = createFixture(
@@ -978,9 +1052,20 @@ class SceytChatConnectionManagerTest {
 
         fun emitConnectionState(
             state: ConnectionState,
-            error: SceytException? = null
+            error: SceytException? = null,
+            connectedUserId: String? = "alice"
         ) {
             connectionState = state
+            if (state == ConnectionState.Connected) {
+                this.connectedUserId = connectedUserId
+            }
+            listener?.onConnectionStateChanged(state, error)
+        }
+
+        fun emitDelayedConnectionState(
+            state: ConnectionState,
+            error: SceytException? = null
+        ) {
             listener?.onConnectionStateChanged(state, error)
         }
 

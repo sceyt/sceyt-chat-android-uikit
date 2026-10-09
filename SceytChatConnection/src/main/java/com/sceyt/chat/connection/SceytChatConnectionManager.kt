@@ -236,6 +236,8 @@ class SceytChatConnectionManager internal constructor(
         error: SceytException?
     ) {
         scope.launch {
+            if (state == ConnectionState.Connected && !client.isConnectedAs(userId)) return@launch
+
             _status.update { current ->
                 current.copy(
                     connectionState = state,
@@ -353,7 +355,7 @@ class SceytChatConnectionManager internal constructor(
             !reconnectAfterBackgroundDisconnect
 
     private fun ChatConnectionStatus.isTerminalConnectionState(): Boolean {
-        if (connectionState == ConnectionState.Connected) return true
+        if (connectionState == ConnectionState.Connected) return client.isConnectedAs(userId)
         if (isFetchingToken) return false
 
         val isRecoverableTokenError = error is SceytException &&
@@ -437,16 +439,3 @@ class SceytChatConnectionManager internal constructor(
         const val DEFAULT_CONNECT_TIMEOUT_MILLIS = 10_000L
     }
 }
-
-private val ConnectionState.isDisconnected: Boolean
-    get() = this == ConnectionState.Disconnected || this == ConnectionState.Failed
-
-private val ConnectionState.isActive: Boolean
-    get() = when (this) {
-        ConnectionState.Connecting,
-        ConnectionState.Reconnecting,
-        ConnectionState.Connected -> true
-
-        ConnectionState.Disconnected,
-        ConnectionState.Failed -> false
-    }
