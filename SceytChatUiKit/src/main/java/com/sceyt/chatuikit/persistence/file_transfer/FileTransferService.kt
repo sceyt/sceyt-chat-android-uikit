@@ -10,4 +10,7 @@ interface FileTransferService : FileTransferListeners.Listeners {
     fun removeTransferTask(messageTid: Long)
     fun getTasks(): Map<String, TransferTask>
     fun clearPreparingThumbPaths()
+
+    /** Resets a finished attachment whose local file is missing to pending download and downloads it again. */
+    fun redownload(attachment: SceytAttachment)
 }
