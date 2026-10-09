@@ -40,6 +40,7 @@ import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
 import com.sceyt.chatuikit.persistence.mappers.getTid
 import com.sceyt.chatuikit.persistence.mappers.isHiddenLinkDetails
+import com.sceyt.chatuikit.persistence.mappers.keepImageDataFrom
 import com.sceyt.chatuikit.persistence.mappers.toAttachment
 import com.sceyt.chatuikit.persistence.mappers.toAttachmentPayLoad
 import com.sceyt.chatuikit.persistence.mappers.toFileChecksumData
@@ -207,10 +208,12 @@ internal class PersistenceAttachmentLogicImpl(
         return@withContext attachmentsRepository.getLinkPreviewData(link).fold(
             onSuccess = { data ->
                 if (data != null) {
-                    val details = data.toLinkPreviewDetails(link)
+                    val stored = linkDao.getLinkDetailsEntity(link)
+                    val entity = data.toLinkPreviewDetails(link).toLinkDetailsEntity().keepImageDataFrom(stored)
+                    linkDao.insert(entity)
+                    val details = entity.toLinkPreviewDetails(false)
                     messagesCache.updateAttachmentLinkDetails(details)
                     attachmentsCache.updateAttachmentLinkDetails(details)
-                    linkDao.insert(details.toLinkDetailsEntity(link, null))
                     SceytResponse.Success(details)
                 } else
                     createErrorResponse("Link is null or blank: link -> $link")
@@ -222,9 +225,10 @@ internal class PersistenceAttachmentLogicImpl(
 
     override suspend fun upsertLinkPreviewData(linkDetails: LinkPreviewDetails) =
         withContext(Dispatchers.IO) {
-            linkDao.upsert(linkDetails.toLinkDetailsEntity())
-            messagesCache.updateAttachmentLinkDetails(linkDetails)
-            attachmentsCache.updateAttachmentLinkDetails(linkDetails)
+            val merged = linkDao.upsert(linkDetails.toLinkDetailsEntity())
+                .toLinkPreviewDetails(linkDetails.hideDetails)
+            messagesCache.updateAttachmentLinkDetails(merged)
+            attachmentsCache.updateAttachmentLinkDetails(merged)
         }
 
     override suspend fun updateLinkDetails(link: String, size: Size, thumb: String?) =
