@@ -1,6 +1,11 @@
 package com.sceyt.chat.connection
 
 import com.google.common.truth.Truth.assertThat
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import kotlin.io.encoding.Base64
@@ -14,14 +19,14 @@ class ChatTokenResolverTest {
         var requestCount = 0
         val provider = ChatTokenProvider {
             requestCount++
-            token
+            Result.success(token)
         }
 
         val firstResolver = resolver(provider, storage)
         val secondResolver = resolver(provider, storage)
 
-        assertThat(firstResolver.resolve("alice")).isEqualTo(token)
-        assertThat(secondResolver.resolve("alice")).isEqualTo(token)
+        assertThat(firstResolver.resolve("alice").getOrThrow()).isEqualTo(token)
+        assertThat(secondResolver.resolve("alice").getOrThrow()).isEqualTo(token)
         assertThat(requestCount).isEqualTo(1)
     }
 
@@ -32,9 +37,9 @@ class ChatTokenResolverTest {
         val storage = FakeChatTokenStorage().apply {
             save("alice", expiredToken)
         }
-        val resolver = resolver({ freshToken }, storage)
+        val resolver = resolver({ Result.success(freshToken) }, storage)
 
-        assertThat(resolver.resolve("alice")).isEqualTo(freshToken)
+        assertThat(resolver.resolve("alice").getOrThrow()).isEqualTo(freshToken)
         assertThat(storage.get("alice")).isEqualTo(freshToken)
     }
 
@@ -44,21 +49,21 @@ class ChatTokenResolverTest {
         val secondToken = jwt(NOW_EPOCH_SECONDS + 7_200L)
         val tokens = listOf(firstToken, secondToken).iterator()
         val storage = FakeChatTokenStorage()
-        val resolver = resolver({ tokens.next() }, storage)
+        val resolver = resolver({ Result.success(tokens.next()) }, storage)
 
-        assertThat(resolver.resolve("alice")).isEqualTo(firstToken)
-        assertThat(resolver.resolve("alice", forceRefresh = true)).isEqualTo(secondToken)
+        assertThat(resolver.resolve("alice").getOrThrow()).isEqualTo(firstToken)
+        assertThat(resolver.resolve("alice", forceRefresh = true).getOrThrow()).isEqualTo(secondToken)
         assertThat(storage.get("alice")).isEqualTo(secondToken)
     }
 
     @Test
     fun newlyFetchedJwtInsideExpiryLeewayIsRejected() = runTest {
         val resolver = resolver(
-            { jwt(NOW_EPOCH_SECONDS + 30L) },
+            { Result.success(jwt(NOW_EPOCH_SECONDS + 30L)) },
             FakeChatTokenStorage()
         )
 
-        val error = runCatching { resolver.resolve("alice") }.exceptionOrNull()
+        val error = resolver.resolve("alice").exceptionOrNull()
 
         assertThat(error).isInstanceOf(IllegalStateException::class.java)
         assertThat(error).hasMessageThat().isEqualTo("Token is expired or expires too soon")
@@ -68,12 +73,12 @@ class ChatTokenResolverTest {
     fun customExpiryLeewayIsApplied() = runTest {
         val token = jwt(NOW_EPOCH_SECONDS + 30L)
         val resolver = resolver(
-            provider = { token },
+            provider = { Result.success(token) },
             storage = FakeChatTokenStorage(),
             expirationLeewaySeconds = 10L
         )
 
-        assertThat(resolver.resolve("alice")).isEqualTo(token)
+        assertThat(resolver.resolve("alice").getOrThrow()).isEqualTo(token)
     }
 
     @Test
@@ -83,13 +88,13 @@ class ChatTokenResolverTest {
         val resolver = resolver(
             {
                 requestCount++
-                "opaque-token"
+                Result.success("opaque-token")
             },
             storage
         )
 
-        assertThat(resolver.resolve("alice")).isEqualTo("opaque-token")
-        assertThat(resolver.resolve("alice")).isEqualTo("opaque-token")
+        assertThat(resolver.resolve("alice").getOrThrow()).isEqualTo("opaque-token")
+        assertThat(resolver.resolve("alice").getOrThrow()).isEqualTo("opaque-token")
         assertThat(requestCount).isEqualTo(2)
         assertThat(storage.get("alice")).isNull()
     }
@@ -105,14 +110,73 @@ class ChatTokenResolverTest {
         val resolver = resolver(
             { userId ->
                 requestedUserId = userId
-                bobToken
+                Result.success(bobToken)
             },
             storage
         )
 
-        assertThat(resolver.resolve("bob")).isEqualTo(bobToken)
+        assertThat(resolver.resolve("bob").getOrThrow()).isEqualTo(bobToken)
         assertThat(requestedUserId).isEqualTo("bob")
         assertThat(storage.get("bob")).isEqualTo(bobToken)
+    }
+
+    @Test
+    fun providerFailureIsReturnedUnchanged() = runTest {
+        val failure = IllegalStateException("token request failed")
+        val resolver = resolver({ Result.failure(failure) }, FakeChatTokenStorage())
+
+        assertThat(resolver.resolve("alice").exceptionOrNull()).isSameInstanceAs(failure)
+    }
+
+    @Test
+    fun thrownProviderFailureIsReturnedAsFailure() = runTest {
+        val failure = IllegalStateException("provider threw")
+        val resolver = resolver({ throw failure }, FakeChatTokenStorage())
+
+        assertThat(resolver.resolve("alice").exceptionOrNull()).isSameInstanceAs(failure)
+    }
+
+    @Test
+    fun cancellationFailureIsRethrown() = runTest {
+        val cancellation = CancellationException("token request cancelled")
+        val resolver = resolver({ Result.failure(cancellation) }, FakeChatTokenStorage())
+
+        val error = runCatching { resolver.resolve("alice") }.exceptionOrNull()
+
+        assertThat(error).isSameInstanceAs(cancellation)
+    }
+
+    @Test
+    fun tokenReturnedAfterCancellationIsNotStored() = runTest {
+        val token = jwt(NOW_EPOCH_SECONDS + 3_600L)
+        val storage = FakeChatTokenStorage()
+        val resolver = resolver(
+            {
+                currentCoroutineContext().cancel()
+                Result.success(token)
+            },
+            storage
+        )
+
+        val request = launch(start = CoroutineStart.UNDISPATCHED) {
+            resolver.resolve("alice")
+        }
+
+        assertThat(request.isCancelled).isTrue()
+        assertThat(storage.get("alice")).isNull()
+    }
+
+    @Test
+    fun storageFailureIsReturnedAsFailure() = runTest {
+        val failure = IllegalStateException("storage unavailable")
+        val storage = object : ChatTokenStorage {
+            override fun get(userId: String): String? = throw failure
+            override fun save(userId: String, token: String) = Unit
+            override fun clear() = Unit
+        }
+        val resolver = resolver({ Result.success("token-1") }, storage)
+
+        assertThat(resolver.resolve("alice").exceptionOrNull()).isSameInstanceAs(failure)
     }
 
     private fun resolver(
