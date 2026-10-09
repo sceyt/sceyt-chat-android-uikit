@@ -10,7 +10,6 @@ import okhttp3.Request
 import okhttp3.Response
 import java.io.IOException
 import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
 
 /**
  * Fetches chat tokens with a GET request containing the user ID as a query parameter.
@@ -38,7 +37,7 @@ class HttpChatTokenProvider internal constructor(
         }
     }
 
-    override suspend fun provideToken(userId: String): String {
+    override suspend fun provideToken(userId: String): Result<String> = runCatchingCancellable {
         val url = endpoint.newBuilder()
             .setQueryParameter(userIdQueryParameter, userId)
             .build()
@@ -50,28 +49,25 @@ class HttpChatTokenProvider internal constructor(
             .get()
             .build()
 
-        return suspendCancellableCoroutine { continuation ->
+        suspendCancellableCoroutine { continuation ->
             val call = client.newCall(request)
             continuation.invokeOnCancellation { call.cancel() }
             call.enqueue(object : Callback {
 
                 override fun onFailure(call: Call, e: IOException) {
                     if (continuation.isActive) {
-                        continuation.resumeWithException(e)
+                        continuation.resume(Result.failure(e))
                     }
                 }
 
                 override fun onResponse(call: Call, response: Response) {
                     val result = runCatching { response.use(::readToken) }
                     if (continuation.isActive) {
-                        result.fold(
-                            onSuccess = continuation::resume,
-                            onFailure = continuation::resumeWithException
-                        )
+                        continuation.resume(result)
                     }
                 }
             })
-        }
+        }.getOrThrow()
     }
 
     private fun readToken(response: Response): String {

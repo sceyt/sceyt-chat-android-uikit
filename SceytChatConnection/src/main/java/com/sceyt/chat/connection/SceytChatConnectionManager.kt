@@ -307,27 +307,23 @@ class SceytChatConnectionManager internal constructor(
 
         tokenRequestJob = scope.launch {
             try {
-                val token = tokenResolver.resolve(userId, forceRefresh)
+                val result = tokenResolver.resolve(userId, forceRefresh)
                 currentCoroutineContext().ensureActive()
-
-                if (token.isNullOrBlank()) {
-                    setTokenError(userId, IllegalStateException("Token provider returned no token"))
-                    return@launch
-                }
 
                 if (!isCurrentRequest(generation, userId)) {
                     return@launch
                 }
 
-                when (tokenRequestPurpose) {
-                    TokenRequestPurpose.Connect -> connectWithToken(userId, token)
-                    TokenRequestPurpose.Update -> updateToken(userId, token)
-                    null -> Unit
-                }
-            } catch (error: CancellationException) {
-                throw error
-            } catch (error: Exception) {
-                setTokenError(userId, error)
+                result.fold(
+                    onSuccess = { token ->
+                        when (tokenRequestPurpose) {
+                            TokenRequestPurpose.Connect -> connectWithToken(userId, token)
+                            TokenRequestPurpose.Update -> updateToken(userId, token)
+                            null -> Unit
+                        }
+                    },
+                    onFailure = { error -> setTokenError(userId, error) }
+                )
             } finally {
                 if (generation == tokenRequestGeneration) {
                     tokenRequestJob = null

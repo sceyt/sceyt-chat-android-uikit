@@ -6,9 +6,42 @@ foreground/background behavior.
 Create one application-scoped manager and reuse it for the lifetime of the process. Initialize
 the Sceyt Chat SDK before calling `connect`.
 
+## Installation
+
+1. Add the repositories to your project's `settings.gradle.kts`:
+
+```kotlin
+dependencyResolutionManagement {
+    repositories {
+        google()
+        mavenCentral()
+        maven(url = "https://central.sonatype.com/repository/maven-snapshots/")
+    }
+}
+```
+
+The Sonatype snapshot repository is required for `-SNAPSHOT` versions of the connection module
+and its Chat SDK dependency.
+
+2. Add the connection dependency to your app's `build.gradle.kts`:
+
+```kotlin
+dependencies {
+    implementation("com.sceyt:sceyt-chat-connection:1.0.0-SNAPSHOT")
+}
+```
+
+The module includes the Sceyt Chat SDK and coroutine dependencies transitively. Sync Gradle after
+adding the dependency.
+
 ## Token provider
 
-Use `ChatTokenProvider` when the application already has its own authenticated API client:
+`ChatTokenProvider.provideToken(userId)` returns `Result<String>`. Return `Result.success(token)`
+with a non-blank token, or `Result.failure(error)` when fetching fails. Coroutine cancellation
+must propagate as `CancellationException`.
+
+Use `ChatTokenProvider` when the application already has its own authenticated API client.
+In this example, `backend.getChatToken(userId)` returns `Result<String>`:
 
 ```kotlin
 val connectionManager = SceytChatConnectionManager(
