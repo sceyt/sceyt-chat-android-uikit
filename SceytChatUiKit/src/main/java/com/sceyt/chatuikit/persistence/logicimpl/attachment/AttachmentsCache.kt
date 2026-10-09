@@ -100,6 +100,14 @@ class AttachmentsCache {
     }
 
     suspend fun updateAttachmentTransferData(updateDate: TransferData) {
+        applyAttachmentTransferData(updateDate, validate = true)
+    }
+
+    internal suspend fun resetAttachmentTransferData(updateDate: TransferData) {
+        applyAttachmentTransferData(updateDate, validate = false)
+    }
+
+    private suspend fun applyAttachmentTransferData(updateDate: TransferData, validate: Boolean) {
         mutex.withLock {
             fun update(attachment: SceytAttachment): SceytAttachment? {
                 // Validate state transition to prevent out-of-order updates
@@ -109,8 +117,8 @@ class AttachmentsCache {
                     currentProgress = attachment.progressPercent ?: 0f,
                     newProgress = updateDate.progressPercent
                 )
-                
-                if (!isValid) {
+
+                if (validate && !isValid) {
                     println("AttachmentsCache: Skipping invalid update for attachment ${attachment.messageTid} - " +
                             "current: ${attachment.transferState}/${attachment.progressPercent}%, " +
                             "new: ${updateDate.state}/${updateDate.progressPercent}%")
