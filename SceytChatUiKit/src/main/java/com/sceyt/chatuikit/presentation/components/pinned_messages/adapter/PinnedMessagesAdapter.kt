@@ -46,16 +46,6 @@ internal class PinnedMessagesAdapter(
 
     fun getData() = items
 
-    fun updateItemSelection(message: SceytMessage) {
-        val item = items.firstOrNull {
-            it is MessageListItem.MessageItem && it.message.tid == message.tid
-        } as? MessageListItem.MessageItem ?: return
-        val updated = item.copy(message = item.message.copy(isSelected = message.isSelected))
-        val index = replaceMessageItem(updated)
-        if (index != RecyclerView.NO_POSITION)
-            notifyItemChanged(index, MessageDiff.DEFAULT_FALSE.copy(selectionChanged = true))
-    }
-
     override fun getItemCount(): Int = items.size
 
     private fun getItem(position: Int) = items[position]

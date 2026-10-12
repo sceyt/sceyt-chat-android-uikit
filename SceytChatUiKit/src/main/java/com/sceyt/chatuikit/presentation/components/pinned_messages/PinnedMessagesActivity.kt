@@ -296,16 +296,47 @@ open class PinnedMessagesActivity : AppCompatActivity() {
             ).show()
             return
         }
-        adapter.updateItemSelection(updated)
+        updateMessageSelection(updated)
 
         val selected = viewModel.selectedMessages.values
         if (selected.isEmpty()) {
             clearSelection()
         } else {
-            if (!adapter.isMultiSelectableMode())
-                setMultiSelectableMode()
             showMessageActions(*selected.toTypedArray())
+            setMultiSelectableMode()
         }
+    }
+
+    protected open fun updateMessageSelection(message: SceytMessage) {
+        val data = adapter.getData()
+        for ((index, item) in data.withIndex()) {
+            if (item is MessageItem && item.message.tid == message.tid) {
+                val updatedItem = item.copy(
+                    message = item.message.copy(isSelected = message.isSelected)
+                )
+
+                updateAdapterItem(
+                    index = index,
+                    item = updatedItem,
+                    diff = MessageDiff.DEFAULT_FALSE.copy(selectionChanged = true)
+                )
+                break
+            }
+        }
+    }
+
+    private fun updateAdapterItem(index: Int, item: MessageItem, diff: MessageDiff) {
+        val currentIndex = adapter.replaceMessageItem(item, index)
+        if (currentIndex == RecyclerView.NO_POSITION) return
+        updateItem(currentIndex, item, diff)
+    }
+
+    private fun updateItem(index: Int, item: MessageItem, diff: MessageDiff) {
+        val holder = binding.rvPinnedMessages.findViewHolderForItemId(item.getItemId())
+                as? PinnedMessagesAdapter.ViewHolder
+        if (holder != null) {
+            holder.bind(item, diff)
+        } else adapter.notifyItemChanged(index, diff)
     }
 
     protected open fun clearSelection() {
