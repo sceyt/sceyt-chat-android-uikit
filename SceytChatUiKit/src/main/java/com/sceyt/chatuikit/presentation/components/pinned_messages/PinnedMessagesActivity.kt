@@ -302,15 +302,46 @@ open class PinnedMessagesActivity : AppCompatActivity() {
         if (selected.isEmpty()) {
             clearSelection()
         } else {
-            adapter.setSelectableMode(true)
+            if (!adapter.isMultiSelectableMode())
+                setMultiSelectableMode()
             showMessageActions(*selected.toTypedArray())
         }
     }
 
     protected open fun clearSelection() {
         viewModel.selectedMessages.clear()
-        adapter.setSelectableMode(false)
+        cancelMultiSelectMode()
         hideMessageActions()
+    }
+
+    protected open fun setMultiSelectableMode() {
+        adapter.setMultiSelectableMode(true)
+        val rv = binding.rvPinnedMessages
+        for (i in 0 until rv.childCount) {
+            rv.getChildAt(i)?.let {
+                val holder = rv.getChildViewHolder(it)
+                (holder as? PinnedMessagesAdapter.ViewHolder)?.setSelectableState()
+            }
+        }
+    }
+
+    protected open fun cancelMultiSelectMode() {
+        adapter.setMultiSelectableMode(false)
+        val rv = binding.rvPinnedMessages
+        for (i in 0 until rv.childCount) {
+            rv.getChildAt(i)?.let {
+                val holder = rv.getChildViewHolder(it)
+                (holder as? PinnedMessagesAdapter.ViewHolder)?.cancelSelectableState()
+            }
+        }
+        adapter.getData().forEachIndexed { index, item ->
+            if (item is MessageItem) {
+                if (item.message.isSelected) {
+                    val updated = item.copy(message = item.message.copy(isSelected = false))
+                    adapter.replaceMessageItem(updated, index)
+                }
+            }
+        }
     }
 
 

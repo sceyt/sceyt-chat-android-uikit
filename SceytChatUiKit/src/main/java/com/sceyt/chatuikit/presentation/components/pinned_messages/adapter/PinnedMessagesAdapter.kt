@@ -17,6 +17,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.mes
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageViewHolderFactory
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessagesDiffUtil
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMessageViewHolder
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.MessageSelectableAnimHelper
 import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle
 import com.sceyt.chatuikit.styles.pinned_messages.PinnedMessagesStyle
 import kotlinx.coroutines.Dispatchers
@@ -31,18 +32,19 @@ internal class PinnedMessagesAdapter(
 ) : RecyclerView.Adapter<PinnedMessagesAdapter.ViewHolder>() {
 
     private var items: List<MessageListItem> = emptyList()
-    private var selectableMode = false
+    private var isMultiSelectableMode = false
 
     init {
         setHasStableIds(true)
     }
-    fun setSelectableMode(enable: Boolean) {
-        if (selectableMode == enable) return
-        selectableMode = enable
-        notifyItemRangeChanged(
-            0, itemCount, MessageDiff.DEFAULT_FALSE.copy(selectionChanged = true)
-        )
+
+    fun setMultiSelectableMode(enable: Boolean) {
+        isMultiSelectableMode = enable
     }
+
+    fun isMultiSelectableMode() = isMultiSelectableMode
+
+    fun getData() = items
 
     fun updateItemSelection(message: SceytMessage) {
         val item = items.firstOrNull {
@@ -94,7 +96,7 @@ internal class PinnedMessagesAdapter(
 
     override fun onViewAttachedToWindow(holder: ViewHolder) {
         super.onViewAttachedToWindow(holder)
-        holder.messageHolder.onViewAttachedToWindow()
+        holder.onViewAttachedToWindow()
     }
 
     override fun onViewDetachedFromWindow(holder: ViewHolder) {
@@ -134,10 +136,12 @@ internal class PinnedMessagesAdapter(
 
         private val bubbleView = messageHolder.layoutBubbleConfig?.first ?: messageHolder.itemView
         private val bubbleBounds = Rect()
+        private val selectableAnimHelper by lazy { MessageSelectableAnimHelper(this) }
+        private val checkBoxSize = dpToPx(22f)
         private var incoming = false
 
         init {
-            messageHolder.itemView.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
+            binding.root.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
                 positionNavigateButton()
             }
         }
@@ -145,38 +149,60 @@ internal class PinnedMessagesAdapter(
         fun bind(item: MessageListItem.MessageItem, diff: MessageDiff) = with(binding) {
             val message = item.message
             messageHolder.bind(item, diff)
+            if (diff.selectionChanged || diff.statusChanged)
+                bindSelectView(message)
 
-            selectView.isVisible = selectableMode
-            selectView.isChecked = message.isSelected
-            // The checkbox itself stays non-clickable, as it is in the conversation's cells;
-            // the row takes the tap, which also covers the space beside the bubble.
-            root.setOnClickListener { if (selectableMode) onSelectClick(message) }
+            root.setOnClickListener { if (isMultiSelectableMode) onSelectClick(message) }
 
             incoming = message.incoming
             bubbleContainer.updateLayoutParams<MarginLayoutParams> {
                 marginEnd = if (incoming) NAV_LANE else 0
             }
-            positionNavigateButton()
 
             navigateButton.setImageDrawable(style.navigateIcon)
             navigateButton.setOnClickListener { onNavigateClick(message) }
         }
 
+        fun onViewAttachedToWindow() {
+            messageHolder.onViewAttachedToWindow()
+            currentMessage?.let { bindSelectView(it) }
+        }
+
+        fun setSelectableState() {
+            val item = items.getOrNull(bindingAdapterPosition) ?: return
+            selectableAnimHelper.setSelectableState(binding.selectView, item)
+        }
+
+        fun cancelSelectableState(onAnimEnd: (() -> Unit)? = null) {
+            selectableAnimHelper.cancelSelectableState(binding.selectView, onAnimEnd)
+        }
+
+        private val currentMessage
+            get() = (items.getOrNull(bindingAdapterPosition) as? MessageListItem.MessageItem)?.message
+
+        private fun bindSelectView(message: SceytMessage) = with(binding.selectView) {
+            if (isMultiSelectableMode) {
+                isVisible = true
+                isChecked = message.isSelected
+                updateLayoutParams<MarginLayoutParams> {
+                    marginStart = checkBoxSize / 2
+                }
+            } else isVisible = false
+        }
+
         private fun positionNavigateButton(): Unit = with(binding) {
-            val bubble = bubbleView
             val rowWidth = root.width
             if (rowWidth == 0) return
-            bubbleBounds.set(0, 0, bubble.width, bubble.height)
-            root.offsetDescendantRectToMyCoords(bubble, bubbleBounds)
-            val navWidth = navigateButton.width.takeIf { it > 0 }
-                ?: navigateButton.layoutParams.width
-            val navHeight = navigateButton.height.takeIf { it > 0 }
-                ?: navigateButton.layoutParams.height
+            val navWidth = navigateButton.width
+            val navHeight = navigateButton.height
 
+            bubbleBounds.set(0, 0, bubbleView.width, bubbleView.height)
+            bubbleContainer.offsetDescendantRectToMyCoords(bubbleView, bubbleBounds)
             navigateButton.translationY =
-                (bubbleBounds.bottom - navHeight - navigateButton.top - NAVIGATION_BOTTOM_INSET)
-                    .coerceAtLeast(0).toFloat()
+                (bubbleBounds.bottom - navHeight).coerceAtLeast(0).toFloat()
 
+            bubbleBounds.set(0, 0, bubbleView.width, bubbleView.height)
+            root.offsetDescendantRectToMyCoords(bubbleView, bubbleBounds)
             val isRtl = root.layoutDirection == View.LAYOUT_DIRECTION_RTL
             val restingLeft = if (isRtl) rowWidth - navWidth else 0
             val left = if (incoming != isRtl) {
@@ -188,11 +214,7 @@ internal class PinnedMessagesAdapter(
     }
 
     private companion object {
-
         val GAP = 8.dpToPx()
-
         val NAV_LANE = 52.dpToPx()
-
-        val NAVIGATION_BOTTOM_INSET = 4.dpToPx()
     }
 }
