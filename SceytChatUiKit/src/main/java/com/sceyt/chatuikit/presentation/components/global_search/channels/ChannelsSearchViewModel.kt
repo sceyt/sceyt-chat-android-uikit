@@ -163,7 +163,7 @@ open class ChannelsSearchViewModel(
             withContext(Dispatchers.Main) {
                 _state.update {
                     it.copy(
-                        listItems = it.listItems + result.listItems,
+                        listItems = (it.listItems + result.listItems).distinct(),
                         isLoadingMore = false,
                         hasMore = result.hasMore,
                         offset = it.offset + result.loadedCount,
