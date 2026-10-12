@@ -72,14 +72,12 @@ fun SceytMessage?.setChatMessageDateAndStatusIcon(
 ) {
     val showPin = this?.pinDetails?.isPinned == true && !this.state.isDeletedOrHardDeleted()
     val pinIcon = itemStyle.pinnedIcon.takeIf { showPin }
-    val pinIconPadding = dpToPx(4f)
 
     if (this?.deliveryStatus == null || state == MessageState.Deleted || incoming) {
         decoratedTextView.appearanceBuilder()
             .setText(dateText)
             .setTextStyle(itemStyle.messageDateTextStyle)
             .setLeadingIcon(pinIcon)
-            .setLeadingIconPadding(pinIconPadding)
             .setTrailingIcon(null)
             .enableLeadingText(edited)
             .setLeadingText(itemStyle.editedStateText)
@@ -102,7 +100,6 @@ fun SceytMessage?.setChatMessageDateAndStatusIcon(
             .setText(dateText)
             .setTextStyle(itemStyle.messageDateTextStyle)
             .setLeadingIcon(pinIcon)
-            .setLeadingIconPadding(pinIconPadding)
             .setTrailingIcon(it)
             .enableLeadingText(edited)
             .setLeadingText(itemStyle.editedStateText)
