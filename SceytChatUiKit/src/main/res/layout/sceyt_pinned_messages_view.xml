@@ -74,6 +74,7 @@
         android:layout_marginStart="4dp"
         android:layout_marginEnd="8dp"
         android:ellipsize="end"
+        android:fallbackLineSpacing="false"
         android:includeFontPadding="false"
         android:maxLines="1"
         app:layout_goneMarginStart="8dp"
