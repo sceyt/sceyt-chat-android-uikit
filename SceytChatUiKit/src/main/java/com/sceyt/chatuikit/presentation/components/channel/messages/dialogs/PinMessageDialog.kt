@@ -2,10 +2,15 @@ package com.sceyt.chatuikit.presentation.components.channel.messages.dialogs
 
 import android.app.Dialog
 import android.content.Context
+import android.graphics.Color
+import android.graphics.drawable.InsetDrawable
 import android.os.Bundle
+import android.view.ViewGroup
+import androidx.core.graphics.drawable.toDrawable
 import com.sceyt.chat.models.message.PinDetails.PinType
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.databinding.SceytDialogPinMessageBinding
+import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.styles.common.DialogStyle
 
 class PinMessageDialog(
@@ -23,7 +28,12 @@ class PinMessageDialog(
         binding.applyStyle()
         initView()
 
-        window?.setWindowAnimations(R.style.SceytDialogWindowAnimation)
+        window?.apply {
+            setWindowAnimations(R.style.SceytDialogWindowAnimation)
+            val inset = dpToPx(32f)
+            setBackgroundDrawable(InsetDrawable(Color.TRANSPARENT.toDrawable(), inset, 0, inset, 0))
+            setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        }
     }
 
     private fun initView() {
