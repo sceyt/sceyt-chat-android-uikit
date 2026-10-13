@@ -92,6 +92,47 @@ class PinnedMessagesPersistenceTest {
     }
 
     @Test
+    fun `sync refreshes an edited pin while preserving its local tid and list visibility`() = runTest {
+        val local = messageEntity(tid = 77L).copy(body = "old body", updatedAt = 100L)
+        database.messageDao().upsertMessage(messageDb(local))
+        cache.add(7L, sceytMessage(tid = 77L).copy(body = "old body", updatedAt = 100L))
+        val fetched = sceytMessage(tid = 0L).copy(body = "edited body", updatedAt = 200L)
+        whenever(pinRepository.getPinnedMessages(7L)).thenReturn(
+            flowOf(SceytPagingResponse.Success(listOf(sceytPinnedMessage(message = fetched)), hasNext = false))
+        )
+
+        logic.syncChannelPins(7L)
+
+        val stored = database.messageDao().getMessageById(42L)!!.messageEntity
+        assertThat(stored.body).isEqualTo("edited body")
+        assertThat(stored.updatedAt).isEqualTo(200L)
+        assertThat(stored.tid).isEqualTo(77L)
+        assertThat(stored.unList).isFalse()
+        assertThat(cache.get(7L, 77L)?.body).isEqualTo("edited body")
+        assertThat(logic.getPinnedMessagesFlow(7L).first().single().message.body).isEqualTo("edited body")
+    }
+
+    @Test
+    fun `sync does not overwrite a newer local message with an older pin response`() = runTest {
+        database.messageDao().upsertMessage(messageDb(
+            messageEntity(tid = 77L).copy(body = "newer body", updatedAt = 300L, unList = true)
+        ))
+        val fetched = sceytMessage(tid = 0L).copy(body = "stale body", updatedAt = 200L)
+        whenever(pinRepository.getPinnedMessages(7L)).thenReturn(
+            flowOf(SceytPagingResponse.Success(listOf(sceytPinnedMessage(message = fetched)), hasNext = false))
+        )
+
+        logic.syncChannelPins(7L)
+
+        val stored = database.messageDao().getMessageById(42L)!!.messageEntity
+        assertThat(stored.body).isEqualTo("newer body")
+        assertThat(stored.updatedAt).isEqualTo(300L)
+        assertThat(stored.tid).isEqualTo(77L)
+        assertThat(stored.unList).isTrue()
+        assertThat(database.pinnedMessageDao().getByTid(77L)).isNotNull()
+    }
+
+    @Test
     fun `failed unpin followed by successful sync preserves removal intent`() = runTest {
         val dao = database.pinnedMessageDao()
         database.messageDao().upsertMessage(messageDb())

@@ -39,7 +39,7 @@ class UpdatePinnedMessagesUseCaseTest {
             scope = PinType.PERSONAL,
             pinnedUntil = 5_000L,
         )
-        whenever(messageDao.getMessageTidById(42L)).thenReturn(77L)
+        whenever(messageDao.getMessageById(42L)).thenReturn(messageDb(messageEntity(tid = 77L)))
 
         useCase(PinUpdateEvent.Pinned(channelId = 7L, messages = listOf(pin)))
 

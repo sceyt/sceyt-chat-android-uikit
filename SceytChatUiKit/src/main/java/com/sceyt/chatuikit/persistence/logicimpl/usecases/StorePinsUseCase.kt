@@ -18,7 +18,7 @@ internal class StorePinsUseCase(
 
     suspend operator fun invoke(channelId: Long, pins: List<SceytPinnedMessage>) {
         val entities = pins.filter { it.message.shouldStore() }.map { pin ->
-            pin.toPinnedMessageEntity(channelId, messageTid = storeMessageIfMissing(pin.message))
+            pin.toPinnedMessageEntity(channelId, messageTid = storeMessage(pin.message))
         }
         if (entities.isEmpty()) return
 
@@ -26,10 +26,12 @@ internal class StorePinsUseCase(
         refreshPinnedMessageCache(channelId, *entities.map { it.messageTid }.toLongArray())
     }
 
-    private suspend fun storeMessageIfMissing(message: SceytMessage): Long {
-        messageDao.getMessageTidById(message.id)?.let { return it }
-        val tid = getTid(message.id, message.tid, message.incoming)
-        messageDao.upsertMessage(message.copy(tid = tid).toMessageDb(unList = true))
+    private suspend fun storeMessage(message: SceytMessage): Long {
+        val existing = messageDao.getMessageById(message.id)?.messageEntity
+        val tid = existing?.tid ?: getTid(message.id, message.tid, message.incoming)
+        if (existing != null && message.updatedAt <= existing.updatedAt) return tid
+
+        messageDao.upsertMessage(message.copy(tid = tid).toMessageDb(unList = existing?.unList ?: true))
         return tid
     }
 
