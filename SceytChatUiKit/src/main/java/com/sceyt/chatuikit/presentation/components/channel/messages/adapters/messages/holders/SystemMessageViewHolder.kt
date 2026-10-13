@@ -1,6 +1,8 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders
 
+import android.text.TextUtils
 import android.view.View
+import com.sceyt.chatuikit.data.models.messages.SystemMessageAction
 import com.sceyt.chatuikit.databinding.SceytItemSystemMessageBinding
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
@@ -31,6 +33,9 @@ class SystemMessageViewHolder(
             with(binding) {
                 val message = item.message
                 title.text = systemMessageStyle.textFormatter.format(context, message)
+                val isPinMessage = SystemMessageAction.getTypeFromString(message.body) == SystemMessageAction.PinMessage
+                title.maxLines = if (isPinMessage) 1 else Int.MAX_VALUE
+                title.ellipsize = if (isPinMessage) TextUtils.TruncateAt.END else null
                 val targetId = message.systemMessageTargetId()
                 title.isClickable = targetId != null
                 if (targetId != null)
