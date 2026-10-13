@@ -34,7 +34,7 @@
         android:paddingVertical="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/toolbar"
-        tools:listitem="@layout/sceyt_item_pinned_message" />
+        tools:listitem="@layout/sceyt_item_inc_text_message" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/emptyStateView"
