@@ -79,6 +79,8 @@ internal class PersistencePinLogicImpl(
     }
 
     override suspend fun onPinUpdated(event: PinUpdateEvent) {
-        updatePinnedMessagesUseCase(event)
+        syncMutex.withLock {
+            updatePinnedMessagesUseCase(event)
+        }
     }
 }
