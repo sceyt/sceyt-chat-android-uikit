@@ -61,7 +61,10 @@ class PinnedMessagesPersistenceTest {
     fun setUp() {
         database = Room.inMemoryDatabaseBuilder(
             RuntimeEnvironment.getApplication(), SceytDatabase::class.java
-        ).allowMainThreadQueries().build()
+        ).allowMainThreadQueries()
+            .setQueryExecutor { it.run() }
+            .setTransactionExecutor { it.run() }
+            .build()
         val dao = database.pinnedMessageDao()
         val pendingDao = database.pendingPinDao()
         val messages = database.messageDao()
@@ -118,6 +121,82 @@ class PinnedMessagesPersistenceTest {
 
         assertThat(dao.getByTid(77L)).isNull()
         assertThat(database.messageDao().getMessageByTid(77L)?.toSceytMessage()?.pinDetails).isNull()
+    }
+
+    @Test
+    fun `realtime pin survives a sync response fetched before that pin`() = runTest {
+        database.messageDao().upsertMessage(messageDb())
+        val started = CompletableDeferred<Unit>()
+        val release = CompletableDeferred<Unit>()
+        whenever(pinRepository.getPinnedMessages(7L)).thenReturn(kotlinx.coroutines.flow.flow {
+            started.complete(Unit)
+            release.await()
+            emit(SceytPagingResponse.Success(emptyList(), hasNext = false))
+        })
+
+        val sync = launch { logic.syncChannelPins(7L) }
+        started.await()
+        val pin = launch(start = CoroutineStart.UNDISPATCHED) {
+            logic.onPinUpdated(PinUpdateEvent.Pinned(7L, listOf(sceytPinnedMessage())))
+        }
+        release.complete(Unit)
+        sync.join()
+        pin.join()
+
+        assertThat(database.pinnedMessageDao().getByTid(42L)).isNotNull()
+        assertThat(logic.getPinnedMessagesFlow(7L).first()).hasSize(1)
+    }
+
+    @Test
+    fun `realtime unpin survives a sync response fetched before that unpin`() = runTest {
+        database.messageDao().upsertMessage(messageDb())
+        database.pinnedMessageDao().insert(pinnedEntity())
+        val started = CompletableDeferred<Unit>()
+        val release = CompletableDeferred<Unit>()
+        whenever(pinRepository.getPinnedMessages(7L)).thenReturn(kotlinx.coroutines.flow.flow {
+            started.complete(Unit)
+            release.await()
+            emit(SceytPagingResponse.Success(listOf(sceytPinnedMessage()), hasNext = false))
+        })
+
+        val sync = launch { logic.syncChannelPins(7L) }
+        started.await()
+        val unpin = launch(start = CoroutineStart.UNDISPATCHED) {
+            logic.onPinUpdated(PinUpdateEvent.Unpinned(7L, listOf(sceytPinnedMessage())))
+        }
+        release.complete(Unit)
+        sync.join()
+        unpin.join()
+
+        assertThat(database.pinnedMessageDao().getByTid(42L)).isNull()
+        assertThat(logic.getPinnedMessagesFlow(7L).first()).isEmpty()
+    }
+
+    @Test
+    fun `pin then unpin queued during sync leaves the message unpinned`() = runTest {
+        database.messageDao().upsertMessage(messageDb())
+        val started = CompletableDeferred<Unit>()
+        val release = CompletableDeferred<Unit>()
+        whenever(pinRepository.getPinnedMessages(7L)).thenReturn(kotlinx.coroutines.flow.flow {
+            started.complete(Unit)
+            release.await()
+            emit(SceytPagingResponse.Success(listOf(sceytPinnedMessage()), hasNext = false))
+        })
+
+        val sync = launch { logic.syncChannelPins(7L) }
+        started.await()
+        val pin = launch(start = CoroutineStart.UNDISPATCHED) {
+            logic.onPinUpdated(PinUpdateEvent.Pinned(7L, listOf(sceytPinnedMessage())))
+        }
+        val unpin = launch(start = CoroutineStart.UNDISPATCHED) {
+            logic.onPinUpdated(PinUpdateEvent.Unpinned(7L, listOf(sceytPinnedMessage())))
+        }
+        release.complete(Unit)
+        sync.join()
+        pin.join()
+        unpin.join()
+
+        assertThat(database.pinnedMessageDao().getByTid(42L)).isNull()
     }
 
     @Test
