@@ -18,6 +18,9 @@ data class LinkPreviewDetails(
     val hideDetails: Boolean,
 ) : Parcelable {
 
+    val shouldShowImage: Boolean
+        get() = !hideDetails && !imageUrl.isNullOrBlank()
+
     companion object {
 
         fun hiddenLink(link: String) = LinkPreviewDetails(

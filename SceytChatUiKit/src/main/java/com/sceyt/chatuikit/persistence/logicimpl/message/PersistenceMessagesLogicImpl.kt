@@ -66,7 +66,6 @@ import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingMarkerEnt
 import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingMessageDeleteByTidEntity
 import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingMessageStateEntity
 import com.sceyt.chatuikit.persistence.database.entity.user.UserDb
-import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
@@ -181,11 +180,20 @@ internal class PersistenceMessagesLogicImpl(
             return@withContext false
 
         incomingMessageMutex.withLock {
-            val messageDb = messageDao.getMessageById(message.id)
-            val isReaction = data.type == NotificationType.MessageReaction
-            val isOwnMessagePush = message.user?.id == myId
+            if (data.type == NotificationType.MessageReaction) {
+                val messageDb = messageDao.getMessageById(message.id)
+                if (messageDb != null)
+                    persistenceReactionLogic.onMessageReactionUpdated(
+                        ReactionUpdateEventData(
+                            message = messageDb.toSceytMessage(),
+                            reaction = data.reaction!!,
+                            eventType = ReactionUpdateEventEnum.Add
+                        )
+                    )
+                return@withContext true
+            }
 
-            if (isOwnMessagePush && !isReaction) {
+            if (message.user?.id == myId) {
                 SceytLog.i(
                     TAG,
                     "Ignored own message push, channelId: ${message.channelId}, messageId: ${message.id}"
@@ -193,27 +201,24 @@ internal class PersistenceMessagesLogicImpl(
                 return@withContext true
             }
 
-            if (messageDb == null && !isReaction) {
-                saveMessagesToDb(
-                    list = arrayListOf(message),
-                    includeParents = false,
-                    replaceUserOnConflict = false
-                )
-                messagesCache.add(data.channel.id, message)
-                onMessageFlow.tryEmit(Pair(data.channel, message))
+            val reconciledMessage = applyPendingStates(listOf(message)).first()
+            val inserted = messageDao.insertMessageIgnored(reconciledMessage.toMessageDb(false))
+            if (!inserted)
+                return@withContext true
 
-                updateMessageLoadRangeOnMessageEvent(message, channel?.lastMessage?.id)
-                persistenceChannelsLogic.handlePush(data)
+            val users = (listOfNotNull(message.user) + message.mentionedUsers.orEmpty())
+                .map { it.toUserDb() }
+            userDao.insertUsersWithMetadata(users, replaceUserOnConflict = false)
+
+            val parentMessage = message.parentMessage?.let {
+                messageDao.getParentMessageById(it.id)?.toSceytMessage()
             }
+            val resolvedMessage = reconciledMessage.copy(parentMessage = parentMessage)
+            messagesCache.add(data.channel.id, resolvedMessage)
+            onMessageFlow.tryEmit(Pair(data.channel, resolvedMessage))
 
-            if (messageDb != null && isReaction)
-                persistenceReactionLogic.onMessageReactionUpdated(
-                    ReactionUpdateEventData(
-                        message = messageDb.toSceytMessage(),
-                        reaction = data.reaction!!,
-                        eventType = ReactionUpdateEventEnum.Add
-                    )
-                )
+            updateMessageLoadRangeOnMessageEvent(message, channel?.lastMessage?.id)
+            persistenceChannelsLogic.handlePush(data)
         }
 
         return@withContext true
@@ -1557,40 +1562,20 @@ internal class PersistenceMessagesLogicImpl(
 
     private suspend fun saveMessagesToDb(
         list: List<SceytMessage>?,
-        includeParents: Boolean = true,
         unListAll: Boolean = false,
-        replaceUserOnConflict: Boolean = true,
     ): List<SceytMessage> {
         if (list.isNullOrEmpty()) return emptyList()
-        val pendingStates = pendingMessageStateDao.getAll().associateBy { it.messageId }
-        val pendingPolls = pendingPollVoteDao.getAllPendingVotesDb().groupBy {
-            it.pendingVote.messageTid
-        }
+        val updatedList = applyPendingStates(list)
         val usersDb = mutableSetOf<UserDb>()
         val messagesDb = arrayListOf<MessageDb>()
         val parentMessagesDb = arrayListOf<MessageDb>()
 
-        val mutableList = list.toArrayList()
-        for ((index, message) in list.withIndex()) {
-            var updatedMessage = message
-
-            // Update message states with pending states
-            updateMessageStatesWithPendingStates(message, pendingStates, pendingPolls).let {
-                updatedMessage = it
-            }
-
-            // Preserve pending poll votes from DB
-            updatedMessage = preservePendingPollVotes(updatedMessage)
-
-            mutableList[index] = updatedMessage
-
-            if (includeParents) {
-                updatedMessage.parentMessage?.let { parent ->
-                    if (parent.id != 0L) {
-                        parentMessagesDb.add(parent.toMessageDb(true))
-                        if (parent.incoming && parent.user != null) {
-                            usersDb.add(parent.user.toUserDb())
-                        }
+        for (updatedMessage in updatedList) {
+            updatedMessage.parentMessage?.let { parent ->
+                if (parent.id != 0L) {
+                    parentMessagesDb.add(parent.toMessageDb(true))
+                    if (parent.incoming && parent.user != null) {
+                        usersDb.add(parent.user.toUserDb())
                     }
                 }
             }
@@ -1605,7 +1590,7 @@ internal class PersistenceMessagesLogicImpl(
             }
         }
 
-        userDao.insertUsersWithMetadata(usersDb.toList(), replaceUserOnConflict)
+        userDao.insertUsersWithMetadata(usersDb.toList())
         val forceUpdatedList = messageDao.upsertMessages(messagesDb)
         // Delete messages from cache which were force updated.
         if (forceUpdatedList.isNotEmpty()) {
@@ -1620,7 +1605,18 @@ internal class PersistenceMessagesLogicImpl(
         if (parentMessagesDb.isNotEmpty())
             messageDao.insertMessagesIgnored(parentMessagesDb)
 
-        return mutableList.toList()
+        return updatedList
+    }
+
+    private suspend fun applyPendingStates(list: List<SceytMessage>): List<SceytMessage> {
+        val pendingStates = pendingMessageStateDao.getAll().associateBy { it.messageId }
+        val pendingPolls = pendingPollVoteDao.getAllPendingVotesDb().groupBy {
+            it.pendingVote.messageTid
+        }
+        return list.map {
+            val updatedMessage = updateMessageStatesWithPendingStates(it, pendingStates, pendingPolls)
+            preservePendingPollVotes(updatedMessage)
+        }
     }
 
     /**

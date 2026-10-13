@@ -116,13 +116,15 @@ fun SceytMessage.getFormattedBodyWithAttachments(
 ): CharSequence {
     val body = when {
         state == MessageState.Deleted -> context.getString(R.string.sceyt_message_was_deleted)
-        !isSupportedType() ->{
+        !isSupportedType() -> {
             unsupportedMessageBodyFormatter.format(context, this)
         }
+
         type == SceytMessageType.ViewOnce.value && !attachments.isNullOrEmpty() -> {
             //viewOnce type always has one attachment
             attachmentNameFormatter.format(context, attachments[0])
         }
+
         attachments.isNullOrEmpty() || attachments.firstOrNull()?.type == AttachmentTypeEnum.Link.value -> {
             buildWithAttributes(
                 context = context,
@@ -133,7 +135,7 @@ fun SceytMessage.getFormattedBodyWithAttachments(
         }
 
         attachments.size == 1 -> {
-            body.ifEmpty  { attachmentNameFormatter.format(context, attachments[0]) }
+            body.ifEmpty { attachmentNameFormatter.format(context, attachments[0]) }
         }
 
         else -> context.getString(R.string.sceyt_file)
@@ -183,7 +185,7 @@ fun SceytAttachment?.getShowName(context: Context): String {
         AttachmentTypeEnum.Video.value -> context.getString(R.string.sceyt_video)
         AttachmentTypeEnum.Image.value -> context.getString(R.string.sceyt_photo)
         AttachmentTypeEnum.Voice.value -> context.getString(R.string.sceyt_voice)
-        AttachmentTypeEnum.File.value -> context.getString(R.string.sceyt_file)
+        AttachmentTypeEnum.File.value -> name
         else -> name
     }
 }

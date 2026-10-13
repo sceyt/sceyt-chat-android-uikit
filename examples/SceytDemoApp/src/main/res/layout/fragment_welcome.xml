@@ -10,7 +10,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.12" />
+        app:layout_constraintGuide_percent="@dimen/welcome_guideline_top_percent" />
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/iv_logo"
@@ -23,8 +23,9 @@
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tv_login_title"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
         android:gravity="center"
         android:text="@string/login_screen_title"
         android:textColor="@color/sceyt_color_text_primary"
@@ -37,10 +38,12 @@
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tv_no_created_channels_desc"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
         android:layout_marginBottom="32dp"
         android:fontFamily="@font/roboto_regular"
+        android:gravity="center"
         android:text="@string/no_created_channels_description"
         android:textColor="@color/sceyt_color_text_secondary"
         android:textSize="15sp"

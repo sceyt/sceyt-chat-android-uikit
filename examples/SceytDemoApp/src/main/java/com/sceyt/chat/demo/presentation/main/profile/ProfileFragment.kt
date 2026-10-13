@@ -11,6 +11,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.commit
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import com.sceyt.chat.connection.SceytChatConnectionManager
 import com.sceyt.chat.demo.R
 import com.sceyt.chat.demo.data.AppSharedPreference
 import com.sceyt.chat.demo.databinding.FragmentProfileBinding
@@ -33,6 +34,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
+import kotlin.time.Duration.Companion.milliseconds
 
 class ProfileFragment : Fragment() {
     private lateinit var binding: FragmentProfileBinding
@@ -42,6 +44,7 @@ class ProfileFragment : Fragment() {
     )
     private val userProfileViewModel: UserProfileViewModel by viewModel()
     private val preference by inject<AppSharedPreference>()
+    private val connectionManager by inject<SceytChatConnectionManager>()
     private var currentUser: SceytUser? = null
     private var avatarUrl: String? = null
     private var muted: Boolean = false
@@ -89,8 +92,8 @@ class ProfileFragment : Fragment() {
         }
 
         viewModel.logOutLiveData.observe(viewLifecycleOwner) {
+            connectionManager.logout()
             preference.setString(AppSharedPreference.PREF_USER_ID, null)
-            preference.setString(AppSharedPreference.PREF_USER_TOKEN, null)
             WelcomeActivity.launch(requireContext())
             requireActivity().finish()
         }
@@ -161,7 +164,7 @@ class ProfileFragment : Fragment() {
         binding.switchTheme.setOnClickListener {
             updateThemeJob?.cancel()
             updateThemeJob = lifecycleScope.launch {
-                delay(250)
+                delay(250.milliseconds)
                 val isDarkMode = binding.switchTheme.isChecked
                 if (isDarkMode) {
                     AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)

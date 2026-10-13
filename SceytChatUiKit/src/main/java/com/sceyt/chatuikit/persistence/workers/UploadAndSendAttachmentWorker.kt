@@ -12,7 +12,6 @@ import androidx.work.OneTimeWorkRequest
 import androidx.work.Operation
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
-import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.constants.SceytConstants.SCEYT_WORKER_TAG
@@ -48,6 +47,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.suspendCancellableCoroutine
 import org.koin.core.component.inject
 import kotlin.time.Duration.Companion.seconds
+import kotlin.Result as KtResult
 
 object UploadAndSendAttachmentWorkManager {
 
@@ -56,11 +56,11 @@ object UploadAndSendAttachmentWorkManager {
     const val FILE_TRANSFER_NOTIFICATION_ID = 1223344
 
     fun schedule(
-            context: Context,
-            messageTid: Long,
-            channelId: Long?,
-            workPolicy: ExistingWorkPolicy = ExistingWorkPolicy.KEEP,
-            isSharing: Boolean = false,
+        context: Context,
+        messageTid: Long,
+        channelId: Long?,
+        workPolicy: ExistingWorkPolicy = ExistingWorkPolicy.KEEP,
+        isSharing: Boolean = false,
     ): Operation {
         val dataBuilder = Data.Builder()
         dataBuilder.putLong(MESSAGE_TID, messageTid)
@@ -73,7 +73,8 @@ object UploadAndSendAttachmentWorkManager {
             .setInputData(dataBuilder.build())
             .build()
 
-        return WorkManager.getInstance(context).beginUniqueWork(messageTid.toString(), workPolicy, myWorkRequest)
+        return WorkManager.getInstance(context)
+            .beginUniqueWork(messageTid.toString(), workPolicy, myWorkRequest)
             .enqueue()
     }
 
@@ -83,8 +84,8 @@ object UploadAndSendAttachmentWorkManager {
 }
 
 class UploadAndSendAttachmentWorker(
-        context: Context,
-        workerParams: WorkerParameters
+    context: Context,
+    workerParams: WorkerParameters
 ) : CoroutineWorker(context, workerParams), SceytKoinComponent {
     private val fileTransferService: FileTransferService by inject()
     private val attachmentLogic: PersistenceAttachmentLogic by inject()
@@ -93,12 +94,12 @@ class UploadAndSendAttachmentWorker(
     private val fileChecksumDao: FileChecksumDao by inject()
 
     private suspend fun checkToUploadAttachmentsBeforeSend(
-            tmpMessage: SceytMessage,
-            isSharing: Boolean
-    ): kotlin.Result<List<SceytAttachment>> {
+        tmpMessage: SceytMessage,
+        isSharing: Boolean
+    ): KtResult<List<SceytAttachment>> {
         val payloads = attachmentLogic.getAllPayLoadsByMsgTid(tmpMessage.tid)
         val attachments = tmpMessage.attachments?.toMutableList()
-                ?: return kotlin.Result.failure(Exception("Attachments not found"))
+            ?: return KtResult.failure(Exception("Attachments not found"))
 
         for ((index, attachment) in attachments.withIndex()) {
             if (attachment.type == AttachmentTypeEnum.Link.value)
@@ -109,7 +110,7 @@ class UploadAndSendAttachmentWorker(
                 val transferData = payload.toTransferData(TransferState.Uploaded, 100f)
                 attachmentLogic.updateAttachmentWithTransferData(transferData)
                 attachments[index] = attachment.copy(url = payload.url)
-                return kotlin.Result.success(attachments)
+                return KtResult.success(attachments)
             } else {
                 val filePath = attachment.originalFilePath ?: attachment.filePath
                 if (filePath.isNullOrEmpty()) {
@@ -120,18 +121,31 @@ class UploadAndSendAttachmentWorker(
                 val checksum = FileChecksumCalculator.calculateFileChecksum(filePath)
 
                 if (checksum != null) {
-                    val checksumEntity = FileChecksumEntity(checksum, null, null, attachment.metadata, attachment.fileSize)
+                    val checksumEntity = FileChecksumEntity(
+                        checksum = checksum,
+                        resizedFilePath = null,
+                        url = null,
+                        metadata = attachment.metadata,
+                        fileSize = attachment.fileSize
+                    )
                     fileChecksumDao.insert(checksumEntity)
                 }
 
                 val result = suspendCancellableCoroutine { continuation ->
                     if (attachment.transferState != TransferState.PauseUpload) {
 
-                        val transferData = TransferData(tmpMessage.tid, attachment.progressPercent
-                                ?: 0f, TransferState.WaitingToUpload,
-                            attachment.filePath, attachment.url)
+                        val transferData = TransferData(
+                            messageTid = tmpMessage.tid,
+                            progressPercent = attachment.progressPercent ?: 0f,
+                            state = TransferState.WaitingToUpload,
+                            filePath = attachment.filePath,
+                            url = attachment.url
+                        )
 
-                        FileTransferHelper.emitAttachmentTransferUpdate(transferData, attachment.fileSize)
+                        FileTransferHelper.emitAttachmentTransferUpdate(
+                            transferData = transferData,
+                            fileSize = attachment.fileSize
+                        )
 
                         runBlocking {
                             attachmentLogic.updateAttachmentWithTransferData(transferData)
@@ -145,33 +159,39 @@ class UploadAndSendAttachmentWorker(
                         if (checksum != null)
                             fileChecksumDao.updateUrl(checksum, it.url)
                         attachments[index] = it
-                        kotlin.Result.success(attachments)
+                        KtResult.success(attachments)
                     },
                     onFailure = {
-                        kotlin.Result.failure(it)
+                        KtResult.failure(it)
                     }
                 )
             }
         }
-        return kotlin.Result.failure(Exception("Could not find any attachment to upload"))
+        return KtResult.failure(Exception("Could not find any attachment to upload"))
     }
 
     private fun uploadFile(
-            attachment: SceytAttachment,
-            continuation: CancellableContinuation<kotlin.Result<SceytAttachment>>,
-            isSharing: Boolean
+        attachment: SceytAttachment,
+        continuation: CancellableContinuation<KtResult<SceytAttachment>>,
+        isSharing: Boolean
     ) {
         if (isSharing) {
             fileTransferService.uploadSharedFile(
                 attachment = attachment,
                 transferTask = FileTransferHelper.createTransferTask(attachment).also { task ->
-                    task.addOnCompletionListener(this.toString(), listener = continuation::safeResume)
+                    task.addOnCompletionListener(
+                        key = this.toString(),
+                        listener = continuation::safeResume
+                    )
                 })
         } else {
             fileTransferService.upload(
                 attachment = attachment,
                 transferTask = FileTransferHelper.createTransferTask(attachment).also { task ->
-                    task.addOnCompletionListener(this.toString(), listener = continuation::safeResume)
+                    task.addOnCompletionListener(
+                        key = this.toString(),
+                        listener = continuation::safeResume
+                    )
                 })
         }
     }
@@ -181,7 +201,7 @@ class UploadAndSendAttachmentWorker(
         val messageTid = data.getLong(MESSAGE_TID, 0)
         val isSharing = data.getBoolean(IS_SHARING, false)
         val tmpMessage = messageLogic.getMessageFromDbByTid(messageTid)
-                ?: return finishWorkWithFailure("Message not found: $messageTid")
+            ?: return finishWorkWithFailure("Message not found: $messageTid")
 
         if (tmpMessage.isNotPending())
             return finishWorkWithSuccess()
@@ -196,17 +216,20 @@ class UploadAndSendAttachmentWorker(
             if (ConnectionEventManager.isConnected) {
                 sendMessage(tmpMessage.channelId, messageToSend)
             } else {
-                SceytLog.i(TAG, "SceytChat is not connected. Connecting to send message tid: $messageTid")
-                val token = SceytChatUIKit.chatTokenProvider?.provideToken().takeIf { !it.isNullOrBlank() }
-                        ?: run {
-                            return finishWorkWithFailure("Couldn't get token to connect to send message tid: $messageTid")
-                        }
+                SceytLog.i(
+                    TAG,
+                    "SceytChat is not connected. Connecting to send message tid: $messageTid"
+                )
+                val connectionResult = SceytChatUIKit.chatConnectionProvider
+                    ?.connect(20.seconds.inWholeMilliseconds)
+                    ?: KtResult.failure(IllegalStateException("ChatConnectionProvider is not configured"))
 
-                ChatClient.getClient().connect(token)
-
-                if (ConnectionEventManager.awaitToConnectSceytWithTimeout(20.seconds.inWholeMilliseconds)) {
+                if (connectionResult.isSuccess) {
                     sendMessage(tmpMessage.channelId, messageToSend)
-                } else finishWorkWithFailure("Could not connect to send message tid: $messageTid")
+                } else finishWorkWithFailure(
+                    "Could not connect to send message tid: $messageTid. " +
+                            connectionResult.exceptionOrNull()?.message
+                )
             }
         } else finishWorkWithFailure("Could not upload attachments, message tid: $messageTid")
     }
@@ -242,7 +265,11 @@ class UploadAndSendAttachmentWorker(
     private suspend fun startForeground(channelId: Long, message: SceytMessage) {
         val notification = creteNotification(channelId, message) ?: return
         val foregroundInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            ForegroundInfo(FILE_TRANSFER_NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
+            ForegroundInfo(
+                FILE_TRANSFER_NOTIFICATION_ID,
+                notification,
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
+            )
         } else ForegroundInfo(FILE_TRANSFER_NOTIFICATION_ID, notification)
         setForeground(foregroundInfo)
     }

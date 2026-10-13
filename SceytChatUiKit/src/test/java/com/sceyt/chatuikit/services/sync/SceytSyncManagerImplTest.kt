@@ -21,7 +21,6 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import kotlinx.coroutines.withContext
@@ -228,17 +227,21 @@ class SceytSyncManagerImplTest {
     fun `cancelSync cancels in-flight channel sync and allows next sync`() = runTest {
         val config = ChannelListConfig.default
         val manager = syncManager()
+        val channelSyncStarted = CompletableDeferred<Unit>()
         val callbacks = mutableListOf<Result<SceytSyncManager.SyncResultData>>()
         whenever(channelInteractor.syncChannels(config))
             .thenReturn(
-                flow { awaitCancellation() },
+                flow {
+                    channelSyncStarted.complete(Unit)
+                    awaitCancellation()
+                },
                 flowOf(SyncResult.SuccessfullyFinished)
             )
 
         val syncJob = launch {
             manager.startSync(config) { callbacks.add(it) }
         }
-        runCurrent()
+        channelSyncStarted.await()
 
         manager.cancelSync()
         syncJob.join()
