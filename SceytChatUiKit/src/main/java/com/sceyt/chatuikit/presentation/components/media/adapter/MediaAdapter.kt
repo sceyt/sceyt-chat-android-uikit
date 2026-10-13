@@ -75,10 +75,11 @@ class MediaAdapter(
 
     fun releaseAllPlayers() {
         releaseWakeLock()
-        mediaPlayers.forEach { it.release() }
+        mediaPlayers.forEach {
+            ExoPlayerHelper.clearLastPlayerIfOwned(it)
+            it.release()
+        }
         mediaPlayers.clear()
-        ExoPlayerHelper.lastPlayer?.release()
-        ExoPlayerHelper.lastPlayer = null
     }
 
     fun addMediaPlayer(mediaPlayer: Player?) {

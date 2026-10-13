@@ -2,6 +2,7 @@ package com.sceyt.chatuikit.styles.extensions.messages_list
 
 import android.content.res.TypedArray
 import android.graphics.Typeface
+import androidx.core.graphics.drawable.toDrawable
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.applyTint
@@ -234,6 +235,18 @@ internal fun MessageItemStyle.Builder.buildIncomingReplyBackgroundStyle(
         Shape.RoundedCornerShape(radius = 5f.dpToPx())
     )
     .build()
+
+internal fun MessageItemStyle.Builder.buildIncomingFileMediaThumbPlaceholder(
+    typedArray: TypedArray,
+) = typedArray.getDrawable(
+    R.styleable.MessagesListView_sceytUiMessagesListIncomingFileMediaThumbPlaceholder
+) ?: context.getCompatColor(R.color.sceyt_color_surface_2).toDrawable()
+
+internal fun MessageItemStyle.Builder.buildOutgoingFileMediaThumbPlaceholder(
+    typedArray: TypedArray,
+) = typedArray.getDrawable(
+    R.styleable.MessagesListView_sceytUiMessagesListOutgoingFileMediaThumbPlaceholder
+) ?: defaultOutDarkColor.toDrawable()
 
 //Outgoing reply background
 internal fun MessageItemStyle.Builder.buildOutgoingReplyBackgroundStyle(

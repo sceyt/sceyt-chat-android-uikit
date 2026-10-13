@@ -3,21 +3,16 @@ package com.sceyt.chat.demo.presentation.welcome.welcome
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.sceyt.chat.demo.connection.SceytConnectionProvider
+import com.sceyt.chat.connection.SceytChatConnectionManager
 import com.sceyt.chat.demo.data.AppSharedPreference
-import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
-import com.sceyt.chatuikit.persistence.extensions.safeResume
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import com.sceyt.chatuikit.presentation.root.PageState
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.coroutines.withContext
 import kotlin.time.Duration.Companion.seconds
 
 class WelcomeViewModel(
     private val preference: AppSharedPreference,
-    private val connectionProvider: SceytConnectionProvider
+    private val connectionManager: SceytChatConnectionManager
 ) : BaseViewModel() {
 
     private val _logInLiveData = MutableLiveData<Boolean>()
@@ -44,27 +39,8 @@ class WelcomeViewModel(
 
     private suspend fun connectUser(
         userId: String
-    ): Result<Boolean> = withContext(Dispatchers.IO) {
-
-        val getTokenResult = suspendCancellableCoroutine { continuation ->
-            connectionProvider.connectChatClient(userId) { isStarted, exception ->
-                if (!isStarted) {
-                    pageStateLiveDataInternal.postValue(
-                        PageState.StateError(null, exception?.message)
-                    )
-                    continuation.safeResume(
-                        Result.failure(
-                            exception ?: Exception("Connection failed")
-                        )
-                    )
-                } else continuation.safeResume(Result.success(true))
-            }
-        }
-
-        if (getTokenResult.isFailure) {
-            return@withContext getTokenResult
-        }
-
-        return@withContext ConnectionEventManager.awaitToConnectSceytWithResult(8.seconds.inWholeMilliseconds)
-    }
+    ): Result<Unit> = connectionManager.connectAndAwait(
+        userId = userId,
+        timeoutMillis = 8.seconds.inWholeMilliseconds
+    )
 }

@@ -16,6 +16,7 @@ import androidx.lifecycle.lifecycleScope
 import com.google.gson.Gson
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.data.models.channels.ChannelAvatar
 import com.sceyt.chatuikit.data.models.channels.ChannelDescriptionData
 import com.sceyt.chatuikit.data.models.channels.EditChannelData
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
@@ -43,6 +44,7 @@ import com.yalantis.ucrop.UCrop
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
+import kotlin.time.Duration.Companion.milliseconds
 
 open class EditChannelFragment : Fragment(), SceytKoinComponent {
     protected var binding: SceytFragmentEditChannelBinding? = null
@@ -85,7 +87,7 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
         viewModel.editChannelLiveData.observe(viewLifecycleOwner) {
             SceytLoader.hideLoading()
             lifecycleScope.launch {
-                delay(100)
+                delay(100.milliseconds)
                 requireActivity().onBackPressedDispatcher.onBackPressed()
             }
         }
@@ -287,12 +289,16 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
             showLoading(requireContext())
             val data = EditChannelData(newSubject = newSubject,
                 metadata = Gson().toJson(ChannelDescriptionData(newDescription)),
-                avatarUrl = avatarUrl,
+                avatar = resolveEditedAvatar(),
                 channelUri = newUrl,
-                channelType = channel.type,
-                avatarEdited = isEditedAvatar)
+                channelType = channel.type)
             viewModel.editChannelChanges(channel.id, data)
         } else requireActivity().onBackPressedDispatcher.onBackPressed()
+    }
+
+    protected open fun resolveEditedAvatar(): ChannelAvatar? {
+        val url = avatarUrl?.takeIf { it.isNotBlank() } ?: return null
+        return if (url == channel.avatarUrl) ChannelAvatar.Remote(url) else ChannelAvatar.Local(url)
     }
 
     protected open fun SceytFragmentEditChannelBinding.applyStyle() {

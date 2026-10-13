@@ -91,8 +91,15 @@ fun getBlurredBytesAndSizeAsString(
         val size: Size?
         var durationMilliSec: Long? = null
         var base64String: String? = null
-        when (type) {
-            AttachmentTypeEnum.Image.value -> {
+        val mediaType = when (type) {
+            AttachmentTypeEnum.Image.value -> AttachmentTypeEnum.Image
+            AttachmentTypeEnum.Video.value -> AttachmentTypeEnum.Video
+            AttachmentTypeEnum.File.value -> getAttachmentType(path)
+            else -> null
+        }
+
+        when (mediaType) {
+            AttachmentTypeEnum.Image -> {
                 size = FileResizeUtil.getImageSizeOriented(path)
                 FileResizeUtil.resizeAndCompressBitmapWithFilePath(path, 100).onSuccess { bm ->
                     val bytes = ThumbHash.rgbaToThumbHash(
@@ -106,7 +113,7 @@ fun getBlurredBytesAndSizeAsString(
                 }
             }
 
-            AttachmentTypeEnum.Video.value -> {
+            AttachmentTypeEnum.Video -> {
                 size = FileResizeUtil.getVideoSizeOriented(path)
                 durationMilliSec = FileResizeUtil.getVideoDuration(context, filePath)
                 FileResizeUtil.getVideoThumbByUrlAsByteArray(path, 100f).onSuccess { bm ->
@@ -150,6 +157,29 @@ fun SceytAttachment.existThumb(): Boolean {
     }
 }
 
+fun Attachment.getVisualMediaType(): AttachmentTypeEnum? =
+    getVisualMediaType(type, name, filePath)
+
+fun SceytAttachment.getVisualMediaType(): AttachmentTypeEnum? =
+    getVisualMediaType(type, name, filePath)
+
+private fun getVisualMediaType(
+    type: String?,
+    name: String?,
+    filePath: String?,
+): AttachmentTypeEnum? {
+    when (type) {
+        AttachmentTypeEnum.Image.value -> return AttachmentTypeEnum.Image
+        AttachmentTypeEnum.Video.value -> return AttachmentTypeEnum.Video
+        AttachmentTypeEnum.File.value -> Unit
+        else -> return null
+    }
+
+    return sequenceOf(name, filePath)
+        .filterNotNull()
+        .map(::getAttachmentType)
+        .firstOrNull { it == AttachmentTypeEnum.Image || it == AttachmentTypeEnum.Video }
+}
 
 fun SceytAttachment.getLinkPreviewDetails(): LinkPreviewDetails? {
     if (type != AttachmentTypeEnum.Link.value) return null

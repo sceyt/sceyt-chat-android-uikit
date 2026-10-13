@@ -11,6 +11,7 @@ import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchLis
 import com.sceyt.chatuikit.presentation.custom_views.CircularProgressView
 import com.sceyt.chatuikit.styles.channel_info.files.ChannelInfoFileItemStyle
 import com.sceyt.chatuikit.styles.common.MediaLoaderStyle
+import java.util.Date
 
 open class FilesSearchItemViewHolder(
     private val style: ChannelInfoFileItemStyle,
@@ -31,14 +32,15 @@ open class FilesSearchItemViewHolder(
     }
 
     override fun bind(item: GlobalSearchListItem.AttachmentItem) {
-        super.bind(item)
         val attachment = item.attachment
         binding.tvFileName.text = style.fileNameFormatter.format(context, attachment)
         binding.tvFileSizeAndDate.text = style.subtitleFormatter.format(context, attachment)
+        super.bind(item)
     }
 
     override fun updateState(data: TransferData, isOnBind: Boolean) {
         super.updateState(data, isOnBind)
+        updateSubtitle(data)
         when (data.state) {
             TransferState.PendingDownload -> {
                 binding.icFile.setImageResource(0)
@@ -52,6 +54,32 @@ open class FilesSearchItemViewHolder(
 
             else -> binding.icFile.setImageResource(0)
         }
+    }
+
+    private fun updateSubtitle(data: TransferData) {
+        val attachment = fileItem.attachment
+        binding.tvFileSizeAndDate.text = if (
+            data.state.shouldShowTransferredSize() && data.isCalculatedLoadedSize()
+        ) {
+            val date = SceytChatUIKit.formatters.channelInfoAttachmentDateFormatter.format(
+                context,
+                Date(attachment.createdAt)
+            )
+            "${data.fileLoadedSize} / ${data.fileTotalSize} • $date"
+        } else style.subtitleFormatter.format(context, attachment)
+    }
+
+    private fun TransferState.shouldShowTransferredSize(): Boolean = when (this) {
+        TransferState.Downloading,
+        TransferState.Uploading,
+        TransferState.Preparing,
+        TransferState.WaitingToUpload,
+        TransferState.PauseDownload,
+        TransferState.PauseUpload,
+        TransferState.ErrorDownload,
+        TransferState.ErrorUpload -> true
+
+        else -> false
     }
 
     override val loadingProgressViewWithStyle: Pair<CircularProgressView, MediaLoaderStyle>

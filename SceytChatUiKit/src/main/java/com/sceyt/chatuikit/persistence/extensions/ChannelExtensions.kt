@@ -29,10 +29,16 @@ fun SceytChannel.getChannelType(): ChannelTypeEnum {
 }
 
 fun SceytChannel.getPeer(): SceytMember? {
-    return members?.firstOrNull { it.id != SceytChatUIKit.chatUIFacade.myId } ?: run {
-        if (isSelf) members?.firstOrNull() else null
+    val myId = SceytChatUIKit.chatUIFacade.myId
+    val members = members ?: return null
+    return if (isSelf) {
+        members.firstOrNull { it.id == myId } ?: members.firstOrNull()
+    } else {
+        val others = members.filter { it.id != myId }
+        others.firstOrNull { it.id.isNotBlank() } ?: others.firstOrNull()
     }
 }
+
 
 fun ChannelTypeEnum?.isGroup() = this != ChannelTypeEnum.Direct
 

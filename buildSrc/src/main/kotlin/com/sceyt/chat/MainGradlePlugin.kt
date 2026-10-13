@@ -1,6 +1,6 @@
 package com.sceyt.chat
 
-import com.android.build.gradle.LibraryExtension
+import com.android.build.api.dsl.LibraryExtension
 import org.gradle.api.JavaVersion
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -15,8 +15,6 @@ class MainGradlePlugin : Plugin<Project> {
     private fun applyPlugins(project: Project) {
         project.apply {
             plugin("android-library")
-            plugin("kotlin-android")
-            plugin("kotlin-kapt")
             plugin("kotlin-parcelize")
         }
     }
@@ -30,7 +28,7 @@ class MainGradlePlugin : Plugin<Project> {
                 testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
                 vectorDrawables.useSupportLibrary = true
 
-                buildConfigField("String", "MAVEN_VERSION", "\"${Config.mavenCentralVersion}\"")
+                buildConfigField("String", "MAVEN_VERSION", "\"${Config.UiKit.version}\"")
             }
 
             compileOptions {

@@ -118,6 +118,7 @@ class MessagesListView @JvmOverloads constructor(
     private var pollEventListener: ((PollEvent) -> Unit)? = null
     private var expandMessageBodyListener: ((Long) -> Unit)? = null
     private var reactionsPopupWindow: PopupWindow? = null
+    private var keyboardEventListener: KeyboardEventListener? = null
     private var onWindowFocusChangeListener: ((Boolean) -> Unit)? = null
     private var multiselectDestination: Map<Long, SceytMessage>? = null
     private var forceDisabledActions = false
@@ -156,7 +157,6 @@ class MessagesListView @JvmOverloads constructor(
         }
 
         initClickListeners()
-        addKeyBoardListener()
 
         if (isInEditMode)
             binding.scrollDownView.isVisible = style.enableScrollDownButton
@@ -324,9 +324,21 @@ class MessagesListView @JvmOverloads constructor(
         } else clickListeners.onMultiSelectClick(view, message)
     }
 
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        if (keyboardEventListener == null)
+            addKeyBoardListener()
+    }
+
+    override fun onDetachedFromWindow() {
+        keyboardEventListener?.dispose()
+        keyboardEventListener = null
+        super.onDetachedFromWindow()
+    }
+
     private fun addKeyBoardListener() {
         context.asComponentActivityOrNull()?.let {
-            KeyboardEventListener(it) { isOpen ->
+            keyboardEventListener = KeyboardEventListener(it) { isOpen ->
                 if (!isOpen) {
                     reactionsPopupWindow?.dismiss()
                     reactionsPopupWindow = null

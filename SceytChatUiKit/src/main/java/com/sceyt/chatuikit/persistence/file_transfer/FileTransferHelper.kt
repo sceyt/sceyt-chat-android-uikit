@@ -70,6 +70,21 @@ object FileTransferHelper : SceytKoinComponent {
         }
     }
 
+    internal fun resetToPendingDownload(attachment: SceytAttachment) {
+        val transferData = TransferData(
+            messageTid = attachment.messageTid,
+            progressPercent = 0f,
+            state = TransferState.PendingDownload,
+            filePath = null,
+            url = attachment.url
+        )
+        AttachmentTransferStateStore.reset(transferData)
+        emitAttachmentTransferUpdate(transferData, attachment.fileSize)
+        enqueueDbUpdate(attachment.messageTid) {
+            attachmentLogic.resetToPendingDownload(transferData)
+        }
+    }
+
     fun createTransferTask(attachment: SceytAttachment): TransferTask {
         return TransferTask(
             attachment = attachment,

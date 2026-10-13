@@ -863,6 +863,16 @@ class ChannelDaoTest {
         assertThat(updated.messageRetentionPeriod).isEqualTo(3600L)
     }
 
+    @Test
+    fun updateAvatarUrl_updatesOnlyThatChannelAvatar() = runTest {
+        insert(channel(1), channel(2))
+
+        channelDao.updateAvatarUrl(channelId = 1L, avatarUrl = "avatars/remote.png")
+
+        assertThat(channelDao.getAvatarUrl(1L)).isEqualTo("avatars/remote.png")
+        assertThat(channelDao.getAvatarUrl(2L)).isNull()
+    }
+
     // endregion
 
     // region getNotExistingChannelIdsByIdsAndTypes — documents the SQL semantics syncChannels relies on

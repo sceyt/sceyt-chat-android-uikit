@@ -22,6 +22,7 @@ import com.sceyt.chatuikit.persistence.database.DatabaseConstants.MARKER_TABLE
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.MENTION_USER_MESSAGE_LINK_TABLE
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.MESSAGE_FTS_TABLE
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.MESSAGE_TABLE
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.PENDING_CHANNEL_AVATAR_TABLE
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.PENDING_MARKER_TABLE
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.PENDING_MESSAGE_STATE_TABLE
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.PENDING_REACTION_TABLE
@@ -112,6 +113,16 @@ internal object DatabaseMigrations {
     @RenameTable(fromTableName = "AutoDeleteMessages", toTableName = AUTO_DELETE_MESSAGES_TABLE)
     @RenameTable(fromTableName = "UserMetadata", toTableName = USER_METADATA_TABLE)
     class AutoMigrationSpec18To19 : AutoMigrationSpec
+
+    class AutoMigrationSpec31To32 : AutoMigrationSpec {
+        override fun onPostMigrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                "INSERT OR IGNORE INTO `$PENDING_CHANNEL_AVATAR_TABLE` (`channelId`, `filePath`) " +
+                        "SELECT `chat_id`, `avatarUrl` FROM `$CHANNEL_TABLE` " +
+                        "WHERE `pending` = 1 AND `avatarUrl` IS NOT NULL AND `avatarUrl` != ''"
+            )
+        }
+    }
 
     val Migration_28_29: Migration = object : Migration(28, 29) {
         override fun migrate(db: SupportSQLiteDatabase) {

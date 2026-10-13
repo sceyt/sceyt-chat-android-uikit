@@ -12,6 +12,7 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.data.models.channels.ChannelAvatar
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
@@ -30,8 +31,10 @@ import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingReactionE
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
 import com.sceyt.chatuikit.persistence.logicimpl.sync.ChannelSyncStateStore
+import com.sceyt.chatuikit.persistence.mappers.toChannel
 import com.sceyt.chatuikit.persistence.mappers.toChannelEntity
 import com.sceyt.chatuikit.persistence.mappers.toMessageDb
+import com.sceyt.chatuikit.persistence.mappers.toUserDb
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
@@ -43,6 +46,11 @@ import java.util.UUID
 @RunWith(AndroidJUnit4::class)
 @SmallTest
 class PendingChannelUseCasesTest {
+    private companion object {
+        const val LOCAL_AVATAR_PATH = "/data/avatar.png"
+        const val REMOTE_AVATAR_URL = "avatars/remote.png"
+    }
+
     private lateinit var database: SceytDatabase
     private lateinit var channelsCache: ChannelsCache
     private lateinit var messagesCache: MessagesCache
@@ -82,6 +90,7 @@ class PendingChannelUseCasesTest {
         createPendingChannelUseCase = CreatePendingChannelUseCase(
             channelDao = database.channelDao(),
             usersDao = database.userDao(),
+            pendingChannelAvatarDao = database.pendingChannelAvatarDao(),
             channelsCache = channelsCache
         )
         findExistingChannelByMembersUseCase = FindExistingChannelByMembersUseCase(database.channelDao())
@@ -131,6 +140,84 @@ class PendingChannelUseCasesTest {
         assertThat(withCurrentUserAndDuplicatePeer.id).isEqualTo(peerOnly.id)
         assertThat(withCurrentUserAndDuplicatePeer.members!!.map { it.id }).containsExactly(currentUser.id, "peer")
         assertThat(channelsCache.isPending(withCurrentUserAndDuplicatePeer.id)).isTrue()
+    }
+
+    @Test
+    fun createPendingChannel_withUserIds_shouldUseDbUsersAndNotOverwriteThem() = runTest {
+        val peer = SceytUser("peer").copy(firstName = "Peer", lastName = "User")
+        database.userDao().insertUsersWithMetadata(listOf(peer.toUserDb()))
+
+        val channel = createPendingChannelUseCase(
+            data = CreateChannelData(
+                type = ChannelTypeEnum.Direct.value,
+                userIds = listOf("peer"),
+                roleName = "owner"
+            ),
+            currentUserId = currentUser.id
+        ).successData()
+
+        val peerMember = channel.members!!.first { it.id == "peer" }
+        assertThat(peerMember.role.name).isEqualTo("owner")
+        assertThat(peerMember.user.fullName).isEqualTo("Peer User")
+        assertThat(channelsCache.getOneOf(channel.id)?.members?.first { it.id == "peer" }?.user?.fullName)
+            .isEqualTo("Peer User")
+        assertThat(database.userDao().getUserById("peer")?.user?.firstName).isEqualTo("Peer")
+        assertThat(
+            database.channelDao().getChannelById(channel.id)?.toChannel()
+                ?.members?.first { it.id == "peer" }?.user?.fullName
+        ).isEqualTo("Peer User")
+    }
+
+    @Test
+    fun createPendingChannel_withLocalAvatar_shouldStoreItForUploadOnRealCreate() = runTest {
+        val channel = createPendingGroup(ChannelAvatar.Local(LOCAL_AVATAR_PATH))
+
+        assertThat(channel.avatarUrl).isEqualTo(LOCAL_AVATAR_PATH)
+        assertThat(database.pendingChannelAvatarDao().getFilePath(channel.id)).isEqualTo(LOCAL_AVATAR_PATH)
+    }
+
+    @Test
+    fun createPendingChannel_withRemoteAvatar_shouldNotStoreLocalAvatar() = runTest {
+        val channel = createPendingGroup(ChannelAvatar.Remote(REMOTE_AVATAR_URL))
+
+        assertThat(channel.avatarUrl).isEqualTo(REMOTE_AVATAR_URL)
+        assertThat(database.pendingChannelAvatarDao().getFilePath(channel.id)).isNull()
+    }
+
+    @Test
+    fun deletingPendingAvatar_shouldKeepThePendingChannel() = runTest {
+        val channel = createPendingGroup(ChannelAvatar.Local(LOCAL_AVATAR_PATH))
+
+        database.pendingChannelAvatarDao().delete(channel.id)
+
+        assertThat(database.pendingChannelAvatarDao().getFilePath(channel.id)).isNull()
+        assertThat(database.channelDao().getChannelById(channel.id)).isNotNull()
+    }
+
+    @Test
+    fun recreatingPendingChannel_shouldDropStaleLocalAvatar() = runTest {
+        val withLocalAvatar = createPendingGroup(ChannelAvatar.Local(LOCAL_AVATAR_PATH))
+
+        val recreated = createPendingGroup(ChannelAvatar.Remote(REMOTE_AVATAR_URL))
+
+        assertThat(recreated.id).isEqualTo(withLocalAvatar.id)
+        assertThat(database.pendingChannelAvatarDao().getFilePath(recreated.id)).isNull()
+    }
+
+    @Test
+    fun migratingPendingChannelToReal_shouldDeleteItsLocalAvatar() = runTest {
+        val pendingGroup = createPendingGroup(ChannelAvatar.Local(LOCAL_AVATAR_PATH))
+        val realGroup = channel(
+            id = 4001,
+            type = ChannelTypeEnum.Group.value,
+            members = listOf(member(currentUser.id), member("group-peer"))
+        )
+        insertChannel(realGroup)
+
+        migratePendingChannelToRealChannelUseCase(pendingGroup, realGroup)
+
+        assertThat(database.channelDao().getChannelById(pendingGroup.id)).isNull()
+        assertThat(database.pendingChannelAvatarDao().getFilePath(pendingGroup.id)).isNull()
     }
 
     @Test
@@ -289,6 +376,15 @@ class PendingChannelUseCasesTest {
     }
 
     private fun member(id: String, role: String = "owner") = SceytMember(SceytUser(id), role)
+
+    private suspend fun createPendingGroup(avatar: ChannelAvatar) = createPendingChannelUseCase(
+        data = CreateChannelData(
+            type = ChannelTypeEnum.Group.value,
+            avatar = avatar,
+            members = listOf(member(currentUser.id), member("group-peer"))
+        ),
+        currentUserId = currentUser.id
+    ).successData()
 
     private fun channel(
         id: Long,

@@ -28,6 +28,7 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploaded
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploading
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.WaitingToUpload
 import com.sceyt.chatuikit.persistence.file_transfer.TransferStateValidator
+import com.sceyt.chatuikit.persistence.mappers.mergeWith
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.comporators.MessageComparator
 import com.sceyt.chatuikit.presentation.extensions.isNotPending
 import kotlinx.coroutines.channels.BufferOverflow
@@ -326,9 +327,10 @@ class MessagesCache {
         payloadData?.filter { payLoad -> payLoad.messageTid == message.tid }?.let { data ->
             message.attachments.forEachIndexed { index, attachment ->
                 if (attachment.type == AttachmentTypeEnum.Link.value) {
-                    updateLinkDetails?.find { it.url == attachment.url }?.let {
-                        updateAttachments[index] = attachment.copy(linkPreviewDetails = it)
-                        updateLinkDetails.remove(it)
+                    updateLinkDetails?.find { it.url == attachment.url }?.let { cached ->
+                        val merged = attachment.linkPreviewDetails?.let { cached.mergeWith(it) } ?: cached
+                        updateAttachments[index] = attachment.copy(linkPreviewDetails = merged)
+                        updateLinkDetails.remove(cached)
                     }
                     return@forEachIndexed
                 }
@@ -351,7 +353,8 @@ class MessagesCache {
         updateLinkDetails?.forEach { linkDetails ->
             updateAttachments.indexOfFirst { it.url == linkDetails.link }.takeIf { it != -1 }?.let {
                 val item = updateAttachments[it]
-                updateAttachments[it] = item.copy(linkPreviewDetails = linkDetails)
+                val merged = item.linkPreviewDetails?.let { details -> linkDetails.mergeWith(details) } ?: linkDetails
+                updateAttachments[it] = item.copy(linkPreviewDetails = merged)
             }
         }
         return updateAttachments
@@ -422,7 +425,16 @@ class MessagesCache {
         }
     }
 
-    suspend fun updateAttachmentTransferData(updateDate: TransferData) = mutex.withLock {
+    suspend fun updateAttachmentTransferData(updateDate: TransferData) =
+        applyAttachmentTransferData(updateDate, validate = true)
+
+    internal suspend fun resetAttachmentTransferData(updateDate: TransferData) =
+        applyAttachmentTransferData(updateDate, validate = false)
+
+    private suspend fun applyAttachmentTransferData(
+        updateDate: TransferData,
+        validate: Boolean,
+    ) = mutex.withLock {
         fun update(attachment: SceytAttachment): SceytAttachment? {
             // Validate state transition to prevent out-of-order updates
             val isValid = TransferStateValidator.isValidStateTransition(
@@ -432,7 +444,7 @@ class MessagesCache {
                 newProgress = updateDate.progressPercent
             )
 
-            if (!isValid) {
+            if (validate && !isValid) {
                 println(
                     "MessagesCache: Skipping invalid update for attachment ${attachment.messageTid} - " +
                             "current: ${attachment.transferState}/${attachment.progressPercent}%, " +

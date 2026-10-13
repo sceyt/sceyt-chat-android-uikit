@@ -127,7 +127,8 @@ object PushDataParser {
                 /* forwardingDetails = */ forwardingDetails,
                 /* bodyAttributes = */ bodyAttributes.toTypedArray(),
                 /* disableMentionsCount = */ false,
-                /* poll = */ pollDetails
+                /* poll = */ pollDetails,
+                /* pinDetails = */ null
             )
         } catch (e: Exception) {
             e.printStackTrace()

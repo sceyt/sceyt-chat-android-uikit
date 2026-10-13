@@ -51,7 +51,7 @@ import com.sceyt.chatuikit.persistence.logicimpl.PersistenceUsersLogicImpl
 import com.sceyt.chatuikit.persistence.logicimpl.attachment.AttachmentsCache
 import com.sceyt.chatuikit.persistence.logicimpl.attachment.PersistenceAttachmentLogicImpl
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
-import com.sceyt.chatuikit.persistence.logicimpl.channel.PendingChannelMigrationLock
+import com.sceyt.chatuikit.persistence.logicimpl.channel.PendingChannelCoordinator
 import com.sceyt.chatuikit.persistence.logicimpl.channel.PersistenceChannelsLogicImpl
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessageLoadRangeUpdater
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
@@ -65,6 +65,7 @@ import com.sceyt.chatuikit.persistence.logicimpl.usecases.CreatePendingChannelUs
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.EndPollUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.FindExistingChannelByMembersUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.FindRealChannelForPendingUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.InsertChannelWithMembersUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.HandleChangeVoteErrorUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.HandleDeleteMessagesByLoadTypeUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.HandleMessagesInRangeUseCase
@@ -100,7 +101,6 @@ internal val appModules = module {
     singleOf(::FileTransferServiceImpl) bind FileTransferService::class
     singleOf(::MessageLoadRangeUpdater)
     singleOf(::ChannelSyncStateStore)
-    singleOf(::PendingChannelMigrationLock)
     singleOf(::PushServiceImpl) bind PushService::class
     singleOf(::RealtimeNotificationManagerImpl) bind RealtimeNotificationManager::class
 }
@@ -144,6 +144,7 @@ internal fun databaseModule(enableDatabase: Boolean) = module {
     single { get<SceytDatabase>().pendingReactionDao() }
     single { get<SceytDatabase>().pendingMessageStateDao() }
     single { get<SceytDatabase>().pendingMessageDeleteByTidDao() }
+    single { get<SceytDatabase>().pendingChannelAvatarDao() }
     single { get<SceytDatabase>().fileChecksumDao() }
     single { get<SceytDatabase>().linkDao() }
     single { get<SceytDatabase>().loadRangeDao() }
@@ -167,6 +168,7 @@ internal val interactorModule = module {
 }
 
 internal val logicModule = module {
+    singleOf(::PendingChannelCoordinator)
     singleOf(::PersistenceChannelsLogicImpl) bind PersistenceChannelsLogic::class
     singleOf(::PersistenceMessagesLogicImpl) bind PersistenceMessagesLogic::class
     singleOf(::PersistenceAttachmentLogicImpl) bind PersistenceAttachmentLogic::class
@@ -203,6 +205,7 @@ internal val useCaseModule = module {
     factoryOf(::FindExistingChannelByMembersUseCase)
     factoryOf(::CreatePendingChannelUseCase)
     factoryOf(::FindRealChannelForPendingUseCase)
+    factoryOf(::InsertChannelWithMembersUseCase)
     factoryOf(::MigratePendingChannelToRealChannelUseCase)
     factoryOf(::MergePendingDirectChannelsUseCase)
 }

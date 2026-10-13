@@ -3,17 +3,17 @@ package com.sceyt.chatuikit.presentation.components.media.adapter.holders
 import android.annotation.SuppressLint
 import android.view.MotionEvent
 import android.view.View
+import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.annotation.OptIn
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.DefaultTimeBar
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.databinding.SceytMediaItemVideoBinding
-import com.sceyt.chatuikit.extensions.applySystemWindowInsetsPadding
 import com.sceyt.chatuikit.extensions.doSafe
+import com.sceyt.chatuikit.extensions.forceApplySystemWindowInsetsPadding
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.persistence.file_transfer.ThumbFor
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
@@ -48,10 +48,11 @@ class MediaVideoViewHolder(
 ) : BaseFileViewHolder<MediaItem>(binding.root, needMediaDataCallback),
     SharedTransitionViewProvider {
     private var playerHelper: ExoPlayerHelper? = null
-    private var videoController: ConstraintLayout? = null
+    private var videoController: FrameLayout? = null
     private val mediaAdapter by lazy { bindingAdapter as? MediaAdapter }
     private var pendingReadyCallback: (() -> Unit)? = null
     private var isOriginalImageReady = false
+    private var preparedFilePath: String? = null
 
     init {
         binding.applyStyle()
@@ -78,10 +79,10 @@ class MediaVideoViewHolder(
     private fun initVideoController() {
         doSafe { binding.videoView.controllerHideOnTouch = false }
         var isPlayingBeforePause = false
-        binding.videoView.findViewById<ConstraintLayout>(R.id.videoTimeContainer)
+        binding.videoView.findViewById<FrameLayout>(R.id.videoTimeContainer)
             ?.let { videoTimeContainer ->
                 with(videoTimeContainer) {
-                    applySystemWindowInsetsPadding(
+                    forceApplySystemWindowInsetsPadding(
                         applyBottom = true,
                         applyRight = true,
                         applyLeft = true
@@ -106,8 +107,12 @@ class MediaVideoViewHolder(
             }
 
         videoController?.findViewById<View>(R.id.exo_play_pause)?.setOnTouchListener { _, event ->
-            if (event.action == MotionEvent.ACTION_UP && playerHelper?.player?.playbackState == Player.STATE_IDLE)
-                initPlayerHelper(true)
+            if (event.action == MotionEvent.ACTION_UP && playerHelper?.player?.playbackState == Player.STATE_IDLE) {
+                playerHelper?.let {
+                    it.retryPlayer()
+                    it.resumePlayer()
+                } ?: initPlayerHelper(true)
+            }
 
             return@setOnTouchListener false
         }
@@ -158,6 +163,7 @@ class MediaVideoViewHolder(
             helper.releasePlayer()
         }
         playerHelper = null
+        preparedFilePath = null
     }
 
     override fun updateState(data: TransferData, isOnBind: Boolean) {
@@ -208,15 +214,31 @@ class MediaVideoViewHolder(
     }
 
     private fun initPlayerHelper(playVideo: Boolean = shouldPlayVideo()) {
-        if (!fileItem.attachment.filePath.isNullOrBlank()) {
-            playerHelper = initPlayer()
-            playerHelper?.setMediaPath(
-                url = fileItem.attachment.filePath,
-                playVideo = playVideo,
-                startPositionMs = mediaAdapter?.getPlaybackPosition(fileItem.attachment.filePath) ?: 0L
-            )
-            if (playVideo) initWakeLock()
+        val filePath = fileItem.attachment.filePath
+        if (filePath.isNullOrBlank()) return
+
+        val existingHelper = playerHelper
+        if (existingHelper != null && preparedFilePath == filePath) {
+            if (playVideo) {
+                existingHelper.resumePlayer()
+                initWakeLock()
+            }
+            return
         }
+
+        existingHelper?.let { helper ->
+            mediaAdapter?.removeMediaPlayer(helper.player)
+            helper.releasePlayer()
+        }
+
+        playerHelper = initPlayer()
+        preparedFilePath = filePath
+        playerHelper?.setMediaPath(
+            url = filePath,
+            playVideo = playVideo,
+            startPositionMs = mediaAdapter?.getPlaybackPosition(filePath) ?: 0L
+        )
+        if (playVideo) initWakeLock()
     }
 
     private fun shouldPlayVideo(): Boolean {

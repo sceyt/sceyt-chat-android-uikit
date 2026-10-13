@@ -43,12 +43,8 @@ class PersistenceChannelsLogicImplLastMessageTest {
             pendingReactionDao = mock(),
             channelsCache = channelsCache,
             channelSyncStateStore = mock(),
-            pendingChannelMigrationLock = mock(),
-            findExistingChannelByMembersUseCase = mock(),
-            createPendingChannelUseCase = mock(),
-            findRealChannelForPendingUseCase = mock(),
-            migratePendingChannelToRealChannelUseCase = mock(),
-            mergePendingDirectChannelsUseCase = mock(),
+            pendingChannelCoordinator = mock(),
+            insertChannelWithMembersUseCase = mock(),
         )
 
     private fun channelWithLastMessage(lastMessage: SceytMessage): SceytChannel =

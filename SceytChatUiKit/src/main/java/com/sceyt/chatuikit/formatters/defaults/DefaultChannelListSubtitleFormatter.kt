@@ -154,8 +154,7 @@ open class DefaultChannelListSubtitleFormatter : Formatter<ChannelItemSubtitleFo
         val style = attributes.channelItemStyle
         val draftMessage = attributes.channel.draftMessage ?: return false to ""
 
-        val draft = "${context.getString(R.string.sceyt_draft)}:".toSpannable()
-        style.draftPrefixTextStyle.apply(context, draft)
+        val draftWord = context.getString(R.string.sceyt_draft)
 
         val formattedBody = style.draftMessageBodyFormatter.format(
             context, DraftMessageBodyFormatterAttributes(
@@ -164,8 +163,20 @@ open class DefaultChannelListSubtitleFormatter : Formatter<ChannelItemSubtitleFo
             )
         )
 
-        if (formattedBody.isBlank())
-            return true to draft.removeSuffix(":").toSpannable()
+        val bodyToRender = formattedBody.ifBlank {
+            if (draftMessage.isReply && draftMessage.replyOrEditMessage != null)
+                context.getString(R.string.sceyt_reply)
+            else ""
+        }
+
+        if (bodyToRender.isBlank()) {
+            val draftOnly = draftWord.toSpannable()
+            style.draftPrefixTextStyle.apply(context, draftOnly)
+            return true to draftOnly
+        }
+
+        val draft = "$draftWord:".toSpannable()
+        style.draftPrefixTextStyle.apply(context, draft)
 
         val attachment = draftMessage.voiceAttachment?.toSceytAttachment()
             ?: draftMessage.attachments?.singleOrNull()?.toSceytAttachment()
@@ -176,7 +187,7 @@ open class DefaultChannelListSubtitleFormatter : Formatter<ChannelItemSubtitleFo
             append(draft)
             append(" ")
             append(attachmentIcon.toSpannableString())
-            append(formattedBody)
+            append(bodyToRender)
         }
         return true to body
     }

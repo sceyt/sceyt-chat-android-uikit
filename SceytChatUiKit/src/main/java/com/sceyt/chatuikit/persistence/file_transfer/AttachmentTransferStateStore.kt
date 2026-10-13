@@ -44,6 +44,11 @@ internal object AttachmentTransferStateStore {
     }
 
     @Synchronized
+    fun reset(update: TransferData) {
+        entries[resolveKey(update)] = Entry(transferData = update)
+    }
+
+    @Synchronized
     fun getTransferData(attachment: SceytAttachment): TransferData? {
         val current = findEntry(attachment)?.transferData ?: return null
         val attachmentState = attachment.transferState

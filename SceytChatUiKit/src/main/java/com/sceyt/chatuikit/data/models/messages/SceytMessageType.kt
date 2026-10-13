@@ -1,4 +1,6 @@
 package com.sceyt.chatuikit.data.models.messages
+
+import com.sceyt.chatuikit.logger.SceytLog
 import java.util.concurrent.ConcurrentHashMap
 
 abstract class SceytMessageType(val value: String) {
@@ -12,6 +14,7 @@ abstract class SceytMessageType(val value: String) {
     data class Unsupported(val type: String) : SceytMessageType(type)
 
     companion object Registry {
+        private const val TAG = "MessageTypeRegistry"
         private val registry = ConcurrentHashMap<String, SceytMessageType>()
 
         fun register(type: SceytMessageType) {
@@ -19,7 +22,13 @@ abstract class SceytMessageType(val value: String) {
         }
 
         fun fromString(type: String): SceytMessageType {
-            return registry[type] ?: Unsupported(type)
+            return registry[type] ?: run {
+                SceytLog.w(
+                    TAG,
+                    "Message type '$type' is not registered. Registered types: ${registry.keys}. Returning Unsupported."
+                )
+                Unsupported(type)
+            }
         }
 
         init {

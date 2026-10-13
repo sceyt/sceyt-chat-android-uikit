@@ -113,7 +113,7 @@ class ProfileViewModel(val userId: String) : BaseViewModel() {
 
     fun logout() {
         viewModelScope.launch(Dispatchers.IO) {
-            SceytChatUIKit.chatUIFacade.logOut {
+            SceytChatUIKit.logOut {
                 _logOutLiveData.postValue(true)
             }
         }
