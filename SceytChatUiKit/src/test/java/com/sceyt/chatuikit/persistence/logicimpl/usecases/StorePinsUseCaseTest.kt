@@ -40,7 +40,7 @@ class StorePinsUseCaseTest {
                 pinDetails = SceytPinDetails(true, 5_000L, PinType.PERSONAL),
             ),
         )
-        whenever(messageDao.getMessageTidById(42L)).thenReturn(77L)
+        whenever(messageDao.getMessageById(42L)).thenReturn(messageDb(messageEntity(tid = 77L)))
 
         useCase(channelId = 7L, pins = listOf(pin))
 
@@ -66,6 +66,22 @@ class StorePinsUseCaseTest {
         verifyBlocking(messageDao) { upsertMessage(stored.capture()) }
         assertThat(stored.firstValue.messageEntity.unList).isTrue()
         assertThat(stored.firstValue.messageEntity.tid).isEqualTo(11L)
+    }
+
+    @Test
+    fun `newer fetched content preserves an existing unlisted message`() = runTest {
+        whenever(messageDao.getMessageById(42L)).thenReturn(messageDb(
+            messageEntity(tid = 77L).copy(unList = true, updatedAt = 100L)
+        ))
+        val fetched = sceytMessage(tid = 0L).copy(body = "edited", updatedAt = 200L)
+
+        useCase(7L, listOf(serverPin(message = fetched)))
+
+        val stored = argumentCaptor<MessageDb>()
+        verifyBlocking(messageDao) { upsertMessage(stored.capture()) }
+        assertThat(stored.firstValue.messageEntity.tid).isEqualTo(77L)
+        assertThat(stored.firstValue.messageEntity.unList).isTrue()
+        assertThat(stored.firstValue.messageEntity.body).isEqualTo("edited")
     }
 
     @Test
