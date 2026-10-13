@@ -6,7 +6,7 @@ import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.database.dao.PinnedMessageDao
 import com.sceyt.chatuikit.persistence.repositories.PinRepository
 
-internal class SyncChannelPinsUseCase(
+internal class SyncPinnedMessagesManager(
     private val pinnedMessageDao: PinnedMessageDao,
     private val pinRepository: PinRepository,
     private val storePinsUseCase: StorePinsUseCase,

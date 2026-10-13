@@ -22,13 +22,13 @@ import org.mockito.kotlin.verifyBlocking
 import org.mockito.kotlin.whenever
 
 @RunWith(RobolectricTestRunner::class)
-class SyncChannelPinsUseCaseTest {
+class SyncPinnedMessagesManagerTest {
 
     private val pinnedMessageDao = mock<PinnedMessageDao>()
     private val pinRepository = mock<PinRepository>()
     private val storePinsUseCase = mock<StorePinsUseCase>()
 
-    private val useCase = SyncChannelPinsUseCase(
+    private val useCase = SyncPinnedMessagesManager(
         pinnedMessageDao = pinnedMessageDao,
         pinRepository = pinRepository,
         storePinsUseCase = storePinsUseCase,
