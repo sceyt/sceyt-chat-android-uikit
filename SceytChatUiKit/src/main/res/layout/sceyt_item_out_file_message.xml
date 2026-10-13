@@ -41,7 +41,7 @@
         app:layout_constrainedWidth="true"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/sideActionView"
         app:layout_constraintTop_toTopOf="parent"
         tools:backgroundTint="#E3E7FF">
 
@@ -238,5 +238,17 @@
         app:layout_constraintEnd_toStartOf="@+id/toReplyLine"
         app:layout_constraintTop_toBottomOf="@id/rvReactions"
         tools:text="34 reply" />
+
+    <ViewStub
+        android:id="@+id/sideActionView"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:layout_marginEnd="8dp"
+        android:layout="@layout/sceyt_message_side_action_button"
+        app:layout_constraintBottom_toBottomOf="@+id/layoutDetails"
+        app:layout_constraintEnd_toStartOf="@+id/layoutDetails"
+        app:layout_constraintHorizontal_bias="1"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

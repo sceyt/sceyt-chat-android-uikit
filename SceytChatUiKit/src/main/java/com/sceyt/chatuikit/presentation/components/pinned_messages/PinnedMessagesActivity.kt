@@ -39,8 +39,10 @@ import com.sceyt.chatuikit.presentation.common.dialogs.SceytDialog
 import com.sceyt.chatuikit.presentation.components.channel.header.MessageActionsMenuInitializer
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.openFile
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.ItemOffsetDecoration
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem.MessageItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageViewHolderFactory
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.reactions.ReactionItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.components.EmojiPickerBottomSheetFragment
 import com.sceyt.chatuikit.presentation.components.channel.messages.dialogs.DeleteMessageDialog
@@ -79,11 +81,12 @@ open class PinnedMessagesActivity : AppCompatActivity() {
 
     private val adapter by lazy {
         PinnedMessagesAdapter(
-            style = style,
-            messagesListStyle = messagesListStyle,
             viewHolderFactory = viewHolderFactory,
+            messagesListStyle = messagesListStyle,
+            scope = lifecycleScope,
+            recyclerView = binding.rvPinnedMessages,
+            style = style,
             onNavigateClick = ::finishWithJump,
-            onSelectClick = ::toggleSelection,
         )
     }
 
@@ -201,7 +204,7 @@ open class PinnedMessagesActivity : AppCompatActivity() {
         override fun onReadMoreClick(view: View, item: MessageItem) {
             val rv = binding.rvPinnedMessages
             val holder = rv.findViewHolderForItemId(item.getItemId())
-                    as? PinnedMessagesAdapter.ViewHolder ?: return
+                    as? BaseMessageViewHolder ?: return
             val position = holder.bindingAdapterPosition
             if (position == RecyclerView.NO_POSITION) return
 
@@ -256,6 +259,7 @@ open class PinnedMessagesActivity : AppCompatActivity() {
             stackFromEnd = true
         }
         rvPinnedMessages.adapter = adapter
+        rvPinnedMessages.addItemDecoration(ItemOffsetDecoration(messagesListStyle))
     }
 
     protected open fun createViewHolderFactory(): MessageViewHolderFactory {
@@ -276,7 +280,7 @@ open class PinnedMessagesActivity : AppCompatActivity() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.pinnedMessages.collect { items ->
-                    adapter.submit(items)
+                    adapter.submitList(items)
                     binding.emptyStateView.isVisible = items.isEmpty()
                     val tids = items.filterIsInstance<MessageItem>().map { it.message.tid }
                     if (viewModel.selectedMessages.keys.any { it !in tids }) clearSelection()
@@ -333,7 +337,7 @@ open class PinnedMessagesActivity : AppCompatActivity() {
 
     private fun updateItem(index: Int, item: MessageItem, diff: MessageDiff) {
         val holder = binding.rvPinnedMessages.findViewHolderForItemId(item.getItemId())
-                as? PinnedMessagesAdapter.ViewHolder
+                as? BaseMessageViewHolder
         if (holder != null) {
             holder.bind(item, diff)
         } else adapter.notifyItemChanged(index, diff)
@@ -351,7 +355,7 @@ open class PinnedMessagesActivity : AppCompatActivity() {
         for (i in 0 until rv.childCount) {
             rv.getChildAt(i)?.let {
                 val holder = rv.getChildViewHolder(it)
-                (holder as? PinnedMessagesAdapter.ViewHolder)?.setSelectableState()
+                (holder as? BaseMessageViewHolder)?.setSelectableState()
             }
         }
     }
@@ -362,7 +366,7 @@ open class PinnedMessagesActivity : AppCompatActivity() {
         for (i in 0 until rv.childCount) {
             rv.getChildAt(i)?.let {
                 val holder = rv.getChildViewHolder(it)
-                (holder as? PinnedMessagesAdapter.ViewHolder)?.cancelSelectableState()
+                (holder as? BaseMessageViewHolder)?.cancelSelectableState()
             }
         }
         adapter.getData().forEachIndexed { index, item ->
