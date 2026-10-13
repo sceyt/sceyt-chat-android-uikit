@@ -11,7 +11,7 @@ import com.sceyt.chatuikit.persistence.logicimpl.usecases.PinMessageUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.SendPendingPinsUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.SendPinUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.SendUnpinUseCase
-import com.sceyt.chatuikit.persistence.logicimpl.usecases.SyncChannelPinsUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.SyncPinnedMessagesManager
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.UnpinMessageUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.UpdatePinnedMessagesUseCase
 import com.sceyt.chatuikit.persistence.mappers.mergePins
@@ -26,7 +26,7 @@ internal class PersistencePinLogicImpl(
     private val pendingPinDao: PendingPinDao,
     private val pinMessageUseCase: PinMessageUseCase,
     private val unpinMessageUseCase: UnpinMessageUseCase,
-    private val syncChannelPinsUseCase: SyncChannelPinsUseCase,
+    private val syncPinnedMessagesManager: SyncPinnedMessagesManager,
     private val sendPendingPinsUseCase: SendPendingPinsUseCase,
     private val sendPinUseCase: SendPinUseCase,
     private val sendUnpinUseCase: SendUnpinUseCase,
@@ -70,7 +70,7 @@ internal class PersistencePinLogicImpl(
     override suspend fun syncChannelPins(channelId: Long) {
         syncMutex.withLock {
             sendPendingPinsUseCase(channelId)
-            syncChannelPinsUseCase(channelId)
+            syncPinnedMessagesManager(channelId)
         }
     }
 
