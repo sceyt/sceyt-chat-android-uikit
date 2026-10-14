@@ -2,6 +2,7 @@ package com.sceyt.chatuikit.persistence.database.entity.messages
 
 import androidx.room.Embedded
 import androidx.room.Relation
+import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingPinEntity
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingReactionEntity
 import com.sceyt.chatuikit.persistence.database.entity.user.UserDb
@@ -48,6 +49,12 @@ internal data class MessageDb(
 
     @Relation(parentColumn = "tid", entityColumn = "messageTid", entity = PollEntity::class)
     val poll: PollDb?,
+
+    @Relation(parentColumn = "tid", entityColumn = "messageTid")
+    val pinnedMessage: PinnedMessageEntity?,
+
+    @Relation(parentColumn = "tid", entityColumn = "messageTid")
+    val pendingPin: PendingPinEntity?,
 ) {
     val selfReactions get() = reactions?.filter { it.from?.id == SceytChatUIKit.chatUIFacade.myId }
 

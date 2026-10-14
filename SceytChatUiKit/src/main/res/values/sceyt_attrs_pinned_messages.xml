@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <declare-styleable name="PinnedMessagesView">
+        <attr name="sceytUiPinnedMessagesBackgroundColor" format="reference|color" />
+        <attr name="sceytUiPinnedMessagesSeparatorColor" format="reference|color" />
+        <attr name="sceytUiPinnedMessagesIcon" format="reference" />
+        <attr name="sceytUiPinnedMessagesIconTint" format="reference|color" />
+        <attr name="sceytUiPinnedMessagesIndicatorActiveColor" format="reference|color" />
+        <attr name="sceytUiPinnedMessagesIndicatorInactiveColor" format="reference|color" />
+
+        <attr name="sceytUiPinnedMessagesTitleTextColor" format="reference|color" />
+        <attr name="sceytUiPinnedMessagesTitleTextSize" format="dimension|integer" />
+        <attr name="sceytUiPinnedMessagesTitleTextStyle" format="enum">
+            <enum name="normal" value="0" />
+            <enum name="bold" value="1" />
+            <enum name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiPinnedMessagesTitleTextFont" format="reference" />
+
+        <attr name="sceytUiPinnedMessagesBodyTextColor" format="reference|color" />
+        <attr name="sceytUiPinnedMessagesBodyTextSize" format="dimension|integer" />
+        <attr name="sceytUiPinnedMessagesBodyTextStyle" format="enum">
+            <enum name="normal" value="0" />
+            <enum name="bold" value="1" />
+            <enum name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiPinnedMessagesBodyTextFont" format="reference" />
+
+        <attr name="sceytUiPinnedMessagesMentionTextColor" format="reference|color" />
+    </declare-styleable>
+
+</resources>

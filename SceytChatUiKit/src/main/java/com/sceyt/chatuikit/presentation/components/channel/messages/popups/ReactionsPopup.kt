@@ -119,6 +119,27 @@ open class ReactionsPopup(
 
     companion object {
 
+        internal fun showPopup(
+            anchorView: View,
+            message: SceytMessage,
+            style: ReactionPickerStyle,
+            clickListener: PopupReactionsAdapter.OnItemClickListener,
+        ): ReactionsPopup {
+            val maxSize = SceytChatUIKit.config.messageReactionPerUserLimit
+            val reactions = message.messageReactions
+                ?.sortedByDescending { it.reaction.containsSelf }
+                ?.map { it.reaction.key }
+                ?.toMutableList() ?: mutableListOf()
+            if (reactions.size < maxSize) {
+                reactions.addAll(
+                    SceytChatUIKit.config.defaultReactions
+                        .minus(reactions.toSet())
+                        .take(maxSize - reactions.size)
+                )
+            }
+            return showPopup(anchorView, message, reactions.take(maxSize), style, clickListener)
+        }
+
         fun showPopup(
                 anchorView: View,
                 message: SceytMessage,

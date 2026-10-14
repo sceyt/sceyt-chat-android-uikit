@@ -16,6 +16,8 @@ import com.sceyt.chatuikit.persistence.database.dao.PendingMarkerDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingMessageDeleteByTidDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingMessageStateDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingPollVoteDao
+import com.sceyt.chatuikit.persistence.database.dao.PendingPinDao
+import com.sceyt.chatuikit.persistence.database.dao.PinnedMessageDao
 import com.sceyt.chatuikit.persistence.database.dao.PollDao
 import com.sceyt.chatuikit.persistence.database.dao.ReactionDao
 import com.sceyt.chatuikit.persistence.database.dao.UserDao
@@ -121,6 +123,8 @@ internal class PersistenceMessagesLogicImplLoadNearTest {
         userDao = mock<UserDao>(),
         pendingMessageStateDao = mock<PendingMessageStateDao>(),
         pollDao = mock<PollDao>(),
+        pinnedMessageDao = mock<PinnedMessageDao>(),
+        pendingPinDao = mock<PendingPinDao>(),
         pendingPollVoteDao = mock<PendingPollVoteDao>(),
         fileTransferService = mock<FileTransferService>(),
         messagesRepository = mock<MessagesRepository>(),

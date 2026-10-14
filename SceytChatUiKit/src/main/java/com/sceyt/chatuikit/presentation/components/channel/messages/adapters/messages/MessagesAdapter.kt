@@ -31,7 +31,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Date
 
-class MessagesAdapter(
+open class MessagesAdapter(
     private var messages: SyncArrayList<MessageListItem>,
     private val viewHolderFactory: MessageViewHolderFactory,
     private val style: MessagesListViewStyle,
