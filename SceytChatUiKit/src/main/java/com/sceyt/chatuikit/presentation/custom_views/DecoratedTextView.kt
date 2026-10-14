@@ -23,13 +23,16 @@ import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.isRtl
 import com.sceyt.chatuikit.extensions.roundUp
+import com.sceyt.chatuikit.styles.StyleConstants.UNSET_SIZE
 import com.sceyt.chatuikit.styles.common.TextStyle
 import kotlin.math.min
+import androidx.core.graphics.withSave
+import androidx.core.graphics.withTranslation
 
 class DecoratedTextView @JvmOverloads constructor(
-        context: Context,
-        attrs: AttributeSet? = null,
-        defStyleAttr: Int = 0
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr) {
     private lateinit var staticLayout: StaticLayout
     private val textPaint = TextPaint(Paint.ANTI_ALIAS_FLAG)
@@ -83,16 +86,30 @@ class DecoratedTextView @JvmOverloads constructor(
     init {
         attrs?.let {
             context.obtainStyledAttributes(attrs, R.styleable.DecoratedTextView).use { array ->
-                bgColor = array.getColor(R.styleable.DecoratedTextView_sceytUiDecoratedTextBackgroundColor, 0)
-                cornerRadius = array.getDimensionPixelSize(R.styleable.DecoratedTextView_sceytUiDecoratedTextBackgroundCornerRadius, cornerRadius)
-                leadingIcon = array.getDrawable(R.styleable.DecoratedTextView_sceytUiDecoratedTextLeadingIcon)?.mutate()
+                bgColor = array.getColor(
+                    R.styleable.DecoratedTextView_sceytUiDecoratedTextBackgroundColor,
+                    0
+                )
+                cornerRadius = array.getDimensionPixelSize(
+                    R.styleable.DecoratedTextView_sceytUiDecoratedTextBackgroundCornerRadius,
+                    cornerRadius
+                )
+                leadingIcon =
+                    array.getDrawable(R.styleable.DecoratedTextView_sceytUiDecoratedTextLeadingIcon)
+                        ?.mutate()
                         ?: leadingIcon
-                trailingIcon = array.getDrawable(R.styleable.DecoratedTextView_sceytUiDecoratedTextTrailingIcon)?.mutate()
+                trailingIcon =
+                    array.getDrawable(R.styleable.DecoratedTextView_sceytUiDecoratedTextTrailingIcon)
+                        ?.mutate()
                         ?: trailingIcon
-                iconsTintColor = array.getColor(R.styleable.DecoratedTextView_sceytUiDecoratedTextIconsTint, iconsTintColor)
+                iconsTintColor = array.getColor(
+                    R.styleable.DecoratedTextView_sceytUiDecoratedTextIconsTint,
+                    iconsTintColor
+                )
                 text = array.getString(R.styleable.DecoratedTextView_sceytUiDecoratedTextTitle)
-                        ?: text
-                leadingText = array.getString(R.styleable.DecoratedTextView_sceytUiDecoratedTextLeadingText)
+                    ?: text
+                leadingText =
+                    array.getString(R.styleable.DecoratedTextView_sceytUiDecoratedTextLeadingText)
                         ?: leadingText
                 textStyle = TextStyle.Builder(array)
                     .setSize(R.styleable.DecoratedTextView_sceytUiDecoratedTextSize, 30)
@@ -102,16 +119,43 @@ class DecoratedTextView @JvmOverloads constructor(
                     .build()
                 leadingTextStyle = TextStyle.Builder(array)
                     .setSize(R.styleable.DecoratedTextView_sceytUiDecoratedTextLeadingTextSize, 30)
-                    .setColor(R.styleable.DecoratedTextView_sceytUiDecoratedTextLeadingTextColor, Color.BLACK)
+                    .setColor(
+                        R.styleable.DecoratedTextView_sceytUiDecoratedTextLeadingTextColor,
+                        Color.BLACK
+                    )
                     .setFont(R.styleable.DecoratedTextView_sceytUiDecoratedTextLeadingTextFont)
                     .setStyle(R.styleable.DecoratedTextView_sceytUiDecoratedTextLeadingTextStyle)
                     .build()
-                leadingIconPadding = array.getDimensionPixelSize(R.styleable.DecoratedTextView_sceytUiDecoratedTextLeadingIconPadding, leadingIconPadding)
-                trailingIconPadding = array.getDimensionPixelSize(R.styleable.DecoratedTextView_sceytUiDecoratedTextTrailingIconPadding, trailingIconPadding)
-                leadingIconSize = array.getDimensionPixelSize(R.styleable.DecoratedTextView_sceytUiDecoratedTextLeadingIconSize, leadingIconSize)
-                trailingIconSize = array.getDimensionPixelSize(R.styleable.DecoratedTextView_sceytUiDecoratedTextTrailingIconSize, trailingIconSize)
-                isHighlighted = array.getBoolean(R.styleable.DecoratedTextView_sceytUiDecoratedTextHighlighted, isHighlighted)
-                ignoreRtl = array.getBoolean(R.styleable.DecoratedTextView_sceytUiDecoratedTextIgnoreRtl, ignoreRtl)
+
+                array.getDimensionPixelSize(
+                    R.styleable.DecoratedTextView_sceytUiDecoratedTextLeadingIconPadding,
+                    -1
+                ).takeIf { it != -1 }?.let {
+                    leadingIconPadding = it
+                }
+
+                array.getDimensionPixelSize(
+                    R.styleable.DecoratedTextView_sceytUiDecoratedTextTrailingIconPadding,
+                    trailingIconPadding
+                ).takeIf { it != -1 }?.let {
+                    trailingIconPadding = it
+                }
+                leadingIconSize = array.getDimensionPixelSize(
+                    R.styleable.DecoratedTextView_sceytUiDecoratedTextLeadingIconSize,
+                    leadingIconSize
+                )
+                trailingIconSize = array.getDimensionPixelSize(
+                    R.styleable.DecoratedTextView_sceytUiDecoratedTextTrailingIconSize,
+                    trailingIconSize
+                )
+                isHighlighted = array.getBoolean(
+                    R.styleable.DecoratedTextView_sceytUiDecoratedTextHighlighted,
+                    isHighlighted
+                )
+                ignoreRtl = array.getBoolean(
+                    R.styleable.DecoratedTextView_sceytUiDecoratedTextIgnoreRtl,
+                    ignoreRtl
+                )
 
                 init()
             }
@@ -194,35 +238,34 @@ class DecoratedTextView @JvmOverloads constructor(
     }
 
     private fun drawLeadingIcon(canvas: Canvas, icon: Drawable) {
-        canvas.save()
-        val dyIcon = (heightWithoutPaddingVertical - leadingIconRect.height()) / 2f
-        canvas.translate(0f, dyIcon)
-        icon.bounds = leadingIconRect
-        if (iconsTintColor != 0)
-            icon.setTint(iconsTintColor)
+        canvas.withSave {
+            val dyIcon = (heightWithoutPaddingVertical - leadingIconRect.height()) / 2f
+            translate(0f, dyIcon)
+            icon.bounds = leadingIconRect
+            if (iconsTintColor != 0)
+                icon.setTint(iconsTintColor)
 
-        icon.draw(canvas)
-        canvas.restore()
+            icon.draw(this)
+        }
     }
 
     private fun drawText(canvas: Canvas) {
         val dyText = (heightWithoutPaddingVertical - staticLayout.height) / 2f
-        canvas.save()
-        canvas.translate(0f, dyText)
-        staticLayout.draw(canvas)
-        canvas.restore()
+        canvas.withTranslation(0f, dyText) {
+            staticLayout.draw(this)
+        }
     }
 
     private fun drawTrailingIcon(canvas: Canvas, icon: Drawable) {
-        canvas.save()
-        val dyIcon = (heightWithoutPaddingVertical - trailingIconRect.height()) / 2f
-        canvas.translate(0f, dyIcon)
-        icon.bounds = trailingIconRect
-        if (iconsTintColor != 0)
-            icon.setTint(iconsTintColor)
+        canvas.withSave {
+            val dyIcon = (heightWithoutPaddingVertical - trailingIconRect.height()) / 2f
+            translate(0f, dyIcon)
+            icon.bounds = trailingIconRect
+            if (iconsTintColor != 0)
+                icon.setTint(iconsTintColor)
 
-        icon.draw(canvas)
-        canvas.restore()
+            icon.draw(this)
+        }
     }
 
     private fun initStaticLayout() {
@@ -237,8 +280,10 @@ class DecoratedTextView @JvmOverloads constructor(
         val widthDiff = sizeDiff.first
         val heightDiff = sizeDiff.second
 
-        val rect = Rect(widthDiff, heightDiff,
-            iconSize.width + widthDiff, iconSize.height + heightDiff)
+        val rect = Rect(
+            widthDiff, heightDiff,
+            iconSize.width + widthDiff, iconSize.height + heightDiff
+        )
 
         return rect
     }
@@ -273,15 +318,12 @@ class DecoratedTextView @JvmOverloads constructor(
     @Suppress("DEPRECATION")
     private fun getStaticLayout(text: CharSequence, textPaint: TextPaint): StaticLayout {
         val textWidth = Layout.getDesiredWidth(text, textPaint).roundUp()
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            StaticLayout.Builder
-                .obtain(text, 0, text.length, textPaint, textWidth)
-                .setAlignment(Layout.Alignment.ALIGN_NORMAL)
-                .setLineSpacing(0f, 1f)
-                .setIncludePad(false)
-                .build()
-        } else StaticLayout(text, textPaint, textWidth,
-            Layout.Alignment.ALIGN_NORMAL, 1f, 0f, false)
+        return StaticLayout.Builder
+            .obtain(text, 0, text.length, textPaint, textWidth)
+            .setAlignment(Layout.Alignment.ALIGN_NORMAL)
+            .setLineSpacing(0f, 1f)
+            .setIncludePad(false)
+            .build()
     }
 
     private fun setHighlightedState(highlighted: Boolean) {
@@ -346,9 +388,9 @@ class DecoratedTextView @JvmOverloads constructor(
     }
 
     fun setIcons(
-            leadingIcon: Drawable? = null,
-            trailingIcon: Drawable? = null,
-            ignoreHighlight: Boolean = false
+        leadingIcon: Drawable? = null,
+        trailingIcon: Drawable? = null,
+        ignoreHighlight: Boolean = false
     ) {
         var leading = leadingIcon
         var trailing = trailingIcon
@@ -401,20 +443,22 @@ class DecoratedTextView @JvmOverloads constructor(
         val leadingIconHeight = leadingIconRect.height()
         val trailingIconHeight = trailingIconRect.height()
         val maxIconHeight = Integer.max(leadingIconHeight, trailingIconHeight)
-        val height = staticLayout.height.coerceAtLeast(maxIconHeight) + realPaddingTop + realPaddingBottom
+        val height =
+            staticLayout.height.coerceAtLeast(maxIconHeight) + realPaddingTop + realPaddingBottom
         setMeasuredDimension(width, height)
     }
 
     inner class DecoratedTextViewAppearance(
-            val leadingIconSize: Int = this@DecoratedTextView.leadingIconSize,
-            val trailingIconSize: Int = this@DecoratedTextView.trailingIconSize,
-            val leadingIcon: Drawable? = this@DecoratedTextView.leadingIcon,
-            val trailingIcon: Drawable? = this@DecoratedTextView.trailingIcon,
-            val text: CharSequence = this@DecoratedTextView.text,
-            val textStyle: TextStyle = this@DecoratedTextView.textStyle,
-            val leadingText: CharSequence = this@DecoratedTextView.leadingText,
-            val leadingTextStyle: TextStyle = this@DecoratedTextView.leadingTextStyle,
-            val enableLeadingText: Boolean = this@DecoratedTextView.enableLeadingText,
+        val leadingIconSize: Int = this@DecoratedTextView.leadingIconSize,
+        val leadingIconPadding: Int = UNSET_SIZE,
+        val trailingIconSize: Int = this@DecoratedTextView.trailingIconSize,
+        val leadingIcon: Drawable? = this@DecoratedTextView.leadingIcon,
+        val trailingIcon: Drawable? = this@DecoratedTextView.trailingIcon,
+        val text: CharSequence = this@DecoratedTextView.text,
+        val textStyle: TextStyle = this@DecoratedTextView.textStyle,
+        val leadingText: CharSequence = this@DecoratedTextView.leadingText,
+        val leadingTextStyle: TextStyle = this@DecoratedTextView.leadingTextStyle,
+        val enableLeadingText: Boolean = this@DecoratedTextView.enableLeadingText,
     ) {
         fun apply(ignoreHighlight: Boolean = false) {
             var leading = leadingIcon?.mutate()
@@ -422,7 +466,9 @@ class DecoratedTextView @JvmOverloads constructor(
 
             if (isHighlighted && !ignoreHighlight) {
                 leading = leadingIcon?.constantState?.newDrawable()?.apply { setTint(Color.WHITE) }
-                trailing = trailingIcon?.constantState?.newDrawable()?.apply { setTint(Color.WHITE) }
+                trailing = trailingIcon?.constantState?.newDrawable()?.apply {
+                    setTint(Color.WHITE)
+                }
             }
 
             this@DecoratedTextView.leadingIconSize = leadingIconSize
@@ -434,6 +480,8 @@ class DecoratedTextView @JvmOverloads constructor(
             this@DecoratedTextView.leadingText = leadingText
             this@DecoratedTextView.leadingTextStyle = leadingTextStyle
             this@DecoratedTextView.enableLeadingText = enableLeadingText
+            if (leadingIconPadding != UNSET_SIZE)
+                this@DecoratedTextView.leadingIconPadding = leadingIconPadding
 
             init()
             requestLayout()
@@ -446,7 +494,8 @@ class DecoratedTextView @JvmOverloads constructor(
         private var trailingIconSize = this@DecoratedTextView.trailingIconSize
         private var leadingIcon = this@DecoratedTextView.leadingIcon
         private var trailingIcon = this@DecoratedTextView.trailingIcon
-
+        private var leadingIconPadding = if (leadingIcon != null)
+            this@DecoratedTextView.leadingIconPadding else UNSET_SIZE
         private var text = this@DecoratedTextView.text
         private var textStyle = this@DecoratedTextView.textStyle
         private var leadingText = this@DecoratedTextView.leadingText
@@ -466,6 +515,12 @@ class DecoratedTextView @JvmOverloads constructor(
 
         fun setLeadingIconSize(size: Int): AppearanceBuilder {
             leadingIconSize = size
+            return this
+        }
+
+        /** Gap between the leading icon and the text. Ignored while there is no leading icon. */
+        fun setLeadingIconPadding(padding: Int): AppearanceBuilder {
+            leadingIconPadding = padding
             return this
         }
 
@@ -506,6 +561,7 @@ class DecoratedTextView @JvmOverloads constructor(
 
         fun build() = DecoratedTextViewAppearance(
             leadingIconSize = leadingIconSize,
+            leadingIconPadding = leadingIconPadding,
             trailingIconSize = trailingIconSize,
             leadingIcon = leadingIcon,
             trailingIcon = trailingIcon,

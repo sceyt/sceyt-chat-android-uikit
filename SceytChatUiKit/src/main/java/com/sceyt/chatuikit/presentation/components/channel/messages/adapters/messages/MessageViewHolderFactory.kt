@@ -347,6 +347,7 @@ open class MessageViewHolderFactory(context: Context) {
     open fun createSystemMessageViewHolder(parent: ViewGroup) = SystemMessageViewHolder(
         binding = SceytItemSystemMessageBinding.inflate(layoutInflater, parent, false),
         style = messageItemStyle.messageItemStyle,
+        messageListeners = clickListeners,
         displayedListener = displayedListener,
         needMediaDataCallback = needMediaDataCallback
     )

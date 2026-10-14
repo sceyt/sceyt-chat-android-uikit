@@ -319,7 +319,6 @@ class SelfDestructingVoiceMessageActivity : AppCompatActivity(), SceytKoinCompon
         voiceFilePath?.let {
             AudioPlayerHelper.stop(it, voiceMessageTid)
         }
-        StyleRegistry.unregister(intent.getStringExtra(STYLE_ID_KEY))
     }
 
     private fun SceytActivitySelfDestructingVoiceMessageBinding.applyStyle() {

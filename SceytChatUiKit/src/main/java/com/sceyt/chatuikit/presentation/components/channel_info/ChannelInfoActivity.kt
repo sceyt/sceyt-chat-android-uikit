@@ -91,7 +91,9 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         applySystemBarsStyle()
-        style = ChannelInfoStyle.Builder(this, null).build()
+        style = StyleRegistry.getOrDefault(savedInstanceState?.getString(STYLE_ID_KEY)) {
+            ChannelInfoStyle.Builder(this, null).build()
+        }
         registerAllStyles()
 
         setActivityContentView()
@@ -110,8 +112,9 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
         observeUserUpdateIfNeeded()
     }
 
-    /** Register all sub-styles to survive configuration changes */
+    /** Register the screen style and its sub-styles to survive configuration changes */
     private fun registerAllStyles() {
+        StyleRegistry.register(style)
         StyleRegistry.register(style.mediaStyle)
         StyleRegistry.register(style.filesStyle)
         StyleRegistry.register(style.linkStyle)
@@ -741,22 +744,31 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
         }
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putString(STYLE_ID_KEY, style.styleId)
+        super.onSaveInstanceState(outState)
+    }
+
     override fun onDestroy() {
         super.onDestroy()
-        // Clean up all registered styles
-        StyleRegistry.unregister(
-            style.mediaStyle.styleId,
-            style.filesStyle.styleId,
-            style.linkStyle.styleId,
-            style.voiceStyle.styleId,
-            style.commonGroupsStyle.styleId
-        )
+        if (isFinishing) {
+            // Clean up all registered styles
+            StyleRegistry.unregister(
+                style.styleId,
+                style.mediaStyle.styleId,
+                style.filesStyle.styleId,
+                style.linkStyle.styleId,
+                style.voiceStyle.styleId,
+                style.commonGroupsStyle.styleId
+            )
+        }
     }
 
     companion object {
         const val CHANNEL = "CHANNEL"
         const val ACTION_SEARCH_MESSAGES = "ACTION_SEARCH_MESSAGES"
         private const val ENABLE_SEARCH_MESSAGES = "ACTION_SEARCH_MESSAGES"
+        private const val STYLE_ID_KEY = "CHANNEL_INFO_STYLE_ID_KEY"
 
         fun createIntent(
             context: Context,

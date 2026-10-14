@@ -62,7 +62,7 @@ class OutAttachmentsMessageViewHolder(
 
                 if (!diff.hasDifference()) return
 
-                if (diff.edited || diff.statusChanged) {
+                if (diff.infoRowChanged()) {
                     setMessageDateDependAttachments(messageDate, message.files)
                     setMessageStatusAndDateText(message, messageDate)
                 }

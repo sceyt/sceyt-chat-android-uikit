@@ -101,6 +101,8 @@ class PendingMessageDeleteByTidDaoTest {
         forwardingUser = null,
         mentionedUsers = null,
         poll = null,
+        pinnedMessage = null,
+        pendingPin = null,
     )
 
     @Test

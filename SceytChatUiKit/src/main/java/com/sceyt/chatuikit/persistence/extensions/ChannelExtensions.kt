@@ -39,7 +39,6 @@ fun SceytChannel.getPeer(): SceytMember? {
     }
 }
 
-
 fun ChannelTypeEnum?.isGroup() = this != ChannelTypeEnum.Direct
 
 fun SceytChannel.isDirect() = type == ChannelTypeEnum.Direct.value

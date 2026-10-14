@@ -53,8 +53,9 @@
         android:background="@drawable/sceyt_bg_corners_18"
         android:paddingTop="2dp"
         app:layout_constrainedWidth="true"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/sideActionView"
         app:layout_constraintHorizontal_bias="0"
+        app:layout_constraintHorizontal_chainStyle="packed"
         app:layout_constraintStart_toEndOf="@+id/avatar"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_goneMarginStart="12dp"
@@ -183,5 +184,16 @@
         app:layout_constraintTop_toBottomOf="@+id/layoutDetails"
         app:layout_constraintVertical_bias="0"
         tools:visibility="visible" />
+
+    <ViewStub
+        android:id="@+id/sideActionView"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout="@layout/sceyt_message_side_action_button"
+        app:layout_constraintBottom_toBottomOf="@+id/layoutDetails"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/layoutDetails" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
