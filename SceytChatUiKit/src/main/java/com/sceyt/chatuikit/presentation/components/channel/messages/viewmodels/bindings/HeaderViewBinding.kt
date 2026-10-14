@@ -91,6 +91,22 @@ fun MessageListViewModel.bind(
                     )
                 }
 
+                R.id.sceyt_pin_message -> firstMessage?.let {
+                    if (it.pinDetails?.isPinned == true) {
+                        actionFinish()
+                        messageActionBridge.dispatchMenuEvent(
+                            MessageActionBridge.MenuEvent.Unpin(it)
+                        )
+                    } else {
+                        messageActionBridge.dispatchMenuEvent(
+                            MessageActionBridge.MenuEvent.Pin(
+                                message = it,
+                                actionFinish = actionFinish
+                            )
+                        )
+                    }
+                }
+
                 R.id.sceyt_retract_vote -> firstMessage?.let {
                     actionFinish()
                     messageActionBridge.dispatchMenuEvent(

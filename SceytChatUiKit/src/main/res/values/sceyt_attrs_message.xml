@@ -97,6 +97,7 @@
         <attr name="sceytUiMessagesListVoicePauseIcon" format="reference" />
         <attr name="sceytUiMessagesListViewOnceBadgeIcon" format="reference" />
         <attr name="sceytUiMessagesListViewCountIcon" format="reference" />
+        <attr name="sceytUiMessagesListPinnedIcon" format="reference" />
         <!--Message body text style-->
         <attr name="sceytUiMessagesListBodyTextColor" format="reference|color" />
         <attr name="sceytUiMessagesListBodyTextSize" format="dimension" />

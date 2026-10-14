@@ -44,9 +44,18 @@ sealed interface MessageActionsViewClickListeners {
         fun onEndVoteClick(message: SceytMessage)
     }
 
+    fun interface PinMessage : MessageActionsViewClickListeners {
+        fun onPinMessageClick(message: SceytMessage, actionFinish: () -> Unit)
+    }
+
+    fun interface UnpinMessage : MessageActionsViewClickListeners {
+        fun onUnpinMessageClick(message: SceytMessage)
+    }
+
     /** Use this if you want to implement all callbacks */
     interface ActionsViewClickListeners : CopyMessage, DeleteMessage, EditMessage, MessageInfo,
-            ForwardMessage, ReactMessage, ReplyMessage, ReplyInThreadMessage, RetractVote, EndVote
+            ForwardMessage, ReactMessage, ReplyMessage, ReplyInThreadMessage, RetractVote, EndVote,
+            PinMessage, UnpinMessage
 }
 
 internal fun MessageActionsViewClickListeners.setListener(listener: MessageActionsViewClickListeners) {

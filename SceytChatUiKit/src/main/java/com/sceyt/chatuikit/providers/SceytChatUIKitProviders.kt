@@ -12,6 +12,7 @@ import com.sceyt.chatuikit.providers.defaults.DefaultChannelListAttachmentIconPr
 import com.sceyt.chatuikit.providers.defaults.DefaultChannelURIValidationMessageProvider
 import com.sceyt.chatuikit.providers.defaults.DefaultMarkerTitleProvider
 import com.sceyt.chatuikit.providers.defaults.DefaultMessageTypeIconProvider
+import com.sceyt.chatuikit.providers.defaults.DefaultPinnedMessageIconProvider
 import com.sceyt.chatuikit.providers.defaults.DefaultPresenceStateColorProvider
 import com.sceyt.chatuikit.providers.defaults.DefaultSenderNameColorProvider
 import com.sceyt.chatuikit.providers.defaults.DefaultUserAvatarProvider
@@ -24,6 +25,10 @@ class SceytChatUIKitProviders {
 
     var attachmentIconProvider: VisualProvider<SceytAttachment, Drawable?> by lazyVar {
         DefaultAttachmentIconProvider()
+    }
+
+    var pinnedMessageIconProvider: VisualProvider<SceytMessage, Drawable?> by lazyVar {
+        DefaultPinnedMessageIconProvider()
     }
 
     var channelListAttachmentIconProvider: VisualProvider<SceytAttachment, Drawable?> by lazyVar {

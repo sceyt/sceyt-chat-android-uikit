@@ -15,6 +15,7 @@ import com.sceyt.chatuikit.persistence.interactor.AttachmentInteractor
 import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
 import com.sceyt.chatuikit.persistence.interactor.ChannelMemberInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
+import com.sceyt.chatuikit.persistence.interactor.MessagePinInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessagePollInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageReactionInteractor
 import com.sceyt.chatuikit.persistence.interactor.UserInteractor
@@ -83,6 +84,7 @@ class MessageListViewModelMentionTest {
                     single<ChannelInteractor> { mock() }
                     single<MessageReactionInteractor> { mock() }
                     single<MessagePollInteractor> { mock() }
+                    single<MessagePinInteractor> { mock() }
                     single<AttachmentInteractor> { mock() }
                     single<ChannelMemberInteractor> { mock() }
                     single<PersistenceConnectionLogic> { mock() }

@@ -2,6 +2,7 @@ package com.sceyt.chatuikit.data.managers.message.handler
 
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.data.models.messages.SceytPinnedMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
 import com.sceyt.chatuikit.data.models.messages.Vote
 
@@ -52,6 +53,14 @@ open class MessageEventHandlerImpl : MessageEventHandler.AllEventManagers {
 
     override fun onPollClosed(message: SceytMessage) {
         defaultListeners?.onPollClosed(message)
+    }
+
+    override fun onMessagesPinned(channelId: Long, messages: List<SceytPinnedMessage>) {
+        defaultListeners?.onMessagesPinned(channelId, messages)
+    }
+
+    override fun onMessagesUnPinned(channelId: Long, messages: List<SceytPinnedMessage>) {
+        defaultListeners?.onMessagesUnPinned(channelId, messages)
     }
 
     internal fun setDefaultListeners(listener: MessageEventHandler.AllEventManagers) {
