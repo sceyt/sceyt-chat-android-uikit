@@ -5,6 +5,7 @@ import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.persistence.database.dao.MessageDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingPinDao
 import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingPinEntity
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
@@ -26,17 +27,18 @@ class UnpinMessageUseCaseTest {
     private val messageDao = mock<MessageDao>()
     private val pendingPinDao = mock<PendingPinDao>()
     private val refreshPinnedMessageCache = mock<RefreshPinnedMessageCacheUseCase>()
-    private val useCase = UnpinMessageUseCase(messageDao, pendingPinDao, refreshPinnedMessageCache)
+    private val dispatcher = StandardTestDispatcher()
+    private val useCase = UnpinMessageUseCase(messageDao, pendingPinDao, refreshPinnedMessageCache, dispatcher)
     private val channelId = 7L
 
     @Before
-    fun storeRequests() = runTest {
+    fun storeRequests() = runTest(dispatcher) {
         doSuspendableAnswer { it.getArgument<PendingPinEntity>(0).copy(id = 2L) }
             .whenever(pendingPinDao).replace(any())
     }
 
     @Test
-    fun `unpinning a confirmed pin stores an unpin request`() = runTest {
+    fun `unpinning a confirmed pin stores an unpin request`() = runTest(dispatcher) {
         whenever(messageDao.getMessageByTid(42L)).thenReturn(messageDb(pinnedMessage = pinnedEntity()))
 
         val result = useCase(channelId, messageTid = 42L)
@@ -50,7 +52,7 @@ class UnpinMessageUseCaseTest {
     }
 
     @Test
-    fun `unpinning a sent message with a pending pin stores an unpin request`() = runTest {
+    fun `unpinning a sent message with a pending pin stores an unpin request`() = runTest(dispatcher) {
         // The pin may be in flight; the unpin replaces it and goes out after it.
         whenever(messageDao.getMessageByTid(42L)).thenReturn(messageDb(pendingPin = pendingPin()))
 
@@ -62,7 +64,7 @@ class UnpinMessageUseCaseTest {
     }
 
     @Test
-    fun `unpinning a message that is not pinned is an error`() = runTest {
+    fun `unpinning a message that is not pinned is an error`() = runTest(dispatcher) {
         whenever(messageDao.getMessageByTid(42L)).thenReturn(messageDb())
 
         assertThat(useCase(channelId, 42L)).isInstanceOf(SceytResponse.Error::class.java)
@@ -70,7 +72,7 @@ class UnpinMessageUseCaseTest {
     }
 
     @Test
-    fun `unpinning a message with a pending unpin is an error`() = runTest {
+    fun `unpinning a message with a pending unpin is an error`() = runTest(dispatcher) {
         whenever(messageDao.getMessageByTid(42L)).thenReturn(
             messageDb(pinnedMessage = pinnedEntity(), pendingPin = pendingPin(isPin = false))
         )

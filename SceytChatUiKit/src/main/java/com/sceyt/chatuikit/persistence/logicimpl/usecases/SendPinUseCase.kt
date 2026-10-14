@@ -14,6 +14,9 @@ import com.sceyt.chatuikit.persistence.logic.SystemMessageSender
 import com.sceyt.chatuikit.persistence.mappers.toPinType
 import com.sceyt.chatuikit.persistence.mappers.toPinnedMessageEntity
 import com.sceyt.chatuikit.persistence.repositories.PinRepository
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 internal class SendPinUseCase(
     private val pendingPinDao: PendingPinDao,
@@ -21,9 +24,10 @@ internal class SendPinUseCase(
     private val pinRepository: PinRepository,
     private val systemMessageSender: SystemMessageSender,
     private val refreshPinnedMessageCache: RefreshPinnedMessageCacheUseCase,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) {
 
-    suspend operator fun invoke(pending: PendingPinEntity): SceytResponse<SceytPinnedMessage> {
+    suspend operator fun invoke(pending: PendingPinEntity): SceytResponse<SceytPinnedMessage> = withContext(ioDispatcher) {
         val response = pinRepository.pinMessages(
             channelId = pending.channelId,
             messageIds = listOf(pending.messageId),
@@ -37,7 +41,7 @@ internal class SendPinUseCase(
                 pendingPinDao.deleteById(pending.id)
                 refreshPinnedMessageCache(pending.channelId, pending.messageTid)
             }
-            return SceytResponse.Error(response.exception)
+            return@withContext SceytResponse.Error(response.exception)
         }
 
         val pin = response.data?.firstOrNull { it.message.id == pending.messageId }
@@ -49,6 +53,6 @@ internal class SendPinUseCase(
 
         if (settled && pin?.scope == PinType.SHARED)
             systemMessageSender.sendMessagePinned(pending.channelId, pin.message)
-        return SceytResponse.Success(pin.takeIf { settled })
+        SceytResponse.Success(pin.takeIf { settled })
     }
 }

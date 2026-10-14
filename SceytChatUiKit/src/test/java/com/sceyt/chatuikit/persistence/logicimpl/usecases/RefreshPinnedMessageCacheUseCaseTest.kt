@@ -3,6 +3,7 @@ package com.sceyt.chatuikit.persistence.logicimpl.usecases
 import com.google.common.truth.Truth.assertThat
 import com.sceyt.chatuikit.persistence.database.dao.MessageDao
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import org.mockito.kotlin.mock
@@ -11,10 +12,11 @@ import org.mockito.kotlin.whenever
 class RefreshPinnedMessageCacheUseCaseTest {
     private val messageDao = mock<MessageDao>()
     private val cache = MessagesCache()
-    private val useCase = RefreshPinnedMessageCacheUseCase(messageDao, cache)
+    private val dispatcher = StandardTestDispatcher()
+    private val useCase = RefreshPinnedMessageCacheUseCase(messageDao, cache, dispatcher)
 
     @Test
-    fun `refreshing an old pin does not insert it into the loaded timeline`() = runTest {
+    fun `refreshing an old pin does not insert it into the loaded timeline`() = runTest(dispatcher) {
         cache.add(7L, sceytMessage(id = 100L, tid = 100L))
         whenever(messageDao.getMessageByTid(42L)).thenReturn(
             messageDb(messageEntity().copy(unList = true))
@@ -26,7 +28,7 @@ class RefreshPinnedMessageCacheUseCaseTest {
     }
 
     @Test
-    fun `refresh updates pin details on an already loaded message`() = runTest {
+    fun `refresh updates pin details on an already loaded message`() = runTest(dispatcher) {
         cache.add(7L, sceytMessage())
         whenever(messageDao.getMessageByTid(42L)).thenReturn(
             messageDb(pinnedMessage = pinnedEntity())
@@ -39,7 +41,7 @@ class RefreshPinnedMessageCacheUseCaseTest {
     }
 
     @Test
-    fun `refresh does not recreate an empty channel cache`() = runTest {
+    fun `refresh does not recreate an empty channel cache`() = runTest(dispatcher) {
         whenever(messageDao.getMessageByTid(42L)).thenReturn(messageDb())
 
         useCase(7L, 42L)

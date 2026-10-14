@@ -9,29 +9,33 @@ import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingPinEntity
 import com.sceyt.chatuikit.persistence.mappers.toSceytMessage
 import com.sceyt.chatuikit.persistence.mappers.toStoredPinScope
 import com.sceyt.chatuikit.presentation.extensions.isDisappearing
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 internal class PinMessageUseCase(
     private val messageDao: MessageDao,
     private val pendingPinDao: PendingPinDao,
     private val refreshPinnedMessageCache: RefreshPinnedMessageCacheUseCase,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) {
 
     suspend operator fun invoke(
         channelId: Long,
         messageTid: Long,
         pinType: PinType,
-    ): SceytResponse<Boolean> {
+    ): SceytResponse<Boolean> = withContext(ioDispatcher) {
         val message = messageDao.getMessageByTid(messageTid)?.toSceytMessage()
-            ?: return createErrorResponse("Message not found in database")
+            ?: return@withContext createErrorResponse("Message not found in database")
 
         if (message.isDisappearing())
-            return createErrorResponse("Ephemeral messages cannot be pinned")
+            return@withContext createErrorResponse("Ephemeral messages cannot be pinned")
 
         if (message.id == 0L)
-            return createErrorResponse("Pending messages cannot be pinned")
+            return@withContext createErrorResponse("Pending messages cannot be pinned")
 
         if (message.pinDetails?.isPinned == true)
-            return createErrorResponse("Message is already pinned")
+            return@withContext createErrorResponse("Message is already pinned")
 
         pendingPinDao.replace(
             PendingPinEntity(
@@ -42,9 +46,9 @@ internal class PinMessageUseCase(
                 pinScope = pinType.toStoredPinScope().value,
                 createdAt = System.currentTimeMillis(),
             )
-        ) ?: return createErrorResponse("Message not found in database")
+        ) ?: return@withContext createErrorResponse("Message not found in database")
 
         refreshPinnedMessageCache(channelId, messageTid)
-        return SceytResponse.Success(true)
+        SceytResponse.Success(true)
     }
 }

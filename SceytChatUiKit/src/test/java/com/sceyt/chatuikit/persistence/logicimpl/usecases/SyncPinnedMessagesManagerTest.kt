@@ -1,20 +1,27 @@
 package com.sceyt.chatuikit.persistence.logicimpl.usecases
 
+import com.sceyt.chat.ChatClient
+import com.sceyt.chat.models.ConnectionState
 import com.sceyt.chatuikit.data.models.messages.SceytPinnedMessage
 import com.sceyt.chatuikit.data.models.SceytPagingResponse
 import com.sceyt.chatuikit.persistence.database.dao.PinnedMessageDao
 import com.sceyt.chatuikit.persistence.repositories.PinRepository
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.launch
+import org.junit.After
+import org.junit.Before
 import org.junit.Test
+import org.mockito.MockedStatic
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.mockStatic
 import org.mockito.kotlin.never
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
@@ -28,17 +35,34 @@ class SyncPinnedMessagesManagerTest {
     private val pinRepository = mock<PinRepository>()
     private val storePinsUseCase = mock<StorePinsUseCase>()
 
+    private val dispatcher = StandardTestDispatcher()
+    private lateinit var chatClientMock: MockedStatic<ChatClient>
     private val useCase = SyncPinnedMessagesManager(
         pinnedMessageDao = pinnedMessageDao,
         pinRepository = pinRepository,
         storePinsUseCase = storePinsUseCase,
         refreshPinnedMessageCache = mock(),
+        ioDispatcher = dispatcher,
     )
 
     private val channelId = 7L
 
+    @Before
+    fun setUp() {
+        val client = mock<ChatClient>()
+        chatClientMock = mockStatic()
+        chatClientMock.`when`<ChatClient> { ChatClient.getClient() }.thenReturn(client)
+        chatClientMock.`when`<Boolean> { ChatClient.isInitialized() }.thenReturn(true)
+        whenever(client.connectionState()).thenReturn(ConnectionState.Connected)
+    }
+
+    @After
+    fun tearDown() {
+        chatClientMock.close()
+    }
+
     @Test
-    fun `concurrent channel sweeps reconcile only their own pages`() = runTest {
+    fun `concurrent channel sweeps reconcile only their own pages`() = runTest(dispatcher) {
         val firstPageStored = CompletableDeferred<Unit>()
         val otherChannelCompleted = CompletableDeferred<Unit>()
         val firstPin = sceytPinnedMessage(id = 10L)
@@ -68,7 +92,7 @@ class SyncPinnedMessagesManagerTest {
     }
 
     @Test
-    fun `a failed fetch never deletes local pins`() = runTest {
+    fun `a failed fetch never deletes local pins`() = runTest(dispatcher) {
         whenever(pinRepository.getPinnedMessages(channelId))
             .thenReturn(flowOf(SceytPagingResponse.Error(null)))
 
@@ -80,7 +104,7 @@ class SyncPinnedMessagesManagerTest {
     }
 
     @Test
-    fun `a page failure part-way through still skips the reconcile`() = runTest {
+    fun `a page failure part-way through still skips the reconcile`() = runTest(dispatcher) {
         whenever(pinRepository.getPinnedMessages(channelId))
             .thenReturn(flowOf(
                 SceytPagingResponse.Success(emptyList(), hasNext = true),
@@ -93,7 +117,7 @@ class SyncPinnedMessagesManagerTest {
     }
 
     @Test
-    fun `walks every page until hasNext is false, storing each as it lands`() = runTest {
+    fun `walks every page until hasNext is false, storing each as it lands`() = runTest(dispatcher) {
         whenever(pinRepository.getPinnedMessages(channelId))
             .thenReturn(flowOf(
                 SceytPagingResponse.Success(emptyList(), hasNext = true),
@@ -109,7 +133,7 @@ class SyncPinnedMessagesManagerTest {
     }
 
     @Test
-    fun `a completed sweep deletes only the confirmed pins the server did not report`() = runTest {
+    fun `a completed sweep deletes only the confirmed pins the server did not report`() = runTest(dispatcher) {
         whenever(pinRepository.getPinnedMessages(channelId))
             .thenReturn(flowOf(SceytPagingResponse.Success(emptyList(), hasNext = false)))
         whenever(pinnedMessageDao.getExcluding(any(), any())).thenReturn(

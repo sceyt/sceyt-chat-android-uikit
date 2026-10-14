@@ -10,6 +10,7 @@ import com.sceyt.chatuikit.persistence.database.dao.PinnedMessageDao
 import com.sceyt.chatuikit.persistence.database.dao.UserDao
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageDb
 import com.sceyt.chatuikit.persistence.database.entity.messages.PinnedMessageEntity
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import org.mockito.kotlin.any
@@ -26,15 +27,17 @@ class StorePinsUseCaseTest {
     private val pinnedMessageDao = mock<PinnedMessageDao>()
     private val refreshPinnedMessageCache = mock<RefreshPinnedMessageCacheUseCase>()
     private val userDao = mock<UserDao>()
+    private val dispatcher = StandardTestDispatcher()
     private val useCase = StorePinsUseCase(
         messageDao,
         pinnedMessageDao,
         refreshPinnedMessageCache,
         userDao,
+        dispatcher,
     )
 
     @Test
-    fun `a server pin prefers the local outgoing tid and stamps server ordering data`() = runTest {
+    fun `a server pin prefers the local outgoing tid and stamps server ordering data`() = runTest(dispatcher) {
         val pin = serverPin(
             pinId = 900L,
             message = sceytMessage(
@@ -59,7 +62,7 @@ class StorePinsUseCaseTest {
     }
 
     @Test
-    fun `a server pin outside the local history is stored as an unlisted message`() = runTest {
+    fun `a server pin outside the local history is stored as an unlisted message`() = runTest(dispatcher) {
         val pin = serverPin(
             message = sceytMessage(id = 42L, tid = 11L),
         )
@@ -72,7 +75,7 @@ class StorePinsUseCaseTest {
     }
 
     @Test
-    fun `newer fetched content preserves an existing unlisted message`() = runTest {
+    fun `newer fetched content preserves an existing unlisted message`() = runTest(dispatcher) {
         whenever(messageDao.getMessageById(42L)).thenReturn(messageDb(
             messageEntity(tid = 77L).copy(unList = true, updatedAt = 100L)
         ))
@@ -88,7 +91,7 @@ class StorePinsUseCaseTest {
     }
 
     @Test
-    fun `server pins without a message id or for ephemeral messages are ignored`() = runTest {
+    fun `server pins without a message id or for ephemeral messages are ignored`() = runTest(dispatcher) {
         val missingId = serverPin(message = sceytMessage(id = 0L, tid = 11L))
         val transient = serverPin(message = sceytMessage(id = 2L, isTransient = true))
         val deleted = serverPin(message = sceytMessage(id = 3L, state = MessageState.Deleted))

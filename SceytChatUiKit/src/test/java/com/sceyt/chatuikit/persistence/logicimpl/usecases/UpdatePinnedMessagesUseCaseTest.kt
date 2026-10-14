@@ -9,6 +9,7 @@ import com.sceyt.chatuikit.persistence.database.dao.PinnedMessageDao
 import com.sceyt.chatuikit.persistence.database.dao.UserDao
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageDb
 import com.sceyt.chatuikit.persistence.database.entity.messages.PinnedMessageEntity
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import org.mockito.kotlin.any
@@ -25,15 +26,17 @@ class UpdatePinnedMessagesUseCaseTest {
     private val pinnedMessageDao = mock<PinnedMessageDao>()
     private val refreshPinnedMessageCache = mock<RefreshPinnedMessageCacheUseCase>()
     private val userDao = mock<UserDao>()
+    private val dispatcher = StandardTestDispatcher()
     private val useCase = UpdatePinnedMessagesUseCase(
         messageDao,
         pinnedMessageDao,
         refreshPinnedMessageCache,
-        StorePinsUseCase(messageDao, pinnedMessageDao, refreshPinnedMessageCache, userDao),
+        StorePinsUseCase(messageDao, pinnedMessageDao, refreshPinnedMessageCache, userDao, dispatcher),
+        dispatcher,
     )
 
     @Test
-    fun `a realtime pin uses the local tid when the server did not echo it`() = runTest {
+    fun `a realtime pin uses the local tid when the server did not echo it`() = runTest(dispatcher) {
         val pin = sceytPinnedMessage(
             id = 900L,
             message = sceytMessage(id = 42L, tid = 0L),
@@ -57,7 +60,7 @@ class UpdatePinnedMessagesUseCaseTest {
     }
 
     @Test
-    fun `a realtime pin stores a missing message outside the conversation list`() = runTest {
+    fun `a realtime pin stores a missing message outside the conversation list`() = runTest(dispatcher) {
         val pin = sceytPinnedMessage(
             id = 901L,
             message = sceytMessage(id = 42L, tid = 11L),
@@ -72,7 +75,7 @@ class UpdatePinnedMessagesUseCaseTest {
     }
 
     @Test
-    fun `a realtime pin ignores an ephemeral or deleted message`() = runTest {
+    fun `a realtime pin ignores an ephemeral or deleted message`() = runTest(dispatcher) {
         val ephemeral = sceytPinnedMessage(
             message = sceytMessage(id = 1L, isTransient = true),
         )
@@ -87,7 +90,7 @@ class UpdatePinnedMessagesUseCaseTest {
     }
 
     @Test
-    fun `a realtime unpin removes the confirmed pins`() = runTest {
+    fun `a realtime unpin removes the confirmed pins`() = runTest(dispatcher) {
         val first = sceytPinnedMessage(message = sceytMessage(id = 1L, tid = 11L))
         val second = sceytPinnedMessage(message = sceytMessage(id = 2L, tid = 12L))
 
@@ -98,7 +101,7 @@ class UpdatePinnedMessagesUseCaseTest {
     }
 
     @Test
-    fun `a realtime unpin resolves an outgoing message whose tid was omitted`() = runTest {
+    fun `a realtime unpin resolves an outgoing message whose tid was omitted`() = runTest(dispatcher) {
         val pin = sceytPinnedMessage(message = sceytMessage(id = 42L, tid = 0L))
         whenever(messageDao.getMessageTidById(42L)).thenReturn(77L)
 
