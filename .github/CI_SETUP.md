@@ -5,10 +5,10 @@ Tracked under [WAAF-3507](https://waafi.atlassian.net/browse/WAAF-3507).
 The Android CI workflow runs on pushes and pull requests targeting `dev` and
 `main`. It cancels superseded runs and runs these checks:
 
-- **Unit Tests & UI Kit Build**: the existing JVM test suite (`test`) and release
+- **Unit tests**: the existing JVM test suite (`test`) and release
   AAR builds for `SceytChatUiKit` and `SceytChatConnection`. Uploads test reports
   and both release libraries.
-- **Instrumented Tests**: the existing connected test suite on an API 35 emulator,
+- **Instrumented tests**: the existing connected test suite on an API 35 emulator,
   including benchmark smoke checks in dry-run mode. Uploads device test reports
   and benchmark reports.
 - **All Tests**: passes only when both jobs succeed. Use this as the required
