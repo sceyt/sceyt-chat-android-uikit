@@ -91,7 +91,15 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         applySystemBarsStyle()
-        style = ChannelInfoStyle.Builder(this, null).build()
+        style = ChannelInfoStyle.Builder(this, null).build().let { built ->
+            built.copy(
+                mediaStyle = StyleRegistry.getOrDefault(savedInstanceState?.getString(MEDIA_STYLE_ID)) { built.mediaStyle },
+                filesStyle = StyleRegistry.getOrDefault(savedInstanceState?.getString(FILES_STYLE_ID)) { built.filesStyle },
+                linkStyle = StyleRegistry.getOrDefault(savedInstanceState?.getString(LINK_STYLE_ID)) { built.linkStyle },
+                voiceStyle = StyleRegistry.getOrDefault(savedInstanceState?.getString(VOICE_STYLE_ID)) { built.voiceStyle },
+                commonGroupsStyle = StyleRegistry.getOrDefault(savedInstanceState?.getString(COMMON_GROUPS_STYLE_ID)) { built.commonGroupsStyle },
+            )
+        }
         registerAllStyles()
 
         setActivityContentView()
@@ -741,22 +749,38 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
         }
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putString(MEDIA_STYLE_ID, style.mediaStyle.styleId)
+        outState.putString(FILES_STYLE_ID, style.filesStyle.styleId)
+        outState.putString(LINK_STYLE_ID, style.linkStyle.styleId)
+        outState.putString(VOICE_STYLE_ID, style.voiceStyle.styleId)
+        outState.putString(COMMON_GROUPS_STYLE_ID, style.commonGroupsStyle.styleId)
+        super.onSaveInstanceState(outState)
+    }
+
     override fun onDestroy() {
         super.onDestroy()
-        // Clean up all registered styles
-        StyleRegistry.unregister(
-            style.mediaStyle.styleId,
-            style.filesStyle.styleId,
-            style.linkStyle.styleId,
-            style.voiceStyle.styleId,
-            style.commonGroupsStyle.styleId
-        )
+        if (isFinishing) {
+            // Clean up all registered styles
+            StyleRegistry.unregister(
+                style.mediaStyle.styleId,
+                style.filesStyle.styleId,
+                style.linkStyle.styleId,
+                style.voiceStyle.styleId,
+                style.commonGroupsStyle.styleId
+            )
+        }
     }
 
     companion object {
         const val CHANNEL = "CHANNEL"
         const val ACTION_SEARCH_MESSAGES = "ACTION_SEARCH_MESSAGES"
         private const val ENABLE_SEARCH_MESSAGES = "ACTION_SEARCH_MESSAGES"
+        private const val MEDIA_STYLE_ID = "MEDIA_STYLE_ID"
+        private const val FILES_STYLE_ID = "FILES_STYLE_ID"
+        private const val LINK_STYLE_ID = "LINK_STYLE_ID"
+        private const val VOICE_STYLE_ID = "VOICE_STYLE_ID"
+        private const val COMMON_GROUPS_STYLE_ID = "COMMON_GROUPS_STYLE_ID"
 
         fun createIntent(
             context: Context,

@@ -530,7 +530,8 @@ open class PinnedMessagesActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         reactionsPopup?.dismiss()
-        StyleRegistry.unregister(intent?.getStringExtra(LIST_STYLE_ID))
+        if (isFinishing)
+            StyleRegistry.unregister(intent?.getStringExtra(LIST_STYLE_ID))
         super.onDestroy()
     }
 
