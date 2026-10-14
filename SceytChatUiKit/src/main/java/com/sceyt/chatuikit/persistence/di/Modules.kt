@@ -206,15 +206,15 @@ internal val useCaseModule = module {
     factoryOf(::ShouldShowNotificationUseCase)
     factoryOf(::AddPollVoteUseCase)
     factoryOf(::RemovePollVoteUseCase)
-    factoryOf(::RefreshPinnedMessageCacheUseCase)
-    factoryOf(::PinMessageUseCase)
-    factoryOf(::UnpinMessageUseCase)
-    factoryOf(::StorePinsUseCase)
-    factoryOf(::SendPendingPinsUseCase)
-    factoryOf(::SendPinUseCase)
-    factoryOf(::SendUnpinUseCase)
-    factoryOf(::SyncPinnedMessagesManager)
-    factoryOf(::UpdatePinnedMessagesUseCase)
+    factory { RefreshPinnedMessageCacheUseCase(get(), get()) }
+    factory { PinMessageUseCase(get(), get(), get()) }
+    factory { UnpinMessageUseCase(get(), get(), get()) }
+    factory { StorePinsUseCase(get(), get(), get(), get()) }
+    factory { SendPendingPinsUseCase(get(), get(), get()) }
+    factory { SendPinUseCase(get(), get(), get(), get(), get()) }
+    factory { SendUnpinUseCase(get(), get(), get()) }
+    factory { SyncPinnedMessagesManager(get(), get(), get(), get()) }
+    factory { UpdatePinnedMessagesUseCase(get(), get(), get(), get()) }
     factoryOf(::TogglePollVoteUseCase)
     factoryOf(::RetractPollVoteUseCase)
     factoryOf(::EndPollUseCase)

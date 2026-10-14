@@ -11,19 +11,23 @@ import com.sceyt.chatuikit.persistence.mappers.toMessageDb
 import com.sceyt.chatuikit.persistence.mappers.toPinnedMessageEntity
 import com.sceyt.chatuikit.persistence.mappers.toUserDb
 import com.sceyt.chatuikit.presentation.extensions.isDisappearing
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 internal class StorePinsUseCase(
     private val messageDao: MessageDao,
     private val pinnedMessageDao: PinnedMessageDao,
     private val refreshPinnedMessageCache: RefreshPinnedMessageCacheUseCase,
     private val userDao: UserDao,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) {
 
-    suspend operator fun invoke(channelId: Long, pins: List<SceytPinnedMessage>) {
+    suspend operator fun invoke(channelId: Long, pins: List<SceytPinnedMessage>) = withContext(ioDispatcher) {
         val entities = pins.filter { it.message.shouldStore() }.map { pin ->
             pin.toPinnedMessageEntity(channelId, messageTid = storeMessage(pin.message))
         }
-        if (entities.isEmpty()) return
+        if (entities.isEmpty()) return@withContext
 
         pinnedMessageDao.insertAllIfMessagesExist(entities)
         refreshPinnedMessageCache(channelId, *entities.map { it.messageTid }.toLongArray())

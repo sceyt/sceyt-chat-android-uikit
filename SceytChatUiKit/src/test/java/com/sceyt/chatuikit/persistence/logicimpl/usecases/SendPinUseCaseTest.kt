@@ -11,6 +11,7 @@ import com.sceyt.chatuikit.persistence.database.entity.messages.PinnedMessageEnt
 import com.sceyt.chatuikit.persistence.database.entity.messages.StoredPinScope
 import com.sceyt.chatuikit.persistence.logic.SystemMessageSender
 import com.sceyt.chatuikit.persistence.repositories.PinRepository
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -34,12 +35,14 @@ class SendPinUseCaseTest {
     private val pinnedMessageDao = mock<PinnedMessageDao>()
     private val pinRepository = mock<PinRepository>()
     private val systemMessageSender = mock<SystemMessageSender>()
+    private val dispatcher = StandardTestDispatcher()
     private val useCase = SendPinUseCase(
         pendingPinDao,
         pinnedMessageDao,
         pinRepository,
         systemMessageSender,
         mock(),
+        dispatcher,
     )
     private val row = pendingPin(messageTid = 42L, id = 1L, messageId = 142L)
 
@@ -56,7 +59,7 @@ class SendPinUseCaseTest {
         sceytPinnedMessage(id = 500L, message = sceytMessage(id = 142L, tid = 42L), scope = scope)
 
     @Test
-    fun `sends the stored message id with its scope`() = runTest {
+    fun `sends the stored message id with its scope`() = runTest(dispatcher) {
         val personal = row.copy(pinScope = StoredPinScope.ForMe.value)
         givenSettled(true)
         givenServerReplies(SceytResponse.Success(emptyList()))
@@ -67,7 +70,7 @@ class SendPinUseCaseTest {
     }
 
     @Test
-    fun `a confirmed shared pin is stored, settled and announced`() = runTest {
+    fun `a confirmed shared pin is stored, settled and announced`() = runTest(dispatcher) {
         givenSettled(true)
         givenServerReplies(SceytResponse.Success(listOf(pin())))
 
@@ -82,7 +85,7 @@ class SendPinUseCaseTest {
     }
 
     @Test
-    fun `a personal pin is not announced`() = runTest {
+    fun `a personal pin is not announced`() = runTest(dispatcher) {
         givenSettled(true)
         givenServerReplies(SceytResponse.Success(listOf(pin(PinType.PERSONAL))))
 
@@ -92,7 +95,7 @@ class SendPinUseCaseTest {
     }
 
     @Test
-    fun `a pin the user replaced while it was in flight is not announced or returned`() = runTest {
+    fun `a pin the user replaced while it was in flight is not announced or returned`() = runTest(dispatcher) {
         givenSettled(false)
         givenServerReplies(SceytResponse.Success(listOf(pin())))
 
@@ -103,7 +106,7 @@ class SendPinUseCaseTest {
     }
 
     @Test
-    fun `a rejected pin is dropped and returned`() = runTest {
+    fun `a rejected pin is dropped and returned`() = runTest(dispatcher) {
         givenServerReplies(SceytResponse.Error(mock<SceytException> { on { type }.thenReturn("NotAllowed") }))
 
         assertThat(useCase(row)).isInstanceOf(SceytResponse.Error::class.java)
@@ -111,7 +114,7 @@ class SendPinUseCaseTest {
     }
 
     @Test
-    fun `a pin that failed for a resendable reason stays pending`() = runTest {
+    fun `a pin that failed for a resendable reason stays pending`() = runTest(dispatcher) {
         givenServerReplies(SceytResponse.Error(null))
 
         assertThat(useCase(row)).isInstanceOf(SceytResponse.Error::class.java)

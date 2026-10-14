@@ -2,6 +2,8 @@ package com.sceyt.chatuikit.persistence.logicimpl
 
 import androidx.room.Room
 import com.google.common.truth.Truth.assertThat
+import com.sceyt.chat.ChatClient
+import com.sceyt.chat.models.ConnectionState
 import com.sceyt.chat.models.message.PinDetails.PinType
 import com.sceyt.chatuikit.data.managers.message.event.PinUpdateEvent
 import com.sceyt.chatuikit.data.models.SceytPagingResponse
@@ -11,7 +13,15 @@ import com.sceyt.chatuikit.persistence.database.DatabaseConstants.PENDING_PIN_TA
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.pendingPin
 import com.sceyt.chatuikit.persistence.database.SceytDatabase
 import com.sceyt.chatuikit.persistence.logic.SystemMessageSender
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.PinMessageUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.RefreshPinnedMessageCacheUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.SendPendingPinsUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.SendPinUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.SendUnpinUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.StorePinsUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.SyncPinnedMessagesManager
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.UnpinMessageUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.UpdatePinnedMessagesUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.messageDb
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.messageEntity
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.pinnedEntity
@@ -26,6 +36,7 @@ import kotlinx.coroutines.CoroutineStart
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
 import com.sceyt.chatuikit.persistence.mappers.toSceytMessage
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import com.sceyt.chatuikit.persistence.di.useCaseModule
 import org.koin.core.KoinApplication
@@ -40,7 +51,9 @@ import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.argThat
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.doSuspendableAnswer
+import org.mockito.MockedStatic
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.mockStatic
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
@@ -50,6 +63,8 @@ import org.robolectric.RuntimeEnvironment
 @RunWith(RobolectricTestRunner::class)
 class PinnedMessagesPersistenceTest {
 
+    private val dispatcher = StandardTestDispatcher()
+    private lateinit var chatClientMock: MockedStatic<ChatClient>
     private lateinit var database: SceytDatabase
     private lateinit var dependencies: KoinApplication
     private val pinRepository = mock<PinRepository>()
@@ -60,6 +75,11 @@ class PinnedMessagesPersistenceTest {
 
     @Before
     fun setUp() {
+        val client = mock<ChatClient>()
+        chatClientMock = mockStatic()
+        chatClientMock.`when`<ChatClient> { ChatClient.getClient() }.thenReturn(client)
+        chatClientMock.`when`<Boolean> { ChatClient.isInitialized() }.thenReturn(true)
+        whenever(client.connectionState()).thenReturn(ConnectionState.Connected)
         database = Room.inMemoryDatabaseBuilder(
             RuntimeEnvironment.getApplication(), SceytDatabase::class.java
         ).allowMainThreadQueries()
@@ -71,6 +91,15 @@ class PinnedMessagesPersistenceTest {
         val messages = database.messageDao()
         dependencies = koinApplication {
             modules(useCaseModule, module {
+                factory { RefreshPinnedMessageCacheUseCase(get(), get(), dispatcher) }
+                factory { PinMessageUseCase(get(), get(), get(), dispatcher) }
+                factory { UnpinMessageUseCase(get(), get(), get(), dispatcher) }
+                factory { StorePinsUseCase(get(), get(), get(), get(), dispatcher) }
+                factory { SendPendingPinsUseCase(get(), get(), get(), dispatcher) }
+                factory { SendPinUseCase(get(), get(), get(), get(), get(), dispatcher) }
+                factory { SendUnpinUseCase(get(), get(), get(), dispatcher) }
+                factory { SyncPinnedMessagesManager(get(), get(), get(), get(), dispatcher) }
+                factory { UpdatePinnedMessagesUseCase(get(), get(), get(), get(), dispatcher) }
                 single { dao }
                 single { pendingDao }
                 single { messages }
@@ -91,10 +120,11 @@ class PinnedMessagesPersistenceTest {
     fun tearDown() {
         dependencies.close()
         database.close()
+        chatClientMock.close()
     }
 
     @Test
-    fun `sync stores an uncached pin sender and reply parent`() = runTest {
+    fun `sync stores an uncached pin sender and reply parent`() = runTest(dispatcher) {
         val sender = SceytUser("sender").copy(
             firstName = "Alice",
             avatarURL = "https://example.com/alice.png",
@@ -129,7 +159,7 @@ class PinnedMessagesPersistenceTest {
     }
 
     @Test
-    fun `sync preserves a reply parent already in the local timeline`() = runTest {
+    fun `sync preserves a reply parent already in the local timeline`() = runTest(dispatcher) {
         val localParent = messageEntity(id = 100L, tid = 88L).copy(
             body = "newer parent",
             updatedAt = 300L,
@@ -152,7 +182,7 @@ class PinnedMessagesPersistenceTest {
     }
 
     @Test
-    fun `sync restores missing relations when the cached message is already current`() = runTest {
+    fun `sync restores missing relations when the cached message is already current`() = runTest(dispatcher) {
         val sender = SceytUser("sender").copy(firstName = "Alice")
         val parent = sceytMessage(id = 100L, incoming = true).copy(body = "reply preview")
         val local = messageEntity(tid = 77L).copy(
@@ -180,7 +210,7 @@ class PinnedMessagesPersistenceTest {
     }
 
     @Test
-    fun `sync refreshes an edited pin while preserving its local tid and list visibility`() = runTest {
+    fun `sync refreshes an edited pin while preserving its local tid and list visibility`() = runTest(dispatcher) {
         val local = messageEntity(tid = 77L).copy(body = "old body", updatedAt = 100L)
         database.messageDao().upsertMessage(messageDb(local))
         cache.add(7L, sceytMessage(tid = 77L).copy(body = "old body", updatedAt = 100L))
@@ -201,7 +231,7 @@ class PinnedMessagesPersistenceTest {
     }
 
     @Test
-    fun `sync does not overwrite a newer local message with an older pin response`() = runTest {
+    fun `sync does not overwrite a newer local message with an older pin response`() = runTest(dispatcher) {
         database.messageDao().upsertMessage(messageDb(
             messageEntity(tid = 77L).copy(body = "newer body", updatedAt = 300L, unList = true)
         ))
@@ -221,7 +251,7 @@ class PinnedMessagesPersistenceTest {
     }
 
     @Test
-    fun `failed unpin followed by successful sync preserves removal intent`() = runTest {
+    fun `failed unpin followed by successful sync preserves removal intent`() = runTest(dispatcher) {
         val dao = database.pinnedMessageDao()
         database.messageDao().upsertMessage(messageDb())
         dao.insert(pinnedEntity())
@@ -239,7 +269,7 @@ class PinnedMessagesPersistenceTest {
     }
 
     @Test
-    fun `realtime unpin removes the stored outgoing pin when the server omits tid`() = runTest {
+    fun `realtime unpin removes the stored outgoing pin when the server omits tid`() = runTest(dispatcher) {
         val dao = database.pinnedMessageDao()
         database.messageDao().upsertMessage(messageDb(messageEntity(tid = 77L)))
         dao.insert(pinnedEntity(messageTid = 77L))
@@ -253,7 +283,7 @@ class PinnedMessagesPersistenceTest {
     }
 
     @Test
-    fun `realtime pin survives a sync response fetched before that pin`() = runTest {
+    fun `realtime pin survives a sync response fetched before that pin`() = runTest(dispatcher) {
         database.messageDao().upsertMessage(messageDb())
         val started = CompletableDeferred<Unit>()
         val release = CompletableDeferred<Unit>()
@@ -277,7 +307,7 @@ class PinnedMessagesPersistenceTest {
     }
 
     @Test
-    fun `realtime unpin survives a sync response fetched before that unpin`() = runTest {
+    fun `realtime unpin survives a sync response fetched before that unpin`() = runTest(dispatcher) {
         database.messageDao().upsertMessage(messageDb())
         database.pinnedMessageDao().insert(pinnedEntity())
         val started = CompletableDeferred<Unit>()
@@ -302,7 +332,7 @@ class PinnedMessagesPersistenceTest {
     }
 
     @Test
-    fun `pin then unpin queued during sync leaves the message unpinned`() = runTest {
+    fun `pin then unpin queued during sync leaves the message unpinned`() = runTest(dispatcher) {
         database.messageDao().upsertMessage(messageDb())
         val started = CompletableDeferred<Unit>()
         val release = CompletableDeferred<Unit>()
@@ -329,7 +359,7 @@ class PinnedMessagesPersistenceTest {
     }
 
     @Test
-    fun `reconnect during an in-flight pin sends and announces it only once`() = runTest {
+    fun `reconnect during an in-flight pin sends and announces it only once`() = runTest(dispatcher) {
         database.messageDao().upsertMessage(messageDb())
         val requestStarted = CompletableDeferred<Unit>()
         val releaseResponse = CompletableDeferred<Unit>()
@@ -352,7 +382,7 @@ class PinnedMessagesPersistenceTest {
     }
 
     @Test
-    fun `unpin refreshes the bubble before a stalled pin request returns`() = runTest {
+    fun `unpin refreshes the bubble before a stalled pin request returns`() = runTest(dispatcher) {
         database.messageDao().upsertMessage(messageDb())
         cache.add(7L, sceytMessage())
         val started = CompletableDeferred<Unit>()
@@ -388,7 +418,7 @@ class PinnedMessagesPersistenceTest {
     }
 
     @Test
-    fun `repin refreshes the bubble before a stalled unpin returns`() = runTest {
+    fun `repin refreshes the bubble before a stalled unpin returns`() = runTest(dispatcher) {
         database.messageDao().upsertMessage(messageDb())
         database.pinnedMessageDao().insert(pinnedEntity())
         cache.add(7L, sceytMessage())
@@ -423,7 +453,7 @@ class PinnedMessagesPersistenceTest {
     }
 
     @Test
-    fun `pin refreshes the bubble while channel sync is stalled`() = runTest {
+    fun `pin refreshes the bubble while channel sync is stalled`() = runTest(dispatcher) {
         database.messageDao().upsertMessage(messageDb())
         cache.add(7L, sceytMessage())
         val started = CompletableDeferred<Unit>()
@@ -452,7 +482,7 @@ class PinnedMessagesPersistenceTest {
     }
 
     @Test
-    fun `late rejection of an old pin cannot remove a newer pin intent`() = runTest {
+    fun `late rejection of an old pin cannot remove a newer pin intent`() = runTest(dispatcher) {
         database.messageDao().upsertMessage(messageDb())
         cache.add(7L, sceytMessage())
         val started = CompletableDeferred<Unit>()
@@ -498,7 +528,7 @@ class PinnedMessagesPersistenceTest {
 
 
     @Test
-    fun `pin returns the matching confirmed server pin`() = runTest {
+    fun `pin returns the matching confirmed server pin`() = runTest(dispatcher) {
         database.messageDao().upsertMessage(messageDb())
         val confirmed = sceytPinnedMessage()
         whenever(pinRepository.pinMessages(any(), any(), any(), anyOrNull()))
@@ -511,7 +541,7 @@ class PinnedMessagesPersistenceTest {
     }
 
     @Test
-    fun `pin returns nullable success when the server has no matching pin`() = runTest {
+    fun `pin returns nullable success when the server has no matching pin`() = runTest(dispatcher) {
         database.messageDao().upsertMessage(messageDb())
         whenever(pinRepository.pinMessages(any(), any(), any(), anyOrNull()))
             .thenReturn(SceytResponse.Success(listOf(
@@ -525,7 +555,7 @@ class PinnedMessagesPersistenceTest {
     }
 
     @Test
-    fun `rejected repin after successful unpin leaves no pin`() = runTest {
+    fun `rejected repin after successful unpin leaves no pin`() = runTest(dispatcher) {
         val rejection = mock<com.sceyt.chat.models.SceytException> {
             on { type }.thenReturn("NotAllowed")
         }
@@ -533,12 +563,12 @@ class PinnedMessagesPersistenceTest {
     }
 
     @Test
-    fun `retryable repin after successful unpin keeps only pending intent`() = runTest {
+    fun `retryable repin after successful unpin keeps only pending intent`() = runTest(dispatcher) {
         checkRepinAfterUnpin(SceytResponse.Error(null), confirmed = false, pending = true)
     }
 
     @Test
-    fun `successful repin replaces the removed confirmed pin`() = runTest {
+    fun `successful repin replaces the removed confirmed pin`() = runTest(dispatcher) {
         checkRepinAfterUnpin(SceytResponse.Success(listOf(sceytPinnedMessage())), confirmed = true, pending = false)
     }
 
@@ -580,7 +610,7 @@ class PinnedMessagesPersistenceTest {
     }
 
     @Test
-    fun `settling an old unpin removes confirmed state but preserves the newer request id`() = runTest {
+    fun `settling an old unpin removes confirmed state but preserves the newer request id`() = runTest(dispatcher) {
         database.messageDao().upsertMessage(messageDb())
         database.pinnedMessageDao().insert(pinnedEntity())
         val dao = database.pendingPinDao()
@@ -595,7 +625,7 @@ class PinnedMessagesPersistenceTest {
     }
 
     @Test
-    fun `failed settlement rolls back confirmed deletion and retains the pending unpin`() = runTest {
+    fun `failed settlement rolls back confirmed deletion and retains the pending unpin`() = runTest(dispatcher) {
         database.messageDao().upsertMessage(messageDb())
         database.pinnedMessageDao().insert(pinnedEntity())
         val dao = database.pendingPinDao()

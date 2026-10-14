@@ -6,6 +6,7 @@ import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.SceytPinnedMessage
 import com.sceyt.chatuikit.persistence.database.dao.PendingPinDao
 import com.sceyt.chatuikit.persistence.repositories.PinRepository
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -22,7 +23,8 @@ class SendUnpinUseCaseTest {
 
     private val pendingPinDao = mock<PendingPinDao>()
     private val pinRepository = mock<PinRepository>()
-    private val useCase = SendUnpinUseCase(pendingPinDao, pinRepository, mock())
+    private val dispatcher = StandardTestDispatcher()
+    private val useCase = SendUnpinUseCase(pendingPinDao, pinRepository, mock(), dispatcher)
     private val row = pendingPin(messageTid = 42L, id = 1L, messageId = 142L, isPin = false)
 
     private suspend fun givenServerReplies(response: SceytResponse<List<SceytPinnedMessage>>) {
@@ -30,7 +32,7 @@ class SendUnpinUseCaseTest {
     }
 
     @Test
-    fun `a confirmed unpin settles the request`() = runTest {
+    fun `a confirmed unpin settles the request`() = runTest(dispatcher) {
         givenServerReplies(SceytResponse.Success(emptyList()))
 
         val result = useCase(row)
@@ -41,7 +43,7 @@ class SendUnpinUseCaseTest {
     }
 
     @Test
-    fun `unpinning a message the server does not have pinned counts as done`() = runTest {
+    fun `unpinning a message the server does not have pinned counts as done`() = runTest(dispatcher) {
         givenServerReplies(SceytResponse.Error(mock<SceytException> { on { type }.thenReturn("NotFound") }))
 
         val result = useCase(row)
@@ -51,7 +53,7 @@ class SendUnpinUseCaseTest {
     }
 
     @Test
-    fun `a rejected unpin is dropped and returned`() = runTest {
+    fun `a rejected unpin is dropped and returned`() = runTest(dispatcher) {
         givenServerReplies(SceytResponse.Error(mock<SceytException> { on { type }.thenReturn("NotAllowed") }))
 
         assertThat(useCase(row)).isInstanceOf(SceytResponse.Error::class.java)
@@ -60,7 +62,7 @@ class SendUnpinUseCaseTest {
     }
 
     @Test
-    fun `an unpin that failed for a resendable reason stays pending`() = runTest {
+    fun `an unpin that failed for a resendable reason stays pending`() = runTest(dispatcher) {
         givenServerReplies(SceytResponse.Error(null))
 
         assertThat(useCase(row)).isInstanceOf(SceytResponse.Error::class.java)
