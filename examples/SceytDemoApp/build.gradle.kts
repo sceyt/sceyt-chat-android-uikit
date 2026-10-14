@@ -1,5 +1,6 @@
 import com.sceyt.chat.Config
 import com.sceyt.chat.configureMockitoAgent
+import com.google.firebase.appdistribution.gradle.firebaseAppDistribution
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -8,6 +9,7 @@ plugins {
     id("kotlin-parcelize")
     id("com.google.gms.google-services")
     id("com.google.firebase.crashlytics")
+    id("com.google.firebase.appdistribution")
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
@@ -19,7 +21,8 @@ android {
         applicationId = "com.sceyt.chat.demo"
         minSdk = Config.minSdk
         targetSdk = Config.targetSdk
-        versionCode = Config.versionCode
+        versionCode = providers.gradleProperty("firebaseVersionCode")
+            .map(String::toInt).getOrElse(Config.versionCode)
         versionName = Config.versionName
 
         multiDexEnabled = true
@@ -34,9 +37,19 @@ android {
 
     flavorDimensions += listOf("environment")
 
+    val firebaseKeystorePath = providers.environmentVariable("FIREBASE_KEYSTORE_PATH").orNull
+    if (firebaseKeystorePath != null) {
+        signingConfigs.create("firebase") {
+            storeFile = file(firebaseKeystorePath)
+            storePassword = providers.environmentVariable("FIREBASE_KEYSTORE_PASSWORD").get()
+            keyAlias = providers.environmentVariable("FIREBASE_KEY_ALIAS").get()
+            keyPassword = providers.environmentVariable("FIREBASE_KEY_PASSWORD").get()
+        }
+    }
+
     buildTypes {
         getByName("release") {
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName(if (firebaseKeystorePath != null) "firebase" else "debug")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
@@ -44,6 +57,10 @@ android {
                 "proguard-rules.pro"
             )
             manifestPlaceholders["crashlyticsCollectionEnabled"] = "true"
+            firebaseAppDistribution {
+                artifactType = "APK"
+                providers.environmentVariable("FIREBASE_APP_ID").orNull?.let { appId = it }
+            }
         }
         getByName("debug") {
             applicationIdSuffix = ".debug"

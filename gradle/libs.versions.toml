@@ -47,6 +47,7 @@ workRuntimeKtx = "2.12.0"
 lifecycleProcess = "2.11.0"
 google-services = "4.5.0"
 firebase-crashlytics = "3.0.8"
+firebase-appdistribution = "5.3.0"
 ksp = "2.3.11"
 documentfile = "1.1.0"
 cameraX = "1.6.2"
@@ -122,6 +123,7 @@ leakcanary-android = { module = "com.squareup.leakcanary:leakcanary-android", ve
 benchmark = { id = "androidx.benchmark", version.ref = "benchmark" }
 google-services = { id = "com.google.gms.google-services", version.ref = "google-services" }
 firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "firebase-crashlytics" }
+firebase-appdistribution = { id = "com.google.firebase.appdistribution", version.ref = "firebase-appdistribution" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 room = { id = "androidx.room", version.ref = "room" }
 compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "compose" }

@@ -5,18 +5,22 @@ on:
     branches:
       - dev
       - main
+      - publish/staging
+      - publish/prod
 
   pull_request:
     branches:
       - dev
       - main
+      - publish/staging
+      - publish/prod
 
 permissions:
   contents: read
 
 concurrency:
   group: branch-test-suite-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name != 'push' || !startsWith(github.ref, 'refs/heads/publish/') }}
 
 jobs:
   unit-tests:
@@ -47,6 +51,9 @@ jobs:
 
       - name: Run unit tests and build release libraries
         run: ./gradlew --no-daemon --stacktrace test :SceytChatUiKit:assembleRelease :SceytChatConnection:assembleRelease
+
+      - name: Test Firebase release notes
+        run: node --test .github/scripts/firebase-release-notes.test.cjs
 
       - name: Upload unit test reports
         if: always()
@@ -140,9 +147,155 @@ jobs:
             exit 1
           fi
 
+  firebase-distribution:
+    name: Firebase distribution
+    needs: all-tests
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/publish/staging' || github.ref == 'refs/heads/publish/prod')
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment: ${{ github.ref == 'refs/heads/publish/prod' && 'firebase-prod' || 'firebase-staging' }}
+    concurrency:
+      group: firebase-app-distribution
+      cancel-in-progress: false
+    permissions:
+      contents: write
+      pull-requests: read
+      id-token: write
+    outputs:
+      release-notes: ${{ steps.complete.outputs.release-notes }}
+      tester-url: ${{ steps.complete.outputs.tester-url }}
+    env:
+      FIREBASE_FLAVOR: ${{ github.ref == 'refs/heads/publish/prod' && 'prod' || 'staging' }}
+      FIREBASE_VARIANT: ${{ github.ref == 'refs/heads/publish/prod' && 'ProdRelease' || 'StagingRelease' }}
+      FIREBASE_KEYSTORE_PASSWORD: ${{ secrets.FIREBASE_KEYSTORE_PASSWORD }}
+      FIREBASE_KEY_ALIAS: ${{ secrets.FIREBASE_KEY_ALIAS }}
+      FIREBASE_KEY_PASSWORD: ${{ secrets.FIREBASE_KEY_PASSWORD }}
+
+    steps:
+      - name: Check out publishing commit
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Validate Firebase configuration and restore signing key
+        shell: bash
+        env:
+          FIREBASE_APP_ID: ${{ vars.FIREBASE_APP_ID }}
+          FIREBASE_GROUPS: ${{ vars.FIREBASE_GROUPS }}
+          FIREBASE_VERSION_CODE_BASE: ${{ vars.FIREBASE_VERSION_CODE_BASE }}
+          FIREBASE_KEYSTORE_BASE64: ${{ secrets.FIREBASE_KEYSTORE_BASE64 }}
+          FIREBASE_WORKLOAD_IDENTITY_PROVIDER: ${{ vars.FIREBASE_WORKLOAD_IDENTITY_PROVIDER }}
+          FIREBASE_SERVICE_ACCOUNT: ${{ vars.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          for setting in FIREBASE_APP_ID FIREBASE_GROUPS FIREBASE_VERSION_CODE_BASE FIREBASE_KEYSTORE_BASE64 FIREBASE_KEYSTORE_PASSWORD FIREBASE_KEY_ALIAS FIREBASE_KEY_PASSWORD FIREBASE_WORKLOAD_IDENTITY_PROVIDER FIREBASE_SERVICE_ACCOUNT; do
+            if [[ -z "${!setting}" ]]; then
+              echo "Configure $setting in this Firebase GitHub environment."
+              exit 1
+            fi
+          done
+          umask 077
+          FIREBASE_KEYSTORE_PATH="$RUNNER_TEMP/firebase-ci.keystore"
+          printf '%s' "$FIREBASE_KEYSTORE_BASE64" | base64 --decode > "$FIREBASE_KEYSTORE_PATH"
+          for setting in FIREBASE_APP_ID FIREBASE_GROUPS FIREBASE_VERSION_CODE_BASE FIREBASE_KEYSTORE_PATH; do
+            printf '%s=%s\n' "$setting" "${!setting}" >> "$GITHUB_ENV"
+          done
+
+      - name: Prepare version code and previous build
+        id: prepare
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const {prepare} = require('./.github/scripts/firebase-release-notes.cjs');
+            const result = await prepare({
+              github, context, flavor: process.env.FIREBASE_FLAVOR,
+              versionBase: process.env.FIREBASE_VERSION_CODE_BASE
+            });
+            core.setOutput('version-code', result.versionCode);
+            core.setOutput('baseline', result.baseline);
+            core.setOutput('first-build', result.firstBuild);
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: 'platform-tools platforms;android-37.0 build-tools;36.0.0'
+          log-accepted-android-sdk-licenses: false
+
+      - name: Build signed Firebase APK
+        env:
+          FIREBASE_VERSION_CODE: ${{ steps.prepare.outputs.version-code }}
+        run: ./gradlew --no-daemon --stacktrace ":SceytDemoApp:assemble${FIREBASE_VARIANT}" "-PfirebaseVersionCode=${FIREBASE_VERSION_CODE}"
+
+      - name: Generate release notes
+        uses: actions/github-script@v7
+        env:
+          FIREBASE_BASELINE: ${{ steps.prepare.outputs.baseline }}
+          FIREBASE_FIRST_BUILD: ${{ steps.prepare.outputs.first-build }}
+          FIREBASE_VERSION_CODE: ${{ steps.prepare.outputs.version-code }}
+        with:
+          script: |
+            const {generate} = require('./.github/scripts/firebase-release-notes.cjs');
+            await generate({
+              github, context, flavor: process.env.FIREBASE_FLAVOR,
+              baseline: process.env.FIREBASE_BASELINE,
+              firstBuild: process.env.FIREBASE_FIRST_BUILD === 'true',
+              versionCode: process.env.FIREBASE_VERSION_CODE,
+              outputPath: `${process.env.RUNNER_TEMP}/firebase-release-notes.txt`
+            });
+
+      - name: Save APK and release notes
+        uses: actions/upload-artifact@v4
+        with:
+          name: firebase-${{ env.FIREBASE_FLAVOR }}-${{ steps.prepare.outputs.version-code }}
+          if-no-files-found: error
+          path: |
+            examples/SceytDemoApp/build/outputs/apk/${{ env.FIREBASE_FLAVOR }}/release/*.apk
+            ${{ runner.temp }}/firebase-release-notes.txt
+
+      - name: Authenticate with Google
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.FIREBASE_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.FIREBASE_SERVICE_ACCOUNT }}
+
+      - name: Upload APK to Firebase testers
+        shell: bash
+        env:
+          FIREBASE_VERSION_CODE: ${{ steps.prepare.outputs.version-code }}
+        run: |
+          ./gradlew --no-daemon --console=plain ":SceytDemoApp:appDistributionUpload${FIREBASE_VARIANT}" \
+            "-PfirebaseVersionCode=${FIREBASE_VERSION_CODE}" \
+            --groups="$FIREBASE_GROUPS" \
+            --releaseNotesFile="$RUNNER_TEMP/firebase-release-notes.txt" \
+            | tee "$RUNNER_TEMP/firebase-upload.log"
+
+      - name: Record successful build and install link
+        id: complete
+        uses: actions/github-script@v7
+        env:
+          FIREBASE_VERSION_CODE: ${{ steps.prepare.outputs.version-code }}
+        with:
+          script: |
+            const {complete} = require('./.github/scripts/firebase-release-notes.cjs');
+            await complete({
+              github, context, core, flavor: process.env.FIREBASE_FLAVOR,
+              versionCode: process.env.FIREBASE_VERSION_CODE,
+              notesPath: `${process.env.RUNNER_TEMP}/firebase-release-notes.txt`,
+              logPath: `${process.env.RUNNER_TEMP}/firebase-upload.log`
+            });
+
   waafi-alerts:
     name: Waafi Alerts
-    needs: [unit-tests, instrumented-tests, all-tests]
+    needs: [unit-tests, instrumented-tests, all-tests, firebase-distribution]
     if: always() && !cancelled() && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
     permissions:
       actions: read
@@ -151,5 +304,7 @@ jobs:
     uses: ./.github/workflows/channel-alerts.yml
     with:
       failed: ${{ contains(needs.*.result, 'failure') }}
+      firebase-notes: ${{ needs.firebase-distribution.outputs.release-notes }}
+      firebase-tester-url: ${{ needs.firebase-distribution.outputs.tester-url }}
     secrets:
       WAAFI_PLATFORM_API_KEY: ${{ secrets.WAAFI_PLATFORM_API_KEY }}
