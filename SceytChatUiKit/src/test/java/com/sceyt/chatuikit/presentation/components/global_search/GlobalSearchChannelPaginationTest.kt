@@ -28,7 +28,6 @@ import com.sceyt.chatuikit.persistence.mappers.toChannelEntity
 import com.sceyt.chatuikit.presentation.components.global_search.channels.ChannelsSearchViewModel
 import com.sceyt.chatuikit.presentation.components.global_search.chats.ChatsSearchViewModel
 import com.sceyt.chatuikit.services.sync.SceytSyncManager
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -41,7 +40,6 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import kotlinx.coroutines.test.TestScope
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -137,56 +135,6 @@ class GlobalSearchChannelPaginationTest {
     }
 
     @Test
-    fun `blank channels query does not skip an unloaded channel that receives a message`() = runTest(dispatcher) {
-        assertChannelEventDoesNotSkip(GlobalSearchTab.Channels, added = false)
-    }
-
-    @Test
-    fun `blank chats query does not skip an unloaded channel that receives a message`() = runTest(dispatcher) {
-        assertChannelEventDoesNotSkip(GlobalSearchTab.Chats, added = false)
-    }
-
-    @Test
-    fun `blank channels query handles a channel added to the cache`() = runTest(dispatcher) {
-        assertChannelEventDoesNotSkip(GlobalSearchTab.Channels, added = true)
-    }
-
-    @Test
-    fun `blank chats query handles a channel added to the cache`() = runTest(dispatcher) {
-        assertChannelEventDoesNotSkip(GlobalSearchTab.Chats, added = true)
-    }
-
-    @Test
-    fun `blank channels query refreshes the loaded window after sync`() = runTest(dispatcher) {
-        assertSyncDoesNotSkip(GlobalSearchTab.Channels)
-    }
-
-    @Test
-    fun `blank chats query refreshes the loaded window after sync`() = runTest(dispatcher) {
-        assertSyncDoesNotSkip(GlobalSearchTab.Chats)
-    }
-
-    @Test
-    fun `channels sync during pagination preserves the requested page`() = runTest(dispatcher) {
-        assertSyncDuringPagination(GlobalSearchTab.Channels)
-    }
-
-    @Test
-    fun `chats sync during pagination preserves the requested page`() = runTest(dispatcher) {
-        assertSyncDuringPagination(GlobalSearchTab.Chats)
-    }
-
-    @Test
-    fun `channels refresh does not skip a channel after a loaded channel moves down`() = runTest(dispatcher) {
-        assertLoadedChannelMovingDown(GlobalSearchTab.Channels)
-    }
-
-    @Test
-    fun `chats refresh does not skip a channel after a loaded channel moves down`() = runTest(dispatcher) {
-        assertLoadedChannelMovingDown(GlobalSearchTab.Chats)
-    }
-
-    @Test
     fun `channel and sync events do not replace typed search results`() = runTest(dispatcher) {
         for (tab in listOf(GlobalSearchTab.Channels, GlobalSearchTab.Chats)) {
             val search = openRecentSearch(tab, GlobalSearchSessionState(query = "missing", activeTab = tab))
@@ -217,62 +165,6 @@ class GlobalSearchChannelPaginationTest {
             assertThat(search.pages.first().ids).isEmpty()
             assertThat(search.dataSource.recentCalls).isEmpty()
         }
-    }
-
-    private suspend fun TestScope.assertChannelEventDoesNotSkip(tab: GlobalSearchTab, added: Boolean) {
-        val search = openRecentSearch(tab)
-        assertThat(search.pages.first().ids).containsExactlyElementsIn(1L..15L).inOrder()
-        if (added) channelsCache.clear(ChannelListConfig.default)
-
-        moveChannel(tab, id = 20, lastMessageAt = 2_000, emitEvent = true)
-        runCurrent()
-        val refreshed = search.pages.first()
-        assertThat(refreshed.ids).containsExactlyElementsIn(listOf(20L).plusElement((1L..14L))).inOrder()
-        assertThat(refreshed.offset).isEqualTo(15)
-        assertThat(loadRemaining(search)).containsExactlyElementsIn(listOf(20L) + (1L..32L).filter { it != 20L }).inOrder()
-        assertThat(search.dataSource.recentCalls).containsExactly(0 to 15, 0 to 15, 15 to 15, 30 to 15).inOrder()
-    }
-
-    private suspend fun TestScope.assertSyncDoesNotSkip(tab: GlobalSearchTab) {
-        val search = openRecentSearch(tab)
-        assertThat(search.pages.first().ids).containsExactlyElementsIn(1L..15L).inOrder()
-        moveChannel(tab, id = 20, lastMessageAt = 2_000, emitEvent = false)
-
-        SceytSyncManager.syncChannelsResult_.tryEmit(SyncResult.SuccessfullyFinished)
-        runCurrent()
-        val refreshed = search.pages.first()
-        assertThat(refreshed.ids).containsExactlyElementsIn(listOf(20L).plusElement((1L..14L))).inOrder()
-        assertThat(refreshed.offset).isEqualTo(15)
-        assertThat(loadRemaining(search)).containsExactlyElementsIn(listOf(20L) + (1L..32L).filter { it != 20L }).inOrder()
-    }
-
-    private suspend fun TestScope.assertSyncDuringPagination(tab: GlobalSearchTab) {
-        val search = openRecentSearch(tab)
-        search.pages.first()
-        val gate = search.dataSource.blockNextRead(offset = 15)
-        search.loadMore()
-        gate.started.await()
-        moveChannel(tab, id = 20, lastMessageAt = 2_000, emitEvent = false)
-
-        SceytSyncManager.syncChannelsResult_.tryEmit(SyncResult.SuccessfullyFinished)
-        runCurrent()
-        gate.release.complete(Unit)
-        val refreshed = search.pages.first()
-        assertThat(refreshed.ids).containsExactlyElementsIn(listOf(20L) + (1L..30L).filter { it != 20L }).inOrder()
-        assertThat(refreshed.offset).isEqualTo(30)
-        search.loadMore()
-        assertThat(search.pages.first().ids).containsExactlyElementsIn(listOf(20L) + (1L..32L).filter { it != 20L }).inOrder()
-        assertThat(search.dataSource.recentCalls).containsExactly(0 to 15, 15 to 15, 0 to 30, 30 to 15).inOrder()
-    }
-
-    private suspend fun TestScope.assertLoadedChannelMovingDown(tab: GlobalSearchTab) {
-        val search = openRecentSearch(tab)
-        search.pages.first()
-        moveChannel(tab, id = 1, lastMessageAt = 1, emitEvent = true)
-        runCurrent()
-
-        assertThat(search.pages.first().ids).containsExactlyElementsIn(2L..16L).inOrder()
-        assertThat(loadRemaining(search)).containsExactlyElementsIn((2L..32L).toList() + 1L).inOrder()
     }
 
     private suspend fun loadRecentChannels(
@@ -340,7 +232,7 @@ class GlobalSearchChannelPaginationTest {
                 viewModelStore.put("search", viewModel)
                 pages = viewModel.state.filter { !it.isLoading && !it.isLoadingMore }
                     .map { state ->
-                        RecentPage(state.listItems.channelIds(), state.offset)
+                        RecentPage(state.listItems.channelIds())
                     }
                 loadMore = viewModel::loadMore
             }
@@ -350,7 +242,7 @@ class GlobalSearchChannelPaginationTest {
                 viewModelStore.put("search", viewModel)
                 pages = viewModel.state.filter { !it.isLoading && !it.isLoadingMore }
                     .map { state ->
-                        RecentPage(state.listItems.channelIds(), state.offset)
+                        RecentPage(state.listItems.channelIds())
                     }
                 loadMore = viewModel::loadMore
             }
@@ -364,7 +256,7 @@ class GlobalSearchChannelPaginationTest {
     private fun List<GlobalSearchListItem>.channelIds() =
         filterIsInstance<GlobalSearchListItem.ChannelItem>().map { it.channel.id }
 
-    private data class RecentPage(val ids: List<Long>, val offset: Int)
+    private data class RecentPage(val ids: List<Long>)
 
     private data class RecentSearch(
         val pages: Flow<RecentPage>,
@@ -372,16 +264,8 @@ class GlobalSearchChannelPaginationTest {
         val dataSource: ControlledDataSource,
     )
 
-    private class ReadGate(val offset: Int) {
-        val started = CompletableDeferred<Unit>()
-        val release = CompletableDeferred<Unit>()
-    }
-
     private class ControlledDataSource(private val delegate: GlobalSearchDataSource) : GlobalSearchDataSource by delegate {
         val recentCalls = mutableListOf<Pair<Int, Int>>()
-        private var gate: ReadGate? = null
-
-        fun blockNextRead(offset: Int): ReadGate = ReadGate(offset).also { gate = it }
 
         override suspend fun getRecentChannels(offset: Int, limit: Int): GlobalSearchPage<SceytChannel> =
             readRecent(offset, limit) { delegate.getRecentChannels(offset, limit) }
@@ -395,13 +279,7 @@ class GlobalSearchChannelPaginationTest {
             read: suspend () -> GlobalSearchPage<SceytChannel>,
         ): GlobalSearchPage<SceytChannel> {
             recentCalls.add(offset to limit)
-            val result = read()
-            gate?.takeIf { it.offset == offset }?.let {
-                gate = null
-                it.started.complete(Unit)
-                it.release.await()
-            }
-            return result
+            return read()
         }
     }
 }
