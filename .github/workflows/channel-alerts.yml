@@ -6,6 +6,14 @@ on:
       failed:
         required: true
         type: boolean
+      firebase-notes:
+        required: false
+        type: string
+        default: ''
+      firebase-tester-url:
+        required: false
+        type: string
+        default: ''
     secrets:
       WAAFI_PLATFORM_API_KEY:
         required: true
@@ -27,6 +35,8 @@ jobs:
           WAAFI_PLATFORM_API_KEY: ${{ secrets.WAAFI_PLATFORM_API_KEY }}
           WAAFI_CHANNEL_ID: ${{ vars.WAAFI_CHANNEL_ID }}
           FAILED: ${{ inputs.failed }}
+          FIREBASE_NOTES: ${{ inputs.firebase-notes }}
+          FIREBASE_TESTER_URL: ${{ inputs.firebase-tester-url }}
         with:
           script: |
             const {data: run} = await github.rest.actions.getWorkflowRun({
@@ -95,6 +105,12 @@ jobs:
                   '', '❌ Failed checks', ...failedChecks.map(name => `• ${name}`)
                 ] : [])
               ] : ['', 'Check results unavailable. Open the run below for details.']),
+              ...(process.env.FIREBASE_NOTES ? [
+                '', '📦 Firebase build distributed', process.env.FIREBASE_NOTES,
+                ...(process.env.FIREBASE_TESTER_URL ? [
+                  '', 'Install this build', process.env.FIREBASE_TESTER_URL
+                ] : [])
+              ] : []),
               ...(pr ? ['', 'Open pull request', pr.html_url] : []),
               '', 'View logs & reports', run.html_url
             ].join('\n');
