@@ -6,6 +6,7 @@ import com.sceyt.chat.models.message.PinDetails.PinType
 import com.sceyt.chatuikit.data.managers.message.event.PinUpdateEvent
 import com.sceyt.chatuikit.persistence.database.dao.MessageDao
 import com.sceyt.chatuikit.persistence.database.dao.PinnedMessageDao
+import com.sceyt.chatuikit.persistence.database.dao.UserDao
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageDb
 import com.sceyt.chatuikit.persistence.database.entity.messages.PinnedMessageEntity
 import kotlinx.coroutines.test.runTest
@@ -23,11 +24,12 @@ class UpdatePinnedMessagesUseCaseTest {
     private val messageDao = mock<MessageDao>()
     private val pinnedMessageDao = mock<PinnedMessageDao>()
     private val refreshPinnedMessageCache = mock<RefreshPinnedMessageCacheUseCase>()
+    private val userDao = mock<UserDao>()
     private val useCase = UpdatePinnedMessagesUseCase(
         messageDao,
         pinnedMessageDao,
         refreshPinnedMessageCache,
-        StorePinsUseCase(messageDao, pinnedMessageDao, refreshPinnedMessageCache),
+        StorePinsUseCase(messageDao, pinnedMessageDao, refreshPinnedMessageCache, userDao),
     )
 
     @Test

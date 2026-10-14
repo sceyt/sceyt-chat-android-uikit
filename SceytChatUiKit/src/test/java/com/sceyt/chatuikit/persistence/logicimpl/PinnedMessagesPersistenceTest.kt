@@ -6,6 +6,7 @@ import com.sceyt.chat.models.message.PinDetails.PinType
 import com.sceyt.chatuikit.data.managers.message.event.PinUpdateEvent
 import com.sceyt.chatuikit.data.models.SceytPagingResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.PENDING_PIN_TABLE
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.pendingPin
 import com.sceyt.chatuikit.persistence.database.SceytDatabase
@@ -73,6 +74,7 @@ class PinnedMessagesPersistenceTest {
                 single { dao }
                 single { pendingDao }
                 single { messages }
+                single { database.userDao() }
                 single { cache }
                 single { pinRepository }
                 single { systemMessageSender }
@@ -89,6 +91,92 @@ class PinnedMessagesPersistenceTest {
     fun tearDown() {
         dependencies.close()
         database.close()
+    }
+
+    @Test
+    fun `sync stores an uncached pin sender and reply parent`() = runTest {
+        val sender = SceytUser("sender").copy(
+            firstName = "Alice",
+            avatarURL = "https://example.com/alice.png",
+            metadataMap = mapOf("role" to "member"),
+        )
+        val parentSender = SceytUser("parent-sender").copy(
+            firstName = "Bob",
+            avatarURL = "https://example.com/bob.png",
+        )
+        val parent = sceytMessage(id = 100L, incoming = true).copy(
+            body = "reply preview",
+            user = parentSender,
+        )
+        val fetched = sceytMessage(incoming = true).copy(user = sender, parentMessage = parent)
+        whenever(pinRepository.getPinnedMessages(7L)).thenReturn(
+            flowOf(SceytPagingResponse.Success(listOf(sceytPinnedMessage(message = fetched)), hasNext = false))
+        )
+
+        logic.syncChannelPins(7L)
+
+        val stored = logic.getPinnedMessagesFlow(7L).first().single().message
+        assertThat(stored.user?.id).isEqualTo(sender.id)
+        assertThat(stored.user?.firstName).isEqualTo(sender.firstName)
+        assertThat(stored.user?.avatarURL).isEqualTo(sender.avatarURL)
+        assertThat(stored.user?.metadataMap).isEqualTo(sender.metadataMap)
+        assertThat(stored.parentMessage?.id).isEqualTo(parent.id)
+        assertThat(stored.parentMessage?.body).isEqualTo(parent.body)
+        assertThat(stored.parentMessage?.user?.firstName).isEqualTo(parentSender.firstName)
+        assertThat(stored.parentMessage?.user?.avatarURL).isEqualTo(parentSender.avatarURL)
+        assertThat(database.messageDao().getMessageById(fetched.id)?.messageEntity?.unList).isTrue()
+        assertThat(database.messageDao().getMessageById(parent.id)?.messageEntity?.unList).isTrue()
+    }
+
+    @Test
+    fun `sync preserves a reply parent already in the local timeline`() = runTest {
+        val localParent = messageEntity(id = 100L, tid = 88L).copy(
+            body = "newer parent",
+            updatedAt = 300L,
+        )
+        database.messageDao().upsertMessage(messageDb(localParent))
+        val parent = sceytMessage(id = 100L, incoming = true).copy(body = "older parent", updatedAt = 200L)
+        val fetched = sceytMessage(incoming = true).copy(parentMessage = parent)
+        whenever(pinRepository.getPinnedMessages(7L)).thenReturn(
+            flowOf(SceytPagingResponse.Success(listOf(sceytPinnedMessage(message = fetched)), hasNext = false))
+        )
+
+        logic.syncChannelPins(7L)
+
+        val stored = logic.getPinnedMessagesFlow(7L).first().single().message.parentMessage
+        assertThat(stored?.tid).isEqualTo(localParent.tid)
+        assertThat(stored?.body).isEqualTo(localParent.body)
+        val storedParent = database.messageDao().getMessageById(parent.id)?.messageEntity
+        assertThat(storedParent?.updatedAt).isEqualTo(localParent.updatedAt)
+        assertThat(storedParent?.unList).isFalse()
+    }
+
+    @Test
+    fun `sync restores missing relations when the cached message is already current`() = runTest {
+        val sender = SceytUser("sender").copy(firstName = "Alice")
+        val parent = sceytMessage(id = 100L, incoming = true).copy(body = "reply preview")
+        val local = messageEntity(tid = 77L).copy(
+            fromId = sender.id,
+            parentId = parent.id,
+            updatedAt = 200L,
+        )
+        database.messageDao().upsertMessage(messageDb(local))
+        val fetched = sceytMessage(tid = 0L).copy(
+            user = sender,
+            parentMessage = parent,
+            updatedAt = local.updatedAt,
+        )
+        whenever(pinRepository.getPinnedMessages(7L)).thenReturn(
+            flowOf(SceytPagingResponse.Success(listOf(sceytPinnedMessage(message = fetched)), hasNext = false))
+        )
+
+        logic.syncChannelPins(7L)
+
+        val stored = logic.getPinnedMessagesFlow(7L).first().single().message
+        assertThat(stored.tid).isEqualTo(local.tid)
+        assertThat(stored.user?.firstName).isEqualTo(sender.firstName)
+        assertThat(stored.parentMessage?.id).isEqualTo(parent.id)
+        assertThat(stored.parentMessage?.body).isEqualTo(parent.body)
     }
 
     @Test
