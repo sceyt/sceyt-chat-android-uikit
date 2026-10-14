@@ -2,6 +2,7 @@ package com.sceyt.chatuikit.persistence.database.entity.messages
 
 import androidx.room.Embedded
 import androidx.room.Relation
+import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingPinEntity
 import com.sceyt.chatuikit.persistence.database.entity.user.UserDb
 import com.sceyt.chatuikit.persistence.database.entity.user.UserEntity
 
@@ -20,4 +21,10 @@ internal data class ParentMessageDb(
 
         @Relation(parentColumn = "tid", entityColumn = "messageTid", entity = PollEntity::class)
         val poll: PollDb?,
+
+        @Relation(parentColumn = "tid", entityColumn = "messageTid")
+        val pinnedMessage: PinnedMessageEntity? = null,
+
+        @Relation(parentColumn = "tid", entityColumn = "messageTid")
+        val pendingPin: PendingPinEntity? = null,
 )

@@ -58,7 +58,7 @@ class IncUnsupportedMessageViewHolder(
                 val message = item.message
                 tvForwarded.isVisible = message.isForwarded
 
-                if (diff.edited || diff.statusChanged)
+                if (diff.infoRowChanged())
                     setMessageStatusAndDateText(message, messageDate)
 
                 if (diff.edited || diff.bodyChanged) {

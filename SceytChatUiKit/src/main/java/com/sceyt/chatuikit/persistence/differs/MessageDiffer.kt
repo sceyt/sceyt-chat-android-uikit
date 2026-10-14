@@ -19,12 +19,15 @@ data class MessageDiff(
     val selectionChanged: Boolean,
     val metadataChanged: Boolean,
     val pollChanged: Boolean,
+    val pinChanged: Boolean,
     val isSelfDestructedChanged: Boolean
 ) {
+    fun infoRowChanged(): Boolean = edited || statusChanged || pinChanged
+
     fun hasDifference(): Boolean {
         return edited || bodyChanged || statusChanged || avatarChanged || nameChanged || replyCountChanged
                 || replyContainerChanged || reactionsChanged || showAvatarAndNameChanged || filesChanged
-                || selectionChanged || metadataChanged || pollChanged || isSelfDestructedChanged
+                || selectionChanged || metadataChanged || pollChanged || pinChanged || isSelfDestructedChanged
     }
 
     companion object {
@@ -42,6 +45,7 @@ data class MessageDiff(
             selectionChanged = true,
             metadataChanged = true,
             pollChanged = true,
+            pinChanged = true,
             isSelfDestructedChanged = true
         )
         val DEFAULT_FALSE = MessageDiff(
@@ -58,6 +62,7 @@ data class MessageDiff(
             selectionChanged = false,
             metadataChanged = false,
             pollChanged = false,
+            pinChanged = false,
             isSelfDestructedChanged = false
         )
     }
@@ -66,7 +71,8 @@ data class MessageDiff(
         return "edited: $edited, bodyChanged: $bodyChanged, statusChanged: $statusChanged, avatarChanged: $avatarChanged, " +
                 "nameChanged: $nameChanged, replyCountChanged: $replyCountChanged, reactionsChanged: $reactionsChanged, " +
                 "showAvatarAndNameChanged: $showAvatarAndNameChanged, filesChanged: $filesChanged, selectionChanged: $selectionChanged, " +
-                "metadataChanged: $metadataChanged, pollChanged: $pollChanged viewOnceStateChanged: $isSelfDestructedChanged"
+                "metadataChanged: $metadataChanged, pollChanged: $pollChanged, pinChanged: $pinChanged, " +
+                "viewOnceStateChanged: $isSelfDestructedChanged"
     }
 }
 
@@ -88,6 +94,7 @@ fun SceytMessage.diff(other: SceytMessage): MessageDiff {
         selectionChanged = isSelected != other.isSelected,
         metadataChanged = metadata != other.metadata,
         pollChanged = poll?.pollChanged(other.poll) ?: (other.poll != null),
+        pinChanged = pinDetails?.isPinned != other.pinDetails?.isPinned,
         isSelfDestructedChanged = isSelfDestructedChanged(other)
     )
 }
@@ -109,6 +116,7 @@ fun SceytMessage.diffContent(other: SceytMessage): MessageDiff {
         selectionChanged = isSelected != other.isSelected,
         metadataChanged = metadata != other.metadata,
         pollChanged = poll?.pollChanged(other.poll) ?: (other.poll != null),
+        pinChanged = pinDetails?.isPinned != other.pinDetails?.isPinned,
         isSelfDestructedChanged = isSelfDestructedChanged(other)
     )
 }

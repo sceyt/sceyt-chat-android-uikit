@@ -195,6 +195,8 @@ class LinkDetailsUpsertDaoTest {
         forwardingUser = null,
         mentionedUsers = null,
         poll = null,
+        pinnedMessage = null,
+        pendingPin = null,
     )
 
     private fun message(tid: Long) = MessageEntity(

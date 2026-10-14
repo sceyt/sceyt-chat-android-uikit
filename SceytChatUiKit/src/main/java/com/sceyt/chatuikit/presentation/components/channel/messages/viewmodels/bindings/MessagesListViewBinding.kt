@@ -141,6 +141,17 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             is MessageActionBridge.MenuEvent.EndVote -> {
                 messagesListView.messageActionsViewClickListeners.onEndVoteClick(event.message)
             }
+
+            is MessageActionBridge.MenuEvent.Pin -> {
+                messagesListView.messageActionsViewClickListeners.onPinMessageClick(
+                    event.message,
+                    event.actionFinish
+                )
+            }
+
+            is MessageActionBridge.MenuEvent.Unpin -> {
+                messagesListView.messageActionsViewClickListeners.onUnpinMessageClick(event.message)
+            }
         }
     }
 
@@ -148,6 +159,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     messageActionBridge.menuEvents.onEach(::applyMenuEvent).launchIn(lifecycleScope)
     messagesListView.setMultiselectDestination(selectedMessagesMap)
     if (channel.isSelf) {
+        messagesListView.setAlwaysPinForMe(true)
         messagesListView.setEmptyStateForSelfChannel()
     }
 
@@ -944,6 +956,10 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 prepareToScrollToUnreadMention()
             }
 
+            is MessageCommandEvent.ScrollToPinnedMessage -> {
+                prepareToScrollToPinnedMessage(event.messageId)
+            }
+
             is MessageCommandEvent.ScrollToReplyMessage -> {
                 prepareToScrollToReplyMessage(event.message)
             }
@@ -989,6 +1005,14 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                     context = messagesListView.context,
                     destination = Destination.PollResults(event.message)
                 )
+            }
+
+            is MessageCommandEvent.PinMessage -> {
+                pinMessage(event.message, event.pinType)
+            }
+
+            is MessageCommandEvent.UnpinMessage -> {
+                unpinMessage(event.message)
             }
         }
     }

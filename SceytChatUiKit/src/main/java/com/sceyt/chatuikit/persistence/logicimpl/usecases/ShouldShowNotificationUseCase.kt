@@ -56,7 +56,10 @@ class ShouldShowNotificationUseCase(
         if (message.createdAt <= channel.messagesClearedAt || message.id <= channel.messagesClearedAt)
             return false
 
-        if (!pushData.message.incoming && pushData.type != NotificationType.MessageReaction)
+        if (!pushData.message.incoming
+            && pushData.type != NotificationType.MessageReaction
+            && pushData.type != NotificationType.MessagePinned
+        )
             return false
 
         val isChannelOpen = ChannelsCache.currentChannelId == pushData.channel.id

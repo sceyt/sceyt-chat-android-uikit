@@ -64,5 +64,17 @@ internal class MessageActionBridge {
         data class ReplyInThread(val message: SceytMessage) : MenuEvent
         data class RetractVote(val message: SceytMessage) : MenuEvent
         data class EndVote(val message: SceytMessage) : MenuEvent
+
+        /**
+         * Carries [actionFinish] rather than calling it up front, as Delete does, so the
+         * "Pin for me / Pin for all" chooser can dismiss the selection toolbar only once a
+         * scope has actually been picked.
+         */
+        data class Pin(
+            val message: SceytMessage,
+            val actionFinish: () -> Unit,
+        ) : MenuEvent
+
+        data class Unpin(val message: SceytMessage) : MenuEvent
     }
 }
