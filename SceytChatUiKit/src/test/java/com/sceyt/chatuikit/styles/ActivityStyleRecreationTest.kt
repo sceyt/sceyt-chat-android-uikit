@@ -131,14 +131,22 @@ class ActivityStyleRecreationTest {
     }
 
     @Test
-    fun `channel info recreation preserves registered tab styles`() {
+    fun `channel info recreation preserves parent and registered tab styles`() {
         val controller = launchChannelInfo()
-        val original = tabStyles(controller.get().currentStyle())
+        val originalStyle = controller.get().currentStyle()
+        val original = tabStyles(originalStyle)
+        assertThat(StyleRegistry.getTyped<ChannelInfoStyle>(originalStyle.styleId))
+            .isSameInstanceAs(originalStyle)
 
         repeat(2) {
             controller.recreate()
-            val current = tabStyles(controller.get().currentStyle())
+            val currentStyle = controller.get().currentStyle()
+            val current = tabStyles(currentStyle)
+            registeredIds += currentStyle.styleId
             registeredIds += current.map { it.styleId }
+            assertThat(currentStyle).isSameInstanceAs(originalStyle)
+            assertThat(StyleRegistry.getTyped<ChannelInfoStyle>(originalStyle.styleId))
+                .isSameInstanceAs(originalStyle)
             original.zip(current).forEach { (previous, restored) ->
                 assertThat(restored).isSameInstanceAs(previous)
                 assertThat(StyleRegistry[previous.styleId]).isSameInstanceAs(previous)
@@ -151,16 +159,23 @@ class ActivityStyleRecreationTest {
     }
 
     @Test
-    fun `channel info finish after recreation releases every registered tab style`() {
+    fun `channel info finish after recreation releases parent and every registered tab style`() {
         val controller = launchChannelInfo()
-        val original = tabStyles(controller.get().currentStyle())
+        val originalStyle = controller.get().currentStyle()
+        val original = tabStyles(originalStyle)
         controller.recreate()
-        val current = tabStyles(controller.get().currentStyle())
+        val currentStyle = controller.get().currentStyle()
+        val current = tabStyles(currentStyle)
+        registeredIds += currentStyle.styleId
         registeredIds += current.map { it.styleId }
+        assertThat(StyleRegistry.getTyped<ChannelInfoStyle>(currentStyle.styleId))
+            .isSameInstanceAs(currentStyle)
 
         controller.get().finish()
         controller.pause().stop().destroy()
 
+        assertThat(StyleRegistry[originalStyle.styleId]).isNull()
+        assertThat(StyleRegistry[currentStyle.styleId]).isNull()
         (original + current).forEach { assertThat(StyleRegistry[it.styleId]).isNull() }
     }
 
@@ -182,6 +197,7 @@ class ActivityStyleRecreationTest {
             .setClass(context, StyleChannelInfoActivity::class.java)
         return Robolectric.buildActivity(StyleChannelInfoActivity::class.java, intent).setup().also {
             controllers += it
+            registeredIds += it.get().currentStyle().styleId
             registeredIds += tabStyles(it.get().currentStyle()).map { style -> style.styleId }
         }
     }
