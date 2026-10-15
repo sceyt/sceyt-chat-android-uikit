@@ -39,6 +39,8 @@ internal class FileTransferServiceImpl(
     override fun cancelUpload(attachment: SceytAttachment) {
         val task = findTransferTask(attachment)
         task?.let(::removeTransferTask)
+        task?.uploadSubscription?.cancel()
+        task?.uploadSubscription = null
         fileTransferLogic.cancelUpload(attachment)
         task?.complete(Result.failure(CancellationException("Attachment upload cancelled")))
     }

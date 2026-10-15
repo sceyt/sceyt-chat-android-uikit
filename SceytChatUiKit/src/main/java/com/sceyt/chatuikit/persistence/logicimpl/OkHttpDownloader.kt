@@ -3,8 +3,8 @@ package com.sceyt.chatuikit.persistence.logicimpl
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.createErrorResponse
-import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.extensions.TAG
+import com.sceyt.chatuikit.filetransfer.FileDownloadRequest
 import com.sceyt.chatuikit.logger.SceytLog
 import okhttp3.Call
 import okhttp3.Callback
@@ -13,14 +13,13 @@ import okhttp3.Request
 import okhttp3.Response
 import okio.buffer
 import okio.sink
-import java.io.File
 import java.io.IOException
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 
 class OkHttpDownloader {
 
-    private val downloadCalls = ConcurrentHashMap<Long, Call>()
+    private val downloadCalls = ConcurrentHashMap<String, Call>()
 
     private val httpClient: OkHttpClient by lazy {
         OkHttpClient.Builder()
@@ -31,22 +30,19 @@ class OkHttpDownloader {
     }
 
     fun downloadFile(
-        attachment: SceytAttachment,
-        destFile: File,
+        request: FileDownloadRequest,
         onProgress: (Float) -> Unit,
         onResult: (SceytResponse<String>) -> Unit,
-    ) {
-        val messageTid = attachment.messageTid
-        val url = attachment.url ?: run {
-            onResult(SceytResponse.Error(SceytException(0, "URL is null")))
-            return
-        }
+    ): Call? {
+        val operationId = request.operationId
+        val url = request.url
+        val destFile = request.destinationFile
 
         // Create parent directories if they don't exist
         destFile.parentFile?.mkdirs()
 
         val existingSize = if (destFile.exists()) destFile.length() else 0L
-        val request = try {
+        val httpRequest = try {
             Request.Builder()
                 .url(url)
                 .apply {
@@ -58,16 +54,16 @@ class OkHttpDownloader {
         } catch (e: Exception) {
             SceytLog.e(TAG, "Invalid URL: ${e.message}")
             onResult(SceytResponse.Error(SceytException(0, "Invalid URL: ${e.message}")))
-            return
+            return null
         }
 
-        val call = httpClient.newCall(request)
-        downloadCalls[messageTid] = call
+        val call = httpClient.newCall(httpRequest)
+        downloadCalls[operationId] = call
 
         call.enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 if (call.isCanceled()) return
-                downloadCalls.remove(messageTid)
+                downloadCalls.remove(operationId, call)
                 SceytLog.e(TAG, "Download failed: ${e.message}")
                 onResult(SceytResponse.Error(SceytException(0, e.message)))
             }
@@ -77,7 +73,7 @@ class OkHttpDownloader {
 
                 try {
                     if (!response.isSuccessful) {
-                        downloadCalls.remove(messageTid)
+                        downloadCalls.remove(operationId, call)
                         onResult(
                             createErrorResponse(message = response.message, code = response.code)
                         )
@@ -126,34 +122,39 @@ class OkHttpDownloader {
 
                         if (call.isCanceled()) return
 
-                        downloadCalls.remove(messageTid)
+                        downloadCalls.remove(operationId, call)
                         onResult(SceytResponse.Success(destFile.absolutePath))
                     } catch (e: Exception) {
                         sink.close()
                         if (!call.isCanceled()) {
-                            downloadCalls.remove(messageTid)
+                            downloadCalls.remove(operationId, call)
                             SceytLog.e(TAG, "Download error: ${e.message}")
                             onResult(SceytResponse.Error(SceytException(0, e.message)))
                         }
                     }
 
                 } catch (e: Exception) {
-                    downloadCalls.remove(messageTid)
+                    downloadCalls.remove(operationId, call)
                     SceytLog.e(TAG, "Download error: ${e.message}")
                     onResult(SceytResponse.Error(SceytException(0, e.message)))
                 }
             }
         })
+        return call
     }
 
-    fun pauseDownload(attachment: SceytAttachment) {
-        downloadCalls[attachment.messageTid]?.cancel()
-        downloadCalls.remove(attachment.messageTid)
+    fun pauseDownload(operationId: String) {
+        downloadCalls.remove(operationId)?.cancel()
     }
 
-    fun resumeDownload(attachment: SceytAttachment): Boolean {
+    fun cancelDownload(operationId: String, call: Call) {
+        downloadCalls.remove(operationId, call)
+        call.cancel()
+    }
+
+    fun resumeDownload(operationId: String): Boolean {
         // Check if there's already a download in progress
-        return if (downloadCalls.containsKey(attachment.messageTid)) {
+        return if (downloadCalls.containsKey(operationId)) {
             true // Already downloading
         } else {
             false // Can resume - the downloadFile method will handle partial download
@@ -167,8 +168,8 @@ class OkHttpDownloader {
     }
 
     @Suppress("unused")
-    fun isDownloading(messageTid: Long): Boolean {
-        return downloadCalls.containsKey(messageTid)
+    fun isDownloading(operationId: String): Boolean {
+        return downloadCalls.containsKey(operationId)
     }
 
     @Suppress("unused")
@@ -177,13 +178,12 @@ class OkHttpDownloader {
     }
 
     @Suppress("unused")
-    fun getActiveDownloads(): List<Long> {
+    fun getActiveDownloads(): List<String> {
         return downloadCalls.keys.toList()
     }
 
     @Suppress("unused")
-    fun cancelDownload(messageTid: Long) {
-        downloadCalls[messageTid]?.cancel()
-        downloadCalls.remove(messageTid)
+    fun cancelDownload(operationId: String) {
+        downloadCalls.remove(operationId)?.cancel()
     }
 } 

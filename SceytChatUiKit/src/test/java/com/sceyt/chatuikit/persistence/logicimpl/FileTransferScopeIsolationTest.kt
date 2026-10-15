@@ -72,7 +72,7 @@ class FileTransferScopeIsolationTest {
         val uploaded = uploadAttachment(messageTid = 90L)
         val downloaded = attachment(messageTid = 91L, state = TransferState.PendingDownload)
 
-        uploads.uploadFile(uploaded, transferTask(uploaded))
+        uploads.uploadFile(uploaded, transferTask(uploaded).also(service::addTransferTask))
         downloads.downloadFile(downloaded, transferTask(downloaded))
         uploads.cancelAll()
 
@@ -91,7 +91,7 @@ class FileTransferScopeIsolationTest {
         val uploaded = uploadAttachment(messageTid = 92L)
         val downloaded = attachment(messageTid = 93L, state = TransferState.PendingDownload)
 
-        uploads.uploadFile(uploaded, transferTask(uploaded))
+        uploads.uploadFile(uploaded, transferTask(uploaded).also(service::addTransferTask))
         downloads.downloadFile(downloaded, transferTask(downloaded))
         downloads.cancelAll()
 
@@ -110,7 +110,7 @@ class FileTransferScopeIsolationTest {
         val uploaded = uploadAttachment(messageTid = 94L)
         val downloaded = attachment(messageTid = 95L, state = TransferState.PendingDownload)
 
-        logic.uploadFile(uploaded, transferTask(uploaded))
+        logic.uploadFile(uploaded, transferTask(uploaded).also(service::addTransferTask))
         logic.downloadFile(downloaded, transferTask(downloaded))
         logic.cancelAll()
 

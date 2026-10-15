@@ -8,20 +8,31 @@ import androidx.work.WorkInfo
 import androidx.work.impl.WorkManagerImpl
 import com.google.common.truth.Truth.assertThat
 import com.google.common.util.concurrent.Futures
-import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chat.models.SceytException
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
+import com.sceyt.chatuikit.filetransfer.FileTransferDestinationProvider
+import com.sceyt.chatuikit.filetransfer.SceytChatUIKitFileTransfer
 import com.sceyt.chatuikit.koin.SceytKoinApp
 import com.sceyt.chatuikit.persistence.database.dao.FileChecksumDao
 import com.sceyt.chatuikit.persistence.di.CoroutineContextType
 import com.sceyt.chatuikit.persistence.logic.FileTransferLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
+import com.sceyt.chatuikit.persistence.logicimpl.AttachmentDownloadCoordinator
+import com.sceyt.chatuikit.persistence.logicimpl.AttachmentUploadCoordinator
+import com.sceyt.chatuikit.persistence.logicimpl.RecordingFileTransferTransport
 import com.sceyt.chatuikit.persistence.logicimpl.attachment
 import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager.RESUME_PAUSED_UPLOAD
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import org.junit.After
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
@@ -38,11 +49,19 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import java.io.File
 import kotlin.coroutines.CoroutineContext
 
 @RunWith(RobolectricTestRunner::class)
+@OptIn(ExperimentalCoroutinesApi::class)
 class FileTransferServiceImplTest {
+    @get:Rule
+    val files = TemporaryFolder()
     private val workManager = mock<WorkManagerImpl>()
+    private lateinit var previousFileTransfer: SceytChatUIKitFileTransfer
+    private lateinit var transport: RecordingFileTransferTransport
+    private var downloadCoordinator: AttachmentDownloadCoordinator? = null
+    private var uploadCoordinator: AttachmentUploadCoordinator? = null
 
     companion object {
         // FileTransferHelper retains injected dependencies for the lifetime of its singleton.
@@ -54,6 +73,7 @@ class FileTransferServiceImplTest {
 
     @Before
     fun setUp() {
+        previousFileTransfer = SceytChatUIKit.fileTransfer
         service.cancelAllTransfers()
         reset(logic)
         WorkManagerImpl.setDelegate(workManager)
@@ -76,6 +96,10 @@ class FileTransferServiceImplTest {
 
     @After
     fun tearDown() {
+        downloadCoordinator?.cancelAll()
+        uploadCoordinator?.cancelAll()
+        service.cancelAllTransfers()
+        SceytChatUIKit.fileTransfer = previousFileTransfer
         WorkManagerImpl.setDelegate(null)
         SceytKoinApp.koinApp = null
         stopKoin()
@@ -169,29 +193,31 @@ class FileTransferServiceImplTest {
 
     @Test
     fun `completing one download leaves the other attachment task registered`() {
+        useTransferCoordinators()
         val first = attachment(state = TransferState.PendingDownload)
         val second = first.copy(id = 11L, name = "second.txt", url = "second-url")
-        val firstTask = service.download(first)
+        service.download(first)
         val secondTask = service.download(second)
 
-        firstTask.downloadCallback?.onResult(SceytResponse.Success("first-file"))
+        transport.downloadCalls.first().succeed(transport.downloadCalls.first().request.destinationFile.path)
 
         assertThat(service.findTransferTask(first)).isNull()
         assertThat(service.findTransferTask(second)).isSameInstanceAs(secondTask)
 
-        secondTask.downloadCallback?.onResult(SceytResponse.Success("second-file"))
+        transport.downloadCalls.last().succeed(transport.downloadCalls.last().request.destinationFile.path)
 
         assertThat(service.getTasks()).isEmpty()
     }
 
     @Test
     fun `failed download leaves the other attachment task registered`() {
+        useTransferCoordinators()
         val first = attachment(state = TransferState.PendingDownload)
         val second = first.copy(id = 11L, name = "second.txt", url = "second-url")
-        val firstTask = service.download(first)
+        service.download(first)
         val secondTask = service.download(second)
 
-        firstTask.downloadCallback?.onResult(SceytResponse.Error())
+        transport.downloadCalls.first().fail(SceytException(7, "download failed"))
 
         assertThat(service.findTransferTask(first)).isNull()
         assertThat(service.findTransferTask(second)).isSameInstanceAs(secondTask)
@@ -199,19 +225,45 @@ class FileTransferServiceImplTest {
 
     @Test
     fun `download notifies completion listener`() {
+        useTransferCoordinators()
         val attachment = attachment(state = TransferState.PendingDownload)
         var result: Result<SceytAttachment>? = null
-        doAnswer {
-            (it.arguments[1] as TransferTask).downloadCallback
-                ?.onResult(SceytResponse.Success("downloaded-file"))
-            Unit
-        }.`when`(logic).downloadFile(eq(attachment), any())
 
         service.download(attachment) {
             addOnCompletionListener("test") { result = it }
         }
+        val call = transport.downloadCalls.single()
+        call.succeed(call.request.destinationFile.path)
 
-        assertThat(result?.getOrNull()?.filePath).isEqualTo("downloaded-file")
+        assertThat(result?.getOrNull()?.filePath).isEqualTo(call.request.destinationFile.path)
+        assertThat(service.getTasks()).isEmpty()
+    }
+
+    @Test
+    fun `retry from completion listener retains the new task and completes once`() {
+        useTransferCoordinators()
+        val attachment = attachment(state = TransferState.PendingDownload)
+        var firstCompletions = 0
+        var retryCompletions = 0
+        var retryTask: TransferTask? = null
+        service.download(attachment) {
+            addOnCompletionListener("first") { result ->
+                firstCompletions++
+                assertThat(result.isFailure).isTrue()
+                retryTask = service.download(attachment) {
+                    addOnCompletionListener("retry") { retryCompletions++ }
+                }
+            }
+        }
+
+        transport.downloadCalls.first().fail(SceytException(7, "download failed"))
+
+        assertThat(transport.downloadCalls).hasSize(2)
+        assertThat(service.findTransferTask(attachment)).isSameInstanceAs(retryTask)
+        transport.downloadCalls.last().succeed(transport.downloadCalls.last().request.destinationFile.path)
+        assertThat(firstCompletions).isEqualTo(1)
+        assertThat(retryCompletions).isEqualTo(1)
+        assertThat(service.getTasks()).isEmpty()
     }
 
     @Test
@@ -239,13 +291,38 @@ class FileTransferServiceImplTest {
 
     @Test
     fun `upload result removes a task even when its url changes`() {
-        val attachment = attachment(url = null).copy(id = null)
+        useTransferCoordinators()
+        val attachment = attachment(url = null, filePath = files.newFile("source.txt").path).copy(id = null)
         val task = service.upload(attachment)
 
-        task.uploadResultCallback?.onResult(SceytResponse.Success("uploaded-url"))
+        transport.uploadCalls.single().succeed("uploaded-url")
 
         assertThat(task.attachment.url).isEqualTo("uploaded-url")
         assertThat(service.getTasks()).isEmpty()
+    }
+
+    private fun useTransferCoordinators() {
+        val context = RuntimeEnvironment.getApplication()
+        val scope = TestScope(UnconfinedTestDispatcher())
+        transport = RecordingFileTransferTransport()
+        SceytChatUIKit.fileTransfer = SceytChatUIKitFileTransfer().apply {
+            this.transport = this@FileTransferServiceImplTest.transport
+            destinationProvider = FileTransferDestinationProvider { _, attachment ->
+                File(files.root, "${attachment.id}.txt")
+            }
+        }
+        val downloads = AttachmentDownloadCoordinator(context, scope)
+        val uploads = AttachmentUploadCoordinator(context, mock(), scope)
+        downloadCoordinator = downloads
+        uploadCoordinator = uploads
+        doAnswer {
+            downloads.downloadFile(it.getArgument(0), it.getArgument(1))
+            Unit
+        }.`when`(logic).downloadFile(any(), any())
+        doAnswer {
+            uploads.uploadFile(it.getArgument(0), it.getArgument(1))
+            Unit
+        }.`when`(logic).uploadFile(any(), any())
     }
 
     @Test
@@ -291,6 +368,26 @@ class FileTransferServiceImplTest {
 
         assertThat(service.findTransferTask(first)).isNull()
         assertThat(service.findTransferTask(second)).isSameInstanceAs(secondTask)
+    }
+
+    @Test
+    fun `cancel upload stops its transport call and starts the next upload`() {
+        useTransferCoordinators()
+        val first = attachment(messageTid = 20L, url = null, filePath = files.newFile("first.txt").path)
+        val second = attachment(messageTid = 21L, url = null, filePath = files.newFile("second.txt").path)
+        var resultCalls = 0
+        val firstTask = service.upload(first) {
+            uploadResultCallback = TransferResultCallback { resultCalls++ }
+        }
+        service.upload(second)
+
+        service.cancelUpload(first)
+
+        assertThat(transport.uploadCalls.first().cancelled).isTrue()
+        assertThat(firstTask.uploadSubscription).isNull()
+        assertThat(resultCalls).isEqualTo(0)
+        assertThat(transport.uploadCalls).hasSize(2)
+        assertThat(transport.uploadCalls.last().request.operationId).isEqualTo("upload:21")
     }
 
     @Test

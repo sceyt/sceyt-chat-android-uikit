@@ -7,6 +7,7 @@ import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.sceyt_callbacks.ProgressCallback
 import com.sceyt.chat.sceyt_callbacks.UrlCallback
 import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.filetransfer.FileDownloadRequest
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -32,7 +33,7 @@ import java.io.File
 class FileTransferUtilityTest {
 
     @Test
-    fun `cancelled upload does not affect a new upload for the same attachment`() = runTest {
+    fun `cancelled upload does not affect a new upload for the same file`() = runTest {
         val client = mock<ChatClient>()
         val callbacks = mutableListOf<UrlCallback>()
         val operations = mutableListOf<UploadOperation>()
@@ -45,12 +46,12 @@ class FileTransferUtilityTest {
 
         withChatClient(client) {
             val utility = FileTransferUtility()
-            val attachment = attachment(messageTid = 20L)
-            val firstUpload = async { utility.uploadFile(attachment, {}) }
+            val source = File("/tmp/upload.txt")
+            val firstUpload = async { utility.uploadFile(source, {}) }
             runCurrent()
             firstUpload.cancelAndJoin()
 
-            val secondUpload = async { utility.uploadFile(attachment, {}) }
+            val secondUpload = async { utility.uploadFile(source, {}) }
             runCurrent()
             callbacks.first().onResult("late-result")
 
@@ -80,7 +81,7 @@ class FileTransferUtilityTest {
             val utility = FileTransferUtility()
             val progress = mutableListOf<Float>()
 
-            val upload = async { utility.uploadFile(attachment(), progress::add) }
+            val upload = async { utility.uploadFile(File("/tmp/upload.txt"), progress::add) }
             runCurrent()
             progressCallback.onResult(0.4f)
 
@@ -112,7 +113,7 @@ class FileTransferUtilityTest {
             val progress = mutableListOf<Float>()
             val error = SceytException(1, "failed")
 
-            val upload = async { utility.uploadFile(attachment(), progress::add) }
+            val upload = async { utility.uploadFile(File("/tmp/upload.txt"), progress::add) }
             runCurrent()
 
             progressCallback.onResult(0.4f)
@@ -140,7 +141,7 @@ class FileTransferUtilityTest {
             val utility = FileTransferUtility()
             job = launch(start = CoroutineStart.LAZY) {
                 try {
-                    utility.uploadFile(attachment(), {})
+                    utility.uploadFile(File("/tmp/upload.txt"), {})
                 } finally {
                     events += "caller-cleanup"
                 }
@@ -165,7 +166,7 @@ class FileTransferUtilityTest {
         }.whenever(client).uploadCancellable(any(), any(), any())
 
         withChatClient(client) {
-            val response = FileTransferUtility().uploadFile(attachment(), {})
+            val response = FileTransferUtility().uploadFile(File("/tmp/upload.txt"), {})
 
             assertThat((response as SceytResponse.Success).data).isEqualTo("uploaded-url")
             verify(operation, never()).cancel()
@@ -177,18 +178,21 @@ class FileTransferUtilityTest {
         Mockito.mockConstruction(OkHttpDownloader::class.java).use { construction ->
             val utility = FileTransferUtility()
             val downloader = construction.constructed().single()
-            val attachment = attachment()
             val destination = File("/tmp/download.txt")
+            val request = FileDownloadRequest("download:20:file", "https://cdn.test/file", destination)
             val onProgress: (Float) -> Unit = {}
             val onResult: (SceytResponse<String>) -> Unit = {}
-            whenever(downloader.resumeDownload(attachment)).thenReturn(true)
+            whenever(downloader.resumeDownload(request.operationId)).thenReturn(true)
 
-            utility.downloadFile(attachment, destination, onProgress, onResult)
-            utility.pauseDownload(attachment)
+            val call = mock<okhttp3.Call>()
+            utility.downloadFile(request, onProgress, onResult)
+            utility.pauseDownload(request.operationId)
+            utility.cancelDownload(request.operationId, call)
 
-            verify(downloader).downloadFile(attachment, destination, onProgress, onResult)
-            verify(downloader).pauseDownload(attachment)
-            assertThat(utility.resumeDownload(attachment)).isTrue()
+            verify(downloader).downloadFile(request, onProgress, onResult)
+            verify(downloader).pauseDownload(request.operationId)
+            verify(downloader).cancelDownload(request.operationId, call)
+            assertThat(utility.resumeDownload(request.operationId)).isTrue()
         }
     }
 

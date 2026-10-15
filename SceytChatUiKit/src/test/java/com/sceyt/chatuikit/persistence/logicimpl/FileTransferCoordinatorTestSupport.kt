@@ -64,6 +64,8 @@ internal class TestFileTransferService : FileTransferService {
     override fun cancelUpload(attachment: SceytAttachment) {
         findTransferTask(attachment)?.let { task ->
             removeTransferTask(task)
+            task.uploadSubscription?.cancel()
+            task.uploadSubscription = null
             task.complete(Result.failure(CancellationException("Attachment upload cancelled")))
         }
     }
@@ -73,7 +75,7 @@ internal class TestFileTransferService : FileTransferService {
     override fun getThumb(messageTid: Long, attachment: SceytAttachment, thumbData: ThumbData) = Unit
 
     fun registerTask(task: TransferTask) {
-        tasks[task.attachment.transferKey] = task
+        tasks.putIfAbsent(task.attachment.transferKey, task)
     }
 
     fun addTransferTask(task: TransferTask) {

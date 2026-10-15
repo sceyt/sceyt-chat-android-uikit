@@ -20,12 +20,8 @@ class DefaultFileTransferTransport : FileTransferTransport {
         request: FileUploadRequest,
         callback: FileTransferCallback,
     ): String? {
-        val attachment = request.attachment.copy(
-            filePath = request.sourceFile.path,
-        )
-
         val response = transferUtility.uploadFile(
-            attachment = attachment,
+            sourceFile = request.sourceFile,
             onProgress = { progressPercent ->
                 callback.onEvent(FileTransferEvent.Progress(progressPercent))
             },
@@ -44,11 +40,8 @@ class DefaultFileTransferTransport : FileTransferTransport {
         callback: FileTransferCallback,
     ): String? = suspendCancellableCoroutine { continuation ->
         val completed = AtomicBoolean()
-        val attachment = request.attachment.copy(url = request.url)
-
-        transferUtility.downloadFile(
-            attachment = attachment,
-            destFile = request.destinationFile,
+        val call = transferUtility.downloadFile(
+            request = request,
             onProgress = { progressPercent ->
                 if (continuation.isActive) {
                     callback.onEvent(FileTransferEvent.Progress(progressPercent))
@@ -61,7 +54,7 @@ class DefaultFileTransferTransport : FileTransferTransport {
 
         continuation.invokeOnCancellation {
             completed.set(true)
-            transferUtility.pauseDownload(attachment)
+            call?.let { transferUtility.cancelDownload(request.operationId, it) }
         }
     }
 

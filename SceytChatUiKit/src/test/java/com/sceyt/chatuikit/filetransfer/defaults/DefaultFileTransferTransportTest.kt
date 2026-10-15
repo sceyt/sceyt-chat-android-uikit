@@ -3,7 +3,7 @@ package com.sceyt.chatuikit.filetransfer.defaults
 import com.google.common.truth.Truth.assertThat
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chatuikit.data.models.SceytResponse
-import com.sceyt.chatuikit.data.models.messages.SceytAttachment
+import com.sceyt.chatuikit.filetransfer.AttachmentTransferContext
 import com.sceyt.chatuikit.filetransfer.FileDownloadRequest
 import com.sceyt.chatuikit.filetransfer.FileTransferCallback
 import com.sceyt.chatuikit.filetransfer.FileTransferEvent
@@ -20,6 +20,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import okhttp3.Call
 import org.mockito.MockedConstruction
 import org.mockito.Mockito
 import org.mockito.kotlin.any
@@ -61,10 +62,10 @@ class DefaultFileTransferTransportTest {
             sourceFile = sourceFile,
             fileName = "prepared.txt",
             mimeType = "text/plain",
-            attachment = attachment(filePath = "/tmp/original.txt"),
+            context = AttachmentTransferContext(attachment(filePath = "/tmp/original.txt")),
         )
         val events = mutableListOf<FileTransferEvent>()
-        val attachmentCaptor = argumentCaptor<SceytAttachment>()
+        val sourceCaptor = argumentCaptor<File>()
         doSuspendableAnswer { invocation ->
             invocation.getArgument<(Float) -> Unit>(1)(35f)
             SceytResponse.Success("uploaded-url")
@@ -72,9 +73,9 @@ class DefaultFileTransferTransportTest {
 
         val result = transport.upload(request, FileTransferCallback(events::add))
 
-        verify(utility).uploadFile(attachmentCaptor.capture(), any())
+        verify(utility).uploadFile(sourceCaptor.capture(), any())
 
-        assertThat(attachmentCaptor.firstValue.filePath).isEqualTo(sourceFile.path)
+        assertThat(sourceCaptor.firstValue).isEqualTo(sourceFile)
         assertThat(events).containsExactly(FileTransferEvent.Progress(35f))
         assertThat(result).isEqualTo("uploaded-url")
     }
@@ -88,7 +89,6 @@ class DefaultFileTransferTransportTest {
             sourceFile = File("/tmp/prepared.txt"),
             fileName = "prepared.txt",
             mimeType = "text/plain",
-            attachment = attachment(),
         )
         val error = SceytException(1, "upload failed")
         whenever(utility.uploadFile(any(), any()))
@@ -108,10 +108,9 @@ class DefaultFileTransferTransportTest {
             operationId = "download:10",
             url = "https://new.test/file",
             destinationFile = destination,
-            attachment = attachment(url = "https://old.test/file"),
+            context = AttachmentTransferContext(attachment(url = "https://old.test/file")),
         )
-        val attachmentCaptor = argumentCaptor<SceytAttachment>()
-        val destinationCaptor = argumentCaptor<File>()
+        val requestCaptor = argumentCaptor<FileDownloadRequest>()
         val resultCaptor = argumentCaptor<(SceytResponse<String>) -> Unit>()
         val error = SceytException(12, "download failed")
 
@@ -123,15 +122,13 @@ class DefaultFileTransferTransportTest {
         runCurrent()
 
         verify(utility).downloadFile(
-            attachmentCaptor.capture(),
-            destinationCaptor.capture(),
+            requestCaptor.capture(),
             any(),
             resultCaptor.capture(),
         )
         resultCaptor.firstValue(SceytResponse.Error(error))
 
-        assertThat(attachmentCaptor.firstValue.url).isEqualTo(request.url)
-        assertThat(destinationCaptor.firstValue).isEqualTo(destination)
+        assertThat(requestCaptor.firstValue).isSameInstanceAs(request)
         assertThat(result.await().exceptionOrNull()).isSameInstanceAs(error)
     }
 
@@ -144,7 +141,6 @@ class DefaultFileTransferTransportTest {
             sourceFile = File("/tmp/prepared.txt"),
             fileName = "prepared.txt",
             mimeType = "text/plain",
-            attachment = attachment(),
         )
         var bridgeCancelled = false
         doSuspendableAnswer {
@@ -167,27 +163,28 @@ class DefaultFileTransferTransportTest {
     }
 
     @Test
-    fun `cancelling download pauses default utility and ignores late result`() = runTest {
+    fun `cancelling download cancels its own call and ignores late result`() = runTest {
         val transport = DefaultFileTransferTransport()
         val utility = utilityConstruction.constructed().single()
         val request = FileDownloadRequest(
             operationId = "download:10",
             url = "https://cdn.test/file",
             destinationFile = File("/tmp/downloaded.txt"),
-            attachment = attachment(),
         )
+        val call = Mockito.mock(Call::class.java)
+        whenever(utility.downloadFile(any(), any(), any())).thenReturn(call)
         val resultCaptor = argumentCaptor<(SceytResponse<String>) -> Unit>()
 
         val job = launch {
             transport.download(request) { }
         }
         runCurrent()
-        verify(utility).downloadFile(any(), any(), any(), resultCaptor.capture())
+        verify(utility).downloadFile(any(), any(), resultCaptor.capture())
 
         job.cancelAndJoin()
         resultCaptor.firstValue(SceytResponse.Success("late-result"))
 
-        verify(utility).pauseDownload(any())
+        verify(utility).cancelDownload(request.operationId, call)
         assertThat(job.isCancelled).isTrue()
     }
 }

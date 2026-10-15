@@ -75,6 +75,7 @@ class AttachmentDownloadCoordinatorTest {
 
     @After
     fun tearDown() {
+        coordinator.cancelAll()
         destinationFile.parentFile?.deleteRecursively()
         SceytChatUIKit.fileTransfer = previousFileTransfer
         SceytKoinApp.koinApp = null
@@ -254,8 +255,8 @@ class AttachmentDownloadCoordinatorTest {
             File(destinationFile.parentFile, value.name)
         }
 
-        coordinator.downloadFile(first, transferTask(first))
-        coordinator.downloadFile(second, transferTask(second))
+        coordinator.downloadFile(first, transferTask(first).also(service::addTransferTask))
+        coordinator.downloadFile(second, transferTask(second).also(service::addTransferTask))
 
         assertThat(transport.downloadCalls).hasSize(2)
         val firstCall = transport.downloadCalls.first()
@@ -369,6 +370,8 @@ class AttachmentDownloadCoordinatorTest {
 
         assertThat(results.single().code).isEqualTo(416)
         assertThat(destinationFile.exists()).isFalse()
+        assertThat(service.findTransferTask(attachment)).isNull()
+        service.findOrCreateTransferTask(attachment).downloadCallback = TransferResultCallback { results += it }
 
         coordinator.resumeLoad(attachment, TransferState.ErrorDownload)
 
@@ -495,6 +498,8 @@ class AttachmentDownloadCoordinatorTest {
         assertThat(results.single()).isInstanceOf(SceytResponse.Error::class.java)
         assertThat(results.single().message).isEqualTo("No network connection")
         assertThat(destinationFile.readBytes()).isEqualTo(partialBytes)
+        assertThat(service.findTransferTask(attachment)).isNull()
+        service.findOrCreateTransferTask(attachment).downloadCallback = TransferResultCallback { results += it }
 
         coordinator.resumeLoad(attachment, TransferState.ErrorDownload)
 
@@ -756,5 +761,31 @@ class AttachmentDownloadCoordinatorTest {
         assertThat(transport.downloadCalls[1].request.operationId)
             .isEqualTo("download:${next.transferKey}")
         assertThat(results).isEmpty()
+    }
+
+    @Test
+    fun `pause before download subscription is bound still pauses it`() {
+        val first = attachment(state = TransferState.PendingDownload)
+        val second = first.copy(id = 11L, name = "second.txt", url = "second-url")
+        val firstTask = transferTask(first).also(service::addTransferTask)
+        val secondTask = transferTask(second).also(service::addTransferTask)
+        SceytChatUIKit.fileTransfer.destinationProvider = FileTransferDestinationProvider { _, value ->
+            File(destinationFile.parentFile, value.name)
+        }
+        var triggered = false
+        firstTask.progressCallback = ProgressUpdateCallback {
+            if (triggered || it.progressPercent != 50f) return@ProgressUpdateCallback
+            triggered = true
+            coordinator.downloadFile(second, secondTask)
+            assertThat(secondTask.downloadSubscription).isNull()
+            coordinator.pauseLoad(second, TransferState.Downloading)
+        }
+        coordinator.downloadFile(first, firstTask)
+
+        transport.downloadCalls.single().progress(50f)
+
+        assertThat(transport.downloadCalls).hasSize(1)
+        assertThat(secondTask.state).isEqualTo(TransferState.PauseDownload)
+        assertThat(secondTask.downloadSubscription?.isPaused).isTrue()
     }
 }

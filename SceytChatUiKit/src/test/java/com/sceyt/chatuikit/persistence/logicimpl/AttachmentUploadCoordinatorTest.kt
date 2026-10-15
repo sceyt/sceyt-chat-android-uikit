@@ -9,6 +9,7 @@ import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.FileChecksumData
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
+import com.sceyt.chatuikit.filetransfer.AttachmentTransferContext
 import com.sceyt.chatuikit.filetransfer.FileTransferCallback
 import com.sceyt.chatuikit.filetransfer.FileTransferTransport
 import com.sceyt.chatuikit.filetransfer.FileUploadRequest
@@ -105,8 +106,8 @@ class AttachmentUploadCoordinatorTest {
         val first = uploadAttachment(messageTid = 1L)
         val second = uploadAttachment(messageTid = 2L)
 
-        coordinator.uploadFile(first, transferTask(first))
-        coordinator.uploadFile(second, transferTask(second))
+        uploadFile(coordinator, first, transferTask(first))
+        uploadFile(coordinator, second, transferTask(second))
 
         assertThat(transport.uploadCalls).hasSize(1)
         assertThat(transport.uploadCalls.single().request.operationId).isEqualTo("upload:1")
@@ -122,9 +123,9 @@ class AttachmentUploadCoordinatorTest {
         val first = uploadAttachment(messageTid = 130L)
         val queued = uploadAttachment(messageTid = 131L)
         val next = uploadAttachment(messageTid = 132L)
-        coordinator.uploadFile(first, transferTask(first))
-        coordinator.uploadFile(queued, transferTask(queued))
-        coordinator.uploadFile(next, transferTask(next))
+        uploadFile(coordinator, first, transferTask(first))
+        uploadFile(coordinator, queued, transferTask(queued))
+        uploadFile(coordinator, next, transferTask(next))
 
         cancelUpload(queued)
         assertThat(transport.uploadCalls.single().cancelled).isFalse()
@@ -146,8 +147,8 @@ class AttachmentUploadCoordinatorTest {
             uploadResultCallback = TransferResultCallback { results += it }
         }
         service.addTransferTask(task)
-        coordinator.uploadFile(first, task)
-        coordinator.uploadFile(next, transferTask(next))
+        uploadFile(coordinator, first, task)
+        uploadFile(coordinator, next, transferTask(next))
         val call = transport.uploadCalls.single()
 
         cancelUpload(first)
@@ -168,8 +169,8 @@ class AttachmentUploadCoordinatorTest {
         val next = uploadAttachment(messageTid = 136L)
         val task = transferTask(first)
         service.addTransferTask(task)
-        coordinator.uploadFile(first, task)
-        coordinator.uploadFile(next, transferTask(next))
+        uploadFile(coordinator, first, task)
+        uploadFile(coordinator, next, transferTask(next))
         val call = transport.uploadCalls.single()
         coordinator.pauseLoad(first, TransferState.Uploading)
         assertThat(call.cancelled).isFalse()
@@ -188,7 +189,7 @@ class AttachmentUploadCoordinatorTest {
         cancelUpload(attachment)
 
         assertThat(service.getTasks()).isEmpty()
-        coordinator.uploadFile(attachment, transferTask(attachment))
+        uploadFile(coordinator, attachment, transferTask(attachment))
         assertThat(transport.uploadCalls).hasSize(1)
     }
 
@@ -202,8 +203,8 @@ class AttachmentUploadCoordinatorTest {
             releaseChecksum.await()
             null
         }.whenever(attachmentLogic) { getFileChecksumData(first.originalFilePath) }
-        coordinator.uploadFile(first, transferTask(first))
-        coordinator.uploadFile(next, transferTask(next))
+        uploadFile(coordinator, first, transferTask(first))
+        uploadFile(coordinator, next, transferTask(next))
 
         cancelUpload(first)
         releaseChecksum.complete(Unit)
@@ -369,9 +370,9 @@ class AttachmentUploadCoordinatorTest {
         val current = uploadAttachment(messageTid = 1L)
         val duplicate = uploadAttachment(messageTid = 2L)
 
-        coordinator.uploadFile(current, transferTask(current))
-        coordinator.uploadFile(duplicate, transferTask(duplicate))
-        coordinator.uploadFile(duplicate, transferTask(duplicate))
+        uploadFile(coordinator, current, transferTask(current))
+        uploadFile(coordinator, duplicate, transferTask(duplicate))
+        uploadFile(coordinator, duplicate, transferTask(duplicate))
         transport.uploadCalls.first().succeed("current-url")
 
         assertThat(transport.uploadCalls.map { it.request.operationId })
@@ -390,7 +391,7 @@ class AttachmentUploadCoordinatorTest {
         task.progressCallback = ProgressUpdateCallback { progress += it }
         task.uploadResultCallback = TransferResultCallback { result = it }
 
-        coordinator.uploadFile(attachment, task)
+        uploadFile(coordinator, attachment, task)
         val call = transport.uploadCalls.single()
         call.progress(55f)
         call.succeed("uploaded-url")
@@ -398,7 +399,7 @@ class AttachmentUploadCoordinatorTest {
         assertThat(call.request.operationId).isEqualTo("upload:30")
         assertThat(call.request.sourceFile.path).isEqualTo(attachment.filePath)
         assertThat(call.request.fileName).isEqualTo("document.txt")
-        assertThat(call.request.attachment).isEqualTo(attachment)
+        assertThat(call.request.context).isEqualTo(AttachmentTransferContext(attachment))
         assertThat(progress.single().progressPercent).isEqualTo(55f)
         assertThat(progress.single().state).isEqualTo(TransferState.Uploading)
         assertThat(result?.data).isEqualTo("uploaded-url")
@@ -421,7 +422,7 @@ class AttachmentUploadCoordinatorTest {
             ),
         )
 
-        coordinator.uploadFile(attachment, task)
+        uploadFile(coordinator, attachment, task)
 
         assertThat(transport.uploadCalls).isEmpty()
         assertThat(result?.data).isEqualTo("reused-url")
@@ -532,7 +533,7 @@ class AttachmentUploadCoordinatorTest {
 
         uploadSharedFile(shared, transferTask(shared))
         uploadSharedFile(follower, transferTask(follower))
-        coordinator.uploadFile(regular, transferTask(regular).also(service::addTransferTask))
+        uploadFile(coordinator, regular, transferTask(regular).also(service::addTransferTask))
         coordinator.pauseLoad(regular, TransferState.Uploading)
 
         assertThat(transport.pauseCalls).containsExactly("upload:84")
@@ -582,7 +583,7 @@ class AttachmentUploadCoordinatorTest {
         coordinator.pauseLoad(first, TransferState.Uploading)
         transport.uploadCalls.single().succeed("shared-url")
 
-        coordinator.uploadFile(first, firstTask)
+        uploadFile(coordinator, first, firstTask)
         assertThat(transport.uploadCalls).hasSize(1)
         coordinator.resumeLoad(first, TransferState.PauseUpload)
 
@@ -680,7 +681,7 @@ class AttachmentUploadCoordinatorTest {
         coordinator.pauseLoad(paused, TransferState.Uploading)
         transport.uploadCalls.single().fail(IllegalStateException("upload failed"))
 
-        coordinator.uploadFile(paused, pausedTask)
+        uploadFile(coordinator, paused, pausedTask)
         assertThat(transport.uploadCalls).hasSize(1)
         uploadSharedFile(next, transferTask(next).apply {
             uploadResultCallback = TransferResultCallback { nextResults += it.data }
@@ -857,8 +858,8 @@ class AttachmentUploadCoordinatorTest {
         val firstTask = transferTask(first)
         service.addTransferTask(firstTask)
 
-        coordinator.uploadFile(first, firstTask)
-        coordinator.uploadFile(second, transferTask(second))
+        uploadFile(coordinator, first, firstTask)
+        uploadFile(coordinator, second, transferTask(second))
         val firstCall = transport.uploadCalls.single()
 
         coordinator.pauseLoad(first, TransferState.Uploading)
@@ -888,7 +889,7 @@ class AttachmentUploadCoordinatorTest {
         val task = transferTask(attachment)
         service.addTransferTask(task)
 
-        coordinator.uploadFile(attachment, task)
+        uploadFile(coordinator, attachment, task)
         coordinator.pauseLoad(attachment, TransferState.Uploading)
         coordinator.resumeLoad(attachment, TransferState.PauseUpload)
 
@@ -910,7 +911,7 @@ class AttachmentUploadCoordinatorTest {
         }
         service.addTransferTask(task)
 
-        coordinator.uploadFile(attachment, task)
+        uploadFile(coordinator, attachment, task)
         coordinator.pauseLoad(attachment, TransferState.Uploading)
         transport.uploadCalls.single().fail(IOException("upload failed"))
         assertThat(results.single()).isInstanceOf(SceytResponse.Error::class.java)
@@ -920,7 +921,7 @@ class AttachmentUploadCoordinatorTest {
         val retryTask = service.findOrCreateTransferTask(retry).apply {
             uploadResultCallback = TransferResultCallback { results += it }
         }
-        coordinator.uploadFile(retry, retryTask)
+        uploadFile(coordinator, retry, retryTask)
 
         assertThat(transport.uploadCalls).hasSize(2)
         transport.uploadCalls.last().succeed("retry-url")
@@ -941,7 +942,7 @@ class AttachmentUploadCoordinatorTest {
         }
         service.addTransferTask(task)
 
-        coordinator.uploadFile(attachment, task)
+        uploadFile(coordinator, attachment, task)
         coordinator.pauseLoad(attachment, TransferState.Uploading)
         transport.uploadCalls.single().fail(IOException("upload failed"))
 
@@ -949,7 +950,7 @@ class AttachmentUploadCoordinatorTest {
         val retryTask = service.findOrCreateTransferTask(retry).apply {
             uploadResultCallback = TransferResultCallback { results += it }
         }
-        coordinator.uploadFile(retry, retryTask)
+        uploadFile(coordinator, retry, retryTask)
 
         assertThat(transport.pauseCalls).containsExactly("upload:121")
         assertThat(transport.uploadCalls).hasSize(2)
@@ -970,7 +971,7 @@ class AttachmentUploadCoordinatorTest {
         }
         service.addTransferTask(task)
 
-        coordinator.uploadFile(attachment, task)
+        uploadFile(coordinator, attachment, task)
         coordinator.pauseLoad(attachment, TransferState.Uploading)
         transport.uploadCalls.single().fail(IOException("upload failed"))
         coordinator.pauseLoad(attachment, TransferState.Uploading)
@@ -979,7 +980,7 @@ class AttachmentUploadCoordinatorTest {
         val retryTask = service.findOrCreateTransferTask(retry).apply {
             uploadResultCallback = TransferResultCallback { results += it }
         }
-        coordinator.uploadFile(retry, retryTask)
+        uploadFile(coordinator, retry, retryTask)
 
         assertThat(transport.uploadCalls).hasSize(2)
         transport.uploadCalls.last().succeed("retry-url")
@@ -993,7 +994,7 @@ class AttachmentUploadCoordinatorTest {
             coordinator.pauseLoad(attachment, state)
 
             val task = service.findOrCreateTransferTask(attachment)
-            coordinator.uploadFile(attachment, task)
+            uploadFile(coordinator, attachment, task)
             assertThat(transport.uploadCalls).hasSize(index)
 
             coordinator.resumeLoad(attachment, TransferState.PauseUpload)
@@ -1015,13 +1016,13 @@ class AttachmentUploadCoordinatorTest {
                 val retryTask = service.findOrCreateTransferTask(retry).apply {
                     uploadResultCallback = TransferResultCallback { retryResults += it.data }
                 }
-                coordinator.uploadFile(retry, retryTask)
-                coordinator.uploadFile(queued, transferTask(queued))
+                uploadFile(coordinator, retry, retryTask)
+                uploadFile(coordinator, queued, transferTask(queued))
             }
         }
         service.addTransferTask(task)
 
-        coordinator.uploadFile(attachment, task)
+        uploadFile(coordinator, attachment, task)
         coordinator.pauseLoad(attachment, TransferState.Uploading)
         transport.uploadCalls.single().fail(IOException("upload failed"))
 
@@ -1054,12 +1055,12 @@ class AttachmentUploadCoordinatorTest {
         }
         service.addTransferTask(task)
 
-        coordinator.uploadFile(attachment, task)
+        uploadFile(coordinator, attachment, task)
         coordinator.pauseLoad(attachment, TransferState.Uploading)
-        coordinator.uploadFile(attachment, task)
+        uploadFile(coordinator, attachment, task)
         assertThat(transport.uploadCalls).hasSize(1)
         coordinator.resumeLoad(attachment, TransferState.PauseUpload)
-        coordinator.uploadFile(queued, transferTask(queued))
+        uploadFile(coordinator, queued, transferTask(queued))
         cancellationGate.complete(Unit)
 
         assertThat(results).isEmpty()
@@ -1088,8 +1089,8 @@ class AttachmentUploadCoordinatorTest {
             uploadResultCallback = TransferResultCallback { results += it }
         }
 
-        coordinator.uploadFile(attachment, task)
-        coordinator.uploadFile(queued, transferTask(queued))
+        uploadFile(coordinator, attachment, task)
+        uploadFile(coordinator, queued, transferTask(queued))
         transport.uploadCalls.single().waitingForNetwork()
 
         assertThat(results.single()).isInstanceOf(SceytResponse.Error::class.java)
@@ -1106,7 +1107,7 @@ class AttachmentUploadCoordinatorTest {
         task.resumePauseCallback = ResumePauseCallback { states += it.state }
         service.addTransferTask(task)
 
-        coordinator.uploadFile(attachment, task)
+        uploadFile(coordinator, attachment, task)
         coordinator.pauseLoad(attachment, TransferState.Uploading)
         coordinator.resumeLoad(attachment, TransferState.PauseUpload)
 
@@ -1127,8 +1128,8 @@ class AttachmentUploadCoordinatorTest {
         firstTask.resumePauseCallback = ResumePauseCallback { states += it.state }
         service.addTransferTask(firstTask)
 
-        coordinator.uploadFile(first, firstTask)
-        coordinator.uploadFile(second, transferTask(second))
+        uploadFile(coordinator, first, firstTask)
+        uploadFile(coordinator, second, transferTask(second))
         coordinator.pauseLoad(first, TransferState.WaitingToUpload)
 
         assertThat(transport.uploadCalls.first().cancelled).isTrue()
@@ -1144,9 +1145,9 @@ class AttachmentUploadCoordinatorTest {
         val task = transferTask(attachment)
         service.addTransferTask(task)
 
-        coordinator.uploadFile(attachment, task)
+        uploadFile(coordinator, attachment, task)
         coordinator.pauseLoad(attachment, TransferState.Uploading)
-        coordinator.uploadFile(attachment, task)
+        uploadFile(coordinator, attachment, task)
 
         assertThat(transport.uploadCalls).hasSize(1)
         assertThat(transport.uploadCalls.single().cancelled).isTrue()
@@ -1159,8 +1160,8 @@ class AttachmentUploadCoordinatorTest {
         val queuedTask = transferTask(queued)
         service.addTransferTask(queuedTask)
 
-        coordinator.uploadFile(current, transferTask(current))
-        coordinator.uploadFile(queued, queuedTask)
+        uploadFile(coordinator, current, transferTask(current))
+        uploadFile(coordinator, queued, queuedTask)
         coordinator.pauseLoad(queued, TransferState.WaitingToUpload)
 
         assertThat(transport.uploadCalls).hasSize(1)
@@ -1182,8 +1183,8 @@ class AttachmentUploadCoordinatorTest {
         var result: SceytResponse<String>? = null
         firstTask.uploadResultCallback = TransferResultCallback { result = it }
 
-        coordinator.uploadFile(first, firstTask)
-        coordinator.uploadFile(second, transferTask(second))
+        uploadFile(coordinator, first, firstTask)
+        uploadFile(coordinator, second, transferTask(second))
         transport.uploadCalls.single().fail(IllegalStateException("upload failed"))
 
         assertThat(result).isInstanceOf(SceytResponse.Error::class.java)
@@ -1201,8 +1202,8 @@ class AttachmentUploadCoordinatorTest {
             uploadResultCallback = TransferResultCallback { results += it }
         }
 
-        coordinator.uploadFile(first, firstTask)
-        coordinator.uploadFile(second, transferTask(second))
+        uploadFile(coordinator, first, firstTask)
+        uploadFile(coordinator, second, transferTask(second))
         transport.uploadCalls.single().fail(CancellationException("transport cancelled"))
 
         assertThat(results).hasSize(1)
@@ -1229,8 +1230,8 @@ class AttachmentUploadCoordinatorTest {
             uploadResultCallback = TransferResultCallback { secondResults += it }
         }
 
-        coordinator.uploadFile(first, firstTask)
-        coordinator.uploadFile(second, secondTask)
+        uploadFile(coordinator, first, firstTask)
+        uploadFile(coordinator, second, secondTask)
         testScope.advanceTimeBy(10.milliseconds)
         testScope.runCurrent()
 
@@ -1276,8 +1277,8 @@ class AttachmentUploadCoordinatorTest {
         var result: SceytResponse<String>? = null
         firstTask.uploadResultCallback = TransferResultCallback { result = it }
 
-        coordinator.uploadFile(first, firstTask)
-        coordinator.uploadFile(second, transferTask(second))
+        uploadFile(coordinator, first, firstTask)
+        uploadFile(coordinator, second, transferTask(second))
         val firstCall = transport.uploadCalls.single()
         firstCall.waitingForNetwork()
 
@@ -1299,8 +1300,8 @@ class AttachmentUploadCoordinatorTest {
             }
         }
 
-        coordinator.uploadFile(first, firstTask)
-        coordinator.uploadFile(second, transferTask(second))
+        uploadFile(coordinator, first, firstTask)
+        uploadFile(coordinator, second, transferTask(second))
         transport.uploadCalls.single().succeed("first-url")
 
         assertThat(callbackCount).isEqualTo(1)
@@ -1316,8 +1317,8 @@ class AttachmentUploadCoordinatorTest {
         var result: SceytResponse<String>? = null
         firstTask.uploadResultCallback = TransferResultCallback { result = it }
 
-        coordinator.uploadFile(first, firstTask)
-        coordinator.uploadFile(second, transferTask(second))
+        uploadFile(coordinator, first, firstTask)
+        uploadFile(coordinator, second, transferTask(second))
         transport.uploadCalls.single().succeed(" ")
 
         assertThat(result).isInstanceOf(SceytResponse.Error::class.java)
@@ -1337,8 +1338,8 @@ class AttachmentUploadCoordinatorTest {
         var result: SceytResponse<String>? = null
         firstTask.uploadResultCallback = TransferResultCallback { result = it }
 
-        coordinator.uploadFile(first, firstTask)
-        coordinator.uploadFile(second, transferTask(second))
+        uploadFile(coordinator, first, firstTask)
+        uploadFile(coordinator, second, transferTask(second))
 
         assertThat(result).isInstanceOf(SceytResponse.Error::class.java)
         assertThat(result?.message).isEqualTo("Attachment source path is missing")
@@ -1358,7 +1359,7 @@ class AttachmentUploadCoordinatorTest {
         var result: SceytResponse<String>? = null
         task.uploadResultCallback = TransferResultCallback { result = it }
 
-        coordinator.uploadFile(attachment, task)
+        uploadFile(coordinator, attachment, task)
 
         assertThat(transport.uploadCalls).isEmpty()
         assertThat(result).isInstanceOf(SceytResponse.Error::class.java)
@@ -1386,8 +1387,8 @@ class AttachmentUploadCoordinatorTest {
             null
         }.whenever(attachmentLogic) { getFileChecksumData(org.mockito.kotlin.any()) }
 
-        coordinator.uploadFile(first, firstTask)
-        coordinator.uploadFile(second, transferTask(second))
+        uploadFile(coordinator, first, firstTask)
+        uploadFile(coordinator, second, transferTask(second))
         releaseChecksum.complete(Unit)
 
         assertThat(checksumStarted.isCompleted).isTrue()
@@ -1414,8 +1415,8 @@ class AttachmentUploadCoordinatorTest {
             null
         }.whenever(attachmentLogic) { getFileChecksumData(org.mockito.kotlin.any()) }
 
-        coordinator.uploadFile(first, firstTask)
-        coordinator.uploadFile(second, transferTask(second))
+        uploadFile(coordinator, first, firstTask)
+        uploadFile(coordinator, second, transferTask(second))
         releaseChecksum.complete(Unit)
 
         assertThat(results).hasSize(1)
@@ -1456,7 +1457,7 @@ class AttachmentUploadCoordinatorTest {
             null
         }.whenever(attachmentLogic) { getFileChecksumData(attachment.originalFilePath) }
 
-        coordinator.uploadFile(attachment, task)
+        uploadFile(coordinator, attachment, task)
         assertThat(checksumStarted.isCompleted).isTrue()
 
         coordinator.pauseLoad(attachment, TransferState.Preparing)
@@ -1492,7 +1493,7 @@ class AttachmentUploadCoordinatorTest {
             val task = transferTask(attachment)
             service.addTransferTask(task)
 
-            coordinator.uploadFile(attachment, task)
+            uploadFile(coordinator, attachment, task)
             assertThat(transcodeCallbacks).hasSize(1)
 
             coordinator.pauseLoad(attachment, TransferState.Preparing)
@@ -1541,10 +1542,10 @@ class AttachmentUploadCoordinatorTest {
                 }
                 service.addTransferTask(task)
 
-                coordinator.uploadFile(video, task)
+                uploadFile(coordinator, video, task)
                 coordinator.pauseLoad(video, TransferState.Preparing)
                 coordinator.resumeLoad(video, TransferState.PauseUpload)
-                coordinator.uploadFile(next, transferTask(next))
+                uploadFile(coordinator, next, transferTask(next))
 
                 assertThat(destinations).hasSize(1)
                 checkNotNull(activeListener).also { activeListener = null }.onCancelled()
@@ -1659,7 +1660,7 @@ class AttachmentUploadCoordinatorTest {
                 releaseResize.countDown()
             }
 
-            coordinator.uploadFile(attachment, task)
+            uploadFile(coordinator, attachment, task)
             assertThat(pauseCompleted.await(2, TimeUnit.SECONDS)).isTrue()
             coordinator.resumeLoad(attachment, TransferState.PauseUpload)
             testScope.runCurrent()
@@ -1680,7 +1681,7 @@ class AttachmentUploadCoordinatorTest {
         task.uploadResultCallback = TransferResultCallback { results += it.data }
         service.addTransferTask(task)
 
-        coordinator.uploadFile(attachment, task)
+        uploadFile(coordinator, attachment, task)
         val pausedCall = transport.uploadCalls.single()
         coordinator.pauseLoad(attachment, TransferState.Uploading)
         coordinator.resumeLoad(attachment, TransferState.PauseUpload)
@@ -1747,10 +1748,10 @@ class AttachmentUploadCoordinatorTest {
             uploadResultCallback = TransferResultCallback { results += it }
         }
 
-        coordinator.uploadFile(active, activeTask)
-        coordinator.uploadFile(queued, transferTask(queued))
+        uploadFile(coordinator, active, activeTask)
+        uploadFile(coordinator, queued, transferTask(queued))
         coordinator.cancelAll()
-        coordinator.uploadFile(next, transferTask(next))
+        uploadFile(coordinator, next, transferTask(next))
 
         assertThat(transport.uploadCalls).hasSize(2)
         assertThat(transport.uploadCalls[0].cancelled).isTrue()
@@ -1798,9 +1799,9 @@ class AttachmentUploadCoordinatorTest {
 
                 if (pauseShared) {
                     uploadSharedFile(shared, sharedTask)
-                    coordinator.uploadFile(regular, regularTask)
+                    uploadFile(coordinator, regular, regularTask)
                 } else {
-                    coordinator.uploadFile(regular, regularTask)
+                    uploadFile(coordinator, regular, regularTask)
                     uploadSharedFile(shared, sharedTask)
                 }
                 coordinator.pauseLoad(if (pauseShared) shared else regular, TransferState.Preparing)
@@ -1816,7 +1817,7 @@ class AttachmentUploadCoordinatorTest {
                 assertThat(results).containsExactly("video-url")
 
                 val next = uploadAttachment(messageTid = 102L)
-                coordinator.uploadFile(next, transferTask(next))
+                uploadFile(coordinator, next, transferTask(next))
                 assertThat(transport.uploadCalls.last().request.operationId).isEqualTo("upload:102")
                 transport.uploadCalls.last().succeed("next-url")
             } finally {
@@ -1824,6 +1825,62 @@ class AttachmentUploadCoordinatorTest {
                 activeListener?.onCancelled()
             }
         }
+    }
+
+    @Test
+    fun `pause before upload subscription is bound still pauses it`() {
+        val first = uploadAttachment(messageTid = 1L)
+        val second = uploadAttachment(messageTid = 2L)
+        val firstTask = transferTask(first)
+        val secondTask = transferTask(second)
+        var triggered = false
+        firstTask.progressCallback = ProgressUpdateCallback {
+            if (triggered) return@ProgressUpdateCallback
+            triggered = true
+            uploadFile(coordinator, second, secondTask)
+            assertThat(secondTask.uploadSubscription).isNull()
+            coordinator.pauseLoad(second, TransferState.WaitingToUpload)
+        }
+        uploadFile(coordinator, first, firstTask)
+
+        transport.uploadCalls.single().progress(50f)
+        transport.uploadCalls.single().succeed("first-url")
+
+        assertThat(transport.uploadCalls).hasSize(1)
+        assertThat(secondTask.state).isEqualTo(TransferState.PauseUpload)
+        assertThat(secondTask.uploadSubscription?.isPaused).isTrue()
+    }
+
+    @Test
+    fun `cancel before upload subscription is bound stops it`() {
+        val first = uploadAttachment(messageTid = 1L)
+        val second = uploadAttachment(messageTid = 2L)
+        val firstTask = transferTask(first)
+        val secondTask = transferTask(second)
+        var triggered = false
+        firstTask.progressCallback = ProgressUpdateCallback {
+            if (triggered) return@ProgressUpdateCallback
+            triggered = true
+            uploadFile(coordinator, second, secondTask)
+            assertThat(secondTask.uploadSubscription).isNull()
+            service.cancelUpload(second)
+        }
+        uploadFile(coordinator, first, firstTask)
+
+        transport.uploadCalls.single().progress(50f)
+        transport.uploadCalls.single().succeed("first-url")
+
+        assertThat(transport.uploadCalls).hasSize(1)
+        assertThat(secondTask.uploadSubscription?.isFinished).isTrue()
+    }
+
+    private fun uploadFile(
+        target: AttachmentUploadCoordinator,
+        attachment: SceytAttachment,
+        task: TransferTask,
+    ) {
+        service.addTransferTask(task)
+        target.uploadFile(attachment, task)
     }
 
     private fun uploadSharedFile(
@@ -1835,7 +1892,7 @@ class AttachmentUploadCoordinatorTest {
     }
 
     private fun cancelUpload(attachment: SceytAttachment) {
-        service.findTransferTask(attachment)?.let(service::removeTransferTask)
+        service.cancelUpload(attachment)
         coordinator.cancelUpload(attachment)
     }
 

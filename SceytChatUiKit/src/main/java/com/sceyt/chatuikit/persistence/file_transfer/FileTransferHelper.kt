@@ -33,7 +33,6 @@ import java.util.concurrent.ConcurrentHashMap
 import kotlin.coroutines.CoroutineContext
 
 object FileTransferHelper : SceytKoinComponent {
-    private val fileTransferService by inject<FileTransferService>()
     private val attachmentLogic by inject<PersistenceAttachmentLogic>()
     private val fileChecksumDao by inject<FileChecksumDao>()
     private val coroutineContext by inject<CoroutineContext>(named(CoroutineContextType.SingleThreaded))
@@ -167,8 +166,6 @@ object FileTransferHelper : SceytKoinComponent {
                 ) ?: return@fold
 
                 emitAttachmentTransferUpdate(transferData, updatedAttachment.fileSize)
-                complete(Result.success(updatedAttachment))
-                fileTransferService.removeTransferTask(this)
                 enqueueDbUpdate(messageTid) {
                     attachmentLogic.updateAttachmentWithTransferData(transferData)
                     removeMutexForAttachment(messageTid)
@@ -187,8 +184,6 @@ object FileTransferHelper : SceytKoinComponent {
                 ) ?: return@fold
 
                 emitAttachmentTransferUpdate(transferData, updatedAttachment.fileSize)
-                complete(Result.failure(exception ?: IllegalStateException("File download failed")))
-                fileTransferService.removeTransferTask(this)
                 enqueueDbUpdate(messageTid) {
                     attachmentLogic.updateAttachmentWithTransferData(transferData)
                 }
@@ -202,7 +197,7 @@ object FileTransferHelper : SceytKoinComponent {
 
     @Suppress("MemberVisibilityCanBePrivate")
     fun TransferTask.getUploadResultCallback() = TransferResultCallback { response ->
-        val result: Result<SceytAttachment> = when (response) {
+        when (response) {
             is SceytResponse.Success -> {
                 val currentAttachment = attachment
                 val transferData = TransferData(
@@ -221,9 +216,6 @@ object FileTransferHelper : SceytKoinComponent {
                         attachmentLogic.updateAttachmentWithTransferData(transferData)
                         removeMutexForAttachment(messageTid)
                     }
-                    Result.success(updatedAttachment)
-                } else {
-                    Result.failure(Throwable("Failed to update attachment"))
                 }
             }
 
@@ -247,11 +239,8 @@ object FileTransferHelper : SceytKoinComponent {
                     }
                 }
                 SceytLog.e(this.TAG, "Couldn't upload file " + response.message.toString())
-                Result.failure(Throwable(response.message.orEmpty()))
             }
         }
-        complete(result)
-        fileTransferService.removeTransferTask(this)
     }
 
     @Suppress("MemberVisibilityCanBePrivate")
