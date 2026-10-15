@@ -15,6 +15,7 @@ import com.sceyt.chatuikit.filetransfer.FileTransferTransport
 import com.sceyt.chatuikit.filetransfer.FileUploadRequest
 import com.sceyt.chatuikit.filetransfer.SceytChatUIKitFileTransfer
 import com.sceyt.chatuikit.koin.SceytKoinApp
+import com.sceyt.chatuikit.persistence.file_transfer.AttachmentTransferStateStore
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.file_transfer.ProgressUpdateCallback
 import com.sceyt.chatuikit.persistence.file_transfer.ResumePauseCallback
@@ -1872,6 +1873,18 @@ class AttachmentUploadCoordinatorTest {
 
         assertThat(transport.uploadCalls).hasSize(1)
         assertThat(secondTask.uploadSubscription?.isFinished).isTrue()
+    }
+
+    @Test
+    fun `stale waiting pause after completed upload is ignored`() {
+        val attachment = uploadAttachment(messageTid = 181L, state = TransferState.WaitingToUpload)
+        AttachmentTransferStateStore.put(
+            TransferData(attachment.messageTid, 100f, TransferState.Uploaded, attachment.filePath, "done-url"),
+        )
+
+        coordinator.pauseLoad(attachment, TransferState.WaitingToUpload)
+
+        assertThat(service.findTransferTask(attachment)).isNull()
     }
 
     private fun uploadFile(

@@ -41,6 +41,8 @@ internal class FileTransferServiceImpl(
         task?.let(::removeTransferTask)
         task?.uploadSubscription?.cancel()
         task?.uploadSubscription = null
+        task?.downloadSubscription?.cancel()
+        task?.downloadSubscription = null
         fileTransferLogic.cancelUpload(attachment)
         task?.complete(Result.failure(CancellationException("Attachment upload cancelled")))
     }
@@ -84,7 +86,9 @@ internal class FileTransferServiceImpl(
 
     override fun cancelAllTransfers() {
         fileTransferLogic.cancelAll()
+        val tasks = tasksMap.values.toList()
         tasksMap.clear()
+        tasks.forEach { it.complete(Result.failure(CancellationException("File transfers cancelled"))) }
     }
 
     private fun startTransfer(
