@@ -7,11 +7,14 @@ import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.FileChecksumData
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
-import com.sceyt.chatuikit.data.models.onSuccessNotNull
 import com.sceyt.chatuikit.extensions.getFileSize
 import com.sceyt.chatuikit.extensions.getMimeType
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
-import com.sceyt.chatuikit.filetransfer.FileTransferEvent
+import com.sceyt.chatuikit.filetransfer.AttachmentTransferContext
+import com.sceyt.chatuikit.filetransfer.FileTransferObserver
+import com.sceyt.chatuikit.filetransfer.FileTransferSubscription
+import com.sceyt.chatuikit.filetransfer.FileUploadCoordinator
+import com.sceyt.chatuikit.filetransfer.FileUploadPreparation
 import com.sceyt.chatuikit.filetransfer.FileUploadRequest
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.logger.SceytLog
@@ -25,491 +28,166 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState.FilePathChang
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.PauseUpload
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.PendingUpload
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Preparing
+import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploaded
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploading
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.WaitingToUpload
 import com.sceyt.chatuikit.persistence.file_transfer.TransferTask
+import com.sceyt.chatuikit.persistence.file_transfer.transferKey
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import com.sceyt.chatuikit.persistence.mappers.toTransferData
 import com.sceyt.chatuikit.shared.media_encoder.VideoTranscodeHelper
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
-import kotlinx.coroutines.job
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import org.koin.core.component.inject
 import java.io.File
-import java.util.LinkedList
-import java.util.Queue
-import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.resume
 
 internal class AttachmentUploadCoordinator(
     private val context: Context,
     private val attachmentLogic: PersistenceAttachmentLogic,
-    private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
+    scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
 ) : SceytKoinComponent {
     private val fileTransferService: FileTransferService by inject()
+    private val fileUploadCoordinator = FileUploadCoordinator(scope) { SceytChatUIKit.fileTransfer.transport }
 
-    private val pendingUploadQueue: Queue<Pair<SceytAttachment, TransferTask>> = LinkedList()
-    private val uploadQueueLock = Any()
-
-    private var currentUploadingAttachment: SceytAttachment? = null
-
-    private val pausedTaskIds = ConcurrentHashMap.newKeySet<Long>()
-    private val uploadJobs = ConcurrentHashMap<Long, Job>()
-    private val sharingFilesPath = ConcurrentHashMap.newKeySet<ShareFileData>()
-    private val sharingFilesLock = Any()
-
-    fun uploadFile(
-        attachment: SceytAttachment,
-        task: TransferTask,
-    ) {
-        checkAndUpload(attachment, task)
+    fun uploadFile(attachment: SceytAttachment, task: TransferTask) {
+        enqueueUpload(attachment, task, shared = false)
     }
 
-    fun uploadSharedFile(
-        attachment: SceytAttachment,
-        task: TransferTask,
-    ) {
+    fun uploadSharedFile(attachment: SceytAttachment, task: TransferTask) {
         task.isSharedUpload = true
+        enqueueUpload(attachment, task, shared = true)
+    }
+
+    private fun enqueueUpload(attachment: SceytAttachment, task: TransferTask, shared: Boolean) {
         if (completeIfPaused(attachment, task)) return
-
-        val shareFileData = ShareFileData(
-            sourceKey = attachment.sharedSourceKey,
-            messageTid = attachment.messageTid,
-        )
-        val sharedUploadInProgress = synchronized(sharingFilesLock) {
-            val inProgress = sharingFilesPath.any {
-                it.sourceKey == shareFileData.sourceKey && it.completedUrl == null &&
-                        !pausedTaskIds.contains(it.messageTid)
-            }
-            sharingFilesPath.add(shareFileData)
-            inProgress
-        }
-        if (sharedUploadInProgress) return
-
-        resumeSharedUpload(attachment, task)
-    }
-
-    private fun startSharedUpload(
-        attachment: SceytAttachment,
-        task: TransferTask,
-    ) = launchUploadJob(
-        attachment = attachment,
-        onError = { response ->
-            takeAppropriateTasks(task).forEach { transferTask ->
-                notifyTaskResult(transferTask, response)
-            }
-        },
-    ) {
-        val checksum = getAttachmentChecksum(attachment.sourcePath)
-        val (uploaded, url) = checkMaybeAlreadyUploadedWithAnotherMessage(checksum, task)
-
-        if (uploaded && url != null) {
-            saveCompletedSharedUpload(attachment, url)
-            takeAppropriateTasks(task).forEach { transferTask ->
-                notifyTaskResult(transferTask, SceytResponse.Success(url))
-            }
-            return@launchUploadJob
-        }
-
-        val result = prepareAttachment(
-            attachment = attachment,
-            checksumData = checksum,
-            task = task,
-        )
-        currentCoroutineContext().ensureActive()
-
-        if (isSharedTransferPaused(attachment)) {
-            return@launchUploadJob
-        }
-
-        val uploadAttachment = result.fold(
-            onSuccess = { path ->
-                // A shared upload may continue for other messages after this message is deleted.
-                // Only notify the task if it is still registered.
-                if (fileTransferService.findTransferTask(attachment) === task) {
-                    task.updateFileLocationCallback?.onUpdateFileLocation(path)
+        if (task.uploadSubscription?.isFinished == false) return
+        var progressFilePath = attachment.filePath
+        fileUploadCoordinator.upload(
+            operationId = attachment.uploadOperationId,
+            participantId = attachment.transferKey,
+            sharingKey = if (shared) attachment.sourcePath ?: attachment.uploadOperationId else null,
+            sequential = !shared,
+            prepare = {
+                prepareUpload(attachment, task, shared).also { prepared ->
+                    if (prepared is FileUploadPreparation.Ready) progressFilePath = prepared.request.sourceFile.path
                 }
-                attachment.copy(filePath = path, fileSize = getFileSize(path))
             },
-            onFailure = {
-                SceytLog.i(TAG, "Couldn't resize sharing file with reason ${it.message}")
-                attachment
-            },
-        )
-
-        uploadSharedAttachment(uploadAttachment, task)
-    }
-
-    fun pauseLoad(
-        attachment: SceytAttachment,
-        state: TransferState,
-    ) {
-        when (state) {
-            PendingUpload,
-            Uploading,
-            Preparing,
-            FilePathChanged,
-            WaitingToUpload -> {
-                val task = fileTransferService.findTransferTask(attachment)
-                // The UI may still show Uploading after a failure removes the task. Ignore that pause
-                // so it cannot block retry. PendingUpload and WaitingToUpload are allowed because
-                // their task may not exist yet, but the user must still be able to pause them.
-                if (task == null && state != PendingUpload && state != WaitingToUpload) return
-
-                val pausedTask = task ?: fileTransferService.findOrCreateTransferTask(attachment)
-                val messageTid = attachment.messageTid
-                pausedTaskIds.add(messageTid)
-
-                pausedTask.state = PauseUpload
-                pausedTask.resumePauseCallback?.onResumePause(attachment.toTransferData(PauseUpload))
-
-                if (pauseSharedUpload(attachment, state)) return
-
-                val currentJob = uploadJobs[messageTid]
-                val pausedByTransport = state == Uploading &&
-                        currentJob?.isActive == true &&
-                        pauseTransport(attachment.uploadOperationId)
-
-                if (!pausedByTransport && currentJob != null) {
-                    cancelUploadJob(messageTid, currentJob)
-                }
-
-                uploadNext(messageTid)
-            }
-
-            else -> return
-        }
-    }
-
-    fun resumeLoad(
-        attachment: SceytAttachment,
-        state: TransferState,
-    ) {
-        when (state) {
-            PendingUpload,
-            PauseUpload,
-            ErrorUpload -> {
-                val wasSharedTransferPaused = isSharedTransferPaused(attachment)
-                val wasSharing = isSharedUpload(attachment) ||
-                        fileTransferService.findTransferTask(attachment)?.isSharedUpload == true
-                pausedTaskIds.remove(attachment.messageTid)
-
-                if (wasSharing) {
-                    findCompletedUpload(attachment)?.let { url ->
-                        fileTransferService.findTransferTask(attachment)?.let { task ->
-                            notifyTaskResult(task, SceytResponse.Success(url))
-                        }
-                        removeSharedMember(attachment.messageTid)
-                        return
-                    }
-                }
-
-                fileTransferService.findTransferTask(attachment)
-                    ?.resumePauseCallback
-                    ?.onResumePause(attachment.toTransferData(WaitingToUpload))
-
-                if (wasSharing) {
-                    val task = fileTransferService.findOrCreateTransferTask(attachment)
-                    when {
-                        !isSharedUpload(attachment) -> {
-                            uploadSharedFile(attachment, task)
-                        }
-
-                        wasSharedTransferPaused -> {
-                            resumeSharedUpload(attachment, task)
-                        }
-
-                        findActiveSharedUpload(getSharedMessageIds(attachment)) == null -> {
-                            startSharedUpload(attachment, task)
-                        }
-                    }
-                    return
-                } else {
-                    uploadFile(
-                        attachment = attachment,
-                        task = fileTransferService.findOrCreateTransferTask(attachment),
+            observer = object : FileTransferObserver {
+                override fun onProgress(progressPercent: Float) {
+                    task.state = Uploading
+                    task.progressCallback?.onProgress(
+                        TransferData(
+                            task.messageTid, progressPercent, Uploading,
+                            if (shared) task.attachment.filePath else progressFilePath, null,
+                        ),
                     )
                 }
-            }
 
-            else -> return
-        }
-    }
-
-    fun cancelUpload(attachment: SceytAttachment) {
-        val messageTid = attachment.messageTid
-        synchronized(uploadQueueLock) {
-            pendingUploadQueue.removeAll { it.first.messageTid == messageTid }
-        }
-
-        val sharedMessageIds = getSharedMessageIds(attachment)
-        // A network-wait job is cancelled before it delivers results to the remaining members.
-        val sharedJob = sharedMessageIds.firstNotNullOfOrNull { tid ->
-            uploadJobs[tid]?.takeUnless(Job::isCompleted)?.let { tid to it }
-        }
-        val registeredMessageIds = fileTransferService.getTasks().values
-            .mapTo(HashSet(), TransferTask::messageTid)
-        val hasActiveSharedMember = sharedMessageIds.any {
-            it in registeredMessageIds && it !in pausedTaskIds
-        }
-        val retainedOwner = sharedJob?.first?.takeIf { hasActiveSharedMember }
-
-        if (retainedOwner == messageTid) {
-            // Keep the operation's owner until its result can reach the remaining shared messages.
-            pausedTaskIds.add(messageTid)
-        } else {
-            if (!hasActiveSharedMember) {
-                sharedJob?.let { (ownerTid, job) -> cancelUploadJob(ownerTid, job) }
-            }
-            uploadJobs[messageTid]?.let { cancelUploadJob(messageTid, it) }
-            pausedTaskIds.remove(messageTid)
-            removeSharedMember(messageTid)
-        }
-
-        synchronized(sharingFilesLock) {
-            sharingFilesPath.removeAll { member ->
-                val detached = member.messageTid in sharedMessageIds &&
-                        member.messageTid !in registeredMessageIds && member.messageTid != retainedOwner
-                if (detached) pausedTaskIds.remove(member.messageTid)
-                detached
-            }
-        }
-        uploadNext(messageTid)
-    }
-
-    fun cancelAll() {
-        uploadJobs.values.forEach { it.cancel() }
-        uploadJobs.clear()
-
-        synchronized(uploadQueueLock) {
-            pendingUploadQueue.clear()
-            currentUploadingAttachment = null
-        }
-
-        pausedTaskIds.clear()
-        synchronized(sharingFilesLock) {
-            sharingFilesPath.clear()
-        }
-    }
-
-    private fun checkAndUpload(
-        attachment: SceytAttachment,
-        task: TransferTask,
-    ) {
-        if (completeIfPaused(attachment, task)) return
-
-        val shouldUpload = synchronized(uploadQueueLock) {
-            if (currentUploadingAttachment == null) {
-                currentUploadingAttachment = attachment
-                true
-            } else {
-                val alreadyExists =
-                    currentUploadingAttachment?.messageTid == attachment.messageTid ||
-                            pendingUploadQueue.any {
-                                it.first.messageTid == attachment.messageTid
-                            }
-
-                if (!alreadyExists) {
-                    pendingUploadQueue.add(attachment to task)
+                override fun onPaused() {
+                    publishPaused(attachment, task)
                 }
 
-                false
-            }
-        }
+                override fun onResumed(restarted: Boolean) {
+                    task.state = WaitingToUpload
+                    task.resumePauseCallback?.onResumePause(attachment.toTransferData(WaitingToUpload))
+                }
 
-        if (shouldUpload) {
-            startOrResumeUpload(attachment, task)
-        }
+                override fun onResult(result: Result<String>) {
+                    task.uploadSubscription = null
+                    notifyTaskResult(task, result.fold(
+                        onSuccess = { SceytResponse.Success(it) },
+                        onFailure = { SceytResponse.Error(it.toSceytException()) },
+                    ))
+                }
+            },
+            bind = { bindUpload(attachment, task, it) },
+        )
     }
 
-    private fun uploadNext(messageTid: Long) {
-        val nextUpload = synchronized(uploadQueueLock) {
-            if (currentUploadingAttachment?.messageTid != messageTid) {
-                return
-            }
-
-            currentUploadingAttachment = null
-
-            pendingUploadQueue.poll()?.also { (attachment) ->
-                currentUploadingAttachment = attachment
-            }
-        } ?: return
-
-        startOrResumeUpload(nextUpload.first, nextUpload.second)
-    }
-
-    private fun startOrResumeUpload(
+    private fun bindUpload(
         attachment: SceytAttachment,
         task: TransferTask,
+        subscription: FileTransferSubscription,
     ) {
-        val messageTid = attachment.messageTid
-        if (completeIfPaused(attachment, task)) {
-            uploadNext(messageTid)
-            return
-        }
-
-        val currentJob = uploadJobs[messageTid]
-        if (currentJob?.isActive == true) {
-            if (resumeTransport(attachment.uploadOperationId)) return
-            cancelUploadJob(messageTid, currentJob)
-        }
-
-        uploadAttachment(attachment, task)
+        task.uploadSubscription = subscription
+        if (fileTransferService.findTransferTask(attachment) == null) subscription.cancel()
+        else if (task.state == PauseUpload) subscription.pause()
     }
 
     private fun completeIfPaused(attachment: SceytAttachment, task: TransferTask): Boolean {
-        if (attachment.messageTid !in pausedTaskIds) return false
-        task.state = PauseUpload
-        task.resumePauseCallback?.onResumePause(attachment.toTransferData(PauseUpload))
+        if (task.uploadSubscription?.isPaused != true && task.state != PauseUpload) return false
+        publishPaused(attachment, task)
         // Finish the worker attempt without failing the attachment or clearing its pause.
         task.complete(Result.failure(IllegalStateException("Attachment upload is paused")))
         return true
     }
 
-    private fun pauseSharedUpload(
-        attachment: SceytAttachment,
-        state: TransferState,
-    ): Boolean {
-        val sharedMessageIds = getSharedMessageIds(attachment)
-        if (sharedMessageIds.isEmpty()) return false
-        if (sharedMessageIds.any { !pausedTaskIds.contains(it) }) return true
-
-        findActiveSharedUpload(sharedMessageIds)?.let { (messageTid, job) ->
-            if (state != Uploading || !pauseTransport(uploadOperationId(messageTid))) {
-                cancelUploadJob(messageTid, job)
-            }
-        }
-        return true
+    private fun publishPaused(attachment: SceytAttachment, task: TransferTask) {
+        task.state = PauseUpload
+        task.resumePauseCallback?.onResumePause(attachment.toTransferData(PauseUpload))
     }
 
-    private fun resumeSharedUpload(
-        attachment: SceytAttachment,
-        task: TransferTask,
-    ) {
-        val sharedMessageIds = getSharedMessageIds(attachment)
-        findActiveSharedUpload(sharedMessageIds)?.let { (messageTid, job) ->
-            if (resumeTransport(uploadOperationId(messageTid))) return
-            cancelUploadJob(messageTid, job)
-        }
+    fun pauseLoad(attachment: SceytAttachment, state: TransferState) {
+        if (state !in listOf(PendingUpload, WaitingToUpload, Preparing, FilePathChanged, Uploading)) return
+        val task = fileTransferService.findTransferTask(attachment)
+        // Ignore stale active-state taps after completion. Pending and queued uploads can still be
+        // paused before the worker has created their task.
+        if (task == null && state != PendingUpload && state != WaitingToUpload) return
 
-        startSharedUpload(attachment, task)
+        val pausedTask = task ?: fileTransferService.findOrCreateTransferTask(attachment)
+        val subscription = pausedTask.uploadSubscription
+        if (subscription != null && !subscription.isFinished) subscription.pause()
+        else publishPaused(attachment, pausedTask)
     }
 
-    private fun isSharedTransferPaused(attachment: SceytAttachment): Boolean {
-        val sharedMessageIds = getSharedMessageIds(attachment)
-        return sharedMessageIds.isNotEmpty() && sharedMessageIds.all(pausedTaskIds::contains)
+    fun resumeLoad(attachment: SceytAttachment, state: TransferState) {
+        if (state != PendingUpload && state != PauseUpload && state != ErrorUpload) return
+        val task = fileTransferService.findOrCreateTransferTask(attachment)
+        val subscription = task.uploadSubscription
+        if (subscription != null && !subscription.isFinished) {
+            subscription.resume()
+            return
+        }
+
+        task.state = WaitingToUpload
+        task.resumePauseCallback?.onResumePause(attachment.toTransferData(WaitingToUpload))
+        enqueueUpload(attachment, task, task.isSharedUpload)
     }
 
-    private fun isSharedUpload(attachment: SceytAttachment): Boolean =
-        synchronized(sharingFilesLock) {
-            sharingFilesPath.any { it.messageTid == attachment.messageTid }
-        }
-
-    private fun getSharedMessageIds(attachment: SceytAttachment): List<Long> =
-        synchronized(sharingFilesLock) {
-            val sourceKey = sharingFilesPath.firstOrNull {
-                it.messageTid == attachment.messageTid
-            }?.sourceKey ?: return@synchronized emptyList()
-
-            sharingFilesPath
-                .filter { it.sourceKey == sourceKey && it.completedUrl == null }
-                .map(ShareFileData::messageTid)
-        }
-
-    private fun findCompletedUpload(attachment: SceytAttachment): String? {
-        return synchronized(sharingFilesLock) {
-            sharingFilesPath.firstOrNull {
-                it.messageTid == attachment.messageTid
-            }?.completedUrl
+    fun cancelUpload(attachment: SceytAttachment) {
+        fileTransferService.findTransferTask(attachment)?.let { task ->
+            task.uploadSubscription?.cancel()
+            task.uploadSubscription = null
         }
     }
 
-    private fun saveCompletedSharedUpload(attachment: SceytAttachment, url: String) {
-        synchronized(sharingFilesLock) {
-            val sourceKey = sharingFilesPath.firstOrNull {
-                it.messageTid == attachment.messageTid
-            }?.sourceKey ?: return
+    fun cancelAll() = fileUploadCoordinator.cancelAll()
 
-            sharingFilesPath.forEach { member ->
-                if (member.sourceKey == sourceKey && member.completedUrl == null) {
-                    member.completedUrl = url
-                }
-            }
-        }
-    }
-
-    private fun findActiveSharedUpload(messageIds: List<Long>): Pair<Long, Job>? {
-        messageIds.forEach { messageTid ->
-            uploadJobs[messageTid]?.takeIf(Job::isActive)?.let { job ->
-                return messageTid to job
-            }
-        }
-        return null
-    }
-
-    private fun pauseTransport(operationId: String): Boolean {
-        return runCatching {
-            SceytChatUIKit.fileTransfer.transport.pause(operationId)
-        }.getOrDefault(false)
-    }
-
-    private fun resumeTransport(operationId: String): Boolean {
-        return runCatching {
-            SceytChatUIKit.fileTransfer.transport.resume(operationId)
-        }.getOrDefault(false)
-    }
-
-    private fun cancelUploadJob(messageTid: Long, job: Job) {
-        if (uploadJobs.remove(messageTid, job)) {
-            job.cancel()
-        }
-    }
-
-    private fun uploadAttachment(
+    private suspend fun prepareUpload(
         attachment: SceytAttachment,
         task: TransferTask,
-    ) = launchUploadJob(
-        attachment = attachment,
-        onError = { response -> notifyTaskResult(task, response) },
-    ) {
-        if (pausedTaskIds.contains(attachment.messageTid)) {
-            uploadNext(attachment.messageTid)
-            return@launchUploadJob
+        shared: Boolean,
+    ): FileUploadPreparation {
+        val checksum = if (SceytChatUIKit.config.preventDuplicateAttachmentUpload)
+            attachmentLogic.getFileChecksumData(attachment.sourcePath) else null
+        if (checksum?.url.isNotNullOrBlank()) {
+            if (!checksum?.resizedFilePath.isNullOrEmpty()) {
+                updateFileLocation(task, checkNotNull(checksum.resizedFilePath))
+            }
+            return FileUploadPreparation.Reused(checkNotNull(checksum?.url))
         }
 
-        val checksum = getAttachmentChecksum(attachment.sourcePath)
-        val (uploaded, url) = checkMaybeAlreadyUploadedWithAnotherMessage(checksum, task)
-
-        if (uploaded && url != null) {
-            notifyTaskResult(task, SceytResponse.Success(url))
-            uploadNext(attachment.messageTid)
-            return@launchUploadJob
-        }
-
-        val result = prepareAttachment(
-            attachment = attachment,
-            checksumData = checksum,
-            task = task,
-        )
+        val result = prepareAttachment(attachment, checksum, task)
         currentCoroutineContext().ensureActive()
-
-        if (pausedTaskIds.contains(attachment.messageTid)) {
-            uploadNext(attachment.messageTid)
-            return@launchUploadJob
-        }
-
-        val uploadAttachment = result.fold(
+        val prepared = result.fold(
             onSuccess = { path ->
-                task.updateFileLocationCallback?.onUpdateFileLocation(path)
+                updateFileLocation(task, path)
                 attachment.copy(filePath = path, fileSize = getFileSize(path))
             },
             onFailure = {
@@ -517,181 +195,25 @@ internal class AttachmentUploadCoordinator(
                 attachment
             },
         )
-
-        uploadAttachmentWithTransport(
-            attachment = uploadAttachment,
-            task = task,
-            onComplete = { uploadNext(attachment.messageTid) },
+        val path = prepared.filePath
+        require(!path.isNullOrBlank()) { "Attachment source path is missing" }
+        val source = File(path)
+        require(source.isFile) { "Attachment source file does not exist: $path" }
+        return FileUploadPreparation.Ready(
+            FileUploadRequest(
+                operationId = attachment.uploadOperationId,
+                sourceFile = source,
+                fileName = prepared.name,
+                mimeType = getMimeType(source.path),
+                context = AttachmentTransferContext(prepared, shared),
+            ),
         )
     }
 
-    private suspend fun uploadSharedAttachment(
-        attachment: SceytAttachment,
-        task: TransferTask,
-    ) = uploadAttachmentWithTransport(
-        attachment = attachment,
-        task = task,
-        isSharedUpload = true,
-        onProgress = { progressPercent ->
-            getAppropriateTasks(task).forEach { transferTask ->
-                transferTask.state = Uploading
-
-                runCatching {
-                    transferTask.progressCallback?.onProgress(
-                        TransferData(
-                            messageTid = transferTask.messageTid,
-                            progressPercent = progressPercent,
-                            state = Uploading,
-                            filePath = transferTask.attachment.filePath,
-                            url = null,
-                        ),
-                    )
-                }.onFailure(::logCallbackFailure)
-            }
-        },
-        onResult = { response ->
-            response.onSuccessNotNull {
-                saveCompletedSharedUpload(attachment, it)
-            }
-
-            takeAppropriateTasks(task).forEach { transferTask ->
-                notifyTaskResult(transferTask, response)
-            }
-        },
-    )
-
-    private suspend fun uploadAttachmentWithTransport(
-        attachment: SceytAttachment,
-        task: TransferTask,
-        isSharedUpload: Boolean = false,
-        onProgress: ((Float) -> Unit)? = null,
-        onResult: ((SceytResponse<String>) -> Unit)? = null,
-        onComplete: (() -> Unit)? = null,
-    ) {
-        val sourcePath = attachment.filePath
-        require(!sourcePath.isNullOrBlank()) { "Attachment source path is missing" }
-
-        val sourceFile = File(sourcePath)
-        require(sourceFile.isFile) { "Attachment source file does not exist: $sourcePath" }
-
-        val request = FileUploadRequest(
-            operationId = attachment.uploadOperationId,
-            sourceFile = sourceFile,
-            fileName = attachment.name,
-            mimeType = getMimeType(sourceFile.path),
-            attachment = attachment,
-            isSharedUpload = isSharedUpload,
-        )
-
-        performUpload(request, attachment, task, onProgress, onResult, onComplete)
-    }
-
-    private fun launchUploadJob(
-        attachment: SceytAttachment,
-        onError: (SceytResponse.Error<String>) -> Unit,
-        block: suspend () -> Unit,
-    ) {
-        val messageTid = attachment.messageTid
-        val job = scope.launch(start = CoroutineStart.LAZY) {
-            try {
-                block()
-            } catch (error: Throwable) {
-                currentCoroutineContext().ensureActive()
-                SceytLog.e(TAG, "Upload preparation failed", error)
-                runCatching { onError(SceytResponse.Error(error.toSceytException())) }
-                uploadNext(messageTid)
-            } finally {
-                uploadJobs.remove(messageTid, currentCoroutineContext().job)
-            }
-        }
-
-        uploadJobs.put(messageTid, job)?.cancel()
-        job.start()
-    }
-
-    private suspend fun performUpload(
-        request: FileUploadRequest,
-        attachment: SceytAttachment,
-        task: TransferTask,
-        onProgress: ((Float) -> Unit)?,
-        onResult: ((SceytResponse<String>) -> Unit)?,
-        onComplete: (() -> Unit)?,
-    ) {
-        val uploadJob = currentCoroutineContext().job
-        val networkWaitTriggered = AtomicBoolean()
-
-        val response = try {
-            val result = SceytChatUIKit.fileTransfer.transport.upload(
-                request = request,
-                callback = { event ->
-                    if (uploadJob.isActive &&
-                        (request.isSharedUpload || attachment.messageTid !in pausedTaskIds)
-                    ) {
-                        when (event) {
-                            is FileTransferEvent.WaitingForNetwork -> {
-                                if (networkWaitTriggered.compareAndSet(false, true)) {
-                                    uploadJob.cancel()
-                                }
-                            }
-
-                            else -> handleUploadEvent(event, attachment, task, onProgress)
-                        }
-                    }
-                },
-            ).takeUnless { it.isNullOrBlank() }
-                ?: throw IllegalStateException("File upload returned an empty remote reference")
-            currentCoroutineContext().ensureActive()
-            SceytResponse.Success(result)
-        } catch (error: CancellationException) {
-            if (networkWaitTriggered.get()) {
-                SceytResponse.Error(SceytException(0, "Waiting for network"))
-            } else {
-                currentCoroutineContext().ensureActive()
-                SceytResponse.Error(error.toSceytException())
-            }
-        } catch (error: Throwable) {
-            if (!networkWaitTriggered.get()) currentCoroutineContext().ensureActive()
-            SceytResponse.Error(error.toSceytException())
-        }
-
-        notifyUploadResult(response, task, onResult)
-        if (uploadJobs[attachment.messageTid] === uploadJob) {
-            runCatching { onComplete?.invoke() }.onFailure(::logCallbackFailure)
-        }
-    }
-
-    private fun handleUploadEvent(
-        event: FileTransferEvent,
-        attachment: SceytAttachment,
-        task: TransferTask,
-        onProgress: ((Float) -> Unit)?,
-    ) {
-        if (event !is FileTransferEvent.Progress) return
-
-        if (onProgress != null) {
-            onProgress(event.progressPercent)
-        } else {
-            task.progressCallback?.onProgress(
-                TransferData(
-                    messageTid = task.messageTid,
-                    progressPercent = event.progressPercent,
-                    state = Uploading,
-                    filePath = attachment.filePath,
-                    url = null,
-                ),
-            )
-        }
-    }
-
-    private fun notifyUploadResult(
-        response: SceytResponse<String>,
-        task: TransferTask,
-        onResult: ((SceytResponse<String>) -> Unit)?,
-    ) {
-        if (onResult != null) {
-            runCatching { onResult(response) }.onFailure(::logCallbackFailure)
-        } else {
-            notifyTaskResult(task, response)
+    private fun updateFileLocation(task: TransferTask, path: String) {
+        // Preparation can outlive a shared participant that was deleted.
+        if (task.uploadSubscription?.isFinished == false) {
+            task.updateFileLocationCallback?.onUpdateFileLocation(path)
         }
     }
 
@@ -701,24 +223,19 @@ internal class AttachmentUploadCoordinator(
         task: TransferTask,
     ): Result<String> {
         val resizedPath = checksumData?.resizedFilePath
-
-        if (resizedPath != null && File(resizedPath).exists()) {
-            return Result.success(resizedPath)
-        }
+        if (resizedPath != null && File(resizedPath).exists()) return Result.success(resizedPath)
 
         return when (attachment.type) {
             AttachmentTypeEnum.Image.value -> {
-                val resizeConfig = SceytChatUIKit.config.imageAttachmentResizeConfig
+                val config = SceytChatUIKit.config.imageAttachmentResizeConfig
                 resizeImage(
                     path = attachment.filePath,
                     parentDir = context.filesDir,
-                    reqSize = resizeConfig.dimensionThreshold,
-                    quality = resizeConfig.compressionQuality,
+                    reqSize = config.dimensionThreshold,
+                    quality = config.compressionQuality,
                 )
             }
-
             AttachmentTypeEnum.Video.value -> transcodeAttachment(attachment, task)
-
             else -> Result.failure(Exception("Unsupported attachment type: ${attachment.type}"))
         }
     }
@@ -733,16 +250,13 @@ internal class AttachmentUploadCoordinator(
             parentDir = context.filesDir,
             config = SceytChatUIKit.config.videoAttachmentResizeConfig,
             progressCallback = { data ->
-                if (continuation.isActive && !pausedTaskIds.contains(attachment.messageTid)) {
-                    task.preparingCallback?.onPreparing(
-                        attachment.toTransferData(Preparing, data.progressPercent),
-                    )
+                val subscription = task.uploadSubscription
+                if (continuation.isActive && subscription?.isPaused == false && !subscription.isFinished) {
+                    task.preparingCallback?.onPreparing(attachment.toTransferData(Preparing, data.progressPercent))
                 }
             },
         ) { result ->
-            if (completed.compareAndSet(false, true)) {
-                continuation.resume(result)
-            }
+            if (completed.compareAndSet(false, true)) continuation.resume(result)
         }
         continuation.invokeOnCancellation {
             completed.set(true)
@@ -750,119 +264,29 @@ internal class AttachmentUploadCoordinator(
         }
     }
 
-    private fun getAppropriateTasks(
-        task: TransferTask,
-    ): List<TransferTask> = synchronized(sharingFilesLock) {
-        getAppropriateTasksLocked(task)
-    }
-
-    private fun takeAppropriateTasks(
-        task: TransferTask,
-    ): List<TransferTask> = synchronized(sharingFilesLock) {
-        val sourceKey = sharingFilesPath.firstOrNull { it.messageTid == task.messageTid }?.sourceKey
-        val registeredMessageIds = fileTransferService.getTasks().values
-            .mapTo(HashSet(), TransferTask::messageTid)
-        getAppropriateTasksLocked(task).also {
-            val completedMessageIds = it.mapTo(HashSet(), TransferTask::messageTid)
-            sharingFilesPath.removeAll { member ->
-                val removed = member.messageTid in completedMessageIds ||
-                        (member.sourceKey == sourceKey && member.messageTid !in registeredMessageIds)
-                if (removed) pausedTaskIds.remove(member.messageTid)
-                removed
-            }
+    private fun notifyTaskResult(task: TransferTask, response: SceytResponse<String>) {
+        fileTransferService.removeTransferTask(task)
+        task.state = if (response is SceytResponse.Success) Uploaded else ErrorUpload
+        runCatching { task.uploadResultCallback?.onResult(response) }.onFailure {
+            SceytLog.e(TAG, "File transfer callback failed", it)
+        }
+        val result = when (response) {
+            is SceytResponse.Success -> Result.success(task.attachment)
+            is SceytResponse.Error -> Result.failure(Throwable(response.message.orEmpty()))
+        }
+        runCatching { task.complete(result) }.onFailure {
+            SceytLog.e(TAG, "File transfer completion listener failed", it)
         }
     }
 
-    private fun getAppropriateTasksLocked(task: TransferTask): List<TransferTask> {
-        val sourceKey = sharingFilesPath.firstOrNull {
-            it.messageTid == task.messageTid
-        }?.sourceKey ?: return emptyList()
-
-        val sharedTasks = sharingFilesPath.filter {
-            it.sourceKey == sourceKey
-        }
-
-        return fileTransferService.getTasks().values.filter { transferTask ->
-            sharedTasks.any { data ->
-                data.messageTid == transferTask.attachment.messageTid
-            } && !pausedTaskIds.contains(transferTask.messageTid)
-        }
-    }
-
-    private fun removeSharedMember(messageTid: Long) {
-        synchronized(sharingFilesLock) {
-            sharingFilesPath.removeAll { it.messageTid == messageTid }
-        }
-    }
-
-    private suspend fun getAttachmentChecksum(
-        filePath: String?,
-    ): FileChecksumData? {
-        if (!SceytChatUIKit.config.preventDuplicateAttachmentUpload) {
-            return null
-        }
-
-        return attachmentLogic.getFileChecksumData(filePath)
-    }
-
-    private fun checkMaybeAlreadyUploadedWithAnotherMessage(
-        checksumData: FileChecksumData?,
-        task: TransferTask,
-    ): Pair<Boolean, String?> {
-        checksumData ?: return false to ""
-
-        if (checksumData.url.isNotNullOrBlank()) {
-            if (!checksumData.resizedFilePath.isNullOrEmpty()) {
-                task.updateFileLocationCallback?.onUpdateFileLocation(checksumData.resizedFilePath)
-            }
-
-            return true to checksumData.url
-        }
-
-        return false to ""
-    }
-
-    private fun Throwable?.toSceytException(): SceytException? {
-        return when (this) {
-            null -> null
-            is SceytException -> this
-            else -> SceytException(0, message)
-        }
-    }
-
-    private fun notifyTaskResult(
-        task: TransferTask,
-        response: SceytResponse<String>,
-    ) {
-        pausedTaskIds.remove(task.messageTid)
-        runCatching {
-            task.uploadResultCallback?.onResult(response)
-        }.onFailure(::logCallbackFailure)
-    }
-
-    private fun logCallbackFailure(error: Throwable) {
-        SceytLog.e(TAG, "File transfer callback failed", error)
-    }
+    private fun Throwable.toSceytException(): SceytException =
+        this as? SceytException ?: SceytException(0, message)
 
     private val SceytAttachment.sourcePath: String?
-        get() = originalFilePath?.takeIf(String::isNotBlank)
-            ?: filePath?.takeIf(String::isNotBlank)
-
-    private val SceytAttachment.sharedSourceKey: String
-        get() = sourcePath ?: uploadOperationId
+        get() = originalFilePath?.takeIf(String::isNotBlank) ?: filePath?.takeIf(String::isNotBlank)
 
     private val SceytAttachment.uploadOperationId: String
-        get() = uploadOperationId(messageTid)
-
-    private fun uploadOperationId(messageTid: Long): String =
-        "upload:$messageTid"
-
-    private data class ShareFileData(
-        val sourceKey: String,
-        val messageTid: Long,
-    ) {
-        var completedUrl: String? = null
-    }
+        get() = "upload:$messageTid"
 
     private companion object {
         const val TAG = "FileTransferLogic"

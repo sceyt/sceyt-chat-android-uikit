@@ -185,6 +185,9 @@ class UploadAndSendAttachmentWorker(
         val completionKey = this.toString()
         val configureTask: TransferTask.() -> Unit = {
             isSharedUpload = isSharedUpload || isSharing
+            if (state == TransferState.PauseUpload && inputData.getBoolean(RESUME_PAUSED_UPLOAD, false)) {
+                state = TransferState.WaitingToUpload
+            }
             addOnCompletionListener(completionKey, continuation::safeResume)
             continuation.invokeOnCancellation {
                 removeOnCompletionListener(completionKey)

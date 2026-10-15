@@ -1,20 +1,28 @@
 package com.sceyt.chatuikit.persistence.file_transfer
 
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
+import com.sceyt.chatuikit.filetransfer.FileTransferSubscription
 
 class TransferTask(
-        attachment: SceytAttachment,
-        val messageTid: Long,
-        var state: TransferState?,
+    attachment: SceytAttachment,
+    val messageTid: Long,
+    var state: TransferState?,
 ) {
     @Volatile
     private var _attachment: SceytAttachment = attachment
-    
+
     @PublishedApi
     internal val lock = Any()
 
     // Remember sharing before a paused upload has joined its shared group.
     internal var isSharedUpload = false
+
+    // Keep participation on the task instead of rebuilding ownership from attachment IDs.
+    @Volatile
+    internal var uploadSubscription: FileTransferSubscription? = null
+
+    @Volatile
+    internal var downloadSubscription: FileTransferSubscription? = null
 
     var attachment: SceytAttachment
         get() = _attachment

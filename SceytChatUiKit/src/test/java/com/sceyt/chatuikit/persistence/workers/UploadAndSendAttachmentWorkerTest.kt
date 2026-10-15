@@ -15,6 +15,7 @@ import com.sceyt.chatuikit.createMessage
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
+import com.sceyt.chatuikit.filetransfer.AttachmentTransferContext
 import com.sceyt.chatuikit.filetransfer.SceytChatUIKitFileTransfer
 import com.sceyt.chatuikit.koin.SceytKoinApp
 import com.sceyt.chatuikit.notifications.SceytNotifications
@@ -348,7 +349,8 @@ class UploadAndSendAttachmentWorkerTest {
         val work = testScope.async { worker.doWork() }
 
         assertThat(transport.uploadCalls).hasSize(1)
-        assertThat(transport.uploadCalls.single().request.isSharedUpload).isTrue()
+        val context = transport.uploadCalls.single().request.context as AttachmentTransferContext
+        assertThat(context.isSharedUpload).isTrue()
         transport.uploadCalls.single().succeed("fresh-url")
 
         assertThat(work.isCompleted).isTrue()

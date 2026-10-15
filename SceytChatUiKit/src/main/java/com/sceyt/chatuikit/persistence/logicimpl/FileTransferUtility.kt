@@ -5,10 +5,11 @@ import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.sceyt_callbacks.ProgressCallback
 import com.sceyt.chat.sceyt_callbacks.UrlCallback
 import com.sceyt.chatuikit.data.models.SceytResponse
-import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.extensions.TAG
+import com.sceyt.chatuikit.filetransfer.FileDownloadRequest
 import com.sceyt.chatuikit.logger.SceytLog
 import kotlinx.coroutines.suspendCancellableCoroutine
+import okhttp3.Call
 import java.io.File
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.resume
@@ -17,7 +18,7 @@ class FileTransferUtility {
     private val downloader = OkHttpDownloader()
 
     suspend fun uploadFile(
-        attachment: SceytAttachment,
+        sourceFile: File,
         onProgress: (Float) -> Unit,
     ): SceytResponse<String> = suspendCancellableCoroutine { continuation ->
         val completed = AtomicBoolean()
@@ -29,7 +30,7 @@ class FileTransferUtility {
         }
 
         val operation = ChatClient.getClient().uploadCancellable(
-            /* filePath = */ attachment.filePath,
+            /* filePath = */ sourceFile.path,
             /* progressCallback = */ object : ProgressCallback {
                 override fun onResult(progress: Float) {
                     if (progress == 1f || !continuation.isActive) return
@@ -60,19 +61,22 @@ class FileTransferUtility {
     }
 
     fun downloadFile(
-        attachment: SceytAttachment,
-        destFile: File,
+        request: FileDownloadRequest,
         onProgress: (Float) -> Unit,
         onResult: (SceytResponse<String>) -> Unit,
-    ) {
-        downloader.downloadFile(attachment, destFile, onProgress, onResult)
+    ): Call? {
+        return downloader.downloadFile(request, onProgress, onResult)
     }
 
-    fun pauseDownload(attachment: SceytAttachment) {
-        downloader.pauseDownload(attachment)
+    fun pauseDownload(operationId: String) {
+        downloader.pauseDownload(operationId)
     }
 
-    fun resumeDownload(attachment: SceytAttachment): Boolean {
-        return downloader.resumeDownload(attachment)
+    fun cancelDownload(operationId: String, call: Call) {
+        downloader.cancelDownload(operationId, call)
+    }
+
+    fun resumeDownload(operationId: String): Boolean {
+        return downloader.resumeDownload(operationId)
     }
 }

@@ -5,8 +5,11 @@ import com.sceyt.chat.models.SceytException
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
+import com.sceyt.chatuikit.filetransfer.AttachmentTransferContext
+import com.sceyt.chatuikit.filetransfer.FileDownloadCoordinator
 import com.sceyt.chatuikit.filetransfer.FileDownloadRequest
-import com.sceyt.chatuikit.filetransfer.FileTransferEvent
+import com.sceyt.chatuikit.filetransfer.FileTransferObserver
+import com.sceyt.chatuikit.filetransfer.FileTransferSubscription
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
@@ -20,304 +23,195 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferTask
 import com.sceyt.chatuikit.persistence.file_transfer.transferKey
 import com.sceyt.chatuikit.persistence.mappers.toTransferData
 import com.sceyt.chatuikit.presentation.extensions.isAttachmentExistAndFullyLoaded
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.ensureActive
-import kotlinx.coroutines.job
-import kotlinx.coroutines.launch
 import org.koin.core.component.inject
 import java.io.File
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.atomic.AtomicBoolean
 
 internal class AttachmentDownloadCoordinator(
     private val context: Context,
-    private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
+    scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
 ) : SceytKoinComponent {
     private val fileTransferService: FileTransferService by inject()
+    private val fileDownloadCoordinator = FileDownloadCoordinator(
+        scope = scope,
+        transport = SceytChatUIKit.fileTransfer::transport
+    )
 
-    private val downloadJobs = ConcurrentHashMap<String, Job>()
-    // Native pause keeps its coroutine active, so its callbacks need a separate thread-safe gate.
-    private val pausedOperationIds = ConcurrentHashMap.newKeySet<String>()
+    fun downloadFile(attachment: SceytAttachment, task: TransferTask) {
+        if (task.downloadSubscription?.isFinished == false) return
 
-    fun downloadFile(
-        attachment: SceytAttachment,
-        task: TransferTask,
-    ) {
         val url = attachment.url
-
         if (url.isNullOrBlank()) {
-            task.downloadCallback?.onResult(SceytResponse.Error(SceytException(0, "Wrong url")))
+            notifyDownloadResult(task, SceytResponse.Error(SceytException(0, "Wrong url")))
             return
         }
-
-        val destinationFile = provideDestination(attachment, task) ?: return
-
-        val existingFile = attachment.isAttachmentExistAndFullyLoaded(destinationFile)
-
+        val destination = provideDestination(attachment, task) ?: return
+        val existingFile = attachment.isAttachmentExistAndFullyLoaded(destination)
         if (existingFile != null) {
-            task.downloadCallback?.onResult(SceytResponse.Success(existingFile.path))
+            notifyDownloadResult(task, SceytResponse.Success(existingFile.path))
             return
         }
-
-        startDownload(attachment, task, url, destinationFile)
+        startDownload(attachment, task, url, destination)
     }
 
     private fun startDownload(
         attachment: SceytAttachment,
         task: TransferTask,
         url: String,
-        destinationFile: File,
+        destination: File,
         isResuming: Boolean = false,
     ) {
-        val operationId = attachment.downloadOperationId
         val request = FileDownloadRequest(
-            operationId = operationId,
+            operationId = "download:${attachment.transferKey}",
             url = url,
-            destinationFile = destinationFile,
-            attachment = attachment,
+            destinationFile = destination,
+            context = AttachmentTransferContext(attachment),
         )
+        task.state = Downloading
+        fileDownloadCoordinator.download(
+            request = request,
+            participantId = attachment.transferKey,
+            observer = object : FileTransferObserver {
+                override fun onStarted() {
+                    publishDownloadingProgress(attachment, task, url)
+                    if (isResuming) onResumed(restarted = false)
+                }
 
-        val downloadJob = scope.launch(start = CoroutineStart.LAZY) {
-            performDownload(request, task)
-        }
+                override fun onProgress(progressPercent: Float) {
+                    task.progressCallback?.onProgress(
+                        TransferData(task.messageTid, progressPercent, Downloading, null, url),
+                    )
+                }
 
-        if (downloadJobs.putIfAbsent(operationId, downloadJob) != null) {
-            downloadJob.cancel()
-            return
-        }
+                override fun onPaused() {
+                    task.state = PauseDownload
+                    task.resumePauseCallback?.onResumePause(attachment.toTransferData(PauseDownload))
+                }
 
-        task.progressCallback?.onProgress(
-            TransferData(
-                messageTid = task.messageTid,
-                progressPercent = attachment.progressPercent ?: 0f,
-                state = Downloading,
-                filePath = attachment.filePath,
-                url = url,
-            ),
-        )
-
-        if (isResuming) {
-            task.resumePauseCallback?.onResumePause(attachment.toTransferData(Downloading))
-        }
-        downloadJob.start()
-    }
-
-    private suspend fun performDownload(
-        request: FileDownloadRequest,
-        task: TransferTask,
-    ) {
-        val downloadJob = currentCoroutineContext().job
-
-        try {
-            val response = downloadWithTransport(request, task)
-            notifyDownloadResult(task, response)
-        } finally {
-            if (downloadJobs.remove(request.operationId, downloadJob)) {
-                pausedOperationIds.remove(request.operationId)
-            }
-        }
-    }
-
-    private suspend fun downloadWithTransport(
-        request: FileDownloadRequest,
-        task: TransferTask,
-    ): SceytResponse<String> {
-        val downloadJob = currentCoroutineContext().job
-        val networkWaitTriggered = AtomicBoolean()
-
-        return try {
-            val result = SceytChatUIKit.fileTransfer.transport.download(
-                request = request,
-                callback = { event ->
-                    if (downloadJob.isActive && request.operationId !in pausedOperationIds) {
-                        when (event) {
-                            is FileTransferEvent.WaitingForNetwork -> {
-                                if (networkWaitTriggered.compareAndSet(false, true)) {
-                                    downloadJob.cancel()
-                                }
-                            }
-
-                            else -> handleDownloadEvent(event, task, request.url)
+                override fun onResumed(restarted: Boolean) {
+                    if (restarted) {
+                        val existingFile = attachment.isAttachmentExistAndFullyLoaded(destination)
+                        if (existingFile != null) {
+                            task.downloadSubscription?.cancel()
+                            task.downloadSubscription = null
+                            notifyDownloadResult(task, SceytResponse.Success(existingFile.path))
+                            return
                         }
+                        publishDownloadingProgress(attachment, task, url)
                     }
-                },
-            ).takeUnless { it.isNullOrBlank() }
-                ?: throw IllegalStateException("File download returned an empty local path")
-            currentCoroutineContext().ensureActive()
-            SceytResponse.Success(result)
-        } catch (error: CancellationException) {
-            if (networkWaitTriggered.get()) {
-                SceytResponse.Error(SceytException(0, "Waiting for network"))
-            } else {
-                currentCoroutineContext().ensureActive()
-                request.destinationFile.delete()
-                SceytResponse.Error(error.toSceytException())
-            }
-        } catch (error: Throwable) {
-            if (!networkWaitTriggered.get()) {
-                currentCoroutineContext().ensureActive()
-                request.destinationFile.delete()
-            }
-            SceytResponse.Error(error.toSceytException())
-        }
+                    task.state = Downloading
+                    task.resumePauseCallback?.onResumePause(attachment.toTransferData(Downloading))
+                }
+
+                override fun onResult(result: Result<String>) {
+                    task.downloadSubscription = null
+                    notifyDownloadResult(
+                        task, result.fold(
+                            onSuccess = { SceytResponse.Success(it) },
+                            onFailure = { SceytResponse.Error(it.toSceytException()) },
+                        )
+                    )
+                }
+            },
+            bind = { bindDownload(task, it) },
+        )
     }
 
-    private fun handleDownloadEvent(
-        event: FileTransferEvent,
+    private fun bindDownload(task: TransferTask, subscription: FileTransferSubscription) {
+        task.downloadSubscription = subscription
+        if (task.state == PauseDownload) subscription.pause()
+    }
+
+    private fun publishDownloadingProgress(
+        attachment: SceytAttachment,
         task: TransferTask,
         url: String,
     ) {
-        if (event !is FileTransferEvent.Progress) return
-
         task.progressCallback?.onProgress(
             TransferData(
-                messageTid = task.messageTid,
-                progressPercent = event.progressPercent,
-                state = Downloading,
-                filePath = null,
-                url = url,
+                task.messageTid,
+                attachment.progressPercent ?: 0f,
+                Downloading,
+                attachment.filePath,
+                url
             ),
         )
     }
 
-    fun pauseLoad(
-        attachment: SceytAttachment,
-        state: TransferState,
-    ) {
-        if (state != PendingDownload && state != Downloading) {
-            return
-        }
-
-        val operationId = attachment.downloadOperationId
-        val currentJob = downloadJobs[operationId]
-        if (currentJob?.isActive == true) {
-            pausedOperationIds.add(operationId)
-        }
-        val pausedByTransport = currentJob?.isActive == true && pauseTransport(operationId)
-
-        if (!pausedByTransport) {
-            if (currentJob != null && downloadJobs.remove(operationId, currentJob)) {
-                currentJob.cancel()
-            }
-            pausedOperationIds.remove(operationId)
-        }
-
-        fileTransferService.findTransferTask(attachment)?.let { task ->
+    fun pauseLoad(attachment: SceytAttachment, state: TransferState) {
+        if (state != PendingDownload && state != Downloading) return
+        val task = fileTransferService.findTransferTask(attachment) ?: return
+        val subscription = task.downloadSubscription
+        if (subscription != null && !subscription.isFinished) {
+            subscription.pause()
+        } else {
             task.state = PauseDownload
             task.resumePauseCallback?.onResumePause(attachment.toTransferData(PauseDownload))
         }
     }
 
-    fun resumeLoad(
-        attachment: SceytAttachment,
-        state: TransferState,
-    ) {
-        if (
-            state != PendingDownload &&
-            state != PauseDownload &&
-            state != ErrorDownload
-        ) {
-            return
-        }
+    fun resumeLoad(attachment: SceytAttachment, state: TransferState) {
+        if (state != PendingDownload && state != PauseDownload && state != ErrorDownload) return
 
-        val operationId = attachment.downloadOperationId
-        val currentJob = downloadJobs[operationId]
-        val task = fileTransferService.findTransferTask(attachment)
-
-        val resumedByTransport = state == PauseDownload &&
-                currentJob?.isActive == true &&
-                resumeTransport(operationId)
-
-        if (resumedByTransport) {
-            pausedOperationIds.remove(operationId)
-            task?.state = Downloading
-            task?.resumePauseCallback?.onResumePause(attachment.toTransferData(Downloading))
-            return
-        }
-
-        if (state != PendingDownload || currentJob?.isActive != true) {
-            if (currentJob != null && downloadJobs.remove(operationId, currentJob)) {
-                currentJob.cancel()
+        val task = fileTransferService.findOrCreateTransferTask(attachment)
+        val subscription = task.downloadSubscription
+        if (subscription != null && !subscription.isFinished) {
+            if (state == PauseDownload) {
+                subscription.resume()
+                return
             }
+            if (state == PendingDownload) return
+            subscription.cancel()
+            task.downloadSubscription = null
         }
 
-        pausedOperationIds.remove(operationId)
-
-        val transferTask = task ?: fileTransferService.findOrCreateTransferTask(attachment)
-        val destinationFile = provideDestination(attachment, transferTask) ?: return
-
-        val existingFile =
-            attachment.isAttachmentExistAndFullyLoaded(destinationFile)
-
-        transferTask.state = Downloading
-
+        val destination = provideDestination(attachment, task) ?: return
+        val existingFile = attachment.isAttachmentExistAndFullyLoaded(destination)
+        task.state = Downloading
         if (existingFile != null) {
-            notifyDownloadResult(transferTask, SceytResponse.Success(existingFile.path))
+            notifyDownloadResult(task, SceytResponse.Success(existingFile.path))
             return
         }
-
         val url = attachment.url
         if (url.isNullOrBlank()) {
-            notifyDownloadResult(transferTask, SceytResponse.Error(SceytException(0, "Wrong url")))
+            notifyDownloadResult(task, SceytResponse.Error(SceytException(0, "Wrong url")))
             return
         }
-
-        startDownload(attachment, transferTask, url, destinationFile, isResuming = true)
+        startDownload(attachment, task, url, destination, isResuming = true)
     }
 
-    private fun pauseTransport(operationId: String): Boolean = runCatching {
-        SceytChatUIKit.fileTransfer.transport.pause(operationId)
-    }.getOrDefault(false)
+    fun cancelAll() = fileDownloadCoordinator.cancelAll()
 
-    private fun resumeTransport(operationId: String): Boolean = runCatching {
-        SceytChatUIKit.fileTransfer.transport.resume(operationId)
-    }.getOrDefault(false)
+    private fun Throwable.toSceytException(): SceytException =
+        this as? SceytException ?: SceytException(0, message)
 
-    fun cancelAll() {
-        downloadJobs.values.forEach { it.cancel() }
-        downloadJobs.clear()
-        pausedOperationIds.clear()
-    }
-
-    private fun Throwable?.toSceytException(): SceytException? {
-        return when (this) {
-            null -> null
-            is SceytException -> this
-            else -> SceytException(0, message)
-        }
-    }
-
-    private fun provideDestination(
-        attachment: SceytAttachment,
-        task: TransferTask,
-    ): File? = runCatching {
-        SceytChatUIKit.fileTransfer.destinationProvider.provideDestination(context, attachment)
-    }.getOrElse { error ->
-        notifyDownloadResult(task, SceytResponse.Error(error.toSceytException()))
-        null
-    }
-
-    private fun notifyDownloadResult(
-        task: TransferTask,
-        response: SceytResponse<String>,
-    ) {
+    private fun provideDestination(attachment: SceytAttachment, task: TransferTask): File? =
         runCatching {
-            task.downloadCallback?.onResult(response)
-        }.onFailure { error ->
-            SceytLog.e(TAG, "File transfer callback failed", error)
+            SceytChatUIKit.fileTransfer.destinationProvider.provideDestination(context, attachment)
+        }.getOrElse { error ->
+            notifyDownloadResult(task, SceytResponse.Error(error.toSceytException()))
+            null
         }
-    }
 
-    private val SceytAttachment.downloadOperationId: String
-        get() = "download:$transferKey"
-
-    companion object {
-        private const val TAG = "AttachmentDownloadCoordinator"
+    private fun notifyDownloadResult(task: TransferTask, response: SceytResponse<String>) {
+        fileTransferService.removeTransferTask(task)
+        runCatching { task.downloadCallback?.onResult(response) }.onFailure { error ->
+            SceytLog.e("AttachmentDownloadCoordinator", "File transfer callback failed", error)
+        }
+        val result = when (response) {
+            is SceytResponse.Success -> Result.success(task.attachment)
+            is SceytResponse.Error -> Result.failure(
+                response.exception ?: IllegalStateException("File download failed")
+            )
+        }
+        runCatching { task.complete(result) }.onFailure { error ->
+            SceytLog.e(
+                "AttachmentDownloadCoordinator",
+                "File transfer completion listener failed",
+                error
+            )
+        }
     }
 }
