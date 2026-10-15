@@ -238,6 +238,26 @@ class UploadAndSendAttachmentWorkerTest {
     }
 
     @Test
+    fun `rerun of a resume worker keeps a later pause`() {
+        val attachment = localAttachment().copy(messageTid = 40L, transferState = TransferState.WaitingToUpload)
+        service.pause(attachment.messageTid, attachment, TransferState.WaitingToUpload)
+
+        val worker = worker(
+            attachment.copy(transferState = TransferState.PauseUpload),
+            resume = true,
+            runAttemptCount = 1,
+        )
+        val work = testScope.async { worker.doWork() }
+
+        assertThat(work.isCompleted).isTrue()
+        assertThat(transport.uploadCalls).isEmpty()
+        assertThat(service.findTransferTask(attachment)?.state).isEqualTo(TransferState.PauseUpload)
+        runBlocking {
+            verify(messageLogic, never()).sendMessageWithUploadedAttachments(any(), any())
+        }
+    }
+
+    @Test
     fun `explicit shared resume joins existing upload after pause before registration`() {
         val first = localAttachment()
         val paused = first.copy(messageTid = 11L, transferState = TransferState.WaitingToUpload)
@@ -366,6 +386,7 @@ class UploadAndSendAttachmentWorkerTest {
         attachment: SceytAttachment,
         resume: Boolean = false,
         shared: Boolean = false,
+        runAttemptCount: Int = 0,
     ): UploadAndSendAttachmentWorker {
         val message = createMessage(createdAt = 1L, tid = attachment.messageTid).copy(
             deliveryStatus = MessageDeliveryStatus.Pending,
@@ -382,6 +403,7 @@ class UploadAndSendAttachmentWorkerTest {
                 .putBoolean(IS_SHARING, shared)
                 .build(),
         )
+        whenever(params.runAttemptCount).thenReturn(runAttemptCount)
         return UploadAndSendAttachmentWorker(context, params)
     }
 

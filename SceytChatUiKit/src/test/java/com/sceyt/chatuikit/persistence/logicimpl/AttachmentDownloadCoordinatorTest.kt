@@ -764,6 +764,21 @@ class AttachmentDownloadCoordinatorTest {
     }
 
     @Test
+    fun `download uses the transport configured after coordinator creation`() {
+        val replacement = RecordingFileTransferTransport()
+        SceytChatUIKit.fileTransfer = SceytChatUIKitFileTransfer().apply {
+            transport = replacement
+            destinationProvider = FileTransferDestinationProvider { _, _ -> destinationFile }
+        }
+        val attachment = attachment(state = TransferState.PendingDownload)
+
+        coordinator.downloadFile(attachment, transferTask(attachment).also(service::addTransferTask))
+
+        assertThat(transport.downloadCalls).isEmpty()
+        assertThat(replacement.downloadCalls).hasSize(1)
+    }
+
+    @Test
     fun `pause before download subscription is bound still pauses it`() {
         val first = attachment(state = TransferState.PendingDownload)
         val second = first.copy(id = 11L, name = "second.txt", url = "second-url")

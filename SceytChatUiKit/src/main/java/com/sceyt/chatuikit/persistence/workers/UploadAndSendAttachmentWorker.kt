@@ -97,6 +97,8 @@ class UploadAndSendAttachmentWorker(
     private val messageLogic: PersistenceMessagesLogic by inject()
     private val channelLogic: PersistenceChannelsLogic by inject()
     private val fileChecksumDao: FileChecksumDao by inject()
+    private val resumePausedUpload: Boolean
+        get() = inputData.getBoolean(RESUME_PAUSED_UPLOAD, false) && runAttemptCount == 0
 
     private suspend fun checkToUploadAttachmentsBeforeSend(
             tmpMessage: SceytMessage,
@@ -185,7 +187,7 @@ class UploadAndSendAttachmentWorker(
         val completionKey = this.toString()
         val configureTask: TransferTask.() -> Unit = {
             isSharedUpload = isSharedUpload || isSharing
-            if (state == TransferState.PauseUpload && inputData.getBoolean(RESUME_PAUSED_UPLOAD, false)) {
+            if (state == TransferState.PauseUpload && resumePausedUpload) {
                 state = TransferState.WaitingToUpload
             }
             addOnCompletionListener(completionKey, continuation::safeResume)
@@ -195,7 +197,7 @@ class UploadAndSendAttachmentWorker(
         }
 
         val task = fileTransferService.findTransferTask(attachment)
-        if (task?.state == TransferState.PauseUpload && inputData.getBoolean(RESUME_PAUSED_UPLOAD, false)) {
+        if (task?.state == TransferState.PauseUpload && resumePausedUpload) {
             task.configureTask()
             fileTransferService.resume(attachment.messageTid, attachment, TransferState.PauseUpload)
         } else if (isSharing) {
@@ -209,7 +211,6 @@ class UploadAndSendAttachmentWorker(
         val data = inputData
         val messageTid = data.getLong(MESSAGE_TID, 0)
         val isSharing = data.getBoolean(IS_SHARING, false)
-        val resumePausedUpload = data.getBoolean(RESUME_PAUSED_UPLOAD, false)
         val tmpMessage = messageLogic.getMessageFromDbByTid(messageTid)
             ?: return finishWorkWithFailure("Message not found: $messageTid")
 

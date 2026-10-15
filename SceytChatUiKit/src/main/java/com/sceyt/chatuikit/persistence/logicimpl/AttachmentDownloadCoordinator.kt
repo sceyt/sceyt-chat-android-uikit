@@ -36,7 +36,7 @@ internal class AttachmentDownloadCoordinator(
     private val fileTransferService: FileTransferService by inject()
     private val fileDownloadCoordinator = FileDownloadCoordinator(
         scope = scope,
-        transport = SceytChatUIKit.fileTransfer::transport
+        transport = { SceytChatUIKit.fileTransfer.transport }
     )
 
     fun downloadFile(attachment: SceytAttachment, task: TransferTask) {

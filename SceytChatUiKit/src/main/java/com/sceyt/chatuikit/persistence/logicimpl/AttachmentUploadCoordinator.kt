@@ -20,6 +20,7 @@ import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.extensions.resizeImage
 import com.sceyt.chatuikit.persistence.extensions.transcodeVideo
+import com.sceyt.chatuikit.persistence.file_transfer.AttachmentTransferStateStore
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
@@ -32,6 +33,7 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploaded
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploading
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.WaitingToUpload
 import com.sceyt.chatuikit.persistence.file_transfer.TransferTask
+import com.sceyt.chatuikit.persistence.file_transfer.isCompleted
 import com.sceyt.chatuikit.persistence.file_transfer.transferKey
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import com.sceyt.chatuikit.persistence.mappers.toTransferData
@@ -139,6 +141,7 @@ internal class AttachmentUploadCoordinator(
         // Ignore stale active-state taps after completion. Pending and queued uploads can still be
         // paused before the worker has created their task.
         if (task == null && state != PendingUpload && state != WaitingToUpload) return
+        if (task == null && AttachmentTransferStateStore.getTransferData(attachment)?.state?.isCompleted() == true) return
 
         val pausedTask = task ?: fileTransferService.findOrCreateTransferTask(attachment)
         val subscription = pausedTask.uploadSubscription

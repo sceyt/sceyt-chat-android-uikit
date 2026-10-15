@@ -391,6 +391,33 @@ class FileTransferServiceImplTest {
     }
 
     @Test
+    fun `cancel upload also stops a running download of the attachment`() {
+        useTransferCoordinators()
+        val attachment = attachment(messageTid = 23L, state = TransferState.PendingDownload)
+        service.download(attachment)
+
+        service.cancelUpload(attachment)
+
+        assertThat(transport.downloadCalls.single().cancelled).isTrue()
+        assertThat(service.getTasks()).isEmpty()
+    }
+
+    @Test
+    fun `cancel all transfers releases waiting completion listeners`() {
+        val attachment = attachment(messageTid = 24L)
+        var completion: Result<SceytAttachment>? = null
+        val task = service.upload(attachment) {
+            addOnCompletionListener("worker") { completion = it }
+        }
+
+        service.cancelAllTransfers()
+
+        assertThat(completion?.exceptionOrNull()).isInstanceOf(CancellationException::class.java)
+        assertThat(task.onCompletionListeners).isEmpty()
+        assertThat(service.getTasks()).isEmpty()
+    }
+
+    @Test
     fun `cancel all clears tasks and coordinator state`() {
         val attachment = attachment()
         service.upload(attachment)
