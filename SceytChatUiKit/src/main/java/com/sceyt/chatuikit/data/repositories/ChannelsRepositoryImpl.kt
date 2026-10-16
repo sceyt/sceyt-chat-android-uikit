@@ -145,34 +145,48 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         getChannelsImpl(query, config, params)
     }
 
+    override suspend fun searchChannels(
+        query: String,
+        config: ChannelListConfig,
+        params: SearchChannelParams,
+    ): SceytResponse<List<SceytChannel>> = retryOnResendableError {
+        loadChannelsPage(createChannelListQuery(config, query, params), query, config, params)
+    }
+
     private suspend fun getChannelsImpl(
         query: String,
         config: ChannelListConfig,
         params: SearchChannelParams,
     ): SceytResponse<List<SceytChannel>> = channelsQueryMutex.withLock {
-        suspendCancellableCoroutine { continuation ->
-            val channelListQuery = createChannelListQuery(config, query, params).also {
-                channelsQuery = it
+        val channelListQuery = createChannelListQuery(config, query, params).also {
+            channelsQuery = it
+        }
+        loadChannelsPage(channelListQuery, query, config, params)
+    }
+
+    private suspend fun loadChannelsPage(
+        channelListQuery: ChannelListQuery,
+        query: String,
+        config: ChannelListConfig,
+        params: SearchChannelParams,
+    ): SceytResponse<List<SceytChannel>> = suspendCancellableCoroutine { continuation ->
+        channelListQuery.loadNext(object : ChannelsCallback {
+            override fun onResult(channels: MutableList<Channel>?) {
+                if (channels.isNullOrEmpty())
+                    continuation.safeResume(SceytResponse.Success(emptyList()))
+                else {
+                    continuation.safeResume(SceytResponse.Success(channels.map { it.toSceytUiChannel() }))
+                }
             }
 
-            channelListQuery.loadNext(object : ChannelsCallback {
-                override fun onResult(channels: MutableList<Channel>?) {
-                    if (channels.isNullOrEmpty())
-                        continuation.safeResume(SceytResponse.Success(emptyList()))
-                    else {
-                        continuation.safeResume(SceytResponse.Success(channels.map { it.toSceytUiChannel() }))
-                    }
-                }
-
-                override fun onError(e: SceytException?) {
-                    continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(
-                        TAG,
-                        "getChannels error: ${e?.message}, code: ${e?.code}, query: $query, config: $config, params: $params"
-                    )
-                }
-            })
-        }
+            override fun onError(e: SceytException?) {
+                continuation.safeResume(SceytResponse.Error(e))
+                SceytLog.e(
+                    TAG,
+                    "getChannels error: ${e?.message}, code: ${e?.code}, query: $query, config: $config, params: $params"
+                )
+            }
+        })
     }
 
     override suspend fun loadMoreChannels(

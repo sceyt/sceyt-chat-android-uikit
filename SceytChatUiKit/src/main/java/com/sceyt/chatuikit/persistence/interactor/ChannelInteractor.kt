@@ -25,6 +25,12 @@ interface ChannelInteractor {
         config: ChannelListConfig,
     ): Flow<PaginationResponse<SceytChannel>>
 
+    /** Fetches one server page without replacing the channel list's loaded window or pagination. */
+    suspend fun searchChannels(
+        query: String,
+        config: ChannelListConfig,
+    ): SceytResponse<List<SceytChannel>>
+
     suspend fun searchChannelsWithUserIds(
         offset: Int,
         searchQuery: String,

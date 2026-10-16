@@ -220,6 +220,11 @@ internal class PersistenceMiddleWareImpl(
         config = config
     )
 
+    override suspend fun searchChannels(
+        query: String,
+        config: ChannelListConfig,
+    ) = channelLogic.searchChannels(query, config)
+
     override suspend fun searchChannelsWithUserIds(
         offset: Int,
         searchQuery: String,

@@ -37,6 +37,11 @@ interface PersistenceChannelsLogic {
         config: ChannelListConfig,
     ): Flow<PaginationResponse<SceytChannel>>
 
+    suspend fun searchChannels(
+        query: String,
+        config: ChannelListConfig,
+    ): SceytResponse<List<SceytChannel>>
+
     suspend fun searchChannelsWithUserIds(
         offset: Int,
         searchQuery: String,

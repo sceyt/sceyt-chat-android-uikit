@@ -35,6 +35,7 @@ import com.sceyt.chatuikit.data.models.channels.SyncedChannelsWindow
 import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
+import com.sceyt.chatuikit.data.models.map
 import com.sceyt.chatuikit.data.models.onError
 import com.sceyt.chatuikit.data.models.onSuccess
 import com.sceyt.chatuikit.data.models.onSuccessNotNull
@@ -383,6 +384,14 @@ internal class PersistenceChannelsLogicImpl(
                 )
             )
         }
+    }
+
+    override suspend fun searchChannels(
+        query: String,
+        config: ChannelListConfig,
+    ): SceytResponse<List<SceytChannel>> {
+        return channelsRepository.searchChannels(query, config, SearchChannelParams.default)
+            .map { saveChannelsToDb(it.orEmpty()) }
     }
 
     override suspend fun searchChannelsWithUserIds(
