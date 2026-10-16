@@ -405,8 +405,6 @@ internal class PersistenceChannelsLogicImpl(
         loadKey: LoadKeyData?,
         directChatType: String,
     ): Flow<PaginationResponse<SceytChannel>> = flow {
-        if (offset == 0) channelsCache.clear(config)
-
         val searchUserIds = userIds.toMutableSet()
 
         if (includeSearchByUserDisplayName) {
@@ -426,8 +424,6 @@ internal class PersistenceChannelsLogicImpl(
                 orderByLastMessage = orderByLastMessage,
                 directType = directChatType
             ).map { it.toChannel() }
-
-            channelsCache.addAll(config, dbChannels, false)
 
             emit(
                 PaginationResponse.DBResponse(
@@ -455,19 +451,13 @@ internal class PersistenceChannelsLogicImpl(
             val channels = response.data.orEmpty()
             val savedChannels = saveChannelsToDb(channels)
 
-            val hasDiff = channelsCache.addAll(
-                config = config,
-                list = savedChannels,
-                checkDifference = offset != 0
-            ) || offset == 0
-
             emit(
                 PaginationResponse.ServerResponse(
                     data = response,
-                    cacheData = channelsCache.getSorted(config),
+                    cacheData = savedChannels,
                     loadKey = loadKey,
                     offset = offset,
-                    hasDiff = hasDiff,
+                    hasDiff = true,
                     hasNext = channels.size == channelsLoadSize,
                     hasPrev = false,
                     loadType = LoadNext,
