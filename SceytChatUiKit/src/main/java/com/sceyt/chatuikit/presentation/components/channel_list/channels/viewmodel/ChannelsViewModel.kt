@@ -8,7 +8,6 @@ import com.sceyt.chatuikit.data.models.LoadKeyData
 import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.SyncResult
-import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.onSuccess
 import com.sceyt.chatuikit.koin.SceytKoinComponent
@@ -244,43 +243,6 @@ class ChannelsViewModel(
             }
         }
         getChannelsJobs.add(job)
-    }
-
-    @Suppress("unused")
-    fun searchChannelsWithUserIds(
-        offset: Int,
-        query: String = searchQuery,
-        userIds: List<String> = emptyList(),
-        directChatType: String = ChannelTypeEnum.Direct.value,
-        config: ChannelListConfig = this.config,
-        onlyMine: Boolean = false,
-        includeSearchByUserDisplayName: Boolean = false,
-        ignoreDatabase: Boolean = false,
-        loadKey: LoadKeyData? = null,
-    ) {
-        searchQuery = query
-        setPagingLoadingStarted(
-            loadType = PaginationResponse.LoadType.LoadNext,
-            ignoreDatabase = ignoreDatabase
-        )
-
-        notifyPageLoadingState(false)
-
-        cancelGetChannelJobs()
-        searchChannelJob?.cancel()
-        searchChannelJob = viewModelScope.launch(ioDispatcher) {
-            channelInteractor.searchChannelsWithUserIds(
-                offset = offset,
-                searchQuery = query,
-                userIds = userIds,
-                config = config,
-                includeSearchByUserDisplayName = includeSearchByUserDisplayName,
-                onlyMine = onlyMine,
-                ignoreDb = ignoreDatabase,
-                loadKey = loadKey,
-                directChatType = directChatType
-            ).collect(::initPaginationResponse)
-        }
     }
 
     @Suppress("unused")

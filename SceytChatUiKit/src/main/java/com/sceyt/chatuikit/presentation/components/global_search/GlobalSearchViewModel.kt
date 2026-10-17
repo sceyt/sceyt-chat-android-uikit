@@ -178,7 +178,6 @@ open class GlobalSearchViewModel(
     override fun onCleared() {
         suggestionJob?.cancel()
         GlobalSearchSessionRegistry.unregister(sessionId)
-        super.onCleared()
     }
 }
 

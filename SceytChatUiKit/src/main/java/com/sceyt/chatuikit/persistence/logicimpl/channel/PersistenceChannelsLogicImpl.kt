@@ -35,6 +35,7 @@ import com.sceyt.chatuikit.data.models.channels.SyncedChannelsWindow
 import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
+import com.sceyt.chatuikit.data.models.map
 import com.sceyt.chatuikit.data.models.onError
 import com.sceyt.chatuikit.data.models.onSuccess
 import com.sceyt.chatuikit.data.models.onSuccessNotNull
@@ -385,6 +386,14 @@ internal class PersistenceChannelsLogicImpl(
         }
     }
 
+    override suspend fun searchChannels(
+        query: String,
+        config: ChannelListConfig,
+    ): SceytResponse<List<SceytChannel>> {
+        return channelsRepository.searchChannels(query, config, SearchChannelParams.default)
+            .map { saveChannelsToDb(it.orEmpty()) }
+    }
+
     override suspend fun searchChannelsWithUserIds(
         offset: Int,
         searchQuery: String,
@@ -396,8 +405,6 @@ internal class PersistenceChannelsLogicImpl(
         loadKey: LoadKeyData?,
         directChatType: String,
     ): Flow<PaginationResponse<SceytChannel>> = flow {
-        if (offset == 0) channelsCache.clear(config)
-
         val searchUserIds = userIds.toMutableSet()
 
         if (includeSearchByUserDisplayName) {
@@ -417,8 +424,6 @@ internal class PersistenceChannelsLogicImpl(
                 orderByLastMessage = orderByLastMessage,
                 directType = directChatType
             ).map { it.toChannel() }
-
-            channelsCache.addAll(config, dbChannels, false)
 
             emit(
                 PaginationResponse.DBResponse(
@@ -446,19 +451,13 @@ internal class PersistenceChannelsLogicImpl(
             val channels = response.data.orEmpty()
             val savedChannels = saveChannelsToDb(channels)
 
-            val hasDiff = channelsCache.addAll(
-                config = config,
-                list = savedChannels,
-                checkDifference = offset != 0
-            ) || offset == 0
-
             emit(
                 PaginationResponse.ServerResponse(
                     data = response,
-                    cacheData = channelsCache.getSorted(config),
+                    cacheData = savedChannels,
                     loadKey = loadKey,
                     offset = offset,
-                    hasDiff = hasDiff,
+                    hasDiff = true,
                     hasNext = channels.size == channelsLoadSize,
                     hasPrev = false,
                     loadType = LoadNext,
