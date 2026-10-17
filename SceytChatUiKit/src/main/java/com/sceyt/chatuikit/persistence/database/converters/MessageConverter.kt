@@ -2,8 +2,10 @@ package com.sceyt.chatuikit.persistence.database.converters
 
 import androidx.room.TypeConverter
 import com.sceyt.chat.models.message.BodyAttribute
+import com.sceyt.chat.models.message.DeleteMessageType
 import com.sceyt.chat.models.message.MarkerTotal
 import com.sceyt.chat.models.message.MessageState
+import com.sceyt.chat.models.message.PinDetails.PinType
 import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import com.sceyt.chatuikit.persistence.extensions.toEnum
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
@@ -39,6 +41,18 @@ class MessageConverter {
 
     @TypeConverter
     fun intToMessageState(value: Int) = value.toEnum<MessageState>()
+
+    @TypeConverter
+    fun pinTypeToInt(value: PinType) = value.ordinal
+
+    @TypeConverter
+    fun intToPinType(value: Int) = value.toEnum<PinType>()
+
+    @TypeConverter
+    fun deleteMessageTypeToInt(value: DeleteMessageType) = value.ordinal
+
+    @TypeConverter
+    fun intToDeleteMessageType(value: Int) = value.toEnum<DeleteMessageType>()
 
     @TypeConverter
     fun transferStateEnumToInt(value: TransferState?) = value?.ordinal

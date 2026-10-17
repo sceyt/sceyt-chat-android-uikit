@@ -17,13 +17,14 @@ import com.sceyt.chatuikit.persistence.database.DatabaseConstants.MARKER_TABLE
             deferred = true
         )
     ],
-    primaryKeys = ["messageId", "name", "userId"])
+    primaryKeys = ["messageId", "name", "userId"]
+)
 internal data class MarkerEntity(
-        @ColumnInfo(index = true)
-        val messageId: Long,
-        val userId: String,
-        @ColumnInfo(index = true)
-        val name: String,
-        @ColumnInfo(index = true)
-        val createdAt: Long = 0
+    @ColumnInfo(index = true)
+    val messageId: Long,
+    val userId: String,
+    @ColumnInfo(index = true)
+    val name: String,
+    @ColumnInfo(index = true)
+    val createdAt: Long
 )

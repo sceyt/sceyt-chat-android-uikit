@@ -9,17 +9,14 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.doAfterTextChanged
-import androidx.lifecycle.lifecycleScope
 import com.google.gson.Gson
-import com.sceyt.chat.models.message.Message
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.data.models.channels.ChannelAvatar
 import com.sceyt.chatuikit.data.models.channels.ChannelDescriptionData
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
 import com.sceyt.chatuikit.data.models.channels.SceytMember
-import com.sceyt.chatuikit.data.models.messages.SceytMessageType
-import com.sceyt.chatuikit.data.models.messages.SystemMsgBodyEnum
 import com.sceyt.chatuikit.databinding.SceytActivityCreateGroupBinding
 import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
 import com.sceyt.chatuikit.extensions.createIntent
@@ -45,7 +42,6 @@ import com.sceyt.chatuikit.styles.common.AvatarStyle
 import com.sceyt.chatuikit.styles.create_channel.CreateGroupStyle
 import com.sceyt.chatuikit.styles.cropper.ImageCropperStyle
 import com.yalantis.ucrop.UCrop
-import kotlinx.coroutines.launch
 import java.io.File
 
 class CreateGroupActivity : AppCompatActivity() {
@@ -53,7 +49,7 @@ class CreateGroupActivity : AppCompatActivity() {
     private lateinit var style: CreateGroupStyle
     private val viewModel: CreateChatViewModel by viewModels()
     private val filePickerHelper = FilePickerHelper(this)
-    private val createChannelData by lazy { CreateChannelData(ChannelTypeEnum.Group.value) }
+    private var avatarPath = ""
     private lateinit var members: List<SceytMember>
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -80,22 +76,11 @@ class CreateGroupActivity : AppCompatActivity() {
 
     private fun initViewModel() {
         viewModel.createChatLiveData.observe(this) {
-            lifecycleScope.launch {
-                SceytChatUIKit.chatUIFacade.messageInteractor.sendMessage(
-                    it.id, Message(
-                        Message.MessageBuilder()
-                            .setType(SceytMessageType.System.value)
-                            .withDisplayCount(0)
-                            .setSilent(true)
-                            .setBody(SystemMsgBodyEnum.GroupCreated.value)
-                    )
-                )
-
-                SceytChatUIKit.navigator.navigate(this@CreateGroupActivity, Destination.Channel(it))
-                val intent = Intent()
-                setResult(RESULT_OK, intent)
-                finish()
-            }
+            hideLoading()
+            SceytChatUIKit.navigator.navigate(this@CreateGroupActivity, Destination.Channel(it))
+            val intent = Intent()
+            setResult(RESULT_OK, intent)
+            finish()
         }
 
         viewModel.pageStateLiveData.observe(this) {
@@ -128,7 +113,7 @@ class CreateGroupActivity : AppCompatActivity() {
         avatar.setOnClickListener {
             EditAvatarTypeDialog(
                 context = this@CreateGroupActivity,
-                enableDelete = createChannelData.avatarUrl.isNotBlank()
+                enableDelete = avatarPath.isNotBlank()
             ) {
                 when (it) {
                     EditAvatarTypeDialog.EditAvatarType.ChooseFromGallery -> {
@@ -155,15 +140,16 @@ class CreateGroupActivity : AppCompatActivity() {
         }
 
         btnCreate.setOnClickListener {
-            with(createChannelData) {
-                subject = inputSubject.text.toString().trim()
-                type = ChannelTypeEnum.Group.value
-                metadata =
-                    Gson().toJson(ChannelDescriptionData(inputDescription.text.toString().trim()))
+            val avatar = avatarPath.takeIf { it.isNotBlank() }?.let { ChannelAvatar.Local(it) }
+            val createChannelData = CreateChannelData(
+                type = ChannelTypeEnum.Group.value,
+                subject = inputSubject.text.toString().trim(),
+                avatar = avatar,
+                metadata = Gson().toJson(ChannelDescriptionData(inputDescription.text.toString().trim())),
                 members = this@CreateGroupActivity.members
-            }
+            )
 
-            viewModel.createChat(createChannelData)
+            viewModel.createGroup(createChannelData)
             hideSoftInput()
         }
     }
@@ -177,7 +163,7 @@ class CreateGroupActivity : AppCompatActivity() {
     }
 
     private fun setAvatarImage(filePath: String?) {
-        createChannelData.avatarUrl = filePath.let {
+        avatarPath = filePath.let {
             val reqSize = SceytChatUIKit.config.avatarResizeConfig.dimensionThreshold
             val quality = SceytChatUIKit.config.avatarResizeConfig.compressionQuality
             resizeImage(
@@ -187,7 +173,7 @@ class CreateGroupActivity : AppCompatActivity() {
                 quality = quality
             ).getOrNull() ?: ""
         }
-        binding.avatar.setImageUrl(createChannelData.avatarUrl)
+        binding.avatar.setImageUrl(avatarPath)
     }
 
     private fun cropImage(filePath: String?) {

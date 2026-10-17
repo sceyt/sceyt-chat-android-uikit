@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.viewModels
@@ -46,7 +47,7 @@ class SelfDestructingMediaPreviewActivity : AppCompatActivity(), SceytKoinCompon
     private var attachment: SceytAttachment? = null
 
     private var playerHelper: ExoPlayerHelper? = null
-    private var videoController: ConstraintLayout? = null
+    private var videoController: ViewGroup? = null
 
     private lateinit var textExpandCollapseHelper: TextExpandCollapseHelper
     private var isVideoAttachment = false
@@ -112,7 +113,7 @@ class SelfDestructingMediaPreviewActivity : AppCompatActivity(), SceytKoinCompon
     private fun initVideoController() {
         binding.videoView.controllerHideOnTouch = false
 
-        binding.videoView.findViewById<ConstraintLayout>(R.id.videoTimeContainer)
+        binding.videoView.findViewById<ViewGroup>(R.id.videoTimeContainer)
             ?.let { controller ->
                 videoController = controller
                 controller.applySystemWindowInsetsPadding(

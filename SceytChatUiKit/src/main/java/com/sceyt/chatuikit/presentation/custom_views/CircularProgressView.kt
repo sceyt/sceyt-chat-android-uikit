@@ -18,11 +18,13 @@ import androidx.core.animation.doOnEnd
 import androidx.core.graphics.toColorInt
 import androidx.core.view.isVisible
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.extensions.cancelAndRelease
 import com.sceyt.chatuikit.extensions.dpToPxAsFloat
 import com.sceyt.chatuikit.extensions.inNotNanOrZero
 import com.sceyt.chatuikit.extensions.scaleAndAlphaAnim
 import kotlin.math.max
 import kotlin.math.min
+import androidx.core.content.withStyledAttributes
 
 class CircularProgressView @JvmOverloads constructor(
     context: Context,
@@ -67,45 +69,43 @@ class CircularProgressView @JvmOverloads constructor(
     private var currentVisibility: Int = visibility
 
     init {
-        attrs?.let {
-            val a = context.obtainStyledAttributes(attrs, R.styleable.CircularProgressView)
+        context.withStyledAttributes(attrs, R.styleable.CircularProgressView) {
             progressColor =
-                a.getColor(R.styleable.CircularProgressView_sceytUiProgressColor, progressColor)
+                getColor(R.styleable.CircularProgressView_sceytUiProgressColor, progressColor)
             trackColor =
-                a.getColor(R.styleable.CircularProgressView_sceytUiProgressTrackColor, trackColor)
+                getColor(R.styleable.CircularProgressView_sceytUiProgressTrackColor, trackColor)
             minProgress =
-                a.getFloat(R.styleable.CircularProgressView_sceytUiProgressMinProgress, minProgress)
+                getFloat(R.styleable.CircularProgressView_sceytUiProgressMinProgress, minProgress)
             progress =
-                a.getFloat(R.styleable.CircularProgressView_sceytUiProgressValue, minProgress)
-            roundedProgress = a.getBoolean(
+                getFloat(R.styleable.CircularProgressView_sceytUiProgressValue, minProgress)
+            roundedProgress = getBoolean(
                 R.styleable.CircularProgressView_sceytUiProgressRoundedProgress,
                 roundedProgress
             )
-            centerIcon = a.getDrawable(R.styleable.CircularProgressView_sceytUiProgressCenterIcon)
-            rotateAnimEnabled = a.getBoolean(
+            centerIcon = getDrawable(R.styleable.CircularProgressView_sceytUiProgressCenterIcon)
+            rotateAnimEnabled = getBoolean(
                 R.styleable.CircularProgressView_sceytUiProgressRotateAnimEnabled,
                 rotateAnimEnabled
             )
-            enableProgressDownAnimation = a.getBoolean(
+            enableProgressDownAnimation = getBoolean(
                 R.styleable.CircularProgressView_sceytUiProgressEnableProgressDownAnimation,
                 enableProgressDownAnimation
             )
             iconTintColor =
-                a.getColor(R.styleable.CircularProgressView_sceytUiProgressIconTint, iconTintColor)
-            bgColor = a.getColor(R.styleable.CircularProgressView_sceytUiProgressBackgroundColor, 0)
+                getColor(R.styleable.CircularProgressView_sceytUiProgressIconTint, iconTintColor)
+            bgColor = getColor(R.styleable.CircularProgressView_sceytUiProgressBackgroundColor, 0)
             iconSizeInPercent = getNormalizedPercent(
-                a.getFloat(
+                getFloat(
                     R.styleable.CircularProgressView_sceytUiProgressIconSizeInPercent,
                     iconSizeInPercent
                 )
             )
-            val trackThickness = a.getDimensionPixelSize(
+            val trackThickness = getDimensionPixelSize(
                 R.styleable.CircularProgressView_sceytUiProgressTrackThickness,
                 0
             )
             if (trackThickness > 0)
-                this.trackThickness = trackThickness.toFloat()
-            a.recycle()
+                this@CircularProgressView.trackThickness = trackThickness.toFloat()
         }
 
         init()
@@ -166,7 +166,7 @@ class CircularProgressView @JvmOverloads constructor(
     }
 
     private fun rotate() {
-        if (rotateAnimEnabled && transferring && (rotateAnim == null || rotateAnim?.isRunning != true)) {
+        if (isAttachedToWindow && rotateAnimEnabled && transferring && (rotateAnim == null || rotateAnim?.isRunning != true)) {
             rotateAnim?.cancel()
             rotateAnim = ValueAnimator.ofFloat(0f, 360f).apply {
                 addUpdateListener { animation ->
@@ -385,8 +385,10 @@ class CircularProgressView @JvmOverloads constructor(
     }
 
     private fun cancelProgressAnimations() {
-        rotateAnim?.cancel()
-        updateProgressAnim?.cancel()
+        rotateAnim.cancelAndRelease()
+        rotateAnim = null
+        updateProgressAnim.cancelAndRelease()
+        updateProgressAnim = null
     }
 
     override fun setVisibility(visibility: Int) {
@@ -411,10 +413,16 @@ class CircularProgressView @JvmOverloads constructor(
         invalidate()
     }
 
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        rotate()
+    }
+
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
         visibleAnim?.cancel()
         goneAnim?.cancel()
+        cancelProgressAnimations()
         super.setVisibility(currentVisibility)
     }
 

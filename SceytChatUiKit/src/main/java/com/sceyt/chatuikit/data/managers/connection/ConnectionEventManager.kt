@@ -12,6 +12,8 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 
 object ConnectionEventManager {
     private const val TAG = "ConnectionEventManager"
@@ -71,6 +73,10 @@ object ConnectionEventManager {
     }
 
     suspend fun awaitToConnectSceytWithTimeout(timeout: Long): Boolean {
+        return awaitToConnectSceytWithTimeout(timeout.milliseconds)
+    }
+
+    suspend fun awaitToConnectSceytWithTimeout(timeout: Duration): Boolean {
         if (isConnected)
             return true
 
@@ -85,7 +91,7 @@ object ConnectionEventManager {
         if (isConnected)
             return Result.success(true)
 
-        val state = withTimeoutOrNull(timeout) {
+        val state = withTimeoutOrNull(timeout.milliseconds) {
             onChangedConnectStatusFlow.first { data ->
                 data.state == ConnectionState.Connected || data.state == ConnectionState.Failed
             }

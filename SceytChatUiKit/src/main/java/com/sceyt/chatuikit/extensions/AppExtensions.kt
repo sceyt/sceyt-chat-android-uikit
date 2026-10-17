@@ -116,9 +116,11 @@ fun Context.isSurfaceRotationRightToLeft(): Boolean {
 
 @Suppress("DEPRECATION")
 fun Context.keepScreenOn(): PowerManager.WakeLock {
-    return (getSystemService(Context.POWER_SERVICE) as PowerManager).run {
+    // WakeLock timeout callbacks can outlive an Activity, so create it from the app context.
+    return (applicationContext.getSystemService(Context.POWER_SERVICE) as PowerManager).run {
         newWakeLock(
-            PowerManager.SCREEN_BRIGHT_WAKE_LOCK, "myApp:proximity_wakelock").apply {
+            PowerManager.SCREEN_BRIGHT_WAKE_LOCK, "SceytChatUIKit:keep_screen_on"
+        ).apply {
             acquire(10 * 60 * 1000L /*10 minutes*/)
         }
     }

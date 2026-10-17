@@ -7,6 +7,7 @@
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/icFile"
+        android:contentDescription="@string/sceyt_cd_message_file"
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:layout_gravity="center"
@@ -19,6 +20,7 @@
 
     <com.sceyt.chatuikit.presentation.custom_views.CircularProgressView
         android:id="@+id/loadProgress"
+        android:contentDescription="@string/sceyt_cd_load_message_file"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:padding="1dp"

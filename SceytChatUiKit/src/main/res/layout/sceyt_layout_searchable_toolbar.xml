@@ -8,6 +8,7 @@
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/icBack"
+        android:contentDescription="@string/sceyt_cd_back"
         android:layout_width="32dp"
         android:layout_height="32dp"
         android:layout_marginStart="12dp"
@@ -62,6 +63,7 @@
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/icClear"
+        android:contentDescription="@string/sceyt_cd_clear_search"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginEnd="10dp"
@@ -77,6 +79,7 @@
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/icSearch"
+        android:contentDescription="@string/sceyt_cd_search"
         android:layout_width="32dp"
         android:layout_height="32dp"
         android:layout_marginEnd="12dp"

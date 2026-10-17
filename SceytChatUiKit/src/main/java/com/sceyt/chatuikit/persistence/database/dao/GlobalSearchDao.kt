@@ -274,7 +274,7 @@ internal abstract class GlobalSearchDao {
             $typeClause
             ORDER BY
               CASE WHEN channel.pinnedAt > 0 THEN channel.pinnedAt END DESC,
-              CASE WHEN $orderByLastMessage AND channel.lastMessageAt IS NOT NULL THEN channel.lastMessageAt END DESC,
+              CASE WHEN ? = 1 AND channel.lastMessageAt IS NOT NULL THEN channel.lastMessageAt END DESC,
               channel.createdAt DESC
             LIMIT ? OFFSET ?
         """.trimIndent()
@@ -286,6 +286,7 @@ internal abstract class GlobalSearchDao {
             addAll(userIds)
             addWordPrefixArgs(words, fieldCount = 1)
             if (!ignoreTypes) addAll(types)
+            add(if (orderByLastMessage) 1 else 0)
             add(limit)
             add(offset)
         }

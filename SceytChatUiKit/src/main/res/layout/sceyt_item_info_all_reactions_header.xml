@@ -2,6 +2,7 @@
 <androidx.appcompat.widget.AppCompatTextView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/tvAll"
+    android:contentDescription="@string/sceyt_cd_info_all_reactions_header"
     android:layout_width="wrap_content"
     android:layout_height="match_parent"
     android:layout_marginVertical=".5dp"

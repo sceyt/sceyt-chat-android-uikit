@@ -229,7 +229,7 @@ fun RecyclerView.getChildTopByPosition(position: Int): Int {
             ?: return -1
     val childView = layoutManager.findViewByPosition(position)
             ?: return -1 // View for the position is not currently laid out or doesn't exist
-    return childView.top
+    return layoutManager.getDecoratedTop(childView)
 }
 
 fun RecyclerView.isThePositionVisible(position: Int): Boolean {

@@ -113,6 +113,7 @@ class CameraXController(
     }
 
     fun unbindAll() {
+        preview?.surfaceProvider = null
         provider?.unbindAll()
         camera = null
         preview = null

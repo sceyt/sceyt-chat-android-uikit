@@ -12,22 +12,24 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.callclient.CallClient
+import com.callclient.call.Call
+import com.callclient.call.data.onFailure
+import com.sceyt.calluikit.model.CallPhase
+import com.sceyt.calluikit.ui.SceytCallUiKit
+import com.sceyt.calluikit.ui.navigation.CallDestination
+import com.sceyt.calluikit.ui.navigation.navigate
 import com.sceyt.chat.demo.R
-import com.sceyt.chat.demo.call.manager.CallManager
-import com.sceyt.chat.demo.call.manager.channelIdOrNull
-import com.sceyt.chat.demo.call.ui.CallActivity
-import com.sceyt.chat.demo.call.ui.attachActiveCallBanner
+import com.sceyt.chat.demo.call.attachActiveCallBanner
+import com.sceyt.chat.demo.call.channelIdOrNull
+import com.sceyt.chat.demo.call.toCreateCallOptions
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.extensions.createIntent
-import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.presentation.components.channel.header.MessagesListHeaderView
 import com.sceyt.chatuikit.presentation.components.channel.messages.ChannelActivity
 import kotlinx.coroutines.launch
-import org.koin.android.ext.android.inject
 
 class CustomChannelActivity : ChannelActivity() {
-
-    private val callManager: CallManager by inject()
 
     private var pendingCallIsVideo: Boolean = false
 
@@ -36,7 +38,7 @@ class CustomChannelActivity : ChannelActivity() {
     ) { permissions ->
         val allGranted = permissions.all { it.value }
         if (allGranted) {
-            initiateCall(pendingCallIsVideo)
+            makeCall(pendingCallIsVideo)
         } else {
             Toast.makeText(
                 this,
@@ -49,7 +51,7 @@ class CustomChannelActivity : ChannelActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding.headerView.setToolbarMenu()
-        attachActiveCallBanner(callManager, binding.root, binding.headerView.id)
+        attachActiveCallBanner(binding.root, binding.headerView.id)
     }
 
     private fun MessagesListHeaderView.setToolbarMenu() {
@@ -68,66 +70,58 @@ class CustomChannelActivity : ChannelActivity() {
     private fun makeCall(isVideo: Boolean) {
         pendingCallIsVideo = isVideo
 
-        val missingPermissions = getMissingPermissions(isVideo)
+        val missingPermissions = getMissingPermissions(findChannelCall()?.videoCall ?: isVideo)
 
         if (missingPermissions.isEmpty()) {
-            if (!tryToFindChannelCallAndJoin()) {
-                initiateCall(isVideo)
-            }
+            initiateCall(isVideo)
         } else {
             permissionLauncher.launch(missingPermissions.toTypedArray())
         }
     }
 
-    private fun tryToFindChannelCallAndJoin(): Boolean {
-        val channel = viewModel.channel
-        val currentCall = CallClient.requireInstance().getOngoingCalls().firstOrNull { call ->
-            val callChannelId = call.channelIdOrNull ?: return@firstOrNull false
-            callChannelId == channel.id
-        } ?: return false
-        lifecycleScope.launch {
-            callManager.joinCall(currentCall, callPrepared = {
-                CallActivity.launchOngoing(context = this@CustomChannelActivity)
-            })
+    private fun findChannelCall(): Call? =
+        CallClient.requireInstance().getOngoingCalls().firstOrNull {
+            it.channelIdOrNull == viewModel.channel.id
         }
-        return true
-    }
 
     private fun initiateCall(isVideo: Boolean) {
-        val channel = viewModel.channel
-
         lifecycleScope.launch {
-            val result = if (channel.isGroup) {
-                callManager.startOutgoingGroupCall(
-                    channel = channel,
-                    isVideo = isVideo,
-                    isCallAgain = false
-                ) {
-                    CallActivity.launchOngoing(context = this@CustomChannelActivity)
+            val controller = SceytCallUiKit.controller
+            val currentCall = findChannelCall()
+            val result = if (currentCall != null) {
+                val state = controller.callState.value
+                if (state.isActive && state.call?.id == currentCall.id) {
+                    SceytCallUiKit.navigator.navigate(
+                        this@CustomChannelActivity,
+                        if (state.phase == CallPhase.Incoming) {
+                            CallDestination.Incoming()
+                        } else {
+                            CallDestination.Ongoing()
+                        },
+                    )
+                    return@launch
                 }
+                controller.joinCall(currentCall)
             } else {
-                val peerUserId = channel.getPeer()?.id
-                if (peerUserId == null) {
+                val options = viewModel.channel.toCreateCallOptions(
+                    isVideo = isVideo,
+                    currentUserId = SceytChatUIKit.currentUserId,
+                )
+                if (options == null) {
                     Toast.makeText(
                         this@CustomChannelActivity,
-                        "Cannot determine peer user",
-                        Toast.LENGTH_SHORT
+                        "No remote participants available",
+                        Toast.LENGTH_SHORT,
                     ).show()
                     return@launch
                 }
-                callManager.startOutgoingCall(
-                    userId = peerUserId,
-                    isVideo = isVideo,
-                    isCallAgain = false
-                ) {
-                    CallActivity.launchOngoing(context = this@CustomChannelActivity)
-                }
+                controller.startCall(createCallOptions = options)
             }
 
             result.onFailure { error ->
                 Toast.makeText(
                     this@CustomChannelActivity,
-                    "Failed to start call: ${error.message}",
+                    "Failed to start or join call: ${error.message}",
                     Toast.LENGTH_SHORT
                 ).show()
             }

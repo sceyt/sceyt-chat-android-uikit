@@ -2,14 +2,16 @@ package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.me
 
 import com.sceyt.chatuikit.databinding.SceytItemOutDeletedMessageBinding
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
+import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMessageViewHolder
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
 class OutDeletedMessageViewHolder(
         private val binding: SceytItemOutDeletedMessageBinding,
-        private val style: MessageItemStyle
-) : BaseMessageViewHolder(binding.root, style) {
+        private val style: MessageItemStyle,
+        needMediaDataCallback: ((NeedMediaInfoData) -> Unit)? = null,
+) : BaseMessageViewHolder(binding.root, style, needMediaDataCallback = needMediaDataCallback) {
 
     init {
         binding.setMessageItemStyle()

@@ -11,6 +11,7 @@ data class ChannelDiff(
     val avatarViewChanged: Boolean,
     val lastMessageChanged: Boolean,
     val lastMessageStatusChanged: Boolean,
+    val messagesClearedAtChanged: Boolean,
     val unreadCountChanged: Boolean,
     val muteStateChanged: Boolean,
     val presenceStateChanged: Boolean,
@@ -26,9 +27,9 @@ data class ChannelDiff(
 ) {
     fun hasDifference(): Boolean {
         return subjectChanged || avatarViewChanged || lastMessageChanged || lastMessageStatusChanged ||
-                unreadCountChanged || muteStateChanged || presenceStateChanged || markedUsUnreadChanged ||
-                lastReadMsdChanged || peerBlockedChanged || activityStateChanged || membersChanged ||
-                metadataUpdated || urlUpdated || pinStateChanged || autoDeleteStateChanged
+                messagesClearedAtChanged || unreadCountChanged || muteStateChanged || presenceStateChanged ||
+                markedUsUnreadChanged || lastReadMsdChanged || peerBlockedChanged || activityStateChanged ||
+                membersChanged || metadataUpdated || urlUpdated || pinStateChanged || autoDeleteStateChanged
     }
 
     companion object {
@@ -37,6 +38,7 @@ data class ChannelDiff(
             avatarViewChanged = true,
             lastMessageChanged = true,
             lastMessageStatusChanged = true,
+            messagesClearedAtChanged = true,
             unreadCountChanged = true,
             muteStateChanged = true,
             presenceStateChanged = true,
@@ -56,6 +58,7 @@ data class ChannelDiff(
             avatarViewChanged = false,
             lastMessageChanged = false,
             lastMessageStatusChanged = false,
+            messagesClearedAtChanged = false,
             unreadCountChanged = false,
             muteStateChanged = false,
             presenceStateChanged = false,
@@ -80,11 +83,13 @@ fun SceytChannel.diff(other: SceytChannel): ChannelDiff {
             || lastMessage?.body.equalsIgnoreNull(other.lastMessage?.body).not()
             || lastMessage?.state != other.lastMessage?.state
             || lastMessage?.bodyAttributes.equalsIgnoreNull(lastMessage?.bodyAttributes).not()
+            || lastMessage?.parentMessage?.body.equalsIgnoreNull(other.lastMessage?.parentMessage?.body).not()
+            || lastMessage?.parentMessage?.state != other.lastMessage?.parentMessage?.state
     val pendingReactionChanged = pendingReactions != other.pendingReactions
     val userReactionsChanged =
         pendingReactionChanged || newReactions?.maxOfOrNull { it.id } != other.newReactions?.maxOfOrNull { it.id }
     val lastDraftMessageChanged = draftMessage != other.draftMessage
-    val membersCountChanged = memberCount != other.memberCount && userRole != other.userRole
+    val membersCountChanged = memberCount != other.memberCount || userRole != other.userRole
     val peerBlockedChanged = isDirect && peer?.user?.blocked != otherPeer?.user?.blocked
     val subjectChanged = isGroup && other.isGroup && subject.orEmpty() != other.subject.orEmpty()
     return ChannelDiff(
@@ -92,6 +97,7 @@ fun SceytChannel.diff(other: SceytChannel): ChannelDiff {
         avatarViewChanged = !iconUrl.equalsIgnoreNull(other.iconUrl),
         lastMessageChanged = lastMessageChanged || userReactionsChanged || lastDraftMessageChanged,
         lastMessageStatusChanged = lastMessage?.deliveryStatus != other.lastMessage?.deliveryStatus,
+        messagesClearedAtChanged = messagesClearedAt != other.messagesClearedAt,
         unreadCountChanged = newMessageCount != other.newMessageCount,
         muteStateChanged = muted != other.muted,
         presenceStateChanged = isDirect && peer?.user?.presence?.hasDiff(otherPeer?.user?.presence) == true,
@@ -106,4 +112,3 @@ fun SceytChannel.diff(other: SceytChannel): ChannelDiff {
         autoDeleteStateChanged = autoDeleteEnabled != other.autoDeleteEnabled
     )
 }
-

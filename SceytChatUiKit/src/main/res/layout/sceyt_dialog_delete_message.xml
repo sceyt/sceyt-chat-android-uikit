@@ -34,6 +34,7 @@
 
     <androidx.appcompat.widget.AppCompatCheckBox
         android:id="@+id/checkbox"
+        android:contentDescription="@string/sceyt_cd_select_delete_for_everyone"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="-6dp"
@@ -48,6 +49,7 @@
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/buttonCancel"
+        android:contentDescription="@string/sceyt_cd_cancel_delete_message"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_margin="8dp"
@@ -64,6 +66,7 @@
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/button_delete"
+        android:contentDescription="@string/sceyt_cd_delete_message"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_margin="8dp"

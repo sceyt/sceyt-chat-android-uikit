@@ -10,6 +10,7 @@ import com.sceyt.chatuikit.extensions.getImageBitmapWithGlideWithTimeout
 import com.sceyt.chatuikit.extensions.isValidUrl
 import com.sceyt.chatuikit.extensions.toBase64
 import com.sceyt.chatuikit.koin.SceytKoinComponent
+import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import com.sceyt.chatuikit.shared.utils.BitmapUtil
 import com.sceyt.chatuikit.shared.utils.FileResizeUtil
@@ -28,6 +29,10 @@ class SingleLinkDetailsProvider(
     private val attachmentsMiddleWare: PersistenceAttachmentLogic by inject()
     private var loadDetailsJob: Job? = null
     private val loadedLinks = mutableMapOf<String, LinkPreviewDetails>()
+
+    companion object {
+        private const val TAG = "SingleLinkDetailsProvider"
+    }
 
     fun loadLinkDetails(
         text: String,
@@ -80,9 +85,11 @@ class SingleLinkDetailsProvider(
     }
 
     private fun getImageThumb(bitmap: Bitmap): String? {
-        FileResizeUtil.resizeAndCompressImageAsByteArray(bitmap, 100)?.let { bm ->
+        FileResizeUtil.resizeAndCompressImageAsByteArray(bitmap, 100).onSuccess { bm ->
             val bytes = ThumbHash.rgbaToThumbHash(bm.width, bm.height, BitmapUtil.bitmapToRgba(bm))
             return bytes.toBase64()
+        }.onFailure {
+            SceytLog.e(TAG, "getImageThumb for link failed with: ${it.message}")
         }
         return null
     }

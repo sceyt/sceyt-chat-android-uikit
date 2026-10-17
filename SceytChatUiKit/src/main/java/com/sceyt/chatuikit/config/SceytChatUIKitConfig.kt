@@ -18,6 +18,7 @@ class SceytChatUIKitConfig {
     var notificationConfig: PushNotificationConfig by lazyVar { PushNotificationConfig() }
     var voiceRecorderConfig: VoiceRecorderConfig by lazyVar { VoiceRecorderConfig() }
     var globalSearchConfig: GlobalSearchConfig by lazyVar { GlobalSearchConfig() }
+    var systemMessagesConfig: SystemMessagesConfig by lazyVar { SystemMessagesConfig() }
     var channelLinkDeepLinkConfig: ChannelInviteDeepLinkConfig? = null
     var syncChannelsAfterConnect: Boolean = true
     var hardDeleteMessageForAll: Boolean = false

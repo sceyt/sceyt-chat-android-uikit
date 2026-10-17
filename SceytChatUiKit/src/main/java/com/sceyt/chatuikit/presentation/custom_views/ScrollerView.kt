@@ -15,19 +15,27 @@ import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
 import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.styles.messages_list.ScrollButtonStyle
 
+@Suppress("JoinDeclarationAndAssignment")
 class ScrollerView @JvmOverloads constructor(
-        context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0,
+    context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0,
 ) : ConstraintLayout(context, attrs, defStyleAttr) {
     private val binding: ScrollerViewBinding
     private var changeVisibilityWithAnim = true
     private lateinit var style: ScrollButtonStyle
     private var unreadCount = 0L
+    private var targetVisibility = visibility
 
     init {
         binding = ScrollerViewBinding.inflate(LayoutInflater.from(context), this)
         context.obtainStyledAttributes(attrs, R.styleable.ScrollerView).use { array ->
-            changeVisibilityWithAnim = array.getBoolean(R.styleable.ScrollerView_sceytUiScrollerChangeVisibilityWithAnim, changeVisibilityWithAnim)
-            unreadCount = array.getInt(R.styleable.ScrollerView_sceytUiScrollerUnreadCount, unreadCount.toInt()).toLong()
+            changeVisibilityWithAnim = array.getBoolean(
+                R.styleable.ScrollerView_sceytUiScrollerChangeVisibilityWithAnim,
+                changeVisibilityWithAnim
+            )
+            unreadCount = array.getInt(
+                R.styleable.ScrollerView_sceytUiScrollerUnreadCount,
+                unreadCount.toInt()
+            ).toLong()
             style = ScrollButtonStyle.Builder(context, array)
                 .unreadCountTextStyle(
                     TextStyle.Builder(array)
@@ -57,34 +65,40 @@ class ScrollerView @JvmOverloads constructor(
             binding.icScrollTo.setBackgroundTint(style.backgroundColor)
     }
 
-    private fun setVisibilityWithAnim(visible: Boolean) {
-        if (isVisible == visible) return
-        if (isAttachedToWindow) {
-            if (animation == null || !animation.hasStarted() || animation.hasEnded()) {
-                if (visible) {
-                    if (!isVisible) {
-                        super.setVisibility(VISIBLE)
-                        val anim = AnimationUtils.loadAnimation(context, R.anim.sceyt_anim_show_scale_with_alpha)
-                        startAnimation(anim)
-                    }
-                } else {
-                    if (isVisible) {
-                        val anim = AnimationUtils.loadAnimation(context, R.anim.sceyt_anim_hide_scale_with_alpha)
-                        anim.setAnimationListener(animationListener {
-                            super.setVisibility(GONE)
-                        })
-                        startAnimation(anim)
-                    }
-                }
+    private fun setVisibilityWithAnim(visibility: Int) {
+        if (targetVisibility == visibility && this.visibility == visibility) return
+        targetVisibility = visibility
+
+        if (animation?.let { it.hasStarted() && !it.hasEnded() } == true)
+            clearAnimation()
+
+        if (visibility == VISIBLE) {
+            if (!isVisible) {
+                super.setVisibility(VISIBLE)
+                val anim =
+                    AnimationUtils.loadAnimation(context, R.anim.sceyt_anim_show_scale_with_alpha)
+                startAnimation(anim)
             }
-        } else isVisible = visible
+        } else {
+            if (isVisible) {
+                val anim =
+                    AnimationUtils.loadAnimation(context, R.anim.sceyt_anim_hide_scale_with_alpha)
+                anim.setAnimationListener(animationListener {
+                    if (targetVisibility == visibility)
+                        super.setVisibility(visibility)
+                })
+                startAnimation(anim)
+            } else super.setVisibility(visibility)
+        }
     }
 
     override fun setVisibility(visibility: Int) {
         if (changeVisibilityWithAnim && isAttachedToWindow) {
-            setVisibilityWithAnim(visibility == VISIBLE)
-        } else
+            setVisibilityWithAnim(visibility)
+        } else {
+            targetVisibility = visibility
             super.setVisibility(visibility)
+        }
     }
 
     fun setUnreadCount(count: Long) {

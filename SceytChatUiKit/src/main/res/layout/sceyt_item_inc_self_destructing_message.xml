@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    android:contentDescription="@string/sceyt_cd_incoming_self_destructing_message" xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -7,6 +8,7 @@
 
     <androidx.appcompat.widget.AppCompatCheckBox
         android:id="@+id/selectView"
+        android:contentDescription="@string/sceyt_cd_select_incoming_self_destructing_message"
         android:layout_width="24dp"
         android:layout_height="24dp"
         android:background="@android:color/transparent"
@@ -18,6 +20,7 @@
 
     <com.sceyt.chatuikit.presentation.custom_views.AvatarView
         android:id="@+id/avatar"
+        android:contentDescription="@string/sceyt_cd_incoming_self_destructing_message_avatar"
         android:layout_width="@dimen/_28sdp"
         android:layout_height="@dimen/_28sdp"
         android:layout_marginStart="12dp"
@@ -49,8 +52,9 @@
         android:layout_marginStart="8dp"
         android:background="@drawable/sceyt_bg_corners_18"
         app:layout_constrainedWidth="true"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/sideActionView"
         app:layout_constraintHorizontal_bias="0"
+        app:layout_constraintHorizontal_chainStyle="packed"
         app:layout_constraintStart_toEndOf="@+id/avatar"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_goneMarginStart="12dp"
@@ -113,6 +117,7 @@
 
         <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/fileImage"
+            android:contentDescription="@string/sceyt_cd_incoming_self_destructing_message_image"
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:layout_margin="2dp"
@@ -127,6 +132,7 @@
 
         <com.sceyt.chatuikit.presentation.custom_views.CircularProgressView
             android:id="@+id/loadProgress"
+            android:contentDescription="@string/sceyt_cd_load_incoming_self_destructing_message"
             android:layout_width="@dimen/messageProgressSize"
             android:layout_height="@dimen/messageProgressSize"
             android:padding="1dp"
@@ -171,6 +177,7 @@
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tvReplyCount"
+        android:contentDescription="@string/sceyt_cd_incoming_self_destructing_message_reply_count"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="2dp"
@@ -186,6 +193,7 @@
 
     <ViewStub
         android:id="@+id/rvReactions"
+        android:contentDescription="@string/sceyt_cd_incoming_self_destructing_message_reactions_list"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="3dp"
@@ -201,5 +209,16 @@
         app:layout_constraintTop_toBottomOf="@+id/layoutDetails"
         app:layout_constraintVertical_bias="0"
         tools:visibility="visible" />
+
+    <ViewStub
+        android:id="@+id/sideActionView"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout="@layout/sceyt_message_side_action_button"
+        app:layout_constraintBottom_toBottomOf="@+id/layoutDetails"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/layoutDetails" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

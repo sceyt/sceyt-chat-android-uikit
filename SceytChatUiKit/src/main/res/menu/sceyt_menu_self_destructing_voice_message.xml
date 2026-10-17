@@ -3,6 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
         android:id="@+id/sceyt_self_destruct_indicator"
+        android:contentDescription="@string/sceyt_cd_view_once_message"
         android:icon="@drawable/sceyt_ic_view_once_white"
         android:title="@string/sceyt_view_once_message"
         android:enabled="true"

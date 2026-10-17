@@ -67,7 +67,7 @@ internal class CheckDeletedMessagesUseCase(
                 loadType = loadType,
                 channelId = channelId,
                 messageId = messageId,
-                includeMessage = loadType == LoadPrev,
+                includeMessage = false,
                 syncStartTime = syncStartTime
             )
             return

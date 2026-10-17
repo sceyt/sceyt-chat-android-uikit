@@ -10,6 +10,7 @@
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/pin"
+        android:contentDescription="@string/sceyt_cd_pin_channel"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?selectableItemBackground"
@@ -25,6 +26,7 @@
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/unPin"
+        android:contentDescription="@string/sceyt_cd_unpin_channel"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?selectableItemBackground"
@@ -42,6 +44,7 @@
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/markAsRead"
+        android:contentDescription="@string/sceyt_cd_mark_channel_as_read"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?selectableItemBackground"
@@ -58,6 +61,7 @@
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/markAsUnRead"
+        android:contentDescription="@string/sceyt_cd_mark_channel_as_unread"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?selectableItemBackground"
@@ -75,6 +79,7 @@
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/mute"
+        android:contentDescription="@string/sceyt_cd_mute_channel"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?selectableItemBackground"
@@ -92,6 +97,7 @@
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/unMute"
+        android:contentDescription="@string/sceyt_cd_unmute_channel"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?selectableItemBackground"
@@ -111,6 +117,7 @@
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/leave"
+        android:contentDescription="@string/sceyt_cd_leave_channel"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?selectableItemBackground"
@@ -128,6 +135,7 @@
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/delete"
+        android:contentDescription="@string/sceyt_cd_delete_channel"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?selectableItemBackground"

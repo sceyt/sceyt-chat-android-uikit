@@ -16,6 +16,7 @@
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvChannels"
+        android:contentDescription="@string/sceyt_cd_forward_channels_list"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:clipToPadding="false"
@@ -37,6 +38,7 @@
 
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btnForward"
+        android:contentDescription="@string/sceyt_cd_forward_message"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="24dp"

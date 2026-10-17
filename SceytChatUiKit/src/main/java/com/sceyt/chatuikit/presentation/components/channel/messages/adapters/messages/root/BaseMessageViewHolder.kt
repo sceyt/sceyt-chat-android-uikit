@@ -52,7 +52,9 @@ import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
 import com.sceyt.chatuikit.extensions.setDrawableStart
 import com.sceyt.chatuikit.formatters.attributes.MessageBodyFormatterAttributes
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
+import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.persistence.mappers.getThumbFromMetadata
+import com.sceyt.chatuikit.persistence.mappers.getVisualMediaType
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.reactions.ReactionItem
@@ -64,6 +66,7 @@ import com.sceyt.chatuikit.presentation.custom_views.AvatarView
 import com.sceyt.chatuikit.presentation.custom_views.ClickableTextView
 import com.sceyt.chatuikit.presentation.custom_views.DecoratedTextView
 import com.sceyt.chatuikit.presentation.custom_views.ToReplyLineView
+import com.sceyt.chatuikit.presentation.extensions.isPending
 import com.sceyt.chatuikit.presentation.extensions.isSupportedType
 import com.sceyt.chatuikit.presentation.extensions.setChatMessageDateAndStatusIcon
 import com.sceyt.chatuikit.shared.helpers.RecyclerItemOffsetDecoration
@@ -75,7 +78,8 @@ abstract class BaseMessageViewHolder(
     private val view: View,
     private val itemStyle: MessageItemStyle,
     private val messageListeners: MessageClickListeners.ClickListeners? = null,
-    private val displayedListener: ((MessageListItem) -> Unit)? = null
+    private val displayedListener: ((MessageListItem) -> Unit)? = null,
+    private val needMediaDataCallback: ((NeedMediaInfoData) -> Unit)? = null
 ) : RecyclerView.ViewHolder(view) {
     protected val context: Context by lazy { view.context }
     protected val bubbleMaxWidth by lazy { calculateBubbleMaxWidth(context) }
@@ -107,12 +111,16 @@ abstract class BaseMessageViewHolder(
 
     protected abstract val incoming: Boolean
     protected abstract val selectMessageView: View?
-    open val enableReply = true
     protected val requireMessageItem get() = messageListItem as MessageListItem.MessageItem
-    protected val requireMessage get() = (messageListItem as MessageListItem.MessageItem).message
+    protected val requireMessage get() = requireMessageItem.message
+    protected val optionalMessageItem get() = messageListItem as? MessageListItem.MessageItem
+    protected val optionalMessage get() = optionalMessageItem?.message
+    protected val isMessageItemisInitialized get() = ::messageListItem.isInitialized
+
+    open val enableReply get() = !isMessageItemisInitialized || optionalMessage?.isPending() != true
 
     /** The Pair's param ViewGroup is layout bubble, the param Boolean when true, that mean the
-     *  layout bubble with will resize depend reactions. */
+     *  layout bubble with will resize depend on reactions. */
     open val layoutBubbleConfig: Pair<ViewGroup, Boolean>? = null
 
     protected val layoutBubble get() = layoutBubbleConfig?.first
@@ -123,7 +131,7 @@ abstract class BaseMessageViewHolder(
     }
 
     fun rebind(diff: MessageDiff = MessageDiff.DEFAULT): Boolean {
-        return if (::messageListItem.isInitialized) {
+        return if (isMessageItemisInitialized) {
             bind(messageListItem, diff)
             true
         } else false
@@ -141,7 +149,7 @@ abstract class BaseMessageViewHolder(
 
     @CallSuper
     open fun onViewAttachedToWindow() {
-        if (::messageListItem.isInitialized) {
+        if (isMessageItemisInitialized) {
             displayedListener?.invoke(messageListItem)
             selectableAnimHelper.doOnAttach(selectMessageView, messageListItem)
         }
@@ -283,8 +291,17 @@ abstract class BaseMessageViewHolder(
                     }
                 }
                 when {
-                    attachment?.type.isEqualsVideoOrImage() -> {
-                        loadReplyMessageImageOrObserveToDownload(attachment, imageAttachment)
+                    attachment?.getVisualMediaType() != null -> {
+                        val fallback = if (attachment.type == AttachmentTypeEnum.File.value) {
+                            if (message.incoming)
+                                itemStyle.incomingFileMediaThumbPlaceholder
+                            else itemStyle.outgoingFileMediaThumbPlaceholder
+                        } else null
+                        loadReplyMessageImageOrObserveToDownload(
+                            attachment = attachment,
+                            imageAttachment = imageAttachment,
+                            fallback = fallback
+                        )
                         imageAttachment.isVisible = true
                         icFile.isVisible = false
                     }
@@ -345,13 +362,14 @@ abstract class BaseMessageViewHolder(
 
     protected open fun loadReplyMessageImageOrObserveToDownload(
         attachment: SceytAttachment?,
-        imageAttachment: ImageView
+        imageAttachment: ImageView,
+        fallback: Drawable? = null,
     ) {
         attachment ?: return
         val path = attachment.filePath
         val placeHolder = getThumbFromMetadata(
             metadata = attachment.metadata
-        )?.toDrawable(context.resources)?.mutate()
+        )?.toDrawable(context.resources)?.mutate() ?: fallback
 
         fun loadImage(filePath: String?) {
             Glide.with(itemView.context.applicationContext)
@@ -364,6 +382,7 @@ abstract class BaseMessageViewHolder(
 
         if (path.isNullOrBlank()) {
             imageAttachment.setImageDrawable(placeHolder)
+            needMediaDataCallback?.invoke(NeedMediaInfoData.NeedDownload(attachment))
         } else loadImage(path)
     }
 
@@ -373,10 +392,10 @@ abstract class BaseMessageViewHolder(
         icon: Drawable?
     ) {
         attachment ?: return
-        val url = attachment.linkPreviewDetails?.imageUrl
-        if (!url.isNullOrBlank()) {
+        val linkDetails = attachment.linkPreviewDetails
+        if (linkDetails?.shouldShowImage == true) {
             Glide.with(itemView.context)
-                .load(url)
+                .load(linkDetails.imageUrl)
                 .placeholder(icon)
                 .error(icon)
                 .override(imageAttachment.width, imageAttachment.height)
@@ -627,17 +646,8 @@ abstract class BaseMessageViewHolder(
         constraintSet.applyTo(parentLayout)
     }
 
-    protected open fun getReactionSpanCount(reactionsSize: Int, incoming: Boolean): Int {
-        if (incoming) return 5
-        return min(5, reactionsSize)
-    }
-
     protected open fun calculateBubbleMaxWidth(context: Context): Int {
         return (context.screenPortraitWidthPx() * 0.75f).toInt()
-    }
-
-    fun getMessageItem(): MessageListItem? {
-        return if (::messageListItem.isInitialized) messageListItem else null
     }
 
     open fun setSelectableState() {

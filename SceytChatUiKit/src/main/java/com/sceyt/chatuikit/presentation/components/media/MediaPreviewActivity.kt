@@ -69,6 +69,7 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull
 import java.io.File
 import java.util.Date
+import kotlin.time.Duration.Companion.milliseconds
 
 open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
     protected lateinit var binding: SceytActivityMediaPreviewBinding
@@ -81,7 +82,6 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
     protected var currentItem: MediaItem? = null
     protected var showInChatChannel: SceytChannel? = null
     protected var sharedTransitionStarted = false
-    protected var hasUserInteractedWithPager = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         if (launchedWithSharedTransition()) {
@@ -133,15 +133,17 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
     }
 
     protected open fun initViewModel() {
-        viewModel.mediaItems.onEach { items ->
-            if (mediaAdapter == null) {
-                initMediaAdapter(items)
-            } else {
-                mediaAdapter?.submitList(items) {
-                    applyPendingInitialScrollIfNeeded()
-                }
+        viewModel.mediaItems.onEach(::onMediaItemsChanged).launchIn(lifecycleScope)
+    }
+
+    protected open fun onMediaItemsChanged(items: List<MediaItem>) {
+        if (mediaAdapter == null) {
+            initMediaAdapter(items)
+        } else {
+            mediaAdapter?.submitList(items) {
+                keepTargetItemVisible()
             }
-        }.launchIn(lifecycleScope)
+        }
     }
 
     protected open fun initViews() {
@@ -167,7 +169,7 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
 
     protected open fun initPageWithData() {
         val items = viewModel.mediaItems.value
-        val initialItem = items.getOrNull(viewModel.initialScrollIndex) ?: items.firstOrNull()
+        val initialItem = items.getOrNull(viewModel.findTargetIndex(items)) ?: items.firstOrNull()
         initialItem?.let { loadMediaDetail(it) }
         startSharedTransitionWhenReady()
     }
@@ -219,8 +221,7 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
             adapter.submitList(data)
         }
 
-        val scrollIndex = viewModel.consumePendingScrollIndex()
-            .takeIf { it >= 0 } ?: viewModel.initialScrollIndex
+        val scrollIndex = viewModel.findTargetIndex(data)
         if (scrollIndex > 0) binding.rvMedia.scrollToPosition(scrollIndex)
 
         binding.rvMedia.apply {
@@ -238,12 +239,10 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
 
                 override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
                     super.onScrollStateChanged(recyclerView, newState)
-                    if (newState == RecyclerView.SCROLL_STATE_DRAGGING) {
-                        hasUserInteractedWithPager = true
-                    }
                     if (newState == RecyclerView.SCROLL_STATE_IDLE) {
                         val position = getFirstVisibleItemPosition()
                         mediaAdapter?.getData()?.getOrNull(position)?.let {
+                            viewModel.onPageSettled(it)
                             loadMediaDetail(it)
                         }
                         mediaAdapter?.shouldPlayVideoPath = null
@@ -253,12 +252,11 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
         }
     }
 
-    protected open fun applyPendingInitialScrollIfNeeded() {
-        val idx = viewModel.consumePendingScrollIndex()
-        if (idx <= 0) return
-        if (!hasUserInteractedWithPager) {
-            binding.rvMedia.scrollToPosition(idx)
-        }
+    protected open fun keepTargetItemVisible() {
+        if (binding.rvMedia.scrollState != RecyclerView.SCROLL_STATE_IDLE) return
+        val items = mediaAdapter?.getData() ?: return
+        val index = viewModel.findTargetIndex(items)
+        if (index >= 0) binding.rvMedia.scrollToPosition(index)
     }
 
     protected open fun closeWithTransition() {
@@ -285,7 +283,7 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
 
     protected open suspend fun awaitSharedTransitionReady() {
         val provider = getSharedTransitionViewProvider() ?: return
-        withTimeoutOrNull(SHARED_TRANSITION_READY_TIMEOUT_MS) {
+        withTimeoutOrNull(SHARED_TRANSITION_READY_TIMEOUT_MS.milliseconds) {
             suspendCancellableCoroutine { continuation ->
                 provider.awaitReadyForSharedTransition {
                     continuation.safeResume(Unit)

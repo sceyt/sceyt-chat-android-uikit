@@ -3,6 +3,7 @@ package com.sceyt.chatuikit.presentation.components.channel.messages
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.sceyt.chatuikit.R
@@ -10,14 +11,16 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.LoadKeyData
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.toIntentPayload
+import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytActivityChannelBinding
 import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
+import com.sceyt.chatuikit.extensions.applySystemBarsStyle
 import com.sceyt.chatuikit.extensions.createIntent
 import com.sceyt.chatuikit.extensions.overrideTransitions
 import com.sceyt.chatuikit.extensions.parcelable
-import com.sceyt.chatuikit.extensions.applySystemBarsStyle
 import com.sceyt.chatuikit.navigation.Destination
 import com.sceyt.chatuikit.navigation.navigate
+import com.sceyt.chatuikit.presentation.components.pinned_messages.PinnedMessagesActivity
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageListViewModel
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageListViewModelFactory
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.bindings.LoadKeyType
@@ -32,14 +35,41 @@ open class ChannelActivity : AppCompatActivity() {
         applySystemBarsStyle()
         setContentView(
             SceytActivityChannelBinding.inflate(layoutInflater)
-            .also { binding = it }
-            .root)
+                .also { binding = it }
+                .root)
 
         applyInsetsAndWindowColor(binding.root)
 
         viewModel.bind(binding.messagesListView, lifecycleOwner = this)
+        viewModel.bind(
+            pinnedMessagesView = binding.pinnedMessagesView,
+            lifecycleOwner = this,
+            pinnedMessagesListLauncher = pinnedMessagesListLauncher,
+            messagesListStyle = binding.messagesListView.style
+        )
         viewModel.bind(binding.messageInputView, null, lifecycleOwner = this)
         viewModel.bind(binding.headerView, null, lifecycleOwner = this)
+    }
+
+    protected val pinnedMessagesListLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode != RESULT_OK) return@registerForActivityResult
+        val data = result.data ?: return@registerForActivityResult
+        val action = data.getStringExtra(PinnedMessagesActivity.RESULT_ACTION)
+            ?.let { runCatching { PinnedMessagesActivity.Action.valueOf(it) }.getOrNull() }
+            ?: PinnedMessagesActivity.Action.Jump
+        val message = data.parcelable<SceytMessage>(PinnedMessagesActivity.RESULT_MESSAGE)
+
+        when (action) {
+            PinnedMessagesActivity.Action.Jump -> {
+                val messageId = data.getLongExtra(PinnedMessagesActivity.RESULT_MESSAGE_ID, 0L)
+                viewModel.prepareToScrollToPinnedMessage(messageId)
+            }
+
+            PinnedMessagesActivity.Action.Reply -> message?.let(viewModel::prepareToReplyMessage)
+            PinnedMessagesActivity.Action.Edit -> message?.let(viewModel::prepareToEditMessage)
+        }
     }
 
     private val factory: MessageListViewModelFactory by lazy(LazyThreadSafetyMode.NONE) {
@@ -78,7 +108,11 @@ open class ChannelActivity : AppCompatActivity() {
         const val CHANNEL = "CHANNEL"
         const val TARGET_MESSAGE_ID = "TARGET_MESSAGE_ID"
 
-        fun createIntent(context: Context, channel: SceytChannel, targetMessageId: Long? = null): Intent {
+        fun createIntent(
+            context: Context,
+            channel: SceytChannel,
+            targetMessageId: Long? = null
+        ): Intent {
             return context.createIntent<ChannelActivity> {
                 putExtra(CHANNEL, channel.toIntentPayload())
                 targetMessageId?.let { putExtra(TARGET_MESSAGE_ID, it) }

@@ -19,10 +19,14 @@ import com.sceyt.chatuikit.persistence.database.dao.LoadRangeDao
 import com.sceyt.chatuikit.persistence.database.dao.MarkerDao
 import com.sceyt.chatuikit.persistence.database.dao.MemberDao
 import com.sceyt.chatuikit.persistence.database.dao.MessageDao
+import com.sceyt.chatuikit.persistence.database.dao.PendingChannelAvatarDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingMarkerDao
+import com.sceyt.chatuikit.persistence.database.dao.PendingMessageDeleteByTidDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingMessageStateDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingPollVoteDao
+import com.sceyt.chatuikit.persistence.database.dao.PendingPinDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingReactionDao
+import com.sceyt.chatuikit.persistence.database.dao.PinnedMessageDao
 import com.sceyt.chatuikit.persistence.database.dao.PollDao
 import com.sceyt.chatuikit.persistence.database.dao.ReactionDao
 import com.sceyt.chatuikit.persistence.database.dao.UserDao
@@ -44,14 +48,18 @@ import com.sceyt.chatuikit.persistence.database.entity.messages.MarkerEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.MentionUserMessageLinkEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageFtsEntity
+import com.sceyt.chatuikit.persistence.database.entity.messages.PinnedMessageEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.PollEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.PollOptionEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.PollVoteEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.ReactionEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.ReactionTotalEntity
+import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingChannelAvatarEntity
 import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingMarkerEntity
+import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingMessageDeleteByTidEntity
 import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingMessageStateEntity
 import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingPollVoteEntity
+import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingPinEntity
 import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingReactionEntity
 import com.sceyt.chatuikit.persistence.database.entity.user.UserEntity
 import com.sceyt.chatuikit.persistence.database.entity.user.UserMetadataEntity
@@ -82,13 +90,17 @@ import com.sceyt.chatuikit.persistence.database.entity.user.UserMetadataEntity
         LoadRangeEntity::class,
         AutoDeleteMessageEntity::class,
         UserMetadataEntity::class,
+        PinnedMessageEntity::class,
         PollEntity::class,
         PollOptionEntity::class,
         PollVoteEntity::class,
         PendingPollVoteEntity::class,
+        PendingPinEntity::class,
+        PendingMessageDeleteByTidEntity::class,
         MessageFtsEntity::class,
+        PendingChannelAvatarEntity::class,
     ],
-    version = 30,
+    version = 34,
     autoMigrations = [
         AutoMigration(from = 1, to = 2),
         AutoMigration(from = 2, to = 3),
@@ -116,6 +128,10 @@ import com.sceyt.chatuikit.persistence.database.entity.user.UserMetadataEntity
         AutoMigration(from = 26, to = 27),
         AutoMigration(from = 27, to = 28),
         AutoMigration(from = 29, to = 30),
+        AutoMigration(from = 30, to = 31),
+        AutoMigration(from = 31, to = 32),
+        AutoMigration(from = 32, to = 33, spec = DatabaseMigrations.AutoMigrationSpec32To33::class),
+        AutoMigration(from = 33, to = 34, spec = DatabaseMigrations.AutoMigrationSpec33To34::class),
     ]
 )
 
@@ -134,10 +150,14 @@ internal abstract class SceytDatabase : RoomDatabase() {
     abstract fun pendingMarkersDao(): PendingMarkerDao
     abstract fun pendingReactionDao(): PendingReactionDao
     abstract fun pendingMessageStateDao(): PendingMessageStateDao
+    abstract fun pendingMessageDeleteByTidDao(): PendingMessageDeleteByTidDao
+    abstract fun pendingChannelAvatarDao(): PendingChannelAvatarDao
     abstract fun fileChecksumDao(): FileChecksumDao
     abstract fun linkDao(): LinkDao
     abstract fun loadRangeDao(): LoadRangeDao
     abstract fun markerDao(): MarkerDao
+    abstract fun pinnedMessageDao(): PinnedMessageDao
     abstract fun pollDao(): PollDao
     abstract fun pendingPollVoteDao(): PendingPollVoteDao
+    abstract fun pendingPinDao(): PendingPinDao
 }

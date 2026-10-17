@@ -25,10 +25,10 @@ import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.li
 import com.sceyt.chatuikit.styles.channel_info.media.ChannelInfoMediaItemStyle
 
 class ImageViewHolder(
-        private val binding: SceytItemChannelImageBinding,
-        private val style: ChannelInfoMediaItemStyle,
-        private val clickListeners: AttachmentClickListeners.ClickListeners,
-        private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
+    private val binding: SceytItemChannelImageBinding,
+    private val style: ChannelInfoMediaItemStyle,
+    private val clickListeners: AttachmentClickListeners.ClickListeners,
+    private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
 ) : BaseFileViewHolder<ChannelFileItem>(binding.root, needMediaDataCallback) {
 
     init {
@@ -79,13 +79,15 @@ class ImageViewHolder(
             }
 
             FilePathChanged -> {
-                if (fileItem.thumbPath.isNullOrBlank())
-                    requestThumb()
+                requestThumb()
             }
 
             ThumbLoaded -> {
                 if (isValidThumb(data.thumbData))
-                    viewHolderHelper.drawImageWithBlurredThumb(fileItem.thumbPath, binding.fileImage)
+                    viewHolderHelper.drawImageWithBlurredThumb(
+                        path = fileItem.thumbPath,
+                        imageView = binding.fileImage
+                    )
             }
 
             Preparing, WaitingToUpload -> Unit

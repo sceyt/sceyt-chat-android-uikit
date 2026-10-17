@@ -131,6 +131,7 @@
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rvPlayedByUsers"
+                    android:contentDescription="@string/sceyt_cd_played_by_users_list"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
@@ -171,6 +172,7 @@
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rvReadByUsers"
+                    android:contentDescription="@string/sceyt_cd_read_by_users_list"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
@@ -211,6 +213,7 @@
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rvDeliveredToUsers"
+                    android:contentDescription="@string/sceyt_cd_delivered_to_users_list"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"

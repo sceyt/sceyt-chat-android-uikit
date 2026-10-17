@@ -1,20 +1,32 @@
 package com.sceyt.chat
 
-@Suppress("ConstPropertyName")
+@Suppress("ConstPropertyName", "unused")
 object Config {
-    const val compileSdk = 36
-    const val targetSdk = 35
+    const val compileSdk = 37
+    const val targetSdk = 36
     const val minSdk = 24
 
     /** MavenCentral */
     const val mavenCentralGroup = "com.sceyt"
-    const val mavenCentralArtifactId = "sceyt-chat-android-uikit"
 
-    const val mavenCentralVersion = "2.1.5"
-    //const val mavenCentralVersion = "local"
-    //const val mavenCentralVersion = "2.1.401-SNAPSHOT"
+    object UiKit {
+        const val artifactId = "sceyt-chat-android-uikit"
+        const val description = "Sceyt Chat Android UIKit"
+
+        const val version = "2.1.6"
+        // const val version = "local"
+        // const val version = "2.1.523025013-SNAPSHOT"
+    }
+
+    object ChatConnection {
+        const val artifactId = "sceyt-chat-connection"
+        const val description = "Sceyt Chat connection and lifecycle management for Android"
+
+        // const val version = "local"
+        const val version = "1.0.1"
+    }
 
     /** App version */
-    const val versionCode = 59
-    const val versionName = "1.3.0"
+    const val versionCode = 62
+    const val versionName = "1.3.2"
 }

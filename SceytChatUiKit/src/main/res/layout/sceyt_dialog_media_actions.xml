@@ -9,6 +9,7 @@
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/showInChat"
+        android:contentDescription="@string/sceyt_cd_show_in_chat"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?selectableItemBackground"
@@ -26,6 +27,7 @@
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/save"
+        android:contentDescription="@string/sceyt_cd_save_media"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?selectableItemBackground"
@@ -41,6 +43,7 @@
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/forward"
+        android:contentDescription="@string/sceyt_cd_forward_media"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?selectableItemBackground"
@@ -56,6 +59,7 @@
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/share"
+        android:contentDescription="@string/sceyt_cd_share_media"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?selectableItemBackground"

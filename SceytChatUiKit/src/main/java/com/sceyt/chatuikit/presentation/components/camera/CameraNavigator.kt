@@ -6,6 +6,7 @@ import androidx.activity.result.ActivityResultLauncher
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.navigation.Destination
 import com.sceyt.chatuikit.navigation.navigateForResult
+import com.sceyt.chatuikit.presentation.components.picker.BottomSheetMediaPicker
 
 class CameraNavigator(
     private val activity: Activity,
@@ -31,6 +32,19 @@ class CameraNavigator(
         val resultIntent = Intent().apply {
             putExtra(CustomCameraActivity.EXTRA_RESULT_URI, filePath)
             putExtra(CustomCameraActivity.EXTRA_IS_VIDEO, isVideo)
+        }
+        activity.setResult(Activity.RESULT_OK, resultIntent)
+        activity.finish()
+    }
+
+    fun returnSelectedMedia(selectedMedia: List<BottomSheetMediaPicker.SelectedMediaData>) {
+        if (selectedMedia.isEmpty()) return
+
+        val resultIntent = Intent().apply {
+            putParcelableArrayListExtra(
+                CustomCameraActivity.EXTRA_RESULT_SELECTED_MEDIA,
+                ArrayList(selectedMedia)
+            )
         }
         activity.setResult(Activity.RESULT_OK, resultIntent)
         activity.finish()

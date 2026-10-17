@@ -98,6 +98,8 @@ class MessageDaoTest {
         forwardingUser = null,
         mentionedUsers = null,
         poll = null,
+        pinnedMessage = null,
+        pendingPin = null,
     )
 
     private suspend fun insert(vararg entities: MessageEntity) {

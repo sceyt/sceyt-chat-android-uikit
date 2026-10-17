@@ -61,6 +61,7 @@
 
         <com.sceyt.chatuikit.presentation.components.channel_list.channels.ChannelListView
             android:id="@+id/channelListView"
+            android:contentDescription="@string/sceyt_cd_channels_list"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:clipToPadding="false"
@@ -68,6 +69,7 @@
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/fabNewChannel"
+            android:contentDescription="@string/sceyt_cd_new_channel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="end|bottom"
@@ -83,4 +85,3 @@
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
-

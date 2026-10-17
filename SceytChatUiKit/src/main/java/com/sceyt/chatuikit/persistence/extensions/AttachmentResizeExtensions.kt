@@ -16,22 +16,19 @@ import java.util.UUID
 
 
 fun resizeImage(
-        path: String?,
-        parentDir: File,
-        reqSize: Int = 600,
-        quality: Int = 80,
+    path: String?,
+    parentDir: File,
+    reqSize: Int = 600,
+    quality: Int = 80,
 ): Result<String> {
     return try {
         path?.let {
-            val resizedImageFile = FileResizeUtil.resizeAndCompressImage(
+            FileResizeUtil.resizeAndCompressImage(
                 filePath = it,
                 parentDir = parentDir,
                 reqSize = reqSize,
                 preferQuality = quality
-            )
-            if (resizedImageFile == null) {
-                Result.failure(Exception("Could not resize image"))
-            } else Result.success(resizedImageFile.path)
+            ).map { file -> file.path }
         } ?: Result.failure(Exception("Wrong file path"))
     } catch (ex: Exception) {
         Log.e("ImageResize", ex.message.toString())
@@ -40,22 +37,29 @@ fun resizeImage(
 }
 
 fun transcodeVideo(
-        path: String?,
-        parentDir: File,
-        quality: VideoQuality = VideoQuality.MEDIUM,
-        progressCallback: ((VideoTranscodeData) -> Unit)? = null,
-        callback: (Result<String>) -> Unit
+    path: String?,
+    parentDir: File,
+    quality: VideoQuality = VideoQuality.MEDIUM,
+    progressCallback: ((VideoTranscodeData) -> Unit)? = null,
+    callback: (Result<String>) -> Unit
 ) {
-    path?.let {
-        val dest = File(parentDir, "${UUID.randomUUID()}${getMimeTypeTakeExtension(path)}")
-        VideoTranscodeHelper.transcodeAsResultWithCallback(destination = dest, path = it, quality) { data ->
-            when (data.resultType) {
-                Cancelled -> callback(Result.failure(Exception("Canceled")))
-                Failure -> callback(Result.failure(Exception(data.errorMessage)))
-                Success -> callback(Result.success(dest.path))
-                Progress -> progressCallback?.invoke(data)
-                Start -> progressCallback?.invoke(data)
-            }
+    if (path.isNullOrBlank()) {
+        callback(Result.failure(Exception("Wrong file path")))
+        return
+    }
+
+    val dest = File(parentDir, "${UUID.randomUUID()}${getMimeTypeTakeExtension(path)}")
+    VideoTranscodeHelper.transcodeAsResultWithCallback(
+        destination = dest,
+        path = path,
+        quality = quality
+    ) { data ->
+        when (data.resultType) {
+            Cancelled -> callback(Result.failure(Exception("Canceled")))
+            Failure -> callback(Result.failure(Exception(data.errorMessage)))
+            Success -> callback(Result.success(dest.path))
+            Progress -> progressCallback?.invoke(data)
+            Start -> progressCallback?.invoke(data)
         }
-    } ?: run { callback(Result.failure(Exception("Wrong file path"))) }
+    }
 }

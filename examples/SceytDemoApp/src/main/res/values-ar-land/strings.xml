@@ -1,0 +1,5 @@
+<resources>
+    <!-- Landscape: no line breaks, vertical space is tight and views would overlap -->
+    <string name="login_screen_title">دردشة سريعة وسلسة عبر API</string>
+    <string name="no_created_channels_description">لم تقم بإنشاء قنوات بعد، قم بإنشاء واحدة لإرسال الرسائل.</string>
+</resources>

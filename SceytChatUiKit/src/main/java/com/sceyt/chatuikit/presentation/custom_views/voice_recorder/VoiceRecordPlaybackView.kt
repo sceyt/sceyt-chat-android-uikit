@@ -8,15 +8,14 @@ import androidx.core.view.isVisible
 import com.masoudss.lib.SeekBarOnProgressChanged
 import com.masoudss.lib.WaveformSeekBar
 import com.sceyt.chatuikit.databinding.SceytVoiceRecordPresenterBinding
-import com.sceyt.chatuikit.extensions.TAG_REF
 import com.sceyt.chatuikit.extensions.durationToMinSecShort
 import com.sceyt.chatuikit.extensions.mediaPlayerPositionToSeekBarProgress
 import com.sceyt.chatuikit.extensions.progressToMediaPlayerPosition
 import com.sceyt.chatuikit.extensions.setBackgroundTint
-import com.sceyt.chatuikit.media.audio.AudioPlaybackState
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
-import com.sceyt.chatuikit.media.audio.AudioPlayerHelper.OnAudioPlayer
-import com.sceyt.chatuikit.persistence.logicimpl.message.MessageTid
+import com.sceyt.chatuikit.media.audio.AudioPlayerState
+import com.sceyt.chatuikit.media.audio.AudioPlayerStateCollector
+import com.sceyt.chatuikit.media.audio.AudioPlayerStatus
 import com.sceyt.chatuikit.styles.input.MessageInputStyle
 import com.sceyt.chatuikit.styles.input.VoiceRecordPlaybackViewStyle
 import java.io.File
@@ -30,6 +29,10 @@ class VoiceRecordPlaybackView @JvmOverloads constructor(
     private lateinit var style: VoiceRecordPlaybackViewStyle
     private val binding: SceytVoiceRecordPresenterBinding
     private val messageTid: Long = -1
+    private val playbackStateCollector = AudioPlayerStateCollector(
+        onStateChanged = ::onPlaybackStateChanged
+    )
+    private var playbackFilePath: String? = null
     var isShowing = false
         private set
     var isViewOnce: Boolean = false
@@ -46,6 +49,7 @@ class VoiceRecordPlaybackView @JvmOverloads constructor(
         viewOnceSelected: Boolean = false,
         listener: VoiceRecordPlaybackListeners? = null
     ) {
+        playbackFilePath = file.path
         isShowing = true
         isViewOnce = viewOnceSelected
         with(binding) {
@@ -53,6 +57,7 @@ class VoiceRecordPlaybackView @JvmOverloads constructor(
                 AudioPlayerHelper.stop(file.path, messageTid)
                 isShowing = false
                 isViewOnce = false
+                playbackFilePath = null
                 listener?.onDeleteVoiceRecord()
             }
 
@@ -67,6 +72,7 @@ class VoiceRecordPlaybackView @JvmOverloads constructor(
             icSendMessage.setOnClickListener {
                 AudioPlayerHelper.stop(file.path, messageTid)
                 isShowing = false
+                playbackFilePath = null
                 listener?.onSendVoiceMessage(isViewOnce)
                 isViewOnce = false
             }
@@ -143,46 +149,28 @@ class VoiceRecordPlaybackView @JvmOverloads constructor(
 
         AudioPlayerHelper.init(
             filePath = file.path,
-            messageTid = messageTid,
-            events = object : OnAudioPlayer {
-                override fun onProgress(
-                    position: Long, duration: Long, filePath: String,
-                    messageTid: MessageTid
-                ) {
-                    val seekBarProgress = mediaPlayerPositionToSeekBarProgress(position, duration)
-                    root.post {
-                        waveformSeekBar.progress = seekBarProgress
-                        voiceRecordDuration.text = position.durationToMinSecShort()
-                    }
-                }
-
-                override fun onToggle(
-                    playing: Boolean, filePath: String,
-                    messageTid: MessageTid
-                ) {
-                    root.post { setPlayButtonIcon(playing) }
-                }
-
-                override fun onStop(
-                    filePath: String,
-                    messageTid: MessageTid,
-                    savedState: AudioPlaybackState?
-                ) {
-                    root.post {
-                        setPlayButtonIcon(false)
-                        waveformSeekBar.progress = 0f
-                    }
-                }
-
-                override fun onPaused(
-                    filePath: String,
-                    messageTid: MessageTid
-                ) {
-                    root.post { setPlayButtonIcon(false) }
-                }
-            },
-            tag = TAG_REF
+            messageTid = messageTid
         )
+    }
+
+    private fun onPlaybackStateChanged(state: AudioPlayerState) {
+        if (!isShowing || !::style.isInitialized) return
+        val filePath = playbackFilePath ?: return
+        if (!state.matches(filePath, messageTid)) {
+            setPlayButtonIcon(false)
+            return
+        }
+        setPlayButtonIcon(state.isPlaying)
+        val duration = state.duration.takeIf { it > 0 } ?: return
+        binding.waveformSeekBar.progress = mediaPlayerPositionToSeekBarProgress(
+            state.position,
+            duration
+        )
+        if (state.status == AudioPlayerStatus.Completed) {
+            binding.waveformSeekBar.progress = 0f
+        } else {
+            binding.voiceRecordDuration.text = state.position.durationToMinSecShort()
+        }
     }
 
     private fun setPlayButtonIcon(playing: Boolean) {
@@ -203,6 +191,16 @@ class VoiceRecordPlaybackView @JvmOverloads constructor(
             icViewOnce.setImageDrawable(style.viewOnceIcon)
             style.durationTextStyle.apply(voiceRecordDuration)
         }
+    }
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        playbackStateCollector.start(this)
+    }
+
+    override fun onDetachedFromWindow() {
+        playbackStateCollector.stop()
+        super.onDetachedFromWindow()
     }
 
     interface VoiceRecordPlaybackListeners {

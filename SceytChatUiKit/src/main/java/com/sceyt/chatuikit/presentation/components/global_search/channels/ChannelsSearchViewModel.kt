@@ -6,7 +6,6 @@ import androidx.lifecycle.viewModelScope
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.config.ChannelListConfig
-import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.search.GlobalSearchMessageResult
 import com.sceyt.chatuikit.data.models.search.GlobalSearchPage
@@ -30,7 +29,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
@@ -163,7 +161,7 @@ open class ChannelsSearchViewModel(
             withContext(Dispatchers.Main) {
                 _state.update {
                     it.copy(
-                        listItems = it.listItems + result.listItems,
+                        listItems = (it.listItems + result.listItems).distinct(),
                         isLoadingMore = false,
                         hasMore = result.hasMore,
                         offset = it.offset + result.loadedCount,
@@ -328,15 +326,10 @@ open class ChannelsSearchViewModel(
             types = listOf(SceytChatUIKit.config.channelTypesConfig.broadcast)
         )
         viewModelScope.launch(ioDispatcher) {
-            channelInteractor.loadChannels(
-                offset = 0,
-                searchQuery = query,
-                loadKey = null,
-                onlyMine = false,
-                ignoreDb = true,
-                awaitForConnection = false,
+            channelInteractor.searchChannels(
+                query = query,
                 config = broadcastConfig
-            ).firstOrNull { it is PaginationResponse.ServerResponse }
+            )
         }
     }
 

@@ -4,13 +4,15 @@
 
     <item
         android:id="@+id/action_video_call"
-        android:icon="@drawable/ic_video_call_blue"
+        android:icon="@drawable/ic_make_video_call"
+        app:iconTint="@color/sceyt_color_accent"
         app:showAsAction="ifRoom"
         android:title="Video Call" />
 
     <item
         android:id="@+id/action_audio_call"
-        android:icon="@drawable/ic_call_up_blue"
+        android:icon="@drawable/ic_make_audio_call"
+        app:iconTint="@color/sceyt_color_accent"
         app:showAsAction="ifRoom"
         android:title="Audio Call" />
 

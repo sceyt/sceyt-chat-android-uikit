@@ -279,9 +279,12 @@ class AvatarView @JvmOverloads constructor(
     }
 
     private fun loadAvatarImage(oldImageUrl: String?, preloadForOffline: Boolean = true) {
-        if (!imageUrl.isNullOrBlank() && imageUrl != oldImageUrl) {
+        if (imageUrl.isNullOrBlank()) {
+            AvatarImageLoader.cancelLoad(context, this)
+            avatarLoadCb?.invoke(false)
+        } else if (imageUrl != oldImageUrl) {
             AvatarImageLoader.loadAvatar(
-                context = context.applicationContext,
+                context = context,
                 imageUrl = imageUrl,
                 imageView = this,
                 placeholder = placeholder ?: AvatarPlaceholder.FromDrawable(defaultPlaceholder),
@@ -336,8 +339,8 @@ class AvatarView @JvmOverloads constructor(
     fun setImageUrl(url: String?, preloadForOffline: Boolean = true) {
         val oldImageUrl = imageUrl
         imageUrl = url
-        setDefaultImageIfNeeded(defaultAvatar)
         loadAvatarImage(oldImageUrl, preloadForOffline)
+        setDefaultImageIfNeeded(defaultAvatar)
         invalidate()
     }
 
@@ -423,8 +426,8 @@ class AvatarView @JvmOverloads constructor(
 
             style.apply(this@AvatarView)
             setInitialsIfNeeded(defaultAvatar)
-            setDefaultImageIfNeeded(defaultAvatar)
             loadAvatarImage(oldImageUrl, preloadForOffline)
+            setDefaultImageIfNeeded(defaultAvatar)
         }
     }
 
@@ -508,5 +511,4 @@ class AvatarView @JvmOverloads constructor(
 fun @receiver:DrawableRes Int.toDefaultAvatar(): DefaultAvatar {
     return DefaultAvatar.FromDrawableRes(this)
 }
-
 

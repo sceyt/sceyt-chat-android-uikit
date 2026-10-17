@@ -3,6 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/parentLayout"
+    android:contentDescription="@string/sceyt_cd_channel_item"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:foreground="@drawable/sceyt_bg_ripple"
@@ -19,6 +20,7 @@
 
     <com.sceyt.chatuikit.presentation.custom_views.AvatarView
         android:id="@+id/avatar"
+        android:contentDescription="@string/sceyt_cd_channel_avatar"
         android:layout_width="56dp"
         android:layout_height="56dp"
         android:layout_marginVertical="8dp"

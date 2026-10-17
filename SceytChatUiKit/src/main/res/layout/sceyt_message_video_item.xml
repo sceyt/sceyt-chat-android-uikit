@@ -3,12 +3,14 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/parentLayout"
+    android:contentDescription="@string/sceyt_cd_message_video"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@drawable/sceyt_rounded_video_background">
 
     <!--    <androidx.media3.ui.PlayerView
             android:id="@+id/videoView"
+            android:contentDescription="@string/sceyt_cd_message_video_player"
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:visibility="gone"
@@ -22,6 +24,7 @@
 
     <com.google.android.material.imageview.ShapeableImageView
         android:id="@+id/imageThumb"
+        android:contentDescription="@string/sceyt_cd_message_video_thumbnail"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:background="@drawable/sceyt_rounded_video_background"
@@ -36,6 +39,7 @@
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/playPauseItem"
+        android:contentDescription="@string/sceyt_cd_play_or_pause_message_video"
         android:layout_width="@dimen/messageProgressSize"
         android:layout_height="@dimen/messageProgressSize"
         android:background="@drawable/sceyt_bg_circle"
@@ -70,6 +74,7 @@
 
     <com.sceyt.chatuikit.presentation.custom_views.CircularProgressView
         android:id="@+id/loadProgress"
+        android:contentDescription="@string/sceyt_cd_load_message_video"
         android:layout_width="@dimen/messageProgressSize"
         android:layout_height="@dimen/messageProgressSize"
         android:padding="1dp"

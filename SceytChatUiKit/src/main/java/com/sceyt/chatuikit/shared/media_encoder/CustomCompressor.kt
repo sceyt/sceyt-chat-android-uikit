@@ -9,6 +9,7 @@ import android.media.MediaMuxer
 import android.net.Uri
 import android.os.Build
 import android.util.Log
+import com.sceyt.chatuikit.extensions.setDataSourceFromPath
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.shared.media_encoder.CompressorUtils.findTrack
 import com.sceyt.chatuikit.shared.media_encoder.CompressorUtils.generateWidthAndHeight
@@ -87,13 +88,13 @@ object CustomCompressor {
             extractor.setDataSource(context, srcUri, null)
         } else {
             try {
-                mediaMetadataRetriever.setDataSource(srcPath)
+                mediaMetadataRetriever.setDataSourceFromPath(srcPath!!)
             } catch (exception: Exception) {
                 printException(exception)
                 return Result.failure(exception)
             }
 
-            val file = File(srcPath!!)
+            val file = File(srcPath)
             if (!file.canRead())
                 return Result.failure(Exception("The source file cannot be accessed!"))
             try {
@@ -432,7 +433,7 @@ object CustomCompressor {
         val decoder = MediaCodec.createDecoderByType(inputFormat.getString(MediaFormat.KEY_MIME)!!)
         //}
 
-        decoder.configure(inputFormat, outputSurface.getSurface(), null, 0)
+        decoder.configure(inputFormat, outputSurface.surface, null, 0)
 
         return decoder
     }

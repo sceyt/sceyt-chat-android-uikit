@@ -70,6 +70,15 @@ class CustomCameraActivity : AppCompatActivity() {
         permissionCoordinator = PermissionCoordinator(this, permissionLauncher)
         filePickerHelper = FilePickerHelper(this)
 
+        supportFragmentManager.setFragmentResultListener(
+            BottomSheetMediaPicker.REQUEST_KEY,
+            this
+        ) { _, bundle ->
+            val selectedMedia = BottomSheetMediaPicker.getSelectedMedia(bundle)
+            if (selectedMedia.isEmpty()) return@setFragmentResultListener
+            navigator.returnSelectedMedia(selectedMedia)
+        }
+
         cameraController = CameraXController(
             appContext = applicationContext,
             lifecycleOwner = this,
@@ -235,16 +244,7 @@ class CustomCameraActivity : AppCompatActivity() {
         }
 
         filePickerHelper.openMediaPicker(
-            pickerListener = BottomSheetMediaPicker.PickerListener { items ->
-                val first = items.firstOrNull() ?: return@PickerListener
-                if (first.mediaType == BottomSheetMediaPicker.MediaType.Video) {
-                    navigator.openVideoPreview(first.realPath)
-                } else {
-                    navigator.openPhotoPreview(first.realPath)
-                }
-            },
-            filter = filter,
-            maxSelectCount = 1
+            filter = filter
         )
     }
 
@@ -403,6 +403,7 @@ class CustomCameraActivity : AppCompatActivity() {
     companion object {
         const val EXTRA_RESULT_URI = "result_uri"
         const val EXTRA_IS_VIDEO = "is_video"
+        internal const val EXTRA_RESULT_SELECTED_MEDIA = "result_selected_media"
         private const val EXTRA_ALLOWED_MODE = "allowed_mode"
 
         fun createIntent(context: Context, allowedMode: AllowedMode? = null): Intent {

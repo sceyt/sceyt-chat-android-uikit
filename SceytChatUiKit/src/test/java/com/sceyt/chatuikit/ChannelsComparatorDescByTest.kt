@@ -179,6 +179,7 @@ internal fun createMessage(
         updatedAt = 0,
         user = null,
         userMarkers = null,
+        pinDetails = null,
         disableMentionsCount = false,
         poll = null,
     )

@@ -10,6 +10,7 @@
 
     <com.github.chrisbanes.photoview.PhotoView
         android:id="@+id/imageView"
+        android:contentDescription="@string/sceyt_cd_self_destructing_image_preview"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:scaleType="fitCenter"
@@ -18,6 +19,7 @@
 
     <androidx.media3.ui.PlayerView
         android:id="@+id/videoView"
+        android:contentDescription="@string/sceyt_cd_self_destructing_video_preview"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:visibility="gone"

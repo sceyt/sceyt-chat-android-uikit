@@ -7,6 +7,7 @@
 
     <com.google.android.material.imageview.ShapeableImageView
         android:id="@+id/fileImage"
+        android:contentDescription="@string/sceyt_cd_message_image"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:background="@color/sceyt_color_background_secondary"
@@ -21,6 +22,7 @@
 
     <com.sceyt.chatuikit.presentation.custom_views.CircularProgressView
         android:id="@+id/loadProgress"
+        android:contentDescription="@string/sceyt_cd_load_message_image"
         android:layout_width="@dimen/messageProgressSize"
         android:layout_height="@dimen/messageProgressSize"
         android:padding="1dp"

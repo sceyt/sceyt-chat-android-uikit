@@ -1,17 +1,24 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders
 
+import android.text.TextUtils
 import android.view.View
+import com.sceyt.chatuikit.data.models.messages.SystemMessageAction
 import com.sceyt.chatuikit.databinding.SceytItemSystemMessageBinding
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
+import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMessageViewHolder
+import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
+import com.sceyt.chatuikit.presentation.extensions.systemMessageTargetId
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
 class SystemMessageViewHolder(
     val binding: SceytItemSystemMessageBinding,
     style: MessageItemStyle,
+    private val messageListeners: MessageClickListeners.ClickListeners? = null,
     displayedListener: ((MessageListItem) -> Unit)?,
-) : BaseMessageViewHolder(binding.root, style, displayedListener = displayedListener) {
+    needMediaDataCallback: ((NeedMediaInfoData) -> Unit)? = null,
+) : BaseMessageViewHolder(binding.root, style, displayedListener = displayedListener, needMediaDataCallback = needMediaDataCallback) {
 
     private val systemMessageStyle = style.systemMessageItemStyle
 
@@ -26,6 +33,16 @@ class SystemMessageViewHolder(
             with(binding) {
                 val message = item.message
                 title.text = systemMessageStyle.textFormatter.format(context, message)
+                val isPinMessage = SystemMessageAction.getTypeFromString(message.body) == SystemMessageAction.PinMessage
+                title.maxLines = if (isPinMessage) 1 else Int.MAX_VALUE
+                title.ellipsize = if (isPinMessage) TextUtils.TruncateAt.END else null
+                val targetId = message.systemMessageTargetId()
+                title.isClickable = targetId != null
+                if (targetId != null)
+                    title.setOnClickListener {
+                        messageListeners?.onPinnedSystemMessageClick(it, item)
+                    }
+                else title.setOnClickListener(null)
             }
         }
     }

@@ -21,6 +21,7 @@ import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.navigation.Destination
 import com.sceyt.chatuikit.navigation.MediaPreviewParams
 import com.sceyt.chatuikit.navigation.navigate
+import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.presentation.common.collections.SyncArrayList
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelFileItem
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoActivity
@@ -84,7 +85,7 @@ open class ChannelInfoMediaFragment : Fragment(), SceytKoinComponent, HistoryCle
     }
 
     private fun initViewModel() {
-        viewModel.observeToUpdateAfterOnResume(this)
+        viewModel.observeToUpdateAfterOnResume(this, ::onDeferredTransferUpdate)
 
         lifecycleScope.launch {
             viewModel.filesFlow.collect(::onInitialMediaList)
@@ -185,6 +186,10 @@ open class ChannelInfoMediaFragment : Fragment(), SceytKoinComponent, HistoryCle
 
     protected open fun onMoreMediaList(list: List<ChannelFileItem>) {
         mediaAdapter?.addNewItems(list)
+    }
+
+    protected open fun onDeferredTransferUpdate(transferData: TransferData) {
+        mediaAdapter?.updateTransfer(transferData)
     }
 
     protected open fun onPageStateChange(pageState: PageState) {

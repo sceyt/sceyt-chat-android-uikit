@@ -14,6 +14,7 @@ import com.sceyt.chatuikit.data.models.channels.DraftMessage
 import com.sceyt.chatuikit.data.models.channels.EditChannelData
 import com.sceyt.chatuikit.data.models.SyncResult
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
+import com.sceyt.chatuikit.data.models.channels.SyncedChannelsWindow
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.push.PushData
 import com.sceyt.chatuikit.services.SceytPresenceChecker
@@ -36,6 +37,11 @@ interface PersistenceChannelsLogic {
         config: ChannelListConfig,
     ): Flow<PaginationResponse<SceytChannel>>
 
+    suspend fun searchChannels(
+        query: String,
+        config: ChannelListConfig,
+    ): SceytResponse<List<SceytChannel>>
+
     suspend fun searchChannelsWithUserIds(
         offset: Int,
         searchQuery: String,
@@ -50,13 +56,14 @@ interface PersistenceChannelsLogic {
 
     suspend fun getChannelsBySQLiteQuery(query: SimpleSQLiteQuery): List<SceytChannel>
     suspend fun syncChannels(config: ChannelListConfig): Flow<SyncResult<SceytChannel>>
+    suspend fun reloadChannelsAfterSync(config: ChannelListConfig, limit: Int): SyncedChannelsWindow
     suspend fun findOrCreatePendingChannelByMembers(data: CreateChannelData): SceytResponse<SceytChannel>
     suspend fun findOrCreatePendingChannelByUri(data: CreateChannelData): SceytResponse<SceytChannel>
     suspend fun createChannel(createChannelData: CreateChannelData): SceytResponse<SceytChannel>
     suspend fun createNewChannelInsteadOfPendingChannel(channel: SceytChannel): SceytResponse<SceytChannel>
     suspend fun markChannelAsRead(channelId: Long): SceytResponse<SceytChannel>
     suspend fun markChannelAsUnRead(channelId: Long): SceytResponse<SceytChannel>
-    suspend fun clearHistory(channelId: Long, forEveryone: Boolean): SceytResponse<Long>
+    suspend fun clearHistory(channelId: Long, forEveryone: Boolean): SceytResponse<SceytChannel>
     suspend fun blockAndLeaveChannel(channelId: Long): SceytResponse<Long>
     suspend fun unblockChannel(channelId: Long): SceytResponse<SceytChannel>
     suspend fun leaveChannel(channelId: Long): SceytResponse<Long>

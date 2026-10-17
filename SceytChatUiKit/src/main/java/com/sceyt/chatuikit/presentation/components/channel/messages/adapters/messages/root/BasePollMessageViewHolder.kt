@@ -8,6 +8,7 @@ import com.sceyt.chatuikit.data.models.messages.PollOption
 import com.sceyt.chatuikit.data.models.messages.PollOptionUiModel
 import com.sceyt.chatuikit.data.models.messages.SceytPollDetails
 import com.sceyt.chatuikit.data.models.messages.getOptionsUiModels
+import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.polls.PollOptionAdapter
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.polls.PollOptionViewHolderFactory
@@ -19,7 +20,8 @@ abstract class BasePollMessageViewHolder(
     protected val style: MessageItemStyle,
     protected val messageListeners: MessageClickListeners.ClickListeners?,
     displayedListener: ((MessageListItem) -> Unit)? = null,
-) : BaseMessageViewHolder(view, style, messageListeners, displayedListener) {
+    needMediaDataCallback: ((NeedMediaInfoData) -> Unit)? = null,
+) : BaseMessageViewHolder(view, style, messageListeners, displayedListener, needMediaDataCallback) {
 
     protected var pollOptionAdapter: PollOptionAdapter? = null
     protected var currentPoll: SceytPollDetails? = null
