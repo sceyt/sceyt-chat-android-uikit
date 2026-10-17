@@ -13,9 +13,9 @@ object Config {
         const val artifactId = "sceyt-chat-android-uikit"
         const val description = "Sceyt Chat Android UIKit"
 
-        // const val version = "2.1.5"
+        const val version = "2.1.6"
         // const val version = "local"
-        const val version = "2.1.523025013-SNAPSHOT"
+        // const val version = "2.1.523025013-SNAPSHOT"
     }
 
     object ChatConnection {
@@ -23,7 +23,7 @@ object Config {
         const val description = "Sceyt Chat connection and lifecycle management for Android"
 
         // const val version = "local"
-        const val version = "1.0.3-SNAPSHOT"
+        const val version = "1.0.1"
     }
 
     /** App version */
