@@ -85,7 +85,7 @@ open class PollOptionVotersFragment : Fragment(), SceytKoinComponent {
     }
 
     protected open fun initStyle(context: Context) {
-        val pollStyle = StyleRegistry.getOrDefault(STYLE_ID) {
+        val pollStyle = StyleRegistry.getOrDefault(styleId) {
             PollResultsStyle.Builder(context, null).build()
         }
         style = pollStyle.pollOptionVotersStyle

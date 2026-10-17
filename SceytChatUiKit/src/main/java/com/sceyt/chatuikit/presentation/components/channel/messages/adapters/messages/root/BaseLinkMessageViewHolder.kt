@@ -17,6 +17,7 @@ import com.sceyt.chatuikit.extensions.calculateScaleWidthHeight
 import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.glideRequestListener
 import com.sceyt.chatuikit.extensions.setTextAndVisibility
+import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
@@ -28,7 +29,8 @@ abstract class BaseLinkMessageViewHolder(
     private val style: MessageItemStyle,
     private val messageListeners: MessageClickListeners.ClickListeners? = null,
     displayedListener: ((MessageListItem) -> Unit)? = null,
-) : BaseMessageViewHolder(view, style, messageListeners, displayedListener) {
+    needMediaDataCallback: ((NeedMediaInfoData) -> Unit)? = null,
+) : BaseMessageViewHolder(view, style, messageListeners, displayedListener, needMediaDataCallback) {
     protected var linkPreviewContainerBinding: SceytMessageLinkPreviewContainerBinding? = null
     protected open val maxSize by lazy {
         bubbleMaxWidth - dpToPx(16f) //(2*8 preview container) is margins

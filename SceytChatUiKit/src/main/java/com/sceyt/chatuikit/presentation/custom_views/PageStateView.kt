@@ -11,9 +11,9 @@ import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.presentation.root.PageState
 
 class PageStateView @JvmOverloads constructor(
-        context: Context,
-        attrs: AttributeSet? = null,
-        defStyleAttr: Int = 0
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0
 ) : FrameLayout(context, attrs, defStyleAttr) {
     internal val layoutInflater by lazy { LayoutInflater.from(context) }
     private var loadingStateView: View? = null
@@ -75,7 +75,11 @@ class PageStateView @JvmOverloads constructor(
         return view
     }
 
-    fun updateState(state: PageState, showLoadingIfNeed: Boolean = true, enableErrorSnackBar: Boolean = true) {
+    fun updateState(
+        state: PageState,
+        showLoadingIfNeed: Boolean = true,
+        enableErrorSnackBar: Boolean = true
+    ) {
         when (state) {
             is PageState.StateEmpty -> {
                 emptyStateView?.isVisible = !state.isSearch && !state.wasLoadingMore

@@ -77,6 +77,12 @@ interface MessagesRepository {
         deleteType: DeleteMessageType,
     ): SceytResponse<SceytMessage>
 
+    suspend fun deleteMessageByTid(
+        channelId: Long,
+        tid: Long,
+        deleteType: DeleteMessageType,
+    ): SceytResponse<SceytMessage>
+
     suspend fun editMessage(
         channelId: Long,
         message: SceytMessage,

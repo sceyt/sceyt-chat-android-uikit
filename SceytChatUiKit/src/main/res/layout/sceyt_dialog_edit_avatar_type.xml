@@ -9,6 +9,7 @@
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tvTakePhoto"
+        android:contentDescription="@string/sceyt_cd_take_photo"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?selectableItemBackground"
@@ -26,6 +27,7 @@
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tvGallery"
+        android:contentDescription="@string/sceyt_cd_choose_from_gallery"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?selectableItemBackground"
@@ -43,6 +45,7 @@
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tvDelete"
+        android:contentDescription="@string/sceyt_cd_delete_avatar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?selectableItemBackground"

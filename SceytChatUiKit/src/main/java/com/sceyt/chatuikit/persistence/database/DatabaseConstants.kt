@@ -23,6 +23,8 @@ internal object DatabaseConstants {
     const val DRAFT_MESSAGE_USER_LINK_TABLE = "sceyt_draft_message_user_link_table"
     const val AUTO_DELETE_MESSAGES_TABLE = "sceyt_auto_delete_messages_table"
     const val PENDING_MESSAGE_STATE_TABLE = "sceyt_pending_message_state_table"
+    const val PENDING_MESSAGE_DELETE_BY_TID_TABLE = "sceyt_pending_message_delete_by_tid_table"
+    const val PENDING_CHANNEL_AVATAR_TABLE = "sceyt_pending_channel_avatar_table"
     const val LOAD_RANGE_TABLE = "sceyt_load_range_table"
 
     // Attachment
@@ -43,9 +45,13 @@ internal object DatabaseConstants {
     const val MARKER_TABLE = "sceyt_marker_table"
     const val PENDING_MARKER_TABLE = "sceyt_pending_marker_table"
 
+    // Pin
+    const val PINNED_MESSAGE_TABLE = "sceyt_pinned_message_table"
+
     // Poll
     const val POLL_TABLE = "sceyt_poll_table"
     const val POLL_OPTION_TABLE = "sceyt_poll_option_table"
     const val POLL_VOTE_TABLE = "sceyt_poll_vote_table"
     const val PENDING_POLL_VOTE_TABLE = "sceyt_pending_poll_vote_table"
+    const val PENDING_PIN_TABLE = "sceyt_pending_pin_table"
 }

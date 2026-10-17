@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout
+    android:contentDescription="@string/sceyt_cd_outgoing_attachments_message" xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -9,6 +10,7 @@
 
     <androidx.appcompat.widget.AppCompatCheckBox
         android:id="@+id/selectView"
+        android:contentDescription="@string/sceyt_cd_select_outgoing_attachments_message"
         android:layout_width="24dp"
         android:layout_height="24dp"
         android:background="@android:color/transparent"
@@ -93,6 +95,7 @@
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvFiles"
+            android:contentDescription="@string/sceyt_cd_outgoing_attachments_message_files_list"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginBottom="2dp"
@@ -126,6 +129,7 @@
 
     <ViewStub
         android:id="@+id/rvReactions"
+        android:contentDescription="@string/sceyt_cd_outgoing_attachments_message_reactions_list"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/layoutDetails"
@@ -141,6 +145,7 @@
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tvReplyCount"
+        android:contentDescription="@string/sceyt_cd_outgoing_attachments_message_reply_count"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/rvReactions"
@@ -152,5 +157,14 @@
         android:textSize="@dimen/tinyTextSize"
         android:visibility="gone"
         tools:text="34 reply" />
+
+    <ViewStub
+        android:id="@+id/sideActionView"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:layout_alignBottom="@+id/layoutDetails"
+        android:layout_marginEnd="8dp"
+        android:layout_toStartOf="@+id/layoutDetails"
+        android:layout="@layout/sceyt_message_side_action_button" />
 
 </RelativeLayout>

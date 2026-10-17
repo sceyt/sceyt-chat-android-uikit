@@ -12,6 +12,7 @@ import com.sceyt.chatuikit.formatters.attributes.ChannelItemSubtitleFormatterAtt
 import com.sceyt.chatuikit.formatters.attributes.ChannelLastMessageStatusAndDateFormatterAttributes
 import com.sceyt.chatuikit.formatters.attributes.DraftMessageBodyFormatterAttributes
 import com.sceyt.chatuikit.formatters.attributes.MessageBodyFormatterAttributes
+import com.sceyt.chatuikit.formatters.attributes.PinnedMessageBodyFormatterAttributes
 import com.sceyt.chatuikit.formatters.attributes.SearchMessageResultFormatterAttributes
 import com.sceyt.chatuikit.formatters.defaults.DefaultAttachmentDateFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultAttachmentNameFormatter
@@ -34,6 +35,7 @@ import com.sceyt.chatuikit.formatters.defaults.DefaultDraftMessageBodyWithAttach
 import com.sceyt.chatuikit.formatters.defaults.DefaultMediaDurationFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultMentionUserNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultMessageBodyFormatter
+import com.sceyt.chatuikit.formatters.defaults.DefaultPinnedMessageBodyFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultMessageBodyWithAttachmentsFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultMessageDateFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultMessageDateSeparatorFormatter
@@ -213,6 +215,10 @@ class SceytChatUIKitFormatters {
 
     var mediaDurationFormatter: Formatter<Long> by lazyVar {
         DefaultMediaDurationFormatter()
+    }
+
+    var pinnedMessageBodyFormatter: Formatter<PinnedMessageBodyFormatterAttributes> by lazyVar {
+        DefaultPinnedMessageBodyFormatter()
     }
 
     var voiceDurationFormatter: Formatter<Long> by lazyVar {

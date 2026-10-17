@@ -9,6 +9,7 @@
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/pin"
+        android:contentDescription="@string/sceyt_cd_pin_direct_channel"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?selectableItemBackground"
@@ -28,6 +29,7 @@
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/unPin"
+        android:contentDescription="@string/sceyt_cd_unpin_direct_channel"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?selectableItemBackground"
@@ -47,6 +49,7 @@
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/unBlockUser"
+        android:contentDescription="@string/sceyt_cd_unblock_user"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?selectableItemBackground"
@@ -66,6 +69,7 @@
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/blockUser"
+        android:contentDescription="@string/sceyt_cd_block_user"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?selectableItemBackground"
@@ -83,6 +87,7 @@
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/clearHistory"
+        android:contentDescription="@string/sceyt_cd_clear_history"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?selectableItemBackground"
@@ -100,6 +105,7 @@
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/delete"
+        android:contentDescription="@string/sceyt_cd_delete_direct_channel"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?selectableItemBackground"

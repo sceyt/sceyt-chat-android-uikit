@@ -11,12 +11,13 @@ import com.sceyt.chatuikit.presentation.custom_views.voice_recorder.AudioMetadat
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
-data class FileListItem(
+class FileListItem(
     private var _attachment: SceytAttachment,
     private var _metadataPayload: AttachmentMetadataPayload,
     private var _thumbPath: String?,
     private var _transferData: TransferData?,
     val type: AttachmentTypeEnum,
+    val isMediaFile: Boolean = false,
 ) : AttachmentDataProvider, Parcelable {
 
     override val attachment: SceytAttachment
@@ -51,5 +52,27 @@ data class FileListItem(
 
     override fun updateTransferData(transferData: TransferData?) {
         _transferData = transferData
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is FileListItem) return false
+
+        return _attachment == other._attachment
+                && _metadataPayload == other._metadataPayload
+                && _thumbPath == other._thumbPath
+                && _transferData == other._transferData
+                && type == other.type
+                && isMediaFile == other.isMediaFile
+    }
+
+    override fun hashCode(): Int {
+        var result = _attachment.hashCode()
+        result = 31 * result + _metadataPayload.hashCode()
+        result = 31 * result + (_thumbPath?.hashCode() ?: 0)
+        result = 31 * result + (_transferData?.hashCode() ?: 0)
+        result = 31 * result + type.hashCode()
+        result = 31 * result + isMediaFile.hashCode()
+        return result
     }
 }

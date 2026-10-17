@@ -36,6 +36,7 @@
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/icFile"
+        android:contentDescription="@string/sceyt_cd_reply_file"
         android:layout_width="34dp"
         android:layout_height="34dp"
         android:layout_gravity="center"

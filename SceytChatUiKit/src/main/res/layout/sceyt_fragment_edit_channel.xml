@@ -31,6 +31,7 @@
 
             <com.sceyt.chatuikit.presentation.custom_views.AvatarView
                 android:id="@+id/avatar"
+                android:contentDescription="@string/sceyt_cd_channel_avatar"
                 android:layout_width="@dimen/_62sdp"
                 android:layout_height="@dimen/_62sdp"
                 android:layout_marginTop="24dp"
@@ -168,6 +169,7 @@
 
     <com.sceyt.chatuikit.presentation.custom_views.CustomFloatingActonButton
         android:id="@+id/icSave"
+        android:contentDescription="@string/sceyt_cd_save_channel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
@@ -177,5 +179,4 @@
         app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
-
 

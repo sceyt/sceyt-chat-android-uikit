@@ -30,18 +30,16 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.databinding.SceytRecordViewBinding
-import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.animatorListener
 import com.sceyt.chatuikit.extensions.checkAndAskPermissions
 import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.initPermissionLauncher
-import com.sceyt.chatuikit.extensions.maybeComponentActivity
+import com.sceyt.chatuikit.extensions.asComponentActivityOrNull
 import com.sceyt.chatuikit.extensions.permissionIgnored
-import com.sceyt.chatuikit.extensions.runOnMainThread
 import com.sceyt.chatuikit.extensions.screenWidthPx
 import com.sceyt.chatuikit.extensions.setBackgroundTint
-import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
+import com.sceyt.chatuikit.media.audio.AudioPlayerStateCollector
 import com.sceyt.chatuikit.presentation.common.dialogs.SceytDialog
 import com.sceyt.chatuikit.styles.input.MessageInputStyle
 import java.util.Timer
@@ -80,7 +78,14 @@ class VoiceRecorderView @JvmOverloads constructor(
     private var recordingListener: RecordingListener? = null
     private var isRecordingAllowed: () -> Boolean = { true }
     private val recorderViewStyle get() = style.voiceRecorderViewStyle
-    
+    private val playbackStateCollector = AudioPlayerStateCollector(
+        onStateChanged = { state ->
+            if (state.isPlaying && isRecording) {
+                forceStopRecording()
+            }
+        }
+    )
+
     var isViewOnce: Boolean = false
         private set
     var enableViewOnce: Boolean = true
@@ -94,14 +99,7 @@ class VoiceRecorderView @JvmOverloads constructor(
         layoutTransition = LayoutTransition().apply { setDuration(200) }
 
         post {
-            context.maybeComponentActivity()?.lifecycle?.addObserver(lifecycleEventObserver)
-        }
-
-        AudioPlayerHelper.addToggleCallback(TAG) {
-            runOnMainThread {
-                if (isRecording)
-                    forceStopRecording()
-            }
+            context.asComponentActivityOrNull()?.lifecycle?.addObserver(lifecycleEventObserver)
         }
     }
 
@@ -119,21 +117,21 @@ class VoiceRecorderView @JvmOverloads constructor(
             isLocked = false
             stopRecording(RecordingBehaviour.LOCK_DONE_SHOW_PREVIEW)
         }
-        
+
         icViewOnce.setOnClickListener {
             toggleViewOnce()
         }
     }
-    
+
     private fun toggleViewOnce() {
         isViewOnce = !isViewOnce
         updateViewOnceIcon()
     }
-    
+
     private fun updateViewOnceIcon() {
         with(binding.icViewOnce) {
             if (isViewOnce) {
-              setImageDrawable(recorderViewStyle.viewOnceSelectedIcon)
+                setImageDrawable(recorderViewStyle.viewOnceSelectedIcon)
             } else {
                 setImageDrawable(recorderViewStyle.viewOnceIcon)
             }
@@ -142,6 +140,7 @@ class VoiceRecorderView @JvmOverloads constructor(
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
+        playbackStateCollector.start(this)
         binding.initViews()
     }
 
@@ -502,7 +501,7 @@ class VoiceRecorderView @JvmOverloads constructor(
     }
 
     private fun animateColor(view: View, colorFrom: Int, colorTo: Int) {
-        colorAnimation = ValueAnimator.ofArgb( colorFrom, colorTo)
+        colorAnimation = ValueAnimator.ofArgb(colorFrom, colorTo)
         colorAnimation?.duration = 200 // milliseconds
         colorAnimation?.addUpdateListener { animator ->
             view.backgroundTintList = ColorStateList.valueOf(animator.animatedValue as Int)
@@ -556,7 +555,7 @@ class VoiceRecorderView @JvmOverloads constructor(
     }
 
     private val requestVoicePermissionLauncher =
-        if (isInEditMode) null else context.maybeComponentActivity()?.run {
+        if (isInEditMode) null else context.asComponentActivityOrNull()?.run {
             if (!lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
                 initPermissionLauncher {
                     onVoicePermissionResult(it)
@@ -579,5 +578,18 @@ class VoiceRecorderView @JvmOverloads constructor(
 
     fun setRecorderHeight(height: Int) {
         binding.recording.updateLayoutParams<LayoutParams> { this.height = height }
+    }
+
+    private fun releaseTimer() {
+        timerTask?.cancel()
+        timerTask = null
+        audioTimer?.cancel()
+        audioTimer = null
+    }
+
+    override fun onDetachedFromWindow() {
+        playbackStateCollector.stop()
+        releaseTimer()
+        super.onDetachedFromWindow()
     }
 }

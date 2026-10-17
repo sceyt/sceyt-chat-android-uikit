@@ -35,6 +35,7 @@
 
                 <com.sceyt.chatuikit.presentation.custom_views.AvatarView
                     android:id="@+id/avatar"
+                    android:contentDescription="@string/sceyt_cd_group_avatar"
                     android:layout_width="@dimen/_60sdp"
                     android:layout_height="@dimen/_60sdp"
                     android:layout_marginTop="24dp"
@@ -93,6 +94,7 @@
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvMembers"
+                android:contentDescription="@string/sceyt_cd_create_group_members_list"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:clipToPadding="false"
@@ -111,6 +113,7 @@
 
     <com.sceyt.chatuikit.presentation.custom_views.CustomFloatingActonButton
         android:id="@+id/btnCreate"
+        android:contentDescription="@string/sceyt_cd_create_group"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
@@ -121,5 +124,4 @@
         tools:tint="@color/sceyt_color_on_primary" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
-
 

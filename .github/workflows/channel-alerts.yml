@@ -1,0 +1,142 @@
+name: Waafi Alerts
+
+on:
+  workflow_call:
+    inputs:
+      failed:
+        required: true
+        type: boolean
+    secrets:
+      WAAFI_PLATFORM_API_KEY:
+        required: true
+
+permissions:
+  actions: read
+  contents: read
+  pull-requests: read
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    steps:
+      - name: Send test results to Waafi
+        uses: actions/github-script@v7
+        env:
+          WAAFI_PLATFORM_API_KEY: ${{ secrets.WAAFI_PLATFORM_API_KEY }}
+          WAAFI_CHANNEL_ID: ${{ vars.WAAFI_CHANNEL_ID }}
+          FAILED: ${{ inputs.failed }}
+        with:
+          script: |
+            const {data: run} = await github.rest.actions.getWorkflowRun({
+              ...context.repo, run_id: context.runId
+            });
+            const headSha = context.payload.pull_request?.head.sha || run.head_sha;
+            let pr;
+            if (context.payload.pull_request) {
+              ({data: pr} = await github.rest.pulls.get({
+                ...context.repo, pull_number: context.payload.pull_request.number
+              }));
+              if (pr.head.sha !== headSha || pr.state !== 'open') {
+                core.info('Skipping Waafi alert: PR closed or newer commits exist.');
+                return;
+              }
+            }
+            if (!process.env.WAAFI_PLATFORM_API_KEY) {
+              core.setFailed('Configure the WAAFI_PLATFORM_API_KEY repository secret.');
+              return;
+            }
+            const channelId = process.env.WAAFI_CHANNEL_ID?.trim();
+            if (!channelId || !/^\d+$/.test(channelId)) {
+              core.setFailed('Configure WAAFI_CHANNEL_ID as a numeric repository Actions variable.');
+              return;
+            }
+            const failed = process.env.FAILED === 'true';
+            let passedChecks;
+            let failedChecks = [];
+            try {
+              const jobs = await github.paginate(github.rest.actions.listJobsForWorkflowRun, {
+                ...context.repo, run_id: context.runId, filter: 'latest', per_page: 100
+              });
+              const checks = jobs.filter(job =>
+                job.name !== 'Waafi Alerts' && !job.name.startsWith('Waafi Alerts /')
+              );
+              passedChecks = checks.filter(job => job.conclusion === 'success').map(job => job.name);
+              failedChecks = checks.filter(job =>
+                ['failure', 'timed_out', 'action_required'].includes(job.conclusion)
+              ).map(job => job.name);
+              if (passedChecks.some(name => name !== 'All Tests')) {
+                passedChecks = passedChecks.filter(name => name !== 'All Tests');
+              }
+              if (failedChecks.some(name => name !== 'All Tests')) {
+                failedChecks = failedChecks.filter(name => name !== 'All Tests');
+              }
+            } catch {
+              core.warning('Could not list check results; sending the alert with the run link.');
+            }
+            const actor = run.triggering_actor?.login || run.actor?.login;
+            const body = [
+              failed ? `🔴 ${failedChecks.length ? failedChecks.join(' & ') : 'Android checks'} failed`
+                : '🟢 All Android checks passed',
+              'Chat Android UI Kit',
+              `${context.repo.owner}/${context.repo.repo}`,
+              '',
+              ...(pr ? [
+                `PR #${pr.number} · ${pr.title.replace(/\s+/g, ' ').trim()}`,
+                `${pr.head.ref} → ${pr.base.ref}`
+              ] : [`Branch · ${run.head_branch}`]),
+              `Commit ${headSha.slice(0, 7)} · Run #${run.run_number}`,
+              ...(actor ? [`Triggered by @${actor}`] : []),
+              ...(passedChecks ? [
+                '', '✅ Passed checks',
+                ...(passedChecks.length ? passedChecks.map(name => `• ${name}`) : ['• None']),
+                ...(failedChecks.length ? [
+                  '', '❌ Failed checks', ...failedChecks.map(name => `• ${name}`)
+                ] : [])
+              ] : ['', 'Check results unavailable. Open the run below for details.']),
+              ...(pr ? ['', 'Open pull request', pr.html_url] : []),
+              '', 'View logs & reports', run.html_url
+            ].join('\n');
+            const channelUrl = `https://uk-london-south-api-v2.waafi.com/v1/dwpe7qzx1k/channels/${channelId}`;
+            const senderId = '37400000000';
+            const headers = {
+              'Content-Type': 'application/json',
+              'Platform-Api-Key': process.env.WAAFI_PLATFORM_API_KEY
+            };
+            const sendMessage = () => fetch(
+              `${channelUrl}/messages`,
+              {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({
+                  user_id: senderId, body, type: 'text', metadata: '',
+                  transient: false, display_count: 1, silent: false,
+                  mentioned_users: [], attachments: []
+                }),
+                signal: AbortSignal.timeout(15000),
+                redirect: 'error'
+              }
+            );
+            let response = await sendMessage();
+            if (response.status === 404) {
+              core.info('Waafi returned HTTP 404; adding the sender to the configured channel.');
+              const membershipResponse = await fetch(`${channelUrl}/members`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({
+                  access_prior_history: true,
+                  members: [{id: senderId, role: 'participant'}]
+                }),
+                signal: AbortSignal.timeout(15000),
+                redirect: 'error'
+              });
+              if (!membershipResponse.ok) {
+                core.setFailed(`Waafi sender enrollment failed: HTTP ${membershipResponse.status}`);
+                return;
+              }
+              core.info('Waafi sender added; retrying the alert once.');
+              response = await sendMessage();
+            }
+            if (!response.ok) core.setFailed(`Waafi delivery failed: HTTP ${response.status}`);
+            else core.info(`Waafi alert delivered: HTTP ${response.status}`);

@@ -1,6 +1,11 @@
-name: Branch Test Suite
+name: Android CI
 
 on:
+  push:
+    branches:
+      - dev
+      - main
+
   pull_request:
     branches:
       - dev
@@ -22,6 +27,8 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Set up Java
         uses: actions/setup-java@v4
@@ -33,26 +40,32 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
+        with:
+          packages: 'platform-tools platforms;android-37.0 build-tools;36.0.0'
+          log-accepted-android-sdk-licenses: false
 
-      - name: Accept Android SDK licenses
-        run: yes | sdkmanager --licenses > /dev/null
-
-      - name: Install Android SDK packages
-        run: sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0"
-
-      - name: Run unit tests
-        run: ./gradlew --stacktrace test
+      - name: Run unit tests and build release libraries
+        run: ./gradlew --no-daemon --stacktrace test :SceytChatUiKit:assembleRelease :SceytChatConnection:assembleRelease
 
       - name: Upload unit test reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: unit-test-reports
-          if-no-files-found: ignore
+          if-no-files-found: warn
           path: |
             **/build/reports/tests/**
             **/build/test-results/**
+
+      - name: Upload release libraries
+        uses: actions/upload-artifact@v4
+        with:
+          name: chat-ui-kit-release
+          if-no-files-found: error
+          path: |
+            SceytChatUiKit/build/outputs/aar/*-release.aar
+            SceytChatConnection/build/outputs/aar/*-release.aar
 
   instrumented-tests:
     name: Instrumented tests
@@ -62,6 +75,8 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Set up Java
         uses: actions/setup-java@v4
@@ -73,13 +88,10 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Accept Android SDK licenses
-        run: yes | sdkmanager --licenses > /dev/null
-
-      - name: Install Android SDK packages
-        run: sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0"
+        uses: android-actions/setup-android@v4
+        with:
+          packages: 'platform-tools platforms;android-37.0 build-tools;36.0.0'
+          log-accepted-android-sdk-licenses: false
 
       - name: Enable KVM access
         run: |
@@ -96,15 +108,48 @@ jobs:
           profile: pixel_6
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          script: ./gradlew --stacktrace connectedCheck
+          script: >-
+            ./gradlew --no-daemon --stacktrace connectedCheck
+            -Pandroid.testInstrumentationRunnerArguments.androidx.benchmark.dryRunMode.enable=true
+            -Pandroid.testInstrumentationRunnerArguments.notClass=com.sceyt.chatuikit.persistence.logicimpl.channel.create_channel.FindOrCreateChanelByUriTests
 
       - name: Upload instrumented test reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: instrumented-test-reports
-          if-no-files-found: ignore
+          if-no-files-found: warn
           path: |
             **/build/reports/androidTests/**
             **/build/outputs/androidTest-results/**
             **/benchmark_reports/**
+
+  all-tests:
+    name: All Tests
+    needs: [unit-tests, instrumented-tests]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify all checks passed
+        env:
+          UNIT_RESULT: ${{ needs.unit-tests.result }}
+          DEVICE_RESULT: ${{ needs.instrumented-tests.result }}
+        run: |
+          if [[ "$UNIT_RESULT" != 'success' || "$DEVICE_RESULT" != 'success' ]]; then
+            echo 'One or more UI Kit checks did not pass.'
+            exit 1
+          fi
+
+  waafi-alerts:
+    name: Waafi Alerts
+    needs: [unit-tests, instrumented-tests, all-tests]
+    if: always() && !cancelled() && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
+    permissions:
+      actions: read
+      contents: read
+      pull-requests: read
+    uses: ./.github/workflows/channel-alerts.yml
+    with:
+      failed: ${{ contains(needs.*.result, 'failure') }}
+    secrets:
+      WAAFI_PLATFORM_API_KEY: ${{ secrets.WAAFI_PLATFORM_API_KEY }}

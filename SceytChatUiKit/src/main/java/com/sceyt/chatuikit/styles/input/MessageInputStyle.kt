@@ -121,6 +121,17 @@ data class MessageInputStyle(
             styleCustomizers[viewId] = customizer
         }
 
+        /**
+         * Removes a previously registered customizer for the given [viewId].
+         * Call this when the owner (e.g. a ViewModel/Activity) is destroyed to avoid
+         * leaking it through the static [styleCustomizers] map.
+         */
+        @Suppress("unused")
+        @JvmStatic
+        fun removeStyleCustomizerForViewId(viewId: Int) {
+            styleCustomizers.remove(viewId)
+        }
+
         private var styleCustomizers: HashMap<Int, StyleCustomizer<MessageInputStyle>> = hashMapOf()
     }
 

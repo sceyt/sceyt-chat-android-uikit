@@ -47,6 +47,11 @@ class KeyboardEventListener(
         activity.getContentView().viewTreeObserver.removeOnGlobalLayoutListener(listener)
     }
 
+    fun dispose() {
+        unregisterKeyboardListener()
+        activity.lifecycle.removeObserver(this)
+    }
+
     override fun onDestroy(owner: LifecycleOwner) {
         super.onDestroy(owner)
         unregisterKeyboardListener()

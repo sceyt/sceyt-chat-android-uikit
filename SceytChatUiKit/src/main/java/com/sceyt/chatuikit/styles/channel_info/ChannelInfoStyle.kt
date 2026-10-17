@@ -7,6 +7,7 @@ import androidx.annotation.Px
 import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoActivity
+import com.sceyt.chatuikit.styles.SceytComponentStyle
 import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.channel_info.common_groups.ChannelInfoCommonGroupsStyle
 import com.sceyt.chatuikit.styles.channel_info.files.ChannelInfoFilesStyle
@@ -53,7 +54,7 @@ data class ChannelInfoStyle(
         val linkStyle: ChannelInfoLinkStyle,
         val commonGroupsStyle: ChannelInfoCommonGroupsStyle,
         val showGroupsInCommon: Boolean
-) {
+) : SceytComponentStyle() {
 
     companion object {
         var styleCustomizer = StyleCustomizer<ChannelInfoStyle> { _, style -> style }

@@ -9,6 +9,7 @@
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/btnBack"
+        android:contentDescription="@string/sceyt_cd_back"
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:layout_marginStart="5dp"
@@ -21,6 +22,7 @@
 
     <com.sceyt.chatuikit.presentation.components.global_search.input.GlobalSearchQueryInputView
         android:id="@+id/searchInputView"
+        android:contentDescription="@string/sceyt_cd_global_search_input"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="5dp"
@@ -38,6 +40,7 @@
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/tabsRecyclerView"
+        android:contentDescription="@string/sceyt_cd_global_search_tabs_list"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="5dp"
@@ -84,6 +87,7 @@
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/suggestionsRecyclerView"
+            android:contentDescription="@string/sceyt_cd_global_search_suggestions_list"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"

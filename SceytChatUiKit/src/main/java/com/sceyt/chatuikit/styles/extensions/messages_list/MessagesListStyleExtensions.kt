@@ -2,6 +2,7 @@ package com.sceyt.chatuikit.styles.extensions.messages_list
 
 import android.content.res.TypedArray
 import android.graphics.Typeface
+import androidx.core.graphics.drawable.toDrawable
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.applyTint
@@ -21,12 +22,12 @@ import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle
 import com.sceyt.chatuikit.styles.messages_list.ReactionPickerStyle
 import com.sceyt.chatuikit.styles.messages_list.ScrollButtonStyle
 import com.sceyt.chatuikit.styles.messages_list.UnreadMessagesSeparatorStyle
+import com.sceyt.chatuikit.styles.messages_list.item.AudioWaveformStyle
 import com.sceyt.chatuikit.styles.messages_list.item.LinkPreviewStyle
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 import com.sceyt.chatuikit.styles.messages_list.item.PollStyle
 import com.sceyt.chatuikit.styles.messages_list.item.ReadMoreStyle
 import com.sceyt.chatuikit.styles.messages_list.item.ReplyMessageStyle
-import com.sceyt.chatuikit.styles.messages_list.item.SelfDestructedMessageItemStyle
 
 internal fun MessagesListViewStyle.Builder.buildScrollDownTextStyle(
     typedArray: TypedArray,
@@ -235,6 +236,18 @@ internal fun MessageItemStyle.Builder.buildIncomingReplyBackgroundStyle(
     )
     .build()
 
+internal fun MessageItemStyle.Builder.buildIncomingFileMediaThumbPlaceholder(
+    typedArray: TypedArray,
+) = typedArray.getDrawable(
+    R.styleable.MessagesListView_sceytUiMessagesListIncomingFileMediaThumbPlaceholder
+) ?: context.getCompatColor(R.color.sceyt_color_surface_2).toDrawable()
+
+internal fun MessageItemStyle.Builder.buildOutgoingFileMediaThumbPlaceholder(
+    typedArray: TypedArray,
+) = typedArray.getDrawable(
+    R.styleable.MessagesListView_sceytUiMessagesListOutgoingFileMediaThumbPlaceholder
+) ?: defaultOutDarkColor.toDrawable()
+
 //Outgoing reply background
 internal fun MessageItemStyle.Builder.buildOutgoingReplyBackgroundStyle(
     typedArray: TypedArray,
@@ -337,13 +350,6 @@ internal fun MessageItemStyle.Builder.buildDeletedMessageTextStyle(
         index = R.styleable.MessagesListView_sceytUiMessagesListDeletedMessageTextFont
     )
     .build()
-
-/*SelfDestructedMessageIconColor*/
-internal fun SelfDestructedMessageItemStyle.Builder.buildSelfDestructedMessageIconColor(
-) = typedArray.getColor(
-    R.styleable.MessagesListView_sceytUiMessagesListSelfDestructedMessageIconTint,
-    context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor)
-)
 
 /*SenderNameTextStyle*/
 internal fun MessageItemStyle.Builder.buildSenderNameTextStyle(
@@ -822,7 +828,7 @@ internal fun MessageItemStyle.Builder.buildMediaLoaderStyle(
 /* Audio waveform style */
 internal fun MessageItemStyle.Builder.buildAudioWaveformStyle(
     typedArray: TypedArray,
-) = com.sceyt.chatuikit.styles.messages_list.item.AudioWaveformStyle.Builder(context, typedArray)
+) = AudioWaveformStyle.Builder(context, typedArray)
     .trackColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListAudioWaveformTrackColor,
         defValue = context.getCompatColor(SceytChatUIKit.theme.colors.iconSecondaryColor)

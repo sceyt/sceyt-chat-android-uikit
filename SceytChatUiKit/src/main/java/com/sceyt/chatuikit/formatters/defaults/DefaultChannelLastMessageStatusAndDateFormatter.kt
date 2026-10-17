@@ -23,12 +23,7 @@ open class DefaultChannelLastMessageStatusAndDateFormatter :
 
             channel.lastMessage != null -> {
                 val lastMessage = channel.lastMessage
-                val lastMessageCreatedAt = lastMessage.createdAt
-                val lastReactionCreatedAt = channel.newReactions
-                    ?.maxByOrNull { it.id }
-                    ?.createdAt ?: 0L
-
-                maxOf(lastMessageCreatedAt, lastReactionCreatedAt) to !lastMessage.isSystemMessage()
+                lastMessage.createdAt to !lastMessage.isSystemMessage()
             }
 
             else -> channel.createdAt to true

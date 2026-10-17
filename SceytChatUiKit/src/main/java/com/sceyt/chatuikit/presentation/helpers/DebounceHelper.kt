@@ -4,7 +4,7 @@ import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.findViewTreeLifecycleOwner
 import androidx.lifecycle.lifecycleScope
-import com.sceyt.chatuikit.extensions.maybeComponentActivity
+import com.sceyt.chatuikit.extensions.asComponentActivityOrNull
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -13,6 +13,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Utility class for debouncing high frequency events.
@@ -40,7 +41,7 @@ class DebounceHelper {
     constructor(debounceMs: Long, view: View) {
         this.debounceMs = debounceMs
         this.scope = (view.findViewTreeLifecycleOwner()
-                ?: view.context.maybeComponentActivity())?.lifecycleScope
+                ?: view.context.asComponentActivityOrNull())?.lifecycleScope
                 ?: CoroutineScope(Dispatchers.Main + SupervisorJob())
     }
 
@@ -55,7 +56,7 @@ class DebounceHelper {
     fun submit(work: () -> Unit) {
         job?.cancel()
         job = scope.launch {
-            delay(debounceMs)
+            delay(debounceMs.milliseconds)
             if (isActive)
                 work()
         }
@@ -71,12 +72,12 @@ class DebounceHelper {
         job?.cancel()
         job = scope.launch {
             if (needToDelay)
-                delay(debounceMs)
+                delay(debounceMs.milliseconds)
             if (isActive)
                 work()
             //Keep job alive for next submit
             if (!needToDelay)
-                delay(debounceMs)
+                delay(debounceMs.milliseconds)
         }
     }
 
@@ -87,7 +88,7 @@ class DebounceHelper {
     fun submitSuspendable(work: suspend () -> Unit) {
         job?.cancel()
         job = scope.launch {
-            delay(debounceMs)
+            delay(debounceMs.milliseconds)
             if (isActive)
                 work()
         }

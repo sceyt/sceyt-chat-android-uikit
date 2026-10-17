@@ -72,7 +72,7 @@ class IncSelfDestructingMessageViewHolder(
 
             if (!diff.hasDifference()) return
 
-            if (diff.edited || diff.statusChanged)
+            if (diff.infoRowChanged())
                 setMessageStatusAndDateText(message, messageDate)
 
             if (diff.avatarChanged || diff.showAvatarAndNameChanged)

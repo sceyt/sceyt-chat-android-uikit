@@ -20,6 +20,7 @@
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/layoutInviteLink"
+        android:contentDescription="@string/sceyt_cd_invite_link"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="16dp"
@@ -49,6 +50,7 @@
 
         <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/icCopyLink"
+            android:contentDescription="@string/sceyt_cd_copy_invite_link"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="10dp"
@@ -63,6 +65,7 @@
 
     <androidx.appcompat.widget.SwitchCompat
         android:id="@+id/switchShowPrevMessages"
+        android:contentDescription="@string/sceyt_cd_show_previous_messages"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
@@ -102,6 +105,7 @@
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tvShare"
+        android:contentDescription="@string/sceyt_cd_share_invite_link"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
@@ -117,6 +121,7 @@
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tvResetLink"
+        android:contentDescription="@string/sceyt_cd_reset_invite_link"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?android:selectableItemBackground"
@@ -131,6 +136,7 @@
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tvOpenQR"
+        android:contentDescription="@string/sceyt_cd_open_qr_code"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?android:selectableItemBackground"

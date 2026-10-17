@@ -94,7 +94,9 @@ open class GlobalSearchActivity : AppCompatActivity(), GlobalSearchClickListener
         }
         super.onCreate(savedInstanceState)
         applySystemBarsStyle()
-        style = buildStyle()
+        style = StyleRegistry.getOrDefault(savedInstanceState?.getString(STYLE_ID_KEY)) {
+            buildStyle()
+        }
         StyleRegistry.register(style)
         setActivityContentView()
         if (launchedWithSharedTransition()) {
@@ -115,9 +117,15 @@ open class GlobalSearchActivity : AppCompatActivity(), GlobalSearchClickListener
         })
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putString(STYLE_ID_KEY, style.styleId)
+        super.onSaveInstanceState(outState)
+    }
+
     override fun onDestroy() {
         binding.viewPager.unregisterOnPageChangeCallback(pagerCallback)
-        StyleRegistry.unregister(style.styleId)
+        if (isFinishing)
+            StyleRegistry.unregister(style.styleId)
         super.onDestroy()
     }
 
@@ -184,7 +192,7 @@ open class GlobalSearchActivity : AppCompatActivity(), GlobalSearchClickListener
         return GlobalSearchSuggestionsAdapter(
             scope = lifecycleScope,
             style = style.suggestionsStyle,
-            onClick = headerViewModel::onMemberSelected
+            onClick = headerViewModel::onUserSelected
         )
     }
 

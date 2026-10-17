@@ -12,7 +12,6 @@ import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.managers.message.MessageEventManager
 import com.sceyt.chatuikit.data.managers.message.event.ReactionUpdateEventData
 import com.sceyt.chatuikit.data.managers.message.event.ReactionUpdateEventEnum
@@ -53,8 +52,11 @@ import com.sceyt.chatuikit.persistence.database.dao.AttachmentDao
 import com.sceyt.chatuikit.persistence.database.dao.LoadRangeDao
 import com.sceyt.chatuikit.persistence.database.dao.MessageDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingMarkerDao
+import com.sceyt.chatuikit.persistence.database.dao.PendingMessageDeleteByTidDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingMessageStateDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingPollVoteDao
+import com.sceyt.chatuikit.persistence.database.dao.PendingPinDao
+import com.sceyt.chatuikit.persistence.database.dao.PinnedMessageDao
 import com.sceyt.chatuikit.persistence.database.dao.PollDao
 import com.sceyt.chatuikit.persistence.database.dao.ReactionDao
 import com.sceyt.chatuikit.persistence.database.dao.UserDao
@@ -63,9 +65,9 @@ import com.sceyt.chatuikit.persistence.database.entity.messages.MarkerEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageDb
 import com.sceyt.chatuikit.persistence.database.entity.messages.PendingPollVoteDb
 import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingMarkerEntity
+import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingMessageDeleteByTidEntity
 import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingMessageStateEntity
 import com.sceyt.chatuikit.persistence.database.entity.user.UserDb
-import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
@@ -113,7 +115,6 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.koin.core.component.inject
 import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Duration.Companion.seconds
 
 internal class PersistenceMessagesLogicImpl(
     private val context: Context,
@@ -124,7 +125,10 @@ internal class PersistenceMessagesLogicImpl(
     private val reactionDao: ReactionDao,
     private val userDao: UserDao,
     private val pendingMessageStateDao: PendingMessageStateDao,
+    private val pendingMessageDeleteByTidDao: PendingMessageDeleteByTidDao,
     private val pollDao: PollDao,
+    private val pinnedMessageDao: PinnedMessageDao,
+    private val pendingPinDao: PendingPinDao,
     private val pendingPollVoteDao: PendingPollVoteDao,
     private val fileTransferService: FileTransferService,
     private val messagesRepository: MessagesRepository,
@@ -140,6 +144,7 @@ internal class PersistenceMessagesLogicImpl(
     private val persistenceAttachmentLogic: PersistenceAttachmentLogic by inject()
     private val persistenceReactionLogic: PersistenceReactionsLogic by inject()
     private val createChannelAndSendMessageMutex = Mutex()
+    private val incomingMessageMutex = Mutex()
     private val dispatcherIO = Dispatchers.IO
     private val myId: String? get() = SceytChatUIKit.chatUIFacade.myId
     private val messagesLoadSize get() = SceytChatUIKit.config.queryLimits.messageListQueryLimit
@@ -155,12 +160,14 @@ internal class PersistenceMessagesLogicImpl(
     ): Unit = withContext(dispatcherIO) {
         val channel = data.first
         val message = data.second
-        saveMessagesToDb(arrayListOf(message))
+        incomingMessageMutex.withLock {
+            saveMessagesToDb(arrayListOf(message))
 
-        messagesCache.add(channel.id, message)
-        onMessageFlow.tryEmit(data)
-        updateMessageLoadRangeOnMessageEvent(message, null)
-        channelSyncStateStore.updateSyncStateForMessage(channel.id, message.id)
+            messagesCache.add(channel.id, message)
+            onMessageFlow.tryEmit(data)
+            updateMessageLoadRangeOnMessageEvent(message, null)
+            channelSyncStateStore.updateSyncStateForMessage(channel.id, message.id)
+        }
 
         launch {
             if (message.incoming && sendDeliveryMarker)
@@ -176,30 +183,47 @@ internal class PersistenceMessagesLogicImpl(
         if (channel != null && message.createdAt <= channel.messagesClearedAt)
             return@withContext false
 
-        val messageDb = messageDao.getMessageById(message.id)
-        val isReaction = data.type == NotificationType.MessageReaction
+        incomingMessageMutex.withLock {
+            if (data.type == NotificationType.MessageReaction) {
+                val messageDb = messageDao.getMessageById(message.id)
+                if (messageDb != null)
+                    persistenceReactionLogic.onMessageReactionUpdated(
+                        ReactionUpdateEventData(
+                            message = messageDb.toSceytMessage(),
+                            reaction = data.reaction!!,
+                            eventType = ReactionUpdateEventEnum.Add
+                        )
+                    )
+                return@withContext true
+            }
 
-        if (messageDb == null && !isReaction) {
-            saveMessagesToDb(
-                list = arrayListOf(message),
-                includeParents = false,
-                replaceUserOnConflict = false
-            )
-            messagesCache.add(data.channel.id, message)
-            onMessageFlow.tryEmit(Pair(data.channel, message))
+            if (message.user?.id == myId) {
+                SceytLog.i(
+                    TAG,
+                    "Ignored own message push, channelId: ${message.channelId}, messageId: ${message.id}"
+                )
+                return@withContext true
+            }
+
+            val reconciledMessage = applyPendingStates(listOf(message)).first()
+            val inserted = messageDao.insertMessageIgnored(reconciledMessage.toMessageDb(false))
+            if (!inserted)
+                return@withContext true
+
+            val users = (listOfNotNull(message.user) + message.mentionedUsers.orEmpty())
+                .map { it.toUserDb() }
+            userDao.insertUsersWithMetadata(users, replaceUserOnConflict = false)
+
+            val parentMessage = message.parentMessage?.let {
+                messageDao.getParentMessageById(it.id)?.toSceytMessage()
+            }
+            val resolvedMessage = reconciledMessage.copy(parentMessage = parentMessage)
+            messagesCache.add(data.channel.id, resolvedMessage)
+            onMessageFlow.tryEmit(Pair(data.channel, resolvedMessage))
 
             updateMessageLoadRangeOnMessageEvent(message, channel?.lastMessage?.id)
             persistenceChannelsLogic.handlePush(data)
         }
-
-        if (messageDb != null && isReaction)
-            persistenceReactionLogic.onMessageReactionUpdated(
-                ReactionUpdateEventData(
-                    message = messageDb.toSceytMessage(),
-                    reaction = data.reaction!!,
-                    eventType = ReactionUpdateEventEnum.Add
-                )
-            )
 
         return@withContext true
     }
@@ -348,7 +372,6 @@ internal class PersistenceMessagesLogicImpl(
         replyInThread: Boolean,
         messageId: Long,
     ): Flow<SyncResult<SceytMessage>> = flow {
-        ConnectionEventManager.awaitToConnectSceyt()
         var cursorId = messageId
 
         messagesRepository.syncMessagesAfterMessageId(
@@ -555,7 +578,7 @@ internal class PersistenceMessagesLogicImpl(
             }
 
             is SceytResponse.Error -> {
-                channelCache.addPendingChannel(updated)
+                channelCache.upsertPendingChannel(updated)
                 return callbackFlow {
                     trySend(SendMessageResult.Error(SceytResponse.Error(response.exception)))
                     this.channel.close()
@@ -574,12 +597,9 @@ internal class PersistenceMessagesLogicImpl(
     private suspend fun createNewChannelInsteadOfPendingChannel(
         pendingChannel: SceytChannel,
     ): SceytResponse<SceytChannel> {
-        val response = persistenceChannelsLogic.createNewChannelInsteadOfPendingChannel(
+        return persistenceChannelsLogic.createNewChannelInsteadOfPendingChannel(
             channel = pendingChannel
-        ).onSuccessNotNull {
-            messagesCache.moveMessagesToNewChannel(pendingChannel.id, it.id)
-        }
-        return response
+        )
     }
 
     override suspend fun sendSharedFileMessage(channelId: Long, message: Message) =
@@ -965,6 +985,17 @@ internal class PersistenceMessagesLogicImpl(
                     state = it.transferState ?: TransferState.Uploading
                 )
             }
+            // The send request may already have reached the server, so persist a delete-by-tid
+            // intent (retried on reconnect) and attempt to delete it on the server now.
+            pendingMessageDeleteByTidDao.insert(
+                PendingMessageDeleteByTidEntity(
+                    messageTid = message.tid,
+                    channelId = channelId,
+                    deleteType = deleteType,
+                    createdAt = System.currentTimeMillis()
+                )
+            )
+            deleteMessageByTidImpl(channelId, message.tid, DeleteHard)
             return@withContext SceytResponse.Success(clonedMessage)
         }
 
@@ -1046,6 +1077,34 @@ internal class PersistenceMessagesLogicImpl(
             }
         }
         return response
+    }
+
+    private suspend fun deleteMessageByTidImpl(
+        channelId: Long,
+        tid: Long,
+        deleteType: DeleteMessageType
+    ): SceytResponse<SceytMessage> {
+        val response = messagesRepository.deleteMessageByTid(channelId, tid, deleteType)
+        response.onSuccessNotNull {
+            pendingMessageDeleteByTidDao.deleteByTid(tid)
+        }.onError {
+            val errorType = SDKErrorTypeEnum.fromValue(it?.type) ?: return@onError
+            if (!errorType.isResendable) {
+                pendingMessageDeleteByTidDao.deleteByTid(tid)
+                SceytLog.e(
+                    TAG,
+                    "Delete message by tid non-resendable error: ${it?.message}, errorType: ${errorType.value}" +
+                            "deleting pending delete by tid state from db for message tid:$tid"
+                )
+            }
+        }
+        return response
+    }
+
+    override suspend fun sendAllPendingMessageDeletesByTid() = withContext(dispatcherIO) {
+        pendingMessageDeleteByTidDao.getAll().forEach { entity ->
+            deleteMessageByTidImpl(entity.channelId, entity.messageTid, entity.deleteType)
+        }
     }
 
     override suspend fun getMessageFromServerById(
@@ -1269,12 +1328,10 @@ internal class PersistenceMessagesLogicImpl(
     ): PaginationResponse.ServerResponse<SceytMessage> {
         var hasNext = false
         var hasPrev = false
-        var hasDiff: Boolean
+        var hasDiff = false
         var forceHasDiff = false
         var messages: List<SceytMessage> = emptyList()
         val response: SceytResponse<List<SceytMessage>>
-
-        ConnectionEventManager.awaitToConnectSceytWithTimeout(10.seconds.inWholeMilliseconds)
 
         val syncStartTime = ServerTimeSync.getCurrentServerTime()
 
@@ -1365,16 +1422,16 @@ internal class PersistenceMessagesLogicImpl(
                 serverMessages = updatedMessages,
                 syncStartTime = syncStartTime
             )
+
+            hasDiff = messagesCache.addAll(
+                channelId = channelId,
+                list = updatedMessages,
+                checkDifference = true,
+                checkDiffAndNotifyUpdate = false
+            )
+
+            if (forceHasDiff) hasDiff = true
         }
-
-        hasDiff = messagesCache.addAll(
-            channelId = channelId,
-            list = updatedMessages,
-            checkDifference = true,
-            checkDiffAndNotifyUpdate = false
-        )
-
-        if (forceHasDiff) hasDiff = true
 
         return PaginationResponse.ServerResponse(
             data = response.map { updatedMessages },
@@ -1469,8 +1526,18 @@ internal class PersistenceMessagesLogicImpl(
         var data = messageDao.getNearMessages(channelId, messageId, limit)
         val messages = data.data
 
-        if (offset == 0)
+        // Add pending messages to the list only if the last message exists in the messages portion.
+        // Otherwise, when navigating to a reply message, pending messages could be shown incorrectly.
+        val channel = channelCache.getOneOf(channelId)
+            ?: persistenceChannelsLogic.getChannelFromDb(channelId)
+
+        val includeLastMessage = if (channel != null) {
+            messages.any { it.id == channel.lastMessage?.id } || channel.lastMessage == null
+        } else false
+
+        if (offset == 0 && includeLastMessage) {
             data = data.copy(data = getPendingMessagesAndAddToList(channelId, messages))
+        }
 
         return data
     }
@@ -1499,40 +1566,20 @@ internal class PersistenceMessagesLogicImpl(
 
     private suspend fun saveMessagesToDb(
         list: List<SceytMessage>?,
-        includeParents: Boolean = true,
         unListAll: Boolean = false,
-        replaceUserOnConflict: Boolean = true,
     ): List<SceytMessage> {
         if (list.isNullOrEmpty()) return emptyList()
-        val pendingStates = pendingMessageStateDao.getAll().associateBy { it.messageId }
-        val pendingPolls = pendingPollVoteDao.getAllPendingVotesDb().groupBy {
-            it.pendingVote.messageTid
-        }
+        val updatedList = applyPendingStates(list)
         val usersDb = mutableSetOf<UserDb>()
         val messagesDb = arrayListOf<MessageDb>()
         val parentMessagesDb = arrayListOf<MessageDb>()
 
-        val mutableList = list.toArrayList()
-        for ((index, message) in list.withIndex()) {
-            var updatedMessage = message
-
-            // Update message states with pending states
-            updateMessageStatesWithPendingStates(message, pendingStates, pendingPolls).let {
-                updatedMessage = it
-            }
-
-            // Preserve pending poll votes from DB
-            updatedMessage = preservePendingPollVotes(updatedMessage)
-
-            mutableList[index] = updatedMessage
-
-            if (includeParents) {
-                updatedMessage.parentMessage?.let { parent ->
-                    if (parent.id != 0L) {
-                        parentMessagesDb.add(parent.toMessageDb(true))
-                        if (parent.incoming && parent.user != null) {
-                            usersDb.add(parent.user.toUserDb())
-                        }
+        for (updatedMessage in updatedList) {
+            updatedMessage.parentMessage?.let { parent ->
+                if (parent.id != 0L) {
+                    parentMessagesDb.add(parent.toMessageDb(true))
+                    if (parent.incoming && parent.user != null) {
+                        usersDb.add(parent.user.toUserDb())
                     }
                 }
             }
@@ -1547,7 +1594,7 @@ internal class PersistenceMessagesLogicImpl(
             }
         }
 
-        userDao.insertUsersWithMetadata(usersDb.toList(), replaceUserOnConflict)
+        userDao.insertUsersWithMetadata(usersDb.toList())
         val forceUpdatedList = messageDao.upsertMessages(messagesDb)
         // Delete messages from cache which were force updated.
         if (forceUpdatedList.isNotEmpty()) {
@@ -1562,7 +1609,18 @@ internal class PersistenceMessagesLogicImpl(
         if (parentMessagesDb.isNotEmpty())
             messageDao.insertMessagesIgnored(parentMessagesDb)
 
-        return mutableList.toList()
+        return updatedList
+    }
+
+    private suspend fun applyPendingStates(list: List<SceytMessage>): List<SceytMessage> {
+        val pendingStates = pendingMessageStateDao.getAll().associateBy { it.messageId }
+        val pendingPolls = pendingPollVoteDao.getAllPendingVotesDb().groupBy {
+            it.pendingVote.messageTid
+        }
+        return list.map {
+            val updatedMessage = updateMessageStatesWithPendingStates(it, pendingStates, pendingPolls)
+            preservePendingPollVotes(updatedMessage)
+        }
     }
 
     /**
@@ -1620,6 +1678,8 @@ internal class PersistenceMessagesLogicImpl(
         messageDao.deleteAttachmentsChunked(listOf(tid))
         messageDao.deleteAttachmentsPayloadsChunked(listOf(tid))
         reactionDao.deleteAllReactionsAndTotals(id)
+        pinnedMessageDao.deleteByTids(listOf(tid))
+        pendingPinDao.deleteByTids(listOf(tid))
     }
 
     private fun getMessagesTid(messages: List<SceytMessage>?): List<Long> {
@@ -1722,7 +1782,12 @@ internal class PersistenceMessagesLogicImpl(
             pendingMarkerDao.deleteMessagesMarkersByStatus(responseIds, marker)
             myId?.let { userId ->
                 messageDao.insertUserMarkersIfExistMessage(responseIds.map {
-                    MarkerEntity(messageId = it, userId = userId, name = data.name)
+                    MarkerEntity(
+                        messageId = it,
+                        userId = userId,
+                        name = data.name,
+                        createdAt = data.createdAt
+                    )
                 })
 
                 messagesCache.addMessageMarker(

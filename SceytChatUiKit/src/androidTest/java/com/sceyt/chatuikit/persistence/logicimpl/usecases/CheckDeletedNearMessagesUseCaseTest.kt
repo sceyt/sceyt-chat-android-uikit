@@ -1601,6 +1601,7 @@ class CheckDeletedNearMessagesUseCaseTest {
             forwardingDetails = null,
             pendingReactions = null,
             bodyAttributes = null,
+            pinDetails = null,
             disableMentionsCount = false,
             poll = null
         )

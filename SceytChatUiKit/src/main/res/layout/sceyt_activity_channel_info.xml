@@ -117,6 +117,7 @@
 
             <com.google.android.material.tabs.TabLayout
                 android:id="@+id/tabLayout"
+                android:contentDescription="@string/sceyt_cd_channel_info_tabs"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@color/sceyt_color_background_sections"

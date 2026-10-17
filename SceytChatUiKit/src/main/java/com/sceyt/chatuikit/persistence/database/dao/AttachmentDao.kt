@@ -113,7 +113,8 @@ internal abstract class AttachmentDao {
         val hasNext = newest.size > halfLimit
 
         val data = (oldAttachments + newAttachments).sortedBy { it.attachmentEntity.createdAt }
-        return LoadNearData(data, hasNext = hasNext, hasPrev)
+
+        return LoadNearData(data, hasNext = hasNext, hasPrev = hasPrev)
     }
 
     @Transaction
@@ -177,8 +178,10 @@ internal abstract class AttachmentDao {
     @Query("UPDATE $ATTACHMENT_PAYLOAD_TABLE SET filePath = :filePath WHERE messageTid = :msgTid")
     abstract suspend fun updateAttachmentPayLoadFilePathByMsgTid(msgTid: Long, filePath: String?)
 
+    @Query("UPDATE $ATTACHMENT_TABLE SET channelId = :newChannelId WHERE channelId = :oldChannelId")
+    abstract suspend fun updateAttachmentsChannelId(oldChannelId: Long, newChannelId: Long): Int
+
     @VisibleForTesting
     @Insert
     abstract suspend fun insertAttachments(attachments: List<AttachmentEntity>)
-
 }

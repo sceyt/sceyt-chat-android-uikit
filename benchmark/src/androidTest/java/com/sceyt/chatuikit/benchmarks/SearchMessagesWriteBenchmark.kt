@@ -85,11 +85,9 @@ private class SearchMessagesWriteBenchmarkHarness(
     private fun prepareMasterDatabase() {
         context.deleteDatabase(WRITE_MASTER_DB_NAME)
         val bridge = SearchMessagesBenchmarkBridge.create(context)
-        try {
+        bridge.use { bridge ->
             bridge.seed(batchSize)
             bridge.exportDatabase(WRITE_MASTER_DB_NAME)
-        } finally {
-            bridge.close()
         }
     }
 
@@ -307,6 +305,7 @@ private class SearchMessagesWriteBenchmarkHarness(
         }
     }
 
+    @Suppress("SameParameterValue")
     private fun copyDatabaseArtifacts(
         sourceDatabaseName: String,
         targetDatabaseName: String,

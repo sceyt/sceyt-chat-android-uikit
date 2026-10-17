@@ -11,13 +11,11 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentContainerView
 import androidx.fragment.app.commit
-import androidx.lifecycle.lifecycleScope
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.appbar.CollapsingToolbarLayout
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
-import com.google.gson.Gson
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventData
@@ -26,11 +24,7 @@ import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum.Group
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum.Public
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.toIntentPayload
-import com.sceyt.chatuikit.data.models.messages.DisappearingMessageMetadata
-import com.sceyt.chatuikit.data.models.messages.SceytMessageType
 import com.sceyt.chatuikit.data.models.messages.SceytUser
-import com.sceyt.chatuikit.data.models.messages.SystemMsgBodyEnum
-import com.sceyt.chatuikit.data.models.messages.SystemMsgBodyEnum.DisappearingMessage
 import com.sceyt.chatuikit.databinding.SceytActivityChannelInfoBinding
 import com.sceyt.chatuikit.extensions.TAG_NAME
 import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
@@ -81,7 +75,6 @@ import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.services.SceytPresenceChecker.PresenceUser
 import com.sceyt.chatuikit.styles.StyleRegistry
 import com.sceyt.chatuikit.styles.channel_info.ChannelInfoStyle
-import kotlinx.coroutines.launch
 
 @Suppress("MemberVisibilityCanBePrivate")
 open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
@@ -98,7 +91,9 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         applySystemBarsStyle()
-        style = ChannelInfoStyle.Builder(this, null).build()
+        style = StyleRegistry.getOrDefault(savedInstanceState?.getString(STYLE_ID_KEY)) {
+            ChannelInfoStyle.Builder(this, null).build()
+        }
         registerAllStyles()
 
         setActivityContentView()
@@ -117,8 +112,9 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
         observeUserUpdateIfNeeded()
     }
 
-    /** Register all sub-styles to survive configuration changes */
+    /** Register the screen style and its sub-styles to survive configuration changes */
     private fun registerAllStyles() {
+        StyleRegistry.register(style)
         StyleRegistry.register(style.mediaStyle)
         StyleRegistry.register(style.filesStyle)
         StyleRegistry.register(style.linkStyle)
@@ -287,7 +283,7 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
     }
 
     protected open fun leaveChannel() {
-        viewModel.leaveChannel(channel.id)
+        viewModel.leaveChannel(channel)
     }
 
     protected open fun blockUser(userId: String) {
@@ -319,23 +315,7 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
     }
 
     private fun sendDisappearingMessageSystemMessage(channelId: Long, duration: Long) {
-        lifecycleScope.launch {
-            SceytChatUIKit.chatUIFacade.messageInteractor.sendMessage(
-                channelId,
-                com.sceyt.chat.models.message.Message(
-                    com.sceyt.chat.models.message.Message.MessageBuilder()
-                        .setType(SceytMessageType.System.value)
-                        .setMetadata(
-                            Gson().toJson(
-                                DisappearingMessageMetadata(duration.toString())
-                            )
-                        )
-                        .withDisplayCount(0)
-                        .setSilent(true)
-                        .setBody(DisappearingMessage.value)
-                )
-            )
-        }
+        viewModel.sendDisappearingMessageSystemMessage(channelId, duration)
     }
 
     protected open fun getMembersType(): MemberTypeEnum {
@@ -511,19 +491,6 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
     }
 
     protected open fun onLeftChannel(channelId: Long) {
-        if (channel.isGroup) {
-            lifecycleScope.launch {
-                SceytChatUIKit.chatUIFacade.messageInteractor.sendMessage(
-                    channelId, com.sceyt.chat.models.message.Message(
-                        com.sceyt.chat.models.message.Message.MessageBuilder()
-                            .setType(SceytMessageType.System.value)
-                            .withDisplayCount(0)
-                            .setSilent(true)
-                            .setBody(SystemMsgBodyEnum.MemberLeaved.value)
-                    )
-                )
-            }
-        }
         finish()
     }
 
@@ -777,22 +744,31 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
         }
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putString(STYLE_ID_KEY, style.styleId)
+        super.onSaveInstanceState(outState)
+    }
+
     override fun onDestroy() {
         super.onDestroy()
-        // Clean up all registered styles
-        StyleRegistry.unregister(
-            style.mediaStyle.styleId,
-            style.filesStyle.styleId,
-            style.linkStyle.styleId,
-            style.voiceStyle.styleId,
-            style.commonGroupsStyle.styleId
-        )
+        if (isFinishing) {
+            // Clean up all registered styles
+            StyleRegistry.unregister(
+                style.styleId,
+                style.mediaStyle.styleId,
+                style.filesStyle.styleId,
+                style.linkStyle.styleId,
+                style.voiceStyle.styleId,
+                style.commonGroupsStyle.styleId
+            )
+        }
     }
 
     companion object {
         const val CHANNEL = "CHANNEL"
         const val ACTION_SEARCH_MESSAGES = "ACTION_SEARCH_MESSAGES"
         private const val ENABLE_SEARCH_MESSAGES = "ACTION_SEARCH_MESSAGES"
+        private const val STYLE_ID_KEY = "CHANNEL_INFO_STYLE_ID_KEY"
 
         fun createIntent(
             context: Context,

@@ -22,9 +22,12 @@ import com.sceyt.chatuikit.persistence.database.DatabaseConstants.MARKER_TABLE
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.MENTION_USER_MESSAGE_LINK_TABLE
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.MESSAGE_FTS_TABLE
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.MESSAGE_TABLE
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.PENDING_CHANNEL_AVATAR_TABLE
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.PENDING_MARKER_TABLE
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.PENDING_MESSAGE_STATE_TABLE
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.PENDING_PIN_TABLE
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.PENDING_REACTION_TABLE
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.PINNED_MESSAGE_TABLE
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.REACTION_TABLE
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.REACTION_TOTAL_TABLE
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.USER_CHAT_LINK_TABLE
@@ -113,6 +116,16 @@ internal object DatabaseMigrations {
     @RenameTable(fromTableName = "UserMetadata", toTableName = USER_METADATA_TABLE)
     class AutoMigrationSpec18To19 : AutoMigrationSpec
 
+    class AutoMigrationSpec33To34 : AutoMigrationSpec {
+        override fun onPostMigrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                "INSERT OR IGNORE INTO `$PENDING_CHANNEL_AVATAR_TABLE` (`channelId`, `filePath`) " +
+                        "SELECT `chat_id`, `avatarUrl` FROM `$CHANNEL_TABLE` " +
+                        "WHERE `pending` = 1 AND `avatarUrl` IS NOT NULL AND `avatarUrl` != ''"
+            )
+        }
+    }
+
     val Migration_28_29: Migration = object : Migration(28, 29) {
         override fun migrate(db: SupportSQLiteDatabase) {
             db.execSQL(
@@ -145,6 +158,23 @@ internal object DatabaseMigrations {
                 "INSERT INTO `$MESSAGE_FTS_TABLE`(`docid`, `body`) " +
                         "SELECT `rowid`, `body` FROM `$MESSAGE_TABLE`"
             )
+        }
+    }
+
+    @DeleteColumn(tableName = MESSAGE_TABLE, columnName = "pin_isPinned")
+    @DeleteColumn(tableName = MESSAGE_TABLE, columnName = "pin_pinnedTill")
+    @DeleteColumn(tableName = MESSAGE_TABLE, columnName = "pin_pinType")
+    @DeleteColumn(tableName = PINNED_MESSAGE_TABLE, columnName = "syncState")
+    @DeleteColumn(tableName = PINNED_MESSAGE_TABLE, columnName = "retryCount")
+    @DeleteColumn(tableName = PINNED_MESSAGE_TABLE, columnName = "lastAttemptAt")
+    class AutoMigrationSpec32To33 : AutoMigrationSpec {
+        override fun onPostMigrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                "INSERT OR REPLACE INTO `$PENDING_PIN_TABLE` (`messageTid`, `channelId`, `messageId`, `isPin`, `pinScope`, `createdAt`) " +
+                        "SELECT `messageTid`, `channelId`, `messageId`, 1, `pinScope`, COALESCE(`pinnedAt`, 0) " +
+                        "FROM `$PINNED_MESSAGE_TABLE` WHERE `serverPinId` = ${Long.MAX_VALUE} AND `messageId` != 0"
+            )
+            db.execSQL("DELETE FROM `$PINNED_MESSAGE_TABLE` WHERE `serverPinId` = ${Long.MAX_VALUE}")
         }
     }
 }
