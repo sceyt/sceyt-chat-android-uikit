@@ -543,6 +543,12 @@ class PendingChannelScenarioTests : SceytKoinComponent {
             params: SearchChannelParams
         ): SceytResponse<List<SceytChannel>> = unused()
 
+        override suspend fun searchChannels(
+            query: String,
+            config: ChannelListConfig,
+            params: SearchChannelParams
+        ): SceytResponse<List<SceytChannel>> = unused()
+
         override suspend fun loadMoreChannels(
             query: String,
             config: ChannelListConfig,
