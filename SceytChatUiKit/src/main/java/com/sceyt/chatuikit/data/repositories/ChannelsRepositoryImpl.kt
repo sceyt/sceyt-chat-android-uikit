@@ -149,8 +149,9 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         query: String,
         config: ChannelListConfig,
         params: SearchChannelParams,
+        offset: Int,
     ): SceytResponse<List<SceytChannel>> = retryOnResendableError {
-        loadChannelsPage(createChannelListQuery(config, query, params), query, config, params)
+        loadChannelsPage(createChannelListQuery(config, query, params, offset), query, config, params)
     }
 
     private suspend fun getChannelsImpl(
@@ -876,6 +877,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         config: ChannelListConfig,
         query: String? = null,
         params: SearchChannelParams,
+        offset: Int = 0,
     ): ChannelListQuery {
         return ChannelListQuery.Builder()
             .order(config.order)
@@ -883,6 +885,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
             .query(query?.ifBlank { null })
             .withQueryParam(config.queryParam)
             .limit(config.queryLimit)
+            .offset(offset)
             .filterKey(params.filterKey)
             .queryType(params.queryType)
             .build()
