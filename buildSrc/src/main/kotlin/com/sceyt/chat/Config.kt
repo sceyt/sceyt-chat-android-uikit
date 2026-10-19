@@ -13,9 +13,9 @@ object Config {
         const val artifactId = "sceyt-chat-android-uikit"
         const val description = "Sceyt Chat Android UIKit"
 
-        const val version = "2.1.6"
+        //const val version = "2.1.6"
         // const val version = "local"
-        // const val version = "2.1.523025013-SNAPSHOT"
+        const val version = "2.1.6001-SNAPSHOT"
     }
 
     object ChatConnection {
