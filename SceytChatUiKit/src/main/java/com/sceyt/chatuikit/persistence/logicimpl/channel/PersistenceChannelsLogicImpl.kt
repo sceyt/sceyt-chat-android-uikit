@@ -386,6 +386,58 @@ internal class PersistenceChannelsLogicImpl(
         }
     }
 
+    override fun loadChannelsSkipCache(
+        offset: Int,
+        searchQuery: String,
+        onlyMine: Boolean,
+        awaitForConnection: Boolean,
+        config: ChannelListConfig,
+    ): Flow<PaginationResponse<SceytChannel>> = flow {
+        val dbChannels = getChannelsDb(offset, searchQuery, config, onlyMine)
+        emit(
+            PaginationResponse.DBResponse(
+                data = dbChannels,
+                loadKey = null,
+                offset = offset,
+                hasNext = dbChannels.size == config.queryLimit,
+                hasPrev = false,
+                query = searchQuery
+            )
+        )
+
+        if (awaitForConnection) {
+            ConnectionEventManager.awaitToConnectSceyt()
+        }
+
+        val response = channelsRepository.searchChannels(
+            query = searchQuery,
+            config = config,
+            params = SearchChannelParams.default,
+            offset = offset
+        )
+
+        if (response is SceytResponse.Success) {
+            val channels = response.data.orEmpty()
+            val savedChannels = saveChannelsToDb(channels)
+            emit(
+                PaginationResponse.ServerResponse(
+                    data = response,
+                    cacheData = savedChannels,
+                    loadKey = null,
+                    offset = offset,
+                    hasDiff = true,
+                    hasNext = channels.size == config.queryLimit,
+                    hasPrev = false,
+                    loadType = LoadNext,
+                    ignoredDb = false,
+                    query = searchQuery
+                )
+            )
+        } else {
+            emit(serverErrorResponse(response, offset, null, false, searchQuery))
+        }
+    }
+
     override suspend fun searchChannels(
         query: String,
         config: ChannelListConfig,
@@ -437,15 +489,12 @@ internal class PersistenceChannelsLogicImpl(
             )
         }
 
-        val response = if (offset == 0) {
-            channelsRepository.getChannels(searchQuery, config, SearchChannelParams.default)
-        } else {
-            channelsRepository.loadMoreChannels(
-                query = searchQuery,
-                config = config,
-                params = SearchChannelParams.default
-            )
-        }
+        val response = channelsRepository.searchChannels(
+            query = searchQuery,
+            config = config,
+            params = SearchChannelParams.default,
+            offset = offset
+        )
 
         if (response is SceytResponse.Success) {
             val channels = response.data.orEmpty()

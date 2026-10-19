@@ -59,6 +59,15 @@ class ChannelsRepositoryImplSearchTest {
         }
     }
 
+    @Test
+    fun `search builds its query at the requested offset`() = runTest {
+        mockQueries(emptyQuery()).use { builders ->
+            ChannelsRepositoryImpl().searchChannels("hello", config, SearchChannelParams.default, offset = 20)
+
+            verify(builders.constructed().last()).offset(20)
+        }
+    }
+
     private fun emptyQuery(): ChannelListQuery = mock<ChannelListQuery>().also { query ->
         doAnswer {
             it.getArgument<ChannelsCallback>(0).onResult(mutableListOf())
