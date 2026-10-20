@@ -2,7 +2,6 @@ package com.sceyt.chatuikit.presentation.components.shareable.viewmodel
 
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chatuikit.config.ChannelListConfig
-import com.sceyt.chatuikit.data.models.LoadKeyData
 import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
@@ -42,7 +41,6 @@ class ShareableViewModel(
     private fun getChannels(
         offset: Int,
         query: String = searchQuery,
-        loadKey: LoadKeyData? = null,
         onlyMine: Boolean = true,
         ignoreDatabase: Boolean = false,
     ) {
@@ -56,38 +54,31 @@ class ShareableViewModel(
         notifyPageLoadingState(false)
 
         cancelGetChannelJobs()
-        launchChannelsLoad(offset, query, loadKey, onlyMine, ignoreDatabase)
+        launchChannelsLoad(offset, query, onlyMine)
     }
 
     fun loadMoreChannels() {
         if (!canLoadNext()) return
         setPagingLoadingStarted(PaginationResponse.LoadType.LoadNext)
         notifyPageLoadingState(false)
-        val state = state.value
         // Does not cancel the in-flight load — that would drop its page.
         launchChannelsLoad(
             offset = nextOffset,
             query = searchQuery,
-            loadKey = LoadKeyData(value = state.channels.lastOrNull()?.id ?: 0),
-            onlyMine = true,
-            ignoreDatabase = false
+            onlyMine = true
         )
     }
 
     private fun launchChannelsLoad(
         offset: Int,
         query: String,
-        loadKey: LoadKeyData?,
         onlyMine: Boolean,
-        ignoreDatabase: Boolean,
     ) {
         val job = viewModelScope.launch(ioDispatcher) {
-            channelInteractor.loadChannels(
+            channelInteractor.loadChannelsSkipCache(
                 offset = offset,
                 searchQuery = query,
-                loadKey = loadKey,
                 onlyMine = onlyMine,
-                ignoreDb = ignoreDatabase,
                 awaitForConnection = true,
                 config = config
             ).collect(::initPaginationResponse)

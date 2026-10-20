@@ -37,6 +37,14 @@ interface PersistenceChannelsLogic {
         config: ChannelListConfig,
     ): Flow<PaginationResponse<SceytChannel>>
 
+    fun loadChannelsSkipCache(
+        offset: Int,
+        searchQuery: String,
+        onlyMine: Boolean,
+        awaitForConnection: Boolean,
+        config: ChannelListConfig,
+    ): Flow<PaginationResponse<SceytChannel>>
+
     suspend fun searchChannels(
         query: String,
         config: ChannelListConfig,
