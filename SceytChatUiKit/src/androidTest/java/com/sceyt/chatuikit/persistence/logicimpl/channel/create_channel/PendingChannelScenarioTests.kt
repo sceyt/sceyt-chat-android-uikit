@@ -546,7 +546,8 @@ class PendingChannelScenarioTests : SceytKoinComponent {
         override suspend fun searchChannels(
             query: String,
             config: ChannelListConfig,
-            params: SearchChannelParams
+            params: SearchChannelParams,
+            offset: Int
         ): SceytResponse<List<SceytChannel>> = unused()
 
         override suspend fun loadMoreChannels(

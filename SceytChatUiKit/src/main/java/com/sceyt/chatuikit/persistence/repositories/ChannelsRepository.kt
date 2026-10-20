@@ -26,6 +26,7 @@ interface ChannelsRepository {
         query: String,
         config: ChannelListConfig,
         params: SearchChannelParams,
+        offset: Int = 0,
     ): SceytResponse<List<SceytChannel>>
 
     suspend fun loadMoreChannels(

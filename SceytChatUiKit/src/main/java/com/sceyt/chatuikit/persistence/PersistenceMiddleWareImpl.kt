@@ -220,6 +220,20 @@ internal class PersistenceMiddleWareImpl(
         config = config
     )
 
+    override suspend fun loadChannelsSkipCache(
+        offset: Int,
+        searchQuery: String,
+        onlyMine: Boolean,
+        awaitForConnection: Boolean,
+        config: ChannelListConfig,
+    ) = channelLogic.loadChannelsSkipCache(
+        offset = offset,
+        searchQuery = searchQuery,
+        onlyMine = onlyMine,
+        awaitForConnection = awaitForConnection,
+        config = config
+    )
+
     override suspend fun searchChannels(
         query: String,
         config: ChannelListConfig,
