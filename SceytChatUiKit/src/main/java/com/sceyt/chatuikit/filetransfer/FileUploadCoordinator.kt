@@ -74,8 +74,8 @@ internal class FileUploadCoordinator(
         val attempt = Attempt(owner.operationId)
         attempt.job = scope.launch(start = CoroutineStart.LAZY) {
             val result = try {
-                val url = when (val prepared = owner.prepare()) {
-                    is FileUploadPreparation.Reused -> prepared.url
+                when (val prepared = owner.prepare()) {
+                    is FileUploadPreparation.Reused -> Result.success(prepared.url)
                     is FileUploadPreparation.Ready -> {
                         currentCoroutineContext().ensureActive()
                         val backend = transport()
@@ -84,10 +84,12 @@ internal class FileUploadCoordinator(
                             control.execute { handleEvent(operation, attempt, event) }
                         }
                     }
-                }.takeUnless { it.isNullOrBlank() }
-                    ?: throw IllegalStateException("File upload returned an empty remote reference")
-                currentCoroutineContext().ensureActive()
-                Result.success(url)
+                }.onSuccess { url ->
+                    check(url.isNotBlank()) { "File upload returned an empty remote reference" }
+                    currentCoroutineContext().ensureActive()
+                }.onFailure {
+                    if (!attempt.waitingForNetwork) currentCoroutineContext().ensureActive()
+                }
             } catch (error: Throwable) {
                 if (!attempt.waitingForNetwork) currentCoroutineContext().ensureActive()
                 Result.failure(

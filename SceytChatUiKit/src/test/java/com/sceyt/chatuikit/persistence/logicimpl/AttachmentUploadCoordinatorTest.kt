@@ -272,7 +272,7 @@ class AttachmentUploadCoordinatorTest {
     fun `cancel shared owner during network wait still delivers follower failure`() {
         val releaseCancellation = CompletableDeferred<Unit>()
         SceytChatUIKit.fileTransfer.transport = object : FileTransferTransport by transport {
-            override suspend fun upload(request: FileUploadRequest, callback: FileTransferCallback): String? {
+            override suspend fun upload(request: FileUploadRequest, callback: FileTransferCallback): Result<String> {
                 try {
                     return transport.upload(request, callback)
                 } finally {
@@ -1039,7 +1039,7 @@ class AttachmentUploadCoordinatorTest {
     fun `late IOException from cancelled upload does not fail or advance its replacement`() {
         val cancellationGate = CompletableDeferred<Unit>()
         SceytChatUIKit.fileTransfer.transport = object : FileTransferTransport by transport {
-            override suspend fun upload(request: FileUploadRequest, callback: FileTransferCallback): String? {
+            override suspend fun upload(request: FileUploadRequest, callback: FileTransferCallback): Result<String> {
                 return try {
                     transport.upload(request, callback)
                 } catch (_: CancellationException) {
@@ -1075,7 +1075,7 @@ class AttachmentUploadCoordinatorTest {
     @Test
     fun `waiting for network still advances queue when cancellation throws IOException`() {
         SceytChatUIKit.fileTransfer.transport = object : FileTransferTransport by transport {
-            override suspend fun upload(request: FileUploadRequest, callback: FileTransferCallback): String? {
+            override suspend fun upload(request: FileUploadRequest, callback: FileTransferCallback): Result<String> {
                 return try {
                     transport.upload(request, callback)
                 } catch (_: CancellationException) {

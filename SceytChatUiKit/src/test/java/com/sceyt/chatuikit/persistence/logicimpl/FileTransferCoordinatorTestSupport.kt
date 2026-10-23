@@ -95,7 +95,7 @@ internal class RecordingFileTransferTransport : FileTransferTransport {
         val request: FileUploadRequest,
         private val callback: FileTransferCallback,
     ) {
-        val result = CompletableDeferred<String?>()
+        val result = CompletableDeferred<Result<String>>()
 
         @Volatile
         var cancelled = false
@@ -108,12 +108,12 @@ internal class RecordingFileTransferTransport : FileTransferTransport {
             callback.onEvent(FileTransferEvent.WaitingForNetwork)
         }
 
-        fun succeed(remoteReference: String?) {
-            result.complete(remoteReference)
+        fun succeed(remoteReference: String) {
+            result.complete(Result.success(remoteReference))
         }
 
         fun fail(error: Throwable) {
-            result.completeExceptionally(error)
+            result.complete(Result.failure(error))
         }
     }
 
@@ -121,7 +121,7 @@ internal class RecordingFileTransferTransport : FileTransferTransport {
         val request: FileDownloadRequest,
         private val callback: FileTransferCallback,
     ) {
-        val result = CompletableDeferred<String?>()
+        val result = CompletableDeferred<Result<String>>()
 
         @Volatile
         var cancelled = false
@@ -134,12 +134,12 @@ internal class RecordingFileTransferTransport : FileTransferTransport {
             callback.onEvent(FileTransferEvent.WaitingForNetwork)
         }
 
-        fun succeed(localPath: String?) {
-            result.complete(localPath)
+        fun succeed(localPath: String) {
+            result.complete(Result.success(localPath))
         }
 
         fun fail(error: Throwable) {
-            result.completeExceptionally(error)
+            result.complete(Result.failure(error))
         }
     }
 
@@ -154,7 +154,7 @@ internal class RecordingFileTransferTransport : FileTransferTransport {
     override suspend fun upload(
         request: FileUploadRequest,
         callback: FileTransferCallback,
-    ): String? {
+    ): Result<String> {
         val call = UploadCall(request, callback)
         uploadCalls += call
         return try {
@@ -168,7 +168,7 @@ internal class RecordingFileTransferTransport : FileTransferTransport {
     override suspend fun download(
         request: FileDownloadRequest,
         callback: FileTransferCallback,
-    ): String? {
+    ): Result<String> {
         val call = DownloadCall(request, callback)
         downloadCalls += call
         return try {

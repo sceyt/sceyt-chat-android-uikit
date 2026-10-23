@@ -1,5 +1,9 @@
 package com.sceyt.chatuikit.filetransfer
 
+/**
+ * Transfers prepared files. Expected failures are returned as [Result.failure].
+ * Coroutine cancellation must propagate as CancellationException, not as a failed result.
+ */
 interface FileTransferTransport {
     /**
      * Uploads the prepared source and returns its remote reference.
@@ -8,7 +12,7 @@ interface FileTransferTransport {
     suspend fun upload(
         request: FileUploadRequest,
         callback: FileTransferCallback,
-    ): String?
+    ): Result<String>
 
     /**
      * Downloads the remote file and returns the resulting local path.
@@ -17,7 +21,7 @@ interface FileTransferTransport {
     suspend fun download(
         request: FileDownloadRequest,
         callback: FileTransferCallback,
-    ): String?
+    ): Result<String>
 
     /**
      * Pauses the existing operation.

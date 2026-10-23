@@ -154,10 +154,15 @@ succeeds, fails, or is cancelled:
   this event as terminal for the current attempt, cancels the transport call, reports an error and
   releases its upload queue turn. A later retry starts a new attempt; this event does not schedule
   an automatic download retry.
-- Return a non-blank remote reference from upload.
-- Return the destination path from download.
-- Throw on terminal failure.
-- Cancel the matching backend work when the coroutine is cancelled.
+- Return `Result.success` with a non-blank remote reference from upload.
+- Return `Result.success` with the destination path from download.
+- Return `Result.failure` for an expected terminal failure.
+- Cancel the matching backend work when the coroutine is cancelled, and propagate
+  `CancellationException` instead of returning it as a failed result.
+
+Custom transports must implement these `Result<String>` return types before adopting this
+unreleased API. Waafi's S3 transport migration is still pending; it must not fall back to the
+default Sceyt transport.
 
 `pause(operationId)` returns `true` only when that exact physical operation was paused and remains
 available to `resume(operationId)`. `resume(operationId)` returns `true` only when the same
