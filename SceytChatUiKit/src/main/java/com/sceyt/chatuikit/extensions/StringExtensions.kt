@@ -134,11 +134,11 @@ fun CharSequence?.getFirstCharIsEmoji(): Pair<CharSequence, Boolean> {
                 }
             }
         }
-    } else {
-        val emojiSequence = extractEmojiSequenceWithoutEmojiCompat()
-        if (emojiSequence.isNotEmpty()) {
-            return emojiSequence to true
-        }
+    }
+
+    val emojiSequence = extractEmojiSequenceWithoutEmojiCompat()
+    if (emojiSequence.isNotEmpty()) {
+        return emojiSequence to true
     }
 
     return take(1) to false
@@ -220,7 +220,7 @@ private fun isLikelyEmoji(char: Char): Boolean {
 private fun isEmojiCompatReady(): Boolean {
     return try {
         EmojiCompat.get().loadState == EmojiCompat.LOAD_STATE_SUCCEEDED
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         false
     }
 }
@@ -228,7 +228,7 @@ private fun isEmojiCompatReady(): Boolean {
 fun CharSequence?.processEmojiCompat(): CharSequence? {
     return try {
         EmojiCompat.get().process(this)
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         println("EmojiCompat.process: not initialized yet")
         this
     }
@@ -242,7 +242,7 @@ fun CharSequence?.processEmojiCompat(
 ): CharSequence? {
     return try {
         EmojiCompat.get().process(this, start, end, maxCount, strategy)
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         println("EmojiCompat.process: not initialized yet")
         this
     }
@@ -281,7 +281,7 @@ fun Char.isVisuallyEmpty(): Boolean {
 fun <T> String?.jsonToObject(clazz: Class<T>): T? {
     return try {
         Gson().fromJson(this, clazz)
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         null
     }
 }
