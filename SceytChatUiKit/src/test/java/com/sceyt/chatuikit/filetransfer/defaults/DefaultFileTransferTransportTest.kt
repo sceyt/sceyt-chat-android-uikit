@@ -77,7 +77,7 @@ class DefaultFileTransferTransportTest {
 
         assertThat(sourceCaptor.firstValue).isEqualTo(sourceFile)
         assertThat(events).containsExactly(FileTransferEvent.Progress(35f))
-        assertThat(result).isEqualTo("uploaded-url")
+        assertThat(result.getOrThrow()).isEqualTo("uploaded-url")
     }
 
     @Test
@@ -94,13 +94,13 @@ class DefaultFileTransferTransportTest {
         whenever(utility.uploadFile(any(), any()))
             .thenReturn(SceytResponse.Error(error))
 
-        val result = runCatching { transport.upload(request) { } }
+        val result = transport.upload(request) { }
 
         assertThat(result.exceptionOrNull()).isSameInstanceAs(error)
     }
 
     @Test
-    fun `download uses request data and throws transport failure`() = runTest {
+    fun `download uses request data and returns transport failure`() = runTest {
         val transport = DefaultFileTransferTransport()
         val utility = utilityConstruction.constructed().single()
         val destination = File("/tmp/downloaded.txt")
@@ -115,9 +115,7 @@ class DefaultFileTransferTransportTest {
         val error = SceytException(12, "download failed")
 
         val result = async {
-            runCatching {
-                transport.download(request) { }
-            }
+            transport.download(request) { }
         }
         runCurrent()
 
@@ -130,6 +128,35 @@ class DefaultFileTransferTransportTest {
 
         assertThat(requestCaptor.firstValue).isSameInstanceAs(request)
         assertThat(result.await().exceptionOrNull()).isSameInstanceAs(error)
+    }
+
+    @Test
+    fun `null SDK upload reference returns failure`() = runTest {
+        val transport = DefaultFileTransferTransport()
+        val utility = utilityConstruction.constructed().single()
+        whenever(utility.uploadFile(any(), any())).thenReturn(SceytResponse.Success(null))
+        val request = FileUploadRequest("upload:10", File("/tmp/prepared.txt"), "prepared.txt", "text/plain")
+
+        val result = transport.upload(request) { }
+
+        assertThat(result.isFailure).isTrue()
+        assertThat(result.exceptionOrNull()?.message).isEqualTo("File upload failed")
+    }
+
+    @Test
+    fun `download success returns destination and ignores duplicate result`() = runTest {
+        val transport = DefaultFileTransferTransport()
+        val utility = utilityConstruction.constructed().single()
+        val request = FileDownloadRequest("download:10", "https://cdn.test/file", File("/tmp/downloaded.txt"))
+        val resultCaptor = argumentCaptor<(SceytResponse<String>) -> Unit>()
+        val download = async { transport.download(request) { } }
+        runCurrent()
+        verify(utility).downloadFile(any(), any(), resultCaptor.capture())
+
+        resultCaptor.firstValue(SceytResponse.Success(request.destinationFile.path))
+        resultCaptor.firstValue(SceytResponse.Error(SceytException(1, "duplicate failure")))
+
+        assertThat(download.await().getOrThrow()).isEqualTo(request.destinationFile.path)
     }
 
     @Test

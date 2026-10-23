@@ -45,12 +45,14 @@ internal class FileDownloadCoordinator(
             val result = try {
                 val backend = transport()
                 attempt.transport = backend
-                val path = backend.download(operation.request) { event ->
+                backend.download(operation.request) { event ->
                     control.execute { handleEvent(operation, attempt, event) }
-                }.takeUnless { it.isNullOrBlank() }
-                    ?: throw IllegalStateException("File download returned an empty local path")
-                currentCoroutineContext().ensureActive()
-                Result.success(path)
+                }.onSuccess { path ->
+                    check(path.isNotBlank()) { "File download returned an empty local path" }
+                    currentCoroutineContext().ensureActive()
+                }.onFailure {
+                    if (!attempt.waitingForNetwork) currentCoroutineContext().ensureActive()
+                }
             } catch (error: Throwable) {
                 if (!attempt.waitingForNetwork) currentCoroutineContext().ensureActive()
                 Result.failure(

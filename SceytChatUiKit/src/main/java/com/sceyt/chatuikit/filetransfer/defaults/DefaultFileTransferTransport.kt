@@ -1,17 +1,16 @@
 package com.sceyt.chatuikit.filetransfer.defaults
 
 import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.data.models.fold
 import com.sceyt.chatuikit.filetransfer.FileDownloadRequest
 import com.sceyt.chatuikit.filetransfer.FileTransferCallback
 import com.sceyt.chatuikit.filetransfer.FileTransferEvent
 import com.sceyt.chatuikit.filetransfer.FileTransferTransport
 import com.sceyt.chatuikit.filetransfer.FileUploadRequest
 import com.sceyt.chatuikit.persistence.logicimpl.FileTransferUtility
-import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
 
 class DefaultFileTransferTransport : FileTransferTransport {
     private val transferUtility = FileTransferUtility()
@@ -19,7 +18,7 @@ class DefaultFileTransferTransport : FileTransferTransport {
     override suspend fun upload(
         request: FileUploadRequest,
         callback: FileTransferCallback,
-    ): String? {
+    ): Result<String> {
         val response = transferUtility.uploadFile(
             sourceFile = request.sourceFile,
             onProgress = { progressPercent ->
@@ -27,18 +26,13 @@ class DefaultFileTransferTransport : FileTransferTransport {
             },
         )
 
-        return when (response) {
-            is SceytResponse.Success -> response.data
-            is SceytResponse.Error -> {
-                throw response.exception ?: IllegalStateException("File upload failed")
-            }
-        }
+        return response.toResult("File upload failed")
     }
 
     override suspend fun download(
         request: FileDownloadRequest,
         callback: FileTransferCallback,
-    ): String? = suspendCancellableCoroutine { continuation ->
+    ): Result<String> = suspendCancellableCoroutine { continuation ->
         val completed = AtomicBoolean()
         val call = transferUtility.downloadFile(
             request = request,
@@ -48,7 +42,9 @@ class DefaultFileTransferTransport : FileTransferTransport {
                 }
             },
             onResult = { response ->
-                continuation.completeWith(response, completed, "File download failed")
+                if (completed.compareAndSet(false, true)) {
+                    continuation.resume(response.toResult("File download failed"))
+                }
             },
         )
 
@@ -58,18 +54,14 @@ class DefaultFileTransferTransport : FileTransferTransport {
         }
     }
 
-    private fun CancellableContinuation<String?>.completeWith(
-        response: SceytResponse<String>,
-        completed: AtomicBoolean,
+    private fun SceytResponse<String>.toResult(
         fallbackErrorMessage: String,
-    ) {
-        if (!completed.compareAndSet(false, true)) return
-
-        when (response) {
-            is SceytResponse.Success -> resume(response.data)
-            is SceytResponse.Error -> resumeWithException(
-                response.exception ?: IllegalStateException(fallbackErrorMessage),
+    ): Result<String> = fold(
+        onSuccess = { result ->
+            result?.let { Result.success(it) } ?: Result.failure(
+                IllegalStateException(fallbackErrorMessage)
             )
-        }
-    }
+        },
+        onError = { Result.failure(it ?: IllegalStateException(fallbackErrorMessage)) }
+    )
 }

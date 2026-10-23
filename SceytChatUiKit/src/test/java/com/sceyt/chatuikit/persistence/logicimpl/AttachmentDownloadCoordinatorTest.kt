@@ -154,7 +154,7 @@ class AttachmentDownloadCoordinatorTest {
     @Test
     fun `resume does not overwrite an immediate transfer failure with downloading`() {
         SceytChatUIKit.fileTransfer.transport = object : FileTransferTransport by transport {
-            override suspend fun download(request: FileDownloadRequest, callback: FileTransferCallback): String? {
+            override suspend fun download(request: FileDownloadRequest, callback: FileTransferCallback): Result<String> {
                 throw IllegalStateException("download failed")
             }
         }
@@ -474,7 +474,7 @@ class AttachmentDownloadCoordinatorTest {
     fun `waiting for network followed by failure preserves partial destination and allows retry`() {
         var waitingForNetwork = true
         SceytChatUIKit.fileTransfer.transport = object : FileTransferTransport by transport {
-            override suspend fun download(request: FileDownloadRequest, callback: FileTransferCallback): String? {
+            override suspend fun download(request: FileDownloadRequest, callback: FileTransferCallback): Result<String> {
                 if (waitingForNetwork) {
                     waitingForNetwork = false
                     callback.onEvent(FileTransferEvent.WaitingForNetwork)
@@ -690,7 +690,7 @@ class AttachmentDownloadCoordinatorTest {
     fun `late error from cancelled download keeps replacement partial destination`() {
         val cancellationGate = CompletableDeferred<Unit>()
         SceytChatUIKit.fileTransfer.transport = object : FileTransferTransport by transport {
-            override suspend fun download(request: FileDownloadRequest, callback: FileTransferCallback): String? {
+            override suspend fun download(request: FileDownloadRequest, callback: FileTransferCallback): Result<String> {
                 return try {
                     transport.download(request, callback)
                 } catch (_: CancellationException) {
