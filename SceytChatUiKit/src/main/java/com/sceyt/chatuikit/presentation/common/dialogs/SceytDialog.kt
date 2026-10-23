@@ -24,6 +24,11 @@ class SceytDialog(context: Context) : Dialog(context, R.style.SceytDialogStyle) 
         binding.applyStyle()
     }
 
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        if (lastDialog === this) lastDialog = null
+    }
+
     private fun initView() {
         binding.buttonAccept.setOnClickListener {
             positiveClickListener?.invoke()
