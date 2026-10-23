@@ -2,6 +2,8 @@ package com.sceyt.chatuikit.presentation.custom_views
 
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
+import androidx.emoji2.bundled.BundledEmojiCompatConfig
+import androidx.emoji2.text.EmojiCompat
 import com.bumptech.glide.request.Request
 import com.bumptech.glide.request.target.DrawableImageViewTarget
 import com.google.common.truth.Truth.assertThat
@@ -14,9 +16,36 @@ import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
 class AvatarViewTest {
+
+    @Test
+    @Config(sdk = [35])
+    fun `initials preserve emoji when EmojiCompat uses system rendering`() {
+        EmojiCompat.init(
+            BundledEmojiCompatConfig(RuntimeEnvironment.getApplication(), Runnable::run)
+        )
+        assertThat(EmojiCompat.get().loadState).isEqualTo(EmojiCompat.LOAD_STATE_SUCCEEDED)
+
+        val avatarView = AvatarView(RuntimeEnvironment.getApplication())
+        val initialsField = AvatarView::class.java.getDeclaredField("initials").apply {
+            isAccessible = true
+        }
+        val cases = listOf(
+            "🚨 Breach" to "🚨",
+            "😶‍🌫️ Group" to "😶‍🌫️",
+            "Alice Brown" to "AB",
+            "Breach 🚨" to "B🚨"
+        )
+        for ((title, expected) in cases) {
+            avatarView.setDefaultAvatar(DefaultAvatar.FromInitials(title))
+
+            val initials = initialsField.get(avatarView) as CharSequence
+            assertThat(initials.toString()).isEqualTo(expected)
+        }
+    }
 
     @Test
     fun `clearing recycled request keeps initials drawable empty`() {
