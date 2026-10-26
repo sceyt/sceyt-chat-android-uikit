@@ -49,7 +49,8 @@ open class MessageInfoActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        StyleRegistry.unregister(intent.getStringExtra(KEY_ITEM_STYLE_ID))
+        if (isFinishing)
+            StyleRegistry.unregister(intent.getStringExtra(KEY_ITEM_STYLE_ID))
     }
 
     companion object {

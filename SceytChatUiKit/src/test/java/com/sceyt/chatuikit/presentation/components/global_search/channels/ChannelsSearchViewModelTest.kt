@@ -3,6 +3,8 @@ package com.sceyt.chatuikit.presentation.components.global_search.channels
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import com.google.common.truth.Truth.assertThat
 import com.sceyt.chat.ChatClient
+import com.sceyt.chatuikit.createChannel
+import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytUser
@@ -23,7 +25,6 @@ import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchSes
 import com.sceyt.chatuikit.presentation.components.global_search.GlobalSearchTab
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -42,8 +43,11 @@ import org.mockito.MockedStatic
 import org.mockito.Mockito
 import org.mockito.kotlin.any
 import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.mockStatic
+import org.mockito.kotlin.never
+import org.mockito.kotlin.verifyBlocking
 import org.mockito.kotlin.whenever
 import kotlin.coroutines.CoroutineContext
 
@@ -80,8 +84,8 @@ class ChannelsSearchViewModelTest {
         }
         runBlocking {
             whenever(
-                channelInteractor.loadChannels(any(), any(), anyOrNull(), any(), any(), any(), any())
-            ).thenReturn(emptyFlow())
+                channelInteractor.searchChannels(any(), any())
+            ).thenReturn(SceytResponse.Success(emptyList()))
         }
     }
 
@@ -260,6 +264,50 @@ class ChannelsSearchViewModelTest {
 
     // ─── Typed query (channels + paginated messages) ──────────────────────────────
 
+    @Suppress("UnusedFlow")
+    @Test
+    fun `typed query does not use the channel list loader`() = runTest(dispatcher) {
+        vmForState(
+            GlobalSearchSessionState(activeTab = GlobalSearchTab.Channels, query = "hello"),
+            ChannelsFakeDataSource()
+        )
+        advanceUntilIdle()
+
+        verifyBlocking(channelInteractor, never()) {
+            loadChannels(any(), any(), anyOrNull(), any(), any(), any(), any())
+        }
+    }
+
+    @Test
+    fun `server fetch leaves current results unchanged until the next search attempt`() = runTest(dispatcher) {
+        val localChannel = createChannel(id = 1, pinnedAt = 0, createdAt = 1)
+        val serverChannel = createChannel(id = 2, pinnedAt = 0, createdAt = 2)
+        val dataSource = ChannelsFakeDataSource()
+        dataSource.enqueueChannels(GlobalSearchPage(listOf(localChannel), false))
+        dataSource.enqueueChannels(GlobalSearchPage(listOf(serverChannel), false))
+        whenever(channelInteractor.searchChannels(any(), any()))
+            .thenReturn(SceytResponse.Success(listOf(serverChannel)))
+        val session = GlobalSearchSessionStore(
+            GlobalSearchSessionState(activeTab = GlobalSearchTab.Channels, query = "hello")
+        )
+        val vm = ChannelsSearchViewModel(session, dataSource, dispatcher)
+        advanceUntilIdle()
+
+        assertThat(
+            vm.state.value.listItems.filterIsInstance<GlobalSearchListItem.ChannelItem>()
+                .map { it.channel.id }
+        ).containsExactly(localChannel.id)
+        verifyBlocking(channelInteractor) { searchChannels(eq("hello"), any()) }
+
+        session.update { it.copy(query = "hello again") }
+        advanceUntilIdle()
+
+        assertThat(
+            vm.state.value.listItems.filterIsInstance<GlobalSearchListItem.ChannelItem>()
+                .map { it.channel.id }
+        ).containsExactly(serverChannel.id)
+    }
+
     @Test
     fun `typed query first page loads both channels and messages`() = runTest(dispatcher) {
         val dataSource = ChannelsFakeDataSource()
@@ -407,6 +455,7 @@ class ChannelsSearchViewModelTest {
 
     // ─── Helpers ─────────────────────────────────────────────────────────────────
 
+    @Suppress("SameParameterValue")
     private fun vmForTab(tab: GlobalSearchTab, dataSource: ChannelsFakeDataSource) =
         vmForState(GlobalSearchSessionState(activeTab = tab), dataSource)
 

@@ -18,7 +18,9 @@ import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import kotlinx.coroutines.Dispatchers
 import org.junit.After
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
@@ -31,6 +33,9 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import java.io.File
+import java.io.FileNotFoundException
+import java.io.IOException
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
@@ -40,6 +45,9 @@ import kotlin.coroutines.CoroutineContext
 
 @RunWith(RobolectricTestRunner::class)
 class AttachmentThumbCoordinatorTest {
+    @get:Rule
+    val tempFolder = TemporaryFolder()
+
     private val fileTransferService = mock<FileTransferService>()
     private val attachmentLogic = mock<PersistenceAttachmentLogic>()
     private val fileChecksumDao = mock<FileChecksumDao>()
@@ -69,7 +77,7 @@ class AttachmentThumbCoordinatorTest {
 
     @Test
     fun `thumb request for another target is not suppressed while message list thumb is preparing`() {
-        val resolver = BlockingThumbPathResolver()
+        val resolver = BlockingThumbPathResolver(tempFolder.root)
         val logic = AttachmentThumbCoordinator(context, resolver)
         val attachment = attachment()
         val callbacks = thumbCallbacksFor(attachment)
@@ -104,7 +112,7 @@ class AttachmentThumbCoordinatorTest {
 
     @Test
     fun `duplicate thumb request for same target is suppressed while preparing`() {
-        val resolver = BlockingThumbPathResolver()
+        val resolver = BlockingThumbPathResolver(tempFolder.root)
         val logic = AttachmentThumbCoordinator(context, resolver)
         val attachment = attachment()
         val callbacks = thumbCallbacksFor(attachment)
@@ -134,7 +142,7 @@ class AttachmentThumbCoordinatorTest {
 
     @Test
     fun `thumb request after file path changes reuses preparing original thumb and emits latest path`() {
-        val resolver = BlockingThumbPathResolver()
+        val resolver = BlockingThumbPathResolver(tempFolder.root)
         val logic = AttachmentThumbCoordinator(context, resolver)
         val originalAttachment = attachment(
             filePath = "/uploads/original.jpg",
@@ -171,7 +179,7 @@ class AttachmentThumbCoordinatorTest {
 
     @Test
     fun `thumb cache is reused for different messages with same source file`() {
-        val resolver = BlockingThumbPathResolver().apply { release() }
+        val resolver = BlockingThumbPathResolver(tempFolder.root).apply { release() }
         val logic = AttachmentThumbCoordinator(context, resolver)
         val firstAttachment = attachment(messageTid = 11L, filePath = "/downloads/shared.jpg")
         val secondAttachment = attachment(messageTid = 22L, filePath = "/downloads/shared.jpg")
@@ -189,8 +197,146 @@ class AttachmentThumbCoordinatorTest {
     }
 
     @Test
+    fun `deleted cached thumb is regenerated on next request`() {
+        val resolver = BlockingThumbPathResolver(tempFolder.root).apply { release() }
+        val logic = AttachmentThumbCoordinator(context, resolver)
+        val attachment = attachment()
+        val thumbPaths = thumbPathCallbacksFor(attachment)
+        val thumb = thumbData(ThumbFor.MessagesLisView)
+
+        logic.getAttachmentThumb(attachment.messageTid, attachment, thumb)
+        File(thumbPaths.single()).delete()
+        logic.getAttachmentThumb(attachment.messageTid, attachment, thumb)
+
+        assertThat(resolver.callCount.get()).isEqualTo(2)
+        assertThat(thumbPaths).hasSize(2)
+        assertThat(File(thumbPaths.last()).exists()).isTrue()
+    }
+
+    @Test
+    fun `missing original is downloaded again when thumb source is not found`() {
+        val resolver = ThumbPathResolver { _, _, _ -> Result.failure(FileNotFoundException()) }
+        val logic = AttachmentThumbCoordinator(context, resolver)
+        val attachment = attachment(state = TransferState.Uploaded)
+        taskFor(attachment)
+
+        logic.getAttachmentThumb(attachment.messageTid, attachment, thumbData(ThumbFor.MessagesLisView))
+
+        verify(fileTransferService).redownload(attachment)
+    }
+
+    @Test
+    fun `original is not downloaded again when thumb fails for another reason`() {
+        val resolver = ThumbPathResolver { _, _, _ -> Result.failure(IOException("decode failed")) }
+        val logic = AttachmentThumbCoordinator(context, resolver)
+        val attachment = attachment()
+        taskFor(attachment)
+
+        logic.getAttachmentThumb(attachment.messageTid, attachment, thumbData(ThumbFor.MessagesLisView))
+
+        verify(fileTransferService, never()).redownload(any())
+    }
+
+    @Test
+    fun `missing downloaded original is downloaded again`() {
+        val resolver = ThumbPathResolver { _, _, _ -> Result.failure(FileNotFoundException()) }
+        val logic = AttachmentThumbCoordinator(context, resolver)
+        val attachment = attachment(state = TransferState.Downloaded)
+        taskFor(attachment)
+
+        logic.getAttachmentThumb(attachment.messageTid, attachment, thumbData(ThumbFor.MessagesLisView))
+
+        verify(fileTransferService).redownload(attachment)
+    }
+
+    @Test
+    fun `missing original without url is not downloaded`() {
+        val resolver = ThumbPathResolver { _, _, _ -> Result.failure(FileNotFoundException()) }
+        val logic = AttachmentThumbCoordinator(context, resolver)
+
+        listOf(null, "", "  ").forEach { url ->
+            val attachment = attachment(url = url, state = TransferState.Downloaded)
+            taskFor(attachment)
+            logic.getAttachmentThumb(attachment.messageTid, attachment, thumbData(ThumbFor.MessagesLisView))
+        }
+
+        verify(fileTransferService, never()).redownload(any())
+    }
+
+    @Test
+    fun `existing original is not downloaded again when thumb source open fails`() {
+        val resolver = ThumbPathResolver { _, _, _ -> Result.failure(FileNotFoundException("ENOSPC")) }
+        val logic = AttachmentThumbCoordinator(context, resolver)
+        val original = tempFolder.newFile("original.jpg")
+        val attachment = attachment(filePath = original.path, state = TransferState.Uploaded)
+        taskFor(attachment)
+
+        logic.getAttachmentThumb(attachment.messageTid, attachment, thumbData(ThumbFor.MessagesLisView))
+
+        verify(fileTransferService, never()).redownload(any())
+    }
+
+    @Test
+    fun `paused download is not resumed when thumb source is not found`() {
+        val resolver = ThumbPathResolver { _, _, _ -> Result.failure(FileNotFoundException()) }
+        val logic = AttachmentThumbCoordinator(context, resolver)
+        val attachment = attachment(state = TransferState.PauseDownload)
+        taskFor(attachment)
+
+        logic.getAttachmentThumb(attachment.messageTid, attachment, thumbData(ThumbFor.MessagesLisView))
+
+        verify(fileTransferService, never()).redownload(any())
+    }
+
+    @Test
+    fun `failed thumb generation releases preparing marker and allows retry`() {
+        val resolver = mock<ThumbPathResolver>()
+        whenever(resolver.getThumbPath(any(), any(), any()))
+            .thenReturn(Result.failure(IllegalStateException("invalid image")))
+            .thenReturn(Result.success("/thumbs/retried.jpg"))
+        val logic = AttachmentThumbCoordinator(context, resolver)
+        val attachment = attachment()
+        val callbacks = thumbCallbacksFor(attachment)
+        val thumb = thumbData(ThumbFor.MessagesLisView)
+
+        logic.getAttachmentThumb(attachment.messageTid, attachment, thumb)
+        assertThat(callbacks).isEmpty()
+        logic.getAttachmentThumb(attachment.messageTid, attachment, thumb)
+
+        assertThat(callbacks).hasSize(1)
+        verify(resolver, org.mockito.kotlin.times(2)).getThumbPath(any(), any(), any())
+    }
+
+    @Test
+    fun `thumb without local path does not invoke resolver or create task`() {
+        val resolver = mock<ThumbPathResolver>()
+        val logic = AttachmentThumbCoordinator(context, resolver)
+        val attachment = attachment(filePath = null)
+
+        logic.getAttachmentThumb(attachment.messageTid, attachment, thumbData(ThumbFor.MessagesLisView))
+
+        verify(resolver, never()).getThumbPath(any(), any(), any())
+        verify(fileTransferService, never()).findOrCreateTransferTask(any())
+    }
+
+    @Test
+    fun `thumb cache separates requests with different sizes`() {
+        val resolver = BlockingThumbPathResolver(tempFolder.root).apply { release() }
+        val logic = AttachmentThumbCoordinator(context, resolver)
+        val attachment = attachment()
+        val callbacks = thumbCallbacksFor(attachment)
+        val thumb = thumbData(ThumbFor.MessagesLisView)
+
+        logic.getAttachmentThumb(attachment.messageTid, attachment, thumb)
+        logic.getAttachmentThumb(attachment.messageTid, attachment, thumb.copy(size = Size(240, 240)))
+
+        assertThat(resolver.callCount.get()).isEqualTo(2)
+        assertThat(callbacks.map { it.size }).containsExactly(Size(120, 120), Size(240, 240))
+    }
+
+    @Test
     fun `clear removes completed thumb cache`() {
-        val resolver = BlockingThumbPathResolver().apply { release() }
+        val resolver = BlockingThumbPathResolver(tempFolder.root).apply { release() }
         val logic = AttachmentThumbCoordinator(context, resolver)
         val attachment = attachment()
         val callbacks = thumbCallbacksFor(attachment)
@@ -206,7 +352,7 @@ class AttachmentThumbCoordinatorTest {
 
     @Test
     fun `thumb-only request does not register a transfer task`() {
-        val resolver = BlockingThumbPathResolver().apply { release() }
+        val resolver = BlockingThumbPathResolver(tempFolder.root).apply { release() }
         val logic = AttachmentThumbCoordinator(context, resolver)
         val attachment = attachment()
 
@@ -217,6 +363,12 @@ class AttachmentThumbCoordinatorTest {
         )
 
         verify(fileTransferService, never()).findOrCreateTransferTask(any())
+    }
+
+    private fun taskFor(attachment: SceytAttachment): TransferTask {
+        val task = TransferTask(attachment, attachment.messageTid, attachment.transferState)
+        whenever(fileTransferService.findTransferTask(any())).thenReturn(task)
+        return task
     }
 
     private fun thumbCallbacksFor(attachment: SceytAttachment): CopyOnWriteArrayList<ThumbData> {
@@ -243,7 +395,15 @@ class AttachmentThumbCoordinatorTest {
         return callbacksByTid
     }
 
-    private class BlockingThumbPathResolver : ThumbPathResolver {
+    private fun thumbPathCallbacksFor(attachment: SceytAttachment): CopyOnWriteArrayList<String> {
+        val paths = CopyOnWriteArrayList<String>()
+        val task = TransferTask(attachment, attachment.messageTid, attachment.transferState)
+        task.thumbCallback = ThumbCallback { path, _ -> paths.add(path) }
+        whenever(fileTransferService.findTransferTask(any())).thenReturn(task)
+        return paths
+    }
+
+    private class BlockingThumbPathResolver(private val dir: File) : ThumbPathResolver {
         val callCount = AtomicInteger()
         private val release = CountDownLatch(1)
 
@@ -254,7 +414,8 @@ class AttachmentThumbCoordinatorTest {
         ): Result<String> {
             val callIndex = callCount.incrementAndGet()
             check(release.await(2, TimeUnit.SECONDS))
-            return Result.success("/thumbs/thumb-$callIndex.jpg")
+            val thumb = File(dir, "thumb-$callIndex.jpg").apply { createNewFile() }
+            return Result.success(thumb.path)
         }
 
         fun awaitCallCount(expectedCount: Int): Boolean {

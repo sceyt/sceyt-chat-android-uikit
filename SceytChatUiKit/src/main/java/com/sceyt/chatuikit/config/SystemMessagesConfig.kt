@@ -11,6 +11,7 @@ data class SystemMessagesConfig(
     val memberLeft: Boolean = true,
     val joinByInviteLink: Boolean = true,
     val disappearingMessageChanged: Boolean = true,
+    val pinMessage: Boolean = true,
 ) {
     fun isEnabled(type: SystemMessageAction): Boolean {
         if (!enabled) return false
@@ -23,6 +24,7 @@ data class SystemMessagesConfig(
             SystemMessageAction.MemberLeaved -> memberLeft
             SystemMessageAction.JoinByInviteLink -> joinByInviteLink
             SystemMessageAction.DisappearingMessage -> disappearingMessageChanged
+            SystemMessageAction.PinMessage -> pinMessage
         }
     }
 }

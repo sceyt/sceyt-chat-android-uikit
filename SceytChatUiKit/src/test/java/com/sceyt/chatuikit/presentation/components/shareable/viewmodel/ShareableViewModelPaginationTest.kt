@@ -6,7 +6,6 @@ import com.sceyt.chat.models.channel.ChannelListQuery.ChannelListOrder
 import com.sceyt.chat.models.channel.ChannelQueryParam
 import com.sceyt.chatuikit.config.ChannelListConfig
 import com.sceyt.chatuikit.createChannel
-import com.sceyt.chatuikit.data.models.LoadKeyData
 import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
@@ -36,7 +35,6 @@ import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.dsl.module
 import org.mockito.kotlin.any
-import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
 
@@ -72,10 +70,8 @@ class ShareableViewModelPaginationTest {
         }
         runBlocking {
             whenever(
-                interactor.loadChannels(
+                interactor.loadChannelsSkipCache(
                     any(),
-                    any(),
-                    anyOrNull(),
                     any(),
                     any(),
                     any(),
@@ -84,8 +80,8 @@ class ShareableViewModelPaginationTest {
             ).thenAnswer { invocation ->
                 val offset = invocation.getArgument<Int>(0)
                 val query = invocation.getArgument<String>(1)
-                val loadKey = invocation.getArgument<LoadKeyData?>(2)
-                requests += LoadRequest(offset, query, loadKey?.value)
+                val awaitForConnection = invocation.getArgument<Boolean>(3)
+                requests += LoadRequest(offset, query, awaitForConnection)
 
                 val page = pageFor(offset)
                 val hasNext = offset < 20
@@ -93,7 +89,7 @@ class ShareableViewModelPaginationTest {
                     emit(
                         PaginationResponse.DBResponse(
                             data = page,
-                            loadKey = loadKey,
+                            loadKey = null,
                             offset = offset,
                             hasNext = hasNext,
                             query = query
@@ -103,7 +99,7 @@ class ShareableViewModelPaginationTest {
                         PaginationResponse.ServerResponse(
                             data = SceytResponse.Success(emptyList()),
                             cacheData = page,
-                            loadKey = loadKey,
+                            loadKey = null,
                             offset = offset,
                             hasDiff = false,
                             hasNext = hasNext,
@@ -138,7 +134,6 @@ class ShareableViewModelPaginationTest {
         appendVisibleChannel(viewModel, createChannel(id = 100, pinnedAt = 0, createdAt = 100))
         assertThat(viewModel.state.value.channels.size).isEqualTo(21)
 
-        val lastVisibleChannelId = viewModel.state.value.channels.lastOrNull()?.id
         viewModel.loadMoreChannels()
         awaitCondition {
             requests.map { it.offset } == listOf(0, 20) &&
@@ -146,7 +141,7 @@ class ShareableViewModelPaginationTest {
         }
 
         assertThat(requests.map { it.offset }).containsExactly(0, 20).inOrder()
-        assertThat(requests.last().loadKeyValue).isEqualTo(lastVisibleChannelId)
+        assertThat(requests.map { it.awaitForConnection }).containsExactly(true, true)
     }
 
     @Test
@@ -176,7 +171,6 @@ class ShareableViewModelPaginationTest {
                     viewModel.state.value.channels.size == 20
         }
 
-        val lastVisibleChannelId = viewModel.state.value.channels.lastOrNull()?.id
         viewModel.loadMoreChannels()
         awaitCondition {
             requests.map { it.offset } == listOf(0, 20, 0, 20) &&
@@ -186,7 +180,6 @@ class ShareableViewModelPaginationTest {
 
         assertThat(requests.map { it.offset }).containsExactly(0, 20, 0, 20).inOrder()
         assertThat(requests.last().query).isEqualTo("alpha")
-        assertThat(requests.last().loadKeyValue).isEqualTo(lastVisibleChannelId)
     }
 
     private suspend fun TestScope.awaitCondition(
@@ -222,7 +215,7 @@ class ShareableViewModelPaginationTest {
     private data class LoadRequest(
         val offset: Int,
         val query: String,
-        val loadKeyValue: Long?,
+        val awaitForConnection: Boolean,
     )
 
     private data class CompletedRequest(

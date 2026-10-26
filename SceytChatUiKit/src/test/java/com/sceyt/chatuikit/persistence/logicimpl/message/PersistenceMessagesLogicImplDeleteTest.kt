@@ -106,6 +106,8 @@ internal class PersistenceMessagesLogicImplDeleteTest {
         pendingMessageStateDao = mock(),
         pendingMessageDeleteByTidDao = mock(),
         pollDao = mock(),
+        pinnedMessageDao = mock(),
+        pendingPinDao = mock(),
         pendingPollVoteDao = mock(),
         fileTransferService = service,
         messagesRepository = repository,

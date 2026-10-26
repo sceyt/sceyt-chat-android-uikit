@@ -68,6 +68,8 @@
     <string name="sceyt_cd_delete_direct_channel">Delete direct channel</string>
     <string name="sceyt_cd_delete_group_channel">Delete group channel</string>
     <string name="sceyt_cd_delete_message">Delete message</string>
+    <string name="sceyt_cd_pin_message">Pin message</string>
+    <string name="sceyt_cd_unpin_message">Unpin message</string>
     <string name="sceyt_cd_delete_voice_recording">Delete voice recording</string>
     <string name="sceyt_cd_delivered_to_users_list">Delivered to users list</string>
     <string name="sceyt_cd_edit_channel">Edit channel</string>
@@ -320,6 +322,7 @@
     <string name="sceyt_cd_search_suggestion_user_avatar">Search suggestion user avatar</string>
     <string name="sceyt_cd_search_suggestion_user_item">Search suggestion user item</string>
     <string name="sceyt_cd_select_delete_for_everyone">Select delete for everyone</string>
+    <string name="sceyt_cd_select_message">Select message</string>
     <string name="sceyt_cd_select_incoming_attachments_message">Select incoming attachments message</string>
     <string name="sceyt_cd_select_incoming_deleted_message">Select incoming deleted message</string>
     <string name="sceyt_cd_select_incoming_file_message">Select incoming file message</string>

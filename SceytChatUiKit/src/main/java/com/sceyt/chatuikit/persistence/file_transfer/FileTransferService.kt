@@ -30,4 +30,7 @@ interface FileTransferService {
     fun getTasks(): Map<String, TransferTask>
     fun clearPreparingThumbPaths()
     fun cancelAllTransfers()
+
+    /** Resets a finished attachment whose local file is missing to pending download and downloads it again. */
+    fun redownload(attachment: SceytAttachment)
 }
