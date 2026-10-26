@@ -11,6 +11,7 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.data.models.messages.SceytPinDetails
 import com.sceyt.chatuikit.data.models.messages.SceytPollDetails
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.data.models.messages.Vote
@@ -76,6 +77,8 @@ internal fun SceytMessage.toMessageDb(unList: Boolean): MessageDb {
         pendingReactions = null,
         mentionedUsers = null,
         poll = poll?.toPollDb(),
+        pinnedMessage = null,
+        pendingPin = null,
     )
 }
 
@@ -119,7 +122,8 @@ internal fun MessageDb.toSceytMessage(): SceytMessage {
             pendingReactions = pendingReactions?.map { it.toReactionData() },
             bodyAttributes = bodyAttribute,
             disableMentionsCount = disableMentionsCount,
-            poll = poll?.toSceytPollDetails()
+            poll = poll?.toSceytPollDetails(),
+            pinDetails = pinDetailsOf(this@toSceytMessage.pinnedMessage, this@toSceytMessage.pendingPin)
         )
     }
 }
@@ -131,7 +135,8 @@ internal fun ParentMessageDb.toSceytMessage(): SceytMessage {
         mentionedUsers = mentionedUsers?.map {
             it.user?.toSceytUser() ?: SceytUser(it.link.userId)
         },
-        pollDetails = this@toSceytMessage.poll?.toSceytPollDetails()
+        pollDetails = this@toSceytMessage.poll?.toSceytPollDetails(),
+        pinDetails = pinDetailsOf(pinnedMessage, pendingPin)
     )
 }
 
@@ -158,6 +163,7 @@ private fun MessageEntity.parentMessageToSceytMessage(
     from: SceytUser?,
     mentionedUsers: List<SceytUser>?,
     pollDetails: SceytPollDetails?,
+    pinDetails: SceytPinDetails?,
 ) = SceytMessage(
     id = id ?: 0,
     tid = tid,
@@ -188,7 +194,8 @@ private fun MessageEntity.parentMessageToSceytMessage(
     pendingReactions = null,
     bodyAttributes = bodyAttribute,
     disableMentionsCount = disableMentionsCount,
-    poll = pollDetails
+    poll = pollDetails,
+    pinDetails = pinDetails
 )
 
 fun MessageDeliveryStatus.toDeliveryStatus(): DeliveryStatus {
@@ -253,7 +260,8 @@ fun Message.toSceytUiMessage(isGroup: Boolean? = null): SceytMessage {
         bodyAttributes = bodyAttributes?.toList(),
         disableMentionsCount = disableMentionsCount,
         isGroup = isGroup ?: false,
-        poll = poll?.toSceytPollDetails(messageTid = tid)
+        poll = poll?.toSceytPollDetails(messageTid = tid),
+        pinDetails = pinDetails?.toSceytPinDetails()
     )
 }
 
@@ -288,7 +296,7 @@ fun SceytMessage.toMessage(): Message {
         bodyAttributes?.toTypedArray(),
         disableMentionsCount,
         poll?.toPollDetails(),
-        null
+        pinDetails?.toPinDetails()
     )
 }
 

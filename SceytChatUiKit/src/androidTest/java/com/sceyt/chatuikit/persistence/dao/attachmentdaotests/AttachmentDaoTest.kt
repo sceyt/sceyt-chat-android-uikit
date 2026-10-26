@@ -127,6 +127,8 @@ class AttachmentDaoTest {
         forwardingUser = null,
         mentionedUsers = null,
         poll = null,
+        pinnedMessage = null,
+        pendingPin = null,
     )
 
     private suspend fun insertWithPayload(message: MessageEntity, vararg attachments: AttachmentEntity) {

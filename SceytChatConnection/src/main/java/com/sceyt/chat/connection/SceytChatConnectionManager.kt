@@ -102,13 +102,17 @@ class SceytChatConnectionManager internal constructor(
     }
 
     fun connect(userId: String) {
+        startConnection(userId)
+    }
+
+    private fun startConnection(userId: String): Job {
         val normalizedUserId = userId.trim()
         require(normalizedUserId.isNotEmpty()) { "userId must not be blank" }
         check(client.isReadyForConnection) {
             "ChatClient must be initialized before connecting"
         }
 
-        scope.launch {
+        return scope.launch {
             cancelBackgroundDisconnect()
             isRecoveringFromTokenError = false
 
@@ -126,7 +130,9 @@ class SceytChatConnectionManager internal constructor(
             _status.update { current ->
                 current.copy(
                     userId = normalizedUserId,
-                    connectionState = if (shouldReplaceConnection) {
+                    connectionState = if (
+                        shouldReplaceConnection || client.connectionState == ConnectionState.Failed
+                    ) {
                         ConnectionState.Disconnected
                     } else {
                         client.connectionState
@@ -161,8 +167,8 @@ class SceytChatConnectionManager internal constructor(
         val normalizedUserId = userId.trim()
 
         return try {
-            connect(normalizedUserId)
             val result = withTimeoutOrNull(timeoutMillis.milliseconds) {
+                startConnection(normalizedUserId).join()
                 status.first { current ->
                     current.userId == normalizedUserId && current.isTerminalConnectionState()
                 }
@@ -236,10 +242,15 @@ class SceytChatConnectionManager internal constructor(
         error: SceytException?
     ) {
         scope.launch {
+            if (state == ConnectionState.Connected && !client.isConnectedAs(userId)) return@launch
+
+            val shouldRetryToken = isTokenError(state, error) &&
+                userId != null && !isRecoveringFromTokenError
+
             _status.update { current ->
                 current.copy(
-                    connectionState = state,
-                    error = error
+                    connectionState = if (shouldRetryToken) ConnectionState.Disconnected else state,
+                    error = if (shouldRetryToken) null else error
                 )
             }
 
@@ -296,27 +307,23 @@ class SceytChatConnectionManager internal constructor(
 
         tokenRequestJob = scope.launch {
             try {
-                val token = tokenResolver.resolve(userId, forceRefresh)
+                val result = tokenResolver.resolve(userId, forceRefresh)
                 currentCoroutineContext().ensureActive()
-
-                if (token.isNullOrBlank()) {
-                    setTokenError(userId, IllegalStateException("Token provider returned no token"))
-                    return@launch
-                }
 
                 if (!isCurrentRequest(generation, userId)) {
                     return@launch
                 }
 
-                when (tokenRequestPurpose) {
-                    TokenRequestPurpose.Connect -> connectWithToken(userId, token)
-                    TokenRequestPurpose.Update -> updateToken(userId, token)
-                    null -> Unit
-                }
-            } catch (error: CancellationException) {
-                throw error
-            } catch (error: Exception) {
-                setTokenError(userId, error)
+                result.fold(
+                    onSuccess = { token ->
+                        when (tokenRequestPurpose) {
+                            TokenRequestPurpose.Connect -> connectWithToken(userId, token)
+                            TokenRequestPurpose.Update -> updateToken(userId, token)
+                            null -> Unit
+                        }
+                    },
+                    onFailure = { error -> setTokenError(userId, error) }
+                )
             } finally {
                 if (generation == tokenRequestGeneration) {
                     tokenRequestJob = null
@@ -353,19 +360,19 @@ class SceytChatConnectionManager internal constructor(
             !reconnectAfterBackgroundDisconnect
 
     private fun ChatConnectionStatus.isTerminalConnectionState(): Boolean {
-        if (connectionState == ConnectionState.Connected) return true
+        if (connectionState == ConnectionState.Connected) return client.isConnectedAs(userId)
         if (isFetchingToken) return false
 
-        val isRecoverableTokenError = error is SceytException &&
-            error.code in config.tokenRefreshErrorCodes
-        return !isRecoverableTokenError &&
-            (error != null || connectionState == ConnectionState.Failed)
+        return error != null || connectionState == ConnectionState.Failed
     }
 
     private fun connectWithToken(userId: String, token: String) {
         if (this.userId != userId) return
 
         try {
+            _status.update {
+                it.copy(connectionState = ConnectionState.Connecting, error = null)
+            }
             client.connect(token)
         } catch (error: Exception) {
             setTokenError(userId, error)
@@ -373,10 +380,8 @@ class SceytChatConnectionManager internal constructor(
     }
 
     private suspend fun updateToken(userId: String, token: String) {
-        val result = try {
-            client.updateToken(token)
-        } catch (error: Exception) {
-            Result.failure(error)
+        val result = runCatchingCancellable {
+            client.updateToken(token).getOrThrow()
         }
 
         if (result.isFailure && isCurrentUser(userId)) {
@@ -439,16 +444,3 @@ class SceytChatConnectionManager internal constructor(
         const val DEFAULT_CONNECT_TIMEOUT_MILLIS = 10_000L
     }
 }
-
-private val ConnectionState.isDisconnected: Boolean
-    get() = this == ConnectionState.Disconnected || this == ConnectionState.Failed
-
-private val ConnectionState.isActive: Boolean
-    get() = when (this) {
-        ConnectionState.Connecting,
-        ConnectionState.Reconnecting,
-        ConnectionState.Connected -> true
-
-        ConnectionState.Disconnected,
-        ConnectionState.Failed -> false
-    }

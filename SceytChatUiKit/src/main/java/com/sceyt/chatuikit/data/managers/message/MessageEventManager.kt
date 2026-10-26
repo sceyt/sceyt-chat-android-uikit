@@ -7,6 +7,7 @@ import com.sceyt.chat.models.message.PinnedMessage
 import com.sceyt.chat.models.message.Reaction
 import com.sceyt.chat.models.poll.PollVote
 import com.sceyt.chat.sceyt_listeners.MessageListener
+import com.sceyt.chatuikit.data.managers.message.event.PinUpdateEvent
 import com.sceyt.chatuikit.data.managers.message.event.PollUpdateEvent
 import com.sceyt.chatuikit.data.managers.message.event.ReactionUpdateEventData
 import com.sceyt.chatuikit.data.managers.message.event.ReactionUpdateEventEnum
@@ -14,9 +15,11 @@ import com.sceyt.chatuikit.data.managers.message.handler.MessageEventHandler.All
 import com.sceyt.chatuikit.data.managers.message.handler.MessageEventHandlerImpl
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.data.models.messages.SceytPinnedMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
 import com.sceyt.chatuikit.data.models.messages.Vote
 import com.sceyt.chatuikit.extensions.TAG
+import com.sceyt.chatuikit.persistence.mappers.toSceytPinnedMessage
 import com.sceyt.chatuikit.persistence.mappers.toSceytReaction
 import com.sceyt.chatuikit.persistence.mappers.toSceytUiChannel
 import com.sceyt.chatuikit.persistence.mappers.toSceytUiMessage
@@ -63,6 +66,13 @@ object MessageEventManager : AllEventManagers {
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
     val onPollUpdatedFlow = onPollUpdatedFlow_.asSharedFlow()
+
+
+    private val onPinUpdatedFlow_: MutableSharedFlow<PinUpdateEvent> = MutableSharedFlow(
+        extraBufferCapacity = 5,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
+    val onPinUpdatedFlow = onPinUpdatedFlow_.asSharedFlow()
 
 
     private val onOutGoingMessageFlow_: MutableSharedFlow<SceytMessage> = MutableSharedFlow(
@@ -132,18 +142,20 @@ object MessageEventManager : AllEventManagers {
                 eventManager.onPollClosed(message.toSceytUiMessage())
             }
 
-            override fun onMessagesPinned(
-                channelId: Long,
-                pins: List<PinnedMessage?>?
-            ) {
-
+            override fun onMessagesPinned(channelId: Long, messages: List<PinnedMessage>?) {
+                messages ?: return
+                eventManager.onMessagesPinned(
+                    channelId = channelId,
+                    messages = messages.mapNotNull { it.toSceytPinnedMessage(channelId) }
+                )
             }
 
-            override fun onMessagesUnPinned(
-                channelId: Long,
-                pins: List<PinnedMessage?>?
-            ) {
-
+            override fun onMessagesUnPinned(channelId: Long, messages: List<PinnedMessage>?) {
+                messages ?: return
+                eventManager.onMessagesUnPinned(
+                    channelId = channelId,
+                    messages = messages.mapNotNull { it.toSceytPinnedMessage(channelId) }
+                )
             }
         })
     }
@@ -210,6 +222,24 @@ object MessageEventManager : AllEventManagers {
 
     override fun onPollClosed(message: SceytMessage) {
         onPollUpdatedFlow_.tryEmit(PollUpdateEvent.PollClosed(message = message))
+    }
+
+    override fun onMessagesPinned(channelId: Long, messages: List<SceytPinnedMessage>) {
+        onPinUpdatedFlow_.tryEmit(
+            value = PinUpdateEvent.Pinned(
+                channelId = channelId,
+                messages = messages,
+            )
+        )
+    }
+
+    override fun onMessagesUnPinned(channelId: Long, messages: List<SceytPinnedMessage>) {
+        onPinUpdatedFlow_.tryEmit(
+            value = PinUpdateEvent.Unpinned(
+                channelId = channelId,
+                messages = messages,
+            )
+        )
     }
 
     @Suppress("unused")

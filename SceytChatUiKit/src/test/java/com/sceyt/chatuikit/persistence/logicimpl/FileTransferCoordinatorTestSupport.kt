@@ -70,6 +70,8 @@ internal class TestFileTransferService : FileTransferService {
 
     override fun resume(messageTid: Long, attachment: SceytAttachment, state: TransferState) = Unit
 
+    override fun redownload(attachment: SceytAttachment) = Unit
+
     override fun getThumb(messageTid: Long, attachment: SceytAttachment, thumbData: ThumbData) = Unit
 
     fun registerTask(task: TransferTask) {

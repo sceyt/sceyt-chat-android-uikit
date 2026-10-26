@@ -22,6 +22,7 @@ import com.sceyt.chatuikit.persistence.interactor.ChannelMemberInteractor
 import com.sceyt.chatuikit.persistence.interactor.GlobalSearchDataSource
 import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageMarkerInteractor
+import com.sceyt.chatuikit.persistence.interactor.MessagePinInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessagePollInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageReactionInteractor
 import com.sceyt.chatuikit.persistence.interactor.UserInteractor
@@ -33,6 +34,7 @@ import com.sceyt.chatuikit.persistence.logic.PersistenceConnectionLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMembersLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessageMarkerLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
+import com.sceyt.chatuikit.persistence.logic.PersistencePinLogic
 import com.sceyt.chatuikit.persistence.logic.PersistencePollLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceReactionsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceUsersLogic
@@ -44,6 +46,7 @@ import com.sceyt.chatuikit.persistence.logicimpl.PersistenceChannelInviteKeyLogi
 import com.sceyt.chatuikit.persistence.logicimpl.PersistenceConnectionLogicImpl
 import com.sceyt.chatuikit.persistence.logicimpl.PersistenceMembersLogicImpl
 import com.sceyt.chatuikit.persistence.logicimpl.PersistenceMessageMarkerLogicImpl
+import com.sceyt.chatuikit.persistence.logicimpl.PersistencePinLogicImpl
 import com.sceyt.chatuikit.persistence.logicimpl.PersistencePollLogicImpl
 import com.sceyt.chatuikit.persistence.logicimpl.PersistenceReactionsLogicImpl
 import com.sceyt.chatuikit.persistence.logicimpl.ThumbPathResolver
@@ -77,7 +80,16 @@ import com.sceyt.chatuikit.persistence.logicimpl.usecases.RetractPollVoteUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.SendPollPendingVotesUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.SetUserPresenceUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.ShouldShowNotificationUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.PinMessageUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.RefreshPinnedMessageCacheUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.SendPendingPinsUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.SendPinUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.SendUnpinUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.StorePinsUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.SyncPinnedMessagesManager
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.TogglePollVoteUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.UnpinMessageUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.UpdatePinnedMessagesUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.UpdatePollUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.UpdatePollVotesUseCase
 import com.sceyt.chatuikit.push.service.PushService
@@ -164,8 +176,10 @@ internal fun databaseModule(enableDatabase: Boolean) = module {
     single { get<SceytDatabase>().linkDao() }
     single { get<SceytDatabase>().loadRangeDao() }
     single { get<SceytDatabase>().markerDao() }
+    single { get<SceytDatabase>().pinnedMessageDao() }
     single { get<SceytDatabase>().pollDao() }
     single { get<SceytDatabase>().pendingPollVoteDao() }
+    single { get<SceytDatabase>().pendingPinDao() }
 }
 
 internal val interactorModule = module {
@@ -175,6 +189,7 @@ internal val interactorModule = module {
     single<AttachmentInteractor> { get<PersistenceMiddleWareImpl>() }
     single<MessageMarkerInteractor> { get<PersistenceMiddleWareImpl>() }
     single<MessageReactionInteractor> { get<PersistenceMiddleWareImpl>() }
+    single<MessagePinInteractor> { get<PersistenceMiddleWareImpl>() }
     single<MessagePollInteractor> { get<PersistenceMiddleWareImpl>() }
     single<ChannelMemberInteractor> { get<PersistenceMiddleWareImpl>() }
     single<UserInteractor> { get<PersistenceMiddleWareImpl>() }
@@ -188,6 +203,7 @@ internal val logicModule = module {
     singleOf(::PersistenceMessagesLogicImpl) bind PersistenceMessagesLogic::class
     singleOf(::PersistenceAttachmentLogicImpl) bind PersistenceAttachmentLogic::class
     singleOf(::PersistenceReactionsLogicImpl) bind PersistenceReactionsLogic::class
+    singleOf(::PersistencePinLogicImpl) bind PersistencePinLogic::class
     singleOf(::PersistencePollLogicImpl) bind PersistencePollLogic::class
     singleOf(::PersistenceMembersLogicImpl) bind PersistenceMembersLogic::class
     singleOf(::PersistenceUsersLogicImpl) bind PersistenceUsersLogic::class
@@ -204,6 +220,15 @@ internal val useCaseModule = module {
     factoryOf(::ShouldShowNotificationUseCase)
     factoryOf(::AddPollVoteUseCase)
     factoryOf(::RemovePollVoteUseCase)
+    factory { RefreshPinnedMessageCacheUseCase(get(), get()) }
+    factory { PinMessageUseCase(get(), get(), get()) }
+    factory { UnpinMessageUseCase(get(), get(), get()) }
+    factory { StorePinsUseCase(get(), get(), get(), get()) }
+    factory { SendPendingPinsUseCase(get(), get(), get()) }
+    factory { SendPinUseCase(get(), get(), get(), get(), get()) }
+    factory { SendUnpinUseCase(get(), get(), get()) }
+    factory { SyncPinnedMessagesManager(get(), get(), get(), get()) }
+    factory { UpdatePinnedMessagesUseCase(get(), get(), get(), get()) }
     factoryOf(::TogglePollVoteUseCase)
     factoryOf(::RetractPollVoteUseCase)
     factoryOf(::EndPollUseCase)

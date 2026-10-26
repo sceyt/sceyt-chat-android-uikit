@@ -35,6 +35,7 @@ import com.sceyt.chatuikit.data.models.channels.SyncedChannelsWindow
 import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
+import com.sceyt.chatuikit.data.models.map
 import com.sceyt.chatuikit.data.models.onError
 import com.sceyt.chatuikit.data.models.onSuccess
 import com.sceyt.chatuikit.data.models.onSuccessNotNull
@@ -256,6 +257,11 @@ internal class PersistenceChannelsLogicImpl(
                         channelsCache.updateLastMessage(message.channelId, null)
                     } else
                         channelsCache.updateLastMessage(message.channelId, message)
+                } else if (message.isParentOf(lastMessage)) {
+                    channelsCache.updateLastMessage(
+                        message.channelId,
+                        lastMessage.copy(parentMessage = message)
+                    )
                 }
             } ?: run {
                 if (state.isHardDeleted() || message.isPending() && state.isDeleted())
@@ -264,6 +270,11 @@ internal class PersistenceChannelsLogicImpl(
                     channelsCache.upsertChannel(channel.copy(lastMessage = message))
             }
         }
+    }
+
+    private fun SceytMessage.isParentOf(other: SceytMessage): Boolean {
+        val parent = other.parentMessage ?: return false
+        return parent.tid == tid || (id != 0L && parent.id == id)
     }
 
     private suspend fun upsertChannelDbAndCache(channel: SceytChannel?) {
@@ -375,6 +386,66 @@ internal class PersistenceChannelsLogicImpl(
         }
     }
 
+    override fun loadChannelsSkipCache(
+        offset: Int,
+        searchQuery: String,
+        onlyMine: Boolean,
+        awaitForConnection: Boolean,
+        config: ChannelListConfig,
+    ): Flow<PaginationResponse<SceytChannel>> = flow {
+        val dbChannels = getChannelsDb(offset, searchQuery, config, onlyMine)
+        emit(
+            PaginationResponse.DBResponse(
+                data = dbChannels,
+                loadKey = null,
+                offset = offset,
+                hasNext = dbChannels.size == config.queryLimit,
+                hasPrev = false,
+                query = searchQuery
+            )
+        )
+
+        if (awaitForConnection) {
+            ConnectionEventManager.awaitToConnectSceyt()
+        }
+
+        val response = channelsRepository.searchChannels(
+            query = searchQuery,
+            config = config,
+            params = SearchChannelParams.default,
+            offset = offset
+        )
+
+        if (response is SceytResponse.Success) {
+            val channels = response.data.orEmpty()
+            val savedChannels = saveChannelsToDb(channels)
+            emit(
+                PaginationResponse.ServerResponse(
+                    data = response,
+                    cacheData = savedChannels,
+                    loadKey = null,
+                    offset = offset,
+                    hasDiff = true,
+                    hasNext = channels.size == config.queryLimit,
+                    hasPrev = false,
+                    loadType = LoadNext,
+                    ignoredDb = false,
+                    query = searchQuery
+                )
+            )
+        } else {
+            emit(serverErrorResponse(response, offset, null, false, searchQuery))
+        }
+    }
+
+    override suspend fun searchChannels(
+        query: String,
+        config: ChannelListConfig,
+    ): SceytResponse<List<SceytChannel>> {
+        return channelsRepository.searchChannels(query, config, SearchChannelParams.default)
+            .map { saveChannelsToDb(it.orEmpty()) }
+    }
+
     override suspend fun searchChannelsWithUserIds(
         offset: Int,
         searchQuery: String,
@@ -386,8 +457,6 @@ internal class PersistenceChannelsLogicImpl(
         loadKey: LoadKeyData?,
         directChatType: String,
     ): Flow<PaginationResponse<SceytChannel>> = flow {
-        if (offset == 0) channelsCache.clear(config)
-
         val searchUserIds = userIds.toMutableSet()
 
         if (includeSearchByUserDisplayName) {
@@ -408,8 +477,6 @@ internal class PersistenceChannelsLogicImpl(
                 directType = directChatType
             ).map { it.toChannel() }
 
-            channelsCache.addAll(config, dbChannels, false)
-
             emit(
                 PaginationResponse.DBResponse(
                     data = dbChannels,
@@ -422,33 +489,24 @@ internal class PersistenceChannelsLogicImpl(
             )
         }
 
-        val response = if (offset == 0) {
-            channelsRepository.getChannels(searchQuery, config, SearchChannelParams.default)
-        } else {
-            channelsRepository.loadMoreChannels(
-                query = searchQuery,
-                config = config,
-                params = SearchChannelParams.default
-            )
-        }
+        val response = channelsRepository.searchChannels(
+            query = searchQuery,
+            config = config,
+            params = SearchChannelParams.default,
+            offset = offset
+        )
 
         if (response is SceytResponse.Success) {
             val channels = response.data.orEmpty()
             val savedChannels = saveChannelsToDb(channels)
 
-            val hasDiff = channelsCache.addAll(
-                config = config,
-                list = savedChannels,
-                checkDifference = offset != 0
-            ) || offset == 0
-
             emit(
                 PaginationResponse.ServerResponse(
                     data = response,
-                    cacheData = channelsCache.getSorted(config),
+                    cacheData = savedChannels,
                     loadKey = loadKey,
                     offset = offset,
-                    hasDiff = hasDiff,
+                    hasDiff = true,
                     hasNext = channels.size == channelsLoadSize,
                     hasPrev = false,
                     loadType = LoadNext,

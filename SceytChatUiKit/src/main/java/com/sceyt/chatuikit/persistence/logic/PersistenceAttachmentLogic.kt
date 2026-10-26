@@ -45,6 +45,9 @@ interface PersistenceAttachmentLogic {
     suspend fun updateAttachmentIdAndMessageId(message: SceytMessage)
     suspend fun updateTransferDataByMsgTid(data: TransferData)
     suspend fun updateAttachmentWithTransferData(data: TransferData)
+
+    /** Writes [data] to caches and DB without transition checks, used to restart a download of a missing original. */
+    suspend fun resetToPendingDownload(data: TransferData)
     suspend fun updateAttachmentFilePathAndMetadata(
         messageTid: Long,
         newPath: String,

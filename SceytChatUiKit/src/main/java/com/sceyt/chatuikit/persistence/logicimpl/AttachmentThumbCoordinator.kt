@@ -8,7 +8,10 @@ import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferHelper
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.file_transfer.ThumbData
+import com.sceyt.chatuikit.persistence.file_transfer.isCompleted
 import org.koin.core.component.inject
+import java.io.File
+import java.io.FileNotFoundException
 import java.util.concurrent.ConcurrentHashMap
 
 internal class AttachmentThumbCoordinator(
@@ -32,11 +35,18 @@ internal class AttachmentThumbCoordinator(
             ?: FileTransferHelper.createTransferTask(attachment)
         val readyThumb = thumbPaths[thumbKey]
 
-        if (readyThumb != null) {
+        if (readyThumb != null && File(readyThumb.path).exists()) {
             task.thumbCallback?.onThumb(readyThumb.path, data)
             return
         }
 
+        readyThumb?.let {
+            SceytLog.w(
+                TAG, "Cached thumb file is missing, regenerating for messageTid: $messageTid," +
+                        " thumb:${it.path}, source:${attachment.filePath}"
+            )
+            thumbPaths.remove(thumbKey, it)
+        }
         if (preparingThumbs.put(preparingThumbKey, data) != null) return
 
         thumbPathResolver.getThumbPath(context, attachment, data.size)
@@ -49,7 +59,13 @@ internal class AttachmentThumbCoordinator(
                 )
             }.onFailure {
                 preparingThumbs.remove(preparingThumbKey)
-
+                if (it is FileNotFoundException && attachment.canDownloadAgain()) {
+                    SceytLog.w(
+                        TAG, "Original file is missing, downloading again for messageTid: $messageTid," +
+                                " path:${attachment.filePath}, url:${attachment.url}"
+                    )
+                    fileTransferService.redownload(attachment)
+                }
                 SceytLog.e(
                     TAG,
                     "Couldn't get a thumb for messageTid: $messageTid," +
@@ -65,6 +81,11 @@ internal class AttachmentThumbCoordinator(
     fun clear() {
         preparingThumbs.clear()
         thumbPaths.clear()
+    }
+
+    private fun SceytAttachment.canDownloadAgain(): Boolean {
+        val path = filePath ?: return false
+        return !url.isNullOrBlank() && transferState?.isCompleted() == true && !File(path).exists()
     }
 
     private fun getThumbSourceKey(

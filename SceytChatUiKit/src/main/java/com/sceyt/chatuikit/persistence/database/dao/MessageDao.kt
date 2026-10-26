@@ -17,6 +17,7 @@ import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.ATTACHMENT_PAYLOAD_TABLE
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.ATTACHMENT_TABLE
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.AUTO_DELETE_MESSAGES_TABLE
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.LINK_DETAILS_TABLE
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.LOAD_RANGE_TABLE
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.MESSAGE_TABLE
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.POLL_TABLE
@@ -37,6 +38,7 @@ import com.sceyt.chatuikit.persistence.database.entity.messages.PollVoteEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.ReactionEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.ReactionTotalEntity
 import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingMarkerEntity
+import com.sceyt.chatuikit.persistence.mappers.mergeWith
 import com.sceyt.chatuikit.persistence.mappers.toAttachmentPayLoad
 import kotlinx.coroutines.flow.Flow
 import kotlin.math.max
@@ -207,8 +209,11 @@ internal abstract class MessageDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     protected abstract suspend fun insertAttachmentPayLoads(payLoad: List<AttachmentPayLoadEntity>)
 
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    abstract suspend fun insertLinkDetails(payLoad: List<LinkDetailsEntity>)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    protected abstract suspend fun insertLinkDetails(payLoad: List<LinkDetailsEntity>)
+
+    @Query("SELECT * FROM $LINK_DETAILS_TABLE WHERE link IN (:links)")
+    protected abstract suspend fun getLinkDetailsByLinks(links: List<String>): List<LinkDetailsEntity>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     protected abstract suspend fun insertUserMarkers(markers: List<MarkerEntity>): List<Long>
@@ -276,8 +281,23 @@ internal abstract class MessageDao {
                 insertAttachmentPayLoads(attachmentPayLoads)
 
             if (linkDetails.isNotEmpty())
-                insertLinkDetails(linkDetails)
+                upsertLinkDetails(linkDetails)
         }
+    }
+
+    private suspend fun upsertLinkDetails(entities: List<LinkDetailsEntity>) {
+        val incoming = entities
+            .groupBy { it.link }
+            .mapValues { (_, items) -> items.reduce { stored, item -> item.mergeWith(stored) } }
+        val existing = incoming.keys.toList()
+            .chunked(SQLITE_MAX_VARIABLE_NUMBER)
+            .flatMap { getLinkDetailsByLinks(it) }
+            .associateBy { it.link }
+        val changed = incoming
+            .map { (link, entity) -> existing[link]?.let { entity.mergeWith(it) } ?: entity }
+            .filter { it != existing[it.link] }
+        if (changed.isNotEmpty())
+            insertLinkDetails(changed)
     }
 
     private suspend fun insertMentionedUsersMessageLinks(vararg messages: MessageDb) {

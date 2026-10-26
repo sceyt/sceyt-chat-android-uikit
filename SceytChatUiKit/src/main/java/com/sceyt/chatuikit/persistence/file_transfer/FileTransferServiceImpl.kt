@@ -54,6 +54,17 @@ internal class FileTransferServiceImpl(
         downloader.download(value, task, onResult = { completeTransfer(task, it, upload = false) })
     }
 
+    override fun redownload(attachment: SceytAttachment) {
+        findTransferTask(attachment)?.let(::removeTransferTask)
+        val pendingAttachment = attachment.copy(
+            transferState = PendingDownload,
+            progressPercent = 0f,
+            filePath = null
+        )
+        FileTransferHelper.resetToPendingDownload(pendingAttachment)
+        download(pendingAttachment)
+    }
+
     override fun pause(messageTid: Long, attachment: SceytAttachment, state: TransferState) {
         when (state) {
             PendingDownload, Downloading -> pauseDownload(attachment)
