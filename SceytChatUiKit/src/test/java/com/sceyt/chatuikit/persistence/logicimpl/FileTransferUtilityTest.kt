@@ -8,6 +8,7 @@ import com.sceyt.chat.sceyt_callbacks.ProgressCallback
 import com.sceyt.chat.sceyt_callbacks.UrlCallback
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.filetransfer.FileDownloadRequest
+import com.sceyt.chatuikit.filetransfer.FileTransferResult
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -181,18 +182,15 @@ class FileTransferUtilityTest {
             val destination = File("/tmp/download.txt")
             val request = FileDownloadRequest("download:20:file", "https://cdn.test/file", destination)
             val onProgress: (Float) -> Unit = {}
-            val onResult: (SceytResponse<String>) -> Unit = {}
-            whenever(downloader.resumeDownload(request.operationId)).thenReturn(true)
+            val onResult: (FileTransferResult<String>) -> Unit = {}
+            val onFinished: () -> Unit = {}
 
             val call = mock<okhttp3.Call>()
-            utility.downloadFile(request, onProgress, onResult)
-            utility.pauseDownload(request.operationId)
-            utility.cancelDownload(request.operationId, call)
+            utility.downloadFile(request, onProgress, onResult, onFinished)
+            utility.cancelDownload(call)
 
-            verify(downloader).downloadFile(request, onProgress, onResult)
-            verify(downloader).pauseDownload(request.operationId)
-            verify(downloader).cancelDownload(request.operationId, call)
-            assertThat(utility.resumeDownload(request.operationId)).isTrue()
+            verify(downloader).downloadFile(request, onProgress, onResult, onFinished)
+            verify(downloader).cancelDownload(call)
         }
     }
 

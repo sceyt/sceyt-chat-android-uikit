@@ -1,11 +1,6 @@
 package com.sceyt.chatuikit.filetransfer
 
+/** Reports transfer progress as a percentage from `0f` to `100f`. */
 fun interface FileTransferCallback {
-    fun onEvent(event: FileTransferEvent)
-}
-
-sealed interface FileTransferEvent {
-    data class Progress(val progressPercent: Float) : FileTransferEvent
-
-    data object WaitingForNetwork : FileTransferEvent
+    fun onProgress(progressPercent: Float)
 }

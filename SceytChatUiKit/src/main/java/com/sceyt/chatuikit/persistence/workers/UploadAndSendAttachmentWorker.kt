@@ -197,10 +197,8 @@ class UploadAndSendAttachmentWorker(
         }
 
         val task = fileTransferService.findTransferTask(attachment)
-        if (task?.state == TransferState.PauseUpload && resumePausedUpload) {
-            task.configureTask()
-            fileTransferService.resume(attachment.messageTid, attachment, TransferState.PauseUpload)
-        } else if (isSharing) {
+        // A resumed worker rejoins through upload; the coordinator retains native/shared progress.
+        if (isSharing || task?.isSharedUpload == true) {
             fileTransferService.uploadSharedFile(attachment, configureTask)
         } else {
             fileTransferService.upload(attachment, configureTask)

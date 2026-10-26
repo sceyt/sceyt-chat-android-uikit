@@ -87,6 +87,6 @@ internal class AttachmentThumbCoordinator(
     )
 
     private companion object {
-        const val TAG = "FileTransferLogic"
+        const val TAG = "AttachmentThumbCoordinator"
     }
 }

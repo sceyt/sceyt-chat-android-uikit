@@ -30,7 +30,8 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
-import com.sceyt.chatuikit.persistence.logicimpl.FileTransferLogicImpl
+import com.sceyt.chatuikit.persistence.logicimpl.AttachmentDownloadCoordinator
+import com.sceyt.chatuikit.persistence.logicimpl.AttachmentUploadCoordinator
 import com.sceyt.chatuikit.persistence.logicimpl.RecordingFileTransferTransport
 import com.sceyt.chatuikit.persistence.logicimpl.attachment
 import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager.IS_SHARING
@@ -39,7 +40,6 @@ import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManage
 import com.sceyt.chatuikit.providers.ChatConnectionProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
-import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -89,8 +89,12 @@ class UploadAndSendAttachmentWorkerTest {
         val testScope = TestScope(UnconfinedTestDispatcher())
         val service by lazy {
             val context = RuntimeEnvironment.getApplication()
-            val logic = FileTransferLogicImpl(context, attachmentLogic, mock(), testScope.coroutineContext)
-            FileTransferServiceImpl(context, logic)
+            FileTransferServiceImpl(
+                context,
+                AttachmentUploadCoordinator(context, attachmentLogic, testScope),
+                AttachmentDownloadCoordinator(context, testScope),
+                mock(),
+            )
         }
     }
 
@@ -140,7 +144,6 @@ class UploadAndSendAttachmentWorkerTest {
     @After
     fun tearDown() {
         service.cancelAllTransfers()
-        testScope.coroutineContext.cancelChildren()
         AttachmentTransferStateStore.clear()
         WorkManagerImpl.setDelegate(null)
         SceytChatUIKit.fileTransfer = previousFileTransfer
@@ -293,8 +296,9 @@ class UploadAndSendAttachmentWorkerTest {
     @Test
     fun `explicit worker resume clears pause and sends uploaded message`() {
         val attachment = localAttachment()
-        service.upload(attachment)
+        val pausedWork = testScope.async { worker(attachment).doWork() }
         service.pause(attachment.messageTid, attachment, TransferState.Uploading)
+        assertThat(pausedWork.isCompleted).isTrue()
 
         val worker = worker(attachment.copy(transferState = TransferState.PauseUpload), resume = true)
         val work = testScope.async { worker.doWork() }
@@ -312,9 +316,10 @@ class UploadAndSendAttachmentWorkerTest {
         transport.pauseResult = true
         transport.resumeResult = true
         val attachment = localAttachment()
-        service.upload(attachment)
+        val pausedWork = testScope.async { worker(attachment).doWork() }
         val call = transport.uploadCalls.single()
         service.pause(attachment.messageTid, attachment, TransferState.Uploading)
+        assertThat(pausedWork.isCompleted).isTrue()
 
         val worker = worker(attachment.copy(transferState = TransferState.PauseUpload), resume = true)
         val work = testScope.async { worker.doWork() }
@@ -326,6 +331,45 @@ class UploadAndSendAttachmentWorkerTest {
 
         assertThat(work.isCompleted).isTrue()
         assertSentUrl(attachment, "native-resumed-url")
+    }
+
+    @Test
+    fun `pausing an active upload finishes its worker without sending the message`() {
+        for (nativePause in listOf(false, true)) {
+            transport.pauseResult = nativePause
+            val attachment = localAttachment().copy(messageTid = if (nativePause) 51L else 50L)
+            val work = testScope.async { worker(attachment).doWork() }
+            assertThat(work.isCompleted).isFalse()
+
+            service.pause(attachment.messageTid, attachment, TransferState.Uploading)
+
+            assertThat(work.isCompleted).isTrue()
+            assertThat(service.findTransferTask(attachment)?.state).isEqualTo(TransferState.PauseUpload)
+            assertThat(service.findTransferTask(attachment)?.onCompletionListeners).isEmpty()
+            assertThat(transport.uploadCalls.last().cancelled).isEqualTo(!nativePause)
+        }
+        runBlocking {
+            verify(messageLogic, never()).sendMessageWithUploadedAttachments(any(), any())
+        }
+    }
+
+    @Test
+    fun `pausing one shared upload finishes only its worker`() {
+        val owner = localAttachment().copy(messageTid = 52L)
+        val follower = owner.copy(messageTid = 53L)
+        val ownerWork = testScope.async { worker(owner, shared = true).doWork() }
+        val followerWork = testScope.async { worker(follower, shared = true).doWork() }
+
+        service.pause(owner.messageTid, owner, TransferState.Uploading)
+
+        assertThat(ownerWork.isCompleted).isTrue()
+        assertThat(followerWork.isCompleted).isFalse()
+        assertThat(transport.uploadCalls).hasSize(1)
+        assertThat(transport.uploadCalls.single().cancelled).isFalse()
+        transport.uploadCalls.single().succeed("shared-url")
+        assertThat(followerWork.isCompleted).isTrue()
+        assertSentUrl(follower, "shared-url")
+        assertThat(service.findTransferTask(owner)?.state).isEqualTo(TransferState.PauseUpload)
     }
 
     @Test
