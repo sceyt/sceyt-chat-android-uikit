@@ -7,6 +7,7 @@ import com.sceyt.chat.sceyt_callbacks.UrlCallback
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.filetransfer.FileDownloadRequest
+import com.sceyt.chatuikit.filetransfer.FileTransferResult
 import com.sceyt.chatuikit.logger.SceytLog
 import kotlinx.coroutines.suspendCancellableCoroutine
 import okhttp3.Call
@@ -63,20 +64,13 @@ class FileTransferUtility {
     fun downloadFile(
         request: FileDownloadRequest,
         onProgress: (Float) -> Unit,
-        onResult: (SceytResponse<String>) -> Unit,
+        onResult: (FileTransferResult<String>) -> Unit,
+        onFinished: () -> Unit = {},
     ): Call? {
-        return downloader.downloadFile(request, onProgress, onResult)
+        return downloader.downloadFile(request, onProgress, onResult, onFinished)
     }
 
-    fun pauseDownload(operationId: String) {
-        downloader.pauseDownload(operationId)
-    }
-
-    fun cancelDownload(operationId: String, call: Call) {
-        downloader.cancelDownload(operationId, call)
-    }
-
-    fun resumeDownload(operationId: String): Boolean {
-        return downloader.resumeDownload(operationId)
+    fun cancelDownload(call: Call) {
+        downloader.cancelDownload(call)
     }
 }

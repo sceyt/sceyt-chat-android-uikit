@@ -6,7 +6,7 @@ import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.filetransfer.AttachmentTransferContext
 import com.sceyt.chatuikit.filetransfer.FileDownloadRequest
 import com.sceyt.chatuikit.filetransfer.FileTransferCallback
-import com.sceyt.chatuikit.filetransfer.FileTransferEvent
+import com.sceyt.chatuikit.filetransfer.FileTransferResult
 import com.sceyt.chatuikit.filetransfer.FileUploadRequest
 import com.sceyt.chatuikit.persistence.logicimpl.FileTransferUtility
 import com.sceyt.chatuikit.persistence.logicimpl.attachment
@@ -64,20 +64,20 @@ class DefaultFileTransferTransportTest {
             mimeType = "text/plain",
             context = AttachmentTransferContext(attachment(filePath = "/tmp/original.txt")),
         )
-        val events = mutableListOf<FileTransferEvent>()
+        val progress = mutableListOf<Float>()
         val sourceCaptor = argumentCaptor<File>()
         doSuspendableAnswer { invocation ->
             invocation.getArgument<(Float) -> Unit>(1)(35f)
             SceytResponse.Success("uploaded-url")
         }.whenever(utility) { uploadFile(any(), any()) }
 
-        val result = transport.upload(request, FileTransferCallback(events::add))
+        val result = transport.upload(request, FileTransferCallback(progress::add))
 
         verify(utility).uploadFile(sourceCaptor.capture(), any())
 
         assertThat(sourceCaptor.firstValue).isEqualTo(sourceFile)
-        assertThat(events).containsExactly(FileTransferEvent.Progress(35f))
-        assertThat(result.getOrThrow()).isEqualTo("uploaded-url")
+        assertThat(progress).containsExactly(35f)
+        assertThat(result).isEqualTo(FileTransferResult.Success("uploaded-url"))
     }
 
     @Test
@@ -96,7 +96,7 @@ class DefaultFileTransferTransportTest {
 
         val result = transport.upload(request) { }
 
-        assertThat(result.exceptionOrNull()).isSameInstanceAs(error)
+        assertThat((result as FileTransferResult.Failure).error).isSameInstanceAs(error)
     }
 
     @Test
@@ -111,7 +111,7 @@ class DefaultFileTransferTransportTest {
             context = AttachmentTransferContext(attachment(url = "https://old.test/file")),
         )
         val requestCaptor = argumentCaptor<FileDownloadRequest>()
-        val resultCaptor = argumentCaptor<(SceytResponse<String>) -> Unit>()
+        val resultCaptor = argumentCaptor<(FileTransferResult<String>) -> Unit>()
         val error = SceytException(12, "download failed")
 
         val result = async {
@@ -123,11 +123,35 @@ class DefaultFileTransferTransportTest {
             requestCaptor.capture(),
             any(),
             resultCaptor.capture(),
+            any(),
         )
-        resultCaptor.firstValue(SceytResponse.Error(error))
+        resultCaptor.firstValue(FileTransferResult.Failure(error))
 
         assertThat(requestCaptor.firstValue).isSameInstanceAs(request)
-        assertThat(result.await().exceptionOrNull()).isSameInstanceAs(error)
+        assertThat((result.await() as FileTransferResult.Failure).error).isSameInstanceAs(error)
+    }
+
+    @Test
+    fun `download returns interruption without cancelling the backend`() = runTest {
+        val transport = DefaultFileTransferTransport()
+        val utility = utilityConstruction.constructed().single()
+        val request = FileDownloadRequest("download:interrupted", "https://cdn.test/file", File("/tmp/partial.txt"))
+        val call = Mockito.mock(Call::class.java)
+        whenever(utility.downloadFile(any(), any(), any(), any())).thenReturn(call)
+        val result = argumentCaptor<(FileTransferResult<String>) -> Unit>()
+        val finished = argumentCaptor<() -> Unit>()
+        val download = async { transport.download(request) {} }
+        runCurrent()
+        verify(utility).downloadFile(any(), any(), result.capture(), finished.capture())
+        val interrupted = FileTransferResult.Interrupted(java.io.IOException("Connection lost"))
+
+        result.firstValue(interrupted)
+        runCurrent()
+        assertThat(download.isCompleted).isFalse()
+        finished.firstValue()
+
+        assertThat(download.await()).isSameInstanceAs(interrupted)
+        Mockito.verifyNoInteractions(call)
     }
 
     @Test
@@ -139,8 +163,7 @@ class DefaultFileTransferTransportTest {
 
         val result = transport.upload(request) { }
 
-        assertThat(result.isFailure).isTrue()
-        assertThat(result.exceptionOrNull()?.message).isEqualTo("File upload failed")
+        assertThat((result as FileTransferResult.Failure).error.message).isEqualTo("File upload failed")
     }
 
     @Test
@@ -148,15 +171,36 @@ class DefaultFileTransferTransportTest {
         val transport = DefaultFileTransferTransport()
         val utility = utilityConstruction.constructed().single()
         val request = FileDownloadRequest("download:10", "https://cdn.test/file", File("/tmp/downloaded.txt"))
-        val resultCaptor = argumentCaptor<(SceytResponse<String>) -> Unit>()
+        val resultCaptor = argumentCaptor<(FileTransferResult<String>) -> Unit>()
         val download = async { transport.download(request) { } }
         runCurrent()
-        verify(utility).downloadFile(any(), any(), resultCaptor.capture())
+        verify(utility).downloadFile(any(), any(), resultCaptor.capture(), any())
 
-        resultCaptor.firstValue(SceytResponse.Success(request.destinationFile.path))
-        resultCaptor.firstValue(SceytResponse.Error(SceytException(1, "duplicate failure")))
+        resultCaptor.firstValue(FileTransferResult.Success(request.destinationFile.path))
+        resultCaptor.firstValue(FileTransferResult.Failure(SceytException(1, "duplicate failure")))
 
-        assertThat(download.await().getOrThrow()).isEqualTo(request.destinationFile.path)
+        assertThat(download.await()).isEqualTo(FileTransferResult.Success(request.destinationFile.path))
+    }
+
+    @Test
+    fun `download result waits for writer cleanup`() = runTest {
+        val transport = DefaultFileTransferTransport()
+        val utility = utilityConstruction.constructed().single()
+        val request = FileDownloadRequest("download:cleanup", "https://cdn.test/file", File("/tmp/downloaded.txt"))
+        val call = Mockito.mock(Call::class.java)
+        whenever(utility.downloadFile(any(), any(), any(), any())).thenReturn(call)
+        val result = argumentCaptor<(FileTransferResult<String>) -> Unit>()
+        val finished = argumentCaptor<() -> Unit>()
+        val download = async { transport.download(request) {} }
+        runCurrent()
+        verify(utility).downloadFile(any(), any(), result.capture(), finished.capture())
+
+        result.firstValue(FileTransferResult.Success(request.destinationFile.path))
+        runCurrent()
+        assertThat(download.isCompleted).isFalse()
+        finished.firstValue()
+
+        assertThat(download.await()).isEqualTo(FileTransferResult.Success(request.destinationFile.path))
     }
 
     @Test
@@ -199,19 +243,24 @@ class DefaultFileTransferTransportTest {
             destinationFile = File("/tmp/downloaded.txt"),
         )
         val call = Mockito.mock(Call::class.java)
-        whenever(utility.downloadFile(any(), any(), any())).thenReturn(call)
-        val resultCaptor = argumentCaptor<(SceytResponse<String>) -> Unit>()
+        whenever(utility.downloadFile(any(), any(), any(), any())).thenReturn(call)
+        val resultCaptor = argumentCaptor<(FileTransferResult<String>) -> Unit>()
+        val finishedCaptor = argumentCaptor<() -> Unit>()
 
         val job = launch {
             transport.download(request) { }
         }
         runCurrent()
-        verify(utility).downloadFile(any(), any(), resultCaptor.capture())
+        verify(utility).downloadFile(any(), any(), resultCaptor.capture(), finishedCaptor.capture())
 
-        job.cancelAndJoin()
-        resultCaptor.firstValue(SceytResponse.Success("late-result"))
+        job.cancel()
+        runCurrent()
+        assertThat(job.isCompleted).isFalse()
+        finishedCaptor.firstValue()
+        job.join()
+        resultCaptor.firstValue(FileTransferResult.Success("late-result"))
 
-        verify(utility).cancelDownload(request.operationId, call)
+        verify(utility).cancelDownload(call)
         assertThat(job.isCancelled).isTrue()
     }
 }

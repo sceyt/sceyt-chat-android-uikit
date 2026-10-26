@@ -4,7 +4,7 @@ import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.filetransfer.FileDownloadRequest
 import com.sceyt.chatuikit.filetransfer.FileTransferCallback
-import com.sceyt.chatuikit.filetransfer.FileTransferEvent
+import com.sceyt.chatuikit.filetransfer.FileTransferResult
 import com.sceyt.chatuikit.filetransfer.FileTransferTransport
 import com.sceyt.chatuikit.filetransfer.FileUploadRequest
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
@@ -64,8 +64,6 @@ internal class TestFileTransferService : FileTransferService {
     override fun cancelUpload(attachment: SceytAttachment) {
         findTransferTask(attachment)?.let { task ->
             removeTransferTask(task)
-            task.uploadSubscription?.cancel()
-            task.uploadSubscription = null
             task.complete(Result.failure(CancellationException("Attachment upload cancelled")))
         }
     }
@@ -95,25 +93,25 @@ internal class RecordingFileTransferTransport : FileTransferTransport {
         val request: FileUploadRequest,
         private val callback: FileTransferCallback,
     ) {
-        val result = CompletableDeferred<Result<String>>()
+        val result = CompletableDeferred<FileTransferResult<String>>()
 
         @Volatile
         var cancelled = false
 
         fun progress(progressPercent: Float) {
-            callback.onEvent(FileTransferEvent.Progress(progressPercent))
+            callback.onProgress(progressPercent)
         }
 
-        fun waitingForNetwork() {
-            callback.onEvent(FileTransferEvent.WaitingForNetwork)
+        fun interrupt(error: Throwable = java.io.IOException("Network interrupted")) {
+            result.complete(FileTransferResult.Interrupted(error))
         }
 
         fun succeed(remoteReference: String) {
-            result.complete(Result.success(remoteReference))
+            result.complete(FileTransferResult.Success(remoteReference))
         }
 
         fun fail(error: Throwable) {
-            result.complete(Result.failure(error))
+            result.complete(FileTransferResult.Failure(error))
         }
     }
 
@@ -121,25 +119,25 @@ internal class RecordingFileTransferTransport : FileTransferTransport {
         val request: FileDownloadRequest,
         private val callback: FileTransferCallback,
     ) {
-        val result = CompletableDeferred<Result<String>>()
+        val result = CompletableDeferred<FileTransferResult<String>>()
 
         @Volatile
         var cancelled = false
 
         fun progress(progressPercent: Float) {
-            callback.onEvent(FileTransferEvent.Progress(progressPercent))
+            callback.onProgress(progressPercent)
         }
 
-        fun waitingForNetwork() {
-            callback.onEvent(FileTransferEvent.WaitingForNetwork)
+        fun interrupt(error: Throwable = java.io.IOException("Network interrupted")) {
+            result.complete(FileTransferResult.Interrupted(error))
         }
 
         fun succeed(localPath: String) {
-            result.complete(Result.success(localPath))
+            result.complete(FileTransferResult.Success(localPath))
         }
 
         fun fail(error: Throwable) {
-            result.complete(Result.failure(error))
+            result.complete(FileTransferResult.Failure(error))
         }
     }
 
@@ -154,7 +152,7 @@ internal class RecordingFileTransferTransport : FileTransferTransport {
     override suspend fun upload(
         request: FileUploadRequest,
         callback: FileTransferCallback,
-    ): Result<String> {
+    ): FileTransferResult<String> {
         val call = UploadCall(request, callback)
         uploadCalls += call
         return try {
@@ -168,7 +166,7 @@ internal class RecordingFileTransferTransport : FileTransferTransport {
     override suspend fun download(
         request: FileDownloadRequest,
         callback: FileTransferCallback,
-    ): Result<String> {
+    ): FileTransferResult<String> {
         val call = DownloadCall(request, callback)
         downloadCalls += call
         return try {

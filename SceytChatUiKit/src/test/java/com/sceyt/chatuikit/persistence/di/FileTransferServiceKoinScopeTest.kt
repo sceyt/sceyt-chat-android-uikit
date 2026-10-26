@@ -3,7 +3,7 @@ package com.sceyt.chatuikit.persistence.di
 import android.content.Context
 import com.google.common.truth.Truth.assertThat
 import com.sceyt.chatuikit.koin.SceytKoinApp
-import com.sceyt.chatuikit.persistence.logic.FileTransferLogic
+import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -22,7 +22,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
-class FileTransferLogicKoinScopeTest {
+class FileTransferServiceKoinScopeTest {
     private val appScope = CoroutineScope(SupervisorJob())
 
     @Before
@@ -31,6 +31,7 @@ class FileTransferLogicKoinScopeTest {
         val context: Context = RuntimeEnvironment.getApplication()
         SceytKoinApp.koinApp = startKoin {
             modules(
+                appModules,
                 logicModule,
                 coroutineModule,
                 module {
@@ -52,9 +53,9 @@ class FileTransferLogicKoinScopeTest {
     @Test
     fun `cancelling all file transfers keeps app scope work running`() {
         val appWork = appScope.launch { awaitCancellation() }
-        val logic = checkNotNull(SceytKoinApp.koinApp).koin.get<FileTransferLogic>()
+        val service = checkNotNull(SceytKoinApp.koinApp).koin.get<FileTransferService>()
 
-        logic.cancelAll()
+        service.cancelAllTransfers()
 
         assertThat(appWork.isActive).isTrue()
     }

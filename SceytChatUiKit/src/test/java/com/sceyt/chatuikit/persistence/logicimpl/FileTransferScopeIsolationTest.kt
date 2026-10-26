@@ -7,6 +7,7 @@ import com.sceyt.chatuikit.filetransfer.FileTransferDestinationProvider
 import com.sceyt.chatuikit.filetransfer.SceytChatUIKitFileTransfer
 import com.sceyt.chatuikit.koin.SceytKoinApp
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
+import com.sceyt.chatuikit.persistence.file_transfer.FileTransferServiceImpl
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import kotlinx.coroutines.CoroutineScope
@@ -72,8 +73,8 @@ class FileTransferScopeIsolationTest {
         val uploaded = uploadAttachment(messageTid = 90L)
         val downloaded = attachment(messageTid = 91L, state = TransferState.PendingDownload)
 
-        uploads.uploadFile(uploaded, transferTask(uploaded).also(service::addTransferTask))
-        downloads.downloadFile(downloaded, transferTask(downloaded))
+        uploads.uploadFile(uploaded, transferTask(uploaded).also(service::addTransferTask), onResult = { _, _ -> }, onPaused = {})
+        downloads.download(downloaded, transferTask(downloaded), onResult = {})
         uploads.cancelAll()
 
         assertThat(transport.uploadCalls.single().cancelled).isTrue()
@@ -91,8 +92,8 @@ class FileTransferScopeIsolationTest {
         val uploaded = uploadAttachment(messageTid = 92L)
         val downloaded = attachment(messageTid = 93L, state = TransferState.PendingDownload)
 
-        uploads.uploadFile(uploaded, transferTask(uploaded).also(service::addTransferTask))
-        downloads.downloadFile(downloaded, transferTask(downloaded))
+        uploads.uploadFile(uploaded, transferTask(uploaded).also(service::addTransferTask), onResult = { _, _ -> }, onPaused = {})
+        downloads.download(downloaded, transferTask(downloaded), onResult = {})
         downloads.cancelAll()
 
         assertThat(transport.downloadCalls.single().cancelled).isTrue()
@@ -100,19 +101,16 @@ class FileTransferScopeIsolationTest {
     }
 
     @Test
-    fun `logic cancelAll stops both uploads and downloads`() {
-        val logic = FileTransferLogicImpl(
-            context = context,
-            attachmentLogic = attachmentLogic,
-            thumbPathResolver = mock(),
-            coroutineContext = sharedScope.coroutineContext,
-        )
+    fun `service cancelAll stops both uploads and downloads`() {
+        val uploads = AttachmentUploadCoordinator(context, attachmentLogic, sharedScope)
         val uploaded = uploadAttachment(messageTid = 94L)
         val downloaded = attachment(messageTid = 95L, state = TransferState.PendingDownload)
+        val downloads = AttachmentDownloadCoordinator(context, sharedScope)
+        val transferService = FileTransferServiceImpl(context, uploads, downloads, mock())
 
-        logic.uploadFile(uploaded, transferTask(uploaded).also(service::addTransferTask))
-        logic.downloadFile(downloaded, transferTask(downloaded))
-        logic.cancelAll()
+        uploads.uploadFile(uploaded, transferTask(uploaded).also(service::addTransferTask), onResult = { _, _ -> }, onPaused = {})
+        downloads.download(downloaded, transferTask(downloaded), onResult = {})
+        transferService.cancelAllTransfers()
 
         assertThat(transport.uploadCalls.single().cancelled).isTrue()
         assertThat(transport.downloadCalls.single().cancelled).isTrue()

@@ -4,11 +4,15 @@ import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.fold
 import com.sceyt.chatuikit.filetransfer.FileDownloadRequest
 import com.sceyt.chatuikit.filetransfer.FileTransferCallback
-import com.sceyt.chatuikit.filetransfer.FileTransferEvent
+import com.sceyt.chatuikit.filetransfer.FileTransferResult
 import com.sceyt.chatuikit.filetransfer.FileTransferTransport
 import com.sceyt.chatuikit.filetransfer.FileUploadRequest
 import com.sceyt.chatuikit.persistence.logicimpl.FileTransferUtility
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
+import okhttp3.Call
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.resume
 
@@ -18,11 +22,11 @@ class DefaultFileTransferTransport : FileTransferTransport {
     override suspend fun upload(
         request: FileUploadRequest,
         callback: FileTransferCallback,
-    ): Result<String> {
+    ): FileTransferResult<String> {
         val response = transferUtility.uploadFile(
             sourceFile = request.sourceFile,
             onProgress = { progressPercent ->
-                callback.onEvent(FileTransferEvent.Progress(progressPercent))
+                callback.onProgress(progressPercent)
             },
         )
 
@@ -32,36 +36,46 @@ class DefaultFileTransferTransport : FileTransferTransport {
     override suspend fun download(
         request: FileDownloadRequest,
         callback: FileTransferCallback,
-    ): Result<String> = suspendCancellableCoroutine { continuation ->
-        val completed = AtomicBoolean()
-        val call = transferUtility.downloadFile(
-            request = request,
-            onProgress = { progressPercent ->
-                if (continuation.isActive) {
-                    callback.onEvent(FileTransferEvent.Progress(progressPercent))
-                }
-            },
-            onResult = { response ->
-                if (completed.compareAndSet(false, true)) {
-                    continuation.resume(response.toResult("File download failed"))
-                }
-            },
-        )
+    ): FileTransferResult<String> {
+        val writerStopped = CompletableDeferred<Unit>()
+        var call: Call? = null
+        try {
+            return suspendCancellableCoroutine { continuation ->
+                val completed = AtomicBoolean()
+                call = transferUtility.downloadFile(
+                    request = request,
+                    onProgress = { progressPercent ->
+                        if (continuation.isActive) {
+                            callback.onProgress(progressPercent)
+                        }
+                    },
+                    onResult = { response ->
+                        if (completed.compareAndSet(false, true)) {
+                            continuation.resume(response)
+                        }
+                    },
+                    onFinished = { writerStopped.complete(Unit) },
+                )
 
-        continuation.invokeOnCancellation {
-            completed.set(true)
-            call?.let { transferUtility.cancelDownload(request.operationId, it) }
+                continuation.invokeOnCancellation {
+                    completed.set(true)
+                    call?.let(transferUtility::cancelDownload)
+                }
+            }
+        } finally {
+            // Joining this coroutine must also wait for the HTTP writer to close its file.
+            if (call != null) withContext(NonCancellable) { writerStopped.await() }
         }
     }
 
     private fun SceytResponse<String>.toResult(
         fallbackErrorMessage: String,
-    ): Result<String> = fold(
+    ): FileTransferResult<String> = fold(
         onSuccess = { result ->
-            result?.let { Result.success(it) } ?: Result.failure(
+            result?.let { FileTransferResult.Success(it) } ?: FileTransferResult.Failure(
                 IllegalStateException(fallbackErrorMessage)
             )
         },
-        onError = { Result.failure(it ?: IllegalStateException(fallbackErrorMessage)) }
+        onError = { FileTransferResult.Failure(it ?: IllegalStateException(fallbackErrorMessage)) }
     )
 }

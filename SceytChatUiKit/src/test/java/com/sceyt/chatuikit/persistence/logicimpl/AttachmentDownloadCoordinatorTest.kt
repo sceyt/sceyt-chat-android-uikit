@@ -5,50 +5,59 @@ import com.google.common.truth.Truth.assertThat
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.filetransfer.FileDownloadRequest
 import com.sceyt.chatuikit.filetransfer.FileTransferCallback
 import com.sceyt.chatuikit.filetransfer.FileTransferDestinationProvider
-import com.sceyt.chatuikit.filetransfer.FileTransferEvent
+import com.sceyt.chatuikit.filetransfer.FileTransferResult
 import com.sceyt.chatuikit.filetransfer.FileTransferTransport
 import com.sceyt.chatuikit.filetransfer.SceytChatUIKitFileTransfer
 import com.sceyt.chatuikit.koin.SceytKoinApp
+import com.sceyt.chatuikit.persistence.database.dao.FileChecksumDao
+import com.sceyt.chatuikit.persistence.di.CoroutineContextType
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
+import com.sceyt.chatuikit.persistence.file_transfer.FileTransferServiceImpl
 import com.sceyt.chatuikit.persistence.file_transfer.ProgressUpdateCallback
 import com.sceyt.chatuikit.persistence.file_transfer.ResumePauseCallback
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferResultCallback
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
+import com.sceyt.chatuikit.persistence.file_transfer.TransferTask
 import com.sceyt.chatuikit.persistence.file_transfer.transferKey
+import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
+import java.io.File
+import kotlin.coroutines.CoroutineContext
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
-import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
+import org.koin.core.qualifier.named
 import org.koin.dsl.module
+import org.mockito.kotlin.mock
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
-import java.io.File
-import kotlin.time.Duration.Companion.milliseconds
 
 @RunWith(RobolectricTestRunner::class)
 @OptIn(ExperimentalCoroutinesApi::class)
 class AttachmentDownloadCoordinatorTest {
     private lateinit var context: Context
     private lateinit var destinationFile: File
-    private lateinit var service: TestFileTransferService
+    private lateinit var service: FileTransferServiceImpl
     private lateinit var transport: RecordingFileTransferTransport
-    private lateinit var coordinator: AttachmentDownloadCoordinator
     private lateinit var previousFileTransfer: SceytChatUIKitFileTransfer
     private lateinit var testScope: TestScope
 
@@ -59,23 +68,27 @@ class AttachmentDownloadCoordinatorTest {
         destinationFile = File(context.cacheDir, "transfer-tests/download.bin")
         destinationFile.parentFile?.mkdirs()
         destinationFile.delete()
-        service = TestFileTransferService()
         transport = RecordingFileTransferTransport()
         testScope = TestScope(UnconfinedTestDispatcher())
+        service = FileTransferServiceImpl(context, mock(), AttachmentDownloadCoordinator(context, testScope), mock())
         previousFileTransfer = SceytChatUIKit.fileTransfer
         SceytChatUIKit.fileTransfer = SceytChatUIKitFileTransfer().apply {
             this.transport = this@AttachmentDownloadCoordinatorTest.transport
             destinationProvider = FileTransferDestinationProvider { _, _ -> destinationFile }
         }
         SceytKoinApp.koinApp = startKoin {
-            modules(module { single<FileTransferService> { service } })
+            modules(module {
+                single<FileTransferService> { service }
+                single<PersistenceAttachmentLogic> { mock() }
+                single<FileChecksumDao> { mock() }
+                single<CoroutineContext>(named(CoroutineContextType.SingleThreaded)) { Dispatchers.Unconfined }
+            })
         }
-        coordinator = AttachmentDownloadCoordinator(context, testScope)
     }
 
     @After
     fun tearDown() {
-        coordinator.cancelAll()
+        service.cancelAllTransfers()
         destinationFile.parentFile?.deleteRecursively()
         SceytChatUIKit.fileTransfer = previousFileTransfer
         SceytKoinApp.koinApp = null
@@ -89,7 +102,7 @@ class AttachmentDownloadCoordinatorTest {
         var result: SceytResponse<String>? = null
         task.downloadCallback = TransferResultCallback { result = it }
 
-        coordinator.downloadFile(attachment, task)
+        service.download(attachment)
 
         assertThat(transport.downloadCalls).isEmpty()
         assertThat(result).isInstanceOf(SceytResponse.Error::class.java)
@@ -106,7 +119,7 @@ class AttachmentDownloadCoordinatorTest {
         var result: SceytResponse<String>? = null
         task.downloadCallback = TransferResultCallback { result = it }
 
-        coordinator.downloadFile(attachment, task)
+        service.download(attachment)
 
         assertThat(transport.downloadCalls).isEmpty()
         assertThat(result).isInstanceOf(SceytResponse.Error::class.java)
@@ -119,11 +132,11 @@ class AttachmentDownloadCoordinatorTest {
             throw IllegalStateException("no destination")
         }
         val attachment = attachment(state = TransferState.ErrorDownload)
-        val task = transferTask(attachment).also(service::addTransferTask)
+        val task = transferTask(attachment)
         var result: SceytResponse<String>? = null
         task.downloadCallback = TransferResultCallback { result = it }
 
-        coordinator.resumeLoad(attachment, TransferState.ErrorDownload)
+        service.resume(attachment.messageTid, attachment, TransferState.ErrorDownload)
 
         assertThat(transport.downloadCalls).isEmpty()
         assertThat(result).isInstanceOf(SceytResponse.Error::class.java)
@@ -138,11 +151,11 @@ class AttachmentDownloadCoordinatorTest {
             destinationFile
         }
         val attachment = attachment(state = TransferState.ErrorDownload)
-        val task = transferTask(attachment).also(service::addTransferTask)
+        val task = transferTask(attachment)
         val results = mutableListOf<SceytResponse<String>>()
         task.downloadCallback = TransferResultCallback { results += it }
 
-        coordinator.resumeLoad(attachment, TransferState.ErrorDownload)
+        service.resume(attachment.messageTid, attachment, TransferState.ErrorDownload)
 
         assertThat(destinationCalls).isEqualTo(1)
         assertThat(transport.downloadCalls).hasSize(1)
@@ -154,12 +167,12 @@ class AttachmentDownloadCoordinatorTest {
     @Test
     fun `resume does not overwrite an immediate transfer failure with downloading`() {
         SceytChatUIKit.fileTransfer.transport = object : FileTransferTransport by transport {
-            override suspend fun download(request: FileDownloadRequest, callback: FileTransferCallback): Result<String> {
+            override suspend fun download(request: FileDownloadRequest, callback: FileTransferCallback): FileTransferResult<String> {
                 throw IllegalStateException("download failed")
             }
         }
         val attachment = attachment(state = TransferState.ErrorDownload)
-        val task = transferTask(attachment).also(service::addTransferTask)
+        val task = transferTask(attachment)
         val states = mutableListOf<TransferState>()
         task.resumePauseCallback = ResumePauseCallback { states += it.state }
         task.downloadCallback = TransferResultCallback {
@@ -167,7 +180,7 @@ class AttachmentDownloadCoordinatorTest {
             states += TransferState.ErrorDownload
         }
 
-        coordinator.resumeLoad(attachment, TransferState.ErrorDownload)
+        service.resume(attachment.messageTid, attachment, TransferState.ErrorDownload)
 
         assertThat(states).containsExactly(TransferState.Downloading, TransferState.ErrorDownload).inOrder()
     }
@@ -175,14 +188,14 @@ class AttachmentDownloadCoordinatorTest {
     @Test
     fun `pause from resume callback stops download before transport starts`() {
         val attachment = attachment(state = TransferState.PauseDownload)
-        val task = transferTask(attachment).also(service::addTransferTask)
+        val task = transferTask(attachment)
         task.resumePauseCallback = ResumePauseCallback {
             if (it.state == TransferState.Downloading) {
-                coordinator.pauseLoad(attachment, TransferState.Downloading)
+                service.pause(attachment.messageTid, attachment, TransferState.Downloading)
             }
         }
 
-        coordinator.resumeLoad(attachment, TransferState.PauseDownload)
+        service.resume(attachment.messageTid, attachment, TransferState.PauseDownload)
 
         assertThat(transport.downloadCalls).isEmpty()
         assertThat(task.state).isEqualTo(TransferState.PauseDownload)
@@ -196,7 +209,7 @@ class AttachmentDownloadCoordinatorTest {
         var result: SceytResponse<String>? = null
         task.downloadCallback = TransferResultCallback { result = it }
 
-        coordinator.downloadFile(attachment, task)
+        service.download(attachment)
 
         assertThat(transport.downloadCalls).isEmpty()
         assertThat(result).isInstanceOf(SceytResponse.Success::class.java)
@@ -208,8 +221,8 @@ class AttachmentDownloadCoordinatorTest {
         val attachment = attachment(state = TransferState.PendingDownload)
         val task = transferTask(attachment)
 
-        coordinator.downloadFile(attachment, task)
-        coordinator.downloadFile(attachment, task)
+        service.download(attachment)
+        service.download(attachment)
 
         assertThat(transport.downloadCalls).hasSize(1)
         assertThat(transport.downloadCalls.single().request.operationId)
@@ -230,8 +243,8 @@ class AttachmentDownloadCoordinatorTest {
             File(destinationFile.parentFile, value.name)
         }
 
-        coordinator.downloadFile(first, firstTask)
-        coordinator.downloadFile(second, secondTask)
+        service.download(first)
+        service.download(second)
 
         assertThat(transport.downloadCalls).hasSize(2)
         val firstCall = transport.downloadCalls.first()
@@ -255,8 +268,8 @@ class AttachmentDownloadCoordinatorTest {
             File(destinationFile.parentFile, value.name)
         }
 
-        coordinator.downloadFile(first, transferTask(first).also(service::addTransferTask))
-        coordinator.downloadFile(second, transferTask(second).also(service::addTransferTask))
+        service.download(first)
+        service.download(second)
 
         assertThat(transport.downloadCalls).hasSize(2)
         val firstCall = transport.downloadCalls.first()
@@ -266,7 +279,7 @@ class AttachmentDownloadCoordinatorTest {
         assertThat(secondCall.request.operationId)
             .isEqualTo("download:${second.messageTid}:url:${second.url}")
 
-        coordinator.pauseLoad(first, TransferState.Downloading)
+        service.pause(first.messageTid, first, TransferState.Downloading)
 
         assertThat(firstCall.cancelled).isTrue()
         assertThat(secondCall.cancelled).isFalse()
@@ -285,18 +298,17 @@ class AttachmentDownloadCoordinatorTest {
         val secondProgress = mutableListOf<Float>()
         firstTask.progressCallback = ProgressUpdateCallback { firstProgress += it.progressPercent }
         secondTask.progressCallback = ProgressUpdateCallback { secondProgress += it.progressPercent }
-        service.addTransferTask(firstTask)
-        service.addTransferTask(secondTask)
+
         SceytChatUIKit.fileTransfer.destinationProvider = FileTransferDestinationProvider { _, value ->
             File(destinationFile.parentFile, value.name)
         }
 
-        coordinator.downloadFile(first, firstTask)
-        coordinator.downloadFile(second, secondTask)
+        service.download(first)
+        service.download(second)
         val firstCall = transport.downloadCalls.first()
         val secondCall = transport.downloadCalls.last()
 
-        coordinator.pauseLoad(first, TransferState.Downloading)
+        service.pause(first.messageTid, first, TransferState.Downloading)
         firstCall.progress(30f)
         secondCall.progress(50f)
 
@@ -306,7 +318,7 @@ class AttachmentDownloadCoordinatorTest {
         assertThat(firstProgress).containsExactly(0f)
         assertThat(secondProgress).containsExactly(0f, 50f).inOrder()
 
-        coordinator.resumeLoad(first, TransferState.PauseDownload)
+        service.resume(first.messageTid, first, TransferState.PauseDownload)
         firstCall.progress(40f)
 
         assertThat(transport.resumeCalls).containsExactly(firstCall.request.operationId)
@@ -326,7 +338,7 @@ class AttachmentDownloadCoordinatorTest {
         task.progressCallback = ProgressUpdateCallback { progress += it }
         task.downloadCallback = TransferResultCallback { result = it }
 
-        coordinator.downloadFile(attachment, task)
+        service.download(attachment)
         transport.downloadCalls.single().progress(42f)
         transport.downloadCalls.single().succeed(destinationFile.path)
 
@@ -346,7 +358,7 @@ class AttachmentDownloadCoordinatorTest {
         var result: SceytResponse<String>? = null
         task.downloadCallback = TransferResultCallback { result = it }
 
-        coordinator.downloadFile(attachment, task)
+        service.download(attachment)
         destinationFile.writeBytes(partialBytes)
         transport.downloadCalls.single().fail(SceytException(7, "failed"))
 
@@ -363,9 +375,8 @@ class AttachmentDownloadCoordinatorTest {
         val task = transferTask(attachment).apply {
             downloadCallback = TransferResultCallback { results += it }
         }
-        service.addTransferTask(task)
 
-        coordinator.downloadFile(attachment, task)
+        service.download(attachment)
         transport.downloadCalls.single().fail(SceytException(416, "Range not satisfiable"))
 
         assertThat(results.single().code).isEqualTo(416)
@@ -373,7 +384,7 @@ class AttachmentDownloadCoordinatorTest {
         assertThat(service.findTransferTask(attachment)).isNull()
         service.findOrCreateTransferTask(attachment).downloadCallback = TransferResultCallback { results += it }
 
-        coordinator.resumeLoad(attachment, TransferState.ErrorDownload)
+        service.resume(attachment.messageTid, attachment, TransferState.ErrorDownload)
 
         assertThat(transport.downloadCalls).hasSize(2)
         assertThat(transport.downloadCalls.last().request.destinationFile.length()).isEqualTo(0L)
@@ -391,7 +402,7 @@ class AttachmentDownloadCoordinatorTest {
             downloadCallback = TransferResultCallback { results += it }
         }
 
-        coordinator.downloadFile(attachment, task)
+        service.download(attachment)
         destinationFile.writeBytes(byteArrayOf(1, 2))
         transport.downloadCalls.single().fail(CancellationException("transport cancelled"))
 
@@ -399,7 +410,9 @@ class AttachmentDownloadCoordinatorTest {
         assertThat(results.single()).isInstanceOf(SceytResponse.Error::class.java)
         assertThat(results.single().message).isEqualTo("transport cancelled")
         assertThat(destinationFile.exists()).isFalse()
-        coordinator.downloadFile(attachment, task)
+        service.download(attachment) {
+            downloadCallback = TransferResultCallback { results += it }
+        }
         assertThat(transport.downloadCalls).hasSize(2)
         transport.downloadCalls.last().succeed(destinationFile.path)
         assertThat(results).hasSize(2)
@@ -418,7 +431,7 @@ class AttachmentDownloadCoordinatorTest {
             downloadCallback = TransferResultCallback { results += it }
         }
 
-        coordinator.downloadFile(attachment, task)
+        service.download(attachment)
         destinationFile.writeBytes(byteArrayOf(1, 2))
         testScope.advanceTimeBy(10.milliseconds)
         testScope.runCurrent()
@@ -427,7 +440,9 @@ class AttachmentDownloadCoordinatorTest {
         assertThat(results.single()).isInstanceOf(SceytResponse.Error::class.java)
         assertThat(transport.downloadCalls.first().cancelled).isTrue()
         assertThat(destinationFile.exists()).isFalse()
-        coordinator.downloadFile(attachment, task)
+        service.download(attachment) {
+            downloadCallback = TransferResultCallback { results += it }
+        }
         assertThat(transport.downloadCalls).hasSize(2)
         transport.downloadCalls.last().succeed(destinationFile.path)
         assertThat(results).hasSize(2)
@@ -442,7 +457,7 @@ class AttachmentDownloadCoordinatorTest {
         var result: SceytResponse<String>? = null
         task.downloadCallback = TransferResultCallback { result = it }
 
-        coordinator.downloadFile(attachment, task)
+        service.download(attachment)
         destinationFile.writeBytes(partialBytes)
         transport.downloadCalls.single().succeed("")
 
@@ -452,33 +467,34 @@ class AttachmentDownloadCoordinatorTest {
     }
 
     @Test
-    fun `waiting for network keeps partial destination and forwards error`() {
+    fun `interruption keeps partial destination without cancelling or retrying`() {
         val attachment = attachment(state = TransferState.PendingDownload)
         val task = transferTask(attachment)
         val partialBytes = byteArrayOf(1, 2)
         var result: SceytResponse<String>? = null
         task.downloadCallback = TransferResultCallback { result = it }
 
-        coordinator.downloadFile(attachment, task)
+        service.download(attachment)
         destinationFile.writeBytes(partialBytes)
         val call = transport.downloadCalls.single()
-        call.waitingForNetwork()
+        call.interrupt()
 
-        assertThat(call.cancelled).isTrue()
+        assertThat(call.cancelled).isFalse()
         assertThat(destinationFile.readBytes()).isEqualTo(partialBytes)
         assertThat(result).isInstanceOf(SceytResponse.Error::class.java)
-        assertThat(result?.message).isEqualTo("Waiting for network")
+        assertThat(result?.message).isEqualTo("Network interrupted")
+        assertThat(service.findTransferTask(attachment)).isNull()
+        assertThat(transport.downloadCalls).hasSize(1)
     }
 
     @Test
-    fun `waiting for network followed by failure preserves partial destination and allows retry`() {
-        var waitingForNetwork = true
+    fun `interruption preserves partial destination and allows explicit retry`() {
+        var interrupted = true
         SceytChatUIKit.fileTransfer.transport = object : FileTransferTransport by transport {
-            override suspend fun download(request: FileDownloadRequest, callback: FileTransferCallback): Result<String> {
-                if (waitingForNetwork) {
-                    waitingForNetwork = false
-                    callback.onEvent(FileTransferEvent.WaitingForNetwork)
-                    throw IllegalStateException("No network connection")
+            override suspend fun download(request: FileDownloadRequest, callback: FileTransferCallback): FileTransferResult<String> {
+                if (interrupted) {
+                    interrupted = false
+                    return FileTransferResult.Interrupted(java.io.IOException("No network connection"))
                 }
                 return transport.download(request, callback)
             }
@@ -490,9 +506,8 @@ class AttachmentDownloadCoordinatorTest {
         val task = transferTask(attachment).apply {
             downloadCallback = TransferResultCallback { results += it }
         }
-        service.addTransferTask(task)
 
-        coordinator.downloadFile(attachment, task)
+        service.download(attachment)
 
         assertThat(results).hasSize(1)
         assertThat(results.single()).isInstanceOf(SceytResponse.Error::class.java)
@@ -501,7 +516,7 @@ class AttachmentDownloadCoordinatorTest {
         assertThat(service.findTransferTask(attachment)).isNull()
         service.findOrCreateTransferTask(attachment).downloadCallback = TransferResultCallback { results += it }
 
-        coordinator.resumeLoad(attachment, TransferState.ErrorDownload)
+        service.resume(attachment.messageTid, attachment, TransferState.ErrorDownload)
 
         assertThat(transport.downloadCalls).hasSize(1)
         assertThat(destinationFile.readBytes()).isEqualTo(partialBytes)
@@ -517,11 +532,10 @@ class AttachmentDownloadCoordinatorTest {
         val task = transferTask(attachment)
         val states = mutableListOf<TransferState>()
         task.resumePauseCallback = ResumePauseCallback { states += it.state }
-        service.addTransferTask(task)
 
-        coordinator.downloadFile(attachment, task)
-        coordinator.pauseLoad(attachment, TransferState.Downloading)
-        coordinator.resumeLoad(attachment, TransferState.PauseDownload)
+        service.download(attachment)
+        service.pause(attachment.messageTid, attachment, TransferState.Downloading)
+        service.resume(attachment.messageTid, attachment, TransferState.PauseDownload)
 
         assertThat(transport.downloadCalls.first().cancelled).isTrue()
         assertThat(transport.downloadCalls).hasSize(2)
@@ -538,12 +552,11 @@ class AttachmentDownloadCoordinatorTest {
         transport.resumeResult = true
         val attachment = attachment(state = TransferState.Downloading)
         val task = transferTask(attachment)
-        service.addTransferTask(task)
 
-        coordinator.downloadFile(attachment, task)
+        service.download(attachment)
         val call = transport.downloadCalls.single()
-        coordinator.pauseLoad(attachment, TransferState.Downloading)
-        coordinator.resumeLoad(attachment, TransferState.PauseDownload)
+        service.pause(attachment.messageTid, attachment, TransferState.Downloading)
+        service.resume(attachment.messageTid, attachment, TransferState.PauseDownload)
 
         assertThat(transport.pauseCalls).containsExactly("download:${attachment.transferKey}")
         assertThat(transport.resumeCalls).containsExactly("download:${attachment.transferKey}")
@@ -562,16 +575,15 @@ class AttachmentDownloadCoordinatorTest {
         val task = transferTask(attachment)
         val progress = mutableListOf<Float>()
         task.progressCallback = ProgressUpdateCallback { progress += it.progressPercent }
-        service.addTransferTask(task)
 
-        coordinator.downloadFile(attachment, task)
+        service.download(attachment)
         val call = transport.downloadCalls.single()
-        coordinator.pauseLoad(attachment, TransferState.Downloading)
+        service.pause(attachment.messageTid, attachment, TransferState.Downloading)
         call.progress(25f)
 
         assertThat(progress).containsExactly(0f)
 
-        coordinator.resumeLoad(attachment, TransferState.PauseDownload)
+        service.resume(attachment.messageTid, attachment, TransferState.PauseDownload)
         call.progress(50f)
 
         assertThat(progress).containsExactly(0f, 50f).inOrder()
@@ -588,7 +600,7 @@ class AttachmentDownloadCoordinatorTest {
             throw IllegalStateException("callback failed")
         }
 
-        coordinator.downloadFile(attachment, task)
+        service.download(attachment)
         transport.downloadCalls.single().succeed(destinationFile.path)
 
         assertThat(callbackCount).isEqualTo(1)
@@ -600,10 +612,9 @@ class AttachmentDownloadCoordinatorTest {
         val task = transferTask(attachment)
         val states = mutableListOf<TransferState>()
         task.resumePauseCallback = ResumePauseCallback { states += it.state }
-        service.addTransferTask(task)
 
-        coordinator.downloadFile(attachment, task)
-        coordinator.pauseLoad(attachment, TransferState.PendingDownload)
+        service.download(attachment)
+        service.pause(attachment.messageTid, attachment, TransferState.PendingDownload)
 
         assertThat(transport.downloadCalls.single().cancelled).isTrue()
         assertThat(task.state).isEqualTo(TransferState.PauseDownload)
@@ -617,13 +628,9 @@ class AttachmentDownloadCoordinatorTest {
             state = TransferState.Downloading,
         )
         val task = transferTask(attachment)
-        service.addTransferTask(task)
 
-        coordinator.downloadFile(attachment, task)
-        coordinator.pauseLoad(
-            attachment.copy(url = "https://cdn.test/new.txt"),
-            TransferState.Downloading,
-        )
+        service.download(attachment)
+        service.pause((attachment.copy(url = "https://cdn.test/new.txt")).messageTid, attachment.copy(url = "https://cdn.test/new.txt"), TransferState.Downloading)
 
         assertThat(transport.downloadCalls.single().cancelled).isTrue()
     }
@@ -636,12 +643,11 @@ class AttachmentDownloadCoordinatorTest {
         val results = mutableListOf<String?>()
         task.resumePauseCallback = ResumePauseCallback { states += it.state }
         task.downloadCallback = TransferResultCallback { results += it.data }
-        service.addTransferTask(task)
 
-        coordinator.downloadFile(attachment, task)
+        service.download(attachment)
         val pausedCall = transport.downloadCalls.single()
-        coordinator.pauseLoad(attachment, TransferState.Downloading)
-        coordinator.resumeLoad(attachment, TransferState.PauseDownload)
+        service.pause(attachment.messageTid, attachment, TransferState.Downloading)
+        service.resume(attachment.messageTid, attachment, TransferState.PauseDownload)
         val replacementCall = transport.downloadCalls.last()
 
         pausedCall.progress(30f)
@@ -653,7 +659,7 @@ class AttachmentDownloadCoordinatorTest {
             TransferState.Downloading,
         ).inOrder()
 
-        coordinator.pauseLoad(attachment, TransferState.Downloading)
+        service.pause(attachment.messageTid, attachment, TransferState.Downloading)
 
         assertThat(replacementCall.cancelled).isTrue()
         assertThat(states).containsExactly(
@@ -665,22 +671,22 @@ class AttachmentDownloadCoordinatorTest {
     }
 
     @Test
-    fun `cancelled download cleanup does not remove replacement`() {
+    fun `resume waits for cancelled download before starting replacement`() {
         val attachment = attachment(state = TransferState.Downloading)
         val task = transferTask(attachment)
         val cancellationGate = CompletableDeferred<Unit>()
         transport.downloadCancellationGate = cancellationGate
-        service.addTransferTask(task)
 
-        coordinator.downloadFile(attachment, task)
-        coordinator.pauseLoad(attachment, TransferState.Downloading)
-        coordinator.resumeLoad(attachment, TransferState.PauseDownload)
+        service.download(attachment)
+        service.pause(attachment.messageTid, attachment, TransferState.Downloading)
+        service.resume(attachment.messageTid, attachment, TransferState.PauseDownload)
 
-        assertThat(transport.downloadCalls).hasSize(2)
-        val replacement = transport.downloadCalls.last()
+        assertThat(transport.downloadCalls).hasSize(1)
 
         cancellationGate.complete(Unit)
-        coordinator.downloadFile(attachment, task)
+        assertThat(transport.downloadCalls).hasSize(2)
+        val replacement = transport.downloadCalls.last()
+        service.download(attachment)
 
         assertThat(transport.downloadCalls).hasSize(2)
         assertThat(replacement.cancelled).isFalse()
@@ -690,7 +696,7 @@ class AttachmentDownloadCoordinatorTest {
     fun `late error from cancelled download keeps replacement partial destination`() {
         val cancellationGate = CompletableDeferred<Unit>()
         SceytChatUIKit.fileTransfer.transport = object : FileTransferTransport by transport {
-            override suspend fun download(request: FileDownloadRequest, callback: FileTransferCallback): Result<String> {
+            override suspend fun download(request: FileDownloadRequest, callback: FileTransferCallback): FileTransferResult<String> {
                 return try {
                     transport.download(request, callback)
                 } catch (_: CancellationException) {
@@ -704,11 +710,10 @@ class AttachmentDownloadCoordinatorTest {
         val task = transferTask(attachment).apply {
             downloadCallback = TransferResultCallback { results += it }
         }
-        service.addTransferTask(task)
 
-        coordinator.downloadFile(attachment, task)
-        coordinator.pauseLoad(attachment, TransferState.Downloading)
-        coordinator.resumeLoad(attachment, TransferState.PauseDownload)
+        service.download(attachment)
+        service.pause(attachment.messageTid, attachment, TransferState.Downloading)
+        service.resume(attachment.messageTid, attachment, TransferState.PauseDownload)
         val partialBytes = byteArrayOf(1, 2)
         destinationFile.writeBytes(partialBytes)
         cancellationGate.complete(Unit)
@@ -726,18 +731,17 @@ class AttachmentDownloadCoordinatorTest {
         val partialBytes = byteArrayOf(1, 2)
         var result: SceytResponse<String>? = null
         task.downloadCallback = TransferResultCallback { result = it }
-        service.addTransferTask(task)
 
-        coordinator.downloadFile(attachment, task)
+        service.download(attachment)
         destinationFile.writeBytes(partialBytes)
-        coordinator.pauseLoad(attachment, TransferState.Downloading)
+        service.pause(attachment.messageTid, attachment, TransferState.Downloading)
 
         assertThat(transport.downloadCalls.single().cancelled).isTrue()
         assertThat(destinationFile.exists()).isTrue()
         assertThat(destinationFile.readBytes()).isEqualTo(partialBytes)
         assertThat(result).isNull()
 
-        coordinator.resumeLoad(attachment, TransferState.PauseDownload)
+        service.resume(attachment.messageTid, attachment, TransferState.PauseDownload)
 
         assertThat(transport.downloadCalls).hasSize(2)
         assertThat(destinationFile.readBytes()).isEqualTo(partialBytes)
@@ -752,9 +756,9 @@ class AttachmentDownloadCoordinatorTest {
             downloadCallback = TransferResultCallback { results += it }
         }
 
-        coordinator.downloadFile(active, activeTask)
-        coordinator.cancelAll()
-        coordinator.downloadFile(next, transferTask(next))
+        service.download(active)
+        service.cancelAllTransfers()
+        service.download(next)
 
         assertThat(transport.downloadCalls).hasSize(2)
         assertThat(transport.downloadCalls[0].cancelled).isTrue()
@@ -772,18 +776,18 @@ class AttachmentDownloadCoordinatorTest {
         }
         val attachment = attachment(state = TransferState.PendingDownload)
 
-        coordinator.downloadFile(attachment, transferTask(attachment).also(service::addTransferTask))
+        service.download(attachment)
 
         assertThat(transport.downloadCalls).isEmpty()
         assertThat(replacement.downloadCalls).hasSize(1)
     }
 
     @Test
-    fun `pause before download subscription is bound still pauses it`() {
+    fun `pause from initial download progress stops it before transport starts`() {
         val first = attachment(state = TransferState.PendingDownload)
         val second = first.copy(id = 11L, name = "second.txt", url = "second-url")
-        val firstTask = transferTask(first).also(service::addTransferTask)
-        val secondTask = transferTask(second).also(service::addTransferTask)
+        val firstTask = transferTask(first)
+        val secondTask = transferTask(second)
         SceytChatUIKit.fileTransfer.destinationProvider = FileTransferDestinationProvider { _, value ->
             File(destinationFile.parentFile, value.name)
         }
@@ -791,16 +795,118 @@ class AttachmentDownloadCoordinatorTest {
         firstTask.progressCallback = ProgressUpdateCallback {
             if (triggered || it.progressPercent != 50f) return@ProgressUpdateCallback
             triggered = true
-            coordinator.downloadFile(second, secondTask)
-            assertThat(secondTask.downloadSubscription).isNull()
-            coordinator.pauseLoad(second, TransferState.Downloading)
+            secondTask.progressCallback = ProgressUpdateCallback {
+                service.pause(second.messageTid, second, TransferState.Downloading)
+            }
+            service.download(second)
         }
-        coordinator.downloadFile(first, firstTask)
+        service.download(first)
 
         transport.downloadCalls.single().progress(50f)
 
         assertThat(transport.downloadCalls).hasSize(1)
         assertThat(secondTask.state).isEqualTo(TransferState.PauseDownload)
-        assertThat(secondTask.downloadSubscription?.isPaused).isTrue()
     }
+
+    @Test
+    fun `explicit cancellation suppresses a delayed interruption result`() {
+        for (cancelAll in listOf(false, true)) {
+            val attachment = attachment(
+                messageTid = if (cancelAll) 91L else 90L,
+                state = TransferState.PendingDownload,
+            )
+            val cancellationGate = CompletableDeferred<Unit>()
+            SceytChatUIKit.fileTransfer.transport = object : FileTransferTransport by transport {
+                override suspend fun download(request: FileDownloadRequest, callback: FileTransferCallback): FileTransferResult<String> {
+                    try {
+                        return transport.download(request, callback)
+                    } finally {
+                        withContext(NonCancellable) { cancellationGate.await() }
+                    }
+                }
+            }
+            val results = mutableListOf<SceytResponse<String>>()
+            service.download(attachment) {
+                downloadCallback = TransferResultCallback { results += it }
+            }
+            destinationFile.writeBytes(byteArrayOf(1, 2))
+            transport.downloadCalls.last().interrupt()
+
+            if (cancelAll) service.cancelAllTransfers() else service.cancelUpload(attachment)
+            cancellationGate.complete(Unit)
+
+            assertThat(results).isEmpty()
+            assertThat(service.findTransferTask(attachment)).isNull()
+            assertThat(destinationFile.readBytes()).isEqualTo(byteArrayOf(1, 2))
+        }
+    }
+
+    @Test
+    fun `throwing pause callback does not escape or prevent resume`() {
+        val attachment = attachment(state = TransferState.PendingDownload)
+        val task = service.download(attachment) {
+            resumePauseCallback = ResumePauseCallback { error("callback failed") }
+        }
+
+        service.pause(attachment.messageTid, attachment, TransferState.Downloading)
+
+        assertThat(task.state).isEqualTo(TransferState.PauseDownload)
+        assertThat(transport.downloadCalls.single().cancelled).isTrue()
+        task.resumePauseCallback = null
+        service.resume(attachment.messageTid, attachment, TransferState.PauseDownload)
+        assertThat(transport.downloadCalls).hasSize(2)
+        transport.downloadCalls.last().succeed(destinationFile.path)
+    }
+
+    @Test
+    fun `pause from progress during native resume is not overwritten`() {
+        transport.pauseResult = true
+        val attachment = attachment(state = TransferState.Downloading)
+        val task = transferTask(attachment)
+        val states = mutableListOf<TransferState>()
+        task.resumePauseCallback = ResumePauseCallback { states += it.state }
+        task.progressCallback = ProgressUpdateCallback {
+            if (it.progressPercent == 50f) {
+                service.pause(attachment.messageTid, attachment, TransferState.Downloading)
+            }
+        }
+        SceytChatUIKit.fileTransfer.transport = object : FileTransferTransport by transport {
+            override fun resume(operationId: String): Boolean {
+                transport.downloadCalls.single().progress(50f)
+                return true
+            }
+        }
+        service.download(attachment)
+        service.pause(attachment.messageTid, attachment, TransferState.Downloading)
+
+        service.resume(attachment.messageTid, attachment, TransferState.PauseDownload)
+
+        assertThat(task.state).isEqualTo(TransferState.PauseDownload)
+        assertThat(states).containsExactly(TransferState.PauseDownload, TransferState.PauseDownload).inOrder()
+        assertThat(transport.downloadCalls).hasSize(1)
+        assertThat(transport.downloadCalls.single().cancelled).isFalse()
+    }
+
+    @Test
+    fun `pause after a terminal result does not revive the task`() {
+        val attachment = attachment(state = TransferState.PendingDownload)
+        val results = mutableListOf<SceytResponse<String>>()
+        service.download(attachment) {
+            downloadCallback = TransferResultCallback { results += it }
+        }
+        transport.downloadCalls.single().succeed(destinationFile.path)
+
+        service.pause(attachment.messageTid, attachment, TransferState.Downloading)
+
+        assertThat(results).hasSize(1)
+        assertThat(service.findTransferTask(attachment)).isNull()
+        assertThat(transport.pauseCalls).isEmpty()
+    }
+
+    private fun transferTask(attachment: SceytAttachment): TransferTask =
+        service.findOrCreateTransferTask(attachment).apply {
+            progressCallback = null
+            downloadCallback = null
+            resumePauseCallback = null
+        }
 }

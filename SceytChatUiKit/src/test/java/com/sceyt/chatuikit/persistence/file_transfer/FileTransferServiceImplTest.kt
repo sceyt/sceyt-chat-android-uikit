@@ -16,7 +16,6 @@ import com.sceyt.chatuikit.filetransfer.SceytChatUIKitFileTransfer
 import com.sceyt.chatuikit.koin.SceytKoinApp
 import com.sceyt.chatuikit.persistence.database.dao.FileChecksumDao
 import com.sceyt.chatuikit.persistence.di.CoroutineContextType
-import com.sceyt.chatuikit.persistence.logic.FileTransferLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import com.sceyt.chatuikit.persistence.logicimpl.AttachmentDownloadCoordinator
 import com.sceyt.chatuikit.persistence.logicimpl.AttachmentUploadCoordinator
@@ -60,14 +59,16 @@ class FileTransferServiceImplTest {
     private val workManager = mock<WorkManagerImpl>()
     private lateinit var previousFileTransfer: SceytChatUIKitFileTransfer
     private lateinit var transport: RecordingFileTransferTransport
-    private var downloadCoordinator: AttachmentDownloadCoordinator? = null
     private var uploadCoordinator: AttachmentUploadCoordinator? = null
 
     companion object {
         // FileTransferHelper retains injected dependencies for the lifetime of its singleton.
-        private val logic = mock<FileTransferLogic>()
+        private val uploader = mock<AttachmentUploadCoordinator>()
+        private val downloads by lazy {
+            AttachmentDownloadCoordinator(RuntimeEnvironment.getApplication(), TestScope(UnconfinedTestDispatcher()))
+        }
         private val service by lazy {
-            FileTransferServiceImpl(RuntimeEnvironment.getApplication(), logic)
+            FileTransferServiceImpl(RuntimeEnvironment.getApplication(), uploader, downloads, mock())
         }
     }
 
@@ -75,7 +76,7 @@ class FileTransferServiceImplTest {
     fun setUp() {
         previousFileTransfer = SceytChatUIKit.fileTransfer
         service.cancelAllTransfers()
-        reset(logic)
+        reset(uploader)
         WorkManagerImpl.setDelegate(workManager)
         val continuation = mock<WorkContinuation>()
         whenever(workManager.beginUniqueWork(any(), any(), any<OneTimeWorkRequest>()))
@@ -92,11 +93,17 @@ class FileTransferServiceImplTest {
                 }
             })
         }
+        transport = RecordingFileTransferTransport()
+        SceytChatUIKit.fileTransfer = SceytChatUIKitFileTransfer().apply {
+            this.transport = this@FileTransferServiceImplTest.transport
+            destinationProvider = FileTransferDestinationProvider { _, attachment ->
+                File(files.root, "${attachment.id}.txt")
+            }
+        }
     }
 
     @After
     fun tearDown() {
-        downloadCoordinator?.cancelAll()
         uploadCoordinator?.cancelAll()
         service.cancelAllTransfers()
         SceytChatUIKit.fileTransfer = previousFileTransfer
@@ -111,14 +118,14 @@ class FileTransferServiceImplTest {
         var configuredTask: TransferTask? = null
         doAnswer {
             assertThat(configuredTask).isSameInstanceAs(it.arguments[1])
-        }.`when`(logic).uploadFile(eq(attachment), any())
+        }.`when`(uploader).uploadFile(eq(attachment), any(), any(), any())
 
         val task = service.upload(attachment) {
             configuredTask = this
         }
 
         assertThat(task).isSameInstanceAs(configuredTask)
-        verify(logic).uploadFile(attachment, task)
+        verify(uploader).uploadFile(eq(attachment), eq(task), any(), any())
     }
 
     @Test
@@ -130,8 +137,8 @@ class FileTransferServiceImplTest {
         val duplicateTask = service.download(updatedAttachment)
 
         assertThat(duplicateTask).isSameInstanceAs(firstTask)
-        verify(logic).downloadFile(attachment, firstTask)
-        verify(logic).downloadFile(updatedAttachment, firstTask)
+        assertThat(transport.downloadCalls).hasSize(1)
+        assertThat(transport.downloadCalls.single().request.url).isEqualTo(attachment.url)
     }
 
     @Test
@@ -144,7 +151,7 @@ class FileTransferServiceImplTest {
 
         assertThat(reusedTask).isSameInstanceAs(task)
         assertThat(service.findTransferTask(updatedAttachment)).isSameInstanceAs(task)
-        verify(logic).downloadFile(updatedAttachment, task)
+        assertThat(transport.downloadCalls).hasSize(1)
     }
 
     @Test
@@ -187,8 +194,8 @@ class FileTransferServiceImplTest {
         assertThat(secondTask).isNotSameInstanceAs(firstTask)
         assertThat(service.findTransferTask(first)).isSameInstanceAs(firstTask)
         assertThat(service.findTransferTask(second)).isSameInstanceAs(secondTask)
-        verify(logic).downloadFile(first, firstTask)
-        verify(logic).downloadFile(second, secondTask)
+        assertThat(transport.downloadCalls.map { it.request.url })
+            .containsExactly(first.url, second.url).inOrder()
     }
 
     @Test
@@ -301,6 +308,58 @@ class FileTransferServiceImplTest {
         assertThat(service.getTasks()).isEmpty()
     }
 
+    @Test
+    fun `throwing upload callback still completes listeners and releases the queue`() {
+        useTransferCoordinators()
+        val first = attachment(messageTid = 25L, filePath = files.newFile("callback-error.txt").path)
+        val next = attachment(messageTid = 26L, filePath = files.newFile("next.txt").path)
+        var completions = 0
+        service.upload(first) {
+            uploadResultCallback = TransferResultCallback {
+                assertThat(service.findTransferTask(first)).isNull()
+                throw IllegalStateException("customer callback failed")
+            }
+            addOnCompletionListener("worker") { result ->
+                assertThat(result.isSuccess).isTrue()
+                completions++
+            }
+        }
+        service.upload(next)
+
+        transport.uploadCalls.first().succeed("first-url")
+
+        assertThat(completions).isEqualTo(1)
+        assertThat(transport.uploadCalls.last().request.operationId).isEqualTo("upload:26")
+        assertThat(service.findTransferTask(first)).isNull()
+    }
+
+    @Test
+    fun `upload retry inside result callback keeps its own task and listener`() {
+        useTransferCoordinators()
+        val attachment = attachment(messageTid = 27L, filePath = files.newFile("retry.txt").path)
+        var firstCompletions = 0
+        var retryCompletions = 0
+        var retryTask: TransferTask? = null
+        service.upload(attachment) {
+            uploadResultCallback = TransferResultCallback {
+                assertThat(service.findTransferTask(attachment)).isNull()
+                retryTask = service.upload(attachment) {
+                    addOnCompletionListener("retry") { retryCompletions++ }
+                }
+            }
+            addOnCompletionListener("first") { firstCompletions++ }
+        }
+
+        transport.uploadCalls.first().fail(SceytException(7, "upload failed"))
+
+        assertThat(service.findTransferTask(attachment)).isSameInstanceAs(retryTask)
+        assertThat(firstCompletions).isEqualTo(1)
+        assertThat(retryCompletions).isEqualTo(0)
+        transport.uploadCalls.last().succeed("retry-url")
+        assertThat(retryCompletions).isEqualTo(1)
+        assertThat(service.getTasks()).isEmpty()
+    }
+
     private fun useTransferCoordinators() {
         val context = RuntimeEnvironment.getApplication()
         val scope = TestScope(UnconfinedTestDispatcher())
@@ -311,18 +370,14 @@ class FileTransferServiceImplTest {
                 File(files.root, "${attachment.id}.txt")
             }
         }
-        val downloads = AttachmentDownloadCoordinator(context, scope)
         val uploads = AttachmentUploadCoordinator(context, mock(), scope)
-        downloadCoordinator = downloads
         uploadCoordinator = uploads
         doAnswer {
-            downloads.downloadFile(it.getArgument(0), it.getArgument(1))
+            uploads.uploadFile(it.getArgument(0), it.getArgument(1), it.getArgument(2), it.getArgument(3))
             Unit
-        }.`when`(logic).downloadFile(any(), any())
-        doAnswer {
-            uploads.uploadFile(it.getArgument(0), it.getArgument(1))
-            Unit
-        }.`when`(logic).uploadFile(any(), any())
+        }.`when`(uploader).uploadFile(any(), any(), any(), any())
+        doAnswer { uploads.cancel(it.getArgument(0)) }.`when`(uploader).cancel(any())
+        doAnswer { uploads.cancelAll() }.`when`(uploader).cancelAll()
     }
 
     @Test
@@ -335,12 +390,12 @@ class FileTransferServiceImplTest {
         val originalState = task.state
         doAnswer {
             assertThat(service.findTransferTask(attachment)).isNull()
-        }.`when`(logic).cancelUpload(attachment)
+        }.`when`(uploader).cancel(task)
 
         service.cancelUpload(attachment)
 
-        verify(logic).cancelUpload(attachment)
-        verify(logic, never()).pauseLoad(any(), any())
+        verify(uploader).cancel(task)
+        verify(uploader, never()).pause(any(), any())
         assertThat(completion?.exceptionOrNull()).isInstanceOf(CancellationException::class.java)
         assertThat(task.onCompletionListeners).isEmpty()
         assertThat(task.state).isEqualTo(originalState)
@@ -353,7 +408,7 @@ class FileTransferServiceImplTest {
 
         service.cancelUpload(attachment)
 
-        verify(logic).cancelUpload(attachment)
+        verify(uploader, never()).uploadFile(any(), any(), any(), any())
         assertThat(service.getTasks()).isEmpty()
     }
 
@@ -384,7 +439,7 @@ class FileTransferServiceImplTest {
         service.cancelUpload(first)
 
         assertThat(transport.uploadCalls.first().cancelled).isTrue()
-        assertThat(firstTask.uploadSubscription).isNull()
+        assertThat(service.findTransferTask(first)).isNull()
         assertThat(resultCalls).isEqualTo(0)
         assertThat(transport.uploadCalls).hasSize(2)
         assertThat(transport.uploadCalls.last().request.operationId).isEqualTo("upload:21")
@@ -425,7 +480,7 @@ class FileTransferServiceImplTest {
         service.cancelAllTransfers()
 
         assertThat(service.getTasks()).isEmpty()
-        verify(logic).cancelAll()
+        verify(uploader).cancelAll()
     }
 
     @Test
@@ -454,14 +509,8 @@ class FileTransferServiceImplTest {
     }
 
     @Test
-    fun `resume with a live worker keeps its completion listener`() {
-        val attachment = attachment(state = TransferState.PauseUpload)
-        setWorkStates(attachment.messageTid, WorkInfo.State.SUCCEEDED, WorkInfo.State.RUNNING)
-
-        service.resume(attachment.messageTid, attachment, TransferState.PauseUpload)
-
-        verify(logic).resumeLoad(attachment, TransferState.PauseUpload)
-        verify(workManager, never()).beginUniqueWork(any(), any(), any<OneTimeWorkRequest>())
+    fun `resume replaces a paused worker even while it is finishing`() {
+        assertResumeSchedulesWorker(WorkInfo.State.SUCCEEDED, WorkInfo.State.RUNNING)
     }
 
     private fun assertResumeSchedulesWorker(
@@ -475,10 +524,10 @@ class FileTransferServiceImplTest {
 
         val request = argumentCaptor<OneTimeWorkRequest>()
         verify(workManager).beginUniqueWork(
-            eq(attachment.messageTid.toString()), eq(ExistingWorkPolicy.KEEP), request.capture(),
+            eq(attachment.messageTid.toString()), eq(ExistingWorkPolicy.REPLACE), request.capture(),
         )
         assertThat(request.firstValue.workSpec.input.getBoolean(RESUME_PAUSED_UPLOAD, false)).isTrue()
-        verify(logic, never()).resumeLoad(any(), any())
+        verify(uploader, never()).uploadFile(any(), any(), any(), any())
     }
 
     private fun setWorkStates(messageTid: Long, vararg states: WorkInfo.State) {
