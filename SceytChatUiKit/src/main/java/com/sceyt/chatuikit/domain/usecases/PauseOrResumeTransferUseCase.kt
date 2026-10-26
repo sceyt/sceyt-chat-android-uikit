@@ -36,11 +36,7 @@ class PauseOrResumeTransferUseCase(
             }
 
             TransferState.PauseDownload -> {
-                val task = fileTransferService.findTransferTask(attachment)
-                if (task != null)
-                    fileTransferService.resume(attachment.messageTid, attachment, state)
-                else
-                    fileTransferService.download(attachment)
+                fileTransferService.resume(attachment.messageTid, attachment, state)
             }
 
             TransferState.PauseUpload -> {
