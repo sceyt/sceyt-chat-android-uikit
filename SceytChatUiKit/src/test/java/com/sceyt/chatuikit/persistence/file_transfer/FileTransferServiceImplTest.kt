@@ -11,6 +11,7 @@ import com.google.common.util.concurrent.Futures
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
+import com.sceyt.chatuikit.domain.usecases.PauseOrResumeTransferUseCase
 import com.sceyt.chatuikit.filetransfer.FileTransferDestinationProvider
 import com.sceyt.chatuikit.filetransfer.SceytChatUIKitFileTransfer
 import com.sceyt.chatuikit.koin.SceytKoinApp
@@ -25,6 +26,7 @@ import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManage
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import org.junit.After
@@ -139,6 +141,35 @@ class FileTransferServiceImplTest {
         assertThat(duplicateTask).isSameInstanceAs(firstTask)
         assertThat(transport.downloadCalls).hasSize(1)
         assertThat(transport.downloadCalls.single().request.url).isEqualTo(attachment.url)
+    }
+
+    @Test
+    fun `paused download resumes on first user tap without a registered task`() = runBlocking {
+        val attachment = attachment(state = TransferState.PauseDownload)
+        val useCase = PauseOrResumeTransferUseCase(RuntimeEnvironment.getApplication(), service, mock())
+        assertThat(service.findTransferTask(attachment)).isNull()
+
+        useCase(attachment)
+
+        assertThat(transport.downloadCalls).hasSize(1)
+        assertThat(transport.downloadCalls.single().request.url).isEqualTo(attachment.url)
+        assertThat(service.findTransferTask(attachment)?.state).isEqualTo(TransferState.Downloading)
+    }
+
+    @Test
+    fun `user tap resumes an existing native download without starting another`() = runBlocking {
+        transport.pauseResult = true
+        transport.resumeResult = true
+        val attachment = attachment(state = TransferState.PendingDownload)
+        val useCase = PauseOrResumeTransferUseCase(RuntimeEnvironment.getApplication(), service, mock())
+        val task = service.download(attachment)
+        service.pause(attachment.messageTid, attachment, TransferState.Downloading)
+
+        useCase(attachment.copy(transferState = TransferState.PauseDownload))
+
+        assertThat(transport.downloadCalls).hasSize(1)
+        assertThat(transport.resumeCalls).containsExactly(transport.downloadCalls.single().request.operationId)
+        assertThat(task.state).isEqualTo(TransferState.Downloading)
     }
 
     @Test
