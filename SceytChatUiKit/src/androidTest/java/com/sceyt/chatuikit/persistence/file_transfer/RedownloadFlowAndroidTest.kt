@@ -10,18 +10,32 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.google.common.truth.Truth.assertThat
 import com.sceyt.chat.models.SceytException
-import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
+import com.sceyt.chatuikit.filetransfer.AttachmentTransferContext
+import com.sceyt.chatuikit.filetransfer.FileDownloadRequest
+import com.sceyt.chatuikit.filetransfer.FileTransferCallback
+import com.sceyt.chatuikit.filetransfer.FileTransferDestinationProvider
+import com.sceyt.chatuikit.filetransfer.FileTransferResult
+import com.sceyt.chatuikit.filetransfer.FileTransferTransport
+import com.sceyt.chatuikit.filetransfer.FileUploadRequest
+import com.sceyt.chatuikit.filetransfer.SceytChatUIKitFileTransfer
 import com.sceyt.chatuikit.koin.SceytKoinApp
 import com.sceyt.chatuikit.persistence.di.CoroutineContextType
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
+import com.sceyt.chatuikit.persistence.logicimpl.AttachmentDownloadCoordinator
+import com.sceyt.chatuikit.persistence.logicimpl.AttachmentThumbCoordinator
 import com.sceyt.chatuikit.persistence.logicimpl.AttachmentThumbPathResolver
-import com.sceyt.chatuikit.persistence.logicimpl.FileTransferLogicImpl
+import com.sceyt.chatuikit.persistence.logicimpl.AttachmentUploadCoordinator
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.AttachmentDataProvider
 import com.sceyt.chatuikit.presentation.custom_views.voice_recorder.AudioMetadata
 import com.sceyt.chatuikit.presentation.helpers.AttachmentViewHolderHelper
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -39,12 +53,25 @@ import kotlin.coroutines.CoroutineContext
 class RedownloadFlowAndroidTest {
     private lateinit var dir: File
     private lateinit var helper: AttachmentViewHolderHelper
+    private lateinit var logic: AttachmentThumbCoordinator
+    private lateinit var service: FileTransferServiceImpl
+    private lateinit var previousFileTransfer: SceytChatUIKitFileTransfer
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val capturedDownloads = CopyOnWriteArrayList<DownloadCall>()
     private val updates = CopyOnWriteArrayList<TransferData>()
     private val observer = Observer<TransferData> { updates.add(it) }
 
     @Before
     fun setUp() {
         dir = File(context.filesDir, "redownload_flow_test").apply { mkdirs() }
+        previousFileTransfer = SceytChatUIKit.fileTransfer
+        logic = AttachmentThumbCoordinator(context, AttachmentThumbPathResolver)
+        service = FileTransferServiceImpl(
+            context,
+            AttachmentUploadCoordinator(context, attachmentLogic, scope),
+            AttachmentDownloadCoordinator(context, scope),
+            logic,
+        )
         AttachmentTransferStateStore.clear()
         attachmentLogicCalls.clear()
         capturedDownloads.clear()
@@ -58,7 +85,10 @@ class RedownloadFlowAndroidTest {
                 }
             })
         }
-        service.setCustomListener(CapturingListeners())
+        SceytChatUIKit.fileTransfer = SceytChatUIKitFileTransfer().apply {
+            transport = CapturingTransport()
+            destinationProvider = FileTransferDestinationProvider { _, _ -> File(dir, "downloaded.jpg") }
+        }
         onMain {
             helper = AttachmentViewHolderHelper(View(context))
             FileTransferHelper.onTransferUpdatedLiveData.observeForever(observer)
@@ -68,6 +98,9 @@ class RedownloadFlowAndroidTest {
 
     @After
     fun tearDown() {
+        service.cancelAllTransfers()
+        scope.cancel()
+        SceytChatUIKit.fileTransfer = previousFileTransfer
         onMain { FileTransferHelper.onTransferUpdatedLiveData.removeObserver(observer) }
         AttachmentTransferStateStore.clear()
         SceytKoinApp.koinApp = null
@@ -82,20 +115,21 @@ class RedownloadFlowAndroidTest {
 
         logic.getAttachmentThumb(MESSAGE_TID, item.attachment, thumbData())
 
-        val (pendingAttachment, task) = awaitDownloadStarted()
+        val download = awaitDownloadStarted()
+        val pendingAttachment = (download.request.context as AttachmentTransferContext).attachment
         assertThat(pendingAttachment.transferState).isEqualTo(TransferState.PendingDownload)
-        assertThat(task.state).isEqualTo(TransferState.PendingDownload)
-        awaitUpdate(TransferState.PendingDownload)
-        assertThat(applyUpdates(item).state).isEqualTo(TransferState.PendingDownload)
+        assertThat(service.findTransferTask(item.attachment)?.state).isEqualTo(TransferState.Downloading)
+        awaitUpdate(TransferState.Downloading)
+        assertThat(applyUpdates(item).state).isEqualTo(TransferState.Downloading)
 
-        task.progressCallback?.onProgress(TransferData(MESSAGE_TID, 30f, TransferState.Downloading, null, URL))
+        download.callback.onProgress(30f)
         awaitUpdate(TransferState.Downloading)
         val progress = applyUpdates(item)
         assertThat(progress.state).isEqualTo(TransferState.Downloading)
         assertThat(progress.progressPercent).isEqualTo(30f)
 
         val downloaded = writeJpeg(File(dir, "downloaded.jpg"))
-        task.downloadCallback?.onResult(SceytResponse.Success(downloaded.path))
+        download.result.complete(FileTransferResult.Success(downloaded.path))
         awaitUpdate(TransferState.Downloaded)
         assertThat(applyUpdates(item).state).isEqualTo(TransferState.Downloaded)
         assertThat(item.attachment.filePath).isEqualTo(downloaded.path)
@@ -114,11 +148,11 @@ class RedownloadFlowAndroidTest {
         AttachmentTransferStateStore.put(item.attachment.toUploadedTransferData())
 
         logic.getAttachmentThumb(MESSAGE_TID, item.attachment, thumbData())
-        val (_, task) = awaitDownloadStarted()
-        awaitUpdate(TransferState.PendingDownload)
+        val download = awaitDownloadStarted()
+        awaitUpdate(TransferState.Downloading)
         applyUpdates(item)
 
-        task.downloadCallback?.onResult(SceytResponse.Error(SceytException(0, "offline")))
+        download.result.complete(FileTransferResult.Failure(SceytException(0, "offline")))
         awaitUpdate(TransferState.ErrorDownload)
 
         assertThat(applyUpdates(item).state).isEqualTo(TransferState.ErrorDownload)
@@ -132,7 +166,7 @@ class RedownloadFlowAndroidTest {
         return item.transferData!!
     }
 
-    private fun awaitDownloadStarted(): Pair<SceytAttachment, TransferTask> {
+    private fun awaitDownloadStarted(): DownloadCall {
         awaitCondition { capturedDownloads.isNotEmpty() }
         return capturedDownloads.single()
     }
@@ -189,19 +223,24 @@ class RedownloadFlowAndroidTest {
     private fun SceytAttachment.toUploadedTransferData() =
         TransferData(messageTid, 100f, TransferState.Uploaded, filePath, url)
 
-    private class CapturingListeners : FileTransferListeners.Listeners {
-        override fun download(attachment: SceytAttachment, transferTask: TransferTask) {
-            capturedDownloads.add(attachment to transferTask)
+    private inner class CapturingTransport : FileTransferTransport {
+        override suspend fun download(
+            request: FileDownloadRequest,
+            callback: FileTransferCallback,
+        ): FileTransferResult<String> {
+            val download = DownloadCall(request, callback)
+            capturedDownloads.add(download)
+            return download.result.await()
         }
 
-        override fun getThumb(messageTid: Long, attachment: SceytAttachment, thumbData: ThumbData) {
-            logic.getAttachmentThumb(messageTid, attachment, thumbData)
-        }
+        override suspend fun upload(
+            request: FileUploadRequest,
+            callback: FileTransferCallback,
+        ): FileTransferResult<String> = error("Unexpected upload")
+    }
 
-        override fun upload(attachment: SceytAttachment, transferTask: TransferTask) = Unit
-        override fun uploadSharedFile(attachment: SceytAttachment, transferTask: TransferTask) = Unit
-        override fun pause(messageTid: Long, attachment: SceytAttachment, state: TransferState) = Unit
-        override fun resume(messageTid: Long, attachment: SceytAttachment, state: TransferState) = Unit
+    private class DownloadCall(val request: FileDownloadRequest, val callback: FileTransferCallback) {
+        val result = CompletableDeferred<FileTransferResult<String>>()
     }
 
     private class TestAttachmentItem(private var currentAttachment: SceytAttachment) : AttachmentDataProvider {
@@ -236,7 +275,6 @@ class RedownloadFlowAndroidTest {
         const val MESSAGE_TID = 4242L
         const val URL = "https://cdn.test/image.jpg"
         val context: Context get() = ApplicationProvider.getApplicationContext()
-        val capturedDownloads = CopyOnWriteArrayList<Pair<SceytAttachment, TransferTask>>()
         val attachmentLogicCalls = CopyOnWriteArrayList<Pair<String, TransferData>>()
         val attachmentLogic: PersistenceAttachmentLogic by lazy {
             Proxy.newProxyInstance(
@@ -248,9 +286,5 @@ class RedownloadFlowAndroidTest {
                 Unit
             } as PersistenceAttachmentLogic
         }
-        val logic: FileTransferLogicImpl by lazy {
-            FileTransferLogicImpl(context, attachmentLogic, AttachmentThumbPathResolver)
-        }
-        val service: FileTransferServiceImpl by lazy { FileTransferServiceImpl(context, logic) }
     }
 }
