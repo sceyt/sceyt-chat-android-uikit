@@ -16,6 +16,10 @@ class TransferTask(
     // Remember sharing before a paused upload has joined its shared group.
     internal var isSharedUpload = false
 
+    // Cancellation can arrive before this task reaches the upload command queue.
+    @Volatile
+    internal var isCancelled = false
+
     var attachment: SceytAttachment
         get() = _attachment
         set(value) {

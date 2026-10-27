@@ -70,6 +70,7 @@ internal class AttachmentUploadCoordinator(
         onResult: (TransferTask, SceytResponse<String>) -> Unit,
         onPaused: (TransferTask) -> Unit,
     ) = dispatch {
+        if (task.isCancelled) return@dispatch
         findMember(task)?.let { member ->
             if (task.state == PauseUpload) {
                 pauseMember(member)
