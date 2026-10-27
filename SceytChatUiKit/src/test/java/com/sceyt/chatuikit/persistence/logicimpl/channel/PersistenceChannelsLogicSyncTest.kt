@@ -120,7 +120,7 @@ internal class PersistenceChannelsLogicSyncTest {
     }
 
     private suspend fun givenSyncMisses(missing: Map<Long, SceytResponse<SceytChannel>>) {
-        whenever(messageDao.getPendingMessages(any())).thenReturn(emptyList())
+        whenever(messageDao.getPendingMessagesByChannelIds(any())).thenReturn(emptyList())
         whenever(channelsRepository.getAllChannels(config.queryLimit))
             .thenReturn(flowOf(serverPage, SyncResult.SuccessfullyFinished))
         whenever(

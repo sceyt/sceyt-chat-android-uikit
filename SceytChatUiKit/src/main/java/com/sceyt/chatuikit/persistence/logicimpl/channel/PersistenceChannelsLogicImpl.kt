@@ -1254,15 +1254,15 @@ internal class PersistenceChannelsLogicImpl(
         } ?: channel.lastMessage
     }
 
-    private suspend fun cancelPendingUploads(channelId: Long) {
+    private suspend fun cancelPendingUploads(channelIds: List<Long>) {
         // Read attachments before deleting their rows; paused uploads may have no running worker.
-        messageDao.getPendingMessages(channelId).forEach { message ->
+        messageDao.getPendingMessagesByChannelIds(channelIds).forEach { message ->
             message.attachments?.forEach { fileTransferService.cancelUpload(it.toAttachment()) }
         }
     }
 
     private suspend fun deleteChannelFromDbAndCache(channelId: Long) {
-        cancelPendingUploads(channelId)
+        cancelPendingUploads(listOf(channelId))
         channelDao.deleteChannelAndLinks(channelId)
         messageDao.deleteAllMessagesByChannel(channelId)
         rangeDao.deleteChannelLoadRanges(channelId)
@@ -1272,7 +1272,7 @@ internal class PersistenceChannelsLogicImpl(
 
     private suspend fun deleteChannelsFromDbAndCache(channelIds: List<Long>) {
         if (channelIds.isEmpty()) return
-        channelIds.forEach { cancelPendingUploads(it) }
+        cancelPendingUploads(channelIds)
         channelDao.deleteAllChannelsAndLinksById(channelIds)
         messageDao.deleteAllChannelsMessages(channelIds)
         rangeDao.deleteChannelsLoadRanges(channelIds)
@@ -1282,7 +1282,7 @@ internal class PersistenceChannelsLogicImpl(
 
     private suspend fun clearHistory(channel: SceytChannel) {
         val channelId = channel.id
-        cancelPendingUploads(channelId)
+        cancelPendingUploads(listOf(channelId))
         channelDao.updateMessagesClearedAt(channelId, channel.messagesClearedAt)
         channelDao.updateLastMessage(channelId, null, null)
         messageDao.deleteAllMessagesByChannel(channelId)

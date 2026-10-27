@@ -515,7 +515,7 @@ class UploadAndSendAttachmentWorkerTest {
         val messageDao = mock<MessageDao>()
         val repository = mock<ChannelsRepository>()
         val pending = checkNotNull(messageLogic.getMessageFromDbByTid(attachment.messageTid))
-        whenever(messageDao.getPendingMessages(0L)).thenReturn(listOf(pending.toMessageDb(false)))
+        whenever(messageDao.getPendingMessagesByChannelIds(listOf(0L))).thenReturn(listOf(pending.toMessageDb(false)))
         whenever(repository.clearHistory(0L, false))
             .thenReturn(SceytResponse.Success(createChannel(0L, 0L, 0L)))
 
@@ -539,7 +539,7 @@ class UploadAndSendAttachmentWorkerTest {
         val messageDao = mock<MessageDao>()
         val repository = mock<ChannelsRepository>()
         val pending = checkNotNull(messageLogic.getMessageFromDbByTid(owner.messageTid))
-        whenever(messageDao.getPendingMessages(0L)).thenReturn(listOf(pending.toMessageDb(false)))
+        whenever(messageDao.getPendingMessagesByChannelIds(listOf(0L))).thenReturn(listOf(pending.toMessageDb(false)))
         whenever(repository.deleteChannel(0L)).thenReturn(SceytResponse.Success(0L))
 
         channelLogic(messageDao, repository).deleteChannel(0L)
@@ -565,7 +565,7 @@ class UploadAndSendAttachmentWorkerTest {
         val messageDao = mock<MessageDao>()
         val repository = mock<ChannelsRepository>()
         val pending = checkNotNull(messageLogic.getMessageFromDbByTid(attachment.messageTid))
-        whenever(messageDao.getPendingMessages(0L)).thenReturn(listOf(pending.toMessageDb(false)))
+        whenever(messageDao.getPendingMessagesByChannelIds(listOf(0L))).thenReturn(listOf(pending.toMessageDb(false)))
         whenever(repository.leaveChannel(0L)).thenReturn(SceytResponse.Success(0L))
 
         channelLogic(messageDao, repository).leaveChannel(0L)
@@ -583,7 +583,7 @@ class UploadAndSendAttachmentWorkerTest {
         val messageDao = mock<MessageDao>()
         val repository = mock<ChannelsRepository>()
         val pending = checkNotNull(messageLogic.getMessageFromDbByTid(attachment.messageTid))
-        whenever(messageDao.getPendingMessages(0L)).thenReturn(listOf(pending.toMessageDb(false)))
+        whenever(messageDao.getPendingMessagesByChannelIds(listOf(0L))).thenReturn(listOf(pending.toMessageDb(false)))
         whenever(repository.clearHistory(0L, false))
             .thenReturn(SceytResponse.Error(SceytException(1, "clear failed")))
 
@@ -605,7 +605,7 @@ class UploadAndSendAttachmentWorkerTest {
         val channelDao = mock<ChannelDao>()
         val repository = mock<ChannelsRepository>()
         val pending = checkNotNull(messageLogic.getMessageFromDbByTid(attachment.messageTid))
-        whenever(messageDao.getPendingMessages(0L)).thenReturn(listOf(pending.toMessageDb(false)))
+        whenever(messageDao.getPendingMessagesByChannelIds(listOf(0L))).thenReturn(listOf(pending.toMessageDb(false)))
         whenever(channelDao.getAllChannelIdsByTypes(emptyList(), true)).thenReturn(listOf(0L))
         whenever(repository.getAllChannels(any())).thenReturn(flowOf(SyncResult.SuccessfullyFinished))
 
@@ -615,6 +615,23 @@ class UploadAndSendAttachmentWorkerTest {
         assertThat(work.isCompleted).isTrue()
         assertThat(service.findTransferTask(attachment)).isNull()
         verify(messageLogic, never()).sendMessageWithUploadedAttachments(any(), any())
+    }
+
+    @Test
+    fun `sync looks up pending messages once for all removed channels`() = runBlocking<Unit> {
+        val channelIds = (0L until 200L).toList()
+        val messageDao = mock<MessageDao>()
+        val channelDao = mock<ChannelDao>()
+        val repository = mock<ChannelsRepository>()
+        whenever(messageDao.getPendingMessages(any())).thenReturn(emptyList())
+        whenever(messageDao.getPendingMessagesByChannelIds(channelIds)).thenReturn(emptyList())
+        whenever(channelDao.getAllChannelIdsByTypes(emptyList(), true)).thenReturn(channelIds)
+        whenever(repository.getAllChannels(any())).thenReturn(flowOf(SyncResult.SuccessfullyFinished))
+
+        channelLogic(messageDao, repository, channelDao).syncChannels(ChannelListConfig.default).toList()
+
+        verify(messageDao).getPendingMessagesByChannelIds(channelIds)
+        verify(messageDao, never()).getPendingMessages(any())
     }
 
     private fun channelLogic(
