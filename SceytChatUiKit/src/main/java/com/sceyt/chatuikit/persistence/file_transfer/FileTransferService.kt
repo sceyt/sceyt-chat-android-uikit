@@ -19,7 +19,13 @@ interface FileTransferService {
     ): TransferTask
 
     fun pause(messageTid: Long, attachment: SceytAttachment, state: TransferState)
-    fun resume(messageTid: Long, attachment: SceytAttachment, state: TransferState)
+    /** Supply [channelId] for uploads so channel cleanup also cancels the resumed worker. */
+    fun resume(
+        messageTid: Long,
+        attachment: SceytAttachment,
+        state: TransferState,
+        channelId: Long? = null,
+    )
     /** Cancels this upload without stopping other messages sharing it. */
     fun cancelUpload(attachment: SceytAttachment)
     fun getThumb(messageTid: Long, attachment: SceytAttachment, thumbData: ThumbData)

@@ -552,6 +552,23 @@ class FileTransferServiceImplTest {
     }
 
     @Test
+    fun `user resumed upload keeps the channel cancellation tag`() = runBlocking {
+        val attachment = attachment(state = TransferState.PauseUpload)
+        service.findOrCreateTransferTask(attachment)
+        val useCase = PauseOrResumeTransferUseCase(RuntimeEnvironment.getApplication(), service, mock())
+
+        useCase(attachment, channelId = 456L)
+
+        val request = argumentCaptor<OneTimeWorkRequest>()
+        verify(workManager).beginUniqueWork(
+            eq(attachment.messageTid.toString()), eq(ExistingWorkPolicy.REPLACE), request.capture(),
+        )
+        assertThat(request.firstValue.tags).contains("456")
+        assertThat(request.firstValue.tags).contains(attachment.messageTid.toString())
+        assertThat(request.firstValue.workSpec.input.getBoolean(RESUME_PAUSED_UPLOAD, false)).isTrue()
+    }
+
+    @Test
     fun `error upload retry after finished worker schedules upload and send`() {
         assertResumeSchedulesWorker(WorkInfo.State.FAILED, transferState = TransferState.ErrorUpload)
     }

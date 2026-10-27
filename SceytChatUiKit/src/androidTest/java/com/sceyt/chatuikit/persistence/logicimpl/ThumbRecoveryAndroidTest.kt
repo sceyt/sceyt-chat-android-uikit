@@ -170,7 +170,7 @@ class ThumbRecoveryAndroidTest {
         override fun cancelUpload(attachment: SceytAttachment) = Unit
         override fun cancelAllTransfers() = Unit
         override fun pause(messageTid: Long, attachment: SceytAttachment, state: TransferState) = Unit
-        override fun resume(messageTid: Long, attachment: SceytAttachment, state: TransferState) = Unit
+        override fun resume(messageTid: Long, attachment: SceytAttachment, state: TransferState, channelId: Long?) = Unit
         override fun getThumb(messageTid: Long, attachment: SceytAttachment, thumbData: ThumbData) = Unit
     }
 

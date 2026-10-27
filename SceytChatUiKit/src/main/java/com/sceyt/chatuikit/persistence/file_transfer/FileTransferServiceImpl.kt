@@ -87,7 +87,12 @@ internal class FileTransferServiceImpl(
         task?.complete(Result.failure(CancellationException("Attachment upload cancelled")))
     }
 
-    override fun resume(messageTid: Long, attachment: SceytAttachment, state: TransferState) {
+    override fun resume(
+        messageTid: Long,
+        attachment: SceytAttachment,
+        state: TransferState,
+        channelId: Long?
+    ) {
         if (state == PendingDownload || state == PauseDownload || state == ErrorDownload) {
             val task = findOrCreateTransferTask(attachment)
             val onResult: (SceytResponse<String>) -> Unit =
@@ -104,7 +109,7 @@ internal class FileTransferServiceImpl(
             UploadAndSendAttachmentWorkManager.schedule(
                 context = context,
                 messageTid = messageTid,
-                channelId = null,
+                channelId = channelId,
                 workPolicy = ExistingWorkPolicy.REPLACE,
                 resumePausedUpload = true,
             )
