@@ -239,7 +239,9 @@ internal class AttachmentUploadCoordinator(
         if (upload.attempt !== attempt) return
         upload.attempt = null
         upload.result = result
-        val finished = upload.members.values.filter { !upload.shared || !it.paused }
+        val finished = upload.members.values.filter {
+            !it.paused || !upload.shared && result.isFailure
+        }
         finished.forEach(::removeMember)
         pending.remove(upload)
         releaseTurn(upload)
