@@ -163,7 +163,7 @@ class FileTransferServiceImplTest {
     @Test
     fun `paused download resumes on first user tap without a registered task`() = runBlocking {
         val attachment = attachment(state = TransferState.PauseDownload)
-        val useCase = PauseOrResumeTransferUseCase(RuntimeEnvironment.getApplication(), service, mock())
+        val useCase = PauseOrResumeTransferUseCase(RuntimeEnvironment.getApplication(), service)
         assertThat(service.findTransferTask(attachment)).isNull()
 
         useCase(attachment)
@@ -178,7 +178,7 @@ class FileTransferServiceImplTest {
         transport.pauseResult = true
         transport.resumeResult = true
         val attachment = attachment(state = TransferState.PendingDownload)
-        val useCase = PauseOrResumeTransferUseCase(RuntimeEnvironment.getApplication(), service, mock())
+        val useCase = PauseOrResumeTransferUseCase(RuntimeEnvironment.getApplication(), service)
         val task = service.download(attachment)
         service.pause(attachment.messageTid, attachment, TransferState.Downloading)
 
@@ -600,7 +600,24 @@ class FileTransferServiceImplTest {
     fun `user resumed upload keeps the channel cancellation tag`() = runBlocking {
         val attachment = attachment(state = TransferState.PauseUpload)
         service.findOrCreateTransferTask(attachment)
-        val useCase = PauseOrResumeTransferUseCase(RuntimeEnvironment.getApplication(), service, mock())
+        val useCase = PauseOrResumeTransferUseCase(RuntimeEnvironment.getApplication(), service)
+
+        useCase(attachment, channelId = 456L)
+
+        val request = argumentCaptor<OneTimeWorkRequest>()
+        verify(workManager).beginUniqueWork(
+            eq(attachment.messageTid.toString()), eq(ExistingWorkPolicy.REPLACE), request.capture(),
+        )
+        assertThat(request.firstValue.tags).contains("456")
+        assertThat(request.firstValue.tags).contains(attachment.messageTid.toString())
+        assertThat(request.firstValue.workSpec.input.getBoolean(RESUME_PAUSED_UPLOAD, false)).isTrue()
+    }
+
+    @Test
+    fun `user resume after restart schedules explicit resume with the channel tag`() = runBlocking {
+        val attachment = attachment(state = TransferState.PauseUpload)
+        assertThat(service.findTransferTask(attachment)).isNull()
+        val useCase = PauseOrResumeTransferUseCase(RuntimeEnvironment.getApplication(), service)
 
         useCase(attachment, channelId = 456L)
 
