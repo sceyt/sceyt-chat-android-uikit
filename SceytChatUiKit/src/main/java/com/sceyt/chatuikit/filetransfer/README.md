@@ -198,6 +198,15 @@ cancels its coroutine, even if the transport would optimistically return `true` 
 - `FileTransferCallback` now exposes `onProgress(Float)`; `FileTransferEvent` is removed.
 - Return `FileTransferResult.Interrupted(error)` instead of emitting the former `WaitingForNetwork` event.
 - `FileTransferLogic` is removed. Configure custom storage through `SceytChatUIKit.fileTransfer.transport`.
+- `FileTransferService.redownload(attachment)` resets a finished attachment with a missing local file
+  and starts its download again. Custom `FileTransferService` implementations must implement it.
+- `FileTransferUtility.uploadFile` is now a suspend function accepting a source `File`.
+  `downloadFile` accepts `FileDownloadRequest`, and cancellation uses `cancelDownload(Call)`.
+  The attachment-based callback overloads and upload/download pause/resume helpers are removed.
+- `OkHttpDownloader` uses request-based downloads and cancels the returned `Call`, not a message ID.
+  Its `pauseDownload`, `resumeDownload`, `cancelAllDownloads`, `isDownloading`,
+  `getActiveDownloadsCount`, and `getActiveDownloads` methods are removed. Use
+  `FileTransferService` for attachment-level transfer control.
 - Waafi must migrate its transport before adopting this branch and preserve S3 state when returning `Interrupted`.
 
 ## Lifecycle

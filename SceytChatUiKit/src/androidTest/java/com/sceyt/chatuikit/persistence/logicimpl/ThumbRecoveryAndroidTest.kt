@@ -10,7 +10,6 @@ import com.google.common.truth.Truth.assertThat
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.koin.SceytKoinApp
-import com.sceyt.chatuikit.persistence.file_transfer.FileTransferListeners
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.file_transfer.ThumbCallback
 import com.sceyt.chatuikit.persistence.file_transfer.ThumbData
@@ -25,7 +24,6 @@ import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.dsl.module
 import java.io.File
-import java.lang.reflect.Proxy
 import java.util.concurrent.CopyOnWriteArrayList
 
 @RunWith(AndroidJUnit4::class)
@@ -33,7 +31,7 @@ class ThumbRecoveryAndroidTest {
     private lateinit var context: Context
     private lateinit var dir: File
     private lateinit var fileTransferService: FakeFileTransferService
-    private lateinit var logic: FileTransferLogicImpl
+    private lateinit var logic: AttachmentThumbCoordinator
     private val thumbPaths = CopyOnWriteArrayList<String>()
 
     @Before
@@ -47,7 +45,7 @@ class ThumbRecoveryAndroidTest {
                 single<FileTransferService> { fileTransferService }
             })
         }
-        logic = FileTransferLogicImpl(context, unused(), AttachmentThumbPathResolver)
+        logic = AttachmentThumbCoordinator(context, AttachmentThumbPathResolver)
     }
 
     @After
@@ -147,12 +145,6 @@ class ThumbRecoveryAndroidTest {
         linkPreviewDetails = null,
     )
 
-    private inline fun <reified T> unused(): T {
-        return Proxy.newProxyInstance(T::class.java.classLoader, arrayOf(T::class.java)) { _, method, _ ->
-            error("Unexpected call: ${method.name}")
-        } as T
-    }
-
     private class FakeFileTransferService : FileTransferService {
         lateinit var task: TransferTask
         val redownloads = CopyOnWriteArrayList<SceytAttachment>()
@@ -163,15 +155,20 @@ class ThumbRecoveryAndroidTest {
             redownloads.add(attachment)
         }
 
-        override fun download(attachment: SceytAttachment, transferTask: TransferTask) = Unit
+        override fun download(attachment: SceytAttachment, configureTask: TransferTask.() -> Unit) =
+            task.apply(configureTask)
 
-        override fun setCustomListener(fileTransferListeners: FileTransferListeners.Listeners) = Unit
-        override fun addTransferTask(task: TransferTask) = Unit
-        override fun removeTransferTask(messageTid: Long) = Unit
+        override fun removeTransferTask(task: TransferTask) = Unit
         override fun getTasks(): Map<String, TransferTask> = emptyMap()
         override fun clearPreparingThumbPaths() = Unit
-        override fun upload(attachment: SceytAttachment, transferTask: TransferTask) = Unit
-        override fun uploadSharedFile(attachment: SceytAttachment, transferTask: TransferTask) = Unit
+        override fun upload(attachment: SceytAttachment, configureTask: TransferTask.() -> Unit) =
+            task.apply(configureTask)
+
+        override fun uploadSharedFile(attachment: SceytAttachment, configureTask: TransferTask.() -> Unit) =
+            task.apply(configureTask)
+
+        override fun cancelUpload(attachment: SceytAttachment) = Unit
+        override fun cancelAllTransfers() = Unit
         override fun pause(messageTid: Long, attachment: SceytAttachment, state: TransferState) = Unit
         override fun resume(messageTid: Long, attachment: SceytAttachment, state: TransferState) = Unit
         override fun getThumb(messageTid: Long, attachment: SceytAttachment, thumbData: ThumbData) = Unit
