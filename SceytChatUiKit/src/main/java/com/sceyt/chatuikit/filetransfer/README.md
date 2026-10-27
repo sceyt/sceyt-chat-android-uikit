@@ -175,9 +175,10 @@ succeeds, fails, or is interrupted; coroutine cancellation remains separate:
 - Cancel the matching backend work when the coroutine is cancelled, and propagate
   `CancellationException` instead of returning it as a failed result.
 
-The default HTTP downloader returns `Interrupted` for connection and response-read failures.
-HTTP errors and destination-write errors return `Failure`. The SDK upload bridge reports its SDK
-errors as `Failure`.
+The default HTTP downloader returns `Interrupted` for connection and response-read failures,
+and HTTP 408, 429, 500, 502, 503, and 504. These responses preserve partial downloads for a later
+retry; they do not trigger an automatic retry. Other HTTP errors and destination-write errors
+return `Failure`. The SDK upload bridge reports its SDK errors as `Failure`.
 
 Custom transports must implement these `FileTransferResult<String>` return types before adopting this
 unreleased API. Waafi's S3 transport migration is still pending; it must not fall back to the
