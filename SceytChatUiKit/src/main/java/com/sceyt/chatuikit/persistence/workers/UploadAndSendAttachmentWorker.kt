@@ -82,8 +82,8 @@ object UploadAndSendAttachmentWorkManager {
             .enqueue()
     }
 
-    fun cancelWorksByTag(context: Context, tag: String) {
-        WorkManager.getInstance(context).cancelAllWorkByTag(tag)
+    fun cancelWorksByTag(context: Context, tag: String): Operation {
+        return WorkManager.getInstance(context).cancelAllWorkByTag(tag)
     }
 }
 
