@@ -361,6 +361,42 @@ class UploadAndSendAttachmentWorkerTest {
     }
 
     @Test
+    fun `worker resume waits for cancelled upload cleanup`() {
+        val cleanup = CompletableDeferred<Unit>()
+        transport.uploadCancellationGate = cleanup
+        val attachment = localAttachment()
+        val pausedWork = testScope.async { worker(attachment).doWork() }
+        service.pause(attachment.messageTid, attachment, TransferState.Uploading)
+        assertThat(pausedWork.isCompleted).isTrue()
+        assertThat(transport.uploadCalls.single().cancelled).isTrue()
+
+        try {
+            val resumedWork = testScope.async {
+                worker(attachment.copy(transferState = TransferState.PauseUpload), resume = true).doWork()
+            }
+
+            assertThat(transport.uploadCalls).hasSize(1)
+            assertThat(resumedWork.isCompleted).isFalse()
+
+            service.pause(attachment.messageTid, attachment, TransferState.WaitingToUpload)
+            assertThat(resumedWork.isCompleted).isTrue()
+            val retriedWork = testScope.async {
+                worker(attachment.copy(transferState = TransferState.PauseUpload), resume = true).doWork()
+            }
+            assertThat(transport.uploadCalls).hasSize(1)
+
+            cleanup.complete(Unit)
+            assertThat(transport.uploadCalls).hasSize(2)
+            transport.uploadCalls.last().succeed("resumed-url")
+
+            assertThat(retriedWork.isCompleted).isTrue()
+            assertSentUrl(attachment, "resumed-url")
+        } finally {
+            cleanup.complete(Unit)
+        }
+    }
+
+    @Test
     fun `explicit worker resume uses native resume instead of uploading twice`() {
         transport.pauseResult = true
         transport.resumeResult = true

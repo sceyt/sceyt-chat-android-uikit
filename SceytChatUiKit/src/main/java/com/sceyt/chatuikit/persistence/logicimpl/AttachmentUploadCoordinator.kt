@@ -23,11 +23,13 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.ArrayDeque
 
@@ -151,8 +153,14 @@ internal class AttachmentUploadCoordinator(
             stopAttempt(upload)
         }
         val owner = upload.members.values.firstOrNull { !it.paused } ?: return
+        val previous = upload.attempt
         val attempt = Attempt(owner.attachment.uploadOperationId)
-        attempt.job = scope.launch(start = CoroutineStart.LAZY) { performUpload(owner, attempt) }
+        attempt.job = scope.launch(start = CoroutineStart.LAZY) {
+            // Keep the cleanup chain intact even if this replacement is paused while waiting.
+            withContext(NonCancellable) { previous?.job?.join() }
+            currentCoroutineContext().ensureActive()
+            performUpload(owner, attempt)
+        }
         upload.attempt = attempt
         attempt.job.start()
     }
@@ -169,7 +177,7 @@ internal class AttachmentUploadCoordinator(
                 },
                 onProgress = { progress ->
                     dispatch {
-                        if (owner.upload.attempt === attempt && !owner.paused && !owner.finished) {
+                        if (owner.upload.attempt === attempt && !attempt.job.isCancelled && !owner.paused && !owner.finished) {
                             owner.task.preparingCallback?.onPreparing(
                                 owner.attachment.toTransferData(
                                     Preparing,
@@ -218,7 +226,7 @@ internal class AttachmentUploadCoordinator(
     }
 
     private fun handleProgress(upload: Upload, attempt: Attempt, progressPercent: Float) {
-        if (upload.attempt !== attempt || !upload.hasActiveMembers) return
+        if (upload.attempt !== attempt || attempt.job.isCancelled || !upload.hasActiveMembers) return
         upload.members.values.filter { !it.paused }.forEach { member ->
             notify {
                 member.task.state = Uploading
@@ -283,9 +291,10 @@ internal class AttachmentUploadCoordinator(
     }.getOrDefault(false)
 
     private fun stopAttempt(upload: Upload) {
-        val attempt = upload.attempt
-        upload.attempt = null
-        attempt?.job?.cancel()
+        upload.attempt?.let { attempt ->
+            attempt.paused = true
+            attempt.job.cancel()
+        }
     }
 
     private fun releaseTurn(upload: Upload) {
