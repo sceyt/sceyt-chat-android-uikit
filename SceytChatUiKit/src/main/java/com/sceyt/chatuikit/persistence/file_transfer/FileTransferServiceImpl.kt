@@ -55,7 +55,10 @@ internal class FileTransferServiceImpl(
     }
 
     override fun redownload(attachment: SceytAttachment) {
-        findTransferTask(attachment)?.let(::removeTransferTask)
+        findTransferTask(attachment)?.let { task ->
+            if (task.state == PendingDownload || task.state == Downloading || task.state == PauseDownload) return
+            removeTransferTask(task)
+        }
         val pendingAttachment = attachment.copy(
             transferState = PendingDownload,
             progressPercent = 0f,

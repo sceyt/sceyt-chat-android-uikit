@@ -144,6 +144,23 @@ class FileTransferServiceImplTest {
     }
 
     @Test
+    fun `duplicate recovery download keeps its task and delivers completion`() {
+        val attachment = attachment(state = TransferState.Downloaded)
+        service.redownload(attachment)
+        val task = checkNotNull(service.findTransferTask(attachment))
+        var result: Result<SceytAttachment>? = null
+        task.addOnCompletionListener("recovery") { result = it }
+
+        service.redownload(attachment)
+
+        assertThat(service.findTransferTask(attachment)).isSameInstanceAs(task)
+        val call = transport.downloadCalls.single()
+        call.succeed(call.request.destinationFile.path)
+        assertThat(result?.getOrNull()?.filePath).isEqualTo(call.request.destinationFile.path)
+        assertThat(service.getTasks()).isEmpty()
+    }
+
+    @Test
     fun `paused download resumes on first user tap without a registered task`() = runBlocking {
         val attachment = attachment(state = TransferState.PauseDownload)
         val useCase = PauseOrResumeTransferUseCase(RuntimeEnvironment.getApplication(), service, mock())
