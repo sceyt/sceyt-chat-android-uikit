@@ -18,6 +18,7 @@ import com.sceyt.chatuikit.logger.SceytLogLevel
 import com.sceyt.chatuikit.logger.SceytLoggerImpl
 import com.sceyt.chatuikit.persistence.database.dao.ChannelDao
 import com.sceyt.chatuikit.persistence.database.dao.ChatUserReactionDao
+import com.sceyt.chatuikit.persistence.database.dao.MessageDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingReactionDao
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
 import com.sceyt.chatuikit.persistence.repositories.ChannelsRepository
@@ -48,6 +49,7 @@ import kotlin.time.Duration.Companion.milliseconds
 internal class PersistenceChannelsLogicSyncTest {
     private val channelsRepository = mock<ChannelsRepository>()
     private val channelDao = mock<ChannelDao>()
+    private val messageDao = mock<MessageDao>()
     private val channelsCache = mock<ChannelsCache>()
     private val chatUserReactionDao = mock<ChatUserReactionDao>()
     private val pendingReactionDao = mock<PendingReactionDao>()
@@ -92,7 +94,7 @@ internal class PersistenceChannelsLogicSyncTest {
         channelDao = channelDao,
         globalSearchDao = mock(),
         usersDao = mock(),
-        messageDao = mock(),
+        messageDao = messageDao,
         rangeDao = mock(),
         draftMessageDao = mock(),
         chatUserReactionDao = chatUserReactionDao,
@@ -118,6 +120,7 @@ internal class PersistenceChannelsLogicSyncTest {
     }
 
     private suspend fun givenSyncMisses(missing: Map<Long, SceytResponse<SceytChannel>>) {
+        whenever(messageDao.getPendingMessages(any())).thenReturn(emptyList())
         whenever(channelsRepository.getAllChannels(config.queryLimit))
             .thenReturn(flowOf(serverPage, SyncResult.SuccessfullyFinished))
         whenever(

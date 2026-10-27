@@ -9,10 +9,14 @@ import androidx.work.impl.WorkManagerImpl
 import com.google.common.truth.Truth.assertThat
 import com.google.common.util.concurrent.Futures
 import com.sceyt.chat.models.message.Message
+import com.sceyt.chat.models.SceytException
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.config.SceytChatUIKitConfig
+import com.sceyt.chatuikit.config.ChannelListConfig
+import com.sceyt.chatuikit.createChannel
 import com.sceyt.chatuikit.createMessage
 import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.data.models.SyncResult
 import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.filetransfer.AttachmentTransferContext
@@ -24,6 +28,8 @@ import com.sceyt.chatuikit.filetransfer.SceytChatUIKitFileTransfer
 import com.sceyt.chatuikit.koin.SceytKoinApp
 import com.sceyt.chatuikit.notifications.SceytNotifications
 import com.sceyt.chatuikit.persistence.database.dao.FileChecksumDao
+import com.sceyt.chatuikit.persistence.database.dao.ChannelDao
+import com.sceyt.chatuikit.persistence.database.dao.MessageDao
 import com.sceyt.chatuikit.persistence.di.CoroutineContextType
 import com.sceyt.chatuikit.persistence.file_transfer.AttachmentTransferStateStore
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferHelper
@@ -38,12 +44,18 @@ import com.sceyt.chatuikit.persistence.logicimpl.AttachmentDownloadCoordinator
 import com.sceyt.chatuikit.persistence.logicimpl.AttachmentUploadCoordinator
 import com.sceyt.chatuikit.persistence.logicimpl.RecordingFileTransferTransport
 import com.sceyt.chatuikit.persistence.logicimpl.attachment
+import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
+import com.sceyt.chatuikit.persistence.logicimpl.channel.PersistenceChannelsLogicImpl
+import com.sceyt.chatuikit.persistence.mappers.toMessageDb
+import com.sceyt.chatuikit.persistence.repositories.ChannelsRepository
 import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager.IS_SHARING
 import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager.MESSAGE_TID
 import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager.RESUME_PAUSED_UPLOAD
 import com.sceyt.chatuikit.providers.ChatConnectionProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -467,6 +479,140 @@ class UploadAndSendAttachmentWorkerTest {
     }
 
     @Test
+    fun `clearing a channel stops its upload and releases the next queued upload`() = runBlocking<Unit> {
+        val attachment = localAttachment()
+        val work = testScope.async { worker(attachment).doWork() }
+        val call = transport.uploadCalls.single()
+        val next = attachment.copy(messageTid = 11L)
+        service.upload(next)
+        val messageDao = mock<MessageDao>()
+        val repository = mock<ChannelsRepository>()
+        val pending = checkNotNull(messageLogic.getMessageFromDbByTid(attachment.messageTid))
+        whenever(messageDao.getPendingMessages(0L)).thenReturn(listOf(pending.toMessageDb(false)))
+        whenever(repository.clearHistory(0L, false))
+            .thenReturn(SceytResponse.Success(createChannel(0L, 0L, 0L)))
+
+        channelLogic(messageDao, repository).clearHistory(0L, false)
+
+        assertThat(call.cancelled).isTrue()
+        assertThat(work.isCompleted).isTrue()
+        assertThat(service.findTransferTask(attachment)).isNull()
+        assertThat(transport.uploadCalls).hasSize(2)
+        assertThat(transport.uploadCalls.last().request.operationId).isEqualTo("upload:11")
+        verify(messageLogic, never()).sendMessageWithUploadedAttachments(any(), any())
+    }
+
+    @Test
+    fun `deleting a channel leaves another channels shared upload running`() = runBlocking {
+        val owner = localAttachment()
+        val follower = owner.copy(messageTid = 11L)
+        val ownerWork = testScope.async { worker(owner, shared = true).doWork() }
+        val followerWork = testScope.async { worker(follower, shared = true, channelId = 1L).doWork() }
+        val call = transport.uploadCalls.single()
+        val messageDao = mock<MessageDao>()
+        val repository = mock<ChannelsRepository>()
+        val pending = checkNotNull(messageLogic.getMessageFromDbByTid(owner.messageTid))
+        whenever(messageDao.getPendingMessages(0L)).thenReturn(listOf(pending.toMessageDb(false)))
+        whenever(repository.deleteChannel(0L)).thenReturn(SceytResponse.Success(0L))
+
+        channelLogic(messageDao, repository).deleteChannel(0L)
+
+        assertThat(ownerWork.isCompleted).isTrue()
+        assertThat(service.findTransferTask(owner)).isNull()
+        assertThat(call.cancelled).isFalse()
+        assertThat(followerWork.isCompleted).isFalse()
+        call.succeed("shared-after-channel-deletion")
+        assertThat(followerWork.isCompleted).isTrue()
+        assertSentUrl(follower, "shared-after-channel-deletion", channelId = 1L)
+    }
+
+    @Test
+    fun `leaving a channel cancels a natively paused upload after its worker finished`() = runBlocking<Unit> {
+        transport.pauseResult = true
+        val attachment = localAttachment()
+        val work = testScope.async { worker(attachment).doWork() }
+        service.pause(attachment.messageTid, attachment, TransferState.Uploading)
+        val call = transport.uploadCalls.single()
+        assertThat(work.isCompleted).isTrue()
+        assertThat(call.cancelled).isFalse()
+        val messageDao = mock<MessageDao>()
+        val repository = mock<ChannelsRepository>()
+        val pending = checkNotNull(messageLogic.getMessageFromDbByTid(attachment.messageTid))
+        whenever(messageDao.getPendingMessages(0L)).thenReturn(listOf(pending.toMessageDb(false)))
+        whenever(repository.leaveChannel(0L)).thenReturn(SceytResponse.Success(0L))
+
+        channelLogic(messageDao, repository).leaveChannel(0L)
+
+        assertThat(call.cancelled).isTrue()
+        assertThat(service.findTransferTask(attachment)).isNull()
+        verify(messageLogic, never()).sendMessageWithUploadedAttachments(any(), any())
+    }
+
+    @Test
+    fun `failed clear history leaves its upload running`() = runBlocking {
+        val attachment = localAttachment()
+        val work = testScope.async { worker(attachment).doWork() }
+        val call = transport.uploadCalls.single()
+        val messageDao = mock<MessageDao>()
+        val repository = mock<ChannelsRepository>()
+        val pending = checkNotNull(messageLogic.getMessageFromDbByTid(attachment.messageTid))
+        whenever(messageDao.getPendingMessages(0L)).thenReturn(listOf(pending.toMessageDb(false)))
+        whenever(repository.clearHistory(0L, false))
+            .thenReturn(SceytResponse.Error(SceytException(1, "clear failed")))
+
+        channelLogic(messageDao, repository).clearHistory(0L, false)
+
+        assertThat(call.cancelled).isFalse()
+        assertThat(work.isCompleted).isFalse()
+        call.succeed("upload-after-failed-clear")
+        assertThat(work.isCompleted).isTrue()
+        assertSentUrl(attachment, "upload-after-failed-clear")
+    }
+
+    @Test
+    fun `sync removing a channel cancels its pending upload`() = runBlocking<Unit> {
+        val attachment = localAttachment()
+        val work = testScope.async { worker(attachment).doWork() }
+        val call = transport.uploadCalls.single()
+        val messageDao = mock<MessageDao>()
+        val channelDao = mock<ChannelDao>()
+        val repository = mock<ChannelsRepository>()
+        val pending = checkNotNull(messageLogic.getMessageFromDbByTid(attachment.messageTid))
+        whenever(messageDao.getPendingMessages(0L)).thenReturn(listOf(pending.toMessageDb(false)))
+        whenever(channelDao.getAllChannelIdsByTypes(emptyList(), true)).thenReturn(listOf(0L))
+        whenever(repository.getAllChannels(any())).thenReturn(flowOf(SyncResult.SuccessfullyFinished))
+
+        channelLogic(messageDao, repository, channelDao).syncChannels(ChannelListConfig.default).toList()
+
+        assertThat(call.cancelled).isTrue()
+        assertThat(work.isCompleted).isTrue()
+        assertThat(service.findTransferTask(attachment)).isNull()
+        verify(messageLogic, never()).sendMessageWithUploadedAttachments(any(), any())
+    }
+
+    private fun channelLogic(
+        messageDao: MessageDao,
+        repository: ChannelsRepository,
+        channelDao: ChannelDao = mock(),
+    ) =
+        PersistenceChannelsLogicImpl(
+            context = context,
+            channelsRepository = repository,
+            channelDao = channelDao,
+            globalSearchDao = mock(),
+            usersDao = mock(),
+            messageDao = messageDao,
+            rangeDao = mock(),
+            draftMessageDao = mock(),
+            chatUserReactionDao = mock(),
+            pendingReactionDao = mock(),
+            channelsCache = ChannelsCache(),
+            channelSyncStateStore = mock(),
+            pendingChannelCoordinator = mock(),
+            insertChannelWithMembersUseCase = mock(),
+        )
+
+    @Test
     fun `explicit resume after process restart starts a fresh shared upload`() {
         val attachment = localAttachment().copy(transferState = TransferState.PauseUpload)
         val worker = worker(attachment, resume = true, shared = true)
@@ -491,8 +637,10 @@ class UploadAndSendAttachmentWorkerTest {
         resume: Boolean = false,
         shared: Boolean = false,
         runAttemptCount: Int = 0,
+        channelId: Long = 0L,
     ): UploadAndSendAttachmentWorker {
         val message = createMessage(createdAt = 1L, tid = attachment.messageTid).copy(
+            channelId = channelId,
             deliveryStatus = MessageDeliveryStatus.Pending,
             attachments = listOf(attachment),
         )
@@ -511,9 +659,9 @@ class UploadAndSendAttachmentWorkerTest {
         return UploadAndSendAttachmentWorker(context, params)
     }
 
-    private fun assertSentUrl(attachment: SceytAttachment, url: String) = runBlocking {
+    private fun assertSentUrl(attachment: SceytAttachment, url: String, channelId: Long = 0L) = runBlocking {
         val message = argumentCaptor<Message>()
-        verify(messageLogic).sendMessageWithUploadedAttachments(eq(0L), message.capture())
+        verify(messageLogic).sendMessageWithUploadedAttachments(eq(channelId), message.capture())
         assertThat(message.firstValue.tid).isEqualTo(attachment.messageTid)
         assertThat(message.firstValue.attachments.single().url).isEqualTo(url)
     }
