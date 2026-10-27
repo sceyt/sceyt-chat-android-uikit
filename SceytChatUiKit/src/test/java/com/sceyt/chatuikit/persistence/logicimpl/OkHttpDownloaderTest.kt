@@ -145,15 +145,52 @@ class OkHttpDownloaderTest {
         val request = request("download:cancel-before-response")
         val callback = argumentCaptor<Callback>()
         var completions = 0
-        downloader.downloadFile(request, {}, { error("Cancelled download must not report a result") }) {
-            completions++
-        }
+        val call = checkNotNull(
+            downloader.downloadFile(
+                request = request,
+                onProgress = {},
+                onResult = { error("Cancelled download must not report a result") },
+                onFinished = { completions++ },
+            )
+        )
         verify(firstCall).enqueue(callback.capture())
         whenever(firstCall.isCanceled()).thenReturn(true)
 
+        downloader.cancelDownload(call)
+        assertThat(completions).isEqualTo(1)
         callback.firstValue.onFailure(firstCall, IOException("cancelled"))
 
         assertThat(completions).isEqualTo(1)
+    }
+
+    @Test
+    fun `late response after cancellation leaves the destination unchanged`() {
+        val request = request("download:late-response")
+        request.destinationFile.writeText("keep")
+        val callback = argumentCaptor<Callback>()
+        val body = mock<ResponseBody>()
+        val downloader = OkHttpDownloader()
+        var completions = 0
+        val call = checkNotNull(
+            downloader.downloadFile(
+                request = request,
+                onProgress = {},
+                onResult = { error("Cancelled download must not report a result") },
+                onFinished = { completions++ },
+            )
+        )
+        verify(firstCall).enqueue(callback.capture())
+        val response = Response.Builder()
+            .request(Request.Builder().url(request.url).build())
+            .protocol(Protocol.HTTP_1_1).code(200).message("OK").body(body).build()
+
+        downloader.cancelDownload(call)
+        callback.firstValue.onResponse(firstCall, response)
+
+        assertThat(request.destinationFile.readText()).isEqualTo("keep")
+        assertThat(completions).isEqualTo(1)
+        verify(body).close()
+        verify(body, never()).source()
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)

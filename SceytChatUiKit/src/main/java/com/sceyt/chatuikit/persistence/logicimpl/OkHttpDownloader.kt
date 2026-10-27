@@ -14,6 +14,7 @@ import okio.buffer
 import okio.sink
 import java.io.IOException
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
 
 class OkHttpDownloader {
 
@@ -58,6 +59,12 @@ class OkHttpDownloader {
         }
 
         val call = httpClient.newCall(httpRequest)
+        val state = AtomicReference(DownloadState.Pending)
+
+        fun finish() {
+            val previousState = state.getAndSet(DownloadState.Finished)
+            if (previousState != DownloadState.Finished) onFinished()
+        }
 
         call.enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
@@ -66,23 +73,27 @@ class OkHttpDownloader {
                     SceytLog.e(TAG, "Download failed: ${e.message}")
                     onResult(FileTransferResult.Interrupted(e))
                 } finally {
-                    onFinished()
+                    finish()
                 }
             }
 
             override fun onResponse(call: Call, response: Response) {
                 try {
                     response.use {
-                        if (call.isCanceled()) return
+                        val canReadResponse =
+                            state.compareAndSet(DownloadState.Pending, DownloadState.Reading)
+                        if (!canReadResponse || call.isCanceled()) return
                         if (!response.isSuccessful) {
-                            onResult(FileTransferResult.Failure(SceytException(response.code, response.message)))
+                            val error = SceytException(response.code, response.message)
+                            onResult(FileTransferResult.Failure(error))
                             return
                         }
 
                         val responseBody = response.body
                         val contentLength = responseBody.contentLength()
                         val resumedBytes = if (response.code == 206) existingSize else 0L
-                        val totalSize = if (contentLength != -1L) contentLength + resumedBytes else -1L
+                        val totalSize =
+                            if (contentLength != -1L) contentLength + resumedBytes else -1L
                         val outputStream = if (response.code == 206) {
                             java.io.FileOutputStream(destFile, true)
                         } else destFile.outputStream()
@@ -97,7 +108,8 @@ class OkHttpDownloader {
                                 val bytesRead = try {
                                     source.read(sink.buffer, 8192)
                                 } catch (e: IOException) {
-                                    if (!call.isCanceled()) onResult(FileTransferResult.Interrupted(e))
+                                    if (!call.isCanceled())
+                                        onResult(FileTransferResult.Interrupted(e))
                                     return
                                 }
                                 if (bytesRead == -1L) break
@@ -123,14 +135,24 @@ class OkHttpDownloader {
                     }
                 } finally {
                     // Signal only after both the file sink and response have closed.
-                    onFinished()
+                    finish()
                 }
             }
         })
-        return call
+        return object : Call by call {
+            override fun cancel() {
+                call.cancel()
+                // No writer owns the destination yet; a late response cannot start one.
+                val cancelledBeforeReading =
+                    state.compareAndSet(DownloadState.Pending, DownloadState.Finished)
+                if (cancelledBeforeReading) onFinished()
+            }
+        }
     }
 
     fun cancelDownload(call: Call) {
         call.cancel()
     }
+
+    private enum class DownloadState { Pending, Reading, Finished }
 }
