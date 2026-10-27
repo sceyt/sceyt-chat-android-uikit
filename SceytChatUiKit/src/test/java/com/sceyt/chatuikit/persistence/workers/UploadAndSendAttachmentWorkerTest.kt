@@ -212,6 +212,50 @@ class UploadAndSendAttachmentWorkerTest {
     }
 
     @Test
+    fun `failed upload finishes worker without sending and releases next upload`() = runBlocking {
+        val failedAttachment = localAttachment()
+        val nextAttachment = failedAttachment.copy(messageTid = 11L, id = 11L)
+        val failedWork = testScope.async { worker(failedAttachment).doWork() }
+        val nextWork = testScope.async { worker(nextAttachment).doWork() }
+        assertThat(transport.uploadCalls).hasSize(1)
+
+        transport.uploadCalls.single().fail(SceytException(500, "Upload failed"))
+
+        assertThat(failedWork.isCompleted).isTrue()
+        assertThat(failedWork.await()).isEqualTo(androidx.work.ListenableWorker.Result.success())
+        assertThat(service.findTransferTask(failedAttachment)).isNull()
+        assertThat(AttachmentTransferStateStore.getTransferData(failedAttachment)?.state)
+            .isEqualTo(TransferState.ErrorUpload)
+        verify(messageLogic, never()).sendMessageWithUploadedAttachments(any(), any())
+        assertThat(transport.uploadCalls).hasSize(2)
+        assertThat(nextWork.isCompleted).isFalse()
+
+        transport.uploadCalls.last().succeed("next-url")
+
+        assertThat(nextWork.isCompleted).isTrue()
+        assertSentUrl(nextAttachment, "next-url")
+    }
+
+    @Test
+    fun `worker rerun retries attachment after upload failure`() = runBlocking {
+        val attachment = localAttachment()
+        val failedWork = testScope.async { worker(attachment).doWork() }
+        transport.uploadCalls.single().fail(SceytException(500, "Upload failed"))
+        assertThat(failedWork.isCompleted).isTrue()
+        assertThat(failedWork.await()).isEqualTo(androidx.work.ListenableWorker.Result.success())
+        verify(messageLogic, never()).sendMessageWithUploadedAttachments(any(), any())
+
+        val retriedWork = testScope.async {
+            worker(attachment.copy(transferState = TransferState.ErrorUpload)).doWork()
+        }
+        assertThat(transport.uploadCalls).hasSize(2)
+        transport.uploadCalls.last().succeed("retried-url")
+
+        assertThat(retriedWork.isCompleted).isTrue()
+        assertSentUrl(attachment, "retried-url")
+    }
+
+    @Test
     fun `worker cancellation stops a suspended state update without starting upload`() = runBlocking<Unit> {
         val updateStarted = CompletableDeferred<Unit>()
         val releaseUpdate = CompletableDeferred<Unit>()
