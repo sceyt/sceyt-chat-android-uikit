@@ -147,6 +147,7 @@ internal class RecordingFileTransferTransport : FileTransferTransport {
     val downloadCalls = CopyOnWriteArrayList<DownloadCall>()
     val pauseCalls = CopyOnWriteArrayList<String>()
     val resumeCalls = CopyOnWriteArrayList<String>()
+    var uploadCancellationGate: CompletableDeferred<Unit>? = null
     var downloadCancellationGate: CompletableDeferred<Unit>? = null
     var pauseResult = false
     var resumeResult = false
@@ -161,6 +162,11 @@ internal class RecordingFileTransferTransport : FileTransferTransport {
             call.result.await()
         } catch (error: CancellationException) {
             call.cancelled = true
+            uploadCancellationGate?.let { gate ->
+                withContext(NonCancellable) {
+                    gate.await()
+                }
+            }
             throw error
         }
     }
