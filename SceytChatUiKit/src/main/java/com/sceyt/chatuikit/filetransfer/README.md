@@ -200,6 +200,8 @@ cancels its coroutine, even if the transport would optimistically return `true` 
 - `FileTransferLogic` is removed. Configure custom storage through `SceytChatUIKit.fileTransfer.transport`.
 - `FileTransferService.redownload(attachment)` resets a finished attachment with a missing local file
   and starts its download again. Custom `FileTransferService` implementations must implement it.
+- `PauseOrResumeTransferUseCase` takes only `Context` and `FileTransferService`; the
+  `AttachmentInteractor` constructor parameter is removed. Upload resume always goes through the service.
 - `FileTransferUtility.uploadFile` is now a suspend function accepting a source `File`.
   `downloadFile` accepts `FileDownloadRequest`, and cancellation uses `cancelDownload(Call)`.
   The attachment-based callback overloads and upload/download pause/resume helpers are removed.
