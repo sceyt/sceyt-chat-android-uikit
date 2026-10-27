@@ -17,6 +17,7 @@ import okhttp3.Protocol
 import okhttp3.Request
 import okhttp3.Response
 import okhttp3.ResponseBody
+import okhttp3.ResponseBody.Companion.toResponseBody
 import okio.Buffer
 import okio.BufferedSource
 import org.junit.After
@@ -234,6 +235,78 @@ class OkHttpDownloaderTest {
             assertThat(download.await()).isEqualTo(FileTransferResult.Success(request.destinationFile.path))
             assertThat(progress.first()).isEqualTo(if (code == 200) 50f else 75f)
             assertThat(request.destinationFile.readText()).isEqualTo(if (code == 200) "abcd" else "old!abcd")
+        }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun `temporary HTTP failure keeps partial bytes for a later range request`() = runTest(UnconfinedTestDispatcher()) {
+        val request = request("download:service-unavailable")
+        request.destinationFile.writeText("partial")
+        val transport = DefaultFileTransferTransport()
+        val download = async { transport.download(request) {} }
+        val callback = argumentCaptor<Callback>()
+        verify(firstCall).enqueue(callback.capture())
+        val response = Response.Builder()
+            .request(Request.Builder().url(request.url).build())
+            .protocol(Protocol.HTTP_1_1).code(503).message("Service Unavailable")
+            .body("unavailable".toResponseBody()).build()
+
+        callback.firstValue.onResponse(firstCall, response)
+
+        assertThat(download.await()).isInstanceOf(FileTransferResult.Interrupted::class.java)
+        assertThat(request.destinationFile.readText()).isEqualTo("partial")
+        verify(client).newCall(any())
+        verify(firstCall, never()).cancel()
+
+        val retry = async { transport.download(request) {} }
+        val requests = argumentCaptor<Request>()
+        verify(client, Mockito.times(2)).newCall(requests.capture())
+        assertThat(requests.lastValue.header("Range")).isEqualTo("bytes=7-")
+        val retryCallback = argumentCaptor<Callback>()
+        verify(secondCall).enqueue(retryCallback.capture())
+        val retryResponse = Response.Builder()
+            .request(requests.lastValue)
+            .protocol(Protocol.HTTP_1_1).code(206).message("Partial Content")
+            .body("rest".toResponseBody()).build()
+
+        retryCallback.firstValue.onResponse(secondCall, retryResponse)
+
+        assertThat(retry.await()).isEqualTo(FileTransferResult.Success(request.destinationFile.path))
+        assertThat(request.destinationFile.readText()).isEqualTo("partialrest")
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun `HTTP classification preserves temporary errors and keeps terminal errors unchanged`() = runTest(UnconfinedTestDispatcher()) {
+        val cases = mapOf(
+            408 to FileTransferResult.Interrupted::class.java,
+            429 to FileTransferResult.Interrupted::class.java,
+            500 to FileTransferResult.Interrupted::class.java,
+            502 to FileTransferResult.Interrupted::class.java,
+            503 to FileTransferResult.Interrupted::class.java,
+            504 to FileTransferResult.Interrupted::class.java,
+            404 to FileTransferResult.Failure::class.java,
+            416 to FileTransferResult.Failure::class.java,
+            501 to FileTransferResult.Failure::class.java,
+            505 to FileTransferResult.Failure::class.java,
+        )
+        for ((code, expectedType) in cases) {
+            val call = mock<Call>()
+            whenever(client.newCall(any())).thenReturn(call)
+            val request = request("download:http-$code")
+            val transport = DefaultFileTransferTransport()
+            val download = async { transport.download(request) {} }
+            val callback = argumentCaptor<Callback>()
+            verify(call).enqueue(callback.capture())
+            val response = Response.Builder()
+                .request(Request.Builder().url(request.url).build())
+                .protocol(Protocol.HTTP_1_1).code(code).message("HTTP $code")
+                .body("error".toResponseBody()).build()
+
+            callback.firstValue.onResponse(call, response)
+
+            assertThat(download.await()).isInstanceOf(expectedType)
         }
     }
 

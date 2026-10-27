@@ -85,7 +85,11 @@ class OkHttpDownloader {
                         if (!canReadResponse || call.isCanceled()) return
                         if (!response.isSuccessful) {
                             val error = SceytException(response.code, response.message)
-                            onResult(FileTransferResult.Failure(error))
+                            val result = when (response.code) {
+                                408, 429, 500, 502, 503, 504 -> FileTransferResult.Interrupted(error)
+                                else -> FileTransferResult.Failure(error)
+                            }
+                            onResult(result)
                             return
                         }
 
