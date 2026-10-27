@@ -52,13 +52,17 @@ import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManage
 import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager.MESSAGE_TID
 import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager.RESUME_PAUSED_UPLOAD
 import com.sceyt.chatuikit.providers.ChatConnectionProvider
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.withTimeout
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -70,6 +74,7 @@ import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import org.mockito.kotlin.any
 import org.mockito.kotlin.argumentCaptor
+import org.mockito.kotlin.doSuspendableAnswer
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
@@ -198,6 +203,28 @@ class UploadAndSendAttachmentWorkerTest {
                 resumePausedUpload = false,
             ),
         ).isTrue()
+    }
+
+    @Test
+    fun `worker cancellation stops a suspended state update without starting upload`() = runBlocking<Unit> {
+        val updateStarted = CompletableDeferred<Unit>()
+        val releaseUpdate = CompletableDeferred<Unit>()
+        whenever(attachmentLogic.updateAttachmentWithTransferData(any())).doSuspendableAnswer {
+            updateStarted.complete(Unit)
+            releaseUpdate.await()
+        }
+        val uploadWorker = worker(localAttachment())
+        val work = testScope.async(Dispatchers.Default) { uploadWorker.doWork() }
+
+        try {
+            withTimeout(5_000) { updateStarted.await() }
+            work.cancel()
+            withTimeout(5_000) { work.join() }
+            assertThat(transport.uploadCalls).isEmpty()
+        } finally {
+            releaseUpdate.complete(Unit)
+            work.cancelAndJoin()
+        }
     }
 
     @Test

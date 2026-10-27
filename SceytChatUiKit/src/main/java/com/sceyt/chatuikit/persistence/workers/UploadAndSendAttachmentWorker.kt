@@ -45,7 +45,6 @@ import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManage
 import com.sceyt.chatuikit.presentation.extensions.isNotPending
 import com.sceyt.chatuikit.shared.utils.FileChecksumCalculator
 import kotlinx.coroutines.CancellableContinuation
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.suspendCancellableCoroutine
 import org.koin.core.component.inject
 import kotlin.time.Duration.Companion.seconds
@@ -143,24 +142,21 @@ class UploadAndSendAttachmentWorker(
                     return KtResult.failure(Exception("Attachment upload is paused"))
                 }
 
+                val transferData = TransferData(
+                    messageTid = tmpMessage.tid,
+                    progressPercent = attachment.progressPercent ?: 0f,
+                    state = TransferState.WaitingToUpload,
+                    filePath = attachment.filePath,
+                    url = attachment.url
+                )
+
+                FileTransferHelper.emitAttachmentTransferUpdate(
+                    transferData = transferData,
+                    fileSize = attachment.fileSize
+                )
+                attachmentLogic.updateAttachmentWithTransferData(transferData)
+
                 val result = suspendCancellableCoroutine { continuation ->
-                    val transferData = TransferData(
-                        messageTid = tmpMessage.tid,
-                        progressPercent = attachment.progressPercent ?: 0f,
-                        state = TransferState.WaitingToUpload,
-                        filePath = attachment.filePath,
-                        url = attachment.url
-                    )
-
-                    FileTransferHelper.emitAttachmentTransferUpdate(
-                        transferData = transferData,
-                        fileSize = attachment.fileSize
-                    )
-
-                    runBlocking {
-                        attachmentLogic.updateAttachmentWithTransferData(transferData)
-                    }
-
                     uploadFile(attachment, continuation, isSharing)
                 }
                 return result.fold(
