@@ -2,6 +2,7 @@ package com.sceyt.chatuikit.persistence.logicimpl.channel
 
 import android.content.Context
 import androidx.sqlite.db.SimpleSQLiteQuery
+import androidx.work.await
 import com.sceyt.chat.models.channel.ChannelListQuery.ChannelListOrder
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.UserState
@@ -56,6 +57,7 @@ import com.sceyt.chatuikit.persistence.database.entity.messages.DraftMessageUser
 import com.sceyt.chatuikit.persistence.database.entity.user.UserDb
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isDirect
+import com.sceyt.chatuikit.persistence.extensions.runCatchingCancellable
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.persistence.extensions.uploadIfLocal
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
@@ -1257,6 +1259,12 @@ internal class PersistenceChannelsLogicImpl(
     private suspend fun cancelPendingUploads(channelIds: List<Long>) {
         // Read attachments before deleting their rows; paused uploads may have no running worker.
         messageDao.getPendingMessagesByChannelIds(channelIds).forEach { message ->
+            val messageTid = message.messageEntity.tid
+            runCatchingCancellable {
+                UploadAndSendAttachmentWorkManager.cancelWorksByTag(context, messageTid.toString()).await()
+            }.onFailure {
+                SceytLog.e(TAG, "Could not cancel upload worker for message $messageTid", it)
+            }
             message.attachments?.forEach { fileTransferService.cancelUpload(it.toAttachment()) }
         }
     }
