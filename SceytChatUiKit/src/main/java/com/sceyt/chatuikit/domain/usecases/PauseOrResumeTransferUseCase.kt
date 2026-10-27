@@ -36,13 +36,13 @@ class PauseOrResumeTransferUseCase(
             }
 
             TransferState.PauseDownload -> {
-                fileTransferService.resume(attachment.messageTid, attachment, state)
+                fileTransferService.resume(attachment.messageTid, attachment, state, channelId)
             }
 
             TransferState.PauseUpload -> {
                 val task = fileTransferService.findTransferTask(attachment)
                 if (task != null)
-                    fileTransferService.resume(attachment.messageTid, attachment, state)
+                    fileTransferService.resume(attachment.messageTid, attachment, state, channelId)
                 else {
                     // Update transfer state to Uploading, otherwise SendAttachmentWorkManager will
                     // not start uploading.

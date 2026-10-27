@@ -68,7 +68,7 @@ internal class TestFileTransferService : FileTransferService {
         }
     }
 
-    override fun resume(messageTid: Long, attachment: SceytAttachment, state: TransferState) = Unit
+    override fun resume(messageTid: Long, attachment: SceytAttachment, state: TransferState, channelId: Long?) = Unit
 
     override fun redownload(attachment: SceytAttachment) = Unit
 

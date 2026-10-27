@@ -191,7 +191,7 @@ open class VoiceSearchViewModel(
 
     fun pauseOrResumeTransfer(item: GlobalSearchListItem.AttachmentItem) {
         viewModelScope.launch {
-            pauseOrResumeTransferUseCase(item.attachment)
+            pauseOrResumeTransferUseCase(item.attachment, item.result.channel.id)
         }
     }
 
