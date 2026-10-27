@@ -117,6 +117,7 @@ internal class PersistenceChannelsLogicImpl(
 
     companion object {
         private const val TAG = "PersistenceChannelsLogic"
+        private const val CHANNEL_CLEANUP_BATCH_SIZE = 999
     }
 
     private val messageLogic: PersistenceMessagesLogic by inject()
@@ -1280,12 +1281,14 @@ internal class PersistenceChannelsLogicImpl(
 
     private suspend fun deleteChannelsFromDbAndCache(channelIds: List<Long>) {
         if (channelIds.isEmpty()) return
-        cancelPendingUploads(channelIds)
-        channelDao.deleteAllChannelsAndLinksById(channelIds)
-        messageDao.deleteAllChannelsMessages(channelIds)
-        rangeDao.deleteChannelsLoadRanges(channelIds)
-        channelsCache.deleteChannel(*channelIds.toLongArray())
-        channelSyncStateStore.deleteSyncStates(channelIds)
+        channelIds.chunked(CHANNEL_CLEANUP_BATCH_SIZE).forEach { batch ->
+            cancelPendingUploads(batch)
+            channelDao.deleteAllChannelsAndLinksById(batch)
+            messageDao.deleteAllChannelsMessages(batch)
+            rangeDao.deleteChannelsLoadRanges(batch)
+            channelsCache.deleteChannel(*batch.toLongArray())
+            channelSyncStateStore.deleteSyncStates(batch)
+        }
     }
 
     private suspend fun clearHistory(channel: SceytChannel) {

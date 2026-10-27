@@ -18,9 +18,11 @@ import com.sceyt.chatuikit.logger.SceytLogLevel
 import com.sceyt.chatuikit.logger.SceytLoggerImpl
 import com.sceyt.chatuikit.persistence.database.dao.ChannelDao
 import com.sceyt.chatuikit.persistence.database.dao.ChatUserReactionDao
+import com.sceyt.chatuikit.persistence.database.dao.LoadRangeDao
 import com.sceyt.chatuikit.persistence.database.dao.MessageDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingReactionDao
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
+import com.sceyt.chatuikit.persistence.logicimpl.sync.ChannelSyncStateStore
 import com.sceyt.chatuikit.persistence.repositories.ChannelsRepository
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.flowOf
@@ -43,6 +45,7 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.mockingDetails
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verifyBlocking
+import org.mockito.kotlin.verifyNoMoreInteractions
 import org.mockito.kotlin.whenever
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -50,6 +53,8 @@ internal class PersistenceChannelsLogicSyncTest {
     private val channelsRepository = mock<ChannelsRepository>()
     private val channelDao = mock<ChannelDao>()
     private val messageDao = mock<MessageDao>()
+    private val rangeDao = mock<LoadRangeDao>()
+    private val channelSyncStateStore = mock<ChannelSyncStateStore>()
     private val channelsCache = mock<ChannelsCache>()
     private val chatUserReactionDao = mock<ChatUserReactionDao>()
     private val pendingReactionDao = mock<PendingReactionDao>()
@@ -95,12 +100,12 @@ internal class PersistenceChannelsLogicSyncTest {
         globalSearchDao = mock(),
         usersDao = mock(),
         messageDao = messageDao,
-        rangeDao = mock(),
+        rangeDao = rangeDao,
         draftMessageDao = mock(),
         chatUserReactionDao = chatUserReactionDao,
         pendingReactionDao = pendingReactionDao,
         channelsCache = channelsCache,
-        channelSyncStateStore = mock(),
+        channelSyncStateStore = channelSyncStateStore,
         pendingChannelCoordinator = pendingChannelCoordinator,
         insertChannelWithMembersUseCase = mock(),
     )
@@ -169,6 +174,29 @@ internal class PersistenceChannelsLogicSyncTest {
             .map { invocation ->
                 (invocation.rawArguments[1] as Array<*>).map { (it as SceytChannel).id }
             }
+
+    @Test
+    fun `sync removes large channel lists in bounded cleanup batches`() = runTest {
+        val channelIds = (1L..1001L).toList()
+        val expectedBatches = listOf((1L..999L).toList(), listOf(1000L, 1001L))
+        whenever(channelDao.getAllChannelIdsByTypes(config.types, true)).thenReturn(channelIds)
+        whenever(channelsRepository.getAllChannels(config.queryLimit))
+            .thenReturn(flowOf(SyncResult.SuccessfullyFinished))
+        whenever(messageDao.getPendingMessagesByChannelIds(any())).thenReturn(emptyList())
+
+        val results = logic().syncChannels(config).toList()
+
+        assertThat(results).containsExactly(SyncResult.SuccessfullyFinished)
+        for (batch in expectedBatches) {
+            verifyBlocking(messageDao) { getPendingMessagesByChannelIds(batch) }
+            verifyBlocking(channelDao) { deleteAllChannelsAndLinksById(batch) }
+            verifyBlocking(messageDao) { deleteAllChannelsMessages(batch) }
+            verifyBlocking(rangeDao) { deleteChannelsLoadRanges(batch) }
+            verifyBlocking(channelSyncStateStore) { deleteSyncStates(batch) }
+        }
+        verifyBlocking(channelDao) { getAllChannelIdsByTypes(config.types, true) }
+        verifyNoMoreInteractions(messageDao, channelDao, rangeDao, channelSyncStateStore)
+    }
 
     @Test
     fun `channel skipped by offset shift but still on server is kept and persisted`() = runTest {
