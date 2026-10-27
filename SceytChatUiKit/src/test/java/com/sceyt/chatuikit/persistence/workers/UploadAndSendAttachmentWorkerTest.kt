@@ -16,6 +16,10 @@ import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.filetransfer.AttachmentTransferContext
+import com.sceyt.chatuikit.filetransfer.FileTransferCallback
+import com.sceyt.chatuikit.filetransfer.FileTransferResult
+import com.sceyt.chatuikit.filetransfer.FileTransferTransport
+import com.sceyt.chatuikit.filetransfer.FileUploadRequest
 import com.sceyt.chatuikit.filetransfer.SceytChatUIKitFileTransfer
 import com.sceyt.chatuikit.koin.SceytKoinApp
 import com.sceyt.chatuikit.notifications.SceytNotifications
@@ -331,6 +335,62 @@ class UploadAndSendAttachmentWorkerTest {
 
         assertThat(work.isCompleted).isTrue()
         assertSentUrl(attachment, "native-resumed-url")
+    }
+
+    @Test
+    fun `completed native upload stays paused until its worker resumes`() {
+        transport.pauseResult = true
+        val attachment = localAttachment()
+        val pausedWork = testScope.async { worker(attachment).doWork() }
+        service.pause(attachment.messageTid, attachment, TransferState.Uploading)
+
+        transport.uploadCalls.single().succeed("completed-while-paused")
+
+        assertThat(pausedWork.isCompleted).isTrue()
+        assertThat(service.findTransferTask(attachment)?.state).isEqualTo(TransferState.PauseUpload)
+        runBlocking {
+            verify(messageLogic, never()).sendMessageWithUploadedAttachments(any(), any())
+        }
+
+        val resumedWork = testScope.async {
+            worker(attachment.copy(transferState = TransferState.PauseUpload), resume = true).doWork()
+        }
+
+        assertThat(resumedWork.isCompleted).isTrue()
+        assertThat(transport.uploadCalls).hasSize(1)
+        assertSentUrl(attachment, "completed-while-paused")
+    }
+
+    @Test
+    fun `pause queued with upload completion retains the result for resume`() {
+        val attachment = localAttachment()
+        SceytChatUIKit.fileTransfer.transport = object : FileTransferTransport by transport {
+            override suspend fun upload(
+                request: FileUploadRequest,
+                callback: FileTransferCallback,
+            ): FileTransferResult<String> {
+                val result = transport.upload(request, callback)
+                service.pause(attachment.messageTid, attachment, TransferState.Uploading)
+                return result
+            }
+        }
+        val pausedWork = testScope.async { worker(attachment).doWork() }
+
+        transport.uploadCalls.single().succeed("completed-before-pause-applied")
+
+        assertThat(pausedWork.isCompleted).isTrue()
+        assertThat(service.findTransferTask(attachment)?.state).isEqualTo(TransferState.PauseUpload)
+        runBlocking {
+            verify(messageLogic, never()).sendMessageWithUploadedAttachments(any(), any())
+        }
+
+        val resumedWork = testScope.async {
+            worker(attachment.copy(transferState = TransferState.PauseUpload), resume = true).doWork()
+        }
+
+        assertThat(resumedWork.isCompleted).isTrue()
+        assertThat(transport.uploadCalls).hasSize(1)
+        assertSentUrl(attachment, "completed-before-pause-applied")
     }
 
     @Test
