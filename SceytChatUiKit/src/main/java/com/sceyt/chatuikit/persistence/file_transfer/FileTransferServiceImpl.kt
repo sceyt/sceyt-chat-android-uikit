@@ -81,6 +81,7 @@ internal class FileTransferServiceImpl(
 
     override fun cancelUpload(attachment: SceytAttachment) {
         val task = findTransferTask(attachment)
+        task?.isCancelled = true
         task?.let(::removeTransferTask)
         task?.let(uploader::cancel)
         downloader.cancel(attachment)
@@ -146,10 +147,11 @@ internal class FileTransferServiceImpl(
     }
 
     override fun cancelAllTransfers() {
+        val tasks = tasksMap.values.toList()
+        tasks.forEach { it.isCancelled = true }
         downloader.cancelAll()
         uploader.cancelAll()
         thumbs.clear()
-        val tasks = tasksMap.values.toList()
         tasksMap.clear()
         tasks.forEach {
             it.complete(Result.failure(CancellationException("File transfers cancelled")))
@@ -231,7 +233,9 @@ internal class FileTransferServiceImpl(
     ): TransferTask {
         val task = findOrCreateTransferTask(attachment)
         task.configureTask()
-        start(attachment, task)
+        if (task.isCancelled) {
+            task.complete(Result.failure(CancellationException("Attachment upload cancelled")))
+        } else start(attachment, task)
         return task
     }
 

@@ -461,6 +461,35 @@ class FileTransferServiceImplTest {
     }
 
     @Test
+    fun `upload cancelled during configuration never starts and releases its listener`() {
+        useTransferCoordinators()
+        val attachment = attachment(url = null, filePath = files.newFile("cancel-before-admission.txt").path)
+        var completion: Result<SceytAttachment>? = null
+
+        service.upload(attachment) {
+            service.cancelUpload(attachment)
+            addOnCompletionListener("worker") { completion = it }
+        }
+
+        assertThat(transport.uploadCalls).isEmpty()
+        assertThat(completion?.exceptionOrNull()).isInstanceOf(CancellationException::class.java)
+        assertThat(service.getTasks()).isEmpty()
+    }
+
+    @Test
+    fun `cancellation from resume callback prevents queued upload admission`() {
+        useTransferCoordinators()
+        val attachment = attachment(url = null, filePath = files.newFile("cancel-on-resume.txt").path)
+        val task = service.findOrCreateTransferTask(attachment)
+        task.resumePauseCallback = ResumePauseCallback { service.cancelUpload(attachment) }
+
+        service.resume(attachment.messageTid, attachment, TransferState.PendingUpload)
+
+        assertThat(transport.uploadCalls).isEmpty()
+        assertThat(service.getTasks()).isEmpty()
+    }
+
+    @Test
     fun `cancel upload leaves other attachment tasks registered`() {
         val first = attachment()
         val second = first.copy(id = 11L, url = "second-url")
@@ -517,6 +546,22 @@ class FileTransferServiceImplTest {
 
         assertThat(completion?.exceptionOrNull()).isInstanceOf(CancellationException::class.java)
         assertThat(task.onCompletionListeners).isEmpty()
+        assertThat(service.getTasks()).isEmpty()
+    }
+
+    @Test
+    fun `cancel all during configuration prevents a late upload and releases its listener`() {
+        useTransferCoordinators()
+        val attachment = attachment(url = null, filePath = files.newFile("cancel-all-before-admission.txt").path)
+        var completion: Result<SceytAttachment>? = null
+
+        service.upload(attachment) {
+            service.cancelAllTransfers()
+            addOnCompletionListener("worker") { completion = it }
+        }
+
+        assertThat(transport.uploadCalls).isEmpty()
+        assertThat(completion?.exceptionOrNull()).isInstanceOf(CancellationException::class.java)
         assertThat(service.getTasks()).isEmpty()
     }
 
