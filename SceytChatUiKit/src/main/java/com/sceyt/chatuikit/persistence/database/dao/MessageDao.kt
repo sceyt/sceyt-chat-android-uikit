@@ -510,6 +510,18 @@ internal abstract class MessageDao {
     )
     abstract suspend fun getPendingMessages(channelId: Long): List<MessageDb>
 
+    @Transaction
+    @Query(
+        """
+        SELECT *
+        FROM $MESSAGE_TABLE
+        WHERE channelId IN (:channelIds)
+          AND deliveryStatus = $PENDING_STATUS
+        ORDER BY createdAt
+        """
+    )
+    abstract suspend fun getPendingMessagesByChannelIds(channelIds: List<Long>): List<MessageDb>
+
     @Query(
         """
         SELECT message_id
