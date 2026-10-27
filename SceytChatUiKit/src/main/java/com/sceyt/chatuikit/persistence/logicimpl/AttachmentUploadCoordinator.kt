@@ -17,8 +17,8 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Preparing
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploading
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.WaitingToUpload
 import com.sceyt.chatuikit.persistence.file_transfer.TransferTask
-import com.sceyt.chatuikit.persistence.mappers.toTransferData
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
+import com.sceyt.chatuikit.persistence.mappers.toTransferData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
@@ -241,7 +241,7 @@ internal class AttachmentUploadCoordinator(
         upload.attempt = null
         upload.result = result
         val finished = upload.members.values.filter {
-            !it.paused || !upload.shared && result.isFailure
+            !it.paused || (!upload.shared && result.isFailure)
         }
         finished.forEach(::removeMember)
         pending.remove(upload)
