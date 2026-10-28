@@ -155,14 +155,13 @@ internal class AttachmentUploadCoordinator(
         val owner = upload.members.values.firstOrNull { !it.paused } ?: return
         val previous = upload.attempt
         val attempt = Attempt(owner.attachment.uploadOperationId)
-        attempt.job = scope.launch(start = CoroutineStart.LAZY) {
-            // Keep the cleanup chain intact even if this replacement is paused while waiting.
+        attempt.job = scope.launch(start = CoroutineStart.ATOMIC) {
+            // Enter cleanup even if paused before dispatch; cancelled attempts never prepare files.
             withContext(NonCancellable) { previous?.job?.join() }
             currentCoroutineContext().ensureActive()
             performUpload(owner, attempt)
         }
         upload.attempt = attempt
-        attempt.job.start()
     }
 
     private suspend fun performUpload(owner: Member, attempt: Attempt) {

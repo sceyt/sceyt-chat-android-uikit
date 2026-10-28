@@ -195,12 +195,42 @@ cancels its coroutine, even if the transport would optimistically return `true` 
 
 ## Unreleased migration notes
 
+This branch intentionally changes public APIs from `dev`. Recompile applications and libraries
+that call the changed APIs; previously compiled JVM callers are not binary-compatible.
+
+### Transfer service and task ownership
+
+| Previous API or behavior | Migration |
+| --- | --- |
+| `FileTransferListeners` and `FileTransferService.setCustomListener()` | Removed. Configure storage through `SceytChatUIKit.fileTransfer.transport` instead of replacing attachment coordination. |
+| `upload`, `uploadSharedFile`, and `download` accept a caller-created `TransferTask` | Pass `configureTask: TransferTask.() -> Unit` instead. Each method returns the task registered by the service. |
+| `addTransferTask(task)` | Removed. Start the transfer through the service, which owns registration. |
+| `removeTransferTask(messageTid: Long)` | Pass the exact `TransferTask` instead; removal must not remove a newer attempt or another attachment. |
+| `findOrCreateTransferTask(attachment)` only creates a task when absent | It now also registers the task. Use `findTransferTask(attachment)` for lookup without registration. |
+| `getTasks()` uses message-tid strings as keys | Keys are now attachment transfer keys. The return type remains `Map<String, TransferTask>`; use attachment lookup rather than constructing or parsing keys. |
+| Three-argument `resume` | An optional `channelId` parameter is added. Supply the message's channel ID when resuming uploads so channel cleanup can cancel the replacement worker. |
+| No explicit service cancellation methods | `cancelUpload(attachment)` and `cancelAllTransfers()` are now part of the service contract. Custom service implementations must implement them. |
+
+Calling `task.uploadResultCallback` directly only publishes state and persistence updates. It no
+longer removes the task or completes the worker's listeners. Customer transports must return
+`FileTransferResult.Success`, `Failure`, or `Interrupted`; the service then owns task completion
+and listener notification. Attach consumer completion listeners through `configureTask` instead
+of creating or registering replacement tasks.
+
+### Transport and utility APIs
+
+The file-only transport is new relative to `dev`. For integrations with earlier unreleased
+versions of this branch:
+
 - `FileTransferTransport.upload/download` return `FileTransferResult<String>` instead of `Result<String>`.
 - `FileTransferCallback` now exposes `onProgress(Float)`; `FileTransferEvent` is removed.
 - Return `FileTransferResult.Interrupted(error)` instead of emitting the former `WaitingForNetwork` event.
+
+Other API changes from `dev`:
+
 - `FileTransferLogic` is removed. Configure custom storage through `SceytChatUIKit.fileTransfer.transport`.
-- `FileTransferService.redownload(attachment)` resets a finished attachment with a missing local file
-  and starts its download again. Custom `FileTransferService` implementations must implement it.
+- `FileTransferService.redownload(attachment)` remains available to reset a finished attachment
+  with a missing local file and start its download again. This method already exists on `dev`.
 - `PauseOrResumeTransferUseCase` takes only `Context` and `FileTransferService`; the
   `AttachmentInteractor` constructor parameter is removed. Upload resume always goes through the service.
 - `FileTransferUtility.uploadFile` is now a suspend function accepting a source `File`.
@@ -211,6 +241,30 @@ cancels its coroutine, even if the transport would optimistically return `true` 
   `getActiveDownloadsCount`, and `getActiveDownloads` methods are removed. Use
   `FileTransferService` for attachment-level transfer control.
 - Waafi must migrate its transport before adopting this branch and preserve S3 state when returning `Interrupted`.
+  Its `FileTransferServiceInitializer`, `WaafiFileTransferService`, and
+  `ProvideVideoPostMediaDataUseCase` still use the old hooks or task-registration behavior and
+  must be migrated before release. Do not silently fall back to the default Sceyt backend.
+
+### Media and worker APIs
+
+| Public API | Migration |
+| --- | --- |
+| `VideoResizeConfig` | The constructor now uses `shortSideThreshold`, `quality`, nullable `frameRate` and `bitrate`, and `bitrateCoefficient`, replacing the old `dimensionThreshold` / `compressionQuality` parameters. |
+| `transcodeVideo` | Pass `config: VideoResizeConfig` instead of `quality`. The function now returns the request's destination `File?`; the result callback still supplies the completed path. |
+| `VideoTranscodeHelper.cancel` | Pass the destination `File` returned by `transcodeVideo`, not the original source path or `File(sourcePath)`. |
+| `CustomVideoCompressor.start` | Now returns `Job` instead of `Unit`. Recompile previously built JVM consumers, even if they ignore the return value. |
+| `UploadAndSendAttachmentWorkManager.schedule` | Adds `resumePausedUpload: Boolean = false`. Use `true` only for an explicit user resume, not an unrelated worker rerun. |
+| `UploadAndSendAttachmentWorkManager.cancelWorksByTag` | Now returns `Operation`. Await its completion when cleanup must finish before deleting message data. |
+
+For `VideoResizeConfig`, bitrate selection is `bitrate`, then `bitrateCoefficient`, then `quality`.
+Set `bitrateCoefficient = null` as well as leaving `bitrate = null` to select only a quality preset;
+the default coefficient otherwise takes precedence over `quality`.
+
+### Checksum-cache migration
+
+Checksum sampling now seeks to absolute file offsets. For files at least 3 MiB (3,145,728 bytes),
+stored checksums may no longer match, so duplicate-upload detection may miss once per file and
+upload it again. Existing sent-message URLs remain valid; this does not delete or corrupt files.
 
 ## Lifecycle
 
