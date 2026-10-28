@@ -17,12 +17,15 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferTask
 import com.sceyt.chatuikit.persistence.file_transfer.transferKey
 import com.sceyt.chatuikit.persistence.mappers.toTransferData
 import com.sceyt.chatuikit.presentation.extensions.isAttachmentExistAndFullyLoaded
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 
 /** Owns file checks and the current download attempt for each attachment. */
@@ -41,13 +44,16 @@ internal class AttachmentDownloadCoordinator(
     ) {
         if (!isResuming && task.state == PauseDownload) return
         val key = attachment.transferKey
-        val download = synchronized(lock) {
+        val registered = CompletableDeferred<Unit>()
+        synchronized(lock) {
             val previous = downloads[key]
             if (previous != null && !previous.job.isCancelled && !previous.job.isCompleted) return
             Download(attachment, task, onResult, isResuming).also { next ->
-                next.job = scope.launch(start = CoroutineStart.LAZY) {
-                    // Wait for the previous attempt to stop before reusing the destination file.
-                    previous?.job?.join()
+                next.job = scope.launch(start = CoroutineStart.UNDISPATCHED) {
+                    // Enter cleanup before cancellation can skip it; file work waits for registration.
+                    withContext(NonCancellable) { previous?.job?.join() }
+                    registered.await()
+                    currentCoroutineContext().ensureActive()
                     performDownload(next)
                 }
                 downloads[key] = next
@@ -58,7 +64,7 @@ internal class AttachmentDownloadCoordinator(
                 }
             }
         }
-        download.job.start()
+        registered.complete(Unit)
     }
 
     fun pause(attachment: SceytAttachment): Boolean {

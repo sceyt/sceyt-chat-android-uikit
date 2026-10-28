@@ -32,10 +32,14 @@ import com.sceyt.chatuikit.shared.media_encoder.CompressionListener
 import com.sceyt.chatuikit.shared.media_encoder.CustomVideoCompressor
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
@@ -163,6 +167,54 @@ class AttachmentUploadCoordinatorTest {
             assertThat(service.findTransferTask(attachment)).isSameInstanceAs(task)
             service.cancelUpload(attachment)
             testScope.runCurrent()
+        }
+    }
+
+    @Test
+    fun `resume waits for original cleanup when an upload replacement never starts`() {
+        val queued = java.util.ArrayDeque<Runnable>()
+        val dispatcher = object : CoroutineDispatcher() {
+            override fun dispatch(context: CoroutineContext, block: Runnable) {
+                queued.addLast(block)
+            }
+        }
+        val scope = CoroutineScope(SupervisorJob() + dispatcher)
+        coordinator = AttachmentUploadCoordinator(context, attachmentLogic, scope)
+        service = FileTransferServiceImpl(context, coordinator, mock(), mock())
+        val attachment = uploadAttachment(messageTid = 221L)
+        val gate = CompletableDeferred<Unit>()
+        transport.uploadCancellationGate = gate
+        fun drain() {
+            while (queued.isNotEmpty()) queued.removeFirst().run()
+        }
+
+        try {
+            uploadFile(attachment, transferTask(attachment))
+            drain()
+            pauseUpload(attachment, TransferState.Uploading)
+            drain()
+            assertThat(transport.uploadCalls.single().cancelled).isTrue()
+
+            resumeUpload(attachment, TransferState.PauseUpload)
+            queued.removeFirst().run()
+            // Let pause run before the newly dispatched upload gets a thread.
+            pauseUpload(attachment, TransferState.WaitingToUpload)
+            queued.removeLast().run()
+            drain()
+            resumeUpload(attachment, TransferState.PauseUpload)
+            drain()
+
+            assertThat(transport.uploadCalls).hasSize(1)
+            gate.complete(Unit)
+            drain()
+            assertThat(transport.uploadCalls).hasSize(2)
+            transport.uploadCalls.last().succeed("resumed-url")
+            drain()
+            assertThat(service.findTransferTask(attachment)).isNull()
+        } finally {
+            gate.complete(Unit)
+            scope.cancel()
+            drain()
         }
     }
 

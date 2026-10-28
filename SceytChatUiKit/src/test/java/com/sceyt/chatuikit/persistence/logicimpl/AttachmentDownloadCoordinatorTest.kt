@@ -33,6 +33,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
@@ -690,6 +691,71 @@ class AttachmentDownloadCoordinatorTest {
 
         assertThat(transport.downloadCalls).hasSize(2)
         assertThat(replacement.cancelled).isFalse()
+    }
+
+    @Test
+    fun `repeated resume waits for original download cleanup`() {
+        val attachment = attachment(state = TransferState.Downloading)
+        val results = mutableListOf<SceytResponse<String>>()
+        val task = transferTask(attachment).apply {
+            downloadCallback = TransferResultCallback { results += it }
+        }
+        val cancellationGate = CompletableDeferred<Unit>()
+        transport.downloadCancellationGate = cancellationGate
+        service.download(attachment)
+        destinationFile.writeBytes(byteArrayOf(1, 2))
+
+        try {
+            service.pause(attachment.messageTid, attachment, TransferState.Downloading)
+            assertThat(transport.downloadCalls.single().cancelled).isTrue()
+            service.resume(attachment.messageTid, attachment, TransferState.PauseDownload)
+            service.resume(attachment.messageTid, attachment, TransferState.PauseDownload)
+
+            assertThat(transport.downloadCalls).hasSize(1)
+            service.pause(attachment.messageTid, attachment, TransferState.Downloading)
+            service.resume(attachment.messageTid, attachment, TransferState.PauseDownload)
+            assertThat(transport.downloadCalls).hasSize(1)
+            assertThat(results).isEmpty()
+
+            cancellationGate.complete(Unit)
+            assertThat(transport.downloadCalls).hasSize(2)
+            destinationFile.writeBytes(byteArrayOf(1, 2, 3, 4))
+            transport.downloadCalls.last().succeed(destinationFile.path)
+
+            assertThat(results.single().data).isEqualTo(destinationFile.path)
+            assertThat(service.findTransferTask(attachment)).isNull()
+        } finally {
+            cancellationGate.complete(Unit)
+        }
+    }
+
+    @Test
+    fun `resume waits for original cleanup when a queued replacement never starts`() {
+        testScope = TestScope(StandardTestDispatcher())
+        service = FileTransferServiceImpl(context, mock(), AttachmentDownloadCoordinator(context, testScope), mock())
+        val attachment = attachment(state = TransferState.Downloading)
+        transferTask(attachment)
+        val cancellationGate = CompletableDeferred<Unit>()
+        transport.downloadCancellationGate = cancellationGate
+        service.download(attachment)
+        testScope.runCurrent()
+
+        try {
+            service.pause(attachment.messageTid, attachment, TransferState.Downloading)
+            testScope.runCurrent()
+            service.resume(attachment.messageTid, attachment, TransferState.PauseDownload)
+            service.resume(attachment.messageTid, attachment, TransferState.PauseDownload)
+            testScope.runCurrent()
+
+            assertThat(transport.downloadCalls).hasSize(1)
+
+            cancellationGate.complete(Unit)
+            testScope.runCurrent()
+            assertThat(transport.downloadCalls).hasSize(2)
+        } finally {
+            cancellationGate.complete(Unit)
+            testScope.runCurrent()
+        }
     }
 
     @Test
