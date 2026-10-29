@@ -47,7 +47,9 @@ internal class AttachmentDownloadCoordinator(
         val registered = CompletableDeferred<Unit>()
         synchronized(lock) {
             val previous = downloads[key]
-            if (previous != null && !previous.job.isCancelled && !previous.job.isCompleted) return
+            if (previous != null && !previous.job.isCancelled && !previous.job.isCompleted) {
+                if (!previous.completed || previous.task === task) return
+            }
             Download(attachment, task, onResult, isResuming).also { next ->
                 next.job = scope.launch(start = CoroutineStart.UNDISPATCHED) {
                     // Enter cleanup before cancellation can skip it; file work waits for registration.
@@ -59,7 +61,7 @@ internal class AttachmentDownloadCoordinator(
                 downloads[key] = next
                 next.job.invokeOnCompletion {
                     synchronized(lock) {
-                        if (!next.paused) downloads.remove(key, next)
+                        if (!next.paused || next.completed) downloads.remove(key, next)
                     }
                 }
             }
@@ -183,7 +185,6 @@ internal class AttachmentDownloadCoordinator(
             if (downloads[download.key] !== download) return
             val callback = download.onResult ?: return
             if (result is FileTransferResult.Failure) download.destination?.delete()
-            downloads.remove(download.key)
             download.onResult = null
             callback
         }

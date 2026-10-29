@@ -5,13 +5,21 @@ import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 class TransferTask(
     attachment: SceytAttachment,
     val messageTid: Long,
-    var state: TransferState?,
+    state: TransferState?,
 ) {
     @Volatile
     private var _attachment: SceytAttachment = attachment
 
     @PublishedApi
     internal val lock = Any()
+
+    @Volatile
+    var state: TransferState? = state
+        set(value) {
+            synchronized(lock) {
+                field = value
+            }
+        }
 
     // Remember sharing before a paused upload has joined its shared group.
     internal var isSharedUpload = false
@@ -68,7 +76,11 @@ class TransferTask(
 
     val onCompletionListeners: HashMap<String, (Result<SceytAttachment>) -> Unit> by lazy { hashMapOf() }
 
-    /** Adds a listener that is notified when this transfer finishes. */
+    /**
+     * Adds a one-shot listener for transfer completion.
+     * Pausing an upload also notifies current listeners with a failure so its worker can finish;
+     * the attachment's paused transfer remains available for resume.
+     */
     fun addOnCompletionListener(
         key: String,
         listener: (Result<SceytAttachment>) -> Unit,
