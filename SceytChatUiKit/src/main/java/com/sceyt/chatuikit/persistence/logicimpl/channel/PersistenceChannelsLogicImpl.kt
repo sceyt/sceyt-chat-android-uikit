@@ -25,6 +25,7 @@ import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.chatuikit.data.models.SDKErrorTypeEnum
 import com.sceyt.chatuikit.data.models.SceytPagingResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.SyncResult
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
@@ -79,7 +80,6 @@ import com.sceyt.chatuikit.persistence.mappers.toSceytUiChannel
 import com.sceyt.chatuikit.persistence.mappers.toUserDb
 import com.sceyt.chatuikit.persistence.mappers.toUserReactionsEntity
 import com.sceyt.chatuikit.persistence.repositories.ChannelsRepository
-import com.sceyt.chatuikit.persistence.workers.SendForwardMessagesWorkManager
 import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager
 import com.sceyt.chatuikit.presentation.extensions.isDeleted
 import com.sceyt.chatuikit.presentation.extensions.isDeletedOrHardDeleted
@@ -830,8 +830,6 @@ internal class PersistenceChannelsLogicImpl(
         val response = channelsRepository.clearHistory(channelId, forEveryone)
 
         if (response is SceytResponse.Success) {
-            UploadAndSendAttachmentWorkManager.cancelWorksByTag(context, channelId.toString())
-            SendForwardMessagesWorkManager.cancelWorksByTag(context, channelId.toString())
             response.onSuccessNotNull {
                 clearHistory(it)
             }
@@ -844,8 +842,6 @@ internal class PersistenceChannelsLogicImpl(
         val response = channelsRepository.blockChannel(channelId)
 
         if (response is SceytResponse.Success) {
-            UploadAndSendAttachmentWorkManager.cancelWorksByTag(context, channelId.toString())
-            SendForwardMessagesWorkManager.cancelWorksByTag(context, channelId.toString())
             deleteChannelFromDbAndCache(channelId)
         }
 
@@ -860,8 +856,6 @@ internal class PersistenceChannelsLogicImpl(
         val response = channelsRepository.leaveChannel(channelId)
 
         if (response is SceytResponse.Success) {
-            UploadAndSendAttachmentWorkManager.cancelWorksByTag(context, channelId.toString())
-            SendForwardMessagesWorkManager.cancelWorksByTag(context, channelId.toString())
             deleteChannelFromDbAndCache(channelId)
         }
 
@@ -877,8 +871,6 @@ internal class PersistenceChannelsLogicImpl(
         val response = channelsRepository.deleteChannel(channelId)
 
         if (response is SceytResponse.Success) {
-            UploadAndSendAttachmentWorkManager.cancelWorksByTag(context, channelId.toString())
-            SendForwardMessagesWorkManager.cancelWorksByTag(context, channelId.toString())
             deleteChannelFromDbAndCache(channelId)
         }
 
@@ -1259,13 +1251,22 @@ internal class PersistenceChannelsLogicImpl(
 
     private suspend fun cancelPendingUploads(channelIds: List<Long>) {
         // Read attachments before deleting their rows; paused uploads may have no running worker.
-        messageDao.getPendingMessagesByChannelIds(channelIds).forEach { message ->
-            val messageTid = message.messageEntity.tid
-            runCatchingCancellable {
-                UploadAndSendAttachmentWorkManager.cancelWorksByTag(context, messageTid.toString()).await()
-            }.onFailure {
-                SceytLog.e(TAG, "Could not cancel upload worker for message $messageTid", it)
-            }
+        val messages = messageDao.getPendingMessagesByChannelIds(channelIds).filter { message ->
+            message.attachments.orEmpty().any { it.attachmentEntity.type != AttachmentTypeEnum.Link.value }
+        }
+        val workerTags = (channelIds + messages.map { it.messageEntity.tid }).distinct()
+        coroutineScope {
+            workerTags.map { tag ->
+                async {
+                    runCatchingCancellable {
+                        UploadAndSendAttachmentWorkManager.cancelWorksByTag(context, tag.toString()).await()
+                    }.onFailure {
+                        SceytLog.e(TAG, "Could not cancel workers tagged $tag", it)
+                    }
+                }
+            }.awaitAll()
+        }
+        messages.forEach { message ->
             message.attachments?.forEach { fileTransferService.cancelUpload(it.toAttachment()) }
         }
     }

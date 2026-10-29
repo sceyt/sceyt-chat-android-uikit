@@ -974,13 +974,13 @@ internal class PersistenceMessagesLogicImpl(
             ?: message
         if (storedMessage.isPending()) {
             val clonedMessage = message.copy(state = MessageState.Deleted)
-            messageDao.deleteMessageByTid(message.tid)
-            messagesCache.hardDeleteMessage(channelId, message)
-            persistenceChannelsLogic.onMessageEditedOrDeleted(clonedMessage)
-            UploadAndSendAttachmentWorkManager.cancelWorksByTag(context, message.tid.toString())
+            UploadAndSendAttachmentWorkManager.cancelWorksByTag(context, message.tid.toString()).await()
             storedMessage.attachments?.forEach {
                 fileTransferService.cancelUpload(it)
             }
+            messageDao.deleteMessageByTid(message.tid)
+            messagesCache.hardDeleteMessage(channelId, message)
+            persistenceChannelsLogic.onMessageEditedOrDeleted(clonedMessage)
             // The send request may already have reached the server, so persist a delete-by-tid
             // intent (retried on reconnect) and attempt to delete it on the server now.
             pendingMessageDeleteByTidDao.insert(

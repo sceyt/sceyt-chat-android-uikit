@@ -127,13 +127,15 @@ internal class FileTransferServiceImpl(
     }
 
     override fun findOrCreateTransferTask(attachment: SceytAttachment): TransferTask {
-        return tasksMap.computeIfAbsent(attachment.transferKey) {
+        val key = if (!tasksMap.containsKey(attachment.transferKey) && tasksMap.containsKey(attachment.urlTransferKey))
+            attachment.urlTransferKey else attachment.transferKey
+        return tasksMap.computeIfAbsent(key) {
             FileTransferHelper.createTransferTask(attachment)
         }
     }
 
     override fun findTransferTask(attachment: SceytAttachment): TransferTask? {
-        return tasksMap[attachment.transferKey]
+        return tasksMap[attachment.transferKey] ?: tasksMap[attachment.urlTransferKey]
     }
 
     override fun removeTransferTask(task: TransferTask) {
@@ -215,7 +217,9 @@ internal class FileTransferServiceImpl(
             SceytLog.e(TAG, "File transfer callback failed", it)
         }
         val result = when (response) {
-            is SceytResponse.Success -> Result.success(task.attachment)
+            is SceytResponse.Success -> Result.success(
+                if (upload) task.attachment.copy(url = response.data) else task.attachment,
+            )
             is SceytResponse.Error -> Result.failure(
                 if (upload) Throwable(response.message.orEmpty())
                 else response.exception ?: IllegalStateException("File download failed"),

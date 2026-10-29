@@ -40,6 +40,7 @@ import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferServiceImpl
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
+import com.sceyt.chatuikit.persistence.file_transfer.TransferTask
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
@@ -56,10 +57,13 @@ import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManage
 import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager.RESUME_PAUSED_UPLOAD
 import com.sceyt.chatuikit.providers.ChatConnectionProvider
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
@@ -275,6 +279,52 @@ class UploadAndSendAttachmentWorkerTest {
             releaseUpdate.complete(Unit)
             work.cancelAndJoin()
         }
+    }
+
+    @Test
+    fun `worker cancelled before upload registration does not start a transfer`() = runBlocking<Unit> {
+        whenever(attachmentLogic.updateAttachmentWithTransferData(any())).doSuspendableAnswer {
+            currentCoroutineContext().cancel()
+        }
+        val work = testScope.async { worker(localAttachment()).doWork() }
+
+        work.join()
+
+        assertThat(work.isCancelled).isTrue()
+        assertThat(transport.uploadCalls).isEmpty()
+        assertThat(service.getTasks()).isEmpty()
+        verify(messageLogic, never()).sendMessageWithUploadedAttachments(any(), any())
+    }
+
+    @Test
+    fun `worker cancelled while registering its task does not leave an upload running`() = runBlocking<Unit> {
+        val attachment = localAttachment()
+        val work = testScope.async(start = CoroutineStart.LAZY) { worker(attachment).doWork() }
+        val cancellingService = mock<FileTransferService>()
+        whenever(cancellingService.findTransferTask(any())).thenAnswer {
+            service.findTransferTask(it.getArgument(0))
+        }
+        whenever(cancellingService.cancelUpload(any())).thenAnswer {
+            service.cancelUpload(it.getArgument(0))
+        }
+        whenever(cancellingService.upload(any(), any())).thenAnswer { invocation ->
+            work.cancel()
+            service.upload(
+                invocation.getArgument<SceytAttachment>(0),
+                invocation.getArgument<TransferTask.() -> Unit>(1),
+            )
+        }
+        SceytKoinApp.koinApp!!.koin.loadModules(listOf(module {
+            single<FileTransferService> { cancellingService }
+        }))
+
+        work.start()
+        work.join()
+
+        assertThat(work.isCancelled).isTrue()
+        assertThat(transport.uploadCalls).isEmpty()
+        assertThat(service.getTasks()).isEmpty()
+        verify(messageLogic, never()).sendMessageWithUploadedAttachments(any(), any())
     }
 
     @Test
@@ -720,7 +770,9 @@ class UploadAndSendAttachmentWorkerTest {
 
         verify(messageDao).getPendingMessagesByChannelIds(channelIds)
         verify(messageDao, never()).getPendingMessages(any())
-        verify(workManager, never()).cancelAllWorkByTag(any())
+        val cancelledTags = argumentCaptor<String>()
+        verify(workManager, org.mockito.kotlin.times(channelIds.size)).cancelAllWorkByTag(cancelledTags.capture())
+        assertThat(cancelledTags.allValues).containsExactlyElementsIn(channelIds.map(Long::toString))
     }
 
     @Test
@@ -794,6 +846,84 @@ class UploadAndSendAttachmentWorkerTest {
         } finally {
             stopped.set(Operation.SUCCESS)
             cleanup.cancelAndJoin()
+        }
+    }
+
+    @Test
+    fun `channel cleanup starts file worker cancellations together and skips text only messages`() = runBlocking<Unit> {
+        val channelId = 7L
+        val first = localAttachment()
+        val second = first.copy(messageTid = 11L)
+        val textTid = 12L
+        val messageDao = mock<MessageDao>()
+        val pending = listOf(first, second).map {
+            createMessage(createdAt = 1L, tid = it.messageTid).copy(
+                channelId = channelId,
+                deliveryStatus = MessageDeliveryStatus.Pending,
+                attachments = listOf(it),
+            ).toMessageDb(false)
+        } + createMessage(createdAt = 1L, tid = textTid).copy(
+            channelId = channelId,
+            deliveryStatus = MessageDeliveryStatus.Pending,
+            attachments = emptyList(),
+        ).toMessageDb(false)
+        whenever(messageDao.getPendingMessagesByChannelIds(listOf(channelId))).thenReturn(pending)
+        val stopped = SettableFuture.create<Operation.State.SUCCESS>()
+        val cancellation = mock<Operation>()
+        whenever(cancellation.result).thenReturn(stopped)
+        whenever(workManager.cancelAllWorkByTag(first.messageTid.toString())).thenReturn(cancellation)
+        val cleanup = testScope.async {
+            channelLogic(messageDao, mock()).onChannelEvent(
+                ChannelActionEvent.ClearedHistory(createChannel(channelId, 0L, 0L)),
+            )
+        }
+
+        try {
+            verify(workManager).cancelAllWorkByTag(second.messageTid.toString())
+            verify(workManager, never()).cancelAllWorkByTag(textTid.toString())
+            assertThat(cleanup.isCompleted).isFalse()
+        } finally {
+            stopped.set(Operation.SUCCESS)
+            withTimeout(5_000) { cleanup.await() }
+        }
+    }
+
+    @Test
+    fun `server history clear stops forward worker even without pending file uploads`() = runBlocking<Unit> {
+        val channelId = 7L
+        val tid = 120L
+        val loaded = CompletableDeferred<Unit>()
+        val release = CompletableDeferred<Unit>()
+        whenever(messageLogic.getMessagesFromDbByTid(listOf(tid))).doSuspendableAnswer {
+            loaded.complete(Unit)
+            release.await()
+            listOf(createMessage(createdAt = 1L, tid = tid).copy(channelId = channelId))
+        }
+        val params = mock<WorkerParameters>()
+        whenever(params.inputData).thenReturn(Data.Builder()
+            .putLong(SendForwardMessagesWorkManager.CHANNEL_ID, channelId)
+            .putLongArray(SendForwardMessagesWorkManager.MESSAGE_TID, longArrayOf(tid))
+            .build())
+        val work = testScope.async { SendForwardMessagesWorker(context, params).doWork() }
+        assertThat(loaded.isCompleted).isTrue()
+        val cancellation = mock<Operation>()
+        whenever(cancellation.result).thenReturn(Futures.immediateFuture(Operation.SUCCESS))
+        whenever(workManager.cancelAllWorkByTag(channelId.toString())).thenAnswer {
+            work.cancel()
+            cancellation
+        }
+        val messageDao = mock<MessageDao>()
+        whenever(messageDao.getPendingMessagesByChannelIds(listOf(channelId))).thenReturn(emptyList())
+
+        try {
+            channelLogic(messageDao, mock()).onChannelEvent(
+                ChannelActionEvent.ClearedHistory(createChannel(channelId, 0L, 0L)),
+            )
+            assertThat(work.isCancelled).isTrue()
+            release.complete(Unit)
+            verify(messageLogic, never()).sendMessageWithUploadedAttachments(any(), any())
+        } finally {
+            work.cancelAndJoin()
         }
     }
 

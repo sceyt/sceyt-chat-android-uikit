@@ -180,6 +180,7 @@ class UploadAndSendAttachmentWorker(
         continuation: CancellableContinuation<KtResult<SceytAttachment>>,
         isSharing: Boolean
     ) {
+        if (!continuation.isActive) return
         val completionKey = this.toString()
         val configureTask: TransferTask.() -> Unit = {
             isSharedUpload = isSharedUpload || isSharing
@@ -189,6 +190,9 @@ class UploadAndSendAttachmentWorker(
             addOnCompletionListener(completionKey, continuation::safeResume)
             continuation.invokeOnCancellation {
                 removeOnCompletionListener(completionKey)
+                if (fileTransferService.findTransferTask(attachment) === this) {
+                    fileTransferService.cancelUpload(attachment)
+                }
             }
         }
 

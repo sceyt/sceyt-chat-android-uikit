@@ -357,6 +357,24 @@ class FileTransferServiceImplTest {
     }
 
     @Test
+    fun `custom upload result callback does not change the url returned to the worker`() {
+        useTransferCoordinators()
+        val attachment = attachment(url = null, filePath = files.newFile("custom-result.txt").path)
+        var completedAttachment: SceytAttachment? = null
+        var callbackCount = 0
+        service.upload(attachment) {
+            uploadResultCallback = TransferResultCallback { callbackCount++ }
+            addOnCompletionListener("worker") { completedAttachment = it.getOrThrow() }
+        }
+
+        transport.uploadCalls.single().succeed("uploaded-url")
+
+        assertThat(callbackCount).isEqualTo(1)
+        assertThat(completedAttachment?.url).isEqualTo("uploaded-url")
+        assertThat(service.getTasks()).isEmpty()
+    }
+
+    @Test
     fun `throwing upload callback still completes listeners and releases the queue`() {
         useTransferCoordinators()
         val first = attachment(messageTid = 25L, filePath = files.newFile("callback-error.txt").path)
@@ -369,6 +387,7 @@ class FileTransferServiceImplTest {
             }
             addOnCompletionListener("worker") { result ->
                 assertThat(result.isSuccess).isTrue()
+                assertThat(result.getOrThrow().url).isEqualTo("first-url")
                 completions++
             }
         }

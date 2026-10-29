@@ -30,6 +30,8 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferTask
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import com.sceyt.chatuikit.shared.media_encoder.CompressionListener
 import com.sceyt.chatuikit.shared.media_encoder.CustomVideoCompressor
+import com.sceyt.chatuikit.shared.media_encoder.TranscodeResultEnum
+import com.sceyt.chatuikit.shared.media_encoder.VideoTranscodeData
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
@@ -86,6 +88,7 @@ class AttachmentUploadCoordinatorTest {
     @Before
     fun setUp() {
         stopKoin()
+        AttachmentTransferStateStore.clear()
         context = RuntimeEnvironment.getApplication()
         transport = RecordingFileTransferTransport()
         testScope = TestScope(UnconfinedTestDispatcher())
@@ -113,6 +116,7 @@ class AttachmentUploadCoordinatorTest {
     @After
     fun tearDown() {
         service.cancelAllTransfers()
+        AttachmentTransferStateStore.clear()
         SceytChatUIKit.fileTransfer = previousFileTransfer
         SceytChatUIKit.config = previousConfig
         SceytKoinApp.koinApp = null
@@ -617,6 +621,80 @@ class AttachmentUploadCoordinatorTest {
 
         assertThat(transport.uploadCalls).isEmpty()
         assertThat(result?.data).isEqualTo("reused-url")
+    }
+
+    @Test
+    fun `cached url with resized path reuses both without uploading or preparing media`() = runBlocking {
+        SceytChatUIKit.config.preventDuplicateAttachmentUpload = true
+        val attachment = uploadAttachment(type = AttachmentTypeEnum.Video.value)
+        val resized = File(checkNotNull(attachment.filePath)).resolveSibling("cached-video.mp4").apply {
+            writeText("resized")
+        }
+        whenever(attachmentLogic.getFileChecksumData(attachment.originalFilePath)).thenReturn(
+            FileChecksumData(1L, resized.path, "reused-url", null, resized.length()),
+        )
+        var completed: SceytAttachment? = null
+        val task = service.upload(attachment) {
+            addOnCompletionListener("worker") { completed = it.getOrThrow() }
+        }
+
+        assertThat(transport.uploadCalls).isEmpty()
+        assertThat(completed?.url).isEqualTo("reused-url")
+        assertThat(completed?.filePath).isEqualTo(resized.path)
+        assertThat(task.attachment.originalFilePath).isEqualTo(attachment.originalFilePath)
+        assertThat(task.state).isEqualTo(TransferState.Uploaded)
+        assertThat(service.getTasks()).isEmpty()
+    }
+
+    @Test
+    fun `video transcode publishes preparing progress before starting transport`() {
+        var transcodeProgress: ((VideoTranscodeData) -> Unit)? = null
+        var transcodeResult: ((Result<String>) -> Unit)? = null
+        @Suppress("UNCHECKED_CAST")
+        val extensionsClass = Class.forName(
+            "com.sceyt.chatuikit.persistence.extensions.AttachmentResizeExtensionsKt",
+        ) as Class<Any>
+        Mockito.mockStatic(extensionsClass) { invocation ->
+            if (invocation.method.name == "transcodeVideo") {
+                transcodeProgress = invocation.getArgument(3)
+                transcodeResult = invocation.getArgument(4)
+                null
+            } else invocation.callRealMethod()
+        }.use {
+            val attachment = uploadAttachment(type = AttachmentTypeEnum.Video.value)
+            val task = service.upload(attachment)
+
+            checkNotNull(transcodeProgress).invoke(VideoTranscodeData(TranscodeResultEnum.Progress, progressPercent = 40f))
+
+            assertThat(task.state).isEqualTo(TransferState.Preparing)
+            assertThat(AttachmentTransferStateStore.getTransferData(attachment)?.state).isEqualTo(TransferState.Preparing)
+            assertThat(AttachmentTransferStateStore.getTransferData(attachment)?.progressPercent).isEqualTo(40f)
+            assertThat(transport.uploadCalls).isEmpty()
+
+            checkNotNull(transcodeResult).invoke(Result.success(checkNotNull(attachment.filePath)))
+            assertThat(transport.uploadCalls).hasSize(1)
+        }
+    }
+
+    @Test
+    fun `cancel all stops a natively paused upload and ignores its late result`() {
+        transport.pauseResult = true
+        val attachment = uploadAttachment()
+        val task = transferTask(attachment)
+        var completions = 0
+        task.addOnCompletionListener("worker") { completions++ }
+        uploadFile(attachment, task)
+        pauseUpload(attachment, TransferState.Uploading)
+        val call = transport.uploadCalls.single()
+        assertThat(call.cancelled).isFalse()
+        assertThat(completions).isEqualTo(1)
+
+        service.cancelAllTransfers()
+        call.succeed("late-url")
+
+        assertThat(call.cancelled).isTrue()
+        assertThat(completions).isEqualTo(1)
+        assertThat(service.getTasks()).isEmpty()
     }
 
     @Test
