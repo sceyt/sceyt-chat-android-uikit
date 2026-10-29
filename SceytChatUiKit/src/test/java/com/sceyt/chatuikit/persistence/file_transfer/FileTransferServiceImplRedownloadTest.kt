@@ -92,9 +92,9 @@ class FileTransferServiceImplRedownloadTest {
     }
 
     @Test
-    fun `redownload keeps another attachment task from the same message`() {
+    fun `redownload keeps another messages transfer task`() {
         val attachment = attachment()
-        val other = attachment.copy(id = MESSAGE_TID + 1, url = "other-url")
+        val other = attachment.copy(messageTid = MESSAGE_TID + 1, url = "other-url")
         service.findOrCreateTransferTask(attachment)
         val otherTask = service.findOrCreateTransferTask(other)
 

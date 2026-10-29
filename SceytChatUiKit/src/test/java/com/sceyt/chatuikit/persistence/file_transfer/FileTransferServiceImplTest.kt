@@ -99,7 +99,7 @@ class FileTransferServiceImplTest {
         SceytChatUIKit.fileTransfer = SceytChatUIKitFileTransfer().apply {
             this.transport = this@FileTransferServiceImplTest.transport
             destinationProvider = FileTransferDestinationProvider { _, attachment ->
-                File(files.root, "${attachment.id}.txt")
+                File(files.root, "${attachment.messageTid}.txt")
             }
         }
     }
@@ -203,9 +203,9 @@ class FileTransferServiceImplTest {
     }
 
     @Test
-    fun `different attachment ids keep tasks separate even with the same url`() {
+    fun `different messages keep tasks separate even with the same attachment id and url`() {
         val first = attachment(state = TransferState.PendingDownload)
-        val second = first.copy(id = 11L, name = "second.txt")
+        val second = first.copy(messageTid = 11L, name = "second.txt")
 
         val firstTask = service.download(first)
         val secondTask = service.download(second)
@@ -216,41 +216,43 @@ class FileTransferServiceImplTest {
     }
 
     @Test
-    fun `attachments without assigned ids use url to separate tasks`() {
+    fun `pending attachment keeps its task when both server id and url are updated`() {
         for (id in listOf(null, 0L)) {
-            val first = attachment(state = TransferState.PendingDownload).copy(id = id)
-            val second = first.copy(name = "second.txt", url = "second-url")
+            val first = attachment(
+                messageTid = if (id == null) 10L else 11L,
+                state = TransferState.PendingDownload,
+            ).copy(id = id)
+            val updated = first.copy(id = 200L, url = "updated-url")
 
             val firstTask = service.download(first)
-            val secondTask = service.download(second)
+            val updatedTask = service.download(updated)
 
-            assertThat(first.transferKey).isEqualTo("${first.messageTid}:url:${first.url}")
-            assertThat(secondTask).isNotSameInstanceAs(firstTask)
+            assertThat(updatedTask).isSameInstanceAs(firstTask)
+            assertThat(service.findTransferTask(updated)).isSameInstanceAs(firstTask)
             assertThat(service.download(first.copy(progressPercent = 40f)))
                 .isSameInstanceAs(firstTask)
         }
+        assertThat(transport.downloadCalls).hasSize(2)
     }
 
     @Test
-    fun `downloads from one message use separate tasks and supplied attachments`() {
+    fun `later attachment snapshots of the same message reuse its running download`() {
         val first = attachment(state = TransferState.PendingDownload)
-        val second = first.copy(id = 11L, name = "second.txt", url = "second-url")
+        val updated = first.copy(id = 200L, url = "updated-url")
 
         val firstTask = service.download(first)
-        val secondTask = service.download(second)
+        val updatedTask = service.download(updated)
 
-        assertThat(secondTask).isNotSameInstanceAs(firstTask)
-        assertThat(service.findTransferTask(first)).isSameInstanceAs(firstTask)
-        assertThat(service.findTransferTask(second)).isSameInstanceAs(secondTask)
-        assertThat(transport.downloadCalls.map { it.request.url })
-            .containsExactly(first.url, second.url).inOrder()
+        assertThat(updatedTask).isSameInstanceAs(firstTask)
+        assertThat(service.findTransferTask(updated)).isSameInstanceAs(firstTask)
+        assertThat(transport.downloadCalls.single().request.url).isEqualTo(first.url)
     }
 
     @Test
-    fun `completing one download leaves the other attachment task registered`() {
+    fun `completing one download leaves another messages task registered`() {
         useTransferCoordinators()
         val first = attachment(state = TransferState.PendingDownload)
-        val second = first.copy(id = 11L, name = "second.txt", url = "second-url")
+        val second = first.copy(messageTid = 11L, name = "second.txt", url = "second-url")
         service.download(first)
         val secondTask = service.download(second)
 
@@ -265,10 +267,10 @@ class FileTransferServiceImplTest {
     }
 
     @Test
-    fun `failed download leaves the other attachment task registered`() {
+    fun `failed download leaves another messages task registered`() {
         useTransferCoordinators()
         val first = attachment(state = TransferState.PendingDownload)
-        val second = first.copy(id = 11L, name = "second.txt", url = "second-url")
+        val second = first.copy(messageTid = 11L, name = "second.txt", url = "second-url")
         service.download(first)
         val secondTask = service.download(second)
 
@@ -434,7 +436,7 @@ class FileTransferServiceImplTest {
         SceytChatUIKit.fileTransfer = SceytChatUIKitFileTransfer().apply {
             this.transport = this@FileTransferServiceImplTest.transport
             destinationProvider = FileTransferDestinationProvider { _, attachment ->
-                File(files.root, "${attachment.id}.txt")
+                File(files.root, "${attachment.messageTid}.txt")
             }
         }
         val uploads = AttachmentUploadCoordinator(context, mock(), scope)
@@ -509,9 +511,9 @@ class FileTransferServiceImplTest {
     }
 
     @Test
-    fun `cancel upload leaves other attachment tasks registered`() {
+    fun `cancel upload leaves another messages task registered`() {
         val first = attachment()
-        val second = first.copy(id = 11L, url = "second-url")
+        val second = first.copy(messageTid = 11L, url = "second-url")
         service.upload(first)
         val secondTask = service.upload(second)
 
