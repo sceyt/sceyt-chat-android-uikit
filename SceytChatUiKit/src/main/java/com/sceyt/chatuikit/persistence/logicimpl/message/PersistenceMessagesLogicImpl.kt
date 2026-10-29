@@ -68,6 +68,7 @@ import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingMarkerEnt
 import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingMessageDeleteByTidEntity
 import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingMessageStateEntity
 import com.sceyt.chatuikit.persistence.database.entity.user.UserDb
+import com.sceyt.chatuikit.persistence.extensions.runCatchingCancellable
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
@@ -974,7 +975,11 @@ internal class PersistenceMessagesLogicImpl(
             ?: message
         if (storedMessage.isPending()) {
             val clonedMessage = message.copy(state = MessageState.Deleted)
-            UploadAndSendAttachmentWorkManager.cancelWorksByTag(context, message.tid.toString()).await()
+            runCatchingCancellable {
+                UploadAndSendAttachmentWorkManager.cancelWorksByTag(context, message.tid.toString()).await()
+            }.onFailure {
+                SceytLog.e(TAG, "Could not cancel workers tagged ${message.tid}", it)
+            }
             storedMessage.attachments?.forEach {
                 fileTransferService.cancelUpload(it)
             }

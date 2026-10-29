@@ -95,8 +95,7 @@ internal class AttachmentDownloadCoordinator(
                 previous.transport?.resume(previous.operationId) == true
             }.getOrDefault(false)
             if (resumed) {
-                if (isCurrent(previous) && !previous.paused && previous.job.isActive)
-                    publishResumed(task)
+                if (previous.job.isActive) publishResumed(previous, task)
                 return
             }
             cancelAttempt(previous)
@@ -157,7 +156,7 @@ internal class AttachmentDownloadCoordinator(
                     }
                 }
                 currentCoroutineContext().ensureActive()
-                if (download.isResuming && isCurrent(download)) publishResumed(task)
+                if (download.isResuming) publishResumed(download, task)
                 currentCoroutineContext().ensureActive()
                 val transport = SceytChatUIKit.fileTransfer.transport
                 download.transport = transport
@@ -220,9 +219,15 @@ internal class AttachmentDownloadCoordinator(
         downloads[download.key] === download
     }
 
-    private fun publishResumed(task: TransferTask) {
-        task.state = Downloading
-        notify { task.resumePauseCallback?.onResumePause(task.attachment.toTransferData(Downloading)) }
+    private fun publishResumed(download: Download, task: TransferTask) {
+        val resumed = synchronized(lock) {
+            if (downloads[download.key] !== download || download.paused) false else {
+                task.state = Downloading
+                true
+            }
+        }
+        if (resumed)
+            notify { task.resumePauseCallback?.onResumePause(task.attachment.toTransferData(Downloading)) }
     }
 
     private fun notify(callback: () -> Unit) {
