@@ -2,11 +2,6 @@ package com.sceyt.chatuikit.persistence.file_transfer
 
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 
-/** Uses the stable attachment ID, falling back to its opaque URL before an ID is available. */
+/** UIKit supports one media/file attachment per message; link previews are not file transfers. */
 internal val SceytAttachment.transferKey: String
-    get() = id?.takeUnless { it == 0L }?.let { "$messageTid:id:$it" }
-        ?: urlTransferKey
-
-/** Finds a transfer started before a pending attachment received its server ID. */
-internal val SceytAttachment.urlTransferKey: String
-    get() = "$messageTid:url:${url.orEmpty()}"
+    get() = messageTid.toString()

@@ -21,6 +21,7 @@ import com.sceyt.chatuikit.data.managers.channel.event.ChannelActionEvent
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.SyncResult
 import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
+import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.filetransfer.AttachmentTransferContext
 import com.sceyt.chatuikit.filetransfer.FileTransferCallback
@@ -213,6 +214,36 @@ class UploadAndSendAttachmentWorkerTest {
                 resumePausedUpload = false,
             ),
         ).isTrue()
+    }
+
+    @Test
+    fun `message with media and link uploads only media and preserves link`() = runBlocking<Unit> {
+        val media = localAttachment()
+        val uploadWorker = worker(media)
+        val link = media.copy(
+            id = 200L,
+            type = AttachmentTypeEnum.Link.value,
+            url = "https://example.com",
+            filePath = null,
+            originalFilePath = null,
+        )
+        val message = checkNotNull(messageLogic.getMessageFromDbByTid(media.messageTid))
+        whenever(messageLogic.getMessageFromDbByTid(media.messageTid))
+            .thenReturn(message.copy(attachments = listOf(link, media)))
+
+        val work = testScope.async { uploadWorker.doWork() }
+
+        assertThat(transport.uploadCalls).hasSize(1)
+        assertThat(service.getTasks()).hasSize(1)
+        assertThat(service.findTransferTask(media)?.attachment?.type).isEqualTo(media.type)
+        transport.uploadCalls.single().succeed("uploaded-media")
+
+        assertThat(work.isCompleted).isTrue()
+        val sent = argumentCaptor<Message>()
+        verify(messageLogic).sendMessageWithUploadedAttachments(eq(0L), sent.capture())
+        assertThat(sent.firstValue.attachments.map { it.url })
+            .containsExactly("https://example.com", "uploaded-media").inOrder()
+        assertThat(service.getTasks()).isEmpty()
     }
 
     @Test

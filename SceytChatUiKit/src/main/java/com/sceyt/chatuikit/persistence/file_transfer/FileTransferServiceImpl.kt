@@ -127,19 +127,17 @@ internal class FileTransferServiceImpl(
     }
 
     override fun findOrCreateTransferTask(attachment: SceytAttachment): TransferTask {
-        val key = if (!tasksMap.containsKey(attachment.transferKey) && tasksMap.containsKey(attachment.urlTransferKey))
-            attachment.urlTransferKey else attachment.transferKey
-        return tasksMap.computeIfAbsent(key) {
+        return tasksMap.computeIfAbsent(attachment.transferKey) {
             FileTransferHelper.createTransferTask(attachment)
         }
     }
 
     override fun findTransferTask(attachment: SceytAttachment): TransferTask? {
-        return tasksMap[attachment.transferKey] ?: tasksMap[attachment.urlTransferKey]
+        return tasksMap[attachment.transferKey]
     }
 
     override fun removeTransferTask(task: TransferTask) {
-        tasksMap.entries.removeIf { it.value === task }
+        tasksMap.remove(task.attachment.transferKey, task)
     }
 
     override fun getTasks(): Map<String, TransferTask> = tasksMap
