@@ -155,8 +155,10 @@ ID for UI-kit pause and resume lookup.
 Downloads include the attachment identity so different attachments in one message can transfer
 independently. An assigned ID keeps pause and resume stable if the URL changes. When the ID is
 null or zero, the opaque URL identifies the attachment and must stay unchanged during an active
-transfer. Repeated requests for the same attachment share one task. Completion removes only that
-task, leaving other attachments and newer attempts registered.
+transfer. If the server assigns an ID during that transfer, requests with the new ID reuse the
+URL-keyed task and operation, including pause/resume restarts. Repeated requests for the same
+attachment share one task. Completion removes only that task, leaving other attachments and newer
+attempts registered.
 
 `upload()` and `download()` are suspend functions. Each call returns a `FileTransferResult` when it
 succeeds, fails, or is interrupted; coroutine cancellation remains separate:

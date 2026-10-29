@@ -15,6 +15,7 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Downloading
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.PauseDownload
 import com.sceyt.chatuikit.persistence.file_transfer.TransferTask
 import com.sceyt.chatuikit.persistence.file_transfer.transferKey
+import com.sceyt.chatuikit.persistence.file_transfer.urlTransferKey
 import com.sceyt.chatuikit.persistence.mappers.toTransferData
 import com.sceyt.chatuikit.presentation.extensions.isAttachmentExistAndFullyLoaded
 import kotlinx.coroutines.CompletableDeferred
@@ -43,12 +44,12 @@ internal class AttachmentDownloadCoordinator(
         isResuming: Boolean = false,
     ) {
         if (!isResuming && task.state == PauseDownload) return
-        val key = attachment.transferKey
         val registered = CompletableDeferred<Unit>()
         synchronized(lock) {
-            val previous = downloads[key]
+            val previous = findDownload(attachment)
             if (previous != null && !previous.job.isCancelled && !previous.job.isCompleted) return
-            Download(attachment, task, onResult, isResuming).also { next ->
+            val key = previous?.key ?: attachment.transferKey
+            Download(key, attachment, task, onResult, isResuming).also { next ->
                 next.job = scope.launch(start = CoroutineStart.UNDISPATCHED) {
                     // Enter cleanup before cancellation can skip it; file work waits for registration.
                     withContext(NonCancellable) { previous?.job?.join() }
@@ -69,8 +70,9 @@ internal class AttachmentDownloadCoordinator(
 
     fun pause(attachment: SceytAttachment): Boolean {
         val download = synchronized(lock) {
-            val current = downloads[attachment.transferKey] ?: return false
-            if (current.completed || current.paused) return false
+            val current = findDownload(attachment) ?: return false
+            if (current.completed) return false
+            if (current.paused) return true
             current.paused = true
             current
         }
@@ -87,7 +89,7 @@ internal class AttachmentDownloadCoordinator(
         onResult: (SceytResponse<String>) -> Unit,
     ) {
         val previous = synchronized(lock) {
-            downloads[attachment.transferKey]?.also { it.paused = false }
+            findDownload(attachment)?.also { it.paused = false }
         }
         if (previous?.job?.isActive == true) {
             val resumed = runCatching {
@@ -105,9 +107,9 @@ internal class AttachmentDownloadCoordinator(
 
     fun cancel(attachment: SceytAttachment) {
         val download = synchronized(lock) {
-            downloads[attachment.transferKey]?.also {
+            findDownload(attachment)?.also {
                 it.paused = false
-                if (it.job.isCompleted) downloads.remove(attachment.transferKey, it)
+                if (it.job.isCompleted) downloads.remove(it.key, it)
             }
         }
         download?.let(::cancelAttempt)
@@ -136,17 +138,24 @@ internal class AttachmentDownloadCoordinator(
                 FileTransferResult.Success(existing.path)
             } else {
                 val task = download.task
-                task.state = Downloading
-                notify {
-                    task.progressCallback?.onProgress(
-                        TransferData(
-                            messageTid = task.messageTid,
-                            progressPercent = attachment.progressPercent ?: 0f,
-                            state = Downloading,
-                            filePath = attachment.filePath,
-                            url = url
-                        ),
-                    )
+                val started = synchronized(lock) {
+                    if (download.paused) false else {
+                        task.state = Downloading
+                        true
+                    }
+                }
+                if (started) {
+                    notify {
+                        task.progressCallback?.onProgress(
+                            TransferData(
+                                messageTid = task.messageTid,
+                                progressPercent = attachment.progressPercent ?: 0f,
+                                state = Downloading,
+                                filePath = attachment.filePath,
+                                url = url
+                            ),
+                        )
+                    }
                 }
                 currentCoroutineContext().ensureActive()
                 if (download.isResuming && isCurrent(download)) publishResumed(task)
@@ -173,10 +182,10 @@ internal class AttachmentDownloadCoordinator(
         }
         download.completed = true
         val onResult = synchronized(lock) {
-            if (downloads[download.attachment.transferKey] !== download) return
+            if (downloads[download.key] !== download) return
             val callback = download.onResult ?: return
             if (result is FileTransferResult.Failure) download.destination?.delete()
-            downloads.remove(download.attachment.transferKey)
+            downloads.remove(download.key)
             download.onResult = null
             callback
         }
@@ -209,8 +218,11 @@ internal class AttachmentDownloadCoordinator(
     }
 
     private fun isCurrent(download: Download): Boolean = synchronized(lock) {
-        downloads[download.attachment.transferKey] === download
+        downloads[download.key] === download
     }
+
+    private fun findDownload(attachment: SceytAttachment): Download? =
+        downloads[attachment.transferKey] ?: downloads[attachment.urlTransferKey]
 
     private fun publishResumed(task: TransferTask) {
         task.state = Downloading
@@ -224,12 +236,13 @@ internal class AttachmentDownloadCoordinator(
     }
 
     private class Download(
+        val key: String,
         val attachment: SceytAttachment,
         val task: TransferTask,
         var onResult: ((SceytResponse<String>) -> Unit)?,
         val isResuming: Boolean,
     ) {
-        val operationId = "download:${attachment.transferKey}"
+        val operationId = "download:$key"
         lateinit var job: Job
         var destination: File? = null
         @Volatile

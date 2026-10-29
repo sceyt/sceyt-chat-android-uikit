@@ -102,7 +102,11 @@ object FileTransferHelper : SceytKoinComponent {
 
     fun TransferTask.getProgressUpdateCallback() = ProgressUpdateCallback { transferData ->
         val updatedAttachment = updateAttachmentAndStateIfValid(
-            validate = { current ->
+            validate = validate@ { current ->
+                val isPausedDownload = current.transferState == TransferState.PauseDownload &&
+                    transferData.state == TransferState.Downloading
+                if (isPausedDownload) return@validate false
+
                 TransferStateValidator.isValidStateTransition(
                     currentState = current.transferState,
                     newState = transferData.state,

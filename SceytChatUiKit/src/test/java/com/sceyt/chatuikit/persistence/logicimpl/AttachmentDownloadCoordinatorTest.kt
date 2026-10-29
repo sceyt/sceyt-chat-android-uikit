@@ -875,6 +875,108 @@ class AttachmentDownloadCoordinatorTest {
     }
 
     @Test
+    fun `pause during destination resolution is not overwritten by initial progress`() {
+        val attachment = attachment(state = TransferState.PendingDownload)
+        val states = mutableListOf<TransferState>()
+        SceytChatUIKit.fileTransfer.destinationProvider = FileTransferDestinationProvider { _, _ ->
+            service.pause(attachment.messageTid, attachment, TransferState.Downloading)
+            destinationFile
+        }
+
+        val task = service.download(attachment) {
+            progressCallback = ProgressUpdateCallback { states += it.state }
+            resumePauseCallback = ResumePauseCallback { states += it.state }
+        }
+
+        assertThat(task.state).isEqualTo(TransferState.PauseDownload)
+        assertThat(states).containsExactly(TransferState.PauseDownload)
+        assertThat(transport.downloadCalls).isEmpty()
+    }
+
+    @Test
+    fun `repeated pause republishes paused state without pausing backend twice`() {
+        transport.pauseResult = true
+        val attachment = attachment(state = TransferState.PendingDownload)
+        val states = mutableListOf<TransferState>()
+        val task = service.download(attachment) {
+            resumePauseCallback = ResumePauseCallback { states += it.state }
+        }
+
+        repeat(2) { service.pause(attachment.messageTid, attachment, TransferState.Downloading) }
+
+        assertThat(task.state).isEqualTo(TransferState.PauseDownload)
+        assertThat(states).containsExactly(TransferState.PauseDownload, TransferState.PauseDownload)
+        assertThat(transport.pauseCalls).hasSize(1)
+    }
+
+    @Test
+    fun `assigning a server id reuses the running download and its pause resume operation`() {
+        transport.pauseResult = true
+        transport.resumeResult = true
+        val pending = attachment(state = TransferState.PendingDownload).copy(id = null)
+        val sent = pending.copy(id = 200L)
+        val task = service.download(pending)
+        val operationId = transport.downloadCalls.single().request.operationId
+
+        assertThat(service.download(sent)).isSameInstanceAs(task)
+        service.pause(sent.messageTid, sent, TransferState.Downloading)
+        assertThat(task.state).isEqualTo(TransferState.PauseDownload)
+        service.resume(sent.messageTid, sent, TransferState.PauseDownload)
+
+        assertThat(transport.downloadCalls).hasSize(1)
+        assertThat(transport.pauseCalls).containsExactly(operationId)
+        assertThat(transport.resumeCalls).containsExactly(operationId)
+        transport.downloadCalls.single().succeed(destinationFile.path)
+        assertThat(service.getTasks()).isEmpty()
+    }
+
+    @Test
+    fun `server id assigned during cancelled download cleanup does not allow overlapping writers`() {
+        val cleanup = CompletableDeferred<Unit>()
+        transport.downloadCancellationGate = cleanup
+        val pending = attachment(state = TransferState.PendingDownload).copy(id = null)
+        val sent = pending.copy(id = 200L)
+        val task = service.download(pending)
+
+        service.pause(sent.messageTid, sent, TransferState.Downloading)
+        service.resume(sent.messageTid, sent, TransferState.PauseDownload)
+
+        assertThat(transport.downloadCalls).hasSize(1)
+        assertThat(service.findTransferTask(sent)).isSameInstanceAs(task)
+        cleanup.complete(Unit)
+        assertThat(transport.downloadCalls).hasSize(2)
+        assertThat(transport.downloadCalls.last().request.operationId)
+            .isEqualTo(transport.downloadCalls.first().request.operationId)
+        transport.pauseResult = true
+        transport.resumeResult = true
+        service.pause(pending.messageTid, pending, TransferState.Downloading)
+        assertThat(task.state).isEqualTo(TransferState.PauseDownload)
+        service.resume(sent.messageTid, sent, TransferState.PauseDownload)
+        assertThat(transport.downloadCalls).hasSize(2)
+        transport.downloadCalls.last().succeed(destinationFile.path)
+        assertThat(service.getTasks()).isEmpty()
+    }
+
+    @Test
+    fun `progress already being delivered cannot undo a pause`() {
+        val attachment = attachment(state = TransferState.PendingDownload)
+        val task = service.download(attachment) {
+            val defaultProgress = progressCallback
+            progressCallback = ProgressUpdateCallback { data ->
+                if (data.progressPercent == 50f) {
+                    service.pause(attachment.messageTid, attachment, TransferState.Downloading)
+                }
+                defaultProgress?.onProgress(data)
+            }
+        }
+
+        transport.downloadCalls.single().progress(50f)
+
+        assertThat(task.state).isEqualTo(TransferState.PauseDownload)
+        assertThat(task.attachment.transferState).isEqualTo(TransferState.PauseDownload)
+    }
+
+    @Test
     fun `explicit cancellation suppresses a delayed interruption result`() {
         for (cancelAll in listOf(false, true)) {
             val attachment = attachment(
@@ -905,6 +1007,28 @@ class AttachmentDownloadCoordinatorTest {
             assertThat(service.findTransferTask(attachment)).isNull()
             assertThat(destinationFile.readBytes()).isEqualTo(byteArrayOf(1, 2))
         }
+    }
+
+    @Test
+    fun `interruption while natively paused preserves partial file and finishes without retrying`() {
+        transport.pauseResult = true
+        val attachment = attachment(state = TransferState.PendingDownload)
+        var completion: Result<SceytAttachment>? = null
+        val task = service.download(attachment) {
+            addOnCompletionListener("download") { completion = it }
+        }
+        destinationFile.writeText("partial")
+        service.pause(attachment.messageTid, attachment, TransferState.Downloading)
+        val call = transport.downloadCalls.single()
+        assertThat(call.cancelled).isFalse()
+
+        call.interrupt()
+
+        assertThat(task.state).isEqualTo(TransferState.ErrorDownload)
+        assertThat(completion?.isFailure).isTrue()
+        assertThat(destinationFile.readText()).isEqualTo("partial")
+        assertThat(transport.downloadCalls).hasSize(1)
+        assertThat(service.getTasks()).isEmpty()
     }
 
     @Test
