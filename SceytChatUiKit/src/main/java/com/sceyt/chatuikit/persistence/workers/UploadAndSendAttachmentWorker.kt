@@ -181,6 +181,7 @@ class UploadAndSendAttachmentWorker(
         isSharing: Boolean
     ) {
         if (!continuation.isActive) return
+        val existingTask = fileTransferService.findTransferTask(attachment)
         val completionKey = this.toString()
         val configureTask: TransferTask.() -> Unit = {
             isSharedUpload = isSharedUpload || isSharing
@@ -190,15 +191,15 @@ class UploadAndSendAttachmentWorker(
             addOnCompletionListener(completionKey, continuation::safeResume)
             continuation.invokeOnCancellation {
                 removeOnCompletionListener(completionKey)
+                if (existingTask != null) return@invokeOnCancellation
                 if (fileTransferService.findTransferTask(attachment) === this) {
                     fileTransferService.cancelUpload(attachment)
                 }
             }
         }
 
-        val task = fileTransferService.findTransferTask(attachment)
         // A resumed worker rejoins through upload; the coordinator retains native/shared progress.
-        if (isSharing || task?.isSharedUpload == true) {
+        if (isSharing || existingTask?.isSharedUpload == true) {
             fileTransferService.uploadSharedFile(attachment, configureTask)
         } else {
             fileTransferService.upload(attachment, configureTask)

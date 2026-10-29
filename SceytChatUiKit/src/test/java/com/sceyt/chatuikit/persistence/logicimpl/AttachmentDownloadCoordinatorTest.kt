@@ -15,6 +15,7 @@ import com.sceyt.chatuikit.filetransfer.SceytChatUIKitFileTransfer
 import com.sceyt.chatuikit.koin.SceytKoinApp
 import com.sceyt.chatuikit.persistence.database.dao.FileChecksumDao
 import com.sceyt.chatuikit.persistence.di.CoroutineContextType
+import com.sceyt.chatuikit.persistence.file_transfer.AttachmentTransferStateStore
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferServiceImpl
 import com.sceyt.chatuikit.persistence.file_transfer.ProgressUpdateCallback
@@ -1090,6 +1091,105 @@ class AttachmentDownloadCoordinatorTest {
         assertThat(results).hasSize(1)
         assertThat(service.findTransferTask(attachment)).isNull()
         assertThat(transport.pauseCalls).isEmpty()
+    }
+
+    @Test
+    fun `delayed resume callback cannot overwrite a newer pause`() {
+        for (native in listOf(false, true)) {
+            transport.pauseResult = native
+            transport.resumeResult = native
+            val attachment = attachment(
+                messageTid = if (native) 9_002L else 9_001L,
+                state = TransferState.PendingDownload,
+            )
+            var pauseOnResume = false
+            val task = service.download(attachment) {
+                val defaultCallback = resumePauseCallback
+                resumePauseCallback = ResumePauseCallback { data ->
+                    if (pauseOnResume && data.state == TransferState.Downloading) {
+                        pauseOnResume = false
+                        service.pause(attachment.messageTid, attachment, TransferState.Downloading)
+                    }
+                    defaultCallback?.onResumePause(data)
+                }
+            }
+            service.pause(attachment.messageTid, attachment, TransferState.Downloading)
+            pauseOnResume = true
+
+            service.resume(attachment.messageTid, attachment, TransferState.PauseDownload)
+
+            assertThat(task.state).isEqualTo(TransferState.PauseDownload)
+            assertThat(task.attachment.transferState).isEqualTo(TransferState.PauseDownload)
+            assertThat(AttachmentTransferStateStore.getTransferData(attachment)?.state)
+                .isEqualTo(TransferState.PauseDownload)
+            service.cancelUpload(attachment)
+        }
+    }
+
+    @Test
+    fun `delayed pause callback cannot overwrite a newer resume`() {
+        transport.pauseResult = true
+        transport.resumeResult = true
+        val attachment = attachment(messageTid = 9_003L, state = TransferState.PendingDownload)
+        var resumeOnPause = true
+        val task = service.download(attachment) {
+            val defaultCallback = resumePauseCallback
+            resumePauseCallback = ResumePauseCallback { data ->
+                if (resumeOnPause && data.state == TransferState.PauseDownload) {
+                    resumeOnPause = false
+                    service.resume(attachment.messageTid, attachment, TransferState.PauseDownload)
+                }
+                defaultCallback?.onResumePause(data)
+            }
+        }
+
+        service.pause(attachment.messageTid, attachment, TransferState.Downloading)
+
+        assertThat(task.state).isEqualTo(TransferState.Downloading)
+        assertThat(task.attachment.transferState).isEqualTo(TransferState.Downloading)
+        assertThat(AttachmentTransferStateStore.getTransferData(attachment)?.state)
+            .isEqualTo(TransferState.Downloading)
+        assertThat(transport.downloadCalls).hasSize(1)
+    }
+
+    @Test
+    fun `duplicate during result delivery joins the finishing task and explicit retry succeeds`() {
+        val attachment = attachment(messageTid = 9_010L, state = TransferState.PendingDownload)
+        var originalCompletions = 0
+        var duplicateCompletions = 0
+        val task = service.download(attachment) {
+            addOnCompletionListener("original") { originalCompletions++ }
+        }
+        var duplicate: TransferTask? = null
+        val failure = object : IllegalStateException() {
+            override val message: String
+                get() {
+                    if (duplicate == null) {
+                        duplicate = service.download(attachment) {
+                            addOnCompletionListener("duplicate") { duplicateCompletions++ }
+                        }
+                    }
+                    return "download failed"
+                }
+        }
+
+        transport.downloadCalls.single().fail(failure)
+
+        assertThat(duplicate).isSameInstanceAs(task)
+        assertThat(transport.downloadCalls).hasSize(1)
+        assertThat(task.state).isEqualTo(TransferState.ErrorDownload)
+        assertThat(originalCompletions).isEqualTo(1)
+        assertThat(duplicateCompletions).isEqualTo(1)
+        assertThat(service.findTransferTask(attachment)).isNull()
+
+        service.resume(attachment.messageTid, attachment, TransferState.ErrorDownload)
+        val retry = checkNotNull(service.findTransferTask(attachment))
+        assertThat(retry).isNotSameInstanceAs(task)
+        transport.downloadCalls.last().succeed(destinationFile.path)
+
+        assertThat(transport.downloadCalls).hasSize(2)
+        assertThat(retry.state).isEqualTo(TransferState.Downloaded)
+        assertThat(service.getTasks()).isEmpty()
     }
 
     private fun transferTask(attachment: SceytAttachment): TransferTask =

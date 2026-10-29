@@ -544,6 +544,69 @@ class UploadAndSendAttachmentWorkerTest {
     }
 
     @Test
+    fun `replacing a resumed shared worker retains native operation and sharing`() = runBlocking<Unit> {
+        transport.pauseResult = true
+        transport.resumeResult = true
+        val owner = localAttachment().copy(messageTid = 9_101L)
+        val follower = owner.copy(messageTid = 9_102L)
+        testScope.async { worker(owner, shared = true).doWork() }
+        testScope.async { worker(follower, shared = true).doWork() }
+        val call = transport.uploadCalls.single()
+        service.pause(owner.messageTid, owner, TransferState.Uploading)
+        service.pause(follower.messageTid, follower, TransferState.Uploading)
+        val task = checkNotNull(service.findTransferTask(owner))
+        val pausedOwner = owner.copy(transferState = TransferState.PauseUpload)
+        val firstResume = testScope.async { worker(pausedOwner, resume = true).doWork() }
+        assertThat(firstResume.isCompleted).isFalse()
+
+        firstResume.cancelAndJoin()
+        val replacement = testScope.async { worker(pausedOwner, resume = true).doWork() }
+
+        assertThat(service.findTransferTask(owner)).isSameInstanceAs(task)
+        assertThat(task.isSharedUpload).isTrue()
+        assertThat(call.cancelled).isFalse()
+        assertThat(transport.uploadCalls).hasSize(1)
+        call.succeed("shared-url")
+        assertThat(replacement.isCompleted).isTrue()
+        assertSentUrl(owner, "shared-url")
+        assertThat(service.findTransferTask(follower)?.state).isEqualTo(TransferState.PauseUpload)
+
+        val followerResume = testScope.async {
+            worker(follower.copy(transferState = TransferState.PauseUpload), resume = true).doWork()
+        }
+
+        assertThat(followerResume.isCompleted).isTrue()
+        val sent = argumentCaptor<Message>()
+        verify(messageLogic, org.mockito.kotlin.times(2))
+            .sendMessageWithUploadedAttachments(eq(0L), sent.capture())
+        assertThat(sent.allValues.map { it.tid to it.attachments.single().url })
+            .containsExactly(owner.messageTid to "shared-url", follower.messageTid to "shared-url")
+        assertThat(transport.uploadCalls).hasSize(1)
+        assertThat(service.getTasks()).isEmpty()
+    }
+
+    @Test
+    fun `replacing resumed worker keeps its restarted upload running`() = runBlocking<Unit> {
+        val attachment = localAttachment()
+        testScope.async { worker(attachment).doWork() }
+        service.pause(attachment.messageTid, attachment, TransferState.Uploading)
+        val paused = attachment.copy(transferState = TransferState.PauseUpload)
+        val firstResume = testScope.async { worker(paused, resume = true).doWork() }
+        val call = transport.uploadCalls.last()
+        assertThat(transport.uploadCalls).hasSize(2)
+
+        firstResume.cancelAndJoin()
+        val replacement = testScope.async { worker(paused, resume = true).doWork() }
+
+        assertThat(call.cancelled).isFalse()
+        assertThat(transport.uploadCalls).hasSize(2)
+        call.succeed("resumed-url")
+        assertThat(replacement.isCompleted).isTrue()
+        assertSentUrl(attachment, "resumed-url")
+        assertThat(service.getTasks()).isEmpty()
+    }
+
+    @Test
     fun `completed native upload stays paused until its worker resumes`() {
         transport.pauseResult = true
         val attachment = localAttachment()
