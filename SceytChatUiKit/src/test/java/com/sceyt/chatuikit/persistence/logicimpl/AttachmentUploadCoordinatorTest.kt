@@ -96,6 +96,7 @@ class AttachmentUploadCoordinatorTest {
         previousFileTransfer = SceytChatUIKit.fileTransfer
         previousConfig = SceytChatUIKit.config
         SceytChatUIKit.fileTransfer = SceytChatUIKitFileTransfer().apply {
+            encryptUploads = false
             this.transport = this@AttachmentUploadCoordinatorTest.transport
         }
         SceytChatUIKit.config = SceytChatUIKitConfig().apply {
@@ -592,7 +593,7 @@ class AttachmentUploadCoordinatorTest {
         call.succeed("uploaded-url")
 
         assertThat(call.request.operationId).isEqualTo("upload:30")
-        assertThat(call.request.sourceFile.path).isEqualTo(attachment.filePath)
+        assertThat((call.request as FileUploadRequest.Plain).sourceFile.path).isEqualTo(attachment.filePath)
         assertThat(call.request.fileName).isEqualTo("document.txt")
         assertThat(call.request.context).isEqualTo(AttachmentTransferContext(attachment))
         assertThat(progress.single().progressPercent).isEqualTo(55f)
@@ -1397,7 +1398,7 @@ class AttachmentUploadCoordinatorTest {
             }
 
             if (shared) uploadSharedFile(attachment, task) else uploadFile(attachment, task)
-            assertThat(transport.uploadCalls.last().request.sourceFile).isEqualTo(prepared)
+            assertThat((transport.uploadCalls.last().request as FileUploadRequest.Plain).sourceFile).isEqualTo(prepared)
             pauseUpload(attachment, TransferState.Uploading)
             resumeUpload(attachment, TransferState.PauseUpload)
 

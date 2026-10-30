@@ -38,4 +38,11 @@ interface FileTransferTransport {
      * @return `true` when the same operation continues, or `false` when the UI kit must restart it.
      */
     fun resume(operationId: String): Boolean = false
+
+    /**
+     * Discards a cancelled upload, including one retained after an interruption or restart.
+     * [checkpointData] is the last opaque backend checkpoint, when available.
+     * Implementations must be idempotent and schedule cleanup without blocking the caller.
+     */
+    fun discardUpload(operationId: String, checkpointData: String?) = Unit
 }

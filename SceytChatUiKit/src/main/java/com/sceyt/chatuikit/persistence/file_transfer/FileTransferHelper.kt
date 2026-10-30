@@ -9,6 +9,7 @@ import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.getFileSize
+import com.sceyt.chatuikit.filetransfer.encryption.FileEncryptionMetadata
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.database.dao.FileChecksumDao
@@ -34,6 +35,7 @@ import kotlin.coroutines.CoroutineContext
 
 object FileTransferHelper : SceytKoinComponent {
     private val attachmentLogic by inject<PersistenceAttachmentLogic>()
+    private val fileTransferService by inject<FileTransferService>()
     private val fileChecksumDao by inject<FileChecksumDao>()
     private val coroutineContext by inject<CoroutineContext>(named(CoroutineContextType.SingleThreaded))
     private val scope = CoroutineScope(coroutineContext + SupervisorJob())
@@ -235,7 +237,12 @@ object FileTransferHelper : SceytKoinComponent {
                 if (updatedAttachment != null) {
                     emitAttachmentTransferUpdate(transferData, updatedAttachment.fileSize)
                     enqueueDbUpdate(messageTid) {
-                        attachmentLogic.updateAttachmentWithTransferData(transferData)
+                        if (FileEncryptionMetadata.read(updatedAttachment.metadata) != null) {
+                            attachmentLogic.updateUploadedAttachment(updatedAttachment)
+                            fileTransferService.uploadPersisted(updatedAttachment)
+                        } else {
+                            attachmentLogic.updateAttachmentWithTransferData(transferData)
+                        }
                         removeMutexForAttachment(messageTid)
                     }
                 }

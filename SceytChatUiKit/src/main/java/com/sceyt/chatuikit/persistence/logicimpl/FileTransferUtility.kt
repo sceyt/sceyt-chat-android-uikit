@@ -1,7 +1,11 @@
 package com.sceyt.chatuikit.persistence.logicimpl
 
 import com.sceyt.chat.ChatClient
+import com.sceyt.chat.UploadOperation
+import com.sceyt.chat.fileencryption.FileEncryptionInfo
+import com.sceyt.chat.fileencryption.PreparedUpload
 import com.sceyt.chat.models.SceytException
+import com.sceyt.chat.sceyt_callbacks.EncryptedUploadCallback
 import com.sceyt.chat.sceyt_callbacks.ProgressCallback
 import com.sceyt.chat.sceyt_callbacks.UrlCallback
 import com.sceyt.chatuikit.data.models.SceytResponse
@@ -18,41 +22,66 @@ import kotlin.coroutines.resume
 class FileTransferUtility {
     private val downloader = OkHttpDownloader()
 
+    suspend fun uploadEncryptedFile(
+        source: PreparedUpload,
+        onProgress: (Float) -> Unit,
+    ): SceytResponse<String> = awaitSdkUpload(onProgress) { progress, result ->
+        ChatClient.getClient().uploadEncrypted(
+            source,
+            progress,
+            object : EncryptedUploadCallback {
+                override fun onResult(url: String?, encryptionInfo: FileEncryptionInfo?) {
+                    result.onResult(url)
+                }
+
+                override fun onError(exception: SceytException?) {
+                    result.onError(exception)
+                }
+            },
+        )
+    }
+
     suspend fun uploadFile(
         sourceFile: File,
         onProgress: (Float) -> Unit,
+    ): SceytResponse<String> = awaitSdkUpload(onProgress) { progress, result ->
+        ChatClient.getClient().uploadCancellable(sourceFile.path, progress, result)
+    }
+
+    private suspend fun awaitSdkUpload(
+        onProgress: (Float) -> Unit,
+        startUpload: (ProgressCallback, UrlCallback) -> UploadOperation,
     ): SceytResponse<String> = suspendCancellableCoroutine { continuation ->
         val completed = AtomicBoolean()
 
         fun complete(response: SceytResponse<String>) {
             if (!continuation.isActive || !completed.compareAndSet(false, true)) return
-
+            if (response is SceytResponse.Error) {
+                SceytLog.e(TAG, "Error upload file ${response.exception?.message}")
+            }
             continuation.resume(response)
         }
 
-        val operation = ChatClient.getClient().uploadCancellable(
-            /* filePath = */ sourceFile.path,
-            /* progressCallback = */ object : ProgressCallback {
+        val operation = startUpload(
+            object : ProgressCallback {
                 override fun onResult(progress: Float) {
-                    if (progress == 1f || !continuation.isActive) return
+                    if (progress == 1f || completed.get() || !continuation.isActive) return
                     onProgress(progress * 100)
                 }
 
                 override fun onError(exception: SceytException?) {
-                    SceytLog.e(TAG, "Error upload file ${exception?.message}")
                     complete(SceytResponse.Error(exception))
                 }
             },
-            /* actionCallback = */ object : UrlCallback {
+            object : UrlCallback {
                 override fun onResult(url: String?) {
                     complete(SceytResponse.Success(url))
                 }
 
                 override fun onError(exception: SceytException?) {
-                    SceytLog.e(TAG, "Error upload file ${exception?.message}")
                     complete(SceytResponse.Error(exception))
                 }
-            }
+            },
         )
 
         continuation.invokeOnCancellation {

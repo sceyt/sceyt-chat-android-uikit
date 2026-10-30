@@ -22,6 +22,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.extensions.hasPermissions
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
+import com.sceyt.chatuikit.filetransfer.encryption.FileEncryptionMetadata
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.notifications.service.FileTransferNotificationData
@@ -161,7 +162,7 @@ class UploadAndSendAttachmentWorker(
                 }
                 return result.fold(
                     onSuccess = {
-                        if (checksum != null)
+                        if (checksum != null && FileEncryptionMetadata.read(it.metadata) == null)
                             fileChecksumDao.updateUrl(checksum, it.url)
                         attachments[index] = it
                         KtResult.success(attachments)

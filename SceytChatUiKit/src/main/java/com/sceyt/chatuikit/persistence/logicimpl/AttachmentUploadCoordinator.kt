@@ -2,14 +2,9 @@ package com.sceyt.chatuikit.persistence.logicimpl
 
 import android.content.Context
 import com.sceyt.chat.models.SceytException
-import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
-import com.sceyt.chatuikit.extensions.getMimeType
-import com.sceyt.chatuikit.filetransfer.AttachmentTransferContext
 import com.sceyt.chatuikit.filetransfer.FileTransferResult
-import com.sceyt.chatuikit.filetransfer.FileTransferTransport
-import com.sceyt.chatuikit.filetransfer.FileUploadRequest
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.PauseUpload
@@ -30,7 +25,6 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.File
 import java.util.ArrayDeque
 
 internal class AttachmentUploadCoordinator(
@@ -38,7 +32,7 @@ internal class AttachmentUploadCoordinator(
     attachmentLogic: PersistenceAttachmentLogic,
     private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
 ) {
-    private val preparer = UploadPreparer(context, attachmentLogic)
+    private val router = AttachmentTransferRouter(context, attachmentLogic)
     private val commands = Channel<() -> Unit>(Channel.UNLIMITED)
     private val uploads = linkedSetOf<Upload>()
     private val pending = ArrayDeque<Upload>()
@@ -113,14 +107,30 @@ internal class AttachmentUploadCoordinator(
     }
 
     fun cancel(task: TransferTask) = dispatch {
-        val member = findMember(task) ?: return@dispatch
+        val member = findMember(task)
+        if (member == null) {
+            discardSavedUpload(task.attachment)
+            return@dispatch
+        }
         removeMember(member)
         val upload = member.upload
         if (!upload.hasActiveMembers) {
-            if (upload.members.isEmpty()) stopAttempt(upload) else pauseOperation(upload)
+            if (upload.members.isEmpty()) stopAttempt(upload, discard = true) else pauseOperation(upload)
             pending.remove(upload)
             releaseTurn(upload)
         }
+    }
+
+    fun uploaded(attachment: SceytAttachment) = dispatch { router.uploaded(attachment) }
+
+    fun discardSavedUpload(attachment: SceytAttachment) = dispatch {
+        val operationId = attachment.uploadOperationId
+        val inUse = uploads.any { upload ->
+            upload.attempt?.operationId == operationId || upload.members.values.any { member ->
+                member.attachment.messageTid == attachment.messageTid
+            }
+        }
+        if (!inUse) router.discardSavedUpload(attachment)
     }
 
     fun cancelAll() = dispatch {
@@ -131,7 +141,7 @@ internal class AttachmentUploadCoordinator(
         active.forEach { upload ->
             upload.members.values.forEach { it.finished = true }
             upload.members.clear()
-            stopAttempt(upload)
+            stopAttempt(upload, discard = true)
         }
     }
 
@@ -166,15 +176,17 @@ internal class AttachmentUploadCoordinator(
 
     private suspend fun performUpload(owner: Member, attempt: Attempt) {
         val result = try {
-            val prepared = preparer.prepare(
+            val transfer = router.upload(
                 attachment = owner.attachment,
+                operationId = attempt.operationId,
+                isSharedUpload = owner.upload.shared,
                 onFilePrepared = { path ->
                     // Preparation belongs to the physical upload, even if its first caller is deleted.
                     if (!owner.finished) owner.task.updateFileLocationCallback?.onUpdateFileLocation(
                         path
                     )
                 },
-                onProgress = { progress ->
+                onPreparing = { progress ->
                     dispatch {
                         if (owner.upload.attempt === attempt && !attempt.job.isCancelled && !owner.paused && !owner.finished) {
                             owner.task.preparingCallback?.onPreparing(
@@ -187,24 +199,9 @@ internal class AttachmentUploadCoordinator(
                     }
                 },
             )
-            val response = prepared.reusedUrl?.let { FileTransferResult.Success(it) } ?: run {
-                currentCoroutineContext().ensureActive()
-                val source = File(checkNotNull(prepared.attachment.filePath))
-                attempt.filePath = source.path
-                val backend = SceytChatUIKit.fileTransfer.transport
-                attempt.transport = backend
-                backend.upload(
-                    FileUploadRequest(
-                        operationId = attempt.operationId,
-                        sourceFile = source,
-                        fileName = prepared.attachment.name,
-                        mimeType = getMimeType(source.path),
-                        context = AttachmentTransferContext(
-                            attachment = prepared.attachment,
-                            isSharedUpload = owner.upload.shared
-                        ),
-                    ),
-                ) { progress -> dispatch { handleProgress(owner.upload, attempt, progress) } }
+            attempt.transfer = transfer
+            val response = transfer.execute { progress ->
+                dispatch { handleProgress(owner.upload, attempt, progress) }
             }
             currentCoroutineContext().ensureActive()
             when (response) {
@@ -235,7 +232,7 @@ internal class AttachmentUploadCoordinator(
                         progressPercent = progressPercent,
                         state = Uploading,
                         filePath = if (upload.shared)
-                            member.task.attachment.filePath else attempt.filePath,
+                            member.task.attachment.filePath else attempt.transfer?.attachment?.filePath,
                         url = null,
                     ),
                 )
@@ -246,6 +243,11 @@ internal class AttachmentUploadCoordinator(
     private fun finish(upload: Upload, attempt: Attempt, result: Result<String>) {
         if (upload.attempt !== attempt) return
         upload.attempt = null
+        attempt.transfer?.let { transfer ->
+            upload.members.values.forEach { member ->
+                member.task.attachment = transfer.applyUploadMetadata(member.task.attachment)
+            }
+        }
         upload.result = result
         val finished = upload.members.values.filter {
             !it.paused || (!upload.shared && result.isFailure)
@@ -280,18 +282,19 @@ internal class AttachmentUploadCoordinator(
         val attempt = upload.attempt ?: return
         if (attempt.completed || attempt.paused) return
         val paused = attempt.job.isActive && runCatching {
-            attempt.transport?.pause(attempt.operationId) == true
+            attempt.transfer?.pause() == true
         }.getOrDefault(false)
         if (paused) attempt.paused = true else stopAttempt(upload)
     }
 
     private fun resumeTransport(attempt: Attempt): Boolean = runCatching {
-        attempt.transport?.resume(attempt.operationId) == true
+        attempt.transfer?.resume() == true
     }.getOrDefault(false)
 
-    private fun stopAttempt(upload: Upload) {
+    private fun stopAttempt(upload: Upload, discard: Boolean = false) {
         upload.attempt?.let { attempt ->
             attempt.paused = true
+            if (discard) attempt.transfer?.discard()
             attempt.job.cancel()
         }
     }
@@ -341,10 +344,9 @@ internal class AttachmentUploadCoordinator(
     private class Attempt(val operationId: String) {
         lateinit var job: Job
         var paused = false
-        var filePath: String? = null
 
         @Volatile
-        var transport: FileTransferTransport? = null
+        var transfer: AttachmentTransferRouter.Transfer? = null
 
         @Volatile
         var completed = false

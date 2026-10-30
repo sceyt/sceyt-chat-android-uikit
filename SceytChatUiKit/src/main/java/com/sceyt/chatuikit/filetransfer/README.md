@@ -22,19 +22,23 @@ The transport must not create its own upload queue or implement shared-upload po
 FileTransferServiceImpl / TransferTask
   ├─ AttachmentUploadCoordinator
   │    upload FIFO, shared participants, pause/resume and attempt lifetime
-  │    ├─ UploadPreparer
-  │    │    checksum reuse, image resizing and video transcoding
-  │    └─ FileTransferTransport.upload
+  │    └─ AttachmentTransferRouter.upload
+  │         ├─ UploadPreparer: checksum reuse, resizing and transcoding
+  │         ├─ Chat SDK FileEncryptionProvider.prepareUpload / restoreUpload
+  │         └─ FileTransferTransport.upload
   ├─ AttachmentDownloadCoordinator
   │    file checks, destination, duplicate suppression and download attempts
-  │    └─ FileTransferTransport.download
+  │    └─ AttachmentTransferRouter.download
+  │         ├─ Plain: FileTransferTransport.download
+  │         └─ Encrypted: download temporary ciphertext, then decrypt locally
+  │              └─ SDK PlaintextReader → verified local file
   └─ AttachmentThumbCoordinator
        local thumbnail extraction and caching
 ```
 
-The service calls the three attachment coordinators directly. There is no router, generic file
-coordinator, subscription, or observer bridge. Each coordinator owns its operations; only uploads
-have a FIFO. Downloads run independently.
+The service calls the three attachment coordinators directly. Upload and download coordinators
+delegate preparation and backend selection to `AttachmentTransferRouter`. Each coordinator owns
+its operations; only uploads have a FIFO. Downloads run independently.
 
 One coroutine processes the upload coordinator's private command channel. It serializes short
 state changes, including requests made from callbacks, without custom draining code or locks.
@@ -61,11 +65,13 @@ Paths below are relative to `com/sceyt/chatuikit`:
 | Package | Classes and purpose |
 | --- | --- |
 | `filetransfer` | `SceytChatUIKitFileTransfer`: customer transport and destination configuration |
-| `filetransfer` | `FileUploadRequest`, `FileDownloadRequest`, `FileTransferContext`: file-only transport input; `AttachmentTransferContext`: optional attachment information |
+| `filetransfer` | `FileUploadRequest.Plain`, `FileUploadRequest.Encrypted`, `FileDownloadRequest`: transport inputs; `AttachmentTransferContext`: optional attachment information; `TransportCheckpointStore`: opaque backend resume state |
 | `filetransfer/defaults` | `DefaultFileTransferTransport`, `DefaultFileTransferDestinationProvider`: built-in backend and attachment destination policy |
 | `persistence/file_transfer` | `FileTransferServiceImpl`, `TransferTask`: task registration, upload/download completion and worker listeners; `FileTransferHelper`: state and persistence publication |
 | `persistence/logicimpl` | `AttachmentUploadCoordinator`, `AttachmentDownloadCoordinator`, `AttachmentThumbCoordinator`: attachment upload, download and local-thumbnail handling |
 | `persistence/logicimpl` | `UploadPreparer`: checksum reuse and media preparation, without task registration or transfer scheduling |
+| `persistence/logicimpl` | `AttachmentTransferRouter`: selects plain/encrypted execution and preserves that selection for the attempt |
+| `filetransfer/encryption` | Key envelopes, upload-session storage and writing SDK-verified plaintext to a local file |
 | `persistence/logicimpl` | `FileTransferUtility`, `OkHttpDownloader`: SDK upload and HTTP download bridges |
 
 ## Configuration
@@ -101,7 +107,7 @@ For a normal upload, the UI kit:
 1. Adds the attachment to the sequential upload queue.
 2. Reuses a completed upload when checksum reuse is enabled and a valid reference exists.
 3. Resizes an image or transcodes a video when required.
-4. Creates a `FileUploadRequest` containing the prepared source file and optional context.
+4. Creates a `FileUploadRequest.Plain` containing the prepared source file and optional context.
 5. Calls the transport and owns progress, persistence, completion, failure, and queue advancement.
 
 Preparation runs inside the admitted upload's coroutine, so a queued upload does not prepare early.
@@ -141,6 +147,138 @@ result delivery.
 Downloads for different messages remain concurrent. There is no download FIFO and no automatic
 download retry.
 
+## Encrypted files and the Chat SDK
+
+This worktree uses the locally published Chat SDK (`sceyt = "local"`). The SDK owns file keys,
+the encryption format, its 64 KiB records and authentication. UIKit consumes the SDK's public
+`FileEncryptionProvider`, `PreparedUpload`, `CiphertextRangeSource` and `PlaintextReader` contracts.
+UIKit does not implement the file cipher or calculate encrypted record boundaries.
+
+Enable encryption before starting transfers:
+
+```kotlin
+SceytChatUIKit.fileTransfer.apply {
+    encryptUploads = true
+    // Set transport here when using customer storage instead of the Chat SDK uploader.
+}
+```
+
+The temporary wrapping-key/provider layer has been removed. UIKit stores the SDK's unique ID
+and raw file key directly in metadata. A recipient needs no separate app wrapping key.
+Anyone who can read that metadata can obtain the file key; recipient-specific key protection is
+not implemented in this prototype.
+
+### Upload call chain
+
+```text
+AttachmentUploadCoordinator.performUpload
+  → AttachmentTransferRouter.upload
+  → UploadPreparer.prepare
+  → FileEncryptionProvider.prepareUpload(finalFile, uniqueId)
+  → FileEncryptionMetadata.fromEncryptionInfo(PreparedUpload.encryptionInfo)
+  → FileUploadRequest.Encrypted(ciphertextSource, checkpointStore)
+  → FileTransferTransport.upload
+      default: ChatClient.uploadEncrypted(PreparedUpload, ...)
+      custom:  ciphertextSource.readCiphertextRange(offset, length) → backend part upload
+```
+
+The SDK encrypts only the requested ciphertext ranges, without creating a complete encrypted
+temporary file. A transport can request a multipart-sized range; SDK records need not align with
+transport parts. Offsets and lengths always address the encrypted object, whose size is
+`ciphertextSource.ciphertextSize`, including encryption overhead.
+
+UIKit writes `enc` alongside the existing attachment metadata:
+
+```json
+{
+  "tmb": "ChgWCYZ4eHiIiAiHiIiAhwg=",
+  "szw": 1280,
+  "szh": 203,
+  "enc": {
+    "id": "4b61fd06-bdf7-43e2-bb3e-3a54f20a8a00",
+    "v": 1,
+    "k": "base64url-file-key"
+  }
+}
+```
+
+`id` comes from `FileEncryptionInfo.data.uniqueId`; `k` is `FileEncryptionInfo.data.key`.
+Version 1 identifies `tink-aes256-gcm-hkdf-64k+commit-v1`. The attachment's existing `fileSize`
+carries the plaintext size; UIKit updates it from the SDK after preparation, including shared
+uploads. On download, `toEncryptionInfo(attachment.fileSize)` reconstructs the SDK's typed
+`FileEncryptionData` from these values. No serialized encryption-info JSON is stored in `k`.
+The file key is carried in this metadata, rather than appended to the uploaded bytes.
+UIKit merges `enc` into each attachment's metadata, preserving dimensions, thumbnails and customer
+fields. The upload URL and matching metadata are saved in one database transaction. Encrypted
+upload URLs are excluded from the plain-file checksum reuse cache.
+
+### Multipart resume
+
+`UploadSessionStore` separates storage from the SDK range reader. The demo implementation,
+`FileUploadSessionStore`, uses atomic JSON files under the app's private `filesDir/upload-sessions`.
+The session holds SDK encryption info (including the file key), the SDK checkpoint and an opaque
+transport checkpoint. A future Room implementation can replace this store; prototype data need
+not be migrated. Older wrapped-key prototype records are not migrated.
+
+Malformed session JSON is discarded without affecting other uploads. The next attempt starts a
+fresh SDK encryption session and backend upload; disk read/write errors still surface as failures.
+
+A custom multipart transport must:
+
+1. Read `request.checkpointStore.get()` and restore its backend state when present.
+2. Save its newly created backend upload ID before reading/uploading the first part.
+3. Read exact ciphertext ranges. UIKit saves the SDK checkpoint before each range is returned.
+4. Save completed part numbers and ETags after backend success, awaiting each durable save.
+5. Complete the backend upload, persisting the completed remote reference for recovery before
+   returning `Success`. On retry after completion, return that saved reference.
+6. Stop all source reads before returning or propagating cancellation. UIKit owns source closure.
+
+On a later attempt the router restores the same SDK session when a transport checkpoint exists.
+The SDK validates the original file and reproduces the same encrypted bytes. The transport owns
+presigned URLs, URL renewal, part sizing, ETags and backend completion/abort behavior.
+
+The default Chat SDK uploader is a single upload request. Its internal reads bypass UIKit's range
+wrapper, and it has no multipart backend checkpoint. A cancelled/failed default upload therefore
+starts a fresh encryption session on retry. UIKit does not claim durable multipart resume for it.
+Successful sessions are released after `FileTransferHelper` confirms persistence through
+`FileTransferService.uploadPersisted`.
+
+Explicit cancellation calls `transport.discardUpload(operationId, checkpointData)` before deleting
+the local session. This lets a backend abort an interrupted multipart upload after a restart.
+The hook is idempotent and schedules cleanup without blocking the caller. Pause and retry do not
+discard the session.
+
+### Download call chain
+
+```text
+AttachmentDownloadCoordinator.performDownload
+  → AttachmentTransferRouter.download
+  → metadata.enc.toEncryptionInfo(attachment.fileSize)
+  → FileTransferTransport.download(<destination>.sceyt.enc.part)
+  → rename completed ciphertext to <destination>.sceyt.enc
+  → FileEncryptionProvider.openDownload(FileCiphertextRangeSource, encryptionInfo)
+  → PlaintextReader.read(plaintextOffset, length)
+      → read encrypted ranges from the local file
+      → SDK decrypts and verifies
+  → write <destination>.sceyt.part, then rename to destination
+  → delete the encrypted temporary file
+```
+
+This full-file path works when the server returns the whole object with HTTP 200. The network
+stage uses the existing downloader. It does not require remote HTTP Range support. The SDK still
+uses range reads, but those reads access the completed local ciphertext file.
+
+During decryption the encrypted file and growing plaintext file coexist, using roughly twice the
+attachment size temporarily. Only verified plaintext is published. Success removes the encrypted
+copy. Network interruptions retain the encrypted partial for retry; pausing decryption retains
+the completed encrypted file and verified plaintext position. Local read/write failures,
+authentication failure and explicit cancellation remove temporary files after reads and writes stop.
+
+Progress uses 0–90% for network download and 90–100% for SDK verification. Native network pause is
+used when available; decryption pause uses cancellation and restart. Playback still waits for the
+full verified file. Transports provide `download` to write encrypted bytes; the SDK's local file
+range reader handles decryption after the download completes.
+
 ## Transport contract
 
 Operation IDs are stable, opaque identifiers generated by the UI kit:
@@ -179,9 +317,8 @@ retry; they do not trigger an automatic retry. Other HTTP errors and destination
 return `Failure`. The SDK upload bridge reports its SDK errors as `Failure`.
 
 Custom transports must implement these `FileTransferResult<String>` return types before adopting this
-unreleased API. Waafi's S3 transport migration is still pending; it must not fall back to the
-default Sceyt transport. Its network-wait state should return `Interrupted` while preserving S3
-state, rather than emitting an event and waiting for coroutine cancellation.
+unreleased API. Waafi's S3 transport returns `Interrupted` for network waits while preserving
+its multipart checkpoint. Custom storage must not silently fall back to the default Sceyt backend.
 
 `pause(operationId)` returns `true` only when that exact physical operation was paused and remains
 available to `resume(operationId)`. `resume(operationId)` returns `true` only when the same
@@ -237,10 +374,19 @@ Other API changes from `dev`:
   Its `pauseDownload`, `resumeDownload`, `cancelAllDownloads`, `isDownloading`,
   `getActiveDownloadsCount`, and `getActiveDownloads` methods are removed. Use
   `FileTransferService` for attachment-level transfer control.
-- Waafi must migrate its transport before adopting this branch and preserve S3 state when returning `Interrupted`.
-  Its `FileTransferServiceInitializer`, `WaafiFileTransferService`, and
-  `ProvideVideoPostMediaDataUseCase` still use the old hooks or task-registration behavior and
-  must be migrated before release. Do not silently fall back to the default Sceyt backend.
+- Custom storage adapters must preserve backend state when returning `Interrupted` and use
+  the file-transfer transport contract instead of the old service hooks. Waafi's current adapter
+  follows this contract; its multipart walkthrough documents the upload and download call chains.
+
+Encryption additions to this branch:
+
+- Handle both sealed `FileUploadRequest` cases; file-based integrations now use `.Plain.sourceFile`.
+- `FileTransferTransport.download` receives the encrypted temporary destination for encrypted files.
+- Implement `FileTransferTransport.discardUpload` to clean up retained backend uploads on cancellation.
+- Custom `PersistenceAttachmentLogic` implementations must implement `updateUploadedAttachment`
+  and save the uploaded URL and metadata together.
+- `FileTransferService.uploadPersisted` defaults to a no-op; services using UIKit's encrypted upload
+  sessions should delegate it to the upload coordinator after the persistence save succeeds.
 
 ### Media and worker APIs
 

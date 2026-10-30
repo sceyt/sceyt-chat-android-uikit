@@ -50,6 +50,7 @@ class FileTransferScopeIsolationTest {
         sharedScope = TestScope(UnconfinedTestDispatcher())
         previousFileTransfer = SceytChatUIKit.fileTransfer
         SceytChatUIKit.fileTransfer = SceytChatUIKitFileTransfer().apply {
+            encryptUploads = false
             this.transport = this@FileTransferScopeIsolationTest.transport
             destinationProvider = FileTransferDestinationProvider { _, _ -> destinationFile }
         }

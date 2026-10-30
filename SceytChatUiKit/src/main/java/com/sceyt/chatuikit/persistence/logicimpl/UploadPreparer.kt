@@ -19,7 +19,7 @@ import java.io.File
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.resume
 
-internal data class PreparedUpload(
+internal data class PreparedAttachment(
     val attachment: SceytAttachment,
     val reusedUrl: String? = null,
 )
@@ -33,16 +33,17 @@ internal class UploadPreparer(
         attachment: SceytAttachment,
         onFilePrepared: (String) -> Unit,
         onProgress: (Float) -> Unit,
-    ): PreparedUpload {
+        reuseUploadedUrl: Boolean = true,
+    ): PreparedAttachment {
         val sourcePath = attachment.originalFilePath?.takeIf(String::isNotBlank)
             ?: attachment.filePath?.takeIf(String::isNotBlank)
-        val checksum = if (SceytChatUIKit.config.preventDuplicateAttachmentUpload)
+        val checksum = if (reuseUploadedUrl && SceytChatUIKit.config.preventDuplicateAttachmentUpload)
             attachmentLogic.getFileChecksumData(sourcePath) else null
         if (checksum?.url.isNotNullOrBlank()) {
             if (!checksum?.resizedFilePath.isNullOrEmpty()) {
                 onFilePrepared(checkNotNull(checksum.resizedFilePath))
             }
-            return PreparedUpload(attachment, checkNotNull(checksum?.url))
+            return PreparedAttachment(attachment, checkNotNull(checksum?.url))
         }
 
         val result = prepareAttachment(attachment, checksum, onProgress)
@@ -60,7 +61,7 @@ internal class UploadPreparer(
         val path = prepared.filePath
         require(!path.isNullOrBlank()) { "Attachment source path is missing" }
         require(File(path).isFile) { "Attachment source file does not exist: $path" }
-        return PreparedUpload(prepared)
+        return PreparedAttachment(prepared)
     }
 
     private suspend fun prepareAttachment(

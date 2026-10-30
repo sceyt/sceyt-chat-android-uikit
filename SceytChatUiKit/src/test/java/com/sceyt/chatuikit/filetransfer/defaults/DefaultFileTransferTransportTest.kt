@@ -57,7 +57,7 @@ class DefaultFileTransferTransportTest {
         val transport = DefaultFileTransferTransport()
         val utility = utilityConstruction.constructed().single()
         val sourceFile = File("/tmp/prepared.txt")
-        val request = FileUploadRequest(
+        val request = FileUploadRequest.Plain(
             operationId = "upload:10",
             sourceFile = sourceFile,
             fileName = "prepared.txt",
@@ -84,7 +84,7 @@ class DefaultFileTransferTransportTest {
     fun `upload forwards SDK failure`() = runTest {
         val transport = DefaultFileTransferTransport()
         val utility = utilityConstruction.constructed().single()
-        val request = FileUploadRequest(
+        val request = FileUploadRequest.Plain(
             operationId = "upload:10",
             sourceFile = File("/tmp/prepared.txt"),
             fileName = "prepared.txt",
@@ -159,7 +159,7 @@ class DefaultFileTransferTransportTest {
         val transport = DefaultFileTransferTransport()
         val utility = utilityConstruction.constructed().single()
         whenever(utility.uploadFile(any(), any())).thenReturn(SceytResponse.Success(null))
-        val request = FileUploadRequest("upload:10", File("/tmp/prepared.txt"), "prepared.txt", "text/plain")
+        val request = FileUploadRequest.Plain("upload:10", File("/tmp/prepared.txt"), "prepared.txt", "text/plain")
 
         val result = transport.upload(request) { }
 
@@ -207,7 +207,7 @@ class DefaultFileTransferTransportTest {
     fun `cancelling upload cancels its suspended SDK bridge`() = runTest {
         val transport = DefaultFileTransferTransport()
         val utility = utilityConstruction.constructed().single()
-        val request = FileUploadRequest(
+        val request = FileUploadRequest.Plain(
             operationId = "upload:10",
             sourceFile = File("/tmp/prepared.txt"),
             fileName = "prepared.txt",

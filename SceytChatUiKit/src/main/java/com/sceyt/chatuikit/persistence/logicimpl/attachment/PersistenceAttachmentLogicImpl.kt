@@ -49,6 +49,7 @@ import com.sceyt.chatuikit.persistence.mappers.toLinkPreviewDetails
 import com.sceyt.chatuikit.persistence.mappers.toMessageDb
 import com.sceyt.chatuikit.persistence.mappers.toSceytAttachment
 import com.sceyt.chatuikit.persistence.mappers.toSceytUser
+import com.sceyt.chatuikit.persistence.mappers.toTransferData
 import com.sceyt.chatuikit.persistence.repositories.AttachmentsRepository
 import com.sceyt.chatuikit.shared.utils.FileChecksumCalculator
 import kotlinx.coroutines.Dispatchers
@@ -160,6 +161,20 @@ internal class PersistenceAttachmentLogicImpl(
         withContext(Dispatchers.IO) {
             attachmentDao.updateAttachmentAndPayLoad(data)
         }
+    }
+
+    override suspend fun updateUploadedAttachment(attachment: SceytAttachment) {
+        val data = attachment.toTransferData(TransferState.Uploaded, 100f)
+        withContext(Dispatchers.IO) {
+            attachmentDao.updateUploadedAttachment(data, attachment.fileSize, attachment.metadata)
+        }
+        messagesCache.updateAttachmentFilePathAndMeta(
+            attachment.messageTid,
+            attachment.filePath,
+            attachment.metadata,
+        )
+        messagesCache.updateAttachmentTransferData(data)
+        attachmentsCache.add(attachment)
     }
 
     override suspend fun resetToPendingDownload(data: TransferData) {

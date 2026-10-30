@@ -83,9 +83,14 @@ internal class FileTransferServiceImpl(
         val task = findTransferTask(attachment)
         task?.isCancelled = true
         task?.let(::removeTransferTask)
-        task?.let(uploader::cancel)
+        if (task != null) uploader.cancel(task)
+        else uploader.discardSavedUpload(attachment)
         downloader.cancel(attachment)
         task?.complete(Result.failure(CancellationException("Attachment upload cancelled")))
+    }
+
+    override fun uploadPersisted(attachment: SceytAttachment) {
+        uploader.uploaded(attachment)
     }
 
     override fun resume(
@@ -100,7 +105,7 @@ internal class FileTransferServiceImpl(
                 { completeTransfer(task, it, upload = false) }
             if (state == PauseDownload) downloader.resume(attachment, task, onResult)
             else {
-                if (state == ErrorDownload) downloader.cancel(attachment)
+                if (state == ErrorDownload) downloader.cancel(attachment, discard = false)
                 downloader.download(attachment, task, onResult, isResuming = true)
             }
             return

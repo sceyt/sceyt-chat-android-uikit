@@ -5,10 +5,7 @@ import com.sceyt.chat.models.SceytException
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
-import com.sceyt.chatuikit.filetransfer.AttachmentTransferContext
-import com.sceyt.chatuikit.filetransfer.FileDownloadRequest
 import com.sceyt.chatuikit.filetransfer.FileTransferResult
-import com.sceyt.chatuikit.filetransfer.FileTransferTransport
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Downloading
@@ -33,6 +30,7 @@ internal class AttachmentDownloadCoordinator(
     private val context: Context,
     private val scope: CoroutineScope,
 ) {
+    private val router = AttachmentTransferRouter(context)
     private val lock = Any()
     private val downloads = hashMapOf<String, Download>()
 
@@ -78,7 +76,7 @@ internal class AttachmentDownloadCoordinator(
             current
         }
         val paused = download.job.isActive && runCatching {
-            download.transport?.pause(download.operationId) == true
+            download.transfer?.pause() == true
         }.getOrDefault(false)
         if (!paused) cancelAttempt(download)
         return true
@@ -94,7 +92,7 @@ internal class AttachmentDownloadCoordinator(
         }
         if (previous?.job?.isActive == true) {
             val resumed = runCatching {
-                previous.transport?.resume(previous.operationId) == true
+                previous.transfer?.resume() == true
             }.getOrDefault(false)
             if (resumed) {
                 if (previous.job.isActive) publishResumed(previous, task)
@@ -105,12 +103,16 @@ internal class AttachmentDownloadCoordinator(
         download(attachment, task, onResult, isResuming = true)
     }
 
-    fun cancel(attachment: SceytAttachment) {
+    fun cancel(attachment: SceytAttachment, discard: Boolean = true) {
         val download = synchronized(lock) {
             downloads[attachment.transferKey]?.also {
                 it.paused = false
                 if (it.job.isCompleted) downloads.remove(it.key, it)
             }
+        }
+        if (discard) {
+            if (download == null) router.discardSavedDownload(attachment)
+            else download.transfer?.discard()
         }
         download?.let(::cancelAttempt)
     }
@@ -160,16 +162,9 @@ internal class AttachmentDownloadCoordinator(
                 currentCoroutineContext().ensureActive()
                 if (download.isResuming) publishResumed(download, task)
                 currentCoroutineContext().ensureActive()
-                val transport = SceytChatUIKit.fileTransfer.transport
-                download.transport = transport
-                transport.download(
-                    FileDownloadRequest(
-                        operationId = download.operationId,
-                        url = url,
-                        destinationFile = destination,
-                        context = AttachmentTransferContext(attachment)
-                    ),
-                ) { progress -> handleProgress(download, progress) }
+                val transfer = router.download(attachment, download.operationId, destination)
+                download.transfer = transfer
+                transfer.execute { progress -> handleProgress(download, progress) }
             }
             currentCoroutineContext().ensureActive()
             if (response is FileTransferResult.Success) {
@@ -248,7 +243,7 @@ internal class AttachmentDownloadCoordinator(
         lateinit var job: Job
         var destination: File? = null
         @Volatile
-        var transport: FileTransferTransport? = null
+        var transfer: AttachmentTransferRouter.Transfer? = null
         @Volatile
         var paused = false
         @Volatile

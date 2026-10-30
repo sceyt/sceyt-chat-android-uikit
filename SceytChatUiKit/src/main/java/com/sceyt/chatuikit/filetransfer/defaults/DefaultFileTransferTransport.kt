@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.filetransfer.defaults
 
+import com.sceyt.chat.fileencryption.PreparedUpload
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.fold
 import com.sceyt.chatuikit.filetransfer.FileDownloadRequest
@@ -7,6 +8,7 @@ import com.sceyt.chatuikit.filetransfer.FileTransferCallback
 import com.sceyt.chatuikit.filetransfer.FileTransferResult
 import com.sceyt.chatuikit.filetransfer.FileTransferTransport
 import com.sceyt.chatuikit.filetransfer.FileUploadRequest
+import com.sceyt.chatuikit.filetransfer.encryption.EncryptedUploadSource
 import com.sceyt.chatuikit.persistence.logicimpl.FileTransferUtility
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.NonCancellable
@@ -23,12 +25,20 @@ class DefaultFileTransferTransport : FileTransferTransport {
         request: FileUploadRequest,
         callback: FileTransferCallback,
     ): FileTransferResult<String> {
-        val response = transferUtility.uploadFile(
-            sourceFile = request.sourceFile,
-            onProgress = { progressPercent ->
-                callback.onProgress(progressPercent)
-            },
-        )
+        val response = when (request) {
+            is FileUploadRequest.Plain -> transferUtility.uploadFile(
+                sourceFile = request.sourceFile,
+                onProgress = callback::onProgress,
+            )
+            is FileUploadRequest.Encrypted -> {
+                val source = (request.ciphertextSource as? EncryptedUploadSource)?.sdkUpload
+                    ?: request.ciphertextSource as? PreparedUpload
+                    ?: return FileTransferResult.Failure(
+                        UnsupportedOperationException("The Chat SDK uploader requires an SDK PreparedUpload"),
+                    )
+                transferUtility.uploadEncryptedFile(source, callback::onProgress)
+            }
+        }
 
         return response.toResult("File upload failed")
     }

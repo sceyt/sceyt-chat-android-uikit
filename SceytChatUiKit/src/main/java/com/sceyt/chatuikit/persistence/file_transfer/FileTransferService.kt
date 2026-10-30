@@ -28,6 +28,10 @@ interface FileTransferService {
     )
     /** Cancels this upload without stopping other messages sharing it. */
     fun cancelUpload(attachment: SceytAttachment)
+
+    /** Releases a resumable upload session after its URL and metadata have been persisted. */
+    fun uploadPersisted(attachment: SceytAttachment) = Unit
+
     fun getThumb(messageTid: Long, attachment: SceytAttachment, thumbData: ThumbData)
     fun findOrCreateTransferTask(attachment: SceytAttachment): TransferTask
     fun findTransferTask(attachment: SceytAttachment): TransferTask?
