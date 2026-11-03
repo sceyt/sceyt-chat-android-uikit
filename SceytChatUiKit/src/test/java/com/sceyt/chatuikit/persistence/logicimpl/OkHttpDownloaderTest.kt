@@ -69,6 +69,27 @@ class OkHttpDownloaderTest {
     }
 
     @Test
+    fun `per request headers accompany range resume without leaking into another download`() {
+        val downloader = OkHttpDownloader()
+        val first = request("download:headers").copy(
+            headers = mapOf("X-Chat-Token" to "test-token", "X-Message-Id" to "1001"),
+        )
+        first.destinationFile.writeText("partial")
+        val second = request("download:other")
+
+        downloader.downloadFile(first, {}, {})
+        downloader.downloadFile(second, {}, {})
+
+        val requests = argumentCaptor<Request>()
+        verify(client, Mockito.times(2)).newCall(requests.capture())
+        assertThat(requests.allValues[0].header("X-Chat-Token")).isEqualTo("test-token")
+        assertThat(requests.allValues[0].header("X-Message-Id")).isEqualTo("1001")
+        assertThat(requests.allValues[0].header("Range")).isEqualTo("bytes=7-")
+        assertThat(requests.allValues[1].header("X-Chat-Token")).isNull()
+        assertThat(requests.allValues[1].header("X-Message-Id")).isNull()
+    }
+
+    @Test
     fun `same URL with different operation IDs keeps both downloads`() {
         val downloader = OkHttpDownloader()
         val first = request("download:20:first")

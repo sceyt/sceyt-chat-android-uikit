@@ -9,6 +9,7 @@ import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.getFileSize
+import com.sceyt.chatuikit.filetransfer.encryption.FileEncryptionMetadata
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.database.dao.FileChecksumDao
@@ -235,7 +236,11 @@ object FileTransferHelper : SceytKoinComponent {
                 if (updatedAttachment != null) {
                     emitAttachmentTransferUpdate(transferData, updatedAttachment.fileSize)
                     enqueueDbUpdate(messageTid) {
-                        attachmentLogic.updateAttachmentWithTransferData(transferData)
+                        if (FileEncryptionMetadata.read(updatedAttachment.metadata) != null) {
+                            attachmentLogic.updateUploadedAttachment(updatedAttachment)
+                        } else {
+                            attachmentLogic.updateAttachmentWithTransferData(transferData)
+                        }
                         removeMutexForAttachment(messageTid)
                     }
                 }

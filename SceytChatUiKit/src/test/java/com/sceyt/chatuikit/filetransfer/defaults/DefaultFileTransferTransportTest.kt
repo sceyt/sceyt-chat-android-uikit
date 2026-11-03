@@ -8,6 +8,7 @@ import com.sceyt.chatuikit.filetransfer.FileDownloadRequest
 import com.sceyt.chatuikit.filetransfer.FileTransferCallback
 import com.sceyt.chatuikit.filetransfer.FileTransferResult
 import com.sceyt.chatuikit.filetransfer.FileUploadRequest
+import com.sceyt.chatuikit.filetransfer.FileUploadResult
 import com.sceyt.chatuikit.persistence.logicimpl.FileTransferUtility
 import com.sceyt.chatuikit.persistence.logicimpl.attachment
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -77,7 +78,7 @@ class DefaultFileTransferTransportTest {
 
         assertThat(sourceCaptor.firstValue).isEqualTo(sourceFile)
         assertThat(progress).containsExactly(35f)
-        assertThat(result).isEqualTo(FileTransferResult.Success("uploaded-url"))
+        assertThat(result).isEqualTo(FileTransferResult.Success(FileUploadResult("uploaded-url")))
     }
 
     @Test

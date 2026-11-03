@@ -7,6 +7,8 @@ import com.sceyt.chatuikit.filetransfer.FileTransferCallback
 import com.sceyt.chatuikit.filetransfer.FileTransferResult
 import com.sceyt.chatuikit.filetransfer.FileTransferTransport
 import com.sceyt.chatuikit.filetransfer.FileUploadRequest
+import com.sceyt.chatuikit.filetransfer.FileUploadResult
+import com.sceyt.chatuikit.filetransfer.encryption.FileEncryptionInfo
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.file_transfer.ThumbData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
@@ -95,7 +97,7 @@ internal class RecordingFileTransferTransport : FileTransferTransport {
         val request: FileUploadRequest,
         private val callback: FileTransferCallback,
     ) {
-        val result = CompletableDeferred<FileTransferResult<String>>()
+        val result = CompletableDeferred<FileTransferResult<FileUploadResult>>()
 
         @Volatile
         var cancelled = false
@@ -108,8 +110,8 @@ internal class RecordingFileTransferTransport : FileTransferTransport {
             result.complete(FileTransferResult.Interrupted(error))
         }
 
-        fun succeed(remoteReference: String) {
-            result.complete(FileTransferResult.Success(remoteReference))
+        fun succeed(remoteReference: String, encryptionInfo: FileEncryptionInfo? = null) {
+            result.complete(FileTransferResult.Success(FileUploadResult(remoteReference, encryptionInfo)))
         }
 
         fun fail(error: Throwable) {
@@ -147,6 +149,7 @@ internal class RecordingFileTransferTransport : FileTransferTransport {
     val downloadCalls = CopyOnWriteArrayList<DownloadCall>()
     val pauseCalls = CopyOnWriteArrayList<String>()
     val resumeCalls = CopyOnWriteArrayList<String>()
+    val cancelCalls = CopyOnWriteArrayList<String>()
     var uploadCancellationGate: CompletableDeferred<Unit>? = null
     var downloadCancellationGate: CompletableDeferred<Unit>? = null
     var pauseResult = false
@@ -155,7 +158,7 @@ internal class RecordingFileTransferTransport : FileTransferTransport {
     override suspend fun upload(
         request: FileUploadRequest,
         callback: FileTransferCallback,
-    ): FileTransferResult<String> {
+    ): FileTransferResult<FileUploadResult> {
         val call = UploadCall(request, callback)
         uploadCalls += call
         return try {
@@ -198,6 +201,10 @@ internal class RecordingFileTransferTransport : FileTransferTransport {
     override fun resume(operationId: String): Boolean {
         resumeCalls += operationId
         return resumeResult
+    }
+
+    override fun cancel(operationId: String) {
+        cancelCalls += operationId
     }
 }
 

@@ -8,6 +8,12 @@ plugins {
     alias(libs.plugins.compose) apply false
 }
 
+subprojects {
+    configurations.configureEach {
+        resolutionStrategy.force("com.sceyt:sceyt-chat-android-sdk:local")
+    }
+}
+
 tasks.register<Delete>("clean") {
     description = "Cleans the build directory of the root project."
     delete(layout.buildDirectory)
