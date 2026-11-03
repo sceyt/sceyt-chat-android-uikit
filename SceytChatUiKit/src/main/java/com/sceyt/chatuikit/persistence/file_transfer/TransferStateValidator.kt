@@ -6,12 +6,13 @@ package com.sceyt.chatuikit.persistence.file_transfer
  * Rules:
  * - Once a transfer is completed (Downloaded/Uploaded), only completed states, ThumbLoaded,
  *   and FilePathChanged are allowed
- * - Progress cannot go backwards during Downloading/Uploading states
+ * - Progress belongs to an attempt and may restart from zero
  */
 object TransferStateValidator {
 
     /**
      * Validates if a transfer state change is allowed.
+     * Progress parameters remain for existing callers; coordinators validate attempt ownership.
      * 
      * @param currentState The current transfer state
      * @param newState The new state to transition to
@@ -19,6 +20,7 @@ object TransferStateValidator {
      * @param newProgress The new progress percentage
      * @return true if the transition is valid, false otherwise
      */
+    @Suppress("UNUSED_PARAMETER")
     fun isValidStateTransition(
         currentState: TransferState?,
         newState: TransferState,
@@ -32,13 +34,6 @@ object TransferStateValidator {
                 TransferState.FilePathChanged -> true
 
                 else -> newState.isCompleted()
-            }
-        }
-
-        // For progress updates (Downloading/Uploading), don't allow backward progress
-        if (newState == TransferState.Downloading || newState == TransferState.Uploading) {
-            if (newProgress < currentProgress) {
-                return false
             }
         }
 

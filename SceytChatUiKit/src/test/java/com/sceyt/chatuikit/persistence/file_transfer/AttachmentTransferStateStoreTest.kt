@@ -24,24 +24,64 @@ class AttachmentTransferStateStoreTest {
     }
 
     @Test
-    fun `progress update cannot move backwards`() {
-        val attachment = attachment(url = "https://cdn.test/file")
+    fun `download restart replaces progress from the previous attempt`() {
+        val attachment = attachment(
+            url = "https://cdn.test/file",
+            state = TransferState.Downloading,
+            progress = 75f,
+        )
 
         assertThat(
             AttachmentTransferStateStore.put(
-                transfer(progress = 50f, state = TransferState.Downloading, url = attachment.url)
+                transfer(progress = 75f, state = TransferState.Downloading, url = attachment.url)
             )
         ).isNotNull()
 
         assertThat(
             AttachmentTransferStateStore.put(
-                transfer(progress = 40f, state = TransferState.Downloading, url = attachment.url)
+                transfer(progress = 0f, state = TransferState.Downloading, url = attachment.url)
             )
-        ).isNull()
+        ).isNotNull()
+
+        AttachmentTransferStateStore.put(
+            transfer(progress = 10f, state = TransferState.Downloading, url = attachment.url)
+        )
 
         val latest = AttachmentTransferStateStore.getTransferData(attachment)
         assertThat(latest?.state).isEqualTo(TransferState.Downloading)
-        assertThat(latest?.progressPercent).isEqualTo(50f)
+        assertThat(latest?.progressPercent).isEqualTo(10f)
+    }
+
+    @Test
+    fun `upload restart replaces progress from the previous attempt`() {
+        val attachment = attachment(
+            filePath = "/uploads/file.jpg",
+            url = null,
+            state = TransferState.Uploading,
+            progress = 75f,
+        )
+        AttachmentTransferStateStore.put(
+            transfer(
+                progress = 75f,
+                state = TransferState.Uploading,
+                filePath = attachment.filePath,
+                url = null,
+            )
+        )
+
+        val restarted = AttachmentTransferStateStore.put(
+            transfer(
+                progress = 0f,
+                state = TransferState.Uploading,
+                filePath = attachment.filePath,
+                url = null,
+            )
+        )
+
+        assertThat(restarted?.progressPercent).isEqualTo(0f)
+        val latest = AttachmentTransferStateStore.getTransferData(attachment)
+        assertThat(latest?.state).isEqualTo(TransferState.Uploading)
+        assertThat(latest?.progressPercent).isEqualTo(0f)
     }
 
     @Test
