@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.filetransfer.defaults
 
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.fold
 import com.sceyt.chatuikit.filetransfer.FileDownloadRequest
@@ -7,8 +8,13 @@ import com.sceyt.chatuikit.filetransfer.FileTransferCallback
 import com.sceyt.chatuikit.filetransfer.FileTransferResult
 import com.sceyt.chatuikit.filetransfer.FileTransferTransport
 import com.sceyt.chatuikit.filetransfer.FileUploadRequest
+import com.sceyt.chatuikit.filetransfer.FileUploadResult
+import com.sceyt.chatuikit.filetransfer.FileUploadType
+import com.sceyt.chatuikit.filetransfer.encryption.ChatSdkFileEncryption
+import com.sceyt.chatuikit.filetransfer.encryption.FileEncryptionInfo
 import com.sceyt.chatuikit.persistence.logicimpl.FileTransferUtility
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
@@ -22,16 +28,37 @@ class DefaultFileTransferTransport : FileTransferTransport {
     override suspend fun upload(
         request: FileUploadRequest,
         callback: FileTransferCallback,
-    ): FileTransferResult<String> {
-        val response = transferUtility.uploadFile(
+    ): FileTransferResult<FileUploadResult> = when (request.type) {
+        FileUploadType.PLAIN -> transferUtility.uploadFile(
             sourceFile = request.sourceFile,
-            onProgress = { progressPercent ->
-                callback.onProgress(progressPercent)
-            },
-        )
+            onProgress = callback::onProgress,
+        ).toUploadResult()
 
-        return response.toResult("File upload failed")
+        FileUploadType.ENCRYPTED -> uploadEncrypted(request, callback)
     }
+
+    private suspend fun uploadEncrypted(
+        request: FileUploadRequest,
+        callback: FileTransferCallback,
+    ): FileTransferResult<FileUploadResult> {
+        val session = SceytChatUIKit.fileTransfer.encryption.prepare(request.sourceFile)
+        return try {
+            if (session !is ChatSdkFileEncryption.Session) {
+                return FileTransferResult.Failure(
+                    UnsupportedOperationException("The native uploader requires Chat SDK encryption"),
+                )
+            }
+            transferUtility.uploadEncryptedFile(
+                source = session.upload,
+                onProgress = callback::onProgress
+            ).toUploadResult(session.encryptionInfo)
+        } finally {
+            withContext(NonCancellable + Dispatchers.IO) { session.close() }
+        }
+    }
+
+    // The caller cancels the coroutine, which stops the SDK operation. No upload journal is kept.
+    override fun cancel(operationId: String) = Unit
 
     override suspend fun download(
         request: FileDownloadRequest,
@@ -68,14 +95,13 @@ class DefaultFileTransferTransport : FileTransferTransport {
         }
     }
 
-    private fun SceytResponse<String>.toResult(
-        fallbackErrorMessage: String,
-    ): FileTransferResult<String> = fold(
+    private fun SceytResponse<String>.toUploadResult(
+        encryptionInfo: FileEncryptionInfo? = null,
+    ): FileTransferResult<FileUploadResult> = fold(
         onSuccess = { result ->
-            result?.let { FileTransferResult.Success(it) } ?: FileTransferResult.Failure(
-                IllegalStateException(fallbackErrorMessage)
-            )
+            result?.let { FileTransferResult.Success(FileUploadResult(it, encryptionInfo)) }
+                ?: FileTransferResult.Failure(IllegalStateException("File upload failed"))
         },
-        onError = { FileTransferResult.Failure(it ?: IllegalStateException(fallbackErrorMessage)) }
+        onError = { FileTransferResult.Failure(it ?: IllegalStateException("File upload failed")) }
     )
 }

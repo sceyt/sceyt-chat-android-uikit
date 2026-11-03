@@ -14,6 +14,7 @@ import com.sceyt.chatuikit.filetransfer.FileTransferCallback
 import com.sceyt.chatuikit.filetransfer.FileTransferResult
 import com.sceyt.chatuikit.filetransfer.FileTransferTransport
 import com.sceyt.chatuikit.filetransfer.FileUploadRequest
+import com.sceyt.chatuikit.filetransfer.FileUploadResult
 import com.sceyt.chatuikit.filetransfer.SceytChatUIKitFileTransfer
 import com.sceyt.chatuikit.koin.SceytKoinApp
 import com.sceyt.chatuikit.persistence.database.dao.FileChecksumDao
@@ -96,6 +97,7 @@ class AttachmentUploadCoordinatorTest {
         previousFileTransfer = SceytChatUIKit.fileTransfer
         previousConfig = SceytChatUIKit.config
         SceytChatUIKit.fileTransfer = SceytChatUIKitFileTransfer().apply {
+            encryptUploads = false
             this.transport = this@AttachmentUploadCoordinatorTest.transport
         }
         SceytChatUIKit.config = SceytChatUIKitConfig().apply {
@@ -418,7 +420,7 @@ class AttachmentUploadCoordinatorTest {
     fun `cancel shared owner during interruption cleanup still delivers follower error`() {
         val releaseCancellation = CompletableDeferred<Unit>()
         SceytChatUIKit.fileTransfer.transport = object : FileTransferTransport by transport {
-            override suspend fun upload(request: FileUploadRequest, callback: FileTransferCallback): FileTransferResult<String> {
+            override suspend fun upload(request: FileUploadRequest, callback: FileTransferCallback): FileTransferResult<FileUploadResult> {
                 try {
                     return transport.upload(request, callback)
                 } finally {
@@ -1303,7 +1305,7 @@ class AttachmentUploadCoordinatorTest {
     fun `late IOException from cancelled upload does not fail or advance its replacement`() {
         val cancellationGate = CompletableDeferred<Unit>()
         SceytChatUIKit.fileTransfer.transport = object : FileTransferTransport by transport {
-            override suspend fun upload(request: FileUploadRequest, callback: FileTransferCallback): FileTransferResult<String> {
+            override suspend fun upload(request: FileUploadRequest, callback: FileTransferCallback): FileTransferResult<FileUploadResult> {
                 return try {
                     transport.upload(request, callback)
                 } catch (_: CancellationException) {

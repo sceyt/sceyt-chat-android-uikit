@@ -23,6 +23,17 @@ class OkHttpDownloader {
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(60, TimeUnit.SECONDS)
             .writeTimeout(60, TimeUnit.SECONDS)
+            .addNetworkInterceptor { chain ->
+                val original = chain.call().request()
+                val redirected = chain.request()
+                val sameOrigin = original.url.scheme == redirected.url.scheme &&
+                        original.url.host == redirected.url.host && original.url.port == redirected.url.port
+                // Caller headers may contain credentials; keep them on the original origin.
+                val next = if (sameOrigin) redirected else redirected.newBuilder().apply {
+                    original.headers.names().forEach { removeHeader(it) }
+                }.build()
+                chain.proceed(next)
+            }
             .build()
     }
 
@@ -43,8 +54,9 @@ class OkHttpDownloader {
             Request.Builder()
                 .url(url)
                 .apply {
+                    request.headers.forEach { (name, value) -> header(name, value) }
                     if (existingSize > 0) {
-                        addHeader("Range", "bytes=$existingSize-")
+                        header("Range", "bytes=$existingSize-")
                     }
                 }
                 .build()

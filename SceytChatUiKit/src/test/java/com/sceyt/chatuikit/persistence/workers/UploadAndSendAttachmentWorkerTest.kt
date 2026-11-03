@@ -28,7 +28,10 @@ import com.sceyt.chatuikit.filetransfer.FileTransferCallback
 import com.sceyt.chatuikit.filetransfer.FileTransferResult
 import com.sceyt.chatuikit.filetransfer.FileTransferTransport
 import com.sceyt.chatuikit.filetransfer.FileUploadRequest
+import com.sceyt.chatuikit.filetransfer.FileUploadResult
+import com.sceyt.chatuikit.filetransfer.encryption.FileEncryptionInfo
 import com.sceyt.chatuikit.filetransfer.SceytChatUIKitFileTransfer
+import com.sceyt.chatuikit.filetransfer.encryption.FileEncryptionMetadata
 import com.sceyt.chatuikit.koin.SceytKoinApp
 import com.sceyt.chatuikit.notifications.SceytNotifications
 import com.sceyt.chatuikit.persistence.database.dao.FileChecksumDao
@@ -138,6 +141,7 @@ class UploadAndSendAttachmentWorkerTest {
         previousNotifications = runCatching { SceytChatUIKit.notifications }
             .getOrElse { SceytNotifications(context) }
         SceytChatUIKit.fileTransfer = SceytChatUIKitFileTransfer().apply {
+            encryptUploads = false
             transport = this@UploadAndSendAttachmentWorkerTest.transport
         }
         SceytChatUIKit.config = SceytChatUIKitConfig().apply {
@@ -184,6 +188,26 @@ class UploadAndSendAttachmentWorkerTest {
         SceytChatUIKit.notifications = previousNotifications
         SceytKoinApp.koinApp = null
         stopKoin()
+    }
+
+    @Test
+    fun `encrypted upload completion persists matching metadata with its URL`() = runBlocking {
+        val value = localAttachment().copy(
+            metadata = FileEncryptionMetadata.write(
+                null,
+                FileEncryptionMetadata.fromEncryptionInfo(FileEncryptionInfo("test-format", "encrypted-file", "file-key")),
+            ),
+        )
+        val task = FileTransferHelper.createTransferTask(value)
+
+        task.uploadResultCallback?.onResult(SceytResponse.Success("https://cdn.test/encrypted"))
+
+        val persisted = argumentCaptor<SceytAttachment>()
+        verify(attachmentLogic).updateUploadedAttachment(persisted.capture())
+        assertThat(persisted.firstValue.url).isEqualTo("https://cdn.test/encrypted")
+        assertThat(persisted.firstValue.metadata).isEqualTo(value.metadata)
+        assertThat(persisted.firstValue.transferState).isEqualTo(TransferState.Uploaded)
+        verify(attachmentLogic, never()).updateAttachmentWithTransferData(any())
     }
 
     @Test
@@ -637,7 +661,7 @@ class UploadAndSendAttachmentWorkerTest {
             override suspend fun upload(
                 request: FileUploadRequest,
                 callback: FileTransferCallback,
-            ): FileTransferResult<String> {
+            ): FileTransferResult<FileUploadResult> {
                 val result = transport.upload(request, callback)
                 service.pause(attachment.messageTid, attachment, TransferState.Uploading)
                 return result

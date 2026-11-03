@@ -13,7 +13,7 @@ interface FileTransferTransport {
     suspend fun upload(
         request: FileUploadRequest,
         callback: FileTransferCallback,
-    ): FileTransferResult<String>
+    ): FileTransferResult<FileUploadResult>
 
     /**
      * Downloads the remote file and returns the resulting local path.
@@ -38,4 +38,13 @@ interface FileTransferTransport {
      * @return `true` when the same operation continues, or `false` when the UI kit must restart it.
      */
     fun resume(operationId: String): Boolean = false
+
+    /**
+     * Notifies the transport that the caller explicitly abandoned an operation.
+     * The caller also cancels its coroutine to stop active work. Implementations clean up
+     * retained backend state without blocking, including after a restart. Must be idempotent.
+     * Pause fallback and recoverable interruptions do not call this method.
+     * Uploads use this hook now; download cleanup remains in UIKit until native SDK support.
+     */
+    fun cancel(operationId: String)
 }
