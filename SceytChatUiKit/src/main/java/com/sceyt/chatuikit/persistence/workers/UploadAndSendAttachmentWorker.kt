@@ -200,11 +200,11 @@ class UploadAndSendAttachmentWorker(
         }
 
         // A resumed worker rejoins through upload; the coordinator retains native/shared progress.
-        if (isSharing || existingTask?.isSharedUpload == true) {
-            fileTransferService.uploadSharedFile(attachment, configureTask)
-        } else {
-            fileTransferService.upload(attachment, configureTask)
-        }
+        fileTransferService.upload(
+            attachment = attachment,
+            shared = isSharing || existingTask?.isSharedUpload == true,
+            configureTask = configureTask,
+        )
     }
 
     override suspend fun doWork(): Result {

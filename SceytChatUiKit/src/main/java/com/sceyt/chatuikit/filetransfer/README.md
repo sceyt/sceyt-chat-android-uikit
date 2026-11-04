@@ -375,7 +375,7 @@ that call the changed APIs; previously compiled JVM callers are not binary-compa
 | Previous API or behavior | Migration |
 | --- | --- |
 | `FileTransferListeners` and `FileTransferService.setCustomListener()` | Removed. Configure storage through `SceytChatUIKit.fileTransfer.transport` instead of replacing attachment coordination. |
-| `upload`, `uploadSharedFile`, and `download` accept a caller-created `TransferTask` | Pass `configureTask: TransferTask.() -> Unit` instead. Each method returns the task registered by the service. |
+| `upload`, `uploadSharedFile`, and `download` accept a caller-created `TransferTask` | Use `upload` or `download` with `configureTask: TransferTask.() -> Unit`. For shared uploads, call `upload` with `shared = true`. Each method returns the task registered by the service. |
 | `addTransferTask(task)` | Removed. Start the transfer through the service, which owns registration. |
 | `removeTransferTask(messageTid: Long)` | Pass the exact `TransferTask` instead; removal must not remove a newer attempt or another attachment. |
 | `findOrCreateTransferTask(attachment)` only creates a task when absent | It now also registers the task. Use `findTransferTask(attachment)` for lookup without registration. |

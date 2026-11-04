@@ -161,8 +161,7 @@ class AttachmentUploadCoordinatorTest {
             val configure: TransferTask.() -> Unit = {
                 addOnCompletionListener("worker", completions::add)
             }
-            if (shared) service.uploadSharedFile(attachment, configure)
-            else service.upload(attachment, configure)
+            service.upload(attachment, shared = shared, configureTask = configure)
             testScope.runCurrent()
 
             assertThat(transport.uploadCalls).isEmpty()
@@ -2209,7 +2208,7 @@ class AttachmentUploadCoordinatorTest {
         attachment: SceytAttachment,
         task: TransferTask,
     ) {
-        assertThat(service.uploadSharedFile(attachment)).isSameInstanceAs(task)
+        assertThat(service.upload(attachment, shared = true)).isSameInstanceAs(task)
     }
 
     private fun cancelUpload(attachment: SceytAttachment) {
@@ -2224,7 +2223,7 @@ class AttachmentUploadCoordinatorTest {
         check(state in listOf(TransferState.PendingUpload, TransferState.PauseUpload, TransferState.ErrorUpload))
         val task = service.findOrCreateTransferTask(attachment)
         task.state = TransferState.WaitingToUpload
-        if (task.isSharedUpload) service.uploadSharedFile(attachment) else service.upload(attachment)
+        service.upload(attachment, shared = task.isSharedUpload)
     }
 
     private fun transferTask(attachment: SceytAttachment): TransferTask =

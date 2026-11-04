@@ -3,6 +3,8 @@ package com.sceyt.chatuikit.persistence.file_transfer
 import android.content.Context
 import androidx.work.ExistingWorkPolicy
 import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.data.models.fold
+import com.sceyt.chatuikit.data.models.isSuccess
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Downloading
@@ -35,35 +37,34 @@ internal class FileTransferServiceImpl(
 
     override fun upload(
         attachment: SceytAttachment,
+        shared: Boolean,
         configureTask: TransferTask.() -> Unit,
-    ) = startTransfer(attachment, configureTask) { value, task ->
-        startUpload(value, task, shared = false)
-    }
-
-    override fun uploadSharedFile(
-        attachment: SceytAttachment,
-        configureTask: TransferTask.() -> Unit,
-    ) = startTransfer(attachment, configureTask) { value, task ->
-        startUpload(value, task, shared = true)
+    ) = startTransfer(attachment = attachment, configureTask = configureTask) { value, task ->
+        startUpload(attachment = value, task = task, shared = shared)
     }
 
     override fun download(
         attachment: SceytAttachment,
         configureTask: TransferTask.() -> Unit,
-    ) = startTransfer(attachment, configureTask) { value, task ->
-        downloader.download(value, task, onResult = { completeTransfer(task, it, upload = false) })
+    ) = startTransfer(attachment = attachment, configureTask = configureTask) { value, task ->
+        downloader.download(attachment = value, task = task, onResult = {
+            completeTransfer(task = task, response = it, upload = false)
+        })
     }
 
     override fun redownload(attachment: SceytAttachment) {
         findTransferTask(attachment)?.let { task ->
-            if (task.state == PendingDownload || task.state == Downloading || task.state == PauseDownload) return
+            if (task.state.isOngoingDownload) return
+
             removeTransferTask(task)
         }
+
         val pendingAttachment = attachment.copy(
             transferState = PendingDownload,
             progressPercent = 0f,
             filePath = null
         )
+
         FileTransferHelper.resetToPendingDownload(pendingAttachment)
         download(pendingAttachment)
     }
@@ -81,10 +82,16 @@ internal class FileTransferServiceImpl(
 
     override fun cancelUpload(attachment: SceytAttachment) {
         val task = findTransferTask(attachment)
-        task?.isCancelled = true
-        task?.let(::removeTransferTask)
-        if (task != null)
-            uploader.cancel(task) else uploader.discardSavedUpload(attachment)
+        if (task != null) {
+            task.isCancelled = true
+            removeTransferTask(task)
+            // Other messages may still be sharing this upload.
+            uploader.cancel(task)
+        } else {
+            // A saved upload session can outlive its task, including across app restarts.
+            uploader.discardUploadSessionIfUnused(attachment)
+        }
+
         downloader.cancel(attachment)
         task?.complete(Result.failure(CancellationException("Attachment upload cancelled")))
     }
@@ -97,15 +104,29 @@ internal class FileTransferServiceImpl(
     ) {
         if (state == PendingDownload || state == PauseDownload || state == ErrorDownload) {
             val task = findOrCreateTransferTask(attachment)
-            val onResult: (SceytResponse<String>) -> Unit =
-                { completeTransfer(task, it, upload = false) }
-            if (state == PauseDownload) downloader.resume(attachment, task, onResult)
-            else {
-                if (state == ErrorDownload) downloader.cancel(attachment, discard = false)
-                downloader.download(attachment, task, onResult, isResuming = true)
+
+            val onResult: (SceytResponse<String>) -> Unit = {
+                completeTransfer(task = task, response = it, upload = false)
             }
+
+            if (state == PauseDownload) {
+                downloader.resume(attachment = attachment, task = task, onResult = onResult)
+                return
+            }
+
+            if (state == ErrorDownload) {
+                downloader.cancel(attachment = attachment, discard = false)
+            }
+
+            downloader.download(
+                attachment = attachment,
+                task = task,
+                onResult = onResult,
+                isResuming = true
+            )
             return
         }
+
         if (state == PauseUpload || state == ErrorUpload) {
             // Replace even a finishing worker: pause has already released its completion listener.
             UploadAndSendAttachmentWorkManager.schedule(
@@ -164,13 +185,20 @@ internal class FileTransferServiceImpl(
     }
 
     private fun pauseUpload(attachment: SceytAttachment, state: TransferState) {
-        val existing = findTransferTask(attachment)
-        // Only pending/queued uploads can be paused before the worker registers a task.
-        if (existing == null && state != PendingUpload && state != WaitingToUpload) return
-        if (existing == null && AttachmentTransferStateStore.getTransferData(attachment)?.state?.isCompleted() == true) return
-        val task = existing ?: findOrCreateTransferTask(attachment)
+        val task = findTransferTask(attachment) ?: when (state) {
+            PendingUpload, WaitingToUpload -> {
+                val storedState = AttachmentTransferStateStore.getTransferData(attachment)?.state
+                if (storedState?.isCompleted() == true) return
+                findOrCreateTransferTask(attachment)
+            }
+
+            else -> return
+        }
+
         uploader.pause(task) {
-            if (findTransferTask(attachment) === task) finishPausedUpload(task)
+            if (findTransferTask(attachment) === task) {
+                finishPausedUpload(task)
+            }
         }
     }
 
@@ -205,27 +233,39 @@ internal class FileTransferServiceImpl(
     private fun completeTransfer(
         task: TransferTask,
         response: SceytResponse<String>,
-        upload: Boolean
+        upload: Boolean,
     ) {
         // Cancellation can remove a task while its result is waiting in the upload command queue.
         if (findTransferTask(task.attachment) !== task) return
+
         removeTransferTask(task)
-        if (upload) task.state = if (response is SceytResponse.Success) Uploaded else ErrorUpload
+        if (upload) {
+            task.state = if (response.isSuccess()) Uploaded else ErrorUpload
+        }
+
         val callback = if (upload) task.uploadResultCallback else task.downloadCallback
-        runCatching { callback?.onResult(response) }.onFailure {
+        runCatching {
+            callback?.onResult(response)
+        }.onFailure {
             SceytLog.e(TAG, "File transfer callback failed", it)
         }
-        val result = when (response) {
-            is SceytResponse.Success -> Result.success(
-                if (upload) task.attachment.copy(url = response.data) else task.attachment,
-            )
 
-            is SceytResponse.Error -> Result.failure(
-                if (upload) Throwable(response.message.orEmpty())
-                else response.exception ?: IllegalStateException("File download failed"),
-            )
-        }
-        runCatching { task.complete(result) }.onFailure {
+        val result = response.fold(
+            onSuccess = { url ->
+                val attachment = if (upload)
+                    task.attachment.copy(url = url) else task.attachment
+
+                Result.success(attachment)
+            },
+            onError = { exception ->
+                val operation = if (upload) "upload" else "download"
+                Result.failure(exception ?: IllegalStateException("File $operation failed"))
+            },
+        )
+
+        runCatching {
+            task.complete(result)
+        }.onFailure {
             SceytLog.e(TAG, "File transfer completion listener failed", it)
         }
     }

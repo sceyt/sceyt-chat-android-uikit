@@ -161,11 +161,11 @@ class ThumbRecoveryAndroidTest {
         override fun removeTransferTask(task: TransferTask) = Unit
         override fun getTasks(): Map<String, TransferTask> = emptyMap()
         override fun clearPreparingThumbPaths() = Unit
-        override fun upload(attachment: SceytAttachment, configureTask: TransferTask.() -> Unit) =
-            task.apply(configureTask)
-
-        override fun uploadSharedFile(attachment: SceytAttachment, configureTask: TransferTask.() -> Unit) =
-            task.apply(configureTask)
+        override fun upload(
+            attachment: SceytAttachment,
+            shared: Boolean,
+            configureTask: TransferTask.() -> Unit,
+        ) = task.apply(configureTask)
 
         override fun cancelUpload(attachment: SceytAttachment) = Unit
         override fun cancelAllTransfers() = Unit

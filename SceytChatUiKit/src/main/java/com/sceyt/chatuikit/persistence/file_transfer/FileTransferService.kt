@@ -5,11 +5,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 interface FileTransferService {
     fun upload(
         attachment: SceytAttachment,
-        configureTask: TransferTask.() -> Unit = {},
-    ): TransferTask
-
-    fun uploadSharedFile(
-        attachment: SceytAttachment,
+        shared: Boolean = false,
         configureTask: TransferTask.() -> Unit = {},
     ): TransferTask
 
