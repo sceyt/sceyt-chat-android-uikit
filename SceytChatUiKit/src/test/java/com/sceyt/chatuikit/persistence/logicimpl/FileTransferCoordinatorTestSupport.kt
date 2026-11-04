@@ -26,11 +26,7 @@ internal class TestFileTransferService : FileTransferService {
 
     override fun upload(
         attachment: SceytAttachment,
-        configureTask: TransferTask.() -> Unit,
-    ) = startTask(attachment, configureTask)
-
-    override fun uploadSharedFile(
-        attachment: SceytAttachment,
+        shared: Boolean,
         configureTask: TransferTask.() -> Unit,
     ) = startTask(attachment, configureTask)
 

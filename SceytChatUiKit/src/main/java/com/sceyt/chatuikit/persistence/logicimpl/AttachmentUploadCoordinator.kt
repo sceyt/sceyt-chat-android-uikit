@@ -111,7 +111,7 @@ internal class AttachmentUploadCoordinator(
     fun cancel(task: TransferTask) = dispatch {
         val member = findMember(task)
         if (member == null) {
-            discardSavedUpload(task.attachment)
+            discardUploadSessionIfUnused(task.attachment)
             return@dispatch
         }
         removeMember(member)
@@ -125,7 +125,7 @@ internal class AttachmentUploadCoordinator(
         }
     }
 
-    fun discardSavedUpload(attachment: SceytAttachment) = dispatch {
+    fun discardUploadSessionIfUnused(attachment: SceytAttachment) = dispatch {
         val operationId = attachment.uploadOperationId
         val inUse = uploads.any { upload ->
             upload.attempt?.operationId == operationId || upload.members.values.any { member ->

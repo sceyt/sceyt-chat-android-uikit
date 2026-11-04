@@ -93,6 +93,9 @@ fun TransferState.isPending(): Boolean {
     return this == PendingDownload || this == PendingUpload
 }
 
+internal val TransferState?.isOngoingDownload: Boolean
+    get() = this == PendingDownload || this == Downloading || this == PauseDownload
+
 fun TransferState.isCompleted(): Boolean {
     return this == Downloaded || this == Uploaded
 }

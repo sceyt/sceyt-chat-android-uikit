@@ -364,11 +364,12 @@ class UploadAndSendAttachmentWorkerTest {
         whenever(cancellingService.cancelUpload(any())).thenAnswer {
             service.cancelUpload(it.getArgument(0))
         }
-        whenever(cancellingService.upload(any(), any())).thenAnswer { invocation ->
+        whenever(cancellingService.upload(any(), any(), any())).thenAnswer { invocation ->
             work.cancel()
             service.upload(
-                invocation.getArgument<SceytAttachment>(0),
-                invocation.getArgument<TransferTask.() -> Unit>(1),
+                attachment = invocation.getArgument(0),
+                shared = invocation.getArgument(1),
+                configureTask = invocation.getArgument(2),
             )
         }
         SceytKoinApp.koinApp!!.koin.loadModules(listOf(module {
@@ -464,7 +465,7 @@ class UploadAndSendAttachmentWorkerTest {
     fun `explicit shared resume joins existing upload after pause before registration`() {
         val first = localAttachment()
         val paused = first.copy(messageTid = 11L, transferState = TransferState.WaitingToUpload)
-        service.uploadSharedFile(first)
+        service.upload(first, shared = true)
         service.pause(paused.messageTid, paused, TransferState.WaitingToUpload)
 
         val worker = worker(paused.copy(transferState = TransferState.PauseUpload), resume = true, shared = true)
@@ -480,9 +481,9 @@ class UploadAndSendAttachmentWorkerTest {
     fun `production resume worker keeps sharing of upload paused before joining group`() {
         val first = localAttachment()
         val paused = first.copy(messageTid = 12L, transferState = TransferState.WaitingToUpload)
-        service.uploadSharedFile(first)
+        service.upload(first, shared = true)
         service.pause(paused.messageTid, paused, TransferState.WaitingToUpload)
-        service.uploadSharedFile(paused)
+        service.upload(paused, shared = true)
 
         val worker = worker(paused.copy(transferState = TransferState.PauseUpload), resume = true)
         val work = testScope.async { worker.doWork() }
@@ -763,8 +764,8 @@ class UploadAndSendAttachmentWorkerTest {
     fun `explicit worker resume reuses completed shared upload`() {
         val first = localAttachment()
         val paused = first.copy(messageTid = 11L)
-        service.uploadSharedFile(first)
-        service.uploadSharedFile(paused)
+        service.upload(first, shared = true)
+        service.upload(paused, shared = true)
         service.pause(paused.messageTid, paused, TransferState.Uploading)
         transport.uploadCalls.single().succeed("shared-url")
 
