@@ -2,7 +2,8 @@
 
 UIKit owns attachment scheduling, preparation and persistence. Upload transports receive a prepared
 plaintext file and own encryption sessions and backend recovery. This phase changes uploads and
-metadata only; the existing download pipeline stays in place until native SDK support is ready.
+metadata; the router-owned download pipeline stays in place until the native SDK provides a complete
+encrypted download operation.
 
 ## Responsibilities
 
@@ -74,7 +75,7 @@ Paths below are relative to `com/sceyt/chatuikit`:
 | `persistence/logicimpl` | `AttachmentUploadCoordinator`, `AttachmentDownloadCoordinator`, `AttachmentThumbCoordinator`: attachment upload, download and local-thumbnail handling |
 | `persistence/logicimpl` | `UploadPreparer`: checksum reuse and media preparation, without task registration or transfer scheduling |
 | `persistence/logicimpl` | `AttachmentTransferRouter`: selects plain/encrypted execution; `TransferExecutor`: executes the attempt, applies upload metadata and controls the selected transport |
-| `filetransfer/encryption` | UIKit encryption contracts and SDK adapter, metadata mapping, and the unchanged full-file decryption helper |
+| `filetransfer/encryption` | UIKit crypto contracts, SDK adapter, metadata mapping, full-file decryption and its download-session store |
 | `persistence/logicimpl` | `FileTransferUtility`, `OkHttpDownloader`: SDK upload and HTTP download bridges |
 
 ## Configuration
@@ -181,9 +182,9 @@ AttachmentUploadCoordinator.performUpload
   -> FileUploadRequest(sourceFile, type = PLAIN or ENCRYPTED)
   -> FileTransferTransport.upload
        default encrypted route:
-         FileEncryption.prepare -> SDK session -> ChatClient.uploadEncrypted
+         FileEncryption.prepareEncryption -> SDK session -> ChatClient.uploadEncrypted
        custom encrypted route:
-         FileEncryption.prepare/restore -> read ranges -> customer backend
+         FileEncryption.prepareEncryption/restoreEncryption -> read ranges -> customer backend
   <- FileUploadResult(url, UIKit FileEncryptionInfo?)
   -> merge enc metadata and save it with the uploaded reference
 ```
@@ -236,7 +237,7 @@ model before enabling that flow.
 
 ```kotlin
 val encryption = SceytChatUIKit.fileTransfer.encryption
-val session = encryption.prepare(preparedFile)
+val session = encryption.prepareEncryption(preparedFile)
 try {
     val bytes = session.read(ciphertextOffset, length)
     val checkpoint: FileEncryptionCheckpoint = session.checkpoint()
@@ -250,10 +251,10 @@ try {
 Both offsets and lengths address ciphertext, including encryption overhead. Reads are exact and
 repeatable; SDK encryption records need not align with backend multipart parts.
 
-`FileEncryptionCheckpoint` is a UIKit-owned typed object containing `encryptionInfo`,
+`FileEncryptionCheckpoint` is a UIKit-owned typed object containing `info`,
 `plaintextSize` and opaque SDK `data`. A custom transport persists that object inside its own
 private journal, together with the backend upload ID, part plan and accepted receipts. Restore
-with `encryption.restore(preparedFile, checkpoint)` to keep the same key and encrypted bytes.
+with `encryption.restoreEncryption(preparedFile, checkpoint)` to keep the same key and encrypted bytes.
 Do not log checkpoint contents.
 
 Custom transports own persistence and completion-result retention. UIKit no longer exposes
@@ -267,18 +268,18 @@ restart. The default native transport has no upload journal to clean; its cancel
 stops the active upload. Pause and recoverable interruptions retain transport-owned recovery state
 and do not call this explicit-abandonment hook.
 
-Waafi's adapter has not been migrated to these new upload signatures in this UIKit-only phase.
+Waafi's adapter uses these UIKit interfaces for multipart upload and owns its backend upload journal.
 
 ### Download call chain
 
 ```text
 AttachmentDownloadCoordinator.performDownload
   → AttachmentTransferRouter.download
-  → metadata.enc.toEncryptionInfo() → SDK info using attachment.fileSize
+  → EncryptedFileDownloader with FileDownloadEncryption(info, attachment.fileSize)
   → FileTransferTransport.download(<destination>.sceyt.enc.part)
   → rename completed ciphertext to <destination>.sceyt.enc
-  → FileEncryptionProvider.openDownload(FileCiphertextRangeSource, encryptionInfo)
-  → PlaintextReader.read(plaintextOffset, length)
+  → FileEncryption.prepareDecryption(encryptedFile, info, plaintextSize)
+  → FileDecryptionSession.read(plaintextOffset, length)
       → read encrypted ranges from the local file
       → SDK decrypts and verifies
   → write <destination>.sceyt.part, then rename to destination
@@ -289,11 +290,24 @@ This full-file path works when the server returns the whole object with HTTP 200
 stage uses the existing downloader. It does not require remote HTTP Range support. The SDK still
 uses range reads, but those reads access the completed local ciphertext file.
 
+`ChatSdkFileEncryption` adapts decryption to the SDK's blocking reader API on IO. Custom crypto
+providers implement the same `prepareDecryption` interface; the router does not cast to SDK types.
+The router keeps this wrapper until the native SDK provides a complete encrypted download operation.
+The planned transport-owned download lifecycle is not enabled in this phase.
+
 During decryption the encrypted file and growing plaintext file coexist, using roughly twice the
 attachment size temporarily. Only verified plaintext is published. Success removes the encrypted
 copy. Network interruptions retain the encrypted partial for retry; pausing decryption retains
 the completed encrypted file and verified plaintext position. Local read/write failures,
 authentication failure and explicit cancellation remove temporary files after reads and writes stop.
+
+`EncryptedDownloadSessionStore` saves the destination before network work starts, so explicit cancel
+can find staging files after recreation. It saves the verified plaintext offset after each flushed
+write. Resume truncates any uncommitted tail and restarts from zero if the file is shorter than the
+saved offset. Cleanup records cancellation intent before deleting staging files and keeps its
+checkpoint if deletion fails. A retry finishes that cleanup before starting new network work or
+decryption. Published plaintext remains untouched. The coordinator orders explicit cleanup before
+the next attempt for the same attachment; pause keeps resumable state.
 
 Progress uses 0–90% for network download and 90–100% for SDK verification. Native network pause is
 used when available; decryption pause uses cancellation and restart. Playback still waits for the
@@ -339,8 +353,8 @@ retry; they do not trigger an automatic retry. Other HTTP errors and destination
 return `Failure`. The SDK upload bridge reports its SDK errors as `Failure`.
 
 Custom transports must return `FileTransferResult<FileUploadResult>` for uploads and
-`FileTransferResult<String>` for downloads before adopting this unreleased API. Waafi's S3 transport
-preserves its checkpoint on network waits and needs the new upload request/result migration.
+`FileTransferResult<String>` for downloads before adopting this unreleased API. Waafi's multipart
+transport uses these contracts and retains backend checkpoints on recoverable interruptions.
 Custom storage must not silently fall back to the default Sceyt backend.
 
 `pause(operationId)` returns `true` only when that exact physical operation was paused and remains

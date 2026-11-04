@@ -8,15 +8,14 @@ import com.google.common.truth.Truth.assertThat
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
-import com.sceyt.chat.fileencryption.StreamingAeadFileEncryptionProvider
 import com.sceyt.chatuikit.filetransfer.FileDownloadRequest
 import com.sceyt.chatuikit.filetransfer.FileTransferCallback
 import com.sceyt.chatuikit.filetransfer.FileTransferResult
 import com.sceyt.chatuikit.filetransfer.encryption.ChatSdkFileEncryption
 import com.sceyt.chatuikit.filetransfer.encryption.EncryptedFileDownloader
+import com.sceyt.chatuikit.filetransfer.encryption.FileDownloadEncryption
 import com.sceyt.chatuikit.filetransfer.encryption.FileEncryptionCheckpoint
 import com.sceyt.chatuikit.filetransfer.encryption.FileEncryptionMetadata
-import com.sceyt.chatuikit.filetransfer.encryption.toSdkInfo
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Deferred
@@ -39,7 +38,7 @@ class ChatSdkFileEncryptionAndroidTest {
         try {
             file.writeBytes(ByteArray(64 * 1024 + 1) { (it % 251).toByte() })
             val encryption = ChatSdkFileEncryption()
-            val (checkpoint, ciphertext) = encryption.prepare(file).use { session ->
+            val (checkpoint, ciphertext) = encryption.prepareEncryption(file).use { session ->
                 val id = session.encryptionInfo.attachmentId
                 assertThat(id).matches("[A-Za-z0-9_-]{22}")
                 assertThat(Base64.decode(id, Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP)).hasLength(16)
@@ -49,11 +48,11 @@ class ChatSdkFileEncryptionAndroidTest {
 
             val gson = Gson()
             val saved = gson.fromJson(gson.toJson(checkpoint), FileEncryptionCheckpoint::class.java)
-            ChatSdkFileEncryption().restore(file, saved).use { restored ->
+            ChatSdkFileEncryption().restoreEncryption(file, saved).use { restored ->
                 assertThat(restored.encryptionInfo.attachmentId).isEqualTo(checkpoint.encryptionInfo.attachmentId)
                 assertThat(restored.read(0, ciphertext.size)).isEqualTo(ciphertext)
             }
-            encryption.prepare(file).use { next ->
+            encryption.prepareEncryption(file).use { next ->
                 assertThat(next.encryptionInfo.attachmentId).isNotEqualTo(checkpoint.encryptionInfo.attachmentId)
             }
         } finally {
@@ -118,7 +117,7 @@ class ChatSdkFileEncryptionAndroidTest {
             val message = attachment.readAttachment()
             val metadata = message.get("metadata").asString
             val envelope = checkNotNull(FileEncryptionMetadata.read(metadata))
-            val differentKey = ChatSdkFileEncryption().prepare(attachment.source).use {
+            val differentKey = ChatSdkFileEncryption().prepareEncryption(attachment.source).use {
                 it.encryptionInfo.key
             }
             message.addProperty(
@@ -161,7 +160,7 @@ class ChatSdkFileEncryptionAndroidTest {
         val attachment = NativeAttachment(directory)
         try {
             attachment.source.writeBytes(ByteArray(size) { (it % 251).toByte() })
-            ChatSdkFileEncryption().prepare(attachment.source).use { session ->
+            ChatSdkFileEncryption().prepareEncryption(attachment.source).use { session ->
                 attachment.ciphertext.outputStream().use { output ->
                     var offset = 0L
                     while (offset < session.ciphertextSize) {
@@ -206,9 +205,14 @@ class ChatSdkFileEncryptionAndroidTest {
             val message = readAttachment()
             val envelope = checkNotNull(FileEncryptionMetadata.read(message.get("metadata").asString))
             return EncryptedFileDownloader(checkpoints).download(
-                request = FileDownloadRequest("download:native", "native-fixture", destination),
-                provider = StreamingAeadFileEncryptionProvider(),
-                encryptionInfo = envelope.toEncryptionInfo().toSdkInfo(message.get("fileSize").asLong),
+                request = FileDownloadRequest(
+                    "download:native", "native-fixture", destination,
+                ),
+                encryptionInfo = FileDownloadEncryption(
+                    info = envelope.toEncryptionInfo(),
+                    plaintextSize = message.get("fileSize").asLong,
+                ),
+                encryption = ChatSdkFileEncryption(),
                 callback = callback,
             ) { request, progress ->
                 downloads++

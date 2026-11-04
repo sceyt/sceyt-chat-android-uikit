@@ -1412,6 +1412,39 @@ class AttachmentUploadCoordinatorTest {
     }
 
     @Test
+    fun `encrypted upload keeps its prepared file on immediate retry without reusing the URL`() {
+        SceytChatUIKit.fileTransfer.encryptUploads = true
+        val attachment = uploadAttachment(name = "original.mp4", type = AttachmentTypeEnum.Video.value)
+        val prepared = File(context.cacheDir, "prepared-encrypted-retry.mp4")
+            .apply { writeText("prepared video") }
+        var cached: FileChecksumData? = FileChecksumData(
+            checksum = 1L,
+            resizedFilePath = prepared.path,
+            url = "https://cdn.test/old-upload",
+            metadata = null,
+            fileSize = prepared.length(),
+        )
+        doSuspendableAnswer { cached }.whenever(attachmentLogic) {
+            getFileChecksumData(attachment.originalFilePath)
+        }
+        val task = transferTask(attachment)
+
+        uploadFile(attachment, task)
+
+        val initial = transport.uploadCalls.single()
+        assertThat(initial.request.sourceFile).isEqualTo(prepared)
+        cached = null
+        pauseUpload(attachment, TransferState.Uploading)
+        resumeUpload(attachment, TransferState.PauseUpload)
+
+        assertThat(initial.cancelled).isTrue()
+        assertThat(transport.uploadCalls).hasSize(2)
+        val retry = transport.uploadCalls.last().request
+        assertThat(retry.sourceFile).isEqualTo(prepared)
+        assertThat(retry.operationId).isEqualTo(initial.request.operationId)
+    }
+
+    @Test
     fun `pausing active upload advances the sequential queue`() {
         val first = uploadAttachment(messageTid = 50L, state = TransferState.WaitingToUpload)
         val second = uploadAttachment(messageTid = 51L, state = TransferState.WaitingToUpload)

@@ -29,6 +29,7 @@ import com.sceyt.chatuikit.filetransfer.FileTransferResult
 import com.sceyt.chatuikit.filetransfer.FileTransferTransport
 import com.sceyt.chatuikit.filetransfer.FileUploadRequest
 import com.sceyt.chatuikit.filetransfer.FileUploadResult
+import com.sceyt.chatuikit.filetransfer.FileUploadType
 import com.sceyt.chatuikit.filetransfer.encryption.FileEncryptionInfo
 import com.sceyt.chatuikit.filetransfer.SceytChatUIKitFileTransfer
 import com.sceyt.chatuikit.filetransfer.encryption.FileEncryptionMetadata
@@ -83,6 +84,7 @@ import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
+import org.mockito.Mockito
 import org.mockito.kotlin.any
 import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.doSuspendableAnswer
@@ -507,6 +509,38 @@ class UploadAndSendAttachmentWorkerTest {
 
         assertThat(work.isCompleted).isTrue()
         assertSentUrl(attachment, "resumed-url")
+    }
+
+    @Test
+    fun `recreated worker uploads the saved prepared video without transcoding again`() {
+        SceytChatUIKit.fileTransfer.encryptUploads = true
+        val original = File(context.cacheDir, "worker-original.mp4").apply { writeText("source video") }
+        val prepared = File(context.cacheDir, "worker-prepared.mp4").apply { writeText("prepared video") }
+        val attachment = attachment(
+            type = AttachmentTypeEnum.Video.value,
+            fileSize = prepared.length(),
+            url = null,
+            filePath = prepared.path,
+            originalFilePath = original.path,
+            state = TransferState.PauseUpload,
+        )
+        val extensionsClass = Class.forName(
+            "com.sceyt.chatuikit.persistence.extensions.AttachmentResizeExtensionsKt",
+        )
+        Mockito.mockStatic(extensionsClass) { invocation ->
+            check(invocation.method.name != "transcodeVideo") { "The saved video is already prepared" }
+            invocation.callRealMethod()
+        }.use {
+            val work = testScope.async { worker(attachment, resume = true).doWork() }
+
+            val call = transport.uploadCalls.single()
+            assertThat(call.request.type).isEqualTo(FileUploadType.ENCRYPTED)
+            assertThat(call.request.sourceFile).isEqualTo(prepared)
+            call.succeed("resumed-url", FileEncryptionInfo("test-format", "file-id", "file-key"))
+
+            assertThat(work.isCompleted).isTrue()
+            assertSentUrl(attachment, "resumed-url")
+        }
     }
 
     @Test

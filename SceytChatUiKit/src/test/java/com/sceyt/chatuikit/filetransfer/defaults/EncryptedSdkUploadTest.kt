@@ -126,7 +126,7 @@ class EncryptedSdkUploadTest {
                 FileTransferResult.Success(FileUploadResult("https://cdn.test/encrypted", info.toUIKitInfo())),
             )
             assertThat(progress).containsExactly(40f)
-            verify(SceytChatUIKit.fileTransfer.encryption).prepare(file)
+            verify(SceytChatUIKit.fileTransfer.encryption).prepareEncryption(file)
             verify(source).close()
             verify(operation, never()).cancel()
         }
@@ -162,8 +162,8 @@ class EncryptedSdkUploadTest {
         whenever(source.ciphertextSize).thenReturn(136L)
         whenever(source.encryptionInfo).thenReturn(info)
         val encryption = mock<FileEncryption>()
-        val session = ChatSdkFileEncryption.Session(source)
-        whenever(encryption.prepare(file)).thenReturn(session)
+        val session = ChatSdkFileEncryption.EncryptionSession(source)
+        whenever(encryption.prepareEncryption(file)).thenReturn(session)
         SceytChatUIKit.fileTransfer.encryption = encryption
         return file
     }

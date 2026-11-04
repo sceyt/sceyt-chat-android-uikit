@@ -16,13 +16,15 @@ import com.sceyt.chatuikit.filetransfer.FileTransferTransport
 import com.sceyt.chatuikit.filetransfer.FileUploadRequest
 import com.sceyt.chatuikit.filetransfer.FileUploadResult
 import com.sceyt.chatuikit.filetransfer.SceytChatUIKitFileTransfer
-import com.sceyt.chatuikit.filetransfer.encryption.FileEncryptionMetadata
 import com.sceyt.chatuikit.filetransfer.encryption.ChatSdkFileEncryption
+import com.sceyt.chatuikit.filetransfer.encryption.FileEncryptionMetadata
 import com.sceyt.chatuikit.filetransfer.encryption.toUIKitInfo
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
@@ -149,6 +151,153 @@ class EncryptedDownloadResumeTest {
         }
     }
 
+    @Test
+    fun `cancel after recreation finishes cleanup before an immediate retry writes`() = runTest {
+        Scenario().use { scenario ->
+            scenario.interruptDownloadOnce = true
+            val reader = scenario.reader { offset, length ->
+                scenario.plaintext.copyOfRange(offset.toInt(), offset.toInt() + length)
+            }
+            whenever(scenario.provider.openDownload(any(), any())).thenReturn(reader)
+            assertThat(scenario.download(backgroundScope)).isInstanceOf(SceytResponse.Error::class.java)
+            scenario.partial.writeText("old plaintext")
+            scenario.beforeDownload = { request ->
+                assertThat(request.destinationFile.exists()).isFalse()
+                assertThat(scenario.partial.exists()).isFalse()
+            }
+            val result = CompletableDeferred<SceytResponse<String>>()
+            val coordinator =
+                AttachmentDownloadCoordinator(RuntimeEnvironment.getApplication(), backgroundScope)
+
+            coordinator.cancel(scenario.attachment)
+            coordinator.download(
+                scenario.attachment,
+                transferTask(scenario.attachment),
+                { result.complete(it) })
+
+            assertThat(result.await()).isInstanceOf(SceytResponse.Success::class.java)
+            assertThat(scenario.downloads).isEqualTo(2)
+            assertThat(scenario.destination.readBytes()).isEqualTo(scenario.plaintext)
+        }
+    }
+
+    @Test
+    fun `cancel before transfer creation waits for the previous writer then cleans saved files`() =
+        runTest {
+            Scenario().use { scenario ->
+                val started = CompletableDeferred<Unit>()
+                val stopping = CompletableDeferred<Unit>()
+                val releaseWriter = CompletableDeferred<Unit>()
+                scenario.downloadAction = { request, _ ->
+                    request.destinationFile.writeText("old ciphertext")
+                    started.complete(Unit)
+                    try {
+                        awaitCancellation()
+                    } finally {
+                        stopping.complete(Unit)
+                        withContext(NonCancellable) { releaseWriter.await() }
+                        request.destinationFile.writeText("last old write")
+                    }
+                }
+                val reader = scenario.reader { offset, length ->
+                    scenario.plaintext.copyOfRange(offset.toInt(), offset.toInt() + length)
+                }
+                whenever(scenario.provider.openDownload(any(), any())).thenReturn(reader)
+                val coordinator = AttachmentDownloadCoordinator(
+                    RuntimeEnvironment.getApplication(),
+                    backgroundScope
+                )
+                coordinator.download(scenario.attachment, transferTask(scenario.attachment), {})
+                try {
+                    withContext(Dispatchers.Default) { withTimeout(5_000) { started.await() } }
+                    coordinator.pause(scenario.attachment)
+                    withContext(Dispatchers.Default) { withTimeout(5_000) { stopping.await() } }
+
+                    coordinator.download(
+                        scenario.attachment,
+                        transferTask(scenario.attachment),
+                        {},
+                        isResuming = true
+                    )
+                    coordinator.cancel(scenario.attachment)
+                    assertThat(File(scenario.destination.path + ".sceyt.enc.part").readText()).isEqualTo(
+                        "old ciphertext"
+                    )
+                    assertThat(scenario.downloads).isEqualTo(1)
+
+                    scenario.downloadAction = null
+                    scenario.beforeDownload =
+                        { request -> assertThat(request.destinationFile.exists()).isFalse() }
+                    val result = CompletableDeferred<SceytResponse<String>>()
+                    coordinator.download(
+                        scenario.attachment,
+                        transferTask(scenario.attachment),
+                        { result.complete(it) })
+                    assertThat(scenario.downloads).isEqualTo(1)
+                    releaseWriter.complete(Unit)
+
+                    assertThat(result.await()).isInstanceOf(SceytResponse.Success::class.java)
+                    assertThat(scenario.downloads).isEqualTo(2)
+                    assertThat(scenario.destination.readBytes()).isEqualTo(scenario.plaintext)
+                } finally {
+                    releaseWriter.complete(Unit)
+                    coordinator.cancel(scenario.attachment)
+                }
+            }
+        }
+
+    @Test
+    fun `explicit cancel during decryption closes the reader and retry starts from zero`() =
+        runTest {
+            Scenario().use { scenario ->
+                val reading = CompletableDeferred<Unit>()
+                val release = CountDownLatch(1)
+                val firstReader = scenario.reader { offset, length ->
+                    if (offset > 0) {
+                        reading.complete(Unit)
+                        check(release.await(5, TimeUnit.SECONDS))
+                    }
+                    scenario.plaintext.copyOfRange(offset.toInt(), offset.toInt() + length)
+                }
+                val offsets = mutableListOf<Long>()
+                val secondReader = scenario.reader { offset, length ->
+                    offsets += offset
+                    scenario.plaintext.copyOfRange(offset.toInt(), offset.toInt() + length)
+                }
+                whenever(scenario.provider.openDownload(any(), any())).thenReturn(
+                    firstReader,
+                    secondReader
+                )
+                val coordinator = AttachmentDownloadCoordinator(
+                    RuntimeEnvironment.getApplication(),
+                    backgroundScope
+                )
+                coordinator.download(scenario.attachment, transferTask(scenario.attachment), {})
+                try {
+                    withContext(Dispatchers.Default) { withTimeout(5_000) { reading.await() } }
+                    coordinator.cancel(scenario.attachment)
+                    scenario.beforeDownload = { request ->
+                        verify(firstReader).close()
+                        assertThat(request.destinationFile.exists()).isFalse()
+                        assertThat(scenario.partial.exists()).isFalse()
+                    }
+                    val result = CompletableDeferred<SceytResponse<String>>()
+                    coordinator.download(
+                        scenario.attachment,
+                        transferTask(scenario.attachment),
+                        { result.complete(it) })
+
+                    assertThat(result.await()).isInstanceOf(SceytResponse.Success::class.java)
+                    assertThat(offsets.first()).isEqualTo(0L)
+                    assertThat(scenario.downloads).isEqualTo(2)
+                    assertThat(scenario.destination.readBytes()).isEqualTo(scenario.plaintext)
+                    verify(secondReader).close()
+                } finally {
+                    release.countDown()
+                }
+            }
+        }
+
     private class Scenario : AutoCloseable {
         private val context = RuntimeEnvironment.getApplication()
         private val previous = SceytChatUIKit.fileTransfer
@@ -158,6 +307,9 @@ class EncryptedDownloadResumeTest {
         val provider = mock<FileEncryptionProvider>()
         var downloads = 0
         var interruptDownloadOnce = false
+        var beforeDownload: (FileDownloadRequest) -> Unit = {}
+        var downloadAction: (suspend (FileDownloadRequest, FileTransferCallback) -> FileTransferResult<String>)? =
+            null
         private val info = FileEncryptionInfo(
             StreamingAeadFileEncryptionProvider.FORMAT,
             FileEncryptionData("resumed-file", "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", plaintext.size.toLong()),
@@ -193,6 +345,8 @@ class EncryptedDownloadResumeTest {
                         callback: FileTransferCallback,
                     ): FileTransferResult<String> {
                         downloads++
+                        beforeDownload(request)
+                        downloadAction?.let { return it(request, callback) }
                         request.destinationFile.writeBytes(byteArrayOf(1, 2, 3))
                         if (interruptDownloadOnce) {
                             interruptDownloadOnce = false
