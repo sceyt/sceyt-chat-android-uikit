@@ -17,6 +17,7 @@ import com.sceyt.chatuikit.presentation.extensions.isAttachmentExistAndFullyLoad
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.currentCoroutineContext
@@ -33,6 +34,7 @@ internal class AttachmentDownloadCoordinator(
     private val router = AttachmentTransferRouter(context)
     private val lock = Any()
     private val downloads = hashMapOf<String, Download>()
+    private val cleanups = hashMapOf<String, Job>()
 
     fun download(
         attachment: SceytAttachment,
@@ -49,9 +51,13 @@ internal class AttachmentDownloadCoordinator(
                 if (!previous.completed || previous.task === task) return
             }
             Download(attachment, task, onResult, isResuming).also { next ->
+                val cleanup = cleanups[key]
                 next.job = scope.launch(start = CoroutineStart.UNDISPATCHED) {
                     // Enter cleanup before cancellation can skip it; file work waits for registration.
-                    withContext(NonCancellable) { previous?.job?.join() }
+                    withContext(NonCancellable) {
+                        previous?.job?.join()
+                        cleanup?.join()
+                    }
                     registered.await()
                     currentCoroutineContext().ensureActive()
                     performDownload(next)
@@ -104,17 +110,33 @@ internal class AttachmentDownloadCoordinator(
     }
 
     fun cancel(attachment: SceytAttachment, discard: Boolean = true) {
-        val download = synchronized(lock) {
-            downloads[attachment.transferKey]?.also {
+        synchronized(lock) {
+            val download = downloads[attachment.transferKey]?.also {
                 it.paused = false
                 if (it.job.isCompleted) downloads.remove(it.key, it)
             }
+            if (discard) discardAfterStop(attachment, download)
+            download?.let(::cancelAttempt)
         }
-        if (discard) {
-            if (download == null) router.discardSavedDownload(attachment)
-            else download.transfer?.discard()
+    }
+
+    /** Called under [lock]; new attempts join this cleanup before they can touch files. */
+    private fun discardAfterStop(attachment: SceytAttachment, download: Download?) {
+        val key = attachment.transferKey
+        val previous = cleanups[key]
+        val cleanup = scope.launch(start = CoroutineStart.LAZY) {
+            withContext(NonCancellable + Dispatchers.IO) {
+                previous?.join()
+                download?.job?.join()
+                val transfer = download?.transfer
+                if (transfer == null) router.discardSavedDownload(attachment) else transfer.discard()
+            }
         }
-        download?.let(::cancelAttempt)
+        cleanups[key] = cleanup
+        cleanup.invokeOnCompletion {
+            synchronized(lock) { cleanups.remove(key, cleanup) }
+        }
+        cleanup.start()
     }
 
     fun cancelAll() {

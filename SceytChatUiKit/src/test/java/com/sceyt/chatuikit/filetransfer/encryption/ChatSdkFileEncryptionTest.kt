@@ -56,7 +56,7 @@ class ChatSdkFileEncryptionTest {
             prepared
         }.whenever(provider).prepareUpload(eq(file), any())
 
-        ChatSdkFileEncryption(provider).prepare(file).use { session ->
+        ChatSdkFileEncryption(provider).prepareEncryption(file).use { session ->
             val id = argumentCaptor<String>()
             verify(provider).prepareUpload(eq(file), id.capture())
             val metadata = FileEncryptionMetadata.write(
@@ -85,7 +85,7 @@ class ChatSdkFileEncryptionTest {
         whenever(restored.readCiphertextRange(2L, 2)).thenReturn(byteArrayOf(3, 4))
         val encryption: FileEncryption = ChatSdkFileEncryption(provider)
 
-        val session = encryption.prepare(file)
+        val session = encryption.prepareEncryption(file)
         val bytes = session.read(2L, 2)
         val saved = Gson().fromJson(
             Gson().toJson(session.checkpoint()),
@@ -93,7 +93,7 @@ class ChatSdkFileEncryptionTest {
         )
         session.close()
         session.close()
-        val resumed = encryption.restore(file, saved)
+        val resumed = encryption.restoreEncryption(file, saved)
 
         assertThat(resumed.read(2L, 2)).isEqualTo(bytes)
         assertThat(resumed.sourceId).isEqualTo(session.sourceId)
@@ -115,7 +115,7 @@ class ChatSdkFileEncryptionTest {
         whenever(provider.restoreUpload(eq(file), any())).thenThrow(error)
         val checkpoint = FileEncryptionCheckpoint(info.toUIKitInfo(), 4L, "saved-state")
 
-        val failure = runCatching { ChatSdkFileEncryption(provider).restore(file, checkpoint) }.exceptionOrNull()
+        val failure = runCatching { ChatSdkFileEncryption(provider).restoreEncryption(file, checkpoint) }.exceptionOrNull()
 
         assertThat(failure).isInstanceOf(IOException::class.java)
         assertThat(failure).hasMessageThat().isEqualTo("Source changed")
@@ -138,7 +138,7 @@ class ChatSdkFileEncryptionTest {
         Executors.newSingleThreadExecutor().asCoroutineDispatcher().use { caller ->
             val failure = withContext(caller) {
                 callerThread = Thread.currentThread()
-                runCatching { ChatSdkFileEncryption(provider).prepare(file) }.exceptionOrNull()
+                runCatching { ChatSdkFileEncryption(provider).prepareEncryption(file) }.exceptionOrNull()
             }
 
             assertThat(failure).hasMessageThat().isEqualTo("Invalid native session")
@@ -163,7 +163,7 @@ class ChatSdkFileEncryptionTest {
             }
             prepared
         }.whenever(provider).prepareUpload(eq(file), any())
-        val job = launch(Dispatchers.Default) { ChatSdkFileEncryption(provider).prepare(file) }
+        val job = launch(Dispatchers.Default) { ChatSdkFileEncryption(provider).prepareEncryption(file) }
         try {
             withContext(Dispatchers.Default) {
                 check(entered.await(5, TimeUnit.SECONDS))

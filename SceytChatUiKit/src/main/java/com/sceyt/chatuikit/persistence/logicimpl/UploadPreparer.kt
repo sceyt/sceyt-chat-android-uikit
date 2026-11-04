@@ -34,21 +34,41 @@ internal class UploadPreparer(
         onFilePrepared: (String) -> Unit,
         onProgress: (Float) -> Unit,
         reuseUploadedUrl: Boolean = true,
+        preparedFilePath: String? = null,
     ): PreparedAttachment {
-        val sourcePath = attachment.originalFilePath?.takeIf(String::isNotBlank)
-            ?: attachment.filePath?.takeIf(String::isNotBlank)
-        val checksum =
-            if (reuseUploadedUrl && SceytChatUIKit.config.preventDuplicateAttachmentUpload)
-                attachmentLogic.getFileChecksumData(sourcePath) else null
-        if (checksum?.url.isNotNullOrBlank()) {
+        val originalPath = attachment.originalFilePath?.takeIf(String::isNotBlank)
+        val sourcePath = originalPath ?: attachment.filePath?.takeIf(String::isNotBlank)
+
+        val reuseUrl = reuseUploadedUrl && SceytChatUIKit.config.preventDuplicateAttachmentUpload
+        val reusePreparedMedia = !reuseUploadedUrl &&
+                (attachment.type == AttachmentTypeEnum.Image.value || attachment.type == AttachmentTypeEnum.Video.value)
+
+        val preparedPath = if (reusePreparedMedia) {
+            val savedPath = attachment.filePath?.takeIf {
+                originalPath != null && it != originalPath
+            }
+            listOfNotNull(preparedFilePath, savedPath).firstOrNull { File(it).isFile }
+        } else null
+
+        val checksum = if (reuseUrl || (reusePreparedMedia && preparedPath == null)) {
+            attachmentLogic.getFileChecksumData(sourcePath)
+        } else null
+
+        if (reuseUrl && checksum?.url.isNotNullOrBlank()) {
             if (!checksum?.resizedFilePath.isNullOrEmpty()) {
                 onFilePrepared(checkNotNull(checksum.resizedFilePath))
             }
             return PreparedAttachment(attachment, checkNotNull(checksum?.url))
         }
 
-        val result = prepareAttachment(attachment, checksum, onProgress)
+        val source = if (reusePreparedMedia && attachment.filePath != sourcePath) {
+            attachment.copy(filePath = sourcePath)
+        } else attachment
+
+        val result = preparedPath?.let { Result.success(it) }
+            ?: prepareAttachment(source, checksum, onProgress)
         currentCoroutineContext().ensureActive()
+
         val prepared = result.fold(
             onSuccess = { path ->
                 onFilePrepared(path)
@@ -56,9 +76,10 @@ internal class UploadPreparer(
             },
             onFailure = {
                 SceytLog.i(TAG, "Couldn't resize file with reason ${it.message}")
-                attachment
+                source
             },
         )
+
         val path = prepared.filePath
         require(!path.isNullOrBlank()) { "Attachment source path is missing" }
         require(File(path).isFile) { "Attachment source file does not exist: $path" }
@@ -71,7 +92,7 @@ internal class UploadPreparer(
         onProgress: (Float) -> Unit,
     ): Result<String> {
         val resizedPath = checksum?.resizedFilePath
-        if (resizedPath != null && File(resizedPath).exists()) return Result.success(resizedPath)
+        if (resizedPath != null && File(resizedPath).isFile) return Result.success(resizedPath)
 
         return when (attachment.type) {
             AttachmentTypeEnum.Image.value -> {

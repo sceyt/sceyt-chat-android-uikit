@@ -1,18 +1,11 @@
 # File transfer architecture: UIKit, Chat SDK and Waafi
 
-Status: target architecture with the UIKit upload and metadata phase implemented locally, 2 November 2026.
-
 Audience: UIKit, Chat SDK, Waafi Android and backend developers.
 
-This document describes the agreed direction for plain and encrypted uploads and downloads.
-UIKit's upload and metadata phase is implemented locally on `refactoring/uikit-file-transfer-architecture`.
-It is uncommitted and is not a published UIKit release. Waafi's adapter migration and native encrypted
-download support are pending.
-
-The current download pipeline is deliberately retained. Its request, HTTP writer, local decryption
-helper, progress, pause and recovery behavior stay in place; it only reads encryption information
-through the new metadata mapping. The download-facing contracts below describe the next phase,
-not additional implemented functionality. See the module's `filetransfer/README.md` for current behavior.
+UIKit supports opt-in encrypted uploads. Waafi implements multipart uploads with presigned URLs
+and resumable HTTP range downloads. UIKit still coordinates decryption after the transport has
+downloaded the ciphertext. The native SDK download operation and the transport ownership switch
+are planned work described in section 10.
 
 ## 1. Purpose
 
@@ -35,7 +28,7 @@ The Sceyt chat server currently supports a single upload request, not S3 multipa
 
 UIKit keeps attachment records. The executing transport keeps its own technical recovery state. For example, UIKit saves the completed local file path, while Waafi saves its upload ID and accepted part ETags.
 
-## 3. Main graph
+## 3. Upload call graph
 
 ```text
 UIKit
@@ -72,7 +65,7 @@ Both transports implement the same `FileTransferTransport`. UIKit does not branc
 
 ## 4. Shared transfer contract
 
-All types in this section belong to UIKit. Existing filename, MIME type and optional context information remain available to transports. The single upload-request data class with its enum, typed results and the cancellation hook are implemented. The expanded download request shown here is a future contract: the current request still has only operation ID, URL, destination and optional context.
+All types in this section belong to UIKit. Upload requests carry the prepared file and its metadata. Download requests carry a remote reference, destination, optional context and HTTP headers.
 
 ```kotlin
 import java.io.File
@@ -109,10 +102,8 @@ data class FileDownloadRequest(
     val operationId: String,
     val url: String,
     val destinationFile: File,
-    val encryptionInfo: FileEncryptionInfo? = null,
-    // Required for encrypted downloads by the current SDK model.
-    val plaintextSize: Long? = null,
     val context: FileTransferContext? = null,
+    val headers: Map<String, String> = emptyMap(),
 )
 
 sealed interface FileTransferResult<out T> {
@@ -143,17 +134,17 @@ interface FileTransferTransport {
 ### Execution rules
 
 - `upload` receives the final prepared plaintext file. The transport owns any encryption session it creates. An encrypted success includes the encryption information for the uploaded bytes.
-- `download` returns the final local plaintext file path. An encrypted download succeeds only after authentication and file publication have finished.
+- `download` returns the path where the transport wrote the remote bytes. For an encrypted attachment, UIKit uses that file to authenticate and publish plaintext before reporting attachment success.
 - `operationId` identifies a logical transfer. Retries use that identity to locate transport-owned state. Upload and download operation IDs must remain distinct.
 - `pause` returning `true` means the same invocation remains available for `resume`. Returning `false` allows UIKit to stop the attempt and retry later.
 - `resume` returning `true` means that paused invocation continues. After a process restart there is no invocation to resume; UIKit calls `upload` or `download` again, and the transport restores its saved state if supported.
 - Coroutine cancellation stops reads, writes and network work. It propagates as `CancellationException`. On its own, it does not mean the user has abandoned the file; it can also be UIKit's pause fallback.
 - Explicit upload cancellation calls `cancel(operationId)` and stops the calling coroutine. The implementation must handle either order, repeated calls and calls after an interrupted attempt has already returned. Download cancellation keeps its existing implementation in this phase.
-- `cancel` schedules cleanup without blocking the caller. Waafi aborts abandoned multipart sessions and removes its upload/download temporary state. A failed remote abort remains available for a cleanup retry.
+- `cancel` schedules cleanup without blocking the caller. Waafi aborts abandoned multipart uploads and can retry a failed remote abort. UIKit orders encrypted download staging cleanup after the current attempt stops.
 - `Interrupted` means recoverable work is retained for another attempt. `Failure` means this attempt cannot complete normally. Neither result is a successful uploaded or downloaded attachment.
 - A transport must stop its current byte operations before its suspended method returns or cancellation completes. Old callbacks must not update a replacement attempt.
 
-There is no public `discardUpload`, `uploadPersisted` or `TransportCheckpointStore` in this proposal. One `cancel` method covers explicit abandonment in both directions. Each transport manages retention of its completed results internally.
+The transport owns upload recovery and decides how long to retain completed upload results. UIKit calls `cancel(operationId)` for explicit upload abandonment.
 
 ## 5. UIKit encryption contract
 
@@ -163,12 +154,18 @@ This interface supplies cryptography to custom transports. It does not initiate 
 import java.io.File
 
 interface FileEncryption {
-    suspend fun prepare(file: File): FileEncryptionSession
+    suspend fun prepareEncryption(file: File): FileEncryptionSession
 
-    suspend fun restore(
+    suspend fun restoreEncryption(
         file: File,
         checkpoint: FileEncryptionCheckpoint,
     ): FileEncryptionSession
+
+    suspend fun prepareDecryption(
+        encryptedFile: File,
+        encryptionInfo: FileEncryptionInfo,
+        plaintextSize: Long,
+    ): FileDecryptionSession
 }
 
 interface FileEncryptionSession : AutoCloseable {
@@ -180,6 +177,15 @@ interface FileEncryptionSession : AutoCloseable {
     suspend fun read(offset: Long, length: Int): ByteArray
 
     fun checkpoint(): FileEncryptionCheckpoint
+
+    override fun close()
+}
+
+interface FileDecryptionSession : AutoCloseable {
+    val sourceId: String
+    val plaintextSize: Long
+
+    suspend fun read(offset: Long, length: Int): ByteArray
 
     override fun close()
 }
@@ -199,8 +205,9 @@ data class FileEncryptionCheckpoint(
 
 ### Session rules
 
-- `prepare` creates a new encryption session and its key. It does not encrypt the whole file in advance. The SDK generates encrypted bytes when the reader needs them.
-- `restore` restores the same encryption session. It preserves the key, attachment ID and encryption parameters so accepted S3 parts remain compatible with later parts.
+- `prepareEncryption` creates a new session and key. The SDK generates ciphertext when the caller reads a range.
+- `restoreEncryption` preserves the key, attachment ID and encryption parameters so accepted S3 parts remain compatible with later parts.
+- `prepareDecryption` opens a completed local ciphertext file. The decryption session reads authenticated plaintext ranges and closes its resources when finished.
 - A changed source file must not silently continue an old multipart session. The SDK checks the source; Waafi handles the failure by abandoning that multipart session and starting a new one when appropriate.
 - `sourceId` identifies the encrypted source and remains stable when the same session is restored.
 - `read` takes a ciphertext offset and byte count, including encryption overhead. It returns exactly that range. Bounds are `offset >= 0`, `length >= 0`, and `length <= ciphertextSize - offset`.
@@ -213,11 +220,11 @@ data class FileEncryptionCheckpoint(
 ### Mapping to the current SDK
 
 ```text
-UIKit FileEncryption.prepare(file)
+UIKit FileEncryption.prepareEncryption(file)
   -> ChatSdkFileEncryption
   -> SDK FileEncryptionProvider.prepareUpload(file, generatedAttachmentId)
 
-UIKit FileEncryption.restore(file, checkpoint)
+UIKit FileEncryption.restoreEncryption(file, checkpoint)
   -> ChatSdkFileEncryption
   -> SDK FileEncryptionProvider.restoreUpload(file, mappedTypedCheckpoint)
 
@@ -229,25 +236,27 @@ UIKit encryptionInfo.attachmentId <- SDK encryptionInfo.data.uniqueId
 UIKit encryptionInfo.key          <- SDK encryptionInfo.data.key
 ```
 
-The UIKit `FileEncryptionInfo` is a separate public type from the SDK class with the same name. SDK types stay inside the adapter and the default transport.
+The UIKit `FileEncryptionInfo` is a separate public type from the SDK class with the same name. Waafi works with the UIKit types.
 
 ## 6. Configuration and routing
 
-The target configuration keeps `encryptUploads`, the configured transport and the destination provider. Its encryption entry becomes a UIKit-owned `FileEncryption`, backed by `ChatSdkFileEncryption` by default.
+`SceytChatUIKit.fileTransfer` provides the upload encryption setting, transport, destination provider and SDK-backed `FileEncryption` facade.
 
 `AttachmentTransferRouter` prepares files, selects the configured transport and translates attachment information into requests. It does not create encrypted readers, persist SDK checkpoints, calculate multipart parts or manage upload IDs.
 
 ```text
 New upload:
-  encryptUploads = false -> FileUploadRequest(type = FileUploadType.PLAIN)
+  encryptUploads = false -> FileUploadRequest(type = FileUploadType.PLAIN) [default]
   encryptUploads = true  -> FileUploadRequest(type = FileUploadType.ENCRYPTED)
 
 Incoming download:
-  no enc metadata -> plaintext request
-  enc metadata    -> request with encryptionInfo and plaintextSize
+  no enc metadata -> transport downloads directly to the destination
+  enc metadata    -> UIKit passes encryption info and plaintext size to its download helper
 ```
 
-The upload setting affects new uploads. Incoming encrypted files must still be decrypted when `encryptUploads` is disabled.
+Apps opt in by setting `SceytChatUIKit.fileTransfer.encryptUploads = true`. Incoming encrypted files follow their attachment metadata.
+
+Encrypted upload retries reuse an existing prepared media file from the active upload, saved attachment or local checksum cache. UIKit uploads that file again through the transport without reusing a remote URL. Keeping the same source file lets Waafi restore the same multipart session and skip accepted parts.
 
 Coordinators continue managing scheduling, shared callers, progress and attachment state. `TransferTask` refactoring is outside this change.
 
@@ -274,11 +283,11 @@ A single HTTP upload can stream encrypted records. It does not require a complet
 AttachmentTransferRouter
   -> WaafiFileTransferTransport.upload(request)
        -> WaafiMultipartUploader
-            -> Restore saved encryption session, or FileEncryption.prepare(file)
+            -> FileEncryption.restoreEncryption(file, checkpoint) or prepareEncryption(file)
             -> Calculate part count from ciphertextSize
             -> POST /chat/upload/multipart/init?parts=N
             -> Save objectKey, uploadId, URLs and encryption checkpoint
-            -> For each unfinished part:
+            -> For each unfinished part, up to three in parallel:
                  session.read(offset, length)
                  save updated encryption checkpoint
                  PUT bytes to that part's presigned URL
@@ -304,7 +313,7 @@ val offset = (partNumber - 1L) * partSize
 val length = minOf(partSize.toLong(), ciphertextSize - offset).toInt()
 ```
 
-Plan before calling `init` and retain that part size for the session. Increase it for files that would exceed the backend's 10,000-part limit. Every S3 part except the last must be at least 5 MiB. Sequential uploads with one bounded part buffer are sufficient for the first implementation; no full ciphertext file or fake scheduling file is needed for upload.
+Plan before calling `init` and retain that part size for the session. Increase it for files that would exceed the backend's 10,000-part limit. Every S3 part except the last must be at least 5 MiB. Waafi uploads up to three parts at a time and reads each part into a buffer. It does not create a full ciphertext file for upload.
 
 ### HTTP contract
 
@@ -402,6 +411,19 @@ The `key` field currently carries the file key directly. Wrapping/envelope-provi
 
 ## 10. Download flow and native SDK work
 
+Current flow for encrypted attachments:
+
+```text
+AttachmentTransferRouter.download()
+  -> EncryptedFileDownloader.download(request, encryptionInfo, ...)
+       -> FileTransferTransport.download() writes temporary ciphertext
+       -> FileEncryption.prepareDecryption() opens the completed ciphertext
+       -> FileDecryptionSession.read() supplies verified plaintext
+  <- final plaintext path
+```
+
+Planned flow once the Chat SDK provides a complete encrypted download operation:
+
 ```text
 AttachmentDownloadCoordinator
   -> AttachmentTransferRouter
@@ -417,9 +439,9 @@ AttachmentDownloadCoordinator
   -> UIKit saves local path, downloaded state and displayed progress
 ```
 
-Both transports must return the same success meaning: the destination is a complete usable file. The SDK/transport owns technical checkpoints, temporary files and authentication failures; UIKit owns the attachment database update.
+In the planned flow, both transports return a complete usable file. The SDK or transport owns technical checkpoints, temporary files and authentication failures. UIKit updates the attachment database.
 
-The existing full-file download implementation remains in UIKit for this upload-only step. The new native encrypted download entry point is pending. Its signature, cancellation behavior and the corresponding download-facing UIKit encryption facade must be finalized before switching the default route. Waafi also needs a supported route for decrypting bytes obtained from its own backend; a downloader usable only against the Sceyt upload host would not cover that case. This document does not claim an existing `ChatClient.downloadEncrypted` method.
+The native operation needs to cover network download, decryption, verification, file publication and cancellation before the default route switches. Waafi will continue to fetch its own bytes and use the SDK-backed decryption facade.
 
 The first download implementation may keep the existing full encrypted download followed by local decryption. That temporarily needs both ciphertext and plaintext storage. The executing downloader cleans up staging files and publishes the destination only after verification. Changing to a single staging file or streaming playback is separate work.
 
@@ -429,14 +451,13 @@ The current product flow downloads the whole file before playback. Random-access
 
 | Area | Current UIKit phase | Remaining target work |
 | --- | --- | --- |
-| Upload request | One prepared-file request with `FileUploadType.PLAIN` / `.ENCRYPTED`; transport owns its encryption session. | Migrate Waafi's adapter to this request. |
-| Upload result | Remote reference plus UIKit-owned encryption information. | Return the same result from Waafi's new backend flow. |
-| Encryption facade | UIKit interfaces, typed checkpoint and internal Chat SDK adapter. | Use the facade from Waafi's own session manager. |
-| UIKit upload recovery | Upload journal, range wrapper and persistence acknowledgement removed. | Waafi owns checkpoint storage and completed-result retention. |
-| Cleanup contract | `cancel(operationId)` is wired for explicit upload abandonment. | Migrate custom upload cleanup; keep current download cleanup until native support. |
+| Upload | UIKit prepares the file and both transports accept `FileUploadRequest`. Encrypted success includes `FileUploadResult.encryptionInfo`. | Coordinate rollout before enabling uploads in release builds. |
+| Encryption facade | Waafi uses UIKit's SDK-backed sessions and typed checkpoints. | Integrate the complete native download operation when available. |
+| Upload recovery | UIKit reuses prepared files. Waafi owns backend checkpoints and completed-result retention. | Agree on backend completion recovery and URL renewal. |
+| Cleanup contract | Waafi handles explicit upload abandonment. UIKit cleans encrypted download staging. | Move download lifecycle ownership to the transports. |
 | Metadata | `{v, alg, attachmentId, key, renditions}` mapper; original file size and media fields preserved. | Coordinate the wire format across clients; integrate separately encrypted rendition files after their references/sizes are defined. |
-| Waafi multipart lifecycle | Waafi source is unchanged in this UIKit-only phase. | Replace direct S3 initiation/signing/completion with Waafi REST plus presigned PUTs. |
-| Encrypted download | Existing router plus unchanged `EncryptedFileDownloader`; only metadata/config adaptation. | Migrate execution after the native SDK contract is ready. |
+| Waafi multipart lifecycle | Waafi REST handles init, complete and abort. Presigned PUTs send parts directly to S3. | Verify live backend interoperability. |
+| Encrypted download | UIKit's router calls a helper that downloads ciphertext through the transport and publishes verified plaintext. | Switch both transports to return verified plaintext after the native SDK contract is ready. |
 
 This is a targeted responsibility move. Preserve existing scheduling, sharing, persistence ordering, plain transfers and progress behavior. The previous implementation's passing tests do not validate the proposed API changes until they are implemented and the tests updated.
 
@@ -464,7 +485,7 @@ Verification in this phase uses local tests and compilation. Native SDK encrypti
 - Waafi API contract supplied for this design: `chat-upload-api.txt`.
 - Current UIKit implementation: `SceytChatUiKit/src/main/java/com/sceyt/chatuikit/filetransfer/` and `persistence/logicimpl/AttachmentTransferRouter.kt`.
 - Current SDK contracts: `com.sceyt.chat.fileencryption.FileEncryptionProvider`, `PreparedUpload`, `FileEncryptionCheckpoint` and `FileEncryptionInfo`.
-- Current Waafi implementation: `WaafiFileTransferTransport`, `S3MultipartTransfer` and `PresignedPartUploader`.
+- Current Waafi implementation: `WaafiFileTransferTransport`, `WaafiMultipartUploader`, `ChatPartUploader` and `WaafiMultipartDownloader`.
 - [AWS: S3 multipart upload limits](https://docs.aws.amazon.com/AmazonS3/latest/userguide/qfacts.html).
 - [AWS: Multipart upload behavior and part ETags](https://docs.aws.amazon.com/AmazonS3/latest/userguide/mpuoverview.html).
 - [AWS: Uploading through presigned URLs](https://docs.aws.amazon.com/AmazonS3/latest/userguide/PresignedUrlUploadObject.html).

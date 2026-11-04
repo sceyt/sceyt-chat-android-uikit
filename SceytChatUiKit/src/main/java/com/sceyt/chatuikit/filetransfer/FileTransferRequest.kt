@@ -24,6 +24,7 @@ data class FileUploadResult(
     val encryptionInfo: FileEncryptionInfo? = null,
 )
 
+/** [destinationFile] is the file where the transport writes the downloaded bytes. */
 data class FileDownloadRequest(
     val operationId: String,
     val url: String,

@@ -100,7 +100,7 @@ class AttachmentEncryptedTransferTest {
         val metadata = JsonParser.parseString(task.attachment.metadata).asJsonObject
         assertThat(metadata.get("szw").asInt).isEqualTo(1280)
         assertThat(metadata.get("tmb").asString).isEqualTo("blur-thumbnail")
-        verify(encryption, never()).prepare(any())
+        verify(encryption, never()).prepareEncryption(any())
     }
 
     @Test

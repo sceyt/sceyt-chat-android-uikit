@@ -2,6 +2,7 @@ package com.sceyt.chatuikit.filetransfer.encryption
 
 import com.sceyt.chat.fileencryption.FileEncryptionData
 import com.sceyt.chat.fileencryption.FileEncryptionProvider
+import com.sceyt.chat.fileencryption.PlaintextReader
 import com.sceyt.chat.fileencryption.PreparedUpload
 import com.sceyt.chat.fileencryption.StreamingAeadFileEncryptionProvider
 import kotlinx.coroutines.Dispatchers
@@ -15,14 +16,14 @@ import com.sceyt.chat.fileencryption.FileEncryptionInfo as SdkFileEncryptionInfo
 
 /** Keeps the SDK's types and blocking calls behind UIKit's encryption interface. */
 internal class ChatSdkFileEncryption(
-    internal val provider: FileEncryptionProvider = StreamingAeadFileEncryptionProvider(),
+    private val provider: FileEncryptionProvider = StreamingAeadFileEncryptionProvider(),
 ) : FileEncryption {
 
-    override suspend fun prepare(file: File): FileEncryptionSession = createSession {
+    override suspend fun prepareEncryption(file: File): FileEncryptionSession = createSession {
         provider.prepareUpload(file, StreamingAeadFileEncryptionProvider.newUniqueId())
     }
 
-    override suspend fun restore(
+    override suspend fun restoreEncryption(
         file: File,
         checkpoint: FileEncryptionCheckpoint
     ): FileEncryptionSession =
@@ -36,13 +37,40 @@ internal class ChatSdkFileEncryption(
             )
         }
 
-    private suspend fun createSession(prepare: () -> PreparedUpload): Session {
+    override suspend fun prepareDecryption(
+        encryptedFile: File,
+        encryptionInfo: FileEncryptionInfo,
+        plaintextSize: Long,
+    ): FileDecryptionSession {
+        var source: FileCiphertextRangeSource? = null
+        var reader: PlaintextReader? = null
+        return try {
+            runInterruptible(Dispatchers.IO) {
+                val ciphertext = FileCiphertextRangeSource(encryptedFile).also { source = it }
+                val plaintext =
+                    provider.openDownload(ciphertext, encryptionInfo.toSdkInfo(plaintextSize))
+                        .also { reader = it }
+                DecryptionSession(ciphertext, plaintext)
+            }
+        } catch (error: Throwable) {
+            withContext(NonCancellable + Dispatchers.IO) {
+                try {
+                    reader?.close()
+                } finally {
+                    source?.close()
+                }
+            }
+            throw error
+        }
+    }
+
+    private suspend fun createSession(prepare: () -> PreparedUpload): EncryptionSession {
         var upload: PreparedUpload? = null
         return try {
             runInterruptible(Dispatchers.IO) {
                 val prepared = prepare()
                 upload = prepared
-                Session(prepared)
+                EncryptionSession(prepared)
             }
         } catch (error: Throwable) {
             withContext(NonCancellable + Dispatchers.IO) { upload?.close() }
@@ -50,7 +78,9 @@ internal class ChatSdkFileEncryption(
         }
     }
 
-    internal class Session(internal val upload: PreparedUpload) : FileEncryptionSession {
+    internal class EncryptionSession(
+        internal val upload: PreparedUpload
+    ) : FileEncryptionSession {
         private val closed = AtomicBoolean()
 
         override val sourceId: String = upload.sourceId
@@ -76,6 +106,28 @@ internal class ChatSdkFileEncryption(
 
         override fun close() {
             if (closed.compareAndSet(false, true)) upload.close()
+        }
+    }
+
+    private class DecryptionSession(
+        private val source: FileCiphertextRangeSource,
+        private val reader: PlaintextReader,
+    ) : FileDecryptionSession {
+        private val closed = AtomicBoolean()
+        override val sourceId: String = source.sourceId
+        override val plaintextSize: Long = reader.plaintextSize
+
+        override suspend fun read(offset: Long, length: Int): ByteArray =
+            runInterruptible(Dispatchers.IO) {
+                check(!closed.get()) { "Decryption session is closed" }
+                reader.read(offset, length)
+            }
+
+        override fun close() {
+            if (!closed.compareAndSet(false, true)) return
+            source.use {
+                reader.close()
+            }
         }
     }
 }

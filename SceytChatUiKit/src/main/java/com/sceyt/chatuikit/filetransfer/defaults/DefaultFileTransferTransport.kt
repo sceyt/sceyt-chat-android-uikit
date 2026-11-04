@@ -41,9 +41,9 @@ class DefaultFileTransferTransport : FileTransferTransport {
         request: FileUploadRequest,
         callback: FileTransferCallback,
     ): FileTransferResult<FileUploadResult> {
-        val session = SceytChatUIKit.fileTransfer.encryption.prepare(request.sourceFile)
+        val session = SceytChatUIKit.fileTransfer.encryption.prepareEncryption(request.sourceFile)
         return try {
-            if (session !is ChatSdkFileEncryption.Session) {
+            if (session !is ChatSdkFileEncryption.EncryptionSession) {
                 return FileTransferResult.Failure(
                     UnsupportedOperationException("The native uploader requires Chat SDK encryption"),
                 )

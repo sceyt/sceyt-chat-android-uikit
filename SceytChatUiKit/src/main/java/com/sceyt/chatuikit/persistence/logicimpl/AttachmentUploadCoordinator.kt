@@ -77,6 +77,7 @@ internal class AttachmentUploadCoordinator(
         val sharingKey = if (shared) attachment.originalFilePath?.takeIf(String::isNotBlank)
             ?: attachment.filePath?.takeIf(String::isNotBlank)
             ?: attachment.uploadOperationId else null
+
         // Completed groups retain only paused callers; a new share starts a new operation.
         val upload = uploads.firstOrNull {
             shared && it.sharingKey == sharingKey && it.result?.isSuccess != true
@@ -84,6 +85,7 @@ internal class AttachmentUploadCoordinator(
         val member = Member(upload, attachment, task, onResult)
         upload.members[task] = member
         upload.result = null
+
         // A pause command can run after the worker calls upload but before this admission.
         if (task.state == PauseUpload) {
             member.paused = true
@@ -115,7 +117,9 @@ internal class AttachmentUploadCoordinator(
         removeMember(member)
         val upload = member.upload
         if (!upload.hasActiveMembers) {
-            if (upload.members.isEmpty()) stopAttempt(upload, discard = true) else pauseOperation(upload)
+            if (upload.members.isEmpty()) stopAttempt(upload, discard = true) else pauseOperation(
+                upload
+            )
             pending.remove(upload)
             releaseTurn(upload)
         }
@@ -180,6 +184,7 @@ internal class AttachmentUploadCoordinator(
                 isSharedUpload = owner.upload.shared,
                 onFilePrepared = { path ->
                     // Preparation belongs to the physical upload, even if its first caller is deleted.
+                    owner.upload.preparedFilePath = path
                     if (!owner.finished) owner.task.updateFileLocationCallback?.onUpdateFileLocation(
                         path
                     )
@@ -196,6 +201,7 @@ internal class AttachmentUploadCoordinator(
                         }
                     }
                 },
+                preparedFilePath = owner.upload.preparedFilePath,
             )
             attempt.transfer = transfer
             val response = transfer.execute { progress ->
@@ -337,6 +343,9 @@ internal class AttachmentUploadCoordinator(
         val shared get() = sharingKey != null
         val members = linkedMapOf<TransferTask, Member>()
         val hasActiveMembers get() = members.values.any { !it.paused }
+
+        // Only an attempt accesses this path. A replacement joins the old attempt first.
+        var preparedFilePath: String? = null
         var attempt: Attempt? = null
         var result: Result<String>? = null
     }

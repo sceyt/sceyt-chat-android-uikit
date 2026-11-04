@@ -4,8 +4,18 @@ import java.io.File
 
 /** Cryptography used by transports; implementations own neither networking nor persistence. */
 interface FileEncryption {
-    suspend fun prepare(file: File): FileEncryptionSession
+    suspend fun prepareEncryption(file: File): FileEncryptionSession
 
     /** Restores the same key and encrypted bytes from a privately stored checkpoint. */
-    suspend fun restore(file: File, checkpoint: FileEncryptionCheckpoint): FileEncryptionSession
+    suspend fun restoreEncryption(
+        file: File,
+        checkpoint: FileEncryptionCheckpoint
+    ): FileEncryptionSession
+
+    /** Prepares verified plaintext reading from a completed encrypted file. Performs no networking. */
+    suspend fun prepareDecryption(
+        encryptedFile: File,
+        encryptionInfo: FileEncryptionInfo,
+        plaintextSize: Long,
+    ): FileDecryptionSession
 }

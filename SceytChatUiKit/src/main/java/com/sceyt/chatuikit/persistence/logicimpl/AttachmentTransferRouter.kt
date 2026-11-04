@@ -10,10 +10,9 @@ import com.sceyt.chatuikit.filetransfer.FileTransferResult
 import com.sceyt.chatuikit.filetransfer.FileUploadRequest
 import com.sceyt.chatuikit.filetransfer.FileUploadResult
 import com.sceyt.chatuikit.filetransfer.FileUploadType
-import com.sceyt.chatuikit.filetransfer.encryption.ChatSdkFileEncryption
 import com.sceyt.chatuikit.filetransfer.encryption.EncryptedFileDownloader
+import com.sceyt.chatuikit.filetransfer.encryption.FileDownloadEncryption
 import com.sceyt.chatuikit.filetransfer.encryption.FileEncryptionMetadata
-import com.sceyt.chatuikit.filetransfer.encryption.toSdkInfo
 import com.sceyt.chatuikit.persistence.file_transfer.transferKey
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import kotlinx.coroutines.Dispatchers
@@ -26,7 +25,6 @@ internal class AttachmentTransferRouter(
     context: Context,
     attachmentLogic: PersistenceAttachmentLogic? = null,
 ) {
-    private val appContext = context.applicationContext
     private val preparer = attachmentLogic?.let { UploadPreparer(context, it) }
     private val downloader = EncryptedFileDownloader(File(context.filesDir, "download-sessions"))
 
@@ -36,6 +34,7 @@ internal class AttachmentTransferRouter(
         isSharedUpload: Boolean,
         onFilePrepared: (String) -> Unit = {},
         onPreparing: (Float) -> Unit = {},
+        preparedFilePath: String? = null,
     ): TransferExecutor {
         val config = SceytChatUIKit.fileTransfer
         val transport = config.transport
@@ -50,6 +49,7 @@ internal class AttachmentTransferRouter(
                 onFilePrepared = onFilePrepared,
                 onProgress = onPreparing,
                 reuseUploadedUrl = !encrypted,
+                preparedFilePath = preparedFilePath,
             )
             execution.attachment = prepared.attachment
 
@@ -152,17 +152,18 @@ internal class AttachmentTransferRouter(
                     }
                     downloader.download(
                         request = request,
-                        provider = (config.encryption as? ChatSdkFileEncryption)?.provider
-                            ?: throw UnsupportedOperationException("Encrypted downloads require Chat SDK encryption"),
-                        encryptionInfo = encryption.toEncryptionInfo()
-                            .toSdkInfo(attachment.fileSize),
+                        encryptionInfo = FileDownloadEncryption(
+                            info = encryption.toEncryptionInfo(),
+                            plaintextSize = attachment.fileSize,
+                        ),
+                        encryption = config.encryption,
                         callback = callback,
                     ) { downloadRequest, progress ->
                         execution.executeTransport { transport.download(downloadRequest, progress) }
                     }
                 } finally {
                     withContext(NonCancellable + Dispatchers.IO) {
-                        execution.onDiscard { downloader.discard(operationId, destination) }
+                        execution.onDiscard { downloader.discard(operationId) }
                     }
                 }
             }
@@ -170,12 +171,7 @@ internal class AttachmentTransferRouter(
     }
 
     fun discardSavedDownload(attachment: SceytAttachment) {
-        if (!FileEncryptionMetadata.isEncrypted(attachment.metadata)) return
-        val destination = SceytChatUIKit.fileTransfer.destinationProvider.provideDestination(
-            appContext,
-            attachment
-        )
-        downloader.discard("download:" + attachment.transferKey, destination)
+        downloader.discard("download:" + attachment.transferKey)
     }
 
     fun cancelUpload(attachment: SceytAttachment) {
