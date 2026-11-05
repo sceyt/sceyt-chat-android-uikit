@@ -5,6 +5,7 @@ import com.sceyt.chat.models.SceytException
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
+import com.sceyt.chatuikit.extensions.takeIfNotBlank
 import com.sceyt.chatuikit.filetransfer.FileTransferResult
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
@@ -42,31 +43,38 @@ internal class AttachmentDownloadCoordinator(
         onResult: (SceytResponse<String>) -> Unit,
         isResuming: Boolean = false,
     ) {
+        // A paused task starts again only through an explicit resume request.
         if (!isResuming && task.state == PauseDownload) return
+
         val key = attachment.transferKey
         val registered = CompletableDeferred<Unit>()
         synchronized(lock) {
             val previous = downloads[key]
-            if (previous != null && !previous.job.isCancelled && !previous.job.isCompleted) {
+            if (previous?.job?.isActive == true) {
+                // Reuse an ongoing attempt or one still delivering its result to this task.
                 if (!previous.completed || previous.task === task) return
             }
-            Download(attachment, task, onResult, isResuming).also { next ->
-                val cleanup = cleanups[key]
-                next.job = scope.launch(start = CoroutineStart.UNDISPATCHED) {
-                    // Enter cleanup before cancellation can skip it; file work waits for registration.
-                    withContext(NonCancellable) {
-                        previous?.job?.join()
-                        cleanup?.join()
-                    }
-                    registered.await()
-                    currentCoroutineContext().ensureActive()
-                    performDownload(next)
+
+            val download = Download(attachment, task, onResult, isResuming)
+            val previousCleanup = cleanups[key]
+            download.job = scope.launch(start = CoroutineStart.UNDISPATCHED) {
+                // Start waiting immediately so cancellation cannot skip joining older file writers.
+                withContext(NonCancellable) {
+                    previous?.job?.join()
+                    previousCleanup?.join()
                 }
-                downloads[key] = next
-                next.job.invokeOnCompletion {
-                    synchronized(lock) {
-                        if (!next.paused || next.completed) downloads.remove(key, next)
-                    }
+
+                // Register this attempt before it can publish progress or results.
+                registered.await()
+                currentCoroutineContext().ensureActive()
+                performDownload(download)
+            }
+
+            downloads[key] = download
+            download.job.invokeOnCompletion {
+                synchronized(lock) {
+                    // Retain paused attempts so resume can reuse their transport.
+                    if (!download.paused || download.completed) downloads.remove(key, download)
                 }
             }
         }
@@ -75,16 +83,24 @@ internal class AttachmentDownloadCoordinator(
 
     fun pause(attachment: SceytAttachment): Boolean {
         val download = synchronized(lock) {
+            // Only registered, unfinished attempts can be paused.
             val current = downloads[attachment.transferKey] ?: return false
             if (current.completed) return false
+
+            // A repeated pause succeeds using the existing paused state.
             if (current.paused) return true
+
+            // Suppress progress before the transport can call back during pause.
             current.paused = true
             current
         }
-        val paused = download.job.isActive && runCatching {
+
+        val transportPaused = download.job.isActive && runCatching {
             download.transfer?.pause() == true
         }.getOrDefault(false)
-        if (!paused) cancelAttempt(download)
+
+        // Cancel the attempt when transport pause is unsupported or fails, keeping resumable files.
+        if (!transportPaused) cancelAttempt(download)
         return true
     }
 
@@ -96,42 +112,57 @@ internal class AttachmentDownloadCoordinator(
         val previous = synchronized(lock) {
             downloads[attachment.transferKey]?.also { it.paused = false }
         }
+
         if (previous?.job?.isActive == true) {
-            val resumed = runCatching {
+            val transportResumed = runCatching {
                 previous.transfer?.resume() == true
             }.getOrDefault(false)
-            if (resumed) {
+
+            if (transportResumed) {
+                // Resume can complete the attempt immediately, so publish only while it is active.
                 if (previous.job.isActive) publishResumed(previous, task)
                 return
             }
+
+            // Stop the old writer before a replacement can use the same destination.
             cancelAttempt(previous)
         }
+
+        // A replacement joins the previous attempt and continues from its saved files.
         download(attachment, task, onResult, isResuming = true)
     }
 
     fun cancel(attachment: SceytAttachment, discard: Boolean = true) {
         synchronized(lock) {
-            val download = downloads[attachment.transferKey]?.also {
-                it.paused = false
-                if (it.job.isCompleted) downloads.remove(it.key, it)
+            val download = downloads[attachment.transferKey]
+            if (download != null) {
+                download.paused = false
+                if (download.job.isCompleted) downloads.remove(download.key, download)
             }
-            if (discard) discardAfterStop(attachment, download)
+
+            // A saved session can need cleanup even when no attempt is registered.
+            if (discard) scheduleCleanup(attachment, download)
             download?.let(::cancelAttempt)
         }
     }
 
-    /** Called under [lock]; new attempts join this cleanup before they can touch files. */
-    private fun discardAfterStop(attachment: SceytAttachment, download: Download?) {
+    /** The caller holds [lock]. New attempts wait for this cleanup before opening their files. */
+    private fun scheduleCleanup(attachment: SceytAttachment, download: Download?) {
         val key = attachment.transferKey
-        val previous = cleanups[key]
+        val previousCleanup = cleanups[key]
         val cleanup = scope.launch(start = CoroutineStart.LAZY) {
             withContext(NonCancellable + Dispatchers.IO) {
-                previous?.join()
+                previousCleanup?.join()
                 download?.job?.join()
+
                 val transfer = download?.transfer
-                if (transfer == null) router.discardSavedDownload(attachment) else transfer.discard()
+                if (transfer != null)
+                    transfer.discard()
+                else router.discardSavedDownload(attachment)
             }
         }
+
+        // Register before starting because cleanup can finish immediately.
         cleanups[key] = cleanup
         cleanup.invokeOnCompletion {
             synchronized(lock) { cleanups.remove(key, cleanup) }
@@ -140,71 +171,92 @@ internal class AttachmentDownloadCoordinator(
     }
 
     fun cancelAll() {
-        val active = synchronized(lock) { downloads.values.map { it.attachment } }
-        active.forEach(::cancel)
+        // Cancellation can remove attempts from the map while this snapshot is processed.
+        val attachments = synchronized(lock) { downloads.values.map { it.attachment } }
+        attachments.forEach(::cancel)
     }
 
     private fun cancelAttempt(download: Download) {
+        // Detach the result callback before cancellation can finish the coroutine.
         synchronized(lock) { download.onResult = null }
         download.job.cancel()
     }
 
     private suspend fun performDownload(download: Download) {
         val result = try {
-            val attachment = download.attachment
-            val url = attachment.url
-            require(!url.isNullOrBlank()) { "Wrong url" }
-            val destination = SceytChatUIKit.fileTransfer.destinationProvider
-                .provideDestination(context, attachment)
-            download.destination = destination
-            val existing = attachment.isAttachmentExistAndFullyLoaded(destination)
-            val response = if (existing != null) {
-                FileTransferResult.Success(existing.path)
-            } else {
-                val task = download.task
-                val started = synchronized(lock) {
-                    if (download.paused) false else {
-                        task.state = Downloading
-                        true
-                    }
-                }
-                if (started) {
-                    notify {
-                        task.progressCallback?.onProgress(
-                            TransferData(
-                                messageTid = task.messageTid,
-                                progressPercent = attachment.progressPercent ?: 0f,
-                                state = Downloading,
-                                filePath = attachment.filePath,
-                                url = url
-                            ),
-                        )
-                    }
-                }
-                currentCoroutineContext().ensureActive()
-                if (download.isResuming) publishResumed(download, task)
-                currentCoroutineContext().ensureActive()
-                val transfer = router.download(attachment, download.operationId, destination)
-                download.transfer = transfer
-                transfer.execute { progress -> handleProgress(download, progress) }
-            }
+            val response = downloadFile(download)
             currentCoroutineContext().ensureActive()
             if (response is FileTransferResult.Success) {
                 check(response.result.isNotBlank()) { "File download returned an empty local path" }
             }
             response
         } catch (error: Throwable) {
+            // Propagate coroutine cancellation before reporting a download failure.
             currentCoroutineContext().ensureActive()
             FileTransferResult.Failure(error)
         }
+
+        completeDownload(download, result)
+    }
+
+    private suspend fun downloadFile(download: Download): FileTransferResult<String> {
+        val attachment = download.attachment
+        val url = requireNotNull(attachment.url.takeIfNotBlank()) { "Wrong url" }
+        val destination = SceytChatUIKit.fileTransfer.destinationProvider
+            .provideDestination(context, attachment)
+        download.destination = destination
+
+        val existingFile = attachment.isAttachmentExistAndFullyLoaded(destination)
+        if (existingFile != null) {
+            // A complete local file satisfies the request immediately.
+            return FileTransferResult.Success(existingFile.path)
+        }
+
+        val task = download.task
+        val started = synchronized(lock) {
+            // A pause during destination resolution takes precedence over the initial state.
+            if (download.paused) return@synchronized false
+            task.state = Downloading
+            true
+        }
+        if (started) {
+            notify {
+                task.progressCallback?.onProgress(
+                    TransferData(
+                        messageTid = task.messageTid,
+                        progressPercent = attachment.progressPercent ?: 0f,
+                        state = Downloading,
+                        filePath = attachment.filePath,
+                        url = url,
+                    ),
+                )
+            }
+        }
+
+        // Progress and resume callbacks can pause or cancel before the transport starts.
+        currentCoroutineContext().ensureActive()
+        if (download.isResuming) {
+            publishResumed(download, task)
+            currentCoroutineContext().ensureActive()
+        }
+
+        val transfer = router.download(attachment, download.operationId, destination)
+        download.transfer = transfer
+        return transfer.execute { progress -> handleProgress(download, progress) }
+    }
+
+    private fun completeDownload(download: Download, result: FileTransferResult<String>) {
         download.completed = true
         val onResult = synchronized(lock) {
+            // A replaced or canceled attempt must leave the current task and its files alone.
             if (downloads[download.key] !== download) return
             val callback = download.onResult ?: return
+
             if (result is FileTransferResult.Failure) download.destination?.delete()
             download.onResult = null
             callback
         }
+
         val response = when (result) {
             is FileTransferResult.Success -> SceytResponse.Success(result.result)
             is FileTransferResult.Failure -> SceytResponse.Error(
@@ -219,7 +271,10 @@ internal class AttachmentDownloadCoordinator(
     }
 
     private fun handleProgress(download: Download, progressPercent: Float) {
-        if (!isCurrent(download) || download.paused || !download.job.isActive) return
+        // Late callbacks from a replaced attempt must not update the current task.
+        if (!isCurrent(download)) return
+        if (download.paused || !download.job.isActive) return
+
         notify {
             download.task.progressCallback?.onProgress(
                 TransferData(
@@ -227,7 +282,7 @@ internal class AttachmentDownloadCoordinator(
                     progressPercent = progressPercent,
                     state = Downloading,
                     filePath = null,
-                    url = download.attachment.url
+                    url = download.attachment.url,
                 ),
             )
         }
@@ -238,14 +293,13 @@ internal class AttachmentDownloadCoordinator(
     }
 
     private fun publishResumed(download: Download, task: TransferTask) {
-        val resumed = synchronized(lock) {
-            if (downloads[download.key] !== download || download.paused) false else {
-                task.state = Downloading
-                true
-            }
+        synchronized(lock) {
+            // A replacement or newer pause takes precedence over this resume notification.
+            if (downloads[download.key] !== download || download.paused) return
+            task.state = Downloading
         }
-        if (resumed)
-            notify { task.resumePauseCallback?.onResumePause(task.attachment.toTransferData(Downloading)) }
+
+        notify { task.resumePauseCallback?.onResumePause(task.attachment.toTransferData(Downloading)) }
     }
 
     private fun notify(callback: () -> Unit) {
@@ -264,10 +318,13 @@ internal class AttachmentDownloadCoordinator(
         val operationId = "download:$key"
         lateinit var job: Job
         var destination: File? = null
+
         @Volatile
         var transfer: TransferExecutor? = null
+
         @Volatile
         var paused = false
+
         @Volatile
         var completed = false
     }
