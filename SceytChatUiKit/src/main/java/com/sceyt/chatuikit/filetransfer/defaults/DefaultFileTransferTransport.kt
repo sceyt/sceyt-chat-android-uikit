@@ -10,20 +10,17 @@ import com.sceyt.chatuikit.filetransfer.FileTransferTransport
 import com.sceyt.chatuikit.filetransfer.FileUploadRequest
 import com.sceyt.chatuikit.filetransfer.FileUploadResult
 import com.sceyt.chatuikit.filetransfer.FileUploadType
+import com.sceyt.chatuikit.filetransfer.download.ChatSdkFileDownloader
 import com.sceyt.chatuikit.filetransfer.encryption.ChatSdkFileEncryption
 import com.sceyt.chatuikit.filetransfer.encryption.FileEncryptionInfo
 import com.sceyt.chatuikit.persistence.logicimpl.FileTransferUtility
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
-import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
-import okhttp3.Call
-import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.coroutines.resume
 
 class DefaultFileTransferTransport : FileTransferTransport {
     private val transferUtility = FileTransferUtility()
+    private val downloader = ChatSdkFileDownloader()
 
     override suspend fun upload(
         request: FileUploadRequest,
@@ -59,42 +56,16 @@ class DefaultFileTransferTransport : FileTransferTransport {
         }
     }
 
-    // Active SDK and HTTP work is stopped through coroutine cancellation.
-    override fun cancel(operationId: String) = Unit
+    override fun pause(operationId: String): Boolean = downloader.pause(operationId)
+
+    override fun resume(operationId: String): Boolean = downloader.resume(operationId)
+
+    override fun cancel(operationId: String) = downloader.cancel(operationId)
 
     override suspend fun download(
         request: FileDownloadRequest,
         callback: FileTransferCallback,
-    ): FileTransferResult<String> {
-        val writerStopped = CompletableDeferred<Unit>()
-        var call: Call? = null
-        return try {
-            suspendCancellableCoroutine { continuation ->
-                val completed = AtomicBoolean()
-                call = transferUtility.downloadFile(
-                    request = request,
-                    onProgress = { progressPercent ->
-                        if (continuation.isActive) callback.onProgress(progressPercent)
-                    },
-                    onResult = { response ->
-                        // Results can arrive after cancellation or be delivered more than once.
-                        if (!completed.compareAndSet(false, true)) return@downloadFile
-                        continuation.resume(response)
-                    },
-                    onFinished = { writerStopped.complete(Unit) },
-                )
-
-                continuation.invokeOnCancellation {
-                    completed.set(true)
-                    call?.let(transferUtility::cancelDownload)
-                }
-            }
-        } finally {
-            // Joining this coroutine must also wait for the HTTP writer to close its file.
-            if (call != null)
-                withContext(NonCancellable) { writerStopped.await() }
-        }
-    }
+    ): FileTransferResult<String> = downloader.download(request, callback)
 
     private fun SceytResponse<String>.toUploadResult(
         encryptionInfo: FileEncryptionInfo? = null,
