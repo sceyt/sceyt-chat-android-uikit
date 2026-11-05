@@ -508,6 +508,7 @@ class AttachmentUploadCoordinatorTest {
         cancelUpload(owner)
 
         assertThat(call.cancelled).isFalse()
+        assertThat(transport.cancelCalls).doesNotContain("upload:146")
         assertThat(transport.pauseCalls).containsExactly("upload:146")
         resumeUpload(follower, TransferState.PauseUpload)
         assertThat(transport.resumeCalls).containsExactly("upload:146")
@@ -557,8 +558,29 @@ class AttachmentUploadCoordinatorTest {
         resumeUpload(follower, TransferState.PauseUpload)
         assertThat(transport.resumeCalls).isEmpty()
         assertThat(transport.uploadCalls).hasSize(2)
+        assertThat(transport.cancelCalls).contains("upload:305")
         transport.uploadCalls.last().succeed("restarted-url")
         assertThat(results).containsExactly("restarted-url")
+    }
+
+    @Test
+    fun `deleting a queued retry discards its retained transport session`() {
+        val retried = uploadAttachment(messageTid = 307L)
+        val blocker = uploadAttachment(messageTid = 308L)
+        uploadFile(retried, transferTask(retried))
+        transport.uploadCalls.single().interrupt()
+        assertThat(transport.cancelCalls).isEmpty()
+
+        uploadFile(blocker, transferTask(blocker))
+        uploadFile(retried, transferTask(retried))
+        assertThat(transport.uploadCalls).hasSize(2)
+
+        cancelUpload(retried)
+
+        assertThat(transport.cancelCalls).contains("upload:307")
+        assertThat(transport.uploadCalls.last().cancelled).isFalse()
+        transport.uploadCalls.last().succeed("blocker-url")
+        assertThat(transport.uploadCalls).hasSize(2)
     }
 
     @Test

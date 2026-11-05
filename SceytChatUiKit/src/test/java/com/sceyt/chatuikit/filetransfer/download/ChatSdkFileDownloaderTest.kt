@@ -39,6 +39,27 @@ class ChatSdkFileDownloaderTest {
     private lateinit var listener: MediaDownload.Listener
 
     @Test
+    fun `legacy partial destination is removed without discarding native resume files`() = runTest {
+        val request = request()
+        request.destinationFile.writeText("legacy partial bytes")
+        val partial = File(request.destinationFile.path + ".part").apply { writeText("verified ranges") }
+        val checkpoint = File(partial.path + ".json").apply { writeText("saved ranges") }
+        setStatus(MediaDownload.State.DOWNLOADING)
+        Mockito.mockStatic(MediaDownload::class.java).use { native ->
+            native.preparePlain(request)
+            val downloader = ChatSdkFileDownloader(StandardTestDispatcher(testScheduler))
+            val result = async { downloader.download(request) {} }
+            runCurrent()
+
+            assertThat(request.destinationFile.exists()).isFalse()
+            assertThat(partial.readText()).isEqualTo("verified ranges")
+            assertThat(checkpoint.readText()).isEqualTo("saved ranges")
+            assertThat(result.isCompleted).isFalse()
+            result.cancelAndJoin()
+        }
+    }
+
+    @Test
     fun `plain download forwards operation ID URL headers and destination`() = runTest {
         val request = request().copy(headers = mapOf("X-Chat-Token" to "token", "X-Message-Id" to "42"))
         val progress = mutableListOf<Float>()

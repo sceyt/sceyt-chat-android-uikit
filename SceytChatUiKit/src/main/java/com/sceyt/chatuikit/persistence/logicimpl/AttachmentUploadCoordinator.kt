@@ -115,6 +115,10 @@ internal class AttachmentUploadCoordinator(
         }
         removeMember(member)
         val upload = member.upload
+
+        // A queued retry can retain a backend session without a running attempt.
+        if (upload.attempt == null) router.cancelUpload(task.attachment)
+
         if (!upload.hasActiveMembers) {
             if (upload.members.isEmpty())
                 stopAttempt(upload, discard = true)
@@ -175,7 +179,13 @@ internal class AttachmentUploadCoordinator(
         val attempt = Attempt(owner.attachment.uploadOperationId)
         attempt.job = scope.launch(start = CoroutineStart.ATOMIC) {
             // Enter cleanup even if paused before dispatch; canceled attempts never prepare files.
-            withContext(NonCancellable) { previous?.job?.join() }
+            withContext(NonCancellable) {
+                previous?.job?.join()
+
+                // A replacement owner cannot restore the previous owner's backend session.
+                if (previous != null && previous.operationId != attempt.operationId)
+                    previous.transfer?.discard()
+            }
             currentCoroutineContext().ensureActive()
             performUpload(owner, attempt)
         }
