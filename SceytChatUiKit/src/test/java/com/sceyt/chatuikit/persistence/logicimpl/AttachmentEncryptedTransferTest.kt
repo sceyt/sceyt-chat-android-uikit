@@ -81,7 +81,7 @@ class AttachmentEncryptedTransferTest {
         val task = transferTask(value)
         val finished = CompletableDeferred<SceytResponse<String>>()
         val coordinator = AttachmentUploadCoordinator(RuntimeEnvironment.getApplication(), mock(), backgroundScope)
-        coordinator.uploadFile(value, task, { _, result -> finished.complete(result) }, {})
+        coordinator.upload(value, task, { _, result -> finished.complete(result) }, {})
         runCurrent()
         val call = transport.uploadCalls.single()
         val request = call.request
@@ -110,7 +110,7 @@ class AttachmentEncryptedTransferTest {
         val task = transferTask(value)
         val finished = CompletableDeferred<SceytResponse<String>>()
         AttachmentUploadCoordinator(RuntimeEnvironment.getApplication(), mock(), backgroundScope)
-            .uploadFile(value, task, { _, result -> finished.complete(result) }, {})
+            .upload(value, task, { _, result -> finished.complete(result) }, {})
         runCurrent()
 
         transport.uploadCalls.single().succeed("https://waafi.test/missing-key")
@@ -125,7 +125,7 @@ class AttachmentEncryptedTransferTest {
         val value = attachment(filePath = file.path, originalFilePath = file.path)
         val task = transferTask(value)
         val coordinator = AttachmentUploadCoordinator(RuntimeEnvironment.getApplication(), mock(), backgroundScope)
-        coordinator.uploadFile(value, task, { _, _ -> }, {})
+        coordinator.upload(value, task, { _, _ -> }, {})
         runCurrent()
 
         coordinator.pause(task) {}
@@ -133,7 +133,7 @@ class AttachmentEncryptedTransferTest {
         assertThat(transport.uploadCalls.single().cancelled).isTrue()
         assertThat(transport.cancelCalls).isEmpty()
 
-        coordinator.uploadFile(value, task, { _, _ -> }, {})
+        coordinator.upload(value, task, { _, _ -> }, {})
         runCurrent()
         assertThat(transport.uploadCalls).hasSize(2)
         coordinator.cancel(task)
@@ -155,8 +155,8 @@ class AttachmentEncryptedTransferTest {
         val firstResult = CompletableDeferred<SceytResponse<String>>()
         val secondResult = CompletableDeferred<SceytResponse<String>>()
         val coordinator = AttachmentUploadCoordinator(RuntimeEnvironment.getApplication(), mock(), backgroundScope)
-        coordinator.uploadSharedFile(first, firstTask, { _, result -> firstResult.complete(result) }, {})
-        coordinator.uploadSharedFile(second, secondTask, { _, result -> secondResult.complete(result) }, {})
+        coordinator.upload(first, firstTask, { _, result -> firstResult.complete(result) }, {}, shared = true)
+        coordinator.upload(second, secondTask, { _, result -> secondResult.complete(result) }, {}, shared = true)
         runCurrent()
         val info = FileEncryptionInfo("shared-format", "shared-id", "shared-key")
 
