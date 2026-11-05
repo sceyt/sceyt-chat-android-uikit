@@ -20,13 +20,13 @@ import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
 import java.io.File
 
-/** Selects an execution once; its controls keep targeting the same transport. */
+/** Creates transfer requests and keeps each execution bound to its selected transport. */
 internal class AttachmentTransferRouter(
     context: Context,
     attachmentLogic: PersistenceAttachmentLogic? = null,
 ) {
-    private val preparer = attachmentLogic?.let { UploadPreparer(context, it) }
-    private val downloader = EncryptedFileDownloader(File(context.filesDir, "download-sessions"))
+    private val uploadPreparer = attachmentLogic?.let { UploadPreparer(context, it) }
+    private val encryptedDownloader = EncryptedFileDownloader(File(context.filesDir, "download-sessions"))
 
     fun upload(
         attachment: SceytAttachment,
@@ -38,13 +38,15 @@ internal class AttachmentTransferRouter(
     ): TransferExecutor {
         val config = SceytChatUIKit.fileTransfer
         val transport = config.transport
+
         return TransferExecutor(
             operationId = operationId,
             transport = transport,
         ) { execution, callback ->
             execution.onDiscard { transport.cancel(operationId) }
+
             val encrypted = config.encryptUploads
-            val prepared = checkNotNull(preparer).prepare(
+            val prepared = checkNotNull(uploadPreparer).prepare(
                 attachment = attachment,
                 onFilePrepared = onFilePrepared,
                 onProgress = onPreparing,
@@ -56,6 +58,8 @@ internal class AttachmentTransferRouter(
             val reusedUrl = prepared.reusedUrl
             val plaintextSize: Long
             val result: FileTransferResult<FileUploadResult>
+
+            // A cached URL skips the transport and keeps the attachment's stored size.
             if (reusedUrl != null) {
                 plaintextSize = prepared.attachment.fileSize
                 result = FileTransferResult.Success(FileUploadResult(reusedUrl))
@@ -110,18 +114,22 @@ internal class AttachmentTransferRouter(
         plaintextSize: Long,
         encrypted: Boolean,
     ): SceytAttachment {
-        val info = result.encryptionInfo
-        check(!encrypted || info != null) { "Encrypted upload returned no encryption information" }
-        val metadata = if (info != null) {
+        val encryptionInfo = result.encryptionInfo
+        if (encrypted) {
+            checkNotNull(encryptionInfo) { "Encrypted upload returned no encryption information" }
+        }
+
+        val metadata = if (encryptionInfo != null) {
             val renditions = FileEncryptionMetadata.read(attachment.metadata)?.renditions.orEmpty()
-            val envelope = FileEncryptionMetadata.fromEncryptionInfo(info, renditions)
+            val envelope = FileEncryptionMetadata.fromEncryptionInfo(encryptionInfo, renditions)
             FileEncryptionMetadata.write(attachment.metadata, envelope)
         } else {
             FileEncryptionMetadata.remove(attachment.metadata)
         }
+
         return attachment.copy(
             metadata = metadata,
-            fileSize = if (info != null) plaintextSize else attachment.fileSize,
+            fileSize = if (encryptionInfo != null) plaintextSize else attachment.fileSize,
         )
     }
 
@@ -138,40 +146,43 @@ internal class AttachmentTransferRouter(
         )
         val config = SceytChatUIKit.fileTransfer
         val transport = config.transport
-        val envelope = FileEncryptionMetadata.read(attachment.metadata)
+        val encryptionMetadata = FileEncryptionMetadata.read(attachment.metadata)
+
         return TransferExecutor(
             operationId = operationId,
             transport = transport,
         ) { execution, callback ->
             if (!FileEncryptionMetadata.isEncrypted(attachment.metadata)) {
-                execution.executeTransport { transport.download(request, callback) }
-            } else {
-                try {
-                    val encryption = checkNotNull(envelope) {
-                        "Malformed attachment encryption metadata"
-                    }
-                    downloader.download(
-                        request = request,
-                        encryptionInfo = FileDownloadEncryption(
-                            info = encryption.toEncryptionInfo(),
-                            plaintextSize = attachment.fileSize,
-                        ),
-                        encryption = config.encryption,
-                        callback = callback,
-                    ) { downloadRequest, progress ->
-                        execution.executeTransport { transport.download(downloadRequest, progress) }
-                    }
-                } finally {
-                    withContext(NonCancellable + Dispatchers.IO) {
-                        execution.onDiscard { downloader.discard(operationId) }
-                    }
+                // Plain attachments can go directly to the selected transport.
+                return@TransferExecutor execution.executeTransport { transport.download(request, callback) }
+            }
+
+            try {
+                val encryption = checkNotNull(encryptionMetadata) {
+                    "Malformed attachment encryption metadata"
+                }
+                encryptedDownloader.download(
+                    request = request,
+                    encryptionInfo = FileDownloadEncryption(
+                        info = encryption.toEncryptionInfo(),
+                        plaintextSize = attachment.fileSize,
+                    ),
+                    encryption = config.encryption,
+                    callback = callback,
+                ) { downloadRequest, progress ->
+                    execution.executeTransport { transport.download(downloadRequest, progress) }
+                }
+            } finally {
+                // Discard runs after the download and decryption have released their files.
+                withContext(NonCancellable + Dispatchers.IO) {
+                    execution.onDiscard { encryptedDownloader.discard(operationId) }
                 }
             }
         }
     }
 
     fun discardSavedDownload(attachment: SceytAttachment) {
-        downloader.discard("download:" + attachment.transferKey)
+        encryptedDownloader.discard("download:" + attachment.transferKey)
     }
 
     fun cancelUpload(attachment: SceytAttachment) {
