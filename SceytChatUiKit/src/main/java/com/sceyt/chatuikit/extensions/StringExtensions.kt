@@ -300,4 +300,8 @@ fun String?.ifNotEmpty(): String? {
     return if (isNullOrEmpty()) null else this
 }
 
+fun String?.takeIfNotBlank(): String? {
+    return this?.takeIf(String::isNotBlank)
+}
+
 const val empty = ""

@@ -150,13 +150,13 @@ class AttachmentEncryptedTransferTest {
             .copy(metadata = """{"caption":"first","szw":100}""")
         val second = attachment(messageTid = 1002, filePath = file.path, originalFilePath = file.path)
             .copy(metadata = """{"caption":"second","szw":200}""")
-        val firstTask = transferTask(first)
-        val secondTask = transferTask(second)
+        val firstTask = transferTask(first).apply { isSharedUpload = true }
+        val secondTask = transferTask(second).apply { isSharedUpload = true }
         val firstResult = CompletableDeferred<SceytResponse<String>>()
         val secondResult = CompletableDeferred<SceytResponse<String>>()
         val coordinator = AttachmentUploadCoordinator(RuntimeEnvironment.getApplication(), mock(), backgroundScope)
-        coordinator.upload(first, firstTask, { _, result -> firstResult.complete(result) }, {}, shared = true)
-        coordinator.upload(second, secondTask, { _, result -> secondResult.complete(result) }, {}, shared = true)
+        coordinator.upload(first, firstTask, { _, result -> firstResult.complete(result) }, {})
+        coordinator.upload(second, secondTask, { _, result -> secondResult.complete(result) }, {})
         runCurrent()
         val info = FileEncryptionInfo("shared-format", "shared-id", "shared-key")
 

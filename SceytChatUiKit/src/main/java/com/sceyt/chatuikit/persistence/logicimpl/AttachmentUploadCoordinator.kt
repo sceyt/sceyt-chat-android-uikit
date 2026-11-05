@@ -4,6 +4,7 @@ import android.content.Context
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
+import com.sceyt.chatuikit.extensions.takeIfNotBlank
 import com.sceyt.chatuikit.filetransfer.FileTransferResult
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
@@ -50,13 +51,11 @@ internal class AttachmentUploadCoordinator(
         task: TransferTask,
         onResult: (TransferTask, SceytResponse<String>) -> Unit,
         onPaused: (TransferTask) -> Unit,
-        shared: Boolean = false,
-    ) = enqueue(attachment, task, shared, onResult, onPaused)
+    ) = enqueue(attachment, task, onResult, onPaused)
 
     private fun enqueue(
         attachment: SceytAttachment,
         task: TransferTask,
-        shared: Boolean,
         onResult: (TransferTask, SceytResponse<String>) -> Unit,
         onPaused: (TransferTask) -> Unit,
     ) = dispatch {
@@ -72,13 +71,15 @@ internal class AttachmentUploadCoordinator(
             // Reuse this task's existing member instead of registering it again.
             return@dispatch
         }
-        val sharingKey = if (shared) attachment.originalFilePath?.takeIf(String::isNotBlank)
-            ?: attachment.filePath?.takeIf(String::isNotBlank)
-            ?: attachment.uploadOperationId else null
+        val sharingKey = if (task.isSharedUpload) {
+            attachment.originalFilePath.takeIfNotBlank()
+                ?: attachment.filePath.takeIfNotBlank()
+                ?: attachment.uploadOperationId
+        } else null
 
         // Completed groups retain only paused callers; a new share starts a new operation.
         val upload = uploads.firstOrNull {
-            shared && it.sharingKey == sharingKey && it.result?.isSuccess != true
+            sharingKey != null && it.sharingKey == sharingKey && it.result?.isSuccess != true
         } ?: Upload(sharingKey).also(uploads::add)
         val member = Member(upload, attachment, task, onResult)
         upload.members[task] = member
@@ -173,7 +174,7 @@ internal class AttachmentUploadCoordinator(
         val previous = upload.attempt
         val attempt = Attempt(owner.attachment.uploadOperationId)
         attempt.job = scope.launch(start = CoroutineStart.ATOMIC) {
-            // Enter cleanup even if paused before dispatch; cancelled attempts never prepare files.
+            // Enter cleanup even if paused before dispatch; canceled attempts never prepare files.
             withContext(NonCancellable) { previous?.job?.join() }
             currentCoroutineContext().ensureActive()
             performUpload(owner, attempt)
