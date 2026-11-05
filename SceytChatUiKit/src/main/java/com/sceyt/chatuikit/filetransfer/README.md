@@ -347,10 +347,12 @@ succeeds, fails, or is interrupted; coroutine cancellation remains separate:
 - Cancel the matching backend work when the coroutine is cancelled, and propagate
   `CancellationException` instead of returning it as a failed result.
 
-The default HTTP downloader returns `Interrupted` for connection and response-read failures,
-and HTTP 408, 429, 500, 502, 503, and 504. These responses preserve partial downloads for a later
-retry; they do not trigger an automatic retry. Other HTTP errors and destination-write errors
-return `Failure`. The SDK upload bridge reports its SDK errors as `Failure`.
+The default native downloader retries recoverable connection, response-read, and HTTP failures.
+After retries are exhausted, it keeps the same call pending in `WAITING_FOR_NETWORK`, retaining
+verified ranges. It continues on SDK network recovery or manual pause/resume, and does not return
+`Interrupted` while waiting. Terminal failures return `Failure` and discard native partial files.
+Custom transports can return `Interrupted` as described above. The SDK upload bridge reports its
+SDK errors as `Failure`.
 
 Custom transports must return `FileTransferResult<FileUploadResult>` for uploads and
 `FileTransferResult<String>` for downloads before adopting this unreleased API. Waafi's multipart

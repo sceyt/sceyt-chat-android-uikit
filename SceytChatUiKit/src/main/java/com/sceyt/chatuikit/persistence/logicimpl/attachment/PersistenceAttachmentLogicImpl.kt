@@ -174,7 +174,7 @@ internal class PersistenceAttachmentLogicImpl(
             metadata = attachment.metadata,
         )
         messagesCache.updateAttachmentTransferData(data)
-        attachmentsCache.add(attachment)
+        attachmentsCache.updateAttachmentTransferData(data)
     }
 
     override suspend fun resetToPendingDownload(data: TransferData) {

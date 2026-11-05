@@ -74,6 +74,10 @@ internal class ChatSdkFileDownloader(
     ): MediaDownload {
         request.destinationFile.parentFile?.mkdirs()
 
+        // The coordinator already reused complete files. Older versions kept partial bytes here.
+        if (request.destinationFile.isFile)
+            check(request.destinationFile.delete()) { "Could not remove incomplete download file" }
+
         val sdkRequest = DownloadRequest(request.url, request.headers, request.operationId)
         val destination = request.destinationFile.absolutePath
 
