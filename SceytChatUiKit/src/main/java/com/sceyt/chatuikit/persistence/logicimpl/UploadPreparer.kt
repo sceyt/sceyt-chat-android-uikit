@@ -6,7 +6,8 @@ import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.FileChecksumData
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.extensions.getFileSize
-import com.sceyt.chatuikit.extensions.isNotNullOrBlank
+import com.sceyt.chatuikit.extensions.ifNotEmpty
+import com.sceyt.chatuikit.extensions.takeIfNotBlank
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.extensions.resizeImage
 import com.sceyt.chatuikit.persistence.extensions.transcodeVideo
@@ -36,40 +37,47 @@ internal class UploadPreparer(
         reuseUploadedUrl: Boolean = true,
         preparedFilePath: String? = null,
     ): PreparedAttachment {
-        val originalPath = attachment.originalFilePath?.takeIf(String::isNotBlank)
-        val sourcePath = originalPath ?: attachment.filePath?.takeIf(String::isNotBlank)
+        val originalPath = attachment.originalFilePath.takeIfNotBlank()
+        val sourcePath = originalPath ?: attachment.filePath.takeIfNotBlank()
 
-        val reuseUrl = reuseUploadedUrl && SceytChatUIKit.config.preventDuplicateAttachmentUpload
-        val reusePreparedMedia = !reuseUploadedUrl &&
-                (attachment.type == AttachmentTypeEnum.Image.value || attachment.type == AttachmentTypeEnum.Video.value)
+        val canReuseUrl = reuseUploadedUrl && SceytChatUIKit.config.preventDuplicateAttachmentUpload
+        val canReusePreparedMedia = when (attachment.type) {
+            AttachmentTypeEnum.Image.value, AttachmentTypeEnum.Video.value -> !reuseUploadedUrl
+            else -> false
+        }
 
-        val preparedPath = if (reusePreparedMedia) {
+        // Encrypted uploads can reuse resized media from an earlier attempt.
+        val preparedPath = if (canReusePreparedMedia) {
             val savedPath = attachment.filePath?.takeIf {
                 originalPath != null && it != originalPath
             }
             listOfNotNull(preparedFilePath, savedPath).firstOrNull { File(it).isFile }
         } else null
 
-        val checksum = if (reuseUrl || (reusePreparedMedia && preparedPath == null)) {
+        // Look up a cached URL or a prepared media file missing from this attempt.
+        val checksum = if (canReuseUrl || (canReusePreparedMedia && preparedPath == null)) {
             attachmentLogic.getFileChecksumData(sourcePath)
         } else null
 
-        if (reuseUrl && checksum?.url.isNotNullOrBlank()) {
-            if (!checksum?.resizedFilePath.isNullOrEmpty()) {
-                onFilePrepared(checkNotNull(checksum.resizedFilePath))
-            }
-            return PreparedAttachment(attachment, checkNotNull(checksum?.url))
+        val reusedUrl = if (canReuseUrl) checksum?.url.takeIfNotBlank() else null
+        if (reusedUrl != null) {
+            // The cached URL completes preparation using the previously uploaded file.
+            checksum?.resizedFilePath.ifNotEmpty()?.let(onFilePrepared)
+            return PreparedAttachment(attachment, reusedUrl)
         }
 
-        val source = if (reusePreparedMedia && attachment.filePath != sourcePath) {
+        // Start from the original file when rebuilding encrypted media.
+        val source = if (canReusePreparedMedia && attachment.filePath != sourcePath) {
             attachment.copy(filePath = sourcePath)
         } else attachment
 
-        val result = preparedPath?.let { Result.success(it) }
+        val preparationResult = preparedPath?.let { Result.success(it) }
             ?: prepareAttachment(source, checksum, onProgress)
+
+        // Image resizing can finish after cancellation, so check before publishing its file path.
         currentCoroutineContext().ensureActive()
 
-        val prepared = result.fold(
+        val prepared = preparationResult.fold(
             onSuccess = { path ->
                 onFilePrepared(path)
                 attachment.copy(filePath = path, fileSize = getFileSize(path))
@@ -80,8 +88,7 @@ internal class UploadPreparer(
             },
         )
 
-        val path = prepared.filePath
-        require(!path.isNullOrBlank()) { "Attachment source path is missing" }
+        val path = requireNotNull(prepared.filePath.takeIfNotBlank()) { "Attachment source path is missing" }
         require(File(path).isFile) { "Attachment source file does not exist: $path" }
         return PreparedAttachment(prepared)
     }
@@ -92,6 +99,8 @@ internal class UploadPreparer(
         onProgress: (Float) -> Unit,
     ): Result<String> {
         val resizedPath = checksum?.resizedFilePath
+
+        // Reuse an existing prepared file before running resize or transcode again.
         if (resizedPath != null && File(resizedPath).isFile) return Result.success(resizedPath)
 
         return when (attachment.type) {
@@ -123,8 +132,10 @@ internal class UploadPreparer(
                 if (continuation.isActive) onProgress(data.progressPercent)
             },
         ) { result ->
+            // Ignore duplicate terminal callbacks and results arriving after cancellation.
             if (completed.compareAndSet(false, true)) continuation.resume(result)
         }
+
         continuation.invokeOnCancellation {
             completed.set(true)
             destination?.let(VideoTranscodeHelper::cancel)

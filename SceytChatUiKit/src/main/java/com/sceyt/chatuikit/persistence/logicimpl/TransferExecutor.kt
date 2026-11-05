@@ -54,6 +54,7 @@ internal class TransferExecutor(
 
     fun onDiscard(action: () -> Unit) = synchronized(lock) {
         discard = action
+        // Discard may be requested before registration, so run the cleanup as soon as it is available.
         if (discarded) action()
     }
 

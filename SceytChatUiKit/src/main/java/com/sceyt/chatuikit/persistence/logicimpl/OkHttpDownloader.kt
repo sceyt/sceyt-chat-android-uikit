@@ -12,10 +12,12 @@ import okhttp3.Request
 import okhttp3.Response
 import okio.buffer
 import okio.sink
+import java.io.FileOutputStream
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 
+/** Downloads HTTP content into a file and resumes partial files using byte ranges. */
 class OkHttpDownloader {
 
     private val httpClient: OkHttpClient by lazy {
@@ -27,12 +29,14 @@ class OkHttpDownloader {
                 val original = chain.call().request()
                 val redirected = chain.request()
                 val sameOrigin = original.url.scheme == redirected.url.scheme &&
-                        original.url.host == redirected.url.host && original.url.port == redirected.url.port
-                // Caller headers may contain credentials; keep them on the original origin.
-                val next = if (sameOrigin) redirected else redirected.newBuilder().apply {
+                        original.url.host == redirected.url.host &&
+                        original.url.port == redirected.url.port
+
+                // Caller headers can contain credentials, so keep them on the original origin.
+                val nextRequest = if (sameOrigin) redirected else redirected.newBuilder().apply {
                     original.headers.names().forEach { removeHeader(it) }
                 }.build()
-                chain.proceed(next)
+                chain.proceed(nextRequest)
             }
             .build()
     }
@@ -43,30 +47,27 @@ class OkHttpDownloader {
         onResult: (FileTransferResult<String>) -> Unit,
         onFinished: () -> Unit = {},
     ): Call? {
-        val url = request.url
-        val destFile = request.destinationFile
+        val destinationFile = request.destinationFile
+        destinationFile.parentFile?.mkdirs()
 
-        // Create parent directories if they don't exist
-        destFile.parentFile?.mkdirs()
-
-        val existingSize = if (destFile.exists()) destFile.length() else 0L
+        val existingSize = if (destinationFile.exists()) destinationFile.length() else 0L
         val httpRequest = try {
             Request.Builder()
-                .url(url)
+                .url(request.url)
                 .apply {
                     request.headers.forEach { (name, value) -> header(name, value) }
-                    if (existingSize > 0) {
-                        header("Range", "bytes=$existingSize-")
-                    }
+                    if (existingSize > 0) header("Range", "bytes=$existingSize-")
                 }
                 .build()
-        } catch (e: Exception) {
-            SceytLog.e(TAG, "Invalid URL: ${e.message}")
+        } catch (error: Exception) {
+            SceytLog.e(TAG, "Invalid URL: ${error.message}")
             try {
-                onResult(FileTransferResult.Failure(SceytException(0, "Invalid URL: ${e.message}")))
+                onResult(FileTransferResult.Failure(SceytException(0, "Invalid URL: ${error.message}")))
             } finally {
                 onFinished()
             }
+
+            // Request creation failed before an HTTP call could be started.
             return null
         }
 
@@ -81,7 +82,9 @@ class OkHttpDownloader {
         call.enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 try {
+                    // An explicitly canceled call only needs its cleanup completion signal.
                     if (call.isCanceled()) return
+
                     SceytLog.e(TAG, "Download failed: ${e.message}")
                     onResult(FileTransferResult.Interrupted(e))
                 } finally {
@@ -92,9 +95,12 @@ class OkHttpDownloader {
             override fun onResponse(call: Call, response: Response) {
                 try {
                     response.use {
-                        val canReadResponse =
-                            state.compareAndSet(DownloadState.Pending, DownloadState.Reading)
-                        if (!canReadResponse || call.isCanceled()) return
+                        val canReadResponse = state.compareAndSet(DownloadState.Pending, DownloadState.Reading)
+
+                        // Cancellation can finish a queued call before its response arrives.
+                        if (!canReadResponse) return
+                        if (call.isCanceled()) return
+
                         if (!response.isSuccessful) {
                             val error = SceytException(response.code, response.message)
                             val result = when (response.code) {
@@ -102,17 +108,18 @@ class OkHttpDownloader {
                                 else -> FileTransferResult.Failure(error)
                             }
                             onResult(result)
+                            // Handle HTTP errors before opening or changing the destination.
                             return
                         }
 
                         val responseBody = response.body
                         val contentLength = responseBody.contentLength()
-                        val resumedBytes = if (response.code == 206) existingSize else 0L
-                        val totalSize =
-                            if (contentLength != -1L) contentLength + resumedBytes else -1L
-                        val outputStream = if (response.code == 206) {
-                            java.io.FileOutputStream(destFile, true)
-                        } else destFile.outputStream()
+
+                        // Append for a range response. A full response starts the file again.
+                        val isPartialResponse = response.code == 206
+                        val resumedBytes = if (isPartialResponse) existingSize else 0L
+                        val totalSize = if (contentLength != -1L) contentLength + resumedBytes else -1L
+                        val outputStream = FileOutputStream(destinationFile, isPartialResponse)
 
                         outputStream.sink().buffer().use { sink ->
                             val source = responseBody.source()
@@ -123,31 +130,33 @@ class OkHttpDownloader {
                             while (!call.isCanceled()) {
                                 val bytesRead = try {
                                     source.read(sink.buffer, 8192)
-                                } catch (e: IOException) {
+                                } catch (error: IOException) {
                                     if (!call.isCanceled())
-                                        onResult(FileTransferResult.Interrupted(e))
+                                        onResult(FileTransferResult.Interrupted(error))
+
+                                    // Keep written bytes so a later attempt can request the remaining range.
                                     return
                                 }
                                 if (bytesRead == -1L) break
+
                                 // Destination writes fail terminally; only network reads are resumable.
                                 sink.emit()
                                 downloadedBytes += bytesRead
 
                                 val currentTime = System.currentTimeMillis()
                                 if (currentTime - lastProgressUpdate > progressUpdateInterval) {
-                                    if (totalSize > 0) {
+                                    if (totalSize > 0)
                                         onProgress(downloadedBytes.toFloat() / totalSize.toFloat() * 100)
-                                    }
                                     lastProgressUpdate = currentTime
                                 }
                             }
                         }
-                        if (!call.isCanceled()) onResult(FileTransferResult.Success(destFile.absolutePath))
+                        if (!call.isCanceled()) onResult(FileTransferResult.Success(destinationFile.absolutePath))
                     }
-                } catch (e: Exception) {
+                } catch (error: Exception) {
                     if (!call.isCanceled()) {
-                        SceytLog.e(TAG, "Download error: ${e.message}")
-                        onResult(FileTransferResult.Failure(e))
+                        SceytLog.e(TAG, "Download error: ${error.message}")
+                        onResult(FileTransferResult.Failure(error))
                     }
                 } finally {
                     // Signal only after both the file sink and response have closed.
