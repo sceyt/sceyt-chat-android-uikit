@@ -16,7 +16,7 @@ import com.sceyt.chat.models.message.Message
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.constants.SceytConstants.SCEYT_WORKER_TAG
 import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
-import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.data.models.fold
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
@@ -71,7 +71,7 @@ object UploadAndSendAttachmentWorkManager {
         dataBuilder.putBoolean(IS_SHARING, isSharing)
         dataBuilder.putBoolean(RESUME_PAUSED_UPLOAD, resumePausedUpload)
 
-        val myWorkRequest = OneTimeWorkRequest.Builder(UploadAndSendAttachmentWorker::class.java)
+        val workRequest = OneTimeWorkRequest.Builder(UploadAndSendAttachmentWorker::class.java)
             .addTag(messageTid.toString())
             .apply { channelId?.let { addTag(channelId.toString()) } }
             .addTag(SCEYT_WORKER_TAG)
@@ -79,7 +79,7 @@ object UploadAndSendAttachmentWorkManager {
             .build()
 
         return WorkManager.getInstance(context)
-            .beginUniqueWork(messageTid.toString(), workPolicy, myWorkRequest)
+            .beginUniqueWork(messageTid.toString(), workPolicy, workRequest)
             .enqueue()
     }
 
@@ -97,80 +97,81 @@ class UploadAndSendAttachmentWorker(
     private val messageLogic: PersistenceMessagesLogic by inject()
     private val channelLogic: PersistenceChannelsLogic by inject()
     private val fileChecksumDao: FileChecksumDao by inject()
+
+    // A retried worker must respect a user pause made after the explicit resume request.
     private val resumePausedUpload: Boolean
         get() = inputData.getBoolean(RESUME_PAUSED_UPLOAD, false) && runAttemptCount == 0
 
-    private suspend fun checkToUploadAttachmentsBeforeSend(
-            tmpMessage: SceytMessage,
+    private suspend fun uploadAttachmentsBeforeSend(
+            message: SceytMessage,
             isSharing: Boolean,
             resumePausedUpload: Boolean,
     ): KtResult<List<SceytAttachment>> {
-        val payloads = attachmentLogic.getAllPayLoadsByMsgTid(tmpMessage.tid)
-        val attachments = tmpMessage.attachments?.toMutableList()
+        val payloads = attachmentLogic.getAllPayLoadsByMsgTid(message.tid)
+        val attachments = message.attachments?.toMutableList()
             ?: return KtResult.failure(Exception("Attachments not found"))
 
         for ((index, attachment) in attachments.withIndex()) {
+            // Link previews already contain their remote reference.
             if (attachment.type == AttachmentTypeEnum.Link.value)
                 continue
 
             val payload = payloads.find { it.messageTid == attachment.messageTid }
+            // A stored upload state or URL lets a resumed worker reuse the previous upload.
             if (payload != null && (payload.transferState == TransferState.Uploaded || payload.url.isNotNullOrBlank())) {
                 val transferData = payload.toTransferData(TransferState.Uploaded, 100f)
                 attachmentLogic.updateAttachmentWithTransferData(transferData)
                 attachments[index] = attachment.copy(url = payload.url)
                 return KtResult.success(attachments)
-            } else {
-                val filePath = attachment.originalFilePath ?: attachment.filePath
-                if (filePath.isNullOrEmpty()) {
-                    SceytLog.i(TAG, "Skip uploading a file path is null or empty")
-                    continue
-                }
+            }
 
-                val checksum = FileChecksumCalculator.calculateFileChecksum(filePath)
+            val filePath = attachment.originalFilePath ?: attachment.filePath
+            if (filePath.isNullOrEmpty()) {
+                SceytLog.i(TAG, "Skip uploading a file path is null or empty")
+                continue
+            }
 
-                if (checksum != null) {
-                    val checksumEntity = FileChecksumEntity(
-                        checksum = checksum,
-                        resizedFilePath = null,
-                        url = null,
-                        metadata = attachment.metadata,
-                        fileSize = attachment.fileSize
-                    )
-                    fileChecksumDao.insert(checksumEntity)
-                }
-
-                if (!shouldStartUpload(attachment.transferState, resumePausedUpload)) {
-                    return KtResult.failure(Exception("Attachment upload is paused"))
-                }
-
-                val transferData = TransferData(
-                    messageTid = tmpMessage.tid,
-                    progressPercent = attachment.progressPercent ?: 0f,
-                    state = TransferState.WaitingToUpload,
-                    filePath = attachment.filePath,
-                    url = attachment.url
-                )
-
-                FileTransferHelper.emitAttachmentTransferUpdate(
-                    transferData = transferData,
+            val checksum = FileChecksumCalculator.calculateFileChecksum(filePath)
+            if (checksum != null) {
+                val checksumEntity = FileChecksumEntity(
+                    checksum = checksum,
+                    resizedFilePath = null,
+                    url = null,
+                    metadata = attachment.metadata,
                     fileSize = attachment.fileSize
                 )
-                attachmentLogic.updateAttachmentWithTransferData(transferData)
+                fileChecksumDao.insert(checksumEntity)
+            }
 
-                val result = suspendCancellableCoroutine { continuation ->
-                    uploadFile(attachment, continuation, isSharing)
-                }
-                return result.fold(
-                    onSuccess = {
-                        if (checksum != null && FileEncryptionMetadata.read(it.metadata) == null)
-                            fileChecksumDao.updateUrl(checksum, it.url)
-                        attachments[index] = it
-                        KtResult.success(attachments)
-                    },
-                    onFailure = {
-                        KtResult.failure(it)
-                    }
-                )
+            // Automatic worker runs leave paused uploads waiting for an explicit resume.
+            if (!shouldStartUpload(attachment.transferState, resumePausedUpload)) {
+                return KtResult.failure(Exception("Attachment upload is paused"))
+            }
+
+            val transferData = TransferData(
+                messageTid = message.tid,
+                progressPercent = attachment.progressPercent ?: 0f,
+                state = TransferState.WaitingToUpload,
+                filePath = attachment.filePath,
+                url = attachment.url
+            )
+
+            FileTransferHelper.emitAttachmentTransferUpdate(
+                transferData = transferData,
+                fileSize = attachment.fileSize
+            )
+            attachmentLogic.updateAttachmentWithTransferData(transferData)
+
+            val result = suspendCancellableCoroutine { continuation ->
+                uploadFile(attachment, continuation, isSharing)
+            }
+            return result.map { uploadedAttachment ->
+                // Encrypted URLs require matching keys and are excluded from checksum URL reuse.
+                if (checksum != null && FileEncryptionMetadata.read(uploadedAttachment.metadata) == null)
+                    fileChecksumDao.updateUrl(checksum, uploadedAttachment.url)
+
+                attachments[index] = uploadedAttachment
+                attachments
             }
         }
         return KtResult.failure(Exception("Could not find any attachment to upload"))
@@ -181,7 +182,9 @@ class UploadAndSendAttachmentWorker(
         continuation: CancellableContinuation<KtResult<SceytAttachment>>,
         isSharing: Boolean
     ) {
+        // Cancellation can happen before the worker reaches task registration.
         if (!continuation.isActive) return
+
         val existingTask = fileTransferService.findTransferTask(attachment)
         val completionKey = this.toString()
         val configureTask: TransferTask.() -> Unit = {
@@ -192,14 +195,18 @@ class UploadAndSendAttachmentWorker(
             addOnCompletionListener(completionKey, continuation::safeResume)
             continuation.invokeOnCancellation {
                 removeOnCompletionListener(completionKey)
+
+                // A worker that joined an existing task only removes its own listener.
                 if (existingTask != null) return@invokeOnCancellation
+
+                // A newer worker may already have replaced this task.
                 if (fileTransferService.findTransferTask(attachment) === this) {
                     fileTransferService.cancelUpload(attachment)
                 }
             }
         }
 
-        // A resumed worker rejoins through upload; the coordinator retains native/shared progress.
+        // A resumed worker rejoins the upload retained by the coordinator.
         fileTransferService.upload(
             attachment = attachment,
             shared = isSharing || existingTask?.isSharedUpload == true,
@@ -211,58 +218,69 @@ class UploadAndSendAttachmentWorker(
         val data = inputData
         val messageTid = data.getLong(MESSAGE_TID, 0)
         val isSharing = data.getBoolean(IS_SHARING, false)
-        val tmpMessage = messageLogic.getMessageFromDbByTid(messageTid)
-            ?: return finishWorkWithFailure("Message not found: $messageTid")
+        val message = messageLogic.getMessageFromDbByTid(messageTid)
+            ?: return finishWorkWithError("Message not found: $messageTid")
 
-        if (tmpMessage.isNotPending())
+        // A queued worker can run after the message has already been sent.
+        if (message.isNotPending())
             return finishWorkWithSuccess()
 
         if (applicationContext.hasPermissions(android.Manifest.permission.FOREGROUND_SERVICE))
-            startForeground(tmpMessage.channelId, tmpMessage)
+            startForeground(message.channelId, message)
 
-        val result = checkToUploadAttachmentsBeforeSend(
-            tmpMessage = tmpMessage,
+        val result = uploadAttachmentsBeforeSend(
+            message = message,
             isSharing = isSharing,
             resumePausedUpload = resumePausedUpload,
         )
-        return if (result.isSuccess && !isStopped) {
-            val messageToSend = tmpMessage.copy(attachments = result.getOrThrow()).toMessage()
 
-            if (ConnectionEventManager.isConnected) {
-                sendMessage(tmpMessage.channelId, messageToSend)
-            } else {
-                SceytLog.i(
-                    TAG,
-                    "SceytChat is not connected. Connecting to send message tid: $messageTid"
-                )
-                val connectionResult = SceytChatUIKit.chatConnectionProvider
-                    ?.connect(20.seconds.inWholeMilliseconds)
-                    ?: KtResult.failure(IllegalStateException("ChatConnectionProvider is not configured"))
+        // Sending requires a completed upload and a worker that is still allowed to run.
+        if (result.isFailure || isStopped) {
+            return finishWorkWithError("Could not upload attachments, message tid: $messageTid")
+        }
 
-                if (connectionResult.isSuccess) {
-                    sendMessage(tmpMessage.channelId, messageToSend)
-                } else finishWorkWithFailure(
-                    "Could not connect to send message tid: $messageTid. " +
-                            connectionResult.exceptionOrNull()?.message
-                )
-            }
-        } else finishWorkWithFailure("Could not upload attachments, message tid: $messageTid")
+        val messageToSend = message.copy(attachments = result.getOrThrow()).toMessage()
+        if (ConnectionEventManager.isConnected) {
+            // The current connection can send the message immediately.
+            return sendMessage(message.channelId, messageToSend)
+        }
+
+        SceytLog.i(
+            TAG,
+            "SceytChat is not connected. Connecting to send message tid: $messageTid"
+        )
+        val connectionResult = SceytChatUIKit.chatConnectionProvider
+            ?.connect(20.seconds.inWholeMilliseconds)
+            ?: KtResult.failure(IllegalStateException("ChatConnectionProvider is not configured"))
+
+        if (connectionResult.isFailure) {
+            return finishWorkWithError(
+                "Could not connect to send message tid: $messageTid. " +
+                        connectionResult.exceptionOrNull()?.message
+            )
+        }
+
+        return sendMessage(message.channelId, messageToSend)
     }
 
     private suspend fun sendMessage(channelId: Long, message: Message): Result {
         val response = messageLogic.sendMessageWithUploadedAttachments(channelId, message)
-        return if (response is SceytResponse.Success) {
-            response.data?.let {
-                messageLogic.attachmentSuccessfullySent(it)
-            }
-            finishWorkWithSuccess()
-        } else {
-            SceytLog.e(TAG, "Could not send message: ${response.message}")
-            finishWorkWithFailure("Could not send message: ${response.message}")
-        }
+        return response.fold(
+            onSuccess = { sentMessage ->
+                if (sentMessage != null)
+                    messageLogic.attachmentSuccessfullySent(sentMessage)
+                finishWorkWithSuccess()
+            },
+            onError = {
+                val errorMessage = "Could not send message: ${response.message}"
+                SceytLog.e(TAG, errorMessage)
+                finishWorkWithError(errorMessage)
+            },
+        )
     }
 
-    private fun finishWorkWithFailure(error: String): Result {
+    private fun finishWorkWithError(error: String): Result {
+        // UIKit controls retries through pending messages, so errors also finish this work successfully.
         val result = Result.success()
         SceytLog.e(TAG, "SendAttachmentWorker worker finished with error: $error")
         SceytChatUIKit.notifications.fileTransferServiceNotification.notificationHandler
@@ -274,11 +292,11 @@ class UploadAndSendAttachmentWorker(
         val result = Result.success()
         SceytChatUIKit.notifications.fileTransferServiceNotification.notificationHandler
             .serviceWorkerFinished(result = result)
-        return Result.success()
+        return result
     }
 
     private suspend fun startForeground(channelId: Long, message: SceytMessage) {
-        val notification = creteNotification(channelId, message) ?: return
+        val notification = createNotification(channelId, message) ?: return
         val foregroundInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             ForegroundInfo(
                 FILE_TRANSFER_NOTIFICATION_ID,
@@ -289,8 +307,10 @@ class UploadAndSendAttachmentWorker(
         setForeground(foregroundInfo)
     }
 
-    private suspend fun creteNotification(channelId: Long, message: SceytMessage): Notification? {
+    private suspend fun createNotification(channelId: Long, message: SceytMessage): Notification? {
         val serviceNotification = SceytChatUIKit.notifications.fileTransferServiceNotification
+
+        // The channel can disappear while this worker is queued.
         val channel = channelLogic.getChannelFromDb(channelId) ?: return null
         return serviceNotification.notificationBuilder.buildNotification(
             context = applicationContext,

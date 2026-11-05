@@ -19,23 +19,24 @@ import java.io.File
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.resume
 
+/** Adapts SDK upload callbacks and HTTP downloads for the default transport. */
 class FileTransferUtility {
     private val downloader = OkHttpDownloader()
 
     suspend fun uploadEncryptedFile(
         source: PreparedUpload,
         onProgress: (Float) -> Unit,
-    ): SceytResponse<String> = awaitSdkUpload(onProgress) { progress, result ->
+    ): SceytResponse<String> = awaitSdkUpload(onProgress) { progressCallback, resultCallback ->
         ChatClient.getClient().uploadEncrypted(
             source,
-            progress,
+            progressCallback,
             object : EncryptedUploadCallback {
                 override fun onResult(url: String?, encryptionInfo: FileEncryptionInfo?) {
-                    result.onResult(url)
+                    resultCallback.onResult(url)
                 }
 
                 override fun onError(exception: SceytException?) {
-                    result.onError(exception)
+                    resultCallback.onError(exception)
                 }
             },
         )
@@ -44,8 +45,8 @@ class FileTransferUtility {
     suspend fun uploadFile(
         sourceFile: File,
         onProgress: (Float) -> Unit,
-    ): SceytResponse<String> = awaitSdkUpload(onProgress) { progress, result ->
-        ChatClient.getClient().uploadCancellable(sourceFile.path, progress, result)
+    ): SceytResponse<String> = awaitSdkUpload(onProgress) { progressCallback, resultCallback ->
+        ChatClient.getClient().uploadCancellable(sourceFile.path, progressCallback, resultCallback)
     }
 
     private suspend fun awaitSdkUpload(
@@ -55,7 +56,10 @@ class FileTransferUtility {
         val completed = AtomicBoolean()
 
         fun complete(response: SceytResponse<String>) {
-            if (!continuation.isActive || !completed.compareAndSet(false, true)) return
+            // SDK failures can reach both callbacks, while cancellation can race with either.
+            if (!continuation.isActive) return
+            if (!completed.compareAndSet(false, true)) return
+
             if (response is SceytResponse.Error) {
                 SceytLog.e(TAG, "Error upload file ${response.exception?.message}")
             }
@@ -65,7 +69,11 @@ class FileTransferUtility {
         val operation = startUpload(
             object : ProgressCallback {
                 override fun onResult(progress: Float) {
-                    if (progress == 1f || completed.get() || !continuation.isActive) return
+                    // The URL callback confirms completion, so reserve 100% for the upload result.
+                    if (progress == 1f) return
+
+                    // Late progress can arrive after completion or cancellation.
+                    if (completed.get() || !continuation.isActive) return
                     onProgress(progress * 100)
                 }
 
@@ -84,6 +92,7 @@ class FileTransferUtility {
             },
         )
 
+        // Cancellation during SDK startup is handled as soon as the operation is returned.
         continuation.invokeOnCancellation {
             completed.set(true)
             operation.cancel()

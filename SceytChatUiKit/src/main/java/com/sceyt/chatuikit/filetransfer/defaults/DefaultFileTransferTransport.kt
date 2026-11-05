@@ -43,21 +43,23 @@ class DefaultFileTransferTransport : FileTransferTransport {
     ): FileTransferResult<FileUploadResult> {
         val session = SceytChatUIKit.fileTransfer.encryption.prepareEncryption(request.sourceFile)
         return try {
+            // The native uploader needs the prepared upload handle owned by an SDK session.
             if (session !is ChatSdkFileEncryption.EncryptionSession) {
                 return FileTransferResult.Failure(
                     UnsupportedOperationException("The native uploader requires Chat SDK encryption"),
                 )
             }
+
             transferUtility.uploadEncryptedFile(
                 source = session.upload,
-                onProgress = callback::onProgress
+                onProgress = callback::onProgress,
             ).toUploadResult(session.encryptionInfo)
         } finally {
             withContext(NonCancellable + Dispatchers.IO) { session.close() }
         }
     }
 
-    // The caller cancels the coroutine, which stops the SDK operation. No upload journal is kept.
+    // Active SDK and HTTP work is stopped through coroutine cancellation.
     override fun cancel(operationId: String) = Unit
 
     override suspend fun download(
@@ -66,20 +68,18 @@ class DefaultFileTransferTransport : FileTransferTransport {
     ): FileTransferResult<String> {
         val writerStopped = CompletableDeferred<Unit>()
         var call: Call? = null
-        try {
-            return suspendCancellableCoroutine { continuation ->
+        return try {
+            suspendCancellableCoroutine { continuation ->
                 val completed = AtomicBoolean()
                 call = transferUtility.downloadFile(
                     request = request,
                     onProgress = { progressPercent ->
-                        if (continuation.isActive) {
-                            callback.onProgress(progressPercent)
-                        }
+                        if (continuation.isActive) callback.onProgress(progressPercent)
                     },
                     onResult = { response ->
-                        if (completed.compareAndSet(false, true)) {
-                            continuation.resume(response)
-                        }
+                        // Results can arrive after cancellation or be delivered more than once.
+                        if (!completed.compareAndSet(false, true)) return@downloadFile
+                        continuation.resume(response)
                     },
                     onFinished = { writerStopped.complete(Unit) },
                 )
@@ -91,17 +91,21 @@ class DefaultFileTransferTransport : FileTransferTransport {
             }
         } finally {
             // Joining this coroutine must also wait for the HTTP writer to close its file.
-            if (call != null) withContext(NonCancellable) { writerStopped.await() }
+            if (call != null)
+                withContext(NonCancellable) { writerStopped.await() }
         }
     }
 
     private fun SceytResponse<String>.toUploadResult(
         encryptionInfo: FileEncryptionInfo? = null,
     ): FileTransferResult<FileUploadResult> = fold(
-        onSuccess = { result ->
-            result?.let { FileTransferResult.Success(FileUploadResult(it, encryptionInfo)) }
-                ?: FileTransferResult.Failure(IllegalStateException("File upload failed"))
+        onSuccess = { url ->
+            if (url != null)
+                FileTransferResult.Success(FileUploadResult(url, encryptionInfo))
+            else FileTransferResult.Failure(IllegalStateException("File upload failed"))
         },
-        onError = { FileTransferResult.Failure(it ?: IllegalStateException("File upload failed")) }
+        onError = { error ->
+            FileTransferResult.Failure(error ?: IllegalStateException("File upload failed"))
+        },
     )
 }
