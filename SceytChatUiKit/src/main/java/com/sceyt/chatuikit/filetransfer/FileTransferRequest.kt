@@ -24,11 +24,12 @@ data class FileUploadResult(
     val encryptionInfo: FileEncryptionInfo? = null,
 )
 
-/** [destinationFile] is the file where the transport writes the downloaded bytes. */
+/** The transport publishes plaintext at [destinationFile], decrypting when [type] is encrypted. */
 data class FileDownloadRequest(
     val operationId: String,
     val url: String,
     val destinationFile: File,
     val context: FileTransferContext? = null,
     val headers: Map<String, String> = emptyMap(),
+    val type: FileDownloadType = FileDownloadType.Plain,
 )

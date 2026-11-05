@@ -16,9 +16,10 @@ interface FileTransferTransport {
     ): FileTransferResult<FileUploadResult>
 
     /**
-     * Downloads the remote bytes into [FileDownloadRequest.destinationFile]. UIKit currently wraps
-     * encrypted downloads and handles decryption; the transport receives a byte-only request.
-     * Implementations must stop their work when the calling coroutine is cancelled.
+     * Downloads to [FileDownloadRequest.destinationFile], decrypting when its type is encrypted.
+     * Success returns the final plaintext path. Implementations must stop file writers before the
+     * calling coroutine finishes, including when it is cancelled. Keep resumable files on coroutine
+     * cancellation; remove them only on explicit [cancel].
      */
     suspend fun download(
         request: FileDownloadRequest,
@@ -43,9 +44,9 @@ interface FileTransferTransport {
     /**
      * Notifies the transport that the caller explicitly abandoned an operation.
      * The caller also cancels its coroutine to stop active work. Implementations clean up
-     * retained backend state without blocking, including after a restart. Must be idempotent.
+     * retained state, including after a restart. Must be idempotent. UIKit calls this on a background
+     * thread after the operation's coroutine stops, so partial files are no longer being written.
      * Pause fallback and recoverable interruptions do not call this method.
-     * UIKit's encrypted-download wrapper currently cleans its temporary files after writers stop.
      */
     fun cancel(operationId: String)
 }
