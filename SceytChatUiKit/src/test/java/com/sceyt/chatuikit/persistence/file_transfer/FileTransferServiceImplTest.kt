@@ -121,14 +121,14 @@ class FileTransferServiceImplTest {
         var configuredTask: TransferTask? = null
         doAnswer {
             assertThat(configuredTask).isSameInstanceAs(it.arguments[1])
-        }.`when`(uploader).uploadFile(eq(attachment), any(), any(), any())
+        }.`when`(uploader).upload(eq(attachment), any(), any(), any(), eq(false))
 
         val task = service.upload(attachment) {
             configuredTask = this
         }
 
         assertThat(task).isSameInstanceAs(configuredTask)
-        verify(uploader).uploadFile(eq(attachment), eq(task), any(), any())
+        verify(uploader).upload(eq(attachment), eq(task), any(), any(), eq(false))
     }
 
     @Test
@@ -444,9 +444,15 @@ class FileTransferServiceImplTest {
         val uploads = AttachmentUploadCoordinator(context, mock(), scope)
         uploadCoordinator = uploads
         doAnswer {
-            uploads.uploadFile(it.getArgument(0), it.getArgument(1), it.getArgument(2), it.getArgument(3))
+            uploads.upload(
+                attachment = it.getArgument(0),
+                task = it.getArgument(1),
+                onResult = it.getArgument(2),
+                onPaused = it.getArgument(3),
+                shared = it.getArgument(4),
+            )
             Unit
-        }.`when`(uploader).uploadFile(any(), any(), any(), any())
+        }.`when`(uploader).upload(any(), any(), any(), any(), any())
         doAnswer { uploads.cancel(it.getArgument(0)) }.`when`(uploader).cancel(any())
         doAnswer { uploads.cancelAll() }.`when`(uploader).cancelAll()
     }
@@ -479,7 +485,7 @@ class FileTransferServiceImplTest {
 
         service.cancelUpload(attachment)
 
-        verify(uploader, never()).uploadFile(any(), any(), any(), any())
+        verify(uploader, never()).upload(any(), any(), any(), any(), any())
         assertThat(service.getTasks()).isEmpty()
     }
 
@@ -677,7 +683,7 @@ class FileTransferServiceImplTest {
             eq(attachment.messageTid.toString()), eq(ExistingWorkPolicy.REPLACE), request.capture(),
         )
         assertThat(request.firstValue.workSpec.input.getBoolean(RESUME_PAUSED_UPLOAD, false)).isTrue()
-        verify(uploader, never()).uploadFile(any(), any(), any(), any())
+        verify(uploader, never()).upload(any(), any(), any(), any(), any())
     }
 
     private fun setWorkStates(messageTid: Long, vararg states: WorkInfo.State) {

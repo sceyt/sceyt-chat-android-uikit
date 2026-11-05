@@ -215,9 +215,7 @@ internal class FileTransferServiceImpl(
 
     private fun startUpload(attachment: SceytAttachment, task: TransferTask, shared: Boolean) {
         if (shared) task.isSharedUpload = true
-        if (shared)
-            uploader.uploadSharedFile(attachment, task, ::completeUpload, ::finishPausedUpload)
-        else uploader.uploadFile(attachment, task, ::completeUpload, ::finishPausedUpload)
+        uploader.upload(attachment, task, ::completeUpload, ::finishPausedUpload, shared = shared)
     }
 
     private fun finishPausedUpload(task: TransferTask) {
