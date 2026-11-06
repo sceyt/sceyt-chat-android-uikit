@@ -11,13 +11,14 @@ import com.sceyt.chat.sceyt_callbacks.EncryptedUploadCallback
 import com.sceyt.chat.sceyt_callbacks.ProgressCallback
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.filetransfer.FileTransferResult
+import com.sceyt.chatuikit.filetransfer.FileTransferType
 import com.sceyt.chatuikit.filetransfer.FileUploadRequest
 import com.sceyt.chatuikit.filetransfer.FileUploadResult
-import com.sceyt.chatuikit.filetransfer.FileUploadType
 import com.sceyt.chatuikit.filetransfer.SceytChatUIKitFileTransfer
 import com.sceyt.chatuikit.filetransfer.encryption.ChatSdkFileEncryption
 import com.sceyt.chatuikit.filetransfer.encryption.FileEncryption
 import com.sceyt.chatuikit.filetransfer.encryption.toUIKitInfo
+import com.sceyt.chatuikit.persistence.logicimpl.attachment
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelAndJoin
@@ -76,7 +77,7 @@ class EncryptedSdkUploadTest {
             val progress = mutableListOf<Float>()
             val result = async {
                 DefaultFileTransferTransport().upload(
-                    FileUploadRequest("upload:cancel", file, "file.bin", null, type = FileUploadType.ENCRYPTED),
+                    FileUploadRequest("upload:cancel", file, "file.bin", null, attachment(), type = FileTransferType.ENCRYPTED),
                     progress::add,
                 )
             }
@@ -112,7 +113,7 @@ class EncryptedSdkUploadTest {
             val progress = mutableListOf<Float>()
             val result = async {
                 DefaultFileTransferTransport().upload(
-                    FileUploadRequest("upload:1", file, "file.bin", null, type = FileUploadType.ENCRYPTED),
+                    FileUploadRequest("upload:1", file, "file.bin", null, attachment(), type = FileTransferType.ENCRYPTED),
                     progress::add,
                 )
             }
@@ -147,7 +148,7 @@ class EncryptedSdkUploadTest {
             static.`when`<ChatClient> { ChatClient.getClient() }.thenReturn(client)
 
             val result = DefaultFileTransferTransport().upload(
-                FileUploadRequest("upload:error", file, "file.bin", null, type = FileUploadType.ENCRYPTED),
+                FileUploadRequest("upload:error", file, "file.bin", null, attachment(), type = FileTransferType.ENCRYPTED),
             ) {}
 
             assertThat((result as FileTransferResult.Failure).error).isSameInstanceAs(error)

@@ -1,17 +1,15 @@
 package com.sceyt.chatuikit.filetransfer.defaults
 
 import com.google.common.truth.Truth.assertThat
+import com.google.gson.JsonObject
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chatuikit.data.models.SceytResponse
-import com.sceyt.chatuikit.filetransfer.AttachmentTransferContext
 import com.sceyt.chatuikit.filetransfer.FileDownloadRequest
-import com.sceyt.chatuikit.filetransfer.FileDownloadType
 import com.sceyt.chatuikit.filetransfer.FileTransferCallback
 import com.sceyt.chatuikit.filetransfer.FileTransferResult
 import com.sceyt.chatuikit.filetransfer.FileUploadRequest
 import com.sceyt.chatuikit.filetransfer.FileUploadResult
 import com.sceyt.chatuikit.filetransfer.download.ChatSdkFileDownloader
-import com.sceyt.chatuikit.filetransfer.encryption.FileEncryptionInfo
 import com.sceyt.chatuikit.persistence.logicimpl.FileTransferUtility
 import com.sceyt.chatuikit.persistence.logicimpl.attachment
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -28,6 +26,7 @@ import org.mockito.Mockito
 import org.mockito.kotlin.any
 import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.doSuspendableAnswer
+import org.mockito.kotlin.same
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import java.io.File
@@ -59,7 +58,7 @@ class DefaultFileTransferTransportTest {
             sourceFile = sourceFile,
             fileName = "prepared.txt",
             mimeType = "text/plain",
-            context = AttachmentTransferContext(attachment(filePath = "/tmp/original.txt")),
+            attachment = attachment(filePath = "/tmp/original.txt"),
         )
         val progress = mutableListOf<Float>()
         val sourceCaptor = argumentCaptor<File>()
@@ -80,7 +79,7 @@ class DefaultFileTransferTransportTest {
     fun `upload forwards SDK failure`() = runTest {
         val transport = DefaultFileTransferTransport()
         val utility = utilityConstruction.constructed().single()
-        val request = FileUploadRequest("upload:10", File("/tmp/prepared.txt"), "prepared.txt", "text/plain")
+        val request = FileUploadRequest("upload:10", File("/tmp/prepared.txt"), "prepared.txt", "text/plain", attachment())
         val error = SceytException(1, "upload failed")
         whenever(utility.uploadFile(any(), any())).thenReturn(SceytResponse.Error(error))
 
@@ -94,7 +93,7 @@ class DefaultFileTransferTransportTest {
         val transport = DefaultFileTransferTransport()
         val utility = utilityConstruction.constructed().single()
         whenever(utility.uploadFile(any(), any())).thenReturn(SceytResponse.Success(null))
-        val request = FileUploadRequest("upload:10", File("/tmp/prepared.txt"), "prepared.txt", "text/plain")
+        val request = FileUploadRequest("upload:10", File("/tmp/prepared.txt"), "prepared.txt", "text/plain", attachment())
 
         val result = transport.upload(request) {}
 
@@ -105,7 +104,7 @@ class DefaultFileTransferTransportTest {
     fun `cancelling upload cancels its suspended SDK bridge`() = runTest {
         val transport = DefaultFileTransferTransport()
         val utility = utilityConstruction.constructed().single()
-        val request = FileUploadRequest("upload:10", File("/tmp/prepared.txt"), "prepared.txt", "text/plain")
+        val request = FileUploadRequest("upload:10", File("/tmp/prepared.txt"), "prepared.txt", "text/plain", attachment())
         var bridgeCancelled = false
         doSuspendableAnswer {
             try {
@@ -124,18 +123,20 @@ class DefaultFileTransferTransportTest {
     }
 
     @Test
-    fun `plain and encrypted requests go unchanged to the native downloader`() = runTest {
+    fun `download requests and metadata go unchanged to the native downloader`() = runTest {
         val transport = DefaultFileTransferTransport()
         val downloader = downloaderConstruction.constructed().single()
-        val info = FileEncryptionInfo("sdk-format", "attachment-id", "file-key")
-        for (type in listOf(FileDownloadType.Plain, FileDownloadType.Encrypted(info, 100))) {
-            val request = FileDownloadRequest("download:10", "https://cdn.test/file", File("/tmp/downloaded.txt"), type = type)
+        val customMetadata = JsonObject().apply { addProperty("appEncryption", "saved-key") }
+        for (metadata in listOf(JsonObject(), customMetadata)) {
+            val request = FileDownloadRequest(
+                "download:10", "https://cdn.test/file", File("/tmp/downloaded.txt"), attachment(), metadata = metadata,
+            )
             val expected = FileTransferResult.Success(request.destinationFile.path)
             whenever(downloader.download(any(), any())).thenReturn(expected)
 
             val result = transport.download(request) {}
 
-            verify(downloader).download(Mockito.same(request), any())
+            verify(downloader).download(same(request), any())
             assertThat(result).isSameInstanceAs(expected)
         }
     }

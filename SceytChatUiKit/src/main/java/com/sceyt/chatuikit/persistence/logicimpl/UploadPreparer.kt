@@ -23,6 +23,7 @@ import kotlin.coroutines.resume
 internal data class PreparedAttachment(
     val attachment: SceytAttachment,
     val reusedUrl: String? = null,
+    val preparedFilePath: String? = null,
 )
 
 /** Prepares a source file without owning transfer tasks, upload ordering, or sharing. */
@@ -32,7 +33,6 @@ internal class UploadPreparer(
 ) {
     suspend fun prepare(
         attachment: SceytAttachment,
-        onFilePrepared: (String) -> Unit,
         onProgress: (Float) -> Unit,
         reuseUploadedUrl: Boolean = true,
         preparedFilePath: String? = null,
@@ -46,13 +46,8 @@ internal class UploadPreparer(
             else -> false
         }
 
-        // Encrypted uploads can reuse resized media from an earlier attempt.
-        val preparedPath = if (canReusePreparedMedia) {
-            val savedPath = attachment.filePath?.takeIf {
-                originalPath != null && it != originalPath
-            }
-            listOfNotNull(preparedFilePath, savedPath).firstOrNull { File(it).isFile }
-        } else null
+        val preparedPath = if (canReusePreparedMedia)
+            findPreparedFile(attachment, originalPath, preparedFilePath) else null
 
         // Look up a cached URL or a prepared media file missing from this attempt.
         val checksum = if (canReuseUrl || (canReusePreparedMedia && preparedPath == null)) {
@@ -62,8 +57,7 @@ internal class UploadPreparer(
         val reusedUrl = if (canReuseUrl) checksum?.url.takeIfNotBlank() else null
         if (reusedUrl != null) {
             // The cached URL completes preparation using the previously uploaded file.
-            checksum?.resizedFilePath.ifNotEmpty()?.let(onFilePrepared)
-            return PreparedAttachment(attachment, reusedUrl)
+            return PreparedAttachment(attachment, reusedUrl, checksum?.resizedFilePath.ifNotEmpty())
         }
 
         // Start from the original file when rebuilding encrypted media.
@@ -71,26 +65,43 @@ internal class UploadPreparer(
             attachment.copy(filePath = sourcePath)
         } else attachment
 
+        return prepareSource(source, checksum, preparedPath, onProgress)
+    }
+
+    private fun findPreparedFile(
+        attachment: SceytAttachment,
+        originalPath: String?,
+        preparedFilePath: String?,
+    ): String? {
+        val savedPath = attachment.filePath?.takeIf { originalPath != null && it != originalPath }
+        return listOfNotNull(preparedFilePath, savedPath).firstOrNull { File(it).isFile }
+    }
+
+    private suspend fun prepareSource(
+        attachment: SceytAttachment,
+        checksum: FileChecksumData?,
+        preparedPath: String?,
+        onProgress: (Float) -> Unit,
+    ): PreparedAttachment {
         val preparationResult = preparedPath?.let { Result.success(it) }
-            ?: prepareAttachment(source, checksum, onProgress)
+            ?: prepareAttachment(attachment, checksum, onProgress)
 
         // Image resizing can finish after cancellation, so check before publishing its file path.
         currentCoroutineContext().ensureActive()
 
         val prepared = preparationResult.fold(
             onSuccess = { path ->
-                onFilePrepared(path)
                 attachment.copy(filePath = path, fileSize = getFileSize(path))
             },
             onFailure = {
                 SceytLog.i(TAG, "Couldn't resize file with reason ${it.message}")
-                source
+                attachment
             },
         )
 
         val path = requireNotNull(prepared.filePath.takeIfNotBlank()) { "Attachment source path is missing" }
         require(File(path).isFile) { "Attachment source file does not exist: $path" }
-        return PreparedAttachment(prepared)
+        return PreparedAttachment(prepared, preparedFilePath = preparationResult.getOrNull())
     }
 
     private suspend fun prepareAttachment(

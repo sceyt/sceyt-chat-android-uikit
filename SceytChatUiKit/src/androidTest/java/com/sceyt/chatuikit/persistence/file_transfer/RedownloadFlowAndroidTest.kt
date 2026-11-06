@@ -13,7 +13,6 @@ import com.sceyt.chat.models.SceytException
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
-import com.sceyt.chatuikit.filetransfer.AttachmentTransferContext
 import com.sceyt.chatuikit.filetransfer.FileDownloadRequest
 import com.sceyt.chatuikit.filetransfer.FileTransferCallback
 import com.sceyt.chatuikit.filetransfer.FileTransferDestinationProvider
@@ -117,7 +116,7 @@ class RedownloadFlowAndroidTest {
         logic.getAttachmentThumb(MESSAGE_TID, item.attachment, thumbData())
 
         val download = awaitDownloadStarted()
-        val pendingAttachment = (download.request.context as AttachmentTransferContext).attachment
+        val pendingAttachment = download.request.attachment
         assertThat(pendingAttachment.transferState).isEqualTo(TransferState.PendingDownload)
         assertThat(service.findTransferTask(item.attachment)?.state).isEqualTo(TransferState.Downloading)
         awaitUpdate(TransferState.Downloading)

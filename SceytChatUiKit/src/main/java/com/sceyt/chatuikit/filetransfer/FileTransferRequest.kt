@@ -1,9 +1,11 @@
 package com.sceyt.chatuikit.filetransfer
 
+import com.google.gson.JsonObject
+import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.filetransfer.encryption.FileEncryptionInfo
 import java.io.File
 
-enum class FileUploadType {
+enum class FileTransferType {
     PLAIN,
     ENCRYPTED,
 }
@@ -14,9 +16,14 @@ data class FileUploadRequest(
     val sourceFile: File,
     val fileName: String,
     val mimeType: String?,
-    val context: FileTransferContext? = null,
-    val type: FileUploadType = FileUploadType.PLAIN,
-)
+    val attachment: SceytAttachment,
+    val type: FileTransferType = FileTransferType.PLAIN,
+    val metadata: JsonObject = JsonObject(),
+    val isSharedUpload: Boolean = false,
+) {
+    override fun toString(): String =
+        "FileUploadRequest(operationId=$operationId, sourceFile=$sourceFile, type=$type)"
+}
 
 /** Encryption information for the same uploaded bytes as [url]. */
 data class FileUploadResult(
@@ -24,12 +31,16 @@ data class FileUploadResult(
     val encryptionInfo: FileEncryptionInfo? = null,
 )
 
-/** The transport publishes plaintext at [destinationFile], decrypting when [type] is encrypted. */
+/** The transport follows [type], interprets [metadata], and publishes plaintext at [destinationFile]. */
 data class FileDownloadRequest(
     val operationId: String,
     val url: String,
     val destinationFile: File,
-    val context: FileTransferContext? = null,
+    val attachment: SceytAttachment,
+    val type: FileTransferType = FileTransferType.PLAIN,
     val headers: Map<String, String> = emptyMap(),
-    val type: FileDownloadType = FileDownloadType.Plain,
-)
+    val metadata: JsonObject = JsonObject(),
+) {
+    override fun toString(): String =
+        "FileDownloadRequest(operationId=$operationId, destinationFile=$destinationFile, type=$type)"
+}

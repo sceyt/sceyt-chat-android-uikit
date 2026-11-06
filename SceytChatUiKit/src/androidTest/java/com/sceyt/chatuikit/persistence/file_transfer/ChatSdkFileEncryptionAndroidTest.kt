@@ -8,12 +8,16 @@ import com.google.common.truth.Truth.assertThat
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import com.sceyt.chat.ChatClient
+import com.sceyt.chat.download.MediaDownload
+import com.sceyt.chat.download.MediaDownloadException
+import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.filetransfer.FileDownloadRequest
 import com.sceyt.chatuikit.filetransfer.FileTransferCallback
 import com.sceyt.chatuikit.filetransfer.FileTransferResult
+import com.sceyt.chatuikit.filetransfer.FileTransferType
+import com.sceyt.chatuikit.filetransfer.download.ChatSdkFileDownloader
 import com.sceyt.chatuikit.filetransfer.encryption.ChatSdkFileEncryption
-import com.sceyt.chatuikit.filetransfer.encryption.EncryptedFileDownloader
-import com.sceyt.chatuikit.filetransfer.encryption.FileDownloadEncryption
 import com.sceyt.chatuikit.filetransfer.encryption.FileEncryptionCheckpoint
 import com.sceyt.chatuikit.filetransfer.encryption.FileEncryptionMetadata
 import kotlinx.coroutines.CancellationException
@@ -22,11 +26,12 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
+import org.junit.BeforeClass
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.File
 import java.io.RandomAccessFile
-import java.security.GeneralSecurityException
 import java.util.UUID
 
 @RunWith(AndroidJUnit4::class)
@@ -70,12 +75,59 @@ class ChatSdkFileEncryptionAndroidTest {
     }
 
     @Test
-    fun nativeDecryptionResumesWithANewDownloaderAfterCancellation() = runBlocking(Dispatchers.IO) {
+    fun nativeDownloadAcceptsFullResponsesWhenRangesAreIgnored() = runBlocking(Dispatchers.IO) {
         prepareAttachment().use { attachment ->
+            attachment.server.ignoreRanges = true
+            attachment.assertPublished(attachment.download())
+        }
+    }
+
+    @Test
+    fun nativeRequestsCarryChatHeadersWithoutWaafiCredentials() = runBlocking(Dispatchers.IO) {
+        prepareAttachment().use { attachment ->
+            val headers = mapOf("X-Chat-Token" to "fixture-token", "X-Message-Id" to "1001")
+
+            attachment.assertPublished(attachment.download(headers = headers))
+
+            assertThat(attachment.server.requests).isNotEmpty()
+            attachment.server.requests.forEach { request ->
+                assertThat(request["x-chat-token"]).isEqualTo("fixture-token")
+                assertThat(request["x-message-id"]).isEqualTo("1001")
+                assertThat(request["authorization"]).isNull()
+                assertThat(request["cookie"]).isNull()
+            }
+        }
+    }
+
+    @Test
+    fun nativeRedirectDoesNotForwardChatCredentialsToAnotherOrigin() = runBlocking(Dispatchers.IO) {
+        prepareAttachment().use { attachment ->
+            AttachmentHttpServer(attachment.ciphertext).use { redirect ->
+                redirect.redirectTo = attachment.server.url
+                val headers = mapOf("X-Chat-Token" to "fixture-token", "X-Message-Id" to "1001")
+
+                attachment.assertPublished(attachment.download(url = redirect.url, headers = headers))
+
+                assertThat(redirect.requests).isNotEmpty()
+                assertThat(attachment.server.requests).isNotEmpty()
+                attachment.server.requests.forEach { request ->
+                    assertThat(request["x-chat-token"]).isNull()
+                    assertThat(request["x-message-id"]).isNull()
+                }
+            }
+        }
+    }
+
+    @Test
+    fun nativeDecryptionResumesWithANewDownloaderAfterCancellation() = runBlocking(Dispatchers.IO) {
+        prepareAttachment(8 * 1024 * 1024 + 37).use { attachment ->
+            attachment.server.chunkDelayMillis = 8
             lateinit var attempt: Deferred<FileTransferResult<String>>
             attempt = async(start = CoroutineStart.LAZY) {
                 attachment.download { progress ->
-                    if (progress > 90f && progress < 100f) attempt.cancel()
+                    // Wait for a verified range to reach the native resume journal.
+                    val saved = File(attachment.destination.path + ".part.json").isFile
+                    if (saved && progress > 0f && progress < 100f) attempt.cancel()
                 }
             }
             attempt.start()
@@ -83,18 +135,17 @@ class ChatSdkFileEncryptionAndroidTest {
             attempt.join()
 
             assertThat(failure).isInstanceOf(CancellationException::class.java)
-            val partial = File(attachment.destination.path + ".sceyt.part")
-            assertThat(partial.length()).isGreaterThan(0L)
-            assertThat(partial.length()).isLessThan(attachment.source.length())
+            assertThat(File(attachment.destination.path + ".part").isFile).isTrue()
+            assertThat(File(attachment.destination.path + ".part.json").isFile).isTrue()
             assertThat(attachment.destination.exists()).isFalse()
 
+            attachment.server.chunkDelayMillis = 0
             attachment.assertPublished(attachment.download())
-            assertThat(attachment.downloads).isEqualTo(1)
         }
     }
 
     @Test
-    fun modifiedNativeCiphertextRemovesAlreadyVerifiedPartialPlaintext() = runBlocking(Dispatchers.IO) {
+    fun modifiedNativeCiphertextIsRejectedBeforePublishingPlaintext() = runBlocking(Dispatchers.IO) {
         prepareAttachment().use { attachment ->
             RandomAccessFile(attachment.ciphertext, "rw").use { file ->
                 val offset = attachment.source.length() - 1024
@@ -103,11 +154,7 @@ class ChatSdkFileEncryptionAndroidTest {
                 file.seek(offset)
                 file.write(byte xor 1)
             }
-            val progress = mutableListOf<Float>()
-
-            attachment.assertRejected(attachment.download { progress += it })
-
-            assertThat(progress.any { it > 90f }).isTrue()
+            attachment.assertRejected(attachment.download())
         }
     }
 
@@ -193,32 +240,45 @@ class ChatSdkFileEncryptionAndroidTest {
         val ciphertext = File(directory, "uploaded.bin")
         val metadataFile = File(directory, "attachment.json")
         val destination = File(directory, "received.bin")
-        private val checkpoints = File(directory, "checkpoints")
-        var downloads = 0
-            private set
+        val server = AttachmentHttpServer(ciphertext)
 
         fun readAttachment(): JsonObject = JsonParser.parseString(metadataFile.readText()).asJsonObject
 
         suspend fun download(
+            url: String = server.url,
+            headers: Map<String, String> = emptyMap(),
             callback: FileTransferCallback = FileTransferCallback {},
         ): FileTransferResult<String> {
             val message = readAttachment()
-            val envelope = checkNotNull(FileEncryptionMetadata.read(message.get("metadata").asString))
-            return EncryptedFileDownloader(checkpoints).download(
-                request = FileDownloadRequest(
-                    "download:native", "native-fixture", destination,
-                ),
-                encryptionInfo = FileDownloadEncryption(
-                    info = envelope.toEncryptionInfo(),
-                    plaintextSize = message.get("fileSize").asLong,
-                ),
-                encryption = ChatSdkFileEncryption(),
-                callback = callback,
-            ) { request, progress ->
-                downloads++
-                ciphertext.copyTo(request.destinationFile, overwrite = true)
-                progress.onProgress(100f)
-                FileTransferResult.Success(request.destinationFile.path)
+            val attachment = SceytAttachment(
+                id = null,
+                messageId = 0,
+                messageTid = 1,
+                userId = null,
+                name = "attachment.bin",
+                type = "file",
+                metadata = message.get("metadata").asString,
+                fileSize = message.get("fileSize").asLong,
+                createdAt = 0,
+                url = url,
+                filePath = null,
+                transferState = TransferState.PendingDownload,
+                progressPercent = 0f,
+                originalFilePath = null,
+                linkPreviewDetails = null,
+            )
+            return withTimeout(20_000) {
+                ChatSdkFileDownloader().download(
+                    request = FileDownloadRequest(
+                        operationId = "download:${directory.name}",
+                        url = url,
+                        destinationFile = destination,
+                        attachment = attachment,
+                        type = FileTransferType.ENCRYPTED,
+                        headers = headers,
+                    ),
+                    callback = callback,
+                )
             }
         }
 
@@ -231,19 +291,22 @@ class ChatSdkFileEncryptionAndroidTest {
         fun assertRejected(result: FileTransferResult<String>) {
             assertThat(result).isInstanceOf(FileTransferResult.Failure::class.java)
             assertThat((result as FileTransferResult.Failure).error)
-                .isInstanceOf(GeneralSecurityException::class.java)
+                .isInstanceOf(MediaDownloadException::class.java)
+            assertThat((result.error as MediaDownloadException).reason)
+                .isEqualTo(MediaDownloadException.Reason.INTEGRITY)
             assertThat(destination.exists()).isFalse()
             assertStagingRemoved()
         }
 
         private fun assertStagingRemoved() {
-            listOf(".sceyt.part", ".sceyt.enc", ".sceyt.enc.part").forEach { suffix ->
+            listOf(".part", ".part.json", ".part.json.tmp").forEach { suffix ->
                 assertThat(File(destination.path + suffix).exists()).isFalse()
             }
-            assertThat(checkpoints.listFiles().orEmpty().toList()).isEmpty()
         }
 
         override fun close() {
+            MediaDownload.cancelDownload(destination.path)
+            server.close()
             directory.deleteRecursively()
         }
     }
@@ -251,5 +314,13 @@ class ChatSdkFileEncryptionAndroidTest {
     private companion object {
         const val RECORD_SIZE = 64 * 1024
         const val PART_SIZE = 5 * 1024 * 1024
+
+        @BeforeClass
+        @JvmStatic
+        fun initializeSdk() {
+            // Operation IDs use the SDK's private session directory; no chat connection is needed.
+            val context = ApplicationProvider.getApplicationContext<Context>()
+            ChatClient.initialize(context, "https://127.0.0.1", "native-transfer-test", "android-test")
+        }
     }
 }

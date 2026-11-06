@@ -1,17 +1,20 @@
 package com.sceyt.chatuikit.persistence.logicimpl
 
 import android.content.Context
+import com.google.gson.JsonObject
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.extensions.getMimeType
-import com.sceyt.chatuikit.filetransfer.AttachmentTransferContext
 import com.sceyt.chatuikit.filetransfer.FileDownloadRequest
-import com.sceyt.chatuikit.filetransfer.FileDownloadType
+import com.sceyt.chatuikit.filetransfer.FileTransferCallback
 import com.sceyt.chatuikit.filetransfer.FileTransferResult
+import com.sceyt.chatuikit.filetransfer.FileTransferTransport
+import com.sceyt.chatuikit.filetransfer.FileTransferType
 import com.sceyt.chatuikit.filetransfer.FileUploadRequest
 import com.sceyt.chatuikit.filetransfer.FileUploadResult
-import com.sceyt.chatuikit.filetransfer.FileUploadType
 import com.sceyt.chatuikit.filetransfer.encryption.FileEncryptionMetadata
+import com.sceyt.chatuikit.persistence.extensions.fileTransferData
+import com.sceyt.chatuikit.persistence.extensions.withFileTransferData
 import com.sceyt.chatuikit.persistence.file_transfer.transferKey
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import java.io.File
@@ -30,6 +33,7 @@ internal class AttachmentTransferRouter(
         onFilePrepared: (String) -> Unit = {},
         onPreparing: (Float) -> Unit = {},
         preparedFilePath: String? = null,
+        onUploadPrepared: suspend (SceytAttachment) -> SceytAttachment,
     ): TransferExecutor {
         val config = SceytChatUIKit.fileTransfer
         val transport = config.transport
@@ -40,49 +44,99 @@ internal class AttachmentTransferRouter(
         ) { execution, callback ->
             execution.onDiscard { transport.cancel(operationId) }
 
-            val encrypted = config.encryptUploads
-            val prepared = checkNotNull(uploadPreparer).prepare(
+            val encrypted = config.encryptionEnabled
+            var prepared = checkNotNull(uploadPreparer).prepare(
                 attachment = attachment,
-                onFilePrepared = onFilePrepared,
                 onProgress = onPreparing,
                 reuseUploadedUrl = !encrypted,
                 preparedFilePath = preparedFilePath,
             )
-            execution.attachment = prepared.attachment
-
-            val reusedUrl = prepared.reusedUrl
-            val plaintextSize: Long
-            val result: FileTransferResult<FileUploadResult>
-
-            // A cached URL skips the transport and keeps the attachment's stored size.
-            if (reusedUrl != null) {
-                plaintextSize = prepared.attachment.fileSize
-                result = FileTransferResult.Success(FileUploadResult(reusedUrl))
-            } else {
+            // A completed checksum match skips both preparation and upload on the transport.
+            if (prepared.reusedUrl == null) {
                 val request = createUploadRequest(
                     attachment = prepared.attachment,
                     operationId = operationId,
                     encrypted = encrypted,
-                    isSharedUpload = isSharedUpload,
+                    isSharedUpload = isSharedUpload
                 )
-                plaintextSize = request.sourceFile.length()
-                result = execution.executeTransport { transport.upload(request, callback) }
-            }
-
-            when (result) {
-                is FileTransferResult.Success -> {
-                    execution.attachment = applyUploadResult(
-                        attachment = prepared.attachment,
-                        result = result.result,
-                        plaintextSize = plaintextSize,
-                        encrypted = encrypted,
+                prepared = prepared.copy(
+                    attachment = prepareUpload(
+                        request = request,
+                        transport = transport,
+                        onUploadPrepared = onUploadPrepared
                     )
-                    FileTransferResult.Success(result.result.url)
-                }
-
-                is FileTransferResult.Failure -> result
-                is FileTransferResult.Interrupted -> result
+                )
             }
+
+            // File-path callbacks may queue metadata writes, so publish after app data is saved.
+            prepared.preparedFilePath?.let(onFilePrepared)
+            execution.attachment = prepared.attachment
+
+            uploadPrepared(
+                prepared = prepared,
+                execution = execution,
+                transport = transport,
+                operationId = operationId,
+                isSharedUpload = isSharedUpload,
+                encrypted = encrypted,
+                callback = callback,
+            )
+        }
+    }
+
+    private suspend fun prepareUpload(
+        request: FileUploadRequest,
+        transport: FileTransferTransport,
+        onUploadPrepared: suspend (SceytAttachment) -> SceytAttachment,
+    ): SceytAttachment {
+        val attachment = request.attachment.copy(fileSize = request.sourceFile.length())
+        val data = transport.prepareUpload(request.copy(attachment = attachment))
+            ?: return request.attachment
+        val metadata = attachment.metadata.withFileTransferData(data)
+        return onUploadPrepared(attachment.copy(metadata = metadata))
+    }
+
+    private suspend fun uploadPrepared(
+        prepared: PreparedAttachment,
+        execution: TransferExecutor,
+        transport: FileTransferTransport,
+        operationId: String,
+        isSharedUpload: Boolean,
+        encrypted: Boolean,
+        callback: FileTransferCallback,
+    ): FileTransferResult<String> {
+        val reusedUrl = prepared.reusedUrl
+        val plaintextSize: Long
+        val result: FileTransferResult<FileUploadResult>
+
+        // A cached URL skips the transport and keeps the attachment's stored size.
+        if (reusedUrl != null) {
+            plaintextSize = prepared.attachment.fileSize
+            result = FileTransferResult.Success(FileUploadResult(reusedUrl))
+        } else {
+            val request = createUploadRequest(
+                attachment = prepared.attachment,
+                operationId = operationId,
+                encrypted = encrypted,
+                isSharedUpload = isSharedUpload
+            )
+            plaintextSize = request.sourceFile.length()
+            result = execution.executeTransport { transport.upload(request, callback) }
+        }
+
+        return when (result) {
+            is FileTransferResult.Success -> {
+                execution.attachment = applyUploadResult(
+                    attachment = prepared.attachment,
+                    result = result.result,
+                    plaintextSize = plaintextSize,
+                    encrypted = encrypted
+                )
+                FileTransferResult.Success(result.result.url)
+            }
+
+            is FileTransferResult.Failure -> result
+            is FileTransferResult.Interrupted -> result
         }
     }
 
@@ -98,8 +152,10 @@ internal class AttachmentTransferRouter(
             sourceFile = file,
             fileName = attachment.name,
             mimeType = getMimeType(file.path),
-            context = AttachmentTransferContext(attachment, isSharedUpload),
-            type = if (encrypted) FileUploadType.ENCRYPTED else FileUploadType.PLAIN,
+            attachment = attachment,
+            isSharedUpload = isSharedUpload,
+            type = if (encrypted) FileTransferType.ENCRYPTED else FileTransferType.PLAIN,
+            metadata = attachment.metadata.fileTransferData() ?: JsonObject(),
         )
     }
 
@@ -110,8 +166,9 @@ internal class AttachmentTransferRouter(
         encrypted: Boolean,
     ): SceytAttachment {
         val encryptionInfo = result.encryptionInfo
-        if (encrypted) {
-            checkNotNull(encryptionInfo) { "Encrypted upload returned no encryption information" }
+        if (encrypted && encryptionInfo == null) {
+            // A custom transport may keep its encryption information in the app's saved object.
+            checkNotNull(attachment.metadata.fileTransferData()) { "Encrypted upload returned no encryption information" }
         }
 
         val metadata = if (encryptionInfo != null) {
@@ -133,7 +190,8 @@ internal class AttachmentTransferRouter(
         operationId: String,
         destination: File,
     ): TransferExecutor {
-        val transport = SceytChatUIKit.fileTransfer.transport
+        val config = SceytChatUIKit.fileTransfer
+        val transport = config.transport
 
         return TransferExecutor(
             operationId = operationId,
@@ -144,20 +202,12 @@ internal class AttachmentTransferRouter(
                 operationId = operationId,
                 url = requireNotNull(attachment.url),
                 destinationFile = destination,
-                context = AttachmentTransferContext(attachment),
-                type = downloadType(attachment),
+                attachment = attachment,
+                type = if (config.encryptionEnabled) FileTransferType.ENCRYPTED else FileTransferType.PLAIN,
+                metadata = attachment.metadata.fileTransferData() ?: JsonObject(),
             )
             execution.executeTransport { transport.download(request, callback) }
         }
-    }
-
-    private fun downloadType(attachment: SceytAttachment): FileDownloadType {
-        if (!FileEncryptionMetadata.isEncrypted(attachment.metadata)) return FileDownloadType.Plain
-
-        val metadata = checkNotNull(FileEncryptionMetadata.read(attachment.metadata)) {
-            "Malformed attachment encryption metadata"
-        }
-        return FileDownloadType.Encrypted(metadata.toEncryptionInfo(), attachment.fileSize)
     }
 
     fun discardSavedDownload(attachment: SceytAttachment) {

@@ -469,5 +469,6 @@ class OkHttpDownloaderTest {
         operationId = operationId,
         url = "https://cdn.test/file",
         destinationFile = temporaryFolder.newFile(),
+        attachment = attachment(),
     )
 }

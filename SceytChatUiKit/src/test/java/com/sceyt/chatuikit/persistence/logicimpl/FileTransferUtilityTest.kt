@@ -180,7 +180,7 @@ class FileTransferUtilityTest {
             val utility = FileTransferUtility()
             val downloader = construction.constructed().single()
             val destination = File("/tmp/download.txt")
-            val request = FileDownloadRequest("download:20:file", "https://cdn.test/file", destination)
+            val request = FileDownloadRequest("download:20:file", "https://cdn.test/file", destination, attachment())
             val onProgress: (Float) -> Unit = {}
             val onResult: (FileTransferResult<String>) -> Unit = {}
             val onFinished: () -> Unit = {}

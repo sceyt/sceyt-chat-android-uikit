@@ -7,9 +7,9 @@ import com.sceyt.chatuikit.filetransfer.FileDownloadRequest
 import com.sceyt.chatuikit.filetransfer.FileTransferCallback
 import com.sceyt.chatuikit.filetransfer.FileTransferResult
 import com.sceyt.chatuikit.filetransfer.FileTransferTransport
+import com.sceyt.chatuikit.filetransfer.FileTransferType
 import com.sceyt.chatuikit.filetransfer.FileUploadRequest
 import com.sceyt.chatuikit.filetransfer.FileUploadResult
-import com.sceyt.chatuikit.filetransfer.FileUploadType
 import com.sceyt.chatuikit.filetransfer.download.ChatSdkFileDownloader
 import com.sceyt.chatuikit.filetransfer.encryption.ChatSdkFileEncryption
 import com.sceyt.chatuikit.filetransfer.encryption.FileEncryptionInfo
@@ -26,12 +26,12 @@ class DefaultFileTransferTransport : FileTransferTransport {
         request: FileUploadRequest,
         callback: FileTransferCallback,
     ): FileTransferResult<FileUploadResult> = when (request.type) {
-        FileUploadType.PLAIN -> transferUtility.uploadFile(
+        FileTransferType.PLAIN -> transferUtility.uploadFile(
             sourceFile = request.sourceFile,
             onProgress = callback::onProgress,
         ).toUploadResult()
 
-        FileUploadType.ENCRYPTED -> uploadEncrypted(request, callback)
+        FileTransferType.ENCRYPTED -> uploadEncrypted(request, callback)
     }
 
     private suspend fun uploadEncrypted(
