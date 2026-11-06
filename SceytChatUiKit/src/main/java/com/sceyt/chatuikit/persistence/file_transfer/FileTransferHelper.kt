@@ -281,7 +281,8 @@ object FileTransferHelper : SceytKoinComponent {
             TransferState.FilePathChanged, newPath, currentAttachment.url
         )
 
-        val originalFilePath = currentAttachment.filePath
+        // App preparation may already have replaced filePath with the prepared file.
+        val originalFilePath = currentAttachment.originalFilePath ?: currentAttachment.filePath
         val fileSize = getFileSize(newPath)
         val dimensions = getDimensions(currentAttachment.type, newPath)
         val metadata = currentAttachment.getUpsertSizeMetadata(dimensions)
