@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.persistence.logicimpl
 
+import android.content.Context
 import com.google.common.truth.Truth.assertThat
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
@@ -40,6 +41,7 @@ class AttachmentUploadPreparationTest {
 
     private lateinit var previousFileTransfer: SceytChatUIKitFileTransfer
     private lateinit var previousConfig: SceytChatUIKitConfig
+    private val context: Context get() = RuntimeEnvironment.getApplication()
     private val transport = RecordingFileTransferTransport()
     private val attachmentLogic = mock<PersistenceAttachmentLogic>()
     private val saved = mutableMapOf<Long, SceytAttachment>()
@@ -84,7 +86,7 @@ class AttachmentUploadPreparationTest {
             assertThat(request.metadata.entrySet()).isEmpty()
             JsonObject().apply { addProperty("appEncryption", "saved-key") }
         }
-        val coordinator = AttachmentUploadCoordinator(RuntimeEnvironment.getApplication(), attachmentLogic, backgroundScope)
+        val coordinator = AttachmentUploadCoordinator(context, attachmentLogic, backgroundScope)
 
         coordinator.upload(value, task, { _, _ -> }, {})
         runCurrent()
@@ -92,13 +94,15 @@ class AttachmentUploadPreparationTest {
         val call = transport.uploadCalls.single()
         val prepared = call.request.attachment
         val metadata = JsonParser.parseString(prepared.metadata).asJsonObject
-        assertThat(metadata.getAsJsonObject("file_transfer").get("appEncryption")?.asString).isEqualTo("saved-key")
+        assertThat(metadata.getAsJsonObject("file_transfer").get("appEncryption")?.asString)
+            .isEqualTo("saved-key")
         assertThat(call.request.metadata).isEqualTo(metadata.getAsJsonObject("file_transfer"))
         assertThat(saved[value.messageTid]?.metadata).isEqualTo(prepared.metadata)
         assertThat(metadata.get("caption").asString).isEqualTo("keep")
         call.succeed("https://cdn.test/uploaded")
         runCurrent()
-        assertThat(JsonParser.parseString(task.attachment.metadata).asJsonObject).isEqualTo(metadata)
+        assertThat(JsonParser.parseString(task.attachment.metadata).asJsonObject)
+            .isEqualTo(metadata)
     }
 
     @Test
@@ -111,7 +115,7 @@ class AttachmentUploadPreparationTest {
         }
         val data = appData()
         transport.onPrepareUpload = { data }
-        val coordinator = AttachmentUploadCoordinator(RuntimeEnvironment.getApplication(), attachmentLogic, backgroundScope)
+        val coordinator = AttachmentUploadCoordinator(context, attachmentLogic, backgroundScope)
 
         coordinator.upload(value, transferTask(value), { _, _ -> }, {})
         runCurrent()
@@ -132,7 +136,7 @@ class AttachmentUploadPreparationTest {
         transport.onPrepareUpload = { request ->
             if (request.metadata.size() == 0) data.also { created++ } else request.metadata
         }
-        val first = AttachmentUploadCoordinator(RuntimeEnvironment.getApplication(), attachmentLogic, backgroundScope)
+        val first = AttachmentUploadCoordinator(context, attachmentLogic, backgroundScope)
         first.upload(value, transferTask(value), { _, _ -> }, {})
         runCurrent()
         transport.uploadCalls.single().interrupt()
@@ -140,7 +144,7 @@ class AttachmentUploadPreparationTest {
 
         val restored = checkNotNull(saved[value.messageTid])
         val task = transferTask(restored)
-        val second = AttachmentUploadCoordinator(RuntimeEnvironment.getApplication(), attachmentLogic, backgroundScope)
+        val second = AttachmentUploadCoordinator(context, attachmentLogic, backgroundScope)
         var result: SceytResponse<String>? = null
         second.upload(restored, task, { _, response -> result = response }, {})
         runCurrent()
@@ -156,7 +160,8 @@ class AttachmentUploadPreparationTest {
     @Test
     fun `shared callers save the same app object and keep their own metadata`() = runTest {
         val file = temporary.newFile().apply { writeText("shared plaintext") }
-        val first = attachment(messageTid = 1, filePath = file.path).copy(metadata = """{"caption":"first"}""")
+        val first = attachment(messageTid = 1, filePath = file.path)
+            .copy(metadata = """{"caption":"first"}""")
         val second = first.copy(messageTid = 2, metadata = """{"caption":"second"}""")
         val late = first.copy(messageTid = 3, metadata = """{"caption":"late"}""")
         val data = appData()
@@ -165,7 +170,7 @@ class AttachmentUploadPreparationTest {
             preparations++
             data
         }
-        val coordinator = AttachmentUploadCoordinator(RuntimeEnvironment.getApplication(), attachmentLogic, backgroundScope)
+        val coordinator = AttachmentUploadCoordinator(context, attachmentLogic, backgroundScope)
         val firstTask = transferTask(first).apply { isSharedUpload = true }
         val secondTask = transferTask(second).apply { isSharedUpload = true }
         val lateTask = transferTask(late).apply { isSharedUpload = true }
@@ -179,9 +184,11 @@ class AttachmentUploadPreparationTest {
         assertThat(preparations).isEqualTo(1)
         assertThat(transport.uploadCalls).hasSize(1)
         for (value in listOf(first, second, late)) {
-            val metadata = JsonParser.parseString(checkNotNull(saved[value.messageTid]).metadata).asJsonObject
+            val metadata =
+                JsonParser.parseString(checkNotNull(saved[value.messageTid]).metadata).asJsonObject
             assertThat(metadata.getAsJsonObject("file_transfer")).isEqualTo(data)
-            assertThat(metadata.get("caption")).isEqualTo(JsonParser.parseString(value.metadata).asJsonObject.get("caption"))
+            assertThat(metadata.get("caption"))
+                .isEqualTo(JsonParser.parseString(value.metadata).asJsonObject.get("caption"))
         }
         transport.uploadCalls.single().succeed("shared-url")
         runCurrent()
@@ -193,7 +200,7 @@ class AttachmentUploadPreparationTest {
         val file = temporary.newFile().apply { writeText("plaintext") }
         val value = attachment(filePath = file.path)
         transport.onPrepareUpload = { error("Could not prepare") }
-        val coordinator = AttachmentUploadCoordinator(RuntimeEnvironment.getApplication(), attachmentLogic, backgroundScope)
+        val coordinator = AttachmentUploadCoordinator(context, attachmentLogic, backgroundScope)
         var result: SceytResponse<String>? = null
 
         coordinator.upload(value, transferTask(value), { _, response -> result = response }, {})
@@ -212,7 +219,7 @@ class AttachmentUploadPreparationTest {
             updateAttachmentFilePathAndMetadata(any(), any(), any(), anyOrNull())
         }
         transport.onPrepareUpload = { appData() }
-        val coordinator = AttachmentUploadCoordinator(RuntimeEnvironment.getApplication(), attachmentLogic, backgroundScope)
+        val coordinator = AttachmentUploadCoordinator(context, attachmentLogic, backgroundScope)
         var result: SceytResponse<String>? = null
 
         coordinator.upload(value, transferTask(value), { _, response -> result = response }, {})
@@ -233,7 +240,7 @@ class AttachmentUploadPreparationTest {
             order += "prepare"
             data
         }
-        val execution = AttachmentTransferRouter(RuntimeEnvironment.getApplication(), attachmentLogic).upload(
+        val execution = AttachmentTransferRouter(context, attachmentLogic).upload(
             attachment = value,
             operationId = "upload:42",
             isSharedUpload = false,
@@ -267,7 +274,7 @@ class AttachmentUploadPreparationTest {
             appData()
         }
         var response: SceytResponse<String>? = null
-        AttachmentUploadCoordinator(RuntimeEnvironment.getApplication(), attachmentLogic, backgroundScope)
+        AttachmentUploadCoordinator(context, attachmentLogic, backgroundScope)
             .upload(value, transferTask(value), { _, result -> response = result }, {})
         runCurrent()
 

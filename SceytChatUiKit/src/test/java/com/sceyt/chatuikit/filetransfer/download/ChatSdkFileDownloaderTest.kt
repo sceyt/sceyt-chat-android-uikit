@@ -44,7 +44,8 @@ class ChatSdkFileDownloaderTest {
     fun `legacy partial destination is removed without discarding native resume files`() = runTest {
         val request = request()
         request.destinationFile.writeText("legacy partial bytes")
-        val partial = File(request.destinationFile.path + ".part").apply { writeText("verified ranges") }
+        val partial = File(request.destinationFile.path + ".part")
+            .apply { writeText("verified ranges") }
         val checkpoint = File(partial.path + ".json").apply { writeText("saved ranges") }
         setStatus(MediaDownload.State.DOWNLOADING)
         Mockito.mockStatic(MediaDownload::class.java).use { native ->
@@ -63,7 +64,8 @@ class ChatSdkFileDownloaderTest {
 
     @Test
     fun `plain download forwards operation ID URL headers and destination`() = runTest {
-        val request = request().copy(headers = mapOf("X-Chat-Token" to "token", "X-Message-Id" to "42"))
+        val request = request()
+            .copy(headers = mapOf("X-Chat-Token" to "token", "X-Message-Id" to "42"))
         val progress = mutableListOf<Float>()
         setStatus(MediaDownload.State.DOWNLOADING, downloaded = 25)
         Mockito.mockStatic(MediaDownload::class.java).use { native ->
@@ -77,7 +79,8 @@ class ChatSdkFileDownloaderTest {
             listener.onStatusChanged(operation.status)
             runCurrent()
 
-            assertThat(result.await()).isEqualTo(FileTransferResult.Success(request.destinationFile.absolutePath))
+            assertThat(result.await())
+                .isEqualTo(FileTransferResult.Success(request.destinationFile.absolutePath))
             assertThat(progress).containsExactly(25f, 100f).inOrder()
             verify(operation).setListener(null)
             verify(operation).close()
@@ -86,47 +89,52 @@ class ChatSdkFileDownloaderTest {
     }
 
     @Test
-    fun `encrypted download passes metadata to native decryption and uses the final plaintext path`() = runTest {
-        val info = FileEncryptionInfo("sdk-format", "attachment-id", "file-key")
-        val metadata = JsonParser.parseString(
-            """{"enc":{"v":1,"alg":"sdk-format","attachmentId":"attachment-id","key":"file-key"}}"""
-        ).asJsonObject
-        val request = request().copy(
-            attachment = attachment(fileSize = 100).copy(metadata = metadata.toString()),
-            type = FileTransferType.ENCRYPTED,
-        )
-        setStatus(MediaDownload.State.COMPLETED, downloaded = 100)
-        Mockito.mockStatic(MediaDownload::class.java).use { native ->
-            native.`when`<MediaDownload> {
-                MediaDownload.downloadEncrypted(
-                    eq(request.toSdkRequest()), eq(request.destinationFile.absolutePath),
-                    eq(info.toSdkInfo(100)), any(), isNull(),
-                )
-            }.thenReturn(operation)
+    fun `encrypted download passes metadata to native decryption and uses the final plaintext path`() =
+        runTest {
+            val info = FileEncryptionInfo("sdk-format", "attachment-id", "file-key")
+            val metadata = JsonParser.parseString(
+                """{"enc":{"v":1,"alg":"sdk-format","attachmentId":"attachment-id","key":"file-key"}}"""
+            ).asJsonObject
+            val request = request().copy(
+                attachment = attachment(fileSize = 100).copy(metadata = metadata.toString()),
+                type = FileTransferType.ENCRYPTED,
+            )
+            setStatus(MediaDownload.State.COMPLETED, downloaded = 100)
+            Mockito.mockStatic(MediaDownload::class.java).use { native ->
+                native.`when`<MediaDownload> {
+                    MediaDownload.downloadEncrypted(
+                        eq(request.toSdkRequest()), eq(request.destinationFile.absolutePath),
+                        eq(info.toSdkInfo(100)), any(), isNull(),
+                    )
+                }.thenReturn(operation)
 
-            val result = ChatSdkFileDownloader(StandardTestDispatcher(testScheduler)).download(request) {}
+                val result =
+                    ChatSdkFileDownloader(StandardTestDispatcher(testScheduler)).download(request) {}
 
-            assertThat(result).isEqualTo(FileTransferResult.Success(request.destinationFile.absolutePath))
-            assertThat(request.toString()).doesNotContain("file-key")
-            verify(operation).close()
+                assertThat(result)
+                    .isEqualTo(FileTransferResult.Success(request.destinationFile.absolutePath))
+                assertThat(request.toString()).doesNotContain("file-key")
+                verify(operation).close()
+            }
         }
-    }
 
     @Test
-    fun `malformed enc fails in the default downloader without starting a plain download`() = runTest {
-        val request = request().copy(
-            attachment = attachment().copy(metadata = """{"enc":"invalid"}"""),
-            type = FileTransferType.ENCRYPTED,
-        )
-        Mockito.mockStatic(MediaDownload::class.java).use { native ->
-            val result = ChatSdkFileDownloader(StandardTestDispatcher(testScheduler)).download(request) {}
+    fun `malformed enc fails in the default downloader without starting a plain download`() =
+        runTest {
+            val request = request().copy(
+                attachment = attachment().copy(metadata = """{"enc":"invalid"}"""),
+                type = FileTransferType.ENCRYPTED,
+            )
+            Mockito.mockStatic(MediaDownload::class.java).use { native ->
+                val result =
+                    ChatSdkFileDownloader(StandardTestDispatcher(testScheduler)).download(request) {}
 
-            assertThat(result).isInstanceOf(FileTransferResult.Failure::class.java)
-            assertThat((result as FileTransferResult.Failure).error.message)
-                .isEqualTo("Encrypted download requires valid encryption metadata")
-            native.verifyNoInteractions()
+                assertThat(result).isInstanceOf(FileTransferResult.Failure::class.java)
+                assertThat((result as FileTransferResult.Failure).error.message)
+                    .isEqualTo("Encrypted download requires valid encryption metadata")
+                native.verifyNoInteractions()
+            }
         }
-    }
 
     @Test
     fun `encrypted requests without metadata fail before starting native downloads`() = runTest {
@@ -136,7 +144,8 @@ class ChatSdkFileDownloaderTest {
                 type = FileTransferType.ENCRYPTED,
             )
             Mockito.mockStatic(MediaDownload::class.java).use { native ->
-                val result = ChatSdkFileDownloader(StandardTestDispatcher(testScheduler)).download(request) {}
+                val result =
+                    ChatSdkFileDownloader(StandardTestDispatcher(testScheduler)).download(request) {}
 
                 assertThat(result).isInstanceOf(FileTransferResult.Failure::class.java)
                 assertThat((result as FileTransferResult.Failure).error.message)
@@ -148,95 +157,111 @@ class ChatSdkFileDownloaderTest {
 
     @Test
     fun `plain requests ignore encryption fields instead of changing download mode`() = runTest {
-        val request = request().copy(attachment = attachment().copy(metadata = """{"enc":"invalid"}"""))
+        val request = request()
+            .copy(attachment = attachment().copy(metadata = """{"enc":"invalid"}"""))
         setStatus(MediaDownload.State.COMPLETED, downloaded = 100)
         Mockito.mockStatic(MediaDownload::class.java).use { native ->
             native.preparePlain(request)
 
-            val result = ChatSdkFileDownloader(StandardTestDispatcher(testScheduler)).download(request) {}
+            val result =
+                ChatSdkFileDownloader(StandardTestDispatcher(testScheduler)).download(request) {}
 
-            assertThat(result).isEqualTo(FileTransferResult.Success(request.destinationFile.absolutePath))
+            assertThat(result)
+                .isEqualTo(FileTransferResult.Success(request.destinationFile.absolutePath))
             native.verify {
-                MediaDownload.download(eq(request.toSdkRequest()), eq(request.destinationFile.absolutePath), any(), isNull())
+                MediaDownload.download(
+                    eq(request.toSdkRequest()),
+                    eq(request.destinationFile.absolutePath),
+                    any(),
+                    isNull()
+                )
             }
             native.verifyNoMoreInteractions()
         }
     }
 
     @Test
-    fun `network loss keeps the same request suspended until native recovery completes it`() = runTest {
-        val request = request()
-        setStatus(MediaDownload.State.WAITING_FOR_NETWORK)
-        Mockito.mockStatic(MediaDownload::class.java).use { native ->
-            native.preparePlain(request)
-            val downloader = ChatSdkFileDownloader(StandardTestDispatcher(testScheduler))
-            val result = async { downloader.download(request) {} }
-            runCurrent()
+    fun `network loss keeps the same request suspended until native recovery completes it`() =
+        runTest {
+            val request = request()
+            setStatus(MediaDownload.State.WAITING_FOR_NETWORK)
+            Mockito.mockStatic(MediaDownload::class.java).use { native ->
+                native.preparePlain(request)
+                val downloader = ChatSdkFileDownloader(StandardTestDispatcher(testScheduler))
+                val result = async { downloader.download(request) {} }
+                runCurrent()
 
-            assertThat(result.isCompleted).isFalse()
-            verify(operation, never()).cancel()
-            setStatus(MediaDownload.State.COMPLETED, downloaded = 100)
-            listener.onStatusChanged(operation.status)
-            runCurrent()
+                assertThat(result.isCompleted).isFalse()
+                verify(operation, never()).cancel()
+                setStatus(MediaDownload.State.COMPLETED, downloaded = 100)
+                listener.onStatusChanged(operation.status)
+                runCurrent()
 
-            assertThat(result.await()).isInstanceOf(FileTransferResult.Success::class.java)
-            native.verify {
-                MediaDownload.download(eq(request.toSdkRequest()), eq(request.destinationFile.absolutePath), any(), isNull())
+                assertThat(result.await()).isInstanceOf(FileTransferResult.Success::class.java)
+                native.verify {
+                    MediaDownload.download(
+                        eq(request.toSdkRequest()),
+                        eq(request.destinationFile.absolutePath),
+                        any(),
+                        isNull()
+                    )
+                }
             }
         }
-    }
 
     @Test
-    fun `cancelling the coroutine pauses native writers and closes the handle without discarding bytes`() = runTest {
-        val request = request()
-        val progress = mutableListOf<Float>()
-        setStatus(MediaDownload.State.WAITING_FOR_NETWORK)
-        Mockito.mockStatic(MediaDownload::class.java).use { native ->
-            native.preparePlain(request)
-            val downloader = ChatSdkFileDownloader(StandardTestDispatcher(testScheduler))
-            val result = async { downloader.download(request, progress::add) }
-            runCurrent()
+    fun `cancelling the coroutine pauses native writers and closes the handle without discarding bytes`() =
+        runTest {
+            val request = request()
+            val progress = mutableListOf<Float>()
+            setStatus(MediaDownload.State.WAITING_FOR_NETWORK)
+            Mockito.mockStatic(MediaDownload::class.java).use { native ->
+                native.preparePlain(request)
+                val downloader = ChatSdkFileDownloader(StandardTestDispatcher(testScheduler))
+                val result = async { downloader.download(request, progress::add) }
+                runCurrent()
 
-            result.cancelAndJoin()
-            listener.onStatusChanged(status(MediaDownload.State.DOWNLOADING, downloaded = 50))
-            runCurrent()
+                result.cancelAndJoin()
+                listener.onStatusChanged(status(MediaDownload.State.DOWNLOADING, downloaded = 50))
+                runCurrent()
 
-            val cleanup = Mockito.inOrder(operation)
-            cleanup.verify(operation).setListener(null)
-            cleanup.verify(operation).pause()
-            cleanup.verify(operation).close()
-            verify(operation, never()).cancel()
-            assertThat(progress).isEmpty()
-            assertThat(result.isCancelled).isTrue()
-            assertThat(downloader.resume(request.operationId)).isFalse()
+                val cleanup = Mockito.inOrder(operation)
+                cleanup.verify(operation).setListener(null)
+                cleanup.verify(operation).pause()
+                cleanup.verify(operation).close()
+                verify(operation, never()).cancel()
+                assertThat(progress).isEmpty()
+                assertThat(result.isCancelled).isTrue()
+                assertThat(downloader.resume(request.operationId)).isFalse()
+            }
         }
-    }
 
     @Test
-    fun `pause and resume run in order on the download coroutine without blocking the caller`() = runTest {
-        val request = request()
-        setStatus(MediaDownload.State.DOWNLOADING)
-        Mockito.mockStatic(MediaDownload::class.java).use { native ->
-            native.preparePlain(request)
-            val downloader = ChatSdkFileDownloader(StandardTestDispatcher(testScheduler))
-            val result = async { downloader.download(request) {} }
-            runCurrent()
+    fun `pause and resume run in order on the download coroutine without blocking the caller`() =
+        runTest {
+            val request = request()
+            setStatus(MediaDownload.State.DOWNLOADING)
+            Mockito.mockStatic(MediaDownload::class.java).use { native ->
+                native.preparePlain(request)
+                val downloader = ChatSdkFileDownloader(StandardTestDispatcher(testScheduler))
+                val result = async { downloader.download(request) {} }
+                runCurrent()
 
-            assertThat(downloader.pause("download:other")).isFalse()
-            assertThat(downloader.pause(request.operationId)).isTrue()
-            assertThat(downloader.resume(request.operationId)).isTrue()
-            verify(operation, never()).pause()
-            verify(operation, never()).resume()
+                assertThat(downloader.pause("download:other")).isFalse()
+                assertThat(downloader.pause(request.operationId)).isTrue()
+                assertThat(downloader.resume(request.operationId)).isTrue()
+                verify(operation, never()).pause()
+                verify(operation, never()).resume()
 
-            runCurrent()
+                runCurrent()
 
-            val controls = Mockito.inOrder(operation)
-            controls.verify(operation).pause()
-            controls.verify(operation).resume()
-            assertThat(result.isCompleted).isFalse()
-            result.cancelAndJoin()
+                val controls = Mockito.inOrder(operation)
+                controls.verify(operation).pause()
+                controls.verify(operation).resume()
+                assertThat(result.isCompleted).isFalse()
+                result.cancelAndJoin()
+            }
         }
-    }
 
     @Test
     fun `resume is rejected once native handle cleanup starts`() = runTest {
@@ -279,7 +304,8 @@ class ChatSdkFileDownloaderTest {
         Mockito.mockStatic(MediaDownload::class.java).use { native ->
             native.preparePlain(request)
 
-            val result = ChatSdkFileDownloader(StandardTestDispatcher(testScheduler)).download(request) {}
+            val result =
+                ChatSdkFileDownloader(StandardTestDispatcher(testScheduler)).download(request) {}
 
             assertThat((result as FileTransferResult.Failure).error).isSameInstanceAs(error)
             verify(operation).cancel()
@@ -308,7 +334,12 @@ class ChatSdkFileDownloaderTest {
 
     private fun MockedStatic<MediaDownload>.preparePlain(request: FileDownloadRequest) {
         `when`<MediaDownload> {
-            MediaDownload.download(eq(request.toSdkRequest()), eq(request.destinationFile.absolutePath), any(), isNull())
+            MediaDownload.download(
+                eq(request.toSdkRequest()),
+                eq(request.destinationFile.absolutePath),
+                any(),
+                isNull()
+            )
         }.thenAnswer {
             listener = it.getArgument(2)
             operation

@@ -79,7 +79,13 @@ class DefaultFileTransferTransportTest {
     fun `upload forwards SDK failure`() = runTest {
         val transport = DefaultFileTransferTransport()
         val utility = utilityConstruction.constructed().single()
-        val request = FileUploadRequest("upload:10", File("/tmp/prepared.txt"), "prepared.txt", "text/plain", attachment())
+        val request = FileUploadRequest(
+            "upload:10",
+            File("/tmp/prepared.txt"),
+            "prepared.txt",
+            "text/plain",
+            attachment()
+        )
         val error = SceytException(1, "upload failed")
         whenever(utility.uploadFile(any(), any())).thenReturn(SceytResponse.Error(error))
 
@@ -93,18 +99,31 @@ class DefaultFileTransferTransportTest {
         val transport = DefaultFileTransferTransport()
         val utility = utilityConstruction.constructed().single()
         whenever(utility.uploadFile(any(), any())).thenReturn(SceytResponse.Success(null))
-        val request = FileUploadRequest("upload:10", File("/tmp/prepared.txt"), "prepared.txt", "text/plain", attachment())
+        val request = FileUploadRequest(
+            "upload:10",
+            File("/tmp/prepared.txt"),
+            "prepared.txt",
+            "text/plain",
+            attachment()
+        )
 
         val result = transport.upload(request) {}
 
-        assertThat((result as FileTransferResult.Failure).error.message).isEqualTo("File upload failed")
+        assertThat((result as FileTransferResult.Failure).error.message)
+            .isEqualTo("File upload failed")
     }
 
     @Test
     fun `cancelling upload cancels its suspended SDK bridge`() = runTest {
         val transport = DefaultFileTransferTransport()
         val utility = utilityConstruction.constructed().single()
-        val request = FileUploadRequest("upload:10", File("/tmp/prepared.txt"), "prepared.txt", "text/plain", attachment())
+        val request = FileUploadRequest(
+            "upload:10",
+            File("/tmp/prepared.txt"),
+            "prepared.txt",
+            "text/plain",
+            attachment()
+        )
         var bridgeCancelled = false
         doSuspendableAnswer {
             try {
@@ -129,7 +148,11 @@ class DefaultFileTransferTransportTest {
         val customMetadata = JsonObject().apply { addProperty("appEncryption", "saved-key") }
         for (metadata in listOf(JsonObject(), customMetadata)) {
             val request = FileDownloadRequest(
-                "download:10", "https://cdn.test/file", File("/tmp/downloaded.txt"), attachment(), metadata = metadata,
+                "download:10",
+                "https://cdn.test/file",
+                File("/tmp/downloaded.txt"),
+                attachment(),
+                metadata = metadata,
             )
             val expected = FileTransferResult.Success(request.destinationFile.path)
             whenever(downloader.download(any(), any())).thenReturn(expected)

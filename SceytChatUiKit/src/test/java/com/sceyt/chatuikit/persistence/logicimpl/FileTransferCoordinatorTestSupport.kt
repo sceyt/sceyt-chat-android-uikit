@@ -67,11 +67,20 @@ internal class TestFileTransferService : FileTransferService {
         }
     }
 
-    override fun resume(messageTid: Long, attachment: SceytAttachment, state: TransferState, channelId: Long?) = Unit
+    override fun resume(
+        messageTid: Long,
+        attachment: SceytAttachment,
+        state: TransferState,
+        channelId: Long?
+    ) = Unit
 
     override fun redownload(attachment: SceytAttachment) = Unit
 
-    override fun getThumb(messageTid: Long, attachment: SceytAttachment, thumbData: ThumbData) = Unit
+    override fun getThumb(
+        messageTid: Long,
+        attachment: SceytAttachment,
+        thumbData: ThumbData
+    ) = Unit
 
     fun registerTask(task: TransferTask) {
         tasks.putIfAbsent(task.attachment.transferKey, task)
@@ -108,7 +117,8 @@ internal class RecordingFileTransferTransport : FileTransferTransport {
         }
 
         fun succeed(remoteReference: String, encryptionInfo: FileEncryptionInfo? = null) {
-            result.complete(FileTransferResult.Success(FileUploadResult(remoteReference, encryptionInfo)))
+            val uploaded = FileUploadResult(remoteReference, encryptionInfo)
+            result.complete(FileTransferResult.Success(uploaded))
         }
 
         fun fail(error: Throwable) {
@@ -153,7 +163,8 @@ internal class RecordingFileTransferTransport : FileTransferTransport {
     var resumeResult = false
     var onPrepareUpload: suspend (FileUploadRequest) -> JsonObject? = { null }
 
-    override suspend fun prepareUpload(request: FileUploadRequest): JsonObject? = onPrepareUpload(request)
+    override suspend fun prepareUpload(request: FileUploadRequest): JsonObject? =
+        onPrepareUpload(request)
 
     override suspend fun upload(
         request: FileUploadRequest,

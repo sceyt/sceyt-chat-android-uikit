@@ -47,16 +47,19 @@ class AttachmentDownloadMetadataTest {
 
     @Test
     fun `the download request carries its attachment and only the saved app object`() = runTest {
-        val value = attachment(filePath = null, fileSize = 456L, state = TransferState.PendingDownload)
-            .copy(metadata = """{"szw":1280,"enc":{"v":1},"file_transfer":{"key":"custom-key"}}""")
+        val value =
+            attachment(filePath = null, fileSize = 456L, state = TransferState.PendingDownload)
+                .copy(metadata = """{"szw":1280,"enc":{"v":1},"file_transfer":{"key":"custom-key"}}""")
         val finished = CompletableDeferred<SceytResponse<String>>()
-        val coordinator = AttachmentDownloadCoordinator(RuntimeEnvironment.getApplication(), backgroundScope)
+        val coordinator =
+            AttachmentDownloadCoordinator(RuntimeEnvironment.getApplication(), backgroundScope)
 
         coordinator.download(value, transferTask(value), { finished.complete(it) })
         runCurrent()
 
         val call = transport.downloadCalls.single()
-        assertThat(call.request.metadata).isEqualTo(JsonParser.parseString("""{"key":"custom-key"}""").asJsonObject)
+        assertThat(call.request.metadata)
+            .isEqualTo(JsonParser.parseString("""{"key":"custom-key"}""").asJsonObject)
         assertThat(call.request.attachment).isEqualTo(value)
         assertThat(call.request.type).isEqualTo(FileTransferType.PLAIN)
         call.succeed(call.request.destinationFile.path)
@@ -69,7 +72,8 @@ class AttachmentDownloadMetadataTest {
         SceytChatUIKit.fileTransfer.encryptionEnabled = true
         val value = attachment(filePath = null, state = TransferState.PendingDownload)
         val finished = CompletableDeferred<SceytResponse<String>>()
-        val coordinator = AttachmentDownloadCoordinator(RuntimeEnvironment.getApplication(), backgroundScope)
+        val coordinator =
+            AttachmentDownloadCoordinator(RuntimeEnvironment.getApplication(), backgroundScope)
 
         coordinator.download(value, transferTask(value), { finished.complete(it) })
         runCurrent()
@@ -85,10 +89,13 @@ class AttachmentDownloadMetadataTest {
 
     @Test
     fun `the router passes custom encryption fields without interpreting them`() = runTest {
-        val metadata = """{"file_transfer":{"enc":"app-format","appEncryption":{"key":"custom-key"}}}"""
-        val value = attachment(filePath = null, state = TransferState.PendingDownload).copy(metadata = metadata)
+        val metadata =
+            """{"file_transfer":{"enc":"app-format","appEncryption":{"key":"custom-key"}}}"""
+        val value = attachment(filePath = null, state = TransferState.PendingDownload)
+            .copy(metadata = metadata)
         val finished = CompletableDeferred<SceytResponse<String>>()
-        val coordinator = AttachmentDownloadCoordinator(RuntimeEnvironment.getApplication(), backgroundScope)
+        val coordinator =
+            AttachmentDownloadCoordinator(RuntimeEnvironment.getApplication(), backgroundScope)
 
         coordinator.download(value, transferTask(value), { finished.complete(it) })
         runCurrent()
@@ -106,7 +113,8 @@ class AttachmentDownloadMetadataTest {
         val value = attachment(filePath = null, state = TransferState.PendingDownload)
             .copy(metadata = "application metadata")
         val finished = CompletableDeferred<SceytResponse<String>>()
-        val coordinator = AttachmentDownloadCoordinator(RuntimeEnvironment.getApplication(), backgroundScope)
+        val coordinator =
+            AttachmentDownloadCoordinator(RuntimeEnvironment.getApplication(), backgroundScope)
 
         coordinator.download(value, transferTask(value), { finished.complete(it) })
         runCurrent()
@@ -124,7 +132,8 @@ class AttachmentDownloadMetadataTest {
         val value = attachment(filePath = null, state = TransferState.PendingDownload)
             .copy(metadata = """{"file_transfer":"broken"}""")
         val finished = CompletableDeferred<SceytResponse<String>>()
-        val coordinator = AttachmentDownloadCoordinator(RuntimeEnvironment.getApplication(), backgroundScope)
+        val coordinator =
+            AttachmentDownloadCoordinator(RuntimeEnvironment.getApplication(), backgroundScope)
 
         coordinator.download(value, transferTask(value), { finished.complete(it) })
         runCurrent()

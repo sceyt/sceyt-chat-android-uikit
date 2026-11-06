@@ -128,32 +128,33 @@ class FileTransferUtilityTest {
     }
 
     @Test
-    fun `cancellation during SDK startup cancels returned handle before caller cleanup`() = runTest {
-        val client = mock<ChatClient>()
-        val events = mutableListOf<String>()
-        val operation = UploadOperation { events += "sdk-cancelled" }
-        lateinit var job: Job
-        doAnswer {
-            job.cancel()
-            operation
-        }.whenever(client).uploadCancellable(any(), any(), any())
+    fun `cancellation during SDK startup cancels returned handle before caller cleanup`() =
+        runTest {
+            val client = mock<ChatClient>()
+            val events = mutableListOf<String>()
+            val operation = UploadOperation { events += "sdk-cancelled" }
+            lateinit var job: Job
+            doAnswer {
+                job.cancel()
+                operation
+            }.whenever(client).uploadCancellable(any(), any(), any())
 
-        withChatClient(client) {
-            val utility = FileTransferUtility()
-            job = launch(start = CoroutineStart.LAZY) {
-                try {
-                    utility.uploadFile(File("/tmp/upload.txt"), {})
-                } finally {
-                    events += "caller-cleanup"
+            withChatClient(client) {
+                val utility = FileTransferUtility()
+                job = launch(start = CoroutineStart.LAZY) {
+                    try {
+                        utility.uploadFile(File("/tmp/upload.txt"), {})
+                    } finally {
+                        events += "caller-cleanup"
+                    }
                 }
-            }
-            job.start()
-            runCurrent()
-            job.join()
+                job.start()
+                runCurrent()
+                job.join()
 
-            assertThat(events).containsExactly("sdk-cancelled", "caller-cleanup").inOrder()
+                assertThat(events).containsExactly("sdk-cancelled", "caller-cleanup").inOrder()
+            }
         }
-    }
 
     @Test
     fun `synchronous SDK completion and duplicate result resume once`() = runTest {
@@ -180,7 +181,12 @@ class FileTransferUtilityTest {
             val utility = FileTransferUtility()
             val downloader = construction.constructed().single()
             val destination = File("/tmp/download.txt")
-            val request = FileDownloadRequest("download:20:file", "https://cdn.test/file", destination, attachment())
+            val request = FileDownloadRequest(
+                "download:20:file",
+                "https://cdn.test/file",
+                destination,
+                attachment()
+            )
             val onProgress: (Float) -> Unit = {}
             val onResult: (FileTransferResult<String>) -> Unit = {}
             val onFinished: () -> Unit = {}

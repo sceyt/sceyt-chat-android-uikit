@@ -62,7 +62,11 @@ class AttachmentTransferResetCacheTest {
     }
 
     private fun messageWith(attachment: SceytAttachment) =
-        createMessage(createdAt = 1_000L, id = MESSAGE_TID, tid = MESSAGE_TID).copy(attachments = listOf(attachment))
+        createMessage(
+            createdAt = 1_000L,
+            id = MESSAGE_TID,
+            tid = MESSAGE_TID
+        ).copy(attachments = listOf(attachment))
 
     private fun pendingDownload() = TransferData(
         messageTid = MESSAGE_TID,

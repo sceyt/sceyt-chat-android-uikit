@@ -63,59 +63,78 @@ class AttachmentEncryptedTransferTest {
     }
 
     @Test
-    fun `custom uploader receives a file and its result supplies metadata and plaintext size`() = runTest {
-        val file = temporary.newFile("attachment.bin").apply { writeText("original plaintext") }
-        val originalSize = file.length()
-        val value = attachment(filePath = file.path, originalFilePath = file.path, fileSize = 999L).copy(
-            metadata = """{"szw":1280,"szh":203,"tmb":"blur-thumbnail"}""",
-        )
-        val task = transferTask(value)
-        val finished = CompletableDeferred<SceytResponse<String>>()
-        val coordinator = AttachmentUploadCoordinator(RuntimeEnvironment.getApplication(), mock(), backgroundScope)
-        coordinator.upload(value, task, { _, result -> finished.complete(result) }, {})
-        runCurrent()
-        val call = transport.uploadCalls.single()
-        val request = call.request
-        val info = FileEncryptionInfo("custom-returned-format", "custom-file-id", "custom-file-key")
+    fun `custom uploader receives a file and its result supplies metadata and plaintext size`() =
+        runTest {
+            val file = temporary.newFile("attachment.bin").apply { writeText("original plaintext") }
+            val originalSize = file.length()
+            val value =
+                attachment(filePath = file.path, originalFilePath = file.path, fileSize = 999L)
+                    .copy(
+                        metadata = """{"szw":1280,"szh":203,"tmb":"blur-thumbnail"}""",
+                    )
+            val task = transferTask(value)
+            val finished = CompletableDeferred<SceytResponse<String>>()
+            val coordinator = AttachmentUploadCoordinator(
+                RuntimeEnvironment.getApplication(),
+                mock(),
+                backgroundScope
+            )
+            coordinator.upload(value, task, { _, result -> finished.complete(result) }, {})
+            runCurrent()
+            val call = transport.uploadCalls.single()
+            val request = call.request
+            val info =
+                FileEncryptionInfo("custom-returned-format", "custom-file-id", "custom-file-key")
 
-        assertThat(request.sourceFile).isEqualTo(file)
-        assertThat(request.type).isEqualTo(FileTransferType.ENCRYPTED)
-        assertThat(request.attachment.metadata).isEqualTo(value.metadata)
-        // The transport has read the original bytes; the completion response can arrive later.
-        file.appendText("edited after the transport read the file")
-        call.succeed("https://waafi.test/completed", info)
+            assertThat(request.sourceFile).isEqualTo(file)
+            assertThat(request.type).isEqualTo(FileTransferType.ENCRYPTED)
+            assertThat(request.attachment.metadata).isEqualTo(value.metadata)
+            // The transport has read the original bytes; the completion response can arrive later.
+            file.appendText("edited after the transport read the file")
+            call.succeed("https://waafi.test/completed", info)
 
-        assertThat((finished.await() as SceytResponse.Success).data).isEqualTo("https://waafi.test/completed")
-        assertThat(task.attachment.fileSize).isEqualTo(originalSize)
-        assertThat(checkNotNull(FileEncryptionMetadata.read(task.attachment.metadata)).toEncryptionInfo()).isEqualTo(info)
-        val metadata = JsonParser.parseString(task.attachment.metadata).asJsonObject
-        assertThat(metadata.get("szw").asInt).isEqualTo(1280)
-        assertThat(metadata.get("tmb").asString).isEqualTo("blur-thumbnail")
-        verify(encryption, never()).prepareEncryption(any())
-    }
+            assertThat((finished.await() as SceytResponse.Success).data)
+                .isEqualTo("https://waafi.test/completed")
+            assertThat(task.attachment.fileSize).isEqualTo(originalSize)
+            val envelope = checkNotNull(FileEncryptionMetadata.read(task.attachment.metadata))
+            assertThat(envelope.toEncryptionInfo()).isEqualTo(info)
+            val metadata = JsonParser.parseString(task.attachment.metadata).asJsonObject
+            assertThat(metadata.get("szw").asInt).isEqualTo(1280)
+            assertThat(metadata.get("tmb").asString).isEqualTo("blur-thumbnail")
+            verify(encryption, never()).prepareEncryption(any())
+        }
 
     @Test
-    fun `encrypted success without encryption information fails instead of publishing an unusable attachment`() = runTest {
-        val file = temporary.newFile("missing-info.bin").apply { writeText("plaintext") }
-        val value = attachment(filePath = file.path, originalFilePath = file.path)
-        val task = transferTask(value)
-        val finished = CompletableDeferred<SceytResponse<String>>()
-        AttachmentUploadCoordinator(RuntimeEnvironment.getApplication(), mock(), backgroundScope)
-            .upload(value, task, { _, result -> finished.complete(result) }, {})
-        runCurrent()
+    fun `encrypted success without encryption information fails instead of publishing an unusable attachment`() =
+        runTest {
+            val file = temporary.newFile("missing-info.bin").apply { writeText("plaintext") }
+            val value = attachment(filePath = file.path, originalFilePath = file.path)
+            val task = transferTask(value)
+            val finished = CompletableDeferred<SceytResponse<String>>()
+            AttachmentUploadCoordinator(
+                RuntimeEnvironment.getApplication(),
+                mock(),
+                backgroundScope
+            )
+                .upload(value, task, { _, result -> finished.complete(result) }, {})
+            runCurrent()
 
-        transport.uploadCalls.single().succeed("https://waafi.test/missing-key")
+            transport.uploadCalls.single().succeed("https://waafi.test/missing-key")
 
-        assertThat(finished.await()).isInstanceOf(SceytResponse.Error::class.java)
-        assertThat(FileEncryptionMetadata.read(task.attachment.metadata)).isNull()
-    }
+            assertThat(finished.await()).isInstanceOf(SceytResponse.Error::class.java)
+            assertThat(FileEncryptionMetadata.read(task.attachment.metadata)).isNull()
+        }
 
     @Test
     fun `pause retains the upload while explicit cancel notifies the custom transport`() = runTest {
         val file = temporary.newFile("paused.bin").apply { writeText("plaintext") }
         val value = attachment(filePath = file.path, originalFilePath = file.path)
         val task = transferTask(value)
-        val coordinator = AttachmentUploadCoordinator(RuntimeEnvironment.getApplication(), mock(), backgroundScope)
+        val coordinator = AttachmentUploadCoordinator(
+            RuntimeEnvironment.getApplication(),
+            mock(),
+            backgroundScope
+        )
         coordinator.upload(value, task, { _, _ -> }, {})
         runCurrent()
 
@@ -137,15 +156,21 @@ class AttachmentEncryptedTransferTest {
     @Test
     fun `shared encrypted upload preserves each callers media metadata`() = runTest {
         val file = temporary.newFile("shared.bin").apply { writeText("shared plaintext") }
-        val first = attachment(messageTid = 1001, filePath = file.path, originalFilePath = file.path)
-            .copy(metadata = """{"caption":"first","szw":100}""")
-        val second = attachment(messageTid = 1002, filePath = file.path, originalFilePath = file.path)
-            .copy(metadata = """{"caption":"second","szw":200}""")
+        val first =
+            attachment(messageTid = 1001, filePath = file.path, originalFilePath = file.path)
+                .copy(metadata = """{"caption":"first","szw":100}""")
+        val second =
+            attachment(messageTid = 1002, filePath = file.path, originalFilePath = file.path)
+                .copy(metadata = """{"caption":"second","szw":200}""")
         val firstTask = transferTask(first).apply { isSharedUpload = true }
         val secondTask = transferTask(second).apply { isSharedUpload = true }
         val firstResult = CompletableDeferred<SceytResponse<String>>()
         val secondResult = CompletableDeferred<SceytResponse<String>>()
-        val coordinator = AttachmentUploadCoordinator(RuntimeEnvironment.getApplication(), mock(), backgroundScope)
+        val coordinator = AttachmentUploadCoordinator(
+            RuntimeEnvironment.getApplication(),
+            mock(),
+            backgroundScope
+        )
         coordinator.upload(first, firstTask, { _, result -> firstResult.complete(result) }, {})
         coordinator.upload(second, secondTask, { _, result -> secondResult.complete(result) }, {})
         runCurrent()
@@ -175,7 +200,8 @@ class AttachmentEncryptedTransferTest {
         Mockito.mockConstruction(ChatSdkFileDownloader::class.java) { downloader, _ ->
             doSuspendableAnswer { invocation ->
                 val request = invocation.getArgument<FileDownloadRequest>(0)
-                val metadata = checkNotNull(FileEncryptionMetadata.read(request.attachment.metadata))
+                val metadata =
+                    checkNotNull(FileEncryptionMetadata.read(request.attachment.metadata))
                 assertThat(metadata.toEncryptionInfo()).isEqualTo(info)
                 assertThat(request.type).isEqualTo(FileTransferType.ENCRYPTED)
                 assertThat(request.attachment.fileSize).isEqualTo(plaintext.size.toLong())

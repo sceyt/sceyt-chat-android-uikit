@@ -149,7 +149,8 @@ class AttachmentUploadCoordinatorTest {
 
         repeat(8) { index ->
             val shared = index % 2 == 0
-            val state = if (index % 4 < 2) TransferState.WaitingToUpload else TransferState.PendingUpload
+            val state =
+                if (index % 4 < 2) TransferState.WaitingToUpload else TransferState.PendingUpload
             val attachment = uploadAttachment(messageTid = 220L + index, state = state)
             val task = transferTask(attachment)
             val completions = mutableListOf<Result<SceytAttachment>>()
@@ -165,7 +166,8 @@ class AttachmentUploadCoordinatorTest {
 
             assertThat(transport.uploadCalls).isEmpty()
             assertThat(completions).hasSize(1)
-            assertThat(completions.single().exceptionOrNull()?.message).isEqualTo("Attachment upload is paused")
+            assertThat(completions.single().exceptionOrNull()?.message)
+                .isEqualTo("Attachment upload is paused")
             assertThat(task.state).isEqualTo(TransferState.PauseUpload)
             assertThat(resultCalls).isEqualTo(0)
             assertThat(service.findTransferTask(attachment)).isSameInstanceAs(task)
@@ -418,7 +420,10 @@ class AttachmentUploadCoordinatorTest {
     fun `cancel shared owner during interruption cleanup still delivers follower error`() {
         val releaseCancellation = CompletableDeferred<Unit>()
         SceytChatUIKit.fileTransfer.transport = object : FileTransferTransport by transport {
-            override suspend fun upload(request: FileUploadRequest, callback: FileTransferCallback): FileTransferResult<FileUploadResult> {
+            override suspend fun upload(
+                request: FileUploadRequest,
+                callback: FileTransferCallback
+            ): FileTransferResult<FileUploadResult> {
                 try {
                     return transport.upload(request, callback)
                 } finally {
@@ -647,32 +652,35 @@ class AttachmentUploadCoordinatorTest {
     }
 
     @Test
-    fun `cached url with resized path reuses both without uploading or preparing media`() = runBlocking {
-        SceytChatUIKit.config.preventDuplicateAttachmentUpload = true
-        val attachment = uploadAttachment(type = AttachmentTypeEnum.Video.value)
-        val resized = File(checkNotNull(attachment.filePath)).resolveSibling("cached-video.mp4").apply {
-            writeText("resized")
-        }
-        whenever(attachmentLogic.getFileChecksumData(attachment.originalFilePath)).thenReturn(
-            FileChecksumData(1L, resized.path, "reused-url", null, resized.length()),
-        )
-        var completed: SceytAttachment? = null
-        val task = service.upload(attachment) {
-            addOnCompletionListener("worker") { completed = it.getOrThrow() }
-        }
+    fun `cached url with resized path reuses both without uploading or preparing media`() =
+        runBlocking {
+            SceytChatUIKit.config.preventDuplicateAttachmentUpload = true
+            val attachment = uploadAttachment(type = AttachmentTypeEnum.Video.value)
+            val resized = File(checkNotNull(attachment.filePath)).resolveSibling("cached-video.mp4")
+                .apply {
+                    writeText("resized")
+                }
+            whenever(attachmentLogic.getFileChecksumData(attachment.originalFilePath)).thenReturn(
+                FileChecksumData(1L, resized.path, "reused-url", null, resized.length()),
+            )
+            var completed: SceytAttachment? = null
+            val task = service.upload(attachment) {
+                addOnCompletionListener("worker") { completed = it.getOrThrow() }
+            }
 
-        assertThat(transport.uploadCalls).isEmpty()
-        assertThat(completed?.url).isEqualTo("reused-url")
-        assertThat(completed?.filePath).isEqualTo(resized.path)
-        assertThat(task.attachment.originalFilePath).isEqualTo(attachment.originalFilePath)
-        assertThat(task.state).isEqualTo(TransferState.Uploaded)
-        assertThat(service.getTasks()).isEmpty()
-    }
+            assertThat(transport.uploadCalls).isEmpty()
+            assertThat(completed?.url).isEqualTo("reused-url")
+            assertThat(completed?.filePath).isEqualTo(resized.path)
+            assertThat(task.attachment.originalFilePath).isEqualTo(attachment.originalFilePath)
+            assertThat(task.state).isEqualTo(TransferState.Uploaded)
+            assertThat(service.getTasks()).isEmpty()
+        }
 
     @Test
     fun `video transcode publishes preparing progress before starting transport`() {
         var transcodeProgress: ((VideoTranscodeData) -> Unit)? = null
         var transcodeResult: ((Result<String>) -> Unit)? = null
+
         @Suppress("UNCHECKED_CAST")
         val extensionsClass = Class.forName(
             "com.sceyt.chatuikit.persistence.extensions.AttachmentResizeExtensionsKt",
@@ -687,11 +695,18 @@ class AttachmentUploadCoordinatorTest {
             val attachment = uploadAttachment(type = AttachmentTypeEnum.Video.value)
             val task = service.upload(attachment)
 
-            checkNotNull(transcodeProgress).invoke(VideoTranscodeData(TranscodeResultEnum.Progress, progressPercent = 40f))
+            checkNotNull(transcodeProgress).invoke(
+                VideoTranscodeData(
+                    TranscodeResultEnum.Progress,
+                    progressPercent = 40f
+                )
+            )
 
             assertThat(task.state).isEqualTo(TransferState.Preparing)
-            assertThat(AttachmentTransferStateStore.getTransferData(attachment)?.state).isEqualTo(TransferState.Preparing)
-            assertThat(AttachmentTransferStateStore.getTransferData(attachment)?.progressPercent).isEqualTo(40f)
+            assertThat(AttachmentTransferStateStore.getTransferData(attachment)?.state)
+                .isEqualTo(TransferState.Preparing)
+            assertThat(AttachmentTransferStateStore.getTransferData(attachment)?.progressPercent)
+                .isEqualTo(40f)
             assertThat(transport.uploadCalls).isEmpty()
 
             checkNotNull(transcodeResult).invoke(Result.success(checkNotNull(attachment.filePath)))
@@ -731,7 +746,8 @@ class AttachmentUploadCoordinatorTest {
         val firstResults = mutableListOf<String?>()
         val secondResults = mutableListOf<String?>()
         firstTask.progressCallback = ProgressUpdateCallback { firstProgress += it.progressPercent }
-        secondTask.progressCallback = ProgressUpdateCallback { secondProgress += it.progressPercent }
+        secondTask.progressCallback =
+            ProgressUpdateCallback { secondProgress += it.progressPercent }
         firstTask.uploadResultCallback = TransferResultCallback { firstResults += it.data }
         secondTask.uploadResultCallback = TransferResultCallback { secondResults += it.data }
 
@@ -759,7 +775,8 @@ class AttachmentUploadCoordinatorTest {
         val firstProgress = mutableListOf<Float>()
         val secondProgress = mutableListOf<Float>()
         firstTask.progressCallback = ProgressUpdateCallback { firstProgress += it.progressPercent }
-        secondTask.progressCallback = ProgressUpdateCallback { secondProgress += it.progressPercent }
+        secondTask.progressCallback =
+            ProgressUpdateCallback { secondProgress += it.progressPercent }
 
         uploadSharedFile(first, firstTask)
         uploadSharedFile(second, secondTask)
@@ -992,52 +1009,53 @@ class AttachmentUploadCoordinatorTest {
     }
 
     @Test
-    fun `checksum shared completion retains result for paused member and allows next share`() = runBlocking {
-        SceytChatUIKit.config.preventDuplicateAttachmentUpload = true
-        testScope = TestScope(StandardTestDispatcher())
-        coordinator = AttachmentUploadCoordinator(context, attachmentLogic, testScope)
-        service = FileTransferServiceImpl(context, coordinator, mock(), mock())
-        val first = uploadAttachment(messageTid = 103L)
-        val paused = uploadAttachment(messageTid = 104L, filePath = first.filePath)
-        val next = uploadAttachment(messageTid = 105L, filePath = first.filePath)
-        val firstResults = mutableListOf<String?>()
-        val pausedResults = mutableListOf<String?>()
-        val nextResults = mutableListOf<String?>()
-        val pausedTask = transferTask(paused).apply {
-            uploadResultCallback = TransferResultCallback { pausedResults += it.data }
+    fun `checksum shared completion retains result for paused member and allows next share`() =
+        runBlocking {
+            SceytChatUIKit.config.preventDuplicateAttachmentUpload = true
+            testScope = TestScope(StandardTestDispatcher())
+            coordinator = AttachmentUploadCoordinator(context, attachmentLogic, testScope)
+            service = FileTransferServiceImpl(context, coordinator, mock(), mock())
+            val first = uploadAttachment(messageTid = 103L)
+            val paused = uploadAttachment(messageTid = 104L, filePath = first.filePath)
+            val next = uploadAttachment(messageTid = 105L, filePath = first.filePath)
+            val firstResults = mutableListOf<String?>()
+            val pausedResults = mutableListOf<String?>()
+            val nextResults = mutableListOf<String?>()
+            val pausedTask = transferTask(paused).apply {
+                uploadResultCallback = TransferResultCallback { pausedResults += it.data }
+            }
+            whenever(attachmentLogic.getFileChecksumData(first.originalFilePath)).thenReturn(
+                FileChecksumData(
+                    checksum = 1L,
+                    resizedFilePath = null,
+                    url = "cached-url",
+                    metadata = null,
+                    fileSize = 4L,
+                ),
+            )
+
+            uploadSharedFile(first, transferTask(first).apply {
+                uploadResultCallback = TransferResultCallback { firstResults += it.data }
+            })
+            uploadSharedFile(paused, pausedTask)
+            pauseUpload(paused, TransferState.PendingUpload)
+            testScope.runCurrent()
+
+            uploadSharedFile(next, transferTask(next).apply {
+                uploadResultCallback = TransferResultCallback { nextResults += it.data }
+            })
+            testScope.runCurrent()
+
+            assertThat(firstResults).containsExactly("cached-url")
+            assertThat(nextResults).containsExactly("cached-url")
+            assertThat(pausedResults).isEmpty()
+            resumeUpload(paused, TransferState.PauseUpload)
+            testScope.runCurrent()
+            assertThat(pausedResults).containsExactly("cached-url")
+            Mockito.verify(attachmentLogic, Mockito.times(2))
+                .getFileChecksumData(first.originalFilePath)
+            assertThat(transport.uploadCalls).isEmpty()
         }
-        whenever(attachmentLogic.getFileChecksumData(first.originalFilePath)).thenReturn(
-            FileChecksumData(
-                checksum = 1L,
-                resizedFilePath = null,
-                url = "cached-url",
-                metadata = null,
-                fileSize = 4L,
-            ),
-        )
-
-        uploadSharedFile(first, transferTask(first).apply {
-            uploadResultCallback = TransferResultCallback { firstResults += it.data }
-        })
-        uploadSharedFile(paused, pausedTask)
-        pauseUpload(paused, TransferState.PendingUpload)
-        testScope.runCurrent()
-
-        uploadSharedFile(next, transferTask(next).apply {
-            uploadResultCallback = TransferResultCallback { nextResults += it.data }
-        })
-        testScope.runCurrent()
-
-        assertThat(firstResults).containsExactly("cached-url")
-        assertThat(nextResults).containsExactly("cached-url")
-        assertThat(pausedResults).isEmpty()
-        resumeUpload(paused, TransferState.PauseUpload)
-        testScope.runCurrent()
-        assertThat(pausedResults).containsExactly("cached-url")
-        Mockito.verify(attachmentLogic, Mockito.times(2))
-            .getFileChecksumData(first.originalFilePath)
-        assertThat(transport.uploadCalls).isEmpty()
-    }
 
     @Test
     fun `new share resumes natively paused group without another upload`() {
@@ -1278,7 +1296,10 @@ class AttachmentUploadCoordinatorTest {
 
     @Test
     fun `pending and queued uploads can pause before task registration`() {
-        listOf(TransferState.PendingUpload, TransferState.WaitingToUpload).forEachIndexed { index, state ->
+        listOf(
+            TransferState.PendingUpload,
+            TransferState.WaitingToUpload
+        ).forEachIndexed { index, state ->
             val attachment = uploadAttachment(messageTid = 123L + index, state = state)
             pauseUpload(attachment, state)
 
@@ -1326,7 +1347,10 @@ class AttachmentUploadCoordinatorTest {
     fun `late IOException from cancelled upload does not fail or advance its replacement`() {
         val cancellationGate = CompletableDeferred<Unit>()
         SceytChatUIKit.fileTransfer.transport = object : FileTransferTransport by transport {
-            override suspend fun upload(request: FileUploadRequest, callback: FileTransferCallback): FileTransferResult<FileUploadResult> {
+            override suspend fun upload(
+                request: FileUploadRequest,
+                callback: FileTransferCallback
+            ): FileTransferResult<FileUploadResult> {
                 return try {
                     transport.upload(request, callback)
                 } catch (_: CancellationException) {
@@ -1435,7 +1459,8 @@ class AttachmentUploadCoordinatorTest {
     @Test
     fun `encrypted upload keeps its prepared file on immediate retry without reusing the URL`() {
         SceytChatUIKit.fileTransfer.encryptionEnabled = true
-        val attachment = uploadAttachment(name = "original.mp4", type = AttachmentTypeEnum.Video.value)
+        val attachment =
+            uploadAttachment(name = "original.mp4", type = AttachmentTypeEnum.Video.value)
         val prepared = File(context.cacheDir, "prepared-encrypted-retry.mp4")
             .apply { writeText("prepared video") }
         var cached: FileChecksumData? = FileChecksumData(
@@ -1559,7 +1584,10 @@ class AttachmentUploadCoordinatorTest {
     @Test
     fun `transport timeout fails upload and next queued upload can complete`() {
         SceytChatUIKit.fileTransfer.transport = object : FileTransferTransport by transport {
-            override suspend fun upload(request: FileUploadRequest, callback: FileTransferCallback) =
+            override suspend fun upload(
+                request: FileUploadRequest,
+                callback: FileTransferCallback
+            ) =
                 withTimeout(10.milliseconds) { transport.upload(request, callback) }
         }
         val first = uploadAttachment(messageTid = 56L)
@@ -1812,6 +1840,7 @@ class AttachmentUploadCoordinatorTest {
     fun `late transcode result after pause is ignored and resume can transcode again`() {
         transport.pauseResult = true
         val transcodeCallbacks = mutableListOf<(Result<String>) -> Unit>()
+
         @Suppress("UNCHECKED_CAST")
         val extensionsClass = Class.forName(
             "com.sceyt.chatuikit.persistence.extensions.AttachmentResizeExtensionsKt",
@@ -1919,6 +1948,7 @@ class AttachmentUploadCoordinatorTest {
     @Test
     fun `shared preparation stops only after every task is paused`() {
         val transcodeCallbacks = mutableListOf<(Result<String>) -> Unit>()
+
         @Suppress("UNCHECKED_CAST")
         val extensionsClass = Class.forName(
             "com.sceyt.chatuikit.persistence.extensions.AttachmentResizeExtensionsKt",
@@ -1968,6 +1998,7 @@ class AttachmentUploadCoordinatorTest {
         val resizeStarted = CountDownLatch(1)
         val releaseResize = CountDownLatch(1)
         val resizeCalls = AtomicInteger()
+
         @Suppress("UNCHECKED_CAST")
         val extensionsClass = Class.forName(
             "com.sceyt.chatuikit.persistence.extensions.AttachmentResizeExtensionsKt",
@@ -2211,7 +2242,13 @@ class AttachmentUploadCoordinatorTest {
     fun `stale waiting pause after completed upload is ignored`() {
         val attachment = uploadAttachment(messageTid = 181L, state = TransferState.WaitingToUpload)
         AttachmentTransferStateStore.put(
-            TransferData(attachment.messageTid, 100f, TransferState.Uploaded, attachment.filePath, "done-url"),
+            TransferData(
+                attachment.messageTid,
+                100f,
+                TransferState.Uploaded,
+                attachment.filePath,
+                "done-url"
+            ),
         )
 
         pauseUpload(attachment, TransferState.WaitingToUpload)
@@ -2242,7 +2279,13 @@ class AttachmentUploadCoordinatorTest {
     }
 
     private fun resumeUpload(attachment: SceytAttachment, state: TransferState) {
-        check(state in listOf(TransferState.PendingUpload, TransferState.PauseUpload, TransferState.ErrorUpload))
+        check(
+            state in listOf(
+                TransferState.PendingUpload,
+                TransferState.PauseUpload,
+                TransferState.ErrorUpload
+            )
+        )
         val task = service.findOrCreateTransferTask(attachment)
         task.state = TransferState.WaitingToUpload
         service.upload(attachment, shared = task.isSharedUpload)

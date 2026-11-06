@@ -35,7 +35,8 @@ class FileTransferServiceImplRedownloadTest {
     fun setUp() {
         AttachmentTransferStateStore.clear()
         stopKoin()
-        service = FileTransferServiceImpl(RuntimeEnvironment.getApplication(), mock(), downloader, mock())
+        service =
+            FileTransferServiceImpl(RuntimeEnvironment.getApplication(), mock(), downloader, mock())
         SceytKoinApp.koinApp = startKoin {
             modules(module {
                 single<FileTransferService> { service }

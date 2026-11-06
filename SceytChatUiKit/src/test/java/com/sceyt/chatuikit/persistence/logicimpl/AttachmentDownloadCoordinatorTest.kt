@@ -71,7 +71,12 @@ class AttachmentDownloadCoordinatorTest {
         destinationFile.delete()
         transport = RecordingFileTransferTransport()
         testScope = TestScope(UnconfinedTestDispatcher())
-        service = FileTransferServiceImpl(context, mock(), AttachmentDownloadCoordinator(context, testScope), mock())
+        service = FileTransferServiceImpl(
+            context,
+            mock(),
+            AttachmentDownloadCoordinator(context, testScope),
+            mock()
+        )
         previousFileTransfer = SceytChatUIKit.fileTransfer
         SceytChatUIKit.fileTransfer = SceytChatUIKitFileTransfer().apply {
             this.transport = this@AttachmentDownloadCoordinatorTest.transport
@@ -168,7 +173,10 @@ class AttachmentDownloadCoordinatorTest {
     @Test
     fun `resume does not overwrite an immediate transfer failure with downloading`() {
         SceytChatUIKit.fileTransfer.transport = object : FileTransferTransport by transport {
-            override suspend fun download(request: FileDownloadRequest, callback: FileTransferCallback): FileTransferResult<String> {
+            override suspend fun download(
+                request: FileDownloadRequest,
+                callback: FileTransferCallback
+            ): FileTransferResult<String> {
                 throw IllegalStateException("download failed")
             }
         }
@@ -183,7 +191,8 @@ class AttachmentDownloadCoordinatorTest {
 
         service.resume(attachment.messageTid, attachment, TransferState.ErrorDownload)
 
-        assertThat(states).containsExactly(TransferState.Downloading, TransferState.ErrorDownload).inOrder()
+        assertThat(states)
+            .containsExactly(TransferState.Downloading, TransferState.ErrorDownload).inOrder()
     }
 
     @Test
@@ -240,9 +249,10 @@ class AttachmentDownloadCoordinatorTest {
         val secondResults = mutableListOf<String?>()
         firstTask.downloadCallback = TransferResultCallback { firstResults += it.data }
         secondTask.downloadCallback = TransferResultCallback { secondResults += it.data }
-        SceytChatUIKit.fileTransfer.destinationProvider = FileTransferDestinationProvider { _, value ->
-            File(destinationFile.parentFile, value.name)
-        }
+        SceytChatUIKit.fileTransfer.destinationProvider =
+            FileTransferDestinationProvider { _, value ->
+                File(destinationFile.parentFile, value.name)
+            }
 
         service.download(first)
         service.download(second)
@@ -265,9 +275,10 @@ class AttachmentDownloadCoordinatorTest {
     fun `different messages with unassigned ids and the same url have separate downloads`() {
         val first = attachment(state = TransferState.Downloading).copy(id = null)
         val second = first.copy(messageTid = 11L, id = 0L, name = "second.txt")
-        SceytChatUIKit.fileTransfer.destinationProvider = FileTransferDestinationProvider { _, value ->
-            File(destinationFile.parentFile, value.name)
-        }
+        SceytChatUIKit.fileTransfer.destinationProvider =
+            FileTransferDestinationProvider { _, value ->
+                File(destinationFile.parentFile, value.name)
+            }
 
         service.download(first)
         service.download(second)
@@ -298,11 +309,13 @@ class AttachmentDownloadCoordinatorTest {
         val firstProgress = mutableListOf<Float>()
         val secondProgress = mutableListOf<Float>()
         firstTask.progressCallback = ProgressUpdateCallback { firstProgress += it.progressPercent }
-        secondTask.progressCallback = ProgressUpdateCallback { secondProgress += it.progressPercent }
+        secondTask.progressCallback =
+            ProgressUpdateCallback { secondProgress += it.progressPercent }
 
-        SceytChatUIKit.fileTransfer.destinationProvider = FileTransferDestinationProvider { _, value ->
-            File(destinationFile.parentFile, value.name)
-        }
+        SceytChatUIKit.fileTransfer.destinationProvider =
+            FileTransferDestinationProvider { _, value ->
+                File(destinationFile.parentFile, value.name)
+            }
 
         service.download(first)
         service.download(second)
@@ -383,7 +396,8 @@ class AttachmentDownloadCoordinatorTest {
         assertThat(results.single().code).isEqualTo(416)
         assertThat(destinationFile.exists()).isFalse()
         assertThat(service.findTransferTask(attachment)).isNull()
-        service.findOrCreateTransferTask(attachment).downloadCallback = TransferResultCallback { results += it }
+        service.findOrCreateTransferTask(attachment).downloadCallback =
+            TransferResultCallback { results += it }
 
         service.resume(attachment.messageTid, attachment, TransferState.ErrorDownload)
 
@@ -423,7 +437,10 @@ class AttachmentDownloadCoordinatorTest {
     @Test
     fun `transport timeout is forwarded as failure and allows retry`() {
         SceytChatUIKit.fileTransfer.transport = object : FileTransferTransport by transport {
-            override suspend fun download(request: FileDownloadRequest, callback: FileTransferCallback) =
+            override suspend fun download(
+                request: FileDownloadRequest,
+                callback: FileTransferCallback
+            ) =
                 withTimeout(10.milliseconds) { transport.download(request, callback) }
         }
         val attachment = attachment(state = TransferState.PendingDownload)
@@ -492,7 +509,10 @@ class AttachmentDownloadCoordinatorTest {
     fun `interruption preserves partial destination and allows explicit retry`() {
         var interrupted = true
         SceytChatUIKit.fileTransfer.transport = object : FileTransferTransport by transport {
-            override suspend fun download(request: FileDownloadRequest, callback: FileTransferCallback): FileTransferResult<String> {
+            override suspend fun download(
+                request: FileDownloadRequest,
+                callback: FileTransferCallback
+            ): FileTransferResult<String> {
                 if (interrupted) {
                     interrupted = false
                     return FileTransferResult.Interrupted(java.io.IOException("No network connection"))
@@ -515,7 +535,8 @@ class AttachmentDownloadCoordinatorTest {
         assertThat(results.single().message).isEqualTo("No network connection")
         assertThat(destinationFile.readBytes()).isEqualTo(partialBytes)
         assertThat(service.findTransferTask(attachment)).isNull()
-        service.findOrCreateTransferTask(attachment).downloadCallback = TransferResultCallback { results += it }
+        service.findOrCreateTransferTask(attachment).downloadCallback =
+            TransferResultCallback { results += it }
 
         service.resume(attachment.messageTid, attachment, TransferState.ErrorDownload)
 
@@ -631,7 +652,11 @@ class AttachmentDownloadCoordinatorTest {
         val task = transferTask(attachment)
 
         service.download(attachment)
-        service.pause((attachment.copy(url = "https://cdn.test/new.txt")).messageTid, attachment.copy(url = "https://cdn.test/new.txt"), TransferState.Downloading)
+        service.pause(
+            (attachment.copy(url = "https://cdn.test/new.txt")).messageTid,
+            attachment.copy(url = "https://cdn.test/new.txt"),
+            TransferState.Downloading
+        )
 
         assertThat(transport.downloadCalls.single().cancelled).isTrue()
     }
@@ -732,7 +757,12 @@ class AttachmentDownloadCoordinatorTest {
     @Test
     fun `resume waits for original cleanup when a queued replacement never starts`() {
         testScope = TestScope(StandardTestDispatcher())
-        service = FileTransferServiceImpl(context, mock(), AttachmentDownloadCoordinator(context, testScope), mock())
+        service = FileTransferServiceImpl(
+            context,
+            mock(),
+            AttachmentDownloadCoordinator(context, testScope),
+            mock()
+        )
         val attachment = attachment(state = TransferState.Downloading)
         transferTask(attachment)
         val cancellationGate = CompletableDeferred<Unit>()
@@ -762,7 +792,10 @@ class AttachmentDownloadCoordinatorTest {
     fun `late error from cancelled download keeps replacement partial destination`() {
         val cancellationGate = CompletableDeferred<Unit>()
         SceytChatUIKit.fileTransfer.transport = object : FileTransferTransport by transport {
-            override suspend fun download(request: FileDownloadRequest, callback: FileTransferCallback): FileTransferResult<String> {
+            override suspend fun download(
+                request: FileDownloadRequest,
+                callback: FileTransferCallback
+            ): FileTransferResult<String> {
                 return try {
                     transport.download(request, callback)
                 } catch (_: CancellationException) {
@@ -854,9 +887,10 @@ class AttachmentDownloadCoordinatorTest {
         val second = first.copy(messageTid = 11L, name = "second.txt", url = "second-url")
         val firstTask = transferTask(first)
         val secondTask = transferTask(second)
-        SceytChatUIKit.fileTransfer.destinationProvider = FileTransferDestinationProvider { _, value ->
-            File(destinationFile.parentFile, value.name)
-        }
+        SceytChatUIKit.fileTransfer.destinationProvider =
+            FileTransferDestinationProvider { _, value ->
+                File(destinationFile.parentFile, value.name)
+            }
         var triggered = false
         firstTask.progressCallback = ProgressUpdateCallback {
             if (triggered || it.progressPercent != 50f) return@ProgressUpdateCallback
@@ -985,7 +1019,10 @@ class AttachmentDownloadCoordinatorTest {
             )
             val cancellationGate = CompletableDeferred<Unit>()
             SceytChatUIKit.fileTransfer.transport = object : FileTransferTransport by transport {
-                override suspend fun download(request: FileDownloadRequest, callback: FileTransferCallback): FileTransferResult<String> {
+                override suspend fun download(
+                    request: FileDownloadRequest,
+                    callback: FileTransferCallback
+                ): FileTransferResult<String> {
                     try {
                         return transport.download(request, callback)
                     } finally {
@@ -1072,7 +1109,8 @@ class AttachmentDownloadCoordinatorTest {
         service.resume(attachment.messageTid, attachment, TransferState.PauseDownload)
 
         assertThat(task.state).isEqualTo(TransferState.PauseDownload)
-        assertThat(states).containsExactly(TransferState.PauseDownload, TransferState.PauseDownload).inOrder()
+        assertThat(states)
+            .containsExactly(TransferState.PauseDownload, TransferState.PauseDownload).inOrder()
         assertThat(transport.downloadCalls).hasSize(1)
         assertThat(transport.downloadCalls.single().cancelled).isFalse()
     }

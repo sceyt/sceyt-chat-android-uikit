@@ -42,32 +42,42 @@ class ChatSdkFileEncryptionTest {
     private val info = SdkInfo("test-format", FileEncryptionData("file-id", "test-file-key", 4L))
 
     @Test
-    fun `prepared attachment ID meets the SDK format and stays in metadata and checkpoint`() = runTest {
-        val provider = mock<FileEncryptionProvider>()
-        val prepared = upload()
-        doAnswer {
-            val id = it.getArgument<String>(1)
-            require(id.matches(Regex("[A-Za-z0-9_-]{22}")) && Base64.getUrlDecoder().decode(id).size == 16) {
-                "uniqueId must be 16 bytes of base64url without padding"
+    fun `prepared attachment ID meets the SDK format and stays in metadata and checkpoint`() =
+        runTest {
+            val provider = mock<FileEncryptionProvider>()
+            val prepared = upload()
+            doAnswer {
+                val id = it.getArgument<String>(1)
+                require(
+                    id.matches(Regex("[A-Za-z0-9_-]{22}")) && Base64.getUrlDecoder()
+                        .decode(id).size == 16
+                ) {
+                    "uniqueId must be 16 bytes of base64url without padding"
+                }
+                val encryptionInfo =
+                    SdkInfo("test-format", FileEncryptionData(id, "test-file-key", 4L))
+                whenever(prepared.encryptionInfo).thenReturn(encryptionInfo)
+                whenever(prepared.checkpoint).thenReturn(
+                    SdkCheckpoint(
+                        encryptionInfo,
+                        "saved-state"
+                    )
+                )
+                prepared
+            }.whenever(provider).prepareUpload(eq(file), any())
+
+            ChatSdkFileEncryption(provider).prepareEncryption(file).use { session ->
+                val id = argumentCaptor<String>()
+                verify(provider).prepareUpload(eq(file), id.capture())
+                val metadata = FileEncryptionMetadata.write(
+                    null, FileEncryptionMetadata.fromEncryptionInfo(session.encryptionInfo),
+                )
+
+                assertThat(session.encryptionInfo.attachmentId).isEqualTo(id.firstValue)
+                assertThat(FileEncryptionMetadata.read(metadata)?.attachmentId).isEqualTo(id.firstValue)
+                assertThat(session.checkpoint().encryptionInfo.attachmentId).isEqualTo(id.firstValue)
             }
-            val encryptionInfo = SdkInfo("test-format", FileEncryptionData(id, "test-file-key", 4L))
-            whenever(prepared.encryptionInfo).thenReturn(encryptionInfo)
-            whenever(prepared.checkpoint).thenReturn(SdkCheckpoint(encryptionInfo, "saved-state"))
-            prepared
-        }.whenever(provider).prepareUpload(eq(file), any())
-
-        ChatSdkFileEncryption(provider).prepareEncryption(file).use { session ->
-            val id = argumentCaptor<String>()
-            verify(provider).prepareUpload(eq(file), id.capture())
-            val metadata = FileEncryptionMetadata.write(
-                null, FileEncryptionMetadata.fromEncryptionInfo(session.encryptionInfo),
-            )
-
-            assertThat(session.encryptionInfo.attachmentId).isEqualTo(id.firstValue)
-            assertThat(FileEncryptionMetadata.read(metadata)?.attachmentId).isEqualTo(id.firstValue)
-            assertThat(session.checkpoint().encryptionInfo.attachmentId).isEqualTo(id.firstValue)
         }
-    }
 
     @Test
     fun `typed checkpoint survives storage and restores the same SDK session`() = runTest {
@@ -97,7 +107,8 @@ class ChatSdkFileEncryptionTest {
 
         assertThat(resumed.read(2L, 2)).isEqualTo(bytes)
         assertThat(resumed.sourceId).isEqualTo(session.sourceId)
-        assertThat(resumed.encryptionInfo).isEqualTo(FileEncryptionInfo("test-format", "file-id", "test-file-key"))
+        assertThat(resumed.encryptionInfo)
+            .isEqualTo(FileEncryptionInfo("test-format", "file-id", "test-file-key"))
         assertThat(resumed.plaintextSize).isEqualTo(4L)
         assertThat(resumed.ciphertextSize).isEqualTo(8L)
         val checkpoint = argumentCaptor<SdkCheckpoint>()
@@ -115,7 +126,9 @@ class ChatSdkFileEncryptionTest {
         whenever(provider.restoreUpload(eq(file), any())).thenThrow(error)
         val checkpoint = FileEncryptionCheckpoint(info.toUIKitInfo(), 4L, "saved-state")
 
-        val failure = runCatching { ChatSdkFileEncryption(provider).restoreEncryption(file, checkpoint) }.exceptionOrNull()
+        val failure = runCatching {
+            ChatSdkFileEncryption(provider).restoreEncryption(file, checkpoint)
+        }.exceptionOrNull()
 
         assertThat(failure).isInstanceOf(IOException::class.java)
         assertThat(failure).hasMessageThat().isEqualTo("Source changed")
@@ -163,7 +176,9 @@ class ChatSdkFileEncryptionTest {
             }
             prepared
         }.whenever(provider).prepareUpload(eq(file), any())
-        val job = launch(Dispatchers.Default) { ChatSdkFileEncryption(provider).prepareEncryption(file) }
+        val job = launch(Dispatchers.Default) {
+            ChatSdkFileEncryption(provider).prepareEncryption(file)
+        }
         try {
             withContext(Dispatchers.Default) {
                 check(entered.await(5, TimeUnit.SECONDS))
