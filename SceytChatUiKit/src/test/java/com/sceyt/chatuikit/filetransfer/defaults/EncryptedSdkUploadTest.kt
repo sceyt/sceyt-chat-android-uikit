@@ -77,13 +77,11 @@ class EncryptedSdkUploadTest {
                 static.`when`<ChatClient> { ChatClient.getClient() }.thenReturn(client)
                 val progress = mutableListOf<Float>()
                 val result = async {
-                    DefaultFileTransferTransport().upload(
+                    DefaultFileTransferProvider().upload(
                         FileUploadRequest(
                             "upload:cancel",
                             file,
-                            "file.bin",
-                            null,
-                            attachment(),
+                            attachment(filePath = file.path),
                             type = FileTransferType.ENCRYPTED
                         ),
                         progress::add,
@@ -121,13 +119,11 @@ class EncryptedSdkUploadTest {
                 static.`when`<ChatClient> { ChatClient.getClient() }.thenReturn(client)
                 val progress = mutableListOf<Float>()
                 val result = async {
-                    DefaultFileTransferTransport().upload(
+                    DefaultFileTransferProvider().upload(
                         FileUploadRequest(
                             "upload:1",
                             file,
-                            "file.bin",
-                            null,
-                            attachment(),
+                            attachment(filePath = file.path),
                             type = FileTransferType.ENCRYPTED
                         ),
                         progress::add,
@@ -162,13 +158,11 @@ class EncryptedSdkUploadTest {
         Mockito.mockStatic(ChatClient::class.java).use { static ->
             static.`when`<ChatClient> { ChatClient.getClient() }.thenReturn(client)
 
-            val result = DefaultFileTransferTransport().upload(
+            val result = DefaultFileTransferProvider().upload(
                 FileUploadRequest(
                     "upload:error",
                     file,
-                    "file.bin",
-                    null,
-                    attachment(),
+                    attachment(filePath = file.path),
                     type = FileTransferType.ENCRYPTED
                 ),
             ) {}

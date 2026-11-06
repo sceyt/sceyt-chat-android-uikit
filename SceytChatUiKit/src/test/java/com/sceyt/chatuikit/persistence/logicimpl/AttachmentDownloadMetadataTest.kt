@@ -28,14 +28,14 @@ class AttachmentDownloadMetadataTest {
     val temporary = TemporaryFolder()
 
     private lateinit var previous: SceytChatUIKitFileTransfer
-    private val transport = RecordingFileTransferTransport()
+    private val transport = RecordingFileTransferProvider()
 
     @Before
     fun setUp() {
         previous = SceytChatUIKit.fileTransfer
         val destination = temporary.newFile()
         SceytChatUIKit.fileTransfer = SceytChatUIKitFileTransfer().apply {
-            transport = this@AttachmentDownloadMetadataTest.transport
+            provider = this@AttachmentDownloadMetadataTest.transport
             destinationProvider = FileTransferDestinationProvider { _, _ -> destination }
         }
     }

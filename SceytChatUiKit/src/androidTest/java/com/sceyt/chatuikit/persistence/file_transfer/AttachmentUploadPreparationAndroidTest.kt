@@ -17,7 +17,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.filetransfer.FileDownloadRequest
 import com.sceyt.chatuikit.filetransfer.FileTransferCallback
 import com.sceyt.chatuikit.filetransfer.FileTransferResult
-import com.sceyt.chatuikit.filetransfer.FileTransferTransport
+import com.sceyt.chatuikit.filetransfer.FileTransferProvider
 import com.sceyt.chatuikit.filetransfer.FileUploadRequest
 import com.sceyt.chatuikit.filetransfer.FileUploadResult
 import com.sceyt.chatuikit.filetransfer.SceytChatUIKitFileTransfer
@@ -94,7 +94,7 @@ class AttachmentUploadPreparationAndroidTest {
             var preparations = 0
             val config = SceytChatUIKitFileTransfer().apply {
                 encryptionEnabled = true
-                transport = object : FileTransferTransport {
+                provider = object : FileTransferProvider {
                     override suspend fun prepareUpload(request: FileUploadRequest): JsonObject {
                         return if (resuming) {
                             assertThat(request.metadata).isEqualTo(originalData)

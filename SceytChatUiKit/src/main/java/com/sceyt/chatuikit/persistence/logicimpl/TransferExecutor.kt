@@ -3,15 +3,15 @@ package com.sceyt.chatuikit.persistence.logicimpl
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.filetransfer.FileTransferCallback
 import com.sceyt.chatuikit.filetransfer.FileTransferResult
-import com.sceyt.chatuikit.filetransfer.FileTransferTransport
+import com.sceyt.chatuikit.filetransfer.FileTransferProvider
 import com.sceyt.chatuikit.filetransfer.encryption.FileEncryptionMetadata
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 
-/** Executes a routed transfer and keeps its controls bound to the selected transport. */
+/** Executes a routed transfer and keeps its controls bound to the selected provider. */
 internal class TransferExecutor(
     private val operationId: String,
-    private val transport: FileTransferTransport,
+    private val provider: FileTransferProvider,
     private val execute: suspend (TransferExecutor, FileTransferCallback) -> FileTransferResult<String>,
 ) {
     var attachment: SceytAttachment? = null
@@ -63,7 +63,7 @@ internal class TransferExecutor(
         discard?.invoke()
     }
 
-    fun pause(): Boolean = transferring && transport.pause(operationId)
+    fun pause(): Boolean = transferring && provider.pause(operationId)
 
-    fun resume(): Boolean = transferring && transport.resume(operationId)
+    fun resume(): Boolean = transferring && provider.resume(operationId)
 }

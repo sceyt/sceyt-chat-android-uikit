@@ -6,7 +6,7 @@ import com.sceyt.chatuikit.data.models.fold
 import com.sceyt.chatuikit.filetransfer.FileDownloadRequest
 import com.sceyt.chatuikit.filetransfer.FileTransferCallback
 import com.sceyt.chatuikit.filetransfer.FileTransferResult
-import com.sceyt.chatuikit.filetransfer.FileTransferTransport
+import com.sceyt.chatuikit.filetransfer.FileTransferProvider
 import com.sceyt.chatuikit.filetransfer.FileTransferType
 import com.sceyt.chatuikit.filetransfer.FileUploadRequest
 import com.sceyt.chatuikit.filetransfer.FileUploadResult
@@ -18,7 +18,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
 
-class DefaultFileTransferTransport : FileTransferTransport {
+class DefaultFileTransferProvider : FileTransferProvider {
     private val transferUtility = FileTransferUtility()
     private val downloader = ChatSdkFileDownloader()
 

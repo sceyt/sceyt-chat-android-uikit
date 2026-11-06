@@ -20,7 +20,7 @@ import com.sceyt.chatuikit.persistence.di.CoroutineContextType
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import com.sceyt.chatuikit.persistence.logicimpl.AttachmentDownloadCoordinator
 import com.sceyt.chatuikit.persistence.logicimpl.AttachmentUploadCoordinator
-import com.sceyt.chatuikit.persistence.logicimpl.RecordingFileTransferTransport
+import com.sceyt.chatuikit.persistence.logicimpl.RecordingFileTransferProvider
 import com.sceyt.chatuikit.persistence.logicimpl.attachment
 import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager.RESUME_PAUSED_UPLOAD
 import kotlinx.coroutines.CancellationException
@@ -60,7 +60,7 @@ class FileTransferServiceImplTest {
     val files = TemporaryFolder()
     private val workManager = mock<WorkManagerImpl>()
     private lateinit var previousFileTransfer: SceytChatUIKitFileTransfer
-    private lateinit var transport: RecordingFileTransferTransport
+    private lateinit var transport: RecordingFileTransferProvider
     private var uploadCoordinator: AttachmentUploadCoordinator? = null
 
     companion object {
@@ -103,10 +103,10 @@ class FileTransferServiceImplTest {
                 }
             })
         }
-        transport = RecordingFileTransferTransport()
+        transport = RecordingFileTransferProvider()
         SceytChatUIKit.fileTransfer = SceytChatUIKitFileTransfer().apply {
             encryptionEnabled = false
-            this.transport = this@FileTransferServiceImplTest.transport
+            this.provider = this@FileTransferServiceImplTest.transport
             destinationProvider = FileTransferDestinationProvider { _, attachment ->
                 File(files.root, "${attachment.messageTid}.txt")
             }
@@ -447,10 +447,10 @@ class FileTransferServiceImplTest {
     private fun useTransferCoordinators() {
         val context = RuntimeEnvironment.getApplication()
         val scope = TestScope(UnconfinedTestDispatcher())
-        transport = RecordingFileTransferTransport()
+        transport = RecordingFileTransferProvider()
         SceytChatUIKit.fileTransfer = SceytChatUIKitFileTransfer().apply {
             encryptionEnabled = false
-            this.transport = this@FileTransferServiceImplTest.transport
+            this.provider = this@FileTransferServiceImplTest.transport
             destinationProvider = FileTransferDestinationProvider { _, attachment ->
                 File(files.root, "${attachment.messageTid}.txt")
             }

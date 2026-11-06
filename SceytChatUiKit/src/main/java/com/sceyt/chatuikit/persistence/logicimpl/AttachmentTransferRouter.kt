@@ -4,11 +4,10 @@ import android.content.Context
 import com.google.gson.JsonObject
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
-import com.sceyt.chatuikit.extensions.getMimeType
 import com.sceyt.chatuikit.filetransfer.FileDownloadRequest
 import com.sceyt.chatuikit.filetransfer.FileTransferCallback
 import com.sceyt.chatuikit.filetransfer.FileTransferResult
-import com.sceyt.chatuikit.filetransfer.FileTransferTransport
+import com.sceyt.chatuikit.filetransfer.FileTransferProvider
 import com.sceyt.chatuikit.filetransfer.FileTransferType
 import com.sceyt.chatuikit.filetransfer.FileUploadRequest
 import com.sceyt.chatuikit.filetransfer.FileUploadResult
@@ -19,7 +18,7 @@ import com.sceyt.chatuikit.persistence.file_transfer.transferKey
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import java.io.File
 
-/** Creates transfer requests and keeps each execution bound to its selected transport. */
+/** Creates transfer requests and keeps each execution bound to its selected provider. */
 internal class AttachmentTransferRouter(
     context: Context,
     attachmentLogic: PersistenceAttachmentLogic? = null,
@@ -36,11 +35,11 @@ internal class AttachmentTransferRouter(
         onUploadPrepared: suspend (SceytAttachment) -> SceytAttachment,
     ): TransferExecutor {
         val config = SceytChatUIKit.fileTransfer
-        val transport = config.transport
+        val transport = config.provider
 
         return TransferExecutor(
             operationId = operationId,
-            transport = transport,
+            provider = transport,
         ) { execution, callback ->
             execution.onDiscard { transport.cancel(operationId) }
 
@@ -51,7 +50,7 @@ internal class AttachmentTransferRouter(
                 reuseUploadedUrl = !encrypted,
                 preparedFilePath = preparedFilePath,
             )
-            // A completed checksum match skips both preparation and upload on the transport.
+            // A completed checksum match skips both preparation and upload on the provider.
             if (prepared.reusedUrl == null) {
                 val request = createUploadRequest(
                     attachment = prepared.attachment,
@@ -86,7 +85,7 @@ internal class AttachmentTransferRouter(
 
     private suspend fun prepareUpload(
         request: FileUploadRequest,
-        transport: FileTransferTransport,
+        transport: FileTransferProvider,
         onUploadPrepared: suspend (SceytAttachment) -> SceytAttachment,
     ): SceytAttachment {
         val attachment = request.attachment.copy(fileSize = request.sourceFile.length())
@@ -99,7 +98,7 @@ internal class AttachmentTransferRouter(
     private suspend fun uploadPrepared(
         prepared: PreparedAttachment,
         execution: TransferExecutor,
-        transport: FileTransferTransport,
+        transport: FileTransferProvider,
         operationId: String,
         isSharedUpload: Boolean,
         encrypted: Boolean,
@@ -109,7 +108,7 @@ internal class AttachmentTransferRouter(
         val plaintextSize: Long
         val result: FileTransferResult<FileUploadResult>
 
-        // A cached URL skips the transport and keeps the attachment's stored size.
+        // A cached URL skips the provider and keeps the attachment's stored size.
         if (reusedUrl != null) {
             plaintextSize = prepared.attachment.fileSize
             result = FileTransferResult.Success(FileUploadResult(reusedUrl))
@@ -145,19 +144,14 @@ internal class AttachmentTransferRouter(
         operationId: String,
         encrypted: Boolean,
         isSharedUpload: Boolean,
-    ): FileUploadRequest {
-        val file = File(checkNotNull(attachment.filePath))
-        return FileUploadRequest(
-            operationId = operationId,
-            sourceFile = file,
-            fileName = attachment.name,
-            mimeType = getMimeType(file.path),
-            attachment = attachment,
-            isSharedUpload = isSharedUpload,
-            type = if (encrypted) FileTransferType.ENCRYPTED else FileTransferType.PLAIN,
-            metadata = attachment.metadata.fileTransferData() ?: JsonObject(),
-        )
-    }
+    ): FileUploadRequest = FileUploadRequest(
+        operationId = operationId,
+        sourceFile = File(checkNotNull(attachment.filePath)),
+        attachment = attachment,
+        isSharedUpload = isSharedUpload,
+        type = if (encrypted) FileTransferType.ENCRYPTED else FileTransferType.PLAIN,
+        metadata = attachment.metadata.fileTransferData() ?: JsonObject(),
+    )
 
     private fun applyUploadResult(
         attachment: SceytAttachment,
@@ -167,7 +161,7 @@ internal class AttachmentTransferRouter(
     ): SceytAttachment {
         val encryptionInfo = result.encryptionInfo
         if (encrypted && encryptionInfo == null) {
-            // A custom transport may keep its encryption information in the app's saved object.
+            // A custom provider may keep its encryption information in the app's saved object.
             checkNotNull(attachment.metadata.fileTransferData()) { "Encrypted upload returned no encryption information" }
         }
 
@@ -191,11 +185,11 @@ internal class AttachmentTransferRouter(
         destination: File,
     ): TransferExecutor {
         val config = SceytChatUIKit.fileTransfer
-        val transport = config.transport
+        val transport = config.provider
 
         return TransferExecutor(
             operationId = operationId,
-            transport = transport,
+            provider = transport,
         ) { execution, callback ->
             execution.onDiscard { transport.cancel(operationId) }
             val request = FileDownloadRequest(
@@ -211,10 +205,10 @@ internal class AttachmentTransferRouter(
     }
 
     fun discardSavedDownload(attachment: SceytAttachment) {
-        SceytChatUIKit.fileTransfer.transport.cancel("download:" + attachment.transferKey)
+        SceytChatUIKit.fileTransfer.provider.cancel("download:" + attachment.transferKey)
     }
 
     fun cancelUpload(attachment: SceytAttachment) {
-        SceytChatUIKit.fileTransfer.transport.cancel("upload:" + attachment.messageTid)
+        SceytChatUIKit.fileTransfer.provider.cancel("upload:" + attachment.messageTid)
     }
 }

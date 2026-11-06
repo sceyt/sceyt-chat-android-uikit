@@ -25,7 +25,7 @@ import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.filetransfer.FileTransferCallback
 import com.sceyt.chatuikit.filetransfer.FileTransferResult
-import com.sceyt.chatuikit.filetransfer.FileTransferTransport
+import com.sceyt.chatuikit.filetransfer.FileTransferProvider
 import com.sceyt.chatuikit.filetransfer.FileTransferType
 import com.sceyt.chatuikit.filetransfer.FileUploadRequest
 import com.sceyt.chatuikit.filetransfer.FileUploadResult
@@ -44,13 +44,12 @@ import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferServiceImpl
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
-import com.sceyt.chatuikit.persistence.file_transfer.TransferTask
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
 import com.sceyt.chatuikit.persistence.logicimpl.AttachmentDownloadCoordinator
 import com.sceyt.chatuikit.persistence.logicimpl.AttachmentUploadCoordinator
-import com.sceyt.chatuikit.persistence.logicimpl.RecordingFileTransferTransport
+import com.sceyt.chatuikit.persistence.logicimpl.RecordingFileTransferProvider
 import com.sceyt.chatuikit.persistence.logicimpl.attachment
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.persistence.logicimpl.channel.PersistenceChannelsLogicImpl
@@ -110,7 +109,7 @@ class UploadAndSendAttachmentWorkerTest {
     private val context: Context = RuntimeEnvironment.getApplication()
     private val messageLogic = mock<PersistenceMessagesLogic>()
     private val workManager = mock<WorkManagerImpl>()
-    private val transport = RecordingFileTransferTransport()
+    private val transport = RecordingFileTransferProvider()
     private lateinit var previousFileTransfer: SceytChatUIKitFileTransfer
     private lateinit var previousConfig: SceytChatUIKitConfig
     private lateinit var previousNotifications: SceytNotifications
@@ -143,7 +142,7 @@ class UploadAndSendAttachmentWorkerTest {
             .getOrElse { SceytNotifications(context) }
         SceytChatUIKit.fileTransfer = SceytChatUIKitFileTransfer().apply {
             encryptionEnabled = false
-            transport = this@UploadAndSendAttachmentWorkerTest.transport
+            provider = this@UploadAndSendAttachmentWorkerTest.transport
         }
         SceytChatUIKit.config = SceytChatUIKitConfig().apply {
             preventDuplicateAttachmentUpload = false
@@ -729,7 +728,7 @@ class UploadAndSendAttachmentWorkerTest {
     @Test
     fun `pause queued with upload completion retains the result for resume`() {
         val attachment = localAttachment()
-        SceytChatUIKit.fileTransfer.transport = object : FileTransferTransport by transport {
+        SceytChatUIKit.fileTransfer.provider = object : FileTransferProvider by transport {
             override suspend fun upload(
                 request: FileUploadRequest,
                 callback: FileTransferCallback,

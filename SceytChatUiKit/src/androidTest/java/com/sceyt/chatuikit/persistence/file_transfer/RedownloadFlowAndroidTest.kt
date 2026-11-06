@@ -17,7 +17,7 @@ import com.sceyt.chatuikit.filetransfer.FileDownloadRequest
 import com.sceyt.chatuikit.filetransfer.FileTransferCallback
 import com.sceyt.chatuikit.filetransfer.FileTransferDestinationProvider
 import com.sceyt.chatuikit.filetransfer.FileTransferResult
-import com.sceyt.chatuikit.filetransfer.FileTransferTransport
+import com.sceyt.chatuikit.filetransfer.FileTransferProvider
 import com.sceyt.chatuikit.filetransfer.FileUploadRequest
 import com.sceyt.chatuikit.filetransfer.FileUploadResult
 import com.sceyt.chatuikit.filetransfer.SceytChatUIKitFileTransfer
@@ -86,7 +86,7 @@ class RedownloadFlowAndroidTest {
             })
         }
         SceytChatUIKit.fileTransfer = SceytChatUIKitFileTransfer().apply {
-            transport = CapturingTransport()
+            provider = CapturingProvider()
             destinationProvider =
                 FileTransferDestinationProvider { _, _ -> File(dir, "downloaded.jpg") }
         }
@@ -225,7 +225,7 @@ class RedownloadFlowAndroidTest {
     private fun SceytAttachment.toUploadedTransferData() =
         TransferData(messageTid, 100f, TransferState.Uploaded, filePath, url)
 
-    private inner class CapturingTransport : FileTransferTransport {
+    private inner class CapturingProvider : FileTransferProvider {
         override suspend fun download(
             request: FileDownloadRequest,
             callback: FileTransferCallback,

@@ -42,7 +42,7 @@ class AttachmentUploadPreparationTest {
     private lateinit var previousFileTransfer: SceytChatUIKitFileTransfer
     private lateinit var previousConfig: SceytChatUIKitConfig
     private val context: Context get() = RuntimeEnvironment.getApplication()
-    private val transport = RecordingFileTransferTransport()
+    private val transport = RecordingFileTransferProvider()
     private val attachmentLogic = mock<PersistenceAttachmentLogic>()
     private val saved = mutableMapOf<Long, SceytAttachment>()
 
@@ -51,7 +51,7 @@ class AttachmentUploadPreparationTest {
         previousFileTransfer = SceytChatUIKit.fileTransfer
         previousConfig = SceytChatUIKit.config
         SceytChatUIKit.fileTransfer = SceytChatUIKitFileTransfer().apply {
-            transport = this@AttachmentUploadPreparationTest.transport
+            provider = this@AttachmentUploadPreparationTest.transport
         }
         SceytChatUIKit.config = SceytChatUIKitConfig().apply {
             preventDuplicateAttachmentUpload = false

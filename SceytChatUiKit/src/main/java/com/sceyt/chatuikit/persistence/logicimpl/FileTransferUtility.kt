@@ -19,7 +19,7 @@ import java.io.File
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.resume
 
-/** Adapts SDK upload callbacks and HTTP downloads for the default transport. */
+/** Adapts SDK upload callbacks and HTTP downloads for the default provider. */
 class FileTransferUtility {
     private val downloader = OkHttpDownloader()
 

@@ -73,7 +73,7 @@ internal class AttachmentDownloadCoordinator(
             downloads[key] = download
             download.job.invokeOnCompletion {
                 synchronized(lock) {
-                    // Retain paused attempts so resume can reuse their transport.
+                    // Retain paused attempts so resume can reuse their provider.
                     if (!download.paused || download.completed) downloads.remove(key, download)
                 }
             }
@@ -90,7 +90,7 @@ internal class AttachmentDownloadCoordinator(
             // A repeated pause succeeds using the existing paused state.
             if (current.paused) return true
 
-            // Suppress progress before the transport can call back during pause.
+            // Suppress progress before the provider can call back during pause.
             current.paused = true
             current
         }
@@ -99,7 +99,7 @@ internal class AttachmentDownloadCoordinator(
             download.transfer?.pause() == true
         }.getOrDefault(false)
 
-        // Cancel the attempt when transport pause is unsupported or fails, keeping resumable files.
+        // Cancel the attempt when provider pause is unsupported or fails, keeping resumable files.
         if (!transportPaused) cancelAttempt(download)
         return true
     }
@@ -233,7 +233,7 @@ internal class AttachmentDownloadCoordinator(
             }
         }
 
-        // Progress and resume callbacks can pause or cancel before the transport starts.
+        // Progress and resume callbacks can pause or cancel before the provider starts.
         currentCoroutineContext().ensureActive()
         if (download.isResuming) {
             publishResumed(download, task)
