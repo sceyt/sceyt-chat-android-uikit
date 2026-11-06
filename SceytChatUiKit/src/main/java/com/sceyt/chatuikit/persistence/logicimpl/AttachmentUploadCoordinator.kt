@@ -221,6 +221,8 @@ internal class AttachmentUploadCoordinator(
                 onFilePrepared = { path ->
                     // Preparation belongs to the physical upload, even if its first caller is deleted.
                     upload.preparedFilePath = path
+                },
+                onFileLocationChanged = { path ->
                     if (!owner.finished)
                         owner.task.updateFileLocationCallback?.onUpdateFileLocation(path)
                 },

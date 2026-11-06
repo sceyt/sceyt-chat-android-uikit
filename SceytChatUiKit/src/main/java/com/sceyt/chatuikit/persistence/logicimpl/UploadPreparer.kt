@@ -46,8 +46,8 @@ internal class UploadPreparer(
             else -> false
         }
 
-        val preparedPath = if (canReusePreparedMedia)
-            findPreparedFile(attachment, originalPath, preparedFilePath) else null
+        val preparedPath = preparedFilePath?.takeIf { File(it).isFile }
+            ?: if (canReusePreparedMedia) findPreparedFile(attachment, originalPath) else null
 
         // Look up a cached URL or a prepared media file missing from this attempt.
         val checksum = if (canReuseUrl || (canReusePreparedMedia && preparedPath == null)) {
@@ -71,10 +71,9 @@ internal class UploadPreparer(
     private fun findPreparedFile(
         attachment: SceytAttachment,
         originalPath: String?,
-        preparedFilePath: String?,
     ): String? {
         val savedPath = attachment.filePath?.takeIf { originalPath != null && it != originalPath }
-        return listOfNotNull(preparedFilePath, savedPath).firstOrNull { File(it).isFile }
+        return savedPath?.takeIf { File(it).isFile }
     }
 
     private suspend fun prepareSource(
