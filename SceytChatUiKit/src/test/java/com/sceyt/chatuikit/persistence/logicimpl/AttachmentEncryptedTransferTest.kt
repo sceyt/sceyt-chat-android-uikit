@@ -9,7 +9,7 @@ import com.sceyt.chatuikit.filetransfer.FileTransferDestinationProvider
 import com.sceyt.chatuikit.filetransfer.FileTransferResult
 import com.sceyt.chatuikit.filetransfer.FileTransferType
 import com.sceyt.chatuikit.filetransfer.SceytChatUIKitFileTransfer
-import com.sceyt.chatuikit.filetransfer.defaults.DefaultFileTransferTransport
+import com.sceyt.chatuikit.filetransfer.defaults.DefaultFileTransferProvider
 import com.sceyt.chatuikit.filetransfer.download.ChatSdkFileDownloader
 import com.sceyt.chatuikit.filetransfer.encryption.FileEncryption
 import com.sceyt.chatuikit.filetransfer.encryption.FileEncryptionInfo
@@ -42,16 +42,16 @@ class AttachmentEncryptedTransferTest {
     val temporary = TemporaryFolder()
 
     private lateinit var previous: SceytChatUIKitFileTransfer
-    private lateinit var transport: RecordingFileTransferTransport
+    private lateinit var transport: RecordingFileTransferProvider
     private lateinit var encryption: FileEncryption
 
     @Before
     fun setUp() {
         previous = SceytChatUIKit.fileTransfer
-        transport = RecordingFileTransferTransport()
+        transport = RecordingFileTransferProvider()
         encryption = mock()
         SceytChatUIKit.fileTransfer = SceytChatUIKitFileTransfer().apply {
-            this.transport = this@AttachmentEncryptedTransferTest.transport
+            this.provider = this@AttachmentEncryptedTransferTest.transport
             this.encryption = this@AttachmentEncryptedTransferTest.encryption
             encryptionEnabled = true
         }
@@ -210,7 +210,7 @@ class AttachmentEncryptedTransferTest {
             }.whenever(downloader) { download(any(), any()) }
         }.use { native ->
             SceytChatUIKit.fileTransfer = SceytChatUIKitFileTransfer().apply {
-                transport = DefaultFileTransferTransport()
+                provider = DefaultFileTransferProvider()
                 destinationProvider = FileTransferDestinationProvider { _, _ -> destination }
                 encryptionEnabled = true
             }

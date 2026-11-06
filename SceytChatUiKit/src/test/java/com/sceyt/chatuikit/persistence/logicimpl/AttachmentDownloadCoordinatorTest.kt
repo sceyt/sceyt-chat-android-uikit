@@ -10,7 +10,7 @@ import com.sceyt.chatuikit.filetransfer.FileDownloadRequest
 import com.sceyt.chatuikit.filetransfer.FileTransferCallback
 import com.sceyt.chatuikit.filetransfer.FileTransferDestinationProvider
 import com.sceyt.chatuikit.filetransfer.FileTransferResult
-import com.sceyt.chatuikit.filetransfer.FileTransferTransport
+import com.sceyt.chatuikit.filetransfer.FileTransferProvider
 import com.sceyt.chatuikit.filetransfer.SceytChatUIKitFileTransfer
 import com.sceyt.chatuikit.koin.SceytKoinApp
 import com.sceyt.chatuikit.persistence.database.dao.FileChecksumDao
@@ -58,7 +58,7 @@ class AttachmentDownloadCoordinatorTest {
     private lateinit var context: Context
     private lateinit var destinationFile: File
     private lateinit var service: FileTransferServiceImpl
-    private lateinit var transport: RecordingFileTransferTransport
+    private lateinit var transport: RecordingFileTransferProvider
     private lateinit var previousFileTransfer: SceytChatUIKitFileTransfer
     private lateinit var testScope: TestScope
 
@@ -69,7 +69,7 @@ class AttachmentDownloadCoordinatorTest {
         destinationFile = File(context.cacheDir, "transfer-tests/download.bin")
         destinationFile.parentFile?.mkdirs()
         destinationFile.delete()
-        transport = RecordingFileTransferTransport()
+        transport = RecordingFileTransferProvider()
         testScope = TestScope(UnconfinedTestDispatcher())
         service = FileTransferServiceImpl(
             context,
@@ -79,7 +79,7 @@ class AttachmentDownloadCoordinatorTest {
         )
         previousFileTransfer = SceytChatUIKit.fileTransfer
         SceytChatUIKit.fileTransfer = SceytChatUIKitFileTransfer().apply {
-            this.transport = this@AttachmentDownloadCoordinatorTest.transport
+            this.provider = this@AttachmentDownloadCoordinatorTest.transport
             destinationProvider = FileTransferDestinationProvider { _, _ -> destinationFile }
         }
         SceytKoinApp.koinApp = startKoin {
@@ -172,7 +172,7 @@ class AttachmentDownloadCoordinatorTest {
 
     @Test
     fun `resume does not overwrite an immediate transfer failure with downloading`() {
-        SceytChatUIKit.fileTransfer.transport = object : FileTransferTransport by transport {
+        SceytChatUIKit.fileTransfer.provider = object : FileTransferProvider by transport {
             override suspend fun download(
                 request: FileDownloadRequest,
                 callback: FileTransferCallback
@@ -436,7 +436,7 @@ class AttachmentDownloadCoordinatorTest {
 
     @Test
     fun `transport timeout is forwarded as failure and allows retry`() {
-        SceytChatUIKit.fileTransfer.transport = object : FileTransferTransport by transport {
+        SceytChatUIKit.fileTransfer.provider = object : FileTransferProvider by transport {
             override suspend fun download(
                 request: FileDownloadRequest,
                 callback: FileTransferCallback
@@ -508,7 +508,7 @@ class AttachmentDownloadCoordinatorTest {
     @Test
     fun `interruption preserves partial destination and allows explicit retry`() {
         var interrupted = true
-        SceytChatUIKit.fileTransfer.transport = object : FileTransferTransport by transport {
+        SceytChatUIKit.fileTransfer.provider = object : FileTransferProvider by transport {
             override suspend fun download(
                 request: FileDownloadRequest,
                 callback: FileTransferCallback
@@ -791,7 +791,7 @@ class AttachmentDownloadCoordinatorTest {
     @Test
     fun `late error from cancelled download keeps replacement partial destination`() {
         val cancellationGate = CompletableDeferred<Unit>()
-        SceytChatUIKit.fileTransfer.transport = object : FileTransferTransport by transport {
+        SceytChatUIKit.fileTransfer.provider = object : FileTransferProvider by transport {
             override suspend fun download(
                 request: FileDownloadRequest,
                 callback: FileTransferCallback
@@ -868,9 +868,9 @@ class AttachmentDownloadCoordinatorTest {
 
     @Test
     fun `download uses the transport configured after coordinator creation`() {
-        val replacement = RecordingFileTransferTransport()
+        val replacement = RecordingFileTransferProvider()
         SceytChatUIKit.fileTransfer = SceytChatUIKitFileTransfer().apply {
-            transport = replacement
+            provider = replacement
             destinationProvider = FileTransferDestinationProvider { _, _ -> destinationFile }
         }
         val attachment = attachment(state = TransferState.PendingDownload)
@@ -1018,7 +1018,7 @@ class AttachmentDownloadCoordinatorTest {
                 state = TransferState.PendingDownload,
             )
             val cancellationGate = CompletableDeferred<Unit>()
-            SceytChatUIKit.fileTransfer.transport = object : FileTransferTransport by transport {
+            SceytChatUIKit.fileTransfer.provider = object : FileTransferProvider by transport {
                 override suspend fun download(
                     request: FileDownloadRequest,
                     callback: FileTransferCallback
@@ -1097,7 +1097,7 @@ class AttachmentDownloadCoordinatorTest {
                 service.pause(attachment.messageTid, attachment, TransferState.Downloading)
             }
         }
-        SceytChatUIKit.fileTransfer.transport = object : FileTransferTransport by transport {
+        SceytChatUIKit.fileTransfer.provider = object : FileTransferProvider by transport {
             override fun resume(operationId: String): Boolean {
                 transport.downloadCalls.single().progress(50f)
                 return true

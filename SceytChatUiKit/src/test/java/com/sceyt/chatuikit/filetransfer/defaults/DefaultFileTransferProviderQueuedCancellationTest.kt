@@ -22,7 +22,7 @@ import org.mockito.kotlin.doSuspendableAnswer
 import org.mockito.kotlin.whenever
 import java.io.File
 
-class DefaultFileTransferTransportQueuedCancellationTest {
+class DefaultFileTransferProviderQueuedCancellationTest {
     @get:Rule
     val temporaryFolder = TemporaryFolder()
 
@@ -42,7 +42,7 @@ class DefaultFileTransferTransportQueuedCancellationTest {
                 }
             }.whenever(downloader) { download(any(), any()) }
         }.use {
-            val transport = DefaultFileTransferTransport()
+            val transport = DefaultFileTransferProvider()
             val activeRequest = request("active")
             val activeDownload = async(start = CoroutineStart.UNDISPATCHED) {
                 transport.download(activeRequest) {}

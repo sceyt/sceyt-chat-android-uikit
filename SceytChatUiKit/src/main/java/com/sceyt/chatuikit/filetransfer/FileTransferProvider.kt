@@ -7,7 +7,7 @@ import com.google.gson.JsonObject
  * recoverable interruptions are returned as [FileTransferResult.Interrupted].
  * Coroutine cancellation must propagate as CancellationException, not as a failed result.
  */
-interface FileTransferTransport {
+interface FileTransferProvider {
     /**
      * Prepares app data for an upload of the final source file.
      * [FileUploadRequest.metadata] contains the object saved by an earlier attempt, or an empty object.
@@ -18,7 +18,7 @@ interface FileTransferTransport {
 
     /**
      * Uploads the prepared source and returns its remote reference.
-     * Implementations must stop their work when the calling coroutine is cancelled.
+     * Implementations must stop their work when the calling coroutine is canceled.
      */
     suspend fun upload(
         request: FileUploadRequest,
@@ -53,7 +53,7 @@ interface FileTransferTransport {
     fun resume(operationId: String): Boolean = false
 
     /**
-     * Notifies the transport that the caller explicitly abandoned an operation.
+     * Notifies the provider that the caller explicitly abandoned an operation.
      * The caller also cancels its coroutine to stop active work. Implementations clean up
      * retained state, including after a restart. Must be idempotent. UIKit calls this on a background
      * thread after the operation's coroutine stops, so partial files are no longer being written.

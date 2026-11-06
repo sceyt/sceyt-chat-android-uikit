@@ -32,7 +32,7 @@ import org.mockito.kotlin.whenever
 import java.io.File
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class DefaultFileTransferTransportTest {
+class DefaultFileTransferProviderTest {
     private lateinit var utilityConstruction: MockedConstruction<FileTransferUtility>
     private lateinit var downloaderConstruction: MockedConstruction<ChatSdkFileDownloader>
 
@@ -50,14 +50,12 @@ class DefaultFileTransferTransportTest {
 
     @Test
     fun `upload uses prepared source and returns result`() = runTest {
-        val transport = DefaultFileTransferTransport()
+        val transport = DefaultFileTransferProvider()
         val utility = utilityConstruction.constructed().single()
         val sourceFile = File("/tmp/prepared.txt")
         val request = FileUploadRequest(
             operationId = "upload:10",
             sourceFile = sourceFile,
-            fileName = "prepared.txt",
-            mimeType = "text/plain",
             attachment = attachment(filePath = "/tmp/original.txt"),
         )
         val progress = mutableListOf<Float>()
@@ -77,14 +75,12 @@ class DefaultFileTransferTransportTest {
 
     @Test
     fun `upload forwards SDK failure`() = runTest {
-        val transport = DefaultFileTransferTransport()
+        val transport = DefaultFileTransferProvider()
         val utility = utilityConstruction.constructed().single()
         val request = FileUploadRequest(
             "upload:10",
             File("/tmp/prepared.txt"),
-            "prepared.txt",
-            "text/plain",
-            attachment()
+            attachment(filePath = "/tmp/prepared.txt")
         )
         val error = SceytException(1, "upload failed")
         whenever(utility.uploadFile(any(), any())).thenReturn(SceytResponse.Error(error))
@@ -96,15 +92,13 @@ class DefaultFileTransferTransportTest {
 
     @Test
     fun `null SDK upload reference returns failure`() = runTest {
-        val transport = DefaultFileTransferTransport()
+        val transport = DefaultFileTransferProvider()
         val utility = utilityConstruction.constructed().single()
         whenever(utility.uploadFile(any(), any())).thenReturn(SceytResponse.Success(null))
         val request = FileUploadRequest(
             "upload:10",
             File("/tmp/prepared.txt"),
-            "prepared.txt",
-            "text/plain",
-            attachment()
+            attachment(filePath = "/tmp/prepared.txt")
         )
 
         val result = transport.upload(request) {}
@@ -115,14 +109,12 @@ class DefaultFileTransferTransportTest {
 
     @Test
     fun `cancelling upload cancels its suspended SDK bridge`() = runTest {
-        val transport = DefaultFileTransferTransport()
+        val transport = DefaultFileTransferProvider()
         val utility = utilityConstruction.constructed().single()
         val request = FileUploadRequest(
             "upload:10",
             File("/tmp/prepared.txt"),
-            "prepared.txt",
-            "text/plain",
-            attachment()
+            attachment(filePath = "/tmp/prepared.txt")
         )
         var bridgeCancelled = false
         doSuspendableAnswer {
@@ -143,7 +135,7 @@ class DefaultFileTransferTransportTest {
 
     @Test
     fun `download requests and metadata go unchanged to the native downloader`() = runTest {
-        val transport = DefaultFileTransferTransport()
+        val transport = DefaultFileTransferProvider()
         val downloader = downloaderConstruction.constructed().single()
         val customMetadata = JsonObject().apply { addProperty("appEncryption", "saved-key") }
         for (metadata in listOf(JsonObject(), customMetadata)) {
@@ -166,7 +158,7 @@ class DefaultFileTransferTransportTest {
 
     @Test
     fun `download controls delegate to the same native adapter`() {
-        val transport = DefaultFileTransferTransport()
+        val transport = DefaultFileTransferProvider()
         val downloader = downloaderConstruction.constructed().single()
         whenever(downloader.pause("download:10")).thenReturn(true)
         whenever(downloader.resume("download:10")).thenReturn(true)

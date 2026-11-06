@@ -2,7 +2,7 @@ package com.sceyt.chatuikit.filetransfer.encryption
 
 import java.io.File
 
-/** Cryptography used by transports; implementations own neither networking nor persistence. */
+/** Cryptography used by file transfer providers; implementations own neither networking nor persistence. */
 interface FileEncryption {
     suspend fun prepareEncryption(file: File): FileEncryptionSession
 

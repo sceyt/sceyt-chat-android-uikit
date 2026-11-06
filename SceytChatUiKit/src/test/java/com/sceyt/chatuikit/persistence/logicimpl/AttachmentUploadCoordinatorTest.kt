@@ -11,7 +11,7 @@ import com.sceyt.chatuikit.data.models.messages.FileChecksumData
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.filetransfer.FileTransferCallback
 import com.sceyt.chatuikit.filetransfer.FileTransferResult
-import com.sceyt.chatuikit.filetransfer.FileTransferTransport
+import com.sceyt.chatuikit.filetransfer.FileTransferProvider
 import com.sceyt.chatuikit.filetransfer.FileUploadRequest
 import com.sceyt.chatuikit.filetransfer.FileUploadResult
 import com.sceyt.chatuikit.filetransfer.SceytChatUIKitFileTransfer
@@ -78,7 +78,7 @@ import kotlin.time.Duration.Companion.milliseconds
 class AttachmentUploadCoordinatorTest {
     private lateinit var context: Context
     private lateinit var service: FileTransferServiceImpl
-    private lateinit var transport: RecordingFileTransferTransport
+    private lateinit var transport: RecordingFileTransferProvider
     private lateinit var attachmentLogic: PersistenceAttachmentLogic
     private lateinit var coordinator: AttachmentUploadCoordinator
     private lateinit var previousFileTransfer: SceytChatUIKitFileTransfer
@@ -90,14 +90,14 @@ class AttachmentUploadCoordinatorTest {
         stopKoin()
         AttachmentTransferStateStore.clear()
         context = RuntimeEnvironment.getApplication()
-        transport = RecordingFileTransferTransport()
+        transport = RecordingFileTransferProvider()
         testScope = TestScope(UnconfinedTestDispatcher())
         attachmentLogic = mock()
         previousFileTransfer = SceytChatUIKit.fileTransfer
         previousConfig = SceytChatUIKit.config
         SceytChatUIKit.fileTransfer = SceytChatUIKitFileTransfer().apply {
             encryptionEnabled = false
-            this.transport = this@AttachmentUploadCoordinatorTest.transport
+            this.provider = this@AttachmentUploadCoordinatorTest.transport
         }
         SceytChatUIKit.config = SceytChatUIKitConfig().apply {
             preventDuplicateAttachmentUpload = false
@@ -419,7 +419,7 @@ class AttachmentUploadCoordinatorTest {
     @Test
     fun `cancel shared owner during interruption cleanup still delivers follower error`() {
         val releaseCancellation = CompletableDeferred<Unit>()
-        SceytChatUIKit.fileTransfer.transport = object : FileTransferTransport by transport {
+        SceytChatUIKit.fileTransfer.provider = object : FileTransferProvider by transport {
             override suspend fun upload(
                 request: FileUploadRequest,
                 callback: FileTransferCallback
@@ -620,7 +620,7 @@ class AttachmentUploadCoordinatorTest {
 
         assertThat(call.request.operationId).isEqualTo("upload:30")
         assertThat(call.request.sourceFile.path).isEqualTo(attachment.filePath)
-        assertThat(call.request.fileName).isEqualTo("document.txt")
+        assertThat(call.request.attachment.name).isEqualTo("document.txt")
         assertThat(call.request.attachment).isEqualTo(attachment)
         assertThat(call.request.isSharedUpload).isFalse()
         assertThat(progress.single().progressPercent).isEqualTo(55f)
@@ -1346,7 +1346,7 @@ class AttachmentUploadCoordinatorTest {
     @Test
     fun `late IOException from cancelled upload does not fail or advance its replacement`() {
         val cancellationGate = CompletableDeferred<Unit>()
-        SceytChatUIKit.fileTransfer.transport = object : FileTransferTransport by transport {
+        SceytChatUIKit.fileTransfer.provider = object : FileTransferProvider by transport {
             override suspend fun upload(
                 request: FileUploadRequest,
                 callback: FileTransferCallback
@@ -1583,7 +1583,7 @@ class AttachmentUploadCoordinatorTest {
 
     @Test
     fun `transport timeout fails upload and next queued upload can complete`() {
-        SceytChatUIKit.fileTransfer.transport = object : FileTransferTransport by transport {
+        SceytChatUIKit.fileTransfer.provider = object : FileTransferProvider by transport {
             override suspend fun upload(
                 request: FileUploadRequest,
                 callback: FileTransferCallback

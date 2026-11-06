@@ -6,7 +6,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.filetransfer.FileDownloadRequest
 import com.sceyt.chatuikit.filetransfer.FileTransferCallback
 import com.sceyt.chatuikit.filetransfer.FileTransferResult
-import com.sceyt.chatuikit.filetransfer.FileTransferTransport
+import com.sceyt.chatuikit.filetransfer.FileTransferProvider
 import com.sceyt.chatuikit.filetransfer.FileUploadRequest
 import com.sceyt.chatuikit.filetransfer.FileUploadResult
 import com.sceyt.chatuikit.filetransfer.encryption.FileEncryptionInfo
@@ -98,7 +98,7 @@ internal class TestFileTransferService : FileTransferService {
     }
 }
 
-internal class RecordingFileTransferTransport : FileTransferTransport {
+internal class RecordingFileTransferProvider : FileTransferProvider {
     class UploadCall(
         val request: FileUploadRequest,
         private val callback: FileTransferCallback,

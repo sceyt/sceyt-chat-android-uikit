@@ -10,12 +10,10 @@ enum class FileTransferType {
     ENCRYPTED,
 }
 
-/** The source is plaintext in both modes; the transport owns encryption when requested. */
+/** [sourceFile] is prepared plaintext in both modes; the provider owns encryption when requested. */
 data class FileUploadRequest(
     val operationId: String,
     val sourceFile: File,
-    val fileName: String,
-    val mimeType: String?,
     val attachment: SceytAttachment,
     val type: FileTransferType = FileTransferType.PLAIN,
     val metadata: JsonObject = JsonObject(),
@@ -31,7 +29,7 @@ data class FileUploadResult(
     val encryptionInfo: FileEncryptionInfo? = null,
 )
 
-/** The transport follows [type], interprets [metadata], and publishes plaintext at [destinationFile]. */
+/** The provider follows [type], interprets [metadata], and publishes plaintext at [destinationFile]. */
 data class FileDownloadRequest(
     val operationId: String,
     val url: String,

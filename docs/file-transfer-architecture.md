@@ -1,8 +1,8 @@
 # File transfer architecture
 
-UIKit owns attachments and their persistence. A configured transport owns uploading, downloading,
+UIKit owns attachments and their persistence. A configured provider owns uploading, downloading,
 and the technical state needed to retry its work. Applications can use the default Chat SDK
-transport or implement their own.
+provider or implement their own.
 
 ## Responsibilities
 
@@ -11,9 +11,9 @@ transport or implement their own.
 | UIKit coordinators | Queueing, shared uploads, attachment state, and callbacks. |
 | UploadPreparer | Existing checksum lookup and resize/transcode preparation. |
 | UIKit persistence | Saving the prepared path, size, and app metadata before upload starts. |
-| AttachmentTransferRouter | Building requests and calling the configured transport. |
-| FileTransferTransport | Network execution, encryption/decryption choices, recovery, and cancellation. |
-| FileEncryption | The UIKit facade for Chat SDK cryptography, available to custom transports. |
+| AttachmentTransferRouter | Building requests and calling the configured provider. |
+| FileTransferProvider | Network execution, encryption/decryption choices, recovery, and cancellation. |
+| FileEncryption | The UIKit facade for Chat SDK cryptography, available to custom providers. |
 | Chat SDK native downloader | HTTP downloads, authenticated decryption, partial files, and download checkpoints. |
 
 UIKit does not interpret a custom application's encryption object. The app returns that object
@@ -33,8 +33,6 @@ enum class FileTransferType {
 data class FileUploadRequest(
     val operationId: String,
     val sourceFile: File,
-    val fileName: String,
-    val mimeType: String?,
     val attachment: SceytAttachment,
     val type: FileTransferType = FileTransferType.PLAIN,
     val metadata: JsonObject = JsonObject(),
@@ -59,8 +57,10 @@ data class FileDownloadRequest(
 
 The actual request classes exclude attachment metadata from `toString()`.
 
-- `sourceFile` is the final prepared plaintext file in either upload mode.
-- `destinationFile` is the final usable plaintext path. The transport must finish decryption before success.
+- `sourceFile` is the explicit prepared plaintext file for this upload. It can differ from `attachment.filePath`.
+- The file name comes from `attachment.name`; the request does not duplicate the name or MIME type.
+- `url` is the remote reference for this download; a provider can replace it with a resolved URL without changing `attachment.url`.
+- `destinationFile` is the final usable plaintext path. The provider must finish decryption before success.
 - `operationId` identifies a logical transfer across attempts. Upload and download IDs are distinct.
 - The attachment's `fileSize` is its plaintext size; there is no separate download size field.
 - `encryptionEnabled` selects `FileTransferType.ENCRYPTED` for both uploads and downloads when true,
@@ -72,24 +72,25 @@ The actual request classes exclude attachment metadata from `toString()`.
 ## Pre-upload hook
 
 ```kotlin
-interface FileTransferTransport {
+interface FileTransferProvider {
     suspend fun prepareUpload(request: FileUploadRequest): JsonObject? = null
 
     // upload(), download(), pause(), resume(), cancel()
 }
 
-SceytChatUIKit.fileTransfer.transport = AppFileTransferTransport()
+SceytChatUIKit.fileTransfer.provider = AppFileTransferProvider()
 ```
 
 The default method returns null, so UIKit does not perform an app-data write. There is no separate
 preparer property on `SceytChatUIKitFileTransfer`.
 
 The method runs after resizing/transcoding, so `request.sourceFile` is the file that will be uploaded.
+Preparation and upload must use the same source and matching app data; retries must restore that pairing.
 On first use, `request.metadata` is empty. On another attempt, including after restarting the app,
 it contains the saved app object.
 
 The hook returns data; it does not write attachment metadata itself. It can create encryption
-parameters, reserve an upload slot, or return other information its transport needs.
+parameters, reserve an upload slot, or return other information its provider needs.
 
 ### Save before upload
 
@@ -103,7 +104,7 @@ AttachmentTransferRouter.upload()
 UploadPreparer.prepare()             existing resize/transcode and prepared-file reuse
     |
     v
-FileTransferTransport.prepareUpload(request)
+FileTransferProvider.prepareUpload(request)
     |
     | returned JSON object
     v
@@ -118,7 +119,7 @@ AttachmentUploadCoordinator.savePreparedUpload()
     |
     | database write has completed
     v
-FileTransferTransport.upload(request)
+FileTransferProvider.upload(request)
     |
     v
 FileUploadResult(url, encryptionInfo?)
@@ -144,7 +145,7 @@ dimensions, ThumbHash, and captions, is preserved. Each shared caller keeps its 
 This object is an example, not a required encryption schema. UIKit preserves its JSON values;
 serialization whitespace is not part of the contract.
 
-If preparation or saving fails, the transport is not called. When a shared caller joins after
+If preparation or saving fails, the provider is not called. When a shared caller joins after
 preparation, UIKit saves the same app data for that caller before completing its transfer.
 
 ### Retry and restart
@@ -154,35 +155,35 @@ First attempt:
     prepareUpload(request with empty metadata)
         -> app creates parameters
         -> UIKit saves file_transfer
-        -> transport.upload(request.metadata)
+        -> provider.upload(request.metadata)
 
 Retry after interruption or app restart:
     load attachment from UIKit database
         -> prepareUpload(request with saved file_transfer)
         -> app returns its existing parameters
         -> UIKit saves the returned object
-        -> transport.upload(request.metadata)
-        -> transport restores its own progress
+        -> provider.upload(request.metadata)
+        -> provider restores its own progress
 ```
 
 The app must create new parameters if the prepared source changes. It must not reuse an old key
 and nonce to encrypt changed plaintext. UIKit cannot validate an arbitrary app encryption format.
 
 The method runs before each actual upload attempt. It should return existing data without repeating
-network work while that data is valid. Completed plain checksum matches skip both transport methods.
+network work while that data is valid. Completed plain checksum matches skip both provider methods.
 Encrypted uploads do not reuse cached remote URLs; set `encryptionEnabled = true` when using custom
 encryption. Prepared media files can still be reused. Disable `preventDuplicateAttachmentUpload`
-if a plain send requires fresh transport preparation every time.
+if a plain send requires fresh provider preparation every time.
 
 The app object travels in attachment metadata when the message is sent and forwarded. Do not put
 credentials for a storage service, signed upload URLs, or large transfer journals in it.
 
 ## Upload execution
 
-### Default Chat SDK transport
+### Default Chat SDK provider
 
 ```text
-DefaultFileTransferTransport.upload()
+DefaultFileTransferProvider.upload()
     |
     +--> PLAIN: FileTransferUtility.uploadFile()
     |
@@ -203,13 +204,13 @@ The native uploader is a single upload request; the Sceyt chat server does not p
 uploads. A failed native upload restarts that request. It does not offer S3 part recovery.
 
 The default encrypted uploader requires a session from the Chat SDK adapter. A custom encryption
-implementation belongs with a transport that understands it.
+implementation belongs with a provider that understands it.
 
-### Custom transport
+### Custom provider
 
-A custom transport reads its own data from `request.metadata`. If it already supplied all encryption
+A custom provider reads its own data from `request.metadata`. If it already supplied all encryption
 information through the preparer, it can return `FileUploadResult(url)`. UIKit keeps the saved
-`file_transfer` object. A transport using UIKit's standard encryption information can instead return
+`file_transfer` object. A provider using UIKit's standard encryption information can instead return
 `encryptionInfo`; UIKit writes the standard `enc` field.
 
 UIKit does not append file keys to uploaded bytes. The encryption implementation defines the
@@ -218,7 +219,7 @@ depends on the protection of chat messages and the attachment database.
 
 ## Encryption facade
 
-Custom transports can use UIKit's SDK-backed cryptography without importing Chat SDK types.
+Custom providers can use UIKit's SDK-backed cryptography without importing Chat SDK types.
 
 ```kotlin
 interface FileEncryption {
@@ -272,7 +273,7 @@ The adapter runs blocking SDK calls on the I/O dispatcher.
 
 A checkpoint contains key material and opaque SDK recovery data. The application chooses how to
 represent the parameters in its app object. Technical progress that changes during upload belongs
-to the executing transport's journal.
+to the executing provider's journal.
 
 ## Download execution
 
@@ -281,15 +282,15 @@ AttachmentDownloadCoordinator
     -> AttachmentTransferRouter.download()
          -> extract file_transfer JSON
          -> build FileDownloadRequest(type selected by encryptionEnabled)
-         -> configured FileTransferTransport.download()
+         -> configured FileTransferProvider.download()
               |
-              +--> DefaultFileTransferTransport
+              +--> DefaultFileTransferProvider
               |      -> ChatSdkFileDownloader
               |           -> PLAIN: MediaDownload.download()
               |           -> ENCRYPTED: read required enc, then MediaDownload.downloadEncrypted()
               |           -> native HTTP, verification, decryption, and file writing
               |
-              +--> AppFileTransferTransport
+              +--> AppFileTransferProvider
                      -> follow request.type and interpret request.metadata
                      -> fetch and decrypt through its chosen implementation
          <- final plaintext path
@@ -297,7 +298,7 @@ AttachmentDownloadCoordinator
 ```
 
 The router selects the requested mode from configuration without parsing encryption algorithms or
-keys. The default transport understands UIKit's `enc` format; custom transports can use their own
+keys. The default provider understands UIKit's `enc` format; custom providers can use their own
 schema under `file_transfer`. Metadata supplies parameters, not the transfer mode.
 
 Native downloads write verified plaintext into `destination.part` and keep their range map in
@@ -314,11 +315,11 @@ is separate work.
 
 ## Waafi example
 
-Waafi's transport overrides `prepareUpload` and delegates to its private `WaafiUploadPreparer`.
+Waafi's provider overrides `prepareUpload` and delegates to its private `WaafiUploadPreparer`.
 Its debug configuration enables encrypted uploads and downloads.
 
 ```text
-WaafiFileTransferTransport.prepareUpload(request)
+WaafiFileTransferProvider.prepareUpload(request)
     -> WaafiUploadPreparer.prepare(request)
     -> reuse existing WaafiUploadMetadata when the source is unchanged
     -> otherwise FileEncryption.prepareEncryption()
@@ -334,7 +335,7 @@ WaafiMultipartUploader.upload()
     -> complete multipart upload
     -> return FileUploadResult(objectKey)
 
-WaafiFileTransferTransport.download()
+WaafiFileTransferProvider.download()
     -> for ENCRYPTED, read Waafi's required encryption information from request.metadata
     -> adapt it in memory for the default native downloader, or use existing standard enc
     -> resolve the URL and add chat headers for the configured origin
@@ -364,7 +365,7 @@ recovered without restarting multipart upload.
 
 ## Transfer lifecycle
 
-`FileTransferTransport` exposes suspend `upload` and `download` methods and three controls:
+`FileTransferProvider` exposes suspend `upload` and `download` methods and three controls:
 
 - `pause(operationId)`: true means the invocation remains alive and can resume.
 - `resume(operationId)`: true means that paused invocation continues.

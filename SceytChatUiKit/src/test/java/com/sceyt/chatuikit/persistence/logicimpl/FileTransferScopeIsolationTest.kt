@@ -32,7 +32,7 @@ class FileTransferScopeIsolationTest {
     private lateinit var context: Context
     private lateinit var destinationFile: File
     private lateinit var service: TestFileTransferService
-    private lateinit var transport: RecordingFileTransferTransport
+    private lateinit var transport: RecordingFileTransferProvider
     private lateinit var attachmentLogic: PersistenceAttachmentLogic
     private lateinit var previousFileTransfer: SceytChatUIKitFileTransfer
     private lateinit var sharedScope: CoroutineScope
@@ -45,13 +45,13 @@ class FileTransferScopeIsolationTest {
         destinationFile.parentFile?.mkdirs()
         destinationFile.delete()
         service = TestFileTransferService()
-        transport = RecordingFileTransferTransport()
+        transport = RecordingFileTransferProvider()
         attachmentLogic = mock()
         sharedScope = TestScope(UnconfinedTestDispatcher())
         previousFileTransfer = SceytChatUIKit.fileTransfer
         SceytChatUIKit.fileTransfer = SceytChatUIKitFileTransfer().apply {
             encryptionEnabled = false
-            this.transport = this@FileTransferScopeIsolationTest.transport
+            this.provider = this@FileTransferScopeIsolationTest.transport
             destinationProvider = FileTransferDestinationProvider { _, _ -> destinationFile }
         }
         SceytKoinApp.koinApp = startKoin {
