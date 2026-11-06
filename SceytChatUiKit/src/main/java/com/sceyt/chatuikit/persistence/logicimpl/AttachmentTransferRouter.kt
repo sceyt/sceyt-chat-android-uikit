@@ -16,6 +16,8 @@ import com.sceyt.chatuikit.persistence.extensions.fileTransferData
 import com.sceyt.chatuikit.persistence.extensions.withFileTransferData
 import com.sceyt.chatuikit.persistence.file_transfer.transferKey
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.isActive
 import java.io.File
 
 /** Creates transfer requests and keeps each execution bound to its selected provider. */
@@ -30,6 +32,7 @@ internal class AttachmentTransferRouter(
         operationId: String,
         isSharedUpload: Boolean,
         onFilePrepared: (String) -> Unit = {},
+        onFileLocationChanged: (String) -> Unit = {},
         onPreparing: (Float) -> Unit = {},
         preparedFilePath: String? = null,
         onUploadPrepared: suspend (SceytAttachment) -> SceytAttachment,
@@ -50,25 +53,32 @@ internal class AttachmentTransferRouter(
                 reuseUploadedUrl = !encrypted,
                 preparedFilePath = preparedFilePath,
             )
-            // A completed checksum match skips both preparation and upload on the provider.
-            if (prepared.reusedUrl == null) {
-                val request = createUploadRequest(
-                    attachment = prepared.attachment,
-                    operationId = operationId,
-                    encrypted = encrypted,
-                    isSharedUpload = isSharedUpload
-                )
-                prepared = prepared.copy(
-                    attachment = prepareUpload(
-                        request = request,
-                        transport = transport,
-                        onUploadPrepared = onUploadPrepared
+            // Remember completed media before the provider can suspend or fail.
+            prepared.preparedFilePath?.let(onFilePrepared)
+            try {
+                // A completed checksum match skips both provider methods.
+                if (prepared.reusedUrl == null) {
+                    val request = createUploadRequest(
+                        attachment = prepared.attachment,
+                        operationId = operationId,
+                        encrypted = encrypted,
+                        isSharedUpload = isSharedUpload
                     )
-                )
+                    prepared = prepared.copy(
+                        attachment = prepareUpload(
+                            request = request,
+                            transport = transport,
+                            onUploadPrepared = onUploadPrepared
+                        )
+                    )
+                }
+            } finally {
+                // These callbacks queue metadata writes, so publish only after app preparation.
+                // Cancellation keeps the cached path without changing the paused task's state.
+                if (currentCoroutineContext().isActive)
+                    prepared.preparedFilePath?.let(onFileLocationChanged)
             }
 
-            // File-path callbacks may queue metadata writes, so publish after app data is saved.
-            prepared.preparedFilePath?.let(onFilePrepared)
             execution.attachment = prepared.attachment
 
             uploadPrepared(

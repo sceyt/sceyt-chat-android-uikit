@@ -13,10 +13,13 @@ import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.filetransfer.FileTransferResult
 import com.sceyt.chatuikit.filetransfer.SceytChatUIKitFileTransfer
 import com.sceyt.chatuikit.persistence.extensions.fileTransferData
+import com.sceyt.chatuikit.persistence.file_transfer.TransferState
+import com.sceyt.chatuikit.persistence.file_transfer.UpdateFileLocationCallback
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -25,6 +28,8 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
+import org.mockito.MockedStatic
+import org.mockito.Mockito
 import org.mockito.kotlin.any
 import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.doSuspendableAnswer
@@ -32,6 +37,7 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import java.io.File
 
 @RunWith(RobolectricTestRunner::class)
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -244,7 +250,7 @@ class AttachmentUploadPreparationTest {
             attachment = value,
             operationId = "upload:42",
             isSharedUpload = false,
-            onFilePrepared = { order += "path" },
+            onFileLocationChanged = { order += "path" },
             preparedFilePath = file.path,
             onUploadPrepared = { prepared ->
                 assertThat(prepared.metadata.fileTransferData()).isEqualTo(data)
@@ -259,6 +265,82 @@ class AttachmentUploadPreparationTest {
         assertThat(result.await()).isEqualTo(FileTransferResult.Success("uploaded"))
         assertThat(order).containsExactly("prepare", "saved", "path").inOrder()
         assertThat(execution.attachment?.filePath).isEqualTo(file.path)
+    }
+
+    @Test
+    fun `failed app preparation publishes the prepared video for retry`() = runTest {
+        val original = temporary.newFile("original.mp4").apply { writeText("original video") }
+        val prepared = temporary.newFile("prepared.mp4").apply { writeText("prepared video") }
+        val value = attachment(
+            filePath = original.path,
+            originalFilePath = original.path,
+            type = AttachmentTypeEnum.Video.value,
+        )
+        val task = transferTask(value).apply {
+            updateFileLocationCallback = UpdateFileLocationCallback { path ->
+                attachment = attachment.copy(filePath = path)
+            }
+        }
+        var transcodes = 0
+        var preparations = 0
+        SceytChatUIKit.fileTransfer.encryptionEnabled = true
+        transport.onPrepareUpload = {
+            if (++preparations == 1) error("Preparation failed")
+            appData()
+        }
+
+        mockTranscode(prepared) { transcodes++ }.use {
+            val first = AttachmentUploadCoordinator(context, attachmentLogic, backgroundScope)
+            first.upload(value, task, { _, _ -> }, {})
+            runCurrent()
+
+            assertThat(task.attachment.filePath).isEqualTo(prepared.path)
+            val restored = task.attachment
+            val retry = AttachmentUploadCoordinator(context, attachmentLogic, backgroundScope)
+            retry.upload(restored, transferTask(restored), { _, _ -> }, {})
+            runCurrent()
+
+            assertThat(transcodes).isEqualTo(1)
+            assertThat(transport.uploadCalls.single().request.sourceFile).isEqualTo(prepared)
+            transport.uploadCalls.single().succeed("uploaded")
+            runCurrent()
+        }
+    }
+
+    @Test
+    fun `pause during app preparation reuses the prepared video on resume`() = runTest {
+        val original = temporary.newFile("original.mp4").apply { writeText("original video") }
+        val prepared = temporary.newFile("prepared.mp4").apply { writeText("prepared video") }
+        val value = attachment(
+            filePath = original.path,
+            originalFilePath = original.path,
+            type = AttachmentTypeEnum.Video.value,
+        )
+        val task = transferTask(value)
+        var transcodes = 0
+        var preparations = 0
+        transport.onPrepareUpload = {
+            if (++preparations == 1) awaitCancellation()
+            appData()
+        }
+
+        mockTranscode(prepared) { transcodes++ }.use {
+            val coordinator = AttachmentUploadCoordinator(context, attachmentLogic, backgroundScope)
+            coordinator.upload(value, task, { _, _ -> }, {})
+            runCurrent()
+            assertThat(preparations).isEqualTo(1)
+
+            coordinator.pause(task) { task.state = TransferState.PauseUpload }
+            runCurrent()
+            task.state = TransferState.WaitingToUpload
+            coordinator.upload(task.attachment, task, { _, _ -> }, {})
+            runCurrent()
+
+            assertThat(transcodes).isEqualTo(1)
+            assertThat(transport.uploadCalls.single().request.sourceFile).isEqualTo(prepared)
+            transport.uploadCalls.single().succeed("uploaded")
+            runCurrent()
+        }
     }
 
     @Test
@@ -282,6 +364,21 @@ class AttachmentUploadPreparationTest {
         assertThat(preparations).isEqualTo(0)
         assertThat(transport.uploadCalls).isEmpty()
         assertThat(saved).isEmpty()
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun mockTranscode(prepared: File, onTranscode: () -> Unit): MockedStatic<Any> {
+        val extensions = Class.forName(
+            "com.sceyt.chatuikit.persistence.extensions.AttachmentResizeExtensionsKt",
+        ) as Class<Any>
+        return Mockito.mockStatic(extensions) { invocation ->
+            if (invocation.method.name == "transcodeVideo") {
+                onTranscode()
+                val callback = invocation.getArgument<(Result<String>) -> Unit>(4)
+                callback(Result.success(prepared.path))
+                prepared
+            } else invocation.callRealMethod()
+        }
     }
 
     private fun appData(): JsonObject = JsonParser.parseString(
