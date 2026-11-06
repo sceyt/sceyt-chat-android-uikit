@@ -6,7 +6,7 @@ import kotlinx.parcelize.Parcelize
 
 @Parcelize
 data class ThumbData(
-        val key: Int,
-        val filePath: String?,
-        val size: Size
+    val key: Int,
+    val filePath: String?,
+    val size: Size
 ) : Parcelable

@@ -67,7 +67,8 @@ internal class AttachmentThumbCoordinator(
                 preparingThumbs.remove(preparingThumbKey)
                 if (error is FileNotFoundException && attachment.canRedownload()) {
                     SceytLog.w(
-                        TAG, "Original file is missing, downloading again for messageTid: $messageTid," +
+                        TAG,
+                        "Original file is missing, downloading again for messageTid: $messageTid," +
                                 " path:${attachment.filePath}, url:${attachment.url}"
                     )
                     fileTransferService.redownload(attachment)

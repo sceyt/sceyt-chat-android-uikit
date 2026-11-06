@@ -59,79 +59,94 @@ class EncryptedSdkUploadTest {
     }
 
     @Test
-    fun `cancellation stops the SDK upload closes its session and ignores late callbacks`() = runTest {
-        val client = mock<ChatClient>()
-        val operation = mock<UploadOperation>()
-        val source = mock<PreparedUpload>()
-        val file = configureSession(source)
-        lateinit var progressCallback: ProgressCallback
-        lateinit var resultCallback: EncryptedUploadCallback
-        doAnswer {
-            progressCallback = it.getArgument(1)
-            resultCallback = it.getArgument(2)
-            operation
-        }.whenever(client).uploadEncrypted(any(), any(), any())
+    fun `cancellation stops the SDK upload closes its session and ignores late callbacks`() =
+        runTest {
+            val client = mock<ChatClient>()
+            val operation = mock<UploadOperation>()
+            val source = mock<PreparedUpload>()
+            val file = configureSession(source)
+            lateinit var progressCallback: ProgressCallback
+            lateinit var resultCallback: EncryptedUploadCallback
+            doAnswer {
+                progressCallback = it.getArgument(1)
+                resultCallback = it.getArgument(2)
+                operation
+            }.whenever(client).uploadEncrypted(any(), any(), any())
 
-        Mockito.mockStatic(ChatClient::class.java).use { static ->
-            static.`when`<ChatClient> { ChatClient.getClient() }.thenReturn(client)
-            val progress = mutableListOf<Float>()
-            val result = async {
-                DefaultFileTransferTransport().upload(
-                    FileUploadRequest("upload:cancel", file, "file.bin", null, attachment(), type = FileTransferType.ENCRYPTED),
-                    progress::add,
-                )
+            Mockito.mockStatic(ChatClient::class.java).use { static ->
+                static.`when`<ChatClient> { ChatClient.getClient() }.thenReturn(client)
+                val progress = mutableListOf<Float>()
+                val result = async {
+                    DefaultFileTransferTransport().upload(
+                        FileUploadRequest(
+                            "upload:cancel",
+                            file,
+                            "file.bin",
+                            null,
+                            attachment(),
+                            type = FileTransferType.ENCRYPTED
+                        ),
+                        progress::add,
+                    )
+                }
+                runCurrent()
+                result.cancelAndJoin()
+                progressCallback.onResult(0.5f)
+                resultCallback.onResult("late-url", info)
+
+                verify(operation).cancel()
+                verify(source).close()
+                assertThat(result.isCancelled).isTrue()
+                assertThat(progress).isEmpty()
             }
-            runCurrent()
-            result.cancelAndJoin()
-            progressCallback.onResult(0.5f)
-            resultCallback.onResult("late-url", info)
-
-            verify(operation).cancel()
-            verify(source).close()
-            assertThat(result.isCancelled).isTrue()
-            assertThat(progress).isEmpty()
         }
-    }
 
     @Test
-    fun `encrypted upload prepares a session and returns URL with matching encryption information`() = runTest {
-        val client = mock<ChatClient>()
-        val source = mock<PreparedUpload>()
-        val file = configureSession(source)
-        val operation = mock<UploadOperation>()
-        lateinit var progressCallback: ProgressCallback
-        lateinit var resultCallback: EncryptedUploadCallback
-        doAnswer {
-            assertThat(it.getArgument<PreparedUpload>(0)).isSameInstanceAs(source)
-            progressCallback = it.getArgument(1)
-            resultCallback = it.getArgument(2)
-            operation
-        }.whenever(client).uploadEncrypted(any(), any(), any())
+    fun `encrypted upload prepares a session and returns URL with matching encryption information`() =
+        runTest {
+            val client = mock<ChatClient>()
+            val source = mock<PreparedUpload>()
+            val file = configureSession(source)
+            val operation = mock<UploadOperation>()
+            lateinit var progressCallback: ProgressCallback
+            lateinit var resultCallback: EncryptedUploadCallback
+            doAnswer {
+                assertThat(it.getArgument<PreparedUpload>(0)).isSameInstanceAs(source)
+                progressCallback = it.getArgument(1)
+                resultCallback = it.getArgument(2)
+                operation
+            }.whenever(client).uploadEncrypted(any(), any(), any())
 
-        Mockito.mockStatic(ChatClient::class.java).use { static ->
-            static.`when`<ChatClient> { ChatClient.getClient() }.thenReturn(client)
-            val progress = mutableListOf<Float>()
-            val result = async {
-                DefaultFileTransferTransport().upload(
-                    FileUploadRequest("upload:1", file, "file.bin", null, attachment(), type = FileTransferType.ENCRYPTED),
-                    progress::add,
-                )
+            Mockito.mockStatic(ChatClient::class.java).use { static ->
+                static.`when`<ChatClient> { ChatClient.getClient() }.thenReturn(client)
+                val progress = mutableListOf<Float>()
+                val result = async {
+                    DefaultFileTransferTransport().upload(
+                        FileUploadRequest(
+                            "upload:1",
+                            file,
+                            "file.bin",
+                            null,
+                            attachment(),
+                            type = FileTransferType.ENCRYPTED
+                        ),
+                        progress::add,
+                    )
+                }
+                runCurrent()
+                progressCallback.onResult(0.4f)
+                resultCallback.onResult("https://cdn.test/encrypted", info)
+                progressCallback.onResult(0.8f)
+                progressCallback.onResult(1f)
+
+                val uploaded = FileUploadResult("https://cdn.test/encrypted", info.toUIKitInfo())
+                assertThat(result.await()).isEqualTo(FileTransferResult.Success(uploaded))
+                assertThat(progress).containsExactly(40f)
+                verify(SceytChatUIKit.fileTransfer.encryption).prepareEncryption(file)
+                verify(source).close()
+                verify(operation, never()).cancel()
             }
-            runCurrent()
-            progressCallback.onResult(0.4f)
-            resultCallback.onResult("https://cdn.test/encrypted", info)
-            progressCallback.onResult(0.8f)
-            progressCallback.onResult(1f)
-
-            assertThat(result.await()).isEqualTo(
-                FileTransferResult.Success(FileUploadResult("https://cdn.test/encrypted", info.toUIKitInfo())),
-            )
-            assertThat(progress).containsExactly(40f)
-            verify(SceytChatUIKit.fileTransfer.encryption).prepareEncryption(file)
-            verify(source).close()
-            verify(operation, never()).cancel()
         }
-    }
 
     @Test
     fun `SDK failure closes the prepared session`() = runTest {
@@ -148,7 +163,14 @@ class EncryptedSdkUploadTest {
             static.`when`<ChatClient> { ChatClient.getClient() }.thenReturn(client)
 
             val result = DefaultFileTransferTransport().upload(
-                FileUploadRequest("upload:error", file, "file.bin", null, attachment(), type = FileTransferType.ENCRYPTED),
+                FileUploadRequest(
+                    "upload:error",
+                    file,
+                    "file.bin",
+                    null,
+                    attachment(),
+                    type = FileTransferType.ENCRYPTED
+                ),
             ) {}
 
             assertThat((result as FileTransferResult.Failure).error).isSameInstanceAs(error)

@@ -87,7 +87,8 @@ class RedownloadFlowAndroidTest {
         }
         SceytChatUIKit.fileTransfer = SceytChatUIKitFileTransfer().apply {
             transport = CapturingTransport()
-            destinationProvider = FileTransferDestinationProvider { _, _ -> File(dir, "downloaded.jpg") }
+            destinationProvider =
+                FileTransferDestinationProvider { _, _ -> File(dir, "downloaded.jpg") }
         }
         onMain {
             helper = AttachmentViewHolderHelper(View(context))
@@ -118,7 +119,8 @@ class RedownloadFlowAndroidTest {
         val download = awaitDownloadStarted()
         val pendingAttachment = download.request.attachment
         assertThat(pendingAttachment.transferState).isEqualTo(TransferState.PendingDownload)
-        assertThat(service.findTransferTask(item.attachment)?.state).isEqualTo(TransferState.Downloading)
+        assertThat(service.findTransferTask(item.attachment)?.state)
+            .isEqualTo(TransferState.Downloading)
         awaitUpdate(TransferState.Downloading)
         assertThat(applyUpdates(item).state).isEqualTo(TransferState.Downloading)
 
@@ -241,11 +243,16 @@ class RedownloadFlowAndroidTest {
         override fun cancel(operationId: String) = Unit
     }
 
-    private class DownloadCall(val request: FileDownloadRequest, val callback: FileTransferCallback) {
+    private class DownloadCall(
+        val request: FileDownloadRequest,
+        val callback: FileTransferCallback
+    ) {
         val result = CompletableDeferred<FileTransferResult<String>>()
     }
 
-    private class TestAttachmentItem(private var currentAttachment: SceytAttachment) : AttachmentDataProvider {
+    private class TestAttachmentItem(
+        private var currentAttachment: SceytAttachment
+    ) : AttachmentDataProvider {
         @Volatile
         private var currentTransferData: TransferData? = null
 

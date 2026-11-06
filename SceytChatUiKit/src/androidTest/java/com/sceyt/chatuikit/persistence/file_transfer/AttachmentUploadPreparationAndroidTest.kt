@@ -115,17 +115,23 @@ class AttachmentUploadPreparationAndroidTest {
                         request: FileUploadRequest,
                         callback: FileTransferCallback,
                     ): FileTransferResult<FileUploadResult> {
-                        val persisted = checkNotNull(database.messageDao().getMessageByTid(MESSAGE_TID))
-                            .attachments.orEmpty().single().toAttachment()
-                        assertThat(persisted.metadata.fileTransferData()).isEqualTo(request.metadata)
+                        val persisted =
+                            checkNotNull(database.messageDao().getMessageByTid(MESSAGE_TID))
+                                .attachments.orEmpty().single().toAttachment()
+                        assertThat(persisted.metadata.fileTransferData())
+                            .isEqualTo(request.metadata)
                         assertThat(persisted.filePath).isEqualTo(request.sourceFile.path)
                         assertThat(persisted.fileSize).isEqualTo(request.sourceFile.length())
-                        val checkpoint = gson.fromJson(request.metadata.get("encryption"), FileEncryptionCheckpoint::class.java)
-                        encryption.restoreEncryption(request.sourceFile, checkpoint).use { session ->
-                            val bytes = session.read(0, session.ciphertextSize.toInt())
-                            if (resuming) assertThat(bytes).isEqualTo(expectedCiphertext.readBytes())
-                            else expectedCiphertext.writeBytes(bytes)
-                        }
+                        val checkpoint = gson.fromJson(
+                            request.metadata.get("encryption"),
+                            FileEncryptionCheckpoint::class.java
+                        )
+                        encryption.restoreEncryption(request.sourceFile, checkpoint)
+                            .use { session ->
+                                val bytes = session.read(0, session.ciphertextSize.toInt())
+                                if (resuming) assertThat(bytes).isEqualTo(expectedCiphertext.readBytes())
+                                else expectedCiphertext.writeBytes(bytes)
+                            }
                         return if (resuming) FileTransferResult.Success(FileUploadResult("custom-object"))
                         else FileTransferResult.Interrupted(IOException("Test network interruption"))
                     }
@@ -144,8 +150,14 @@ class AttachmentUploadPreparationAndroidTest {
                 arrayOf(AttachmentsRepository::class.java),
             ) { _, _, _ -> error("This test must not call the chat server") } as AttachmentsRepository
             val logic = PersistenceAttachmentLogicImpl(
-                database.messageDao(), database.attachmentsDao(), database.userDao(),
-                database.fileChecksumDao(), database.linkDao(), MessagesCache(), AttachmentsCache(), repository,
+                database.messageDao(),
+                database.attachmentsDao(),
+                database.userDao(),
+                database.fileChecksumDao(),
+                database.linkDao(),
+                MessagesCache(),
+                AttachmentsCache(),
+                repository,
             )
             val task = TransferTask(saved, saved.messageTid, TransferState.PendingUpload)
             val result = CompletableDeferred<SceytResponse<String>>()
@@ -162,7 +174,10 @@ class AttachmentUploadPreparationAndroidTest {
                 assertThat(response).isInstanceOf(SceytResponse.Error::class.java)
                 assertThat(preparations).isEqualTo(1)
             }
-            assertThat(gson.fromJson(task.attachment.metadata, JsonObject::class.java).get("caption").asString)
+            assertThat(
+                gson.fromJson(task.attachment.metadata, JsonObject::class.java)
+                    .get("caption").asString
+            )
                 .isEqualTo("keep this caption")
         } finally {
             scope.coroutineContext[Job]?.cancelAndJoin()
@@ -180,18 +195,46 @@ class AttachmentUploadPreparationAndroidTest {
             originalFilePath = source.path, linkPreviewDetails = null,
         )
         val entity = MessageEntity(
-            tid = MESSAGE_TID, id = null, channelId = 1, body = "", type = "file", metadata = null,
-            createdAt = 0, updatedAt = 0, incoming = false, isTransient = false, silent = false,
-            viewOnce = false, deliveryStatus = MessageDeliveryStatus.Pending, state = MessageState.Unmodified,
-            fromId = null, markerCount = null, mentionedUsersIds = null, parentId = null,
-            replyCount = 0, displayCount = 0, autoDeleteAt = null, forwardingDetailsDb = null,
-            bodyAttribute = null, disableMentionsCount = false, unList = false,
+            tid = MESSAGE_TID,
+            id = null,
+            channelId = 1,
+            body = "",
+            type = "file",
+            metadata = null,
+            createdAt = 0,
+            updatedAt = 0,
+            incoming = false,
+            isTransient = false,
+            silent = false,
+            viewOnce = false,
+            deliveryStatus = MessageDeliveryStatus.Pending,
+            state = MessageState.Unmodified,
+            fromId = null,
+            markerCount = null,
+            mentionedUsersIds = null,
+            parentId = null,
+            replyCount = 0,
+            displayCount = 0,
+            autoDeleteAt = null,
+            forwardingDetailsDb = null,
+            bodyAttribute = null,
+            disableMentionsCount = false,
+            unList = false,
         )
         return MessageDb(
-            messageEntity = entity, from = null, parent = null,
+            messageEntity = entity,
+            from = null,
+            parent = null,
             attachments = listOf(attachment.toAttachmentDb(0, MESSAGE_TID, 1, false)),
-            userMarkers = null, reactions = null, reactionsTotals = null, pendingReactions = null,
-            forwardingUser = null, mentionedUsers = null, poll = null, pinnedMessage = null, pendingPin = null,
+            userMarkers = null,
+            reactions = null,
+            reactionsTotals = null,
+            pendingReactions = null,
+            forwardingUser = null,
+            mentionedUsers = null,
+            poll = null,
+            pinnedMessage = null,
+            pendingPin = null,
         )
     }
 

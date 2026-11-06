@@ -246,14 +246,22 @@ class AttachmentTransferStateStoreTest {
                 state = TransferState.ThumbLoaded,
                 filePath = "/thumbs/file.jpg",
                 url = attachment.url,
-                thumbData = ThumbData(ThumbFor.MessagesLisView.value, attachment.filePath, thumbSize)
+                thumbData = ThumbData(
+                    ThumbFor.MessagesLisView.value,
+                    attachment.filePath,
+                    thumbSize
+                )
             )
         )
 
         val latest = AttachmentTransferStateStore.getTransferData(attachment)
         assertThat(latest?.state).isEqualTo(TransferState.Downloaded)
         assertThat(
-            AttachmentTransferStateStore.getThumbPath(attachment, ThumbFor.MessagesLisView, thumbSize)
+            AttachmentTransferStateStore.getThumbPath(
+                attachment,
+                ThumbFor.MessagesLisView,
+                thumbSize
+            )
         ).isEqualTo("/thumbs/file.jpg")
     }
 
@@ -282,12 +290,20 @@ class AttachmentTransferStateStoreTest {
                 state = TransferState.ThumbLoaded,
                 filePath = "/thumbs/channel-file.jpg",
                 url = attachment.url,
-                thumbData = ThumbData(ThumbFor.ChannelInfo.value, attachment.filePath, generatedThumbSize)
+                thumbData = ThumbData(
+                    ThumbFor.ChannelInfo.value,
+                    attachment.filePath,
+                    generatedThumbSize
+                )
             )
         )
 
         assertThat(
-            AttachmentTransferStateStore.getThumbPath(attachment, ThumbFor.ChannelInfo, requestedThumbSize)
+            AttachmentTransferStateStore.getThumbPath(
+                attachment,
+                ThumbFor.ChannelInfo,
+                requestedThumbSize
+            )
         ).isEqualTo("/thumbs/channel-file.jpg")
     }
 
@@ -325,13 +341,21 @@ class AttachmentTransferStateStoreTest {
                 state = TransferState.ThumbLoaded,
                 filePath = "/thumbs/original.jpg",
                 url = null,
-                thumbData = ThumbData(ThumbFor.MessagesLisView.value, originalAttachment.filePath, thumbSize)
+                thumbData = ThumbData(
+                    ThumbFor.MessagesLisView.value,
+                    originalAttachment.filePath,
+                    thumbSize
+                )
             )
         )
 
         assertThat(staleThumb).isNull()
         assertThat(
-            AttachmentTransferStateStore.getThumbPath(resizedAttachment, ThumbFor.MessagesLisView, thumbSize)
+            AttachmentTransferStateStore.getThumbPath(
+                resizedAttachment,
+                ThumbFor.MessagesLisView,
+                thumbSize
+            )
         ).isNull()
 
         val currentThumb = AttachmentTransferStateStore.put(
@@ -340,13 +364,21 @@ class AttachmentTransferStateStoreTest {
                 state = TransferState.ThumbLoaded,
                 filePath = "/thumbs/resized.jpg",
                 url = null,
-                thumbData = ThumbData(ThumbFor.MessagesLisView.value, resizedAttachment.filePath, thumbSize)
+                thumbData = ThumbData(
+                    ThumbFor.MessagesLisView.value,
+                    resizedAttachment.filePath,
+                    thumbSize
+                )
             )
         )
 
         assertThat(currentThumb).isNotNull()
         assertThat(
-            AttachmentTransferStateStore.getThumbPath(resizedAttachment, ThumbFor.MessagesLisView, thumbSize)
+            AttachmentTransferStateStore.getThumbPath(
+                resizedAttachment,
+                ThumbFor.MessagesLisView,
+                thumbSize
+            )
         ).isEqualTo("/thumbs/resized.jpg")
     }
 
@@ -396,7 +428,11 @@ class AttachmentTransferStateStoreTest {
 
     @Test
     fun `completed transfer still rejects pending download without reset`() {
-        val attachment = attachment(filePath = "/downloads/file.jpg", state = TransferState.Downloaded, progress = 100f)
+        val attachment = attachment(
+            filePath = "/downloads/file.jpg",
+            state = TransferState.Downloaded,
+            progress = 100f
+        )
         AttachmentTransferStateStore.put(
             transfer(
                 progress = 100f,

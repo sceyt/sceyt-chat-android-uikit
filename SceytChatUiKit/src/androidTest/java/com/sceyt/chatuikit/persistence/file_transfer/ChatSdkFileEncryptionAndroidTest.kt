@@ -46,7 +46,8 @@ class ChatSdkFileEncryptionAndroidTest {
             val (checkpoint, ciphertext) = encryption.prepareEncryption(file).use { session ->
                 val id = session.encryptionInfo.attachmentId
                 assertThat(id).matches("[A-Za-z0-9_-]{22}")
-                assertThat(Base64.decode(id, Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP)).hasLength(16)
+                val flags = Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP
+                assertThat(Base64.decode(id, flags)).hasLength(16)
                 val bytes = session.read(0, session.ciphertextSize.toInt())
                 session.checkpoint() to bytes
             }
@@ -54,7 +55,8 @@ class ChatSdkFileEncryptionAndroidTest {
             val gson = Gson()
             val saved = gson.fromJson(gson.toJson(checkpoint), FileEncryptionCheckpoint::class.java)
             ChatSdkFileEncryption().restoreEncryption(file, saved).use { restored ->
-                assertThat(restored.encryptionInfo.attachmentId).isEqualTo(checkpoint.encryptionInfo.attachmentId)
+                assertThat(restored.encryptionInfo.attachmentId)
+                    .isEqualTo(checkpoint.encryptionInfo.attachmentId)
                 assertThat(restored.read(0, ciphertext.size)).isEqualTo(ciphertext)
             }
             encryption.prepareEncryption(file).use { next ->
@@ -67,7 +69,8 @@ class ChatSdkFileEncryptionAndroidTest {
 
     @Test
     fun nativeRoundTripUsesSerializedAttachmentMetadata() = runBlocking(Dispatchers.IO) {
-        listOf(0, 1, RECORD_SIZE - 1, RECORD_SIZE, RECORD_SIZE + 1, PART_SIZE + 37).forEach { size ->
+        val sizes = listOf(0, 1, RECORD_SIZE - 1, RECORD_SIZE, RECORD_SIZE + 1, PART_SIZE + 37)
+        sizes.forEach { size ->
             prepareAttachment(size).use { attachment ->
                 attachment.assertPublished(attachment.download())
             }
@@ -106,7 +109,8 @@ class ChatSdkFileEncryptionAndroidTest {
                 redirect.redirectTo = attachment.server.url
                 val headers = mapOf("X-Chat-Token" to "fixture-token", "X-Message-Id" to "1001")
 
-                attachment.assertPublished(attachment.download(url = redirect.url, headers = headers))
+                val result = attachment.download(url = redirect.url, headers = headers)
+                attachment.assertPublished(result)
 
                 assertThat(redirect.requests).isNotEmpty()
                 assertThat(attachment.server.requests).isNotEmpty()
@@ -145,18 +149,19 @@ class ChatSdkFileEncryptionAndroidTest {
     }
 
     @Test
-    fun modifiedNativeCiphertextIsRejectedBeforePublishingPlaintext() = runBlocking(Dispatchers.IO) {
-        prepareAttachment().use { attachment ->
-            RandomAccessFile(attachment.ciphertext, "rw").use { file ->
-                val offset = attachment.source.length() - 1024
-                file.seek(offset)
-                val byte = file.read()
-                file.seek(offset)
-                file.write(byte xor 1)
+    fun modifiedNativeCiphertextIsRejectedBeforePublishingPlaintext() =
+        runBlocking(Dispatchers.IO) {
+            prepareAttachment().use { attachment ->
+                RandomAccessFile(attachment.ciphertext, "rw").use { file ->
+                    val offset = attachment.source.length() - 1024
+                    file.seek(offset)
+                    val byte = file.read()
+                    file.seek(offset)
+                    file.write(byte xor 1)
+                }
+                attachment.assertRejected(attachment.download())
             }
-            attachment.assertRejected(attachment.download())
         }
-    }
 
     @Test
     fun nativeDownloadRejectsAKeyChangedInAttachmentMetadata() = runBlocking(Dispatchers.IO) {
@@ -211,7 +216,8 @@ class ChatSdkFileEncryptionAndroidTest {
                 attachment.ciphertext.outputStream().use { output ->
                     var offset = 0L
                     while (offset < session.ciphertextSize) {
-                        val length = minOf(PART_SIZE.toLong(), session.ciphertextSize - offset).toInt()
+                        val length =
+                            minOf(PART_SIZE.toLong(), session.ciphertextSize - offset).toInt()
                         output.write(session.read(offset, length))
                         offset += length
                     }
@@ -242,7 +248,8 @@ class ChatSdkFileEncryptionAndroidTest {
         val destination = File(directory, "received.bin")
         val server = AttachmentHttpServer(ciphertext)
 
-        fun readAttachment(): JsonObject = JsonParser.parseString(metadataFile.readText()).asJsonObject
+        fun readAttachment(): JsonObject =
+            JsonParser.parseString(metadataFile.readText()).asJsonObject
 
         suspend fun download(
             url: String = server.url,
@@ -320,7 +327,12 @@ class ChatSdkFileEncryptionAndroidTest {
         fun initializeSdk() {
             // Operation IDs use the SDK's private session directory; no chat connection is needed.
             val context = ApplicationProvider.getApplicationContext<Context>()
-            ChatClient.initialize(context, "https://127.0.0.1", "native-transfer-test", "android-test")
+            ChatClient.initialize(
+                context,
+                "https://127.0.0.1",
+                "native-transfer-test",
+                "android-test"
+            )
         }
     }
 }

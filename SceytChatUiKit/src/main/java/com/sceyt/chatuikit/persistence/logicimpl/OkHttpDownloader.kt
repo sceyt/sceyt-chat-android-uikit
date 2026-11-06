@@ -62,7 +62,8 @@ class OkHttpDownloader {
         } catch (error: Exception) {
             SceytLog.e(TAG, "Invalid URL: ${error.message}")
             try {
-                onResult(FileTransferResult.Failure(SceytException(0, "Invalid URL: ${error.message}")))
+                val exception = SceytException(0, "Invalid URL: ${error.message}")
+                onResult(FileTransferResult.Failure(exception))
             } finally {
                 onFinished()
             }
@@ -95,7 +96,8 @@ class OkHttpDownloader {
             override fun onResponse(call: Call, response: Response) {
                 try {
                     response.use {
-                        val canReadResponse = state.compareAndSet(DownloadState.Pending, DownloadState.Reading)
+                        val canReadResponse =
+                            state.compareAndSet(DownloadState.Pending, DownloadState.Reading)
 
                         // Cancellation can finish a queued call before its response arrives.
                         if (!canReadResponse) return
@@ -118,7 +120,8 @@ class OkHttpDownloader {
                         // Append for a range response. A full response starts the file again.
                         val isPartialResponse = response.code == 206
                         val resumedBytes = if (isPartialResponse) existingSize else 0L
-                        val totalSize = if (contentLength != -1L) contentLength + resumedBytes else -1L
+                        val totalSize =
+                            if (contentLength != -1L) contentLength + resumedBytes else -1L
                         val outputStream = FileOutputStream(destinationFile, isPartialResponse)
 
                         outputStream.sink().buffer().use { sink ->

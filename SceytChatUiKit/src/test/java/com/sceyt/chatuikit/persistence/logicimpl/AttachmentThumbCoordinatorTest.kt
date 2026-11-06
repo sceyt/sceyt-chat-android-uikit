@@ -158,12 +158,20 @@ class AttachmentThumbCoordinatorTest {
 
         try {
             val first = executor.submit {
-                logic.getAttachmentThumb(originalAttachment.messageTid, originalAttachment, originalThumb)
+                logic.getAttachmentThumb(
+                    originalAttachment.messageTid,
+                    originalAttachment,
+                    originalThumb
+                )
             }
             assertThat(resolver.awaitCallCount(1)).isTrue()
 
             val second = executor.submit {
-                logic.getAttachmentThumb(resizedAttachment.messageTid, resizedAttachment, resizedThumb)
+                logic.getAttachmentThumb(
+                    resizedAttachment.messageTid,
+                    resizedAttachment,
+                    resizedThumb
+                )
             }
             second.get(1, TimeUnit.SECONDS)
 
@@ -220,7 +228,11 @@ class AttachmentThumbCoordinatorTest {
         val attachment = attachment(state = TransferState.Uploaded)
         taskFor(attachment)
 
-        logic.getAttachmentThumb(attachment.messageTid, attachment, thumbData(ThumbFor.MessagesLisView))
+        logic.getAttachmentThumb(
+            attachment.messageTid,
+            attachment,
+            thumbData(ThumbFor.MessagesLisView)
+        )
 
         verify(fileTransferService).redownload(attachment)
     }
@@ -232,7 +244,11 @@ class AttachmentThumbCoordinatorTest {
         val attachment = attachment()
         taskFor(attachment)
 
-        logic.getAttachmentThumb(attachment.messageTid, attachment, thumbData(ThumbFor.MessagesLisView))
+        logic.getAttachmentThumb(
+            attachment.messageTid,
+            attachment,
+            thumbData(ThumbFor.MessagesLisView)
+        )
 
         verify(fileTransferService, never()).redownload(any())
     }
@@ -244,7 +260,11 @@ class AttachmentThumbCoordinatorTest {
         val attachment = attachment(state = TransferState.Downloaded)
         taskFor(attachment)
 
-        logic.getAttachmentThumb(attachment.messageTid, attachment, thumbData(ThumbFor.MessagesLisView))
+        logic.getAttachmentThumb(
+            attachment.messageTid,
+            attachment,
+            thumbData(ThumbFor.MessagesLisView)
+        )
 
         verify(fileTransferService).redownload(attachment)
     }
@@ -257,7 +277,11 @@ class AttachmentThumbCoordinatorTest {
         listOf(null, "", "  ").forEach { url ->
             val attachment = attachment(url = url, state = TransferState.Downloaded)
             taskFor(attachment)
-            logic.getAttachmentThumb(attachment.messageTid, attachment, thumbData(ThumbFor.MessagesLisView))
+            logic.getAttachmentThumb(
+                attachment.messageTid,
+                attachment,
+                thumbData(ThumbFor.MessagesLisView)
+            )
         }
 
         verify(fileTransferService, never()).redownload(any())
@@ -265,13 +289,18 @@ class AttachmentThumbCoordinatorTest {
 
     @Test
     fun `existing original is not downloaded again when thumb source open fails`() {
-        val resolver = ThumbPathResolver { _, _, _ -> Result.failure(FileNotFoundException("ENOSPC")) }
+        val resolver =
+            ThumbPathResolver { _, _, _ -> Result.failure(FileNotFoundException("ENOSPC")) }
         val logic = AttachmentThumbCoordinator(context, resolver)
         val original = tempFolder.newFile("original.jpg")
         val attachment = attachment(filePath = original.path, state = TransferState.Uploaded)
         taskFor(attachment)
 
-        logic.getAttachmentThumb(attachment.messageTid, attachment, thumbData(ThumbFor.MessagesLisView))
+        logic.getAttachmentThumb(
+            attachment.messageTid,
+            attachment,
+            thumbData(ThumbFor.MessagesLisView)
+        )
 
         verify(fileTransferService, never()).redownload(any())
     }
@@ -283,7 +312,11 @@ class AttachmentThumbCoordinatorTest {
         val attachment = attachment(state = TransferState.PauseDownload)
         taskFor(attachment)
 
-        logic.getAttachmentThumb(attachment.messageTid, attachment, thumbData(ThumbFor.MessagesLisView))
+        logic.getAttachmentThumb(
+            attachment.messageTid,
+            attachment,
+            thumbData(ThumbFor.MessagesLisView)
+        )
 
         verify(fileTransferService, never()).redownload(any())
     }
@@ -313,7 +346,11 @@ class AttachmentThumbCoordinatorTest {
         val logic = AttachmentThumbCoordinator(context, resolver)
         val attachment = attachment(filePath = null)
 
-        logic.getAttachmentThumb(attachment.messageTid, attachment, thumbData(ThumbFor.MessagesLisView))
+        logic.getAttachmentThumb(
+            attachment.messageTid,
+            attachment,
+            thumbData(ThumbFor.MessagesLisView)
+        )
 
         verify(resolver, never()).getThumbPath(any(), any(), any())
         verify(fileTransferService, never()).findOrCreateTransferTask(any())
@@ -328,7 +365,11 @@ class AttachmentThumbCoordinatorTest {
         val thumb = thumbData(ThumbFor.MessagesLisView)
 
         logic.getAttachmentThumb(attachment.messageTid, attachment, thumb)
-        logic.getAttachmentThumb(attachment.messageTid, attachment, thumb.copy(size = Size(240, 240)))
+        logic.getAttachmentThumb(
+            attachment.messageTid,
+            attachment,
+            thumb.copy(size = Size(240, 240))
+        )
 
         assertThat(resolver.callCount.get()).isEqualTo(2)
         assertThat(callbacks.map { it.size }).containsExactly(Size(120, 120), Size(240, 240))

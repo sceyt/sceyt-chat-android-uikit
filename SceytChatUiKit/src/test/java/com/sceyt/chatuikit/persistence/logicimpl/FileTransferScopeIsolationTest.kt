@@ -74,7 +74,11 @@ class FileTransferScopeIsolationTest {
         val uploaded = uploadAttachment(messageTid = 90L)
         val downloaded = attachment(messageTid = 91L, state = TransferState.PendingDownload)
 
-        uploads.upload(uploaded, transferTask(uploaded).also(service::addTransferTask), onResult = { _, _ -> }, onPaused = {})
+        uploads.upload(
+            uploaded,
+            transferTask(uploaded).also(service::addTransferTask),
+            onResult = { _, _ -> },
+            onPaused = {})
         downloads.download(downloaded, transferTask(downloaded), onResult = {})
         uploads.cancelAll()
 
@@ -93,7 +97,11 @@ class FileTransferScopeIsolationTest {
         val uploaded = uploadAttachment(messageTid = 92L)
         val downloaded = attachment(messageTid = 93L, state = TransferState.PendingDownload)
 
-        uploads.upload(uploaded, transferTask(uploaded).also(service::addTransferTask), onResult = { _, _ -> }, onPaused = {})
+        uploads.upload(
+            uploaded,
+            transferTask(uploaded).also(service::addTransferTask),
+            onResult = { _, _ -> },
+            onPaused = {})
         downloads.download(downloaded, transferTask(downloaded), onResult = {})
         downloads.cancelAll()
 
@@ -109,7 +117,11 @@ class FileTransferScopeIsolationTest {
         val downloads = AttachmentDownloadCoordinator(context, sharedScope)
         val transferService = FileTransferServiceImpl(context, uploads, downloads, mock())
 
-        uploads.upload(uploaded, transferTask(uploaded).also(service::addTransferTask), onResult = { _, _ -> }, onPaused = {})
+        uploads.upload(
+            uploaded,
+            transferTask(uploaded).also(service::addTransferTask),
+            onResult = { _, _ -> },
+            onPaused = {})
         downloads.download(downloaded, transferTask(downloaded), onResult = {})
         transferService.cancelAllTransfers()
 

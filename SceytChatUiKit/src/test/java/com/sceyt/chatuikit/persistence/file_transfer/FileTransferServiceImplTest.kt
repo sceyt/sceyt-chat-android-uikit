@@ -67,10 +67,18 @@ class FileTransferServiceImplTest {
         // FileTransferHelper retains injected dependencies for the lifetime of its singleton.
         private val uploader = mock<AttachmentUploadCoordinator>()
         private val downloads by lazy {
-            AttachmentDownloadCoordinator(RuntimeEnvironment.getApplication(), TestScope(UnconfinedTestDispatcher()))
+            AttachmentDownloadCoordinator(
+                RuntimeEnvironment.getApplication(),
+                TestScope(UnconfinedTestDispatcher())
+            )
         }
         private val service by lazy {
-            FileTransferServiceImpl(RuntimeEnvironment.getApplication(), uploader, downloads, mock())
+            FileTransferServiceImpl(
+                RuntimeEnvironment.getApplication(),
+                uploader,
+                downloads,
+                mock()
+            )
         }
     }
 
@@ -186,7 +194,8 @@ class FileTransferServiceImplTest {
         useCase(attachment.copy(transferState = TransferState.PauseDownload))
 
         assertThat(transport.downloadCalls).hasSize(1)
-        assertThat(transport.resumeCalls).containsExactly(transport.downloadCalls.single().request.operationId)
+        assertThat(transport.resumeCalls)
+            .containsExactly(transport.downloadCalls.single().request.operationId)
         assertThat(task.state).isEqualTo(TransferState.Downloading)
     }
 
@@ -257,12 +266,14 @@ class FileTransferServiceImplTest {
         service.download(first)
         val secondTask = service.download(second)
 
-        transport.downloadCalls.first().succeed(transport.downloadCalls.first().request.destinationFile.path)
+        transport.downloadCalls.first()
+            .succeed(transport.downloadCalls.first().request.destinationFile.path)
 
         assertThat(service.findTransferTask(first)).isNull()
         assertThat(service.findTransferTask(second)).isSameInstanceAs(secondTask)
 
-        transport.downloadCalls.last().succeed(transport.downloadCalls.last().request.destinationFile.path)
+        transport.downloadCalls.last()
+            .succeed(transport.downloadCalls.last().request.destinationFile.path)
 
         assertThat(service.getTasks()).isEmpty()
     }
@@ -318,7 +329,8 @@ class FileTransferServiceImplTest {
 
         assertThat(transport.downloadCalls).hasSize(2)
         assertThat(service.findTransferTask(attachment)).isSameInstanceAs(retryTask)
-        transport.downloadCalls.last().succeed(transport.downloadCalls.last().request.destinationFile.path)
+        transport.downloadCalls.last()
+            .succeed(transport.downloadCalls.last().request.destinationFile.path)
         assertThat(firstCompletions).isEqualTo(1)
         assertThat(retryCompletions).isEqualTo(1)
         assertThat(service.getTasks()).isEmpty()
@@ -350,7 +362,8 @@ class FileTransferServiceImplTest {
     @Test
     fun `upload result removes a task even when its url changes`() {
         useTransferCoordinators()
-        val attachment = attachment(url = null, filePath = files.newFile("source.txt").path).copy(id = null)
+        val attachment = attachment(url = null, filePath = files.newFile("source.txt").path)
+            .copy(id = null)
         val task = service.upload(attachment)
 
         transport.uploadCalls.single().succeed("uploaded-url")
@@ -380,7 +393,8 @@ class FileTransferServiceImplTest {
     @Test
     fun `throwing upload callback still completes listeners and releases the queue`() {
         useTransferCoordinators()
-        val first = attachment(messageTid = 25L, filePath = files.newFile("callback-error.txt").path)
+        val first =
+            attachment(messageTid = 25L, filePath = files.newFile("callback-error.txt").path)
         val next = attachment(messageTid = 26L, filePath = files.newFile("next.txt").path)
         var completions = 0
         service.upload(first) {
@@ -491,7 +505,8 @@ class FileTransferServiceImplTest {
     @Test
     fun `upload cancelled during configuration never starts and releases its listener`() {
         useTransferCoordinators()
-        val attachment = attachment(url = null, filePath = files.newFile("cancel-before-admission.txt").path)
+        val attachment =
+            attachment(url = null, filePath = files.newFile("cancel-before-admission.txt").path)
         var completion: Result<SceytAttachment>? = null
 
         service.upload(attachment) {
@@ -507,7 +522,8 @@ class FileTransferServiceImplTest {
     @Test
     fun `cancellation from resume callback prevents queued upload admission`() {
         useTransferCoordinators()
-        val attachment = attachment(url = null, filePath = files.newFile("cancel-on-resume.txt").path)
+        val attachment =
+            attachment(url = null, filePath = files.newFile("cancel-on-resume.txt").path)
         val task = service.findOrCreateTransferTask(attachment)
         task.resumePauseCallback = ResumePauseCallback { service.cancelUpload(attachment) }
 
@@ -533,8 +549,10 @@ class FileTransferServiceImplTest {
     @Test
     fun `cancel upload stops its transport call and starts the next upload`() {
         useTransferCoordinators()
-        val first = attachment(messageTid = 20L, url = null, filePath = files.newFile("first.txt").path)
-        val second = attachment(messageTid = 21L, url = null, filePath = files.newFile("second.txt").path)
+        val first =
+            attachment(messageTid = 20L, url = null, filePath = files.newFile("first.txt").path)
+        val second =
+            attachment(messageTid = 21L, url = null, filePath = files.newFile("second.txt").path)
         var resultCalls = 0
         val firstTask = service.upload(first) {
             uploadResultCallback = TransferResultCallback { resultCalls++ }
@@ -580,7 +598,8 @@ class FileTransferServiceImplTest {
     @Test
     fun `cancel all during configuration prevents a late upload and releases its listener`() {
         useTransferCoordinators()
-        val attachment = attachment(url = null, filePath = files.newFile("cancel-all-before-admission.txt").path)
+        val attachment =
+            attachment(url = null, filePath = files.newFile("cancel-all-before-admission.txt").path)
         var completion: Result<SceytAttachment>? = null
 
         service.upload(attachment) {
@@ -638,7 +657,8 @@ class FileTransferServiceImplTest {
         )
         assertThat(request.firstValue.tags).contains("456")
         assertThat(request.firstValue.tags).contains(attachment.messageTid.toString())
-        assertThat(request.firstValue.workSpec.input.getBoolean(RESUME_PAUSED_UPLOAD, false)).isTrue()
+        val inputData = request.firstValue.workSpec.input
+        assertThat(inputData.getBoolean(RESUME_PAUSED_UPLOAD, false)).isTrue()
     }
 
     @Test
@@ -655,12 +675,16 @@ class FileTransferServiceImplTest {
         )
         assertThat(request.firstValue.tags).contains("456")
         assertThat(request.firstValue.tags).contains(attachment.messageTid.toString())
-        assertThat(request.firstValue.workSpec.input.getBoolean(RESUME_PAUSED_UPLOAD, false)).isTrue()
+        val inputData = request.firstValue.workSpec.input
+        assertThat(inputData.getBoolean(RESUME_PAUSED_UPLOAD, false)).isTrue()
     }
 
     @Test
     fun `error upload retry after finished worker schedules upload and send`() {
-        assertResumeSchedulesWorker(WorkInfo.State.FAILED, transferState = TransferState.ErrorUpload)
+        assertResumeSchedulesWorker(
+            WorkInfo.State.FAILED,
+            transferState = TransferState.ErrorUpload
+        )
     }
 
     @Test
@@ -681,7 +705,8 @@ class FileTransferServiceImplTest {
         verify(workManager).beginUniqueWork(
             eq(attachment.messageTid.toString()), eq(ExistingWorkPolicy.REPLACE), request.capture(),
         )
-        assertThat(request.firstValue.workSpec.input.getBoolean(RESUME_PAUSED_UPLOAD, false)).isTrue()
+        val inputData = request.firstValue.workSpec.input
+        assertThat(inputData.getBoolean(RESUME_PAUSED_UPLOAD, false)).isTrue()
         verify(uploader, never()).upload(any(), any(), any(), any())
     }
 

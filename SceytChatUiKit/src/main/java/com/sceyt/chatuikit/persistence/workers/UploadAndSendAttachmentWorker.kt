@@ -59,12 +59,12 @@ object UploadAndSendAttachmentWorkManager {
     const val FILE_TRANSFER_NOTIFICATION_ID = 1223344
 
     fun schedule(
-            context: Context,
-            messageTid: Long,
-            channelId: Long?,
-            workPolicy: ExistingWorkPolicy = ExistingWorkPolicy.KEEP,
-            isSharing: Boolean = false,
-            resumePausedUpload: Boolean = false,
+        context: Context,
+        messageTid: Long,
+        channelId: Long?,
+        workPolicy: ExistingWorkPolicy = ExistingWorkPolicy.KEEP,
+        isSharing: Boolean = false,
+        resumePausedUpload: Boolean = false,
     ): Operation {
         val dataBuilder = Data.Builder()
         dataBuilder.putLong(MESSAGE_TID, messageTid)
@@ -103,9 +103,9 @@ class UploadAndSendAttachmentWorker(
         get() = inputData.getBoolean(RESUME_PAUSED_UPLOAD, false) && runAttemptCount == 0
 
     private suspend fun uploadAttachmentsBeforeSend(
-            message: SceytMessage,
-            isSharing: Boolean,
-            resumePausedUpload: Boolean,
+        message: SceytMessage,
+        isSharing: Boolean,
+        resumePausedUpload: Boolean,
     ): KtResult<List<SceytAttachment>> {
         val payloads = attachmentLogic.getAllPayLoadsByMsgTid(message.tid)
         val attachments = message.attachments?.toMutableList()

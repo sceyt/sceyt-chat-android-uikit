@@ -99,7 +99,8 @@ internal class UploadPreparer(
             },
         )
 
-        val path = requireNotNull(prepared.filePath.takeIfNotBlank()) { "Attachment source path is missing" }
+        val path = prepared.filePath.takeIfNotBlank()
+        requireNotNull(path) { "Attachment source path is missing" }
         require(File(path).isFile) { "Attachment source file does not exist: $path" }
         return PreparedAttachment(prepared, preparedFilePath = preparationResult.getOrNull())
     }
