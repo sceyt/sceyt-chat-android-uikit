@@ -59,6 +59,7 @@ import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManage
 import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager.MESSAGE_TID
 import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager.RESUME_PAUSED_UPLOAD
 import com.sceyt.chatuikit.providers.ChatConnectionProvider
+import com.sceyt.chatuikit.shared.utils.FileChecksumCalculator
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
@@ -118,6 +119,7 @@ class UploadAndSendAttachmentWorkerTest {
     private companion object {
         // FileTransferHelper retains injected dependencies, so reuse them across worker tests.
         val attachmentLogic = mock<PersistenceAttachmentLogic>()
+        val fileChecksumDao = mock<FileChecksumDao>()
         val testScope = TestScope(UnconfinedTestDispatcher())
         val service by lazy {
             val context = RuntimeEnvironment.getApplication()
@@ -133,6 +135,7 @@ class UploadAndSendAttachmentWorkerTest {
     @Before
     fun setUp() = runBlocking {
         reset(attachmentLogic)
+        reset(fileChecksumDao)
         AttachmentTransferStateStore.clear()
         previousFileTransfer = SceytChatUIKit.fileTransfer
         previousConfig = SceytChatUIKit.config
@@ -169,7 +172,7 @@ class UploadAndSendAttachmentWorkerTest {
                 single<PersistenceAttachmentLogic> { attachmentLogic }
                 single<PersistenceMessagesLogic> { messageLogic }
                 single<PersistenceChannelsLogic> { mock() }
-                single<FileChecksumDao> { mock() }
+                single<FileChecksumDao> { fileChecksumDao }
                 single<CoroutineContext>(named(CoroutineContextType.SingleThreaded)) {
                     testScope.coroutineContext
                 }
@@ -188,6 +191,24 @@ class UploadAndSendAttachmentWorkerTest {
         SceytChatUIKit.notifications = previousNotifications
         SceytKoinApp.koinApp = null
         stopKoin()
+    }
+
+    @Test
+    fun `prepared file callback updates the original checksum after app data is saved`() = runBlocking {
+        val original = File(context.cacheDir, "checksum-original.txt").apply { writeText("original source") }
+        val prepared = File(context.cacheDir, "checksum-prepared.txt").apply { writeText("prepared") }
+        val value = attachment(
+            filePath = prepared.path,
+            originalFilePath = original.path,
+            fileSize = prepared.length(),
+        ).copy(metadata = """{"file_transfer":{"id":"saved"}}""")
+        val task = FileTransferHelper.createTransferTask(value)
+        val checksum = checkNotNull(FileChecksumCalculator.calculateFileChecksum(original.path))
+
+        task.updateFileLocationCallback?.onUpdateFileLocation(prepared.path)
+
+        verify(fileChecksumDao).updateResizedFilePathAndSize(checksum, prepared.path, prepared.length())
+        assertThat(task.attachment.metadata).contains("file_transfer")
     }
 
     @Test
