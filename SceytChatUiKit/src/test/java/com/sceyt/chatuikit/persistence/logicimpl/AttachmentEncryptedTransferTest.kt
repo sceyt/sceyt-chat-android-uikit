@@ -2,25 +2,19 @@ package com.sceyt.chatuikit.persistence.logicimpl
 
 import com.google.common.truth.Truth.assertThat
 import com.google.gson.JsonParser
-import com.sceyt.chat.fileencryption.CiphertextRangeSource
-import com.sceyt.chat.fileencryption.FileEncryptionData
-import com.sceyt.chat.fileencryption.FileEncryptionProvider
-import com.sceyt.chat.fileencryption.PlaintextReader
-import com.sceyt.chat.fileencryption.StreamingAeadFileEncryptionProvider
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.SceytResponse
-import com.sceyt.chatuikit.filetransfer.AttachmentTransferContext
+import com.sceyt.chatuikit.filetransfer.FileDownloadRequest
 import com.sceyt.chatuikit.filetransfer.FileTransferDestinationProvider
-import com.sceyt.chatuikit.filetransfer.FileUploadType
+import com.sceyt.chatuikit.filetransfer.FileTransferResult
+import com.sceyt.chatuikit.filetransfer.FileTransferType
 import com.sceyt.chatuikit.filetransfer.SceytChatUIKitFileTransfer
 import com.sceyt.chatuikit.filetransfer.defaults.DefaultFileTransferTransport
-import com.sceyt.chatuikit.filetransfer.encryption.ChatSdkFileEncryption
+import com.sceyt.chatuikit.filetransfer.download.ChatSdkFileDownloader
 import com.sceyt.chatuikit.filetransfer.encryption.FileEncryption
 import com.sceyt.chatuikit.filetransfer.encryption.FileEncryptionInfo
 import com.sceyt.chatuikit.filetransfer.encryption.FileEncryptionMetadata
-import com.sceyt.chatuikit.filetransfer.encryption.toUIKitInfo
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
-import com.sun.net.httpserver.HttpServer
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runCurrent
@@ -31,18 +25,15 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
+import org.mockito.Mockito
 import org.mockito.kotlin.any
-import org.mockito.kotlin.doAnswer
-import org.mockito.kotlin.eq
+import org.mockito.kotlin.doSuspendableAnswer
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
-import java.io.File
-import java.net.InetSocketAddress
-import com.sceyt.chat.fileencryption.FileEncryptionInfo as SdkFileEncryptionInfo
 
 @RunWith(RobolectricTestRunner::class)
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -62,7 +53,7 @@ class AttachmentEncryptedTransferTest {
         SceytChatUIKit.fileTransfer = SceytChatUIKitFileTransfer().apply {
             this.transport = this@AttachmentEncryptedTransferTest.transport
             this.encryption = this@AttachmentEncryptedTransferTest.encryption
-            encryptUploads = true
+            encryptionEnabled = true
         }
     }
 
@@ -88,8 +79,8 @@ class AttachmentEncryptedTransferTest {
         val info = FileEncryptionInfo("custom-returned-format", "custom-file-id", "custom-file-key")
 
         assertThat(request.sourceFile).isEqualTo(file)
-        assertThat(request.type).isEqualTo(FileUploadType.ENCRYPTED)
-        assertThat((request.context as AttachmentTransferContext).attachment.metadata).isEqualTo(value.metadata)
+        assertThat(request.type).isEqualTo(FileTransferType.ENCRYPTED)
+        assertThat(request.attachment.metadata).isEqualTo(value.metadata)
         // The transport has read the original bytes; the completion response can arrive later.
         file.appendText("edited after the transport read the file")
         call.succeed("https://waafi.test/completed", info)
@@ -175,41 +166,27 @@ class AttachmentEncryptedTransferTest {
     }
 
     @Test
-    fun `receiver downloads a full HTTP 200 response then publishes SDK verified plaintext`() = runTest {
+    fun `receiver forwards saved encryption metadata to the native downloader`() = runTest {
         val context = RuntimeEnvironment.getApplication()
-        val previous = SceytChatUIKit.fileTransfer
-        val destination = File.createTempFile("decrypted-attachment", ".bin", context.cacheDir)
+        val destination = temporary.newFile("decrypted-attachment.bin")
         destination.delete()
         val plaintext = "verified attachment".toByteArray()
-        val provider = mock<FileEncryptionProvider>()
-        val reader = mock<PlaintextReader>()
-        val ciphertext = "encrypted attachment fixture".toByteArray()
-        val info = SdkFileEncryptionInfo(
-            StreamingAeadFileEncryptionProvider.FORMAT,
-            FileEncryptionData("received-file", "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", plaintext.size.toLong()),
-        )
-        doAnswer {
-            val source = it.getArgument<CiphertextRangeSource>(0)
-            assertThat(source.readCiphertextRange(0, ciphertext.size)).isEqualTo(ciphertext)
-            reader
-        }.whenever(provider).openDownload(any(), eq(info))
-        whenever(reader.plaintextSize).thenReturn(plaintext.size.toLong())
-        doAnswer {
-            val offset = it.getArgument<Long>(0).toInt()
-            plaintext.copyOfRange(offset, offset + it.getArgument<Int>(1))
-        }.whenever(reader).read(any(), any())
-        val server = HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0)
-        server.createContext("/blob") { exchange ->
-            exchange.sendResponseHeaders(200, ciphertext.size.toLong())
-            exchange.responseBody.use { it.write(ciphertext) }
-            exchange.close()
-        }
-        server.start()
-        try {
+        val info = FileEncryptionInfo("sdk-format", "received-file", "file-key")
+        Mockito.mockConstruction(ChatSdkFileDownloader::class.java) { downloader, _ ->
+            doSuspendableAnswer { invocation ->
+                val request = invocation.getArgument<FileDownloadRequest>(0)
+                val metadata = checkNotNull(FileEncryptionMetadata.read(request.attachment.metadata))
+                assertThat(metadata.toEncryptionInfo()).isEqualTo(info)
+                assertThat(request.type).isEqualTo(FileTransferType.ENCRYPTED)
+                assertThat(request.attachment.fileSize).isEqualTo(plaintext.size.toLong())
+                request.destinationFile.writeBytes(plaintext)
+                FileTransferResult.Success(request.destinationFile.path)
+            }.whenever(downloader) { download(any(), any()) }
+        }.use { native ->
             SceytChatUIKit.fileTransfer = SceytChatUIKitFileTransfer().apply {
-                encryption = ChatSdkFileEncryption(provider)
                 transport = DefaultFileTransferTransport()
                 destinationProvider = FileTransferDestinationProvider { _, _ -> destination }
+                encryptionEnabled = true
             }
             val value = attachment(
                 messageTid = System.nanoTime(),
@@ -217,11 +194,11 @@ class AttachmentEncryptedTransferTest {
                 originalFilePath = null,
                 state = TransferState.PendingDownload,
                 fileSize = plaintext.size.toLong(),
-                url = "http://127.0.0.1:${server.address.port}/blob",
+                url = "https://cdn.test/blob",
             ).copy(
                 metadata = FileEncryptionMetadata.write(
                     metadata = null,
-                    envelope = FileEncryptionMetadata.fromEncryptionInfo(info.toUIKitInfo()),
+                    envelope = FileEncryptionMetadata.fromEncryptionInfo(info),
                 ),
             )
             val finished = CompletableDeferred<SceytResponse<String>>()
@@ -233,14 +210,7 @@ class AttachmentEncryptedTransferTest {
 
             assertThat((finished.await() as SceytResponse.Success).data).isEqualTo(destination.path)
             assertThat(destination.readBytes()).isEqualTo(plaintext)
-            assertThat(File(destination.path + ".sceyt.part").exists()).isFalse()
-            assertThat(File(destination.path + ".sceyt.enc").exists()).isFalse()
-            assertThat(File(destination.path + ".sceyt.enc.part").exists()).isFalse()
-            verify(reader).close()
-        } finally {
-            server.stop(0)
-            SceytChatUIKit.fileTransfer = previous
-            destination.delete()
+            verify(native.constructed().single()).download(any(), any())
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.persistence.logicimpl
 
+import com.google.gson.JsonObject
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.filetransfer.FileDownloadRequest
@@ -150,6 +151,9 @@ internal class RecordingFileTransferTransport : FileTransferTransport {
     var downloadCancellationGate: CompletableDeferred<Unit>? = null
     var pauseResult = false
     var resumeResult = false
+    var onPrepareUpload: suspend (FileUploadRequest) -> JsonObject? = { null }
+
+    override suspend fun prepareUpload(request: FileUploadRequest): JsonObject? = onPrepareUpload(request)
 
     override suspend fun upload(
         request: FileUploadRequest,

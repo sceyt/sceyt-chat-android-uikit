@@ -9,7 +9,6 @@ import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.FileChecksumData
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
-import com.sceyt.chatuikit.filetransfer.AttachmentTransferContext
 import com.sceyt.chatuikit.filetransfer.FileTransferCallback
 import com.sceyt.chatuikit.filetransfer.FileTransferResult
 import com.sceyt.chatuikit.filetransfer.FileTransferTransport
@@ -97,7 +96,7 @@ class AttachmentUploadCoordinatorTest {
         previousFileTransfer = SceytChatUIKit.fileTransfer
         previousConfig = SceytChatUIKit.config
         SceytChatUIKit.fileTransfer = SceytChatUIKitFileTransfer().apply {
-            encryptUploads = false
+            encryptionEnabled = false
             this.transport = this@AttachmentUploadCoordinatorTest.transport
         }
         SceytChatUIKit.config = SceytChatUIKitConfig().apply {
@@ -617,7 +616,8 @@ class AttachmentUploadCoordinatorTest {
         assertThat(call.request.operationId).isEqualTo("upload:30")
         assertThat(call.request.sourceFile.path).isEqualTo(attachment.filePath)
         assertThat(call.request.fileName).isEqualTo("document.txt")
-        assertThat(call.request.context).isEqualTo(AttachmentTransferContext(attachment))
+        assertThat(call.request.attachment).isEqualTo(attachment)
+        assertThat(call.request.isSharedUpload).isFalse()
         assertThat(progress.single().progressPercent).isEqualTo(55f)
         assertThat(progress.single().state).isEqualTo(TransferState.Uploading)
         assertThat(result?.data).isEqualTo("uploaded-url")
@@ -1434,7 +1434,7 @@ class AttachmentUploadCoordinatorTest {
 
     @Test
     fun `encrypted upload keeps its prepared file on immediate retry without reusing the URL`() {
-        SceytChatUIKit.fileTransfer.encryptUploads = true
+        SceytChatUIKit.fileTransfer.encryptionEnabled = true
         val attachment = uploadAttachment(name = "original.mp4", type = AttachmentTypeEnum.Video.value)
         val prepared = File(context.cacheDir, "prepared-encrypted-retry.mp4")
             .apply { writeText("prepared video") }

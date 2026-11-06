@@ -1,11 +1,21 @@
 package com.sceyt.chatuikit.filetransfer
 
+import com.google.gson.JsonObject
+
 /**
  * Transfers prepared files. Expected failures are returned as [FileTransferResult.Failure];
  * recoverable interruptions are returned as [FileTransferResult.Interrupted].
  * Coroutine cancellation must propagate as CancellationException, not as a failed result.
  */
 interface FileTransferTransport {
+    /**
+     * Prepares app data for an upload of the final source file.
+     * [FileUploadRequest.metadata] contains the object saved by an earlier attempt, or an empty object.
+     * UIKit saves a returned object under file_transfer before calling [upload]. Returning null skips
+     * this write. Completed checksum matches skip both methods. Throwing prevents upload.
+     */
+    suspend fun prepareUpload(request: FileUploadRequest): JsonObject? = null
+
     /**
      * Uploads the prepared source and returns its remote reference.
      * Implementations must stop their work when the calling coroutine is cancelled.
@@ -16,9 +26,10 @@ interface FileTransferTransport {
     ): FileTransferResult<FileUploadResult>
 
     /**
-     * Downloads to [FileDownloadRequest.destinationFile], decrypting when its type is encrypted.
+     * Downloads to [FileDownloadRequest.destinationFile] using [FileDownloadRequest.type].
+     * Encrypted requests require valid encryption metadata; missing data must fail without a plain fallback.
      * Success returns the final plaintext path. Implementations must stop file writers before the
-     * calling coroutine finishes, including when it is cancelled. Keep resumable files on coroutine
+     * calling coroutine finishes, including when it is canceled. Keep resumable files on coroutine
      * cancellation; remove them only on explicit [cancel].
      */
     suspend fun download(

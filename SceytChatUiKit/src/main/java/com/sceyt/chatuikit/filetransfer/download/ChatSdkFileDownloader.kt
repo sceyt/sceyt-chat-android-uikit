@@ -4,9 +4,10 @@ import com.sceyt.chat.download.DownloadRequest
 import com.sceyt.chat.download.MediaDownload
 import com.sceyt.chat.download.MediaDownload.State
 import com.sceyt.chatuikit.filetransfer.FileDownloadRequest
-import com.sceyt.chatuikit.filetransfer.FileDownloadType
 import com.sceyt.chatuikit.filetransfer.FileTransferCallback
 import com.sceyt.chatuikit.filetransfer.FileTransferResult
+import com.sceyt.chatuikit.filetransfer.FileTransferType
+import com.sceyt.chatuikit.filetransfer.encryption.FileEncryptionMetadata
 import com.sceyt.chatuikit.filetransfer.encryption.toSdkInfo
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -83,13 +84,17 @@ internal class ChatSdkFileDownloader(
 
         // Keep native callbacks short; the coroutine handles progress and results.
         val listener = MediaDownload.Listener { events.trySend(DownloadEvent.StatusChanged) }
-        return when (val type = request.type) {
-            is FileDownloadType.Plain -> {
+        return when (request.type) {
+            FileTransferType.PLAIN -> {
                 MediaDownload.download(sdkRequest, destination, listener, null)
             }
 
-            is FileDownloadType.Encrypted -> {
-                val encryptionInfo = type.encryptionInfo.toSdkInfo(type.plaintextSize)
+            FileTransferType.ENCRYPTED -> {
+                val metadata = FileEncryptionMetadata.read(request.attachment.metadata)
+                checkNotNull(metadata) { "Encrypted download requires valid encryption metadata" }
+                val encryptionInfo = metadata.toEncryptionInfo().toSdkInfo(
+                    plaintextSize = request.attachment.fileSize
+                )
                 MediaDownload.downloadEncrypted(
                     /* request = */ sdkRequest,
                     /* destinationPath = */ destination,

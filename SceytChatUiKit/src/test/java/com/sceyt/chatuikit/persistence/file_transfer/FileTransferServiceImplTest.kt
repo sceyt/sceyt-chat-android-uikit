@@ -97,7 +97,7 @@ class FileTransferServiceImplTest {
         }
         transport = RecordingFileTransferTransport()
         SceytChatUIKit.fileTransfer = SceytChatUIKitFileTransfer().apply {
-            encryptUploads = false
+            encryptionEnabled = false
             this.transport = this@FileTransferServiceImplTest.transport
             destinationProvider = FileTransferDestinationProvider { _, attachment ->
                 File(files.root, "${attachment.messageTid}.txt")
@@ -435,7 +435,7 @@ class FileTransferServiceImplTest {
         val scope = TestScope(UnconfinedTestDispatcher())
         transport = RecordingFileTransferTransport()
         SceytChatUIKit.fileTransfer = SceytChatUIKitFileTransfer().apply {
-            encryptUploads = false
+            encryptionEnabled = false
             this.transport = this@FileTransferServiceImplTest.transport
             destinationProvider = FileTransferDestinationProvider { _, attachment ->
                 File(files.root, "${attachment.messageTid}.txt")

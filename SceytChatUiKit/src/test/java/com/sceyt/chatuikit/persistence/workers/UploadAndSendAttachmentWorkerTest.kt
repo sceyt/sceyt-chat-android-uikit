@@ -23,15 +23,14 @@ import com.sceyt.chatuikit.data.models.SyncResult
 import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
-import com.sceyt.chatuikit.filetransfer.AttachmentTransferContext
 import com.sceyt.chatuikit.filetransfer.FileTransferCallback
 import com.sceyt.chatuikit.filetransfer.FileTransferResult
 import com.sceyt.chatuikit.filetransfer.FileTransferTransport
+import com.sceyt.chatuikit.filetransfer.FileTransferType
 import com.sceyt.chatuikit.filetransfer.FileUploadRequest
 import com.sceyt.chatuikit.filetransfer.FileUploadResult
-import com.sceyt.chatuikit.filetransfer.FileUploadType
-import com.sceyt.chatuikit.filetransfer.encryption.FileEncryptionInfo
 import com.sceyt.chatuikit.filetransfer.SceytChatUIKitFileTransfer
+import com.sceyt.chatuikit.filetransfer.encryption.FileEncryptionInfo
 import com.sceyt.chatuikit.filetransfer.encryption.FileEncryptionMetadata
 import com.sceyt.chatuikit.koin.SceytKoinApp
 import com.sceyt.chatuikit.notifications.SceytNotifications
@@ -143,7 +142,7 @@ class UploadAndSendAttachmentWorkerTest {
         previousNotifications = runCatching { SceytChatUIKit.notifications }
             .getOrElse { SceytNotifications(context) }
         SceytChatUIKit.fileTransfer = SceytChatUIKitFileTransfer().apply {
-            encryptUploads = false
+            encryptionEnabled = false
             transport = this@UploadAndSendAttachmentWorkerTest.transport
         }
         SceytChatUIKit.config = SceytChatUIKitConfig().apply {
@@ -514,7 +513,7 @@ class UploadAndSendAttachmentWorkerTest {
 
     @Test
     fun `recreated worker uploads the saved prepared video without transcoding again`() {
-        SceytChatUIKit.fileTransfer.encryptUploads = true
+        SceytChatUIKit.fileTransfer.encryptionEnabled = true
         val original = File(context.cacheDir, "worker-original.mp4").apply { writeText("source video") }
         val prepared = File(context.cacheDir, "worker-prepared.mp4").apply { writeText("prepared video") }
         val attachment = attachment(
@@ -535,7 +534,7 @@ class UploadAndSendAttachmentWorkerTest {
             val work = testScope.async { worker(attachment, resume = true).doWork() }
 
             val call = transport.uploadCalls.single()
-            assertThat(call.request.type).isEqualTo(FileUploadType.ENCRYPTED)
+            assertThat(call.request.type).isEqualTo(FileTransferType.ENCRYPTED)
             assertThat(call.request.sourceFile).isEqualTo(prepared)
             call.succeed("resumed-url", FileEncryptionInfo("test-format", "file-id", "file-key"))
 
@@ -1132,8 +1131,7 @@ class UploadAndSendAttachmentWorkerTest {
         val work = testScope.async { worker.doWork() }
 
         assertThat(transport.uploadCalls).hasSize(1)
-        val context = transport.uploadCalls.single().request.context as AttachmentTransferContext
-        assertThat(context.isSharedUpload).isTrue()
+        assertThat(transport.uploadCalls.single().request.isSharedUpload).isTrue()
         transport.uploadCalls.single().succeed("fresh-url")
 
         assertThat(work.isCompleted).isTrue()

@@ -7,6 +7,8 @@ import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.extensions.takeIfNotBlank
 import com.sceyt.chatuikit.filetransfer.FileTransferResult
 import com.sceyt.chatuikit.logger.SceytLog
+import com.sceyt.chatuikit.persistence.extensions.fileTransferData
+import com.sceyt.chatuikit.persistence.extensions.withFileTransferData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.PauseUpload
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Preparing
@@ -16,6 +18,7 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferTask
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import com.sceyt.chatuikit.persistence.mappers.toTransferData
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -30,11 +33,11 @@ import java.util.ArrayDeque
 
 internal class AttachmentUploadCoordinator(
     context: Context,
-    attachmentLogic: PersistenceAttachmentLogic,
+    private val attachmentLogic: PersistenceAttachmentLogic,
     private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
 ) {
     private val router = AttachmentTransferRouter(context, attachmentLogic)
-    private val commands = Channel<() -> Unit>(Channel.UNLIMITED)
+    private val commands = Channel<suspend () -> Unit>(Channel.UNLIMITED)
     private val uploads = linkedSetOf<Upload>()
     private val pending = ArrayDeque<Upload>()
     private var current: Upload? = null
@@ -42,7 +45,11 @@ internal class AttachmentUploadCoordinator(
     init {
         // One coroutine owns upload state. Reentrant callbacks enqueue their next change.
         scope.launch {
-            for (command in commands) notify(command)
+            for (command in commands) {
+                runCatching {
+                    command()
+                }.onFailure { SceytLog.e(TAG, "File transfer command failed", it) }
+            }
         }
     }
 
@@ -84,6 +91,17 @@ internal class AttachmentUploadCoordinator(
         val member = Member(upload, attachment, task, onResult)
         upload.members[task] = member
         upload.result = null
+
+        // A late shared caller must save the same app data before reusing the running transfer.
+        upload.preparedAttachment?.let { prepared ->
+            try {
+                savePreparedAttachment(member, prepared)
+            } catch (error: Throwable) {
+                removeMember(member)
+                complete(member, Result.failure(error))
+                return@dispatch
+            }
+        }
 
         // Pause may arrive after upload() is called but before this command runs.
         if (task.state == PauseUpload) {
@@ -177,6 +195,7 @@ internal class AttachmentUploadCoordinator(
         val owner = upload.members.values.firstOrNull { !it.paused } ?: return
         val previous = upload.attempt
         val attempt = Attempt(owner.attachment.uploadOperationId)
+        upload.preparedAttachment = null
         attempt.job = scope.launch(start = CoroutineStart.ATOMIC) {
             // Enter cleanup even if paused before dispatch; canceled attempts never prepare files.
             withContext(NonCancellable) {
@@ -216,6 +235,7 @@ internal class AttachmentUploadCoordinator(
                     }
                 },
                 preparedFilePath = upload.preparedFilePath,
+                onUploadPrepared = { prepared -> savePreparedUpload(owner, attempt, prepared) },
             )
             attempt.transfer = transfer
             val response = transfer.execute { progress ->
@@ -237,6 +257,52 @@ internal class AttachmentUploadCoordinator(
         }
         attempt.completed = true
         dispatch { finish(upload, attempt, result) }
+    }
+
+    private suspend fun savePreparedUpload(
+        owner: Member,
+        attempt: Attempt,
+        attachment: SceytAttachment,
+    ): SceytAttachment {
+        val saved = CompletableDeferred<SceytAttachment>()
+        dispatch {
+            val upload = owner.upload
+            // A canceled or replaced attempt must not persist its preparation or start uploading.
+            if (upload.attempt !== attempt || attempt.job.isCancelled) {
+                saved.cancel()
+                return@dispatch
+            }
+
+            try {
+                upload.members.values.forEach { savePreparedAttachment(it, attachment) }
+                upload.preparedAttachment = attachment
+                saved.complete(if (owner.finished) attachment else owner.attachment)
+            } catch (error: Throwable) {
+                saved.completeExceptionally(error)
+            }
+        }
+        return saved.await()
+    }
+
+    private suspend fun savePreparedAttachment(member: Member, prepared: SceytAttachment) {
+        val data = checkNotNull(prepared.metadata.fileTransferData())
+        val metadata = member.task.attachment.metadata.withFileTransferData(data)
+        val path = checkNotNull(prepared.filePath)
+        attachmentLogic.updateAttachmentFilePathAndMetadata(
+            messageTid = member.attachment.messageTid,
+            newPath = path,
+            fileSize = prepared.fileSize,
+            metadata = metadata
+        )
+
+        // Keep a pause or state update that arrived while the database write was suspended.
+        val attachment = member.task.attachment.copy(
+            filePath = path,
+            fileSize = prepared.fileSize,
+            metadata = metadata
+        )
+        member.attachment = attachment
+        member.task.attachment = attachment
     }
 
     private fun handleProgress(upload: Upload, attempt: Attempt, progressPercent: Float) {
@@ -345,7 +411,7 @@ internal class AttachmentUploadCoordinator(
         )
     }
 
-    private fun dispatch(command: () -> Unit) {
+    private fun dispatch(command: suspend () -> Unit) {
         commands.trySend(command)
     }
 
@@ -360,6 +426,7 @@ internal class AttachmentUploadCoordinator(
 
         // Only an attempt accesses this path. A replacement joins the old attempt first.
         var preparedFilePath: String? = null
+        var preparedAttachment: SceytAttachment? = null
         var attempt: Attempt? = null
         var result: Result<String>? = null
     }
@@ -377,7 +444,7 @@ internal class AttachmentUploadCoordinator(
 
     private class Member(
         val upload: Upload,
-        val attachment: SceytAttachment,
+        var attachment: SceytAttachment,
         val task: TransferTask,
         val onResult: (TransferTask, SceytResponse<String>) -> Unit,
     ) {

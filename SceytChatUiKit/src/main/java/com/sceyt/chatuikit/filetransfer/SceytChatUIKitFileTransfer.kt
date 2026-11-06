@@ -7,8 +7,8 @@ import com.sceyt.chatuikit.filetransfer.encryption.FileEncryption
 import com.sceyt.chatuikit.persistence.lazyVar
 
 class SceytChatUIKitFileTransfer {
-    /** Opts in to encrypting new uploads. Encrypted downloads follow attachment metadata. */
-    var encryptUploads: Boolean = false
+    /** Selects encrypted or plain mode for both upload and download requests. */
+    var encryptionEnabled: Boolean = false
 
     var encryption: FileEncryption = ChatSdkFileEncryption()
 
