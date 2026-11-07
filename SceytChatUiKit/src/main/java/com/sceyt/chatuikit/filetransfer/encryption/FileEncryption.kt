@@ -15,6 +15,6 @@ interface FileEncryption {
     /** Prepares verified plaintext reading from a completed encrypted file. Performs no networking. */
     suspend fun prepareDecryption(
         encryptedFile: File,
-        token: String,
+        attachmentKey: String,
     ): FileDecryptionSession
 }

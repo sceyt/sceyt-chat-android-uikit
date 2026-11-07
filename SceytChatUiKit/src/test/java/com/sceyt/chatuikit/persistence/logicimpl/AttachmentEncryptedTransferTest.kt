@@ -228,7 +228,7 @@ class AttachmentEncryptedTransferTest {
             ).copy(
                 metadata = FileEncryptionMetadata.write(
                     metadata = null,
-                    token = token,
+                    attachmentKey = token,
                 ),
             )
             val finished = CompletableDeferred<SceytResponse<String>>()

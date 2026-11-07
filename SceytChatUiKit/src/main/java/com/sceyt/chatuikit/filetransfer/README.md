@@ -167,7 +167,7 @@ provider preparation every time.
 Neither upload nor download requests have a separate metadata field. The provider reads and
 validates its own values in `request.attachment.metadata`. It can serialize structured data into
 a string under its own key. This supports encryption formats and keys that differ from UIKit's
-standard `sceyt.enc` token.
+standard `sceyt.enc` attachment key.
 
 ## Download behavior
 
@@ -189,7 +189,7 @@ and waiting-for-network state.
 The SDK owns file keys,
 the encryption format, its 64 KiB records and authentication. Applications use UIKit's
 `FileEncryption`, `FileEncryptionSession` and `FileEncryptionCheckpoint` contracts.
-`ChatSdkFileEncryption` maps these to SDK types internally and exposes the SDK-generated token.
+`ChatSdkFileEncryption` maps these to SDK types internally and exposes the SDK-generated attachment key.
 UIKit does not implement the file cipher or calculate encrypted record boundaries.
 
 Enable encryption before starting transfers:
@@ -201,9 +201,9 @@ SceytChatUIKit.fileTransfer.apply {
 }
 ```
 
-The SDK's `PreparedUpload.cipher.token` is already Base64URL and carries the file's encryption
-parameters. The provider returns that opaque string through `prepareUpload()`; UIKit stores it
-unchanged. Base64 is not key protection: anyone who can read the token can obtain the file key.
+The SDK's `PreparedUpload.cipher.attachmentKey` is already Base64URL and carries the key and attachment
+ID. The provider returns that opaque string through `prepareUpload()`; UIKit stores it unchanged.
+Base64 is not key protection: anyone who can read the attachment key can decrypt the file.
 
 ### Upload call chain
 
@@ -234,19 +234,19 @@ The native upload is a single request. It streams encrypted bytes and does not n
 encrypted temporary file. A failed or cancelled native upload restarts as a whole upload; UIKit
 does not claim durable multipart resume for the Sceyt chat server.
 
-The default provider returns `mapOf(FileEncryptionMetadata.FIELD to session.token)`. UIKit saves
-the token as a string alongside existing attachment metadata:
+The default provider returns `mapOf(FileEncryptionMetadata.FIELD to session.attachmentKey)`. UIKit saves
+the attachment key as a string alongside existing attachment metadata:
 
 ```json
 {
   "tmb": "blur-thumbnail",
   "szw": 1280,
   "szh": 203,
-  "sceyt.enc": "<SDK-generated-base64url-token>"
+  "sceyt.enc": "<SDK-generated-base64url-attachment-key>"
 }
 ```
 
-The SDK creates and restores the token; UIKit does not decode it or rebuild key fields. The file
+The SDK creates and restores the attachment key. UIKit passes it through to metadata. The file
 itself stays binary ciphertext. The attachment's `fileSize` remains its plaintext size. Dimensions,
 blur thumbnails and customer fields are preserved, including for shared uploads. The URL and matching
 metadata are saved together. Encrypted uploads are excluded from plain checksum URL reuse regardless
@@ -258,8 +258,8 @@ thumbnail upload/download.
 ### Custom encryption sessions and multipart recovery
 
 A custom provider can call `SceytChatUIKit.fileTransfer.encryption.prepareEncryption(file)`,
-return `session.token` under its own metadata key, and keep `session.checkpoint().data` locally.
-After a restart, it rebuilds `FileEncryptionCheckpoint(savedToken, localData)` and restores the session:
+return `session.attachmentKey` under its own metadata key, and save the checkpoint's header and data locally.
+After a restart, it rebuilds `FileEncryptionCheckpoint(savedKey, savedHeader, localData)` and restores the session:
 
 ```kotlin
 val session = encryption.restoreEncryption(preparedFile, checkpoint)
@@ -275,11 +275,10 @@ try {
 Both offsets and lengths address ciphertext, including encryption overhead. Reads are exact and
 repeatable; SDK encryption records need not align with backend multipart parts.
 
-`FileEncryptionCheckpoint` is a regular class containing `token` and opaque SDK `data`. Do not log
-either field. Only the token goes in attachment metadata. The default provider's
-`NativeUploadCheckpointStore` atomically saves recovery data and a token fingerprint in app-private
-storage, without another copy of the token or key. It retains the record after an interruption and
-removes it on success or explicit cancellation. There is no `_sceyt_upload` metadata entry.
+`FileEncryptionCheckpoint` contains `attachmentKey`, `header`, and opaque SDK `data`. The attachment
+metadata holds the key. The default provider atomically saves the 72-byte header, recovery data,
+and key fingerprint in app-private storage. It retains this record after an interruption and
+removes it on success or explicit cancellation.
 
 When a preparer supplied all required encryption information, a custom upload can return
 `FileTransferResult.Success(url)`; UIKit preserves its saved metadata entries. The custom provider
@@ -291,7 +290,7 @@ restart. Pause and recoverable interruptions retain that state.
 
 A Waafi adapter using this hook returns its parameters as string values and restores them from
 `request.attachment.metadata`. Its private journal stores upload IDs, part URLs, ETags, and
-checkpoint data without a second copy of the key.
+the encryption header and checkpoint data. It reads the key from attachment metadata.
 
 ### Download call chain
 
@@ -312,7 +311,7 @@ AttachmentDownloadCoordinator.performDownload
 ```
 
 The router selects the request type from configuration without parsing keys or choosing a decryption
-algorithm. The default native downloader reads UIKit's `sceyt.enc` token. Applications can interpret
+algorithm. The default native downloader reads UIKit's `sceyt.enc` attachment key. Applications can interpret
 different data in their own provider.
 
 `encryptionEnabled` controls both directions: true selects `ENCRYPTED`, false selects `PLAIN`.

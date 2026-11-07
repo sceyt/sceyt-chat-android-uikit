@@ -44,7 +44,7 @@ class ChatSdkFileEncryptionAndroidTest {
             file.writeBytes(ByteArray(64 * 1024 + 1) { (it % 251).toByte() })
             val encryption = ChatSdkFileEncryption()
             val (checkpoint, ciphertext) = encryption.prepareEncryption(file).use { session ->
-                assertThat(session.token).matches("[A-Za-z0-9_-]+")
+                assertThat(session.attachmentKey).matches("[A-Za-z0-9_-]+")
                 val bytes = session.read(0, session.ciphertextSize.toInt())
                 session.checkpoint() to bytes
             }
@@ -52,11 +52,11 @@ class ChatSdkFileEncryptionAndroidTest {
             val gson = Gson()
             val saved = gson.fromJson(gson.toJson(checkpoint), FileEncryptionCheckpoint::class.java)
             ChatSdkFileEncryption().restoreEncryption(file, saved).use { restored ->
-                assertThat(restored.token).isEqualTo(checkpoint.token)
+                assertThat(restored.attachmentKey).isEqualTo(checkpoint.attachmentKey)
                 assertThat(restored.read(0, ciphertext.size)).isEqualTo(ciphertext)
             }
             encryption.prepareEncryption(file).use { next ->
-                assertThat(next.token).isNotEqualTo(checkpoint.token)
+                assertThat(next.attachmentKey).isNotEqualTo(checkpoint.attachmentKey)
             }
         } finally {
             file.delete()
@@ -164,12 +164,12 @@ class ChatSdkFileEncryptionAndroidTest {
         prepareAttachment().use { attachment ->
             val message = attachment.readAttachment()
             val metadata = message.get("metadata").asString
-            val differentToken = ChatSdkFileEncryption().prepareEncryption(attachment.source).use {
-                it.token
+            val differentKey = ChatSdkFileEncryption().prepareEncryption(attachment.source).use {
+                it.attachmentKey
             }
             message.addProperty(
                 "metadata",
-                FileEncryptionMetadata.write(metadata, differentToken),
+                FileEncryptionMetadata.write(metadata, differentKey),
             )
             attachment.metadataFile.writeText(message.toString())
 
@@ -189,18 +189,17 @@ class ChatSdkFileEncryptionAndroidTest {
     }
 
     @Test
-    fun nativeDownloadRejectsAnIncorrectPlaintextSize() = runBlocking(Dispatchers.IO) {
+    fun nativeDownloadRejectsAnUnsupportedAttachmentKeyVersion() = runBlocking(Dispatchers.IO) {
         prepareAttachment().use { attachment ->
             val message = attachment.readAttachment()
             val metadata = message.get("metadata").asString
-            val token = checkNotNull(FileEncryptionMetadata.read(metadata))
+            val attachmentKey = checkNotNull(FileEncryptionMetadata.read(metadata))
             val flags = Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP
-            val decoded = Base64.decode(token, flags).toString(Charsets.UTF_8)
+            val decoded = Base64.decode(attachmentKey, flags).toString(Charsets.UTF_8)
             val parameters = JsonParser.parseString(decoded).asJsonObject
-            // The SDK now trusts the size in the token, rather than a separate attachment field.
-            parameters.addProperty("ps", parameters.get("ps").asLong + 1)
-            val invalidToken = Base64.encodeToString(parameters.toString().toByteArray(), flags)
-            message.addProperty("metadata", FileEncryptionMetadata.write(metadata, invalidToken))
+            parameters.addProperty("v", 2)
+            val invalidKey = Base64.encodeToString(parameters.toString().toByteArray(), flags)
+            message.addProperty("metadata", FileEncryptionMetadata.write(metadata, invalidKey))
             attachment.metadataFile.writeText(message.toString())
 
             attachment.assertRejected(attachment.download())
@@ -231,7 +230,7 @@ class ChatSdkFileEncryptionAndroidTest {
                         "metadata",
                         FileEncryptionMetadata.write(
                             metadata = """{"caption":"native attachment"}""",
-                            token = session.token,
+                            attachmentKey = session.attachmentKey,
                         ),
                     )
                 }

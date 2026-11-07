@@ -56,7 +56,7 @@ class EncryptedSdkUploadTest {
         SceytChatUIKit.fileTransfer = SceytChatUIKitFileTransfer()
         checkpointConstruction = Mockito.mockConstruction(NativeUploadCheckpointStore::class.java) { store, _ ->
             doAnswer { call ->
-                savedCheckpoint?.takeIf { it.token == call.getArgument<String>(1) }
+                savedCheckpoint?.takeIf { it.attachmentKey == call.getArgument<String>(1) }
             }.whenever(store).read(any(), any())
             doAnswer { call ->
                 savedCheckpoint = call.getArgument(1)
@@ -64,7 +64,7 @@ class EncryptedSdkUploadTest {
             }.whenever(store).save(any(), any())
             doAnswer { call ->
                 val checkpoint = call.getArgument<FileEncryptionCheckpoint>(1)
-                if (savedCheckpoint?.token == checkpoint.token) savedCheckpoint = checkpoint
+                if (savedCheckpoint?.attachmentKey == checkpoint.attachmentKey) savedCheckpoint = checkpoint
                 Unit
             }.whenever(store).update(any(), any())
             doAnswer {
@@ -205,7 +205,8 @@ class EncryptedSdkUploadTest {
     private suspend fun configureSession(source: PreparedUpload): File {
         val file = File("/tmp/native-upload.bin")
         val cipher = mock<AttachmentCipher>()
-        whenever(cipher.token).thenReturn(token)
+        whenever(cipher.attachmentKey).thenReturn(token)
+        whenever(cipher.header).thenReturn(ByteArray(72))
         whenever(source.sourceId).thenReturn("sdk-session")
         whenever(source.plaintextSize).thenReturn(32L)
         whenever(source.ciphertextSize).thenReturn(136L)
@@ -213,7 +214,7 @@ class EncryptedSdkUploadTest {
         whenever(source.checkpoint).thenReturn(SdkCheckpoint(cipher, "after-read"))
         val encryption = mock<FileEncryption>()
         val prepared = mock<FileEncryptionSession>()
-        whenever(prepared.checkpoint()).thenReturn(FileEncryptionCheckpoint(token, "before-read"))
+        whenever(prepared.checkpoint()).thenReturn(FileEncryptionCheckpoint(token, ByteArray(72), "before-read"))
         val session = ChatSdkFileEncryption.EncryptionSession(source)
         whenever(encryption.prepareEncryption(file)).thenReturn(prepared)
         whenever(encryption.restoreEncryption(eq(file), any())).thenReturn(session)

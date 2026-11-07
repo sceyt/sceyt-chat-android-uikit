@@ -106,10 +106,12 @@ class AttachmentUploadPreparationAndroidTest {
                             assertThat(metadata.has("encryption")).isFalse()
                             preparations++
                             encryption.prepareEncryption(request.sourceFile).use { session ->
-                                checkpointFile.writeText(session.checkpoint().data)
+                                val checkpoint = session.checkpoint()
+                                checkpointFile.writeText(checkpoint.data)
+                                File(checkpointFile.path + ".header").writeBytes(checkpoint.header)
                                 mapOf(
                                     "provider" to "custom-app",
-                                    "encryption" to session.token,
+                                    "encryption" to session.attachmentKey,
                                 )
                             }
                         }
@@ -128,13 +130,14 @@ class AttachmentUploadPreparationAndroidTest {
                         val metadata = gson.fromJson(request.attachment.metadata, JsonObject::class.java)
                         val checkpoint = FileEncryptionCheckpoint(
                             metadata.get("encryption").asString,
+                            File(checkpointFile.path + ".header").readBytes(),
                             checkpointFile.readText(),
                         )
                         encryption.restoreEncryption(request.sourceFile, checkpoint)
                             .use { session ->
                                 val bytes = session.read(0, session.ciphertextSize.toInt())
                                 checkpointFile.writeText(session.checkpoint().data)
-                                assertThat(checkpointFile.readText()).doesNotContain(session.token)
+                                assertThat(checkpointFile.readText()).doesNotContain(session.attachmentKey)
                                 if (resuming) assertThat(bytes).isEqualTo(expectedCiphertext.readBytes())
                                 else expectedCiphertext.writeBytes(bytes)
                             }
