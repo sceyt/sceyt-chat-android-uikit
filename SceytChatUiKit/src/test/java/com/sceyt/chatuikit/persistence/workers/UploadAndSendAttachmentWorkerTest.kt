@@ -28,10 +28,7 @@ import com.sceyt.chatuikit.filetransfer.FileTransferResult
 import com.sceyt.chatuikit.filetransfer.FileTransferProvider
 import com.sceyt.chatuikit.filetransfer.FileTransferType
 import com.sceyt.chatuikit.filetransfer.FileUploadRequest
-import com.sceyt.chatuikit.filetransfer.FileUploadResult
 import com.sceyt.chatuikit.filetransfer.SceytChatUIKitFileTransfer
-import com.sceyt.chatuikit.filetransfer.encryption.FileEncryptionInfo
-import com.sceyt.chatuikit.filetransfer.encryption.FileEncryptionMetadata
 import com.sceyt.chatuikit.koin.SceytKoinApp
 import com.sceyt.chatuikit.notifications.SceytNotifications
 import com.sceyt.chatuikit.persistence.database.dao.FileChecksumDao
@@ -85,6 +82,7 @@ import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import org.mockito.Mockito
 import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.doSuspendableAnswer
 import org.mockito.kotlin.eq
@@ -212,13 +210,9 @@ class UploadAndSendAttachmentWorkerTest {
     }
 
     @Test
-    fun `encrypted upload completion persists matching metadata with its URL`() = runBlocking {
-        val info = FileEncryptionInfo("test-format", "encrypted-file", "file-key")
+    fun `upload completion persists provider metadata with its URL`() = runBlocking {
         val value = localAttachment().copy(
-            metadata = FileEncryptionMetadata.write(
-                null,
-                FileEncryptionMetadata.fromEncryptionInfo(info),
-            ),
+            metadata = """{"custom_cipher":"encrypted-file-token"}""",
         )
         val task = FileTransferHelper.createTransferTask(value)
 
@@ -230,6 +224,20 @@ class UploadAndSendAttachmentWorkerTest {
         assertThat(persisted.firstValue.metadata).isEqualTo(value.metadata)
         assertThat(persisted.firstValue.transferState).isEqualTo(TransferState.Uploaded)
         verify(attachmentLogic, never()).updateAttachmentWithTransferData(any())
+    }
+
+    @Test
+    fun `custom encrypted uploads do not cache ciphertext URLs for plain checksum reuse`() = runBlocking {
+        SceytChatUIKit.fileTransfer.encryptionEnabled = true
+        transport.onPrepareUpload = { mapOf("custom_cipher" to "encrypted-file-token") }
+        val attachment = localAttachment()
+        val work = testScope.async { worker(attachment).doWork() }
+
+        transport.uploadCalls.single().succeed("encrypted-url")
+
+        assertThat(work.isCompleted).isTrue()
+        verify(fileChecksumDao, never()).updateUrl(any(), anyOrNull())
+        assertSentUrl(attachment, "encrypted-url")
     }
 
     @Test
@@ -575,7 +583,7 @@ class UploadAndSendAttachmentWorkerTest {
             val call = transport.uploadCalls.single()
             assertThat(call.request.type).isEqualTo(FileTransferType.ENCRYPTED)
             assertThat(call.request.sourceFile).isEqualTo(prepared)
-            call.succeed("resumed-url", FileEncryptionInfo("test-format", "file-id", "file-key"))
+            call.succeed("resumed-url")
 
             assertThat(work.isCompleted).isTrue()
             assertSentUrl(attachment, "resumed-url")
@@ -753,7 +761,7 @@ class UploadAndSendAttachmentWorkerTest {
             override suspend fun upload(
                 request: FileUploadRequest,
                 callback: FileTransferCallback,
-            ): FileTransferResult<FileUploadResult> {
+            ): FileTransferResult<String> {
                 val result = transport.upload(request, callback)
                 service.pause(attachment.messageTid, attachment, TransferState.Uploading)
                 return result

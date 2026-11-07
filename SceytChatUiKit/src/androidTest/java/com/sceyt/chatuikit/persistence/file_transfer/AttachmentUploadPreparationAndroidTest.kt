@@ -19,13 +19,11 @@ import com.sceyt.chatuikit.filetransfer.FileTransferCallback
 import com.sceyt.chatuikit.filetransfer.FileTransferResult
 import com.sceyt.chatuikit.filetransfer.FileTransferProvider
 import com.sceyt.chatuikit.filetransfer.FileUploadRequest
-import com.sceyt.chatuikit.filetransfer.FileUploadResult
 import com.sceyt.chatuikit.filetransfer.SceytChatUIKitFileTransfer
 import com.sceyt.chatuikit.filetransfer.encryption.FileEncryptionCheckpoint
 import com.sceyt.chatuikit.persistence.database.SceytDatabase
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageDb
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageEntity
-import com.sceyt.chatuikit.persistence.extensions.fileTransferData
 import com.sceyt.chatuikit.persistence.logicimpl.AttachmentUploadCoordinator
 import com.sceyt.chatuikit.persistence.logicimpl.attachment.AttachmentsCache
 import com.sceyt.chatuikit.persistence.logicimpl.attachment.PersistenceAttachmentLogicImpl
@@ -53,6 +51,7 @@ class AttachmentUploadPreparationAndroidTest {
     private val directory = File(context.filesDir, "pre-upload-restart-test")
     private val source = File(directory, "source.bin")
     private val expectedCiphertext = File(directory, "expected.bin")
+    private val checkpointFile = File(directory, "checkpoint.txt")
     private val processFile = File(directory, "process.txt")
     private val gson = Gson()
 
@@ -90,23 +89,28 @@ class AttachmentUploadPreparationAndroidTest {
             if (!resuming) database.messageDao().insertMessagesIgnored(listOf(message()))
             val saved = checkNotNull(database.messageDao().getMessageByTid(MESSAGE_TID))
                 .attachments.orEmpty().single().toAttachment()
-            val originalData = saved.metadata.fileTransferData()
+            val originalData = gson.fromJson(saved.metadata, JsonObject::class.java)
             var preparations = 0
             val config = SceytChatUIKitFileTransfer().apply {
                 encryptionEnabled = true
                 provider = object : FileTransferProvider {
-                    override suspend fun prepareUpload(request: FileUploadRequest): JsonObject {
+                    override suspend fun prepareUpload(request: FileUploadRequest): Map<String, String> {
+                        val metadata = gson.fromJson(request.attachment.metadata, JsonObject::class.java)
                         return if (resuming) {
-                            assertThat(request.metadata).isEqualTo(originalData)
-                            request.metadata
+                            assertThat(metadata).isEqualTo(originalData)
+                            mapOf(
+                                "provider" to metadata.get("provider").asString,
+                                "encryption" to metadata.get("encryption").asString,
+                            )
                         } else {
-                            assertThat(request.metadata.entrySet()).isEmpty()
+                            assertThat(metadata.has("encryption")).isFalse()
                             preparations++
                             encryption.prepareEncryption(request.sourceFile).use { session ->
-                                JsonObject().apply {
-                                    addProperty("provider", "custom-app")
-                                    add("encryption", gson.toJsonTree(session.checkpoint()))
-                                }
+                                checkpointFile.writeText(session.checkpoint().data)
+                                mapOf(
+                                    "provider" to "custom-app",
+                                    "encryption" to session.token,
+                                )
                             }
                         }
                     }
@@ -114,25 +118,27 @@ class AttachmentUploadPreparationAndroidTest {
                     override suspend fun upload(
                         request: FileUploadRequest,
                         callback: FileTransferCallback,
-                    ): FileTransferResult<FileUploadResult> {
+                    ): FileTransferResult<String> {
                         val persisted =
                             checkNotNull(database.messageDao().getMessageByTid(MESSAGE_TID))
                                 .attachments.orEmpty().single().toAttachment()
-                        assertThat(persisted.metadata.fileTransferData())
-                            .isEqualTo(request.metadata)
+                        assertThat(persisted.metadata).isEqualTo(request.attachment.metadata)
                         assertThat(persisted.filePath).isEqualTo(request.sourceFile.path)
                         assertThat(persisted.fileSize).isEqualTo(request.sourceFile.length())
-                        val checkpoint = gson.fromJson(
-                            request.metadata.get("encryption"),
-                            FileEncryptionCheckpoint::class.java
+                        val metadata = gson.fromJson(request.attachment.metadata, JsonObject::class.java)
+                        val checkpoint = FileEncryptionCheckpoint(
+                            metadata.get("encryption").asString,
+                            checkpointFile.readText(),
                         )
                         encryption.restoreEncryption(request.sourceFile, checkpoint)
                             .use { session ->
                                 val bytes = session.read(0, session.ciphertextSize.toInt())
+                                checkpointFile.writeText(session.checkpoint().data)
+                                assertThat(checkpointFile.readText()).doesNotContain(session.token)
                                 if (resuming) assertThat(bytes).isEqualTo(expectedCiphertext.readBytes())
                                 else expectedCiphertext.writeBytes(bytes)
                             }
-                        return if (resuming) FileTransferResult.Success(FileUploadResult("custom-object"))
+                        return if (resuming) FileTransferResult.Success("custom-object")
                         else FileTransferResult.Interrupted(IOException("Test network interruption"))
                     }
 
@@ -168,7 +174,8 @@ class AttachmentUploadPreparationAndroidTest {
             val response = withTimeout(20_000) { result.await() }
             if (resuming) {
                 assertThat(response).isInstanceOf(SceytResponse.Success::class.java)
-                assertThat(task.attachment.metadata.fileTransferData()).isEqualTo(originalData)
+                assertThat(gson.fromJson(task.attachment.metadata, JsonObject::class.java))
+                    .isEqualTo(originalData)
                 assertThat(preparations).isEqualTo(0)
             } else {
                 assertThat(response).isInstanceOf(SceytResponse.Error::class.java)

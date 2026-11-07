@@ -5,7 +5,7 @@ interface FileEncryptionSession : AutoCloseable {
     val sourceId: String
     val plaintextSize: Long
     val ciphertextSize: Long
-    val encryptionInfo: FileEncryptionInfo
+    val token: String
 
     /** Exact ciphertext range, including overhead. Repeated reads return identical bytes. */
     suspend fun read(offset: Long, length: Int): ByteArray

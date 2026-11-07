@@ -22,7 +22,6 @@ import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.extensions.hasPermissions
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
-import com.sceyt.chatuikit.filetransfer.encryption.FileEncryptionMetadata
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.notifications.service.FileTransferNotificationData
@@ -167,7 +166,7 @@ class UploadAndSendAttachmentWorker(
             }
             return result.map { uploadedAttachment ->
                 // Encrypted URLs require matching keys and are excluded from checksum URL reuse.
-                if (checksum != null && FileEncryptionMetadata.read(uploadedAttachment.metadata) == null)
+                if (checksum != null && !SceytChatUIKit.fileTransfer.encryptionEnabled)
                     fileChecksumDao.updateUrl(checksum, uploadedAttachment.url)
 
                 attachments[index] = uploadedAttachment

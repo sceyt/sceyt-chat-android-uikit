@@ -12,7 +12,6 @@ import com.sceyt.chatuikit.filetransfer.SceytChatUIKitFileTransfer
 import com.sceyt.chatuikit.filetransfer.defaults.DefaultFileTransferProvider
 import com.sceyt.chatuikit.filetransfer.download.ChatSdkFileDownloader
 import com.sceyt.chatuikit.filetransfer.encryption.FileEncryption
-import com.sceyt.chatuikit.filetransfer.encryption.FileEncryptionInfo
 import com.sceyt.chatuikit.filetransfer.encryption.FileEncryptionMetadata
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 import kotlinx.coroutines.CompletableDeferred
@@ -63,7 +62,7 @@ class AttachmentEncryptedTransferTest {
     }
 
     @Test
-    fun `custom uploader receives a file and its result supplies metadata and plaintext size`() =
+    fun `custom uploader prepares metadata and plaintext size before returning its URL`() =
         runTest {
             val file = temporary.newFile("attachment.bin").apply { writeText("original plaintext") }
             val originalSize = file.length()
@@ -74,6 +73,10 @@ class AttachmentEncryptedTransferTest {
                     )
             val task = transferTask(value)
             val finished = CompletableDeferred<SceytResponse<String>>()
+            val token = "custom-sdk-token"
+            transport.onPrepareUpload = {
+                mapOf("sceyt.enc" to token)
+            }
             val coordinator = AttachmentUploadCoordinator(
                 RuntimeEnvironment.getApplication(),
                 mock(),
@@ -83,21 +86,18 @@ class AttachmentEncryptedTransferTest {
             runCurrent()
             val call = transport.uploadCalls.single()
             val request = call.request
-            val info =
-                FileEncryptionInfo("custom-returned-format", "custom-file-id", "custom-file-key")
-
             assertThat(request.sourceFile).isEqualTo(file)
             assertThat(request.type).isEqualTo(FileTransferType.ENCRYPTED)
-            assertThat(request.attachment.metadata).isEqualTo(value.metadata)
+            assertThat(FileEncryptionMetadata.read(request.attachment.metadata)).isEqualTo(token)
+            assertThat(task.attachment.metadata).isEqualTo(request.attachment.metadata)
             // The transport has read the original bytes; the completion response can arrive later.
             file.appendText("edited after the transport read the file")
-            call.succeed("https://waafi.test/completed", info)
+            call.succeed("https://waafi.test/completed")
 
             assertThat((finished.await() as SceytResponse.Success).data)
                 .isEqualTo("https://waafi.test/completed")
             assertThat(task.attachment.fileSize).isEqualTo(originalSize)
-            val envelope = checkNotNull(FileEncryptionMetadata.read(task.attachment.metadata))
-            assertThat(envelope.toEncryptionInfo()).isEqualTo(info)
+            assertThat(FileEncryptionMetadata.read(task.attachment.metadata)).isEqualTo(token)
             val metadata = JsonParser.parseString(task.attachment.metadata).asJsonObject
             assertThat(metadata.get("szw").asInt).isEqualTo(1280)
             assertThat(metadata.get("tmb").asString).isEqualTo("blur-thumbnail")
@@ -105,12 +105,13 @@ class AttachmentEncryptedTransferTest {
         }
 
     @Test
-    fun `encrypted success without encryption information fails instead of publishing an unusable attachment`() =
+    fun `custom encrypted upload keeps its own string metadata without standard encryption information`() =
         runTest {
             val file = temporary.newFile("missing-info.bin").apply { writeText("plaintext") }
             val value = attachment(filePath = file.path, originalFilePath = file.path)
             val task = transferTask(value)
             val finished = CompletableDeferred<SceytResponse<String>>()
+            transport.onPrepareUpload = { mapOf("app.enc" to "custom-format", "customKey" to "app-key") }
             AttachmentUploadCoordinator(
                 RuntimeEnvironment.getApplication(),
                 mock(),
@@ -121,8 +122,10 @@ class AttachmentEncryptedTransferTest {
 
             transport.uploadCalls.single().succeed("https://waafi.test/missing-key")
 
-            assertThat(finished.await()).isInstanceOf(SceytResponse.Error::class.java)
-            assertThat(FileEncryptionMetadata.read(task.attachment.metadata)).isNull()
+            assertThat(finished.await()).isInstanceOf(SceytResponse.Success::class.java)
+            val metadata = JsonParser.parseString(task.attachment.metadata).asJsonObject
+            assertThat(metadata.get("app.enc").asString).isEqualTo("custom-format")
+            assertThat(metadata.get("customKey").asString).isEqualTo("app-key")
         }
 
     @Test
@@ -166,6 +169,10 @@ class AttachmentEncryptedTransferTest {
         val secondTask = transferTask(second).apply { isSharedUpload = true }
         val firstResult = CompletableDeferred<SceytResponse<String>>()
         val secondResult = CompletableDeferred<SceytResponse<String>>()
+        val token = "shared-sdk-token"
+        transport.onPrepareUpload = {
+            mapOf("sceyt.enc" to token)
+        }
         val coordinator = AttachmentUploadCoordinator(
             RuntimeEnvironment.getApplication(),
             mock(),
@@ -174,9 +181,8 @@ class AttachmentEncryptedTransferTest {
         coordinator.upload(first, firstTask, { _, result -> firstResult.complete(result) }, {})
         coordinator.upload(second, secondTask, { _, result -> secondResult.complete(result) }, {})
         runCurrent()
-        val info = FileEncryptionInfo("shared-format", "shared-id", "shared-key")
 
-        transport.uploadCalls.single().succeed("https://waafi.test/shared", info)
+        transport.uploadCalls.single().succeed("https://waafi.test/shared")
 
         assertThat(firstResult.await()).isInstanceOf(SceytResponse.Success::class.java)
         assertThat(secondResult.await()).isInstanceOf(SceytResponse.Success::class.java)
@@ -196,13 +202,11 @@ class AttachmentEncryptedTransferTest {
         val destination = temporary.newFile("decrypted-attachment.bin")
         destination.delete()
         val plaintext = "verified attachment".toByteArray()
-        val info = FileEncryptionInfo("sdk-format", "received-file", "file-key")
+        val token = "received-sdk-token"
         Mockito.mockConstruction(ChatSdkFileDownloader::class.java) { downloader, _ ->
             doSuspendableAnswer { invocation ->
                 val request = invocation.getArgument<FileDownloadRequest>(0)
-                val metadata =
-                    checkNotNull(FileEncryptionMetadata.read(request.attachment.metadata))
-                assertThat(metadata.toEncryptionInfo()).isEqualTo(info)
+                assertThat(FileEncryptionMetadata.read(request.attachment.metadata)).isEqualTo(token)
                 assertThat(request.type).isEqualTo(FileTransferType.ENCRYPTED)
                 assertThat(request.attachment.fileSize).isEqualTo(plaintext.size.toLong())
                 request.destinationFile.writeBytes(plaintext)
@@ -224,7 +228,7 @@ class AttachmentEncryptedTransferTest {
             ).copy(
                 metadata = FileEncryptionMetadata.write(
                     metadata = null,
-                    envelope = FileEncryptionMetadata.fromEncryptionInfo(info),
+                    token = token,
                 ),
             )
             val finished = CompletableDeferred<SceytResponse<String>>()

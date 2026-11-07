@@ -2,10 +2,10 @@ package com.sceyt.chatuikit.filetransfer.encryption
 
 import com.google.common.truth.Truth.assertThat
 import com.google.gson.Gson
-import com.sceyt.chat.fileencryption.FileEncryptionData
+import com.sceyt.chat.fileencryption.AeadFileEncryptionProvider
+import com.sceyt.chat.fileencryption.AttachmentCipher
 import com.sceyt.chat.fileencryption.FileEncryptionProvider
 import com.sceyt.chat.fileencryption.PreparedUpload
-import com.sceyt.chat.fileencryption.StreamingAeadFileEncryptionProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
@@ -33,13 +33,12 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import com.sceyt.chat.fileencryption.FileEncryptionCheckpoint as SdkCheckpoint
-import com.sceyt.chat.fileencryption.FileEncryptionInfo as SdkInfo
 
 @RunWith(RobolectricTestRunner::class)
 @Config(shadows = [ShadowEncryptionIdGenerator::class])
 class ChatSdkFileEncryptionTest {
     private val file = File("/tmp/prepared-file.bin")
-    private val info = SdkInfo("test-format", FileEncryptionData("file-id", "test-file-key", 4L))
+    private val token = "opaque-sdk-token"
 
     @Test
     fun `prepared attachment ID meets the SDK format and stays in metadata and checkpoint`() =
@@ -54,12 +53,11 @@ class ChatSdkFileEncryptionTest {
                 ) {
                     "uniqueId must be 16 bytes of base64url without padding"
                 }
-                val encryptionInfo =
-                    SdkInfo("test-format", FileEncryptionData(id, "test-file-key", 4L))
-                whenever(prepared.encryptionInfo).thenReturn(encryptionInfo)
+                val cipher = mockCipher("token:$id")
+                whenever(prepared.cipher).thenReturn(cipher)
                 whenever(prepared.checkpoint).thenReturn(
                     SdkCheckpoint(
-                        encryptionInfo,
+                        cipher,
                         "saved-state"
                     )
                 )
@@ -70,12 +68,12 @@ class ChatSdkFileEncryptionTest {
                 val id = argumentCaptor<String>()
                 verify(provider).prepareUpload(eq(file), id.capture())
                 val metadata = FileEncryptionMetadata.write(
-                    null, FileEncryptionMetadata.fromEncryptionInfo(session.encryptionInfo),
+                    null, session.token,
                 )
 
-                assertThat(session.encryptionInfo.attachmentId).isEqualTo(id.firstValue)
-                assertThat(FileEncryptionMetadata.read(metadata)?.attachmentId).isEqualTo(id.firstValue)
-                assertThat(session.checkpoint().encryptionInfo.attachmentId).isEqualTo(id.firstValue)
+                assertThat(session.token).isEqualTo("token:" + id.firstValue)
+                assertThat(FileEncryptionMetadata.read(metadata)).isEqualTo(session.token)
+                assertThat(session.checkpoint().token).isEqualTo(session.token)
             }
         }
 
@@ -87,7 +85,7 @@ class ChatSdkFileEncryptionTest {
         whenever(provider.prepareUpload(eq(file), any())).thenReturn(first)
         whenever(provider.restoreUpload(eq(file), any())).thenReturn(restored)
         var checkpointData = "before-read"
-        whenever(first.checkpoint).thenAnswer { SdkCheckpoint(info, checkpointData) }
+        whenever(first.checkpoint).thenAnswer { SdkCheckpoint(first.cipher, checkpointData) }
         doAnswer {
             checkpointData = "after-read"
             byteArrayOf(3, 4)
@@ -107,13 +105,13 @@ class ChatSdkFileEncryptionTest {
 
         assertThat(resumed.read(2L, 2)).isEqualTo(bytes)
         assertThat(resumed.sourceId).isEqualTo(session.sourceId)
-        assertThat(resumed.encryptionInfo)
-            .isEqualTo(FileEncryptionInfo("test-format", "file-id", "test-file-key"))
+        assertThat(resumed.token).isEqualTo(token)
         assertThat(resumed.plaintextSize).isEqualTo(4L)
         assertThat(resumed.ciphertextSize).isEqualTo(8L)
         val checkpoint = argumentCaptor<SdkCheckpoint>()
         verify(provider).restoreUpload(eq(file), checkpoint.capture())
-        assertThat(checkpoint.firstValue).isEqualTo(SdkCheckpoint(info, "after-read"))
+        assertThat(checkpoint.firstValue.cipher.token).isEqualTo(token)
+        assertThat(checkpoint.firstValue.data).isEqualTo("after-read")
         verify(first, times(1)).close()
         resumed.close()
         verify(restored).close()
@@ -124,7 +122,7 @@ class ChatSdkFileEncryptionTest {
         val provider = mock<FileEncryptionProvider>()
         val error = IOException("Source changed")
         whenever(provider.restoreUpload(eq(file), any())).thenThrow(error)
-        val checkpoint = FileEncryptionCheckpoint(info.toUIKitInfo(), 4L, "saved-state")
+        val checkpoint = FileEncryptionCheckpoint(token, "saved-state")
 
         val failure = runCatching {
             ChatSdkFileEncryption(provider).restoreEncryption(file, checkpoint)
@@ -195,20 +193,31 @@ class ChatSdkFileEncryptionTest {
         }
     }
 
-    private fun upload(): PreparedUpload = mock<PreparedUpload>().also {
-        whenever(it.sourceId).thenReturn("same-ciphertext")
-        whenever(it.plaintextSize).thenReturn(4L)
-        whenever(it.ciphertextSize).thenReturn(8L)
-        whenever(it.encryptionInfo).thenReturn(info)
+    private fun upload(): PreparedUpload {
+        val cipher = mockCipher(token)
+        return mock<PreparedUpload>().also {
+            whenever(it.sourceId).thenReturn("same-ciphertext")
+            whenever(it.plaintextSize).thenReturn(4L)
+            whenever(it.ciphertextSize).thenReturn(8L)
+            whenever(it.cipher).thenReturn(cipher)
+        }
     }
 }
 
 /** Replaces the Android native generator for JVM tests, including calls on Dispatchers.IO. */
-@Implements(StreamingAeadFileEncryptionProvider::class, isInAndroidSdk = false)
+@Implements(AeadFileEncryptionProvider::class, isInAndroidSdk = false)
 class ShadowEncryptionIdGenerator {
     companion object {
         @JvmStatic
         @Implementation
         fun newUniqueId(): String = "gIGCg4SFhoeIiYqLjI2Ojw"
+
+        @JvmStatic
+        @Implementation
+        fun restore(token: String): AttachmentCipher = mockCipher(token)
     }
+}
+
+private fun mockCipher(token: String): AttachmentCipher = mock<AttachmentCipher>().also {
+    whenever(it.token).thenReturn(token)
 }

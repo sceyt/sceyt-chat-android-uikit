@@ -6,31 +6,18 @@ import org.junit.Test
 
 class FileEncryptionMetadataTest {
     @Test
-    fun `metadata preserves algorithm binding IDs independent rendition keys and media fields`() {
+    fun `metadata preserves the SDK token and existing media fields`() {
         val original = """{"tmb":"blur-thumbnail","szw":1280,"szh":203}"""
-        val info = FileEncryptionInfo("returned-sdk-format", "main-id", "main-file-key")
-        val thumbnail = FileEncryptionRendition("thumbnail", "thumbnail-id", "thumbnail-file-key")
-        val envelope = FileEncryptionMetadata.fromEncryptionInfo(info, listOf(thumbnail))
+        val token = "opaque-sdk-token"
 
-        val metadata = FileEncryptionMetadata.write(original, envelope)
+        val metadata = FileEncryptionMetadata.write(original, token)
 
         val json = JsonParser.parseString(metadata).asJsonObject
-        val enc = json.getAsJsonObject("enc")
-        assertThat(enc.keySet()).containsExactly("v", "alg", "attachmentId", "key", "renditions")
-        assertThat(enc.get("v").asInt).isEqualTo(1)
-        assertThat(enc.get("alg").asString).isEqualTo(info.algorithm)
-        assertThat(enc.get("attachmentId").asString).isEqualTo(info.attachmentId)
-        assertThat(enc.get("key").asString).isEqualTo(info.key)
-        val rendition = enc.getAsJsonArray("renditions").single().asJsonObject
-        assertThat(rendition.keySet()).containsExactly("role", "attachmentId", "key")
-        assertThat(rendition.get("key").asString).isEqualTo(thumbnail.key)
-        assertThat(rendition.get("attachmentId").asString).isEqualTo(thumbnail.attachmentId)
+        assertThat(json.get("sceyt.enc").asString).isEqualTo(token)
         assertThat(json.get("tmb").asString).isEqualTo("blur-thumbnail")
         assertThat(json.get("szw").asInt).isEqualTo(1280)
         assertThat(json.get("szh").asInt).isEqualTo(203)
-        val decoded = checkNotNull(FileEncryptionMetadata.read(metadata))
-        assertThat(decoded).isEqualTo(envelope)
-        assertThat(decoded.toEncryptionInfo()).isEqualTo(info)
+        assertThat(FileEncryptionMetadata.read(metadata)).isEqualTo(token)
         assertThat(JsonParser.parseString(FileEncryptionMetadata.remove(metadata)))
             .isEqualTo(JsonParser.parseString(original))
     }
@@ -38,23 +25,16 @@ class FileEncryptionMetadataTest {
     @Test
     fun `malformed metadata does not escape the parser`() {
         assertThat(FileEncryptionMetadata.read("{invalid-json")).isNull()
-        assertThat(FileEncryptionMetadata.read("""{"enc":"invalid"}""")).isNull()
+        assertThat(FileEncryptionMetadata.read("""{"sceyt.enc":{}}""")).isNull()
         assertThat(FileEncryptionMetadata.read(null)).isNull()
-        assertThat(FileEncryptionMetadata.isEncrypted("""{"enc":"invalid"}""")).isTrue()
+        assertThat(FileEncryptionMetadata.isEncrypted("""{"sceyt.enc":"invalid"}""")).isTrue()
     }
 
     @Test
     fun `key bearing models omit keys from diagnostic strings`() {
-        val info = FileEncryptionInfo("format", "main-id", "private-main-key")
-        val rendition = FileEncryptionRendition("thumbnail", "thumb-id", "private-thumbnail-key")
-        val envelope = FileEncryptionMetadata.fromEncryptionInfo(info, listOf(rendition))
-        val checkpoint = FileEncryptionCheckpoint(info, 42L, "private-checkpoint-state")
+        val checkpoint = FileEncryptionCheckpoint("private-token", "private-checkpoint-state")
 
-        assertThat(info.toString()).doesNotContain(info.key)
-        assertThat(rendition.toString()).doesNotContain(rendition.key)
-        assertThat(envelope.toString()).doesNotContain(info.key)
-        assertThat(envelope.toString()).doesNotContain(rendition.key)
-        assertThat(checkpoint.toString()).doesNotContain(info.key)
+        assertThat(checkpoint.toString()).doesNotContain(checkpoint.token)
         assertThat(checkpoint.toString()).doesNotContain(checkpoint.data)
     }
 }

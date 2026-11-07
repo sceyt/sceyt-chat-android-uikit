@@ -37,17 +37,14 @@ import java.util.UUID
 @RunWith(AndroidJUnit4::class)
 class ChatSdkFileEncryptionAndroidTest {
     @Test
-    fun generatedAttachmentIdsWorkWithNativePreparationAndRestore() = runBlocking(Dispatchers.IO) {
+    fun nativeTokenSurvivesPreparationAndRestore() = runBlocking(Dispatchers.IO) {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val file = File.createTempFile("attachment-id", ".bin", context.cacheDir)
         try {
             file.writeBytes(ByteArray(64 * 1024 + 1) { (it % 251).toByte() })
             val encryption = ChatSdkFileEncryption()
             val (checkpoint, ciphertext) = encryption.prepareEncryption(file).use { session ->
-                val id = session.encryptionInfo.attachmentId
-                assertThat(id).matches("[A-Za-z0-9_-]{22}")
-                val flags = Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP
-                assertThat(Base64.decode(id, flags)).hasLength(16)
+                assertThat(session.token).matches("[A-Za-z0-9_-]+")
                 val bytes = session.read(0, session.ciphertextSize.toInt())
                 session.checkpoint() to bytes
             }
@@ -55,12 +52,11 @@ class ChatSdkFileEncryptionAndroidTest {
             val gson = Gson()
             val saved = gson.fromJson(gson.toJson(checkpoint), FileEncryptionCheckpoint::class.java)
             ChatSdkFileEncryption().restoreEncryption(file, saved).use { restored ->
-                assertThat(restored.encryptionInfo.attachmentId)
-                    .isEqualTo(checkpoint.encryptionInfo.attachmentId)
+                assertThat(restored.token).isEqualTo(checkpoint.token)
                 assertThat(restored.read(0, ciphertext.size)).isEqualTo(ciphertext)
             }
             encryption.prepareEncryption(file).use { next ->
-                assertThat(next.encryptionInfo.attachmentId).isNotEqualTo(checkpoint.encryptionInfo.attachmentId)
+                assertThat(next.token).isNotEqualTo(checkpoint.token)
             }
         } finally {
             file.delete()
@@ -168,13 +164,12 @@ class ChatSdkFileEncryptionAndroidTest {
         prepareAttachment().use { attachment ->
             val message = attachment.readAttachment()
             val metadata = message.get("metadata").asString
-            val envelope = checkNotNull(FileEncryptionMetadata.read(metadata))
-            val differentKey = ChatSdkFileEncryption().prepareEncryption(attachment.source).use {
-                it.encryptionInfo.key
+            val differentToken = ChatSdkFileEncryption().prepareEncryption(attachment.source).use {
+                it.token
             }
             message.addProperty(
                 "metadata",
-                FileEncryptionMetadata.write(metadata, envelope.copy(key = differentKey)),
+                FileEncryptionMetadata.write(metadata, differentToken),
             )
             attachment.metadataFile.writeText(message.toString())
 
@@ -197,7 +192,15 @@ class ChatSdkFileEncryptionAndroidTest {
     fun nativeDownloadRejectsAnIncorrectPlaintextSize() = runBlocking(Dispatchers.IO) {
         prepareAttachment().use { attachment ->
             val message = attachment.readAttachment()
-            message.addProperty("fileSize", message.get("fileSize").asLong + 1)
+            val metadata = message.get("metadata").asString
+            val token = checkNotNull(FileEncryptionMetadata.read(metadata))
+            val flags = Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP
+            val decoded = Base64.decode(token, flags).toString(Charsets.UTF_8)
+            val parameters = JsonParser.parseString(decoded).asJsonObject
+            // The SDK now trusts the size in the token, rather than a separate attachment field.
+            parameters.addProperty("ps", parameters.get("ps").asLong + 1)
+            val invalidToken = Base64.encodeToString(parameters.toString().toByteArray(), flags)
+            message.addProperty("metadata", FileEncryptionMetadata.write(metadata, invalidToken))
             attachment.metadataFile.writeText(message.toString())
 
             attachment.assertRejected(attachment.download())
@@ -228,7 +231,7 @@ class ChatSdkFileEncryptionAndroidTest {
                         "metadata",
                         FileEncryptionMetadata.write(
                             metadata = """{"caption":"native attachment"}""",
-                            envelope = FileEncryptionMetadata.fromEncryptionInfo(session.encryptionInfo),
+                            token = session.token,
                         ),
                     )
                 }

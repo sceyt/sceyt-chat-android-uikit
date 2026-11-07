@@ -4,18 +4,10 @@ import com.google.gson.Gson
 import com.google.gson.JsonObject
 
 private val metadataGson = Gson()
-private const val FILE_TRANSFER_FIELD = "file_transfer"
 
-private fun String?.toMetadataJson(): JsonObject =
-    metadataGson.fromJson(this, JsonObject::class.java) ?: JsonObject()
-
-/** Reads the app's data; existing non-JSON metadata has no file_transfer object. */
-internal fun String?.fileTransferData(): JsonObject? =
-    runCatching { toMetadataJson() }.getOrNull()?.getAsJsonObject(FILE_TRANSFER_FIELD)
-
-/** Stores the app's object unchanged, preserving the rest of the attachment metadata. */
-internal fun String?.withFileTransferData(data: JsonObject): String {
-    val metadata = toMetadataJson()
-    metadata.add(FILE_TRANSFER_FIELD, data.deepCopy())
+/** Merges the provider's string values, preserving unrelated attachment metadata. */
+internal fun String?.withMetadata(data: Map<String, String>): String {
+    val metadata = metadataGson.fromJson(this, JsonObject::class.java) ?: JsonObject()
+    data.forEach { (key, value) -> metadata.addProperty(key, value) }
     return metadata.toString()
 }

@@ -13,7 +13,6 @@ import com.sceyt.chatuikit.filetransfer.FileTransferCallback
 import com.sceyt.chatuikit.filetransfer.FileTransferResult
 import com.sceyt.chatuikit.filetransfer.FileTransferProvider
 import com.sceyt.chatuikit.filetransfer.FileUploadRequest
-import com.sceyt.chatuikit.filetransfer.FileUploadResult
 import com.sceyt.chatuikit.filetransfer.SceytChatUIKitFileTransfer
 import com.sceyt.chatuikit.koin.SceytKoinApp
 import com.sceyt.chatuikit.persistence.database.dao.FileChecksumDao
@@ -423,7 +422,7 @@ class AttachmentUploadCoordinatorTest {
             override suspend fun upload(
                 request: FileUploadRequest,
                 callback: FileTransferCallback
-            ): FileTransferResult<FileUploadResult> {
+            ): FileTransferResult<String> {
                 try {
                     return transport.upload(request, callback)
                 } finally {
@@ -1350,7 +1349,7 @@ class AttachmentUploadCoordinatorTest {
             override suspend fun upload(
                 request: FileUploadRequest,
                 callback: FileTransferCallback
-            ): FileTransferResult<FileUploadResult> {
+            ): FileTransferResult<String> {
                 return try {
                     transport.upload(request, callback)
                 } catch (_: CancellationException) {

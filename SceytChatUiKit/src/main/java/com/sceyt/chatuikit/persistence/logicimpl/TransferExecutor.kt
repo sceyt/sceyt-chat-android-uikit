@@ -4,7 +4,6 @@ import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.filetransfer.FileTransferCallback
 import com.sceyt.chatuikit.filetransfer.FileTransferResult
 import com.sceyt.chatuikit.filetransfer.FileTransferProvider
-import com.sceyt.chatuikit.filetransfer.encryption.FileEncryptionMetadata
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 
@@ -25,20 +24,6 @@ internal class TransferExecutor(
 
     suspend fun execute(callback: FileTransferCallback): FileTransferResult<String> =
         execute.invoke(this, callback)
-
-    fun applyUploadMetadata(current: SceytAttachment): SceytAttachment {
-        val prepared = attachment ?: return current
-        val envelope = FileEncryptionMetadata.read(prepared.metadata)
-        val metadata = if (envelope != null) {
-            FileEncryptionMetadata.write(current.metadata, envelope)
-        } else {
-            FileEncryptionMetadata.remove(current.metadata)
-        }
-        return current.copy(
-            metadata = metadata,
-            fileSize = if (envelope != null) prepared.fileSize else current.fileSize,
-        )
-    }
 
     suspend fun <T> executeTransport(
         block: suspend () -> FileTransferResult<T>,

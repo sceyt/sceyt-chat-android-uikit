@@ -1,6 +1,5 @@
 package com.sceyt.chatuikit.persistence.logicimpl
 
-import com.google.gson.JsonObject
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.filetransfer.FileDownloadRequest
@@ -8,8 +7,6 @@ import com.sceyt.chatuikit.filetransfer.FileTransferCallback
 import com.sceyt.chatuikit.filetransfer.FileTransferResult
 import com.sceyt.chatuikit.filetransfer.FileTransferProvider
 import com.sceyt.chatuikit.filetransfer.FileUploadRequest
-import com.sceyt.chatuikit.filetransfer.FileUploadResult
-import com.sceyt.chatuikit.filetransfer.encryption.FileEncryptionInfo
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.file_transfer.ThumbData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
@@ -103,7 +100,7 @@ internal class RecordingFileTransferProvider : FileTransferProvider {
         val request: FileUploadRequest,
         private val callback: FileTransferCallback,
     ) {
-        val result = CompletableDeferred<FileTransferResult<FileUploadResult>>()
+        val result = CompletableDeferred<FileTransferResult<String>>()
 
         @Volatile
         var cancelled = false
@@ -116,9 +113,8 @@ internal class RecordingFileTransferProvider : FileTransferProvider {
             result.complete(FileTransferResult.Interrupted(error))
         }
 
-        fun succeed(remoteReference: String, encryptionInfo: FileEncryptionInfo? = null) {
-            val uploaded = FileUploadResult(remoteReference, encryptionInfo)
-            result.complete(FileTransferResult.Success(uploaded))
+        fun succeed(remoteReference: String) {
+            result.complete(FileTransferResult.Success(remoteReference))
         }
 
         fun fail(error: Throwable) {
@@ -161,15 +157,15 @@ internal class RecordingFileTransferProvider : FileTransferProvider {
     var downloadCancellationGate: CompletableDeferred<Unit>? = null
     var pauseResult = false
     var resumeResult = false
-    var onPrepareUpload: suspend (FileUploadRequest) -> JsonObject? = { null }
+    var onPrepareUpload: suspend (FileUploadRequest) -> Map<String, String> = { emptyMap() }
 
-    override suspend fun prepareUpload(request: FileUploadRequest): JsonObject? =
+    override suspend fun prepareUpload(request: FileUploadRequest): Map<String, String> =
         onPrepareUpload(request)
 
     override suspend fun upload(
         request: FileUploadRequest,
         callback: FileTransferCallback,
-    ): FileTransferResult<FileUploadResult> {
+    ): FileTransferResult<String> {
         val call = UploadCall(request, callback)
         uploadCalls += call
         return try {

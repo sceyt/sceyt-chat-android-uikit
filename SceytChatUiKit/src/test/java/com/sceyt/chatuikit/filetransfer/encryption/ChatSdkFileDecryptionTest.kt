@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.filetransfer.encryption
 
 import com.google.common.truth.Truth.assertThat
+import com.sceyt.chat.fileencryption.AttachmentCipher
 import com.sceyt.chat.fileencryption.CiphertextRangeSource
 import com.sceyt.chat.fileencryption.FileEncryptionProvider
 import com.sceyt.chat.fileencryption.PlaintextReader
@@ -16,25 +17,26 @@ import org.junit.runner.RunWith
 import org.mockito.kotlin.any
 import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.doAnswer
-import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 import java.security.GeneralSecurityException
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 @RunWith(RobolectricTestRunner::class)
+@Config(shadows = [ShadowEncryptionIdGenerator::class])
 class ChatSdkFileDecryptionTest {
     @get:Rule
     val temporary = TemporaryFolder()
-    private val info = FileEncryptionInfo("test-format", "attachment-id", "test-file-key")
+    private val token = "opaque-sdk-token"
 
     @Test
-    fun `prepare and read use IO and pass the original metadata size to the SDK`() = runTest {
+    fun `prepare and read use IO and pass the saved token to the SDK`() = runTest {
         val file = temporary.newFile().apply { writeBytes(byteArrayOf(1, 2, 3, 4, 5)) }
         val provider = mock<FileEncryptionProvider>()
         val reader = reader()
@@ -45,8 +47,9 @@ class ChatSdkFileDecryptionTest {
             prepareThread = Thread.currentThread()
             val source = it.getArgument<CiphertextRangeSource>(0)
             assertThat(source.readCiphertextRange(0, 5)).isEqualTo(file.readBytes())
+            assertThat(it.getArgument<AttachmentCipher>(1).token).isEqualTo(token)
             reader
-        }.whenever(provider).openDownload(any(), eq(info.toSdkInfo(4)))
+        }.whenever(provider).openDownload(any(), any())
         doAnswer {
             readThread = Thread.currentThread()
             byteArrayOf(7, 8)
@@ -55,7 +58,7 @@ class ChatSdkFileDecryptionTest {
         Executors.newSingleThreadExecutor().asCoroutineDispatcher().use { caller ->
             withContext(caller) {
                 callerThread = Thread.currentThread()
-                val session = ChatSdkFileEncryption(provider).prepareDecryption(file, info, 4)
+                val session = ChatSdkFileEncryption(provider).prepareDecryption(file, token)
                 assertThat(session.plaintextSize).isEqualTo(4L)
                 assertThat(session.read(2, 2)).isEqualTo(byteArrayOf(7, 8))
                 session.close()
@@ -68,7 +71,7 @@ class ChatSdkFileDecryptionTest {
         assertThat(readThread).isNotSameInstanceAs(callerThread)
         verify(reader, times(1)).close()
         val source = argumentCaptor<CiphertextRangeSource>()
-        verify(provider).openDownload(source.capture(), eq(info.toSdkInfo(4)))
+        verify(provider).openDownload(source.capture(), any())
         assertClosed(source.firstValue)
     }
 
@@ -85,8 +88,7 @@ class ChatSdkFileDecryptionTest {
         val error = runCatching {
             ChatSdkFileEncryption(provider).prepareDecryption(
                 file,
-                info,
-                4
+                token,
             )
         }.exceptionOrNull()
 
@@ -105,8 +107,7 @@ class ChatSdkFileDecryptionTest {
         val error = runCatching {
             ChatSdkFileEncryption(provider).prepareDecryption(
                 file,
-                info,
-                4
+                token,
             )
         }.exceptionOrNull()
 
@@ -136,8 +137,7 @@ class ChatSdkFileDecryptionTest {
         val job = launch(Dispatchers.Default) {
             ChatSdkFileEncryption(provider).prepareDecryption(
                 file,
-                info,
-                4
+                token,
             )
         }
         try {
@@ -171,7 +171,7 @@ class ChatSdkFileDecryptionTest {
                 check(release.await(5, TimeUnit.SECONDS))
                 byteArrayOf(7, 8)
             }.whenever(reader).read(0, 2)
-            val session = ChatSdkFileEncryption(provider).prepareDecryption(file, info, 4)
+            val session = ChatSdkFileEncryption(provider).prepareDecryption(file, token)
             val job = launch(Dispatchers.Default) { session.use { it.read(0, 2) } }
             try {
                 withContext(Dispatchers.IO) { check(entered.await(5, TimeUnit.SECONDS)) }

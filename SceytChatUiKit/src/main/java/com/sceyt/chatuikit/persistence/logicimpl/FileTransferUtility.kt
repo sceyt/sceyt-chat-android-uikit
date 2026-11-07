@@ -2,7 +2,7 @@ package com.sceyt.chatuikit.persistence.logicimpl
 
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.UploadOperation
-import com.sceyt.chat.fileencryption.FileEncryptionInfo
+import com.sceyt.chat.fileencryption.AttachmentCipher
 import com.sceyt.chat.fileencryption.PreparedUpload
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.sceyt_callbacks.EncryptedUploadCallback
@@ -31,7 +31,7 @@ class FileTransferUtility {
             source,
             progressCallback,
             object : EncryptedUploadCallback {
-                override fun onResult(url: String?, encryptionInfo: FileEncryptionInfo?) {
+                override fun onResult(url: String?, cipher: AttachmentCipher?) {
                     resultCallback.onResult(url)
                 }
 

@@ -7,8 +7,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.extensions.takeIfNotBlank
 import com.sceyt.chatuikit.filetransfer.FileTransferResult
 import com.sceyt.chatuikit.logger.SceytLog
-import com.sceyt.chatuikit.persistence.extensions.fileTransferData
-import com.sceyt.chatuikit.persistence.extensions.withFileTransferData
+import com.sceyt.chatuikit.persistence.extensions.withMetadata
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.PauseUpload
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Preparing
@@ -95,7 +94,7 @@ internal class AttachmentUploadCoordinator(
         // A late shared caller must save the same app data before reusing the running transfer.
         upload.preparedAttachment?.let { prepared ->
             try {
-                savePreparedAttachment(member, prepared)
+                savePreparedAttachment(member, prepared, upload.preparedMetadata)
             } catch (error: Throwable) {
                 removeMember(member)
                 complete(member, Result.failure(error))
@@ -237,7 +236,7 @@ internal class AttachmentUploadCoordinator(
                     }
                 },
                 preparedFilePath = upload.preparedFilePath,
-                onUploadPrepared = { prepared -> savePreparedUpload(owner, attempt, prepared) },
+                onUploadPrepared = { prepared, data -> savePreparedUpload(owner, attempt, prepared, data) },
             )
             attempt.transfer = transfer
             val response = transfer.execute { progress ->
@@ -265,6 +264,7 @@ internal class AttachmentUploadCoordinator(
         owner: Member,
         attempt: Attempt,
         attachment: SceytAttachment,
+        data: Map<String, String>,
     ): SceytAttachment {
         val saved = CompletableDeferred<SceytAttachment>()
         dispatch {
@@ -276,8 +276,9 @@ internal class AttachmentUploadCoordinator(
             }
 
             try {
-                upload.members.values.forEach { savePreparedAttachment(it, attachment) }
+                upload.members.values.forEach { savePreparedAttachment(it, attachment, data) }
                 upload.preparedAttachment = attachment
+                upload.preparedMetadata = data
                 saved.complete(if (owner.finished) attachment else owner.attachment)
             } catch (error: Throwable) {
                 saved.completeExceptionally(error)
@@ -286,9 +287,12 @@ internal class AttachmentUploadCoordinator(
         return saved.await()
     }
 
-    private suspend fun savePreparedAttachment(member: Member, prepared: SceytAttachment) {
-        val data = checkNotNull(prepared.metadata.fileTransferData())
-        val metadata = member.task.attachment.metadata.withFileTransferData(data)
+    private suspend fun savePreparedAttachment(
+        member: Member,
+        prepared: SceytAttachment,
+        data: Map<String, String>,
+    ) {
+        val metadata = member.task.attachment.metadata.withMetadata(data)
         val path = checkNotNull(prepared.filePath)
         attachmentLogic.updateAttachmentFilePathAndMetadata(
             messageTid = member.attachment.messageTid,
@@ -330,11 +334,6 @@ internal class AttachmentUploadCoordinator(
     private fun finish(upload: Upload, attempt: Attempt, result: Result<String>) {
         if (upload.attempt !== attempt) return
         upload.attempt = null
-        attempt.transfer?.let { transfer ->
-            upload.members.values.forEach { member ->
-                member.task.attachment = transfer.applyUploadMetadata(member.task.attachment)
-            }
-        }
         upload.result = result
 
         // A failed regular upload completes paused callers too.
@@ -429,6 +428,7 @@ internal class AttachmentUploadCoordinator(
         // Only an attempt accesses this path. A replacement joins the old attempt first.
         var preparedFilePath: String? = null
         var preparedAttachment: SceytAttachment? = null
+        var preparedMetadata: Map<String, String> = emptyMap()
         var attempt: Attempt? = null
         var result: Result<String>? = null
     }

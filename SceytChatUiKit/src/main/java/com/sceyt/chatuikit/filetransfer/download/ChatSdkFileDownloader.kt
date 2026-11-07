@@ -3,12 +3,12 @@ package com.sceyt.chatuikit.filetransfer.download
 import com.sceyt.chat.download.DownloadRequest
 import com.sceyt.chat.download.MediaDownload
 import com.sceyt.chat.download.MediaDownload.State
+import com.sceyt.chat.fileencryption.AeadFileEncryptionProvider
 import com.sceyt.chatuikit.filetransfer.FileDownloadRequest
 import com.sceyt.chatuikit.filetransfer.FileTransferCallback
 import com.sceyt.chatuikit.filetransfer.FileTransferResult
 import com.sceyt.chatuikit.filetransfer.FileTransferType
 import com.sceyt.chatuikit.filetransfer.encryption.FileEncryptionMetadata
-import com.sceyt.chatuikit.filetransfer.encryption.toSdkInfo
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
@@ -90,18 +90,17 @@ internal class ChatSdkFileDownloader(
             }
 
             FileTransferType.ENCRYPTED -> {
-                val metadata = FileEncryptionMetadata.read(request.attachment.metadata)
-                checkNotNull(metadata) { "Encrypted download requires valid encryption metadata" }
-                val encryptionInfo = metadata.toEncryptionInfo().toSdkInfo(
-                    plaintextSize = request.attachment.fileSize
-                )
-                MediaDownload.downloadEncrypted(
-                    /* request = */ sdkRequest,
-                    /* destinationPath = */ destination,
-                    /* encryption = */ encryptionInfo,
-                    /* listener = */ listener,
-                    /* requestProvider = */ null
-                )
+                val token = FileEncryptionMetadata.read(request.attachment.metadata)
+                checkNotNull(token) { "Encrypted download requires valid encryption metadata" }
+                AeadFileEncryptionProvider.restore(token).use { cipher ->
+                    MediaDownload.downloadEncrypted(
+                        /* request = */ sdkRequest,
+                        /* destinationPath = */ destination,
+                        /* encryption = */ cipher,
+                        /* listener = */ listener,
+                        /* requestProvider = */ null
+                    )
+                }
             }
         }
     }

@@ -1,7 +1,5 @@
 package com.sceyt.chatuikit.filetransfer
 
-import com.google.gson.JsonObject
-
 /**
  * Transfers prepared files. Expected failures are returned as [FileTransferResult.Failure];
  * recoverable interruptions are returned as [FileTransferResult.Interrupted].
@@ -9,21 +7,23 @@ import com.google.gson.JsonObject
  */
 interface FileTransferProvider {
     /**
-     * Prepares app data for an upload of the final source file.
-     * [FileUploadRequest.metadata] contains the object saved by an earlier attempt, or an empty object.
-     * UIKit saves a returned object under file_transfer before calling [upload]. Returning null skips
-     * this write. Completed checksum matches skip both methods. Throwing prevents upload.
+     * Prepares metadata for an upload of the final source file.
+     * Read previously saved values from [FileUploadRequest.attachment]'s metadata on retry or restart.
+     * UIKit merges the returned string values into that metadata and saves it before calling [upload].
+     * Matching keys are replaced; other keys are preserved. An empty map skips this write.
+     * Completed checksum matches skip both methods. Throwing prevents upload.
      */
-    suspend fun prepareUpload(request: FileUploadRequest): JsonObject? = null
+    suspend fun prepareUpload(request: FileUploadRequest): Map<String, String> = emptyMap()
 
     /**
      * Uploads the prepared source and returns its remote reference.
+     * Encryption metadata must be supplied through [prepareUpload]; the provider validates its own data.
      * Implementations must stop their work when the calling coroutine is canceled.
      */
     suspend fun upload(
         request: FileUploadRequest,
         callback: FileTransferCallback,
-    ): FileTransferResult<FileUploadResult>
+    ): FileTransferResult<String>
 
     /**
      * Downloads to [FileDownloadRequest.destinationFile] using [FileDownloadRequest.type].
