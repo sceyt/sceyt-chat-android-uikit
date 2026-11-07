@@ -19,7 +19,6 @@ import com.sceyt.chatuikit.filetransfer.FileTransferDestinationProvider
 import com.sceyt.chatuikit.filetransfer.FileTransferResult
 import com.sceyt.chatuikit.filetransfer.FileTransferProvider
 import com.sceyt.chatuikit.filetransfer.FileUploadRequest
-import com.sceyt.chatuikit.filetransfer.FileUploadResult
 import com.sceyt.chatuikit.filetransfer.SceytChatUIKitFileTransfer
 import com.sceyt.chatuikit.koin.SceytKoinApp
 import com.sceyt.chatuikit.persistence.di.CoroutineContextType
@@ -238,7 +237,7 @@ class RedownloadFlowAndroidTest {
         override suspend fun upload(
             request: FileUploadRequest,
             callback: FileTransferCallback,
-        ): FileTransferResult<FileUploadResult> = error("Unexpected upload")
+        ): FileTransferResult<String> = error("Unexpected upload")
 
         override fun cancel(operationId: String) = Unit
     }

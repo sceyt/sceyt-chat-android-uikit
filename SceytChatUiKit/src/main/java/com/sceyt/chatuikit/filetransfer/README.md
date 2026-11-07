@@ -71,12 +71,12 @@ Paths below are relative to `com/sceyt/chatuikit`:
 | Package | Classes and purpose |
 | --- | --- |
 | `filetransfer` | `SceytChatUIKitFileTransfer`: customer provider and destination configuration |
-| `filetransfer` | `FileUploadRequest` and `FileDownloadRequest` with shared `FileTransferType`: requests with required attachments and app metadata; `FileTransferProvider.prepareUpload`: app preparation hook; `FileUploadResult`: uploaded reference and optional standard encryption information |
+| `filetransfer` | `FileUploadRequest` and `FileDownloadRequest` with shared `FileTransferType`: requests with required attachments; `FileTransferProvider.prepareUpload`: metadata preparation hook; uploads return the remote reference |
 | `filetransfer/defaults` | `DefaultFileTransferProvider`, `DefaultFileTransferDestinationProvider`: built-in backend and attachment destination policy |
 | `persistence/file_transfer` | `FileTransferServiceImpl`, `TransferTask`: task registration, upload/download completion and worker listeners; `FileTransferHelper`: state and persistence publication |
 | `persistence/logicimpl` | `AttachmentUploadCoordinator`, `AttachmentDownloadCoordinator`, `AttachmentThumbCoordinator`: attachment upload, download and local-thumbnail handling |
 | `persistence/logicimpl` | `UploadPreparer`: checksum reuse and media preparation, without task registration or transfer scheduling |
-| `persistence/logicimpl` | `AttachmentTransferRouter`: prepares requests and calls the configured provider; `TransferExecutor`: executes the attempt, applies upload metadata and controls the selected provider |
+| `persistence/logicimpl` | `AttachmentTransferRouter`: prepares requests and calls the configured provider; `TransferExecutor`: executes the attempt and controls the selected provider |
 | `filetransfer/encryption` | UIKit crypto contracts, SDK adapter, and standard encryption metadata mapping |
 | `filetransfer/download` | `ChatSdkFileDownloader`: native download lifecycle, progress, and controls |
 | `persistence/logicimpl` | `FileTransferUtility`, `OkHttpDownloader`: SDK upload and HTTP download bridges |
@@ -114,9 +114,9 @@ For a normal upload, the UI kit:
 1. Adds the attachment to the sequential upload queue.
 2. Reuses a completed upload when encryption is disabled, checksum reuse is enabled and a valid reference exists.
 3. Reuses prepared media, or resizes an image or transcodes a video when required.
-4. Calls `provider.prepareUpload(request)` and saves a returned app object before proceeding.
-5. Creates one `FileUploadRequest` with `type = PLAIN` or `ENCRYPTED`, selected by `encryptionEnabled`; it carries the prepared source, attachment, and saved app object.
-6. Calls the provider, receives `FileUploadResult(url, encryptionInfo?)`, and owns progress, attachment persistence, completion, failure and queue advancement.
+4. Calls `provider.prepareUpload(request)` and merges and saves its returned metadata entries before proceeding.
+5. Creates one `FileUploadRequest` with `type = PLAIN` or `ENCRYPTED`, selected by `encryptionEnabled`; it carries the prepared source and attachment with saved metadata.
+6. Calls the provider, receives its URL, and owns progress, attachment persistence, completion, failure and queue advancement.
 
 Preparation runs inside the admitted upload's coroutine, so a queued upload does not prepare early.
 `UploadPreparer` receives an attachment and preparation callbacks, then returns the prepared
@@ -143,30 +143,31 @@ use the request's source, destination, URL and operation ID for execution.
 
 ```kotlin
 interface FileTransferProvider {
-    suspend fun prepareUpload(request: FileUploadRequest): JsonObject? = null
+    suspend fun prepareUpload(request: FileUploadRequest): Map<String, String> = emptyMap()
 
     // upload(), download(), pause(), resume(), cancel()
 }
 ```
 
-Override the method on the configured provider. The default returns null, which skips an app-data
+Override the method on the configured provider. The default returns an empty map, which skips a metadata
 write. There is no separate preparer property on `SceytChatUIKitFileTransfer`.
 
-The hook receives the prepared source, after resizing/transcoding. UIKit saves a returned object
-under `file_transfer`, preserving all other metadata, and waits for that database write before
-calling `upload()`. Preparation or persistence failure prevents upload.
+The hook receives the prepared source, after resizing/transcoding. UIKit merges the returned keys
+and string values directly into attachment metadata, replacing matching keys and preserving other
+fields. It waits for that database write before calling `upload()`. Preparation or persistence
+failure prevents upload. There is no wrapper key.
 
-On retry or app restart, `request.metadata` contains the saved app object; it is empty on first use.
-Return those parameters unchanged while the source remains valid; create new parameters when it
-changes. Shared callers save the same app object while preserving their own captions and media data.
+On retry or app restart, the provider reads its saved keys from `request.attachment.metadata`.
+Return those entries unchanged while the source remains valid; create new parameters when it
+changes. Shared callers save the same entries while preserving their own captions and media data.
 A completed plain checksum match skips both provider methods. Encrypted uploads do not reuse a
 cached remote URL. Disable `preventDuplicateAttachmentUpload` if a plain send needs fresh
 provider preparation every time.
 
-Both `FileUploadRequest.metadata` and `FileDownloadRequest.metadata` contain exactly this app object,
-or an empty object when none was saved. The router extracts it without interpreting encryption
-fields. The provider decides how to use it. This supports app encryption formats and keys that
-differ from UIKit's standard `enc` format.
+Neither upload nor download requests have a separate metadata field. The provider reads and
+validates its own values in `request.attachment.metadata`. It can serialize structured data into
+a string under its own key. This supports encryption formats and keys that differ from UIKit's
+standard `sceyt.enc` token.
 
 ## Download behavior
 
@@ -187,8 +188,8 @@ and waiting-for-network state.
 
 The SDK owns file keys,
 the encryption format, its 64 KiB records and authentication. Applications use UIKit's
-`FileEncryption`, `FileEncryptionSession`, `FileEncryptionInfo` and
-`FileEncryptionCheckpoint` contracts. `ChatSdkFileEncryption` maps these to SDK types internally.
+`FileEncryption`, `FileEncryptionSession` and `FileEncryptionCheckpoint` contracts.
+`ChatSdkFileEncryption` maps these to SDK types internally and exposes the SDK-generated token.
 UIKit does not implement the file cipher or calculate encrypted record boundaries.
 
 Enable encryption before starting transfers:
@@ -200,10 +201,9 @@ SceytChatUIKit.fileTransfer.apply {
 }
 ```
 
-The temporary wrapping-key/provider layer has been removed. UIKit stores the returned attachment ID
-and raw file key directly in metadata. A recipient needs no separate app wrapping key.
-Anyone who can read that metadata can obtain the file key; recipient-specific key protection is
-not implemented in this prototype.
+The SDK's `PreparedUpload.cipher.token` is already Base64URL and carries the file's encryption
+parameters. The provider returns that opaque string through `prepareUpload()`; UIKit stores it
+unchanged. Base64 is not key protection: anyone who can read the token can obtain the file key.
 
 ### Upload call chain
 
@@ -213,20 +213,20 @@ AttachmentUploadCoordinator.performUpload
   -> UploadPreparer.prepare
        -> prepare media
        -> provider.prepareUpload(request)
-       -> UIKit saves a returned file_transfer object in the attachment database
-  -> FileUploadRequest(sourceFile, attachment, metadata, type = PLAIN or ENCRYPTED)
+       -> UIKit merges the returned map into attachment metadata and saves it
+  -> FileUploadRequest(sourceFile, attachment, type = PLAIN or ENCRYPTED)
   -> FileTransferProvider.upload
        default encrypted route:
-         FileEncryption.prepareEncryption -> SDK session -> ChatClient.uploadEncrypted
+         FileEncryption.restoreEncryption -> SDK session -> ChatClient.uploadEncrypted
        custom encrypted route:
          FileEncryption.prepareEncryption/restoreEncryption -> read ranges -> customer backend
-  <- FileUploadResult(url, UIKit FileEncryptionInfo?)
-  -> merge enc metadata and save it with the uploaded reference
+  <- FileTransferResult.Success(url)
+  -> save the uploaded reference with the attachment's prepared metadata
 ```
 
-The provider opens and closes the encryption session used for byte transfer. A custom preparer
-can create the initial parameters so UIKit saves them before upload. The router neither creates
-ciphertext readers nor saves technical upload journals. The default native uploader releases its session
+The provider opens and closes the encryption session used for byte transfer. Its preparation hook
+creates or reuses the token so UIKit saves it before upload. The router neither creates
+ciphertext readers nor interprets encryption metadata. The default native uploader releases its session
 on success, error or cancellation. It uses the bundled SDK adapter; another encryption
 implementation requires a compatible custom provider.
 
@@ -234,46 +234,32 @@ The native upload is a single request. It streams encrypted bytes and does not n
 encrypted temporary file. A failed or cancelled native upload restarts as a whole upload; UIKit
 does not claim durable multipart resume for the Sceyt chat server.
 
-UIKit merges the following `enc` object alongside existing attachment metadata:
+The default provider returns `mapOf(FileEncryptionMetadata.FIELD to session.token)`. UIKit saves
+the token as a string alongside existing attachment metadata:
 
 ```json
 {
   "tmb": "blur-thumbnail",
   "szw": 1280,
   "szh": 203,
-  "enc": {
-    "v": 1,
-    "alg": "tink-aes256-gcm-hkdf-64k+commit-v1",
-    "attachmentId": "main-file-binding-id",
-    "key": "base64url-main-file-key",
-    "renditions": [
-      {
-        "role": "thumbnail",
-        "attachmentId": "thumbnail-binding-id",
-        "key": "base64url-thumbnail-file-key"
-      }
-    ]
-  }
+  "sceyt.enc": "<SDK-generated-base64url-token>"
 }
 ```
 
-The algorithm is the returned format, not a hardcoded download constant. `attachmentId` is the
-encryption binding ID; it need not equal the database/server attachment ID. The file key is carried
-in metadata and is not appended to ciphertext. The attachment's existing `fileSize` carries the
-original plaintext size. Dimensions, blur thumbnails and customer fields are preserved, including
-for shared uploads. The URL and matching encryption metadata are saved together. Encrypted URLs
-are excluded from the plain checksum reuse cache.
+The SDK creates and restores the token; UIKit does not decode it or rebuild key fields. The file
+itself stays binary ciphertext. The attachment's `fileSize` remains its plaintext size. Dimensions,
+blur thumbnails and customer fields are preserved, including for shared uploads. The URL and matching
+metadata are saved together. Encrypted uploads are excluded from plain checksum URL reuse regardless
+of the provider's chosen metadata keys.
 
-Each encrypted file or rendition needs its own session. The metadata model can round-trip existing
-rendition information, but this phase does not implement encrypted thumbnail upload/download.
-Rendition remote references and plaintext sizes still need an agreed location in the attachment
-model before enabling that flow.
+Each encrypted file or rendition needs its own session. This phase does not implement encrypted
+thumbnail upload/download.
 
 ### Custom encryption sessions and multipart recovery
 
-A custom preparer can call `SceytChatUIKit.fileTransfer.encryption.prepareEncryption(file)`,
-return the initial checkpoint in its JSON object, and close that session. UIKit saves the object.
-The custom provider restores its execution session from the saved parameters:
+A custom provider can call `SceytChatUIKit.fileTransfer.encryption.prepareEncryption(file)`,
+return `session.token` under its own metadata key, and keep `session.checkpoint().data` locally.
+After a restart, it rebuilds `FileEncryptionCheckpoint(savedToken, localData)` and restores the session:
 
 ```kotlin
 val session = encryption.restoreEncryption(preparedFile, checkpoint)
@@ -289,29 +275,30 @@ try {
 Both offsets and lengths address ciphertext, including encryption overhead. Reads are exact and
 repeatable; SDK encryption records need not align with backend multipart parts.
 
-`FileEncryptionCheckpoint` contains `encryptionInfo`, `plaintextSize`, and opaque SDK `data`.
-Do not log it. An app owns its schema and must decide which parameters belong in attachment metadata
-and which technical progress belongs in its private transfer journal.
+`FileEncryptionCheckpoint` is a regular class containing `token` and opaque SDK `data`. Do not log
+either field. Only the token goes in attachment metadata. The default provider's
+`NativeUploadCheckpointStore` atomically saves recovery data and a token fingerprint in app-private
+storage, without another copy of the token or key. It retains the record after an interruption and
+removes it on success or explicit cancellation. There is no `_sceyt_upload` metadata entry.
 
 When a preparer supplied all required encryption information, a custom upload can return
-`FileUploadResult(url)`; UIKit preserves the saved `file_transfer` object. Otherwise return
-`encryptionInfo` for UIKit to write the standard `enc` field. An encrypted success without either
-source of information is rejected.
+`FileTransferResult.Success(url)`; UIKit preserves its saved metadata entries. The custom provider
+validates its own parameters. There is no encryption-specific upload result handling in UIKit.
 
 Explicit upload abandonment calls `provider.cancel(operationId)` and cancels the attempt's
 coroutine. The provider cleans up retained backend state, including inactive sessions after a
 restart. Pause and recoverable interruptions retain that state.
 
-Waafi's provider overrides `prepareUpload(request)` and delegates to `WaafiUploadPreparer`.
-Its uploader restores those parameters from the request, while its private journal stores upload
-IDs, part URLs, ETags, and checkpoint data without a second copy of the key.
+A Waafi adapter using this hook returns its parameters as string values and restores them from
+`request.attachment.metadata`. Its private journal stores upload IDs, part URLs, ETags, and
+checkpoint data without a second copy of the key.
 
 ### Download call chain
 
 ```text
 AttachmentDownloadCoordinator.performDownload
   → AttachmentTransferRouter.download
-  → FileDownloadRequest(type selected by encryptionEnabled, attachment, metadata = saved file_transfer)
+  → FileDownloadRequest(type selected by encryptionEnabled, attachment)
   → FileTransferProvider.download(final plaintext destination)
        default:
          ChatSdkFileDownloader
@@ -325,7 +312,7 @@ AttachmentDownloadCoordinator.performDownload
 ```
 
 The router selects the request type from configuration without parsing keys or choosing a decryption
-algorithm. The default native downloader understands UIKit's `enc`; applications can interpret
+algorithm. The default native downloader reads UIKit's `sceyt.enc` token. Applications can interpret
 different data in their own provider.
 
 `encryptionEnabled` controls both directions: true selects `ENCRYPTED`, false selects `PLAIN`.
@@ -366,8 +353,8 @@ Completion removes only that task, leaving other messages and newer attempts reg
 succeeds, fails, or is interrupted; coroutine cancellation remains separate:
 
 - Report progress through `FileTransferCallback.onProgress` as a value from `0f` to `100f`.
-- Return `FileTransferResult.Success(FileUploadResult(url, encryptionInfo))` for uploads,
-  or `FileUploadResult(url)` when the preparer already saved the app's required parameters. Downloads return
+- Return `FileTransferResult.Success(url)` for uploads. Supply metadata through `prepareUpload()`.
+  Downloads return
   `FileTransferResult.Success(destinationPath)`.
 - Return `FileTransferResult.Failure(error)` for a terminal failure. UIKit deletes the partial
   download, preserving the existing failure policy.
@@ -387,9 +374,8 @@ verified ranges. It continues on SDK network recovery or manual pause/resume, an
 Custom providers can return `Interrupted` as described above. The SDK upload bridge reports its
 SDK errors as `Failure`.
 
-Custom providers must return `FileTransferResult<FileUploadResult>` for uploads and
-`FileTransferResult<String>` for downloads before adopting this unreleased API. Waafi's multipart
-provider uses these contracts and retains backend checkpoints on recoverable interruptions.
+Custom providers must return `FileTransferResult<String>` for both uploads and downloads before
+adopting this unreleased API. Custom multipart providers retain backend checkpoints on recoverable interruptions.
 Custom storage must not silently fall back to the default Sceyt backend.
 
 `pause(operationId)` returns `true` only when that exact physical operation was paused and remains
@@ -431,8 +417,9 @@ versions of this branch:
 - `FileTransferTransport` is renamed to `FileTransferProvider`, and `DefaultFileTransferTransport`
   to `DefaultFileTransferProvider`. Configure it through `SceytChatUIKit.fileTransfer.provider`
   instead of `SceytChatUIKit.fileTransfer.transport`.
-- `FileTransferProvider.upload` returns `FileTransferResult<FileUploadResult>`; `download` returns
-  `FileTransferResult<String>`. Both replace the earlier `Result<String>` contract.
+- `FileTransferProvider.upload` and `download` return `FileTransferResult<String>`.
+  Upload success contains the remote reference; download success contains the plaintext path.
+  `FileUploadResult` and its `encryptionInfo` field are removed.
 - `FileTransferCallback` now exposes `onProgress(Float)`; `FileTransferEvent` is removed.
 - Return `FileTransferResult.Interrupted(error)` instead of emitting the former `WaitingForNetwork` event.
 
@@ -460,8 +447,8 @@ Encryption additions to this branch:
 - Both requests contain a required `attachment`; `FileTransferContext` and `AttachmentTransferContext` are removed.
 - Separate upload/download types are replaced by `FileTransferType`. The executing provider follows
   the requested mode and interprets saved attachment/app metadata for encryption parameters.
-- Override `FileTransferProvider.prepareUpload` to return app data; UIKit saves it under `file_transfer` before upload and passes it back in `request.metadata` on retry.
-- `upload` returns `FileTransferResult<FileUploadResult>` with the uploaded reference and matching encryption information.
+- Override `FileTransferProvider.prepareUpload` to return `Map<String, String>`. UIKit merges the entries into attachment metadata and saves it before upload. Providers read their keys from `request.attachment.metadata` on upload, download, and retry.
+- `upload` returns only the uploaded reference in `FileTransferResult<String>`; encryption data is prepared and saved beforehand.
 - Implement `FileTransferProvider.cancel` to clean up retained backend uploads on explicit cancellation.
 - Custom `PersistenceAttachmentLogic` implementations must implement `updateUploadedAttachment`
   and save the uploaded URL and metadata together.

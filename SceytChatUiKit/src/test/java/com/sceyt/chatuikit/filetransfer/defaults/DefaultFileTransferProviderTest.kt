@@ -8,7 +8,6 @@ import com.sceyt.chatuikit.filetransfer.FileDownloadRequest
 import com.sceyt.chatuikit.filetransfer.FileTransferCallback
 import com.sceyt.chatuikit.filetransfer.FileTransferResult
 import com.sceyt.chatuikit.filetransfer.FileUploadRequest
-import com.sceyt.chatuikit.filetransfer.FileUploadResult
 import com.sceyt.chatuikit.filetransfer.download.ChatSdkFileDownloader
 import com.sceyt.chatuikit.persistence.logicimpl.FileTransferUtility
 import com.sceyt.chatuikit.persistence.logicimpl.attachment
@@ -70,7 +69,7 @@ class DefaultFileTransferProviderTest {
         verify(utility).uploadFile(sourceCaptor.capture(), any())
         assertThat(sourceCaptor.firstValue).isEqualTo(sourceFile)
         assertThat(progress).containsExactly(35f)
-        assertThat(result).isEqualTo(FileTransferResult.Success(FileUploadResult("uploaded-url")))
+        assertThat(result).isEqualTo(FileTransferResult.Success("uploaded-url"))
     }
 
     @Test
@@ -143,8 +142,7 @@ class DefaultFileTransferProviderTest {
                 "download:10",
                 "https://cdn.test/file",
                 File("/tmp/downloaded.txt"),
-                attachment(),
-                metadata = metadata,
+                attachment().copy(metadata = metadata.toString()),
             )
             val expected = FileTransferResult.Success(request.destinationFile.path)
             whenever(downloader.download(any(), any())).thenReturn(expected)

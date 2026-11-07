@@ -2,7 +2,6 @@ package com.sceyt.chatuikit.persistence.logicimpl
 
 import android.content.Context
 import com.google.common.truth.Truth.assertThat
-import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.config.SceytChatUIKitConfig
@@ -12,7 +11,6 @@ import com.sceyt.chatuikit.data.models.messages.FileChecksumData
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.filetransfer.FileTransferResult
 import com.sceyt.chatuikit.filetransfer.SceytChatUIKitFileTransfer
-import com.sceyt.chatuikit.persistence.extensions.fileTransferData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 import com.sceyt.chatuikit.persistence.file_transfer.UpdateFileLocationCallback
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
@@ -85,12 +83,12 @@ class AttachmentUploadPreparationTest {
     fun `upload receives prepared app metadata and preserves it on completion`() = runTest {
         val file = temporary.newFile().apply { writeText("plaintext") }
         val value = attachment(filePath = file.path, originalFilePath = file.path)
-            .copy(metadata = """{"caption":"keep"}""")
+            .copy(metadata = """{"caption":"keep","szw":1280,"custom":{"value":true},"uploadId":"old"}""")
         val task = transferTask(value)
         transport.onPrepareUpload = { request ->
             assertThat(request.attachment.filePath).isEqualTo(file.path)
-            assertThat(request.metadata.entrySet()).isEmpty()
-            JsonObject().apply { addProperty("appEncryption", "saved-key") }
+            assertThat(request.attachment.metadata).isEqualTo(value.metadata)
+            mapOf("appEncryption" to "saved-key", "uploadId" to "prepared-upload")
         }
         val coordinator = AttachmentUploadCoordinator(context, attachmentLogic, backgroundScope)
 
@@ -100,9 +98,8 @@ class AttachmentUploadPreparationTest {
         val call = transport.uploadCalls.single()
         val prepared = call.request.attachment
         val metadata = JsonParser.parseString(prepared.metadata).asJsonObject
-        assertThat(metadata.getAsJsonObject("file_transfer").get("appEncryption")?.asString)
-            .isEqualTo("saved-key")
-        assertThat(call.request.metadata).isEqualTo(metadata.getAsJsonObject("file_transfer"))
+        val expected = """{"caption":"keep","szw":1280,"custom":{"value":true},"uploadId":"prepared-upload","appEncryption":"saved-key"}"""
+        assertThat(metadata).isEqualTo(JsonParser.parseString(expected))
         assertThat(saved[value.messageTid]?.metadata).isEqualTo(prepared.metadata)
         assertThat(metadata.get("caption").asString).isEqualTo("keep")
         call.succeed("https://cdn.test/uploaded")
@@ -129,7 +126,27 @@ class AttachmentUploadPreparationTest {
 
         persisted.complete(Unit)
         runCurrent()
-        assertThat(transport.uploadCalls.single().request.metadata).isEqualTo(data)
+        val request = transport.uploadCalls.single().request
+        val metadata = JsonParser.parseString(request.attachment.metadata).asJsonObject
+        data.forEach { (key, value) -> assertThat(metadata.get(key).asString).isEqualTo(value) }
+    }
+
+    @Test
+    fun `empty preparation keeps existing metadata without another save`() = runTest {
+        val file = temporary.newFile().apply { writeText("plaintext") }
+        val value = attachment(filePath = file.path).copy(metadata = "application metadata")
+        val task = transferTask(value)
+        val coordinator = AttachmentUploadCoordinator(context, attachmentLogic, backgroundScope)
+
+        coordinator.upload(value, task, { _, _ -> }, {})
+        runCurrent()
+
+        val call = transport.uploadCalls.single()
+        assertThat(saved).isEmpty()
+        assertThat(call.request.attachment.metadata).isEqualTo(value.metadata)
+        call.succeed("uploaded")
+        runCurrent()
+        assertThat(task.attachment.metadata).isEqualTo(value.metadata)
     }
 
     @Test
@@ -140,7 +157,9 @@ class AttachmentUploadPreparationTest {
         var created = 0
         SceytChatUIKit.fileTransfer.encryptionEnabled = true
         transport.onPrepareUpload = { request ->
-            if (request.metadata.size() == 0) data.also { created++ } else request.metadata
+            val metadata = JsonParser.parseString(request.attachment.metadata ?: "{}").asJsonObject
+            if (!metadata.has("uploadId")) data.also { created++ }
+            else data.keys.associateWith { metadata.get(it).asString }
         }
         val first = AttachmentUploadCoordinator(context, attachmentLogic, backgroundScope)
         first.upload(value, transferTask(value), { _, _ -> }, {})
@@ -156,11 +175,11 @@ class AttachmentUploadPreparationTest {
         runCurrent()
 
         assertThat(created).isEqualTo(1)
-        assertThat(transport.uploadCalls.last().request.metadata).isEqualTo(data)
+        assertThat(transport.uploadCalls.last().request.attachment.metadata).isEqualTo(restored.metadata)
         transport.uploadCalls.last().succeed("https://cdn.test/custom-encrypted")
         runCurrent()
         assertThat(result).isInstanceOf(SceytResponse.Success::class.java)
-        assertThat(task.attachment.metadata.fileTransferData()).isEqualTo(data)
+        assertThat(task.attachment.metadata).isEqualTo(restored.metadata)
     }
 
     @Test
@@ -192,13 +211,13 @@ class AttachmentUploadPreparationTest {
         for (value in listOf(first, second, late)) {
             val metadata =
                 JsonParser.parseString(checkNotNull(saved[value.messageTid]).metadata).asJsonObject
-            assertThat(metadata.getAsJsonObject("file_transfer")).isEqualTo(data)
+            data.forEach { (key, value) -> assertThat(metadata.get(key).asString).isEqualTo(value) }
             assertThat(metadata.get("caption"))
                 .isEqualTo(JsonParser.parseString(value.metadata).asJsonObject.get("caption"))
         }
         transport.uploadCalls.single().succeed("shared-url")
         runCurrent()
-        assertThat(lateTask.attachment.metadata.fileTransferData()).isEqualTo(data)
+        assertThat(lateTask.attachment.metadata).isEqualTo(saved[late.messageTid]?.metadata)
     }
 
     @Test
@@ -252,8 +271,10 @@ class AttachmentUploadPreparationTest {
             isSharedUpload = false,
             onFileLocationChanged = { order += "path" },
             preparedFilePath = file.path,
-            onUploadPrepared = { prepared ->
-                assertThat(prepared.metadata.fileTransferData()).isEqualTo(data)
+            onUploadPrepared = { prepared, values ->
+                assertThat(values).isEqualTo(data)
+                val metadata = JsonParser.parseString(prepared.metadata).asJsonObject
+                data.forEach { (key, value) -> assertThat(metadata.get(key).asString).isEqualTo(value) }
                 order += "saved"
                 prepared
             },
@@ -381,7 +402,8 @@ class AttachmentUploadPreparationTest {
         }
     }
 
-    private fun appData(): JsonObject = JsonParser.parseString(
-        """{"encryption":{"key":"app-key","algorithm":"custom"},"uploadId":"saved-upload","values":[1,true,"text"]}"""
-    ).asJsonObject
+    private fun appData(): Map<String, String> = mapOf(
+        "encryption" to """{"key":"app-key","algorithm":"custom"}""",
+        "uploadId" to "saved-upload",
+    )
 }

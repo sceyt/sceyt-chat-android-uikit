@@ -3,8 +3,7 @@ package com.sceyt.chatuikit.filetransfer.defaults
 import com.google.common.truth.Truth.assertThat
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.UploadOperation
-import com.sceyt.chat.fileencryption.FileEncryptionData
-import com.sceyt.chat.fileencryption.FileEncryptionInfo
+import com.sceyt.chat.fileencryption.AttachmentCipher
 import com.sceyt.chat.fileencryption.PreparedUpload
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.sceyt_callbacks.EncryptedUploadCallback
@@ -13,11 +12,12 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.filetransfer.FileTransferResult
 import com.sceyt.chatuikit.filetransfer.FileTransferType
 import com.sceyt.chatuikit.filetransfer.FileUploadRequest
-import com.sceyt.chatuikit.filetransfer.FileUploadResult
 import com.sceyt.chatuikit.filetransfer.SceytChatUIKitFileTransfer
 import com.sceyt.chatuikit.filetransfer.encryption.ChatSdkFileEncryption
 import com.sceyt.chatuikit.filetransfer.encryption.FileEncryption
-import com.sceyt.chatuikit.filetransfer.encryption.toUIKitInfo
+import com.sceyt.chatuikit.filetransfer.encryption.FileEncryptionCheckpoint
+import com.sceyt.chatuikit.filetransfer.encryption.FileEncryptionSession
+import com.sceyt.chatuikit.persistence.extensions.withMetadata
 import com.sceyt.chatuikit.persistence.logicimpl.attachment
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
@@ -28,34 +28,80 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.MockedConstruction
 import org.mockito.Mockito
 import org.mockito.kotlin.any
 import org.mockito.kotlin.doAnswer
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
+import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 import java.io.File
+import com.sceyt.chat.fileencryption.FileEncryptionCheckpoint as SdkCheckpoint
 
 @RunWith(RobolectricTestRunner::class)
 @OptIn(ExperimentalCoroutinesApi::class)
 class EncryptedSdkUploadTest {
     private lateinit var previous: SceytChatUIKitFileTransfer
-    private val info = FileEncryptionInfo(
-        "sdk-format",
-        FileEncryptionData("sdk-upload", "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", 32L),
-    )
+    private val token = "opaque-sdk-token"
+    private var savedCheckpoint: FileEncryptionCheckpoint? = null
+    private lateinit var checkpointConstruction: MockedConstruction<NativeUploadCheckpointStore>
 
     @Before
     fun setUp() {
         previous = SceytChatUIKit.fileTransfer
         SceytChatUIKit.fileTransfer = SceytChatUIKitFileTransfer()
+        checkpointConstruction = Mockito.mockConstruction(NativeUploadCheckpointStore::class.java) { store, _ ->
+            doAnswer { call ->
+                savedCheckpoint?.takeIf { it.token == call.getArgument<String>(1) }
+            }.whenever(store).read(any(), any())
+            doAnswer { call ->
+                savedCheckpoint = call.getArgument(1)
+                Unit
+            }.whenever(store).save(any(), any())
+            doAnswer { call ->
+                val checkpoint = call.getArgument<FileEncryptionCheckpoint>(1)
+                if (savedCheckpoint?.token == checkpoint.token) savedCheckpoint = checkpoint
+                Unit
+            }.whenever(store).update(any(), any())
+            doAnswer {
+                savedCheckpoint = null
+                Unit
+            }.whenever(store).remove(any())
+        }
     }
 
     @After
     fun tearDown() {
         SceytChatUIKit.fileTransfer = previous
+        checkpointConstruction.close()
+    }
+
+    @Test
+    fun `a new provider reuses the saved token during retry preparation`() = runTest {
+        val file = configureSession(mock())
+        val request = prepareRequest(DefaultFileTransferProvider(), file, "upload:retry")
+
+        val data = DefaultFileTransferProvider().prepareUpload(request)
+
+        assertThat(data).containsExactly("sceyt.enc", token)
+        assertThat(savedCheckpoint?.data).isEqualTo("before-read")
+        verify(SceytChatUIKit.fileTransfer.encryption, times(1)).prepareEncryption(file)
+    }
+
+    @Test
+    fun `explicit upload cancellation removes the local checkpoint`() = runTest {
+        val file = configureSession(mock())
+        val provider = DefaultFileTransferProvider()
+        prepareRequest(provider, file, "upload:discard")
+
+        provider.cancel("upload:discard")
+
+        assertThat(savedCheckpoint).isNull()
+        verify(checkpointConstruction.constructed().single()).remove("upload:discard")
     }
 
     @Test
@@ -76,21 +122,15 @@ class EncryptedSdkUploadTest {
             Mockito.mockStatic(ChatClient::class.java).use { static ->
                 static.`when`<ChatClient> { ChatClient.getClient() }.thenReturn(client)
                 val progress = mutableListOf<Float>()
+                val provider = DefaultFileTransferProvider()
+                val request = prepareRequest(provider, file, "upload:cancel")
                 val result = async {
-                    DefaultFileTransferProvider().upload(
-                        FileUploadRequest(
-                            "upload:cancel",
-                            file,
-                            attachment(filePath = file.path),
-                            type = FileTransferType.ENCRYPTED
-                        ),
-                        progress::add,
-                    )
+                    provider.upload(request, progress::add)
                 }
                 runCurrent()
                 result.cancelAndJoin()
                 progressCallback.onResult(0.5f)
-                resultCallback.onResult("late-url", info)
+                resultCallback.onResult("late-url", source.cipher)
 
                 verify(operation).cancel()
                 verify(source).close()
@@ -100,7 +140,7 @@ class EncryptedSdkUploadTest {
         }
 
     @Test
-    fun `encrypted upload prepares a session and returns URL with matching encryption information`() =
+    fun `encrypted upload restores prepared parameters and returns only its URL`() =
         runTest {
             val client = mock<ChatClient>()
             val source = mock<PreparedUpload>()
@@ -118,25 +158,19 @@ class EncryptedSdkUploadTest {
             Mockito.mockStatic(ChatClient::class.java).use { static ->
                 static.`when`<ChatClient> { ChatClient.getClient() }.thenReturn(client)
                 val progress = mutableListOf<Float>()
+                val provider = DefaultFileTransferProvider()
+                val request = prepareRequest(provider, file, "upload:1")
                 val result = async {
-                    DefaultFileTransferProvider().upload(
-                        FileUploadRequest(
-                            "upload:1",
-                            file,
-                            attachment(filePath = file.path),
-                            type = FileTransferType.ENCRYPTED
-                        ),
-                        progress::add,
-                    )
+                    provider.upload(request, progress::add)
                 }
                 runCurrent()
                 progressCallback.onResult(0.4f)
-                resultCallback.onResult("https://cdn.test/encrypted", info)
+                resultCallback.onResult("https://cdn.test/encrypted", source.cipher)
                 progressCallback.onResult(0.8f)
                 progressCallback.onResult(1f)
 
-                val uploaded = FileUploadResult("https://cdn.test/encrypted", info.toUIKitInfo())
-                assertThat(result.await()).isEqualTo(FileTransferResult.Success(uploaded))
+                assertThat(result.await()).isEqualTo(FileTransferResult.Success("https://cdn.test/encrypted"))
+                assertThat(savedCheckpoint).isNull()
                 assertThat(progress).containsExactly(40f)
                 verify(SceytChatUIKit.fileTransfer.encryption).prepareEncryption(file)
                 verify(source).close()
@@ -158,30 +192,45 @@ class EncryptedSdkUploadTest {
         Mockito.mockStatic(ChatClient::class.java).use { static ->
             static.`when`<ChatClient> { ChatClient.getClient() }.thenReturn(client)
 
-            val result = DefaultFileTransferProvider().upload(
-                FileUploadRequest(
-                    "upload:error",
-                    file,
-                    attachment(filePath = file.path),
-                    type = FileTransferType.ENCRYPTED
-                ),
-            ) {}
+            val provider = DefaultFileTransferProvider()
+            val request = prepareRequest(provider, file, "upload:error")
+            val result = provider.upload(request) {}
 
             assertThat((result as FileTransferResult.Failure).error).isSameInstanceAs(error)
+            assertThat(savedCheckpoint?.data).isEqualTo("after-read")
             verify(source).close()
         }
     }
 
     private suspend fun configureSession(source: PreparedUpload): File {
         val file = File("/tmp/native-upload.bin")
+        val cipher = mock<AttachmentCipher>()
+        whenever(cipher.token).thenReturn(token)
         whenever(source.sourceId).thenReturn("sdk-session")
         whenever(source.plaintextSize).thenReturn(32L)
         whenever(source.ciphertextSize).thenReturn(136L)
-        whenever(source.encryptionInfo).thenReturn(info)
+        whenever(source.cipher).thenReturn(cipher)
+        whenever(source.checkpoint).thenReturn(SdkCheckpoint(cipher, "after-read"))
         val encryption = mock<FileEncryption>()
+        val prepared = mock<FileEncryptionSession>()
+        whenever(prepared.checkpoint()).thenReturn(FileEncryptionCheckpoint(token, "before-read"))
         val session = ChatSdkFileEncryption.EncryptionSession(source)
-        whenever(encryption.prepareEncryption(file)).thenReturn(session)
+        whenever(encryption.prepareEncryption(file)).thenReturn(prepared)
+        whenever(encryption.restoreEncryption(eq(file), any())).thenReturn(session)
         SceytChatUIKit.fileTransfer.encryption = encryption
         return file
+    }
+
+    private suspend fun prepareRequest(
+        provider: DefaultFileTransferProvider,
+        file: File,
+        operationId: String,
+    ): FileUploadRequest {
+        val request = FileUploadRequest(
+            operationId, file, attachment(filePath = file.path), FileTransferType.ENCRYPTED,
+        )
+        val data = provider.prepareUpload(request)
+        assertThat(data).containsExactly("sceyt.enc", token)
+        return request.copy(attachment = request.attachment.copy(metadata = null.withMetadata(data)))
     }
 }

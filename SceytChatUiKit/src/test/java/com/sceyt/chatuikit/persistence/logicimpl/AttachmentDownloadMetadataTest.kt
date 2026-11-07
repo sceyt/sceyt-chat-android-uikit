@@ -1,7 +1,6 @@
 package com.sceyt.chatuikit.persistence.logicimpl
 
 import com.google.common.truth.Truth.assertThat
-import com.google.gson.JsonParser
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.filetransfer.FileTransferDestinationProvider
@@ -46,10 +45,10 @@ class AttachmentDownloadMetadataTest {
     }
 
     @Test
-    fun `the download request carries its attachment and only the saved app object`() = runTest {
+    fun `the download request carries its attachment and unchanged metadata`() = runTest {
         val value =
             attachment(filePath = null, fileSize = 456L, state = TransferState.PendingDownload)
-                .copy(metadata = """{"szw":1280,"enc":{"v":1},"file_transfer":{"key":"custom-key"}}""")
+                .copy(metadata = """{"szw":1280,"enc":{"v":1},"appKey":"custom-key"}""")
         val finished = CompletableDeferred<SceytResponse<String>>()
         val coordinator =
             AttachmentDownloadCoordinator(RuntimeEnvironment.getApplication(), backgroundScope)
@@ -58,8 +57,6 @@ class AttachmentDownloadMetadataTest {
         runCurrent()
 
         val call = transport.downloadCalls.single()
-        assertThat(call.request.metadata)
-            .isEqualTo(JsonParser.parseString("""{"key":"custom-key"}""").asJsonObject)
         assertThat(call.request.attachment).isEqualTo(value)
         assertThat(call.request.type).isEqualTo(FileTransferType.PLAIN)
         call.succeed(call.request.destinationFile.path)
@@ -81,7 +78,7 @@ class AttachmentDownloadMetadataTest {
         val call = transport.downloadCalls.single()
         assertThat(call.request.type).isEqualTo(FileTransferType.ENCRYPTED)
         assertThat(call.request.attachment).isEqualTo(value)
-        assertThat(call.request.metadata.entrySet()).isEmpty()
+        assertThat(call.request.attachment.metadata).isNull()
         call.succeed(call.request.destinationFile.path)
         runCurrent()
         assertThat(finished.await()).isInstanceOf(SceytResponse.Success::class.java)
@@ -90,7 +87,7 @@ class AttachmentDownloadMetadataTest {
     @Test
     fun `the router passes custom encryption fields without interpreting them`() = runTest {
         val metadata =
-            """{"file_transfer":{"enc":"app-format","appEncryption":{"key":"custom-key"}}}"""
+            """{"enc":"app-format","appEncryption":"custom-key"}"""
         val value = attachment(filePath = null, state = TransferState.PendingDownload)
             .copy(metadata = metadata)
         val finished = CompletableDeferred<SceytResponse<String>>()
@@ -101,8 +98,7 @@ class AttachmentDownloadMetadataTest {
         runCurrent()
 
         val call = transport.downloadCalls.single()
-        assertThat(call.request.metadata)
-            .isEqualTo(JsonParser.parseString(metadata).asJsonObject.getAsJsonObject("file_transfer"))
+        assertThat(call.request.attachment.metadata).isEqualTo(metadata)
         call.succeed(call.request.destinationFile.path)
         runCurrent()
         assertThat(finished.await()).isInstanceOf(SceytResponse.Success::class.java)
@@ -120,7 +116,6 @@ class AttachmentDownloadMetadataTest {
         runCurrent()
 
         val call = transport.downloadCalls.single()
-        assertThat(call.request.metadata.entrySet()).isEmpty()
         assertThat(call.request.attachment.metadata).isEqualTo("application metadata")
         call.succeed(call.request.destinationFile.path)
         runCurrent()
@@ -128,9 +123,9 @@ class AttachmentDownloadMetadataTest {
     }
 
     @Test
-    fun `a malformed saved app object fails before reaching the transport`() = runTest {
+    fun `the provider receives its string values without router parsing`() = runTest {
         val value = attachment(filePath = null, state = TransferState.PendingDownload)
-            .copy(metadata = """{"file_transfer":"broken"}""")
+            .copy(metadata = """{"uploadData":"application value"}""")
         val finished = CompletableDeferred<SceytResponse<String>>()
         val coordinator =
             AttachmentDownloadCoordinator(RuntimeEnvironment.getApplication(), backgroundScope)
@@ -138,7 +133,10 @@ class AttachmentDownloadMetadataTest {
         coordinator.download(value, transferTask(value), { finished.complete(it) })
         runCurrent()
 
-        assertThat(transport.downloadCalls).isEmpty()
-        assertThat(finished.await()).isInstanceOf(SceytResponse.Error::class.java)
+        val call = transport.downloadCalls.single()
+        assertThat(call.request.attachment.metadata).isEqualTo(value.metadata)
+        call.succeed(call.request.destinationFile.path)
+        runCurrent()
+        assertThat(finished.await()).isInstanceOf(SceytResponse.Success::class.java)
     }
 }

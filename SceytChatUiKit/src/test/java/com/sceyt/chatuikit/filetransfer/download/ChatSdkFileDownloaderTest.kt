@@ -1,16 +1,16 @@
 package com.sceyt.chatuikit.filetransfer.download
 
 import com.google.common.truth.Truth.assertThat
-import com.google.gson.JsonParser
 import com.sceyt.chat.download.DownloadRequest
 import com.sceyt.chat.download.MediaDownload
 import com.sceyt.chat.download.MediaDownloadException
 import com.sceyt.chat.download.MediaDownloadStatus
+import com.sceyt.chat.fileencryption.AeadFileEncryptionProvider
+import com.sceyt.chat.fileencryption.AttachmentCipher
+import com.sceyt.chat.fileencryption.InvalidEncryptionException
 import com.sceyt.chatuikit.filetransfer.FileDownloadRequest
 import com.sceyt.chatuikit.filetransfer.FileTransferResult
 import com.sceyt.chatuikit.filetransfer.FileTransferType
-import com.sceyt.chatuikit.filetransfer.encryption.FileEncryptionInfo
-import com.sceyt.chatuikit.filetransfer.encryption.toSdkInfo
 import com.sceyt.chatuikit.persistence.logicimpl.attachment
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
@@ -91,30 +91,32 @@ class ChatSdkFileDownloaderTest {
     @Test
     fun `encrypted download passes metadata to native decryption and uses the final plaintext path`() =
         runTest {
-            val info = FileEncryptionInfo("sdk-format", "attachment-id", "file-key")
-            val metadata = JsonParser.parseString(
-                """{"enc":{"v":1,"alg":"sdk-format","attachmentId":"attachment-id","key":"file-key"}}"""
-            ).asJsonObject
+            val cipher = mock<AttachmentCipher>()
             val request = request().copy(
-                attachment = attachment(fileSize = 100).copy(metadata = metadata.toString()),
+                attachment = attachment(fileSize = 100).copy(metadata = """{"sceyt.enc":"opaque-sdk-token"}"""),
                 type = FileTransferType.ENCRYPTED,
             )
             setStatus(MediaDownload.State.COMPLETED, downloaded = 100)
-            Mockito.mockStatic(MediaDownload::class.java).use { native ->
-                native.`when`<MediaDownload> {
-                    MediaDownload.downloadEncrypted(
-                        eq(request.toSdkRequest()), eq(request.destinationFile.absolutePath),
-                        eq(info.toSdkInfo(100)), any(), isNull(),
-                    )
-                }.thenReturn(operation)
+            Mockito.mockStatic(AeadFileEncryptionProvider::class.java).use { crypto ->
+                crypto.`when`<AttachmentCipher> { AeadFileEncryptionProvider.restore("opaque-sdk-token") }
+                    .thenReturn(cipher)
+                Mockito.mockStatic(MediaDownload::class.java).use { native ->
+                    native.`when`<MediaDownload> {
+                        MediaDownload.downloadEncrypted(
+                            eq(request.toSdkRequest()), eq(request.destinationFile.absolutePath),
+                            eq(cipher), any(), isNull(),
+                        )
+                    }.thenReturn(operation)
 
-                val result =
-                    ChatSdkFileDownloader(StandardTestDispatcher(testScheduler)).download(request) {}
+                    val result =
+                        ChatSdkFileDownloader(StandardTestDispatcher(testScheduler)).download(request) {}
 
-                assertThat(result)
-                    .isEqualTo(FileTransferResult.Success(request.destinationFile.absolutePath))
-                assertThat(request.toString()).doesNotContain("file-key")
-                verify(operation).close()
+                    assertThat(result)
+                        .isEqualTo(FileTransferResult.Success(request.destinationFile.absolutePath))
+                    assertThat(request.toString()).doesNotContain("opaque-sdk-token")
+                    verify(cipher).close()
+                    verify(operation).close()
+                }
             }
         }
 
@@ -122,17 +124,21 @@ class ChatSdkFileDownloaderTest {
     fun `malformed enc fails in the default downloader without starting a plain download`() =
         runTest {
             val request = request().copy(
-                attachment = attachment().copy(metadata = """{"enc":"invalid"}"""),
+                attachment = attachment().copy(metadata = """{"sceyt.enc":"invalid"}"""),
                 type = FileTransferType.ENCRYPTED,
             )
-            Mockito.mockStatic(MediaDownload::class.java).use { native ->
-                val result =
-                    ChatSdkFileDownloader(StandardTestDispatcher(testScheduler)).download(request) {}
+            Mockito.mockStatic(AeadFileEncryptionProvider::class.java).use { crypto ->
+                crypto.`when`<AttachmentCipher> { AeadFileEncryptionProvider.restore("invalid") }
+                    .thenThrow(InvalidEncryptionException("Invalid token"))
+                Mockito.mockStatic(MediaDownload::class.java).use { native ->
+                    val result =
+                        ChatSdkFileDownloader(StandardTestDispatcher(testScheduler)).download(request) {}
 
-                assertThat(result).isInstanceOf(FileTransferResult.Failure::class.java)
-                assertThat((result as FileTransferResult.Failure).error.message)
-                    .isEqualTo("Encrypted download requires valid encryption metadata")
-                native.verifyNoInteractions()
+                    assertThat(result).isInstanceOf(FileTransferResult.Failure::class.java)
+                    assertThat((result as FileTransferResult.Failure).error)
+                        .isInstanceOf(InvalidEncryptionException::class.java)
+                    native.verifyNoInteractions()
+                }
             }
         }
 
@@ -158,7 +164,7 @@ class ChatSdkFileDownloaderTest {
     @Test
     fun `plain requests ignore encryption fields instead of changing download mode`() = runTest {
         val request = request()
-            .copy(attachment = attachment().copy(metadata = """{"enc":"invalid"}"""))
+            .copy(attachment = attachment().copy(metadata = """{"sceyt.enc":"invalid"}"""))
         setStatus(MediaDownload.State.COMPLETED, downloaded = 100)
         Mockito.mockStatic(MediaDownload::class.java).use { native ->
             native.preparePlain(request)
