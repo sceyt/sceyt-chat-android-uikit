@@ -6,6 +6,7 @@ import com.sceyt.chat.fileencryption.AeadFileEncryptionProvider
 import com.sceyt.chat.fileencryption.AttachmentCipher
 import com.sceyt.chat.fileencryption.FileEncryptionProvider
 import com.sceyt.chat.fileencryption.PreparedUpload
+import com.sceyt.chat.fileencryption.RandomAccessStream
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
@@ -35,10 +36,10 @@ import java.util.concurrent.TimeUnit
 import com.sceyt.chat.fileencryption.FileEncryptionCheckpoint as SdkCheckpoint
 
 @RunWith(RobolectricTestRunner::class)
-@Config(shadows = [ShadowEncryptionIdGenerator::class])
+@Config(shadows = [ShadowEncryptionIdGenerator::class, ShadowAttachmentCipher::class])
 class ChatSdkFileEncryptionTest {
     private val file = File("/tmp/prepared-file.bin")
-    private val token = "opaque-sdk-token"
+    private val attachmentKey = "opaque-attachment-key"
 
     @Test
     fun `prepared attachment ID meets the SDK format and stays in metadata and checkpoint`() =
@@ -46,14 +47,9 @@ class ChatSdkFileEncryptionTest {
             val provider = mock<FileEncryptionProvider>()
             val prepared = upload()
             doAnswer {
-                val id = it.getArgument<String>(1)
-                require(
-                    id.matches(Regex("[A-Za-z0-9_-]{22}")) && Base64.getUrlDecoder()
-                        .decode(id).size == 16
-                ) {
-                    "uniqueId must be 16 bytes of base64url without padding"
-                }
-                val cipher = mockCipher("token:$id")
+                val id = it.getArgument<ByteArray>(1)
+                require(id.size == 16) { "attachmentId must contain 16 bytes" }
+                val cipher = mockCipher("key:" + Base64.getUrlEncoder().withoutPadding().encodeToString(id))
                 whenever(prepared.cipher).thenReturn(cipher)
                 whenever(prepared.checkpoint).thenReturn(
                     SdkCheckpoint(
@@ -65,15 +61,15 @@ class ChatSdkFileEncryptionTest {
             }.whenever(provider).prepareUpload(eq(file), any())
 
             ChatSdkFileEncryption(provider).prepareEncryption(file).use { session ->
-                val id = argumentCaptor<String>()
+                val id = argumentCaptor<ByteArray>()
                 verify(provider).prepareUpload(eq(file), id.capture())
                 val metadata = FileEncryptionMetadata.write(
-                    null, session.token,
+                    null, session.attachmentKey,
                 )
 
-                assertThat(session.token).isEqualTo("token:" + id.firstValue)
-                assertThat(FileEncryptionMetadata.read(metadata)).isEqualTo(session.token)
-                assertThat(session.checkpoint().token).isEqualTo(session.token)
+                assertThat(session.attachmentKey).isEqualTo(prepared.cipher.attachmentKey)
+                assertThat(FileEncryptionMetadata.read(metadata)).isEqualTo(session.attachmentKey)
+                assertThat(session.checkpoint().attachmentKey).isEqualTo(session.attachmentKey)
             }
         }
 
@@ -105,12 +101,12 @@ class ChatSdkFileEncryptionTest {
 
         assertThat(resumed.read(2L, 2)).isEqualTo(bytes)
         assertThat(resumed.sourceId).isEqualTo(session.sourceId)
-        assertThat(resumed.token).isEqualTo(token)
+        assertThat(resumed.attachmentKey).isEqualTo(attachmentKey)
         assertThat(resumed.plaintextSize).isEqualTo(4L)
         assertThat(resumed.ciphertextSize).isEqualTo(8L)
         val checkpoint = argumentCaptor<SdkCheckpoint>()
         verify(provider).restoreUpload(eq(file), checkpoint.capture())
-        assertThat(checkpoint.firstValue.cipher.token).isEqualTo(token)
+        assertThat(checkpoint.firstValue.cipher.attachmentKey).isEqualTo(attachmentKey)
         assertThat(checkpoint.firstValue.data).isEqualTo("after-read")
         verify(first, times(1)).close()
         resumed.close()
@@ -122,7 +118,7 @@ class ChatSdkFileEncryptionTest {
         val provider = mock<FileEncryptionProvider>()
         val error = IOException("Source changed")
         whenever(provider.restoreUpload(eq(file), any())).thenThrow(error)
-        val checkpoint = FileEncryptionCheckpoint(token, "saved-state")
+        val checkpoint = FileEncryptionCheckpoint(attachmentKey, ByteArray(72), "saved-state")
 
         val failure = runCatching {
             ChatSdkFileEncryption(provider).restoreEncryption(file, checkpoint)
@@ -194,7 +190,7 @@ class ChatSdkFileEncryptionTest {
     }
 
     private fun upload(): PreparedUpload {
-        val cipher = mockCipher(token)
+        val cipher = mockCipher(attachmentKey)
         return mock<PreparedUpload>().also {
             whenever(it.sourceId).thenReturn("same-ciphertext")
             whenever(it.plaintextSize).thenReturn(4L)
@@ -210,14 +206,26 @@ class ShadowEncryptionIdGenerator {
     companion object {
         @JvmStatic
         @Implementation
-        fun newUniqueId(): String = "gIGCg4SFhoeIiYqLjI2Ojw"
-
-        @JvmStatic
-        @Implementation
-        fun restore(token: String): AttachmentCipher = mockCipher(token)
+        fun newAttachmentId(): ByteArray = ByteArray(16) { it.toByte() }
     }
 }
 
-private fun mockCipher(token: String): AttachmentCipher = mock<AttachmentCipher>().also {
-    whenever(it.token).thenReturn(token)
+@Implements(AttachmentCipher::class, isInAndroidSdk = false)
+class ShadowAttachmentCipher {
+    companion object {
+        var decrypt: ((RandomAccessStream) -> RandomAccessStream)? = null
+
+        @JvmStatic
+        @Implementation
+        fun restore(attachmentKey: String, header: ByteArray): AttachmentCipher = mockCipher(attachmentKey, header)
+    }
 }
+
+private fun mockCipher(attachmentKey: String, header: ByteArray = ByteArray(72)): AttachmentCipher =
+    mock<AttachmentCipher>().also {
+        whenever(it.attachmentKey).thenReturn(attachmentKey)
+        whenever(it.header).thenReturn(header)
+        whenever(it.newDecryptingRandomAccessStream(any())).thenAnswer { call ->
+            checkNotNull(ShadowAttachmentCipher.decrypt)(call.getArgument(0))
+        }
+    }

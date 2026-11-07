@@ -32,9 +32,9 @@ class FileEncryptionMetadataTest {
 
     @Test
     fun `key bearing models omit keys from diagnostic strings`() {
-        val checkpoint = FileEncryptionCheckpoint("private-token", "private-checkpoint-state")
+        val checkpoint = FileEncryptionCheckpoint("private-token", ByteArray(72), "private-checkpoint-state")
 
-        assertThat(checkpoint.toString()).doesNotContain(checkpoint.token)
+        assertThat(checkpoint.toString()).doesNotContain(checkpoint.attachmentKey)
         assertThat(checkpoint.toString()).doesNotContain(checkpoint.data)
     }
 }

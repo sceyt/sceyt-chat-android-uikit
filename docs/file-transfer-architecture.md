@@ -179,13 +179,13 @@ DefaultFileTransferProvider.prepareUpload()
     -> PLAIN: empty map
     -> ENCRYPTED: create or reuse a native encryption checkpoint
          -> keep recovery data locally in NativeUploadCheckpointStore
-         -> return mapOf("sceyt.enc" to checkpoint.token)
+         -> return mapOf("sceyt.enc" to checkpoint.attachmentKey)
 
 UIKit merges and saves the returned entries
 
 DefaultFileTransferProvider.upload()
     -> PLAIN: FileTransferUtility.uploadFile()
-    -> ENCRYPTED: restoreEncryption() using the saved token and local recovery data
+    -> ENCRYPTED: restoreEncryption() using the saved attachment key, header, and recovery data
          -> FileTransferUtility.uploadEncryptedFile()
     -> return FileTransferResult.Success(url)
 
@@ -224,7 +224,7 @@ interface FileEncryption {
 
     suspend fun prepareDecryption(
         encryptedFile: File,
-        token: String,
+        attachmentKey: String,
     ): FileDecryptionSession
 }
 
@@ -232,7 +232,7 @@ interface FileEncryptionSession : AutoCloseable {
     val sourceId: String
     val plaintextSize: Long
     val ciphertextSize: Long
-    val token: String
+    val attachmentKey: String
 
     suspend fun read(offset: Long, length: Int): ByteArray
     fun checkpoint(): FileEncryptionCheckpoint
@@ -246,7 +246,8 @@ interface FileDecryptionSession : AutoCloseable {
 }
 
 class FileEncryptionCheckpoint(
-    val token: String,
+    val attachmentKey: String,
+    val header: ByteArray,
     val data: String,
 )
 ```
@@ -255,13 +256,17 @@ Encryption reads use ciphertext offsets and byte counts, including format overhe
 same session against the unchanged source produces identical bytes. Close sessions after use.
 The adapter runs blocking SDK calls on the I/O dispatcher.
 
-The SDK's `PreparedUpload.cipher.token` is already Base64URL. The adapter exposes it as `session.token`;
-UIKit does not decode or re-encode its format, key, or ID. The file itself stays binary ciphertext.
+The SDK's `PreparedUpload.cipher.attachmentKey` is already Base64URL. The adapter exposes it as
+`session.attachmentKey`. UIKit passes that string through as metadata.
 
-A checkpoint has `token` and opaque SDK `data`. Return the token through the preparation map for
-recipient metadata. Keep `data` in the provider's local journal, never in message metadata. The default
-provider stores recovery data with a token fingerprint, with no second copy of the token or key.
-It keeps the checkpoint after an interruption and removes it on success or explicit cancellation.
+A checkpoint contains the attachment key, the 72-byte header, and opaque SDK recovery data.
+The default provider saves the header and recovery data locally with a key fingerprint. It reads
+the key from attachment metadata when restoring the upload and retains recovery after interruption.
+It removes the local record on success or explicit cancellation.
+
+Native downloads accept the attachment key directly and fetch the header from the stored object.
+Local decryption uses `AttachmentCipher.restore(attachmentKey, header)` and its
+`newDecryptingRandomAccessStream()` view. SDK views own their sources after successful creation.
 
 ## Download execution
 
@@ -285,7 +290,7 @@ AttachmentDownloadCoordinator
 ```
 
 The router selects the requested mode from configuration without parsing encryption algorithms or
-keys. The default provider reads the SDK token from `sceyt.enc`. Custom providers can use their
+keys. The default provider reads the SDK attachment key from `sceyt.enc`. Custom providers can use their
 own keys and schema in attachment metadata.
 
 Native downloads write verified plaintext into `destination.part` and keep their range map in
@@ -308,9 +313,9 @@ implementations read their own keys from the attachment; the UIKit requests have
 ```text
 WaafiFileTransferProvider.prepareUpload(request)
     -> WaafiMultipartUploader.prepareUpload(request)
-    -> reuse the saved token when it matches the source and upload journal
+    -> reuse the saved attachment key when it matches the source and upload journal
     -> otherwise FileEncryption.prepareEncryption()
-    -> return its SDK token under "waafi.enc"
+    -> return its SDK attachment key under "waafi.enc"
     -> keep source identity and checkpoint data in its local upload journal
     -> UIKit merges the returned map into attachment metadata and saves it
 
@@ -333,11 +338,11 @@ WaafiFileTransferProvider.download()
     -> return the plaintext path
 ```
 
-The stored Waafi attachment keeps its `waafi.enc` token. The default provider reads the same
-SDK token format from `sceyt.enc`. Plain requests skip encryption metadata.
+The stored Waafi attachment keeps its `waafi.enc` attachment key. The default provider reads the same
+SDK attachment key format from `sceyt.enc`. Plain requests skip encryption metadata.
 
-Waafi's private upload journal keeps the source identity, token hash, SDK recovery data, upload ID,
-object key, part URLs, ETags, and phase. A different token invalidates a previous multipart session.
+Waafi's private upload journal keeps the source identity, key hash, header, SDK recovery data, upload ID,
+object key, part URLs, ETags, and phase. A different attachment key invalidates a previous multipart session.
 
 Waafi uses its REST API for init, complete, and abort, and OkHttp for presigned PUTs. No low-level
 AWS SDK is needed for that upload path. Its ciphertext part size starts at 5 MiB and increases if

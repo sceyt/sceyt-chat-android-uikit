@@ -3,7 +3,7 @@ package com.sceyt.chatuikit.filetransfer.encryption
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 
-/** The default provider's metadata key and SDK token. Custom providers own their own keys. */
+/** The default provider's metadata key and SDK attachment key. Custom providers own their own keys. */
 object FileEncryptionMetadata {
     internal const val FIELD = "sceyt.enc"
     private val gson = Gson()
@@ -14,9 +14,9 @@ object FileEncryptionMetadata {
         parse(metadata)?.get(FIELD)?.asString
     }.getOrNull()
 
-    fun write(metadata: String?, token: String): String {
+    fun write(metadata: String?, attachmentKey: String): String {
         val json = parse(metadata) ?: JsonObject()
-        json.addProperty(FIELD, token)
+        json.addProperty(FIELD, attachmentKey)
         return gson.toJson(json)
     }
 

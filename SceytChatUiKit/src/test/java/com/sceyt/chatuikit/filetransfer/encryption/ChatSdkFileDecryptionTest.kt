@@ -2,14 +2,13 @@ package com.sceyt.chatuikit.filetransfer.encryption
 
 import com.google.common.truth.Truth.assertThat
 import com.sceyt.chat.fileencryption.AttachmentCipher
-import com.sceyt.chat.fileencryption.CiphertextRangeSource
-import com.sceyt.chat.fileencryption.FileEncryptionProvider
-import com.sceyt.chat.fileencryption.PlaintextReader
+import com.sceyt.chat.fileencryption.RandomAccessStream
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
+import org.junit.After
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -29,27 +28,24 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 @RunWith(RobolectricTestRunner::class)
-@Config(shadows = [ShadowEncryptionIdGenerator::class])
+@Config(shadows = [ShadowAttachmentCipher::class])
 class ChatSdkFileDecryptionTest {
     @get:Rule
     val temporary = TemporaryFolder()
-    private val token = "opaque-sdk-token"
+    private val attachmentKey = "opaque-attachment-key"
 
     @Test
-    fun `prepare and read use IO and pass the saved token to the SDK`() = runTest {
-        val file = temporary.newFile().apply { writeBytes(byteArrayOf(1, 2, 3, 4, 5)) }
-        val provider = mock<FileEncryptionProvider>()
+    fun `prepare and read use IO and pass the saved attachmentKey to the SDK`() = runTest {
+        val file = temporary.newFile().apply { writeBytes(ByteArray(72) { it.toByte() }) }
         val reader = reader()
         var callerThread: Thread? = null
         var prepareThread: Thread? = null
         var readThread: Thread? = null
-        doAnswer {
+        open { source ->
             prepareThread = Thread.currentThread()
-            val source = it.getArgument<CiphertextRangeSource>(0)
-            assertThat(source.readCiphertextRange(0, 5)).isEqualTo(file.readBytes())
-            assertThat(it.getArgument<AttachmentCipher>(1).token).isEqualTo(token)
+            assertThat(source.read(0, 72)).isEqualTo(file.readBytes())
             reader
-        }.whenever(provider).openDownload(any(), any())
+        }
         doAnswer {
             readThread = Thread.currentThread()
             byteArrayOf(7, 8)
@@ -58,7 +54,7 @@ class ChatSdkFileDecryptionTest {
         Executors.newSingleThreadExecutor().asCoroutineDispatcher().use { caller ->
             withContext(caller) {
                 callerThread = Thread.currentThread()
-                val session = ChatSdkFileEncryption(provider).prepareDecryption(file, token)
+                val session = ChatSdkFileEncryption().prepareDecryption(file, attachmentKey)
                 assertThat(session.plaintextSize).isEqualTo(4L)
                 assertThat(session.read(2, 2)).isEqualTo(byteArrayOf(7, 8))
                 session.close()
@@ -70,25 +66,22 @@ class ChatSdkFileDecryptionTest {
         assertThat(prepareThread).isNotSameInstanceAs(callerThread)
         assertThat(readThread).isNotSameInstanceAs(callerThread)
         verify(reader, times(1)).close()
-        val source = argumentCaptor<CiphertextRangeSource>()
-        verify(provider).openDownload(source.capture(), any())
-        assertClosed(source.firstValue)
+        assertClosed(checkNotNull(openedSource))
     }
 
     @Test
     fun `failed native open closes the ciphertext source`() = runTest {
-        val file = temporary.newFile().apply { writeText("ciphertext") }
-        val provider = mock<FileEncryptionProvider>()
-        var source: CiphertextRangeSource? = null
-        doAnswer {
-            source = it.getArgument(0)
+        val file = temporary.newFile().apply { writeBytes(ByteArray(72) { it.toByte() }) }
+        var source: RandomAccessStream? = null
+        open {
+            source = it
             throw GeneralSecurityException("Wrong key")
-        }.whenever(provider).openDownload(any(), any())
+        }
 
         val error = runCatching {
-            ChatSdkFileEncryption(provider).prepareDecryption(
+            ChatSdkFileEncryption().prepareDecryption(
                 file,
-                token,
+                attachmentKey,
             )
         }.exceptionOrNull()
 
@@ -98,34 +91,30 @@ class ChatSdkFileDecryptionTest {
 
     @Test
     fun `failed session construction closes both the native reader and source`() = runTest {
-        val file = temporary.newFile().apply { writeText("ciphertext") }
-        val provider = mock<FileEncryptionProvider>()
+        val file = temporary.newFile().apply { writeBytes(ByteArray(72) { it.toByte() }) }
         val reader = reader()
-        whenever(reader.plaintextSize).thenThrow(IllegalStateException("Invalid native handle"))
-        whenever(provider.openDownload(any(), any())).thenReturn(reader)
+        whenever(reader.size()).thenThrow(IllegalStateException("Invalid native handle"))
+        open { reader }
 
         val error = runCatching {
-            ChatSdkFileEncryption(provider).prepareDecryption(
+            ChatSdkFileEncryption().prepareDecryption(
                 file,
-                token,
+                attachmentKey,
             )
         }.exceptionOrNull()
 
         assertThat(error).hasMessageThat().isEqualTo("Invalid native handle")
         verify(reader).close()
-        val source = argumentCaptor<CiphertextRangeSource>()
-        verify(provider).openDownload(source.capture(), any())
-        assertClosed(source.firstValue)
+        assertClosed(checkNotNull(openedSource))
     }
 
     @Test
     fun `cancel during native open closes a reader allocated as cancellation arrives`() = runTest {
-        val file = temporary.newFile().apply { writeText("ciphertext") }
-        val provider = mock<FileEncryptionProvider>()
+        val file = temporary.newFile().apply { writeBytes(ByteArray(72) { it.toByte() }) }
         val reader = reader()
         val entered = CountDownLatch(1)
         val release = CountDownLatch(1)
-        doAnswer {
+        open {
             entered.countDown()
             try {
                 check(release.await(5, TimeUnit.SECONDS))
@@ -133,11 +122,11 @@ class ChatSdkFileDecryptionTest {
                 // A native allocation can finish despite the thread interruption.
             }
             reader
-        }.whenever(provider).openDownload(any(), any())
+        }
         val job = launch(Dispatchers.Default) {
-            ChatSdkFileEncryption(provider).prepareDecryption(
+            ChatSdkFileEncryption().prepareDecryption(
                 file,
-                token,
+                attachmentKey,
             )
         }
         try {
@@ -148,9 +137,7 @@ class ChatSdkFileDecryptionTest {
 
             assertThat(job.isCancelled).isTrue()
             verify(reader).close()
-            val source = argumentCaptor<CiphertextRangeSource>()
-            verify(provider).openDownload(source.capture(), any())
-            assertClosed(source.firstValue)
+            assertClosed(checkNotNull(openedSource))
         } finally {
             release.countDown()
             job.cancel()
@@ -160,18 +147,17 @@ class ChatSdkFileDecryptionTest {
     @Test
     fun `cancel interrupts a blocking native read and allows the caller to close its session`() =
         runTest {
-            val file = temporary.newFile().apply { writeText("ciphertext") }
-            val provider = mock<FileEncryptionProvider>()
+            val file = temporary.newFile().apply { writeBytes(ByteArray(72) { it.toByte() }) }
             val reader = reader()
             val entered = CountDownLatch(1)
             val release = CountDownLatch(1)
-            whenever(provider.openDownload(any(), any())).thenReturn(reader)
+            open { reader }
             doAnswer {
                 entered.countDown()
                 check(release.await(5, TimeUnit.SECONDS))
                 byteArrayOf(7, 8)
             }.whenever(reader).read(0, 2)
-            val session = ChatSdkFileEncryption(provider).prepareDecryption(file, token)
+            val session = ChatSdkFileEncryption().prepareDecryption(file, attachmentKey)
             val job = launch(Dispatchers.Default) { session.use { it.read(0, 2) } }
             try {
                 withContext(Dispatchers.IO) { check(entered.await(5, TimeUnit.SECONDS)) }
@@ -180,21 +166,35 @@ class ChatSdkFileDecryptionTest {
 
                 assertThat(job.isCancelled).isTrue()
                 verify(reader).close()
-                val source = argumentCaptor<CiphertextRangeSource>()
-                verify(provider).openDownload(source.capture(), any())
-                assertClosed(source.firstValue)
+                assertClosed(checkNotNull(openedSource))
             } finally {
                 release.countDown()
                 job.cancel()
             }
         }
 
-    private fun reader(): PlaintextReader = mock<PlaintextReader>().also {
-        whenever(it.plaintextSize).thenReturn(4L)
+    private var openedSource: RandomAccessStream? = null
+
+    @After
+    fun resetCipher() {
+        ShadowAttachmentCipher.decrypt = null
     }
 
-    private fun assertClosed(source: CiphertextRangeSource) {
-        assertThat(runCatching { source.readCiphertextRange(0, 1) }.exceptionOrNull())
+    private fun open(action: (RandomAccessStream) -> RandomAccessStream) {
+        ShadowAttachmentCipher.decrypt = { source ->
+            openedSource = source
+            action(source).also { reader ->
+                doAnswer { source.close() }.whenever(reader).close()
+            }
+        }
+    }
+
+    private fun reader(): RandomAccessStream = mock<RandomAccessStream>().also {
+        whenever(it.size()).thenReturn(4L)
+    }
+
+    private fun assertClosed(source: RandomAccessStream) {
+        assertThat(runCatching { source.read(0, 1) }.exceptionOrNull())
             .isInstanceOf(IllegalStateException::class.java)
     }
 }

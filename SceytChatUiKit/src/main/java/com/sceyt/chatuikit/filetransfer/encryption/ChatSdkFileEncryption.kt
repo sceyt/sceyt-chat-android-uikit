@@ -1,9 +1,10 @@
 package com.sceyt.chatuikit.filetransfer.encryption
 
 import com.sceyt.chat.fileencryption.AeadFileEncryptionProvider
+import com.sceyt.chat.fileencryption.AttachmentCipher
 import com.sceyt.chat.fileencryption.FileEncryptionProvider
-import com.sceyt.chat.fileencryption.PlaintextReader
 import com.sceyt.chat.fileencryption.PreparedUpload
+import com.sceyt.chat.fileencryption.RandomAccessStream
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.runInterruptible
@@ -18,7 +19,7 @@ internal class ChatSdkFileEncryption(
 ) : FileEncryption {
 
     override suspend fun prepareEncryption(file: File): FileEncryptionSession = createSession {
-        provider.prepareUpload(file, AeadFileEncryptionProvider.newUniqueId())
+        provider.prepareUpload(file, AeadFileEncryptionProvider.newAttachmentId())
     }
 
     override suspend fun restoreEncryption(
@@ -26,32 +27,30 @@ internal class ChatSdkFileEncryption(
         checkpoint: FileEncryptionCheckpoint
     ): FileEncryptionSession =
         createSession {
-            AeadFileEncryptionProvider.restore(checkpoint.token).use { cipher ->
+            AttachmentCipher.restore(checkpoint.attachmentKey, checkpoint.header).use { cipher ->
                 provider.restoreUpload(file, SdkFileEncryptionCheckpoint(cipher, checkpoint.data))
             }
         }
 
     override suspend fun prepareDecryption(
         encryptedFile: File,
-        token: String,
+        attachmentKey: String,
     ): FileDecryptionSession {
-        var source: FileCiphertextRangeSource? = null
-        var reader: PlaintextReader? = null
+        var source: FileRandomAccessStream? = null
+        var reader: RandomAccessStream? = null
         return try {
             runInterruptible(Dispatchers.IO) {
-                val ciphertext = FileCiphertextRangeSource(encryptedFile).also { source = it }
-                val plaintext = AeadFileEncryptionProvider.restore(token).use { cipher ->
-                    provider.openDownload(ciphertext, cipher).also { reader = it }
+                val ciphertext = FileRandomAccessStream(encryptedFile).also { source = it }
+                val header = ciphertext.read(0, AttachmentCipher.HEADER_SIZE)
+                val plaintext = AttachmentCipher.restore(attachmentKey, header).use { cipher ->
+                    cipher.newDecryptingRandomAccessStream(ciphertext).also { reader = it }
                 }
-                DecryptionSession(ciphertext, plaintext)
+                DecryptionSession(ciphertext.sourceId, plaintext)
             }
         } catch (error: Throwable) {
             withContext(NonCancellable + Dispatchers.IO) {
-                try {
-                    reader?.close()
-                } finally {
-                    source?.close()
-                }
+                // A returned view owns the source, including cleanup after cancellation.
+                if (reader != null) reader.close() else source?.close()
             }
             throw error
         }
@@ -79,7 +78,7 @@ internal class ChatSdkFileEncryption(
         override val sourceId: String = upload.sourceId
         override val plaintextSize: Long = upload.plaintextSize
         override val ciphertextSize: Long = upload.ciphertextSize
-        override val token: String = upload.cipher.token
+        override val attachmentKey: String = upload.cipher.attachmentKey
 
         override suspend fun read(offset: Long, length: Int): ByteArray =
             runInterruptible(Dispatchers.IO) {
@@ -91,7 +90,8 @@ internal class ChatSdkFileEncryption(
             check(!closed.get()) { "Encryption session is closed" }
             val checkpoint = upload.checkpoint
             return FileEncryptionCheckpoint(
-                token = checkpoint.cipher.token,
+                attachmentKey = checkpoint.cipher.attachmentKey,
+                header = checkpoint.cipher.header,
                 data = checkpoint.data,
             )
         }
@@ -102,12 +102,11 @@ internal class ChatSdkFileEncryption(
     }
 
     private class DecryptionSession(
-        private val source: FileCiphertextRangeSource,
-        private val reader: PlaintextReader,
+        override val sourceId: String,
+        private val reader: RandomAccessStream,
     ) : FileDecryptionSession {
         private val closed = AtomicBoolean()
-        override val sourceId: String = source.sourceId
-        override val plaintextSize: Long = reader.plaintextSize
+        override val plaintextSize: Long = reader.size()
 
         override suspend fun read(offset: Long, length: Int): ByteArray =
             runInterruptible(Dispatchers.IO) {
@@ -117,9 +116,7 @@ internal class ChatSdkFileEncryption(
 
         override fun close() {
             if (!closed.compareAndSet(false, true)) return
-            source.use {
-                reader.close()
-            }
+            reader.close()
         }
     }
 }

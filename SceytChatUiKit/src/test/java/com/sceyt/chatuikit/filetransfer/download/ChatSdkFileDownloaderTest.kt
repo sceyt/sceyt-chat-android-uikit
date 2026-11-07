@@ -5,9 +5,6 @@ import com.sceyt.chat.download.DownloadRequest
 import com.sceyt.chat.download.MediaDownload
 import com.sceyt.chat.download.MediaDownloadException
 import com.sceyt.chat.download.MediaDownloadStatus
-import com.sceyt.chat.fileencryption.AeadFileEncryptionProvider
-import com.sceyt.chat.fileencryption.AttachmentCipher
-import com.sceyt.chat.fileencryption.InvalidEncryptionException
 import com.sceyt.chatuikit.filetransfer.FileDownloadRequest
 import com.sceyt.chatuikit.filetransfer.FileTransferResult
 import com.sceyt.chatuikit.filetransfer.FileTransferType
@@ -89,58 +86,52 @@ class ChatSdkFileDownloaderTest {
     }
 
     @Test
-    fun `encrypted download passes metadata to native decryption and uses the final plaintext path`() =
-        runTest {
-            val cipher = mock<AttachmentCipher>()
-            val request = request().copy(
-                attachment = attachment(fileSize = 100).copy(metadata = """{"sceyt.enc":"opaque-sdk-token"}"""),
-                type = FileTransferType.ENCRYPTED,
-            )
-            setStatus(MediaDownload.State.COMPLETED, downloaded = 100)
-            Mockito.mockStatic(AeadFileEncryptionProvider::class.java).use { crypto ->
-                crypto.`when`<AttachmentCipher> { AeadFileEncryptionProvider.restore("opaque-sdk-token") }
-                    .thenReturn(cipher)
-                Mockito.mockStatic(MediaDownload::class.java).use { native ->
-                    native.`when`<MediaDownload> {
-                        MediaDownload.downloadEncrypted(
-                            eq(request.toSdkRequest()), eq(request.destinationFile.absolutePath),
-                            eq(cipher), any(), isNull(),
-                        )
-                    }.thenReturn(operation)
+    fun `encrypted download passes the attachment key directly to native decryption`() = runTest {
+        val attachmentKey = "opaque-attachment-key"
+        val request = request().copy(
+            attachment = attachment(fileSize = 100).copy(metadata = """{"sceyt.enc":"$attachmentKey"}"""),
+            type = FileTransferType.ENCRYPTED,
+        )
+        setStatus(MediaDownload.State.COMPLETED, downloaded = 100)
+        Mockito.mockStatic(MediaDownload::class.java).use { native ->
+            native.`when`<MediaDownload> {
+                MediaDownload.downloadEncrypted(
+                    eq(request.toSdkRequest()), eq(request.destinationFile.absolutePath),
+                    eq(attachmentKey), any(), isNull(),
+                )
+            }.thenReturn(operation)
 
-                    val result =
-                        ChatSdkFileDownloader(StandardTestDispatcher(testScheduler)).download(request) {}
+            val result = ChatSdkFileDownloader(StandardTestDispatcher(testScheduler)).download(request) {}
 
-                    assertThat(result)
-                        .isEqualTo(FileTransferResult.Success(request.destinationFile.absolutePath))
-                    assertThat(request.toString()).doesNotContain("opaque-sdk-token")
-                    verify(cipher).close()
-                    verify(operation).close()
-                }
-            }
+            assertThat(result).isEqualTo(FileTransferResult.Success(request.destinationFile.absolutePath))
+            assertThat(request.toString()).doesNotContain(attachmentKey)
+            verify(operation).close()
         }
+    }
 
     @Test
-    fun `malformed enc fails in the default downloader without starting a plain download`() =
-        runTest {
-            val request = request().copy(
-                attachment = attachment().copy(metadata = """{"sceyt.enc":"invalid"}"""),
-                type = FileTransferType.ENCRYPTED,
-            )
-            Mockito.mockStatic(AeadFileEncryptionProvider::class.java).use { crypto ->
-                crypto.`when`<AttachmentCipher> { AeadFileEncryptionProvider.restore("invalid") }
-                    .thenThrow(InvalidEncryptionException("Invalid token"))
-                Mockito.mockStatic(MediaDownload::class.java).use { native ->
-                    val result =
-                        ChatSdkFileDownloader(StandardTestDispatcher(testScheduler)).download(request) {}
+    fun `native rejects an invalid attachment key without a plaintext fallback`() = runTest {
+        val request = request().copy(
+            attachment = attachment().copy(metadata = """{"sceyt.enc":"invalid"}"""),
+            type = FileTransferType.ENCRYPTED,
+        )
+        val error = mock<MediaDownloadException>()
+        setStatus(MediaDownload.State.FAILED, error = error)
+        Mockito.mockStatic(MediaDownload::class.java).use { native ->
+            native.`when`<MediaDownload> {
+                MediaDownload.downloadEncrypted(
+                    eq(request.toSdkRequest()), eq(request.destinationFile.absolutePath),
+                    eq("invalid"), any(), isNull(),
+                )
+            }.thenReturn(operation)
 
-                    assertThat(result).isInstanceOf(FileTransferResult.Failure::class.java)
-                    assertThat((result as FileTransferResult.Failure).error)
-                        .isInstanceOf(InvalidEncryptionException::class.java)
-                    native.verifyNoInteractions()
-                }
-            }
+            val result = ChatSdkFileDownloader(StandardTestDispatcher(testScheduler)).download(request) {}
+
+            assertThat((result as FileTransferResult.Failure).error).isSameInstanceAs(error)
+            verify(operation).cancel()
+            verify(operation).close()
         }
+    }
 
     @Test
     fun `encrypted requests without metadata fail before starting native downloads`() = runTest {

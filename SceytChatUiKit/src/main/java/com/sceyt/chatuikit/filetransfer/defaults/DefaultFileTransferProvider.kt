@@ -33,13 +33,13 @@ class DefaultFileTransferProvider : FileTransferProvider, SceytKoinComponent {
     override suspend fun prepareUpload(request: FileUploadRequest): Map<String, String> {
         if (request.type == FileTransferType.PLAIN) return emptyMap()
 
-        val token = FileEncryptionMetadata.read(request.attachment.metadata)
-        if (token != null && checkpoints.read(request.operationId, token) != null)
-            return mapOf(FileEncryptionMetadata.FIELD to token)
+        val attachmentKey = FileEncryptionMetadata.read(request.attachment.metadata)
+        if (attachmentKey != null && checkpoints.read(request.operationId, attachmentKey) != null)
+            return mapOf(FileEncryptionMetadata.FIELD to attachmentKey)
 
         val checkpoint = prepareCheckpoint(request)
         checkpoints.save(request.operationId, checkpoint)
-        return mapOf(FileEncryptionMetadata.FIELD to checkpoint.token)
+        return mapOf(FileEncryptionMetadata.FIELD to checkpoint.attachmentKey)
     }
 
     private suspend fun prepareCheckpoint(request: FileUploadRequest): FileEncryptionCheckpoint {
@@ -67,8 +67,8 @@ class DefaultFileTransferProvider : FileTransferProvider, SceytKoinComponent {
         request: FileUploadRequest,
         callback: FileTransferCallback,
     ): FileTransferResult<String> {
-        val token = FileEncryptionMetadata.read(request.attachment.metadata)
-        val checkpoint = token?.let { checkpoints.read(request.operationId, it) }
+        val attachmentKey = FileEncryptionMetadata.read(request.attachment.metadata)
+        val checkpoint = attachmentKey?.let { checkpoints.read(request.operationId, it) }
         if (checkpoint == null) return FileTransferResult.Failure(
             IllegalStateException("Encrypted upload must be prepared before upload")
         )

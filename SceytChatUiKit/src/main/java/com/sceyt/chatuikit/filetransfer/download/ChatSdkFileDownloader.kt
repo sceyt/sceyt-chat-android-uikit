@@ -3,7 +3,6 @@ package com.sceyt.chatuikit.filetransfer.download
 import com.sceyt.chat.download.DownloadRequest
 import com.sceyt.chat.download.MediaDownload
 import com.sceyt.chat.download.MediaDownload.State
-import com.sceyt.chat.fileencryption.AeadFileEncryptionProvider
 import com.sceyt.chatuikit.filetransfer.FileDownloadRequest
 import com.sceyt.chatuikit.filetransfer.FileTransferCallback
 import com.sceyt.chatuikit.filetransfer.FileTransferResult
@@ -90,17 +89,15 @@ internal class ChatSdkFileDownloader(
             }
 
             FileTransferType.ENCRYPTED -> {
-                val token = FileEncryptionMetadata.read(request.attachment.metadata)
-                checkNotNull(token) { "Encrypted download requires valid encryption metadata" }
-                AeadFileEncryptionProvider.restore(token).use { cipher ->
-                    MediaDownload.downloadEncrypted(
-                        /* request = */ sdkRequest,
-                        /* destinationPath = */ destination,
-                        /* encryption = */ cipher,
-                        /* listener = */ listener,
-                        /* requestProvider = */ null
-                    )
-                }
+                val attachmentKey = FileEncryptionMetadata.read(request.attachment.metadata)
+                checkNotNull(attachmentKey) { "Encrypted download requires valid encryption metadata" }
+                MediaDownload.downloadEncrypted(
+                    /* request = */ sdkRequest,
+                    /* destinationPath = */ destination,
+                    /* attachmentKey = */ attachmentKey,
+                    /* listener = */ listener,
+                    /* requestProvider = */ null
+                )
             }
         }
     }
