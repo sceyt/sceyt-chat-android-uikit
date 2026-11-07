@@ -299,8 +299,9 @@ temporary file in this route. An incomplete final file left by older versions is
 native download begins; complete files are reused by the coordinator.
 
 On coroutine cancellation, the adapter stops native writers and keeps resumable partial data.
-Explicit cancellation discards the native download by operation ID. Native network retries may
-leave the invocation waiting for reconnection; UIKit does not report successful completion then.
+Explicit cancellation discards the native download by operation ID. If native reports
+`WAITING_FOR_NETWORK` after its retries, the adapter returns `Interrupted` and pauses native writers,
+retaining verified ranges. UIKit shows the existing download icon; the user taps it to retry.
 
 Playback still waits for the complete local file. Player integration for streaming and seeking
 is separate work.

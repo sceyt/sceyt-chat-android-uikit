@@ -28,6 +28,7 @@ import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import java.io.File
+import java.io.IOException
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ChatSdkFileDownloaderTest {
@@ -178,40 +179,66 @@ class ChatSdkFileDownloaderTest {
     }
 
     @Test
-    fun `network loss keeps the same request suspended until native recovery completes it`() =
+    fun `network loss interrupts the attempt without discarding resumable files`() =
         runTest {
             val request = request()
-            setStatus(MediaDownload.State.WAITING_FOR_NETWORK)
+            val partial = File(request.destinationFile.path + ".part").apply { writeText("verified bytes") }
+            val checkpoint = File(partial.path + ".json").apply { writeText("saved ranges") }
+            val error = mock<MediaDownloadException>()
+            val progress = mutableListOf<Float>()
+            setStatus(MediaDownload.State.DOWNLOADING, downloaded = 25)
             Mockito.mockStatic(MediaDownload::class.java).use { native ->
                 native.preparePlain(request)
                 val downloader = ChatSdkFileDownloader(StandardTestDispatcher(testScheduler))
-                val result = async { downloader.download(request) {} }
-                runCurrent()
+                val result = async { downloader.download(request, progress::add) }
+                try {
+                    runCurrent()
+                    setStatus(MediaDownload.State.WAITING_FOR_NETWORK, downloaded = 25, error = error)
+                    listener.onStatusChanged(operation.status)
+                    runCurrent()
 
-                assertThat(result.isCompleted).isFalse()
-                verify(operation, never()).cancel()
-                setStatus(MediaDownload.State.COMPLETED, downloaded = 100)
-                listener.onStatusChanged(operation.status)
-                runCurrent()
-
-                assertThat(result.await()).isInstanceOf(FileTransferResult.Success::class.java)
-                native.verify {
-                    MediaDownload.download(
-                        eq(request.toSdkRequest()),
-                        eq(request.destinationFile.absolutePath),
-                        any(),
-                        isNull()
-                    )
+                    assertThat(result.isCompleted).isTrue()
+                    assertThat((result.await() as FileTransferResult.Interrupted).error).isSameInstanceAs(error)
+                    assertThat(progress).containsExactly(25f)
+                    assertThat(partial.readText()).isEqualTo("verified bytes")
+                    assertThat(checkpoint.readText()).isEqualTo("saved ranges")
+                    verify(operation).pause()
+                    verify(operation).close()
+                    verify(operation, never()).cancel()
+                } finally {
+                    result.cancelAndJoin()
                 }
             }
         }
+
+    @Test
+    fun `network wait without a native cause returns a recoverable IO error`() = runTest {
+        val request = request()
+        setStatus(MediaDownload.State.WAITING_FOR_NETWORK)
+        Mockito.mockStatic(MediaDownload::class.java).use { native ->
+            native.preparePlain(request)
+            val downloader = ChatSdkFileDownloader(StandardTestDispatcher(testScheduler))
+            val result = async { downloader.download(request) {} }
+            try {
+                runCurrent()
+
+                assertThat(result.isCompleted).isTrue()
+                val error = (result.await() as FileTransferResult.Interrupted).error
+                assertThat(error).isInstanceOf(IOException::class.java)
+                assertThat(error.message).isEqualTo("No network connection")
+                verify(operation, never()).cancel()
+            } finally {
+                result.cancelAndJoin()
+            }
+        }
+    }
 
     @Test
     fun `cancelling the coroutine pauses native writers and closes the handle without discarding bytes`() =
         runTest {
             val request = request()
             val progress = mutableListOf<Float>()
-            setStatus(MediaDownload.State.WAITING_FOR_NETWORK)
+            setStatus(MediaDownload.State.DOWNLOADING)
             Mockito.mockStatic(MediaDownload::class.java).use { native ->
                 native.preparePlain(request)
                 val downloader = ChatSdkFileDownloader(StandardTestDispatcher(testScheduler))
@@ -227,7 +254,7 @@ class ChatSdkFileDownloaderTest {
                 cleanup.verify(operation).pause()
                 cleanup.verify(operation).close()
                 verify(operation, never()).cancel()
-                assertThat(progress).isEmpty()
+                assertThat(progress).containsExactly(0f)
                 assertThat(result.isCancelled).isTrue()
                 assertThat(downloader.resume(request.operationId)).isFalse()
             }

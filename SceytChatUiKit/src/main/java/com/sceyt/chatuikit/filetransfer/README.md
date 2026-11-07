@@ -181,8 +181,8 @@ The UI kit skips the provider when a complete local file already exists. Otherwi
 result delivery.
 
 Downloads for different messages remain concurrent. There is no download FIFO. The coordinator
-does not automatically submit another failed call; the native downloader owns its network retries
-and waiting-for-network state.
+does not automatically submit another failed call. Native performs network retries; once it waits
+for connectivity, UIKit ends the attempt as `Interrupted` and the user can tap download to retry.
 
 ## Encrypted files and the Chat SDK
 
@@ -367,9 +367,9 @@ succeeds, fails, or is interrupted; coroutine cancellation remains separate:
   `CancellationException` instead of returning it as a failed result.
 
 The default native downloader retries recoverable connection, response-read, and HTTP failures.
-After retries are exhausted, it keeps the same call pending in `WAITING_FOR_NETWORK`, retaining
-verified ranges. It continues on SDK network recovery or manual pause/resume, and does not return
-`Interrupted` while waiting. Terminal failures return `Failure` and discard native partial files.
+When native reports `WAITING_FOR_NETWORK`, the adapter returns `Interrupted`, stops native writers,
+and retains verified ranges. The existing `ErrorDownload` state shows the download icon; tapping it
+starts another attempt using the saved ranges. Terminal failures return `Failure` and discard native partial files.
 Custom providers can return `Interrupted` as described above. The SDK upload bridge reports its
 SDK errors as `Failure`.
 
