@@ -15,6 +15,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
+import java.io.IOException
 import java.util.concurrent.ConcurrentHashMap
 
 /** Adapts native downloads while the SDK owns file writing, decryption, and resume checkpoints. */
@@ -146,8 +147,13 @@ internal class ChatSdkFileDownloader(
                     }
                 }
 
-                // Native keeps the same download available for resume and network recovery.
-                State.IDLE, State.PAUSED, State.WAITING_FOR_NETWORK -> Unit
+                State.WAITING_FOR_NETWORK -> {
+                    val error = status.error ?: IOException("No network connection")
+                    return FileTransferResult.Interrupted(error)
+                }
+
+                // Native keeps the same download available for resume.
+                State.IDLE, State.PAUSED -> Unit
             }
         }
     }
