@@ -16,6 +16,8 @@ import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
 import com.sceyt.chatuikit.persistence.mappers.toAttachment
 import com.sceyt.chatuikit.persistence.mappers.toMessageDb
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
@@ -29,6 +31,10 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.shadows.ShadowMediaMetadataRetriever
 import org.robolectric.shadows.util.DataSource
+import java.io.File
+import java.io.IOException
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 @RunWith(RobolectricTestRunner::class)
 class AttachmentPreviewPersistenceTest {
@@ -84,13 +90,14 @@ class AttachmentPreviewPersistenceTest {
     @Test
     fun `preview download uses its own operation and saves the local path`() = runBlocking {
         val video = storeVideoMessageWithPreview()
-        val transfer = AttachmentPreviewTransfer(context, database.attachmentsDao(), MessagesCache(), mock())
+        val transfer =
+            AttachmentPreviewTransfer(context, database.attachmentsDao(), MessagesCache(), mock())
         val loaded = CompletableDeferred<String>()
 
         transfer.loadPreviewPath(video) { loaded.complete(it) }
 
-        val call = withTimeout(5_000) {
-            while (provider.downloadCalls.isEmpty()) delay(10)
+        val call = withTimeout(5.seconds) {
+            while (provider.downloadCalls.isEmpty()) delay(10.milliseconds)
             provider.downloadCalls.single()
         }
         assertThat(call.request.operationId).isEqualTo("download:$TID:preview")
@@ -101,19 +108,21 @@ class AttachmentPreviewPersistenceTest {
         }
         call.succeed(file.path)
 
-        assertThat(withTimeout(5_000) { loaded.await() }).isEqualTo(file.path)
+        assertThat(withTimeout(5.seconds) { loaded.await() }).isEqualTo(file.path)
         assertThat(transfer.getPreview(video)?.filePath).isEqualTo(file.path)
     }
 
     @Test
     fun `video uses the preview its metadata links to`() = runBlocking {
-        val video = storeVideoMessageWithPreview(extraPreviewUrl = "https://cdn.test/other_preview.jpg")
-        val transfer = AttachmentPreviewTransfer(context, database.attachmentsDao(), MessagesCache(), mock())
+        val video =
+            storeVideoMessageWithPreview(extraPreviewUrl = "https://cdn.test/other_preview.jpg")
+        val transfer =
+            AttachmentPreviewTransfer(context, database.attachmentsDao(), MessagesCache(), mock())
 
         transfer.loadPreviewPath(video) { }
 
-        val call = withTimeout(5_000) {
-            while (provider.downloadCalls.isEmpty()) delay(10)
+        val call = withTimeout(5.seconds) {
+            while (provider.downloadCalls.isEmpty()) delay(10.milliseconds)
             provider.downloadCalls.single()
         }
         assertThat(call.request.url).isEqualTo(PREVIEW_URL)
@@ -122,7 +131,8 @@ class AttachmentPreviewPersistenceTest {
     @Test
     fun `video without a preview link has no preview`() = runBlocking {
         val video = storeVideoMessageWithPreview(linkedPreviewUrl = null)
-        val transfer = AttachmentPreviewTransfer(context, database.attachmentsDao(), MessagesCache(), mock())
+        val transfer =
+            AttachmentPreviewTransfer(context, database.attachmentsDao(), MessagesCache(), mock())
 
         assertThat(transfer.getPreview(video)).isNull()
     }
@@ -130,17 +140,18 @@ class AttachmentPreviewPersistenceTest {
     @Test
     fun `cancelling all transfers stops a running preview download`() = runBlocking {
         val video = storeVideoMessageWithPreview()
-        val transfer = AttachmentPreviewTransfer(context, database.attachmentsDao(), MessagesCache(), mock())
+        val transfer =
+            AttachmentPreviewTransfer(context, database.attachmentsDao(), MessagesCache(), mock())
         var loaded: String? = null
 
         transfer.loadPreviewPath(video) { loaded = it }
-        val call = withTimeout(5_000) {
-            while (provider.downloadCalls.isEmpty()) delay(10)
+        val call = withTimeout(5.seconds) {
+            while (provider.downloadCalls.isEmpty()) delay(10.milliseconds)
             provider.downloadCalls.single()
         }
         transfer.cancelAll()
 
-        withTimeout(5_000) { while (!call.cancelled) delay(10) }
+        withTimeout(5.seconds) { while (!call.cancelled) delay(10.milliseconds) }
         call.succeed("/late/preview.jpg")
         assertThat(loaded).isNull()
         assertThat(transfer.getPreview(video)?.filePath).isNull()
@@ -154,7 +165,8 @@ class AttachmentPreviewPersistenceTest {
             1_000L,
             Bitmap.createBitmap(4, 4, Bitmap.Config.ARGB_8888),
         )
-        val transfer = AttachmentPreviewTransfer(context, database.attachmentsDao(), MessagesCache(), mock())
+        val transfer =
+            AttachmentPreviewTransfer(context, database.attachmentsDao(), MessagesCache(), mock())
         val video = attachment(
             messageTid = TID,
             name = "video.mp4",
@@ -171,11 +183,141 @@ class AttachmentPreviewPersistenceTest {
         assertThat(provider.uploadCalls).isEmpty()
     }
 
+    @Test
+    fun `uploaded preview saves its own URL source and provider metadata`() = runBlocking {
+        val video = storeVideoMessageWithPreview().copy(filePath = VIDEO_SOURCE)
+        ShadowMediaMetadataRetriever.addFrame(
+            DataSource.toDataSource(VIDEO_SOURCE),
+            1_000L,
+            Bitmap.createBitmap(4, 4, Bitmap.Config.ARGB_8888),
+        )
+        provider.onPrepareUpload = { mapOf("custom.enc" to "preview-token") }
+        val transfer =
+            AttachmentPreviewTransfer(context, database.attachmentsDao(), MessagesCache(), mock())
+        val upload = async(Dispatchers.Default) { transfer.upload(video) }
+        val call = withTimeout(5.seconds) {
+            while (provider.uploadCalls.isEmpty()) delay(10.milliseconds)
+            provider.uploadCalls.single()
+        }
+        try {
+            assertThat(call.request.operationId).isEqualTo("upload:$TID:preview")
+            assertThat(call.request.attachment.type).isEqualTo(AttachmentTypeEnum.Preview.value)
+            assertThat(JSONObject(call.request.attachment.metadata.orEmpty()).getString("custom.enc"))
+                .isEqualTo("preview-token")
+            call.succeed(PREVIEW_URL)
+
+            val result = withTimeout(5.seconds) { upload.await() }
+            assertThat(result).isInstanceOf(PreviewUploadResult.Uploaded::class.java)
+            val stored = checkNotNull(transfer.getPreview(video))
+            assertThat(stored.url).isEqualTo(PREVIEW_URL)
+            assertThat(stored.filePath).isEqualTo(call.request.sourceFile.path)
+            assertThat(stored.fileSize).isEqualTo(call.request.sourceFile.length())
+            assertThat(JSONObject(stored.metadata.orEmpty()).getString("custom.enc")).isEqualTo("preview-token")
+            assertThat(database.attachmentsDao().getAllAttachmentPayLoadsByMsgTid(TID)).hasSize(1)
+        } finally {
+            call.request.sourceFile.delete()
+        }
+    }
+
+    @Test
+    fun `a provider upload failure leaves the stored preview unchanged`() = runBlocking {
+        val video = storeVideoMessageWithPreview().copy(filePath = VIDEO_SOURCE)
+        ShadowMediaMetadataRetriever.addFrame(
+            DataSource.toDataSource(VIDEO_SOURCE),
+            1_000L,
+            Bitmap.createBitmap(4, 4, Bitmap.Config.ARGB_8888),
+        )
+        val error = IOException("connection lost")
+        val transfer =
+            AttachmentPreviewTransfer(context, database.attachmentsDao(), MessagesCache(), mock())
+        val upload = async(Dispatchers.Default) { transfer.upload(video) }
+        val call = withTimeout(5.seconds) {
+            while (provider.uploadCalls.isEmpty()) delay(10.milliseconds)
+            provider.uploadCalls.single()
+        }
+        try {
+            call.fail(error)
+
+            val result = withTimeout(5.seconds) { upload.await() }
+            assertThat(result).isEqualTo(PreviewUploadResult.Failed(error))
+            assertThat(transfer.getPreview(video)?.filePath).isNull()
+            assertThat(transfer.getPreview(video)?.url).isEqualTo(PREVIEW_URL)
+        } finally {
+            call.request.sourceFile.delete()
+        }
+    }
+
+    @Test
+    fun `a video without a local source skips preview upload`() = runBlocking {
+        val transfer =
+            AttachmentPreviewTransfer(context, database.attachmentsDao(), MessagesCache(), mock())
+
+        val result =
+            transfer.upload(attachment(type = AttachmentTypeEnum.Video.value, filePath = null))
+
+        assertThat(result).isEqualTo(PreviewUploadResult.Unavailable)
+        assertThat(provider.uploadCalls).isEmpty()
+    }
+
+    @Test
+    fun `a saved preview file is returned without another network request`() = runBlocking {
+        val video = storeVideoMessageWithPreview()
+        val file = File(context.cacheDir, "saved-preview-$TID.jpg").apply { writeText("jpeg") }
+        database.attachmentsDao().updateAttachmentFilePathByMsgTidAndType(
+            TID, AttachmentTypeEnum.Preview.value, file.path
+        )
+        val transfer =
+            AttachmentPreviewTransfer(context, database.attachmentsDao(), MessagesCache(), mock())
+        val loaded = CompletableDeferred<String>()
+        try {
+            transfer.loadPreviewPath(video) { loaded.complete(it) }
+
+            assertThat(withTimeout(5.seconds) { loaded.await() }).isEqualTo(file.path)
+            assertThat(provider.downloadCalls).isEmpty()
+        } finally {
+            file.delete()
+        }
+    }
+
+    @Test
+    fun `simultaneous preview requests share one download and both receive the file`() =
+        runBlocking {
+            val video = storeVideoMessageWithPreview()
+            val transfer = AttachmentPreviewTransfer(
+                context,
+                database.attachmentsDao(),
+                MessagesCache(),
+                mock()
+            )
+            val first = CompletableDeferred<String>()
+            val second = CompletableDeferred<String>()
+            transfer.loadPreviewPath(video) { first.complete(it) }
+            transfer.loadPreviewPath(video) { second.complete(it) }
+            val call = withTimeout(5.seconds) {
+                while (provider.downloadCalls.isEmpty()) delay(10.milliseconds)
+                provider.downloadCalls.single()
+            }
+            val file = call.request.destinationFile.apply {
+                parentFile?.mkdirs()
+                writeText("jpeg")
+            }
+            try {
+                call.succeed(file.path)
+
+                assertThat(withTimeout(5.seconds) { first.await() }).isEqualTo(file.path)
+                assertThat(withTimeout(5.seconds) { second.await() }).isEqualTo(file.path)
+                assertThat(provider.downloadCalls).hasSize(1)
+            } finally {
+                file.delete()
+            }
+        }
+
     private suspend fun storeVideoMessageWithPreview(
         extraPreviewUrl: String? = null,
         linkedPreviewUrl: String? = PREVIEW_URL,
     ): SceytAttachment {
-        val metadata = linkedPreviewUrl?.let { JSONObject().put(SceytConstants.Preview, it).toString() }
+        val metadata =
+            linkedPreviewUrl?.let { JSONObject().put(SceytConstants.Preview, it).toString() }
         val video = attachment(
             messageTid = TID,
             name = "video.mp4",
