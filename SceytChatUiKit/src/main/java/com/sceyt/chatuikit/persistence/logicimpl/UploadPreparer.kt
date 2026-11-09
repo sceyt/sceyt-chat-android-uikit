@@ -91,7 +91,7 @@ internal class UploadPreparer(
         // Image resizing can finish after cancellation, so check before publishing its file path.
         currentCoroutineContext().ensureActive()
 
-        val prepared = preparationResult.fold(
+        val prepared = preparationResult?.fold(
             onSuccess = { path ->
                 attachment.copy(filePath = path, fileSize = getFileSize(path))
             },
@@ -99,19 +99,19 @@ internal class UploadPreparer(
                 SceytLog.i(TAG, "Couldn't resize file with reason ${it.message}")
                 attachment
             },
-        )
+        ) ?: attachment
 
         val path = prepared.filePath.takeIfNotBlank()
         requireNotNull(path) { "Attachment source path is missing" }
         require(File(path).isFile) { "Attachment source file does not exist: $path" }
-        return PreparedAttachment(prepared, preparedFilePath = preparationResult.getOrNull())
+        return PreparedAttachment(prepared, preparedFilePath = preparationResult?.getOrNull())
     }
 
     private suspend fun prepareAttachment(
         attachment: SceytAttachment,
         checksum: FileChecksumData?,
         onProgress: (Float) -> Unit,
-    ): Result<String> {
+    ): Result<String>? {
         val resizedPath = checksum?.resizedFilePath
 
         // Reuse an existing prepared file before running resize or transcode again.
@@ -129,7 +129,7 @@ internal class UploadPreparer(
             }
 
             AttachmentTypeEnum.Video.value -> transcodeAttachment(attachment, onProgress)
-            else -> Result.failure(Exception("Unsupported attachment type: ${attachment.type}"))
+            else -> null
         }
     }
 
