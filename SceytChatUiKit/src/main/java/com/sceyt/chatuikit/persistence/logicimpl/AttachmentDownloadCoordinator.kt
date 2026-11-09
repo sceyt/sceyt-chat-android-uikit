@@ -5,6 +5,7 @@ import com.sceyt.chat.models.SceytException
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
+import com.sceyt.chatuikit.extensions.boundedSynchronizedMap
 import com.sceyt.chatuikit.extensions.takeIfNotBlank
 import com.sceyt.chatuikit.filetransfer.FileTransferResult
 import com.sceyt.chatuikit.logger.SceytLog
@@ -36,6 +37,7 @@ internal class AttachmentDownloadCoordinator(
     private val lock = Any()
     private val downloads = hashMapOf<String, Download>()
     private val cleanups = hashMapOf<String, Job>()
+    private val interruptions = boundedSynchronizedMap<String, SceytAttachment>(MAX_INTERRUPTED_DOWNLOADS)
 
     fun download(
         attachment: SceytAttachment,
@@ -92,6 +94,7 @@ internal class AttachmentDownloadCoordinator(
 
             // Suppress progress before the provider can call back during pause.
             current.paused = true
+            interruptions.remove(current.key)
             current
         }
 
@@ -133,6 +136,7 @@ internal class AttachmentDownloadCoordinator(
     }
 
     fun cancel(attachment: SceytAttachment, discard: Boolean = true) {
+        interruptions.remove(attachment.transferKey)
         synchronized(lock) {
             val download = downloads[attachment.transferKey]
             if (download != null) {
@@ -172,8 +176,23 @@ internal class AttachmentDownloadCoordinator(
 
     fun cancelAll() {
         // Cancellation can remove attempts from the map while this snapshot is processed.
+        interruptions.clear()
         val attachments = synchronized(lock) { downloads.values.map { it.attachment } }
         attachments.forEach(::cancel)
+    }
+
+    fun getInterruptedDownloads(): List<SceytAttachment> = synchronized(interruptions) {
+        interruptions.values.toList()
+    }
+
+    suspend fun retryInterruptedDownloads(
+        findStored: suspend (SceytAttachment) -> SceytAttachment?,
+        start: (SceytAttachment) -> Unit,
+    ) {
+        getInterruptedDownloads().forEach { attachment ->
+            val stored = findStored(attachment)
+            if (stored == null) cancel(attachment) else start(stored)
+        }
     }
 
     private fun cancelAttempt(download: Download) {
@@ -258,14 +277,29 @@ internal class AttachmentDownloadCoordinator(
         }
 
         val response = when (result) {
-            is FileTransferResult.Success -> SceytResponse.Success(result.result)
-            is FileTransferResult.Failure -> SceytResponse.Error(
-                result.error as? SceytException ?: SceytException(0, result.error.message),
-            )
+            is FileTransferResult.Success -> {
+                interruptions.remove(download.key)
+                SceytResponse.Success(result.result)
+            }
 
-            is FileTransferResult.Interrupted -> SceytResponse.Error(
-                result.error as? SceytException ?: SceytException(0, result.error.message),
-            )
+            is FileTransferResult.Failure -> {
+                interruptions.remove(download.key)
+                SceytResponse.Error(
+                    result.error as? SceytException ?: SceytException(0, result.error.message),
+                )
+            }
+
+            is FileTransferResult.Interrupted -> {
+                if (!download.paused) {
+                    synchronized(interruptions) {
+                        interruptions.remove(download.key)
+                        interruptions[download.key] = download.attachment
+                    }
+                }
+                SceytResponse.Error(
+                    result.error as? SceytException ?: SceytException(0, result.error.message),
+                )
+            }
         }
         notify { onResult(response) }
     }
@@ -331,5 +365,6 @@ internal class AttachmentDownloadCoordinator(
 
     private companion object {
         const val TAG = "AttachmentDownloadCoordinator"
+        const val MAX_INTERRUPTED_DOWNLOADS = 10
     }
 }
