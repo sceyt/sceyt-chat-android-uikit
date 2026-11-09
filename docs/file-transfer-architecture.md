@@ -306,6 +306,32 @@ retaining verified ranges. UIKit shows the existing download icon; the user taps
 Playback still waits for the complete local file. Player integration for streaming and seeking
 is separate work.
 
+## Video previews
+
+```text
+UploadAndSendAttachmentWorker
+    -> AttachmentPreviewTransfer.upload(video)          op: upload:<messageTid>:preview
+         -> frame from the original video (JPEG)
+         -> AttachmentTransferRouter.upload()           prepareUpload + upload, preparer skips previews
+         -> save the preview row (url, metadata)
+    -> existing video upload                            op: upload:<messageTid>
+    -> send [video with metadata "pvw" = preview url, preview]
+
+Video message holder (video not downloaded yet)
+    -> AttachmentThumbCoordinator
+         -> AttachmentPreviewTransfer.loadPreviewPath(video)  op: download:<messageTid>:preview
+              -> preview row whose url equals the video's "pvw"
+              -> AttachmentTransferRouter.download()
+              -> save the preview row's filePath
+         -> ThumbLoaded for the video
+```
+
+The video's `pvw` metadata value is its preview attachment's URL, so each video finds its own
+preview. The preview is stored like a link attachment: its own row, no transfer-state row, and it
+is skipped by every transfer-state update keyed by `messageTid`. A failed preview upload fails the message
+before the video starts. A retry uploads only the missing part. A video with no extractable frame
+is sent without a preview.
+
 ## Waafi example
 
 A Waafi adapter using the map-based hook follows this flow. Its preparation, upload, and download

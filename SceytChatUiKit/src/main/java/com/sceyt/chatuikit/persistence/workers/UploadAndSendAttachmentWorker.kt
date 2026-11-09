@@ -14,6 +14,7 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.data.constants.SceytConstants
 import com.sceyt.chatuikit.data.constants.SceytConstants.SCEYT_WORKER_TAG
 import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.models.fold
@@ -28,6 +29,7 @@ import com.sceyt.chatuikit.notifications.service.FileTransferNotificationData
 import com.sceyt.chatuikit.persistence.database.dao.FileChecksumDao
 import com.sceyt.chatuikit.persistence.database.entity.FileChecksumEntity
 import com.sceyt.chatuikit.persistence.extensions.safeResume
+import com.sceyt.chatuikit.persistence.extensions.withMetadata
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferHelper
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
@@ -36,6 +38,10 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferTask
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
+import com.sceyt.chatuikit.persistence.logicimpl.AttachmentPreviewTransfer
+import com.sceyt.chatuikit.persistence.logicimpl.PreviewUploadResult
+import com.sceyt.chatuikit.persistence.mappers.isPreview
+import com.sceyt.chatuikit.persistence.mappers.isTransferTracked
 import com.sceyt.chatuikit.persistence.mappers.toMessage
 import com.sceyt.chatuikit.persistence.mappers.toTransferData
 import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager.FILE_TRANSFER_NOTIFICATION_ID
@@ -96,6 +102,7 @@ class UploadAndSendAttachmentWorker(
     private val messageLogic: PersistenceMessagesLogic by inject()
     private val channelLogic: PersistenceChannelsLogic by inject()
     private val fileChecksumDao: FileChecksumDao by inject()
+    private val previewTransfer: AttachmentPreviewTransfer by inject()
 
     // A retried worker must respect a user pause made after the explicit resume request.
     private val resumePausedUpload: Boolean
@@ -110,9 +117,13 @@ class UploadAndSendAttachmentWorker(
         val attachments = message.attachments?.toMutableList()
             ?: return KtResult.failure(Exception("Attachments not found"))
 
+        uploadPreviewIfNeeded(message, attachments, resumePausedUpload).onFailure {
+            return KtResult.failure(it)
+        }
+
         for ((index, attachment) in attachments.withIndex()) {
             // Link previews already contain their remote reference.
-            if (attachment.type == AttachmentTypeEnum.Link.value)
+            if (!attachment.isTransferTracked())
                 continue
 
             val payload = payloads.find { it.messageTid == attachment.messageTid }
@@ -174,6 +185,56 @@ class UploadAndSendAttachmentWorker(
             }
         }
         return KtResult.failure(Exception("Could not find any attachment to upload"))
+    }
+
+    private suspend fun uploadPreviewIfNeeded(
+        message: SceytMessage,
+        attachments: MutableList<SceytAttachment>,
+        resumePausedUpload: Boolean,
+    ): KtResult<Unit> {
+        val video = attachments.find { it.type == AttachmentTypeEnum.Video.value }
+            ?: return KtResult.success(Unit)
+
+        if (message.isForwarded || attachments.any { it.isPreview() })
+            return KtResult.success(Unit)
+
+        if (!shouldStartUpload(video.transferState, resumePausedUpload))
+            return KtResult.success(Unit)
+
+        return when (val result = previewTransfer.upload(video)) {
+            is PreviewUploadResult.Uploaded -> {
+                attachments.add(result.preview)
+                KtResult.success(Unit)
+            }
+
+            is PreviewUploadResult.Unavailable -> KtResult.success(Unit)
+            is PreviewUploadResult.Failed -> {
+                val transferData = TransferData(
+                    messageTid = message.tid,
+                    progressPercent = 0f,
+                    state = TransferState.ErrorUpload,
+                    filePath = video.filePath,
+                    url = video.url
+                )
+                FileTransferHelper.emitAttachmentTransferUpdate(transferData, video.fileSize)
+                attachmentLogic.updateAttachmentWithTransferData(transferData)
+                KtResult.failure(result.error)
+            }
+        }
+    }
+
+    private fun List<SceytAttachment>.withPreviewLink(): List<SceytAttachment> {
+        val previewUrl =
+            firstOrNull { it.isPreview() }?.url?.takeIf { it.isNotBlank() } ?: return this
+        val link = mapOf(SceytConstants.Preview to previewUrl)
+        return map {
+            if (it.type == AttachmentTypeEnum.Video.value) it.copy(
+                metadata = it.metadata.withMetadata(
+                    link
+                )
+            )
+            else it
+        }
     }
 
     private fun uploadFile(
@@ -238,7 +299,8 @@ class UploadAndSendAttachmentWorker(
             return finishWorkWithError("Could not upload attachments, message tid: $messageTid")
         }
 
-        val messageToSend = message.copy(attachments = result.getOrThrow()).toMessage()
+        val attachments = result.getOrThrow().withPreviewLink()
+        val messageToSend = message.copy(attachments = attachments).toMessage()
         if (ConnectionEventManager.isConnected) {
             // The current connection can send the message immediately.
             return sendMessage(message.channelId, messageToSend)

@@ -164,6 +164,8 @@ internal class AttachmentTransferRouter(
     }
 
     fun cancelUpload(attachment: SceytAttachment) {
-        SceytChatUIKit.fileTransfer.provider.cancel("upload:" + attachment.messageTid)
+        val provider = SceytChatUIKit.fileTransfer.provider
+        provider.cancel("upload:" + attachment.messageTid)
+        provider.cancel(previewUploadOperationId(attachment.messageTid))
     }
 }

@@ -12,6 +12,7 @@ import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.extensions.resizeImage
 import com.sceyt.chatuikit.persistence.extensions.transcodeVideo
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
+import com.sceyt.chatuikit.persistence.mappers.isPreview
 import com.sceyt.chatuikit.shared.media_encoder.VideoTranscodeHelper
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
@@ -37,6 +38,8 @@ internal class UploadPreparer(
         reuseUploadedUrl: Boolean = true,
         preparedFilePath: String? = null,
     ): PreparedAttachment {
+        if (attachment.isPreview()) return PreparedAttachment(attachment)
+
         val originalPath = attachment.originalFilePath.takeIfNotBlank()
         val sourcePath = originalPath ?: attachment.filePath.takeIfNotBlank()
 

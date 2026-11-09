@@ -56,6 +56,7 @@ internal fun SceytAttachment.toAttachmentDb(
 internal fun AttachmentDb.toAttachment(): SceytAttachment {
     with(attachmentEntity) {
         val isLink = type == AttachmentTypeEnum.Link.value
+        val usesPayload = isTransferTrackedType(type)
         return SceytAttachment(
             id = id,
             messageId = messageId,
@@ -66,10 +67,10 @@ internal fun AttachmentDb.toAttachment(): SceytAttachment {
             metadata = metadata,
             fileSize = fileSize,
             createdAt = createdAt,
-            url = if (isLink) url else payLoad?.url ?: url,
-            filePath = if (isLink) null else payLoad?.filePath ?: filePath,
-            transferState = if (isLink) TransferState.PendingDownload else payLoad?.transferState,
-            progressPercent = if (isLink) 0f else payLoad?.progressPercent,
+            url = if (usesPayload) payLoad?.url ?: url else url,
+            filePath = if (isLink) null else if (usesPayload) payLoad?.filePath ?: filePath else filePath,
+            transferState = if (usesPayload) payLoad?.transferState else TransferState.PendingDownload,
+            progressPercent = if (usesPayload) payLoad?.progressPercent else 0f,
             originalFilePath = if (isLink) null else originalFilePath,
             linkPreviewDetails = linkDetails?.toLinkPreviewDetails(isHiddenLinkDetails())
         )

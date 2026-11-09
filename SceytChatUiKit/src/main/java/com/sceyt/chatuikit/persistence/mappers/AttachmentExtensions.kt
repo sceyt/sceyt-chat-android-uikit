@@ -245,6 +245,24 @@ fun SceytAttachment.isLink(): Boolean {
     return type == AttachmentTypeEnum.Link.value
 }
 
+internal fun SceytAttachment.isPreview(): Boolean {
+    return type == AttachmentTypeEnum.Preview.value
+}
+
+internal fun isTransferTrackedType(type: String?): Boolean {
+    return type != AttachmentTypeEnum.Link.value && type != AttachmentTypeEnum.Preview.value
+}
+
+internal fun SceytAttachment.isTransferTracked(): Boolean = isTransferTrackedType(type)
+
+internal fun List<SceytAttachment>.withoutPreview(): List<SceytAttachment> = filterNot { it.isPreview() }
+
+internal fun SceytAttachment.previewUrl(): String? = try {
+    JSONObject(metadata ?: return null).getStringOrNull(SceytConstants.Preview)?.takeIf { it.isNotBlank() }
+} catch (_: Exception) {
+    null
+}
+
 fun SceytAttachment.isHiddenLinkDetails(): Boolean {
     return isHiddenLinkDetails(metadata, type)
 }

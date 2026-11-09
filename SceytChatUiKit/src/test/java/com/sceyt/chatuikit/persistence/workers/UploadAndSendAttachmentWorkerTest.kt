@@ -17,6 +17,7 @@ import com.sceyt.chatuikit.config.SceytChatUIKitConfig
 import com.sceyt.chatuikit.config.ChannelListConfig
 import com.sceyt.chatuikit.createChannel
 import com.sceyt.chatuikit.createMessage
+import com.sceyt.chatuikit.data.constants.SceytConstants
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelActionEvent
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.SyncResult
@@ -44,7 +45,10 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
+import com.sceyt.chatuikit.data.models.AttachmentPayLoad
 import com.sceyt.chatuikit.persistence.logicimpl.AttachmentDownloadCoordinator
+import com.sceyt.chatuikit.persistence.logicimpl.AttachmentPreviewTransfer
+import com.sceyt.chatuikit.persistence.logicimpl.PreviewUploadResult
 import com.sceyt.chatuikit.persistence.logicimpl.AttachmentUploadCoordinator
 import com.sceyt.chatuikit.persistence.logicimpl.RecordingFileTransferProvider
 import com.sceyt.chatuikit.persistence.logicimpl.attachment
@@ -71,6 +75,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.withTimeout
+import org.json.JSONObject
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -109,6 +114,7 @@ class UploadAndSendAttachmentWorkerTest {
     private val messageLogic = mock<PersistenceMessagesLogic>()
     private val workManager = mock<WorkManagerImpl>()
     private val transport = RecordingFileTransferProvider()
+    private val previewTransfer = mock<AttachmentPreviewTransfer>()
     private lateinit var previousFileTransfer: SceytChatUIKitFileTransfer
     private lateinit var previousConfig: SceytChatUIKitConfig
     private lateinit var previousNotifications: SceytNotifications
@@ -163,6 +169,7 @@ class UploadAndSendAttachmentWorkerTest {
         whenever(attachmentLogic.getAllPayLoadsByMsgTid(any())).thenReturn(emptyList())
         whenever(messageLogic.sendMessageWithUploadedAttachments(any(), any()))
             .thenReturn(SceytResponse.Success(null))
+        whenever(previewTransfer.upload(any())).thenReturn(PreviewUploadResult.Unavailable)
         stopKoin()
         SceytKoinApp.koinApp = startKoin {
             modules(module {
@@ -171,6 +178,7 @@ class UploadAndSendAttachmentWorkerTest {
                 single<PersistenceMessagesLogic> { messageLogic }
                 single<PersistenceChannelsLogic> { mock() }
                 single<FileChecksumDao> { fileChecksumDao }
+                single<AttachmentPreviewTransfer> { previewTransfer }
                 single<CoroutineContext>(named(CoroutineContextType.SingleThreaded)) {
                     testScope.coroutineContext
                 }
@@ -588,6 +596,68 @@ class UploadAndSendAttachmentWorkerTest {
             assertThat(work.isCompleted).isTrue()
             assertSentUrl(attachment, "resumed-url")
         }
+    }
+
+    @Test
+    fun `video message uploads its preview and sends it after the video`() = runBlocking {
+        val video = preparedVideo()
+        val preview = previewAttachment(video, url = "preview-url")
+        whenever(previewTransfer.upload(any())).thenReturn(PreviewUploadResult.Uploaded(preview))
+        val work = testScope.async { worker(video).doWork() }
+
+        transport.uploadCalls.single().succeed("video-url")
+
+        assertThat(work.isCompleted).isTrue()
+        assertSentAttachments(video, "video-url" to AttachmentTypeEnum.Video, "preview-url" to AttachmentTypeEnum.Preview)
+        val sent = argumentCaptor<Message>()
+        verify(messageLogic).sendMessageWithUploadedAttachments(eq(0L), sent.capture())
+        val videoMetadata = JSONObject(sent.firstValue.attachments.first().metadata)
+        assertThat(videoMetadata.getString(SceytConstants.Preview)).isEqualTo("preview-url")
+    }
+
+    @Test
+    fun `preview failure fails the message before the video upload starts`() = runBlocking {
+        val video = preparedVideo()
+        whenever(previewTransfer.upload(any()))
+            .thenReturn(PreviewUploadResult.Failed(IllegalStateException("offline")))
+
+        val work = testScope.async { worker(video).doWork() }
+
+        assertThat(work.isCompleted).isTrue()
+        assertThat(transport.uploadCalls).isEmpty()
+        verify(messageLogic, never()).sendMessageWithUploadedAttachments(any(), any())
+        val transferData = argumentCaptor<TransferData>()
+        verify(attachmentLogic).updateAttachmentWithTransferData(transferData.capture())
+        assertThat(transferData.lastValue.state).isEqualTo(TransferState.ErrorUpload)
+    }
+
+    @Test
+    fun `retry with a saved preview uploads only the video`() = runBlocking {
+        val video = preparedVideo()
+        val preview = previewAttachment(video, url = "preview-url")
+        val work = testScope.async { worker(video, extraAttachments = listOf(preview)).doWork() }
+
+        transport.uploadCalls.single().succeed("video-url")
+
+        assertThat(work.isCompleted).isTrue()
+        verify(previewTransfer, never()).upload(any())
+        assertSentAttachments(video, "video-url" to AttachmentTypeEnum.Video, "preview-url" to AttachmentTypeEnum.Preview)
+    }
+
+    @Test
+    fun `retry with an uploaded video uploads only the preview`() = runBlocking {
+        val video = preparedVideo()
+        val preview = previewAttachment(video, url = "preview-url")
+        whenever(previewTransfer.upload(any())).thenReturn(PreviewUploadResult.Uploaded(preview))
+        whenever(attachmentLogic.getAllPayLoadsByMsgTid(any())).thenReturn(
+            listOf(AttachmentPayLoad(video.messageTid, TransferState.ErrorUpload, 0f, "video-url", video.filePath, null))
+        )
+
+        val work = testScope.async { worker(video.copy(url = "video-url", transferState = TransferState.ErrorUpload)).doWork() }
+
+        assertThat(work.isCompleted).isTrue()
+        assertThat(transport.uploadCalls).isEmpty()
+        assertSentAttachments(video, "video-url" to AttachmentTypeEnum.Video, "preview-url" to AttachmentTypeEnum.Preview)
     }
 
     @Test
@@ -1248,17 +1318,51 @@ class UploadAndSendAttachmentWorkerTest {
         return attachment(filePath = file.path, url = null)
     }
 
+    private fun preparedVideo(): SceytAttachment {
+        SceytChatUIKit.fileTransfer.encryptionEnabled = true
+        val original = File(context.cacheDir, "preview-original.mp4").apply { writeText("source video") }
+        val prepared = File(context.cacheDir, "preview-prepared.mp4").apply { writeText("prepared video") }
+        return attachment(
+            type = AttachmentTypeEnum.Video.value,
+            fileSize = prepared.length(),
+            url = null,
+            filePath = prepared.path,
+            originalFilePath = original.path,
+        )
+    }
+
+    private fun previewAttachment(video: SceytAttachment, url: String) = attachment(
+        messageTid = video.messageTid,
+        name = "preview.jpg",
+        type = AttachmentTypeEnum.Preview.value,
+        url = url,
+        filePath = File(context.cacheDir, "preview.jpg").path,
+    )
+
+    private fun assertSentAttachments(
+        attachment: SceytAttachment,
+        vararg expected: Pair<String, AttachmentTypeEnum>,
+    ) = runBlocking {
+        val message = argumentCaptor<Message>()
+        verify(messageLogic).sendMessageWithUploadedAttachments(eq(0L), message.capture())
+        assertThat(message.firstValue.tid).isEqualTo(attachment.messageTid)
+        assertThat(message.firstValue.attachments.map { it.url to it.type })
+            .containsExactlyElementsIn(expected.map { it.first to it.second.value })
+            .inOrder()
+    }
+
     private fun worker(
         attachment: SceytAttachment,
         resume: Boolean = false,
         shared: Boolean = false,
         runAttemptCount: Int = 0,
         channelId: Long = 0L,
+        extraAttachments: List<SceytAttachment> = emptyList(),
     ): UploadAndSendAttachmentWorker {
         val message = createMessage(createdAt = 1L, tid = attachment.messageTid).copy(
             channelId = channelId,
             deliveryStatus = MessageDeliveryStatus.Pending,
-            attachments = listOf(attachment),
+            attachments = listOf(attachment) + extraAttachments,
         )
         runBlocking {
             whenever(messageLogic.getMessageFromDbByTid(attachment.messageTid)).thenReturn(message)

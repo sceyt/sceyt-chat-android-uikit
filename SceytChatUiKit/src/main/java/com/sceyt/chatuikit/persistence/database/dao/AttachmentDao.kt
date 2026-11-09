@@ -3,6 +3,7 @@ package com.sceyt.chatuikit.persistence.database.dao
 import androidx.annotation.VisibleForTesting
 import androidx.room.Dao
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import com.sceyt.chatuikit.data.models.LoadNearData
@@ -19,6 +20,15 @@ import kotlin.math.max
 
 @Dao
 internal abstract class AttachmentDao {
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    abstract suspend fun insertAttachment(attachment: AttachmentEntity)
+
+    @Transaction
+    open suspend fun replaceAttachmentByType(attachment: AttachmentEntity) {
+        deleteAttachmentsByMsgTidAndType(attachment.messageTid, attachment.type)
+        insertAttachment(attachment)
+    }
 
     @Transaction
     @Query(
@@ -121,6 +131,12 @@ internal abstract class AttachmentDao {
     @Query("SELECT * FROM $ATTACHMENT_PAYLOAD_TABLE WHERE messageTid IN (:tid)")
     abstract suspend fun getAllAttachmentPayLoadsByMsgTid(vararg tid: Long): List<AttachmentPayLoadDb>
 
+    @Query("SELECT * FROM $ATTACHMENT_TABLE WHERE messageTid = :msgTid AND type = :type LIMIT 1")
+    abstract suspend fun getAttachmentByMsgTidAndType(msgTid: Long, type: String): AttachmentEntity?
+
+    @Query("SELECT * FROM $ATTACHMENT_TABLE WHERE messageTid = :msgTid AND url = :url LIMIT 1")
+    abstract suspend fun getAttachmentByMsgTidAndUrl(msgTid: Long, url: String): AttachmentEntity?
+
     @Query(
         """
         UPDATE $ATTACHMENT_TABLE
@@ -153,8 +169,13 @@ internal abstract class AttachmentDao {
         updateAttachmentAndPayLoad(data)
     }
 
-    @Query("UPDATE $ATTACHMENT_TABLE SET filePath = :filePath, url = :url WHERE messageTid = :msgTid AND type != :ignoreType")
-    abstract suspend fun updateAttachmentByMsgTid(msgTid: Long, filePath: String?, url: String?, ignoreType: String = AttachmentTypeEnum.Link.value)
+    @Query("UPDATE $ATTACHMENT_TABLE SET filePath = :filePath, url = :url WHERE messageTid = :msgTid AND type NOT IN (:ignoreTypes)")
+    abstract suspend fun updateAttachmentByMsgTid(
+        msgTid: Long,
+        filePath: String?,
+        url: String?,
+        ignoreTypes: List<String> = untrackedAttachmentTypes
+    )
 
     @Query(
         """
@@ -170,7 +191,7 @@ internal abstract class AttachmentDao {
         UPDATE $ATTACHMENT_TABLE
         SET filePath = :filePath, fileSize = :fileSize, metadata = :metadata
         WHERE messageTid = :msgTid
-          AND type != :ignoreType
+          AND type NOT IN (:ignoreTypes)
         """
     )
     abstract suspend fun updateAttachmentFilePathByMsgTid(
@@ -178,7 +199,7 @@ internal abstract class AttachmentDao {
         filePath: String?,
         fileSize: Long,
         metadata: String?,
-        ignoreType: String = AttachmentTypeEnum.Link.value
+        ignoreTypes: List<String> = untrackedAttachmentTypes
     )
 
     @Query("UPDATE $ATTACHMENT_PAYLOAD_TABLE SET filePath = :filePath WHERE messageTid = :msgTid")
@@ -187,7 +208,15 @@ internal abstract class AttachmentDao {
     @Query("UPDATE $ATTACHMENT_TABLE SET channelId = :newChannelId WHERE channelId = :oldChannelId")
     abstract suspend fun updateAttachmentsChannelId(oldChannelId: Long, newChannelId: Long): Int
 
+    @Query("UPDATE $ATTACHMENT_TABLE SET filePath = :filePath WHERE messageTid = :msgTid AND type = :type")
+    abstract suspend fun updateAttachmentFilePathByMsgTidAndType(msgTid: Long, type: String, filePath: String?)
+
+    @Query("DELETE FROM $ATTACHMENT_TABLE WHERE messageTid = :msgTid AND type = :type")
+    abstract suspend fun deleteAttachmentsByMsgTidAndType(msgTid: Long, type: String)
+
     @VisibleForTesting
     @Insert
     abstract suspend fun insertAttachments(attachments: List<AttachmentEntity>)
 }
+
+private val untrackedAttachmentTypes = listOf(AttachmentTypeEnum.Link.value, AttachmentTypeEnum.Preview.value)

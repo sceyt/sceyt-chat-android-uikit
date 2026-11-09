@@ -84,6 +84,9 @@ import com.sceyt.chatuikit.persistence.mappers.existThumb
 import com.sceyt.chatuikit.persistence.mappers.getLinkPreviewDetails
 import com.sceyt.chatuikit.persistence.mappers.isHiddenLinkDetails
 import com.sceyt.chatuikit.persistence.mappers.isLink
+import com.sceyt.chatuikit.persistence.mappers.isPreview
+import com.sceyt.chatuikit.persistence.mappers.isTransferTracked
+import com.sceyt.chatuikit.persistence.mappers.isTransferTrackedType
 import com.sceyt.chatuikit.persistence.mappers.toLinkPreviewDetails
 import com.sceyt.chatuikit.persistence.mappers.toMessageDb
 import com.sceyt.chatuikit.persistence.mappers.toMessageEntity
@@ -628,7 +631,7 @@ internal class PersistenceMessagesLogicImpl(
             MessageEventManager.emitOutgoingMessage(tmpMessage)
             insertTmpMessageToDb(tmpMessage)
             it.attachments?.forEach { attachment ->
-                if (attachment.type != AttachmentTypeEnum.Link.value) {
+                if (isTransferTrackedType(attachment.type)) {
                     var state = TransferState.PendingDownload
                     var progressPercent = 0f
                     if (attachment.filePath.isNotNullOrBlank()) {
@@ -761,7 +764,7 @@ internal class PersistenceMessagesLogicImpl(
     private fun checkHasFileAttachments(message: SceytMessage): Boolean {
         if (message.attachments.isNullOrEmpty()) return false
         message.attachments.forEach {
-            if (it.type != AttachmentTypeEnum.Link.value) return true
+            if (it.isTransferTracked()) return true
         }
         return false
     }
@@ -838,9 +841,15 @@ internal class PersistenceMessagesLogicImpl(
                 if (messageDb.attachments.isNullOrEmpty() || messageDb.attachments.any { attachment ->
                         attachment.payLoad?.transferState != TransferState.PauseUpload
                     }) {
-                    val isUploaded = messageDb.attachments?.all { attachment ->
-                        attachment.attachmentEntity.type == AttachmentTypeEnum.Link.value
-                                || attachment.payLoad?.transferState == TransferState.Uploaded
+                    val isUploaded = messageDb.attachments?.let { attachments ->
+                        val filesUploaded = attachments.all { attachment ->
+                            !isTransferTrackedType(attachment.attachmentEntity.type)
+                                    || attachment.payLoad?.transferState == TransferState.Uploaded
+                        }
+                        val needsPreview = messageDb.messageEntity.forwardingDetailsDb == null
+                                && attachments.any { it.attachmentEntity.type == AttachmentTypeEnum.Video.value }
+                                && attachments.none { it.attachmentEntity.type == AttachmentTypeEnum.Preview.value }
+                        filesUploaded && !needsPreview
                     } ?: false
                     sendMessageImpl(
                         channelId = channelId,
@@ -1456,6 +1465,7 @@ internal class PersistenceMessagesLogicImpl(
             .let { entity ->
                 val attachments = message.attachments?.toMutableList() ?: return message
                 attachments.forEachIndexed { index, attachment ->
+                    if (attachment.isPreview()) return@forEachIndexed
                     val predicate: (AttachmentPayLoadDb) -> Boolean =
                         if (attachment.url.isNotNullOrBlank()) {
                             { entity.any { it.payLoadEntity.url == attachment.url } }

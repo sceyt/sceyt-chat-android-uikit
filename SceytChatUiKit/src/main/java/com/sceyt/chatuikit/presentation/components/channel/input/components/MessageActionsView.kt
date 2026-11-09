@@ -28,6 +28,7 @@ import com.sceyt.chatuikit.shared.utils.ViewUtil
 import com.sceyt.chatuikit.styles.input.InputEditMessageStyle
 import com.sceyt.chatuikit.styles.input.InputReplyMessageStyle
 import com.sceyt.chatuikit.styles.input.MessageInputStyle
+import com.sceyt.chatuikit.persistence.mappers.withoutPreview
 
 @Suppress("MemberVisibilityCanBePrivate", "JoinDeclarationAndAssignment")
 class MessageActionsView @JvmOverloads constructor(
@@ -169,7 +170,7 @@ class MessageActionsView @JvmOverloads constructor(
             layoutImage.isVisible = true
             imageAttachment.isVisible = true
             fileAttachment.isVisible = false
-            val (links, others) = attachments.partition { it.type == AttachmentTypeEnum.Link.value }
+            val (links, others) = attachments.withoutPreview().partition { it.type == AttachmentTypeEnum.Link.value }
             if (others.isNotEmpty()) {
                 val attachment = others[0]
                 when {

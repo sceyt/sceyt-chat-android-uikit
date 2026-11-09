@@ -165,14 +165,14 @@ class IncVideoMessageViewHolder(
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.attachment))
                 binding.playPauseItem.isVisible = false
                 binding.tvLoadSize.isVisible = false
-                viewHolderHelper.loadBlurThumb(imageView = imageView)
+                viewHolderHelper.drawThumbOrRequest(imageView, ::requestPreview)
             }
 
             Downloading -> {
                 binding.playPauseItem.isVisible = false
                 setFileLoadProgress(data)
                 if (isOnBind)
-                    viewHolderHelper.loadBlurThumb(imageView = imageView)
+                    viewHolderHelper.drawThumbOrRequest(imageView, ::requestPreview)
             }
 
             Uploading, Preparing -> {
@@ -192,13 +192,13 @@ class IncVideoMessageViewHolder(
             PauseDownload -> {
                 binding.playPauseItem.isVisible = false
                 binding.tvLoadSize.isVisible = false
-                viewHolderHelper.loadBlurThumb(imageView = imageView)
+                viewHolderHelper.drawThumbOrRequest(imageView, ::requestPreview)
             }
 
             ErrorDownload -> {
                 binding.playPauseItem.isVisible = false
                 binding.tvLoadSize.isVisible = false
-                viewHolderHelper.loadBlurThumb(imageView = imageView)
+                viewHolderHelper.drawThumbOrRequest(imageView, ::requestPreview)
             }
 
             FilePathChanged -> {
