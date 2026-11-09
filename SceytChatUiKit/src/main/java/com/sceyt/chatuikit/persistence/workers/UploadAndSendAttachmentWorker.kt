@@ -14,7 +14,6 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.data.constants.SceytConstants
 import com.sceyt.chatuikit.data.constants.SceytConstants.SCEYT_WORKER_TAG
 import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.models.fold
@@ -29,7 +28,6 @@ import com.sceyt.chatuikit.notifications.service.FileTransferNotificationData
 import com.sceyt.chatuikit.persistence.database.dao.FileChecksumDao
 import com.sceyt.chatuikit.persistence.database.entity.FileChecksumEntity
 import com.sceyt.chatuikit.persistence.extensions.safeResume
-import com.sceyt.chatuikit.persistence.extensions.withMetadata
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferHelper
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
@@ -44,6 +42,7 @@ import com.sceyt.chatuikit.persistence.mappers.isPreview
 import com.sceyt.chatuikit.persistence.mappers.isTransferTracked
 import com.sceyt.chatuikit.persistence.mappers.toMessage
 import com.sceyt.chatuikit.persistence.mappers.toTransferData
+import com.sceyt.chatuikit.persistence.mappers.withPreviewLink
 import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager.FILE_TRANSFER_NOTIFICATION_ID
 import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager.IS_SHARING
 import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager.MESSAGE_TID
@@ -220,20 +219,6 @@ class UploadAndSendAttachmentWorker(
                 attachmentLogic.updateAttachmentWithTransferData(transferData)
                 KtResult.failure(result.error)
             }
-        }
-    }
-
-    private fun List<SceytAttachment>.withPreviewLink(): List<SceytAttachment> {
-        val previewUrl =
-            firstOrNull { it.isPreview() }?.url?.takeIf { it.isNotBlank() } ?: return this
-        val link = mapOf(SceytConstants.Preview to previewUrl)
-        return map {
-            if (it.type == AttachmentTypeEnum.Video.value) it.copy(
-                metadata = it.metadata.withMetadata(
-                    link
-                )
-            )
-            else it
         }
     }
 
