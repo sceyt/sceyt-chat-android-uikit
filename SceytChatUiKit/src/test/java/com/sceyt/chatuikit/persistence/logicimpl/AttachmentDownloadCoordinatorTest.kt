@@ -31,6 +31,7 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -58,6 +59,7 @@ class AttachmentDownloadCoordinatorTest {
     private lateinit var context: Context
     private lateinit var destinationFile: File
     private lateinit var service: FileTransferServiceImpl
+    private lateinit var downloader: AttachmentDownloadCoordinator
     private lateinit var transport: RecordingFileTransferProvider
     private lateinit var previousFileTransfer: SceytChatUIKitFileTransfer
     private lateinit var testScope: TestScope
@@ -71,12 +73,8 @@ class AttachmentDownloadCoordinatorTest {
         destinationFile.delete()
         transport = RecordingFileTransferProvider()
         testScope = TestScope(UnconfinedTestDispatcher())
-        service = FileTransferServiceImpl(
-            context,
-            mock(),
-            AttachmentDownloadCoordinator(context, testScope),
-            mock()
-        )
+        downloader = AttachmentDownloadCoordinator(context, testScope)
+        service = FileTransferServiceImpl(context, mock(), downloader, mock())
         previousFileTransfer = SceytChatUIKit.fileTransfer
         SceytChatUIKit.fileTransfer = SceytChatUIKitFileTransfer().apply {
             this.provider = this@AttachmentDownloadCoordinatorTest.transport
@@ -99,6 +97,85 @@ class AttachmentDownloadCoordinatorTest {
         SceytChatUIKit.fileTransfer = previousFileTransfer
         SceytKoinApp.koinApp = null
         stopKoin()
+    }
+
+    @Test
+    fun `interrupted download is kept for retry until it succeeds`() {
+        val attachment = attachment(state = TransferState.PendingDownload)
+        service.download(attachment)
+        transport.downloadCalls.single().interrupt()
+
+        assertThat(downloader.getInterruptedDownloads().map { it.messageTid })
+            .containsExactly(attachment.messageTid)
+
+        service.download(attachment)
+        transport.downloadCalls.last().succeed(destinationFile.path)
+
+        assertThat(downloader.getInterruptedDownloads()).isEmpty()
+    }
+
+    @Test
+    fun `failed download is not kept for retry`() {
+        val attachment = attachment(state = TransferState.PendingDownload)
+        service.download(attachment)
+
+        transport.downloadCalls.single().fail(IllegalStateException("Forbidden"))
+
+        assertThat(downloader.getInterruptedDownloads()).isEmpty()
+    }
+
+    @Test
+    fun `cancelled download is no longer retried`() {
+        val attachment = attachment(state = TransferState.PendingDownload)
+        service.download(attachment)
+        transport.downloadCalls.single().interrupt()
+
+        downloader.cancel(attachment)
+
+        assertThat(downloader.getInterruptedDownloads()).isEmpty()
+    }
+
+    @Test
+    fun `natively paused download is not retried after an interruption`() {
+        transport.pauseResult = true
+        val attachment = attachment(state = TransferState.PendingDownload)
+        service.download(attachment)
+
+        assertThat(downloader.pause(attachment)).isTrue()
+        transport.downloadCalls.single().interrupt()
+
+        assertThat(downloader.getInterruptedDownloads()).isEmpty()
+    }
+
+    @Test
+    fun `retry starts stored downloads and forgets deleted ones`() = runBlocking<Unit> {
+        val kept = attachment(messageTid = 1L, state = TransferState.PendingDownload)
+        val deleted = attachment(messageTid = 2L, state = TransferState.PendingDownload)
+        listOf(kept, deleted).forEach {
+            service.download(it)
+            transport.downloadCalls.last().interrupt()
+        }
+        val started = mutableListOf<Long>()
+
+        downloader.retryInterruptedDownloads(
+            findStored = { if (it.messageTid == kept.messageTid) it else null },
+            start = { started += it.messageTid },
+        )
+
+        assertThat(started).containsExactly(kept.messageTid)
+        assertThat(downloader.getInterruptedDownloads().map { it.messageTid })
+            .containsExactly(kept.messageTid)
+    }
+
+    @Test
+    fun `only the ten latest interrupted downloads are kept for retry`() {
+        (1L..11L).forEach { messageTid ->
+            service.download(attachment(messageTid = messageTid, state = TransferState.PendingDownload))
+            transport.downloadCalls.last().interrupt()
+        }
+
+        assertThat(downloader.getInterruptedDownloads().map { it.messageTid })
+            .containsExactlyElementsIn(2L..11L)
     }
 
     @Test
