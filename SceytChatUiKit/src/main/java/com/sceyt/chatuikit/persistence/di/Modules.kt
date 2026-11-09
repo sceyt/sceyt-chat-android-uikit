@@ -41,6 +41,7 @@ import com.sceyt.chatuikit.persistence.logic.PersistenceUsersLogic
 import com.sceyt.chatuikit.persistence.logic.SystemMessageSender
 import com.sceyt.chatuikit.persistence.logicimpl.AttachmentDownloadCoordinator
 import com.sceyt.chatuikit.persistence.logicimpl.AttachmentThumbCoordinator
+import com.sceyt.chatuikit.persistence.logicimpl.AttachmentPreviewTransfer
 import com.sceyt.chatuikit.persistence.logicimpl.AttachmentUploadCoordinator
 import com.sceyt.chatuikit.persistence.logicimpl.PersistenceChannelInviteKeyLogicImpl
 import com.sceyt.chatuikit.persistence.logicimpl.PersistenceConnectionLogicImpl
@@ -125,6 +126,7 @@ internal val appModules = module {
         )
     }
     singleOf(::AttachmentThumbCoordinator)
+    singleOf(::AttachmentPreviewTransfer)
     singleOf(::FileTransferServiceImpl) bind FileTransferService::class
     singleOf(::MessageLoadRangeUpdater)
     singleOf(::ChannelSyncStateStore)

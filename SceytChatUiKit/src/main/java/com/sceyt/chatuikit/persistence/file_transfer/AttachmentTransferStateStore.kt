@@ -1,7 +1,7 @@
 package com.sceyt.chatuikit.persistence.file_transfer
 
 import android.util.Size
-import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
+import com.sceyt.chatuikit.persistence.mappers.isTransferTracked
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Downloaded
@@ -94,7 +94,7 @@ internal object AttachmentTransferStateStore {
         attachment: SceytAttachment,
     ): Boolean {
         if (transferData.messageTid != attachment.messageTid) return false
-        return attachment.type != AttachmentTypeEnum.Link.value
+        return attachment.isTransferTracked()
     }
 
     @Synchronized

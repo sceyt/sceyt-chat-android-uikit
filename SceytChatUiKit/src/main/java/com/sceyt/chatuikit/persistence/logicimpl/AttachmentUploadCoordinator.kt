@@ -19,6 +19,7 @@ import com.sceyt.chatuikit.persistence.mappers.toTransferData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
@@ -168,6 +169,7 @@ internal class AttachmentUploadCoordinator(
         }
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     private fun startOrResumeUpload(upload: Upload) {
         if (!upload.hasActiveMembers || upload !in uploads) return
 

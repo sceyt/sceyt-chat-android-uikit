@@ -51,6 +51,7 @@ class AttachmentThumbCoordinatorTest {
     private val fileTransferService = mock<FileTransferService>()
     private val attachmentLogic = mock<PersistenceAttachmentLogic>()
     private val fileChecksumDao = mock<FileChecksumDao>()
+    private val previewTransfer = mock<AttachmentPreviewTransfer>()
     private lateinit var context: Context
 
     @Before
@@ -62,6 +63,7 @@ class AttachmentThumbCoordinatorTest {
                 single<FileTransferService> { fileTransferService }
                 single<PersistenceAttachmentLogic> { attachmentLogic }
                 single<FileChecksumDao> { fileChecksumDao }
+                single<AttachmentPreviewTransfer> { previewTransfer }
                 single<CoroutineContext>(named(CoroutineContextType.SingleThreaded)) {
                     Dispatchers.Unconfined
                 }
@@ -73,6 +75,30 @@ class AttachmentThumbCoordinatorTest {
     fun tearDown() {
         SceytKoinApp.koinApp = null
         stopKoin()
+    }
+
+    @Test
+    fun `video waiting for download shows its preview without reading the video file`() {
+        val resolver = BlockingThumbPathResolver(tempFolder.root)
+        val logic = AttachmentThumbCoordinator(context, resolver)
+        val video = attachment(filePath = null, state = TransferState.Downloading)
+            .copy(type = AttachmentTypeEnum.Video.value)
+        val callbacks = thumbCallbacksFor(video)
+        val requested = thumbData(ThumbFor.MessagesLisView, filePath = null)
+        whenever(previewTransfer.loadPreviewPath(any(), any())).thenAnswer { invocation ->
+            @Suppress("UNCHECKED_CAST")
+            (invocation.arguments[1] as (String) -> Unit).invoke("/previews/video_preview.jpg")
+        }
+
+        logic.getAttachmentThumb(video.messageTid, video, requested)
+
+        verify(previewTransfer).loadPreviewPath(org.mockito.kotlin.eq(video), any())
+        assertThat(callbacks).containsExactly(requested)
+        assertThat(resolver.callCount.get()).isEqualTo(0)
+
+        logic.clear()
+
+        verify(previewTransfer).cancelAll()
     }
 
     @Test

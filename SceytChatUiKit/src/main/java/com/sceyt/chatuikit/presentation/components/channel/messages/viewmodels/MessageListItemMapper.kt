@@ -8,6 +8,7 @@ import com.sceyt.chatuikit.data.toFileListItem
 import com.sceyt.chatuikit.extensions.findIndexed
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessageTid
+import com.sceyt.chatuikit.persistence.mappers.withoutPreview
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem.MessageItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.reactions.ReactionItem
@@ -96,7 +97,7 @@ internal class MessageListItemMapper {
     ): SceytMessage {
         return sceytMessage.copy(
             isGroup = context.channel.isGroup,
-            files = sceytMessage.attachments?.map { it.toFileListItem() },
+            files = sceytMessage.attachments?.withoutPreview()?.map { it.toFileListItem() },
             shouldShowAvatarAndName = if (initNameAndAvatar && context.showSenderAvatarAndName)
                 shouldShowAvatarAndName(sceytMessage, prevMessage, context.channel)
             else sceytMessage.shouldShowAvatarAndName,

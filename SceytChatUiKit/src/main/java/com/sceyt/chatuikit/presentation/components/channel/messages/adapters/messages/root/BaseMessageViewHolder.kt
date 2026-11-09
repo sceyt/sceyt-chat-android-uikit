@@ -73,6 +73,7 @@ import com.sceyt.chatuikit.shared.helpers.RecyclerItemOffsetDecoration
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 import java.util.Date
 import kotlin.math.min
+import com.sceyt.chatuikit.persistence.mappers.withoutPreview
 
 abstract class BaseMessageViewHolder(
     private val view: View,
@@ -284,7 +285,7 @@ abstract class BaseMessageViewHolder(
                 imageAttachment.isVisible = false
                 icFile.isVisible = false
             } else {
-                val attachment = parent.attachments.firstOrNull()
+                val attachment = parent.attachments.withoutPreview().firstOrNull()
                 val icon by lazy {
                     attachment?.let {
                         itemStyle.replyMessageStyle.attachmentIconProvider.provide(context, it)

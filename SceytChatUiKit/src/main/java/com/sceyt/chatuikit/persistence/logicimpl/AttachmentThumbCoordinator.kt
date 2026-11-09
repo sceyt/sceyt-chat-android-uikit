@@ -2,6 +2,7 @@ package com.sceyt.chatuikit.persistence.logicimpl
 
 import android.content.Context
 import android.util.Size
+import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.extensions.takeIfNotBlank
 import com.sceyt.chatuikit.koin.SceytKoinComponent
@@ -9,6 +10,7 @@ import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferHelper
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.file_transfer.ThumbData
+import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 import com.sceyt.chatuikit.persistence.file_transfer.isCompleted
 import org.koin.core.component.inject
 import java.io.File
@@ -20,6 +22,8 @@ internal class AttachmentThumbCoordinator(
     private val thumbPathResolver: ThumbPathResolver,
 ) : SceytKoinComponent {
     private val fileTransferService: FileTransferService by inject()
+    private val previewTransferLazy: Lazy<AttachmentPreviewTransfer> = inject()
+    private val previewTransfer by previewTransferLazy
     private val thumbPaths = ConcurrentHashMap<String, ThumbPathData>()
     private val preparingThumbs = ConcurrentHashMap<String, ThumbData>()
 
@@ -28,6 +32,15 @@ internal class AttachmentThumbCoordinator(
         attachment: SceytAttachment,
         data: ThumbData,
     ) {
+        if (attachment.isVideoDownloadPending()) {
+            val task = fileTransferService.findTransferTask(attachment)
+                ?: FileTransferHelper.createTransferTask(attachment)
+            previewTransfer.loadPreviewPath(attachment) { path ->
+                task.thumbCallback?.onThumb(path, data)
+            }
+            return
+        }
+
         // Thumbnail generation needs a local source before creating a task or calling the resolver.
         attachment.filePath ?: return
 
@@ -88,6 +101,17 @@ internal class AttachmentThumbCoordinator(
     fun clear() {
         preparingThumbs.clear()
         thumbPaths.clear()
+        if (previewTransferLazy.isInitialized()) previewTransfer.cancelAll()
+    }
+
+    private fun SceytAttachment.isVideoDownloadPending(): Boolean {
+        if (type != AttachmentTypeEnum.Video.value) return false
+        return when (transferState) {
+            TransferState.PendingDownload, TransferState.Downloading,
+            TransferState.PauseDownload, TransferState.ErrorDownload -> true
+
+            else -> false
+        }
     }
 
     private fun SceytAttachment.canRedownload(): Boolean {

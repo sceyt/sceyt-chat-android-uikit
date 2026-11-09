@@ -25,6 +25,8 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.PauseDownload
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.PendingDownload
 import com.sceyt.chatuikit.persistence.file_transfer.getProgressWithState
+import com.sceyt.chatuikit.persistence.file_transfer.isCompleted
+import com.sceyt.chatuikit.persistence.mappers.isPreview
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
@@ -114,6 +116,18 @@ abstract class BaseMediaMessageViewHolder(
         }
     }
 
+    internal fun requestPreview() {
+        if (requireMessage.attachments?.any { it.isPreview() } != true) return
+        itemView.post {
+            val thumbData = ThumbData(
+                key = ThumbFor.MessagesLisView.value,
+                filePath = null,
+                size = getThumbSize()
+            )
+            needMediaDataCallback.invoke(NeedMediaInfoData.NeedThumb(fileItem.attachment, thumbData))
+        }
+    }
+
     protected open fun getFileItem(item: MessageListItem.MessageItem): FileListItem? {
         return item.message.files?.find { it.attachment.type != AttachmentTypeEnum.Link.value }
     }
@@ -157,7 +171,7 @@ abstract class BaseMediaMessageViewHolder(
         loadingProgressView.getProgressWithState(
             state = data.state,
             style = style.mediaLoaderStyle,
-            hideOnThumbLoaded = requireMessage.isNotPending(),
+            hideOnThumbLoaded = requireMessage.isNotPending() && fileItem.transferData?.state?.isCompleted() != false,
             progressPercent = data.progressPercent
         )
     }

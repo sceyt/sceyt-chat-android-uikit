@@ -13,6 +13,7 @@ import com.sceyt.chatuikit.formatters.attributes.MessageBodyFormatterAttributes
 import com.sceyt.chatuikit.formatters.attributes.PinnedMessageBodyFormatterAttributes
 import com.sceyt.chatuikit.persistence.mappers.getInfoFromMetadata
 import com.sceyt.chatuikit.presentation.extensions.isSupportedType
+import com.sceyt.chatuikit.persistence.mappers.withoutPreview
 
 open class DefaultPinnedMessageBodyFormatter : Formatter<PinnedMessageBodyFormatterAttributes> {
 
@@ -44,7 +45,7 @@ open class DefaultPinnedMessageBodyFormatter : Formatter<PinnedMessageBodyFormat
         message: SceytMessage,
     ): CharSequence {
         val body = message.body.trim()
-        val attachment = message.attachments?.firstOrNull()
+        val attachment = message.attachments?.withoutPreview()?.firstOrNull()
 
         // A caption wins over the attachment label — it is what distinguishes one media pin
         // from another.
