@@ -87,6 +87,7 @@ import com.sceyt.chatuikit.persistence.mappers.isLink
 import com.sceyt.chatuikit.persistence.mappers.isPreview
 import com.sceyt.chatuikit.persistence.mappers.isTransferTracked
 import com.sceyt.chatuikit.persistence.mappers.isTransferTrackedType
+import com.sceyt.chatuikit.persistence.mappers.withPreviewLink
 import com.sceyt.chatuikit.persistence.mappers.toLinkPreviewDetails
 import com.sceyt.chatuikit.persistence.mappers.toMessageDb
 import com.sceyt.chatuikit.persistence.mappers.toMessageEntity
@@ -724,8 +725,9 @@ internal class PersistenceMessagesLogicImpl(
             ).await()
             trySend(SendMessageResult.StartedSendingAttachment)
         } else {
-            val response = messagesRepository.sendMessage(channelId, message)
-            onMessageSentResponse(channelId, response, message)
+            val linkedMessage = message.copy(attachments = message.attachments?.withPreviewLink())
+            val response = messagesRepository.sendMessage(channelId, linkedMessage)
+            onMessageSentResponse(channelId, response, linkedMessage)
             trySend(response.toSendMessageResult())
         }
         channel.close()

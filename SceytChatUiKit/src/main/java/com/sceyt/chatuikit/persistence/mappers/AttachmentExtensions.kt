@@ -17,6 +17,7 @@ import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.toBase64
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.database.entity.messages.AttachmentEntity
+import com.sceyt.chatuikit.persistence.extensions.withMetadata
 import com.sceyt.chatuikit.shared.utils.BitmapUtil
 import com.sceyt.chatuikit.shared.utils.FileResizeUtil
 import com.sceyt.chatuikit.shared.utils.ThumbHash
@@ -256,6 +257,16 @@ internal fun isTransferTrackedType(type: String?): Boolean {
 internal fun SceytAttachment.isTransferTracked(): Boolean = isTransferTrackedType(type)
 
 internal fun List<SceytAttachment>.withoutPreview(): List<SceytAttachment> = filterNot { it.isPreview() }
+
+internal fun List<SceytAttachment>.withPreviewLink(): List<SceytAttachment> {
+    val previewUrl = firstOrNull { it.isPreview() }?.url?.takeIf { it.isNotBlank() } ?: return this
+    val link = mapOf(SceytConstants.Preview to previewUrl)
+    return map { attachment ->
+        if (attachment.type == AttachmentTypeEnum.Video.value)
+            attachment.copy(metadata = attachment.metadata.withMetadata(link))
+        else attachment
+    }
+}
 
 internal fun SceytAttachment.previewUrl(): String? = try {
     JSONObject(metadata ?: return null).getStringOrNull(SceytConstants.Preview)?.takeIf { it.isNotBlank() }
