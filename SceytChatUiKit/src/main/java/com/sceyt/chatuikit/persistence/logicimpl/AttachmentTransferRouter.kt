@@ -43,31 +43,23 @@ internal class AttachmentTransferRouter(
             execution.onDiscard { transport.cancel(operationId) }
 
             val encrypted = config.encryptionEnabled
-            var prepared = checkNotNull(uploadPreparer).prepare(
+            val prepared = checkNotNull(uploadPreparer).prepare(
                 attachment = attachment,
                 onProgress = onPreparing,
-                reuseUploadedUrl = !encrypted,
+                encrypted = encrypted,
                 preparedFilePath = preparedFilePath,
             )
             // Remember completed media before the provider can suspend or fail.
             prepared.preparedFilePath?.let(onFilePrepared)
-            try {
-                // A completed checksum match skips both provider methods.
-                if (prepared.reusedUrl == null) {
-                    val request = createUploadRequest(
-                        attachment = prepared.attachment,
-                        operationId = operationId,
-                        encrypted = encrypted,
-                        isSharedUpload = isSharedUpload
-                    )
-                    prepared = prepared.copy(
-                        attachment = prepareUpload(
-                            request = request,
-                            transport = transport,
-                            onUploadPrepared = onUploadPrepared
-                        )
-                    )
-                }
+            val uploadAttachment = try {
+                prepareUploadAttachment(
+                    prepared = prepared,
+                    transport = transport,
+                    operationId = operationId,
+                    encrypted = encrypted,
+                    isSharedUpload = isSharedUpload,
+                    onUploadPrepared = onUploadPrepared,
+                )
             } finally {
                 // These callbacks queue metadata writes, so publish only after app preparation.
                 // Cancellation keeps the cached path without changing the paused task's state.
@@ -75,10 +67,10 @@ internal class AttachmentTransferRouter(
                     prepared.preparedFilePath?.let(onFileLocationChanged)
             }
 
-            execution.attachment = prepared.attachment
+            execution.attachment = uploadAttachment
 
             uploadPrepared(
-                prepared = prepared,
+                prepared = prepared.copy(attachment = uploadAttachment),
                 execution = execution,
                 transport = transport,
                 operationId = operationId,
@@ -89,16 +81,34 @@ internal class AttachmentTransferRouter(
         }
     }
 
-    private suspend fun prepareUpload(
-        request: FileUploadRequest,
+    private suspend fun prepareUploadAttachment(
+        prepared: PreparedAttachment,
         transport: FileTransferProvider,
+        operationId: String,
+        encrypted: Boolean,
+        isSharedUpload: Boolean,
         onUploadPrepared: suspend (SceytAttachment, Map<String, String>) -> SceytAttachment,
     ): SceytAttachment {
-        val attachment = request.attachment.copy(fileSize = request.sourceFile.length())
-        val data = transport.prepareUpload(request.copy(attachment = attachment))
-        if (data.isEmpty()) return request.attachment
+        val attachment = prepared.attachment
+        if (prepared.reusedUrl != null) {
+            val keys = prepared.reusedEncryptionMetadata.orEmpty()
+            val metadata = attachment.metadata
+            val updatedMetadata = if (keys.isEmpty()) metadata else metadata.withMetadata(keys)
+            return onUploadPrepared(attachment.copy(metadata = updatedMetadata), keys)
+        }
 
-        return onUploadPrepared(attachment.copy(metadata = attachment.metadata.withMetadata(data)), data)
+        val request = createUploadRequest(
+            attachment = attachment,
+            operationId = operationId,
+            encrypted = encrypted,
+            isSharedUpload = isSharedUpload,
+        )
+        val sizedAttachment = attachment.copy(fileSize = request.sourceFile.length())
+        val data = transport.prepareUpload(request.copy(attachment = sizedAttachment))
+        if (data.isEmpty()) return attachment
+
+        val metadata = sizedAttachment.metadata.withMetadata(data)
+        return onUploadPrepared(sizedAttachment.copy(metadata = metadata), data)
     }
 
     private suspend fun uploadPrepared(

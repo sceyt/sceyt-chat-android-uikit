@@ -162,10 +162,11 @@ The app must create new parameters if the prepared source changes. It must not r
 and nonce to encrypt changed plaintext. UIKit cannot validate an arbitrary app encryption format.
 
 The method runs before each actual upload attempt. It should return existing data without repeating
-network work while that data is valid. Completed plain checksum matches skip both provider methods.
-Encrypted uploads do not reuse cached remote URLs; set `encryptionEnabled = true` when using custom
-encryption. Prepared media files can still be reused. Disable `preventDuplicateAttachmentUpload`
-if a plain send requires fresh provider preparation every time.
+network work while that data is valid. Completed checksum matches skip both provider methods when
+the cached upload used the same mode. An encrypted match restores the metadata saved with its URL;
+set `encryptionEnabled = true` when using custom encryption. Prepared media files can still be
+reused. Disable `preventDuplicateAttachmentUpload` if a send requires fresh provider preparation
+every time.
 
 The saved entries travel in attachment metadata when the message is sent and forwarded. Do not put
 credentials for a storage service, signed upload URLs, or large transfer journals in it.

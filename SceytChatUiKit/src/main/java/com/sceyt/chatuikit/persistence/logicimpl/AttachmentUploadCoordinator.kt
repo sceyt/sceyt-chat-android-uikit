@@ -238,7 +238,9 @@ internal class AttachmentUploadCoordinator(
                     }
                 },
                 preparedFilePath = upload.preparedFilePath,
-                onUploadPrepared = { prepared, data -> savePreparedUpload(owner, attempt, prepared, data) },
+                onUploadPrepared = { prepared, data ->
+                    savePreparedUpload(owner, attempt, prepared, data)
+                },
             )
             attempt.transfer = transfer
             val response = transfer.execute { progress ->
@@ -294,7 +296,8 @@ internal class AttachmentUploadCoordinator(
         prepared: SceytAttachment,
         data: Map<String, String>,
     ) {
-        val metadata = member.task.attachment.metadata.withMetadata(data)
+        val currentMetadata = member.task.attachment.metadata
+        val metadata = if (data.isEmpty()) currentMetadata else currentMetadata.withMetadata(data)
         val path = checkNotNull(prepared.filePath)
         attachmentLogic.updateAttachmentFilePathAndMetadata(
             messageTid = member.attachment.messageTid,
@@ -311,6 +314,7 @@ internal class AttachmentUploadCoordinator(
         )
         member.attachment = attachment
         member.task.attachment = attachment
+        member.task.encryptionMetadata = data
     }
 
     private fun handleProgress(upload: Upload, attempt: Attempt, progressPercent: Float) {

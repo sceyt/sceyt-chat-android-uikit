@@ -17,6 +17,7 @@ import com.sceyt.chatuikit.persistence.file_transfer.transferKey
 import com.sceyt.chatuikit.persistence.mappers.toTransferData
 import com.sceyt.chatuikit.presentation.extensions.isAttachmentExistAndFullyLoaded
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
@@ -32,6 +33,7 @@ import java.io.File
 internal class AttachmentDownloadCoordinator(
     private val context: Context,
     private val scope: CoroutineScope,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) {
     private val router = AttachmentTransferRouter(context)
     private val lock = Any()
@@ -155,7 +157,7 @@ internal class AttachmentDownloadCoordinator(
         val key = attachment.transferKey
         val previousCleanup = cleanups[key]
         val cleanup = scope.launch(start = CoroutineStart.LAZY) {
-            withContext(NonCancellable + Dispatchers.IO) {
+            withContext(NonCancellable + ioDispatcher) {
                 previousCleanup?.join()
                 download?.job?.join()
 

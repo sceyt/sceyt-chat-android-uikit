@@ -67,9 +67,11 @@ class FileTransferServiceImplTest {
         // FileTransferHelper retains injected dependencies for the lifetime of its singleton.
         private val uploader = mock<AttachmentUploadCoordinator>()
         private val downloads by lazy {
+            val dispatcher = UnconfinedTestDispatcher()
             AttachmentDownloadCoordinator(
                 RuntimeEnvironment.getApplication(),
-                TestScope(UnconfinedTestDispatcher())
+                TestScope(dispatcher),
+                dispatcher,
             )
         }
         private val service by lazy {

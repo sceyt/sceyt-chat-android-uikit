@@ -28,6 +28,9 @@ class TransferTask(
     @Volatile
     internal var isCancelled = false
 
+    @Volatile
+    internal var encryptionMetadata: Map<String, String>? = null
+
     var attachment: SceytAttachment
         get() = _attachment
         set(value) {
