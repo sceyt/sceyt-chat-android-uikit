@@ -94,6 +94,7 @@ import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.reset
+import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
@@ -822,8 +823,111 @@ class UploadAndSendAttachmentWorkerTest {
         assertThat(transport.uploadCalls).isEmpty()
         verify(messageLogic, never()).sendMessageWithUploadedAttachments(any(), any())
         val transferData = argumentCaptor<TransferData>()
+        verify(attachmentLogic, times(2)).updateAttachmentWithTransferData(transferData.capture())
+        assertThat(transferData.allValues.map { it.state })
+            .containsExactly(TransferState.WaitingToUpload, TransferState.ErrorUpload)
+            .inOrder()
+    }
+
+    @Test
+    fun `pause during a failing preview keeps the upload paused`() = runBlocking<Unit> {
+        val video = pauseDuringFailingPreview()
+
+        assertThat(service.findTransferTask(video)?.state).isEqualTo(TransferState.PauseUpload)
+        assertThat(FileTransferHelper.onTransferUpdatedLiveData.value?.state)
+            .isEqualTo(TransferState.PauseUpload)
+        val transferData = argumentCaptor<TransferData>()
         verify(attachmentLogic).updateAttachmentWithTransferData(transferData.capture())
-        assertThat(transferData.lastValue.state).isEqualTo(TransferState.ErrorUpload)
+        assertThat(transferData.allValues.map { it.state }).containsExactly(TransferState.WaitingToUpload)
+        assertThat(transport.uploadCalls).isEmpty()
+        verify(messageLogic, never()).sendMessageWithUploadedAttachments(any(), any())
+    }
+
+    @Test
+    fun `resume after pause during preview uploads the video`() = runBlocking<Unit> {
+        val video = pauseDuringFailingPreview()
+        whenever(previewTransfer.upload(any())).thenReturn(PreviewUploadResult.Unavailable)
+
+        val work = testScope.async {
+            worker(video.copy(transferState = TransferState.PauseUpload), resume = true).doWork()
+        }
+        transport.uploadCalls.single().succeed("video-url")
+
+        assertThat(work.isCompleted).isTrue()
+        assertSentAttachments(video, "video-url" to AttachmentTypeEnum.Video)
+    }
+
+    @Test
+    fun `pause again during a resumed preview keeps the video paused`() = runBlocking<Unit> {
+        val video = pauseDuringFailingPreview().copy(transferState = TransferState.PauseUpload)
+        val preview = previewAttachment(video, url = "preview-url")
+        val previewResult = CompletableDeferred<PreviewUploadResult>()
+        whenever(previewTransfer.upload(any())).doSuspendableAnswer { previewResult.await() }
+
+        val work = testScope.async { worker(video, resume = true).doWork() }
+        try {
+            assertThat(service.findTransferTask(video)?.state).isEqualTo(TransferState.WaitingToUpload)
+            service.pause(video.messageTid, video, TransferState.WaitingToUpload)
+            assertThat(service.findTransferTask(video)?.state).isEqualTo(TransferState.PauseUpload)
+
+            previewResult.complete(PreviewUploadResult.Uploaded(preview))
+
+            assertThat(work.isCompleted).isTrue()
+            assertThat(service.findTransferTask(video)?.state).isEqualTo(TransferState.PauseUpload)
+            assertThat(FileTransferHelper.onTransferUpdatedLiveData.value?.state)
+                .isEqualTo(TransferState.PauseUpload)
+            assertThat(transport.uploadCalls).isEmpty()
+            verify(messageLogic, never()).sendMessageWithUploadedAttachments(any(), any())
+        } finally {
+            work.cancelAndJoin()
+        }
+    }
+
+    @Test
+    fun `offline resume after pause during preview shows the upload error`() = runBlocking<Unit> {
+        val video = pauseDuringFailingPreview()
+        whenever(previewTransfer.upload(any()))
+            .thenReturn(PreviewUploadResult.Failed(IllegalStateException("offline")))
+
+        val work = testScope.async {
+            worker(video.copy(transferState = TransferState.PauseUpload), resume = true).doWork()
+        }
+
+        assertThat(work.isCompleted).isTrue()
+        assertThat(FileTransferHelper.onTransferUpdatedLiveData.value?.state)
+            .isEqualTo(TransferState.ErrorUpload)
+        assertThat(transport.uploadCalls).isEmpty()
+    }
+
+    private suspend fun pauseDuringFailingPreview(): SceytAttachment {
+        val video = preparedVideo().copy(transferState = TransferState.ErrorUpload)
+        val previewResult = CompletableDeferred<PreviewUploadResult>()
+        whenever(previewTransfer.upload(any())).doSuspendableAnswer { previewResult.await() }
+        val work = testScope.async { worker(video).doWork() }
+
+        service.pause(video.messageTid, video, TransferState.WaitingToUpload)
+        previewResult.complete(PreviewUploadResult.Failed(IllegalStateException("offline")))
+
+        assertThat(work.isCompleted).isTrue()
+        return video
+    }
+
+    @Test
+    fun `preview upload for an uploaded video keeps its uploaded state`() = runBlocking<Unit> {
+        val video = preparedVideo().copy(url = "video-url", transferState = TransferState.Uploaded)
+        val preview = previewAttachment(video, url = "preview-url")
+        whenever(previewTransfer.upload(any())).thenReturn(PreviewUploadResult.Uploaded(preview))
+        whenever(attachmentLogic.getAllPayLoadsByMsgTid(any())).thenReturn(
+            listOf(AttachmentPayLoad(video.messageTid, TransferState.Uploaded, 100f, "video-url", video.filePath, null))
+        )
+
+        val work = testScope.async { worker(video).doWork() }
+
+        assertThat(work.isCompleted).isTrue()
+        val transferData = argumentCaptor<TransferData>()
+        verify(attachmentLogic).updateAttachmentWithTransferData(transferData.capture())
+        assertThat(transferData.allValues.map { it.state }).containsExactly(TransferState.Uploaded)
+        assertSentAttachments(video, "video-url" to AttachmentTypeEnum.Video, "preview-url" to AttachmentTypeEnum.Preview)
     }
 
     @Test

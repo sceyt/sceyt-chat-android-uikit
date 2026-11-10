@@ -173,19 +173,7 @@ class UploadAndSendAttachmentWorker(
                 return KtResult.failure(Exception("Attachment upload is paused"))
             }
 
-            val transferData = TransferData(
-                messageTid = message.tid,
-                progressPercent = attachment.progressPercent ?: 0f,
-                state = TransferState.WaitingToUpload,
-                filePath = attachment.filePath,
-                url = attachment.url
-            )
-
-            FileTransferHelper.emitAttachmentTransferUpdate(
-                transferData = transferData,
-                fileSize = attachment.fileSize
-            )
-            attachmentLogic.updateAttachmentWithTransferData(transferData)
+            markWaitingToUpload(message.tid, attachment)
 
             val result = uploadFile(attachment, isSharing)
             return result.map { uploadedAttachment ->
@@ -214,6 +202,13 @@ class UploadAndSendAttachmentWorker(
         if (!shouldStartUpload(video.transferState, resumePausedUpload))
             return KtResult.success(Unit)
 
+        val task = fileTransferService.findTransferTask(video)
+        if (resumePausedUpload && task != null && task.state == TransferState.PauseUpload)
+            task.state = TransferState.WaitingToUpload
+
+        if (video.transferState != TransferState.Uploaded)
+            markWaitingToUpload(message.tid, video)
+
         return when (val result = previewTransfer.upload(video)) {
             is PreviewUploadResult.Uploaded -> {
                 attachments.add(result.preview)
@@ -222,6 +217,9 @@ class UploadAndSendAttachmentWorker(
 
             is PreviewUploadResult.Unavailable -> KtResult.success(Unit)
             is PreviewUploadResult.Failed -> {
+                if (fileTransferService.findTransferTask(video)?.state == TransferState.PauseUpload)
+                    return KtResult.failure(Exception("Attachment upload is paused"))
+
                 val transferData = TransferData(
                     messageTid = message.tid,
                     progressPercent = 0f,
@@ -234,6 +232,22 @@ class UploadAndSendAttachmentWorker(
                 KtResult.failure(result.error)
             }
         }
+    }
+
+    private suspend fun markWaitingToUpload(messageTid: Long, attachment: SceytAttachment) {
+        val transferData = TransferData(
+            messageTid = messageTid,
+            progressPercent = attachment.progressPercent ?: 0f,
+            state = TransferState.WaitingToUpload,
+            filePath = attachment.filePath,
+            url = attachment.url
+        )
+
+        FileTransferHelper.emitAttachmentTransferUpdate(
+            transferData = transferData,
+            fileSize = attachment.fileSize
+        )
+        attachmentLogic.updateAttachmentWithTransferData(transferData)
     }
 
     private suspend fun uploadFile(
