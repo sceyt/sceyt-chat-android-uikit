@@ -173,6 +173,7 @@ class UploadAndSendAttachmentWorkerTest {
         stopKoin()
         SceytKoinApp.koinApp = startKoin {
             modules(module {
+                single { AttachmentUploadLock() }
                 single<FileTransferService> { service }
                 single<PersistenceAttachmentLogic> { attachmentLogic }
                 single<PersistenceMessagesLogic> { messageLogic }
@@ -197,6 +198,171 @@ class UploadAndSendAttachmentWorkerTest {
         SceytChatUIKit.notifications = previousNotifications
         SceytKoinApp.koinApp = null
         stopKoin()
+    }
+
+    @Test
+    fun `queued uploads keep their order when first preparation is delayed`() = runBlocking {
+        val first = localAttachment()
+        val second = first.copy(messageTid = 11L, name = "second.txt")
+        val firstWorker = worker(first)
+        val secondWorker = worker(second)
+        val preparationStarted = CompletableDeferred<Unit>()
+        val releasePreparation = CompletableDeferred<Unit>()
+        whenever(attachmentLogic.updateAttachmentWithTransferData(any())).doSuspendableAnswer {
+            if (it.getArgument<TransferData>(0).messageTid == first.messageTid) {
+                preparationStarted.complete(Unit)
+                releasePreparation.await()
+            }
+        }
+
+        val firstWork = testScope.async { firstWorker.doWork() }
+        val secondWork = testScope.async { secondWorker.doWork() }
+        try {
+            assertThat(preparationStarted.isCompleted).isTrue()
+            assertThat(transport.uploadCalls).isEmpty()
+
+            releasePreparation.complete(Unit)
+            assertThat(transport.uploadCalls.single().request.attachment.messageTid).isEqualTo(first.messageTid)
+            transport.uploadCalls.single().succeed("first-url")
+            assertThat(firstWork.isCompleted).isTrue()
+
+            assertThat(transport.uploadCalls).hasSize(2)
+            assertThat(transport.uploadCalls.last().request.attachment.messageTid).isEqualTo(second.messageTid)
+            transport.uploadCalls.last().succeed("second-url")
+            assertThat(secondWork.isCompleted).isTrue()
+        } finally {
+            releasePreparation.complete(Unit)
+            firstWork.cancelAndJoin()
+            secondWork.cancelAndJoin()
+        }
+    }
+
+    @Test
+    fun `slow video preview does not let a later attachment upload first`() = runBlocking {
+        val video = preparedVideo()
+        val next = localAttachment().copy(messageTid = 11L)
+        val releasePreview = CompletableDeferred<Unit>()
+        whenever(previewTransfer.upload(any())).doSuspendableAnswer {
+            releasePreview.await()
+            PreviewUploadResult.Unavailable
+        }
+        val videoWorker = worker(video)
+        val nextWorker = worker(next)
+        val videoWork = testScope.async { videoWorker.doWork() }
+        val nextWork = testScope.async { nextWorker.doWork() }
+        try {
+            assertThat(transport.uploadCalls).isEmpty()
+
+            releasePreview.complete(Unit)
+            assertThat(transport.uploadCalls.single().request.attachment.messageTid).isEqualTo(video.messageTid)
+            transport.uploadCalls.single().succeed("video-url")
+            assertThat(videoWork.isCompleted).isTrue()
+
+            assertThat(transport.uploadCalls).hasSize(2)
+            assertThat(transport.uploadCalls.last().request.attachment.messageTid).isEqualTo(next.messageTid)
+            transport.uploadCalls.last().succeed("next-url")
+            assertThat(nextWork.isCompleted).isTrue()
+        } finally {
+            releasePreview.complete(Unit)
+            videoWork.cancelAndJoin()
+            nextWork.cancelAndJoin()
+        }
+    }
+
+    @Test
+    fun `cancelling a waiting worker leaves the next upload able to run`() = runBlocking {
+        val first = localAttachment()
+        val cancelled = first.copy(messageTid = 11L)
+        val next = first.copy(messageTid = 12L)
+        val releasePreparation = CompletableDeferred<Unit>()
+        whenever(attachmentLogic.updateAttachmentWithTransferData(any())).doSuspendableAnswer {
+            if (it.getArgument<TransferData>(0).messageTid == first.messageTid)
+                releasePreparation.await()
+        }
+        val firstWorker = worker(first)
+        val cancelledWorker = worker(cancelled)
+        val nextWorker = worker(next)
+        val firstWork = testScope.async { firstWorker.doWork() }
+        val cancelledWork = testScope.async { cancelledWorker.doWork() }
+        val nextWork = testScope.async { nextWorker.doWork() }
+        try {
+            cancelledWork.cancelAndJoin()
+            releasePreparation.complete(Unit)
+            transport.uploadCalls.single().succeed("first-url")
+            assertThat(firstWork.isCompleted).isTrue()
+
+            assertThat(transport.uploadCalls.map { it.request.attachment.messageTid })
+                .containsExactly(first.messageTid, next.messageTid).inOrder()
+            transport.uploadCalls.last().succeed("next-url")
+            assertThat(nextWork.isCompleted).isTrue()
+        } finally {
+            releasePreparation.complete(Unit)
+            firstWork.cancelAndJoin()
+            cancelledWork.cancelAndJoin()
+            nextWork.cancelAndJoin()
+        }
+    }
+
+    @Test
+    fun `shared upload remains independent of a regular worker preparing its file`() = runBlocking {
+        val regular = localAttachment()
+        val shared = regular.copy(messageTid = 11L)
+        val releasePreparation = CompletableDeferred<Unit>()
+        whenever(attachmentLogic.updateAttachmentWithTransferData(any())).doSuspendableAnswer {
+            if (it.getArgument<TransferData>(0).messageTid == regular.messageTid)
+                releasePreparation.await()
+        }
+        val regularWorker = worker(regular)
+        val sharedWorker = worker(shared, shared = true)
+        val regularWork = testScope.async { regularWorker.doWork() }
+        val sharedWork = testScope.async { sharedWorker.doWork() }
+        try {
+            assertThat(transport.uploadCalls.single().request.attachment.messageTid).isEqualTo(shared.messageTid)
+            transport.uploadCalls.single().succeed("shared-url")
+            assertThat(sharedWork.isCompleted).isTrue()
+
+            releasePreparation.complete(Unit)
+            assertThat(transport.uploadCalls.last().request.attachment.messageTid).isEqualTo(regular.messageTid)
+            transport.uploadCalls.last().succeed("regular-url")
+            assertThat(regularWork.isCompleted).isTrue()
+        } finally {
+            releasePreparation.complete(Unit)
+            regularWork.cancelAndJoin()
+            sharedWork.cancelAndJoin()
+        }
+    }
+
+    @Test
+    fun `retained shared upload can resume while a regular worker is preparing`() = runBlocking {
+        transport.pauseResult = true
+        transport.resumeResult = true
+        val shared = localAttachment()
+        val regular = shared.copy(messageTid = 11L)
+        service.upload(shared, shared = true)
+        service.pause(shared.messageTid, shared, TransferState.Uploading)
+
+        val releasePreparation = CompletableDeferred<Unit>()
+        whenever(attachmentLogic.updateAttachmentWithTransferData(any())).doSuspendableAnswer {
+            if (it.getArgument<TransferData>(0).messageTid == regular.messageTid)
+                releasePreparation.await()
+        }
+        val regularWorker = worker(regular)
+        val resumedWorker = worker(shared.copy(transferState = TransferState.PauseUpload), resume = true)
+        val regularWork = testScope.async { regularWorker.doWork() }
+        val resumedWork = testScope.async { resumedWorker.doWork() }
+        try {
+            assertThat(transport.resumeCalls).containsExactly("upload:${shared.messageTid}")
+            transport.uploadCalls.single().succeed("shared-url")
+            assertThat(resumedWork.isCompleted).isTrue()
+
+            releasePreparation.complete(Unit)
+            transport.uploadCalls.last().succeed("regular-url")
+            assertThat(regularWork.isCompleted).isTrue()
+        } finally {
+            releasePreparation.complete(Unit)
+            regularWork.cancelAndJoin()
+            resumedWork.cancelAndJoin()
+        }
     }
 
     @Test

@@ -93,6 +93,7 @@ import com.sceyt.chatuikit.persistence.logicimpl.usecases.UnpinMessageUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.UpdatePinnedMessagesUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.UpdatePollUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.UpdatePollVotesUseCase
+import com.sceyt.chatuikit.persistence.workers.AttachmentUploadLock
 import com.sceyt.chatuikit.push.service.PushService
 import com.sceyt.chatuikit.push.service.PushServiceImpl
 import com.sceyt.chatuikit.services.sync.SceytSyncManager
@@ -111,6 +112,7 @@ import java.util.concurrent.Executors
 import kotlin.coroutines.CoroutineContext
 
 internal val appModules = module {
+    singleOf(::AttachmentUploadLock)
     singleOf(::SceytSyncManagerImpl) bind SceytSyncManager::class
     single {
         AttachmentUploadCoordinator(

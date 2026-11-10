@@ -96,6 +96,7 @@ class UploadAndSendAttachmentWorker(
     context: Context,
     workerParams: WorkerParameters
 ) : CoroutineWorker(context, workerParams), SceytKoinComponent {
+    private val uploadLock: AttachmentUploadLock by inject()
     private val fileTransferService: FileTransferService by inject()
     private val attachmentLogic: PersistenceAttachmentLogic by inject()
     private val messageLogic: PersistenceMessagesLogic by inject()
@@ -106,6 +107,22 @@ class UploadAndSendAttachmentWorker(
     // A retried worker must respect a user pause made after the explicit resume request.
     private val resumePausedUpload: Boolean
         get() = inputData.getBoolean(RESUME_PAUSED_UPLOAD, false) && runAttemptCount == 0
+
+    override suspend fun doWork(): Result {
+        val messageTid = inputData.getLong(MESSAGE_TID, 0)
+        val isSharing =
+            inputData.getBoolean(IS_SHARING, false) || fileTransferService.getTasks().values.any {
+                it.messageTid == messageTid && it.isSharedUpload
+            }
+
+        return if (isSharing) {
+            uploadAndSend(true)
+        } else {
+            uploadLock.withLock {
+                uploadAndSend(false)
+            }
+        }
+    }
 
     private suspend fun uploadAttachmentsBeforeSend(
         message: SceytMessage,
@@ -259,10 +276,8 @@ class UploadAndSendAttachmentWorker(
         )
     }
 
-    override suspend fun doWork(): Result {
-        val data = inputData
-        val messageTid = data.getLong(MESSAGE_TID, 0)
-        val isSharing = data.getBoolean(IS_SHARING, false)
+    private suspend fun uploadAndSend(isSharing: Boolean): Result {
+        val messageTid = inputData.getLong(MESSAGE_TID, 0)
         val message = messageLogic.getMessageFromDbByTid(messageTid)
             ?: return finishWorkWithError("Message not found: $messageTid")
 
