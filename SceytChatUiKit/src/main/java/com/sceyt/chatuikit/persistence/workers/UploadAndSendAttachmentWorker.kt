@@ -49,7 +49,6 @@ import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManage
 import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager.RESUME_PAUSED_UPLOAD
 import com.sceyt.chatuikit.presentation.extensions.isNotPending
 import com.sceyt.chatuikit.shared.utils.FileChecksumCalculator
-import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.suspendCancellableCoroutine
 import org.koin.core.component.inject
 import kotlin.time.Duration.Companion.seconds
@@ -188,9 +187,7 @@ class UploadAndSendAttachmentWorker(
             )
             attachmentLogic.updateAttachmentWithTransferData(transferData)
 
-            val result = suspendCancellableCoroutine { continuation ->
-                uploadFile(attachment, continuation, isSharing)
-            }
+            val result = uploadFile(attachment, isSharing)
             return result.map { uploadedAttachment ->
                 // Encrypted URLs require matching keys and are excluded from checksum URL reuse.
                 if (checksum != null && !SceytChatUIKit.fileTransfer.encryptionEnabled)
@@ -239,13 +236,12 @@ class UploadAndSendAttachmentWorker(
         }
     }
 
-    private fun uploadFile(
+    private suspend fun uploadFile(
         attachment: SceytAttachment,
-        continuation: CancellableContinuation<KtResult<SceytAttachment>>,
         isSharing: Boolean
-    ) {
+    ): KtResult<SceytAttachment> = suspendCancellableCoroutine { continuation ->
         // Cancellation can happen before the worker reaches task registration.
-        if (!continuation.isActive) return
+        if (!continuation.isActive) return@suspendCancellableCoroutine
 
         val existingTask = fileTransferService.findTransferTask(attachment)
         val completionKey = this.toString()
