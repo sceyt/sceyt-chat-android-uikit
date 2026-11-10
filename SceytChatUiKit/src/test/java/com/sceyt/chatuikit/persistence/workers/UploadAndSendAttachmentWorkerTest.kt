@@ -782,6 +782,35 @@ class UploadAndSendAttachmentWorkerTest {
     }
 
     @Test
+    fun `view once video sends only the video without uploading a preview`() = runBlocking {
+        val video = preparedVideo()
+        val preview = previewAttachment(video, url = "preview-url")
+        whenever(previewTransfer.upload(any())).thenReturn(PreviewUploadResult.Uploaded(preview))
+        val work = testScope.async { worker(video, viewOnce = true).doWork() }
+
+        transport.uploadCalls.single().succeed("video-url")
+
+        assertThat(work.isCompleted).isTrue()
+        verify(previewTransfer, never()).upload(any())
+        assertSentAttachments(video, "video-url" to AttachmentTypeEnum.Video)
+    }
+
+    @Test
+    fun `view once retry omits a previously saved preview attachment`() = runBlocking {
+        val video = preparedVideo()
+        val preview = previewAttachment(video, url = "preview-url")
+        val work = testScope.async {
+            worker(video, extraAttachments = listOf(preview), viewOnce = true).doWork()
+        }
+
+        transport.uploadCalls.single().succeed("video-url")
+
+        assertThat(work.isCompleted).isTrue()
+        verify(previewTransfer, never()).upload(any())
+        assertSentAttachments(video, "video-url" to AttachmentTypeEnum.Video)
+    }
+
+    @Test
     fun `preview failure fails the message before the video upload starts`() = runBlocking {
         val video = preparedVideo()
         whenever(previewTransfer.upload(any()))
@@ -1524,9 +1553,11 @@ class UploadAndSendAttachmentWorkerTest {
         runAttemptCount: Int = 0,
         channelId: Long = 0L,
         extraAttachments: List<SceytAttachment> = emptyList(),
+        viewOnce: Boolean = false,
     ): UploadAndSendAttachmentWorker {
         val message = createMessage(createdAt = 1L, tid = attachment.messageTid).copy(
             channelId = channelId,
+            viewOnce = viewOnce,
             deliveryStatus = MessageDeliveryStatus.Pending,
             attachments = listOf(attachment) + extraAttachments,
         )

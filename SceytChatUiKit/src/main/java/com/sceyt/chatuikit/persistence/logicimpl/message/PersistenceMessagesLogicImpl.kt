@@ -725,7 +725,11 @@ internal class PersistenceMessagesLogicImpl(
             ).await()
             trySend(SendMessageResult.StartedSendingAttachment)
         } else {
-            val linkedMessage = message.copy(attachments = message.attachments?.withPreviewLink())
+            val linkedMessage = message.copy(
+                attachments = message.attachments?.withPreviewLink(
+                    viewOnce = message.viewOnce
+                )
+            )
             val response = messagesRepository.sendMessage(channelId, linkedMessage)
             onMessageSentResponse(channelId, response, linkedMessage)
             trySend(response.toSendMessageResult())
@@ -848,7 +852,8 @@ internal class PersistenceMessagesLogicImpl(
                             !isTransferTrackedType(attachment.attachmentEntity.type)
                                     || attachment.payLoad?.transferState == TransferState.Uploaded
                         }
-                        val needsPreview = messageDb.messageEntity.forwardingDetailsDb == null
+                        val needsPreview = !messageDb.messageEntity.viewOnce
+                                && messageDb.messageEntity.forwardingDetailsDb == null
                                 && attachments.any { it.attachmentEntity.type == AttachmentTypeEnum.Video.value }
                                 && attachments.none { it.attachmentEntity.type == AttachmentTypeEnum.Preview.value }
                         filesUploaded && !needsPreview
@@ -987,7 +992,10 @@ internal class PersistenceMessagesLogicImpl(
         if (storedMessage.isPending()) {
             val clonedMessage = message.copy(state = MessageState.Deleted)
             runCatchingCancellable {
-                UploadAndSendAttachmentWorkManager.cancelWorksByTag(context, message.tid.toString()).await()
+                UploadAndSendAttachmentWorkManager.cancelWorksByTag(
+                    context = context,
+                    tag = message.tid.toString()
+                ).await()
             }.onFailure {
                 SceytLog.e(TAG, "Could not cancel workers tagged ${message.tid}", it)
             }
@@ -1631,7 +1639,11 @@ internal class PersistenceMessagesLogicImpl(
             it.pendingVote.messageTid
         }
         return list.map {
-            val updatedMessage = updateMessageStatesWithPendingStates(it, pendingStates, pendingPolls)
+            val updatedMessage = updateMessageStatesWithPendingStates(
+                message = it,
+                pendingStates = pendingStates,
+                pendingPolls = pendingPolls
+            )
             preservePendingPollVotes(updatedMessage)
         }
     }
