@@ -132,6 +132,14 @@ class UploadAndSendAttachmentWorker(
         val attachments = message.attachments?.toMutableList()
             ?: return KtResult.failure(Exception("Attachments not found"))
 
+        // Apply the explicit resume before preparation can expose the pause control again.
+        if (resumePausedUpload) {
+            val attachment = attachments.firstOrNull { it.isTransferTracked() }
+            val task = attachment?.let(fileTransferService::findTransferTask)
+            if (task?.state == TransferState.PauseUpload)
+                task.state = TransferState.WaitingToUpload
+        }
+
         uploadPreviewIfNeeded(message, attachments, resumePausedUpload).onFailure {
             return KtResult.failure(it)
         }
@@ -169,13 +177,18 @@ class UploadAndSendAttachmentWorker(
             }
 
             // Automatic worker runs leave paused uploads waiting for an explicit resume.
-            if (!shouldStartUpload(attachment.transferState, resumePausedUpload)) {
+            val isPaused =
+                fileTransferService.findTransferTask(attachment)?.state == TransferState.PauseUpload
+            if (isPaused || !shouldStartUpload(attachment.transferState, resumePausedUpload)) {
                 return KtResult.failure(Exception("Attachment upload is paused"))
             }
 
             markWaitingToUpload(message.tid, attachment)
 
-            val result = uploadFile(attachment, isSharing)
+            val uploadAttachment = if (attachment.transferState == TransferState.PauseUpload)
+                attachment.copy(transferState = TransferState.WaitingToUpload)
+            else attachment
+            val result = uploadFile(uploadAttachment, isSharing)
             return result.map { uploadedAttachment ->
                 // Encrypted URLs require matching keys and are excluded from checksum URL reuse.
                 if (checksum != null && !SceytChatUIKit.fileTransfer.encryptionEnabled)
@@ -202,14 +215,14 @@ class UploadAndSendAttachmentWorker(
         if (!shouldStartUpload(video.transferState, resumePausedUpload))
             return KtResult.success(Unit)
 
-        val task = fileTransferService.findTransferTask(video)
-        if (resumePausedUpload && task != null && task.state == TransferState.PauseUpload)
-            task.state = TransferState.WaitingToUpload
-
         if (video.transferState != TransferState.Uploaded)
             markWaitingToUpload(message.tid, video)
 
-        return when (val result = previewTransfer.upload(video)) {
+        val result = previewTransfer.upload(video)
+        if (fileTransferService.findTransferTask(video)?.state == TransferState.PauseUpload)
+            return KtResult.failure(Exception("Attachment upload is paused"))
+
+        return when (result) {
             is PreviewUploadResult.Uploaded -> {
                 attachments.add(result.preview)
                 KtResult.success(Unit)
@@ -217,9 +230,6 @@ class UploadAndSendAttachmentWorker(
 
             is PreviewUploadResult.Unavailable -> KtResult.success(Unit)
             is PreviewUploadResult.Failed -> {
-                if (fileTransferService.findTransferTask(video)?.state == TransferState.PauseUpload)
-                    return KtResult.failure(Exception("Attachment upload is paused"))
-
                 val transferData = TransferData(
                     messageTid = message.tid,
                     progressPercent = 0f,
@@ -261,9 +271,6 @@ class UploadAndSendAttachmentWorker(
         val completionKey = this.toString()
         val configureTask: TransferTask.() -> Unit = {
             isSharedUpload = isSharedUpload || isSharing
-            if (state == TransferState.PauseUpload && resumePausedUpload) {
-                state = TransferState.WaitingToUpload
-            }
             addOnCompletionListener(completionKey, continuation::safeResume)
             continuation.invokeOnCancellation {
                 removeOnCompletionListener(completionKey)
