@@ -7,6 +7,7 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.createMessage
 import com.sceyt.chatuikit.data.constants.SceytConstants
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
+import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.filetransfer.SceytChatUIKitFileTransfer
 import com.sceyt.chatuikit.persistence.database.SceytDatabase
@@ -60,6 +61,39 @@ class AttachmentPreviewPersistenceTest {
     fun tearDown() {
         SceytChatUIKit.fileTransfer = previousFileTransfer
         database.close()
+    }
+
+    @Test
+    fun `reloading a chat keeps queued uploads waiting and preserves active progress`() = runBlocking {
+        val messageDao = database.messageDao()
+        val attachmentDao = database.attachmentsDao()
+        val uploadingTid = TID
+        val queuedTid = TID + 1
+
+        for (tid in listOf(uploadingTid, queuedTid)) {
+            val video = attachment(
+                messageTid = tid,
+                type = AttachmentTypeEnum.Video.value,
+                url = null,
+                filePath = "/videos/$tid.mp4",
+                state = TransferState.WaitingToUpload,
+            )
+            val message = createMessage(createdAt = tid, tid = tid).copy(
+                deliveryStatus = MessageDeliveryStatus.Pending,
+                attachments = listOf(video),
+            )
+            messageDao.upsertMessage(message.toMessageDb(unList = false))
+        }
+
+        attachmentDao.updateAttachmentTransferDataByMsgTid(uploadingTid, 42f, TransferState.Uploading)
+        attachmentDao.markUploadQueued(uploadingTid)
+        attachmentDao.markUploadQueued(queuedTid)
+
+        val uploading = checkNotNull(messageDao.getMessageByTid(uploadingTid)?.attachments).single().toAttachment()
+        val queued = checkNotNull(messageDao.getMessageByTid(queuedTid)?.attachments).single().toAttachment()
+        assertThat(uploading.transferState).isEqualTo(TransferState.Uploading)
+        assertThat(uploading.progressPercent).isEqualTo(42f)
+        assertThat(queued.transferState).isEqualTo(TransferState.WaitingToUpload)
     }
 
     @Test

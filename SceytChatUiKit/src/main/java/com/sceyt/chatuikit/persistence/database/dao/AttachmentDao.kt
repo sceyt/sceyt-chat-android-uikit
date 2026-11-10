@@ -150,6 +150,19 @@ internal abstract class AttachmentDao {
     @Query("UPDATE $ATTACHMENT_PAYLOAD_TABLE SET progressPercent = :progress, transferState = :state WHERE messageTid = :tid")
     abstract suspend fun updateAttachmentTransferDataByMsgTid(tid: Long, progress: Float, state: TransferState)
 
+    @Query(
+        """
+        UPDATE $ATTACHMENT_PAYLOAD_TABLE
+        SET transferState = :waiting
+        WHERE messageTid = :tid AND transferState = :pending
+        """
+    )
+    abstract suspend fun markUploadQueued(
+        tid: Long,
+        waiting: TransferState = TransferState.WaitingToUpload,
+        pending: TransferState = TransferState.PendingUpload,
+    )
+
     @Transaction
     open suspend fun updateAttachmentAndPayLoad(transferData: TransferData) {
         updateAttachmentByMsgTid(transferData.messageTid, transferData.filePath, transferData.url)
