@@ -384,7 +384,9 @@ class AttachmentUploadPreparationTest {
         assertThat((response as SceytResponse.Success).data).isEqualTo("cached-url")
         assertThat(preparations).isEqualTo(0)
         assertThat(transport.uploadCalls).isEmpty()
-        assertThat(saved).isEmpty()
+        val reused = saved.values.single()
+        assertThat(reused.fileSize).isEqualTo(file.length())
+        assertThat(reused.metadata).isNull()
     }
 
     @Suppress("UNCHECKED_CAST")

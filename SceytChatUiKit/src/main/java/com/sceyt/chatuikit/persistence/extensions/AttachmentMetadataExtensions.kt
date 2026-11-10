@@ -11,3 +11,10 @@ internal fun String?.withMetadata(data: Map<String, String>): String {
     data.forEach { (key, value) -> metadata.addProperty(key, value) }
     return metadata.toString()
 }
+
+internal fun Map<String, String>.toMetadataJson(): String = metadataGson.toJson(this)
+
+internal fun String.toMetadataMap(): Map<String, String> {
+    val metadata = metadataGson.fromJson(this, JsonObject::class.java) ?: return emptyMap()
+    return metadata.entrySet().associate { (key, value) -> key to value.asString }
+}

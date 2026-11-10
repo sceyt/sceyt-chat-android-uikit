@@ -182,7 +182,7 @@ fun SceytAttachment.toAttachment(): Attachment = Attachment(
 )
 
 internal fun FileChecksumEntity.toFileChecksumData() = FileChecksumData(
-    checksum, resizedFilePath, url, metadata, fileSize
+    checksum, resizedFilePath, url, metadata, fileSize, encryptionMetadata
 )
 
 fun SceytAttachment.getInfoFromMetadata(): AttachmentMetadataPayload {

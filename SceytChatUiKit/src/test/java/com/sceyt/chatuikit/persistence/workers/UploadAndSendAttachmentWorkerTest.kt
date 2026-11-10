@@ -42,6 +42,7 @@ import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferServiceImpl
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
+import com.sceyt.chatuikit.persistence.extensions.toMetadataJson
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
@@ -91,6 +92,7 @@ import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.doSuspendableAnswer
 import org.mockito.kotlin.eq
+import org.mockito.kotlin.isNull
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.reset
@@ -402,16 +404,43 @@ class UploadAndSendAttachmentWorkerTest {
     }
 
     @Test
-    fun `custom encrypted uploads do not cache ciphertext URLs for plain checksum reuse`() = runBlocking {
+    fun `encrypted upload saves its URL with its encryption metadata`() = runBlocking {
         SceytChatUIKit.fileTransfer.encryptionEnabled = true
-        transport.onPrepareUpload = { mapOf("custom_cipher" to "encrypted-file-token") }
+        val keys = mapOf("custom_cipher" to "encrypted-file-token")
+        transport.onPrepareUpload = { keys }
         val attachment = localAttachment()
         val work = testScope.async { worker(attachment).doWork() }
 
         transport.uploadCalls.single().succeed("encrypted-url")
 
         assertThat(work.isCompleted).isTrue()
-        verify(fileChecksumDao, never()).updateUrl(any(), anyOrNull())
+        verify(fileChecksumDao).updateUpload(any(), eq("encrypted-url"), eq(keys.toMetadataJson()))
+        assertSentUrl(attachment, "encrypted-url")
+    }
+
+    @Test
+    fun `plain upload saves its URL without encryption metadata`() = runBlocking {
+        val attachment = localAttachment()
+        val work = testScope.async { worker(attachment).doWork() }
+
+        transport.uploadCalls.single().succeed("plain-url")
+
+        assertThat(work.isCompleted).isTrue()
+        verify(fileChecksumDao).updateUpload(any(), eq("plain-url"), isNull())
+        assertSentUrl(attachment, "plain-url")
+    }
+
+    @Test
+    fun `encrypted upload without keys is not cached for reuse`() = runBlocking {
+        SceytChatUIKit.fileTransfer.encryptionEnabled = true
+        transport.onPrepareUpload = { emptyMap() }
+        val attachment = localAttachment()
+        val work = testScope.async { worker(attachment).doWork() }
+
+        transport.uploadCalls.single().succeed("encrypted-url")
+
+        assertThat(work.isCompleted).isTrue()
+        verify(fileChecksumDao, never()).updateUpload(any(), anyOrNull(), anyOrNull())
         assertSentUrl(attachment, "encrypted-url")
     }
 

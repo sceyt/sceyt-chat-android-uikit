@@ -26,6 +26,8 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferResultCallback
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 import com.sceyt.chatuikit.persistence.file_transfer.TransferTask
+import com.sceyt.chatuikit.persistence.extensions.toMetadataJson
+import com.sceyt.chatuikit.persistence.extensions.toMetadataMap
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import com.sceyt.chatuikit.shared.media_encoder.CompressionListener
 import com.sceyt.chatuikit.shared.media_encoder.CustomVideoCompressor
@@ -58,8 +60,11 @@ import org.koin.core.context.stopKoin
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import org.mockito.Mockito
+import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.doSuspendableAnswer
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
@@ -648,6 +653,67 @@ class AttachmentUploadCoordinatorTest {
 
         assertThat(transport.uploadCalls).isEmpty()
         assertThat(result?.data).isEqualTo("reused-url")
+    }
+
+    @Test
+    fun `encrypted checksum url reuses its keys and skips transport`() = runBlocking {
+        SceytChatUIKit.config.preventDuplicateAttachmentUpload = true
+        SceytChatUIKit.fileTransfer.encryptionEnabled = true
+        var prepareCalls = 0
+        transport.onPrepareUpload = { prepareCalls++; mapOf("sceyt.enc" to "new-key") }
+        val keys = mapOf("sceyt.enc" to "saved-key")
+        val attachment = uploadAttachment()
+        val task = transferTask(attachment)
+        var result: SceytResponse<String>? = null
+        task.uploadResultCallback = TransferResultCallback { result = it }
+        whenever(attachmentLogic.getFileChecksumData(attachment.originalFilePath)).thenReturn(
+            FileChecksumData(1L, null, "encrypted-url", null, 4L, keys.toMetadataJson()),
+        )
+
+        uploadFile(attachment, task)
+
+        assertThat(prepareCalls).isEqualTo(0)
+        assertThat(transport.uploadCalls).isEmpty()
+        assertThat(result?.data).isEqualTo("encrypted-url")
+        assertThat(task.encryptionMetadata).isEqualTo(keys)
+        assertThat(checkNotNull(task.attachment.metadata).toMetadataMap()).containsEntry("sceyt.enc", "saved-key")
+    }
+
+    @Test
+    fun `checksum reuse sends the uploaded size when the prepared file is gone`() = runBlocking {
+        SceytChatUIKit.config.preventDuplicateAttachmentUpload = true
+        val attachment = uploadAttachment(type = AttachmentTypeEnum.Video.value)
+        val missing = File(checkNotNull(attachment.filePath)).resolveSibling("deleted-video.mp4")
+        whenever(attachmentLogic.getFileChecksumData(attachment.originalFilePath)).thenReturn(
+            FileChecksumData(1L, missing.path, "reused-url", null, 2L),
+        )
+        var completed: SceytAttachment? = null
+
+        service.upload(attachment) {
+            addOnCompletionListener("worker") { completed = it.getOrThrow() }
+        }
+
+        assertThat(transport.uploadCalls).isEmpty()
+        assertThat(completed?.url).isEqualTo("reused-url")
+        assertThat(completed?.fileSize).isEqualTo(2L)
+        verify(attachmentLogic).updateAttachmentFilePathAndMetadata(
+            eq(attachment.messageTid), org.mockito.kotlin.any(), eq(2L), anyOrNull(),
+        )
+    }
+
+    @Test
+    fun `encrypted upload ignores a plain checksum url`() = runBlocking {
+        SceytChatUIKit.config.preventDuplicateAttachmentUpload = true
+        SceytChatUIKit.fileTransfer.encryptionEnabled = true
+        val attachment = uploadAttachment()
+        val task = transferTask(attachment)
+        whenever(attachmentLogic.getFileChecksumData(attachment.originalFilePath)).thenReturn(
+            FileChecksumData(1L, null, "plain-url", null, 4L),
+        )
+
+        uploadFile(attachment, task)
+
+        assertThat(transport.uploadCalls).hasSize(1)
     }
 
     @Test
@@ -1457,12 +1523,13 @@ class AttachmentUploadCoordinatorTest {
 
     @Test
     fun `encrypted upload keeps its prepared file on immediate retry without reusing the URL`() {
+        SceytChatUIKit.config.preventDuplicateAttachmentUpload = true
         SceytChatUIKit.fileTransfer.encryptionEnabled = true
         val attachment =
             uploadAttachment(name = "original.mp4", type = AttachmentTypeEnum.Video.value)
         val prepared = File(context.cacheDir, "prepared-encrypted-retry.mp4")
             .apply { writeText("prepared video") }
-        var cached: FileChecksumData? = FileChecksumData(
+        val cached = FileChecksumData(
             checksum = 1L,
             resizedFilePath = prepared.path,
             url = "https://cdn.test/old-upload",
@@ -1478,7 +1545,7 @@ class AttachmentUploadCoordinatorTest {
 
         val initial = transport.uploadCalls.single()
         assertThat(initial.request.sourceFile).isEqualTo(prepared)
-        cached = null
+        SceytChatUIKit.config.preventDuplicateAttachmentUpload = false
         pauseUpload(attachment, TransferState.Uploading)
         resumeUpload(attachment, TransferState.PauseUpload)
 

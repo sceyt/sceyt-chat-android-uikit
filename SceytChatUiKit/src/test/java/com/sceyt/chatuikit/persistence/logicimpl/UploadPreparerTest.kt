@@ -11,6 +11,7 @@ import com.sceyt.chatuikit.data.models.messages.FileChecksumData
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.logger.SceytLogLevel
 import com.sceyt.chatuikit.logger.SceytLoggerImpl
+import com.sceyt.chatuikit.persistence.extensions.toMetadataJson
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import com.sceyt.chatuikit.shared.media_encoder.TranscodeResultEnum
 import com.sceyt.chatuikit.shared.media_encoder.VideoTranscodeData
@@ -121,11 +122,47 @@ class UploadPreparerTest {
 
         assertThat(result.reusedUrl).isEqualTo("cached-url")
         assertThat(result.preparedFilePath).isEqualTo("/cached/video.mp4")
-        assertThat(result.attachment).isEqualTo(original)
+        assertThat(result.attachment).isEqualTo(original.copy(fileSize = 123L))
+    }
+
+    @Test
+    fun `encrypted preparation reuses an encrypted upload with its keys`() = runTest {
+        SceytChatUIKit.config.preventDuplicateAttachmentUpload = true
+        val keys = mapOf("sceyt.enc" to "saved-key")
+        val original = attachment(filePath = "/missing/original.mp4", type = AttachmentTypeEnum.Video.value)
+        whenever(attachmentLogic.getFileChecksumData(original.filePath)).thenReturn(
+            FileChecksumData(1L, "/cached/video.mp4", "encrypted-url", null, 123L, keys.toMetadataJson())
+        )
+
+        val result = UploadPreparer(RuntimeEnvironment.getApplication(), attachmentLogic)
+            .prepare(original, onProgress = {}, encrypted = true)
+
+        assertThat(result.reusedUrl).isEqualTo("encrypted-url")
+        assertThat(result.reusedEncryptionMetadata).isEqualTo(keys)
+        assertThat(result.preparedFilePath).isEqualTo("/cached/video.mp4")
+        assertThat(result.attachment.fileSize).isEqualTo(123L)
+    }
+
+    @Test
+    fun `plain preparation ignores an encrypted upload URL`() = runTest {
+        SceytChatUIKit.config.preventDuplicateAttachmentUpload = true
+        val source = temporary.newFile("source.txt").apply { writeText("source") }
+        val original = attachment(filePath = source.path, type = AttachmentTypeEnum.File.value)
+        whenever(attachmentLogic.getFileChecksumData(source.path)).thenReturn(
+            FileChecksumData(1L, null, "encrypted-url", null, 6L, mapOf("sceyt.enc" to "key").toMetadataJson())
+        )
+
+        val result = UploadPreparer(RuntimeEnvironment.getApplication(), attachmentLogic)
+            .prepare(original, onProgress = {})
+
+        assertThat(result.reusedUrl).isNull()
+        assertThat(result.reusedEncryptionMetadata).isNull()
+        assertThat(result.attachment.filePath).isEqualTo(source.path)
     }
 
     @Test
     fun `encrypted preparation reuses cached media but ignores its uploaded URL`() = runTest {
+        SceytChatUIKit.config.preventDuplicateAttachmentUpload = true
         val source = temporary.newFile("source.mp4").apply { writeText("source") }
         val prepared = temporary.newFile("prepared.mp4").apply { writeText("prepared video") }
         val original = attachment(filePath = source.path, type = AttachmentTypeEnum.Video.value)
@@ -134,7 +171,7 @@ class UploadPreparerTest {
         )
 
         val result = UploadPreparer(RuntimeEnvironment.getApplication(), attachmentLogic)
-            .prepare(original, onProgress = {}, reuseUploadedUrl = false)
+            .prepare(original, onProgress = {}, encrypted = true)
 
         assertThat(result.reusedUrl).isNull()
         assertThat(result.preparedFilePath).isEqualTo(prepared.path)
@@ -151,7 +188,7 @@ class UploadPreparerTest {
             .copy(originalFilePath = source.path)
 
         val result = UploadPreparer(RuntimeEnvironment.getApplication(), attachmentLogic)
-            .prepare(original, onProgress = {}, reuseUploadedUrl = false)
+            .prepare(original, onProgress = {}, encrypted = true)
 
         assertThat(result.preparedFilePath).isEqualTo(prepared.path)
         assertThat(result.attachment.filePath).isEqualTo(prepared.path)
@@ -167,7 +204,7 @@ class UploadPreparerTest {
         val result = UploadPreparer(RuntimeEnvironment.getApplication(), attachmentLogic).prepare(
             original,
             onProgress = {},
-            reuseUploadedUrl = false,
+            encrypted = true,
             preparedFilePath = prepared.path,
         )
 
@@ -178,23 +215,24 @@ class UploadPreparerTest {
 
     @Test
     @GraphicsMode(GraphicsMode.Mode.NATIVE)
-    fun `missing prepared files are rebuilt from the original image with configured dimensions`() = runTest {
+    fun `disabled reuse rebuilds a missing prepared image from the original with configured dimensions`() = runTest {
         val source = temporary.newFile("original.png")
         val bitmap = Bitmap.createBitmap(128, 128, Bitmap.Config.ARGB_8888)
         source.outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
         bitmap.recycle()
         val missing = File(temporary.root, "missing.jpg")
+        val cached = temporary.newFile("cached.jpg").apply { writeText("cached image") }
         SceytChatUIKit.config.imageAttachmentResizeConfig = ResizeConfig(32, 90)
         val original = attachment(filePath = missing.path, type = AttachmentTypeEnum.Image.value)
             .copy(originalFilePath = source.path)
         whenever(attachmentLogic.getFileChecksumData(source.path)).thenReturn(
-            FileChecksumData(1L, missing.path, "old-url", null, 0L)
+            FileChecksumData(1L, cached.path, "old-url", null, cached.length())
         )
 
         val result = UploadPreparer(RuntimeEnvironment.getApplication(), attachmentLogic).prepare(
             original,
             onProgress = {},
-            reuseUploadedUrl = false,
+            encrypted = true,
             preparedFilePath = missing.path,
         )
 
@@ -208,6 +246,7 @@ class UploadPreparerTest {
             assertThat(result.attachment.fileSize).isEqualTo(prepared.length())
             assertThat(result.attachment.originalFilePath).isEqualTo(source.path)
             assertThat(result.reusedUrl).isNull()
+            verifyNoInteractions(attachmentLogic)
         } finally {
             prepared.delete()
         }

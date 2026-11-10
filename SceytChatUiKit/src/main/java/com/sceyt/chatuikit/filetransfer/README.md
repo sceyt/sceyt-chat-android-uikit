@@ -112,7 +112,7 @@ Do not replace the provider while operations are active.
 For a normal upload, the UI kit:
 
 1. Adds the attachment to the sequential upload queue.
-2. Reuses a completed upload when encryption is disabled, checksum reuse is enabled and a valid reference exists.
+2. Reuses a completed upload when checksum reuse is enabled and a valid reference exists from an upload in the same mode. An encrypted reuse also restores the saved provider metadata.
 3. Reuses prepared media, or resizes an image or transcodes a video when required.
 4. Calls `provider.prepareUpload(request)` and merges and saves its returned metadata entries before proceeding.
 5. Creates one `FileUploadRequest` with `type = PLAIN` or `ENCRYPTED`, selected by `encryptionEnabled`; it carries the prepared source and attachment with saved metadata.
@@ -160,9 +160,10 @@ failure prevents upload. There is no wrapper key.
 On retry or app restart, the provider reads its saved keys from `request.attachment.metadata`.
 Return those entries unchanged while the source remains valid; create new parameters when it
 changes. Shared callers save the same entries while preserving their own captions and media data.
-A completed plain checksum match skips both provider methods. Encrypted uploads do not reuse a
-cached remote URL. Disable `preventDuplicateAttachmentUpload` if a plain send needs fresh
-provider preparation every time.
+A completed checksum match skips both provider methods. Plain uploads reuse only plain URLs.
+Encrypted uploads reuse only encrypted URLs, and UIKit merges and saves the metadata entries that
+were returned for that upload, so receivers get the matching keys. Disable
+`preventDuplicateAttachmentUpload` if a send needs fresh provider preparation every time.
 
 Neither upload nor download requests have a separate metadata field. The provider reads and
 validates its own values in `request.attachment.metadata`. It can serialize structured data into
@@ -249,8 +250,8 @@ the attachment key as a string alongside existing attachment metadata:
 The SDK creates and restores the attachment key. UIKit passes it through to metadata. The file
 itself stays binary ciphertext. The attachment's `fileSize` remains its plaintext size. Dimensions,
 blur thumbnails and customer fields are preserved, including for shared uploads. The URL and matching
-metadata are saved together. Encrypted uploads are excluded from plain checksum URL reuse regardless
-of the provider's chosen metadata keys.
+metadata are saved together, including in the checksum cache. An encrypted checksum match reuses that
+URL with its saved metadata, whatever keys the provider chose, and is never reused as a plain URL.
 
 Each encrypted file needs its own session. A video's preview is a separate attachment with its own
 session and key; see [Video previews](#video-previews).

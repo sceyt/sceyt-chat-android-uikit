@@ -10,6 +10,7 @@ import com.sceyt.chatuikit.extensions.ifNotEmpty
 import com.sceyt.chatuikit.extensions.takeIfNotBlank
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.extensions.resizeImage
+import com.sceyt.chatuikit.persistence.extensions.toMetadataMap
 import com.sceyt.chatuikit.persistence.extensions.transcodeVideo
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import com.sceyt.chatuikit.persistence.mappers.isPreview
@@ -25,6 +26,7 @@ internal data class PreparedAttachment(
     val attachment: SceytAttachment,
     val reusedUrl: String? = null,
     val preparedFilePath: String? = null,
+    val reusedEncryptionMetadata: Map<String, String>? = null,
 )
 
 /** Prepares a source file without owning transfer tasks, upload ordering, or sharing. */
@@ -35,7 +37,7 @@ internal class UploadPreparer(
     suspend fun prepare(
         attachment: SceytAttachment,
         onProgress: (Float) -> Unit,
-        reuseUploadedUrl: Boolean = true,
+        encrypted: Boolean = false,
         preparedFilePath: String? = null,
     ): PreparedAttachment {
         if (attachment.isPreview()) return PreparedAttachment(attachment)
@@ -43,24 +45,29 @@ internal class UploadPreparer(
         val originalPath = attachment.originalFilePath.takeIfNotBlank()
         val sourcePath = originalPath ?: attachment.filePath.takeIfNotBlank()
 
-        val canReuseUrl = reuseUploadedUrl && SceytChatUIKit.config.preventDuplicateAttachmentUpload
         val canReusePreparedMedia = when (attachment.type) {
-            AttachmentTypeEnum.Image.value, AttachmentTypeEnum.Video.value -> !reuseUploadedUrl
+            AttachmentTypeEnum.Image.value, AttachmentTypeEnum.Video.value -> encrypted
             else -> false
         }
 
         val preparedPath = preparedFilePath?.takeIf { File(it).isFile }
             ?: if (canReusePreparedMedia) findPreparedFile(attachment, originalPath) else null
 
-        // Look up a cached URL or a prepared media file missing from this attempt.
-        val checksum = if (canReuseUrl || (canReusePreparedMedia && preparedPath == null)) {
+        val checksum = if (SceytChatUIKit.config.preventDuplicateAttachmentUpload) {
             attachmentLogic.getFileChecksumData(sourcePath)
         } else null
 
-        val reusedUrl = if (canReuseUrl) checksum?.url.takeIfNotBlank() else null
-        if (reusedUrl != null) {
+        val reusable = checksum?.takeIf { (it.encryptionMetadata != null) == encrypted }
+        val reusedUrl = reusable?.url.takeIfNotBlank()
+        if (reusable != null && reusedUrl != null) {
+            val reusedAttachment = reusable.fileSize?.let { attachment.copy(fileSize = it) } ?: attachment
             // The cached URL completes preparation using the previously uploaded file.
-            return PreparedAttachment(attachment, reusedUrl, checksum?.resizedFilePath.ifNotEmpty())
+            return PreparedAttachment(
+                attachment = reusedAttachment,
+                reusedUrl = reusedUrl,
+                preparedFilePath = reusable.resizedFilePath.ifNotEmpty(),
+                reusedEncryptionMetadata = reusable.encryptionMetadata?.toMetadataMap(),
+            )
         }
 
         // Start from the original file when rebuilding encrypted media.

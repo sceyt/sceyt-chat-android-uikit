@@ -28,6 +28,7 @@ import com.sceyt.chatuikit.notifications.service.FileTransferNotificationData
 import com.sceyt.chatuikit.persistence.database.dao.FileChecksumDao
 import com.sceyt.chatuikit.persistence.database.entity.FileChecksumEntity
 import com.sceyt.chatuikit.persistence.extensions.safeResume
+import com.sceyt.chatuikit.persistence.extensions.toMetadataJson
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferHelper
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
@@ -189,16 +190,24 @@ class UploadAndSendAttachmentWorker(
                 attachment.copy(transferState = TransferState.WaitingToUpload)
             else attachment
             val result = uploadFile(uploadAttachment, isSharing)
-            return result.map { uploadedAttachment ->
-                // Encrypted URLs require matching keys and are excluded from checksum URL reuse.
-                if (checksum != null && !SceytChatUIKit.fileTransfer.encryptionEnabled)
-                    fileChecksumDao.updateUrl(checksum, uploadedAttachment.url)
+            return result.map { uploaded ->
+                checksum?.let { saveUploadedChecksum(it, uploaded) }
 
-                attachments[index] = uploadedAttachment
+                attachments[index] = uploaded.attachment
                 attachments
             }
         }
         return KtResult.failure(Exception("Could not find any attachment to upload"))
+    }
+
+    private suspend fun saveUploadedChecksum(checksum: Long, uploaded: UploadedAttachment) {
+        val encrypted = SceytChatUIKit.fileTransfer.encryptionEnabled
+        val encryptionMetadata = uploaded.encryptionMetadata.orEmpty()
+        if (encrypted && encryptionMetadata.isEmpty())
+            return
+
+        val savedMetadata = if (encrypted) encryptionMetadata.toMetadataJson() else null
+        fileChecksumDao.updateUpload(checksum, uploaded.attachment.url, savedMetadata)
     }
 
     private suspend fun uploadPreviewIfNeeded(
@@ -263,7 +272,7 @@ class UploadAndSendAttachmentWorker(
     private suspend fun uploadFile(
         attachment: SceytAttachment,
         isSharing: Boolean
-    ): KtResult<SceytAttachment> = suspendCancellableCoroutine { continuation ->
+    ): KtResult<UploadedAttachment> = suspendCancellableCoroutine { continuation ->
         // Cancellation can happen before the worker reaches task registration.
         if (!continuation.isActive) return@suspendCancellableCoroutine
 
@@ -271,7 +280,9 @@ class UploadAndSendAttachmentWorker(
         val completionKey = this.toString()
         val configureTask: TransferTask.() -> Unit = {
             isSharedUpload = isSharedUpload || isSharing
-            addOnCompletionListener(completionKey, continuation::safeResume)
+            addOnCompletionListener(completionKey) { result ->
+                continuation.safeResume(result.map { UploadedAttachment(it, encryptionMetadata) })
+            }
             continuation.invokeOnCancellation {
                 removeOnCompletionListener(completionKey)
 
@@ -406,3 +417,8 @@ internal fun shouldStartUpload(
     state: TransferState?,
     resumePausedUpload: Boolean,
 ): Boolean = state != TransferState.PauseUpload || resumePausedUpload
+
+private class UploadedAttachment(
+    val attachment: SceytAttachment,
+    val encryptionMetadata: Map<String, String>?,
+)
