@@ -723,6 +723,7 @@ internal class PersistenceMessagesLogicImpl(
                 channelId = channelId,
                 isSharing = isSharing
             ).await()
+            attachmentDao.markUploadQueued(message.tid)
             trySend(SendMessageResult.StartedSendingAttachment)
         } else {
             val linkedMessage = message.copy(
