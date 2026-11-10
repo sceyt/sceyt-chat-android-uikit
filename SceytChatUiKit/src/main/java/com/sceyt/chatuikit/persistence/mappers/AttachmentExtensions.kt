@@ -258,7 +258,10 @@ internal fun SceytAttachment.isTransferTracked(): Boolean = isTransferTrackedTyp
 
 internal fun List<SceytAttachment>.withoutPreview(): List<SceytAttachment> = filterNot { it.isPreview() }
 
-internal fun List<SceytAttachment>.withPreviewLink(): List<SceytAttachment> {
+internal fun List<SceytAttachment>.withPreviewLink(viewOnce: Boolean = false): List<SceytAttachment> {
+    // View-once messages must not include an independently accessible preview attachment.
+    if (viewOnce) return withoutPreview()
+
     val previewUrl = firstOrNull { it.isPreview() }?.url?.takeIf { it.isNotBlank() } ?: return this
     val link = mapOf(SceytConstants.Preview to previewUrl)
     return map { attachment ->

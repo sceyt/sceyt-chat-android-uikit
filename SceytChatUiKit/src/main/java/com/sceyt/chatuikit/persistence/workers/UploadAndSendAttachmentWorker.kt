@@ -211,7 +211,7 @@ class UploadAndSendAttachmentWorker(
         val video = attachments.find { it.type == AttachmentTypeEnum.Video.value }
             ?: return KtResult.success(Unit)
 
-        if (message.isForwarded || attachments.any { it.isPreview() })
+        if (message.viewOnce || message.isForwarded || attachments.any { it.isPreview() })
             return KtResult.success(Unit)
 
         if (!shouldStartUpload(video.transferState, resumePausedUpload))
@@ -299,7 +299,7 @@ class UploadAndSendAttachmentWorker(
             return finishWorkWithError("Could not upload attachments, message tid: $messageTid")
         }
 
-        val attachments = result.getOrThrow().withPreviewLink()
+        val attachments = result.getOrThrow().withPreviewLink(viewOnce = message.viewOnce)
         val messageToSend = message.copy(attachments = attachments).toMessage()
         if (ConnectionEventManager.isConnected) {
             // The current connection can send the message immediately.

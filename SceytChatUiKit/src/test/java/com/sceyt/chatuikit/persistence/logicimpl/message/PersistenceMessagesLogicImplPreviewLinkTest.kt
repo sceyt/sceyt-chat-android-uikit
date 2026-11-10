@@ -67,7 +67,39 @@ class PersistenceMessagesLogicImplPreviewLinkTest {
             .isEqualTo(PREVIEW_URL)
     }
 
-    private fun uploadedVideoMessageWithPreview() = run {
+    @Test
+    fun `reconnect send of a view once video omits its saved preview`() = runBlocking<Unit> {
+        whenever(messageDao.getPendingMessages(CHANNEL_ID))
+            .thenReturn(listOf(uploadedVideoMessageWithPreview(viewOnce = true)))
+        whenever(repository.sendMessage(any(), any())).thenReturn(SceytResponse.Error())
+
+        logic().sendPendingMessages(CHANNEL_ID)
+
+        val sent = argumentCaptor<SceytMessage>()
+        verify(repository).sendMessage(eq(CHANNEL_ID), sent.capture())
+        assertThat(sent.firstValue.viewOnce).isTrue()
+        assertThat(sent.firstValue.attachments.orEmpty().map { it.type })
+            .containsExactly(AttachmentTypeEnum.Video.value)
+    }
+
+    @Test
+    fun `uploaded view once video without a preview is sent directly on reconnect`() = runBlocking<Unit> {
+        val stored = uploadedVideoMessageWithPreview(viewOnce = true)
+        val withoutPreview = stored.copy(attachments = stored.attachments?.filter {
+            it.attachmentEntity.type != AttachmentTypeEnum.Preview.value
+        })
+        whenever(messageDao.getPendingMessages(CHANNEL_ID)).thenReturn(listOf(withoutPreview))
+        whenever(repository.sendMessage(any(), any())).thenReturn(SceytResponse.Error())
+
+        logic().sendPendingMessages(CHANNEL_ID)
+
+        val sent = argumentCaptor<SceytMessage>()
+        verify(repository).sendMessage(eq(CHANNEL_ID), sent.capture())
+        assertThat(sent.firstValue.viewOnce).isTrue()
+        assertThat(sent.firstValue.attachments.orEmpty().map { it.url }).containsExactly(VIDEO_URL)
+    }
+
+    private fun uploadedVideoMessageWithPreview(viewOnce: Boolean = false) = run {
         val video = attachment(
             messageTid = TID,
             name = "video.mp4",
@@ -83,7 +115,12 @@ class PersistenceMessagesLogicImplPreviewLinkTest {
             state = null,
         )
         val messageDb = createMessage(createdAt = 1L, tid = TID)
-            .copy(channelId = CHANNEL_ID, deliveryStatus = MessageDeliveryStatus.Pending, attachments = listOf(video, preview))
+            .copy(
+                channelId = CHANNEL_ID,
+                viewOnce = viewOnce,
+                deliveryStatus = MessageDeliveryStatus.Pending,
+                attachments = listOf(video, preview)
+            )
             .toMessageDb(unList = false)
         val payload = AttachmentPayLoadEntity(
             messageTid = TID,
