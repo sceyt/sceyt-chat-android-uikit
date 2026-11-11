@@ -365,6 +365,10 @@ succeeds, fails, or is interrupted; coroutine cancellation remains separate:
   UIKit preserves the partial download, reports through its existing error callback and releases
   the upload queue turn. It does not cancel the provider or schedule an automatic download retry.
   Pending uploads in `ErrorUpload` remain eligible for the existing resend-on-reconnect flow.
+  If the attempt fails while the device has no validated network, UIKit also queues one
+  network-constrained retry that reschedules pending file messages once the network returns,
+  even when the app is in the background or was restarted. A system stop of the upload worker
+  keeps the provider session, so the next run continues the upload.
   A later attempt uses the same operation ID and destination.
 - Cancel the matching backend work when the coroutine is cancelled, and propagate
   `CancellationException` instead of returning it as a failed result.

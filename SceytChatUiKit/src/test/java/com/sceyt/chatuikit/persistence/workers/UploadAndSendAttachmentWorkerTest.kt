@@ -1,8 +1,16 @@
 package com.sceyt.chatuikit.persistence.workers
 
+import android.app.ForegroundServiceStartNotAllowedException
 import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.work.Data
+import androidx.work.ExistingWorkPolicy
+import androidx.work.ForegroundUpdater
+import androidx.work.ListenableWorker
+import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequest
 import androidx.work.Operation
 import androidx.work.WorkInfo
 import androidx.work.WorkerParameters
@@ -101,8 +109,11 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import org.robolectric.shadows.ShadowNetworkCapabilities
 import java.io.File
+import java.util.UUID
 import kotlin.coroutines.CoroutineContext
 
 @RunWith(RobolectricTestRunner::class)
@@ -124,6 +135,8 @@ class UploadAndSendAttachmentWorkerTest {
     private var previousConnectionProvider: ChatConnectionProvider? = null
 
     private companion object {
+        const val PENDING_ATTACHMENT_RETRY = "PendingAttachmentRetry"
+
         // FileTransferHelper retains injected dependencies, so reuse them across worker tests.
         val attachmentLogic = mock<PersistenceAttachmentLogic>()
         val fileChecksumDao = mock<FileChecksumDao>()
@@ -165,6 +178,8 @@ class UploadAndSendAttachmentWorkerTest {
         val cancellation = mock<Operation>()
         whenever(cancellation.result).thenReturn(Futures.immediateFuture(Operation.SUCCESS))
         whenever(workManager.cancelAllWorkByTag(any())).thenReturn(cancellation)
+        whenever(workManager.enqueueUniqueWork(any(), any(), any<OneTimeWorkRequest>())).thenReturn(cancellation)
+        setNetwork(NetworkCapabilities.NET_CAPABILITY_INTERNET, NetworkCapabilities.NET_CAPABILITY_VALIDATED)
         val runningWork = mock<WorkInfo>()
         whenever(runningWork.state).thenReturn(WorkInfo.State.RUNNING)
         whenever(workManager.getWorkInfosByTag(any()))
@@ -1641,6 +1656,179 @@ class UploadAndSendAttachmentWorkerTest {
         assertSentUrl(attachment, "fresh-url")
     }
 
+    @Test
+    fun `offline upload failure queues the pending attachment retry`() = runBlocking<Unit> {
+        setNetwork()
+        val attachment = localAttachment()
+        val work = testScope.async { worker(attachment).doWork() }
+
+        transport.uploadCalls.single().interrupt()
+
+        assertThat(work.await()).isEqualTo(ListenableWorker.Result.success())
+        val request = argumentCaptor<OneTimeWorkRequest>()
+        verify(workManager).enqueueUniqueWork(
+            eq(PENDING_ATTACHMENT_RETRY),
+            eq(ExistingWorkPolicy.REPLACE),
+            request.capture(),
+        )
+        val workSpec = request.firstValue.workSpec
+        assertThat(workSpec.workerClassName).isEqualTo(PendingAttachmentRetryWorker::class.java.name)
+        assertThat(workSpec.constraints.requiredNetworkType).isEqualTo(NetworkType.CONNECTED)
+        assertThat(request.firstValue.tags).contains(SceytConstants.SCEYT_WORKER_TAG)
+    }
+
+    @Test
+    fun `online upload failure does not queue the pending attachment retry`() = runBlocking<Unit> {
+        val attachment = localAttachment()
+        val work = testScope.async { worker(attachment).doWork() }
+
+        transport.uploadCalls.single().interrupt()
+
+        assertThat(work.await()).isEqualTo(ListenableWorker.Result.success())
+        verify(workManager, never()).enqueueUniqueWork(any(), any(), any<OneTimeWorkRequest>())
+    }
+
+    @Test
+    fun `network without validation counts as offline on Android 8 and later`() = runBlocking<Unit> {
+        setNetwork(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+        val attachment = localAttachment()
+        val work = testScope.async { worker(attachment).doWork() }
+
+        transport.uploadCalls.single().interrupt()
+
+        work.await()
+        verify(workManager).enqueueUniqueWork(eq(PENDING_ATTACHMENT_RETRY), any(), any<OneTimeWorkRequest>())
+    }
+
+    @Test
+    @Config(sdk = [24])
+    fun `connected network without validation counts as online before Android 8`() = runBlocking<Unit> {
+        setNetwork(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+        val attachment = localAttachment()
+        val work = testScope.async { worker(attachment).doWork() }
+
+        transport.uploadCalls.single().interrupt()
+
+        work.await()
+        verify(workManager, never()).enqueueUniqueWork(any(), any(), any<OneTimeWorkRequest>())
+    }
+
+    @Test
+    fun `offline connection failure queues the pending attachment retry`() = runBlocking<Unit> {
+        setNetwork()
+        SceytChatUIKit.chatConnectionProvider = ChatConnectionProvider {
+            Result.failure(IllegalStateException("No network"))
+        }
+        val attachment = localAttachment()
+        val work = testScope.async { worker(attachment).doWork() }
+
+        transport.uploadCalls.single().succeed("uploaded-url")
+
+        work.await()
+        verify(messageLogic, never()).sendMessageWithUploadedAttachments(any(), any())
+        verify(workManager).enqueueUniqueWork(eq(PENDING_ATTACHMENT_RETRY), any(), any<OneTimeWorkRequest>())
+    }
+
+    @Test
+    fun `offline send failure queues the pending attachment retry`() = runBlocking<Unit> {
+        setNetwork()
+        whenever(messageLogic.sendMessageWithUploadedAttachments(any(), any())).thenReturn(SceytResponse.Error())
+        val attachment = localAttachment()
+        val work = testScope.async { worker(attachment).doWork() }
+
+        transport.uploadCalls.single().succeed("uploaded-url")
+
+        work.await()
+        verify(workManager).enqueueUniqueWork(eq(PENDING_ATTACHMENT_RETRY), any(), any<OneTimeWorkRequest>())
+    }
+
+    @Test
+    fun `foreground start restriction still uploads and sends`() = runBlocking<Unit> {
+        val updater = failingForegroundUpdater(ForegroundServiceStartNotAllowedException("Not allowed"))
+        val attachment = localAttachment()
+        val work = testScope.async { worker(attachment, foregroundUpdater = updater).doWork() }
+
+        transport.uploadCalls.single().succeed("uploaded-url")
+
+        assertThat(work.await()).isEqualTo(ListenableWorker.Result.success())
+        verify(updater).setForegroundAsync(any(), any(), any())
+        assertSentUrl(attachment, "uploaded-url")
+    }
+
+    @Test
+    fun `other foreground errors still fail the worker`() = runBlocking<Unit> {
+        val updater = failingForegroundUpdater(IllegalStateException("Invalid foreground type"))
+        val worker = worker(localAttachment(), foregroundUpdater = updater)
+
+        val error = runCatching { worker.doWork() }.exceptionOrNull()
+
+        assertThat(error).isInstanceOf(IllegalStateException::class.java)
+        assertThat(error).isNotInstanceOf(ForegroundServiceStartNotAllowedException::class.java)
+        assertThat(transport.uploadCalls).isEmpty()
+    }
+
+    @Test
+    fun `system stop keeps the upload running`() = runBlocking<Unit> {
+        val attachment = localAttachment()
+        val worker = worker(attachment)
+        val work = testScope.async { worker.doWork() }
+        val call = transport.uploadCalls.single()
+
+        worker.stop(WorkInfo.STOP_REASON_TIMEOUT)
+        work.cancelAndJoin()
+
+        assertThat(call.cancelled).isFalse()
+        assertThat(service.findTransferTask(attachment)).isNotNull()
+    }
+
+    @Test
+    @Config(sdk = [24])
+    fun `system stop cancels the upload before Android 12`() = runBlocking<Unit> {
+        val attachment = localAttachment()
+        val worker = worker(attachment)
+        val work = testScope.async { worker.doWork() }
+        val call = transport.uploadCalls.single()
+
+        worker.stop(WorkInfo.STOP_REASON_TIMEOUT)
+        work.cancelAndJoin()
+
+        assertThat(call.cancelled).isTrue()
+        assertThat(service.findTransferTask(attachment)).isNull()
+    }
+
+    @Test
+    fun `app cancellation still cancels the upload`() = runBlocking<Unit> {
+        val attachment = localAttachment()
+        val worker = worker(attachment)
+        val work = testScope.async { worker.doWork() }
+        val call = transport.uploadCalls.single()
+
+        worker.stop(WorkInfo.STOP_REASON_CANCELLED_BY_APP)
+        work.cancelAndJoin()
+
+        assertThat(call.cancelled).isTrue()
+        assertThat(service.findTransferTask(attachment)).isNull()
+    }
+
+    private fun failingForegroundUpdater(error: Throwable): ForegroundUpdater {
+        shadowOf(RuntimeEnvironment.getApplication())
+            .grantPermissions(android.Manifest.permission.FOREGROUND_SERVICE)
+        val channelLogic = SceytKoinApp.koinApp!!.koin.get<PersistenceChannelsLogic>()
+        runBlocking {
+            whenever(channelLogic.getChannelFromDb(any())).thenReturn(createChannel(0L, 0L, 0L))
+        }
+        val updater = mock<ForegroundUpdater>()
+        whenever(updater.setForegroundAsync(any(), any(), any())).thenReturn(Futures.immediateFailedFuture(error))
+        return updater
+    }
+
+    private fun setNetwork(vararg capabilities: Int) {
+        val connectivityManager = context.getSystemService(ConnectivityManager::class.java)
+        val networkCapabilities = ShadowNetworkCapabilities.newInstance()
+        capabilities.forEach { shadowOf(networkCapabilities).addCapability(it) }
+        shadowOf(connectivityManager).setNetworkCapabilities(connectivityManager.activeNetwork, networkCapabilities)
+    }
+
     private fun localAttachment(): SceytAttachment {
         val file = File(context.cacheDir, "worker-upload.txt").apply { writeText("test") }
         return attachment(filePath = file.path, url = null)
@@ -1687,6 +1875,7 @@ class UploadAndSendAttachmentWorkerTest {
         channelId: Long = 0L,
         extraAttachments: List<SceytAttachment> = emptyList(),
         viewOnce: Boolean = false,
+        foregroundUpdater: ForegroundUpdater? = null,
     ): UploadAndSendAttachmentWorker {
         val message = createMessage(createdAt = 1L, tid = attachment.messageTid).copy(
             channelId = channelId,
@@ -1706,6 +1895,8 @@ class UploadAndSendAttachmentWorkerTest {
                 .build(),
         )
         whenever(params.runAttemptCount).thenReturn(runAttemptCount)
+        whenever(params.id).thenReturn(UUID.randomUUID())
+        foregroundUpdater?.let { whenever(params.foregroundUpdater).thenReturn(it) }
         return UploadAndSendAttachmentWorker(context, params)
     }
 

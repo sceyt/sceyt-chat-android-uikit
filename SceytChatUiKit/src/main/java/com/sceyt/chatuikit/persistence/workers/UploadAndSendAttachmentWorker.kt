@@ -1,25 +1,23 @@
 package com.sceyt.chatuikit.persistence.workers
 
+import android.app.ForegroundServiceStartNotAllowedException
 import android.app.Notification
 import android.content.Context
 import android.content.pm.ServiceInfo
 import android.os.Build
 import androidx.work.CoroutineWorker
-import androidx.work.Data
-import androidx.work.ExistingWorkPolicy
 import androidx.work.ForegroundInfo
-import androidx.work.OneTimeWorkRequest
-import androidx.work.Operation
-import androidx.work.WorkManager
+import androidx.work.WorkInfo
 import androidx.work.WorkerParameters
+import androidx.work.await
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.data.constants.SceytConstants.SCEYT_WORKER_TAG
 import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.models.fold
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.extensions.hasConnectedNetwork
 import com.sceyt.chatuikit.extensions.hasPermissions
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.koin.SceytKoinComponent
@@ -54,43 +52,6 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import org.koin.core.component.inject
 import kotlin.time.Duration.Companion.seconds
 import kotlin.Result as KtResult
-
-object UploadAndSendAttachmentWorkManager {
-
-    internal const val MESSAGE_TID = "MESSAGE_TID"
-    internal const val IS_SHARING = "IS_SHARING"
-    internal const val RESUME_PAUSED_UPLOAD = "RESUME_PAUSED_UPLOAD"
-    const val FILE_TRANSFER_NOTIFICATION_ID = 1223344
-
-    fun schedule(
-        context: Context,
-        messageTid: Long,
-        channelId: Long?,
-        workPolicy: ExistingWorkPolicy = ExistingWorkPolicy.KEEP,
-        isSharing: Boolean = false,
-        resumePausedUpload: Boolean = false,
-    ): Operation {
-        val dataBuilder = Data.Builder()
-        dataBuilder.putLong(MESSAGE_TID, messageTid)
-        dataBuilder.putBoolean(IS_SHARING, isSharing)
-        dataBuilder.putBoolean(RESUME_PAUSED_UPLOAD, resumePausedUpload)
-
-        val workRequest = OneTimeWorkRequest.Builder(UploadAndSendAttachmentWorker::class.java)
-            .addTag(messageTid.toString())
-            .apply { channelId?.let { addTag(channelId.toString()) } }
-            .addTag(SCEYT_WORKER_TAG)
-            .setInputData(dataBuilder.build())
-            .build()
-
-        return WorkManager.getInstance(context)
-            .beginUniqueWork(messageTid.toString(), workPolicy, workRequest)
-            .enqueue()
-    }
-
-    fun cancelWorksByTag(context: Context, tag: String): Operation {
-        return WorkManager.getInstance(context).cancelAllWorkByTag(tag)
-    }
-}
 
 class UploadAndSendAttachmentWorker(
     context: Context,
@@ -288,6 +249,10 @@ class UploadAndSendAttachmentWorker(
 
                 // A worker that joined an existing task only removes its own listener.
                 if (existingTask != null) return@invokeOnCancellation
+                if (isStoppedBySystem()) {
+                    SceytLog.i(TAG, "Worker stopped by the system, keeping upload for message tid: ${attachment.messageTid}")
+                    return@invokeOnCancellation
+                }
 
                 // A newer worker may already have replaced this task.
                 if (fileTransferService.findTransferTask(attachment) === this) {
@@ -302,6 +267,16 @@ class UploadAndSendAttachmentWorker(
             shared = isSharing || existingTask?.isSharedUpload == true,
             configureTask = configureTask,
         )
+    }
+
+    private fun isStoppedBySystem(): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S)
+            return false
+
+        return when (stopReason) {
+            WorkInfo.STOP_REASON_NOT_STOPPED, WorkInfo.STOP_REASON_CANCELLED_BY_APP -> false
+            else -> true
+        }
     }
 
     private suspend fun uploadAndSend(isSharing: Boolean): Result {
@@ -368,13 +343,23 @@ class UploadAndSendAttachmentWorker(
         )
     }
 
-    private fun finishWorkWithError(error: String): Result {
+    private suspend fun finishWorkWithError(error: String): Result {
         // UIKit controls retries through pending messages, so errors also finish this work successfully.
         val result = Result.success()
         SceytLog.e(TAG, "SendAttachmentWorker worker finished with error: $error")
+        scheduleRetryIfOffline()
         SceytChatUIKit.notifications.fileTransferServiceNotification.notificationHandler
             .serviceWorkerFinished(result = result)
         return result
+    }
+
+    private suspend fun scheduleRetryIfOffline() {
+        if (applicationContext.hasConnectedNetwork())
+            return
+
+        val messageTid = inputData.getLong(MESSAGE_TID, 0)
+        SceytLog.i(TAG, "Network is unavailable, queued pending attachment retry for message tid: $messageTid")
+        PendingAttachmentRetryWorker.schedule(applicationContext).await()
     }
 
     private fun finishWorkWithSuccess(): Result {
@@ -393,8 +378,21 @@ class UploadAndSendAttachmentWorker(
                 ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
             )
         } else ForegroundInfo(FILE_TRANSFER_NOTIFICATION_ID, notification)
-        setForeground(foregroundInfo)
+
+        try {
+            setForeground(foregroundInfo)
+        } catch (error: IllegalStateException) {
+            if (!error.isForegroundStartNotAllowed())
+                throw error
+            SceytLog.i(
+                TAG,
+                "Foreground is not allowed in the background, message tid: ${message.tid}"
+            )
+        }
     }
+
+    private fun IllegalStateException.isForegroundStartNotAllowed(): Boolean =
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && this is ForegroundServiceStartNotAllowedException
 
     private suspend fun createNotification(channelId: Long, message: SceytMessage): Notification? {
         val serviceNotification = SceytChatUIKit.notifications.fileTransferServiceNotification

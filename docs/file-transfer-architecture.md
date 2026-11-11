@@ -156,6 +156,13 @@ Retry after interruption or app restart:
         -> UIKit merges and saves the returned map
         -> provider.upload(request), reading request.attachment.metadata
         -> provider restores its own progress
+
+Network returns after an offline failure (app closed or restarted):
+    upload worker fails without a validated network
+        -> PendingAttachmentRetryWorker queued once (unique, NetworkType.CONNECTED)
+        -> network returns: it schedules UploadAndSendAttachmentWorker (KEEP) per pending,
+           unpaused, non-forwarded file message
+        -> each upload worker uploads, connects chat if needed, and sends
 ```
 
 The app must create new parameters if the prepared source changes. It must not reuse an old key
