@@ -101,7 +101,7 @@ open class ChannelInfoFilesFragment : Fragment(), SceytKoinComponent, HistoryCle
                 })
 
                 it.setClickListener(AttachmentClickListeners.AttachmentLoaderClickListener { _, item ->
-                    viewModel.pauseOrResumeUpload(item, channel.id)
+                    onAttachmentLoaderClick(item)
                 })
 
                 it.setNeedMediaDataCallback { data -> viewModel.needMediaInfo(data) }
@@ -125,6 +125,10 @@ open class ChannelInfoFilesFragment : Fragment(), SceytKoinComponent, HistoryCle
 
     open fun onMoreFilesList(list: List<ChannelFileItem>) {
         mediaAdapter?.addNewItems(list)
+    }
+
+    protected open fun onAttachmentLoaderClick(item: ChannelFileItem) {
+        viewModel.pauseOrResumeUpload(item, channel.id)
     }
 
     protected open fun onDeferredTransferUpdate(transferData: TransferData) {
