@@ -34,7 +34,6 @@ import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.createErrorResponse
 import com.sceyt.chatuikit.data.models.isSuccess
 import com.sceyt.chatuikit.data.models.map
-import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.MarkerType.Received
 import com.sceyt.chatuikit.data.models.messages.SceytMarker
@@ -848,23 +847,19 @@ internal class PersistenceMessagesLogicImpl(
                 if (messageDb.attachments.isNullOrEmpty() || messageDb.attachments.any { attachment ->
                         attachment.payLoad?.transferState != TransferState.PauseUpload
                     }) {
-                    val isUploaded = messageDb.attachments?.let { attachments ->
-                        val filesUploaded = attachments.all { attachment ->
-                            !isTransferTrackedType(attachment.attachmentEntity.type)
-                                    || attachment.payLoad?.transferState == TransferState.Uploaded
-                        }
-                        val needsPreview = !messageDb.messageEntity.viewOnce
-                                && messageDb.messageEntity.forwardingDetailsDb == null
-                                && attachments.any { it.attachmentEntity.type == AttachmentTypeEnum.Video.value }
-                                && attachments.none { it.attachmentEntity.type == AttachmentTypeEnum.Preview.value }
-                        filesUploaded && !needsPreview
-                    } ?: false
+                    val isForwarded = messageDb.messageEntity.forwardingDetailsDb != null
+                    val areTrackedAttachmentsUploaded = messageDb.attachments?.all { attachment ->
+                        val isTracked = isTransferTrackedType(attachment.attachmentEntity.type)
+                        val isUploaded = attachment.payLoad?.transferState == TransferState.Uploaded
+                        !isTracked || isUploaded
+                    } == true
+                    val isUploadedForward = isForwarded && areTrackedAttachmentsUploaded
                     sendMessageImpl(
                         channelId = channelId,
                         message = messageDb.toSceytMessage(),
                         isSharing = false,
                         isPendingMessage = true,
-                        isUploadedAttachments = isUploaded
+                        isUploadedAttachments = isUploadedForward
                     ).collect()
                 }
             }

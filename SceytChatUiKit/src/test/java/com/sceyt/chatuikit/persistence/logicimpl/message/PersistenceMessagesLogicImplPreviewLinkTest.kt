@@ -1,6 +1,12 @@
 package com.sceyt.chatuikit.persistence.logicimpl.message
 
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequest
+import androidx.work.Operation
+import androidx.work.WorkContinuation
+import androidx.work.impl.WorkManagerImpl
 import com.google.common.truth.Truth.assertThat
+import com.google.common.util.concurrent.Futures
 import com.sceyt.chatuikit.createMessage
 import com.sceyt.chatuikit.data.constants.SceytConstants
 import com.sceyt.chatuikit.data.models.SceytResponse
@@ -13,7 +19,9 @@ import com.sceyt.chatuikit.persistence.database.entity.messages.AttachmentPayLoa
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.logicimpl.attachment
+import com.sceyt.chatuikit.persistence.mappers.toMessage
 import com.sceyt.chatuikit.persistence.mappers.toMessageDb
+import com.sceyt.chatuikit.persistence.mappers.toSceytMessage
 import com.sceyt.chatuikit.persistence.repositories.MessagesRepository
 import kotlinx.coroutines.runBlocking
 import org.json.JSONObject
@@ -28,6 +36,7 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
@@ -49,16 +58,17 @@ class PersistenceMessagesLogicImplPreviewLinkTest {
 
     @After
     fun tearDown() {
+        WorkManagerImpl.setDelegate(null)
         SceytKoinApp.koinApp = null
         stopKoin()
     }
 
     @Test
-    fun `reconnect send of an uploaded video links its saved preview`() = runBlocking {
-        whenever(messageDao.getPendingMessages(CHANNEL_ID)).thenReturn(listOf(uploadedVideoMessageWithPreview()))
+    fun `sending an uploaded video links its saved preview`() = runBlocking {
+        val message = uploadedVideoMessageWithPreview().toSceytMessage()
         whenever(repository.sendMessage(any(), any())).thenReturn(SceytResponse.Error())
 
-        logic().sendPendingMessages(CHANNEL_ID)
+        logic().sendMessageWithUploadedAttachments(CHANNEL_ID, message.toMessage())
 
         val sent = argumentCaptor<SceytMessage>()
         verify(repository).sendMessage(eq(CHANNEL_ID), sent.capture())
@@ -68,12 +78,11 @@ class PersistenceMessagesLogicImplPreviewLinkTest {
     }
 
     @Test
-    fun `reconnect send of a view once video omits its saved preview`() = runBlocking<Unit> {
-        whenever(messageDao.getPendingMessages(CHANNEL_ID))
-            .thenReturn(listOf(uploadedVideoMessageWithPreview(viewOnce = true)))
+    fun `sending an uploaded view once video omits its saved preview`() = runBlocking<Unit> {
+        val message = uploadedVideoMessageWithPreview(viewOnce = true).toSceytMessage()
         whenever(repository.sendMessage(any(), any())).thenReturn(SceytResponse.Error())
 
-        logic().sendPendingMessages(CHANNEL_ID)
+        logic().sendMessageWithUploadedAttachments(CHANNEL_ID, message.toMessage())
 
         val sent = argumentCaptor<SceytMessage>()
         verify(repository).sendMessage(eq(CHANNEL_ID), sent.capture())
@@ -83,20 +92,22 @@ class PersistenceMessagesLogicImplPreviewLinkTest {
     }
 
     @Test
-    fun `uploaded view once video without a preview is sent directly on reconnect`() = runBlocking<Unit> {
-        val stored = uploadedVideoMessageWithPreview(viewOnce = true)
-        val withoutPreview = stored.copy(attachments = stored.attachments?.filter {
-            it.attachmentEntity.type != AttachmentTypeEnum.Preview.value
-        })
-        whenever(messageDao.getPendingMessages(CHANNEL_ID)).thenReturn(listOf(withoutPreview))
+    fun `reconnect routes an uploaded pending attachment through unique work`() = runBlocking<Unit> {
+        val workManager = mock<WorkManagerImpl>()
+        val continuation = mock<WorkContinuation>()
+        val operation = mock<Operation>()
+        whenever(operation.result).thenReturn(Futures.immediateFuture(Operation.SUCCESS))
+        whenever(continuation.enqueue()).thenReturn(operation)
+        whenever(workManager.beginUniqueWork(eq(TID.toString()), eq(ExistingWorkPolicy.KEEP), any<OneTimeWorkRequest>()))
+            .thenReturn(continuation)
+        WorkManagerImpl.setDelegate(workManager)
+        whenever(messageDao.getPendingMessages(CHANNEL_ID)).thenReturn(listOf(uploadedVideoMessageWithPreview()))
         whenever(repository.sendMessage(any(), any())).thenReturn(SceytResponse.Error())
 
         logic().sendPendingMessages(CHANNEL_ID)
 
-        val sent = argumentCaptor<SceytMessage>()
-        verify(repository).sendMessage(eq(CHANNEL_ID), sent.capture())
-        assertThat(sent.firstValue.viewOnce).isTrue()
-        assertThat(sent.firstValue.attachments.orEmpty().map { it.url }).containsExactly(VIDEO_URL)
+        verify(workManager).beginUniqueWork(eq(TID.toString()), eq(ExistingWorkPolicy.KEEP), any<OneTimeWorkRequest>())
+        verify(repository, never()).sendMessage(any(), any())
     }
 
     private fun uploadedVideoMessageWithPreview(viewOnce: Boolean = false) = run {
