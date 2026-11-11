@@ -10,12 +10,14 @@ import com.sceyt.chatuikit.config.ChannelListConfig
 import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.managers.connection.event.ConnectionStateData
 import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.repositories.Keys
 import com.sceyt.chatuikit.data.repositories.getUserId
 import com.sceyt.chatuikit.extensions.isAppOnForeground
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.database.dao.UserDao
 import com.sceyt.chatuikit.persistence.extensions.broadcastSharedFlow
+import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.logic.PersistenceConnectionLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
 import com.sceyt.chatuikit.persistence.logic.PersistencePinLogic
@@ -50,6 +52,8 @@ internal class PersistenceConnectionLogicImpl(
     private val pollLogic: PersistencePollLogic by inject()
     private val pinLogic: PersistencePinLogic by inject()
     private val sceytSyncManager: SceytSyncManager by inject()
+    private val downloadCoordinator: AttachmentDownloadCoordinator by inject()
+    private val fileTransferService: FileTransferService by inject()
 
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val _allPendingEventsSentFlow = broadcastSharedFlow<Unit>()
@@ -77,6 +81,7 @@ internal class PersistenceConnectionLogicImpl(
             insertCurrentUser()
             if (isAppOnForeground())
                 setUserPresenceUseCase()
+            retryInterruptedDownloads()
 
             withContext(Dispatchers.IO) {
                 messageLogic.sendAllPendingMarkers()
@@ -99,6 +104,18 @@ internal class PersistenceConnectionLogicImpl(
 
     override val allPendingEventsSentFlow: Flow<Unit>
         get() = _allPendingEventsSentFlow
+
+    private suspend fun retryInterruptedDownloads() = withContext(Dispatchers.IO) {
+        downloadCoordinator.retryInterruptedDownloads(
+            findStored = ::findStoredAttachment,
+            start = { fileTransferService.download(it) },
+        )
+    }
+
+    private suspend fun findStoredAttachment(attachment: SceytAttachment): SceytAttachment? {
+        val message = messageLogic.getMessageFromDbByTid(attachment.messageTid) ?: return null
+        return message.attachments?.find { it.url == attachment.url }
+    }
 
     private suspend fun insertCurrentUser() = withContext(Dispatchers.IO) {
         ClientWrapper.currentUser?.let {

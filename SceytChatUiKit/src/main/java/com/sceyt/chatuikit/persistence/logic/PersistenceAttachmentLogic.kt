@@ -8,6 +8,7 @@ import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.AttachmentWithUserData
 import com.sceyt.chatuikit.data.models.messages.FileChecksumData
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
+import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import kotlinx.coroutines.flow.Flow
@@ -45,6 +46,9 @@ interface PersistenceAttachmentLogic {
     suspend fun updateAttachmentIdAndMessageId(message: SceytMessage)
     suspend fun updateTransferDataByMsgTid(data: TransferData)
     suspend fun updateAttachmentWithTransferData(data: TransferData)
+
+    /** Saves the uploaded URL and its matching encryption metadata in one transaction. */
+    suspend fun updateUploadedAttachment(attachment: SceytAttachment)
 
     /** Writes [data] to caches and DB without transition checks, used to restart a download of a missing original. */
     suspend fun resetToPendingDownload(data: TransferData)

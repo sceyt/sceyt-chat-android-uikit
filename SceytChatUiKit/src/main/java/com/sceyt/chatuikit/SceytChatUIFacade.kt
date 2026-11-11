@@ -2,6 +2,7 @@ package com.sceyt.chatuikit
 
 import android.content.Context
 import androidx.work.WorkManager
+import androidx.work.await
 import com.google.firebase.FirebaseApp
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.SceytException
@@ -12,6 +13,7 @@ import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.repositories.getUserId
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.database.cleaner.DatabaseCleaner
+import com.sceyt.chatuikit.persistence.extensions.runCatchingCancellable
 import com.sceyt.chatuikit.persistence.extensions.safeResume
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.interactor.AttachmentInteractor
@@ -112,7 +114,12 @@ class SceytChatUIFacade(
 
     fun logOut(unregisterPushCallback: ((Result<Boolean>) -> Unit)? = null) = scope.launch {
         sceytSyncManager.cancelSync()
-        WorkManager.getInstance(context).cancelAllWorkByTag(SCEYT_WORKER_TAG)
+        runCatchingCancellable {
+            WorkManager.getInstance(context).cancelAllWorkByTag(SCEYT_WORKER_TAG).await()
+        }.onFailure {
+            SceytLog.e(TAG, "Could not cancel workers during logout", it)
+        }
+        filesTransferService.cancelAllTransfers()
         clearData()
         val result = unregisterFirebaseToken()
         ChatClient.getClient().disconnect()

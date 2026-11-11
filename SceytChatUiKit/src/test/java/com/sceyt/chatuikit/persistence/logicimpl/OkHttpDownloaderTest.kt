@@ -1,0 +1,477 @@
+package com.sceyt.chatuikit.persistence.logicimpl
+
+import com.google.common.truth.Truth.assertThat
+import com.sceyt.chatuikit.filetransfer.FileDownloadRequest
+import com.sceyt.chatuikit.filetransfer.FileTransferResult
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.OkHttpClient
+import okhttp3.Protocol
+import okhttp3.Request
+import okhttp3.Response
+import okhttp3.ResponseBody
+import okhttp3.ResponseBody.Companion.toResponseBody
+import okio.Buffer
+import okio.BufferedSource
+import org.junit.After
+import org.junit.Before
+import org.junit.Rule
+import org.junit.Test
+import org.junit.rules.TemporaryFolder
+import org.junit.runner.RunWith
+import org.mockito.MockedConstruction
+import org.mockito.Mockito
+import org.mockito.kotlin.any
+import org.mockito.kotlin.argumentCaptor
+import org.mockito.kotlin.doAnswer
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.never
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
+import org.robolectric.RobolectricTestRunner
+import java.io.IOException
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
+
+@RunWith(RobolectricTestRunner::class)
+class OkHttpDownloaderTest {
+    @get:Rule
+    val temporaryFolder = TemporaryFolder()
+
+    private val client = mock<OkHttpClient>()
+    private val firstCall = mock<Call>()
+    private val secondCall = mock<Call>()
+    private lateinit var builders: MockedConstruction<OkHttpClient.Builder>
+
+    @Before
+    fun setUp() {
+        builders = Mockito.mockConstruction(
+            OkHttpClient.Builder::class.java,
+            Mockito.withSettings().defaultAnswer(Mockito.RETURNS_SELF),
+        ) { builder, _ ->
+            whenever(builder.build()).thenReturn(client)
+        }
+        whenever(client.newCall(any())).thenReturn(firstCall, secondCall)
+    }
+
+    @After
+    fun tearDown() {
+        builders.close()
+    }
+
+    @Test
+    fun `per request headers accompany range resume without leaking into another download`() {
+        val downloader = OkHttpDownloader()
+        val first = request("download:headers").copy(
+            headers = mapOf("X-Chat-Token" to "test-token", "X-Message-Id" to "1001"),
+        )
+        first.destinationFile.writeText("partial")
+        val second = request("download:other")
+
+        downloader.downloadFile(first, {}, {})
+        downloader.downloadFile(second, {}, {})
+
+        val requests = argumentCaptor<Request>()
+        verify(client, Mockito.times(2)).newCall(requests.capture())
+        assertThat(requests.allValues[0].header("X-Chat-Token")).isEqualTo("test-token")
+        assertThat(requests.allValues[0].header("X-Message-Id")).isEqualTo("1001")
+        assertThat(requests.allValues[0].header("Range")).isEqualTo("bytes=7-")
+        assertThat(requests.allValues[1].header("X-Chat-Token")).isNull()
+        assertThat(requests.allValues[1].header("X-Message-Id")).isNull()
+    }
+
+    @Test
+    fun `same URL with different operation IDs keeps both downloads`() {
+        val downloader = OkHttpDownloader()
+        val first = request("download:20:first")
+        val second = request("download:20:second")
+
+        val firstResults = mutableListOf<FileTransferResult<String>>()
+        val secondResults = mutableListOf<FileTransferResult<String>>()
+        downloader.downloadFile(first, {}, firstResults::add)
+        downloader.downloadFile(second, {}, secondResults::add)
+        val firstCallback = argumentCaptor<Callback>()
+        val secondCallback = argumentCaptor<Callback>()
+        verify(firstCall).enqueue(firstCallback.capture())
+        verify(secondCall).enqueue(secondCallback.capture())
+        val error = IOException("Connection lost")
+
+        firstCallback.firstValue.onFailure(firstCall, error)
+
+        assertThat(firstResults).containsExactly(FileTransferResult.Interrupted(error))
+        assertThat(secondResults).isEmpty()
+        secondCallback.firstValue.onFailure(secondCall, error)
+        assertThat(secondResults).containsExactly(FileTransferResult.Interrupted(error))
+    }
+
+    @Test
+    fun `cancelling one download does not cancel another with the same URL`() {
+        val downloader = OkHttpDownloader()
+        val first = request("download:20:first")
+        val second = request("download:20:second")
+        val call = checkNotNull(downloader.downloadFile(first, {}, {}))
+        downloader.downloadFile(second, {}, {})
+
+        downloader.cancelDownload(call)
+
+        verify(firstCall).cancel()
+        verify(secondCall, never()).cancel()
+    }
+
+    @Test
+    fun `old failure is delivered only to the old request`() {
+        val downloader = OkHttpDownloader()
+        val request = request("download:20:first")
+        val callback = argumentCaptor<Callback>()
+        val oldResults = mutableListOf<FileTransferResult<String>>()
+        val replacementResults = mutableListOf<FileTransferResult<String>>()
+        downloader.downloadFile(request, {}, oldResults::add)
+        verify(firstCall).enqueue(callback.capture())
+        downloader.downloadFile(request, {}, replacementResults::add)
+        val error = IOException("old failure")
+
+        callback.firstValue.onFailure(firstCall, error)
+
+        assertThat(oldResults).containsExactly(FileTransferResult.Interrupted(error))
+        assertThat(replacementResults).isEmpty()
+        verify(secondCall, never()).cancel()
+    }
+
+    @Test
+    fun `cancelling an old call does not cancel its replacement`() {
+        val downloader = OkHttpDownloader()
+        val request = request("download:20:first")
+        val oldCall = checkNotNull(downloader.downloadFile(request, {}, {}))
+        downloader.downloadFile(request, {}, {})
+
+        downloader.cancelDownload(oldCall)
+
+        verify(firstCall).cancel()
+        verify(secondCall, never()).cancel()
+        downloader.cancelDownload(secondCall)
+        verify(secondCall).cancel()
+    }
+
+    @Test
+    fun `cancellation before a response still signals cleanup completion`() {
+        val downloader = OkHttpDownloader()
+        val request = request("download:cancel-before-response")
+        val callback = argumentCaptor<Callback>()
+        var completions = 0
+        val call = checkNotNull(
+            downloader.downloadFile(
+                request = request,
+                onProgress = {},
+                onResult = { error("Cancelled download must not report a result") },
+                onFinished = { completions++ },
+            )
+        )
+        verify(firstCall).enqueue(callback.capture())
+        whenever(firstCall.isCanceled()).thenReturn(true)
+
+        downloader.cancelDownload(call)
+        assertThat(completions).isEqualTo(1)
+        callback.firstValue.onFailure(firstCall, IOException("cancelled"))
+
+        assertThat(completions).isEqualTo(1)
+    }
+
+    @Test
+    fun `late response after cancellation leaves the destination unchanged`() {
+        val request = request("download:late-response")
+        request.destinationFile.writeText("keep")
+        val callback = argumentCaptor<Callback>()
+        val body = mock<ResponseBody>()
+        val downloader = OkHttpDownloader()
+        var completions = 0
+        val call = checkNotNull(
+            downloader.downloadFile(
+                request = request,
+                onProgress = {},
+                onResult = { error("Cancelled download must not report a result") },
+                onFinished = { completions++ },
+            )
+        )
+        verify(firstCall).enqueue(callback.capture())
+        val response = Response.Builder()
+            .request(Request.Builder().url(request.url).build())
+            .protocol(Protocol.HTTP_1_1).code(200).message("OK").body(body).build()
+
+        downloader.cancelDownload(call)
+        callback.firstValue.onResponse(firstCall, response)
+
+        assertThat(request.destinationFile.readText()).isEqualTo("keep")
+        assertThat(completions).isEqualTo(1)
+        verify(body).close()
+        verify(body, never()).source()
+    }
+
+    @Test
+    fun `progress uses old bytes only when the server honors range`() {
+        for (code in listOf(200, 206)) {
+            val request = request("download:range-$code")
+            request.destinationFile.writeText("old!")
+            val source = mock<BufferedSource>()
+            val body = mock<ResponseBody>()
+            whenever(body.source()).thenReturn(source)
+            whenever(body.contentLength()).thenReturn(4L)
+            var reads = 0
+            doAnswer { invocation ->
+                when (reads++) {
+                    0 -> {
+                        invocation.getArgument<Buffer>(0).writeUtf8("ab")
+                        2L
+                    }
+
+                    1 -> {
+                        invocation.getArgument<Buffer>(0).writeUtf8("cd")
+                        2L
+                    }
+
+                    else -> -1L
+                }
+            }.whenever(source).read(any(), any())
+            val progress = mutableListOf<Float>()
+            val results = mutableListOf<FileTransferResult<String>>()
+            val downloader = OkHttpDownloader()
+            downloader.downloadFile(request, progress::add, results::add)
+            val call = if (code == 200) firstCall else secondCall
+            val callback = argumentCaptor<Callback>()
+            verify(call).enqueue(callback.capture())
+            val response = Response.Builder()
+                .request(Request.Builder().url(request.url).build())
+                .protocol(Protocol.HTTP_1_1).code(code).message("OK").body(body).build()
+
+            callback.firstValue.onResponse(call, response)
+
+            assertThat(results)
+                .containsExactly(FileTransferResult.Success(request.destinationFile.path))
+            assertThat(progress.first()).isEqualTo(if (code == 200) 50f else 75f)
+            assertThat(request.destinationFile.readText())
+                .isEqualTo(if (code == 200) "abcd" else "old!abcd")
+        }
+    }
+
+    @Test
+    fun `temporary HTTP failure keeps partial bytes for a later range request`() {
+        val request = request("download:service-unavailable")
+        request.destinationFile.writeText("partial")
+        val downloader = OkHttpDownloader()
+        val results = mutableListOf<FileTransferResult<String>>()
+        downloader.downloadFile(request, {}, results::add)
+        val callback = argumentCaptor<Callback>()
+        verify(firstCall).enqueue(callback.capture())
+        val response = Response.Builder()
+            .request(Request.Builder().url(request.url).build())
+            .protocol(Protocol.HTTP_1_1).code(503).message("Service Unavailable")
+            .body("unavailable".toResponseBody()).build()
+
+        callback.firstValue.onResponse(firstCall, response)
+
+        assertThat(results.single()).isInstanceOf(FileTransferResult.Interrupted::class.java)
+        assertThat(request.destinationFile.readText()).isEqualTo("partial")
+        verify(client).newCall(any())
+        verify(firstCall, never()).cancel()
+
+        downloader.downloadFile(request, {}, results::add)
+        val requests = argumentCaptor<Request>()
+        verify(client, Mockito.times(2)).newCall(requests.capture())
+        assertThat(requests.lastValue.header("Range")).isEqualTo("bytes=7-")
+        val retryCallback = argumentCaptor<Callback>()
+        verify(secondCall).enqueue(retryCallback.capture())
+        val retryResponse = Response.Builder()
+            .request(requests.lastValue)
+            .protocol(Protocol.HTTP_1_1).code(206).message("Partial Content")
+            .body("rest".toResponseBody()).build()
+
+        retryCallback.firstValue.onResponse(secondCall, retryResponse)
+
+        assertThat(results).hasSize(2)
+        assertThat(results.last())
+            .isEqualTo(FileTransferResult.Success(request.destinationFile.path))
+        assertThat(request.destinationFile.readText()).isEqualTo("partialrest")
+    }
+
+    @Test
+    fun `HTTP classification preserves temporary errors and keeps terminal errors unchanged`() {
+        val cases = mapOf(
+            408 to FileTransferResult.Interrupted::class.java,
+            429 to FileTransferResult.Interrupted::class.java,
+            500 to FileTransferResult.Interrupted::class.java,
+            502 to FileTransferResult.Interrupted::class.java,
+            503 to FileTransferResult.Interrupted::class.java,
+            504 to FileTransferResult.Interrupted::class.java,
+            404 to FileTransferResult.Failure::class.java,
+            416 to FileTransferResult.Failure::class.java,
+            501 to FileTransferResult.Failure::class.java,
+            505 to FileTransferResult.Failure::class.java,
+        )
+        for ((code, expectedType) in cases) {
+            val call = mock<Call>()
+            whenever(client.newCall(any())).thenReturn(call)
+            val request = request("download:http-$code")
+            val downloader = OkHttpDownloader()
+            val results = mutableListOf<FileTransferResult<String>>()
+            downloader.downloadFile(request, {}, results::add)
+            val callback = argumentCaptor<Callback>()
+            verify(call).enqueue(callback.capture())
+            val response = Response.Builder()
+                .request(Request.Builder().url(request.url).build())
+                .protocol(Protocol.HTTP_1_1).code(code).message("HTTP $code")
+                .body("error".toResponseBody()).build()
+
+            callback.firstValue.onResponse(call, response)
+
+            assertThat(results.single()).isInstanceOf(expectedType)
+        }
+    }
+
+    @Test
+    fun `connection failure returns interruption and retains the partial file`() {
+        val request = request("download:connection-loss")
+        request.destinationFile.writeText("partial")
+        val downloader = OkHttpDownloader()
+        val results = mutableListOf<FileTransferResult<String>>()
+        downloader.downloadFile(request, {}, results::add)
+        val callback = argumentCaptor<Callback>()
+        verify(firstCall).enqueue(callback.capture())
+        val error = IOException("Connection lost")
+
+        callback.firstValue.onFailure(firstCall, error)
+
+        assertThat(results).containsExactly(FileTransferResult.Interrupted(error))
+        assertThat(request.destinationFile.readText()).isEqualTo("partial")
+        verify(firstCall, never()).cancel()
+    }
+
+    @Test
+    fun `response read failure retains bytes for a later range request`() {
+        val request = request("download:read-loss")
+        request.destinationFile.writeText("old")
+        val source = mock<BufferedSource>()
+        val body = mock<ResponseBody>()
+        val error = IOException("Connection reset")
+        whenever(body.source()).thenReturn(source)
+        whenever(body.contentLength()).thenReturn(6L)
+        var reads = 0
+        doAnswer { invocation ->
+            if (reads++ > 0) throw error
+            invocation.getArgument<Buffer>(0).writeUtf8("new")
+            3L
+        }.whenever(source).read(any(), any())
+        val downloader = OkHttpDownloader()
+        val results = mutableListOf<FileTransferResult<String>>()
+        downloader.downloadFile(request, {}, results::add)
+        val callback = argumentCaptor<Callback>()
+        verify(firstCall).enqueue(callback.capture())
+        val response = Response.Builder()
+            .request(Request.Builder().url(request.url).build())
+            .protocol(Protocol.HTTP_1_1).code(206).message("Partial Content").body(body).build()
+
+        callback.firstValue.onResponse(firstCall, response)
+
+        assertThat(results).containsExactly(FileTransferResult.Interrupted(error))
+        assertThat(request.destinationFile.readText()).isEqualTo("oldnew")
+        verify(body).close()
+        verify(firstCall, never()).cancel()
+
+        downloader.downloadFile(request, {}, results::add)
+        val requests = argumentCaptor<Request>()
+        verify(client, Mockito.times(2)).newCall(requests.capture())
+        assertThat(requests.lastValue.header("Range")).isEqualTo("bytes=6-")
+        val retryCallback = argumentCaptor<Callback>()
+        verify(secondCall).enqueue(retryCallback.capture())
+        retryCallback.firstValue.onFailure(secondCall, IOException("Still offline"))
+
+        assertThat(results).hasSize(2)
+        assertThat(results.last()).isInstanceOf(FileTransferResult.Interrupted::class.java)
+    }
+
+    @Test
+    fun `destination write error is a failure not an interruption`() {
+        val request = request("download:disk-error")
+            .copy(destinationFile = temporaryFolder.newFolder())
+        val body = mock<ResponseBody>()
+        whenever(body.source()).thenReturn(Buffer().writeUtf8("data"))
+        whenever(body.contentLength()).thenReturn(4L)
+        val downloader = OkHttpDownloader()
+        val results = mutableListOf<FileTransferResult<String>>()
+        downloader.downloadFile(request, {}, results::add)
+        val callback = argumentCaptor<Callback>()
+        verify(firstCall).enqueue(callback.capture())
+        val response = Response.Builder()
+            .request(Request.Builder().url(request.url).build())
+            .protocol(Protocol.HTTP_1_1).code(200).message("OK").body(body).build()
+
+        callback.firstValue.onResponse(firstCall, response)
+
+        assertThat(results.single()).isInstanceOf(FileTransferResult.Failure::class.java)
+        verify(body).close()
+    }
+
+    @Test
+    fun `cancellation signals completion after the response writer stops`() {
+        val enteredRead = CountDownLatch(1)
+        val releaseRead = CountDownLatch(1)
+        val finished = CountDownLatch(1)
+        val cancelled = AtomicBoolean()
+        val source = mock<BufferedSource>()
+        val body = mock<ResponseBody>()
+        whenever(body.source()).thenReturn(source)
+        whenever(body.contentLength()).thenReturn(3L)
+        whenever(firstCall.isCanceled()).thenAnswer { cancelled.get() }
+        doAnswer { cancelled.set(true) }.whenever(firstCall).cancel()
+        doAnswer { invocation ->
+            enteredRead.countDown()
+            check(releaseRead.await(2, TimeUnit.SECONDS))
+            invocation.getArgument<Buffer>(0).writeUtf8("old")
+            3L
+        }.whenever(source).read(any(), any())
+
+        val request = request("download:writer-stop")
+        val downloader = OkHttpDownloader()
+        val results = mutableListOf<FileTransferResult<String>>()
+        val call = checkNotNull(
+            downloader.downloadFile(request, {}, results::add, finished::countDown)
+        )
+        val callback = argumentCaptor<Callback>()
+        verify(firstCall).enqueue(callback.capture())
+        val response = Response.Builder()
+            .request(Request.Builder().url(request.url).build())
+            .protocol(Protocol.HTTP_1_1)
+            .code(200)
+            .message("OK")
+            .body(body)
+            .build()
+        val executor = Executors.newSingleThreadExecutor()
+        val writer = executor.submit { callback.firstValue.onResponse(firstCall, response) }
+        try {
+            assertThat(enteredRead.await(2, TimeUnit.SECONDS)).isTrue()
+            downloader.cancelDownload(call)
+
+            assertThat(cancelled.get()).isTrue()
+            assertThat(writer.isDone).isFalse()
+            assertThat(finished.count).isEqualTo(1L)
+            releaseRead.countDown()
+            writer.get(2, TimeUnit.SECONDS)
+
+            assertThat(finished.count).isEqualTo(0L)
+            assertThat(results).isEmpty()
+            assertThat(request.destinationFile.readText()).isEqualTo("old")
+            verify(body).close()
+        } finally {
+            releaseRead.countDown()
+            writer.get(2, TimeUnit.SECONDS)
+            executor.shutdownNow()
+        }
+    }
+
+    private fun request(operationId: String) = FileDownloadRequest(
+        operationId = operationId,
+        url = "https://cdn.test/file",
+        destinationFile = temporaryFolder.newFile(),
+        attachment = attachment(),
+    )
+}

@@ -11,6 +11,7 @@ import android.graphics.drawable.Drawable
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -271,6 +272,16 @@ fun Context.hasActiveNetwork(): Boolean {
     val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     val capability = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
     return capability?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) ?: false
+}
+
+internal fun Context.hasConnectedNetwork(): Boolean {
+    val connectivityManager = getSystemService(ConnectivityManager::class.java)
+    val capabilities = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+        ?: return false
+    val requiredCapability = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+        NetworkCapabilities.NET_CAPABILITY_VALIDATED
+    else NetworkCapabilities.NET_CAPABILITY_INTERNET
+    return capabilities.hasCapability(requiredCapability)
 }
 
 internal fun Context?.getFragmentManager(): FragmentManager? {

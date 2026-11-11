@@ -162,7 +162,7 @@ class OutFileMessageViewHolder(
             }
 
             PendingDownload -> {
-                drawMediaThumbOrRequestIfNeeded()
+                if (!drawMediaThumbOrRequestIfNeeded()) binding.icFile.setImageResource(0)
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.attachment))
             }
 

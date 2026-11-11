@@ -38,6 +38,7 @@ import com.sceyt.chatuikit.databinding.SceytItemOutVoiceMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemSystemMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemUnreadMessagesSeparatorBinding
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
+import com.sceyt.chatuikit.persistence.mappers.withoutPreview
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.DateSeparatorViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.IncAttachmentsMessageViewHolder
@@ -480,13 +481,14 @@ open class MessageViewHolderFactory(context: Context) {
         inc: Boolean,
         attachments: List<SceytAttachment>
     ): MessageViewTypeEnum {
-        if (attachments.isEmpty()) {
+        val visibleAttachments = attachments.withoutPreview()
+        if (visibleAttachments.isEmpty()) {
             return pick(inc, MessageViewTypeEnum.IncText, MessageViewTypeEnum.OutText)
         }
 
-        val (links, nonLinks) = attachments.partition { it.type == AttachmentTypeEnum.Link.value }
+        val (links, nonLinks) = visibleAttachments.partition { it.type == AttachmentTypeEnum.Link.value }
 
-        if (links.size == attachments.size) {
+        if (links.size == visibleAttachments.size) {
             return pick(inc, MessageViewTypeEnum.IncLink, MessageViewTypeEnum.OutLink)
         }
 

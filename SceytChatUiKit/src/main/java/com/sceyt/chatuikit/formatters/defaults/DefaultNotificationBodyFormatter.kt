@@ -15,11 +15,12 @@ import com.sceyt.chatuikit.notifications.NotificationType
 import com.sceyt.chatuikit.presentation.extensions.getFormattedBodyWithAttachments
 import com.sceyt.chatuikit.push.PushData
 import com.sceyt.chatuikit.styles.common.TextStyle
+import com.sceyt.chatuikit.persistence.mappers.withoutPreview
 
 open class DefaultNotificationBodyFormatter : Formatter<PushData> {
 
     override fun format(context: Context, from: PushData): CharSequence {
-        val attachmentIcon = from.message.attachments?.firstOrNull()?.getEmojiIcon()
+        val attachmentIcon = from.message.attachments?.withoutPreview()?.firstOrNull()?.getEmojiIcon()
         val messageBody = from.message.getFormattedBodyWithAttachments(
             context = context,
             mentionTextStyle = TextStyle(style = Typeface.BOLD),

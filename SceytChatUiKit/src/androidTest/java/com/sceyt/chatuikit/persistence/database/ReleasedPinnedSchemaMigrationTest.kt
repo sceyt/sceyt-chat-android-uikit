@@ -181,7 +181,7 @@ class ReleasedPinnedSchemaMigrationTest {
 private const val TEST_DB_NAME = "released-pinned-schema-migration-test.db"
 
 private fun assertLatestSchema(database: SupportSQLiteDatabase) {
-    assertThat(database.version).isEqualTo(34)
+    assertThat(database.version).isEqualTo(35)
     assertThat(rowCount(database, DatabaseConstants.PENDING_CHANNEL_AVATAR_TABLE)).isEqualTo(0L)
     database.query("PRAGMA foreign_key_check").use { cursor ->
         assertThat(cursor.count).isEqualTo(0)
@@ -209,6 +209,7 @@ private fun queryLong(database: SupportSQLiteDatabase, sql: String): Long =
         cursor.getLong(0)
     }
 
+@Suppress("SameParameterValue")
 private fun queryString(database: SupportSQLiteDatabase, sql: String): String =
     database.query(sql).use { cursor ->
         check(cursor.moveToFirst()) { "Expected a row for query: $sql" }

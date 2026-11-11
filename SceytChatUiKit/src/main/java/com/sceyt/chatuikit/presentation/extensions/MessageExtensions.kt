@@ -15,11 +15,11 @@ import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SystemMessageAction
 import com.sceyt.chatuikit.data.models.messages.SceytMessageType
 import com.sceyt.chatuikit.data.models.messages.SceytUser
-import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.getFileSize
 import com.sceyt.chatuikit.extensions.jsonToObject
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.persistence.mappers.toSceytAttachment
+import com.sceyt.chatuikit.persistence.mappers.withoutPreview
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.MessageBodyStyleHelper.buildWithAttributes
 import com.sceyt.chatuikit.presentation.custom_views.DecoratedTextView
 import com.sceyt.chatuikit.styles.channel.ChannelItemStyle
@@ -123,6 +123,7 @@ fun SceytMessage.getFormattedBodyWithAttachments(
     unsupportedMessageBodyFormatter: Formatter<SceytMessage>,
     mentionClickListener: ((String) -> Unit)?,
 ): CharSequence {
+    val visibleAttachments = attachments?.withoutPreview()
     val body = when {
         state == MessageState.Deleted -> context.getString(R.string.sceyt_message_was_deleted)
         !isSupportedType() -> {
@@ -134,7 +135,7 @@ fun SceytMessage.getFormattedBodyWithAttachments(
             attachmentNameFormatter.format(context, attachments[0])
         }
 
-        attachments.isNullOrEmpty() || attachments.firstOrNull()?.type == AttachmentTypeEnum.Link.value -> {
+        visibleAttachments.isNullOrEmpty() || visibleAttachments.firstOrNull()?.type == AttachmentTypeEnum.Link.value -> {
             buildWithAttributes(
                 context = context,
                 mentionTextStyle = mentionTextStyle,
@@ -143,8 +144,8 @@ fun SceytMessage.getFormattedBodyWithAttachments(
             )
         }
 
-        attachments.size == 1 -> {
-            body.ifEmpty { attachmentNameFormatter.format(context, attachments[0]) }
+        visibleAttachments.size == 1 -> {
+            body.ifEmpty { attachmentNameFormatter.format(context, visibleAttachments[0]) }
         }
 
         else -> context.getString(R.string.sceyt_file)

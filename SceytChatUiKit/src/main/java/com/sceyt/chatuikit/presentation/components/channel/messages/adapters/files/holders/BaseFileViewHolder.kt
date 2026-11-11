@@ -45,9 +45,10 @@ abstract class BaseFileViewHolder<Item : AttachmentDataProvider>(
     private fun setListener() {
         if (addedLister) return
         addedLister = true
-        FileTransferHelper.onTransferUpdatedLiveData.observe(context.asComponentActivity()) {
-            if (viewHolderHelper.updateTransferData(it, fileItem, ::isValidThumb))
+        FileTransferHelper.onTransferUpdatedLiveData.observe(context.asComponentActivity()) { data ->
+            viewHolderHelper.updateAndResolveTransferData(data, fileItem, ::isValidThumb)?.let {
                 updateState(it)
+            }
         }
     }
 

@@ -5,5 +5,6 @@ data class FileChecksumData(
         val resizedFilePath: String?,
         val url: String?,
         val metadata: String?,
-        val fileSize: Long?
+        val fileSize: Long?,
+        val encryptionMetadata: String? = null,
 )

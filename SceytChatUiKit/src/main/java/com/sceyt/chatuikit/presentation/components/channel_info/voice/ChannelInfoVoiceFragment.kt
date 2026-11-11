@@ -97,7 +97,7 @@ open class ChannelInfoVoiceFragment : Fragment(), SceytKoinComponent, HistoryCle
                     // voice message play functionality is handled in VoiceMessageViewHolder
                 })
                 it.setClickListener(AttachmentClickListeners.AttachmentLoaderClickListener { _, item ->
-                    viewModel.pauseOrResumeUpload(item, channel.id)
+                    onAttachmentLoaderClick(item)
                 })
 
                 it.setNeedMediaDataCallback { data -> viewModel.needMediaInfo(data) }
@@ -121,6 +121,10 @@ open class ChannelInfoVoiceFragment : Fragment(), SceytKoinComponent, HistoryCle
 
     protected open fun onMoreFilesList(list: List<ChannelFileItem>) {
         mediaAdapter?.addNewItems(list)
+    }
+
+    protected open fun onAttachmentLoaderClick(item: ChannelFileItem) {
+        viewModel.pauseOrResumeUpload(item, channel.id)
     }
 
     protected open fun onDeferredTransferUpdate(transferData: TransferData) {

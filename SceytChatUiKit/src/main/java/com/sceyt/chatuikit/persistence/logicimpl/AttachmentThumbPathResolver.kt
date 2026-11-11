@@ -16,16 +16,18 @@ internal object AttachmentThumbPathResolver : ThumbPathResolver {
         attachment: SceytAttachment,
         size: Size,
     ): Result<String> {
+        // Thumbnail generation needs a local source file.
         val path = attachment.filePath ?: return Result.failure(FileNotFoundException())
-        val minSize = max(size.height, size.width)
-        val reqSize = if (minSize > 0) minSize.toFloat() else 800f
+        val maxDimension = max(size.height, size.width)
+        val requestedSize = if (maxDimension > 0) maxDimension.toFloat() else 800f
+
         return when (attachment.getVisualMediaType()) {
             AttachmentTypeEnum.Image -> {
-                FileResizeUtil.getImageThumbAsFile(context, path, reqSize).map { it.path }
+                FileResizeUtil.getImageThumbAsFile(context, path, requestedSize).map { it.path }
             }
 
             AttachmentTypeEnum.Video -> {
-                FileResizeUtil.getVideoThumbAsFile(context, path, reqSize).map { it.path }
+                FileResizeUtil.getVideoThumbAsFile(context, path, requestedSize).map { it.path }
             }
 
             else -> Result.failure(Exception("Unsupported attachment type: ${attachment.type}"))

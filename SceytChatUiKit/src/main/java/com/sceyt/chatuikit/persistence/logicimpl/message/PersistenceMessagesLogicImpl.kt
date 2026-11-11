@@ -34,7 +34,6 @@ import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.createErrorResponse
 import com.sceyt.chatuikit.data.models.isSuccess
 import com.sceyt.chatuikit.data.models.map
-import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.MarkerType.Received
 import com.sceyt.chatuikit.data.models.messages.SceytMarker
@@ -68,6 +67,7 @@ import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingMarkerEnt
 import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingMessageDeleteByTidEntity
 import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingMessageStateEntity
 import com.sceyt.chatuikit.persistence.database.entity.user.UserDb
+import com.sceyt.chatuikit.persistence.extensions.runCatchingCancellable
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
@@ -83,6 +83,10 @@ import com.sceyt.chatuikit.persistence.mappers.existThumb
 import com.sceyt.chatuikit.persistence.mappers.getLinkPreviewDetails
 import com.sceyt.chatuikit.persistence.mappers.isHiddenLinkDetails
 import com.sceyt.chatuikit.persistence.mappers.isLink
+import com.sceyt.chatuikit.persistence.mappers.isPreview
+import com.sceyt.chatuikit.persistence.mappers.isTransferTracked
+import com.sceyt.chatuikit.persistence.mappers.isTransferTrackedType
+import com.sceyt.chatuikit.persistence.mappers.withPreviewLink
 import com.sceyt.chatuikit.persistence.mappers.toLinkPreviewDetails
 import com.sceyt.chatuikit.persistence.mappers.toMessageDb
 import com.sceyt.chatuikit.persistence.mappers.toMessageEntity
@@ -627,7 +631,7 @@ internal class PersistenceMessagesLogicImpl(
             MessageEventManager.emitOutgoingMessage(tmpMessage)
             insertTmpMessageToDb(tmpMessage)
             it.attachments?.forEach { attachment ->
-                if (attachment.type != AttachmentTypeEnum.Link.value) {
+                if (isTransferTrackedType(attachment.type)) {
                     var state = TransferState.PendingDownload
                     var progressPercent = 0f
                     if (attachment.filePath.isNotNullOrBlank()) {
@@ -718,10 +722,16 @@ internal class PersistenceMessagesLogicImpl(
                 channelId = channelId,
                 isSharing = isSharing
             ).await()
+            attachmentDao.markUploadQueued(message.tid)
             trySend(SendMessageResult.StartedSendingAttachment)
         } else {
-            val response = messagesRepository.sendMessage(channelId, message)
-            onMessageSentResponse(channelId, response, message)
+            val linkedMessage = message.copy(
+                attachments = message.attachments?.withPreviewLink(
+                    viewOnce = message.viewOnce
+                )
+            )
+            val response = messagesRepository.sendMessage(channelId, linkedMessage)
+            onMessageSentResponse(channelId, response, linkedMessage)
             trySend(response.toSendMessageResult())
         }
         channel.close()
@@ -760,7 +770,7 @@ internal class PersistenceMessagesLogicImpl(
     private fun checkHasFileAttachments(message: SceytMessage): Boolean {
         if (message.attachments.isNullOrEmpty()) return false
         message.attachments.forEach {
-            if (it.type != AttachmentTypeEnum.Link.value) return true
+            if (it.isTransferTracked()) return true
         }
         return false
     }
@@ -837,16 +847,19 @@ internal class PersistenceMessagesLogicImpl(
                 if (messageDb.attachments.isNullOrEmpty() || messageDb.attachments.any { attachment ->
                         attachment.payLoad?.transferState != TransferState.PauseUpload
                     }) {
-                    val isUploaded = messageDb.attachments?.all { attachment ->
-                        attachment.attachmentEntity.type == AttachmentTypeEnum.Link.value
-                                || attachment.payLoad?.transferState == TransferState.Uploaded
-                    } ?: false
+                    val isForwarded = messageDb.messageEntity.forwardingDetailsDb != null
+                    val areTrackedAttachmentsUploaded = messageDb.attachments?.all { attachment ->
+                        val isTracked = isTransferTrackedType(attachment.attachmentEntity.type)
+                        val isUploaded = attachment.payLoad?.transferState == TransferState.Uploaded
+                        !isTracked || isUploaded
+                    } == true
+                    val isUploadedForward = isForwarded && areTrackedAttachmentsUploaded
                     sendMessageImpl(
                         channelId = channelId,
                         message = messageDb.toSceytMessage(),
                         isSharing = false,
                         isPendingMessage = true,
-                        isUploadedAttachments = isUploaded
+                        isUploadedAttachments = isUploadedForward
                     ).collect()
                 }
             }
@@ -974,17 +987,20 @@ internal class PersistenceMessagesLogicImpl(
             ?: message
         if (storedMessage.isPending()) {
             val clonedMessage = message.copy(state = MessageState.Deleted)
+            runCatchingCancellable {
+                UploadAndSendAttachmentWorkManager.cancelWorksByTag(
+                    context = context,
+                    tag = message.tid.toString()
+                ).await()
+            }.onFailure {
+                SceytLog.e(TAG, "Could not cancel workers tagged ${message.tid}", it)
+            }
+            storedMessage.attachments?.forEach {
+                fileTransferService.cancelUpload(it)
+            }
             messageDao.deleteMessageByTid(message.tid)
             messagesCache.hardDeleteMessage(channelId, message)
             persistenceChannelsLogic.onMessageEditedOrDeleted(clonedMessage)
-            UploadAndSendAttachmentWorkManager.cancelWorksByTag(context, message.tid.toString())
-            storedMessage.attachments?.firstOrNull()?.let {
-                fileTransferService.pause(
-                    messageTid = it.messageTid,
-                    attachment = it,
-                    state = it.transferState ?: TransferState.Uploading
-                )
-            }
             // The send request may already have reached the server, so persist a delete-by-tid
             // intent (retried on reconnect) and attempt to delete it on the server now.
             pendingMessageDeleteByTidDao.insert(
@@ -1455,6 +1471,7 @@ internal class PersistenceMessagesLogicImpl(
             .let { entity ->
                 val attachments = message.attachments?.toMutableList() ?: return message
                 attachments.forEachIndexed { index, attachment ->
+                    if (attachment.isPreview()) return@forEachIndexed
                     val predicate: (AttachmentPayLoadDb) -> Boolean =
                         if (attachment.url.isNotNullOrBlank()) {
                             { entity.any { it.payLoadEntity.url == attachment.url } }
@@ -1618,7 +1635,11 @@ internal class PersistenceMessagesLogicImpl(
             it.pendingVote.messageTid
         }
         return list.map {
-            val updatedMessage = updateMessageStatesWithPendingStates(it, pendingStates, pendingPolls)
+            val updatedMessage = updateMessageStatesWithPendingStates(
+                message = it,
+                pendingStates = pendingStates,
+                pendingPolls = pendingPolls
+            )
             preservePendingPollVotes(updatedMessage)
         }
     }

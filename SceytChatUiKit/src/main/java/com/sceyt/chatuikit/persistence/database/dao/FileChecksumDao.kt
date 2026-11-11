@@ -16,8 +16,8 @@ internal interface FileChecksumDao {
     @Query("SELECT * FROM $FILE_CHECKSUM_TABLE WHERE checksum = :checksum")
     suspend fun getChecksum(checksum: Long): FileChecksumEntity?
 
-    @Query("UPDATE $FILE_CHECKSUM_TABLE SET url = :url WHERE checksum = :checksum")
-    suspend fun updateUrl(checksum: Long, url: String?)
+    @Query("UPDATE $FILE_CHECKSUM_TABLE SET url = :url, encryptionMetadata = :encryptionMetadata WHERE checksum = :checksum")
+    suspend fun updateUpload(checksum: Long, url: String?, encryptionMetadata: String?)
 
     @Query("UPDATE $FILE_CHECKSUM_TABLE SET resizedFilePath = :path, fileSize = :fileSize WHERE checksum = :checksum")
     suspend fun updateResizedFilePathAndSize(checksum: Long, path: String?, fileSize: Long?)

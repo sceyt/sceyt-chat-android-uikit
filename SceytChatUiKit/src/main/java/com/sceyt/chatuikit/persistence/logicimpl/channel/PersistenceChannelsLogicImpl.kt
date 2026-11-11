@@ -2,6 +2,7 @@ package com.sceyt.chatuikit.persistence.logicimpl.channel
 
 import android.content.Context
 import androidx.sqlite.db.SimpleSQLiteQuery
+import androidx.work.await
 import com.sceyt.chat.models.channel.ChannelListQuery.ChannelListOrder
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.UserState
@@ -24,6 +25,7 @@ import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.chatuikit.data.models.SDKErrorTypeEnum
 import com.sceyt.chatuikit.data.models.SceytPagingResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.SyncResult
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
@@ -56,12 +58,15 @@ import com.sceyt.chatuikit.persistence.database.entity.messages.DraftMessageUser
 import com.sceyt.chatuikit.persistence.database.entity.user.UserDb
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isDirect
+import com.sceyt.chatuikit.persistence.extensions.runCatchingCancellable
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.persistence.extensions.uploadIfLocal
+import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
 import com.sceyt.chatuikit.persistence.logicimpl.sync.ChannelSyncStateStore
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.InsertChannelWithMembersUseCase
+import com.sceyt.chatuikit.persistence.mappers.toAttachment
 import com.sceyt.chatuikit.persistence.mappers.toChannel
 import com.sceyt.chatuikit.persistence.mappers.toChannelEntity
 import com.sceyt.chatuikit.persistence.mappers.toDraftAttachmentEntity
@@ -75,7 +80,6 @@ import com.sceyt.chatuikit.persistence.mappers.toSceytUiChannel
 import com.sceyt.chatuikit.persistence.mappers.toUserDb
 import com.sceyt.chatuikit.persistence.mappers.toUserReactionsEntity
 import com.sceyt.chatuikit.persistence.repositories.ChannelsRepository
-import com.sceyt.chatuikit.persistence.workers.SendForwardMessagesWorkManager
 import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager
 import com.sceyt.chatuikit.presentation.extensions.isDeleted
 import com.sceyt.chatuikit.presentation.extensions.isDeletedOrHardDeleted
@@ -113,9 +117,11 @@ internal class PersistenceChannelsLogicImpl(
 
     companion object {
         private const val TAG = "PersistenceChannelsLogic"
+        private const val CHANNEL_CLEANUP_BATCH_SIZE = 999
     }
 
     private val messageLogic: PersistenceMessagesLogic by inject()
+    private val fileTransferService: FileTransferService by inject()
     private val myId: String? get() = SceytChatUIKit.chatUIFacade.myId
     private val channelsLoadSize get() = SceytChatUIKit.config.queryLimits.channelListQueryLimit
 
@@ -824,8 +830,6 @@ internal class PersistenceChannelsLogicImpl(
         val response = channelsRepository.clearHistory(channelId, forEveryone)
 
         if (response is SceytResponse.Success) {
-            UploadAndSendAttachmentWorkManager.cancelWorksByTag(context, channelId.toString())
-            SendForwardMessagesWorkManager.cancelWorksByTag(context, channelId.toString())
             response.onSuccessNotNull {
                 clearHistory(it)
             }
@@ -838,8 +842,6 @@ internal class PersistenceChannelsLogicImpl(
         val response = channelsRepository.blockChannel(channelId)
 
         if (response is SceytResponse.Success) {
-            UploadAndSendAttachmentWorkManager.cancelWorksByTag(context, channelId.toString())
-            SendForwardMessagesWorkManager.cancelWorksByTag(context, channelId.toString())
             deleteChannelFromDbAndCache(channelId)
         }
 
@@ -854,8 +856,6 @@ internal class PersistenceChannelsLogicImpl(
         val response = channelsRepository.leaveChannel(channelId)
 
         if (response is SceytResponse.Success) {
-            UploadAndSendAttachmentWorkManager.cancelWorksByTag(context, channelId.toString())
-            SendForwardMessagesWorkManager.cancelWorksByTag(context, channelId.toString())
             deleteChannelFromDbAndCache(channelId)
         }
 
@@ -871,8 +871,6 @@ internal class PersistenceChannelsLogicImpl(
         val response = channelsRepository.deleteChannel(channelId)
 
         if (response is SceytResponse.Success) {
-            UploadAndSendAttachmentWorkManager.cancelWorksByTag(context, channelId.toString())
-            SendForwardMessagesWorkManager.cancelWorksByTag(context, channelId.toString())
             deleteChannelFromDbAndCache(channelId)
         }
 
@@ -1251,7 +1249,30 @@ internal class PersistenceChannelsLogicImpl(
         } ?: channel.lastMessage
     }
 
+    private suspend fun cancelPendingUploads(channelIds: List<Long>) {
+        // Read attachments before deleting their rows; paused uploads may have no running worker.
+        val messages = messageDao.getPendingMessagesByChannelIds(channelIds).filter { message ->
+            message.attachments.orEmpty().any { it.attachmentEntity.type != AttachmentTypeEnum.Link.value }
+        }
+        val workerTags = (channelIds + messages.map { it.messageEntity.tid }).distinct()
+        coroutineScope {
+            workerTags.map { tag ->
+                async {
+                    runCatchingCancellable {
+                        UploadAndSendAttachmentWorkManager.cancelWorksByTag(context, tag.toString()).await()
+                    }.onFailure {
+                        SceytLog.e(TAG, "Could not cancel workers tagged $tag", it)
+                    }
+                }
+            }.awaitAll()
+        }
+        messages.forEach { message ->
+            message.attachments?.forEach { fileTransferService.cancelUpload(it.toAttachment()) }
+        }
+    }
+
     private suspend fun deleteChannelFromDbAndCache(channelId: Long) {
+        cancelPendingUploads(listOf(channelId))
         channelDao.deleteChannelAndLinks(channelId)
         messageDao.deleteAllMessagesByChannel(channelId)
         rangeDao.deleteChannelLoadRanges(channelId)
@@ -1261,15 +1282,19 @@ internal class PersistenceChannelsLogicImpl(
 
     private suspend fun deleteChannelsFromDbAndCache(channelIds: List<Long>) {
         if (channelIds.isEmpty()) return
-        channelDao.deleteAllChannelsAndLinksById(channelIds)
-        messageDao.deleteAllChannelsMessages(channelIds)
-        rangeDao.deleteChannelsLoadRanges(channelIds)
-        channelsCache.deleteChannel(*channelIds.toLongArray())
-        channelSyncStateStore.deleteSyncStates(channelIds)
+        channelIds.chunked(CHANNEL_CLEANUP_BATCH_SIZE).forEach { batch ->
+            cancelPendingUploads(batch)
+            channelDao.deleteAllChannelsAndLinksById(batch)
+            messageDao.deleteAllChannelsMessages(batch)
+            rangeDao.deleteChannelsLoadRanges(batch)
+            channelsCache.deleteChannel(*batch.toLongArray())
+            channelSyncStateStore.deleteSyncStates(batch)
+        }
     }
 
     private suspend fun clearHistory(channel: SceytChannel) {
         val channelId = channel.id
+        cancelPendingUploads(listOf(channelId))
         channelDao.updateMessagesClearedAt(channelId, channel.messagesClearedAt)
         channelDao.updateLastMessage(channelId, null, null)
         messageDao.deleteAllMessagesByChannel(channelId)

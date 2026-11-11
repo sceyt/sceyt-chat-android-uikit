@@ -7,7 +7,6 @@ import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
 import com.sceyt.chatuikit.data.models.LoadNearData
-import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
 import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus.Displayed
 import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus.Received
@@ -38,6 +37,7 @@ import com.sceyt.chatuikit.persistence.database.entity.messages.PollVoteEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.ReactionEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.ReactionTotalEntity
 import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingMarkerEntity
+import com.sceyt.chatuikit.persistence.mappers.isTransferTrackedType
 import com.sceyt.chatuikit.persistence.mappers.mergeWith
 import com.sceyt.chatuikit.persistence.mappers.toAttachmentPayLoad
 import kotlinx.coroutines.flow.Flow
@@ -268,7 +268,7 @@ internal abstract class MessageDao {
                 attachments.addAll(attachmentsDb.map { it.attachmentEntity })
                 // Add attachment payloads to list
                 attachmentPayLoads.addAll(attachmentsDb.filter {
-                    it.attachmentEntity.type != AttachmentTypeEnum.Link.value
+                    isTransferTrackedType(it.attachmentEntity.type)
                 }.map { it.toAttachmentPayLoad(messageDb.messageEntity) })
                 // Add link details to list
                 linkDetails.addAll(attachmentsDb.mapNotNull { it.linkDetails })
@@ -509,6 +509,18 @@ internal abstract class MessageDao {
         """
     )
     abstract suspend fun getPendingMessages(channelId: Long): List<MessageDb>
+
+    @Transaction
+    @Query(
+        """
+        SELECT *
+        FROM $MESSAGE_TABLE
+        WHERE channelId IN (:channelIds)
+          AND deliveryStatus = $PENDING_STATUS
+        ORDER BY createdAt
+        """
+    )
+    abstract suspend fun getPendingMessagesByChannelIds(channelIds: List<Long>): List<MessageDb>
 
     @Query(
         """

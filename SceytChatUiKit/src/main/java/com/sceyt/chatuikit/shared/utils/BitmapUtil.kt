@@ -5,10 +5,14 @@ import android.graphics.Bitmap
 object BitmapUtil {
 
     fun bitmapToRgba(bitmap: Bitmap): ByteArray {
-        require(bitmap.config == Bitmap.Config.ARGB_8888) { "Bitmap must be in ARGB_8888 format" }
-        val pixels = IntArray(bitmap.width * bitmap.height)
+        val argbBitmap = if (bitmap.config == Bitmap.Config.ARGB_8888) bitmap
+        else checkNotNull(bitmap.copy(Bitmap.Config.ARGB_8888, false)) {
+            "Couldn't convert ${bitmap.config} bitmap to ARGB_8888"
+        }
+        val pixels = IntArray(argbBitmap.width * argbBitmap.height)
         val bytes = ByteArray(pixels.size * 4)
-        bitmap.getPixels(pixels, 0, bitmap.width, 0, 0, bitmap.width, bitmap.height)
+        argbBitmap.getPixels(pixels, 0, argbBitmap.width, 0, 0, argbBitmap.width, argbBitmap.height)
+        if (argbBitmap !== bitmap) argbBitmap.recycle()
         var i = 0
         for (pixel in pixels) {
             // Get components assuming is ARGB

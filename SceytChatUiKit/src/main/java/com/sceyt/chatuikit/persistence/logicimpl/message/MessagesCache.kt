@@ -28,6 +28,8 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploaded
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploading
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.WaitingToUpload
 import com.sceyt.chatuikit.persistence.file_transfer.TransferStateValidator
+import com.sceyt.chatuikit.persistence.mappers.isPreview
+import com.sceyt.chatuikit.persistence.mappers.isTransferTracked
 import com.sceyt.chatuikit.persistence.mappers.mergeWith
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.comporators.MessageComparator
 import com.sceyt.chatuikit.presentation.extensions.isNotPending
@@ -342,6 +344,8 @@ class MessagesCache {
                     }
                     return@forEachIndexed
                 }
+                if (attachment.isPreview())
+                    return@forEachIndexed
                 val predicate: (AttachmentPayLoadData) -> Boolean =
                     if (attachment.url.isNotNullOrBlank()) {
                         { data.any { it.url == attachment.url } }
@@ -370,7 +374,7 @@ class MessagesCache {
 
     private fun getAttachmentPayLoads(cashedMessage: SceytMessage?): List<AttachmentPayLoadData>? {
         val payloads = cashedMessage?.attachments?.filter {
-            it.type != AttachmentTypeEnum.Link.value
+            it.isTransferTracked()
         }?.map { attachment ->
             AttachmentPayLoadData(
                 messageTid = cashedMessage.tid,
@@ -473,7 +477,7 @@ class MessagesCache {
             messageHashMap[updateDate.messageTid]?.let { message ->
                 val attachments = message.attachments?.toMutableList() ?: return@let
                 attachments.forEachIndexed att@{ index, attachment ->
-                    if (attachment.type == AttachmentTypeEnum.Link.value)
+                    if (!attachment.isTransferTracked())
                         return@att
 
                     when (updateDate.state) {
@@ -513,7 +517,7 @@ class MessagesCache {
             messageHashMap[messageTid]?.let { message ->
                 val attachments = message.attachments?.toMutableList() ?: return@let
                 attachments.forEachIndexed att@{ index, attachment ->
-                    if (attachment.type == AttachmentTypeEnum.Link.value)
+                    if (!attachment.isTransferTracked())
                         return@att
                     attachments[index] = attachment.copy(
                         filePath = path,
@@ -521,6 +525,15 @@ class MessagesCache {
                     )
                     messageHashMap[messageTid] = message.copy(attachments = attachments)
                 }
+            }
+        }
+    }
+
+    suspend fun replaceAttachmentByType(attachment: SceytAttachment) = mutex.withLock {
+        cachedMessages.values.forEach { messageHashMap ->
+            messageHashMap[attachment.messageTid]?.let { message ->
+                val attachments = message.attachments.orEmpty().filterNot { it.type == attachment.type }
+                messageHashMap[attachment.messageTid] = message.copy(attachments = attachments + attachment)
             }
         }
     }

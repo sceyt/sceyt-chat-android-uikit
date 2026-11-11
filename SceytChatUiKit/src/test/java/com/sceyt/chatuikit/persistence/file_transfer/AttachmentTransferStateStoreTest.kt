@@ -24,24 +24,64 @@ class AttachmentTransferStateStoreTest {
     }
 
     @Test
-    fun `progress update cannot move backwards`() {
-        val attachment = attachment(url = "https://cdn.test/file")
+    fun `download restart replaces progress from the previous attempt`() {
+        val attachment = attachment(
+            url = "https://cdn.test/file",
+            state = TransferState.Downloading,
+            progress = 75f,
+        )
 
         assertThat(
             AttachmentTransferStateStore.put(
-                transfer(progress = 50f, state = TransferState.Downloading, url = attachment.url)
+                transfer(progress = 75f, state = TransferState.Downloading, url = attachment.url)
             )
         ).isNotNull()
 
         assertThat(
             AttachmentTransferStateStore.put(
-                transfer(progress = 40f, state = TransferState.Downloading, url = attachment.url)
+                transfer(progress = 0f, state = TransferState.Downloading, url = attachment.url)
             )
-        ).isNull()
+        ).isNotNull()
+
+        AttachmentTransferStateStore.put(
+            transfer(progress = 10f, state = TransferState.Downloading, url = attachment.url)
+        )
 
         val latest = AttachmentTransferStateStore.getTransferData(attachment)
         assertThat(latest?.state).isEqualTo(TransferState.Downloading)
-        assertThat(latest?.progressPercent).isEqualTo(50f)
+        assertThat(latest?.progressPercent).isEqualTo(10f)
+    }
+
+    @Test
+    fun `upload restart replaces progress from the previous attempt`() {
+        val attachment = attachment(
+            filePath = "/uploads/file.jpg",
+            url = null,
+            state = TransferState.Uploading,
+            progress = 75f,
+        )
+        AttachmentTransferStateStore.put(
+            transfer(
+                progress = 75f,
+                state = TransferState.Uploading,
+                filePath = attachment.filePath,
+                url = null,
+            )
+        )
+
+        val restarted = AttachmentTransferStateStore.put(
+            transfer(
+                progress = 0f,
+                state = TransferState.Uploading,
+                filePath = attachment.filePath,
+                url = null,
+            )
+        )
+
+        assertThat(restarted?.progressPercent).isEqualTo(0f)
+        val latest = AttachmentTransferStateStore.getTransferData(attachment)
+        assertThat(latest?.state).isEqualTo(TransferState.Uploading)
+        assertThat(latest?.progressPercent).isEqualTo(0f)
     }
 
     @Test
@@ -206,14 +246,22 @@ class AttachmentTransferStateStoreTest {
                 state = TransferState.ThumbLoaded,
                 filePath = "/thumbs/file.jpg",
                 url = attachment.url,
-                thumbData = ThumbData(ThumbFor.MessagesLisView.value, attachment.filePath, thumbSize)
+                thumbData = ThumbData(
+                    ThumbFor.MessagesLisView.value,
+                    attachment.filePath,
+                    thumbSize
+                )
             )
         )
 
         val latest = AttachmentTransferStateStore.getTransferData(attachment)
         assertThat(latest?.state).isEqualTo(TransferState.Downloaded)
         assertThat(
-            AttachmentTransferStateStore.getThumbPath(attachment, ThumbFor.MessagesLisView, thumbSize)
+            AttachmentTransferStateStore.getThumbPath(
+                attachment,
+                ThumbFor.MessagesLisView,
+                thumbSize
+            )
         ).isEqualTo("/thumbs/file.jpg")
     }
 
@@ -242,12 +290,20 @@ class AttachmentTransferStateStoreTest {
                 state = TransferState.ThumbLoaded,
                 filePath = "/thumbs/channel-file.jpg",
                 url = attachment.url,
-                thumbData = ThumbData(ThumbFor.ChannelInfo.value, attachment.filePath, generatedThumbSize)
+                thumbData = ThumbData(
+                    ThumbFor.ChannelInfo.value,
+                    attachment.filePath,
+                    generatedThumbSize
+                )
             )
         )
 
         assertThat(
-            AttachmentTransferStateStore.getThumbPath(attachment, ThumbFor.ChannelInfo, requestedThumbSize)
+            AttachmentTransferStateStore.getThumbPath(
+                attachment,
+                ThumbFor.ChannelInfo,
+                requestedThumbSize
+            )
         ).isEqualTo("/thumbs/channel-file.jpg")
     }
 
@@ -285,13 +341,21 @@ class AttachmentTransferStateStoreTest {
                 state = TransferState.ThumbLoaded,
                 filePath = "/thumbs/original.jpg",
                 url = null,
-                thumbData = ThumbData(ThumbFor.MessagesLisView.value, originalAttachment.filePath, thumbSize)
+                thumbData = ThumbData(
+                    ThumbFor.MessagesLisView.value,
+                    originalAttachment.filePath,
+                    thumbSize
+                )
             )
         )
 
         assertThat(staleThumb).isNull()
         assertThat(
-            AttachmentTransferStateStore.getThumbPath(resizedAttachment, ThumbFor.MessagesLisView, thumbSize)
+            AttachmentTransferStateStore.getThumbPath(
+                resizedAttachment,
+                ThumbFor.MessagesLisView,
+                thumbSize
+            )
         ).isNull()
 
         val currentThumb = AttachmentTransferStateStore.put(
@@ -300,13 +364,21 @@ class AttachmentTransferStateStoreTest {
                 state = TransferState.ThumbLoaded,
                 filePath = "/thumbs/resized.jpg",
                 url = null,
-                thumbData = ThumbData(ThumbFor.MessagesLisView.value, resizedAttachment.filePath, thumbSize)
+                thumbData = ThumbData(
+                    ThumbFor.MessagesLisView.value,
+                    resizedAttachment.filePath,
+                    thumbSize
+                )
             )
         )
 
         assertThat(currentThumb).isNotNull()
         assertThat(
-            AttachmentTransferStateStore.getThumbPath(resizedAttachment, ThumbFor.MessagesLisView, thumbSize)
+            AttachmentTransferStateStore.getThumbPath(
+                resizedAttachment,
+                ThumbFor.MessagesLisView,
+                thumbSize
+            )
         ).isEqualTo("/thumbs/resized.jpg")
     }
 
@@ -356,7 +428,11 @@ class AttachmentTransferStateStoreTest {
 
     @Test
     fun `completed transfer still rejects pending download without reset`() {
-        val attachment = attachment(filePath = "/downloads/file.jpg", state = TransferState.Downloaded, progress = 100f)
+        val attachment = attachment(
+            filePath = "/downloads/file.jpg",
+            state = TransferState.Downloaded,
+            progress = 100f
+        )
         AttachmentTransferStateStore.put(
             transfer(
                 progress = 100f,

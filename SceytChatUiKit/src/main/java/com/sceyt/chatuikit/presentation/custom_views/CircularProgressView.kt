@@ -14,6 +14,7 @@ import android.view.animation.AnimationSet
 import android.view.animation.LinearInterpolator
 import androidx.annotation.ColorInt
 import androidx.annotation.FloatRange
+import androidx.annotation.VisibleForTesting
 import androidx.core.animation.doOnEnd
 import androidx.core.graphics.toColorInt
 import androidx.core.view.isVisible
@@ -67,6 +68,10 @@ class CircularProgressView @JvmOverloads constructor(
     private var visibleAnim: AnimationSet? = null
     private var goneAnim: AnimationSet? = null
     private var currentVisibility: Int = visibility
+
+    @VisibleForTesting
+    internal val rotationAngle: Float
+        get() = startAngle
 
     init {
         context.withStyledAttributes(attrs, R.styleable.CircularProgressView) {
@@ -168,12 +173,9 @@ class CircularProgressView @JvmOverloads constructor(
     private fun rotate() {
         if (isAttachedToWindow && rotateAnimEnabled && transferring && (rotateAnim == null || rotateAnim?.isRunning != true)) {
             rotateAnim?.cancel()
-            rotateAnim = ValueAnimator.ofFloat(0f, 360f).apply {
+            rotateAnim = ValueAnimator.ofFloat(startAngle, startAngle + 360f).apply {
                 addUpdateListener { animation ->
-                    startAngle = (animation.animatedValue as Float)
-
-                    if (startAngle > 360)
-                        startAngle = 0f
+                    startAngle = (animation.animatedValue as Float) % 360f
 
                     if (angle >= 360f || angle == 0f)
                         rotateAnim?.cancel()

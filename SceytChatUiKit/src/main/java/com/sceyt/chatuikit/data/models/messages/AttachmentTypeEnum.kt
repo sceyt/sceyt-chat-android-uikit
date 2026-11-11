@@ -5,5 +5,7 @@ enum class AttachmentTypeEnum(val value: String) {
     Video("video"),
     Voice("voice"),
     Link("link"),
-    File ("file");
+    File ("file"),
+    /** Preview image of the message's video, sent as its own attachment and not displayed as a separate item. */
+    Preview("preview");
 }

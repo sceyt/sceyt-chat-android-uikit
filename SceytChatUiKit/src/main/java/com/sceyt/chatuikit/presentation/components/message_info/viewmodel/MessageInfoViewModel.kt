@@ -20,6 +20,7 @@ import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageMarkerInteractor
+import com.sceyt.chatuikit.persistence.mappers.withoutPreview
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.BufferOverflow
@@ -303,12 +304,12 @@ class MessageInfoViewModel(
 
     private fun initMessageFiles(sceytMessage: SceytMessage): SceytMessage {
         return sceytMessage.copy(
-            files = sceytMessage.attachments?.map { it.toFileListItem() }
+            files = sceytMessage.attachments?.withoutPreview()?.map { it.toFileListItem() }
         )
     }
 
     fun getMessageAttachmentToShowSizeIfExist(message: SceytMessage): SceytAttachment? {
-        return message.attachments?.find {
+        return message.attachments?.withoutPreview()?.find {
             it.type != AttachmentTypeEnum.Link.value && it.type != AttachmentTypeEnum.File.value
         }
     }
@@ -318,10 +319,7 @@ class MessageInfoViewModel(
         when (data) {
             is NeedMediaInfoData.NeedDownload -> {
                 viewModelScope.launch(Dispatchers.IO) {
-                    fileTransferService.download(
-                        attachment = attachment,
-                        transferTask = fileTransferService.findOrCreateTransferTask(attachment)
-                    )
+                    fileTransferService.download(attachment)
                 }
             }
 

@@ -2,6 +2,13 @@
 
 package com.sceyt.chatuikit.extensions
 
+import java.util.Collections
+
+internal fun <K, V> boundedSynchronizedMap(maxSize: Int): MutableMap<K, V> =
+    Collections.synchronizedMap(object : LinkedHashMap<K, V>(maxSize) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<K, V>): Boolean = size > maxSize
+    })
+
 inline fun <T> Collection<T>.findIndexed(predicate: (T) -> Boolean): Pair<Int, T>? {
     for ((index, item) in withIndex()) {
         if (predicate(item)) return index to item

@@ -15,6 +15,7 @@ import com.sceyt.chatuikit.data.models.messages.SystemMessageAction.Companion.ge
 import com.sceyt.chatuikit.extensions.formatDisappearingMessagesDuration
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.presentation.extensions.isDeletedOrHardDeleted
+import com.sceyt.chatuikit.persistence.mappers.withoutPreview
 
 open class DefaultSystemMessageBodyFormatter : Formatter<SceytMessage> {
     override fun format(context: Context, from: SceytMessage): CharSequence {
@@ -103,7 +104,7 @@ open class DefaultSystemMessageBodyFormatter : Formatter<SceytMessage> {
     @StringRes
     protected open fun SceytMessage.attachmentAnnouncement(): Int? {
         if (body.isNotBlank()) return null
-        return when (attachments?.firstOrNull()?.type) {
+        return when (attachments?.withoutPreview()?.firstOrNull()?.type) {
             null -> null
             AttachmentTypeEnum.Voice.value -> R.string.sceyt_pinned_voice_message
             AttachmentTypeEnum.Image.value -> R.string.sceyt_pinned_photo_message
