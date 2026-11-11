@@ -33,6 +33,7 @@ import org.junit.runner.RunWith
 import java.io.File
 import java.io.RandomAccessFile
 import java.util.UUID
+import kotlin.time.Duration.Companion.milliseconds
 
 @RunWith(AndroidJUnit4::class)
 class ChatSdkFileEncryptionAndroidTest {
@@ -202,7 +203,7 @@ class ChatSdkFileEncryptionAndroidTest {
             message.addProperty("metadata", FileEncryptionMetadata.write(metadata, invalidKey))
             attachment.metadataFile.writeText(message.toString())
 
-            attachment.assertRejected(attachment.download())
+            attachment.assertRejected(attachment.download(), MediaDownloadException.Reason.INVALID_ENCRYPTION)
         }
     }
 
@@ -276,7 +277,7 @@ class ChatSdkFileEncryptionAndroidTest {
                 originalFilePath = null,
                 linkPreviewDetails = null,
             )
-            return withTimeout(20_000) {
+            return withTimeout(20_000.milliseconds) {
                 ChatSdkFileDownloader().download(
                     request = FileDownloadRequest(
                         operationId = "download:${directory.name}",
@@ -297,12 +298,15 @@ class ChatSdkFileEncryptionAndroidTest {
             assertStagingRemoved()
         }
 
-        fun assertRejected(result: FileTransferResult<String>) {
+        fun assertRejected(
+            result: FileTransferResult<String>,
+            reason: MediaDownloadException.Reason = MediaDownloadException.Reason.INTEGRITY,
+        ) {
             assertThat(result).isInstanceOf(FileTransferResult.Failure::class.java)
             assertThat((result as FileTransferResult.Failure).error)
                 .isInstanceOf(MediaDownloadException::class.java)
             assertThat((result.error as MediaDownloadException).reason)
-                .isEqualTo(MediaDownloadException.Reason.INTEGRITY)
+                .isEqualTo(reason)
             assertThat(destination.exists()).isFalse()
             assertStagingRemoved()
         }
