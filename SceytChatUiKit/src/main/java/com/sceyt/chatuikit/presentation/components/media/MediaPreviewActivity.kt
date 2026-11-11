@@ -1,7 +1,9 @@
 package com.sceyt.chatuikit.presentation.components.media
 
+import android.Manifest
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
 import android.transition.ChangeBounds
@@ -15,6 +17,7 @@ import android.view.View
 import android.view.Window
 import android.widget.Toast
 import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ShareCompat
 import androidx.core.view.ViewCompat
@@ -37,18 +40,16 @@ import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.databinding.SceytActivityMediaPreviewBinding
 import com.sceyt.chatuikit.extensions.applySystemWindowInsetsPadding
-import com.sceyt.chatuikit.extensions.checkAndAskPermissions
 import com.sceyt.chatuikit.extensions.createIntent
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.getFileUriWithProvider
 import com.sceyt.chatuikit.extensions.getFirstVisibleItemPosition
 import com.sceyt.chatuikit.extensions.getMimeType
-import com.sceyt.chatuikit.extensions.getPermissionsForMangeStorage
+import com.sceyt.chatuikit.extensions.hasPermissions
 import com.sceyt.chatuikit.extensions.initPermissionLauncher
 import com.sceyt.chatuikit.extensions.isFirstItemDisplaying
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.extensions.parcelable
-import com.sceyt.chatuikit.extensions.saveToGallery
 import com.sceyt.chatuikit.extensions.transitionListener
 import com.sceyt.chatuikit.navigation.Destination
 import com.sceyt.chatuikit.navigation.navigate
@@ -82,6 +83,7 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
     protected var currentItem: MediaItem? = null
     protected var showInChatChannel: SceytChannel? = null
     protected var sharedTransitionStarted = false
+    private var storageFullDialog: AlertDialog? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         if (launchedWithSharedTransition()) {
@@ -126,6 +128,7 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
     override fun onDestroy() {
         super.onDestroy()
         mediaAdapter?.releaseAllPlayers()
+        storageFullDialog?.dismiss()
     }
 
     protected open fun getDataFromIntent() {
@@ -368,10 +371,13 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
             when (it) {
                 ActionDialog.Action.ShowInChat -> showInChat(file)
                 ActionDialog.Action.Save -> {
-                    fileToSaveAfterPermission = file
-                    val permissions = getPermissionsForMangeStorage()
-                    if (checkAndAskPermissions(requestPermissionLauncher, *permissions))
+                    val permission = Manifest.permission.WRITE_EXTERNAL_STORAGE
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q || hasPermissions(permission)) {
                         save(file)
+                    } else {
+                        fileToSaveAfterPermission = file
+                        requestPermissionLauncher.launch(permission)
+                    }
                 }
 
                 ActionDialog.Action.Share -> share(file)
@@ -419,20 +425,22 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
 
     protected open fun save(item: MediaItem) {
         val file = item.attachment
-        val mimeType = getMimeTypeFrom(file)
-
-        saveToGallery(
-            context = this,
-            path = file.filePath.toString(),
-            name = file.name,
-            mimeType = mimeType,
-        )?.let {
-            Toast.makeText(this, getString(R.string.sceyt_saved), Toast.LENGTH_SHORT).show()
-        } ?: run {
-            Toast.makeText(
-                this, getString(R.string.sceyt_media_cannot_save_to_gallery), Toast.LENGTH_SHORT
-            ).show()
+        val result = file.filePath?.let { path ->
+            MediaGallerySaver.save(this, path, file.name, getMimeTypeFrom(file))
+        } ?: GallerySaveResult.Failed
+        when (result) {
+            is GallerySaveResult.Saved -> Toast.makeText(this, R.string.sceyt_saved, Toast.LENGTH_SHORT).show()
+            GallerySaveResult.StorageFull -> showStorageFullDialog()
+            GallerySaveResult.Failed -> Toast.makeText(this, R.string.sceyt_media_save_failed, Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun showStorageFullDialog() {
+        storageFullDialog = AlertDialog.Builder(this)
+            .setTitle(R.string.sceyt_storage_full_title)
+            .setMessage(R.string.sceyt_media_save_storage_full)
+            .setPositiveButton(R.string.sceyt_ok, null)
+            .show()
     }
 
     protected open fun getMimeTypeFrom(file: SceytAttachment): String {
@@ -444,8 +452,10 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
     }
 
     protected open val requestPermissionLauncher = initPermissionLauncher { isGranted ->
+        val pendingItem = fileToSaveAfterPermission
+        fileToSaveAfterPermission = null
         if (isGranted) {
-            fileToSaveAfterPermission?.let { save(it) }
+            pendingItem?.let { save(it) }
         } else {
             Toast.makeText(
                 this, getString(R.string.sceyt_media_cannot_save_to_gallery), Toast.LENGTH_SHORT
