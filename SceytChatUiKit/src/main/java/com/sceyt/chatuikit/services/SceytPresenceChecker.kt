@@ -4,6 +4,7 @@ import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.SceytPresence
 import com.sceyt.chatuikit.data.models.messages.SceytUser
+import com.sceyt.chatuikit.extensions.boundedSynchronizedMap
 import com.sceyt.chatuikit.extensions.getPresentableName
 import com.sceyt.chatuikit.extensions.isAppOnForeground
 import com.sceyt.chatuikit.koin.SceytKoinComponent
@@ -14,7 +15,6 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.runBlocking
 import org.koin.core.component.inject
-import java.util.Collections
 import java.util.Timer
 import kotlin.concurrent.timer
 
@@ -33,11 +33,7 @@ object SceytPresenceChecker : SceytKoinComponent {
 
     @Volatile
     private var presenceCheckTimer: Timer? = null
-    private val presenceCheckUsers = Collections.synchronizedMap(object : LinkedHashMap<String, SceytUser>(presenceCheckCapacity) {
-        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, SceytUser>): Boolean {
-            return size > presenceCheckCapacity
-        }
-    })
+    private val presenceCheckUsers = boundedSynchronizedMap<String, SceytUser>(presenceCheckCapacity)
 
     @Synchronized
     fun startPresenceCheck() {

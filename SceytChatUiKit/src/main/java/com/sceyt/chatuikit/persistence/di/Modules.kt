@@ -26,7 +26,6 @@ import com.sceyt.chatuikit.persistence.interactor.MessagePinInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessagePollInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageReactionInteractor
 import com.sceyt.chatuikit.persistence.interactor.UserInteractor
-import com.sceyt.chatuikit.persistence.logic.FileTransferLogic
 import com.sceyt.chatuikit.persistence.logic.GlobalSearchLocalInteractor
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelInviteKeyLogic
@@ -40,7 +39,10 @@ import com.sceyt.chatuikit.persistence.logic.PersistencePollLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceReactionsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceUsersLogic
 import com.sceyt.chatuikit.persistence.logic.SystemMessageSender
-import com.sceyt.chatuikit.persistence.logicimpl.FileTransferLogicImpl
+import com.sceyt.chatuikit.persistence.logicimpl.AttachmentDownloadCoordinator
+import com.sceyt.chatuikit.persistence.logicimpl.AttachmentThumbCoordinator
+import com.sceyt.chatuikit.persistence.logicimpl.AttachmentPreviewTransfer
+import com.sceyt.chatuikit.persistence.logicimpl.AttachmentUploadCoordinator
 import com.sceyt.chatuikit.persistence.logicimpl.PersistenceChannelInviteKeyLogicImpl
 import com.sceyt.chatuikit.persistence.logicimpl.PersistenceConnectionLogicImpl
 import com.sceyt.chatuikit.persistence.logicimpl.PersistenceMembersLogicImpl
@@ -91,6 +93,7 @@ import com.sceyt.chatuikit.persistence.logicimpl.usecases.UnpinMessageUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.UpdatePinnedMessagesUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.UpdatePollUseCase
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.UpdatePollVotesUseCase
+import com.sceyt.chatuikit.persistence.workers.AttachmentUploadLock
 import com.sceyt.chatuikit.push.service.PushService
 import com.sceyt.chatuikit.push.service.PushServiceImpl
 import com.sceyt.chatuikit.services.sync.SceytSyncManager
@@ -109,7 +112,23 @@ import java.util.concurrent.Executors
 import kotlin.coroutines.CoroutineContext
 
 internal val appModules = module {
+    singleOf(::AttachmentUploadLock)
     singleOf(::SceytSyncManagerImpl) bind SceytSyncManager::class
+    single {
+        AttachmentUploadCoordinator(
+            context = get(),
+            attachmentLogic = get(),
+            scope = CoroutineScope(get<CoroutineContext>(named(CoroutineContextType.IO)) + SupervisorJob()),
+        )
+    }
+    single {
+        AttachmentDownloadCoordinator(
+            context = get(),
+            scope = CoroutineScope(get<CoroutineContext>(named(CoroutineContextType.IO)) + SupervisorJob()),
+        )
+    }
+    singleOf(::AttachmentThumbCoordinator)
+    singleOf(::AttachmentPreviewTransfer)
     singleOf(::FileTransferServiceImpl) bind FileTransferService::class
     singleOf(::MessageLoadRangeUpdater)
     singleOf(::ChannelSyncStateStore)
@@ -195,7 +214,6 @@ internal val logicModule = module {
     singleOf(::PersistenceMessageMarkerLogicImpl) bind PersistenceMessageMarkerLogic::class
     singleOf(::PersistenceConnectionLogicImpl) bind PersistenceConnectionLogic::class
     singleOf(::PersistenceChannelInviteKeyLogicImpl) bind PersistenceChannelInviteKeyLogic::class
-    singleOf(::FileTransferLogicImpl) bind FileTransferLogic::class
     singleOf(::GlobalSearchLocalInteractor) bind GlobalSearchDataSource::class
     singleOf(::SystemMessageSenderImpl) bind SystemMessageSender::class
     factory<ThumbPathResolver> { AttachmentThumbPathResolver }

@@ -22,6 +22,7 @@ import com.sceyt.chatuikit.persistence.mappers.getThumbFromMetadata
 import com.sceyt.chatuikit.persistence.mappers.getVisualMediaType
 import com.sceyt.chatuikit.styles.messages_list.PinnedMessagesViewStyle
 import kotlin.math.abs
+import com.sceyt.chatuikit.persistence.mappers.withoutPreview
 
 /**
  * The banner under the toolbar. Shows one pin at a time and pages through the channel's pins.
@@ -211,6 +212,7 @@ class PinnedMessagesView @JvmOverloads constructor(
 
     private fun renderThumbnail(item: SceytPinnedMessage) = with(binding) {
         val attachment = item.message.attachments
+            ?.withoutPreview()
             ?.firstOrNull { it.type != AttachmentTypeEnum.Link.value }
             ?.takeIf { it.getVisualMediaType() != null }
 

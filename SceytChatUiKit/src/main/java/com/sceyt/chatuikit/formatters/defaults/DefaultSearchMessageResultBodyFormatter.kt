@@ -9,6 +9,7 @@ import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.formatters.attributes.MessageBodyFormatterAttributes
 import com.sceyt.chatuikit.formatters.attributes.SearchMessageResultFormatterAttributes
 import com.sceyt.chatuikit.presentation.extensions.isSupportedType
+import com.sceyt.chatuikit.persistence.mappers.withoutPreview
 
 open class DefaultSearchMessageResultBodyFormatter :
     Formatter<SearchMessageResultFormatterAttributes> {
@@ -48,7 +49,7 @@ open class DefaultSearchMessageResultBodyFormatter :
             resultStyle.senderNameFormatter.format(context, message)
         } else ""
 
-        val attachmentIcon = message.attachments?.firstOrNull()?.let {
+        val attachmentIcon = message.attachments?.withoutPreview()?.firstOrNull()?.let {
             resultStyle.attachmentIconProvider.provide(context, it)
         }
 

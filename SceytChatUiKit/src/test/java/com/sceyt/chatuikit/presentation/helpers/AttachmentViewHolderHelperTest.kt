@@ -68,7 +68,7 @@ class AttachmentViewHolderHelperTest {
     }
 
     @Test
-    fun `update transfer data renders latest store data instead of raw event`() {
+    fun `update transfer data returns latest store data instead of stale terminal event`() {
         val item = TestAttachmentItem(
             attachment(
                 url = "https://cdn.test/file.jpg",
@@ -85,21 +85,72 @@ class AttachmentViewHolderHelperTest {
             )
         )
 
-        val applied = helper().updateTransferData(
+        val renderData = helper().updateAndResolveTransferData(
             data = transfer(
-                progress = 40f,
-                state = TransferState.Downloading,
-                url = item.attachment.url
+                progress = 100f,
+                state = TransferState.Downloaded,
+                filePath = "/stale/downloaded-file",
+                url = item.attachment.url,
             ),
             item = item,
             isValidThumb = { true }
         )
 
-        assertThat(applied).isTrue()
+        assertThat(renderData).isEqualTo(item.transferData)
+        assertThat(renderData?.state).isEqualTo(TransferState.Downloading)
+        assertThat(renderData?.progressPercent).isEqualTo(70f)
         assertThat(item.transferData?.progressPercent).isEqualTo(70f)
         assertThat(item.transferData?.filePath).isEqualTo("/downloads/file.jpg")
         assertThat(item.attachment.progressPercent).isEqualTo(70f)
         assertThat(item.attachment.filePath).isEqualTo("/downloads/file.jpg")
+    }
+
+    @Test
+    fun `update transfer data returns raw event when store has no newer data`() {
+        val item = TestAttachmentItem(attachment())
+        val update = transfer(
+            progress = 40f,
+            state = TransferState.Downloading,
+            filePath = "/downloads/file.jpg"
+        )
+
+        val renderData = helper().updateAndResolveTransferData(update, item) { true }
+
+        assertThat(renderData).isSameInstanceAs(update)
+        assertThat(item.transferData).isSameInstanceAs(update)
+    }
+
+    @Test
+    fun `valid thumb returns thumb event without changing primary transfer data`() {
+        val primaryData = transfer(
+            progress = 40f,
+            state = TransferState.Downloading,
+            filePath = "/downloads/file.jpg"
+        )
+        val item = TestAttachmentItem(
+            currentAttachment = attachment(
+                filePath = primaryData.filePath,
+                state = primaryData.state,
+                progress = primaryData.progressPercent
+            ),
+            currentTransferData = primaryData
+        )
+        val thumbUpdate = transfer(
+            state = TransferState.ThumbLoaded,
+            filePath = "/thumbs/file.jpg",
+            thumbData = ThumbData(
+                ThumbFor.MessagesLisView.value,
+                primaryData.filePath,
+                Size(100, 100)
+            )
+        )
+
+        val renderData = helper().updateAndResolveTransferData(thumbUpdate, item) { true }
+
+        assertThat(renderData).isSameInstanceAs(thumbUpdate)
+        assertThat(item.thumbPath).isEqualTo("/thumbs/file.jpg")
+        assertThat(item.transferData).isSameInstanceAs(primaryData)
+        assertThat(item.attachment.transferState).isEqualTo(TransferState.Downloading)
     }
 
     @Test

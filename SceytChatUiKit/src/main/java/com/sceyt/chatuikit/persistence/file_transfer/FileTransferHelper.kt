@@ -33,7 +33,6 @@ import java.util.concurrent.ConcurrentHashMap
 import kotlin.coroutines.CoroutineContext
 
 object FileTransferHelper : SceytKoinComponent {
-    private val fileTransferService by inject<FileTransferService>()
     private val attachmentLogic by inject<PersistenceAttachmentLogic>()
     private val fileChecksumDao by inject<FileChecksumDao>()
     private val coroutineContext by inject<CoroutineContext>(named(CoroutineContextType.SingleThreaded))
@@ -103,7 +102,11 @@ object FileTransferHelper : SceytKoinComponent {
 
     fun TransferTask.getProgressUpdateCallback() = ProgressUpdateCallback { transferData ->
         val updatedAttachment = updateAttachmentAndStateIfValid(
-            validate = { current ->
+            validate = validate@{ current ->
+                val isPausedDownload = current.transferState == TransferState.PauseDownload &&
+                        transferData.state == TransferState.Downloading
+                if (isPausedDownload) return@validate false
+
                 TransferStateValidator.isValidStateTransition(
                     currentState = current.transferState,
                     newState = transferData.state,
@@ -147,23 +150,26 @@ object FileTransferHelper : SceytKoinComponent {
     }
 
     fun TransferTask.getResumePauseCallback() = ResumePauseCallback { transferData ->
-        val updatedAttachment = updateAttachmentAndStateIfValid(
-            validate = { current ->
-                TransferStateValidator.isValidStateTransition(
-                    currentState = current.transferState,
-                    newState = transferData.state,
-                    currentProgress = current.progressPercent ?: 0f,
-                    newProgress = transferData.progressPercent
-                )
-            },
-            update = { current ->
-                current.copy(transferState = transferData.state)
-            }
-        ) ?: return@ResumePauseCallback
+        synchronized(lock) {
+            if (state != transferData.state) return@ResumePauseCallback
+            val updatedAttachment = updateAttachmentAndStateIfValid(
+                validate = { current ->
+                    TransferStateValidator.isValidStateTransition(
+                        currentState = current.transferState,
+                        newState = transferData.state,
+                        currentProgress = current.progressPercent ?: 0f,
+                        newProgress = transferData.progressPercent
+                    )
+                },
+                update = { current ->
+                    current.copy(transferState = transferData.state)
+                }
+            ) ?: return@ResumePauseCallback
 
-        emitAttachmentTransferUpdate(transferData, updatedAttachment.fileSize)
-        enqueueDbUpdate(messageTid) {
-            attachmentLogic.updateTransferDataByMsgTid(transferData)
+            emitAttachmentTransferUpdate(transferData, updatedAttachment.fileSize)
+            enqueueDbUpdate(messageTid) {
+                attachmentLogic.updateTransferDataByMsgTid(transferData)
+            }
         }
     }
 
@@ -182,7 +188,6 @@ object FileTransferHelper : SceytKoinComponent {
                 ) ?: return@fold
 
                 emitAttachmentTransferUpdate(transferData, updatedAttachment.fileSize)
-                fileTransferService.removeTransferTask(messageTid)
                 enqueueDbUpdate(messageTid) {
                     attachmentLogic.updateAttachmentWithTransferData(transferData)
                     removeMutexForAttachment(messageTid)
@@ -201,7 +206,6 @@ object FileTransferHelper : SceytKoinComponent {
                 ) ?: return@fold
 
                 emitAttachmentTransferUpdate(transferData, updatedAttachment.fileSize)
-                fileTransferService.removeTransferTask(messageTid)
                 enqueueDbUpdate(messageTid) {
                     attachmentLogic.updateAttachmentWithTransferData(transferData)
                 }
@@ -215,7 +219,7 @@ object FileTransferHelper : SceytKoinComponent {
 
     @Suppress("MemberVisibilityCanBePrivate")
     fun TransferTask.getUploadResultCallback() = TransferResultCallback { response ->
-        val result: Result<SceytAttachment> = when (response) {
+        when (response) {
             is SceytResponse.Success -> {
                 val currentAttachment = attachment
                 val transferData = TransferData(
@@ -231,12 +235,9 @@ object FileTransferHelper : SceytKoinComponent {
                 if (updatedAttachment != null) {
                     emitAttachmentTransferUpdate(transferData, updatedAttachment.fileSize)
                     enqueueDbUpdate(messageTid) {
-                        attachmentLogic.updateAttachmentWithTransferData(transferData)
+                        attachmentLogic.updateUploadedAttachment(updatedAttachment)
                         removeMutexForAttachment(messageTid)
                     }
-                    Result.success(updatedAttachment)
-                } else {
-                    Result.failure(Throwable("Failed to update attachment"))
                 }
             }
 
@@ -260,13 +261,8 @@ object FileTransferHelper : SceytKoinComponent {
                     }
                 }
                 SceytLog.e(this.TAG, "Couldn't upload file " + response.message.toString())
-                Result.failure(Throwable(response.message.orEmpty()))
             }
         }
-        fileTransferService.findTransferTask(attachment)?.onCompletionListeners?.forEach {
-            it.value.invoke(result)
-        }
-        fileTransferService.removeTransferTask(messageTid)
     }
 
     @Suppress("MemberVisibilityCanBePrivate")
@@ -280,7 +276,8 @@ object FileTransferHelper : SceytKoinComponent {
             TransferState.FilePathChanged, newPath, currentAttachment.url
         )
 
-        val originalFilePath = currentAttachment.filePath
+        // App preparation may already have replaced filePath with the prepared file.
+        val originalFilePath = currentAttachment.originalFilePath ?: currentAttachment.filePath
         val fileSize = getFileSize(newPath)
         val dimensions = getDimensions(currentAttachment.type, newPath)
         val metadata = currentAttachment.getUpsertSizeMetadata(dimensions)

@@ -17,6 +17,7 @@ import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.toBase64
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.database.entity.messages.AttachmentEntity
+import com.sceyt.chatuikit.persistence.extensions.withMetadata
 import com.sceyt.chatuikit.shared.utils.BitmapUtil
 import com.sceyt.chatuikit.shared.utils.FileResizeUtil
 import com.sceyt.chatuikit.shared.utils.ThumbHash
@@ -101,12 +102,13 @@ fun getBlurredBytesAndSizeAsString(
         when (mediaType) {
             AttachmentTypeEnum.Image -> {
                 size = FileResizeUtil.getImageSizeOriented(path)
-                FileResizeUtil.resizeAndCompressBitmapWithFilePath(path, 100).onSuccess { bm ->
-                    val bytes = ThumbHash.rgbaToThumbHash(
+                FileResizeUtil.resizeAndCompressBitmapWithFilePath(path, 100).mapCatching { bm ->
+                    ThumbHash.rgbaToThumbHash(
                         bm.width,
                         bm.height,
                         BitmapUtil.bitmapToRgba(bm)
                     )
+                }.onSuccess { bytes ->
                     base64String = bytes.toBase64()
                 }.onFailure {
                     SceytLog.e(TAG, "Couldn't get a blurred thumb for image. Error: ${it.message}")
@@ -116,12 +118,13 @@ fun getBlurredBytesAndSizeAsString(
             AttachmentTypeEnum.Video -> {
                 size = FileResizeUtil.getVideoSizeOriented(path)
                 durationMilliSec = FileResizeUtil.getVideoDuration(context, filePath)
-                FileResizeUtil.getVideoThumbByUrlAsByteArray(path, 100f).onSuccess { bm ->
-                    val bytes = ThumbHash.rgbaToThumbHash(
+                FileResizeUtil.getVideoThumbByUrlAsByteArray(path, 100f).mapCatching { bm ->
+                    ThumbHash.rgbaToThumbHash(
                         bm.width,
                         bm.height,
                         BitmapUtil.bitmapToRgba(bm)
                     )
+                }.onSuccess { bytes ->
                     base64String = bytes.toBase64()
                 }.onFailure {
                     SceytLog.e(TAG, "Couldn't get a blurred thumb for video. Error: ${it.message}")
@@ -243,6 +246,37 @@ fun Attachment.getLinkPreviewDetails(): LinkPreviewDetails? {
 
 fun SceytAttachment.isLink(): Boolean {
     return type == AttachmentTypeEnum.Link.value
+}
+
+internal fun SceytAttachment.isPreview(): Boolean {
+    return type == AttachmentTypeEnum.Preview.value
+}
+
+internal fun isTransferTrackedType(type: String?): Boolean {
+    return type != AttachmentTypeEnum.Link.value && type != AttachmentTypeEnum.Preview.value
+}
+
+internal fun SceytAttachment.isTransferTracked(): Boolean = isTransferTrackedType(type)
+
+internal fun List<SceytAttachment>.withoutPreview(): List<SceytAttachment> = filterNot { it.isPreview() }
+
+internal fun List<SceytAttachment>.withPreviewLink(viewOnce: Boolean = false): List<SceytAttachment> {
+    // View-once messages must not include an independently accessible preview attachment.
+    if (viewOnce) return withoutPreview()
+
+    val previewUrl = firstOrNull { it.isPreview() }?.url?.takeIf { it.isNotBlank() } ?: return this
+    val link = mapOf(SceytConstants.Preview to previewUrl)
+    return map { attachment ->
+        if (attachment.type == AttachmentTypeEnum.Video.value)
+            attachment.copy(metadata = attachment.metadata.withMetadata(link))
+        else attachment
+    }
+}
+
+internal fun SceytAttachment.previewUrl(): String? = try {
+    JSONObject(metadata ?: return null).getStringOrNull(SceytConstants.Preview)?.takeIf { it.isNotBlank() }
+} catch (_: Exception) {
+    null
 }
 
 fun SceytAttachment.isHiddenLinkDetails(): Boolean {

@@ -1,0 +1,1913 @@
+package com.sceyt.chatuikit.persistence.workers
+
+import android.app.ForegroundServiceStartNotAllowedException
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import androidx.work.Data
+import androidx.work.ExistingWorkPolicy
+import androidx.work.ForegroundUpdater
+import androidx.work.ListenableWorker
+import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequest
+import androidx.work.Operation
+import androidx.work.WorkInfo
+import androidx.work.WorkerParameters
+import androidx.work.impl.WorkManagerImpl
+import com.google.common.truth.Truth.assertThat
+import com.google.common.util.concurrent.Futures
+import com.google.common.util.concurrent.SettableFuture
+import com.sceyt.chat.models.message.Message
+import com.sceyt.chat.models.SceytException
+import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.config.SceytChatUIKitConfig
+import com.sceyt.chatuikit.config.ChannelListConfig
+import com.sceyt.chatuikit.createChannel
+import com.sceyt.chatuikit.createMessage
+import com.sceyt.chatuikit.data.constants.SceytConstants
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelActionEvent
+import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.data.models.SyncResult
+import com.sceyt.chatuikit.data.models.messages.MessageDeliveryStatus
+import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
+import com.sceyt.chatuikit.data.models.messages.SceytAttachment
+import com.sceyt.chatuikit.filetransfer.FileTransferCallback
+import com.sceyt.chatuikit.filetransfer.FileTransferResult
+import com.sceyt.chatuikit.filetransfer.FileTransferProvider
+import com.sceyt.chatuikit.filetransfer.FileTransferType
+import com.sceyt.chatuikit.filetransfer.FileUploadRequest
+import com.sceyt.chatuikit.filetransfer.SceytChatUIKitFileTransfer
+import com.sceyt.chatuikit.koin.SceytKoinApp
+import com.sceyt.chatuikit.notifications.SceytNotifications
+import com.sceyt.chatuikit.persistence.database.dao.FileChecksumDao
+import com.sceyt.chatuikit.persistence.database.dao.ChannelDao
+import com.sceyt.chatuikit.persistence.database.dao.MessageDao
+import com.sceyt.chatuikit.persistence.di.CoroutineContextType
+import com.sceyt.chatuikit.persistence.file_transfer.AttachmentTransferStateStore
+import com.sceyt.chatuikit.persistence.file_transfer.FileTransferHelper
+import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
+import com.sceyt.chatuikit.persistence.file_transfer.FileTransferServiceImpl
+import com.sceyt.chatuikit.persistence.file_transfer.TransferData
+import com.sceyt.chatuikit.persistence.file_transfer.TransferState
+import com.sceyt.chatuikit.persistence.extensions.toMetadataJson
+import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
+import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
+import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
+import com.sceyt.chatuikit.data.models.AttachmentPayLoad
+import com.sceyt.chatuikit.persistence.logicimpl.AttachmentDownloadCoordinator
+import com.sceyt.chatuikit.persistence.logicimpl.AttachmentPreviewTransfer
+import com.sceyt.chatuikit.persistence.logicimpl.PreviewUploadResult
+import com.sceyt.chatuikit.persistence.logicimpl.AttachmentUploadCoordinator
+import com.sceyt.chatuikit.persistence.logicimpl.RecordingFileTransferProvider
+import com.sceyt.chatuikit.persistence.logicimpl.attachment
+import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
+import com.sceyt.chatuikit.persistence.logicimpl.channel.PersistenceChannelsLogicImpl
+import com.sceyt.chatuikit.persistence.mappers.toMessageDb
+import com.sceyt.chatuikit.persistence.repositories.ChannelsRepository
+import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager.IS_SHARING
+import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager.MESSAGE_TID
+import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager.RESUME_PAUSED_UPLOAD
+import com.sceyt.chatuikit.providers.ChatConnectionProvider
+import com.sceyt.chatuikit.shared.utils.FileChecksumCalculator
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.withTimeout
+import org.json.JSONObject
+import org.junit.After
+import org.junit.Before
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.koin.core.context.startKoin
+import org.koin.core.context.stopKoin
+import org.koin.core.qualifier.named
+import org.koin.dsl.module
+import org.mockito.Mockito
+import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.argumentCaptor
+import org.mockito.kotlin.doSuspendableAnswer
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.isNull
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.never
+import org.mockito.kotlin.reset
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
+import org.robolectric.Shadows.shadowOf
+import org.robolectric.annotation.Config
+import org.robolectric.shadows.ShadowNetworkCapabilities
+import java.io.File
+import java.util.UUID
+import kotlin.coroutines.CoroutineContext
+
+@RunWith(RobolectricTestRunner::class)
+// Isolate the real service from other suites' FileTransferHelper singleton dependencies.
+@Config(instrumentedPackages = ["com.sceyt.chatuikit.persistence.workers"])
+@OptIn(ExperimentalCoroutinesApi::class)
+class UploadAndSendAttachmentWorkerTest {
+    @get:Rule
+    val instantTaskExecutorRule = InstantTaskExecutorRule()
+
+    private val context: Context = RuntimeEnvironment.getApplication()
+    private val messageLogic = mock<PersistenceMessagesLogic>()
+    private val workManager = mock<WorkManagerImpl>()
+    private val transport = RecordingFileTransferProvider()
+    private val previewTransfer = mock<AttachmentPreviewTransfer>()
+    private lateinit var previousFileTransfer: SceytChatUIKitFileTransfer
+    private lateinit var previousConfig: SceytChatUIKitConfig
+    private lateinit var previousNotifications: SceytNotifications
+    private var previousConnectionProvider: ChatConnectionProvider? = null
+
+    private companion object {
+        const val PENDING_ATTACHMENT_RETRY = "PendingAttachmentRetry"
+
+        // FileTransferHelper retains injected dependencies, so reuse them across worker tests.
+        val attachmentLogic = mock<PersistenceAttachmentLogic>()
+        val fileChecksumDao = mock<FileChecksumDao>()
+        val testScope = TestScope(UnconfinedTestDispatcher())
+        val service by lazy {
+            val context = RuntimeEnvironment.getApplication()
+            FileTransferServiceImpl(
+                context,
+                AttachmentUploadCoordinator(context, attachmentLogic, testScope),
+                AttachmentDownloadCoordinator(context, testScope),
+                mock(),
+            )
+        }
+    }
+
+    @Before
+    fun setUp() = runBlocking {
+        reset(attachmentLogic)
+        reset(fileChecksumDao)
+        AttachmentTransferStateStore.clear()
+        previousFileTransfer = SceytChatUIKit.fileTransfer
+        previousConfig = SceytChatUIKit.config
+        previousConnectionProvider = SceytChatUIKit.chatConnectionProvider
+        // UIKit is not initialized here, so its lazy notifications may not exist yet.
+        previousNotifications = runCatching { SceytChatUIKit.notifications }
+            .getOrElse { SceytNotifications(context) }
+        SceytChatUIKit.fileTransfer = SceytChatUIKitFileTransfer().apply {
+            encryptionEnabled = false
+            provider = this@UploadAndSendAttachmentWorkerTest.transport
+        }
+        SceytChatUIKit.config = SceytChatUIKitConfig().apply {
+            preventDuplicateAttachmentUpload = false
+        }
+        SceytChatUIKit.chatConnectionProvider = ChatConnectionProvider { Result.success(Unit) }
+        SceytChatUIKit.notifications = SceytNotifications(context).apply {
+            fileTransferServiceNotification.notificationHandler = mock()
+        }
+        WorkManagerImpl.setDelegate(workManager)
+        val cancellation = mock<Operation>()
+        whenever(cancellation.result).thenReturn(Futures.immediateFuture(Operation.SUCCESS))
+        whenever(workManager.cancelAllWorkByTag(any())).thenReturn(cancellation)
+        whenever(workManager.enqueueUniqueWork(any(), any(), any<OneTimeWorkRequest>())).thenReturn(cancellation)
+        setNetwork(NetworkCapabilities.NET_CAPABILITY_INTERNET, NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+        val runningWork = mock<WorkInfo>()
+        whenever(runningWork.state).thenReturn(WorkInfo.State.RUNNING)
+        whenever(workManager.getWorkInfosByTag(any()))
+            .thenReturn(Futures.immediateFuture(listOf(runningWork)))
+        whenever(attachmentLogic.getAllPayLoadsByMsgTid(any())).thenReturn(emptyList())
+        whenever(messageLogic.sendMessageWithUploadedAttachments(any(), any()))
+            .thenReturn(SceytResponse.Success(null))
+        whenever(previewTransfer.upload(any())).thenReturn(PreviewUploadResult.Unavailable)
+        stopKoin()
+        SceytKoinApp.koinApp = startKoin {
+            modules(module {
+                single { AttachmentUploadLock() }
+                single<FileTransferService> { service }
+                single<PersistenceAttachmentLogic> { attachmentLogic }
+                single<PersistenceMessagesLogic> { messageLogic }
+                single<PersistenceChannelsLogic> { mock() }
+                single<FileChecksumDao> { fileChecksumDao }
+                single<AttachmentPreviewTransfer> { previewTransfer }
+                single<CoroutineContext>(named(CoroutineContextType.SingleThreaded)) {
+                    testScope.coroutineContext
+                }
+            })
+        }
+    }
+
+    @After
+    fun tearDown() {
+        service.cancelAllTransfers()
+        AttachmentTransferStateStore.clear()
+        WorkManagerImpl.setDelegate(null)
+        SceytChatUIKit.fileTransfer = previousFileTransfer
+        SceytChatUIKit.config = previousConfig
+        SceytChatUIKit.chatConnectionProvider = previousConnectionProvider
+        SceytChatUIKit.notifications = previousNotifications
+        SceytKoinApp.koinApp = null
+        stopKoin()
+    }
+
+    @Test
+    fun `queued uploads keep their order when first preparation is delayed`() = runBlocking {
+        val first = localAttachment()
+        val second = first.copy(messageTid = 11L, name = "second.txt")
+        val firstWorker = worker(first)
+        val secondWorker = worker(second)
+        val preparationStarted = CompletableDeferred<Unit>()
+        val releasePreparation = CompletableDeferred<Unit>()
+        whenever(attachmentLogic.updateAttachmentWithTransferData(any())).doSuspendableAnswer {
+            if (it.getArgument<TransferData>(0).messageTid == first.messageTid) {
+                preparationStarted.complete(Unit)
+                releasePreparation.await()
+            }
+        }
+
+        val firstWork = testScope.async { firstWorker.doWork() }
+        val secondWork = testScope.async { secondWorker.doWork() }
+        try {
+            assertThat(preparationStarted.isCompleted).isTrue()
+            assertThat(transport.uploadCalls).isEmpty()
+
+            releasePreparation.complete(Unit)
+            assertThat(transport.uploadCalls.single().request.attachment.messageTid).isEqualTo(first.messageTid)
+            transport.uploadCalls.single().succeed("first-url")
+            assertThat(firstWork.isCompleted).isTrue()
+
+            assertThat(transport.uploadCalls).hasSize(2)
+            assertThat(transport.uploadCalls.last().request.attachment.messageTid).isEqualTo(second.messageTid)
+            transport.uploadCalls.last().succeed("second-url")
+            assertThat(secondWork.isCompleted).isTrue()
+        } finally {
+            releasePreparation.complete(Unit)
+            firstWork.cancelAndJoin()
+            secondWork.cancelAndJoin()
+        }
+    }
+
+    @Test
+    fun `slow video preview does not let a later attachment upload first`() = runBlocking {
+        val video = preparedVideo()
+        val next = localAttachment().copy(messageTid = 11L)
+        val releasePreview = CompletableDeferred<Unit>()
+        whenever(previewTransfer.upload(any())).doSuspendableAnswer {
+            releasePreview.await()
+            PreviewUploadResult.Unavailable
+        }
+        val videoWorker = worker(video)
+        val nextWorker = worker(next)
+        val videoWork = testScope.async { videoWorker.doWork() }
+        val nextWork = testScope.async { nextWorker.doWork() }
+        try {
+            assertThat(transport.uploadCalls).isEmpty()
+
+            releasePreview.complete(Unit)
+            assertThat(transport.uploadCalls.single().request.attachment.messageTid).isEqualTo(video.messageTid)
+            transport.uploadCalls.single().succeed("video-url")
+            assertThat(videoWork.isCompleted).isTrue()
+
+            assertThat(transport.uploadCalls).hasSize(2)
+            assertThat(transport.uploadCalls.last().request.attachment.messageTid).isEqualTo(next.messageTid)
+            transport.uploadCalls.last().succeed("next-url")
+            assertThat(nextWork.isCompleted).isTrue()
+        } finally {
+            releasePreview.complete(Unit)
+            videoWork.cancelAndJoin()
+            nextWork.cancelAndJoin()
+        }
+    }
+
+    @Test
+    fun `cancelling a waiting worker leaves the next upload able to run`() = runBlocking {
+        val first = localAttachment()
+        val cancelled = first.copy(messageTid = 11L)
+        val next = first.copy(messageTid = 12L)
+        val releasePreparation = CompletableDeferred<Unit>()
+        whenever(attachmentLogic.updateAttachmentWithTransferData(any())).doSuspendableAnswer {
+            if (it.getArgument<TransferData>(0).messageTid == first.messageTid)
+                releasePreparation.await()
+        }
+        val firstWorker = worker(first)
+        val cancelledWorker = worker(cancelled)
+        val nextWorker = worker(next)
+        val firstWork = testScope.async { firstWorker.doWork() }
+        val cancelledWork = testScope.async { cancelledWorker.doWork() }
+        val nextWork = testScope.async { nextWorker.doWork() }
+        try {
+            cancelledWork.cancelAndJoin()
+            releasePreparation.complete(Unit)
+            transport.uploadCalls.single().succeed("first-url")
+            assertThat(firstWork.isCompleted).isTrue()
+
+            assertThat(transport.uploadCalls.map { it.request.attachment.messageTid })
+                .containsExactly(first.messageTid, next.messageTid).inOrder()
+            transport.uploadCalls.last().succeed("next-url")
+            assertThat(nextWork.isCompleted).isTrue()
+        } finally {
+            releasePreparation.complete(Unit)
+            firstWork.cancelAndJoin()
+            cancelledWork.cancelAndJoin()
+            nextWork.cancelAndJoin()
+        }
+    }
+
+    @Test
+    fun `shared upload remains independent of a regular worker preparing its file`() = runBlocking {
+        val regular = localAttachment()
+        val shared = regular.copy(messageTid = 11L)
+        val releasePreparation = CompletableDeferred<Unit>()
+        whenever(attachmentLogic.updateAttachmentWithTransferData(any())).doSuspendableAnswer {
+            if (it.getArgument<TransferData>(0).messageTid == regular.messageTid)
+                releasePreparation.await()
+        }
+        val regularWorker = worker(regular)
+        val sharedWorker = worker(shared, shared = true)
+        val regularWork = testScope.async { regularWorker.doWork() }
+        val sharedWork = testScope.async { sharedWorker.doWork() }
+        try {
+            assertThat(transport.uploadCalls.single().request.attachment.messageTid).isEqualTo(shared.messageTid)
+            transport.uploadCalls.single().succeed("shared-url")
+            assertThat(sharedWork.isCompleted).isTrue()
+
+            releasePreparation.complete(Unit)
+            assertThat(transport.uploadCalls.last().request.attachment.messageTid).isEqualTo(regular.messageTid)
+            transport.uploadCalls.last().succeed("regular-url")
+            assertThat(regularWork.isCompleted).isTrue()
+        } finally {
+            releasePreparation.complete(Unit)
+            regularWork.cancelAndJoin()
+            sharedWork.cancelAndJoin()
+        }
+    }
+
+    @Test
+    fun `retained shared upload can resume while a regular worker is preparing`() = runBlocking {
+        transport.pauseResult = true
+        transport.resumeResult = true
+        val shared = localAttachment()
+        val regular = shared.copy(messageTid = 11L)
+        service.upload(shared, shared = true)
+        service.pause(shared.messageTid, shared, TransferState.Uploading)
+
+        val releasePreparation = CompletableDeferred<Unit>()
+        whenever(attachmentLogic.updateAttachmentWithTransferData(any())).doSuspendableAnswer {
+            if (it.getArgument<TransferData>(0).messageTid == regular.messageTid)
+                releasePreparation.await()
+        }
+        val regularWorker = worker(regular)
+        val resumedWorker = worker(shared.copy(transferState = TransferState.PauseUpload), resume = true)
+        val regularWork = testScope.async { regularWorker.doWork() }
+        val resumedWork = testScope.async { resumedWorker.doWork() }
+        try {
+            assertThat(transport.resumeCalls).containsExactly("upload:${shared.messageTid}")
+            transport.uploadCalls.single().succeed("shared-url")
+            assertThat(resumedWork.isCompleted).isTrue()
+
+            releasePreparation.complete(Unit)
+            transport.uploadCalls.last().succeed("regular-url")
+            assertThat(regularWork.isCompleted).isTrue()
+        } finally {
+            releasePreparation.complete(Unit)
+            regularWork.cancelAndJoin()
+            resumedWork.cancelAndJoin()
+        }
+    }
+
+    @Test
+    fun `prepared file callback updates the original checksum after app data is saved`() = runBlocking {
+        val original = File(context.cacheDir, "checksum-original.txt").apply { writeText("original source") }
+        val prepared = File(context.cacheDir, "checksum-prepared.txt").apply { writeText("prepared") }
+        val value = attachment(
+            filePath = prepared.path,
+            originalFilePath = original.path,
+            fileSize = prepared.length(),
+        ).copy(metadata = """{"file_transfer":{"id":"saved"}}""")
+        val task = FileTransferHelper.createTransferTask(value)
+        val checksum = checkNotNull(FileChecksumCalculator.calculateFileChecksum(original.path))
+
+        task.updateFileLocationCallback?.onUpdateFileLocation(prepared.path)
+
+        verify(fileChecksumDao).updateResizedFilePathAndSize(checksum, prepared.path, prepared.length())
+        assertThat(task.attachment.metadata).contains("file_transfer")
+    }
+
+    @Test
+    fun `upload completion persists provider metadata with its URL`() = runBlocking {
+        val value = localAttachment().copy(
+            metadata = """{"custom_cipher":"encrypted-file-token"}""",
+        )
+        val task = FileTransferHelper.createTransferTask(value)
+
+        task.uploadResultCallback?.onResult(SceytResponse.Success("https://cdn.test/encrypted"))
+
+        val persisted = argumentCaptor<SceytAttachment>()
+        verify(attachmentLogic).updateUploadedAttachment(persisted.capture())
+        assertThat(persisted.firstValue.url).isEqualTo("https://cdn.test/encrypted")
+        assertThat(persisted.firstValue.metadata).isEqualTo(value.metadata)
+        assertThat(persisted.firstValue.transferState).isEqualTo(TransferState.Uploaded)
+        verify(attachmentLogic, never()).updateAttachmentWithTransferData(any())
+    }
+
+    @Test
+    fun `encrypted upload saves its URL with its encryption metadata`() = runBlocking {
+        SceytChatUIKit.fileTransfer.encryptionEnabled = true
+        val keys = mapOf("custom_cipher" to "encrypted-file-token")
+        transport.onPrepareUpload = { keys }
+        val attachment = localAttachment()
+        val work = testScope.async { worker(attachment).doWork() }
+
+        transport.uploadCalls.single().succeed("encrypted-url")
+
+        assertThat(work.isCompleted).isTrue()
+        verify(fileChecksumDao).updateUpload(any(), eq("encrypted-url"), eq(keys.toMetadataJson()))
+        assertSentUrl(attachment, "encrypted-url")
+    }
+
+    @Test
+    fun `plain upload saves its URL without encryption metadata`() = runBlocking {
+        val attachment = localAttachment()
+        val work = testScope.async { worker(attachment).doWork() }
+
+        transport.uploadCalls.single().succeed("plain-url")
+
+        assertThat(work.isCompleted).isTrue()
+        verify(fileChecksumDao).updateUpload(any(), eq("plain-url"), isNull())
+        assertSentUrl(attachment, "plain-url")
+    }
+
+    @Test
+    fun `encrypted upload without keys is not cached for reuse`() = runBlocking {
+        SceytChatUIKit.fileTransfer.encryptionEnabled = true
+        transport.onPrepareUpload = { emptyMap() }
+        val attachment = localAttachment()
+        val work = testScope.async { worker(attachment).doWork() }
+
+        transport.uploadCalls.single().succeed("encrypted-url")
+
+        assertThat(work.isCompleted).isTrue()
+        verify(fileChecksumDao, never()).updateUpload(any(), anyOrNull(), anyOrNull())
+        assertSentUrl(attachment, "encrypted-url")
+    }
+
+    @Test
+    fun `unrelated worker run does not restart paused upload`() {
+        assertThat(
+            shouldStartUpload(
+                state = TransferState.PauseUpload,
+                resumePausedUpload = false,
+            ),
+        ).isFalse()
+    }
+
+    @Test
+    fun `explicit worker resume restarts paused upload`() {
+        assertThat(
+            shouldStartUpload(
+                state = TransferState.PauseUpload,
+                resumePausedUpload = true,
+            ),
+        ).isTrue()
+    }
+
+    @Test
+    fun `normal upload does not require explicit resume`() {
+        assertThat(
+            shouldStartUpload(
+                state = TransferState.PendingUpload,
+                resumePausedUpload = false,
+            ),
+        ).isTrue()
+    }
+
+    @Test
+    fun `message with media and link uploads only media and preserves link`() = runBlocking<Unit> {
+        val media = localAttachment()
+        val uploadWorker = worker(media)
+        val link = media.copy(
+            id = 200L,
+            type = AttachmentTypeEnum.Link.value,
+            url = "https://example.com",
+            filePath = null,
+            originalFilePath = null,
+        )
+        val message = checkNotNull(messageLogic.getMessageFromDbByTid(media.messageTid))
+        whenever(messageLogic.getMessageFromDbByTid(media.messageTid))
+            .thenReturn(message.copy(attachments = listOf(link, media)))
+
+        val work = testScope.async { uploadWorker.doWork() }
+
+        assertThat(transport.uploadCalls).hasSize(1)
+        assertThat(service.getTasks()).hasSize(1)
+        assertThat(service.findTransferTask(media)?.attachment?.type).isEqualTo(media.type)
+        transport.uploadCalls.single().succeed("uploaded-media")
+
+        assertThat(work.isCompleted).isTrue()
+        val sent = argumentCaptor<Message>()
+        verify(messageLogic).sendMessageWithUploadedAttachments(eq(0L), sent.capture())
+        assertThat(sent.firstValue.attachments.map { it.url })
+            .containsExactly("https://example.com", "uploaded-media").inOrder()
+        assertThat(service.getTasks()).isEmpty()
+    }
+
+    @Test
+    fun `failed upload finishes worker without sending and releases next upload`() = runBlocking {
+        val failedAttachment = localAttachment()
+        val nextAttachment = failedAttachment.copy(messageTid = 11L, id = 11L)
+        val failedWork = testScope.async { worker(failedAttachment).doWork() }
+        val nextWork = testScope.async { worker(nextAttachment).doWork() }
+        assertThat(transport.uploadCalls).hasSize(1)
+
+        transport.uploadCalls.single().fail(SceytException(500, "Upload failed"))
+
+        assertThat(failedWork.isCompleted).isTrue()
+        assertThat(failedWork.await()).isEqualTo(androidx.work.ListenableWorker.Result.success())
+        assertThat(service.findTransferTask(failedAttachment)).isNull()
+        assertThat(AttachmentTransferStateStore.getTransferData(failedAttachment)?.state)
+            .isEqualTo(TransferState.ErrorUpload)
+        verify(messageLogic, never()).sendMessageWithUploadedAttachments(any(), any())
+        assertThat(transport.uploadCalls).hasSize(2)
+        assertThat(nextWork.isCompleted).isFalse()
+
+        transport.uploadCalls.last().succeed("next-url")
+
+        assertThat(nextWork.isCompleted).isTrue()
+        assertSentUrl(nextAttachment, "next-url")
+    }
+
+    @Test
+    fun `worker rerun retries attachment after upload failure`() = runBlocking {
+        val attachment = localAttachment()
+        val failedWork = testScope.async { worker(attachment).doWork() }
+        transport.uploadCalls.single().fail(SceytException(500, "Upload failed"))
+        assertThat(failedWork.isCompleted).isTrue()
+        assertThat(failedWork.await()).isEqualTo(androidx.work.ListenableWorker.Result.success())
+        verify(messageLogic, never()).sendMessageWithUploadedAttachments(any(), any())
+
+        val retriedWork = testScope.async {
+            worker(attachment.copy(transferState = TransferState.ErrorUpload)).doWork()
+        }
+        assertThat(transport.uploadCalls).hasSize(2)
+        transport.uploadCalls.last().succeed("retried-url")
+
+        assertThat(retriedWork.isCompleted).isTrue()
+        assertSentUrl(attachment, "retried-url")
+    }
+
+    @Test
+    fun `worker cancellation stops a suspended state update without starting upload`() =
+        runBlocking<Unit> {
+            val updateStarted = CompletableDeferred<Unit>()
+            val releaseUpdate = CompletableDeferred<Unit>()
+            whenever(attachmentLogic.updateAttachmentWithTransferData(any())).doSuspendableAnswer {
+                updateStarted.complete(Unit)
+                releaseUpdate.await()
+            }
+            val uploadWorker = worker(localAttachment())
+            val work = testScope.async(Dispatchers.Default) { uploadWorker.doWork() }
+
+            try {
+                withTimeout(5_000) { updateStarted.await() }
+                work.cancel()
+                withTimeout(5_000) { work.join() }
+                assertThat(transport.uploadCalls).isEmpty()
+            } finally {
+                releaseUpdate.complete(Unit)
+                work.cancelAndJoin()
+            }
+        }
+
+    @Test
+    fun `worker cancelled before upload registration does not start a transfer`() =
+        runBlocking<Unit> {
+            whenever(attachmentLogic.updateAttachmentWithTransferData(any())).doSuspendableAnswer {
+                currentCoroutineContext().cancel()
+            }
+            val work = testScope.async { worker(localAttachment()).doWork() }
+
+            work.join()
+
+            assertThat(work.isCancelled).isTrue()
+            assertThat(transport.uploadCalls).isEmpty()
+            assertThat(service.getTasks()).isEmpty()
+            verify(messageLogic, never()).sendMessageWithUploadedAttachments(any(), any())
+        }
+
+    @Test
+    fun `worker cancelled while registering its task does not leave an upload running`() =
+        runBlocking<Unit> {
+            val attachment = localAttachment()
+            val work = testScope.async(start = CoroutineStart.LAZY) { worker(attachment).doWork() }
+            val cancellingService = mock<FileTransferService>()
+            whenever(cancellingService.findTransferTask(any())).thenAnswer {
+                service.findTransferTask(it.getArgument(0))
+            }
+            whenever(cancellingService.cancelUpload(any())).thenAnswer {
+                service.cancelUpload(it.getArgument(0))
+            }
+            whenever(cancellingService.upload(any(), any(), any())).thenAnswer { invocation ->
+                work.cancel()
+                service.upload(
+                    attachment = invocation.getArgument(0),
+                    shared = invocation.getArgument(1),
+                    configureTask = invocation.getArgument(2),
+                )
+            }
+            SceytKoinApp.koinApp!!.koin.loadModules(listOf(module {
+                single<FileTransferService> { cancellingService }
+            }))
+
+            work.start()
+            work.join()
+
+            assertThat(work.isCancelled).isTrue()
+            assertThat(transport.uploadCalls).isEmpty()
+            assertThat(service.getTasks()).isEmpty()
+            verify(messageLogic, never()).sendMessageWithUploadedAttachments(any(), any())
+        }
+
+    @Test
+    fun `pause before task registration publishes and persists paused state`() = runBlocking {
+        val attachment = localAttachment().copy(transferState = TransferState.WaitingToUpload)
+
+        service.pause(attachment.messageTid, attachment, TransferState.WaitingToUpload)
+
+        assertThat(service.findTransferTask(attachment)?.state).isEqualTo(TransferState.PauseUpload)
+        assertThat(FileTransferHelper.onTransferUpdatedLiveData.value?.state)
+            .isEqualTo(TransferState.PauseUpload)
+        val update = argumentCaptor<TransferData>()
+        verify(attachmentLogic).updateTransferDataByMsgTid(update.capture())
+        assertThat(update.firstValue.state).isEqualTo(TransferState.PauseUpload)
+    }
+
+    @Test
+    fun `worker with stale state finishes when paused before task registration`() {
+        for (shared in listOf(false, true)) {
+            for (state in listOf(TransferState.PendingUpload, TransferState.WaitingToUpload)) {
+                val attachment = localAttachment().copy(
+                    messageTid = (if (shared) 100L else 200L) + state.ordinal,
+                    transferState = state,
+                )
+                service.pause(attachment.messageTid, attachment, state)
+
+                val worker = worker(attachment, shared = shared)
+                val work = testScope.async { worker.doWork() }
+
+                assertThat(work.isCompleted).isTrue()
+                runBlocking {
+                    assertThat(work.await())
+                        .isEqualTo(androidx.work.ListenableWorker.Result.success())
+                }
+                assertThat(service.findTransferTask(attachment)?.state)
+                    .isEqualTo(TransferState.PauseUpload)
+                assertThat(FileTransferHelper.onTransferUpdatedLiveData.value?.state)
+                    .isEqualTo(TransferState.PauseUpload)
+            }
+        }
+        assertThat(transport.uploadCalls).isEmpty()
+        runBlocking {
+            verify(messageLogic, never()).sendMessageWithUploadedAttachments(any(), any())
+        }
+    }
+
+    @Test
+    fun `explicit worker resume starts upload paused before task registration`() {
+        val attachment = localAttachment().copy(transferState = TransferState.WaitingToUpload)
+        service.pause(attachment.messageTid, attachment, TransferState.WaitingToUpload)
+
+        val worker = worker(
+            attachment.copy(transferState = TransferState.PauseUpload),
+            resume = true
+        )
+        val work = testScope.async { worker.doWork() }
+
+        assertThat(transport.uploadCalls).hasSize(1)
+        transport.uploadCalls.single().succeed("resumed-url")
+        assertThat(work.isCompleted).isTrue()
+        assertSentUrl(attachment, "resumed-url")
+    }
+
+    @Test
+    fun `rerun of a resume worker keeps a later pause`() {
+        val attachment = localAttachment()
+            .copy(messageTid = 40L, transferState = TransferState.WaitingToUpload)
+        service.pause(attachment.messageTid, attachment, TransferState.WaitingToUpload)
+
+        val worker = worker(
+            attachment.copy(transferState = TransferState.PauseUpload),
+            resume = true,
+            runAttemptCount = 1,
+        )
+        val work = testScope.async { worker.doWork() }
+
+        assertThat(work.isCompleted).isTrue()
+        assertThat(transport.uploadCalls).isEmpty()
+        assertThat(service.findTransferTask(attachment)?.state).isEqualTo(TransferState.PauseUpload)
+        runBlocking {
+            verify(messageLogic, never()).sendMessageWithUploadedAttachments(any(), any())
+        }
+    }
+
+    @Test
+    fun `explicit shared resume joins existing upload after pause before registration`() {
+        val first = localAttachment()
+        val paused = first.copy(messageTid = 11L, transferState = TransferState.WaitingToUpload)
+        service.upload(first, shared = true)
+        service.pause(paused.messageTid, paused, TransferState.WaitingToUpload)
+
+        val worker = worker(
+            paused.copy(transferState = TransferState.PauseUpload),
+            resume = true,
+            shared = true
+        )
+        val work = testScope.async { worker.doWork() }
+
+        assertThat(transport.uploadCalls).hasSize(1)
+        transport.uploadCalls.single().succeed("shared-url")
+        assertThat(work.isCompleted).isTrue()
+        assertSentUrl(paused, "shared-url")
+    }
+
+    @Test
+    fun `production resume worker keeps sharing of upload paused before joining group`() {
+        val first = localAttachment()
+        val paused = first.copy(messageTid = 12L, transferState = TransferState.WaitingToUpload)
+        service.upload(first, shared = true)
+        service.pause(paused.messageTid, paused, TransferState.WaitingToUpload)
+        service.upload(paused, shared = true)
+
+        val worker = worker(paused.copy(transferState = TransferState.PauseUpload), resume = true)
+        val work = testScope.async { worker.doWork() }
+
+        assertThat(transport.uploadCalls).hasSize(1)
+        transport.uploadCalls.single().succeed("shared-url")
+        assertThat(work.isCompleted).isTrue()
+        assertSentUrl(paused, "shared-url")
+    }
+
+    @Test
+    fun `explicit worker resume clears pause and sends uploaded message`() {
+        val attachment = localAttachment()
+        val pausedWork = testScope.async { worker(attachment).doWork() }
+        service.pause(attachment.messageTid, attachment, TransferState.Uploading)
+        assertThat(pausedWork.isCompleted).isTrue()
+
+        val worker = worker(
+            attachment.copy(transferState = TransferState.PauseUpload),
+            resume = true
+        )
+        val work = testScope.async { worker.doWork() }
+
+        assertThat(transport.uploadCalls).hasSize(2)
+        assertThat(transport.uploadCalls.first().cancelled).isTrue()
+        transport.uploadCalls.last().succeed("resumed-url")
+
+        assertThat(work.isCompleted).isTrue()
+        assertSentUrl(attachment, "resumed-url")
+    }
+
+    @Test
+    fun `recreated worker uploads the saved prepared video without transcoding again`() {
+        SceytChatUIKit.fileTransfer.encryptionEnabled = true
+        val original = File(context.cacheDir, "worker-original.mp4")
+            .apply { writeText("source video") }
+        val prepared = File(context.cacheDir, "worker-prepared.mp4")
+            .apply { writeText("prepared video") }
+        val attachment = attachment(
+            type = AttachmentTypeEnum.Video.value,
+            fileSize = prepared.length(),
+            url = null,
+            filePath = prepared.path,
+            originalFilePath = original.path,
+            state = TransferState.PauseUpload,
+        )
+        val extensionsClass = Class.forName(
+            "com.sceyt.chatuikit.persistence.extensions.AttachmentResizeExtensionsKt",
+        )
+        Mockito.mockStatic(extensionsClass) { invocation ->
+            check(invocation.method.name != "transcodeVideo") { "The saved video is already prepared" }
+            invocation.callRealMethod()
+        }.use {
+            val work = testScope.async { worker(attachment, resume = true).doWork() }
+
+            val call = transport.uploadCalls.single()
+            assertThat(call.request.type).isEqualTo(FileTransferType.ENCRYPTED)
+            assertThat(call.request.sourceFile).isEqualTo(prepared)
+            call.succeed("resumed-url")
+
+            assertThat(work.isCompleted).isTrue()
+            assertSentUrl(attachment, "resumed-url")
+        }
+    }
+
+    @Test
+    fun `video message uploads its preview and sends it after the video`() = runBlocking {
+        val video = preparedVideo()
+        val preview = previewAttachment(video, url = "preview-url")
+        whenever(previewTransfer.upload(any())).thenReturn(PreviewUploadResult.Uploaded(preview))
+        val work = testScope.async { worker(video).doWork() }
+
+        transport.uploadCalls.single().succeed("video-url")
+
+        assertThat(work.isCompleted).isTrue()
+        assertSentAttachments(video, "video-url" to AttachmentTypeEnum.Video, "preview-url" to AttachmentTypeEnum.Preview)
+        val sent = argumentCaptor<Message>()
+        verify(messageLogic).sendMessageWithUploadedAttachments(eq(0L), sent.capture())
+        val videoMetadata = JSONObject(sent.firstValue.attachments.first().metadata)
+        assertThat(videoMetadata.getString(SceytConstants.Preview)).isEqualTo("preview-url")
+    }
+
+    @Test
+    fun `view once video sends only the video without uploading a preview`() = runBlocking {
+        val video = preparedVideo()
+        val preview = previewAttachment(video, url = "preview-url")
+        whenever(previewTransfer.upload(any())).thenReturn(PreviewUploadResult.Uploaded(preview))
+        val work = testScope.async { worker(video, viewOnce = true).doWork() }
+
+        transport.uploadCalls.single().succeed("video-url")
+
+        assertThat(work.isCompleted).isTrue()
+        verify(previewTransfer, never()).upload(any())
+        assertSentAttachments(video, "video-url" to AttachmentTypeEnum.Video)
+    }
+
+    @Test
+    fun `view once retry omits a previously saved preview attachment`() = runBlocking {
+        val video = preparedVideo()
+        val preview = previewAttachment(video, url = "preview-url")
+        val work = testScope.async {
+            worker(video, extraAttachments = listOf(preview), viewOnce = true).doWork()
+        }
+
+        transport.uploadCalls.single().succeed("video-url")
+
+        assertThat(work.isCompleted).isTrue()
+        verify(previewTransfer, never()).upload(any())
+        assertSentAttachments(video, "video-url" to AttachmentTypeEnum.Video)
+    }
+
+    @Test
+    fun `preview failure fails the message before the video upload starts`() = runBlocking {
+        val video = preparedVideo()
+        whenever(previewTransfer.upload(any()))
+            .thenReturn(PreviewUploadResult.Failed(IllegalStateException("offline")))
+
+        val work = testScope.async { worker(video).doWork() }
+
+        assertThat(work.isCompleted).isTrue()
+        assertThat(transport.uploadCalls).isEmpty()
+        verify(messageLogic, never()).sendMessageWithUploadedAttachments(any(), any())
+        val transferData = argumentCaptor<TransferData>()
+        verify(attachmentLogic, times(2)).updateAttachmentWithTransferData(transferData.capture())
+        assertThat(transferData.allValues.map { it.state })
+            .containsExactly(TransferState.WaitingToUpload, TransferState.ErrorUpload)
+            .inOrder()
+    }
+
+    @Test
+    fun `pause during a failing preview keeps the upload paused`() = runBlocking<Unit> {
+        val video = pauseDuringFailingPreview()
+
+        assertThat(service.findTransferTask(video)?.state).isEqualTo(TransferState.PauseUpload)
+        assertThat(FileTransferHelper.onTransferUpdatedLiveData.value?.state)
+            .isEqualTo(TransferState.PauseUpload)
+        val transferData = argumentCaptor<TransferData>()
+        verify(attachmentLogic).updateAttachmentWithTransferData(transferData.capture())
+        assertThat(transferData.allValues.map { it.state }).containsExactly(TransferState.WaitingToUpload)
+        assertThat(transport.uploadCalls).isEmpty()
+        verify(messageLogic, never()).sendMessageWithUploadedAttachments(any(), any())
+    }
+
+    @Test
+    fun `resume after pause during preview uploads the video`() = runBlocking<Unit> {
+        val video = pauseDuringFailingPreview()
+        whenever(previewTransfer.upload(any())).thenReturn(PreviewUploadResult.Unavailable)
+
+        val work = testScope.async {
+            worker(video.copy(transferState = TransferState.PauseUpload), resume = true).doWork()
+        }
+        transport.uploadCalls.single().succeed("video-url")
+
+        assertThat(work.isCompleted).isTrue()
+        assertSentAttachments(video, "video-url" to AttachmentTypeEnum.Video)
+    }
+
+    @Test
+    fun `pause again during a resumed preview keeps the video paused`() = runBlocking<Unit> {
+        val video = pauseDuringFailingPreview().copy(transferState = TransferState.PauseUpload)
+        val preview = previewAttachment(video, url = "preview-url")
+        val previewResult = CompletableDeferred<PreviewUploadResult>()
+        whenever(previewTransfer.upload(any())).doSuspendableAnswer { previewResult.await() }
+
+        val work = testScope.async { worker(video, resume = true).doWork() }
+        try {
+            assertThat(service.findTransferTask(video)?.state).isEqualTo(TransferState.WaitingToUpload)
+            service.pause(video.messageTid, video, TransferState.WaitingToUpload)
+            assertThat(service.findTransferTask(video)?.state).isEqualTo(TransferState.PauseUpload)
+
+            previewResult.complete(PreviewUploadResult.Uploaded(preview))
+
+            assertThat(work.isCompleted).isTrue()
+            assertThat(service.findTransferTask(video)?.state).isEqualTo(TransferState.PauseUpload)
+            assertThat(FileTransferHelper.onTransferUpdatedLiveData.value?.state)
+                .isEqualTo(TransferState.PauseUpload)
+            assertThat(transport.uploadCalls).isEmpty()
+            verify(messageLogic, never()).sendMessageWithUploadedAttachments(any(), any())
+        } finally {
+            work.cancelAndJoin()
+        }
+    }
+
+    @Test
+    fun `offline resume after pause during preview shows the upload error`() = runBlocking<Unit> {
+        val video = pauseDuringFailingPreview()
+        whenever(previewTransfer.upload(any()))
+            .thenReturn(PreviewUploadResult.Failed(IllegalStateException("offline")))
+
+        val work = testScope.async {
+            worker(video.copy(transferState = TransferState.PauseUpload), resume = true).doWork()
+        }
+
+        assertThat(work.isCompleted).isTrue()
+        assertThat(FileTransferHelper.onTransferUpdatedLiveData.value?.state)
+            .isEqualTo(TransferState.ErrorUpload)
+        assertThat(transport.uploadCalls).isEmpty()
+    }
+
+    private suspend fun pauseDuringFailingPreview(): SceytAttachment {
+        val video = preparedVideo().copy(transferState = TransferState.ErrorUpload)
+        val previewResult = CompletableDeferred<PreviewUploadResult>()
+        whenever(previewTransfer.upload(any())).doSuspendableAnswer { previewResult.await() }
+        val work = testScope.async { worker(video).doWork() }
+
+        service.pause(video.messageTid, video, TransferState.WaitingToUpload)
+        previewResult.complete(PreviewUploadResult.Failed(IllegalStateException("offline")))
+
+        assertThat(work.isCompleted).isTrue()
+        return video
+    }
+
+    @Test
+    fun `preview upload for an uploaded video keeps its uploaded state`() = runBlocking<Unit> {
+        val video = preparedVideo().copy(url = "video-url", transferState = TransferState.Uploaded)
+        val preview = previewAttachment(video, url = "preview-url")
+        whenever(previewTransfer.upload(any())).thenReturn(PreviewUploadResult.Uploaded(preview))
+        whenever(attachmentLogic.getAllPayLoadsByMsgTid(any())).thenReturn(
+            listOf(AttachmentPayLoad(video.messageTid, TransferState.Uploaded, 100f, "video-url", video.filePath, null))
+        )
+
+        val work = testScope.async { worker(video).doWork() }
+
+        assertThat(work.isCompleted).isTrue()
+        val transferData = argumentCaptor<TransferData>()
+        verify(attachmentLogic).updateAttachmentWithTransferData(transferData.capture())
+        assertThat(transferData.allValues.map { it.state }).containsExactly(TransferState.Uploaded)
+        assertSentAttachments(video, "video-url" to AttachmentTypeEnum.Video, "preview-url" to AttachmentTypeEnum.Preview)
+    }
+
+    @Test
+    fun `retry with a saved preview uploads only the video`() = runBlocking {
+        val video = preparedVideo()
+        val preview = previewAttachment(video, url = "preview-url")
+        val work = testScope.async { worker(video, extraAttachments = listOf(preview)).doWork() }
+
+        transport.uploadCalls.single().succeed("video-url")
+
+        assertThat(work.isCompleted).isTrue()
+        verify(previewTransfer, never()).upload(any())
+        assertSentAttachments(video, "video-url" to AttachmentTypeEnum.Video, "preview-url" to AttachmentTypeEnum.Preview)
+    }
+
+    @Test
+    fun `retry with an uploaded video uploads only the preview`() = runBlocking {
+        val video = preparedVideo()
+        val preview = previewAttachment(video, url = "preview-url")
+        whenever(previewTransfer.upload(any())).thenReturn(PreviewUploadResult.Uploaded(preview))
+        whenever(attachmentLogic.getAllPayLoadsByMsgTid(any())).thenReturn(
+            listOf(AttachmentPayLoad(video.messageTid, TransferState.ErrorUpload, 0f, "video-url", video.filePath, null))
+        )
+
+        val work = testScope.async { worker(video.copy(url = "video-url", transferState = TransferState.ErrorUpload)).doWork() }
+
+        assertThat(work.isCompleted).isTrue()
+        assertThat(transport.uploadCalls).isEmpty()
+        assertSentAttachments(video, "video-url" to AttachmentTypeEnum.Video, "preview-url" to AttachmentTypeEnum.Preview)
+    }
+
+    @Test
+    fun `worker resume waits for cancelled upload cleanup`() {
+        val cleanup = CompletableDeferred<Unit>()
+        transport.uploadCancellationGate = cleanup
+        val attachment = localAttachment()
+        val pausedWork = testScope.async { worker(attachment).doWork() }
+        service.pause(attachment.messageTid, attachment, TransferState.Uploading)
+        assertThat(pausedWork.isCompleted).isTrue()
+        assertThat(transport.uploadCalls.single().cancelled).isTrue()
+
+        try {
+            val resumedWork = testScope.async {
+                worker(
+                    attachment.copy(transferState = TransferState.PauseUpload),
+                    resume = true
+                ).doWork()
+            }
+
+            assertThat(transport.uploadCalls).hasSize(1)
+            assertThat(resumedWork.isCompleted).isFalse()
+
+            service.pause(attachment.messageTid, attachment, TransferState.WaitingToUpload)
+            assertThat(resumedWork.isCompleted).isTrue()
+            val retriedWork = testScope.async {
+                worker(
+                    attachment.copy(transferState = TransferState.PauseUpload),
+                    resume = true
+                ).doWork()
+            }
+            assertThat(transport.uploadCalls).hasSize(1)
+
+            cleanup.complete(Unit)
+            assertThat(transport.uploadCalls).hasSize(2)
+            transport.uploadCalls.last().succeed("resumed-url")
+
+            assertThat(retriedWork.isCompleted).isTrue()
+            assertSentUrl(attachment, "resumed-url")
+        } finally {
+            cleanup.complete(Unit)
+        }
+    }
+
+    @Test
+    fun `explicit worker resume uses native resume instead of uploading twice`() {
+        transport.pauseResult = true
+        transport.resumeResult = true
+        val attachment = localAttachment()
+        val pausedWork = testScope.async { worker(attachment).doWork() }
+        val call = transport.uploadCalls.single()
+        service.pause(attachment.messageTid, attachment, TransferState.Uploading)
+        assertThat(pausedWork.isCompleted).isTrue()
+
+        val worker = worker(
+            attachment.copy(transferState = TransferState.PauseUpload),
+            resume = true
+        )
+        val work = testScope.async { worker.doWork() }
+
+        assertThat(transport.resumeCalls).containsExactly("upload:${attachment.messageTid}")
+        assertThat(transport.uploadCalls).hasSize(1)
+        assertThat(call.cancelled).isFalse()
+        call.succeed("native-resumed-url")
+
+        assertThat(work.isCompleted).isTrue()
+        assertSentUrl(attachment, "native-resumed-url")
+    }
+
+    @Test
+    fun `replacing a resumed shared worker retains native operation and sharing`() =
+        runBlocking<Unit> {
+            transport.pauseResult = true
+            transport.resumeResult = true
+            val owner = localAttachment().copy(messageTid = 9_101L)
+            val follower = owner.copy(messageTid = 9_102L)
+            testScope.async { worker(owner, shared = true).doWork() }
+            testScope.async { worker(follower, shared = true).doWork() }
+            val call = transport.uploadCalls.single()
+            service.pause(owner.messageTid, owner, TransferState.Uploading)
+            service.pause(follower.messageTid, follower, TransferState.Uploading)
+            val task = checkNotNull(service.findTransferTask(owner))
+            val pausedOwner = owner.copy(transferState = TransferState.PauseUpload)
+            val firstResume = testScope.async { worker(pausedOwner, resume = true).doWork() }
+            assertThat(firstResume.isCompleted).isFalse()
+
+            firstResume.cancelAndJoin()
+            val replacement = testScope.async { worker(pausedOwner, resume = true).doWork() }
+
+            assertThat(service.findTransferTask(owner)).isSameInstanceAs(task)
+            assertThat(task.isSharedUpload).isTrue()
+            assertThat(call.cancelled).isFalse()
+            assertThat(transport.uploadCalls).hasSize(1)
+            call.succeed("shared-url")
+            assertThat(replacement.isCompleted).isTrue()
+            assertSentUrl(owner, "shared-url")
+            assertThat(service.findTransferTask(follower)?.state).isEqualTo(TransferState.PauseUpload)
+
+            val followerResume = testScope.async {
+                worker(
+                    follower.copy(transferState = TransferState.PauseUpload),
+                    resume = true
+                ).doWork()
+            }
+
+            assertThat(followerResume.isCompleted).isTrue()
+            val sent = argumentCaptor<Message>()
+            verify(messageLogic, org.mockito.kotlin.times(2))
+                .sendMessageWithUploadedAttachments(eq(0L), sent.capture())
+            assertThat(sent.allValues.map { it.tid to it.attachments.single().url })
+                .containsExactly(
+                    owner.messageTid to "shared-url",
+                    follower.messageTid to "shared-url"
+                )
+            assertThat(transport.uploadCalls).hasSize(1)
+            assertThat(service.getTasks()).isEmpty()
+        }
+
+    @Test
+    fun `replacing resumed worker keeps its restarted upload running`() = runBlocking<Unit> {
+        val attachment = localAttachment()
+        testScope.async { worker(attachment).doWork() }
+        service.pause(attachment.messageTid, attachment, TransferState.Uploading)
+        val paused = attachment.copy(transferState = TransferState.PauseUpload)
+        val firstResume = testScope.async { worker(paused, resume = true).doWork() }
+        val call = transport.uploadCalls.last()
+        assertThat(transport.uploadCalls).hasSize(2)
+
+        firstResume.cancelAndJoin()
+        val replacement = testScope.async { worker(paused, resume = true).doWork() }
+
+        assertThat(call.cancelled).isFalse()
+        assertThat(transport.uploadCalls).hasSize(2)
+        call.succeed("resumed-url")
+        assertThat(replacement.isCompleted).isTrue()
+        assertSentUrl(attachment, "resumed-url")
+        assertThat(service.getTasks()).isEmpty()
+    }
+
+    @Test
+    fun `completed native upload stays paused until its worker resumes`() {
+        transport.pauseResult = true
+        val attachment = localAttachment()
+        val pausedWork = testScope.async { worker(attachment).doWork() }
+        service.pause(attachment.messageTid, attachment, TransferState.Uploading)
+
+        transport.uploadCalls.single().succeed("completed-while-paused")
+
+        assertThat(pausedWork.isCompleted).isTrue()
+        assertThat(service.findTransferTask(attachment)?.state).isEqualTo(TransferState.PauseUpload)
+        runBlocking {
+            verify(messageLogic, never()).sendMessageWithUploadedAttachments(any(), any())
+        }
+
+        val resumedWork = testScope.async {
+            worker(
+                attachment.copy(transferState = TransferState.PauseUpload),
+                resume = true
+            ).doWork()
+        }
+
+        assertThat(resumedWork.isCompleted).isTrue()
+        assertThat(transport.uploadCalls).hasSize(1)
+        assertSentUrl(attachment, "completed-while-paused")
+    }
+
+    @Test
+    fun `pause queued with upload completion retains the result for resume`() {
+        val attachment = localAttachment()
+        SceytChatUIKit.fileTransfer.provider = object : FileTransferProvider by transport {
+            override suspend fun upload(
+                request: FileUploadRequest,
+                callback: FileTransferCallback,
+            ): FileTransferResult<String> {
+                val result = transport.upload(request, callback)
+                service.pause(attachment.messageTid, attachment, TransferState.Uploading)
+                return result
+            }
+        }
+        val pausedWork = testScope.async { worker(attachment).doWork() }
+
+        transport.uploadCalls.single().succeed("completed-before-pause-applied")
+
+        assertThat(pausedWork.isCompleted).isTrue()
+        assertThat(service.findTransferTask(attachment)?.state).isEqualTo(TransferState.PauseUpload)
+        runBlocking {
+            verify(messageLogic, never()).sendMessageWithUploadedAttachments(any(), any())
+        }
+
+        val resumedWork = testScope.async {
+            worker(
+                attachment.copy(transferState = TransferState.PauseUpload),
+                resume = true
+            ).doWork()
+        }
+
+        assertThat(resumedWork.isCompleted).isTrue()
+        assertThat(transport.uploadCalls).hasSize(1)
+        assertSentUrl(attachment, "completed-before-pause-applied")
+    }
+
+    @Test
+    fun `pausing an active upload finishes its worker without sending the message`() {
+        for (nativePause in listOf(false, true)) {
+            transport.pauseResult = nativePause
+            val attachment = localAttachment().copy(messageTid = if (nativePause) 51L else 50L)
+            val work = testScope.async { worker(attachment).doWork() }
+            assertThat(work.isCompleted).isFalse()
+
+            service.pause(attachment.messageTid, attachment, TransferState.Uploading)
+
+            assertThat(work.isCompleted).isTrue()
+            assertThat(service.findTransferTask(attachment)?.state)
+                .isEqualTo(TransferState.PauseUpload)
+            assertThat(service.findTransferTask(attachment)?.onCompletionListeners).isEmpty()
+            assertThat(transport.uploadCalls.last().cancelled).isEqualTo(!nativePause)
+        }
+        runBlocking {
+            verify(messageLogic, never()).sendMessageWithUploadedAttachments(any(), any())
+        }
+    }
+
+    @Test
+    fun `pausing one shared upload finishes only its worker`() {
+        val owner = localAttachment().copy(messageTid = 52L)
+        val follower = owner.copy(messageTid = 53L)
+        val ownerWork = testScope.async { worker(owner, shared = true).doWork() }
+        val followerWork = testScope.async { worker(follower, shared = true).doWork() }
+
+        service.pause(owner.messageTid, owner, TransferState.Uploading)
+
+        assertThat(ownerWork.isCompleted).isTrue()
+        assertThat(followerWork.isCompleted).isFalse()
+        assertThat(transport.uploadCalls).hasSize(1)
+        assertThat(transport.uploadCalls.single().cancelled).isFalse()
+        transport.uploadCalls.single().succeed("shared-url")
+        assertThat(followerWork.isCompleted).isTrue()
+        assertSentUrl(follower, "shared-url")
+        assertThat(service.findTransferTask(owner)?.state).isEqualTo(TransferState.PauseUpload)
+    }
+
+    @Test
+    fun `explicit worker resume reuses completed shared upload`() {
+        val first = localAttachment()
+        val paused = first.copy(messageTid = 11L)
+        service.upload(first, shared = true)
+        service.upload(paused, shared = true)
+        service.pause(paused.messageTid, paused, TransferState.Uploading)
+        transport.uploadCalls.single().succeed("shared-url")
+
+        val worker = worker(
+            paused.copy(transferState = TransferState.PauseUpload),
+            resume = true,
+            shared = true
+        )
+        val work = testScope.async { worker.doWork() }
+
+        assertThat(transport.uploadCalls).hasSize(1)
+        assertThat(work.isCompleted).isTrue()
+        assertSentUrl(paused, "shared-url")
+    }
+
+    @Test
+    fun `automatic worker run leaves user paused upload stopped`() {
+        val attachment = localAttachment()
+        service.upload(attachment)
+        service.pause(attachment.messageTid, attachment, TransferState.Uploading)
+
+        val worker = worker(attachment.copy(transferState = TransferState.PauseUpload))
+        val work = testScope.async { worker.doWork() }
+
+        assertThat(work.isCompleted).isTrue()
+        assertThat(transport.uploadCalls).hasSize(1)
+        assertThat(transport.resumeCalls).isEmpty()
+        runBlocking {
+            verify(messageLogic, never()).sendMessageWithUploadedAttachments(any(), any())
+        }
+    }
+
+    @Test
+    fun `clearing a channel stops its upload and releases the next queued upload`() =
+        runBlocking<Unit> {
+            val attachment = localAttachment()
+            val work = testScope.async { worker(attachment).doWork() }
+            val call = transport.uploadCalls.single()
+            val next = attachment.copy(messageTid = 11L)
+            service.upload(next)
+            val messageDao = mock<MessageDao>()
+            val repository = mock<ChannelsRepository>()
+            val pending = checkNotNull(messageLogic.getMessageFromDbByTid(attachment.messageTid))
+            whenever(messageDao.getPendingMessagesByChannelIds(listOf(0L)))
+                .thenReturn(listOf(pending.toMessageDb(false)))
+            whenever(repository.clearHistory(0L, false))
+                .thenReturn(SceytResponse.Success(createChannel(0L, 0L, 0L)))
+
+            channelLogic(messageDao, repository).clearHistory(0L, false)
+
+            assertThat(call.cancelled).isTrue()
+            assertThat(work.isCompleted).isTrue()
+            assertThat(service.findTransferTask(attachment)).isNull()
+            assertThat(transport.uploadCalls).hasSize(2)
+            assertThat(transport.uploadCalls.last().request.operationId).isEqualTo("upload:11")
+            verify(messageLogic, never()).sendMessageWithUploadedAttachments(any(), any())
+        }
+
+    @Test
+    fun `deleting a channel leaves another channels shared upload running`() = runBlocking {
+        val owner = localAttachment()
+        val follower = owner.copy(messageTid = 11L)
+        val ownerWork = testScope.async { worker(owner, shared = true).doWork() }
+        val followerWork =
+            testScope.async { worker(follower, shared = true, channelId = 1L).doWork() }
+        val call = transport.uploadCalls.single()
+        val messageDao = mock<MessageDao>()
+        val repository = mock<ChannelsRepository>()
+        val pending = checkNotNull(messageLogic.getMessageFromDbByTid(owner.messageTid))
+        whenever(messageDao.getPendingMessagesByChannelIds(listOf(0L)))
+            .thenReturn(listOf(pending.toMessageDb(false)))
+        whenever(repository.deleteChannel(0L)).thenReturn(SceytResponse.Success(0L))
+
+        channelLogic(messageDao, repository).deleteChannel(0L)
+
+        verify(workManager).cancelAllWorkByTag(owner.messageTid.toString())
+        verify(workManager, never()).cancelAllWorkByTag(follower.messageTid.toString())
+        assertThat(ownerWork.isCompleted).isTrue()
+        assertThat(service.findTransferTask(owner)).isNull()
+        assertThat(call.cancelled).isFalse()
+        assertThat(followerWork.isCompleted).isFalse()
+        call.succeed("shared-after-channel-deletion")
+        assertThat(followerWork.isCompleted).isTrue()
+        assertSentUrl(follower, "shared-after-channel-deletion", channelId = 1L)
+    }
+
+    @Test
+    fun `leaving a channel cancels a natively paused upload after its worker finished`() =
+        runBlocking<Unit> {
+            transport.pauseResult = true
+            val attachment = localAttachment()
+            val work = testScope.async { worker(attachment).doWork() }
+            service.pause(attachment.messageTid, attachment, TransferState.Uploading)
+            val call = transport.uploadCalls.single()
+            assertThat(work.isCompleted).isTrue()
+            assertThat(call.cancelled).isFalse()
+            val messageDao = mock<MessageDao>()
+            val repository = mock<ChannelsRepository>()
+            val pending = checkNotNull(messageLogic.getMessageFromDbByTid(attachment.messageTid))
+            whenever(messageDao.getPendingMessagesByChannelIds(listOf(0L)))
+                .thenReturn(listOf(pending.toMessageDb(false)))
+            whenever(repository.leaveChannel(0L)).thenReturn(SceytResponse.Success(0L))
+
+            channelLogic(messageDao, repository).leaveChannel(0L)
+
+            assertThat(call.cancelled).isTrue()
+            assertThat(service.findTransferTask(attachment)).isNull()
+            verify(messageLogic, never()).sendMessageWithUploadedAttachments(any(), any())
+        }
+
+    @Test
+    fun `failed clear history leaves its upload running`() = runBlocking {
+        val attachment = localAttachment()
+        val work = testScope.async { worker(attachment).doWork() }
+        val call = transport.uploadCalls.single()
+        val messageDao = mock<MessageDao>()
+        val repository = mock<ChannelsRepository>()
+        val pending = checkNotNull(messageLogic.getMessageFromDbByTid(attachment.messageTid))
+        whenever(messageDao.getPendingMessagesByChannelIds(listOf(0L)))
+            .thenReturn(listOf(pending.toMessageDb(false)))
+        whenever(repository.clearHistory(0L, false))
+            .thenReturn(SceytResponse.Error(SceytException(1, "clear failed")))
+
+        channelLogic(messageDao, repository).clearHistory(0L, false)
+
+        assertThat(call.cancelled).isFalse()
+        assertThat(work.isCompleted).isFalse()
+        call.succeed("upload-after-failed-clear")
+        assertThat(work.isCompleted).isTrue()
+        assertSentUrl(attachment, "upload-after-failed-clear")
+    }
+
+    @Test
+    fun `sync removing a channel cancels its pending upload`() = runBlocking<Unit> {
+        val attachment = localAttachment()
+        val work = testScope.async { worker(attachment).doWork() }
+        val call = transport.uploadCalls.single()
+        val messageDao = mock<MessageDao>()
+        val channelDao = mock<ChannelDao>()
+        val repository = mock<ChannelsRepository>()
+        val pending = checkNotNull(messageLogic.getMessageFromDbByTid(attachment.messageTid))
+        whenever(messageDao.getPendingMessagesByChannelIds(listOf(0L)))
+            .thenReturn(listOf(pending.toMessageDb(false)))
+        whenever(channelDao.getAllChannelIdsByTypes(emptyList(), true)).thenReturn(listOf(0L))
+        whenever(repository.getAllChannels(any()))
+            .thenReturn(flowOf(SyncResult.SuccessfullyFinished))
+
+        channelLogic(messageDao, repository, channelDao).syncChannels(ChannelListConfig.default)
+            .toList()
+
+        assertThat(call.cancelled).isTrue()
+        assertThat(work.isCompleted).isTrue()
+        assertThat(service.findTransferTask(attachment)).isNull()
+        verify(messageLogic, never()).sendMessageWithUploadedAttachments(any(), any())
+    }
+
+    @Test
+    fun `sync looks up pending messages once for all removed channels`() = runBlocking<Unit> {
+        val channelIds = (0L until 200L).toList()
+        val messageDao = mock<MessageDao>()
+        val channelDao = mock<ChannelDao>()
+        val repository = mock<ChannelsRepository>()
+        whenever(messageDao.getPendingMessages(any())).thenReturn(emptyList())
+        whenever(messageDao.getPendingMessagesByChannelIds(channelIds)).thenReturn(emptyList())
+        whenever(channelDao.getAllChannelIdsByTypes(emptyList(), true)).thenReturn(channelIds)
+        whenever(repository.getAllChannels(any()))
+            .thenReturn(flowOf(SyncResult.SuccessfullyFinished))
+
+        channelLogic(messageDao, repository, channelDao).syncChannels(ChannelListConfig.default)
+            .toList()
+
+        verify(messageDao).getPendingMessagesByChannelIds(channelIds)
+        verify(messageDao, never()).getPendingMessages(any())
+        val cancelledTags = argumentCaptor<String>()
+        verify(workManager, org.mockito.kotlin.times(channelIds.size)).cancelAllWorkByTag(
+            cancelledTags.capture()
+        )
+        assertThat(cancelledTags.allValues).containsExactlyElementsIn(channelIds.map(Long::toString))
+    }
+
+    @Test
+    fun `server clear prevents a worker with an already loaded message from sending`() =
+        runBlocking<Unit> {
+            val updateStarted = CompletableDeferred<Unit>()
+            val releaseUpdate = CompletableDeferred<Unit>()
+            whenever(attachmentLogic.updateAttachmentWithTransferData(any())).doSuspendableAnswer {
+                updateStarted.complete(Unit)
+                releaseUpdate.await()
+            }
+            val attachment = localAttachment()
+            val work = testScope.async { worker(attachment).doWork() }
+            assertThat(updateStarted.isCompleted).isTrue()
+            assertThat(service.findTransferTask(attachment)).isNull()
+            val messageDao = mock<MessageDao>()
+            val repository = mock<ChannelsRepository>()
+            val pending = checkNotNull(messageLogic.getMessageFromDbByTid(attachment.messageTid))
+            whenever(messageDao.getPendingMessagesByChannelIds(listOf(0L)))
+                .thenReturn(listOf(pending.toMessageDb(false)))
+            val cancellation = mock<Operation>()
+            whenever(cancellation.result).thenReturn(Futures.immediateFuture(Operation.SUCCESS))
+            whenever(workManager.cancelAllWorkByTag(attachment.messageTid.toString())).thenAnswer {
+                work.cancel()
+                cancellation
+            }
+
+            try {
+                channelLogic(messageDao, repository).onChannelEvent(
+                    ChannelActionEvent.ClearedHistory(createChannel(0L, 0L, 0L)),
+                )
+                whenever(messageLogic.getMessageFromDbByTid(attachment.messageTid)).thenReturn(null)
+                releaseUpdate.complete(Unit)
+                transport.uploadCalls.singleOrNull()?.succeed("uploaded-after-clear")
+
+                assertThat(work.isCompleted).isTrue()
+                verify(messageLogic, never()).sendMessageWithUploadedAttachments(any(), any())
+                assertThat(transport.uploadCalls).isEmpty()
+            } finally {
+                releaseUpdate.complete(Unit)
+                work.cancelAndJoin()
+            }
+        }
+
+    @Test
+    fun `server cleanup waits for worker cancellation before deleting message rows`() =
+        runBlocking<Unit> {
+            val attachment = attachment()
+            val pending = createMessage(createdAt = 1L, tid = attachment.messageTid).copy(
+                deliveryStatus = MessageDeliveryStatus.Pending,
+                attachments = listOf(attachment),
+            )
+            val messageDao = mock<MessageDao>()
+            whenever(messageDao.getPendingMessagesByChannelIds(listOf(0L)))
+                .thenReturn(listOf(pending.toMessageDb(false)))
+            val stopped = SettableFuture.create<Operation.State.SUCCESS>()
+            val cancellation = mock<Operation>()
+            whenever(cancellation.result).thenReturn(stopped)
+            whenever(workManager.cancelAllWorkByTag(attachment.messageTid.toString()))
+                .thenReturn(cancellation)
+            val cleanup = testScope.async {
+                channelLogic(messageDao, mock()).onChannelEvent(
+                    ChannelActionEvent.ClearedHistory(createChannel(0L, 0L, 0L)),
+                )
+            }
+
+            try {
+                assertThat(cleanup.isCompleted).isFalse()
+                verify(messageDao, never()).deleteAllMessagesByChannel(0L)
+
+                stopped.set(Operation.SUCCESS)
+                cleanup.await()
+
+                verify(messageDao).deleteAllMessagesByChannel(0L)
+                assertThat(service.getTasks()).isEmpty()
+            } finally {
+                stopped.set(Operation.SUCCESS)
+                cleanup.cancelAndJoin()
+            }
+        }
+
+    @Test
+    fun `channel cleanup starts file worker cancellations together and skips text only messages`() =
+        runBlocking<Unit> {
+            val channelId = 7L
+            val first = localAttachment()
+            val second = first.copy(messageTid = 11L)
+            val textTid = 12L
+            val messageDao = mock<MessageDao>()
+            val pending = listOf(first, second).map {
+                createMessage(createdAt = 1L, tid = it.messageTid).copy(
+                    channelId = channelId,
+                    deliveryStatus = MessageDeliveryStatus.Pending,
+                    attachments = listOf(it),
+                ).toMessageDb(false)
+            } + createMessage(createdAt = 1L, tid = textTid).copy(
+                channelId = channelId,
+                deliveryStatus = MessageDeliveryStatus.Pending,
+                attachments = emptyList(),
+            ).toMessageDb(false)
+            whenever(messageDao.getPendingMessagesByChannelIds(listOf(channelId))).thenReturn(
+                pending
+            )
+            val stopped = SettableFuture.create<Operation.State.SUCCESS>()
+            val cancellation = mock<Operation>()
+            whenever(cancellation.result).thenReturn(stopped)
+            whenever(workManager.cancelAllWorkByTag(first.messageTid.toString()))
+                .thenReturn(cancellation)
+            val cleanup = testScope.async {
+                channelLogic(messageDao, mock()).onChannelEvent(
+                    ChannelActionEvent.ClearedHistory(createChannel(channelId, 0L, 0L)),
+                )
+            }
+
+            try {
+                verify(workManager).cancelAllWorkByTag(second.messageTid.toString())
+                verify(workManager, never()).cancelAllWorkByTag(textTid.toString())
+                assertThat(cleanup.isCompleted).isFalse()
+            } finally {
+                stopped.set(Operation.SUCCESS)
+                withTimeout(5_000) { cleanup.await() }
+            }
+        }
+
+    @Test
+    fun `server history clear stops forward worker even without pending file uploads`() =
+        runBlocking<Unit> {
+            val channelId = 7L
+            val tid = 120L
+            val loaded = CompletableDeferred<Unit>()
+            val release = CompletableDeferred<Unit>()
+            whenever(messageLogic.getMessagesFromDbByTid(listOf(tid))).doSuspendableAnswer {
+                loaded.complete(Unit)
+                release.await()
+                listOf(createMessage(createdAt = 1L, tid = tid).copy(channelId = channelId))
+            }
+            val params = mock<WorkerParameters>()
+            whenever(params.inputData).thenReturn(
+                Data.Builder()
+                    .putLong(SendForwardMessagesWorkManager.CHANNEL_ID, channelId)
+                    .putLongArray(SendForwardMessagesWorkManager.MESSAGE_TID, longArrayOf(tid))
+                    .build()
+            )
+            val work = testScope.async { SendForwardMessagesWorker(context, params).doWork() }
+            assertThat(loaded.isCompleted).isTrue()
+            val cancellation = mock<Operation>()
+            whenever(cancellation.result).thenReturn(Futures.immediateFuture(Operation.SUCCESS))
+            whenever(workManager.cancelAllWorkByTag(channelId.toString())).thenAnswer {
+                work.cancel()
+                cancellation
+            }
+            val messageDao = mock<MessageDao>()
+            whenever(messageDao.getPendingMessagesByChannelIds(listOf(channelId)))
+                .thenReturn(emptyList())
+
+            try {
+                channelLogic(messageDao, mock()).onChannelEvent(
+                    ChannelActionEvent.ClearedHistory(createChannel(channelId, 0L, 0L)),
+                )
+                assertThat(work.isCancelled).isTrue()
+                release.complete(Unit)
+                verify(messageLogic, never()).sendMessageWithUploadedAttachments(any(), any())
+            } finally {
+                work.cancelAndJoin()
+            }
+        }
+
+    @Test
+    fun `worker cancellation failure still cancels the upload and clears message rows`() =
+        runBlocking<Unit> {
+            val attachment = localAttachment()
+            val work = testScope.async { worker(attachment).doWork() }
+            val call = transport.uploadCalls.single()
+            val messageDao = mock<MessageDao>()
+            val pending = checkNotNull(messageLogic.getMessageFromDbByTid(attachment.messageTid))
+            whenever(messageDao.getPendingMessagesByChannelIds(listOf(0L)))
+                .thenReturn(listOf(pending.toMessageDb(false)))
+            val cancellation = mock<Operation>()
+            whenever(cancellation.result)
+                .thenReturn(Futures.immediateFailedFuture(IllegalStateException("cancel failed")))
+            whenever(workManager.cancelAllWorkByTag(attachment.messageTid.toString()))
+                .thenReturn(cancellation)
+
+            channelLogic(messageDao, mock()).onChannelEvent(
+                ChannelActionEvent.ClearedHistory(createChannel(0L, 0L, 0L)),
+            )
+
+            assertThat(call.cancelled).isTrue()
+            assertThat(work.isCompleted).isTrue()
+            assertThat(service.findTransferTask(attachment)).isNull()
+            verify(messageDao).deleteAllMessagesByChannel(0L)
+            verify(messageLogic, never()).sendMessageWithUploadedAttachments(any(), any())
+        }
+
+    private fun channelLogic(
+        messageDao: MessageDao,
+        repository: ChannelsRepository,
+        channelDao: ChannelDao = mock(),
+    ) =
+        PersistenceChannelsLogicImpl(
+            context = context,
+            channelsRepository = repository,
+            channelDao = channelDao,
+            globalSearchDao = mock(),
+            usersDao = mock(),
+            messageDao = messageDao,
+            rangeDao = mock(),
+            draftMessageDao = mock(),
+            chatUserReactionDao = mock(),
+            pendingReactionDao = mock(),
+            channelsCache = ChannelsCache(),
+            channelSyncStateStore = mock(),
+            pendingChannelCoordinator = mock(),
+            insertChannelWithMembersUseCase = mock(),
+        )
+
+    @Test
+    fun `explicit resume after process restart starts a fresh shared upload`() {
+        val attachment = localAttachment().copy(transferState = TransferState.PauseUpload)
+        val worker = worker(attachment, resume = true, shared = true)
+        val work = testScope.async { worker.doWork() }
+
+        assertThat(transport.uploadCalls).hasSize(1)
+        assertThat(transport.uploadCalls.single().request.isSharedUpload).isTrue()
+        transport.uploadCalls.single().succeed("fresh-url")
+
+        assertThat(work.isCompleted).isTrue()
+        assertSentUrl(attachment, "fresh-url")
+    }
+
+    @Test
+    fun `offline upload failure queues the pending attachment retry`() = runBlocking<Unit> {
+        setNetwork()
+        val attachment = localAttachment()
+        val work = testScope.async { worker(attachment).doWork() }
+
+        transport.uploadCalls.single().interrupt()
+
+        assertThat(work.await()).isEqualTo(ListenableWorker.Result.success())
+        val request = argumentCaptor<OneTimeWorkRequest>()
+        verify(workManager).enqueueUniqueWork(
+            eq(PENDING_ATTACHMENT_RETRY),
+            eq(ExistingWorkPolicy.REPLACE),
+            request.capture(),
+        )
+        val workSpec = request.firstValue.workSpec
+        assertThat(workSpec.workerClassName).isEqualTo(PendingAttachmentRetryWorker::class.java.name)
+        assertThat(workSpec.constraints.requiredNetworkType).isEqualTo(NetworkType.CONNECTED)
+        assertThat(request.firstValue.tags).contains(SceytConstants.SCEYT_WORKER_TAG)
+    }
+
+    @Test
+    fun `online upload failure does not queue the pending attachment retry`() = runBlocking<Unit> {
+        val attachment = localAttachment()
+        val work = testScope.async { worker(attachment).doWork() }
+
+        transport.uploadCalls.single().interrupt()
+
+        assertThat(work.await()).isEqualTo(ListenableWorker.Result.success())
+        verify(workManager, never()).enqueueUniqueWork(any(), any(), any<OneTimeWorkRequest>())
+    }
+
+    @Test
+    fun `network without validation counts as offline on Android 8 and later`() = runBlocking<Unit> {
+        setNetwork(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+        val attachment = localAttachment()
+        val work = testScope.async { worker(attachment).doWork() }
+
+        transport.uploadCalls.single().interrupt()
+
+        work.await()
+        verify(workManager).enqueueUniqueWork(eq(PENDING_ATTACHMENT_RETRY), any(), any<OneTimeWorkRequest>())
+    }
+
+    @Test
+    @Config(sdk = [24])
+    fun `connected network without validation counts as online before Android 8`() = runBlocking<Unit> {
+        setNetwork(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+        val attachment = localAttachment()
+        val work = testScope.async { worker(attachment).doWork() }
+
+        transport.uploadCalls.single().interrupt()
+
+        work.await()
+        verify(workManager, never()).enqueueUniqueWork(any(), any(), any<OneTimeWorkRequest>())
+    }
+
+    @Test
+    fun `offline connection failure queues the pending attachment retry`() = runBlocking<Unit> {
+        setNetwork()
+        SceytChatUIKit.chatConnectionProvider = ChatConnectionProvider {
+            Result.failure(IllegalStateException("No network"))
+        }
+        val attachment = localAttachment()
+        val work = testScope.async { worker(attachment).doWork() }
+
+        transport.uploadCalls.single().succeed("uploaded-url")
+
+        work.await()
+        verify(messageLogic, never()).sendMessageWithUploadedAttachments(any(), any())
+        verify(workManager).enqueueUniqueWork(eq(PENDING_ATTACHMENT_RETRY), any(), any<OneTimeWorkRequest>())
+    }
+
+    @Test
+    fun `offline send failure queues the pending attachment retry`() = runBlocking<Unit> {
+        setNetwork()
+        whenever(messageLogic.sendMessageWithUploadedAttachments(any(), any())).thenReturn(SceytResponse.Error())
+        val attachment = localAttachment()
+        val work = testScope.async { worker(attachment).doWork() }
+
+        transport.uploadCalls.single().succeed("uploaded-url")
+
+        work.await()
+        verify(workManager).enqueueUniqueWork(eq(PENDING_ATTACHMENT_RETRY), any(), any<OneTimeWorkRequest>())
+    }
+
+    @Test
+    fun `foreground start restriction still uploads and sends`() = runBlocking<Unit> {
+        val updater = failingForegroundUpdater(ForegroundServiceStartNotAllowedException("Not allowed"))
+        val attachment = localAttachment()
+        val work = testScope.async { worker(attachment, foregroundUpdater = updater).doWork() }
+
+        transport.uploadCalls.single().succeed("uploaded-url")
+
+        assertThat(work.await()).isEqualTo(ListenableWorker.Result.success())
+        verify(updater).setForegroundAsync(any(), any(), any())
+        assertSentUrl(attachment, "uploaded-url")
+    }
+
+    @Test
+    fun `other foreground errors still fail the worker`() = runBlocking<Unit> {
+        val updater = failingForegroundUpdater(IllegalStateException("Invalid foreground type"))
+        val worker = worker(localAttachment(), foregroundUpdater = updater)
+
+        val error = runCatching { worker.doWork() }.exceptionOrNull()
+
+        assertThat(error).isInstanceOf(IllegalStateException::class.java)
+        assertThat(error).isNotInstanceOf(ForegroundServiceStartNotAllowedException::class.java)
+        assertThat(transport.uploadCalls).isEmpty()
+    }
+
+    @Test
+    fun `system stop keeps the upload running`() = runBlocking<Unit> {
+        val attachment = localAttachment()
+        val worker = worker(attachment)
+        val work = testScope.async { worker.doWork() }
+        val call = transport.uploadCalls.single()
+
+        worker.stop(WorkInfo.STOP_REASON_TIMEOUT)
+        work.cancelAndJoin()
+
+        assertThat(call.cancelled).isFalse()
+        assertThat(service.findTransferTask(attachment)).isNotNull()
+    }
+
+    @Test
+    @Config(sdk = [24])
+    fun `system stop cancels the upload before Android 12`() = runBlocking<Unit> {
+        val attachment = localAttachment()
+        val worker = worker(attachment)
+        val work = testScope.async { worker.doWork() }
+        val call = transport.uploadCalls.single()
+
+        worker.stop(WorkInfo.STOP_REASON_TIMEOUT)
+        work.cancelAndJoin()
+
+        assertThat(call.cancelled).isTrue()
+        assertThat(service.findTransferTask(attachment)).isNull()
+    }
+
+    @Test
+    fun `app cancellation still cancels the upload`() = runBlocking<Unit> {
+        val attachment = localAttachment()
+        val worker = worker(attachment)
+        val work = testScope.async { worker.doWork() }
+        val call = transport.uploadCalls.single()
+
+        worker.stop(WorkInfo.STOP_REASON_CANCELLED_BY_APP)
+        work.cancelAndJoin()
+
+        assertThat(call.cancelled).isTrue()
+        assertThat(service.findTransferTask(attachment)).isNull()
+    }
+
+    private fun failingForegroundUpdater(error: Throwable): ForegroundUpdater {
+        shadowOf(RuntimeEnvironment.getApplication())
+            .grantPermissions(android.Manifest.permission.FOREGROUND_SERVICE)
+        val channelLogic = SceytKoinApp.koinApp!!.koin.get<PersistenceChannelsLogic>()
+        runBlocking {
+            whenever(channelLogic.getChannelFromDb(any())).thenReturn(createChannel(0L, 0L, 0L))
+        }
+        val updater = mock<ForegroundUpdater>()
+        whenever(updater.setForegroundAsync(any(), any(), any())).thenReturn(Futures.immediateFailedFuture(error))
+        return updater
+    }
+
+    private fun setNetwork(vararg capabilities: Int) {
+        val connectivityManager = context.getSystemService(ConnectivityManager::class.java)
+        val networkCapabilities = ShadowNetworkCapabilities.newInstance()
+        capabilities.forEach { shadowOf(networkCapabilities).addCapability(it) }
+        shadowOf(connectivityManager).setNetworkCapabilities(connectivityManager.activeNetwork, networkCapabilities)
+    }
+
+    private fun localAttachment(): SceytAttachment {
+        val file = File(context.cacheDir, "worker-upload.txt").apply { writeText("test") }
+        return attachment(filePath = file.path, url = null)
+    }
+
+    private fun preparedVideo(): SceytAttachment {
+        SceytChatUIKit.fileTransfer.encryptionEnabled = true
+        val original = File(context.cacheDir, "preview-original.mp4").apply { writeText("source video") }
+        val prepared = File(context.cacheDir, "preview-prepared.mp4").apply { writeText("prepared video") }
+        return attachment(
+            type = AttachmentTypeEnum.Video.value,
+            fileSize = prepared.length(),
+            url = null,
+            filePath = prepared.path,
+            originalFilePath = original.path,
+        )
+    }
+
+    private fun previewAttachment(video: SceytAttachment, url: String) = attachment(
+        messageTid = video.messageTid,
+        name = "preview.jpg",
+        type = AttachmentTypeEnum.Preview.value,
+        url = url,
+        filePath = File(context.cacheDir, "preview.jpg").path,
+    )
+
+    private fun assertSentAttachments(
+        attachment: SceytAttachment,
+        vararg expected: Pair<String, AttachmentTypeEnum>,
+    ) = runBlocking {
+        val message = argumentCaptor<Message>()
+        verify(messageLogic).sendMessageWithUploadedAttachments(eq(0L), message.capture())
+        assertThat(message.firstValue.tid).isEqualTo(attachment.messageTid)
+        assertThat(message.firstValue.attachments.map { it.url to it.type })
+            .containsExactlyElementsIn(expected.map { it.first to it.second.value })
+            .inOrder()
+    }
+
+    private fun worker(
+        attachment: SceytAttachment,
+        resume: Boolean = false,
+        shared: Boolean = false,
+        runAttemptCount: Int = 0,
+        channelId: Long = 0L,
+        extraAttachments: List<SceytAttachment> = emptyList(),
+        viewOnce: Boolean = false,
+        foregroundUpdater: ForegroundUpdater? = null,
+    ): UploadAndSendAttachmentWorker {
+        val message = createMessage(createdAt = 1L, tid = attachment.messageTid).copy(
+            channelId = channelId,
+            viewOnce = viewOnce,
+            deliveryStatus = MessageDeliveryStatus.Pending,
+            attachments = listOf(attachment) + extraAttachments,
+        )
+        runBlocking {
+            whenever(messageLogic.getMessageFromDbByTid(attachment.messageTid)).thenReturn(message)
+        }
+        val params = mock<WorkerParameters>()
+        whenever(params.inputData).thenReturn(
+            Data.Builder()
+                .putLong(MESSAGE_TID, attachment.messageTid)
+                .putBoolean(RESUME_PAUSED_UPLOAD, resume)
+                .putBoolean(IS_SHARING, shared)
+                .build(),
+        )
+        whenever(params.runAttemptCount).thenReturn(runAttemptCount)
+        whenever(params.id).thenReturn(UUID.randomUUID())
+        foregroundUpdater?.let { whenever(params.foregroundUpdater).thenReturn(it) }
+        return UploadAndSendAttachmentWorker(context, params)
+    }
+
+    private fun assertSentUrl(
+        attachment: SceytAttachment,
+        url: String,
+        channelId: Long = 0L
+    ) = runBlocking {
+        val message = argumentCaptor<Message>()
+        verify(messageLogic).sendMessageWithUploadedAttachments(eq(channelId), message.capture())
+        assertThat(message.firstValue.tid).isEqualTo(attachment.messageTid)
+        assertThat(message.firstValue.attachments.single().url).isEqualTo(url)
+    }
+}

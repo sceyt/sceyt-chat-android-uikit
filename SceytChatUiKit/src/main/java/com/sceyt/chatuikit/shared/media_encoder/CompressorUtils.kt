@@ -14,9 +14,6 @@ import kotlin.math.roundToInt
 
 object CompressorUtils {
 
-    private const val MIN_HEIGHT = 640.0
-    private const val MIN_WIDTH = 368.0
-
     // 10 seconds between I-frames
     private const val I_FRAME_INTERVAL = 10
 
@@ -198,26 +195,34 @@ object CompressorUtils {
         }
     }
 
+    internal fun shouldResizeVideo(
+            width: Double,
+            height: Double,
+            shortSideThreshold: Int,
+    ) = width > shortSideThreshold && height > shortSideThreshold
+
     /**
      * Generate new width and height for source file
      * @param width file's original width
      * @param height file's original height
+     * @param shortSideThreshold target size of the shorter side
      * @return new width and height pair
      */
     fun generateWidthAndHeight(
             width: Double,
-            height: Double
+            height: Double,
+            shortSideThreshold: Int = TranscoderConfiguration.DEFAULT_SHORT_SIDE_THRESHOLD
     ): Pair<Int, Int> {
 
         val newWidth: Int
         val newHeight: Int
 
         if (width > height) {
-            newHeight = 480
-            newWidth = (480 * width / height / 16).roundToInt() * 16
+            newHeight = shortSideThreshold
+            newWidth = (shortSideThreshold * width / height / 16).roundToInt() * 16
         } else {
-            newWidth = 480
-            newHeight = (480 * height / width / 16).roundToInt() * 16
+            newWidth = shortSideThreshold
+            newHeight = (shortSideThreshold * height / width / 16).roundToInt() * 16
         }
 
         /* when {

@@ -8,6 +8,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
@@ -38,6 +40,14 @@ inline fun <T> CancellableContinuation<T>.safeResume(value: T, onFailure: () -> 
     } catch (_: Exception) {
         onFailure()
     }
+}
+
+/** Captures block failures, but propagates cancellation of the calling coroutine. */
+internal suspend fun <T> runCatchingCancellable(block: suspend () -> T): Result<T> = try {
+    Result.success(block())
+} catch (error: Throwable) {
+    currentCoroutineContext().ensureActive()
+    Result.failure(error)
 }
 
 fun <T> MutableLiveData<T>.asLiveData(): LiveData<T> {

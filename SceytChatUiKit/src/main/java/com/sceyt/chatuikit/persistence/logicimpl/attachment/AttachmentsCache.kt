@@ -8,6 +8,9 @@ import com.sceyt.chatuikit.persistence.differs.diffBetweenServerData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 import com.sceyt.chatuikit.persistence.file_transfer.TransferStateValidator
+import com.sceyt.chatuikit.persistence.mappers.isLink
+import com.sceyt.chatuikit.persistence.mappers.isPreview
+import com.sceyt.chatuikit.persistence.mappers.isTransferTracked
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -135,8 +138,11 @@ class AttachmentsCache {
 
             cachedAttachments.values.forEach {
                 it[updateDate.messageTid]?.let { attachment ->
-                    if (attachment.type == AttachmentTypeEnum.Link.value)
+                    if (attachment.isLink())
                         return@withLock
+
+                    if (attachment.isPreview())
+                        return@let
 
                     when (updateDate.state) {
                         TransferState.PendingUpload, TransferState.Uploading, TransferState.Uploaded,
@@ -221,7 +227,7 @@ class AttachmentsCache {
     private fun updateAttachmentsPayLoads(data: AttachmentPayLoadData?,
                                           attachment: SceytAttachment,
                                           linkPreviewDetails: LinkPreviewDetails?): SceytAttachment {
-        if (attachment.type == AttachmentTypeEnum.Link.value || data == null) return attachment
+        if (!attachment.isTransferTracked() || data == null) return attachment
         return attachment.copy(
             transferState = data.transferState,
             progressPercent = data.progressPercent,

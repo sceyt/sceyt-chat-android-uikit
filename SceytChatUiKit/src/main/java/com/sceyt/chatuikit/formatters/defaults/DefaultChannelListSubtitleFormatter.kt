@@ -21,6 +21,7 @@ import com.sceyt.chatuikit.persistence.mappers.toSceytReaction
 import com.sceyt.chatuikit.presentation.extensions.isPending
 import com.sceyt.chatuikit.presentation.extensions.isSupportedType
 import com.sceyt.chatuikit.styles.channel.ChannelItemStyle
+import com.sceyt.chatuikit.persistence.mappers.withoutPreview
 
 open class DefaultChannelListSubtitleFormatter : Formatter<ChannelItemSubtitleFormatterAttributes> {
 
@@ -69,7 +70,7 @@ open class DefaultChannelListSubtitleFormatter : Formatter<ChannelItemSubtitleFo
         }
 
         val senderName = style.lastMessageSenderNameFormatter.format(context, channel)
-        val attachmentIcon = style.attachmentIcon(context, message.attachments?.firstOrNull())
+        val attachmentIcon = style.attachmentIcon(context, message.attachments?.withoutPreview()?.firstOrNull())
 
         return buildSpannedString {
             if (senderName.isNotEmpty()) {
@@ -115,7 +116,7 @@ open class DefaultChannelListSubtitleFormatter : Formatter<ChannelItemSubtitleFo
             )
         )
 
-        val attachmentIcon = style.attachmentIcon(context, message.attachments?.firstOrNull())
+        val attachmentIcon = style.attachmentIcon(context, message.attachments?.withoutPreview()?.firstOrNull())
         val reactedWord = context.getString(R.string.sceyt_reacted)
 
         val reactUserName = when {

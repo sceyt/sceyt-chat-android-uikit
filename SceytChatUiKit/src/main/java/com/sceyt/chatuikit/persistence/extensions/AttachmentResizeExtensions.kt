@@ -7,7 +7,7 @@ import com.sceyt.chatuikit.shared.media_encoder.TranscodeResultEnum.Failure
 import com.sceyt.chatuikit.shared.media_encoder.TranscodeResultEnum.Progress
 import com.sceyt.chatuikit.shared.media_encoder.TranscodeResultEnum.Start
 import com.sceyt.chatuikit.shared.media_encoder.TranscodeResultEnum.Success
-import com.sceyt.chatuikit.shared.media_encoder.VideoQuality
+import com.sceyt.chatuikit.config.VideoResizeConfig
 import com.sceyt.chatuikit.shared.media_encoder.VideoTranscodeData
 import com.sceyt.chatuikit.shared.media_encoder.VideoTranscodeHelper
 import com.sceyt.chatuikit.shared.utils.FileResizeUtil
@@ -36,23 +36,24 @@ fun resizeImage(
     }
 }
 
+/** Returns the unique destination identifying this request for cancellation, or null for an invalid path. */
 fun transcodeVideo(
     path: String?,
     parentDir: File,
-    quality: VideoQuality = VideoQuality.MEDIUM,
+    config: VideoResizeConfig = VideoResizeConfig.Medium,
     progressCallback: ((VideoTranscodeData) -> Unit)? = null,
     callback: (Result<String>) -> Unit
-) {
+): File? {
     if (path.isNullOrBlank()) {
         callback(Result.failure(Exception("Wrong file path")))
-        return
+        return null
     }
 
     val dest = File(parentDir, "${UUID.randomUUID()}${getMimeTypeTakeExtension(path)}")
     VideoTranscodeHelper.transcodeAsResultWithCallback(
         destination = dest,
         path = path,
-        quality = quality
+        config = config
     ) { data ->
         when (data.resultType) {
             Cancelled -> callback(Result.failure(Exception("Canceled")))
@@ -62,4 +63,5 @@ fun transcodeVideo(
             Start -> progressCallback?.invoke(data)
         }
     }
+    return dest
 }

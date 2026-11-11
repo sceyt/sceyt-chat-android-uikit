@@ -1,0 +1,249 @@
+package com.sceyt.chatuikit.persistence.logicimpl
+
+import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
+import com.sceyt.chatuikit.data.models.messages.SceytAttachment
+import com.sceyt.chatuikit.filetransfer.FileDownloadRequest
+import com.sceyt.chatuikit.filetransfer.FileTransferCallback
+import com.sceyt.chatuikit.filetransfer.FileTransferResult
+import com.sceyt.chatuikit.filetransfer.FileTransferProvider
+import com.sceyt.chatuikit.filetransfer.FileUploadRequest
+import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
+import com.sceyt.chatuikit.persistence.file_transfer.ThumbData
+import com.sceyt.chatuikit.persistence.file_transfer.TransferState
+import com.sceyt.chatuikit.persistence.file_transfer.TransferTask
+import com.sceyt.chatuikit.persistence.file_transfer.transferKey
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.CopyOnWriteArrayList
+
+internal class TestFileTransferService : FileTransferService {
+    private val tasks = ConcurrentHashMap<String, TransferTask>()
+
+    override fun upload(
+        attachment: SceytAttachment,
+        shared: Boolean,
+        configureTask: TransferTask.() -> Unit,
+    ) = startTask(attachment, configureTask)
+
+    override fun download(
+        attachment: SceytAttachment,
+        configureTask: TransferTask.() -> Unit,
+    ) = startTask(attachment, configureTask)
+
+    override fun findOrCreateTransferTask(attachment: SceytAttachment): TransferTask {
+        return tasks.getOrPut(attachment.transferKey) {
+            TransferTask(attachment, attachment.messageTid, attachment.transferState)
+        }
+    }
+
+    override fun findTransferTask(attachment: SceytAttachment): TransferTask? {
+        return tasks[attachment.transferKey]
+    }
+
+    override fun removeTransferTask(task: TransferTask) {
+        tasks.entries.removeIf { it.value === task }
+    }
+
+    override fun getTasks(): Map<String, TransferTask> = tasks
+
+    override fun clearPreparingThumbPaths() = Unit
+
+    override fun cancelAllTransfers() {
+        tasks.clear()
+    }
+
+    override fun pause(messageTid: Long, attachment: SceytAttachment, state: TransferState) = Unit
+
+    override fun cancelUpload(attachment: SceytAttachment) {
+        findTransferTask(attachment)?.let { task ->
+            removeTransferTask(task)
+            task.complete(Result.failure(CancellationException("Attachment upload cancelled")))
+        }
+    }
+
+    override fun resume(
+        messageTid: Long,
+        attachment: SceytAttachment,
+        state: TransferState,
+        channelId: Long?
+    ) = Unit
+
+    override fun redownload(attachment: SceytAttachment) = Unit
+
+    override fun getThumb(
+        messageTid: Long,
+        attachment: SceytAttachment,
+        thumbData: ThumbData
+    ) = Unit
+
+    fun registerTask(task: TransferTask) {
+        tasks.putIfAbsent(task.attachment.transferKey, task)
+    }
+
+    fun addTransferTask(task: TransferTask) {
+        registerTask(task)
+    }
+
+    private fun startTask(
+        attachment: SceytAttachment,
+        configureTask: TransferTask.() -> Unit,
+    ): TransferTask {
+        return findOrCreateTransferTask(attachment).apply(configureTask)
+    }
+}
+
+internal class RecordingFileTransferProvider : FileTransferProvider {
+    class UploadCall(
+        val request: FileUploadRequest,
+        private val callback: FileTransferCallback,
+    ) {
+        val result = CompletableDeferred<FileTransferResult<String>>()
+
+        @Volatile
+        var cancelled = false
+
+        fun progress(progressPercent: Float) {
+            callback.onProgress(progressPercent)
+        }
+
+        fun interrupt(error: Throwable = java.io.IOException("Network interrupted")) {
+            result.complete(FileTransferResult.Interrupted(error))
+        }
+
+        fun succeed(remoteReference: String) {
+            result.complete(FileTransferResult.Success(remoteReference))
+        }
+
+        fun fail(error: Throwable) {
+            result.complete(FileTransferResult.Failure(error))
+        }
+    }
+
+    class DownloadCall(
+        val request: FileDownloadRequest,
+        private val callback: FileTransferCallback,
+    ) {
+        val result = CompletableDeferred<FileTransferResult<String>>()
+
+        @Volatile
+        var cancelled = false
+
+        fun progress(progressPercent: Float) {
+            callback.onProgress(progressPercent)
+        }
+
+        fun interrupt(error: Throwable = java.io.IOException("Network interrupted")) {
+            result.complete(FileTransferResult.Interrupted(error))
+        }
+
+        fun succeed(localPath: String) {
+            result.complete(FileTransferResult.Success(localPath))
+        }
+
+        fun fail(error: Throwable) {
+            result.complete(FileTransferResult.Failure(error))
+        }
+    }
+
+    val uploadCalls = CopyOnWriteArrayList<UploadCall>()
+    val downloadCalls = CopyOnWriteArrayList<DownloadCall>()
+    val pauseCalls = CopyOnWriteArrayList<String>()
+    val resumeCalls = CopyOnWriteArrayList<String>()
+    val cancelCalls = CopyOnWriteArrayList<String>()
+    var uploadCancellationGate: CompletableDeferred<Unit>? = null
+    var downloadCancellationGate: CompletableDeferred<Unit>? = null
+    var pauseResult = false
+    var resumeResult = false
+    var onPrepareUpload: suspend (FileUploadRequest) -> Map<String, String> = { emptyMap() }
+
+    override suspend fun prepareUpload(request: FileUploadRequest): Map<String, String> =
+        onPrepareUpload(request)
+
+    override suspend fun upload(
+        request: FileUploadRequest,
+        callback: FileTransferCallback,
+    ): FileTransferResult<String> {
+        val call = UploadCall(request, callback)
+        uploadCalls += call
+        return try {
+            call.result.await()
+        } catch (error: CancellationException) {
+            call.cancelled = true
+            uploadCancellationGate?.let { gate ->
+                withContext(NonCancellable) {
+                    gate.await()
+                }
+            }
+            throw error
+        }
+    }
+
+    override suspend fun download(
+        request: FileDownloadRequest,
+        callback: FileTransferCallback,
+    ): FileTransferResult<String> {
+        val call = DownloadCall(request, callback)
+        downloadCalls += call
+        return try {
+            call.result.await()
+        } catch (error: CancellationException) {
+            call.cancelled = true
+            downloadCancellationGate?.let { gate ->
+                withContext(NonCancellable) {
+                    gate.await()
+                }
+            }
+            throw error
+        }
+    }
+
+    override fun pause(operationId: String): Boolean {
+        pauseCalls += operationId
+        return pauseResult
+    }
+
+    override fun resume(operationId: String): Boolean {
+        resumeCalls += operationId
+        return resumeResult
+    }
+
+    override fun cancel(operationId: String) {
+        cancelCalls += operationId
+    }
+}
+
+internal fun attachment(
+    messageTid: Long = 10L,
+    name: String = "attachment.txt",
+    type: String = AttachmentTypeEnum.File.value,
+    fileSize: Long = 4L,
+    url: String? = "https://cdn.test/attachment.txt",
+    filePath: String? = "/tmp/attachment.txt",
+    originalFilePath: String? = filePath,
+    state: TransferState? = TransferState.PendingUpload,
+): SceytAttachment {
+    return SceytAttachment(
+        id = messageTid,
+        messageId = messageTid,
+        messageTid = messageTid,
+        userId = null,
+        name = name,
+        type = type,
+        metadata = null,
+        fileSize = fileSize,
+        createdAt = 1_000L,
+        url = url,
+        filePath = filePath,
+        transferState = state,
+        progressPercent = 0f,
+        originalFilePath = originalFilePath,
+        linkPreviewDetails = null,
+    )
+}
+
+internal fun transferTask(attachment: SceytAttachment): TransferTask {
+    return TransferTask(attachment, attachment.messageTid, attachment.transferState)
+}

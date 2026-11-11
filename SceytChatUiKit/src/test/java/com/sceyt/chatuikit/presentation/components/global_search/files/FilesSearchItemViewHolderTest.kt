@@ -200,7 +200,7 @@ class FilesSearchItemViewHolderTest {
         fileNameTextStyle = TextStyle(),
         subtitleTextStyle = TextStyle(),
         mediaLoaderStyle = MediaLoaderStyle(),
-        fileNameFormatter = { _, attachment -> attachment.name.orEmpty() },
+        fileNameFormatter = { _, attachment -> attachment.name },
         subtitleFormatter = { _, _ -> IDLE_SUBTITLE },
         iconProvider = { _, _ -> null },
     )

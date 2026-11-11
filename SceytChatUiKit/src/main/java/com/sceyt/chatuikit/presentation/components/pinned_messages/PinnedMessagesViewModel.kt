@@ -158,10 +158,7 @@ class PinnedMessagesViewModel(
         val attachment = data.item
         viewModelScope.launch(Dispatchers.IO) {
             when (data) {
-                is NeedMediaInfoData.NeedDownload -> fileTransferService.download(
-                    attachment = attachment,
-                    transferTask = fileTransferService.findOrCreateTransferTask(attachment)
-                )
+                is NeedMediaInfoData.NeedDownload -> fileTransferService.download(attachment)
 
                 is NeedMediaInfoData.NeedThumb -> fileTransferService.getThumb(
                     attachment.messageTid, attachment, data.thumbData

@@ -3,15 +3,33 @@ package com.sceyt.chatuikit.persistence.file_transfer
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 
 class TransferTask(
-        attachment: SceytAttachment,
-        val messageTid: Long,
-        var state: TransferState?,
+    attachment: SceytAttachment,
+    val messageTid: Long,
+    state: TransferState?,
 ) {
     @Volatile
     private var _attachment: SceytAttachment = attachment
-    
+
     @PublishedApi
     internal val lock = Any()
+
+    @Volatile
+    var state: TransferState? = state
+        set(value) {
+            synchronized(lock) {
+                field = value
+            }
+        }
+
+    // Remember sharing before a paused upload has joined its shared group.
+    internal var isSharedUpload = false
+
+    // Cancellation can arrive before this task reaches the upload command queue.
+    @Volatile
+    internal var isCancelled = false
+
+    @Volatile
+    internal var encryptionMetadata: Map<String, String>? = null
 
     var attachment: SceytAttachment
         get() = _attachment
@@ -61,7 +79,33 @@ class TransferTask(
 
     val onCompletionListeners: HashMap<String, (Result<SceytAttachment>) -> Unit> by lazy { hashMapOf() }
 
-    fun addOnCompletionListener(key: String, listener: (Result<SceytAttachment>) -> Unit) {
-        onCompletionListeners[key] = listener
+    /**
+     * Adds a one-shot listener for transfer completion.
+     * Pausing an upload also notifies current listeners with a failure so its worker can finish;
+     * the attachment's paused transfer remains available for resume.
+     */
+    fun addOnCompletionListener(
+        key: String,
+        listener: (Result<SceytAttachment>) -> Unit,
+    ) {
+        synchronized(onCompletionListeners) {
+            onCompletionListeners[key] = listener
+        }
+    }
+
+    fun removeOnCompletionListener(key: String) {
+        synchronized(onCompletionListeners) {
+            onCompletionListeners.remove(key)
+        }
+    }
+
+    internal fun complete(result: Result<SceytAttachment>) {
+        val listeners = synchronized(onCompletionListeners) {
+            onCompletionListeners.values.toList().also {
+                onCompletionListeners.clear()
+            }
+        }
+
+        listeners.forEach { it(result) }
     }
 }
