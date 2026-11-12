@@ -12,10 +12,11 @@ import android.system.ErrnoException
 import android.system.OsConstants
 import android.view.View
 import android.widget.TextView
-import androidx.appcompat.app.AlertDialog
+import androidx.core.view.isVisible
 import com.google.common.truth.Truth.assertThat
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
+import com.sceyt.chatuikit.presentation.common.dialogs.SceytDialog
 import com.sceyt.chatuikit.presentation.components.media.adapter.MediaItem
 import org.junit.Rule
 import org.junit.Test
@@ -156,10 +157,15 @@ class MediaPreviewGallerySaveTest {
 
         activity.saveToGallery(item)
 
-        val dialog = ShadowDialog.getLatestDialog() as AlertDialog
+        val dialog = ShadowDialog.getLatestDialog() as SceytDialog
         assertThat(dialog.isShowing).isTrue()
-        assertThat(dialog.findViewById<TextView>(android.R.id.message)?.text.toString())
+        assertThat(dialog.findViewById<TextView>(R.id.textTitle).text.toString())
+            .isEqualTo(activity.getString(R.string.sceyt_storage_full_title))
+        assertThat(dialog.findViewById<TextView>(R.id.textDescription).text.toString())
             .isEqualTo(activity.getString(R.string.sceyt_media_save_storage_full))
+        assertThat(dialog.findViewById<TextView>(R.id.buttonAccept).text.toString())
+            .isEqualTo(activity.getString(R.string.sceyt_ok))
+        assertThat(dialog.findViewById<View>(R.id.buttonCancel).isVisible).isFalse()
         assertThat(ShadowToast.getLatestToast()).isNull()
         verify(provider).delete(destination, null, null)
     }
