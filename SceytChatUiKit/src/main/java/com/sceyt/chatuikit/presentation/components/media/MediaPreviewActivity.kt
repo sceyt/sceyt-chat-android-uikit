@@ -17,7 +17,6 @@ import android.view.View
 import android.view.Window
 import android.widget.Toast
 import androidx.activity.viewModels
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ShareCompat
 import androidx.core.view.ViewCompat
@@ -54,6 +53,7 @@ import com.sceyt.chatuikit.extensions.transitionListener
 import com.sceyt.chatuikit.navigation.Destination
 import com.sceyt.chatuikit.navigation.navigate
 import com.sceyt.chatuikit.persistence.extensions.safeResume
+import com.sceyt.chatuikit.presentation.common.dialogs.SceytDialog
 import com.sceyt.chatuikit.presentation.components.media.adapter.MediaAdapter
 import com.sceyt.chatuikit.presentation.components.media.adapter.MediaFilesViewHolderFactory
 import com.sceyt.chatuikit.presentation.components.media.adapter.MediaItem
@@ -83,7 +83,7 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
     protected var currentItem: MediaItem? = null
     protected var showInChatChannel: SceytChannel? = null
     protected var sharedTransitionStarted = false
-    private var storageFullDialog: AlertDialog? = null
+    private var storageFullDialog: SceytDialog? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         if (launchedWithSharedTransition()) {
@@ -429,18 +429,28 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
             MediaGallerySaver.save(this, path, file.name, getMimeTypeFrom(file))
         } ?: GallerySaveResult.Failed
         when (result) {
-            is GallerySaveResult.Saved -> Toast.makeText(this, R.string.sceyt_saved, Toast.LENGTH_SHORT).show()
-            GallerySaveResult.StorageFull -> showStorageFullDialog()
-            GallerySaveResult.Failed -> Toast.makeText(this, R.string.sceyt_media_save_failed, Toast.LENGTH_SHORT).show()
+            is GallerySaveResult.Saved -> {
+                Toast.makeText(this, R.string.sceyt_saved, Toast.LENGTH_SHORT).show()
+            }
+
+            GallerySaveResult.StorageFull -> {
+                showStorageFullDialog()
+            }
+
+            GallerySaveResult.Failed -> {
+                Toast.makeText(this, R.string.sceyt_media_save_failed, Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
     private fun showStorageFullDialog() {
-        storageFullDialog = AlertDialog.Builder(this)
-            .setTitle(R.string.sceyt_storage_full_title)
-            .setMessage(R.string.sceyt_media_save_storage_full)
-            .setPositiveButton(R.string.sceyt_ok, null)
-            .show()
+        storageFullDialog = SceytDialog(this).apply {
+            setTitle(getString(R.string.sceyt_storage_full_title))
+            setDescription(getString(R.string.sceyt_media_save_storage_full))
+            setPositiveButtonTitle(getString(R.string.sceyt_ok))
+            hideNegativeButton()
+            show()
+        }
     }
 
     protected open fun getMimeTypeFrom(file: SceytAttachment): String {
