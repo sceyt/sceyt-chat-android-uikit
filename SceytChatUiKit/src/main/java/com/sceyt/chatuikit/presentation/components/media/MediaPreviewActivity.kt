@@ -53,6 +53,7 @@ import com.sceyt.chatuikit.extensions.transitionListener
 import com.sceyt.chatuikit.navigation.Destination
 import com.sceyt.chatuikit.navigation.navigate
 import com.sceyt.chatuikit.persistence.extensions.safeResume
+import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.presentation.common.dialogs.SceytDialog
 import com.sceyt.chatuikit.presentation.components.media.adapter.MediaAdapter
 import com.sceyt.chatuikit.presentation.components.media.adapter.MediaFilesViewHolderFactory
@@ -213,8 +214,9 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
     protected open fun initMediaAdapter(data: List<MediaItem>) {
         mediaAdapter = MediaAdapter(
             attachmentViewHolderFactory = MediaFilesViewHolderFactory(this, style).also {
-                it.setNeedMediaDataCallback { infoData -> viewModel.needMediaInfo(infoData) }
+                it.setNeedMediaDataCallback { infoData -> onNeedMediaInfo(infoData) }
                 it.setClickListener { onMediaClick() }
+                it.setLoaderClickListener { item -> onAttachmentLoaderClick(item) }
             },
             scope = lifecycleScope,
         ).also { adapter ->
@@ -253,6 +255,14 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
                 }
             })
         }
+    }
+
+    protected open fun onNeedMediaInfo(data: NeedMediaInfoData) {
+        viewModel.needMediaInfo(data)
+    }
+
+    protected open fun onAttachmentLoaderClick(item: MediaItem) {
+        viewModel.pauseOrResumeTransfer(item)
     }
 
     protected open fun keepTargetItemVisible() {

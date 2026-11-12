@@ -36,8 +36,10 @@ import com.sceyt.chatuikit.presentation.components.media.MediaPreviewActivity
 import com.sceyt.chatuikit.presentation.components.media.OnMediaClickCallback
 import com.sceyt.chatuikit.presentation.components.media.adapter.MediaAdapter
 import com.sceyt.chatuikit.presentation.components.media.adapter.MediaItem
+import com.sceyt.chatuikit.presentation.custom_views.CircularProgressView
 import com.sceyt.chatuikit.presentation.custom_views.PlayPauseImage
 import com.sceyt.chatuikit.presentation.helpers.ExoPlayerHelper
+import com.sceyt.chatuikit.styles.common.MediaLoaderStyle
 import com.sceyt.chatuikit.styles.preview.MediaPreviewStyle
 
 class MediaVideoViewHolder(
@@ -45,6 +47,7 @@ class MediaVideoViewHolder(
     private val style: MediaPreviewStyle,
     private val clickListeners: (MediaItem) -> Unit,
     private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
+    private val loaderClickListener: (MediaItem) -> Unit = {},
 ) : BaseFileViewHolder<MediaItem>(binding.root, needMediaDataCallback),
     SharedTransitionViewProvider {
     private var playerHelper: ExoPlayerHelper? = null
@@ -59,6 +62,10 @@ class MediaVideoViewHolder(
 
         binding.root.setOnClickListener {
             clickListeners.invoke(fileItem)
+        }
+
+        binding.progress.setOnClickListener {
+            loaderClickListener.invoke(fileItem)
         }
 
         binding.videoView.setOnClickListener {
@@ -167,7 +174,7 @@ class MediaVideoViewHolder(
     }
 
     override fun updateState(data: TransferData, isOnBind: Boolean) {
-        binding.progress.isVisible = data.state == Downloading || data.state == PendingDownload
+        super.updateState(data, isOnBind)
 
         when (data.state) {
             PendingUpload, ErrorUpload, PauseUpload -> {
@@ -182,8 +189,6 @@ class MediaVideoViewHolder(
             Downloading -> {
                 if (isOnBind)
                     viewHolderHelper.loadBlurThumb(imageView = binding.icThumb)
-
-                binding.progress.setProgress(data.progressPercent)
             }
 
             Uploading -> {
@@ -246,6 +251,9 @@ class MediaVideoViewHolder(
     }
 
     override fun needThumbFor() = ThumbFor.MediaPreview
+
+    override val loadingProgressViewWithStyle: Pair<CircularProgressView, MediaLoaderStyle>
+        get() = binding.progress to style.mediaLoaderStyle
 
     override fun provide() = binding.icThumb
 

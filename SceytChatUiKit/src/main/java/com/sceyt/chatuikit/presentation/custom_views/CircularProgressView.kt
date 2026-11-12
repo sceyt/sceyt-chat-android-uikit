@@ -324,6 +324,7 @@ class CircularProgressView @JvmOverloads constructor(
 
     fun setIcon(drawable: Drawable?) {
         centerIcon = drawable
+        initCenterIcon()
         invalidate()
     }
 
