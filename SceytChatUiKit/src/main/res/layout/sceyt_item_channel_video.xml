@@ -19,6 +19,24 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <com.sceyt.chatuikit.presentation.custom_views.CircularProgressView
+        android:id="@+id/loadProgress"
+        android:contentDescription="@string/sceyt_cd_load_channel_file"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:padding="2dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:sceytUiProgressBackgroundColor="@color/sceyt_color_overlay_background_2"
+        app:sceytUiProgressColor="@color/sceyt_color_on_primary"
+        app:sceytUiProgressIconSizeInPercent="60"
+        app:sceytUiProgressMinProgress="2"
+        app:sceytUiProgressTrackColor="@android:color/transparent"
+        tools:visibility="visible" />
+
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tvDuration"
         android:layout_width="wrap_content"
