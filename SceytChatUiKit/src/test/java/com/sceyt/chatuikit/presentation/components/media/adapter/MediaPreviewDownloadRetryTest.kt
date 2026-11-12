@@ -96,6 +96,22 @@ class MediaPreviewDownloadRetryTest {
         assertThat(clicked).containsExactly(item)
     }
 
+    @Test
+    fun `refresh shows a download that finished while the preview was in the background`() {
+        val preview = previewHolder(MediaFilesViewHolderFactory.ItemType.Image, mutableListOf())
+        val item = mediaItem(TransferState.Downloading, AttachmentTypeEnum.Image, MediaItemType.Image)
+        preview.holder.bind(item)
+        assertThat(preview.progress.isVisible).isTrue()
+
+        AttachmentTransferStateStore.put(
+            item.attachment.toTransferData(TransferState.Downloaded, 100f).copy(filePath = "/downloaded.jpg")
+        )
+        preview.holder.refreshTransferState()
+
+        assertThat(preview.progress.isVisible).isFalse()
+        assertThat(item.transferData?.state).isEqualTo(TransferState.Downloaded)
+    }
+
     private fun previewHolder(
         type: MediaFilesViewHolderFactory.ItemType,
         clicked: MutableList<MediaItem>,

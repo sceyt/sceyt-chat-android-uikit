@@ -101,6 +101,19 @@ class ChannelInfoMediaLoaderTest {
     }
 
     @Test
+    fun `failed upload keeps the upload icon after its thumbnail loads`() {
+        val binding = SceytItemChannelImageBinding.inflate(LayoutInflater.from(activity), FrameLayout(activity), false)
+        val holder = ImageViewHolder(binding, style, clickListeners, needMediaDataCallback = {})
+        val item = fileItem(TransferState.ErrorUpload, AttachmentTypeEnum.Image, ChannelFileItemType.Image)
+        holder.bind(item)
+
+        holder.updateState(item.attachment.toTransferData(TransferState.ThumbLoaded), false)
+
+        assertThat(binding.loadProgress.isVisible).isTrue()
+        assertThat(binding.loadProgress.centerIcon()).isSameInstanceAs(style.mediaLoaderStyle.uploadIcon)
+    }
+
+    @Test
     fun `downloaded image hides the loader`() {
         val binding = SceytItemChannelImageBinding.inflate(LayoutInflater.from(activity), FrameLayout(activity), false)
         val holder = ImageViewHolder(binding, style, clickListeners, needMediaDataCallback = {})
