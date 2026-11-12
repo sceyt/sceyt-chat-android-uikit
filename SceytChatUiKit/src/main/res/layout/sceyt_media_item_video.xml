@@ -29,8 +29,8 @@
 
     <com.sceyt.chatuikit.presentation.custom_views.CircularProgressView
         android:id="@+id/progress"
-        android:layout_width="72dp"
-        android:layout_height="72dp"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
         android:padding="3dp"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -39,10 +39,9 @@
         app:layout_constraintTop_toTopOf="parent"
         app:sceytUiProgressBackgroundColor="@color/sceyt_color_overlay_background_2"
         app:sceytUiProgressColor="@color/sceyt_color_on_primary"
-        app:sceytUiProgressIconSizeInPercent="65"
+        app:sceytUiProgressIconSizeInPercent="60"
         app:sceytUiProgressMinProgress="2"
         tools:visibility="visible"
-        app:sceytUiProgressRotateAnimEnabled="false"
         app:sceytUiProgressTrackColor="@android:color/transparent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

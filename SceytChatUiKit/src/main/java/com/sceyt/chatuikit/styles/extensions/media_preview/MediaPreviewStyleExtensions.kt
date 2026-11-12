@@ -44,4 +44,14 @@ internal fun MediaPreviewStyle.Builder.buildToolbarStyle(
 
 internal fun MediaPreviewStyle.Builder.buildMediaLoaderStyle(
         array: TypedArray,
-) = MediaLoaderStyle()
+) = MediaLoaderStyle(
+    cancelIcon = context.getCompatDrawable(R.drawable.sceyt_ic_cancel_transfer).applyTint(
+        context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor)
+    ),
+    uploadIcon = context.getCompatDrawable(R.drawable.sceyt_ic_upload).applyTint(
+        context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor)
+    ),
+    downloadIcon = context.getCompatDrawable(R.drawable.sceyt_ic_download).applyTint(
+        context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor)
+    )
+)

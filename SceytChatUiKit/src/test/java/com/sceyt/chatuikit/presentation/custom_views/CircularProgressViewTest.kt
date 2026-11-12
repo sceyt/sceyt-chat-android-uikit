@@ -1,6 +1,9 @@
 package com.sceyt.chatuikit.presentation.custom_views
 
 import android.app.Activity
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.drawable.GradientDrawable
 import android.os.Looper
 import android.view.ViewGroup
 import com.google.common.truth.Truth.assertThat
@@ -25,6 +28,19 @@ class CircularProgressViewTest {
         view.setProgress(50f)
 
         assertThat(view.rotationAngle).isWithin(0.5f).of(123f)
+    }
+
+    @Test
+    fun `icon set after layout is drawn at full size`() {
+        val view = attachedProgressView()
+        val icon = GradientDrawable().apply { setSize(24, 24) }
+
+        view.setIcon(icon)
+        view.draw(Canvas(Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888)))
+
+        assertThat(view.width).isEqualTo(100)
+        assertThat(icon.bounds.width()).isGreaterThan(0)
+        assertThat(icon.bounds.height()).isGreaterThan(0)
     }
 
     private fun attachedProgressView(): CircularProgressView {
