@@ -5,6 +5,7 @@ import android.content.Context
 import android.os.Bundle
 import android.widget.TextView
 import androidx.annotation.StringRes
+import androidx.core.view.isVisible
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.databinding.SceytDialogViewBinding
 import com.sceyt.chatuikit.extensions.dismissSafety
@@ -58,6 +59,11 @@ class SceytDialog(context: Context) : Dialog(context, R.style.SceytDialogStyle) 
 
     fun setNegativeButtonTitle(negativeBtnTitle: CharSequence): SceytDialog {
         binding.buttonCancel.setText(negativeBtnTitle, TextView.BufferType.SPANNABLE)
+        return this
+    }
+
+    fun hideNegativeButton(): SceytDialog {
+        binding.buttonCancel.isVisible = false
         return this
     }
 
