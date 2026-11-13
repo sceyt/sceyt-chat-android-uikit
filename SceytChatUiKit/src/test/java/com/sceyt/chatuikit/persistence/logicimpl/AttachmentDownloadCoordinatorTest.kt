@@ -1,6 +1,8 @@
 package com.sceyt.chatuikit.persistence.logicimpl
 
 import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Looper
 import androidx.lifecycle.Observer
 import com.google.common.truth.Truth.assertThat
@@ -57,6 +59,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.LooperMode
+import org.robolectric.shadows.ShadowNetworkCapabilities
 
 @RunWith(RobolectricTestRunner::class)
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -73,6 +76,7 @@ class AttachmentDownloadCoordinatorTest {
     fun setUp() {
         stopKoin()
         context = RuntimeEnvironment.getApplication()
+        setNetwork(connected = true)
         destinationFile = File(context.cacheDir, "transfer-tests/download.bin")
         destinationFile.parentFile?.mkdirs()
         destinationFile.delete()
@@ -102,6 +106,105 @@ class AttachmentDownloadCoordinatorTest {
         SceytChatUIKit.fileTransfer = previousFileTransfer
         SceytKoinApp.koinApp = null
         stopKoin()
+    }
+
+    @Test
+    fun `repeated offline download requests retry on reconnect without loading or errors`() = runBlocking {
+        setNetwork(connected = false)
+        val attachment = attachment(state = TransferState.PendingDownload)
+        val updates = mutableListOf<TransferData>()
+        val results = mutableListOf<SceytResponse<String>>()
+
+        repeat(3) {
+            val task = service.download(attachment) {
+                progressCallback = ProgressUpdateCallback { updates += it }
+                downloadCallback = TransferResultCallback { results += it }
+            }
+            assertThat(task.state).isEqualTo(TransferState.PendingDownload)
+        }
+
+        assertThat(transport.downloadCalls).isEmpty()
+        assertThat(updates).isEmpty()
+        assertThat(results).isEmpty()
+        assertThat(downloader.getInterruptedDownloads().map { it.messageTid })
+            .containsExactly(attachment.messageTid)
+
+        setNetwork(connected = true)
+        downloader.retryInterruptedDownloads(
+            findStored = { it },
+            start = { service.download(it) },
+        )
+
+        assertThat(transport.downloadCalls).hasSize(1)
+        assertThat(updates.single().state).isEqualTo(TransferState.Downloading)
+        transport.downloadCalls.single().succeed(destinationFile.path)
+        assertThat(downloader.getInterruptedDownloads()).isEmpty()
+    }
+
+    @Test
+    fun `offline requests and interrupted downloads share the same ten retry slots`() {
+        setNetwork(connected = false)
+        (1L..6L).forEach { tid ->
+            service.download(attachment(messageTid = tid, state = TransferState.PendingDownload))
+        }
+        setNetwork(connected = true)
+        (7L..12L).forEach { tid ->
+            service.download(attachment(messageTid = tid, state = TransferState.PendingDownload))
+            transport.downloadCalls.last().interrupt()
+        }
+
+        assertThat(downloader.getInterruptedDownloads().map { it.messageTid })
+            .containsExactlyElementsIn(3L..12L).inOrder()
+    }
+
+    @Test
+    fun `pausing an offline request removes it from reconnect retries`() = runBlocking {
+        setNetwork(connected = false)
+        val attachment = attachment(state = TransferState.PendingDownload)
+        service.download(attachment)
+        assertThat(downloader.getInterruptedDownloads()).hasSize(1)
+
+        service.pause(attachment.messageTid, attachment, TransferState.PendingDownload)
+        service.download(attachment.copy(transferState = TransferState.PauseDownload))
+        setNetwork(connected = true)
+        downloader.retryInterruptedDownloads(
+            findStored = { it },
+            start = { service.download(it) },
+        )
+
+        assertThat(downloader.getInterruptedDownloads()).isEmpty()
+        assertThat(transport.downloadCalls).isEmpty()
+        assertThat(service.findTransferTask(attachment)?.state).isEqualTo(TransferState.PauseDownload)
+    }
+
+    @Test
+    fun `offline rebind does not restart an ongoing download`() {
+        val attachment = attachment(state = TransferState.PendingDownload)
+        val updates = mutableListOf<TransferData>()
+        val task = service.download(attachment) {
+            progressCallback = ProgressUpdateCallback { updates += it }
+        }
+        val call = transport.downloadCalls.single()
+        call.progress(42f)
+        setNetwork(connected = false)
+
+        service.download(attachment)
+
+        assertThat(transport.downloadCalls).hasSize(1)
+        assertThat(call.cancelled).isFalse()
+        assertThat(task.state).isEqualTo(TransferState.Downloading)
+        assertThat(updates.map { it.progressPercent }).containsExactly(0f, 42f).inOrder()
+        assertThat(downloader.getInterruptedDownloads()).isEmpty()
+    }
+
+    private fun setNetwork(connected: Boolean) {
+        val connectivityManager = context.getSystemService(ConnectivityManager::class.java)
+        val capabilities = ShadowNetworkCapabilities.newInstance()
+        if (connected) {
+            shadowOf(capabilities).addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+            shadowOf(capabilities).addCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+        }
+        shadowOf(connectivityManager).setNetworkCapabilities(connectivityManager.activeNetwork, capabilities)
     }
 
     @Test
