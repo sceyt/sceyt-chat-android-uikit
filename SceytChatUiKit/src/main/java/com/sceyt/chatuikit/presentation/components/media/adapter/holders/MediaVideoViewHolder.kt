@@ -88,7 +88,7 @@ class MediaVideoViewHolder(
     }
 
     private fun initPlayer(): ExoPlayerHelper {
-        binding.icThumb.isVisible = true
+        showThumb()
         return ExoPlayerHelper(context, binding.videoView, errorListener = {
             Toast.makeText(context, "Couldn't play video: ${it.message}", Toast.LENGTH_SHORT).show()
         }, listener = {
@@ -96,7 +96,7 @@ class MediaVideoViewHolder(
                 playerHelper?.seekToStart()
 
             if (it.isReady())
-                binding.icThumb.isVisible = false
+                fadeOutThumb()
         }, playingListener = { playing ->
             if (playing) {
                 initWakeLock()
@@ -104,6 +104,24 @@ class MediaVideoViewHolder(
         }).also {
             mediaAdapter?.addMediaPlayer(it.player)
             binding.videoController.setPlayer(it.player)
+        }
+    }
+
+    private fun showThumb() {
+        with(binding.icThumb) {
+            animate().cancel()
+            alpha = 1f
+            isVisible = true
+        }
+    }
+
+    private fun fadeOutThumb() {
+        with(binding.icThumb) {
+            if (!isVisible) return
+            animate().alpha(0f).setDuration(THUMB_FADE_DURATION_MS).withEndAction {
+                isVisible = false
+                alpha = 1f
+            }.start()
         }
     }
 
@@ -249,5 +267,9 @@ class MediaVideoViewHolder(
             thumbColor = style.thumbColor,
             timelineTextStyle = style.timelineTextStyle
         )
+    }
+
+    private companion object {
+        const val THUMB_FADE_DURATION_MS = 150L
     }
 }
