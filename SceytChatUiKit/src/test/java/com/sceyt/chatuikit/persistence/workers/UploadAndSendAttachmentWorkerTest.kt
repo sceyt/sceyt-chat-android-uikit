@@ -208,6 +208,7 @@ class UploadAndSendAttachmentWorkerTest {
     @After
     fun tearDown() {
         service.cancelAllTransfers()
+        testScope.testScheduler.runCurrent()
         AttachmentTransferStateStore.clear()
         WorkManagerImpl.setDelegate(null)
         SceytChatUIKit.fileTransfer = previousFileTransfer
@@ -318,6 +319,68 @@ class UploadAndSendAttachmentWorkerTest {
             firstWork.cancelAndJoin()
             cancelledWork.cancelAndJoin()
             nextWork.cancelAndJoin()
+        }
+    }
+
+    @Test
+    fun `queued upload enters foreground before previous upload finishes`() = runBlocking {
+        val first = localAttachment()
+        val second = first.copy(messageTid = 11L)
+        val firstUpdater = foregroundUpdater()
+        val secondUpdater = foregroundUpdater()
+        val firstWorker = worker(first, foregroundUpdater = firstUpdater)
+        val secondWorker = worker(second, foregroundUpdater = secondUpdater)
+        val firstWork = testScope.async { firstWorker.doWork() }
+        val secondWork = testScope.async { secondWorker.doWork() }
+
+        try {
+            assertThat(transport.uploadCalls).hasSize(1)
+            verify(firstUpdater).setForegroundAsync(any(), any(), any())
+            verify(secondUpdater).setForegroundAsync(any(), any(), any())
+
+            transport.uploadCalls.single().succeed("first-url")
+            assertThat(firstWork.isCompleted).isTrue()
+            assertThat(transport.uploadCalls.last().request.attachment.messageTid).isEqualTo(second.messageTid)
+            transport.uploadCalls.last().succeed("second-url")
+            assertThat(secondWork.isCompleted).isTrue()
+        } finally {
+            firstWork.cancelAndJoin()
+            secondWork.cancelAndJoin()
+        }
+    }
+
+    @Test
+    fun `slower foreground setup does not block uploads or change their order`() = runBlocking {
+        val first = localAttachment()
+        val second = first.copy(messageTid = 11L)
+        val third = first.copy(messageTid = 12L)
+        val secondUpdater = foregroundUpdater()
+        val secondForeground = SettableFuture.create<Void?>()
+        whenever(secondUpdater.setForegroundAsync(any(), any(), any())).thenReturn(secondForeground)
+        val firstWorker = worker(first, foregroundUpdater = foregroundUpdater())
+        val secondWorker = worker(second, foregroundUpdater = secondUpdater)
+        val thirdWorker = worker(third, foregroundUpdater = foregroundUpdater())
+        val firstWork = testScope.async { firstWorker.doWork() }
+        val secondWork = testScope.async { secondWorker.doWork() }
+        val thirdWork = testScope.async { thirdWorker.doWork() }
+
+        try {
+            transport.uploadCalls.single().succeed("first-url")
+            assertThat(firstWork.isCompleted).isTrue()
+            assertThat(transport.uploadCalls.last().request.attachment.messageTid).isEqualTo(second.messageTid)
+            assertThat(secondForeground.isDone).isFalse()
+            transport.uploadCalls.last().succeed("second-url")
+
+            assertThat(transport.uploadCalls.last().request.attachment.messageTid).isEqualTo(third.messageTid)
+            transport.uploadCalls.last().succeed("third-url")
+            assertThat(thirdWork.isCompleted).isTrue()
+
+            secondForeground.set(null)
+            assertThat(secondWork.isCompleted).isTrue()
+        } finally {
+            firstWork.cancelAndJoin()
+            secondWork.cancelAndJoin()
+            thirdWork.cancelAndJoin()
         }
     }
 
@@ -1810,7 +1873,7 @@ class UploadAndSendAttachmentWorkerTest {
         assertThat(service.findTransferTask(attachment)).isNull()
     }
 
-    private fun failingForegroundUpdater(error: Throwable): ForegroundUpdater {
+    private fun foregroundUpdater(): ForegroundUpdater {
         shadowOf(RuntimeEnvironment.getApplication())
             .grantPermissions(android.Manifest.permission.FOREGROUND_SERVICE)
         val channelLogic = SceytKoinApp.koinApp!!.koin.get<PersistenceChannelsLogic>()
@@ -1818,8 +1881,12 @@ class UploadAndSendAttachmentWorkerTest {
             whenever(channelLogic.getChannelFromDb(any())).thenReturn(createChannel(0L, 0L, 0L))
         }
         val updater = mock<ForegroundUpdater>()
-        whenever(updater.setForegroundAsync(any(), any(), any())).thenReturn(Futures.immediateFailedFuture(error))
+        whenever(updater.setForegroundAsync(any(), any(), any())).thenReturn(Futures.immediateFuture(null))
         return updater
+    }
+
+    private fun failingForegroundUpdater(error: Throwable): ForegroundUpdater = foregroundUpdater().also {
+        whenever(it.setForegroundAsync(any(), any(), any())).thenReturn(Futures.immediateFailedFuture(error))
     }
 
     private fun setNetwork(vararg capabilities: Int) {
