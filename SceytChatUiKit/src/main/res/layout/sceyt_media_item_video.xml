@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    xmlns:tools="http://schemas.android.com/tools">
+    android:layout_height="match_parent">
 
     <androidx.media3.ui.PlayerView
         android:id="@+id/videoView"
-        android:contentDescription="@string/sceyt_cd_media_video_player"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:contentDescription="@string/sceyt_cd_media_video_player"
         app:auto_show="true"
         app:controller_layout_id="@layout/sceyt_player_control_view"
         app:layout_constraintBottom_toTopOf="parent"
@@ -41,7 +41,7 @@
         app:sceytUiProgressColor="@color/sceyt_color_on_primary"
         app:sceytUiProgressIconSizeInPercent="60"
         app:sceytUiProgressMinProgress="2"
-        tools:visibility="visible"
-        app:sceytUiProgressTrackColor="@android:color/transparent" />
+        app:sceytUiProgressTrackColor="@android:color/transparent"
+        tools:visibility="visible" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
