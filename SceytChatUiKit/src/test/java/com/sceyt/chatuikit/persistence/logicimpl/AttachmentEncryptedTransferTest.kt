@@ -199,6 +199,7 @@ class AttachmentEncryptedTransferTest {
     @Test
     fun `receiver forwards saved encryption metadata to the native downloader`() = runTest {
         val context = RuntimeEnvironment.getApplication()
+        context.setValidatedNetwork()
         val destination = temporary.newFile("decrypted-attachment.bin")
         destination.delete()
         val plaintext = "verified attachment".toByteArray()
