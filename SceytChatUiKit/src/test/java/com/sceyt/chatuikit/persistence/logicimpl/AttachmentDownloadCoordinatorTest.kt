@@ -137,10 +137,10 @@ class AttachmentDownloadCoordinatorTest {
         val attachments = (711L..718L).map { tid ->
             attachment(messageTid = tid, state = TransferState.PendingDownload)
         }
-        val messageTids = attachments.map { it.messageTid }
+        val messageIds = attachments.map { it.messageTid }
         val updates = mutableListOf<TransferData>()
         val observer = Observer<TransferData> { update ->
-            if (update.messageTid in messageTids) updates += update
+            if (update.messageTid in messageIds) updates += update
         }
         FileTransferHelper.onTransferUpdatedLiveData.observeForever(observer)
 
@@ -149,7 +149,7 @@ class AttachmentDownloadCoordinatorTest {
             shadowOf(Looper.getMainLooper()).idle()
 
             assertThat(transport.downloadCalls).hasSize(attachments.size)
-            assertThat(updates.map { it.messageTid }).containsExactlyElementsIn(messageTids)
+            assertThat(updates.map { it.messageTid }).containsExactlyElementsIn(messageIds)
             assertThat(updates.all { it.state == TransferState.Downloading && it.progressPercent == 0f }).isTrue()
         } finally {
             FileTransferHelper.onTransferUpdatedLiveData.removeObserver(observer)
@@ -165,10 +165,10 @@ class AttachmentDownloadCoordinatorTest {
         val attachments = (721L..728L).map { tid ->
             attachment(messageTid = tid, state = TransferState.PauseDownload).copy(progressPercent = 37f)
         }
-        val messageTids = attachments.map { it.messageTid }
+        val messageIds = attachments.map { it.messageTid }
         val updates = mutableListOf<TransferData>()
         val observer = Observer<TransferData> { update ->
-            if (update.messageTid in messageTids) updates += update
+            if (update.messageTid in messageIds) updates += update
         }
         FileTransferHelper.onTransferUpdatedLiveData.observeForever(observer)
 
@@ -179,7 +179,7 @@ class AttachmentDownloadCoordinatorTest {
             shadowOf(Looper.getMainLooper()).idle()
 
             assertThat(transport.downloadCalls).isEmpty()
-            assertThat(updates.map { it.messageTid }).containsExactlyElementsIn(messageTids)
+            assertThat(updates.map { it.messageTid }).containsExactlyElementsIn(messageIds)
             assertThat(updates.all { it.state == TransferState.Downloading && it.progressPercent == 37f }).isTrue()
         } finally {
             FileTransferHelper.onTransferUpdatedLiveData.removeObserver(observer)
@@ -395,7 +395,7 @@ class AttachmentDownloadCoordinatorTest {
     @Test
     fun `duplicate active download invokes transport once`() {
         val attachment = attachment(state = TransferState.PendingDownload)
-        val task = transferTask(attachment)
+        transferTask(attachment)
 
         service.download(attachment)
         service.download(attachment)
@@ -552,7 +552,7 @@ class AttachmentDownloadCoordinatorTest {
         destinationFile.writeBytes(byteArrayOf(1, 2, 3, 4, 5))
         val attachment = attachment(state = TransferState.PendingDownload)
         val results = mutableListOf<SceytResponse<String>>()
-        val task = transferTask(attachment).apply {
+        transferTask(attachment).apply {
             downloadCallback = TransferResultCallback { results += it }
         }
 
@@ -579,7 +579,7 @@ class AttachmentDownloadCoordinatorTest {
     fun `transport cancellation is forwarded as failure and allows retry`() {
         val attachment = attachment(state = TransferState.PendingDownload)
         val results = mutableListOf<SceytResponse<String>>()
-        val task = transferTask(attachment).apply {
+        transferTask(attachment).apply {
             downloadCallback = TransferResultCallback { results += it }
         }
 
@@ -611,7 +611,7 @@ class AttachmentDownloadCoordinatorTest {
         }
         val attachment = attachment(state = TransferState.PendingDownload)
         val results = mutableListOf<SceytResponse<String>>()
-        val task = transferTask(attachment).apply {
+        transferTask(attachment).apply {
             downloadCallback = TransferResultCallback { results += it }
         }
 
@@ -690,7 +690,7 @@ class AttachmentDownloadCoordinatorTest {
         destinationFile.writeBytes(partialBytes)
         val attachment = attachment(state = TransferState.PendingDownload)
         val results = mutableListOf<SceytResponse<String>>()
-        val task = transferTask(attachment).apply {
+        transferTask(attachment).apply {
             downloadCallback = TransferResultCallback { results += it }
         }
 
@@ -815,7 +815,7 @@ class AttachmentDownloadCoordinatorTest {
             url = "https://cdn.test/old.txt",
             state = TransferState.Downloading,
         )
-        val task = transferTask(attachment)
+        transferTask(attachment)
 
         service.download(attachment)
         service.pause(
@@ -865,7 +865,7 @@ class AttachmentDownloadCoordinatorTest {
     @Test
     fun `resume waits for cancelled download before starting replacement`() {
         val attachment = attachment(state = TransferState.Downloading)
-        val task = transferTask(attachment)
+        transferTask(attachment)
         val cancellationGate = CompletableDeferred<Unit>()
         transport.downloadCancellationGate = cancellationGate
 
@@ -888,7 +888,7 @@ class AttachmentDownloadCoordinatorTest {
     fun `repeated resume waits for original download cleanup`() {
         val attachment = attachment(state = TransferState.Downloading)
         val results = mutableListOf<SceytResponse<String>>()
-        val task = transferTask(attachment).apply {
+        transferTask(attachment).apply {
             downloadCallback = TransferResultCallback { results += it }
         }
         val cancellationGate = CompletableDeferred<Unit>()
@@ -972,7 +972,7 @@ class AttachmentDownloadCoordinatorTest {
         }
         val attachment = attachment(state = TransferState.Downloading)
         val results = mutableListOf<SceytResponse<String>>()
-        val task = transferTask(attachment).apply {
+        transferTask(attachment).apply {
             downloadCallback = TransferResultCallback { results += it }
         }
 
@@ -1017,7 +1017,7 @@ class AttachmentDownloadCoordinatorTest {
         val active = attachment(messageTid = 80L, state = TransferState.Downloading)
         val next = attachment(messageTid = 81L, state = TransferState.PendingDownload)
         val results = mutableListOf<SceytResponse<String>>()
-        val activeTask = transferTask(active).apply {
+        transferTask(active).apply {
             downloadCallback = TransferResultCallback { results += it }
         }
 
@@ -1364,14 +1364,15 @@ class AttachmentDownloadCoordinatorTest {
         val task = service.download(attachment) {
             addOnCompletionListener("original") { originalCompletions++ }
         }
-        var duplicate: TransferTask? = null
+        val duplicate = CompletableDeferred<TransferTask>()
         val failure = object : IllegalStateException() {
             override val message: String
                 get() {
-                    if (duplicate == null) {
-                        duplicate = service.download(attachment) {
+                if (!duplicate.isCompleted) {
+                    val duplicateTask = service.download(attachment) {
                             addOnCompletionListener("duplicate") { duplicateCompletions++ }
                         }
+                    duplicate.complete(duplicateTask)
                     }
                     return "download failed"
                 }
@@ -1379,7 +1380,7 @@ class AttachmentDownloadCoordinatorTest {
 
         transport.downloadCalls.single().fail(failure)
 
-        assertThat(duplicate).isSameInstanceAs(task)
+        assertThat(duplicate.getCompleted()).isSameInstanceAs(task)
         assertThat(transport.downloadCalls).hasSize(1)
         assertThat(task.state).isEqualTo(TransferState.ErrorDownload)
         assertThat(originalCompletions).isEqualTo(1)
