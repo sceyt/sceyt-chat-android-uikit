@@ -142,13 +142,14 @@ class UploadAndSendAttachmentWorkerTest {
         // FileTransferHelper retains injected dependencies, so reuse them across worker tests.
         val attachmentLogic = mock<PersistenceAttachmentLogic>()
         val fileChecksumDao = mock<FileChecksumDao>()
-        val testScope = TestScope(UnconfinedTestDispatcher())
+        val testDispatcher = UnconfinedTestDispatcher()
+        val testScope = TestScope(testDispatcher)
         val service by lazy {
             val context = RuntimeEnvironment.getApplication()
             FileTransferServiceImpl(
                 context,
                 AttachmentUploadCoordinator(context, attachmentLogic, testScope),
-                AttachmentDownloadCoordinator(context, testScope),
+                AttachmentDownloadCoordinator(context, testScope, testDispatcher),
                 mock(),
             )
         }
