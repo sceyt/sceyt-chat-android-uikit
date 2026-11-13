@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.persistence.logicimpl
 
+import android.content.Context
 import com.google.common.truth.Truth.assertThat
 import com.google.gson.JsonParser
 import com.sceyt.chatuikit.SceytChatUIKit
@@ -13,6 +14,7 @@ import com.sceyt.chatuikit.filetransfer.defaults.DefaultFileTransferProvider
 import com.sceyt.chatuikit.filetransfer.download.ChatSdkFileDownloader
 import com.sceyt.chatuikit.filetransfer.encryption.FileEncryption
 import com.sceyt.chatuikit.filetransfer.encryption.FileEncryptionMetadata
+import com.sceyt.chatuikit.koin.SceytKoinApp
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -24,6 +26,8 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
+import org.koin.dsl.koinApplication
+import org.koin.dsl.module
 import org.mockito.Mockito
 import org.mockito.kotlin.any
 import org.mockito.kotlin.doSuspendableAnswer
@@ -59,6 +63,8 @@ class AttachmentEncryptedTransferTest {
     @After
     fun tearDown() {
         SceytChatUIKit.fileTransfer = previous
+        SceytKoinApp.koinApp?.close()
+        SceytKoinApp.koinApp = null
     }
 
     @Test
@@ -200,6 +206,9 @@ class AttachmentEncryptedTransferTest {
     fun `receiver forwards saved encryption metadata to the native downloader`() = runTest {
         val context = RuntimeEnvironment.getApplication()
         context.setValidatedNetwork()
+        SceytKoinApp.koinApp = koinApplication {
+            modules(module { single<Context> { context } })
+        }
         val destination = temporary.newFile("decrypted-attachment.bin")
         destination.delete()
         val plaintext = "verified attachment".toByteArray()

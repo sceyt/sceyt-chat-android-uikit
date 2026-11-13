@@ -181,9 +181,12 @@ The UI kit skips the provider when a complete local file already exists. Otherwi
 `FileDownloadRequest`, suppresses duplicate in-flight downloads, and owns transfer state and
 result delivery.
 
-Downloads for different messages remain concurrent. There is no download FIFO. The coordinator
-does not automatically submit another failed call. Native performs network retries; once it waits
-for connectivity, UIKit ends the attempt as `Interrupted` and the user can tap download to retry.
+Downloads for different messages remain concurrent. There is no download FIFO. The default provider
+returns `Interrupted` immediately when the device is offline, before starting native networking.
+Custom providers receive offline requests and decide how to handle them, including their own error UI.
+Native performs retries for downloads already in progress; once it waits for connectivity, UIKit ends
+the attempt as `Interrupted`. Interruptions report a download error and remain available for manual
+retry. UIKit also remembers the last ten interrupted downloads and retries them when chat reconnects.
 
 ## Encrypted files and the Chat SDK
 

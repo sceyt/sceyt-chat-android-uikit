@@ -181,6 +181,30 @@ class FileTransferServiceImplTest {
     }
 
     @Test
+    fun `offline manual download taps reach provider error handling`() = runBlocking {
+        val context = RuntimeEnvironment.getApplication()
+        val connectivityManager = context.getSystemService(ConnectivityManager::class.java)
+        val capabilities = ShadowNetworkCapabilities.newInstance()
+        shadowOf(connectivityManager).setNetworkCapabilities(connectivityManager.activeNetwork, capabilities)
+        val useCase = PauseOrResumeTransferUseCase(context, service)
+        val states = listOf(TransferState.PendingDownload, TransferState.ErrorDownload, TransferState.PauseDownload)
+
+        for ((index, state) in states.withIndex()) {
+            val attachment = attachment(messageTid = 100L + index, state = state)
+            useCase(attachment)
+
+            assertThat(transport.downloadCalls).hasSize(index + 1)
+            val task = checkNotNull(service.findTransferTask(attachment))
+            var result: Result<SceytAttachment>? = null
+            task.addOnCompletionListener("manual-download") { result = it }
+            transport.downloadCalls.last().interrupt(java.io.IOException("No network connection"))
+            assertThat(result?.isFailure).isTrue()
+            assertThat(result?.exceptionOrNull()?.message).isEqualTo("No network connection")
+            assertThat(task.attachment.transferState).isEqualTo(TransferState.ErrorDownload)
+        }
+    }
+
+    @Test
     fun `paused download resumes on first user tap without a registered task`() = runBlocking {
         val attachment = attachment(state = TransferState.PauseDownload)
         val useCase = PauseOrResumeTransferUseCase(RuntimeEnvironment.getApplication(), service)
