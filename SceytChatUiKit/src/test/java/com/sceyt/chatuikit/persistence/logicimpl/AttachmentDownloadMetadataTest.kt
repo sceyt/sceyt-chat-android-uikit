@@ -31,6 +31,7 @@ class AttachmentDownloadMetadataTest {
 
     @Before
     fun setUp() {
+        RuntimeEnvironment.getApplication().setValidatedNetwork()
         previous = SceytChatUIKit.fileTransfer
         val destination = temporary.newFile()
         SceytChatUIKit.fileTransfer = SceytChatUIKitFileTransfer().apply {

@@ -78,6 +78,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
@@ -115,6 +116,7 @@ import org.robolectric.shadows.ShadowNetworkCapabilities
 import java.io.File
 import java.util.UUID
 import kotlin.coroutines.CoroutineContext
+import kotlin.time.Duration.Companion.seconds
 
 @RunWith(RobolectricTestRunner::class)
 // Isolate the real service from other suites' FileTransferHelper singleton dependencies.
@@ -140,13 +142,14 @@ class UploadAndSendAttachmentWorkerTest {
         // FileTransferHelper retains injected dependencies, so reuse them across worker tests.
         val attachmentLogic = mock<PersistenceAttachmentLogic>()
         val fileChecksumDao = mock<FileChecksumDao>()
-        val testScope = TestScope(UnconfinedTestDispatcher())
+        val testDispatcher = UnconfinedTestDispatcher()
+        val testScope = TestScope(testDispatcher)
         val service by lazy {
             val context = RuntimeEnvironment.getApplication()
             FileTransferServiceImpl(
                 context,
                 AttachmentUploadCoordinator(context, attachmentLogic, testScope),
-                AttachmentDownloadCoordinator(context, testScope),
+                AttachmentDownloadCoordinator(context, testScope, testDispatcher),
                 mock(),
             )
         }
@@ -208,6 +211,7 @@ class UploadAndSendAttachmentWorkerTest {
     @After
     fun tearDown() {
         service.cancelAllTransfers()
+        testScope.testScheduler.runCurrent()
         AttachmentTransferStateStore.clear()
         WorkManagerImpl.setDelegate(null)
         SceytChatUIKit.fileTransfer = previousFileTransfer
@@ -318,6 +322,68 @@ class UploadAndSendAttachmentWorkerTest {
             firstWork.cancelAndJoin()
             cancelledWork.cancelAndJoin()
             nextWork.cancelAndJoin()
+        }
+    }
+
+    @Test
+    fun `queued upload enters foreground before previous upload finishes`() = runBlocking {
+        val first = localAttachment()
+        val second = first.copy(messageTid = 11L)
+        val firstUpdater = foregroundUpdater()
+        val secondUpdater = foregroundUpdater()
+        val firstWorker = worker(first, foregroundUpdater = firstUpdater)
+        val secondWorker = worker(second, foregroundUpdater = secondUpdater)
+        val firstWork = testScope.async { firstWorker.doWork() }
+        val secondWork = testScope.async { secondWorker.doWork() }
+
+        try {
+            assertThat(transport.uploadCalls).hasSize(1)
+            verify(firstUpdater).setForegroundAsync(any(), any(), any())
+            verify(secondUpdater).setForegroundAsync(any(), any(), any())
+
+            transport.uploadCalls.single().succeed("first-url")
+            assertThat(firstWork.isCompleted).isTrue()
+            assertThat(transport.uploadCalls.last().request.attachment.messageTid).isEqualTo(second.messageTid)
+            transport.uploadCalls.last().succeed("second-url")
+            assertThat(secondWork.isCompleted).isTrue()
+        } finally {
+            firstWork.cancelAndJoin()
+            secondWork.cancelAndJoin()
+        }
+    }
+
+    @Test
+    fun `slower foreground setup does not block uploads or change their order`() = runBlocking {
+        val first = localAttachment()
+        val second = first.copy(messageTid = 11L)
+        val third = first.copy(messageTid = 12L)
+        val secondUpdater = foregroundUpdater()
+        val secondForeground = SettableFuture.create<Void?>()
+        whenever(secondUpdater.setForegroundAsync(any(), any(), any())).thenReturn(secondForeground)
+        val firstWorker = worker(first, foregroundUpdater = foregroundUpdater())
+        val secondWorker = worker(second, foregroundUpdater = secondUpdater)
+        val thirdWorker = worker(third, foregroundUpdater = foregroundUpdater())
+        val firstWork = testScope.async { firstWorker.doWork() }
+        val secondWork = testScope.async { secondWorker.doWork() }
+        val thirdWork = testScope.async { thirdWorker.doWork() }
+
+        try {
+            transport.uploadCalls.single().succeed("first-url")
+            assertThat(firstWork.isCompleted).isTrue()
+            assertThat(transport.uploadCalls.last().request.attachment.messageTid).isEqualTo(second.messageTid)
+            assertThat(secondForeground.isDone).isFalse()
+            transport.uploadCalls.last().succeed("second-url")
+
+            assertThat(transport.uploadCalls.last().request.attachment.messageTid).isEqualTo(third.messageTid)
+            transport.uploadCalls.last().succeed("third-url")
+            assertThat(thirdWork.isCompleted).isTrue()
+
+            secondForeground.set(null)
+            assertThat(secondWork.isCompleted).isTrue()
+        } finally {
+            firstWork.cancelAndJoin()
+            secondWork.cancelAndJoin()
+            thirdWork.cancelAndJoin()
         }
     }
 
@@ -490,7 +556,7 @@ class UploadAndSendAttachmentWorkerTest {
     }
 
     @Test
-    fun `message with media and link uploads only media and preserves link`() = runBlocking<Unit> {
+    fun `message with media and link uploads only media and preserves link`() = runBlocking {
         val media = localAttachment()
         val uploadWorker = worker(media)
         val link = media.copy(
@@ -530,7 +596,7 @@ class UploadAndSendAttachmentWorkerTest {
         transport.uploadCalls.single().fail(SceytException(500, "Upload failed"))
 
         assertThat(failedWork.isCompleted).isTrue()
-        assertThat(failedWork.await()).isEqualTo(androidx.work.ListenableWorker.Result.success())
+        assertThat(failedWork.await()).isEqualTo(ListenableWorker.Result.success())
         assertThat(service.findTransferTask(failedAttachment)).isNull()
         assertThat(AttachmentTransferStateStore.getTransferData(failedAttachment)?.state)
             .isEqualTo(TransferState.ErrorUpload)
@@ -550,7 +616,7 @@ class UploadAndSendAttachmentWorkerTest {
         val failedWork = testScope.async { worker(attachment).doWork() }
         transport.uploadCalls.single().fail(SceytException(500, "Upload failed"))
         assertThat(failedWork.isCompleted).isTrue()
-        assertThat(failedWork.await()).isEqualTo(androidx.work.ListenableWorker.Result.success())
+        assertThat(failedWork.await()).isEqualTo(ListenableWorker.Result.success())
         verify(messageLogic, never()).sendMessageWithUploadedAttachments(any(), any())
 
         val retriedWork = testScope.async {
@@ -565,7 +631,7 @@ class UploadAndSendAttachmentWorkerTest {
 
     @Test
     fun `worker cancellation stops a suspended state update without starting upload`() =
-        runBlocking<Unit> {
+        runBlocking {
             val updateStarted = CompletableDeferred<Unit>()
             val releaseUpdate = CompletableDeferred<Unit>()
             whenever(attachmentLogic.updateAttachmentWithTransferData(any())).doSuspendableAnswer {
@@ -576,9 +642,9 @@ class UploadAndSendAttachmentWorkerTest {
             val work = testScope.async(Dispatchers.Default) { uploadWorker.doWork() }
 
             try {
-                withTimeout(5_000) { updateStarted.await() }
+                withTimeout(5.seconds) { updateStarted.await() }
                 work.cancel()
-                withTimeout(5_000) { work.join() }
+                withTimeout(5.seconds) { work.join() }
                 assertThat(transport.uploadCalls).isEmpty()
             } finally {
                 releaseUpdate.complete(Unit)
@@ -665,7 +731,7 @@ class UploadAndSendAttachmentWorkerTest {
                 assertThat(work.isCompleted).isTrue()
                 runBlocking {
                     assertThat(work.await())
-                        .isEqualTo(androidx.work.ListenableWorker.Result.success())
+                        .isEqualTo(ListenableWorker.Result.success())
                 }
                 assertThat(service.findTransferTask(attachment)?.state)
                     .isEqualTo(TransferState.PauseUpload)
@@ -812,7 +878,7 @@ class UploadAndSendAttachmentWorkerTest {
     @Test
     fun `video message uploads its preview and sends it after the video`() = runBlocking {
         val video = preparedVideo()
-        val preview = previewAttachment(video, url = "preview-url")
+        val preview = previewAttachment(video)
         whenever(previewTransfer.upload(any())).thenReturn(PreviewUploadResult.Uploaded(preview))
         val work = testScope.async { worker(video).doWork() }
 
@@ -829,7 +895,7 @@ class UploadAndSendAttachmentWorkerTest {
     @Test
     fun `view once video sends only the video without uploading a preview`() = runBlocking {
         val video = preparedVideo()
-        val preview = previewAttachment(video, url = "preview-url")
+        val preview = previewAttachment(video)
         whenever(previewTransfer.upload(any())).thenReturn(PreviewUploadResult.Uploaded(preview))
         val work = testScope.async { worker(video, viewOnce = true).doWork() }
 
@@ -843,7 +909,7 @@ class UploadAndSendAttachmentWorkerTest {
     @Test
     fun `view once retry omits a previously saved preview attachment`() = runBlocking {
         val video = preparedVideo()
-        val preview = previewAttachment(video, url = "preview-url")
+        val preview = previewAttachment(video)
         val work = testScope.async {
             worker(video, extraAttachments = listOf(preview), viewOnce = true).doWork()
         }
@@ -888,7 +954,7 @@ class UploadAndSendAttachmentWorkerTest {
     }
 
     @Test
-    fun `resume after pause during preview uploads the video`() = runBlocking<Unit> {
+    fun `resume after pause during preview uploads the video`() = runBlocking {
         val video = pauseDuringFailingPreview()
         whenever(previewTransfer.upload(any())).thenReturn(PreviewUploadResult.Unavailable)
 
@@ -904,7 +970,7 @@ class UploadAndSendAttachmentWorkerTest {
     @Test
     fun `pause again during a resumed preview keeps the video paused`() = runBlocking<Unit> {
         val video = pauseDuringFailingPreview().copy(transferState = TransferState.PauseUpload)
-        val preview = previewAttachment(video, url = "preview-url")
+        val preview = previewAttachment(video)
         val previewResult = CompletableDeferred<PreviewUploadResult>()
         whenever(previewTransfer.upload(any())).doSuspendableAnswer { previewResult.await() }
 
@@ -928,7 +994,7 @@ class UploadAndSendAttachmentWorkerTest {
     }
 
     @Test
-    fun `offline resume after pause during preview shows the upload error`() = runBlocking<Unit> {
+    fun `offline resume after pause during preview shows the upload error`() = runBlocking {
         val video = pauseDuringFailingPreview()
         whenever(previewTransfer.upload(any()))
             .thenReturn(PreviewUploadResult.Failed(IllegalStateException("offline")))
@@ -957,9 +1023,9 @@ class UploadAndSendAttachmentWorkerTest {
     }
 
     @Test
-    fun `preview upload for an uploaded video keeps its uploaded state`() = runBlocking<Unit> {
+    fun `preview upload for an uploaded video keeps its uploaded state`() = runBlocking {
         val video = preparedVideo().copy(url = "video-url", transferState = TransferState.Uploaded)
-        val preview = previewAttachment(video, url = "preview-url")
+        val preview = previewAttachment(video)
         whenever(previewTransfer.upload(any())).thenReturn(PreviewUploadResult.Uploaded(preview))
         whenever(attachmentLogic.getAllPayLoadsByMsgTid(any())).thenReturn(
             listOf(AttachmentPayLoad(video.messageTid, TransferState.Uploaded, 100f, "video-url", video.filePath, null))
@@ -977,7 +1043,7 @@ class UploadAndSendAttachmentWorkerTest {
     @Test
     fun `retry with a saved preview uploads only the video`() = runBlocking {
         val video = preparedVideo()
-        val preview = previewAttachment(video, url = "preview-url")
+        val preview = previewAttachment(video)
         val work = testScope.async { worker(video, extraAttachments = listOf(preview)).doWork() }
 
         transport.uploadCalls.single().succeed("video-url")
@@ -990,7 +1056,7 @@ class UploadAndSendAttachmentWorkerTest {
     @Test
     fun `retry with an uploaded video uploads only the preview`() = runBlocking {
         val video = preparedVideo()
-        val preview = previewAttachment(video, url = "preview-url")
+        val preview = previewAttachment(video)
         whenever(previewTransfer.upload(any())).thenReturn(PreviewUploadResult.Uploaded(preview))
         whenever(attachmentLogic.getAllPayLoadsByMsgTid(any())).thenReturn(
             listOf(AttachmentPayLoad(video.messageTid, TransferState.ErrorUpload, 0f, "video-url", video.filePath, null))
@@ -1072,13 +1138,13 @@ class UploadAndSendAttachmentWorkerTest {
 
     @Test
     fun `replacing a resumed shared worker retains native operation and sharing`() =
-        runBlocking<Unit> {
+        runBlocking {
             transport.pauseResult = true
             transport.resumeResult = true
             val owner = localAttachment().copy(messageTid = 9_101L)
             val follower = owner.copy(messageTid = 9_102L)
-            testScope.async { worker(owner, shared = true).doWork() }
-            testScope.async { worker(follower, shared = true).doWork() }
+            testScope.launch { worker(owner, shared = true).doWork() }
+            testScope.launch { worker(follower, shared = true).doWork() }
             val call = transport.uploadCalls.single()
             service.pause(owner.messageTid, owner, TransferState.Uploading)
             service.pause(follower.messageTid, follower, TransferState.Uploading)
@@ -1108,7 +1174,7 @@ class UploadAndSendAttachmentWorkerTest {
 
             assertThat(followerResume.isCompleted).isTrue()
             val sent = argumentCaptor<Message>()
-            verify(messageLogic, org.mockito.kotlin.times(2))
+            verify(messageLogic, times(2))
                 .sendMessageWithUploadedAttachments(eq(0L), sent.capture())
             assertThat(sent.allValues.map { it.tid to it.attachments.single().url })
                 .containsExactly(
@@ -1120,9 +1186,9 @@ class UploadAndSendAttachmentWorkerTest {
         }
 
     @Test
-    fun `replacing resumed worker keeps its restarted upload running`() = runBlocking<Unit> {
+    fun `replacing resumed worker keeps its restarted upload running`() = runBlocking {
         val attachment = localAttachment()
-        testScope.async { worker(attachment).doWork() }
+        testScope.launch { worker(attachment).doWork() }
         service.pause(attachment.messageTid, attachment, TransferState.Uploading)
         val paused = attachment.copy(transferState = TransferState.PauseUpload)
         val firstResume = testScope.async { worker(paused, resume = true).doWork() }
@@ -1422,7 +1488,7 @@ class UploadAndSendAttachmentWorkerTest {
         verify(messageDao).getPendingMessagesByChannelIds(channelIds)
         verify(messageDao, never()).getPendingMessages(any())
         val cancelledTags = argumentCaptor<String>()
-        verify(workManager, org.mockito.kotlin.times(channelIds.size)).cancelAllWorkByTag(
+        verify(workManager, times(channelIds.size)).cancelAllWorkByTag(
             cancelledTags.capture()
         )
         assertThat(cancelledTags.allValues).containsExactlyElementsIn(channelIds.map(Long::toString))
@@ -1430,7 +1496,7 @@ class UploadAndSendAttachmentWorkerTest {
 
     @Test
     fun `server clear prevents a worker with an already loaded message from sending`() =
-        runBlocking<Unit> {
+        runBlocking {
             val updateStarted = CompletableDeferred<Unit>()
             val releaseUpdate = CompletableDeferred<Unit>()
             whenever(attachmentLogic.updateAttachmentWithTransferData(any())).doSuspendableAnswer {
@@ -1472,7 +1538,7 @@ class UploadAndSendAttachmentWorkerTest {
 
     @Test
     fun `server cleanup waits for worker cancellation before deleting message rows`() =
-        runBlocking<Unit> {
+        runBlocking {
             val attachment = attachment()
             val pending = createMessage(createdAt = 1L, tid = attachment.messageTid).copy(
                 deliveryStatus = MessageDeliveryStatus.Pending,
@@ -1509,7 +1575,7 @@ class UploadAndSendAttachmentWorkerTest {
 
     @Test
     fun `channel cleanup starts file worker cancellations together and skips text only messages`() =
-        runBlocking<Unit> {
+        runBlocking {
             val channelId = 7L
             val first = localAttachment()
             val second = first.copy(messageTid = 11L)
@@ -1546,7 +1612,7 @@ class UploadAndSendAttachmentWorkerTest {
                 assertThat(cleanup.isCompleted).isFalse()
             } finally {
                 stopped.set(Operation.SUCCESS)
-                withTimeout(5_000) { cleanup.await() }
+                withTimeout(5.seconds) { cleanup.await() }
             }
         }
 
@@ -1657,7 +1723,7 @@ class UploadAndSendAttachmentWorkerTest {
     }
 
     @Test
-    fun `offline upload failure queues the pending attachment retry`() = runBlocking<Unit> {
+    fun `offline upload failure queues the pending attachment retry`() = runBlocking {
         setNetwork()
         val attachment = localAttachment()
         val work = testScope.async { worker(attachment).doWork() }
@@ -1743,7 +1809,7 @@ class UploadAndSendAttachmentWorkerTest {
     }
 
     @Test
-    fun `foreground start restriction still uploads and sends`() = runBlocking<Unit> {
+    fun `foreground start restriction still uploads and sends`() = runBlocking {
         val updater = failingForegroundUpdater(ForegroundServiceStartNotAllowedException("Not allowed"))
         val attachment = localAttachment()
         val work = testScope.async { worker(attachment, foregroundUpdater = updater).doWork() }
@@ -1756,7 +1822,7 @@ class UploadAndSendAttachmentWorkerTest {
     }
 
     @Test
-    fun `other foreground errors still fail the worker`() = runBlocking<Unit> {
+    fun `other foreground errors still fail the worker`() = runBlocking {
         val updater = failingForegroundUpdater(IllegalStateException("Invalid foreground type"))
         val worker = worker(localAttachment(), foregroundUpdater = updater)
 
@@ -1768,7 +1834,7 @@ class UploadAndSendAttachmentWorkerTest {
     }
 
     @Test
-    fun `system stop keeps the upload running`() = runBlocking<Unit> {
+    fun `system stop keeps the upload running`() = runBlocking {
         val attachment = localAttachment()
         val worker = worker(attachment)
         val work = testScope.async { worker.doWork() }
@@ -1783,7 +1849,7 @@ class UploadAndSendAttachmentWorkerTest {
 
     @Test
     @Config(sdk = [24])
-    fun `system stop cancels the upload before Android 12`() = runBlocking<Unit> {
+    fun `system stop cancels the upload before Android 12`() = runBlocking {
         val attachment = localAttachment()
         val worker = worker(attachment)
         val work = testScope.async { worker.doWork() }
@@ -1797,7 +1863,7 @@ class UploadAndSendAttachmentWorkerTest {
     }
 
     @Test
-    fun `app cancellation still cancels the upload`() = runBlocking<Unit> {
+    fun `app cancellation still cancels the upload`() = runBlocking {
         val attachment = localAttachment()
         val worker = worker(attachment)
         val work = testScope.async { worker.doWork() }
@@ -1810,7 +1876,7 @@ class UploadAndSendAttachmentWorkerTest {
         assertThat(service.findTransferTask(attachment)).isNull()
     }
 
-    private fun failingForegroundUpdater(error: Throwable): ForegroundUpdater {
+    private fun foregroundUpdater(): ForegroundUpdater {
         shadowOf(RuntimeEnvironment.getApplication())
             .grantPermissions(android.Manifest.permission.FOREGROUND_SERVICE)
         val channelLogic = SceytKoinApp.koinApp!!.koin.get<PersistenceChannelsLogic>()
@@ -1818,8 +1884,12 @@ class UploadAndSendAttachmentWorkerTest {
             whenever(channelLogic.getChannelFromDb(any())).thenReturn(createChannel(0L, 0L, 0L))
         }
         val updater = mock<ForegroundUpdater>()
-        whenever(updater.setForegroundAsync(any(), any(), any())).thenReturn(Futures.immediateFailedFuture(error))
+        whenever(updater.setForegroundAsync(any(), any(), any())).thenReturn(Futures.immediateFuture(null))
         return updater
+    }
+
+    private fun failingForegroundUpdater(error: Throwable): ForegroundUpdater = foregroundUpdater().also {
+        whenever(it.setForegroundAsync(any(), any(), any())).thenReturn(Futures.immediateFailedFuture(error))
     }
 
     private fun setNetwork(vararg capabilities: Int) {
@@ -1847,11 +1917,11 @@ class UploadAndSendAttachmentWorkerTest {
         )
     }
 
-    private fun previewAttachment(video: SceytAttachment, url: String) = attachment(
+    private fun previewAttachment(video: SceytAttachment) = attachment(
         messageTid = video.messageTid,
         name = "preview.jpg",
         type = AttachmentTypeEnum.Preview.value,
-        url = url,
+        url = "preview-url",
         filePath = File(context.cacheDir, "preview.jpg").path,
     )
 

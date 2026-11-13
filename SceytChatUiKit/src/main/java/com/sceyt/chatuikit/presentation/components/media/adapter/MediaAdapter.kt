@@ -14,8 +14,8 @@ import com.sceyt.chatuikit.presentation.helpers.ExoPlayerHelper
 import kotlinx.coroutines.CoroutineScope
 
 class MediaAdapter(
-        private val attachmentViewHolderFactory: MediaFilesViewHolderFactory,
-        scope: CoroutineScope,
+    private val attachmentViewHolderFactory: MediaFilesViewHolderFactory,
+    scope: CoroutineScope,
 ) : RecyclerView.Adapter<BaseFileViewHolder<MediaItem>>() {
     private var mediaPlayers = mutableListOf<Player>()
     private var wakeLock: PowerManager.WakeLock? = null
@@ -36,7 +36,10 @@ class MediaAdapter(
         scope = scope,
     )
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseFileViewHolder<MediaItem> {
+    override fun onCreateViewHolder(
+        parent: ViewGroup,
+        viewType: Int
+    ): BaseFileViewHolder<MediaItem> {
         return attachmentViewHolderFactory.createViewHolder(parent, viewType)
     }
 
@@ -46,6 +49,7 @@ class MediaAdapter(
 
     override fun onViewAttachedToWindow(holder: BaseFileViewHolder<MediaItem>) {
         super.onViewAttachedToWindow(holder)
+        holder.refreshTransferState()
         holder.onViewAttachedToWindow()
     }
 

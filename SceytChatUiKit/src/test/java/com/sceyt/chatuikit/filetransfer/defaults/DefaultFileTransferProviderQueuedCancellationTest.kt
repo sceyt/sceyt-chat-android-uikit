@@ -1,10 +1,13 @@
 package com.sceyt.chatuikit.filetransfer.defaults
 
+import android.content.Context
 import com.google.common.truth.Truth.assertThat
 import com.sceyt.chatuikit.filetransfer.FileDownloadRequest
 import com.sceyt.chatuikit.filetransfer.FileTransferResult
 import com.sceyt.chatuikit.filetransfer.download.ChatSdkFileDownloader
+import com.sceyt.chatuikit.koin.SceytKoinApp
 import com.sceyt.chatuikit.persistence.logicimpl.attachment
+import com.sceyt.chatuikit.persistence.logicimpl.setValidatedNetwork
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.async
@@ -13,18 +16,41 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withTimeout
+import org.junit.After
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import org.junit.runner.RunWith
+import org.koin.dsl.koinApplication
+import org.koin.dsl.module
 import org.mockito.Mockito
 import org.mockito.kotlin.any
 import org.mockito.kotlin.doSuspendableAnswer
 import org.mockito.kotlin.whenever
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 import java.io.File
 
+@RunWith(RobolectricTestRunner::class)
 class DefaultFileTransferProviderQueuedCancellationTest {
     @get:Rule
     val temporaryFolder = TemporaryFolder()
+
+    @Before
+    fun setUp() {
+        val context = RuntimeEnvironment.getApplication()
+        context.setValidatedNetwork()
+        SceytKoinApp.koinApp = koinApplication {
+            modules(module { single<Context> { context } })
+        }
+    }
+
+    @After
+    fun tearDown() {
+        SceytKoinApp.koinApp?.close()
+        SceytKoinApp.koinApp = null
+    }
 
     @Test
     fun `cancelling a queued download does not wait for an unrelated download`() = runTest {

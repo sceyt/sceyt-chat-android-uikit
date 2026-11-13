@@ -129,6 +129,10 @@ open class ChannelInfoMediaFragment : Fragment(), SceytKoinComponent, HistoryCle
                     it.setClickListener(AttachmentClickListeners.AttachmentClickListener { _, item ->
                         onMediaClick(item)
                     })
+
+                    it.setClickListener(AttachmentClickListeners.AttachmentLoaderClickListener { _, item ->
+                        onAttachmentLoaderClick(item)
+                    })
                 }).also { mediaAdapter = it }
 
             with((binding ?: return).rvFiles) {
@@ -182,6 +186,10 @@ open class ChannelInfoMediaFragment : Fragment(), SceytKoinComponent, HistoryCle
                 )
             )
         }
+    }
+
+    protected open fun onAttachmentLoaderClick(item: ChannelFileItem) {
+        viewModel.pauseOrResumeUpload(item, channel.id)
     }
 
     protected open fun onMoreMediaList(list: List<ChannelFileItem>) {

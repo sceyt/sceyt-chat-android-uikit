@@ -22,7 +22,9 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState.WaitingToUplo
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.holders.BaseFileViewHolder
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelFileItem
 import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.listeners.AttachmentClickListeners
+import com.sceyt.chatuikit.presentation.custom_views.CircularProgressView
 import com.sceyt.chatuikit.styles.channel_info.media.ChannelInfoMediaItemStyle
+import com.sceyt.chatuikit.styles.common.MediaLoaderStyle
 
 class ImageViewHolder(
     private val binding: SceytItemChannelImageBinding,
@@ -36,6 +38,10 @@ class ImageViewHolder(
 
         binding.root.setOnClickListener {
             clickListeners.onAttachmentClick(it, fileItem)
+        }
+
+        binding.loadProgress.setOnClickListener {
+            clickListeners.onAttachmentLoaderClick(it, fileItem)
         }
     }
 
@@ -98,7 +104,11 @@ class ImageViewHolder(
 
     override fun needThumbFor() = ThumbFor.ChannelInfo
 
+    override val loadingProgressViewWithStyle: Pair<CircularProgressView, MediaLoaderStyle>
+        get() = binding.loadProgress to style.mediaLoaderStyle
+
     private fun SceytItemChannelImageBinding.applyStyle() {
         root.setBackgroundColor(style.backgroundColor)
+        style.mediaLoaderStyle.apply(loadProgress)
     }
 }

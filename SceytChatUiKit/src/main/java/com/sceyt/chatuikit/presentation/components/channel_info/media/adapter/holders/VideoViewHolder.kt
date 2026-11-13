@@ -24,7 +24,9 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState.WaitingToUplo
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.holders.BaseFileViewHolder
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelFileItem
 import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.listeners.AttachmentClickListeners
+import com.sceyt.chatuikit.presentation.custom_views.CircularProgressView
 import com.sceyt.chatuikit.styles.channel_info.media.ChannelInfoMediaItemStyle
+import com.sceyt.chatuikit.styles.common.MediaLoaderStyle
 
 class VideoViewHolder(
     private val binding: SceytItemChannelVideoBinding,
@@ -38,6 +40,10 @@ class VideoViewHolder(
 
         binding.root.setOnClickListener {
             clickListeners.onAttachmentClick(it, fileItem)
+        }
+
+        binding.loadProgress.setOnClickListener {
+            clickListeners.onAttachmentLoaderClick(it, fileItem)
         }
     }
 
@@ -107,10 +113,14 @@ class VideoViewHolder(
 
     override fun needThumbFor() = ThumbFor.ChannelInfo
 
+    override val loadingProgressViewWithStyle: Pair<CircularProgressView, MediaLoaderStyle>
+        get() = binding.loadProgress to style.mediaLoaderStyle
+
     private fun SceytItemChannelVideoBinding.applyStyle() {
         with(tvDuration) {
             setDrawableStart(style.videoDurationIcon)
             style.videoDurationTextStyle.apply(this)
         }
+        style.mediaLoaderStyle.apply(loadProgress)
     }
 }

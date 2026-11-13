@@ -18,18 +18,17 @@
 
     <com.sceyt.chatuikit.presentation.custom_views.CircularProgressView
         android:id="@+id/progress"
-        android:layout_width="72dp"
-        android:layout_height="72dp"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
         android:padding="3dp"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:sceytUiProgressRotateAnimEnabled="false"
         app:sceytUiProgressBackgroundColor="@color/sceyt_color_overlay_background_2"
         app:sceytUiProgressColor="@color/sceyt_color_on_primary"
-        app:sceytUiProgressIconSizeInPercent="65"
+        app:sceytUiProgressIconSizeInPercent="60"
         app:sceytUiProgressMinProgress="2"
         app:sceytUiProgressTrackColor="@android:color/transparent"
         tools:visibility="visible" />

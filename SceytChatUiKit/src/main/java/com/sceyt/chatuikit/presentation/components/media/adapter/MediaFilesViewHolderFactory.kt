@@ -12,12 +12,13 @@ import com.sceyt.chatuikit.presentation.components.media.adapter.holders.MediaVi
 import com.sceyt.chatuikit.styles.preview.MediaPreviewStyle
 
 open class MediaFilesViewHolderFactory(
-        context: Context,
-        private val style: MediaPreviewStyle
+    context: Context,
+    private val style: MediaPreviewStyle
 ) {
     protected val layoutInflater: LayoutInflater = LayoutInflater.from(context)
     private var clickListeners: (MediaItem) -> Unit = {}
     private var needMediaDataCallback: (NeedMediaInfoData) -> Unit = {}
+    private var loaderClickListener: (MediaItem) -> Unit = {}
 
     fun createViewHolder(parent: ViewGroup, viewType: Int): BaseFileViewHolder<MediaItem> {
         return when (viewType) {
@@ -29,14 +30,22 @@ open class MediaFilesViewHolderFactory(
 
     open fun createImageViewHolder(parent: ViewGroup): BaseFileViewHolder<MediaItem> {
         return MediaImageViewHolder(
-            SceytMediaItemImageBinding.inflate(layoutInflater, parent, false), style,
-            clickListeners = clickListeners, needMediaDataCallback = needMediaDataCallback)
+            binding = SceytMediaItemImageBinding.inflate(layoutInflater, parent, false),
+            style = style,
+            clickListeners = clickListeners,
+            needMediaDataCallback = needMediaDataCallback,
+            loaderClickListener = loaderClickListener
+        )
     }
 
     open fun createVideoViewHolder(parent: ViewGroup): BaseFileViewHolder<MediaItem> {
         return MediaVideoViewHolder(
-            SceytMediaItemVideoBinding.inflate(layoutInflater, parent, false), style,
-            clickListeners = clickListeners, needMediaDataCallback = needMediaDataCallback)
+            binding = SceytMediaItemVideoBinding.inflate(layoutInflater, parent, false),
+            style = style,
+            clickListeners = clickListeners,
+            needMediaDataCallback = needMediaDataCallback,
+            loaderClickListener = loaderClickListener
+        )
     }
 
     open fun getItemViewType(item: MediaItem): Int {
@@ -52,6 +61,10 @@ open class MediaFilesViewHolderFactory(
 
     fun setNeedMediaDataCallback(callback: (NeedMediaInfoData) -> Unit) {
         needMediaDataCallback = callback
+    }
+
+    fun setLoaderClickListener(listener: (MediaItem) -> Unit) {
+        loaderClickListener = listener
     }
 
     @Suppress("unused")

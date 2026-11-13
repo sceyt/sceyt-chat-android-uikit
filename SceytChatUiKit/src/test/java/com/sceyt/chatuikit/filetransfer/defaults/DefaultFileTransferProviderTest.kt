@@ -1,5 +1,7 @@
 package com.sceyt.chatuikit.filetransfer.defaults
 
+import android.content.Context
+import android.net.ConnectivityManager
 import com.google.common.truth.Truth.assertThat
 import com.google.gson.JsonObject
 import com.sceyt.chat.models.SceytException
@@ -9,8 +11,10 @@ import com.sceyt.chatuikit.filetransfer.FileTransferCallback
 import com.sceyt.chatuikit.filetransfer.FileTransferResult
 import com.sceyt.chatuikit.filetransfer.FileUploadRequest
 import com.sceyt.chatuikit.filetransfer.download.ChatSdkFileDownloader
+import com.sceyt.chatuikit.koin.SceytKoinApp
 import com.sceyt.chatuikit.persistence.logicimpl.FileTransferUtility
 import com.sceyt.chatuikit.persistence.logicimpl.attachment
+import com.sceyt.chatuikit.persistence.logicimpl.setValidatedNetwork
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancelAndJoin
@@ -20,6 +24,9 @@ import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.koin.dsl.koinApplication
+import org.koin.dsl.module
 import org.mockito.MockedConstruction
 import org.mockito.Mockito
 import org.mockito.kotlin.any
@@ -28,8 +35,13 @@ import org.mockito.kotlin.doSuspendableAnswer
 import org.mockito.kotlin.same
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
+import org.robolectric.Shadows.shadowOf
+import org.robolectric.shadows.ShadowNetworkCapabilities
 import java.io.File
 
+@RunWith(RobolectricTestRunner::class)
 @OptIn(ExperimentalCoroutinesApi::class)
 class DefaultFileTransferProviderTest {
     private lateinit var utilityConstruction: MockedConstruction<FileTransferUtility>
@@ -37,6 +49,11 @@ class DefaultFileTransferProviderTest {
 
     @Before
     fun setUp() {
+        val context = RuntimeEnvironment.getApplication()
+        context.setValidatedNetwork()
+        SceytKoinApp.koinApp = koinApplication {
+            modules(module { single<Context> { context } })
+        }
         utilityConstruction = Mockito.mockConstruction(FileTransferUtility::class.java)
         downloaderConstruction = Mockito.mockConstruction(ChatSdkFileDownloader::class.java)
     }
@@ -45,6 +62,8 @@ class DefaultFileTransferProviderTest {
     fun tearDown() {
         downloaderConstruction.close()
         utilityConstruction.close()
+        SceytKoinApp.koinApp?.close()
+        SceytKoinApp.koinApp = null
     }
 
     @Test
@@ -130,6 +149,37 @@ class DefaultFileTransferProviderTest {
 
         assertThat(bridgeCancelled).isTrue()
         assertThat(job.isCancelled).isTrue()
+    }
+
+    @Test
+    fun `offline download is interrupted before native starts and can retry when online`() = runTest {
+        val context = RuntimeEnvironment.getApplication()
+        val connectivityManager = context.getSystemService(ConnectivityManager::class.java)
+        val capabilities = ShadowNetworkCapabilities.newInstance()
+        shadowOf(connectivityManager).setNetworkCapabilities(connectivityManager.activeNetwork, capabilities)
+        val provider = DefaultFileTransferProvider()
+        val downloader = downloaderConstruction.constructed().single()
+        val request = FileDownloadRequest(
+            "download:10",
+            "https://cdn.test/file",
+            File("/tmp/downloaded.txt"),
+            attachment(),
+        )
+        val progress = mutableListOf<Float>()
+
+        val result = provider.download(request, progress::add)
+
+        assertThat(result).isInstanceOf(FileTransferResult.Interrupted::class.java)
+        assertThat((result as FileTransferResult.Interrupted).error.message).isEqualTo("No network connection")
+        assertThat(progress).isEmpty()
+        Mockito.verifyNoInteractions(downloader)
+
+        context.setValidatedNetwork()
+        val success = FileTransferResult.Success(request.destinationFile.path)
+        whenever(downloader.download(any(), any())).thenReturn(success)
+
+        assertThat(provider.download(request, progress::add)).isSameInstanceAs(success)
+        verify(downloader).download(same(request), any())
     }
 
     @Test
