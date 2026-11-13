@@ -1,6 +1,8 @@
 package com.sceyt.chatuikit.persistence.logicimpl
 
 import android.content.Context
+import android.os.Looper
+import androidx.lifecycle.Observer
 import com.google.common.truth.Truth.assertThat
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chatuikit.SceytChatUIKit
@@ -18,6 +20,7 @@ import com.sceyt.chatuikit.persistence.di.CoroutineContextType
 import com.sceyt.chatuikit.persistence.file_transfer.AttachmentTransferStateStore
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferServiceImpl
+import com.sceyt.chatuikit.persistence.file_transfer.FileTransferHelper
 import com.sceyt.chatuikit.persistence.file_transfer.ProgressUpdateCallback
 import com.sceyt.chatuikit.persistence.file_transfer.ResumePauseCallback
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
@@ -52,6 +55,8 @@ import org.koin.dsl.module
 import org.mockito.kotlin.mock
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import org.robolectric.Shadows.shadowOf
+import org.robolectric.annotation.LooperMode
 
 @RunWith(RobolectricTestRunner::class)
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -97,6 +102,90 @@ class AttachmentDownloadCoordinatorTest {
         SceytChatUIKit.fileTransfer = previousFileTransfer
         SceytKoinApp.koinApp = null
         stopKoin()
+    }
+
+    @Test
+    fun `queued downloads publish loading before their work starts`() {
+        testScope = TestScope(StandardTestDispatcher())
+        downloader = AttachmentDownloadCoordinator(context, testScope)
+        service = FileTransferServiceImpl(context, mock(), downloader, mock())
+        val attachments = (701L..708L).map { tid ->
+            attachment(messageTid = tid, state = TransferState.PendingDownload)
+        }
+        val updates = mutableListOf<TransferData>()
+
+        try {
+            attachments.forEach { attachment ->
+                service.download(attachment) {
+                    progressCallback = ProgressUpdateCallback { updates += it }
+                }
+            }
+
+            assertThat(transport.downloadCalls).isEmpty()
+            assertThat(updates.map { it.messageTid })
+                .containsExactlyElementsIn(attachments.map { it.messageTid }).inOrder()
+            assertThat(updates.all { it.state == TransferState.Downloading && it.progressPercent == 0f }).isTrue()
+        } finally {
+            service.cancelAllTransfers()
+            testScope.runCurrent()
+        }
+    }
+
+    @Test
+    @LooperMode(LooperMode.Mode.PAUSED)
+    fun `every download shows loading while network requests are waiting`() {
+        val attachments = (711L..718L).map { tid ->
+            attachment(messageTid = tid, state = TransferState.PendingDownload)
+        }
+        val messageTids = attachments.map { it.messageTid }
+        val updates = mutableListOf<TransferData>()
+        val observer = Observer<TransferData> { update ->
+            if (update.messageTid in messageTids) updates += update
+        }
+        FileTransferHelper.onTransferUpdatedLiveData.observeForever(observer)
+
+        try {
+            attachments.forEach { service.download(it) }
+            shadowOf(Looper.getMainLooper()).idle()
+
+            assertThat(transport.downloadCalls).hasSize(attachments.size)
+            assertThat(updates.map { it.messageTid }).containsExactlyElementsIn(messageTids)
+            assertThat(updates.all { it.state == TransferState.Downloading && it.progressPercent == 0f }).isTrue()
+        } finally {
+            FileTransferHelper.onTransferUpdatedLiveData.removeObserver(observer)
+        }
+    }
+
+    @Test
+    @LooperMode(LooperMode.Mode.PAUSED)
+    fun `queued resumed downloads show loading with their saved progress`() {
+        testScope = TestScope(StandardTestDispatcher())
+        downloader = AttachmentDownloadCoordinator(context, testScope)
+        service = FileTransferServiceImpl(context, mock(), downloader, mock())
+        val attachments = (721L..728L).map { tid ->
+            attachment(messageTid = tid, state = TransferState.PauseDownload).copy(progressPercent = 37f)
+        }
+        val messageTids = attachments.map { it.messageTid }
+        val updates = mutableListOf<TransferData>()
+        val observer = Observer<TransferData> { update ->
+            if (update.messageTid in messageTids) updates += update
+        }
+        FileTransferHelper.onTransferUpdatedLiveData.observeForever(observer)
+
+        try {
+            attachments.forEach {
+                service.resume(it.messageTid, it, TransferState.PauseDownload)
+            }
+            shadowOf(Looper.getMainLooper()).idle()
+
+            assertThat(transport.downloadCalls).isEmpty()
+            assertThat(updates.map { it.messageTid }).containsExactlyElementsIn(messageTids)
+            assertThat(updates.all { it.state == TransferState.Downloading && it.progressPercent == 37f }).isTrue()
+        } finally {
+            FileTransferHelper.onTransferUpdatedLiveData.removeObserver(observer)
+            service.cancelAllTransfers()
+            testScope.runCurrent()
+        }
     }
 
     @Test
@@ -1000,7 +1089,7 @@ class AttachmentDownloadCoordinatorTest {
         }
 
         assertThat(task.state).isEqualTo(TransferState.PauseDownload)
-        assertThat(states).containsExactly(TransferState.PauseDownload)
+        assertThat(states).containsExactly(TransferState.Downloading, TransferState.PauseDownload).inOrder()
         assertThat(transport.downloadCalls).isEmpty()
     }
 
