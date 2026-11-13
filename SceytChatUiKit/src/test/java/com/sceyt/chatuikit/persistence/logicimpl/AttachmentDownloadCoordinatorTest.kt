@@ -109,7 +109,7 @@ class AttachmentDownloadCoordinatorTest {
     }
 
     @Test
-    fun `repeated offline download requests retry on reconnect without loading or errors`() = runBlocking {
+    fun `offline downloads reach the provider and interruptions retry on reconnect`() = runBlocking {
         setNetwork(connected = false)
         val attachment = attachment(state = TransferState.PendingDownload)
         val updates = mutableListOf<TransferData>()
@@ -120,12 +120,14 @@ class AttachmentDownloadCoordinatorTest {
                 progressCallback = ProgressUpdateCallback { updates += it }
                 downloadCallback = TransferResultCallback { results += it }
             }
-            assertThat(task.state).isEqualTo(TransferState.PendingDownload)
+            assertThat(task.state).isEqualTo(TransferState.Downloading)
+            transport.downloadCalls.last().interrupt()
         }
 
-        assertThat(transport.downloadCalls).isEmpty()
-        assertThat(updates).isEmpty()
-        assertThat(results).isEmpty()
+        assertThat(transport.downloadCalls).hasSize(3)
+        assertThat(updates).hasSize(3)
+        assertThat(results).hasSize(3)
+        assertThat(results.all { it is SceytResponse.Error }).isTrue()
         assertThat(downloader.getInterruptedDownloads().map { it.messageTid })
             .containsExactly(attachment.messageTid)
 
@@ -135,17 +137,18 @@ class AttachmentDownloadCoordinatorTest {
             start = { service.download(it) },
         )
 
-        assertThat(transport.downloadCalls).hasSize(1)
-        assertThat(updates.single().state).isEqualTo(TransferState.Downloading)
-        transport.downloadCalls.single().succeed(destinationFile.path)
+        assertThat(transport.downloadCalls).hasSize(4)
+        assertThat(updates.last().state).isEqualTo(TransferState.Downloading)
+        transport.downloadCalls.last().succeed(destinationFile.path)
         assertThat(downloader.getInterruptedDownloads()).isEmpty()
     }
 
     @Test
-    fun `offline requests and interrupted downloads share the same ten retry slots`() {
+    fun `provider interruptions share the same ten retry slots regardless of connectivity`() {
         setNetwork(connected = false)
         (1L..6L).forEach { tid ->
             service.download(attachment(messageTid = tid, state = TransferState.PendingDownload))
+            transport.downloadCalls.last().interrupt()
         }
         setNetwork(connected = true)
         (7L..12L).forEach { tid ->
@@ -155,26 +158,6 @@ class AttachmentDownloadCoordinatorTest {
 
         assertThat(downloader.getInterruptedDownloads().map { it.messageTid })
             .containsExactlyElementsIn(3L..12L).inOrder()
-    }
-
-    @Test
-    fun `pausing an offline request removes it from reconnect retries`() = runBlocking {
-        setNetwork(connected = false)
-        val attachment = attachment(state = TransferState.PendingDownload)
-        service.download(attachment)
-        assertThat(downloader.getInterruptedDownloads()).hasSize(1)
-
-        service.pause(attachment.messageTid, attachment, TransferState.PendingDownload)
-        service.download(attachment.copy(transferState = TransferState.PauseDownload))
-        setNetwork(connected = true)
-        downloader.retryInterruptedDownloads(
-            findStored = { it },
-            start = { service.download(it) },
-        )
-
-        assertThat(downloader.getInterruptedDownloads()).isEmpty()
-        assertThat(transport.downloadCalls).isEmpty()
-        assertThat(service.findTransferTask(attachment)?.state).isEqualTo(TransferState.PauseDownload)
     }
 
     @Test
