@@ -28,8 +28,8 @@ import java.util.Date
 
 /** Style for [MediaPreviewActivity].
  * @property backgroundColor Background color of the media preview, default is [Color.BLACK].
- * @property videoControllerBackgroundColor Color of the video controller, default is [R.color.sceyt_media_primary_color].
- * @property trackColor Color of the track, default is [Colors.iconSecondaryColor].
+ * @property videoControllerBackgroundColor Color of the video controller, default is [R.color.sceyt_media_controller_color].
+ * @property trackColor Color of the track, default is [R.color.sceyt_media_controller_track_color].
  * @property progressColor Color of the progress, default is [Colors.primaryColor].
  * @property thumbColor Color of the thumb, default is [Colors.primaryColor].
  * @property pauseIcon Icon for the pause button, default is [R.drawable.sceyt_ic_pause].
@@ -68,7 +68,7 @@ data class MediaPreviewStyle(
                 val opPrimaryColor = context.getCompatColor(SceytChatUIKitTheme.colors.onPrimaryColor)
 
                 val backgroundColor = Color.BLACK
-                val videoControllerBackgroundColor = context.getCompatColor(R.color.sceyt_media_primary_color)
+                val videoControllerBackgroundColor = context.getCompatColor(R.color.sceyt_media_controller_color)
 
                 val pauseIcon = context.getCompatDrawable(R.drawable.sceyt_ic_pause).applyTint(
                     context.getCompatColor(SceytChatUIKitTheme.colors.onPrimaryColor)
@@ -76,7 +76,7 @@ data class MediaPreviewStyle(
                 val playIcon = context.getCompatDrawable(R.drawable.sceyt_ic_play).applyTint(
                     context.getCompatColor(SceytChatUIKitTheme.colors.onPrimaryColor)
                 )
-                val trackColor = context.getCompatColor(SceytChatUIKit.theme.colors.iconSecondaryColor)
+                val trackColor = context.getCompatColor(R.color.sceyt_media_controller_track_color)
 
                 return MediaPreviewStyle(
                     backgroundColor = backgroundColor,

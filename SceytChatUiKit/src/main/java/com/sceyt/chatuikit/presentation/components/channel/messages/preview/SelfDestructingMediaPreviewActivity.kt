@@ -5,19 +5,15 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.viewModels
-import androidx.annotation.OptIn
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.isVisible
-import androidx.media3.common.util.UnstableApi
-import androidx.media3.ui.DefaultTimeBar
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.sceyt.chatuikit.R
@@ -31,7 +27,6 @@ import com.sceyt.chatuikit.extensions.darkModeContext
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.presentation.common.dialogs.ViewOnceInfoDialog
-import com.sceyt.chatuikit.presentation.custom_views.PlayPauseImage
 import com.sceyt.chatuikit.presentation.helpers.ExoPlayerHelper
 import com.sceyt.chatuikit.styles.preview.SelfDestructingMediaPreviewStyle
 import java.util.Date
@@ -47,7 +42,6 @@ class SelfDestructingMediaPreviewActivity : AppCompatActivity(), SceytKoinCompon
     private var attachment: SceytAttachment? = null
 
     private var playerHelper: ExoPlayerHelper? = null
-    private var videoController: ViewGroup? = null
 
     private lateinit var textExpandCollapseHelper: TextExpandCollapseHelper
     private var isVideoAttachment = false
@@ -109,20 +103,12 @@ class SelfDestructingMediaPreviewActivity : AppCompatActivity(), SceytKoinCompon
         initVideoController()
     }
 
-    @OptIn(UnstableApi::class)
     private fun initVideoController() {
-        binding.videoView.controllerHideOnTouch = false
-
-        binding.videoView.findViewById<ViewGroup>(R.id.videoTimeContainer)
-            ?.let { controller ->
-                videoController = controller
-                controller.applySystemWindowInsetsPadding(
-                    applyBottom = true,
-                    applyRight = true,
-                    applyLeft = true
-                )
-                controller.isVisible = binding.toolbar.isVisible
-            }
+        binding.videoController.applySystemWindowInsetsPadding(
+            applyBottom = true,
+            applyRight = true,
+            applyLeft = true
+        )
 
         binding.videoView.setOnClickListener {
             onMediaClick()
@@ -174,6 +160,7 @@ class SelfDestructingMediaPreviewActivity : AppCompatActivity(), SceytKoinCompon
     private fun displayVideo(attachment: SceytAttachment) {
         binding.imageView.isVisible = false
         binding.videoView.isVisible = true
+        binding.videoController.isVisible = binding.toolbar.isVisible
         isVideoAttachment = true
 
         val filePath = attachment.filePath ?: attachment.url ?: return
@@ -186,6 +173,7 @@ class SelfDestructingMediaPreviewActivity : AppCompatActivity(), SceytKoinCompon
                 Toast.makeText(this, "Video playback error", Toast.LENGTH_SHORT).show()
             }
         )
+        binding.videoController.setPlayer(playerHelper?.player)
         playerHelper?.setMediaPath(filePath, playVideo = true)
     }
 
@@ -200,14 +188,14 @@ class SelfDestructingMediaPreviewActivity : AppCompatActivity(), SceytKoinCompon
         textExpandCollapseHelper.setText(body)
 
         binding.messageBodyContainer.post {
-            adjustMessageBodyPosition(videoController?.isVisible == true)
+            adjustMessageBodyPosition(binding.videoController.isVisible)
         }
     }
 
     private fun onMediaClick() {
         val newVisibility = !binding.toolbar.isVisible
         binding.toolbar.isVisible = newVisibility
-        videoController?.isVisible = newVisibility
+        if (isVideoAttachment) binding.videoController.isVisible = newVisibility
 
         adjustMessageBodyPosition(newVisibility)
 
@@ -217,7 +205,7 @@ class SelfDestructingMediaPreviewActivity : AppCompatActivity(), SceytKoinCompon
     private fun adjustMessageBodyPosition(controllerVisible: Boolean) {
         if (!isVideoAttachment) return
 
-        val controller = videoController ?: return
+        val controller = binding.videoController
 
         if (controllerVisible) {
             controller.post {
@@ -258,6 +246,7 @@ class SelfDestructingMediaPreviewActivity : AppCompatActivity(), SceytKoinCompon
 
     override fun onDestroy() {
         super.onDestroy()
+        binding.videoController.setPlayer(null)
         playerHelper?.releasePlayer()
         playerHelper = null
         textExpandCollapseHelper.cleanup()
@@ -270,27 +259,16 @@ class SelfDestructingMediaPreviewActivity : AppCompatActivity(), SceytKoinCompon
         applyMessageBodyStyle()
     }
 
-    @OptIn(UnstableApi::class)
     private fun SceytActivitySelfDestructingMediaPreviewBinding.applyVideoPlayerStyle() {
-        with(videoView) {
-            findViewById<View>(R.id.videoTimeContainer)?.setBackgroundColor(style.videoControllerBackgroundColor)
-
-            findViewById<PlayPauseImage>(R.id.exo_play_pause)?.apply {
-                setPlayIcon(style.playIcon)
-                setPauseIcon(style.pauseIcon)
-            }
-
-            findViewById<DefaultTimeBar>(R.id.exo_progress)?.apply {
-                setPlayedColor(style.progressColor)
-                setScrubberColor(style.thumbColor)
-                setUnplayedColor(style.trackColor)
-                setBufferedColor(style.trackColor)
-            }
-
-            style.timelineTextStyle.apply(findViewById(R.id.exo_position))
-            style.timelineTextStyle.apply(findViewById(R.id.tvMiddle))
-            style.timelineTextStyle.apply(findViewById(R.id.exo_duration))
-        }
+        videoController.applyStyle(
+            backgroundColor = style.videoControllerBackgroundColor,
+            playIcon = style.playIcon,
+            pauseIcon = style.pauseIcon,
+            trackColor = style.trackColor,
+            progressColor = style.progressColor,
+            thumbColor = style.thumbColor,
+            timelineTextStyle = style.timelineTextStyle
+        )
     }
 
     private fun SceytActivitySelfDestructingMediaPreviewBinding.applyMessageBodyStyle() {

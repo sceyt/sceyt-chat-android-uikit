@@ -33,8 +33,8 @@ import java.util.Date
  * @property mediaDateFormatter Formatter for the media date, default is [SceytChatUIKit.formatters.mediaPreviewDateFormatter].
  * @property messageBodyBackgroundStyle Background style for the message body container (supports color, gradient, borders, etc).
  * @property messageBodyTextStyle Style for the message body text.
- * @property videoControllerBackgroundColor Color of the video controller, default is [R.color.sceyt_media_primary_color].
- * @property trackColor Color of the timeline track, default is [Colors.iconSecondaryColor].
+ * @property videoControllerBackgroundColor Color of the video controller, default is [R.color.sceyt_media_controller_color].
+ * @property trackColor Color of the timeline track, default is [R.color.sceyt_media_controller_track_color].
  * @property progressColor Color of the timeline progress, default is [Colors.onPrimaryColor].
  * @property thumbColor Color of the timeline thumb, default is [Colors.onPrimaryColor].
  * @property pauseIcon Icon for the pause button, default is [R.drawable.sceyt_ic_pause].
@@ -74,7 +74,7 @@ data class SelfDestructingMediaPreviewStyle(
 
                     val backgroundColor = Color.BLACK
                     val videoControllerBackgroundColor =
-                        context.getCompatColor(R.color.sceyt_media_primary_color)
+                        context.getCompatColor(R.color.sceyt_media_controller_color)
 
                     val pauseIcon = context.getCompatDrawable(R.drawable.sceyt_ic_pause).applyTint(
                         context.getCompatColor(SceytChatUIKitTheme.colors.onPrimaryColor)
@@ -83,7 +83,7 @@ data class SelfDestructingMediaPreviewStyle(
                         context.getCompatColor(SceytChatUIKitTheme.colors.onPrimaryColor)
                     )
                     val trackColor =
-                        context.getCompatColor(SceytChatUIKit.theme.colors.iconSecondaryColor)
+                        context.getCompatColor(R.color.sceyt_media_controller_track_color)
 
                     return SelfDestructingMediaPreviewStyle(
                         backgroundColor = backgroundColor,

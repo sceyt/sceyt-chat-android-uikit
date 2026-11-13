@@ -1,18 +1,8 @@
 package com.sceyt.chatuikit.presentation.components.media.adapter.holders
 
-import android.annotation.SuppressLint
-import android.view.MotionEvent
-import android.view.View
-import android.widget.FrameLayout
 import android.widget.Toast
-import androidx.annotation.OptIn
 import androidx.core.view.isVisible
-import androidx.media3.common.Player
-import androidx.media3.common.util.UnstableApi
-import androidx.media3.ui.DefaultTimeBar
-import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.databinding.SceytMediaItemVideoBinding
-import com.sceyt.chatuikit.extensions.doSafe
 import com.sceyt.chatuikit.extensions.forceApplySystemWindowInsetsPadding
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.persistence.file_transfer.ThumbFor
@@ -37,7 +27,6 @@ import com.sceyt.chatuikit.presentation.components.media.OnMediaClickCallback
 import com.sceyt.chatuikit.presentation.components.media.adapter.MediaAdapter
 import com.sceyt.chatuikit.presentation.components.media.adapter.MediaItem
 import com.sceyt.chatuikit.presentation.custom_views.CircularProgressView
-import com.sceyt.chatuikit.presentation.custom_views.PlayPauseImage
 import com.sceyt.chatuikit.presentation.helpers.ExoPlayerHelper
 import com.sceyt.chatuikit.styles.common.MediaLoaderStyle
 import com.sceyt.chatuikit.styles.preview.MediaPreviewStyle
@@ -51,7 +40,6 @@ class MediaVideoViewHolder(
 ) : BaseFileViewHolder<MediaItem>(binding.root, needMediaDataCallback),
     SharedTransitionViewProvider {
     private var playerHelper: ExoPlayerHelper? = null
-    private var videoController: FrameLayout? = null
     private val mediaAdapter by lazy { bindingAdapter as? MediaAdapter }
     private var pendingReadyCallback: (() -> Unit)? = null
     private var isOriginalImageReady = false
@@ -69,65 +57,33 @@ class MediaVideoViewHolder(
         }
 
         binding.videoView.setOnClickListener {
-            videoController?.isVisible = !(videoController?.isVisible ?: false)
+            with(binding.videoController) {
+                setControllerVisible(!isControllerVisible, animate = true)
+            }
             (context as? OnMediaClickCallback)?.onMediaClick()
         }
+
+        binding.videoController.forceApplySystemWindowInsetsPadding(
+            applyBottom = true,
+            applyRight = true,
+            applyLeft = true
+        )
     }
 
     override fun bind(item: MediaItem) {
         super.bind(item)
-        initVideoController()
+        syncControllerVisibility()
         pendingReadyCallback = null
         isOriginalImageReady = false
     }
 
-    @OptIn(UnstableApi::class)
-    @SuppressLint("ClickableViewAccessibility")
-    private fun initVideoController() {
-        doSafe { binding.videoView.controllerHideOnTouch = false }
-        var isPlayingBeforePause = false
-        binding.videoView.findViewById<FrameLayout>(R.id.videoTimeContainer)
-            ?.let { videoTimeContainer ->
-                with(videoTimeContainer) {
-                    forceApplySystemWindowInsetsPadding(
-                        applyBottom = true,
-                        applyRight = true,
-                        applyLeft = true
-                    )
-                    findViewById<DefaultTimeBar>(R.id.exo_progress)?.setOnTouchListener { _, event ->
-                        when (event.action) {
-                            MotionEvent.ACTION_DOWN -> {
-                                isPlayingBeforePause = playerHelper?.isPlaying() ?: false
-                                playerHelper?.pausePlayer()
-                            }
-
-                            MotionEvent.ACTION_UP -> if (isPlayingBeforePause) {
-                                playerHelper?.resumePlayer()
-                                initWakeLock()
-                            }
-                        }
-                        false
-                    }
-                    isVisible = ((context as? MediaPreviewActivity)?.isVisibleToolbar() ?: true)
-                    videoController = this
-                }
-            }
-
-        videoController?.findViewById<View>(R.id.exo_play_pause)?.setOnTouchListener { _, event ->
-            if (event.action == MotionEvent.ACTION_UP && playerHelper?.player?.playbackState == Player.STATE_IDLE) {
-                playerHelper?.let {
-                    it.retryPlayer()
-                    it.resumePlayer()
-                } ?: initPlayerHelper(true)
-            }
-
-            return@setOnTouchListener false
-        }
+    private fun syncControllerVisibility() {
+        val visible = (context as? MediaPreviewActivity)?.isVisibleToolbar() ?: true
+        binding.videoController.setControllerVisible(visible, animate = false)
     }
 
     private fun setPlayingState() {
-        videoController?.isVisible = ((context as? MediaPreviewActivity)?.isVisibleToolbar()
-            ?: true)
+        syncControllerVisibility()
         initPlayerHelper()
     }
 
@@ -145,7 +101,10 @@ class MediaVideoViewHolder(
             if (playing) {
                 initWakeLock()
             } else releaseWakeLock()
-        }).also { mediaAdapter?.addMediaPlayer(it.player) }
+        }).also {
+            mediaAdapter?.addMediaPlayer(it.player)
+            binding.videoController.setPlayer(it.player)
+        }
     }
 
     private fun initWakeLock() {
@@ -164,6 +123,7 @@ class MediaVideoViewHolder(
     override fun onViewDetachedFromWindow() {
         super.onViewDetachedFromWindow()
         releaseWakeLock()
+        binding.videoController.setPlayer(null)
         playerHelper?.let { helper ->
             mediaAdapter?.savePlaybackPosition(fileItem.attachment.filePath, helper.player.currentPosition)
             mediaAdapter?.removeMediaPlayer(helper.player)
@@ -278,24 +238,16 @@ class MediaVideoViewHolder(
         }
     }
 
-    @OptIn(UnstableApi::class)
     private fun SceytMediaItemVideoBinding.applyStyle() {
         style.mediaLoaderStyle.apply(progress)
-        with(videoView) {
-            findViewById<View>(R.id.videoTimeContainer).setBackgroundColor(style.videoControllerBackgroundColor)
-            findViewById<PlayPauseImage>(R.id.exo_play_pause)?.apply {
-                setPlayIcon(style.playIcon)
-                setPauseIcon(style.pauseIcon)
-            }
-            findViewById<DefaultTimeBar>(R.id.exo_progress).apply {
-                setPlayedColor(style.progressColor)
-                setScrubberColor(style.thumbColor)
-                setUnplayedColor(style.trackColor)
-                setBufferedColor(style.trackColor)
-            }
-            style.timelineTextStyle.apply(findViewById(R.id.exo_position))
-            style.timelineTextStyle.apply(findViewById(R.id.tvMiddle))
-            style.timelineTextStyle.apply(findViewById(R.id.exo_duration))
-        }
+        videoController.applyStyle(
+            backgroundColor = style.videoControllerBackgroundColor,
+            playIcon = style.playIcon,
+            pauseIcon = style.pauseIcon,
+            trackColor = style.trackColor,
+            progressColor = style.progressColor,
+            thumbColor = style.thumbColor,
+            timelineTextStyle = style.timelineTextStyle
+        )
     }
 }
