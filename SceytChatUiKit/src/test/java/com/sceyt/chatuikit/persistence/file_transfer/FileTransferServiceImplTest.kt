@@ -1,5 +1,7 @@
 package com.sceyt.chatuikit.persistence.file_transfer
 
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequest
 import androidx.work.Operation
@@ -50,6 +52,8 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import org.robolectric.Shadows.shadowOf
+import org.robolectric.shadows.ShadowNetworkCapabilities
 import java.io.File
 import kotlin.coroutines.CoroutineContext
 
@@ -86,6 +90,11 @@ class FileTransferServiceImplTest {
 
     @Before
     fun setUp() {
+        val context = RuntimeEnvironment.getApplication()
+        val connectivityManager = context.getSystemService(ConnectivityManager::class.java)
+        val capabilities = ShadowNetworkCapabilities.newInstance()
+        shadowOf(capabilities).addCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+        shadowOf(connectivityManager).setNetworkCapabilities(connectivityManager.activeNetwork, capabilities)
         previousFileTransfer = SceytChatUIKit.fileTransfer
         service.cancelAllTransfers()
         reset(uploader)
@@ -466,7 +475,6 @@ class FileTransferServiceImplTest {
                 onResult = it.getArgument(2),
                 onPaused = it.getArgument(3),
             )
-            Unit
         }.`when`(uploader).upload(any(), any(), any(), any())
         doAnswer { uploads.cancel(it.getArgument(0)) }.`when`(uploader).cancel(any())
         doAnswer { uploads.cancelAll() }.`when`(uploader).cancelAll()
@@ -556,7 +564,7 @@ class FileTransferServiceImplTest {
         val second =
             attachment(messageTid = 21L, url = null, filePath = files.newFile("second.txt").path)
         var resultCalls = 0
-        val firstTask = service.upload(first) {
+        service.upload(first) {
             uploadResultCallback = TransferResultCallback { resultCalls++ }
         }
         service.upload(second)

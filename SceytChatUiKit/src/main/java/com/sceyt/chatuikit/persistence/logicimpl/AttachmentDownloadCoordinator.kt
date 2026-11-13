@@ -6,6 +6,7 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.extensions.boundedSynchronizedMap
+import com.sceyt.chatuikit.extensions.hasConnectedNetwork
 import com.sceyt.chatuikit.extensions.takeIfNotBlank
 import com.sceyt.chatuikit.filetransfer.FileTransferResult
 import com.sceyt.chatuikit.logger.SceytLog
@@ -59,6 +60,12 @@ internal class AttachmentDownloadCoordinator(
                 if (!previous.completed || previous.task === task) return
             }
 
+            // Remember offline requests for reconnect without flashing loading or error states.
+            if (!isResuming && !context.hasConnectedNetwork()) {
+                rememberDownloadForRetry(attachment)
+                return
+            }
+
             val download = Download(attachment, task, onResult)
             val previousCleanup = cleanups[key]
             download.job = scope.launch(start = CoroutineStart.UNDISPATCHED) {
@@ -90,8 +97,12 @@ internal class AttachmentDownloadCoordinator(
 
     fun pause(attachment: SceytAttachment): Boolean {
         val download = synchronized(lock) {
+            val key = attachment.transferKey
+            // An offline request can be waiting for retry without a registered attempt.
+            interruptions.remove(key)
+
             // Only registered, unfinished attempts can be paused.
-            val current = downloads[attachment.transferKey] ?: return false
+            val current = downloads[key] ?: return false
             if (current.completed) return false
 
             // A repeated pause succeeds using the existing paused state.
@@ -99,7 +110,6 @@ internal class AttachmentDownloadCoordinator(
 
             // Suppress progress before the provider can call back during pause.
             current.paused = true
-            interruptions.remove(current.key)
             current
         }
 
@@ -206,6 +216,14 @@ internal class AttachmentDownloadCoordinator(
         download.job.cancel()
     }
 
+    private fun rememberDownloadForRetry(attachment: SceytAttachment) {
+        val key = attachment.transferKey
+        synchronized(interruptions) {
+            interruptions.remove(key)
+            interruptions[key] = attachment
+        }
+    }
+
     private suspend fun performDownload(download: Download) {
         val result = try {
             val response = downloadFile(download)
@@ -270,12 +288,9 @@ internal class AttachmentDownloadCoordinator(
             }
 
             is FileTransferResult.Interrupted -> {
-                if (!download.paused) {
-                    synchronized(interruptions) {
-                        interruptions.remove(download.key)
-                        interruptions[download.key] = download.attachment
-                    }
-                }
+                if (!download.paused)
+                    rememberDownloadForRetry(download.attachment)
+
                 SceytResponse.Error(
                     result.error as? SceytException ?: SceytException(0, result.error.message),
                 )
