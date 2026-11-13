@@ -1,13 +1,19 @@
 package com.sceyt.chatuikit.presentation.helpers
 
 import android.content.Context
+import android.view.View
 import androidx.annotation.OptIn
+import androidx.media3.common.C
+import androidx.media3.common.Format
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
+import androidx.media3.common.Tracks
+import androidx.media3.common.VideoSize
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.DefaultRenderersFactory
+import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import com.sceyt.chatuikit.extensions.doSafe
 import com.sceyt.chatuikit.extensions.toMediaUri
@@ -111,8 +117,37 @@ class ExoPlayerHelper(
         errorListener?.invoke(error)
     }
 
+    override fun onTracksChanged(tracks: Tracks) {
+        if (exoPlayer.videoSize != VideoSize.UNKNOWN) return
+        tracks.singleSelectedVideoFormat()?.let(::applyVideoAspectRatio)
+    }
+
+    private fun Tracks.singleSelectedVideoFormat(): Format? {
+        val selectedFormats = groups
+            .filter { it.type == C.TRACK_TYPE_VIDEO }
+            .flatMap { group ->
+                (0 until group.length)
+                    .filter(group::isTrackSelected)
+                    .map(group::getTrackFormat)
+            }
+        return selectedFormats.singleOrNull()
+    }
+
+    @OptIn(UnstableApi::class)
+    private fun applyVideoAspectRatio(format: Format) {
+        if (format.width <= 0 || format.height <= 0) return
+        val aspectRatio = format.width * format.pixelWidthHeightRatio / format.height
+        val isRotated = format.rotationDegrees == 90 || format.rotationDegrees == 270
+        val displayAspectRatio = if (isRotated) 1 / aspectRatio else aspectRatio
+        val contentFrame = playerView.findViewById<View>(androidx.media3.ui.R.id.exo_content_frame)
+        (contentFrame as? AspectRatioFrameLayout)?.setAspectRatio(displayAspectRatio)
+    }
+
     val videoDuration: Int
-        get() = exoPlayer.duration.toInt()
+        get() = exoPlayer.duration
+            .takeIf { it != C.TIME_UNSET }
+            ?.coerceIn(0L, Int.MAX_VALUE.toLong())
+            ?.toInt() ?: 0
 
     fun seekToStart() {
         exoPlayer.seekTo(0)
