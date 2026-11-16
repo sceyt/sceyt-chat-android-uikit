@@ -152,8 +152,15 @@ object FileTransferHelper : SceytKoinComponent {
     }
 
     fun TransferTask.getResumePauseCallback() = ResumePauseCallback { transferData ->
+        updateResumePause(transferData)
+    }
+
+    internal fun TransferTask.updateResumePause(
+        transferData: TransferData,
+        onSaved: () -> Unit = {},
+    ) {
         synchronized(lock) {
-            if (state != transferData.state) return@ResumePauseCallback
+            if (state != transferData.state) return
             val updatedAttachment = updateAttachmentAndStateIfValid(
                 validate = { current ->
                     TransferStateValidator.isValidStateTransition(
@@ -166,11 +173,12 @@ object FileTransferHelper : SceytKoinComponent {
                 update = { current ->
                     current.copy(transferState = transferData.state)
                 }
-            ) ?: return@ResumePauseCallback
+            ) ?: return
 
             emitAttachmentTransferUpdate(transferData, updatedAttachment.fileSize, true)
             enqueueDbUpdate(messageTid) {
                 attachmentLogic.updateTransferDataByMsgTid(transferData)
+                onSaved()
             }
         }
     }

@@ -7,6 +7,7 @@ import com.sceyt.chatuikit.data.models.fold
 import com.sceyt.chatuikit.data.models.isSuccess
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.logger.SceytLog
+import com.sceyt.chatuikit.persistence.file_transfer.FileTransferHelper.updateResumePause
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Downloading
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.ErrorDownload
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.ErrorUpload
@@ -127,20 +128,56 @@ internal class FileTransferServiceImpl(
             return
         }
 
-        if (state == PauseUpload || state == ErrorUpload) {
-            // Replace even a finishing worker: pause has already released its completion listener.
-            UploadAndSendAttachmentWorkManager.schedule(
-                context = context,
-                messageTid = messageTid,
-                channelId = channelId,
-                workPolicy = ExistingWorkPolicy.REPLACE,
-                resumePausedUpload = true,
-            )
-        } else if (state == PendingUpload) {
-            val task = findOrCreateTransferTask(attachment)
+        when (state) {
+            PauseUpload -> {
+                resumePausedUpload(messageTid, attachment, channelId)
+            }
+
+            ErrorUpload -> {
+                UploadAndSendAttachmentWorkManager.schedule(
+                    context = context,
+                    messageTid = messageTid,
+                    channelId = channelId,
+                    workPolicy = ExistingWorkPolicy.REPLACE,
+                    resumePausedUpload = true,
+                )
+            }
+
+            PendingUpload -> {
+                val task = findOrCreateTransferTask(attachment)
+                task.state = WaitingToUpload
+                task.resumePauseCallback?.onResumePause(attachment.toTransferData(WaitingToUpload))
+                startUpload(attachment, task, task.isSharedUpload)
+            }
+
+            else -> Unit
+        }
+    }
+
+    private fun resumePausedUpload(
+        messageTid: Long,
+        attachment: SceytAttachment,
+        channelId: Long?
+    ) {
+        val storedState = AttachmentTransferStateStore.getTransferData(attachment)?.state
+        if (storedState?.isCompleted() == true) return
+
+        val task = findOrCreateTransferTask(attachment)
+        synchronized(task.lock) {
+            if (task.isCancelled || task.state != PauseUpload) return
+
             task.state = WaitingToUpload
-            task.resumePauseCallback?.onResumePause(attachment.toTransferData(WaitingToUpload))
-            startUpload(attachment, task, task.isSharedUpload)
+            task.updateResumePause(task.attachment.toTransferData(WaitingToUpload)) {
+                if (task.isCancelled || task.state != WaitingToUpload) return@updateResumePause
+
+                // The old worker may still be finishing after Pause.
+                UploadAndSendAttachmentWorkManager.schedule(
+                    context = context,
+                    messageTid = messageTid,
+                    channelId = channelId,
+                    workPolicy = ExistingWorkPolicy.REPLACE,
+                )
+            }
         }
     }
 
