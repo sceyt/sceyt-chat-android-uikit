@@ -110,10 +110,13 @@ internal class AttachmentUploadCoordinator(
         upload.members[task] = member
         upload.result = null
 
-        // A late shared caller must save the same app data before reusing the running transfer.
+        // A late shared caller reuses the prepared file and app data.
         upload.preparedAttachment?.let { prepared ->
             try {
                 savePreparedAttachment(member, prepared, upload.preparedMetadata)
+                upload.preparedFilePath?.let { path ->
+                    notify { member.task.updateFileLocationCallback?.onUpdateFileLocation(path) }
+                }
             } catch (error: Throwable) {
                 removeMember(member)
                 complete(member, Result.failure(error))
@@ -237,8 +240,15 @@ internal class AttachmentUploadCoordinator(
                 upload.preparedFilePath = path
             },
             onFileLocationChanged = { path ->
-                if (!owner.finished)
-                    owner.task.updateFileLocationCallback?.onUpdateFileLocation(path)
+                dispatch {
+                    if (upload.attempt !== attempt || attempt.execution.isCancelled) return@dispatch
+
+                    upload.members.values.forEach { member ->
+                        notify { member.task.updateFileLocationCallback?.onUpdateFileLocation(path) }
+                    }
+                    // Keep updated file details for callers that join after this callback.
+                    upload.preparedAttachment = upload.members.values.firstOrNull()?.task?.attachment
+                }
             },
             onPreparing = { progress ->
                 dispatch {
