@@ -37,6 +37,7 @@ import com.sceyt.chatuikit.persistence.logic.PersistenceReactionsLogic
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.persistence.logicimpl.sync.ChannelSyncStateStore
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.CheckDeletedMessagesUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.SendPendingMessagesUseCase
 import com.sceyt.chatuikit.persistence.mappers.toParentMessageEntity
 import com.sceyt.chatuikit.persistence.repositories.MessagesRepository
 import com.sceyt.chatuikit.persistence.repositories.SceytSharedPreference
@@ -298,6 +299,7 @@ internal class PersistenceMessagesLogicImplPushTest {
         checkDeletedMessagesUseCase = mock<CheckDeletedMessagesUseCase>(),
         channelSyncStateStore = mock<ChannelSyncStateStore>(),
         pendingMessageDeleteByTidDao = mock<PendingMessageDeleteByTidDao>(),
+        sendPendingMessagesUseCase = mock<SendPendingMessagesUseCase>(),
     )
 
     private fun pushData(messageId: Long, parentId: Long? = null): PushData {

@@ -174,7 +174,6 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                     markMessageAsRead(*pendingDisplayMsgIds.toLongArray())
                     pendingDisplayMsgIds.clear()
                 }
-                sendPendingMessages()
             }
             messagesListView.post {
                 if (needToUpdateTransferAfterOnResume.isNotEmpty()) {
