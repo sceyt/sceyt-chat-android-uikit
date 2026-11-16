@@ -592,6 +592,43 @@ class AttachmentUploadCoordinatorTest {
     }
 
     @Test
+    fun `cancel notifies the provider only after the upload coroutine stops`() {
+        val gate = CompletableDeferred<Unit>()
+        transport.uploadCancellationGate = gate
+        val attachment = uploadAttachment(messageTid = 340L)
+        uploadFile(attachment, transferTask(attachment))
+        val call = transport.uploadCalls.single()
+
+        try {
+            cancelUpload(attachment)
+            assertThat(call.cancelled).isTrue()
+            assertThat(transport.cancelCalls).isEmpty()
+        } finally {
+            gate.complete(Unit)
+        }
+        assertThat(transport.cancelCalls).containsExactly("upload:340")
+    }
+
+    @Test
+    fun `cancel cleans up a resumed upload that has not started yet`() {
+        val gate = CompletableDeferred<Unit>()
+        transport.uploadCancellationGate = gate
+        val attachment = uploadAttachment(messageTid = 341L)
+        uploadFile(attachment, transferTask(attachment))
+        pauseUpload(attachment, TransferState.Uploading)
+        resumeUpload(attachment, TransferState.PauseUpload)
+
+        try {
+            cancelUpload(attachment)
+            assertThat(transport.cancelCalls).isEmpty()
+        } finally {
+            gate.complete(Unit)
+        }
+        assertThat(transport.cancelCalls).containsExactly("upload:341")
+        assertThat(transport.uploadCalls).hasSize(1)
+    }
+
+    @Test
     fun `duplicate queued upload is suppressed`() {
         val current = uploadAttachment(messageTid = 1L)
         val duplicate = uploadAttachment(messageTid = 2L)

@@ -18,17 +18,12 @@ import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import com.sceyt.chatuikit.persistence.mappers.toTransferData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.util.ArrayDeque
 
 internal class AttachmentUploadCoordinator(
@@ -219,59 +214,53 @@ internal class AttachmentUploadCoordinator(
         return true
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
     private fun launchUploadAttempt(upload: Upload) {
         val owner = upload.members.values.firstOrNull { !it.paused } ?: return
         val previous = upload.attempt
         val attempt = Attempt(owner.attachment.uploadOperationId)
+        attempt.execution = createUploadExecution(owner, attempt)
         upload.preparedAttachment = null
-        attempt.job = scope.launch(start = CoroutineStart.ATOMIC) {
-            // Enter cleanup even if paused before dispatch; canceled attempts never prepare files.
-            withContext(NonCancellable) {
-                previous?.job?.join()
-
-                // A replacement owner cannot restore the previous owner's backend session.
-                if (previous != null && previous.operationId != attempt.operationId)
-                    previous.transfer?.discard()
-            }
-            currentCoroutineContext().ensureActive()
+        upload.attempt = attempt
+        attempt.execution.start(scope, previous?.execution) {
             performUpload(owner, attempt)
         }
-        upload.attempt = attempt
+    }
+
+    private fun createUploadExecution(owner: Member, attempt: Attempt): TransferExecutor {
+        val upload = owner.upload
+        return router.upload(
+            attachment = owner.attachment,
+            operationId = attempt.operationId,
+            isSharedUpload = upload.shared,
+            onFilePrepared = { path ->
+                // Preparation belongs to the physical upload, even if its first caller is deleted.
+                upload.preparedFilePath = path
+            },
+            onFileLocationChanged = { path ->
+                if (!owner.finished)
+                    owner.task.updateFileLocationCallback?.onUpdateFileLocation(path)
+            },
+            onPreparing = { progress ->
+                dispatch {
+                    if (upload.attempt !== attempt || attempt.execution.isCancelled) return@dispatch
+                    if (owner.paused || owner.finished) return@dispatch
+
+                    owner.task.preparingCallback?.onPreparing(
+                        owner.attachment.toTransferData(Preparing, progress)
+                    )
+                }
+            },
+            preparedFilePath = upload.preparedFilePath,
+            onUploadPrepared = { prepared, data ->
+                savePreparedUpload(owner, attempt, prepared, data)
+            },
+        )
     }
 
     private suspend fun performUpload(owner: Member, attempt: Attempt) {
         val upload = owner.upload
         val result = try {
-            val transfer = router.upload(
-                attachment = owner.attachment,
-                operationId = attempt.operationId,
-                isSharedUpload = upload.shared,
-                onFilePrepared = { path ->
-                    // Preparation belongs to the physical upload, even if its first caller is deleted.
-                    upload.preparedFilePath = path
-                },
-                onFileLocationChanged = { path ->
-                    if (!owner.finished)
-                        owner.task.updateFileLocationCallback?.onUpdateFileLocation(path)
-                },
-                onPreparing = { progress ->
-                    dispatch {
-                        if (upload.attempt !== attempt || attempt.job.isCancelled) return@dispatch
-                        if (owner.paused || owner.finished) return@dispatch
-
-                        owner.task.preparingCallback?.onPreparing(
-                            owner.attachment.toTransferData(Preparing, progress)
-                        )
-                    }
-                },
-                preparedFilePath = upload.preparedFilePath,
-                onUploadPrepared = { prepared, data ->
-                    savePreparedUpload(owner, attempt, prepared, data)
-                },
-            )
-            attempt.transfer = transfer
-            val response = transfer.execute { progress ->
+            val response = attempt.execution.execute { progress ->
                 dispatch { handleProgress(upload, attempt, progress) }
             }
             currentCoroutineContext().ensureActive()
@@ -302,7 +291,7 @@ internal class AttachmentUploadCoordinator(
         dispatch {
             val upload = owner.upload
             // A canceled or replaced attempt must not persist its preparation or start uploading.
-            if (upload.attempt !== attempt || attempt.job.isCancelled) {
+            if (upload.attempt !== attempt || attempt.execution.isCancelled) {
                 saved.cancel()
                 return@dispatch
             }
@@ -346,7 +335,7 @@ internal class AttachmentUploadCoordinator(
     }
 
     private fun handleProgress(upload: Upload, attempt: Attempt, progressPercent: Float) {
-        if (upload.attempt !== attempt || attempt.job.isCancelled) return
+        if (upload.attempt !== attempt || attempt.execution.isCancelled) return
 
         upload.members.values.filter { !it.paused }.forEach { member ->
             notify {
@@ -357,7 +346,7 @@ internal class AttachmentUploadCoordinator(
                         progressPercent = progressPercent,
                         state = Uploading,
                         filePath = if (upload.shared)
-                            member.task.attachment.filePath else attempt.transfer?.attachment?.filePath,
+                            member.task.attachment.filePath else attempt.execution.attachment?.filePath,
                         url = null,
                     ),
                 )
@@ -401,22 +390,27 @@ internal class AttachmentUploadCoordinator(
     private fun pauseOperation(upload: Upload) {
         val attempt = upload.attempt ?: return
         if (attempt.completed || attempt.paused) return
-        val paused = attempt.job.isActive && runCatching {
-            attempt.transfer?.pause() == true
+        val paused = attempt.execution.isActive && runCatching {
+            attempt.execution.pause()
         }.getOrDefault(false)
 
         if (paused) attempt.paused = true else stopAttempt(upload)
     }
 
-    private fun resumeTransport(attempt: Attempt): Boolean = attempt.job.isActive && runCatching {
-        attempt.transfer?.resume() == true
-    }.getOrDefault(false)
+    private fun resumeTransport(attempt: Attempt): Boolean {
+        val execution = attempt.execution
+        return execution.isActive && runCatching { execution.resume() }.getOrDefault(false)
+    }
 
     private fun stopAttempt(upload: Upload, discard: Boolean = false) {
         upload.attempt?.let { attempt ->
             attempt.paused = true
-            if (discard) attempt.transfer?.discard()
-            attempt.job.cancel()
+            attempt.execution.stop()
+            if (discard) {
+                scope.launch {
+                    attempt.execution.cancel()
+                }
+            }
         }
     }
 
@@ -468,11 +462,8 @@ internal class AttachmentUploadCoordinator(
     }
 
     private class Attempt(val operationId: String) {
-        lateinit var job: Job
+        lateinit var execution: TransferExecutor
         var paused = false
-
-        @Volatile
-        var transfer: TransferExecutor? = null
 
         @Volatile
         var completed = false
